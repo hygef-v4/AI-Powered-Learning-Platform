@@ -1,12 +1,12 @@
-import { sectionNumber, type DocumentModel, type Run } from "@/shared/document/types";
+import { formatSectionNumber, type DocumentModel, type Run } from "@/shared/document/types";
 
-const runsText = (runs: Run[] | undefined) => (runs ?? []).map((run) => run.text).join("");
+const joinRunsText = (runs: Run[] | undefined) => (runs ?? []).map((run) => run.text).join("");
 
 /**
  * Chữ của mẫu đề (DOCX đã nhập thành khung) gửi cho AI (yêu cầu 2026-11-05): mục đánh số I., I.1., I.1.a. như trình soạn,
  * đoạn, danh sách, bảng thành dòng chữ. {@code questionCount}: số mục ngoài cùng, tức số câu hỏi của mẫu.
  */
-export function templateText(document: DocumentModel): { text: string; questionCount: number } {
+export function extractTemplateText(document: DocumentModel): { text: string; questionCount: number } {
   const lines: string[] = [];
   const open: number[] = [];
   const counters: number[] = [];
@@ -21,17 +21,17 @@ export function templateText(document: DocumentModel): { text: string; questionC
         counters[depth - 1] = (counters[depth - 1] ?? 0) + 1;
         counters.length = depth;
         if (depth === 1) questionCount++;
-        lines.push(`${sectionNumber(counters)} ${block.content.text ?? ""}`.trimEnd());
+        lines.push(`${formatSectionNumber(counters)} ${block.content.text ?? ""}`.trimEnd());
         break;
       }
       case "PARAGRAPH":
-        lines.push(runsText(block.content.runs));
+        lines.push(joinRunsText(block.content.runs));
         break;
       case "LIST":
-        block.content.items.forEach((item) => lines.push(`${"  ".repeat(item.level ?? 0)}- ${runsText(item.runs)}`));
+        block.content.items.forEach((item) => lines.push(`${"  ".repeat(item.level ?? 0)}- ${joinRunsText(item.runs)}`));
         break;
       case "TABLE":
-        block.content.rows.forEach((row) => lines.push(row.map((cell) => runsText(cell.runs)).join(" | ")));
+        block.content.rows.forEach((row) => lines.push(row.map((cell) => joinRunsText(cell.runs)).join(" | ")));
         break;
       default:
         break;

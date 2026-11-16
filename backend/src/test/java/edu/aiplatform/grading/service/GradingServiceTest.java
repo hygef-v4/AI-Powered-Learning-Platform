@@ -48,7 +48,7 @@ class GradingServiceTest {
                 new BigDecimal("4"), objectMapper.writeValueAsString(rubrics), Instant.now());
         when(evaluationRepository.findById(evaluation.id)).thenReturn(Optional.of(evaluation));
         when(evaluationRepository.lockById(evaluation.id)).thenReturn(Optional.of(evaluation));
-        when(evaluationRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(evaluationRepository.saveEvaluation(any())).thenAnswer(i -> i.getArgument(0));
         when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
         when(classAccess.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId,
                 UUID.randomUUID(), "SE1", "Class", ClassStatus.OPEN, teacherId, false)));
@@ -119,12 +119,12 @@ class GradingServiceTest {
                 null, false, null, List.of())));
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(0)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("GRADING_ASSIGNMENT_OPEN"));
+                        error -> assertThat(error.readCode()).isEqualTo("GRADING_ASSIGNMENT_OPEN"));
         evaluation.score = BigDecimal.ONE;
         evaluation.state = EvaluationStatus.DRAFT;
         assertThatThrownBy(() -> gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("GRADING_ASSIGNMENT_OPEN"));
+                        error -> assertThat(error.readCode()).isEqualTo("GRADING_ASSIGNMENT_OPEN"));
     }
 
     @org.junit.jupiter.params.ParameterizedTest
@@ -142,9 +142,9 @@ class GradingServiceTest {
 
         for (var write : writes) {
             assertThatThrownBy(write::run).isInstanceOfSatisfying(ApiException.class,
-                    error -> assertThat(error.code()).isEqualTo("GRADING_ASSIGNMENT_OPEN"));
+                    error -> assertThat(error.readCode()).isEqualTo("GRADING_ASSIGNMENT_OPEN"));
         }
-        verify(evaluationRepository, never()).save(any());
+        verify(evaluationRepository, never()).saveEvaluation(any());
         verifyNoInteractions(eventPublisher);
     }
 
@@ -170,8 +170,8 @@ class GradingServiceTest {
 
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(0)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("GRADING_ASSIGNMENT_OPEN"));
-        verify(evaluationRepository, never()).save(any());
+                        error -> assertThat(error.readCode()).isEqualTo("GRADING_ASSIGNMENT_OPEN"));
+        verify(evaluationRepository, never()).saveEvaluation(any());
     }
 
     @Test
@@ -179,12 +179,12 @@ class GradingServiceTest {
         when(assignmentQuery.get(assignmentId)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> gradingService.requireCurrent(teacher, evaluation.id, 0))
                 .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("ASSIGNMENT_UNAVAILABLE"));
+                        error -> assertThat(error.readCode()).isEqualTo("ASSIGNMENT_UNAVAILABLE"));
         when(assignmentQuery.get(assignmentId)).thenThrow(new IllegalStateException("unavailable"));
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(0)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("GRADING_DEPENDENCY_UNAVAILABLE"));
-        verify(evaluationRepository, never()).save(any());
+                        error -> assertThat(error.readCode()).isEqualTo("GRADING_DEPENDENCY_UNAVAILABLE"));
+        verify(evaluationRepository, never()).saveEvaluation(any());
     }
 
     @org.junit.jupiter.params.ParameterizedTest
@@ -203,7 +203,7 @@ class GradingServiceTest {
             assertThat(item.outcome()).isEqualTo("FAILED");
             assertThat(item.code()).isEqualTo("GRADING_ASSIGNMENT_OPEN");
         });
-        verify(evaluationRepository, never()).save(any());
+        verify(evaluationRepository, never()).saveEvaluation(any());
     }
 
     @Test
@@ -230,7 +230,7 @@ class GradingServiceTest {
                 new Save(0, Map.of(), BigDecimal.ZERO, null, "Replacement", null, null,
                         Map.of(), sampleFeedback("Review", true, "Unclear diagram"), false,
                         null, null))).isInstanceOfSatisfying(ApiException.class,
-                                error -> assertThat(error.code()).isEqualTo("STRUCTURED_FEEDBACK_REVIEW_REQUIRED"));
+                                error -> assertThat(error.readCode()).isEqualTo("STRUCTURED_FEEDBACK_REVIEW_REQUIRED"));
         assertThat(evaluation.feedback).isEqualTo(before);
     }
 
@@ -244,10 +244,10 @@ class GradingServiceTest {
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id,
                 new Save(0, Map.of(), null, null, "Must not save", null, null)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("GRADING_CLASS_READ_ONLY"));
+                        error -> assertThat(error.readCode()).isEqualTo("GRADING_CLASS_READ_ONLY"));
         assertThat(evaluation.score).isEqualByComparingTo("4");
         assertThat(evaluation.feedback).isEqualTo("feedback");
-        verify(evaluationRepository, never()).save(any());
+        verify(evaluationRepository, never()).saveEvaluation(any());
     }
 
     GradingFeedback sampleFeedback(String reason, boolean requiresReview, String reviewReason) {
@@ -263,7 +263,7 @@ class GradingServiceTest {
     void serverComputesChecklistAndNeverCallsAi() {
         gradingService.saveEvaluation(teacher, evaluation.id, command(0));
         assertThat(evaluation.score()).isEqualByComparingTo("4");
-        assertThat(evaluation.status()).isEqualTo(EvaluationStatus.DRAFT);
+        assertThat(evaluation.resolveStatus()).isEqualTo(EvaluationStatus.DRAFT);
     }
 
     @Test
@@ -278,7 +278,7 @@ class GradingServiceTest {
     void changedTeacherAndStaleVersionCannotSave() {
         when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("OUT_OF_CLASS_SCOPE"));
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(0))).isInstanceOfSatisfying(
-                ApiException.class, ex -> assertThat(ex.status().value()).isEqualTo(404));
+                ApiException.class, ex -> assertThat(ex.readStatus().value()).isEqualTo(404));
         when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(9))).hasMessageContaining("Reload");
     }
@@ -287,8 +287,8 @@ class GradingServiceTest {
     void staleVersionDoesNotWriteAuditOrPublish() {
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(9)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        ex -> assertThat(ex.status().value()).isEqualTo(409));
-        verify(evaluationRepository, never()).save(any());
+                        ex -> assertThat(ex.readStatus().value()).isEqualTo(409));
+        verify(evaluationRepository, never()).saveEvaluation(any());
         verifyNoInteractions(audit, eventPublisher);
     }
 
@@ -304,9 +304,9 @@ class GradingServiceTest {
     void legacyFinalizeValidatesWithoutLockingAndPublicationEmitsOnce() {
         gradingService.saveEvaluation(teacher, evaluation.id, command(0));
         gradingService.finalizeEvaluation(teacher, new ItemVersion(evaluation.id, 0));
-        assertThat(evaluation.status()).isEqualTo(EvaluationStatus.DRAFT);
+        assertThat(evaluation.resolveStatus()).isEqualTo(EvaluationStatus.DRAFT);
         gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
-        assertThat(evaluation.status()).isEqualTo(EvaluationStatus.PUBLISHED);
+        assertThat(evaluation.resolveStatus()).isEqualTo(EvaluationStatus.PUBLISHED);
         gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
         verify(eventPublisher, times(1))
                 .publish(argThat(e -> e.eventType().equals("grade.published") && !e.payload().containsKey("score")));
@@ -353,7 +353,7 @@ class GradingServiceTest {
                     .isInstanceOf(ApiException.class);
             assertThat(evaluation.score).isNull();
         }
-        verify(evaluationRepository, never()).save(any());
+        verify(evaluationRepository, never()).saveEvaluation(any());
     }
 
     @Test
@@ -439,7 +439,7 @@ class GradingServiceTest {
         // Finalizing while score != reviewedScore is rejected on the server
         assertThatThrownBy(() -> gradingService.finalizeEvaluation(teacher, new ItemVersion(evaluation.id, 0)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("STRUCTURED_FEEDBACK_SCORE_MISMATCH"));
+                        ex -> assertThat(ex.readCode()).isEqualTo("STRUCTURED_FEEDBACK_SCORE_MISMATCH"));
         assertThat(evaluation.state).isEqualTo(EvaluationStatus.DRAFT);
 
         // Explicit teacher confirmation via acknowledgedReviewItems resolves the score mismatch
@@ -492,7 +492,7 @@ class GradingServiceTest {
                 Map.of(rubricId, Map.of(itemId, new BigDecimal("2.00"))),
                 silentlyUnchecked, false, null, null), proposal))
                 .isInstanceOfSatisfying(ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("UNACKNOWLEDGED_REVIEW_FLAG"));
+                        ex -> assertThat(ex.readCode()).isEqualTo("UNACKNOWLEDGED_REVIEW_FLAG"));
 
         // Saving draft with requiresReview=true is allowed, but finalizing without acknowledgement is blocked
         var flaggedFeedback = new GradingFeedback(
@@ -507,7 +507,7 @@ class GradingServiceTest {
                 flaggedFeedback, false, null, null), proposal);
         assertThatThrownBy(() -> gradingService.finalizeEvaluation(teacher, new ItemVersion(evaluation.id, 0)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("STRUCTURED_FEEDBACK_REVIEW_REQUIRED"));
+                        ex -> assertThat(ex.readCode()).isEqualTo("STRUCTURED_FEEDBACK_REVIEW_REQUIRED"));
 
         // Forged acknowledgement for unknown itemId is rejected
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, new Save(
@@ -515,7 +515,7 @@ class GradingServiceTest {
                 Map.of(rubricId, Map.of(itemId, new BigDecimal("2.00"))),
                 flaggedFeedback, false, Map.of(rubricId, Set.of(UUID.randomUUID())), null)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("INVALID_REVIEW_METADATA"));
+                        ex -> assertThat(ex.readCode()).isEqualTo("INVALID_REVIEW_METADATA"));
 
         // Explicit teacher acknowledgement allows finalization
         gradingService.saveEvaluation(teacher, evaluation.id, new Save(
@@ -574,8 +574,8 @@ class GradingServiceTest {
         evaluation.groupDocumentId = UUID.randomUUID();
         evaluation.submissionHash = "older";
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(0)))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("SUBMISSION_CHANGED"));
-        verify(evaluationRepository, never()).save(any());
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.readCode()).isEqualTo("SUBMISSION_CHANGED"));
+        verify(evaluationRepository, never()).saveEvaluation(any());
     }
     @Test
     void savedChecksFollowExplicitPartialScores() {
@@ -615,7 +615,7 @@ class GradingServiceTest {
         assertThatThrownBy(() -> gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
                 new MemberSave(99, BigDecimal.ONE, "stale", ContributionLevel.MEETS_EXPECTATIONS)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("GRADE_VERSION_CONFLICT"));
+                        error -> assertThat(error.readCode()).isEqualTo("GRADE_VERSION_CONFLICT"));
         assertThat(member.contributionLevel).isEqualTo(ContributionLevel.NOT_COMPLETED);
         gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
                 new MemberSave(0, new BigDecimal("2"), null, null));
@@ -626,7 +626,7 @@ class GradingServiceTest {
         assertThatThrownBy(() -> gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
                 new MemberSave(0, BigDecimal.ONE, "archived", ContributionLevel.NOT_COMPLETED)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("GRADING_CLASS_READ_ONLY"));
+                        error -> assertThat(error.readCode()).isEqualTo("GRADING_CLASS_READ_ONLY"));
         assertThat(member.contributionLevel).isNull();
         when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("OUT_OF_CLASS_SCOPE"));
         assertThatThrownBy(() -> gradingService.saveMemberGrade(teacher, evaluation.id, studentId,

@@ -22,19 +22,19 @@ public class RoleChangeBlockedException extends RuntimeException {
         this.classes = List.copyOf(classes);
     }
 
-    public List<Held> subjects() {
+    public List<Held> listSubjects() {
         return subjects;
     }
 
-    public List<Held> classes() {
+    public List<Held> listClasses() {
         return classes;
     }
 
-    public List<UUID> managedSubjects() {
+    public List<UUID> listManagedSubjects() {
         return subjects.stream().map(Held::id).toList();
     }
 
-    public List<UUID> taughtClasses() {
+    public List<UUID> listTaughtClasses() {
         return classes.stream().map(Held::id).toList();
     }
 }

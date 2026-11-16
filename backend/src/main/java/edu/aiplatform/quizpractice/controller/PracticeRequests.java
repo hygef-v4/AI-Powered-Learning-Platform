@@ -32,45 +32,45 @@ final class PracticeRequests {
     record PenaltyInput(PenaltyDecision decision, BigDecimal points, String reason) {
     }
 
-    static PenaltyInput penaltyInput(JsonNode body) {
-        fields(body, Set.of("decision", "points", "reason"));
+    static PenaltyInput parsePenaltyInput(JsonNode body) {
+        rejectUnknownFields(body, Set.of("decision", "points", "reason"));
         JsonNode reason = body.get("reason");
         if (reason == null || !reason.isTextual()) {
-            throw invalid("reason cần là chuỗi");
+            throw createInvalidError("reason cần là chuỗi");
         }
-        PenaltyDecision decision = penaltyDecision(body.get("decision"));
+        PenaltyDecision decision = parsePenaltyDecision(body.get("decision"));
         JsonNode points = body.get("points");
         if (points != null && !points.isNull() && !points.isNumber()) {
-            throw invalid("points cần là số");
+            throw createInvalidError("points cần là số");
         }
         BigDecimal value = points == null || points.isNull() ? null : points.decimalValue();
         if (decision == PenaltyDecision.DISMISSED && value != null) {
-            throw invalid("Không trừ điểm thì không gửi points");
+            throw createInvalidError("Không trừ điểm thì không gửi points");
         }
         return new PenaltyInput(decision, value, reason.asText());
     }
 
-    private static PenaltyDecision penaltyDecision(JsonNode decision) {
+    private static PenaltyDecision parsePenaltyDecision(JsonNode decision) {
         if (decision == null || !decision.isTextual()) {
-            throw invalid("decision cần là APPLIED hoặc DISMISSED");
+            throw createInvalidError("decision cần là APPLIED hoặc DISMISSED");
         }
         try {
             return PenaltyDecision.valueOf(decision.asText());
         } catch (IllegalArgumentException unknown) {
-            throw invalid("decision cần là APPLIED hoặc DISMISSED");
+            throw createInvalidError("decision cần là APPLIED hoặc DISMISSED");
         }
     }
 
-    static UUID classId(JsonNode body) {
-        fields(body, Set.of("classId"));
-        return uuid(body.get("classId"), "classId");
+    static UUID parseClassId(JsonNode body) {
+        rejectUnknownFields(body, Set.of("classId"));
+        return parseUuid(body.get("classId"), "classId");
     }
 
-    static Answers answers(JsonNode body) {
-        fields(body, Set.of("answers", "answerVersion"));
+    static Answers parseAnswers(JsonNode body) {
+        rejectUnknownFields(body, Set.of("answers", "answerVersion"));
         JsonNode map = body.get("answers");
         if (map == null || !map.isObject() || map.size() > MAX_QUESTIONS) {
-            throw invalid("answers cần là object câu → danh sách lựa chọn");
+            throw createInvalidError("answers cần là object câu → danh sách lựa chọn");
         }
         Map<UUID, List<String>> answers = new LinkedHashMap<>();
         Iterator<Map.Entry<String, JsonNode>> entries = map.fields();
@@ -80,16 +80,16 @@ final class PracticeRequests {
             try {
                 questionId = UUID.fromString(entry.getKey());
             } catch (IllegalArgumentException invalid) {
-                throw invalid("Mã câu không hợp lệ");
+                throw createInvalidError("Mã câu không hợp lệ");
             }
             JsonNode options = entry.getValue();
             if (!options.isArray() || options.size() > MAX_OPTIONS) {
-                throw invalid("Lựa chọn của một câu cần là danh sách tối đa 6 mục");
+                throw createInvalidError("Lựa chọn của một câu cần là danh sách tối đa 6 mục");
             }
             List<String> ids = new ArrayList<>();
             for (JsonNode option : options) {
                 if (!option.isTextual()) {
-                    throw invalid("Mã lựa chọn cần là chuỗi");
+                    throw createInvalidError("Mã lựa chọn cần là chuỗi");
                 }
                 ids.add(option.asText());
             }
@@ -97,20 +97,20 @@ final class PracticeRequests {
         }
         JsonNode version = body.get("answerVersion");
         if (version == null || !version.canConvertToExactIntegral() || version.asLong() < 0) {
-            throw invalid("Thiếu answerVersion");
+            throw createInvalidError("Thiếu answerVersion");
         }
         return new Answers(answers, version.asLong());
     }
 
-    static List<ActivityEventInput> activity(JsonNode body) {
-        fields(body, Set.of("events"));
+    static List<ActivityEventInput> parseActivity(JsonNode body) {
+        rejectUnknownFields(body, Set.of("events"));
         JsonNode list = body.get("events");
         if (list == null || !list.isArray()) {
-            throw invalid("events cần là danh sách");
+            throw createInvalidError("events cần là danh sách");
         }
         List<ActivityEventInput> events = new ArrayList<>();
         for (JsonNode node : list) {
-            fields(node, Set.of("sessionId", "clientEventId", "sequence", "kind", "clientTime"));
+            rejectUnknownFields(node, Set.of("sessionId", "clientEventId", "sequence", "kind", "clientTime"));
             JsonNode sequence = node.get("sequence");
             JsonNode kind = node.get("kind");
             JsonNode eventId = node.get("clientEventId");
@@ -118,13 +118,13 @@ final class PracticeRequests {
             if (sequence == null || !sequence.canConvertToExactIntegral() || kind == null || !kind.isTextual()
                     || eventId == null || !eventId.isTextual() || eventId.asText().isBlank() || eventId.asText().length() > 64
                     || time == null || !time.isTextual()) {
-                throw invalid("Sự kiện hoạt động không hợp lệ");
+                throw createInvalidError("Sự kiện hoạt động không hợp lệ");
             }
             try {
-                events.add(new ActivityEventInput(uuid(node.get("sessionId"), "sessionId"), eventId.asText(),
+                events.add(new ActivityEventInput(parseUuid(node.get("sessionId"), "sessionId"), eventId.asText(),
                         sequence.asLong(), ActivityKind.valueOf(kind.asText()), Instant.parse(time.asText())));
             } catch (IllegalArgumentException | DateTimeParseException invalid) {
-                throw invalid("Sự kiện hoạt động không hợp lệ");
+                throw createInvalidError("Sự kiện hoạt động không hợp lệ");
             }
         }
         return events;
@@ -132,34 +132,34 @@ final class PracticeRequests {
 
     static void query(MultiValueMap<String, String> params, Set<String> allowed) {
         if (!allowed.containsAll(params.keySet()) || params.values().stream().anyMatch(v -> v.size() != 1)) {
-            throw invalid("Chỉ nhận " + String.join(", ", allowed) + ", mỗi trường một giá trị");
+            throw createInvalidError("Chỉ nhận " + String.join(", ", allowed) + ", mỗi trường một giá trị");
         }
     }
 
-    private static void fields(JsonNode body, Set<String> allowed) {
+    private static void rejectUnknownFields(JsonNode body, Set<String> allowed) {
         if (body == null || !body.isObject()) {
-            throw invalid("Cần một JSON object");
+            throw createInvalidError("Cần một JSON object");
         }
         Iterator<String> names = body.fieldNames();
         while (names.hasNext()) {
             if (!allowed.contains(names.next())) {
-                throw invalid("Có trường không được phép trong yêu cầu");
+                throw createInvalidError("Có trường không được phép trong yêu cầu");
             }
         }
     }
 
-    private static UUID uuid(JsonNode value, String field) {
+    private static UUID parseUuid(JsonNode value, String field) {
         if (value == null || !value.isTextual()) {
-            throw invalid(field + " cần là mã định danh");
+            throw createInvalidError(field + " cần là mã định danh");
         }
         try {
             return UUID.fromString(value.asText());
         } catch (IllegalArgumentException invalid) {
-            throw invalid(field + " cần là mã định danh");
+            throw createInvalidError(field + " cần là mã định danh");
         }
     }
 
-    private static ApiException invalid(String message) {
-        return ApiException.badRequest("QUIZ_PRACTICE_REQUEST_INVALID", message);
+    private static ApiException createInvalidError(String message) {
+        return ApiException.createBadRequest("QUIZ_PRACTICE_REQUEST_INVALID", message);
     }
 }

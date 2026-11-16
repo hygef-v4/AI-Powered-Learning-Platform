@@ -67,10 +67,10 @@ class RabbitSseMultiInstanceIntegrationTest {
             var ownFirst = new RecordingEmitter(false);
             var ownSecond = new RecordingEmitter(false);
             var other = new RecordingEmitter(false);
-            first.channels().add(ownChannel, null, ownFirst);
-            first.channels().add(ownChannel, null, new RecordingEmitter(true));
-            second.channels().add(ownChannel, null, ownSecond);
-            second.channels().add("notifications:account:" + UUID.randomUUID(), null, other);
+            first.readChannels().addEmitter(ownChannel, null, ownFirst);
+            first.readChannels().addEmitter(ownChannel, null, new RecordingEmitter(true));
+            second.readChannels().addEmitter(ownChannel, null, ownSecond);
+            second.readChannels().addEmitter("notifications:account:" + UUID.randomUUID(), null, other);
             var source = new DriverManagerDataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
             var transaction = new TransactionTemplate(new DataSourceTransactionManager(source));
             var committedAt = new java.util.concurrent.atomic.AtomicLong();
@@ -93,7 +93,7 @@ class RabbitSseMultiInstanceIntegrationTest {
             assertThat(committedAt.get()).isPositive();
             assertThat(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - committedAt.get())).isLessThan(5000);
             assertThat(other.events).isEmpty();
-            assertThat(first.channels().size(ownChannel)).isEqualTo(1);
+            assertThat(first.readChannels().countSubscribers(ownChannel)).isEqualTo(1);
             transaction.executeWithoutResult(status -> {
                 first.publish(ownChannel, Map.of("type", "rolled-back"));
                 status.setRollbackOnly();

@@ -163,7 +163,7 @@ final class AssignmentDraftValidator {
 
     record Options(String profile, String language, Integer questionCount, BigDecimal targetPoints,
                    boolean requireTitle) {
-        static Options legacy() {
+        static Options createLegacyOptions() {
             return new Options("GENERAL", "VI", null, null, false);
         }
     }

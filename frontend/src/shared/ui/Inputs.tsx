@@ -1,7 +1,7 @@
 "use client";
 import {
   Children, Fragment, cloneElement, isValidElement, useId, useRef, useState,
-  type InputHTMLAttributes, type KeyboardEvent, type ReactNode, type SelectHTMLAttributes,
+  type InputHTMLAttributes, type KeyboardEvent, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes,
 } from "react";
 import { cx } from "./cx";
 import { Icon, type IconName } from "./Icon";
@@ -90,6 +90,26 @@ export function TextInput({ invalid, suffix, icon, wrapperClassName, className, 
       />
       {suffix && <span className="text-xs text-muted">{suffix}</span>}
     </div>
+  );
+}
+
+type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean };
+
+/** Ô nhập nhiều dòng cùng dáng với TextInput; mặc định 3 dòng, kéo dọc được. */
+export function Textarea({ invalid, className, rows = 3, ...rest }: TextareaProps) {
+  return (
+    <textarea
+      rows={rows}
+      aria-invalid={invalid || undefined}
+      className={cx(
+        "w-full resize-y rounded-lg border bg-surface px-3 py-2 text-[13.5px] text-ink outline-none placeholder:text-muted",
+        "transition-[border-color,box-shadow] duration-200 focus:border-focus focus:shadow-[0_0_0_3px_var(--c-primary-soft)]",
+        "disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted disabled:opacity-70",
+        invalid ? "border-danger" : "border-field",
+        className,
+      )}
+      {...rest}
+    />
   );
 }
 

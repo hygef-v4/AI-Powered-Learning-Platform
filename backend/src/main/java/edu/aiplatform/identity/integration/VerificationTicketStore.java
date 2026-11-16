@@ -30,14 +30,14 @@ public class VerificationTicketStore {
 
     /** Trả ticket bản rõ cho client; Redis chỉ giữ băm. Ticket cũ cùng tài khoản và mục đích bị xóa. */
     public String issue(UUID accountId, OtpPurpose purpose) {
-        String ticket = Hashing.randomToken(32);
-        String hash = Hashing.sha256Hex(ticket);
+        String ticket = Hashing.generateRandomToken(32);
+        String hash = Hashing.hashSha256Hex(ticket);
         String index = indexKey(accountId, purpose);
         String previous = redis.opsForValue().get(index);
         if (previous != null) {
             redis.delete(PREFIX + previous);
         }
-        redis.opsForValue().set(PREFIX + hash, value(accountId, purpose), properties.otpTtl());
+        redis.opsForValue().set(PREFIX + hash, buildValue(accountId, purpose), properties.otpTtl());
         redis.opsForValue().set(index, hash, properties.otpTtl());
         return ticket;
     }
@@ -47,7 +47,7 @@ public class VerificationTicketStore {
         if (ticket == null || ticket.isBlank()) {
             return Optional.empty();
         }
-        String value = redis.opsForValue().get(PREFIX + Hashing.sha256Hex(ticket));
+        String value = redis.opsForValue().get(PREFIX + Hashing.hashSha256Hex(ticket));
         String prefix = purpose.name() + ":";
         if (value == null || !value.startsWith(prefix)) {
             return Optional.empty();
@@ -64,13 +64,13 @@ public class VerificationTicketStore {
         if (ticket == null || ticket.isBlank()) {
             return false;
         }
-        String hash = Hashing.sha256Hex(ticket);
+        String hash = Hashing.hashSha256Hex(ticket);
         String value = redis.opsForValue().getAndDelete(PREFIX + hash);
         String index = indexKey(accountId, purpose);
         if (hash.equals(redis.opsForValue().get(index))) {
             redis.delete(index);
         }
-        return value(accountId, purpose).equals(value);
+        return buildValue(accountId, purpose).equals(value);
     }
 
     /** Thu hồi ticket đang chờ của tài khoản cho mục đích này. */
@@ -92,7 +92,7 @@ public class VerificationTicketStore {
         return ACCOUNT_PREFIX + accountId + ":" + purpose.name();
     }
 
-    private static String value(UUID accountId, OtpPurpose purpose) {
+    private static String buildValue(UUID accountId, OtpPurpose purpose) {
         return purpose.name() + ":" + accountId;
     }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatStudentLabel } from "@/shared/studentCode";
 import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { SearchPicker } from "@/features/assignments/components/SearchPicker";
@@ -7,10 +8,11 @@ import { Alert, Button, Dialog, Field, Pill, TableFrame, Td, Th } from "@/shared
 import { SECTION_STATUS } from "../model/status";
 import { assignSection, submitDocument } from "../api";
 import type { Receipt, SectionView, WorkspaceView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
-function problemMessage(e: unknown, fallback: string): string {
+function describeProblem(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
-    if (e.problem.status === 409) return e.problem.detail ?? "Dữ liệu vừa thay đổi, hãy tải lại.";
+    if (e.problem.status === 409) return e.problem.detail ?? msg("groupdocs.components.SectionDialogs.theDataJustChangedPlease");
     return e.problem.detail ?? fallback;
   }
   return fallback;
@@ -44,30 +46,29 @@ export function AssignSectionDialog({
       onChanged();
       onClose();
     } catch (e) {
-      setError(problemMessage(e, "Không giao được mục."));
+      setError(describeProblem(e, msg("groupdocs.components.SectionDialogs.couldNotAssignTheSection")));
       setBusy(false);
     }
   };
   return (
     <Dialog
       open
-      title="Giao mục"
+      title={msg("groupdocs.components.SectionDialogs.assignSection")}
       icon="person_add"
       onClose={onClose}
       footer={
         <Button variant="primary" onClick={() => void assign()} disabled={!changed || busy}>
-          Giao mục
-        </Button>
+          {msg("groupdocs.components.SectionDialogs.assignSection")}</Button>
       }
     >
-      <Field label="Thành viên nhận mục" htmlFor="assign-member">
-        <SearchPicker id="assign-member" label="Thành viên nhận mục" placeholder="Tìm thành viên" optionIcon="person"
-          emptyText="Không có thành viên phù hợp."
-          options={view.members.filter((m) => m.accountId !== assignee).map((m) => ({ id: m.accountId, label: m.name ?? m.accountId }))}
+      <Field label={msg("groupdocs.components.SectionDialogs.memberTakingTheSection")} htmlFor="assign-member">
+        <SearchPicker id="assign-member" label={msg("groupdocs.components.SectionDialogs.memberTakingTheSection")} placeholder={msg("groupdocs.components.SectionDialogs.findMembers")} optionIcon="person"
+          emptyText={msg("groupdocs.components.SectionDialogs.noMatchingMembers")}
+          options={view.members.filter((m) => m.accountId !== assignee).map((m) => ({ id: m.accountId, label: formatStudentLabel({ ...m, name: m.name ?? m.accountId }) }))}
           onPick={setAssignee}
-          selected={chosen ? { label: chosen.name ?? chosen.accountId, clearLabel: "Bỏ chọn thành viên", onClear: () => setAssignee("") } : undefined} />
+          selected={chosen ? { label: formatStudentLabel({ ...chosen, name: chosen.name ?? chosen.accountId }), clearLabel: msg("groupdocs.components.SectionDialogs.deselectMember"), onClear: () => setAssignee("") } : undefined} />
       </Field>
-      {heldByOther && <Alert tone="warning">Giao cho người khác sẽ nhả mục trước đó.</Alert>}
+      {heldByOther && <Alert tone="warning">{msg("groupdocs.components.SectionDialogs.assigningItToSomeoneElse")}</Alert>}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -94,7 +95,10 @@ export function SubmitGroupDialog({
 }) {
   const [busy, setBusy] = useState(false);
   const undone = view.sections.filter((s) => s.status !== "DONE");
-  const name = (id: string | null) => view.members.find((m) => m.accountId === id)?.name ?? "Chưa ai nhận";
+  const resolveName = (id: string | null) => {
+    const member = view.members.find((m) => m.accountId === id);
+    return formatStudentLabel({ name: member?.name ?? msg("groupdocs.components.SectionDialogs.unclaimed"), studentCode: member?.studentCode });
+  };
   const submit = async () => {
     setBusy(true);
     try {
@@ -103,13 +107,13 @@ export function SubmitGroupDialog({
       const problem = e instanceof ApiError ? (e.problem as ApiError["problem"] & { issues?: { blockId?: string }[] }) : undefined;
       const blockIds = (problem?.issues ?? []).map((i) => i.blockId ?? "").filter(Boolean);
       const invalid = problem?.issues !== undefined;
-      onFailed(invalid ? "Chưa nộp được vì còn mục chưa xong." : problemMessage(e, "Không nộp được, thử lại sau."), blockIds);
+      onFailed(invalid ? msg("groupdocs.components.SectionDialogs.cannotSubmitYetBecauseSome") : describeProblem(e, msg("groupdocs.components.SectionDialogs.couldNotSubmitPleaseTry")), blockIds);
     }
   };
   return (
     <Dialog
       open
-      title="Nộp tài liệu nhóm?"
+      title={msg("groupdocs.components.SectionDialogs.submitGroupDocument")}
       icon="upload_file"
       size="lg"
       onClose={onClose}
@@ -117,10 +121,9 @@ export function SubmitGroupDialog({
       footer={
         <>
           <Button onClick={onClose} disabled={busy}>
-            Quay lại
-          </Button>
+            {msg("groupdocs.components.SectionDialogs.back")}</Button>
           <Button variant="primary" onClick={() => void submit()} disabled={busy}>
-            {undone.length ? "Vẫn nộp" : "Nộp"}
+            {undone.length ? msg("groupdocs.components.SectionDialogs.submitAnyway") : msg("groupdocs.components.SectionDialogs.submit")}
           </Button>
         </>
       }
@@ -129,16 +132,16 @@ export function SubmitGroupDialog({
         <TableFrame filledHead className="[&_table]:table-fixed">
           <colgroup><col /><col className="w-[32%]" /><col className="w-[140px]" /></colgroup><thead>
             <tr>
-              <Th>Mục</Th>
-              <Th>Người giữ</Th>
-              <Th>Trạng thái</Th>
+              <Th>{msg("groupdocs.components.SectionDialogs.section")}</Th>
+              <Th>{msg("groupdocs.components.SectionDialogs.holder")}</Th>
+              <Th>{msg("groupdocs.components.SectionDialogs.status")}</Th>
             </tr>
           </thead>
           <tbody>
             {undone.map((s) => (
               <tr key={s.id}>
                 <Td>{s.title}</Td>
-                <Td>{name(s.holderId)}</Td>
+                <Td>{resolveName(s.holderId)}</Td>
                 <Td><Pill tone={SECTION_STATUS[s.status].tone}>{SECTION_STATUS[s.status].text}</Pill></Td>
               </tr>
             ))}

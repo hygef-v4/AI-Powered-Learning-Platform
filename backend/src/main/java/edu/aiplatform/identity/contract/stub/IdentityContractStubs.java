@@ -79,7 +79,7 @@ public class IdentityContractStubs {
     @ConditionalOnMissingBean
     IMail mailStub() {
         return Stubs.announce(IMail.class,
-                message -> Stubs.called(IMail.class, "bỏ qua email tới " + message.to() + ": " + message.subject()));
+                message -> Stubs.recordCall(IMail.class, "bỏ qua email tới " + message.to() + ": " + message.subject()));
     }
 
     @Bean
@@ -119,7 +119,7 @@ public class IdentityContractStubs {
 
             @Override
             public Optional<UUID> subjectOfClass(UUID classId) {
-                return Optional.of(Stubs.derivedId("subject", classId));
+                return Optional.of(Stubs.deriveId("subject", classId));
             }
 
             @Override

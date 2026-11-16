@@ -2,8 +2,10 @@ package edu.aiplatform.identity.integration;
 
 import static edu.aiplatform.identity.IdentityTestData.NOW;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import edu.aiplatform.identity.IdentityTestData;
 import java.time.Duration;
@@ -17,12 +19,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -67,12 +75,194 @@ class SessionStoreIntegrationTest {
     }
 
     @Test
+    void injectedMapperSupportsLegacyJsonAndRollbackReaderIgnoresStamp() {
+        new ApplicationContextRunner()
+                .withInitializer(new ConfigDataApplicationContextInitializer())
+                .withConfiguration(AutoConfigurations.of(JacksonAutoConfiguration.class))
+                .withBean(StringRedisTemplate.class, () -> redis)
+                .withBean(java.time.Clock.class, () -> clock)
+                .withBean(edu.aiplatform.identity.config.IdentityProperties.class, IdentityTestData::properties)
+                .withBean(SessionStore.class)
+                .run(context -> {
+                    ObjectMapper injected = context.getBean(ObjectMapper.class);
+                    assertThat(injected.isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)).isFalse();
+                    SessionStore injectedStore = context.getBean(SessionStore.class);
+                    var issued = injectedStore.createSession(accountId, NOW.toEpochMilli());
+                    String key = SessionStore.SESSION_PREFIX + issued.sid();
+                    String json = redis.opsForValue().get(key);
+                    assertThat(injected.readValue(json, LegacySessionRecord.class).accountId()).isEqualTo(accountId);
+                    var legacy = injected.readTree(json);
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) legacy).remove("pwdStamp");
+                    redis.opsForValue().set(key, injected.writeValueAsString(legacy));
+                    assertThat(injectedStore.findSession(issued.sid())).hasValueSatisfying(session -> {
+                        assertThat(session.pwdStamp()).isNull();
+                        assertThat(session.isPasswordCurrent(NOW)).isTrue();
+                        assertThat(session.isPasswordCurrent(NOW.plusNanos(1))).isFalse();
+                    });
+                });
+    }
+
+    record LegacySessionRecord(UUID accountId, java.time.Instant issuedAt, java.time.Instant lastUsedAt,
+                               String refreshHash) {
+    }
+
+    @Test
+    void concurrentObserverNeverSeesPartiallyCreatedSessions() throws Exception {
+        var snapshot = new DefaultRedisScript<>("""
+                for _, key in ipairs(redis.call('KEYS', 'session:*')) do
+                    if string.sub(key, 1, 16) ~= 'session:refresh:' then
+                        local session = cjson.decode(redis.call('GET', key))
+                        local sid = string.sub(key, 9)
+                        if redis.call('SISMEMBER', 'account:sessions:' .. session.accountId, sid) ~= 1
+                            or redis.call('GET', 'session:refresh:' .. session.refreshHash) ~= sid
+                            or redis.call('PTTL', key) <= 0 then return 0 end
+                    end
+                end
+                return 1
+                """, Long.class);
+        CountDownLatch start = new CountDownLatch(1);
+        var pool = Executors.newSingleThreadExecutor();
+        try {
+            var writer = pool.submit(() -> {
+                start.await();
+                for (int i = 0; i < 50; i++) {
+                    store.createSession(accountId, NOW.toEpochMilli());
+                }
+                return null;
+            });
+            start.countDown();
+            for (int i = 0; i < 50; i++) {
+                assertThat(redis.execute(snapshot, List.of())).isEqualTo(1L);
+            }
+            writer.get(10, TimeUnit.SECONDS);
+            assertThat(redis.opsForSet().size(SessionStore.ACCOUNT_SESSIONS_PREFIX + accountId)).isEqualTo(50);
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    @Test
+    void staleRotationCasCannotRestoreDeletedSession() {
+        assertStaleRotationRejected(false);
+    }
+
+    @Test
+    void staleRotationCasCannotRestoreBulkRevokedSession() {
+        assertStaleRotationRejected(true);
+    }
+
+    private void assertStaleRotationRejected(boolean bulk) {
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
+        String key = SessionStore.SESSION_PREFIX + session.sid();
+        String expectedJson = redis.opsForValue().get(key);
+        if (bulk) {
+            store.deleteAll(accountId);
+        } else {
+            store.deleteSession(session.sid());
+        }
+        String newRefreshKey = SessionStore.REFRESH_PREFIX + "new-hash";
+
+        assertThat(redis.execute(SessionStore.ROTATE_CAS, List.of(key, newRefreshKey),
+                expectedJson, expectedJson, "1000", session.sid())).isZero();
+        assertThat(redis.hasKey(key)).isFalse();
+        assertThat(redis.hasKey(newRefreshKey)).isFalse();
+        assertThat(redis.opsForSet().members(SessionStore.ACCOUNT_SESSIONS_PREFIX + accountId)).isEmpty();
+    }
+
+    @Test
+    void deletionBetweenRotationReadAndCasCannotResurrectSession() throws Exception {
+        assertRevocationDuringRotation(false);
+    }
+
+    @Test
+    void bulkRevocationBetweenRotationReadAndCasCannotResurrectSession() throws Exception {
+        assertRevocationDuringRotation(true);
+    }
+
+    private void assertRevocationDuringRotation(boolean bulk) throws Exception {
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
+        CountDownLatch read = new CountDownLatch(1);
+        CountDownLatch resume = new CountDownLatch(1);
+        SessionStore paused = new SessionStore(redis, objectMapper, clock, IdentityTestData.properties()) {
+            @Override
+            void recordRead() {
+                read.countDown();
+                try {
+                    assertThat(resume.await(10, TimeUnit.SECONDS)).isTrue();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new AssertionError(e);
+                }
+            }
+        };
+        ExecutorService pool = Executors.newSingleThreadExecutor();
+        try {
+            Future<SessionStore.IRotateResult> rotation = pool.submit(() -> paused.rotate(session.refreshToken()));
+            assertThat(read.await(10, TimeUnit.SECONDS)).isTrue();
+            if (bulk) {
+                store.deleteAll(accountId);
+            } else {
+                store.deleteSession(session.sid());
+            }
+            resume.countDown();
+            assertThat(rotation.get(10, TimeUnit.SECONDS))
+                    .isEqualTo(new SessionStore.Rejected(SessionStore.Reason.UNKNOWN));
+            assertThat(redis.hasKey(SessionStore.SESSION_PREFIX + session.sid())).isFalse();
+            assertThat(redis.keys(SessionStore.REFRESH_PREFIX + "*")).isEmpty();
+            assertThat(redis.opsForSet().members(SessionStore.ACCOUNT_SESSIONS_PREFIX + accountId)).isEmpty();
+        } finally {
+            resume.countDown();
+            pool.shutdownNow();
+        }
+    }
+
+    @Test
+    void rotateThenDeleteRemovesCurrentRefreshAndIndex() {
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
+        SessionStore.Rotated rotated = (SessionStore.Rotated) store.rotate(session.refreshToken());
+
+        store.deleteSession(session.sid());
+
+        assertThat(redis.hasKey(SessionStore.SESSION_PREFIX + session.sid())).isFalse();
+        assertThat(redis.hasKey(refreshKey(rotated.refreshToken()))).isFalse();
+        assertThat(redis.opsForSet().members(SessionStore.ACCOUNT_SESSIONS_PREFIX + accountId)).isEmpty();
+    }
+
+    @Test
+    void restampPreservesTtlAndCannotRestoreDeletedOrChangedSession() {
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
+        String key = SessionStore.SESSION_PREFIX + session.sid();
+        String oldJson = redis.opsForValue().get(key);
+        Long ttl = redis.getExpire(key, TimeUnit.MILLISECONDS);
+
+        store.restampSession(session.sid(), NOW.plusMillis(1).toEpochMilli());
+
+        assertThat(store.findSession(session.sid())).hasValueSatisfying(s ->
+                assertThat(s.pwdStamp()).isEqualTo(NOW.plusMillis(1).toEpochMilli()));
+        assertThat(redis.getExpire(key, TimeUnit.MILLISECONDS)).isBetween(ttl - 5000, ttl);
+        assertThat(redis.execute(SessionStore.RESTAMP_CAS, List.of(key), oldJson, oldJson)).isZero();
+        store.deleteSession(session.sid());
+        store.restampSession(session.sid(), NOW.plusMillis(2).toEpochMilli());
+        assertThat(redis.execute(SessionStore.RESTAMP_CAS, List.of(key), oldJson, oldJson)).isZero();
+        assertThat(redis.hasKey(key)).isFalse();
+        assertThat(redis.hasKey(refreshKey(session.refreshToken()))).isFalse();
+        assertThat(redis.opsForSet().members(SessionStore.ACCOUNT_SESSIONS_PREFIX + accountId)).isEmpty();
+    }
+
+    @Test
+    void corruptJsonCanStillBeDeleted() {
+        redis.opsForValue().set(SessionStore.SESSION_PREFIX + "broken", "{invalid");
+        store.deleteSession("broken");
+        assertThat(redis.hasKey(SessionStore.SESSION_PREFIX + "broken")).isFalse();
+    }
+
+    @Test
     void createWritesHashedRefreshKeyWithIdleTtlAndAccountIndexWithMaxTtl() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
         String refreshKey = refreshKey(session.refreshToken());
 
         assertThat(redis.opsForValue().get(refreshKey)).isEqualTo(session.sid());
-        assertThat(store.find(session.sid())).hasValueSatisfying(s -> {
+        assertThat(store.findSession(session.sid())).hasValueSatisfying(s -> {
             assertThat(s.accountId()).isEqualTo(accountId);
             assertThat(s.issuedAt()).isEqualTo(NOW);
         });
@@ -92,7 +282,7 @@ class SessionStoreIntegrationTest {
     /** Nhiều tab refresh cùng lúc bằng một token: script Lua để đúng một request thắng, còn lại CONCURRENT. */
     @Test
     void concurrentRefreshesWithSameTokenRotateExactlyOnce() throws Exception {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
         int callers = 8;
         CountDownLatch start = new CountDownLatch(1);
         ExecutorService pool = Executors.newFixedThreadPool(callers);
@@ -122,14 +312,14 @@ class SessionStoreIntegrationTest {
                 .containsOnly(new SessionStore.Rejected(SessionStore.Reason.CONCURRENT));
 
         // Phiên còn nguyên, token mới của bên thắng dùng tiếp được.
-        assertThat(store.find(session.sid())).isPresent();
-        assertThat(store.sidOf(rotated.get(0).refreshToken())).hasValue(session.sid());
+        assertThat(store.findSession(session.sid())).isPresent();
+        assertThat(store.findSid(rotated.get(0).refreshToken())).hasValue(session.sid());
         assertThat(store.rotate(rotated.get(0).refreshToken())).isInstanceOf(SessionStore.Rotated.class);
     }
 
     @Test
     void oldTokenWithinGraceIsConcurrentButAfterGraceRevokesSession() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
         String newToken = ((SessionStore.Rotated) store.rotate(session.refreshToken())).refreshToken();
         // Dấu "đã dùng" giữ tới hết idle TTL để còn phát hiện dùng lại.
         assertThat(redis.opsForValue().get(refreshKey(session.refreshToken())))
@@ -139,12 +329,12 @@ class SessionStoreIntegrationTest {
         clock.set(NOW.plus(SessionStore.REUSE_GRACE));
         assertThat(store.rotate(session.refreshToken()))
                 .isEqualTo(new SessionStore.Rejected(SessionStore.Reason.CONCURRENT));
-        assertThat(store.find(session.sid())).isPresent();
+        assertThat(store.findSession(session.sid())).isPresent();
 
         clock.set(NOW.plus(SessionStore.REUSE_GRACE).plusMillis(1));
         assertThat(store.rotate(session.refreshToken()))
                 .isEqualTo(new SessionStore.Rejected(SessionStore.Reason.REUSED));
-        assertThat(store.find(session.sid())).isEmpty();
+        assertThat(store.findSession(session.sid())).isEmpty();
         assertThat(redis.hasKey(SessionStore.SESSION_PREFIX + session.sid())).isFalse();
         assertThat(redis.hasKey(refreshKey(newToken))).isFalse();
         assertThat(redis.opsForSet().members(SessionStore.ACCOUNT_SESSIONS_PREFIX + accountId)).isEmpty();
@@ -153,13 +343,13 @@ class SessionStoreIntegrationTest {
 
     @Test
     void rotationShrinksTtlToSevenDayCapAndExpiresAfterIt() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
 
         clock.set(NOW.plus(Duration.ofDays(7)).minus(Duration.ofMinutes(30)));
         SessionStore.Rotated rotated = (SessionStore.Rotated) store.rotate(session.refreshToken());
         assertTtl(SessionStore.SESSION_PREFIX + session.sid(), Duration.ofMinutes(30));
         assertTtl(refreshKey(rotated.refreshToken()), Duration.ofMinutes(30));
-        assertThat(store.find(session.sid())).hasValueSatisfying(s -> assertThat(s.issuedAt()).isEqualTo(NOW));
+        assertThat(store.findSession(session.sid())).hasValueSatisfying(s -> assertThat(s.issuedAt()).isEqualTo(NOW));
 
         clock.set(NOW.plus(Duration.ofDays(7)).plusSeconds(1));
         assertThat(store.rotate(rotated.refreshToken()))
@@ -169,10 +359,10 @@ class SessionStoreIntegrationTest {
 
     @Test
     void findDropsSessionPastSevenDays() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
 
         clock.set(NOW.plus(Duration.ofDays(7)));
-        assertThat(store.find(session.sid())).isEmpty();
+        assertThat(store.findSession(session.sid())).isEmpty();
         assertThat(redis.hasKey(SessionStore.SESSION_PREFIX + session.sid())).isFalse();
         assertThat(redis.hasKey(refreshKey(session.refreshToken()))).isFalse();
     }
@@ -188,31 +378,31 @@ class SessionStoreIntegrationTest {
 
     @Test
     void sidOfFollowsOnlyLiveRefreshTokens() {
-        SessionStore.IssuedSession session = store.create(accountId);
-        assertThat(store.sidOf(session.refreshToken())).hasValue(session.sid());
+        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
+        assertThat(store.findSid(session.refreshToken())).hasValue(session.sid());
 
         String newToken = ((SessionStore.Rotated) store.rotate(session.refreshToken())).refreshToken();
-        assertThat(store.sidOf(session.refreshToken())).isEmpty();
-        assertThat(store.sidOf(newToken)).hasValue(session.sid());
-        assertThat(store.sidOf("khong-ton-tai")).isEmpty();
-        assertThat(store.sidOf(null)).isEmpty();
+        assertThat(store.findSid(session.refreshToken())).isEmpty();
+        assertThat(store.findSid(newToken)).hasValue(session.sid());
+        assertThat(store.findSid("khong-ton-tai")).isEmpty();
+        assertThat(store.findSid(null)).isEmpty();
 
-        store.delete(session.sid());
-        assertThat(store.sidOf(newToken)).isEmpty();
+        store.deleteSession(session.sid());
+        assertThat(store.findSid(newToken)).isEmpty();
     }
 
     @Test
     void deleteAllExceptKeepsOnlyCurrentSessionAndDeleteAllRemovesEverything() {
-        SessionStore.IssuedSession keep = store.create(accountId);
-        SessionStore.IssuedSession other = store.create(accountId);
-        SessionStore.IssuedSession third = store.create(accountId);
-        SessionStore.IssuedSession otherAccount = store.create(UUID.randomUUID());
+        SessionStore.IssuedSession keep = store.createSession(accountId, NOW.toEpochMilli());
+        SessionStore.IssuedSession other = store.createSession(accountId, NOW.toEpochMilli());
+        SessionStore.IssuedSession third = store.createSession(accountId, NOW.toEpochMilli());
+        SessionStore.IssuedSession otherAccount = store.createSession(UUID.randomUUID(), NOW.toEpochMilli());
 
         store.deleteAllExcept(accountId, keep.sid());
 
-        assertThat(store.find(keep.sid())).isPresent();
-        assertThat(store.find(other.sid())).isEmpty();
-        assertThat(store.find(third.sid())).isEmpty();
+        assertThat(store.findSession(keep.sid())).isPresent();
+        assertThat(store.findSession(other.sid())).isEmpty();
+        assertThat(store.findSession(third.sid())).isEmpty();
         assertThat(redis.hasKey(refreshKey(other.refreshToken()))).isFalse();
         assertThat(redis.hasKey(refreshKey(third.refreshToken()))).isFalse();
         assertThat(redis.opsForSet().members(SessionStore.ACCOUNT_SESSIONS_PREFIX + accountId))
@@ -220,14 +410,156 @@ class SessionStoreIntegrationTest {
         assertThat(store.rotate(other.refreshToken())).isEqualTo(new SessionStore.Rejected(SessionStore.Reason.UNKNOWN));
 
         store.deleteAll(accountId);
-        assertThat(store.find(keep.sid())).isEmpty();
+        assertThat(store.findSession(keep.sid())).isEmpty();
         assertThat(redis.hasKey(refreshKey(keep.refreshToken()))).isFalse();
-        assertThat(store.find(otherAccount.sid())).isPresent();
+        assertThat(store.findSession(otherAccount.sid())).isPresent();
         store.deleteAll(UUID.randomUUID());
     }
 
+    @Test
+    void refreshRacingPasswordRestampKeepsAUsableRefreshToken() {
+        var issued = store.createSession(accountId, NOW.toEpochMilli());
+        SessionStore overlapping = new SessionStore(redis, objectMapper, clock, IdentityTestData.properties()) {
+            @Override
+            void recordRead() {
+                // Deterministic interleave: password change restamps after refresh read, before its CAS.
+                store.restampSession(issued.sid(), NOW.plusMillis(1).toEpochMilli());
+            }
+        };
+
+        var result = overlapping.rotate(issued.refreshToken());
+
+        assertThat(store.findSession(issued.sid())).isPresent();
+        assertThat(store.findSid(issued.refreshToken())).isEmpty();
+        assertThat(redis.opsForValue().get(refreshKey(issued.refreshToken())))
+                .startsWith(SessionStore.USED_MARK);
+        assertThat(result).as("the session kept by password change must remain refreshable")
+                .isInstanceOf(SessionStore.Rotated.class);
+        var rotated = (SessionStore.Rotated) result;
+        assertThat(rotated.session().pwdStamp()).isEqualTo(NOW.plusMillis(1).toEpochMilli());
+        assertThat(store.findSid(rotated.refreshToken())).hasValue(issued.sid());
+        assertThat(store.rotate(rotated.refreshToken())).isInstanceOf(SessionStore.Rotated.class);
+    }
+
+    @Test
+    void restampRacingRefreshDoesNotSilentlyLeaveAnOldPasswordStamp() {
+        var issued = store.createSession(accountId, NOW.toEpochMilli());
+        var interleavingRedis = new StringRedisTemplate(connectionFactory) {
+            @Override
+            public <T> T execute(org.springframework.data.redis.core.script.RedisScript<T> script,
+                                 List<String> keys, Object... args) {
+                if (script == SessionStore.RESTAMP_CAS) store.rotate(issued.refreshToken());
+                return super.execute(script, keys, args);
+            }
+        };
+        var overlapping = new SessionStore(interleavingRedis, objectMapper, clock, IdentityTestData.properties());
+
+        overlapping.restampSession(issued.sid(), NOW.plusMillis(1).toEpochMilli());
+
+        assertThat(store.findSession(issued.sid())).hasValueSatisfying(session ->
+                assertThat(session.isPasswordCurrent(NOW.plusMillis(1)))
+                        .as("the kept session must accept the committed password generation").isTrue());
+        assertThat(store.findSession(issued.sid())).hasValueSatisfying(session ->
+                assertThat(redis.opsForValue().get(SessionStore.REFRESH_PREFIX + session.refreshHash()))
+                        .isEqualTo(issued.sid()));
+    }
+
+    @Test
+    void corruptJsonNullIsRejectedWithoutCrashing() {
+        var issued = store.createSession(accountId, NOW.toEpochMilli());
+        String key = SessionStore.SESSION_PREFIX + issued.sid();
+        redis.opsForValue().set(key, "null");
+
+        assertThat(store.findSession(issued.sid())).isEmpty();
+        assertThat(redis.hasKey(key)).isFalse();
+    }
+
+    @Test
+    void incompleteSessionRecordsAreDeletedBeforeUse() throws Exception {
+        for (String field : List.of("accountId", "issuedAt", "lastUsedAt", "refreshHash")) {
+            var issued = store.createSession(accountId, NOW.toEpochMilli());
+            String key = SessionStore.SESSION_PREFIX + issued.sid();
+            var json = (com.fasterxml.jackson.databind.node.ObjectNode)
+                    objectMapper.readTree(redis.opsForValue().get(key));
+            json.remove(field);
+            redis.opsForValue().set(key, objectMapper.writeValueAsString(json));
+
+            assertThat(store.findSession(issued.sid())).as("missing %s", field).isEmpty();
+            assertThat(redis.hasKey(key)).isFalse();
+        }
+        var issued = store.createSession(accountId, NOW.toEpochMilli());
+        String key = SessionStore.SESSION_PREFIX + issued.sid();
+        redis.opsForValue().set(key, objectMapper.writeValueAsString(
+                new SessionStore.SessionRecord(accountId, NOW, NOW, " ", null)));
+        assertThat(store.findSession(issued.sid())).isEmpty();
+        assertThat(redis.hasKey(key)).isFalse();
+    }
+
+    @Test
+    void repeatedRestampsBoundRotationRetriesWithoutPublishingANewRefresh() {
+        var issued = store.createSession(accountId, NOW.toEpochMilli());
+        AtomicInteger attempts = new AtomicInteger();
+        var overlapping = new SessionStore(redis, objectMapper, clock, IdentityTestData.properties()) {
+            @Override
+            void recordRead() {
+                store.restampSession(issued.sid(), NOW.toEpochMilli() + attempts.incrementAndGet());
+            }
+        };
+
+        assertThat(overlapping.rotate(issued.refreshToken()))
+                .isEqualTo(new SessionStore.Rejected(SessionStore.Reason.UNKNOWN));
+        assertThat(attempts.get()).isEqualTo(3);
+        assertThat(redis.keys(SessionStore.REFRESH_PREFIX + "*"))
+                .containsExactly(refreshKey(issued.refreshToken()));
+    }
+
+    @Test
+    void repeatedRestampConflictsAreReportedAfterThreeAttempts() {
+        var issued = store.createSession(accountId, NOW.toEpochMilli());
+        AtomicInteger attempts = new AtomicInteger();
+        var interleavingRedis = new StringRedisTemplate(connectionFactory) {
+            @Override
+            public <T> T execute(org.springframework.data.redis.core.script.RedisScript<T> script,
+                                 List<String> keys, Object... args) {
+                if (script == SessionStore.RESTAMP_CAS) {
+                    store.restampSession(issued.sid(), NOW.toEpochMilli() + attempts.incrementAndGet());
+                }
+                return super.execute(script, keys, args);
+            }
+        };
+        var overlapping = new SessionStore(interleavingRedis, objectMapper, clock, IdentityTestData.properties());
+
+        assertThatThrownBy(() -> overlapping.restampSession(issued.sid(), NOW.plusMillis(100).toEpochMilli()))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(attempts.get()).isEqualTo(3);
+        assertThat(store.findSession(issued.sid())).hasValueSatisfying(session ->
+                assertThat(session.pwdStamp()).isEqualTo(NOW.plusMillis(3).toEpochMilli()));
+    }
+
+    @Test
+    void restampRetryCannotRestoreConcurrentlyDeletedSession() {
+        var issued = store.createSession(accountId, NOW.toEpochMilli());
+        var interleavingRedis = new StringRedisTemplate(connectionFactory) {
+            @Override
+            public <T> T execute(org.springframework.data.redis.core.script.RedisScript<T> script,
+                                 List<String> keys, Object... args) {
+                if (script == SessionStore.RESTAMP_CAS) {
+                    store.deleteSession(issued.sid());
+                }
+                return super.execute(script, keys, args);
+            }
+        };
+        var overlapping = new SessionStore(interleavingRedis, objectMapper, clock, IdentityTestData.properties());
+
+        overlapping.restampSession(issued.sid(), NOW.plusMillis(1).toEpochMilli());
+
+        assertThat(store.findSession(issued.sid())).isEmpty();
+        assertThat(redis.hasKey(refreshKey(issued.refreshToken()))).isFalse();
+        assertThat(redis.opsForSet().members(SessionStore.ACCOUNT_SESSIONS_PREFIX + accountId)).isEmpty();
+    }
+
     private static String refreshKey(String refreshToken) {
-        return SessionStore.REFRESH_PREFIX + Hashing.sha256Hex(refreshToken);
+        return SessionStore.REFRESH_PREFIX + Hashing.hashSha256Hex(refreshToken);
     }
 
     /** TTL thật trên Redis: không quá {@code expected} và chỉ hụt vài giây do thời gian chạy test. */

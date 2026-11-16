@@ -54,15 +54,15 @@ class RabbitSseHubTest {
         Recording mine = new Recording(false);
         Recording broken = new Recording(true);
         Recording other = new Recording(false);
-        hub.channels().add("group-doc:" + doc, "a", mine);
-        hub.channels().add("group-doc:" + doc, "b", broken);
-        hub.channels().add("group-doc:" + UUID.randomUUID(), "c", other);
+        hub.readChannels().addEmitter("group-doc:" + doc, "a", mine);
+        hub.readChannels().addEmitter("group-doc:" + doc, "b", broken);
+        hub.readChannels().addEmitter("group-doc:" + UUID.randomUUID(), "c", other);
 
         hub.deliver(Map.of("channel", "group-doc:" + doc, "event", Map.of("type", "section.claimed")));
 
         assertThat(mine.sent).hasSize(1);
         assertThat(other.sent).isEmpty();
-        assertThat(hub.channels().size("group-doc:" + doc)).isEqualTo(1);
+        assertThat(hub.readChannels().countSubscribers("group-doc:" + doc)).isEqualTo(1);
     }
 
     @Test
@@ -71,8 +71,8 @@ class RabbitSseHubTest {
         UUID removed = UUID.randomUUID();
         Recording leaving = new Recording(false);
         Recording staying = new Recording(false);
-        hub.channels().add("group-doc:" + doc, removed.toString(), leaving);
-        hub.channels().add("group-doc:" + doc, UUID.randomUUID().toString(), staying);
+        hub.readChannels().addEmitter("group-doc:" + doc, removed.toString(), leaving);
+        hub.readChannels().addEmitter("group-doc:" + doc, UUID.randomUUID().toString(), staying);
 
         hub.closeFor(removed, Set.of(doc));
         hub.deliver(Map.of("close", removed.toString(), "channels", List.of("group-doc:" + doc)));
@@ -80,7 +80,7 @@ class RabbitSseHubTest {
         verify(rabbit).convertAndSend(eq("platform.realtime"), eq(""), any(Object.class));
         assertThat(leaving.completed).isTrue();
         assertThat(staying.completed).isFalse();
-        assertThat(hub.channels().size("group-doc:" + doc)).isEqualTo(1);
+        assertThat(hub.readChannels().countSubscribers("group-doc:" + doc)).isEqualTo(1);
     }
 
     /** Emitter ghi lại sự kiện; {@code failing} giả lập kết nối đã đứt. */

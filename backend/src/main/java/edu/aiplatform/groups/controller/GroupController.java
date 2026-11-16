@@ -32,19 +32,19 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class GroupController {
 
-    private final ClassGroupService classGroups;
-    private final LeaderRequestService requests;
-    private final MyGroupService myGroups;
-    private final GroupWorkQueryService work;
-    private final GroupRenameService renames;
+    private final ClassGroupService classGroupService;
+    private final LeaderRequestService leaderRequestService;
+    private final MyGroupService myGroupService;
+    private final GroupWorkQueryService groupWorkQueryService;
+    private final GroupRenameService groupRenameService;
 
-    public GroupController(ClassGroupService classGroups, LeaderRequestService requests, MyGroupService myGroups,
-                           GroupWorkQueryService work, GroupRenameService renames) {
-        this.classGroups = classGroups;
-        this.requests = requests;
-        this.myGroups = myGroups;
-        this.work = work;
-        this.renames = renames;
+    public GroupController(ClassGroupService classGroupService, LeaderRequestService leaderRequestService, MyGroupService myGroupService,
+                           GroupWorkQueryService groupWorkQueryService, GroupRenameService groupRenameService) {
+        this.classGroupService = classGroupService;
+        this.leaderRequestService = leaderRequestService;
+        this.myGroupService = myGroupService;
+        this.groupWorkQueryService = groupWorkQueryService;
+        this.groupRenameService = groupRenameService;
     }
 
     public record RandomRequest(Integer maxSize) {
@@ -63,76 +63,76 @@ public class GroupController {
     }
 
     @GetMapping("/api/v1/classes/{classId}/groups")
-    public GroupSetView groups(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
-        return classGroups.view(actor, classId);
+    public GroupSetView loadGroups(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
+        return classGroupService.view(actor, classId);
     }
 
     @PutMapping("/api/v1/classes/{classId}/groups")
-    public GroupSetView save(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+    public GroupSetView saveGroups(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                              @RequestBody SaveCommand command) {
-        return classGroups.save(actor, classId, command);
+        return classGroupService.saveGroups(actor, classId, command);
     }
 
     @PostMapping("/api/v1/classes/{classId}/groups:random-preview")
-    public List<DraftView> randomPreview(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+    public List<DraftView> previewRandomGroups(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                          @RequestBody RandomRequest request) {
-        return classGroups.randomPreview(actor, classId, request.maxSize());
+        return classGroupService.previewRandomGroups(actor, classId, request.maxSize());
     }
 
     @GetMapping("/api/v1/classes/{classId}/leader-requests")
-    public List<RequestView> pendingRequests(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
-        return classGroups.view(actor, classId).pendingRequests();
+    public List<RequestView> listPendingRequests(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
+        return classGroupService.view(actor, classId).pendingRequests();
     }
 
     @PostMapping("/api/v1/leader-requests/{id}:approve")
     public RequestResult approve(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                  @RequestBody(required = false) ApproveRequest request) {
-        return requests.approve(actor, id, request == null ? null : request.newLeaderId());
+        return leaderRequestService.approve(actor, id, request == null ? null : request.newLeaderId());
     }
 
     @PostMapping("/api/v1/leader-requests/{id}:reject")
     public RequestResult reject(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                 @RequestBody RejectRequest request) {
-        return requests.reject(actor, id, request.reason());
+        return leaderRequestService.reject(actor, id, request.reason());
     }
 
     @GetMapping("/api/v1/me/classes/{classId}/group")
-    public MyGroupView myGroup(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
-        return myGroups.myGroup(actor, classId);
+    public MyGroupView loadMyGroup(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
+        return myGroupService.loadMyGroup(actor, classId);
     }
 
     /** Trưởng nhóm đổi tên nhóm của mình, không cần duyệt. */
     @PutMapping("/api/v1/groups/{groupId}/name")
     public Renamed rename(@AuthenticationPrincipal Actor actor, @PathVariable UUID groupId, @RequestBody RenameRequest request) {
-        return renames.rename(actor, groupId, request.name());
+        return groupRenameService.rename(actor, groupId, request.name());
     }
 
     @PostMapping("/api/v1/groups/{groupId}/leader-requests")
     @ResponseStatus(HttpStatus.CREATED)
     public RequestResult submitRequest(@AuthenticationPrincipal Actor actor, @PathVariable UUID groupId,
                                        @RequestBody SubmitLeaderRequest request) {
-        return requests.submit(actor, groupId, request.reason(), request.proposedLeaderId());
+        return leaderRequestService.submit(actor, groupId, request.reason(), request.proposedLeaderId());
     }
 
     @PostMapping("/api/v1/leader-requests/{id}:cancel")
     public RequestResult cancel(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return requests.cancel(actor, id);
+        return leaderRequestService.cancel(actor, id);
     }
 
     @GetMapping("/api/v1/classes/{classId}/students/{studentId}/group")
-    public StudentGroup studentGroup(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+    public StudentGroup loadStudentGroup(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                      @PathVariable UUID studentId) {
-        return myGroups.studentGroup(actor, classId, studentId);
+        return myGroupService.loadStudentGroup(actor, classId, studentId);
     }
 
     @GetMapping("/api/v1/classes/{classId}/group-assignments")
     public List<GroupAssignment> groupAssignments(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
-        return work.groupAssignments(actor, classId);
+        return groupWorkQueryService.groupAssignments(actor, classId);
     }
 
     @GetMapping("/api/v1/classes/{classId}/group-assignments/{assignmentId}/progress")
-    public List<GroupProgress> progress(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+    public List<GroupProgress> listProgress(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                         @PathVariable UUID assignmentId) {
-        return work.progress(actor, classId, assignmentId);
+        return groupWorkQueryService.listProgress(actor, classId, assignmentId);
     }
 }

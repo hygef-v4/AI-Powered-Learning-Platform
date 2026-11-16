@@ -71,13 +71,13 @@ public class GradingMcpReadProgress {
 
     /** Creates the conflict returned when grading context pages have not all been read. */
     static ApiException createReadRequiredError() {
-        return ApiException.conflict("MCP_CONTEXT_READ_REQUIRED",
+        return ApiException.createConflict("MCP_CONTEXT_READ_REQUIRED",
                 "Read every grading context page from offset 0 with the current fingerprint, then retry");
     }
 
     /** Creates the service error returned when read progress cannot be verified. */
     private static ApiException createUnavailableError() {
-        return ApiException.unavailable("MCP_CONTEXT_READ_UNAVAILABLE",
+        return ApiException.createUnavailable("MCP_CONTEXT_READ_UNAVAILABLE",
                 "Cannot verify grading context reads; retry after the service recovers");
     }
 }

@@ -2,16 +2,82 @@
 
 ## Sửa các điểm rà soát toàn dự án trên nền staging — 2026-11-16
 
-Người dùng yêu cầu rà soát toàn dự án (2026-11-15), rồi chọn phương án 1: chỉ mang lên staging những điểm staging còn thiếu. Nhánh `chi-cuongg/audit-project-bugs-docs` trên `origin/staging@f1c351dd`. [Kế hoạch và phạm vi](construction/plans/code-generation-plan/2026-11-16-review-fixes-on-staging.md); [kết quả và giới hạn](construction/build-and-test/2026-11-16-review-fixes-on-staging-results.md).
+Người dùng yêu cầu rà soát toàn dự án (2026-11-15), rồi chọn phương án 1: chỉ mang lên staging những điểm staging còn thiếu. Nhánh `chi-cuongg/audit-project-bugs-docs` trên `origin/staging@f1c351dd`, đã gộp `origin/staging@5f9c0173`. [Kế hoạch và phạm vi](construction/plans/code-generation-plan/2026-11-16-review-fixes-on-staging.md); [kết quả và giới hạn](construction/build-and-test/2026-11-16-review-fixes-on-staging-results.md).
 
 - [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering.
 - [x] Requirements Analysis (Minimal): phạm vi là các điểm của báo cáo rà soát còn tồn tại trên staging.
 - [x] Workflow Planning: chỉ Code Generation và Build and Test; các giai đoạn khác bỏ qua vì không có thành phần hay quy tắc nghiệp vụ mới.
-- [x] Code Generation: 6/6 bước. Quét bù nhắc hạn 24 giờ (U14); migration bỏ trần 10 của số thứ tự lượt và bỏ bảng `group_peer_reviews`; frontend bỏ `GRADE_LOCKED` và nhãn đánh giá chéo; OpenAPI grading và tài liệu đồng bộ.
-- [x] Build and Test: backend `mvn -B verify` có Docker 2.492 test, 0 thất bại, 0 lỗi, 1 bỏ qua; bộ kiểm bắt buộc của CI qua; 48 migration áp trên PostgreSQL thật; frontend ESLint, TypeScript, Vitest 1.134/1.134 và production build qua.
+- [x] Code Generation: 7/7 bước, gồm bước gộp lại staging. Quét bù nhắc hạn 24 giờ (U14); migration bỏ trần 10 của số thứ tự lượt và bỏ bảng `group_peer_reviews`; frontend bỏ `GRADE_LOCKED` và nhãn đánh giá chéo; OpenAPI grading và tài liệu đồng bộ.
+- [x] Build and Test trên bản đã gộp: backend `mvn -B verify` có Docker 2.546 test, 0 thất bại, 0 lỗi, 1 bỏ qua; bộ kiểm bắt buộc của CI qua; migration áp trên PostgreSQL thật tới `v20261116.1010`; frontend ESLint, TypeScript, Vitest 1.159/1.159 và production build qua.
 - [ ] Người dùng duyệt mã và quyết định push, mở PR vào staging.
 
 Bản sửa đầu trên `3b86e57d` có thêm chặn nộp lại khi đã có điểm công bố, trạng thái `CANCELLED` của lượt làm và hộp xác nhận công bố. Các phần đó không mang lên vì staging đã có quy tắc chỉ chấm khi bài đã đóng (`fe492df5`); bản đầy đủ giữ ở nhánh cục bộ `backup/review-fixes-full-2026-11-15`. Chưa kiểm trên trình duyệt, chưa push hay deploy. Security/Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
+## Rà soát MSSV trên danh sách và bộ chọn sinh viên — 2026-11-16
+
+- [x] Đối chiếu yêu cầu SC-10/SC-11, component hiện có và đường truyền `studentCode`.
+- [x] Xác minh 8 nhóm vị trí thiếu mã; lập [kết quả/phạm vi](inception/requirements/2026-11-16-student-code-ui-completeness.md).
+- [x] Người dùng quyết định [duyệt phạm vi hay chỉ rà soát](inception/requirements/2026-11-16-student-code-ui-completeness-questions.md).
+- [x] Sau khi duyệt: lập kế hoạch Code Generation, sửa và kiểm thử.
+
+Người dùng chọn “Duyệt phạm vi, tiếp tục sửa và kiểm thử”. Đã sửa đủ 8 nhóm, thêm hai trường DTO nullable và nhãn dùng chung. [Kế hoạch/kết quả](construction/plans/code-generation-plan/2026-11-16-student-code-ui-completeness.md): frontend 338/338, backend groups/groupdocs 141/141; ESLint, TypeScript và diff check đạt; review độc lập không có finding. Backend đã restart, `/health` UP; frontend `/login` 200. Đã kiểm tra browser đăng nhập giảng viên/sinh viên rộng/hẹp: [kết quả UI](construction/build-and-test/2026-11-16-student-code-ui-browser-results.md). Lượt UI đầu MSSV local đều null, ca có mã dùng fixture GET đã gỡ. Theo yêu cầu tiếp theo, đã backfill 6 sinh viên seed local bằng HE190001–HE190006, kiểm tra SQL/unique/idempotence đạt; API và browser Nhóm của tôi hiển thị 5 mã thật của lớp, không có fixture. Giao mục, duyệt đề xuất/lời mời và chi tiết quiz còn thiếu dữ liệu/trạng thái phù hợp, không tính browser PASS. Có thông báo CSP inline style trên quiz chưa xác định nguồn. Chưa chạy production build/module ngoài phạm vi. Giữ nguyên ba báo cáo AUDIT chưa theo dõi; không commit/push. Security/Resiliency compliant trong phạm vi; PBT disabled.
+
+
+Theo ảnh phản hồi tiếp theo, đã tách cột MSSV/Email và cân chữ/độ rộng trong bảng Sinh viên (ClassGroupsPanel). Groups 50/50 test, ESLint, TypeScript đạt; browser dữ liệu thật ở 1920/1440/390px xác minh 6 cột, tìm kiếm, empty colspan và link ID. Màn hẹp cuộn trong bảng, không tràn trang. Xem phần bổ sung cuối báo cáo browser. Không đổi backend/database/commit/push.
+
+Người dùng tiếp tục yêu cầu “giúp tôi commit”: cho phép commit local phần source, test và tài liệu MSSV trong phiên; ba báo cáo AUDIT gốc vẫn không đưa vào Git, không push. Backfill HE19 ở DB local và ảnh/script dưới .tmp không thuộc nội dung commit.
+
+Người dùng yêu cầu “tạo pr lên staging”: cho phép publish nhánh audit-staging và tạo PR mới vào staging cho phần MSSV; PR audit trước đã được merge. Không tự merge PR. Mô tả PR nêu kết quả kiểm thử và các ca browser còn thiếu dữ liệu; backfill DB local không thuộc PR.
+
+## Audit staging và sửa lỗi quan trọng (AUD-001..008) — 2026-11-16
+
+User yêu cầu audit nhánh staging, tạo nhánh mới để audit/sửa lỗi, chưa commit/push.
+Brownfield, nhánh `audit-staging` từ staging@f1c351dd, worktree riêng của Orca. Đã commit cục bộ thành 8 commit (không push).
+Điều phối theo ORCA MASTER WORKFLOW v2.1: Sonnet điều phối, Codex GPT-6.1 Sol làm Developer
+và Tester độc lập (4 vòng QA, worktree QA riêng đã xóa), Opus 5.5 High quyết định thiết kế
+và duyệt cuối. Ghi chú làm việc `AUDIT-FINDINGS.md`, `AUDIT-DEVELOPER-REPORT.md`,
+`AUDIT-006-007-REPORT.md` chỉ nằm ở thư mục gốc worktree, chưa theo dõi và không đưa vào commit
+(`AUDIT-DEVELOPER-REPORT.md` đã cũ: AUD-004 sau đó có thêm bản nháp sessionStorage). Báo cáo QA
+và báo cáo Opus lưu ngoài repo, trên máy của user.
+
+- [x] AUD-001/002 (high): race session/đổi mật khẩu và refresh. Dấu mốc mật khẩu trên session,
+  thao tác Lua nguyên tử, thử lại có giới hạn khi refresh/restamp. QA vòng 2 FAIL (2 bug
+  interleave + JSON null), sửa, QA vòng 4 PASS (110 test, gồm Redis 7.4 thật và rollback
+  PostgreSQL). Opus duyệt cuối: APPROVE WITH CONDITIONS.
+- [x] AUD-003 (high): giới hạn 100 trang và ngân sách giải nén chung cho Draw.io. QA PASS.
+- [x] AUD-004 (high): giữ bản nháp khi rời trang lúc lưu lỗi (sessionStorage). QA vòng 1 FAIL,
+  sửa, QA vòng 2/4 PASS.
+- [x] AUD-005 (high): restore-isolated.sh sai main class, dọn khóa/dump khi lỗi. QA PASS
+  (chưa restore bằng image thật).
+- [x] AUD-006 (medium): khóa cấp quiz cho sửa/bắt đầu/retire. QA PASS, kể cả PostgreSQL thật.
+- [x] AUD-007 (medium): gộp tham chiếu ảnh nhóm sau khi lưu. QA PASS.
+- [x] AUD-008 (medium): task AI CANCELLED vào danh sách phục hồi callback. QA PASS.
+- [x] Opus 5.5 High kiểm chứng toàn bộ (2026-11-16): backend `mvn test` BUILD SUCCESS, 2539
+  test, 0 lỗi, 1 bỏ qua (GradingAiEvaluationTest cần ai.eval.mode); frontend tsc, eslint,
+  vitest 156 file/1147 test đều qua; `next build` qua trên ổ F: (trên ổ C: lỗi do liên kết
+  node_modules khác ổ, không phải mã); test restore qua và fail trên bản gốc như mong đợi.
+  Kết luận READY WITH CONDITIONS, không có lỗi chặn commit.
+- [x] Opus sửa mục review (1): lưu lúc rời trang ghi vào `Map<attemptId, Promise>` cấp module, mở
+  lại cùng attempt chờ lần lưu đó xong rồi mới tải, nên lần lưu sau dùng phiên bản mới. Test vitest
+  "waits for a pending departure save…" đỏ trước (gửi version 1), xanh sau; `workspace-ui` +
+  `assignmentwork` 18/18 qua.
+- [x] Opus sửa mục review (2): CI job `deploy-script` shellcheck thêm `restore-isolated.sh`,
+  `test-restore-isolated.sh` và chạy `sh infra/scripts/test-restore-isolated.sh`; YAML parse được,
+  test restore chạy cục bộ qua. shellcheck không có trên máy: NOT TESTED, CI sẽ chạy lần đầu.
+- [x] Opus sửa mục review (4): bỏ tiền tố `qa` ở 3 test `SessionStoreIntegrationTest`;
+  `mvn test -Dtest=SessionStoreIntegrationTest` 24/24 qua (Redis thật). Thêm: tsc, eslint file
+  đã sửa đều qua.
+- [ ] Còn mở (nợ đã ghi nhận): (3) lock bắt đầu attempt (`for update` trên dòng quiz) làm các lượt
+  bắt đầu cùng quiz xếp hàng; có thể đổi sang `for share` cho `lockStart`. Không đổi trong đợt này.
+- [ ] NOT TESTED: trình duyệt thật cho AUD-004/007, restore bằng image thật, shellcheck,
+  deploy nhiều instance/lệch phiên bản, Redis sập/cluster, tải, tài khoản ACTIVE có
+  `password_changed_at` null (rơi về luật `issuedAt`, không chống race AUD-001).
+- [x] Đã commit cục bộ 8 commit theo nhóm (identity, Draw.io, assignmentwork, infra, quiz, groupdocs, AI, docs), không dòng đồng tác giả Claude theo yêu cầu. [x] Đã push `audit-staging` và mở [PR #92](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/92) vào staging (8 commit, MERGEABLE); không merge/deploy. [ ] CI và merge do người dùng quyết định. Điều kiện: không commit `AUDIT-*.md` gốc, stage theo
+  từng đường dẫn, deploy mọi backend cùng lúc, giữ Redis một node và ≥ 6.0. Gợi ý chia 8
+  commit: identity, Draw.io, assignmentwork, infra restore, quiz, groupdocs, AI, tài liệu.
+
+Quy tắc Security/Resiliency tuân thủ trong phạm vi; PBT disabled. Không sửa dữ liệu thật,
+không commit/push/merge/deploy.
 
 ## Ngày tháng, kiểm API key và mở chấm sau đóng bài — 2026-11-15
 

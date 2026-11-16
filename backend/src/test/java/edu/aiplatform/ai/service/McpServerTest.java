@@ -80,7 +80,7 @@ class McpServerTest {
                 "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"1999-01-01\"}}");
         assertThat(reply.at("/result/protocolVersion").asText()).isEqualTo(McpServer.LATEST_PROTOCOL);
 
-        assertThat(server.handle(principal(Access.READ_ONLY),
+        assertThat(server.handleMessage(principal(Access.READ_ONLY),
                 read("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}"))).isEmpty();
         assertThat(handle(Access.READ_ONLY, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"resources/list\"}")
                 .at("/error/code").asInt()).isEqualTo(-32601);
@@ -156,7 +156,7 @@ class McpServerTest {
 
     @Test
     void ownerDenialAndResultSizeAreHandled() {
-        when(provider.call(any(), anyString(), any())).thenThrow(ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
+        when(provider.call(any(), anyString(), any())).thenThrow(ApiException.createNotFound("ASSIGNMENT_NOT_FOUND"));
         JsonNode denied = handle(Access.READ_ONLY, call("read_own_work", "{\"q\":\"x\"}"));
         assertThat(denied.at("/result/isError").asBoolean()).isTrue();
         assertThat(denied.at("/result/content/0/text").asText()).doesNotContain("ASSIGNMENT");
@@ -171,7 +171,7 @@ class McpServerTest {
     }
 
     @Test void staleSnapshotReturnsMachineReadableErrorCodeAndEscapedResultsStayBounded() {
-        when(provider.call(any(),anyString(),any())).thenThrow(ApiException.conflict("SUBMISSION_CHANGED","Restart reading"));
+        when(provider.call(any(),anyString(),any())).thenThrow(ApiException.createConflict("SUBMISSION_CHANGED","Restart reading"));
         var reply=handle(Access.READ_ONLY,call("read_own_work","{\"q\":\"x\"}"));
         assertThat(reply.at("/result/content/0/text").asText()).contains("SUBMISSION_CHANGED");
         org.mockito.Mockito.doReturn(new McpToolResult(false,"\"".repeat(160000))).when(provider).call(any(),anyString(),any());
@@ -192,7 +192,7 @@ class McpServerTest {
     }
 
     private JsonNode handle(Access access, String body) {
-        ObjectNode reply = server.handle(principal(access), read(body)).orElseThrow();
+        ObjectNode reply = server.handleMessage(principal(access), read(body)).orElseThrow();
         assertThat(reply.get("jsonrpc").asText()).isEqualTo("2.0");
         return reply;
     }

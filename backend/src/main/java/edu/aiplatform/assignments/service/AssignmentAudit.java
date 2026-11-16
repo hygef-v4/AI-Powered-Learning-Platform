@@ -28,12 +28,12 @@ class AssignmentAudit {
         this.clock = clock;
     }
 
-    void success(Actor actor, String action, UUID assignmentId, Map<String, Object> details) {
+    void recordSuccess(Actor actor, String action, UUID assignmentId, Map<String, Object> details) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), action,
                 OBJECT_ASSIGNMENT, assignmentId.toString(), AuditResult.SUCCESS, null, clean(details), clock.instant()));
     }
 
-    void denied(Actor actor, String attemptedAction, String objectType, UUID objectId, String reason) {
+    void recordDenied(Actor actor, String attemptedAction, String objectType, UUID objectId, String reason) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                 objectType, objectId == null ? null : objectId.toString(), AuditResult.DENIED, reason,
                 Map.of("attemptedAction", attemptedAction), clock.instant()));
@@ -51,7 +51,7 @@ class AssignmentAudit {
         return Collections.unmodifiableMap(out);
     }
 
-    static Map<String, Object> details(Object... keyValues) {
+    static Map<String, Object> collectDetails(Object... keyValues) {
         Map<String, Object> out = new LinkedHashMap<>();
         for (int i = 0; i + 1 < keyValues.length; i += 2) {
             out.put((String) keyValues[i], keyValues[i + 1]);

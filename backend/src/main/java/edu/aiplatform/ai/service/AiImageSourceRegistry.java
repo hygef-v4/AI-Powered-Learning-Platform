@@ -30,11 +30,11 @@ public class AiImageSourceRegistry {
     }
 
     /** Dùng trong test với danh sách cố định. */
-    static AiImageSourceRegistry of(List<IAiImageSource> sources) {
+    static AiImageSourceRegistry createRegistry(List<IAiImageSource> sources) {
         return new AiImageSourceRegistry(() -> sources);
     }
 
-    public Optional<IAiImageSource> find(String source) {
+    public Optional<IAiImageSource> findSource(String source) {
         return Optional.ofNullable(loadSources().get(source));
     }
 

@@ -9,6 +9,7 @@ import {
   useSubjectMutation,
   type SubjectMutationProps,
 } from "../hooks/useSubjectMutation";
+import { msg } from "@/i18n/msg";
 
 /** Popup Lưu trữ / Mở lại môn: như popup Vô hiệu hóa tài khoản, một câu hỏi lại và nút xác nhận. */
 export function SubjectStatusActions({
@@ -26,7 +27,7 @@ export function SubjectStatusActions({
   return (
     <Dialog
       open
-      title={archived ? "Mở lại môn học?" : "Lưu trữ môn học?"}
+      title={archived ? msg("subjects.components.SubjectStatusActions.reopenSubject") : msg("subjects.components.SubjectStatusActions.archiveSubject")}
       icon={archived ? "lock_open" : "archive"}
       tone={archived ? "primary" : "danger"}
       onClose={handleClose}
@@ -49,18 +50,15 @@ export function SubjectStatusActions({
               );
           }}
         >
-          {archived ? "Mở lại" : "Lưu trữ"}
+          {archived ? msg("subjects.components.SubjectStatusActions.reopen") : msg("subjects.components.SubjectStatusActions.archive")}
         </Button>
       }
     >
       <p>
-        Bạn có chắc muốn {archived ? "mở lại" : "lưu trữ"} môn học {subject.name} không?
-      </p>
+        {msg("subjects.components.SubjectStatusActions.areYouSureYouWant")}{archived ? msg("subjects.components.SubjectStatusActions.reopen2") : msg("subjects.components.SubjectStatusActions.archive2")} {msg("subjects.components.SubjectStatusActions.theSubject")}{subject.name} {msg("subjects.components.SubjectStatusActions.text")}</p>
       {!archived && (
         <p>
-          Các lớp Nháp và Đang mở sẽ được lưu trữ theo. Chủ nhiệm môn sẽ bị gỡ.
-          Ghi danh và lịch sử học tập được giữ nguyên.
-        </p>
+          {msg("subjects.components.SubjectStatusActions.draftAndOpenClassesWill")}</p>
       )}
       {mutation.error !== null && (
         <SubjectMutationFeedback error={mutation.error} onReload={onReload} />

@@ -158,7 +158,7 @@ class GroupProposalRepositoryIntegrationTest {
         GroupProposal draft = proposal("Nhóm A", studentA);
         proposals.insertProposal(draft);
         proposals.insertActiveMember(draft.id(), classId, studentA, NOW);
-        GroupProposal rejected = draft.submitted(NOW).rejected(teacher, "Thiếu người", NOW);
+        GroupProposal rejected = draft.markSubmitted(NOW).markRejected(teacher, "Thiếu người", NOW);
         proposals.lockProposal(draft.id()).orElseThrow();
         proposals.updateProposal(rejected);
         proposals.deactivateMembers(draft.id());

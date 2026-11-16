@@ -41,7 +41,7 @@ public class GroupAccess {
     /** Giảng viên chính của lớp; trả thông tin lớp. */
     public ClassRef requireTeacher(Actor actor, UUID classId) {
         require(actor, classId, Actions.GROUP_MANAGE);
-        return classRef(classId);
+        return loadClassRef(classId);
     }
 
     /** Sinh viên đang học của lớp; trả thông tin lớp. */
@@ -51,16 +51,16 @@ public class GroupAccess {
         try {
             active = classes.isActiveStudent(actor.accountId(), classId);
         } catch (RuntimeException e) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         if (!active) {
             deny(actor, classId, Actions.GROUP_WORK, "ENROLLMENT_REQUIRED");
         }
-        return classRef(classId);
+        return loadClassRef(classId);
     }
 
     /** Có được làm thao tác không (không audit), dùng khi chỉ cần biết để hiện nút hay kiểm vai trò phụ. */
-    public boolean allowed(Actor actor, UUID classId, String action) {
+    public boolean isAllowed(Actor actor, UUID classId, String action) {
         try {
             AuthorizationDecision decision = authorization.authorize(actor, action, ResourceRef.courseClass(classId));
             return decision != null && decision.allowed();
@@ -69,32 +69,32 @@ public class GroupAccess {
         }
     }
 
-    public ClassRef classRef(UUID classId) {
+    public ClassRef loadClassRef(UUID classId) {
         try {
-            return classes.getClassRef(classId).orElseThrow(GroupAccess::notFound);
+            return classes.getClassRef(classId).orElseThrow(GroupAccess::createNotFoundError);
         } catch (ApiException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw unavailable();
+            throw createUnavailableError();
         }
     }
 
     /** Sửa nhóm và xử lý yêu cầu chỉ khi lớp {@code DRAFT} hoặc {@code OPEN} (BR-U12-06). */
     public static void requireEditable(ClassRef ref) {
         if (ref.status() == ClassStatus.ARCHIVED) {
-            throw ApiException.conflict("GROUP_CLASS_ARCHIVED", "Lớp đã lưu trữ, chỉ xem được nhóm");
+            throw ApiException.createConflict("GROUP_CLASS_ARCHIVED", "Lớp đã lưu trữ, chỉ xem được nhóm");
         }
     }
 
     /** Sinh viên chỉ thao tác ở lớp {@code OPEN} (BR-U12-06). */
     public static void requireOpen(ClassRef ref) {
         if (ref.status() != ClassStatus.OPEN) {
-            throw ApiException.conflict("GROUP_CLASS_NOT_OPEN", "Lớp không mở, chưa thao tác được");
+            throw ApiException.createConflict("GROUP_CLASS_NOT_OPEN", "Lớp không mở, chưa thao tác được");
         }
     }
 
-    public static ApiException notFound() {
-        return ApiException.notFound(NOT_FOUND);
+    public static ApiException createNotFoundError() {
+        return ApiException.createNotFound(NOT_FOUND);
     }
 
     private void require(Actor actor, UUID classId, String action) {
@@ -102,10 +102,10 @@ public class GroupAccess {
         try {
             decision = authorization.authorize(actor, action, ResourceRef.courseClass(classId));
         } catch (RuntimeException e) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         if (decision == null || "DEPENDENCY_UNAVAILABLE".equals(decision.reason())) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         if (!decision.allowed()) {
             deny(actor, classId, action, decision.reason());
@@ -116,16 +116,16 @@ public class GroupAccess {
     public ApiException denyProposal(Actor actor, UUID proposalId, String reason) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                 "GROUP_PROPOSAL", String.valueOf(proposalId), AuditResult.DENIED, reason, Map.of(), clock.instant()));
-        return ApiException.notFound("GROUP_PROPOSAL_NOT_FOUND");
+        return ApiException.createNotFound("GROUP_PROPOSAL_NOT_FOUND");
     }
 
     private void deny(Actor actor, UUID classId, String action, String reason) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED", "CLASS",
                 String.valueOf(classId), AuditResult.DENIED, reason, Map.of("action", action), clock.instant()));
-        throw notFound();
+        throw createNotFoundError();
     }
 
-    private static ApiException unavailable() {
-        return ApiException.unavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
+    private static ApiException createUnavailableError() {
+        return ApiException.createUnavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
     }
 }

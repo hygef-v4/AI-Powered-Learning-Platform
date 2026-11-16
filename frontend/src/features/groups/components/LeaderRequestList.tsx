@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, Section, Select } from "@/shared/ui";
+import { Alert, Button, Card, Dialog, Section, Select } from "@/shared/ui";
 import { approveRequest, rejectRequest } from "../api";
-import { personLabel } from "../model/groupDrafts";
+import { formatStudentLabel } from "@/shared/studentCode";
 import type { GroupSetView, LeaderRequestView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /**
  * Yêu cầu đổi trưởng nhóm đang chờ (F3, BR-U12-11). Thẻ ngoài gom các yêu cầu, mỗi yêu cầu một thẻ con trên một dòng: tên
@@ -16,7 +17,7 @@ export function LeaderRequestList({ set, groupId, onChanged }: { set: GroupSetVi
   const requests = groupId ? set.pendingRequests.filter((r) => r.groupId === groupId) : set.pendingRequests;
   if (requests.length === 0) return null;
   return (
-    <Section title="Yêu cầu đổi trưởng nhóm" icon="swap_horiz" tone="warning">
+    <Section title={msg("groups.components.LeaderRequestList.leaderChangeRequests")} icon="swap_horiz" tone="warning">
       <ul className="flex flex-col gap-2">
         {requests.map((r) => (
           <RequestRow key={r.id} request={r} set={set} onChanged={onChanged} />
@@ -34,7 +35,7 @@ function RequestRow({ request, set, onChanged }: { request: LeaderRequestView; s
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const act = async (action: () => Promise<unknown>) => {
+  const runAction = async (action: () => Promise<unknown>) => {
     setBusy(true);
     setError(null);
     try {
@@ -42,32 +43,30 @@ function RequestRow({ request, set, onChanged }: { request: LeaderRequestView; s
       setConfirming(false);
       onChanged();
     } catch (e) {
-      setError(e instanceof ApiError ? (e.problem.detail ?? "Không xử lý được yêu cầu") : "Không xử lý được yêu cầu");
+      setError(e instanceof ApiError ? (e.problem.detail ?? msg("groups.components.LeaderRequestList.couldNotProcessTheRequest")) : msg("groups.components.LeaderRequestList.couldNotProcessTheRequest"));
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <li className="flex flex-col gap-2 rounded-xl border border-line bg-surface px-4 py-3" data-testid={`leader-request-${request.groupId}`}>
+    <Card as="li" padding="none" className="flex flex-col gap-2 px-4 py-3" data-testid={`leader-request-${request.groupId}`}>
       <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
         <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-ink" title={request.groupName}>{request.groupName}</span>
-        <Select aria-label={`Trưởng nhóm mới của ${request.groupName}`} value={leader} onChange={(e) => setLeader(e.target.value)} disabled={busy}
+        <Select aria-label={msg("groups.components.LeaderRequestList.newLeaderOf", { groupName: String(request.groupName) })} value={leader} onChange={(e) => setLeader(e.target.value)} disabled={busy}
           wrapperClassName="w-full sm:w-64">
-          <option value="">Chọn trưởng nhóm mới</option>
+          <option value="">{msg("groups.components.LeaderRequestList.chooseANewLeader")}</option>
           {candidates.map((m) => (
             <option key={m.accountId} value={m.accountId}>
-              {personLabel(m)}
-              {request.proposedLeader?.accountId === m.accountId ? " (được đề xuất)" : ""}
+              {formatStudentLabel(m)}
+              {request.proposedLeader?.accountId === m.accountId ? msg("groups.components.LeaderRequestList.proposed") : ""}
             </option>
           ))}
         </Select>
         <Button size="sm" variant="danger" onClick={() => setConfirming(true)} disabled={busy}>
-          Từ chối
-        </Button>
-        <Button size="sm" variant="primary" onClick={() => void act(() => approveRequest(request.id, leader || null))} disabled={busy || !leader}>
-          Duyệt
-        </Button>
+          {msg("groups.components.LeaderRequestList.reject")}</Button>
+        <Button size="sm" variant="primary" onClick={() => void runAction(() => approveRequest(request.id, leader || null))} disabled={busy || !leader}>
+          {msg("groups.components.LeaderRequestList.approve")}</Button>
       </div>
       {error && !confirming && (
         <Alert tone="danger" role="alert">
@@ -75,12 +74,12 @@ function RequestRow({ request, set, onChanged }: { request: LeaderRequestView; s
         </Alert>
       )}
       {confirming && (
-        <Dialog open title="Từ chối yêu cầu?" tone="danger" onClose={() => { setConfirming(false); setError(null); }} dismissible={!busy}
-          footer={<Button variant="danger" disabled={busy} onClick={() => void act(() => rejectRequest(request.id))} data-testid="leader-request-reject-confirm">Từ chối</Button>}>
-          <p>Bạn có chắc muốn từ chối yêu cầu đổi trưởng nhóm của {request.groupName} không?</p>
+        <Dialog open title={msg("groups.components.LeaderRequestList.rejectRequest")} tone="danger" onClose={() => { setConfirming(false); setError(null); }} dismissible={!busy}
+          footer={<Button variant="danger" disabled={busy} onClick={() => void runAction(() => rejectRequest(request.id))} data-testid="leader-request-reject-confirm">{msg("groups.components.LeaderRequestList.reject")}</Button>}>
+          <p>{msg("groups.components.LeaderRequestList.areYouSureYouWant")}{request.groupName} {msg("groups.components.LeaderRequestList.text")}</p>
           {error && <p role="alert" className="text-sm text-danger">{error}</p>}
         </Dialog>
       )}
-    </li>
+    </Card>
   );
 }

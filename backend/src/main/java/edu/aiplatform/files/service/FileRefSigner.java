@@ -48,7 +48,7 @@ public class FileRefSigner {
     public record Payload(String fileId, UUID ownerAccountId, ArtifactPurpose purpose, String mediaType, long byteSize,
                           String originalFileName, String sha256, long expiresAtEpochSecond) {
 
-        public Instant expiresAt() {
+        public Instant calculateExpiresAt() {
             return Instant.ofEpochSecond(expiresAtEpochSecond);
         }
     }
@@ -56,7 +56,7 @@ public class FileRefSigner {
     public FileRef sign(Payload payload) {
         try {
             String body = ENCODER.encodeToString(objectMapper.writeValueAsBytes(payload));
-            return new FileRef(body + "." + ENCODER.encodeToString(mac(body)));
+            return new FileRef(body + "." + ENCODER.encodeToString(computeMac(body)));
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Không ký được FileRef", e);
         }
@@ -72,7 +72,7 @@ public class FileRefSigner {
             return Optional.empty();
         }
         try {
-            if (!MessageDigest.isEqual(mac(parts[0]), DECODER.decode(parts[1]))) {
+            if (!MessageDigest.isEqual(computeMac(parts[0]), DECODER.decode(parts[1]))) {
                 return Optional.empty();
             }
             return Optional.of(objectMapper.readValue(DECODER.decode(parts[0]), Payload.class));
@@ -81,7 +81,7 @@ public class FileRefSigner {
         }
     }
 
-    private byte[] mac(String body) {
+    private byte[] computeMac(String body) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             mac.init(new SecretKeySpec(secret, "HmacSHA256"));

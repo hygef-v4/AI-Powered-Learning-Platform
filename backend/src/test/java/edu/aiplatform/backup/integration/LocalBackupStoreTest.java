@@ -20,12 +20,12 @@ class LocalBackupStoreTest {
         UUID runId = UUID.randomUUID();
         Path archive = Files.writeString(dir.resolve("a.bin"), "abc");
 
-        IBackupStore.StoredArchive stored = store.put(runId, archive);
+        IBackupStore.StoredArchive stored = store.putArchive(runId, archive);
 
         assertThat(stored.byteSize()).isEqualTo(3);
         assertThat(stored.md5()).isEqualTo("900150983cd24fb0d6963f7d28e17f72");
-        store.delete(runId.toString());
-        store.delete(runId.toString());
+        store.deleteArchive(runId.toString());
+        store.deleteArchive(runId.toString());
         assertThat(dir.resolve("backups").resolve(runId.toString())).doesNotExist();
     }
 }

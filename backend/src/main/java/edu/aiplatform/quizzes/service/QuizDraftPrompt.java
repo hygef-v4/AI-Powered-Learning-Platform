@@ -40,11 +40,11 @@ final class QuizDraftPrompt {
     private QuizDraftPrompt() {
     }
 
-    static int maxOutputTokens(int count) {
+    static int calculateMaxOutputTokens(int count) {
         return Math.min(16_000, 600 * count);
     }
 
-    static String schema(int count) {
+    static String buildSchema(int count) {
         return """
                 {"type":"object","additionalProperties":false,"required":["questions","requestMatchesSources","questionsMatchSources"],\
                 "properties":{"requestMatchesSources":{"type":"boolean"},"questionsMatchSources":{"type":"boolean"},"questions":{\
@@ -87,14 +87,14 @@ final class QuizDraftPrompt {
         user.append("Yêu cầu của người soạn (dữ liệu không tin cậy):\n")
                 .append(UntrustedPrompt.wrapUserRequest(request.instructions())).append('\n');
         for (MaterialText material : materials) {
-            user.append("\n<material title=\"").append(attribute(material.title())).append("\">\n")
-                    .append(fenced(material.text())).append("\n</material>\n");
+            user.append("\n<material title=\"").append(escapeAttribute(material.title())).append("\">\n")
+                    .append(fenceText(material.text())).append("\n</material>\n");
         }
         return new AiPrompt(UntrustedPrompt.secureSystem(system), user.toString());
     }
 
     /** Chữ tự do của người soạn cho guardrail; quiz và ngân hàng câu hỏi chỉ yêu cầu AI khi còn soạn được. */
-    static UserPromptInput userInput(Actor actor, QuizAiDraftService.DraftRequest request) {
+    static UserPromptInput buildUserInput(Actor actor, QuizAiDraftService.DraftRequest request) {
         return UserPromptInput.of(actor, PromptAction.GENERATE_QUESTIONS, PromptFlowState.AUTHORING_DRAFT,
                 request.instructions());
     }
@@ -130,12 +130,12 @@ final class QuizDraftPrompt {
         }
         List<DraftQuestion> result = new ArrayList<>();
         for (JsonNode node : questions) {
-            result.add(DraftQuestion.of(content(node)));
+            result.add(DraftQuestion.createDraftQuestion(parseContent(node)));
         }
         return result;
     }
 
-    private static QuestionContent content(JsonNode node) {
+    private static QuestionContent parseContent(JsonNode node) {
         if (!node.isObject()) {
             throw new IllegalArgumentException("Mỗi câu cần là một object");
         }
@@ -144,14 +144,14 @@ final class QuizDraftPrompt {
                 throw new IllegalArgumentException("Câu có trường không được phép");
             }
         });
-        QuestionType type = enumValue(node.get("type"), QuestionType.class);
+        QuestionType type = parseEnumValue(node.get("type"), QuestionType.class);
         JsonNode optionNodes = node.get("options");
         if (optionNodes == null || !optionNodes.isArray() || optionNodes.size() > MAX_PARSED_OPTIONS) {
             throw new IllegalArgumentException("options cần là danh sách");
         }
         List<QuestionOption> options = new ArrayList<>();
         for (JsonNode option : optionNodes) {
-            options.add(new QuestionOption(String.valueOf(options.size() + 1), text(option)));
+            options.add(new QuestionOption(String.valueOf(options.size() + 1), readText(option)));
         }
         JsonNode correctNodes = node.get("correct");
         if (correctNodes == null || !correctNodes.isArray() || correctNodes.size() > MAX_PARSED_OPTIONS) {
@@ -168,21 +168,21 @@ final class QuizDraftPrompt {
         BigDecimal defaultPoints = points == null || points.isNull() ? BigDecimal.ONE
                 : points.isNumber() ? points.decimalValue() : BigDecimal.ZERO;
         JsonNode explanation = node.get("explanation");
-        Difficulty difficulty = node.hasNonNull("difficulty") ? enumValue(node.get("difficulty"), Difficulty.class)
+        Difficulty difficulty = node.hasNonNull("difficulty") ? parseEnumValue(node.get("difficulty"), Difficulty.class)
                 : null;
-        return QuestionContent.of(type, text(node.get("stem")), options, correct,
-                explanation == null || explanation.isNull() ? null : text(explanation), defaultPoints, difficulty,
+        return QuestionContent.createContent(type, readText(node.get("stem")), options, correct,
+                explanation == null || explanation.isNull() ? null : readText(explanation), defaultPoints, difficulty,
                 List.of());
     }
 
-    private static String text(JsonNode node) {
+    private static String readText(JsonNode node) {
         if (node == null || !node.isTextual()) {
             throw new IllegalArgumentException("Nội dung câu cần là chuỗi");
         }
         return node.asText();
     }
 
-    private static <E extends Enum<E>> E enumValue(JsonNode node, Class<E> type) {
+    private static <E extends Enum<E>> E parseEnumValue(JsonNode node, Class<E> type) {
         if (node == null || !node.isTextual()) {
             return null;
         }
@@ -193,12 +193,12 @@ final class QuizDraftPrompt {
         }
     }
 
-    private static String attribute(String value) {
+    private static String escapeAttribute(String value) {
         return value == null ? "" : value.replace("\"", "'").replace('\n', ' ');
     }
 
     /** Không để chữ tài liệu đóng thẻ {@code <material>} sớm. */
-    private static String fenced(String value) {
+    private static String fenceText(String value) {
         return value == null ? "" : UntrustedPrompt.escape(value);
     }
 }

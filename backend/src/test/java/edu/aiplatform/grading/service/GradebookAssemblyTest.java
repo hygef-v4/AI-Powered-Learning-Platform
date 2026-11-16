@@ -73,13 +73,13 @@ class GradebookAssemblyTest {
         fixture(1);
         assertThatThrownBy(() -> gradebookService.buildExport(actor, classId, UUID.randomUUID(), "xlsx"))
                 .isInstanceOfSatisfying(ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("ASSIGNMENT_NOT_FOUND"));
+                        error -> assertThat(error.readCode()).isEqualTo("ASSIGNMENT_NOT_FOUND"));
         verifyNoInteractions(audit);
     }
 
     @Test
     void exportRequiresPermissionBeforeReadingAnyGradebookData() {
-        doThrow(ApiException.notFound("CLASS_NOT_FOUND")).when(gradingAccess)
+        doThrow(ApiException.createNotFound("CLASS_NOT_FOUND")).when(gradingAccess)
                 .requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
         assertThatThrownBy(() -> gradebookService.buildExport(actor, classId, null, "xlsx"))
                 .isInstanceOf(ApiException.class);
@@ -179,19 +179,19 @@ class GradebookAssemblyTest {
         var values = fixture(1);
         assertThatThrownBy(() -> gradebookService.loadStudentGrades(actor, classId, UUID.randomUUID()))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("STUDENT_NOT_FOUND"));
+                        ex -> assertThat(ex.readCode()).isEqualTo("STUDENT_NOT_FOUND"));
         when(classAccess.listActiveStudents(classId)).thenReturn(List.of());
         assertThatThrownBy(() -> gradebookService.loadStudentGrades(actor, classId, values.get(0).accountId))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("STUDENT_NOT_FOUND"));
+                        ex -> assertThat(ex.readCode()).isEqualTo("STUDENT_NOT_FOUND"));
         when(classAccess.getClassRef(classId)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> gradebookService.loadStudentGrades(actor, classId, values.get(0).accountId))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
-                        ex -> assertThat(ex.code()).isEqualTo("CLASS_NOT_FOUND"));
+                        ex -> assertThat(ex.readCode()).isEqualTo("CLASS_NOT_FOUND"));
     }
 
     @Test void studentLookupAuthorizesBeforeReadingAnyGrades() {
-        doThrow(edu.aiplatform.shared.error.ApiException.forbidden("CLASS_FORBIDDEN"))
+        doThrow(edu.aiplatform.shared.error.ApiException.createForbidden("CLASS_FORBIDDEN"))
                 .when(gradingAccess).requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
         assertThatThrownBy(() -> gradebookService.loadStudentGrades(actor, classId, UUID.randomUUID()))
                 .isInstanceOf(edu.aiplatform.shared.error.ApiException.class);

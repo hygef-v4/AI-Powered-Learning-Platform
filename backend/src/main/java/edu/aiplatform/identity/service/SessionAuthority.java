@@ -17,12 +17,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class SessionAuthority {
 
-    private final JwtService jwt;
+    private final JwtService jwtService;
     private final SessionStore sessions;
     private final AccountRepository accounts;
 
-    public SessionAuthority(JwtService jwt, SessionStore sessions, AccountRepository accounts) {
-        this.jwt = jwt;
+    public SessionAuthority(JwtService jwtService, SessionStore sessions, AccountRepository accounts) {
+        this.jwtService = jwtService;
         this.sessions = sessions;
         this.accounts = accounts;
     }
@@ -31,19 +31,27 @@ public class SessionAuthority {
     }
 
     public Optional<AuthenticatedSession> authenticate(String accessToken) {
-        Optional<JwtService.AccessClaims> claims = jwt.parse(accessToken);
+        Optional<JwtService.AccessClaims> claims = jwtService.parse(accessToken);
         if (claims.isEmpty()) {
             return Optional.empty();
         }
         JwtService.AccessClaims c = claims.get();
-        boolean sessionAlive = sessions.find(c.sid())
-                .filter(session -> session.accountId().equals(c.accountId()))
-                .isPresent();
-        if (!sessionAlive) {
+        Optional<SessionStore.SessionRecord> session = sessions.findSession(c.sid())
+                .filter(s -> s.accountId().equals(c.accountId()));
+        if (session.isEmpty()) {
             return Optional.empty();
         }
         Optional<Account> account = accounts.findById(c.accountId())
                 .filter(a -> a.status() == AccountStatus.ACTIVE);
+        if (account.isPresent() && !session.get().isPasswordCurrent(account.get().passwordChangedAt())) {
+            session = sessions.findSession(c.sid())
+                    .filter(s -> s.accountId().equals(c.accountId()))
+                    .filter(s -> s.isPasswordCurrent(account.get().passwordChangedAt()));
+            if (session.isEmpty()) {
+                sessions.deleteSession(c.sid());
+                return Optional.empty();
+            }
+        }
         return account.map(a -> new AuthenticatedSession(new Actor(a.id(), a.role()), c.sid()));
     }
 }

@@ -1,16 +1,17 @@
 "use client";
 
-import { Pagination, Pill, Td } from "@/shared/ui";
+import { Card, Pagination, Pill, Td } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
-import { RESULT_LABELS, actionLabel, formatDateTime, formatFull, objectTypeLabel, shortId, shortReason } from "../model/labels";
+import { RESULT_LABELS, describeAction, formatDateTime, formatFull, describeObjectType, shortenId, shortenReason } from "../model/labels";
 import type { AuditLogPage } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   data: AuditLogPage;
   onPageChange: (page: number) => void;
 };
 
-export const SYSTEM_ACTOR = "Hệ thống";
+export const SYSTEM_ACTOR = msg("audit.components.AuditTable.system");
 
 /** Ô chữ dài: tối đa 2 dòng, dài hơn thì cắt (đủ chữ khi rê chuột). */
 const CLAMP = "line-clamp-2 leading-snug";
@@ -30,8 +31,7 @@ export function AuditTable({ data, onPageChange }: Props) {
   const first = data.page * data.size;
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto overflow-y-hidden overscroll-x-contain rounded-xl border border-line bg-surface"
-        data-testid="audit-table-scroll">
+      <Card padding="none" className="overflow-x-auto overflow-y-hidden overscroll-x-contain" data-testid="audit-table-scroll">
         <table className="w-full min-w-[980px] table-fixed border-collapse [&_tbody_tr:last-child>td]:border-b-0">
           <colgroup>
             <col className="w-12" /><col className="w-[104px]" /><col className="w-[22%]" /><col className="w-[25%]" />
@@ -40,27 +40,26 @@ export function AuditTable({ data, onPageChange }: Props) {
           <thead>
             <tr>
               <th scope="col" className={cx(HEAD, "text-right")}>STT</th>
-              <th scope="col" className={HEAD}>Thời gian</th>
-              <th scope="col" className={HEAD}>Người thực hiện</th>
-              <th scope="col" className={HEAD}>Hành động</th>
-              <th scope="col" className={HEAD}>Đối tượng</th>
-              <th scope="col" className={HEAD}>Kết quả</th>
-              <th scope="col" className={HEAD}>Lý do</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.time")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.actor")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.action")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.object")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.result")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.reason")}</th>
             </tr>
           </thead>
           <tbody>
             {data.items.length === 0 && (
               <tr>
                 <Td colSpan={7} className="px-3 text-muted" data-testid="audit-table-empty">
-                  Không có bản ghi nào phù hợp.
-                </Td>
+                  {msg("audit.components.AuditTable.noMatchingRecords")}</Td>
               </tr>
             )}
             {data.items.map((item, index) => {
               const when = formatDateTime(item.occurredAt);
               const [time, date] = [when.slice(0, 5), when.slice(6)];
-              const action = actionLabel(item.action);
-              const object = item.objectLabel ?? (item.objectType ? objectTypeLabel(item.objectType) : "—");
+              const action = describeAction(item.action);
+              const object = item.objectLabel ?? (item.objectType ? describeObjectType(item.objectType) : "—");
               return (
                 <tr key={item.id} data-testid={`audit-table-row-${item.id}`}>
                   <Td className="px-3 text-right text-muted tabular-nums first:pl-3">{first + index + 1}</Td>
@@ -70,7 +69,7 @@ export function AuditTable({ data, onPageChange }: Props) {
                   </Td>
                   <Td className="px-3">
                     {item.actorId ? (
-                      <span className={CLAMP + " font-mono text-xs break-all"} title={item.actorEmail ?? item.actorId}>{item.actorEmail ?? shortId(item.actorId)}</span>
+                      <span className={CLAMP + " font-mono text-xs break-all"} title={item.actorEmail ?? item.actorId}>{item.actorEmail ?? shortenId(item.actorId)}</span>
                     ) : (
                       <i className="text-muted">{SYSTEM_ACTOR}</i>
                     )}
@@ -79,20 +78,20 @@ export function AuditTable({ data, onPageChange }: Props) {
                     <span className={CLAMP + " font-semibold [overflow-wrap:anywhere]"} title={action === item.action ? item.action : `${action} (${item.action})`}>{action}</span>
                   </Td>
                   <Td className="px-3">
-                    <span className={CLAMP + " [overflow-wrap:anywhere]"} title={item.objectType ? `${objectTypeLabel(item.objectType)}: ${object}` : object}>{object}</span>
+                    <span className={CLAMP + " [overflow-wrap:anywhere]"} title={item.objectType ? `${describeObjectType(item.objectType)}: ${object}` : object}>{object}</span>
                   </Td>
                   <Td className="px-3">
                     <Pill tone={RESULT_LABELS[item.result].tone}>{RESULT_LABELS[item.result].label}</Pill>
                   </Td>
                   <Td className="px-3 last:pr-3">
-                    <span className="block truncate text-body" title={item.reason ?? undefined}>{shortReason(item.reason)}</span>
+                    <span className="block truncate text-body" title={item.reason ?? undefined}>{shortenReason(item.reason)}</span>
                   </Td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-      </div>
+      </Card>
       <Pagination
         page={data.page}
         pageSize={data.size}

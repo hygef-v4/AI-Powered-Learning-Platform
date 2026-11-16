@@ -2,7 +2,7 @@
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
-import { useSession } from "@/features/identity/hooks/session";
+import { useSession } from "@/features/identity/hooks/SessionProvider";
 import { McpAgentsTab } from "../components/McpAgentsTab";
 import {
   addConnection,
@@ -16,6 +16,7 @@ import {
 import { AiUsageHistoryPage } from "./AiUsageHistoryPage";
 import { KeysSection, type KeysApi } from "../components/KeysSection";
 import { ApiSetupGuide } from "../components/SetupGuides";
+import { msg } from "@/i18n/msg";
 
 type Tab = "usage" | "settings" | "mcp";
 /**
@@ -27,8 +28,8 @@ export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
   const mcpEnabled = session.status === "authenticated" &&
     (session.profile.role === "STUDENT" || session.profile.role === "TEACHER" || session.profile.role === "SUBJECT_MANAGER");
   const tabs: TabItem<Tab>[] = [
-    { key: "usage", label: "Lịch sử sử dụng" },
-    { key: "settings", label: "API cá nhân" },
+    { key: "usage", label: msg("ai.pages.AiConnectionPage.usageHistory") },
+    { key: "settings", label: msg("ai.pages.AiConnectionPage.personalApi") },
     ...(mcpEnabled ? [{ key: "mcp" as const, label: "Agent MCP" }] : []),
   ];
   const [chosen, setChosen] = useUrlState<Tab>("tab", initialTab === "settings" || initialTab === "mcp" ? initialTab : "usage", ["usage", "settings", "mcp"]);
@@ -36,8 +37,8 @@ export function AiConnectionPage({ initialTab }: { initialTab?: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Kết nối AI" />
-      <Tabs items={tabs} value={tab} onChange={setChosen} label="Kết nối AI" />
+      <PageHeader title={msg("ai.pages.AiConnectionPage.aiConnection")} />
+      <Tabs items={tabs} value={tab} onChange={setChosen} label={msg("ai.pages.AiConnectionPage.aiConnection")} />
       {tab === "usage" && <AiUsageHistoryPage mcpEnabled={mcpEnabled} />}
       {tab === "settings" && <PersonalKeysTab />}
       {tab === "mcp" && <McpAgentsTab />}
@@ -62,8 +63,8 @@ const PERSONAL: KeysApi = {
 function PersonalKeysTab() {
   return (
     <SettingsCard>
-      <KeysSection title="Khóa API cá nhân" api={PERSONAL} revokeTitle="Thu hồi khóa API?"
-        loadError="Không tải được kết nối AI, thử lại sau." />
+      <KeysSection title={msg("ai.pages.AiConnectionPage.personalApiKeys")} api={PERSONAL} revokeTitle={msg("ai.pages.AiConnectionPage.revokeApiKey")}
+        loadError={msg("ai.pages.AiConnectionPage.couldNotLoadAiConnections")} />
       <ApiSetupGuide />
     </SettingsCard>
   );

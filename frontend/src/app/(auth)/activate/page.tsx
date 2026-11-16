@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { ActivationPage } from "@/features/identity/otp/pages/ActivationPage";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Kích hoạt tài khoản" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.auth.activate.page.activateAccount") };
+}
 
 export default function Page() {
   return <ActivationPage />;

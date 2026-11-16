@@ -47,10 +47,10 @@ public final class PracticeViews {
                               Integer leaveCount, boolean decisionPending, PenaltyDecision decision,
                               String decisionReason) {
 
-        public static PenaltyView of(ActivityOutcome outcome, boolean teacher) {
+        public static PenaltyView createPenaltyView(ActivityOutcome outcome, boolean teacher) {
             return outcome == null ? null : new PenaltyView(outcome.rawScore(),
                     teacher ? outcome.suggestedPenalty() : null, outcome.penaltyPoints(), outcome.leaveCount(),
-                    outcome.pendingDecision(), outcome.decision(), outcome.decisionReason());
+                    outcome.awaitsDecision(), outcome.decision(), outcome.decisionReason());
         }
     }
 

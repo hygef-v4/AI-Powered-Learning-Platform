@@ -11,12 +11,12 @@ class AssignmentRequestsTest {
 
     @Test
     void closeRequiresAnExplicitNonNegativeVersion() throws Exception {
-        assertThat(json.readValue("{\"version\":0}", AssignmentRequests.Close.class).value()).isZero();
+        assertThat(json.readValue("{\"version\":0}", AssignmentRequests.Close.class).readVersion()).isZero();
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
-                json.readValue("{}", AssignmentRequests.Close.class).value())
+                json.readValue("{}", AssignmentRequests.Close.class).readVersion())
                 .isInstanceOf(edu.aiplatform.shared.error.ApiException.class);
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
-                json.readValue("{\"version\":-1}", AssignmentRequests.Close.class).value())
+                json.readValue("{\"version\":-1}", AssignmentRequests.Close.class).readVersion())
                 .isInstanceOf(edu.aiplatform.shared.error.ApiException.class);
     }
 
@@ -24,12 +24,12 @@ class AssignmentRequestsTest {
     void applyBodyCarriesTheImportPlacement() throws Exception {
         // Thử trên trình duyệt 2026-11-11: thiếu trường này thì "Chèn vào cuối" thành "Thay toàn bộ".
         var append = json.readValue("{\"version\":3,\"replaceTitle\":true,\"placement\":\"APPEND\"}",
-                AssignmentRequests.Apply.class).command();
+                AssignmentRequests.Apply.class).buildCommand();
         assertThat(append.placement()).isEqualTo("APPEND");
         assertThat(append.version()).isEqualTo(3);
         assertThat(append.replaceTitle()).isTrue();
 
-        var plain = json.readValue("{\"version\":3}", AssignmentRequests.Apply.class).command();
+        var plain = json.readValue("{\"version\":3}", AssignmentRequests.Apply.class).buildCommand();
         assertThat(plain.placement()).isNull();
         assertThat(plain.replaceInstructions()).isFalse();
     }

@@ -74,7 +74,7 @@ public class BrevoApiMailAdapter implements IMail {
                 .header("api-key", apiKey)
                 .header("accept", "application/json")
                 .header("content-type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body(message), StandardCharsets.UTF_8))
+                .POST(HttpRequest.BodyPublishers.ofString(buildBody(message), StandardCharsets.UTF_8))
                 .build();
         HttpResponse<String> response;
         try {
@@ -87,13 +87,13 @@ public class BrevoApiMailAdapter implements IMail {
             throw new MailSendException("Bị ngắt khi gọi API Brevo", e);
         }
         if (response.statusCode() / 100 != 2) {
-            String error = "API Brevo trả HTTP " + response.statusCode() + errorCode(response.body());
+            String error = "API Brevo trả HTTP " + response.statusCode() + parseErrorCode(response.body());
             log.warn(error);
             throw new MailSendException(error);
         }
     }
 
-    private String body(MailMessage message) {
+    private String buildBody(MailMessage message) {
         InternetAddress sender;
         try {
             sender = new InternetAddress(from, true);
@@ -119,7 +119,7 @@ public class BrevoApiMailAdapter implements IMail {
     }
 
     /** Mã lỗi ngắn của Brevo (ví dụ {@code unauthorized}); bỏ phần message vì có thể nhắc lại dữ liệu gửi đi. */
-    private String errorCode(String body) {
+    private String parseErrorCode(String body) {
         try {
             String code = json.readTree(body == null ? "" : body).path("code").asText("");
             return ERROR_CODE.matcher(code).matches() ? " (" + code + ")" : "";

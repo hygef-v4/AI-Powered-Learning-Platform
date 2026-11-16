@@ -3,25 +3,26 @@
 import { useCandidates, type CandidateLoader } from "../hooks/useCandidates";
 import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Button, ClickableRow, Dialog, Icon, IconButton, PageNav, Pill, Section, Segmented, Select, TableFrame, Td, TextInput, Th, showToast } from "@/shared/ui";
+import { Button, Card, ClickableRow, Dialog, Icon, IconButton, Pagination, Pill, Section, Segmented, Select, showToast, TableFrame, Td, Textarea, TextInput, Th } from "@/shared/ui";
 import { formatDate, formatOperationError } from "../model/format";
 import { parseEnrollmentList, type EnrollmentPreviewRow } from "../model/enrollmentList";
 import { readEnrollmentWorkbook } from "../model/enrollmentWorkbook";
 import { matchesPersonQuery } from "@/shared/studentCode";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
 import { ENROLLMENT_RESULT_LABELS, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 const PAGE_SIZE = 20;
 const PREVIEW_SIZE = 10;
-const STATUS_TABS = [{ value: "ACTIVE", label: "Đang học" }, { value: "REMOVED", label: "Đã gỡ" }] as const;
+const STATUS_TABS = [{ value: "ACTIVE", label: msg("academics.components.EnrollmentPanel.studying") }, { value: "REMOVED", label: msg("academics.components.EnrollmentPanel.removed") }] as const;
 const OK_RESULTS = new Set(["ENROLLED", "RESTORED"]);
 const NO_GROUP = "__none";
 
 /** Kết quả từng dòng sau khi thêm theo danh sách, cùng kiểu bảng kiểm tra Excel ở trang Tài khoản. */
 export function EnrollmentResultTable({ rows }: { rows: EnrollmentRowResult[] }) {
   return <TableFrame filledHead className="[&_table]:table-fixed">
-    <caption className="sr-only">Kết quả từng dòng</caption>
-    <colgroup><col className="w-[72px]" /><col /><col className="w-[200px]" /></colgroup><thead><tr><Th className="w-16">Dòng</Th><Th>Email hoặc MSSV</Th><Th>Kết quả</Th></tr></thead>
+    <caption className="sr-only">{msg("academics.components.EnrollmentPanel.perRowResults")}</caption>
+    <colgroup><col className="w-[72px]" /><col /><col className="w-[200px]" /></colgroup><thead><tr><Th className="w-16">{msg("academics.components.EnrollmentPanel.row")}</Th><Th>{msg("academics.components.EnrollmentPanel.emailOrStudentId")}</Th><Th>{msg("academics.components.EnrollmentPanel.result")}</Th></tr></thead>
     <tbody>{rows.map((row) => <tr key={row.line}>
       <Td className="text-muted">{row.line}</Td>
       <Td>{row.email}</Td>
@@ -67,34 +68,34 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
   async function handleEnrollmentChange(student: EnrollmentView, next: "ACTIVE" | "REMOVED") {
     if (!onStatusChange || busy) return;
     setBusy(true); setError("");
-    try { await onStatusChange(student.accountId, next); setRemoving(null); if (next === "REMOVED") showToast("Đã gỡ sinh viên", "danger"); else showToast("Đã thêm lại sinh viên"); }
+    try { await onStatusChange(student.accountId, next); setRemoving(null); if (next === "REMOVED") showToast(msg("academics.components.EnrollmentPanel.studentRemoved"), "danger"); else showToast(msg("academics.components.EnrollmentPanel.studentReAdded")); }
     catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   const addButtons = editable && (onEnroll || onBatch) ? <div className="flex flex-wrap gap-2">
-    {onBatch && <Button icon="upload_file" onClick={() => setImporting((open) => !open)} aria-expanded={importing}>Thêm theo danh sách</Button>}
-    {onEnroll && <Button variant="primary" icon="add" onClick={() => setAdding(true)} data-testid="enrollment-add">Thêm sinh viên</Button>}
+    {onBatch && <Button icon="upload_file" onClick={() => setImporting((open) => !open)} aria-expanded={importing}>{msg("academics.components.EnrollmentPanel.addFromAList")}</Button>}
+    {onEnroll && <Button variant="primary" icon="add" onClick={() => setAdding(true)} data-testid="enrollment-add">{msg("academics.components.EnrollmentPanel.addStudents")}</Button>}
   </div> : null;
   return <div className="flex flex-col gap-4">
     {editable && importing && onBatch && <BatchEnrollPanel onBatch={onBatch} onClose={() => setImporting(false)} />}
-    <section aria-label="Sinh viên trong lớp" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+    <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label={msg("academics.components.EnrollmentPanel.studentsInClass")}>
       {/* Một hàng công cụ: tab trạng thái, lọc nhóm, ô tìm. */}
       <div className="flex flex-wrap items-center gap-3">
         {showStatus && <Segmented
   as="tab"
-  ariaLabel="Trạng thái sinh viên"
+  ariaLabel={msg("academics.components.EnrollmentPanel.studentStatus")}
   value={status}
   onChange={(value) => { setStatus(value); setPage(0); }}
   options={[...STATUS_TABS]}
 />}
         {groupNames && (
-          <Select aria-label="Lọc theo nhóm" value={group} wrapperClassName="w-48" onChange={(event) => { setGroup(event.target.value); setPage(0); }}>
-            <option value="">Tất cả</option>
-            <option value={NO_GROUP}>Chưa có nhóm</option>
+          <Select aria-label={msg("academics.components.EnrollmentPanel.filterByGroup")} value={group} wrapperClassName="w-48" onChange={(event) => { setGroup(event.target.value); setPage(0); }}>
+            <option value="">{msg("academics.components.EnrollmentPanel.all")}</option>
+            <option value={NO_GROUP}>{msg("academics.components.EnrollmentPanel.noGroup")}</option>
             {groupOptions.map((name) => <option key={name} value={name}>{name}</option>)}
           </Select>
         )}
         <div role="search" className="ml-auto w-full sm:w-72">
-          <TextInput type="search" icon="search" aria-label="Lọc theo tên, email hoặc MSSV" placeholder="Lọc theo tên, email hoặc MSSV"
+          <TextInput type="search" icon="search" aria-label={msg("academics.components.EnrollmentPanel.filterByNameEmailOr")} placeholder={msg("academics.components.EnrollmentPanel.filterByNameEmailOr")}
             value={query} maxLength={200} onChange={(event) => { setQuery(event.target.value); setPage(0); }} />
         </div>
         {addButtons && !actionsHost && addButtons}
@@ -103,10 +104,10 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
       {error && !removing && <p role="alert" className="text-sm text-danger">{error}</p>}
       <TableFrame filledHead className="[&_table]:min-w-[740px] [&_table]:table-fixed">
         <colgroup>{numbered && <col className="w-[60px]" />}<col className="w-[110px]" /><col /><col className="w-[28%]" />{groupNames !== undefined && <col className="w-[130px]" />}<col className="w-[120px]" />{actions && <col className="w-[56px]" />}</colgroup><thead><tr>
-          {numbered && <Th className="w-12">STT</Th>}<Th>MSSV</Th><Th>Họ tên</Th><Th>Email</Th>
-          {groupNames !== undefined && <Th>Nhóm</Th>}
-          <Th>Ngày vào lớp</Th>
-          {actions && <Th className="w-12"><span className="sr-only">Thao tác</span></Th>}
+          {numbered && <Th className="w-12">STT</Th>}<Th>MSSV</Th><Th>{msg("academics.components.EnrollmentPanel.fullName")}</Th><Th>Email</Th>
+          {groupNames !== undefined && <Th>{msg("academics.components.EnrollmentPanel.group")}</Th>}
+          <Th>{msg("academics.components.EnrollmentPanel.joined")}</Th>
+          {actions && <Th className="w-12"><span className="sr-only">{msg("academics.components.EnrollmentPanel.actions")}</span></Th>}
         </tr></thead>
         <tbody>
           {rows.map((student, index) => {
@@ -115,25 +116,25 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
               <Td className="text-body" data-testid="enrollment-student-code">{student.studentCode}</Td>
               <Td><span className="flex flex-wrap items-center gap-2">{onView ? <button type="button" aria-label={`Xem ${student.name}`} onClick={(event) => { event.stopPropagation(); onView(student); }}
                 className="text-left font-semibold text-ink hover:text-primary-ink">{student.name}</button> : <span className="font-semibold text-ink">{student.name}</span>}
-                {groupLeaders?.includes(student.accountId) && <Pill tone="warning">Trưởng nhóm</Pill>}</span></Td>
+                {groupLeaders?.includes(student.accountId) && <Pill tone="warning">{msg("academics.components.EnrollmentPanel.groupLeader")}</Pill>}</span></Td>
               <Td className="text-muted">{student.email}</Td>
-              {groupNames !== undefined && <Td>{groupNames === null ? "—" : groupNames[student.accountId] ?? <span className="text-muted">Chưa có nhóm</span>}</Td>}
+              {groupNames !== undefined && <Td>{groupNames === null ? "—" : groupNames[student.accountId] ?? <span className="text-muted">{msg("academics.components.EnrollmentPanel.noGroup")}</span>}</Td>}
               <Td className="text-muted">{formatDate(student.enrolledAt)}</Td>
               {actions && <Td className="text-right">{student.status === "ACTIVE"
-                ? <IconButton icon="trash" label={`Gỡ ${student.name}`} disabled={busy} className="text-danger! hover:bg-danger-soft" onClick={() => { setError(""); setRemoving(student); }} />
-                : <IconButton icon="person_add" label={`Thêm lại ${student.name}`} disabled={busy} className="text-primary-ink! hover:bg-primary-soft" onClick={() => void handleEnrollmentChange(student, "ACTIVE")} />}</Td>}
+                ? <IconButton icon="trash" label={msg("academics.components.EnrollmentPanel.remove", { name: String(student.name) })} disabled={busy} className="text-danger! hover:bg-danger-soft" onClick={() => { setError(""); setRemoving(student); }} />
+                : <IconButton icon="person_add" label={msg("academics.components.EnrollmentPanel.reAdd", { name: String(student.name) })} disabled={busy} className="text-primary-ink! hover:bg-primary-soft" onClick={() => void handleEnrollmentChange(student, "ACTIVE")} />}</Td>}
             </>;
             return onView ? <ClickableRow key={student.accountId} onClick={() => onView(student)}>{cells}</ClickableRow> : <tr key={student.accountId}>{cells}</tr>;
           })}
-          {rows.length === 0 && <tr><Td colSpan={columns} className="py-10 text-center! text-muted">Không có sinh viên phù hợp.</Td></tr>}
+          {rows.length === 0 && <tr><Td colSpan={columns} className="py-10 text-center! text-muted">{msg("academics.components.EnrollmentPanel.noMatchingStudents")}</Td></tr>}
         </tbody>
       </TableFrame>
-      <PageNav page={current} size={PAGE_SIZE} total={visible.length} onPage={setPage} />
-    </section>
+      <Pagination page={current} pageSize={PAGE_SIZE} total={visible.length} onPageChange={setPage} summary={false} />
+    </Card>
     {adding && onEnroll && <AddStudentDialog candidates={candidates} students={students} loadCandidates={loadCandidates} onEnroll={onEnroll} onBatch={onBatch} onClose={() => setAdding(false)} />}
-    <Dialog open={removing !== null} title="Gỡ sinh viên khỏi lớp?" onClose={() => setRemoving(null)} dismissible={!busy}
-      footer={<Button variant="danger" disabled={busy} onClick={() => removing && void handleEnrollmentChange(removing, "REMOVED")} data-testid="enrollment-remove-confirm">Gỡ sinh viên</Button>}>
-      <p>Bạn có chắc muốn gỡ {removing?.name} khỏi lớp không?</p>
+    <Dialog open={removing !== null} title={msg("academics.components.EnrollmentPanel.removeStudentFromClass")} onClose={() => setRemoving(null)} dismissible={!busy}
+      footer={<Button variant="danger" disabled={busy} onClick={() => removing && void handleEnrollmentChange(removing, "REMOVED")} data-testid="enrollment-remove-confirm">{msg("academics.components.EnrollmentPanel.removeStudent")}</Button>}>
+      <p>{msg("academics.components.EnrollmentPanel.areYouSureYouWant")}{removing?.name} {msg("academics.components.EnrollmentPanel.fromTheClass")}</p>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     </Dialog>
   </div>;
@@ -159,7 +160,7 @@ function AddStudentDialog({ candidates, students, loadCandidates, onEnroll, onBa
     setSelected(current => allSelected ? current.filter(person => !rows.some(row => row.id === person.id))
       : [...current, ...rows.filter(person => !current.some(item => item.id === person.id))]);
   }
-  async function add() {
+  async function addStudent() {
     if (!selected.length || busy) return;
     setBusy(true); setError(""); setResults([]);
     try {
@@ -167,7 +168,7 @@ function AddStudentDialog({ candidates, students, loadCandidates, onEnroll, onBa
         const next = await onBatch(selected.map(person => person.email).join("\n"));
         const failed = next.filter(row => !OK_RESULTS.has(row.result));
         const added = next.length - failed.length;
-        if (added) showToast(`Đã thêm ${added} sinh viên`);
+        if (added) showToast(msg("academics.components.EnrollmentPanel.addedStudents", { added: String(added) }));
         if (!failed.length) { onClose(); return; }
         setSelected(current => current.filter(person => failed.some(row => row.email.toLowerCase() === person.email.toLowerCase())));
         setResults(failed);
@@ -176,22 +177,22 @@ function AddStudentDialog({ candidates, students, loadCandidates, onEnroll, onBa
           await onEnroll(person.id);
           setSelected(current => current.filter(item => item.id !== person.id));
         }
-        showToast("Đã thêm sinh viên"); onClose();
+        showToast(msg("academics.components.EnrollmentPanel.studentsAdded")); onClose();
       }
     } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
-  return <Dialog open title="Thêm sinh viên" size="lg" onClose={onClose} dismissible={!busy}
-    footer={<Button variant="primary" disabled={busy || !selected.length || selected.length > 200} onClick={() => void add()} data-testid="enrollment-add-submit">Thêm {selected.length} sinh viên</Button>}>
-    <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm tên, email hoặc MSSV" value={query} disabled={busy} onChange={event => setQuery(event.target.value)} />
+  return <Dialog open title={msg("academics.components.EnrollmentPanel.addStudents")} size="lg" onClose={onClose} dismissible={!busy}
+    footer={<Button variant="primary" disabled={busy || !selected.length || selected.length > 200} onClick={() => void addStudent()} data-testid="enrollment-add-submit">{msg("academics.components.EnrollmentPanel.add")}{selected.length} {msg("academics.components.EnrollmentPanel.students")}</Button>}>
+    <TextInput type="search" icon="search" aria-label={msg("academics.components.EnrollmentPanel.findStudents")} placeholder={msg("academics.components.EnrollmentPanel.searchByNameEmailOr")} value={query} disabled={busy} onChange={event => setQuery(event.target.value)} />
     <label className="flex items-center gap-3 text-sm">
       <input type="checkbox" className="size-4 accent-primary" checked={allSelected} disabled={busy || options.loading || !rows.length}
         ref={node => { if (node) node.indeterminate = someSelected && !allSelected; }} onChange={toggleAll} />
-      Chọn tất cả kết quả lọc ({rows.length})
-      <span className="ml-auto text-xs text-muted">Đã chọn {selected.length}</span>
+      {msg("academics.components.EnrollmentPanel.selectAllFilteredResults")}{rows.length})
+      <span className="ml-auto text-xs text-muted">{msg("academics.components.EnrollmentPanel.selected")}{selected.length}</span>
     </label>
-    {options.loading && <p role="status">Đang tải sinh viên…</p>}
+    {options.loading && <p role="status">{msg("academics.components.EnrollmentPanel.loadingStudents")}</p>}
     {options.error && <p role="alert" className="text-sm text-danger">{options.error}</p>}
-    <ul aria-label="Chọn sinh viên" className="max-h-72 overflow-y-auto rounded-lg border border-line">
+    <ul aria-label={msg("academics.components.EnrollmentPanel.selectStudents")} className="max-h-72 overflow-y-auto rounded-lg border border-line">
       {!options.loading && rows.map(person => <li key={person.id} className="border-b border-line last:border-0">
         <label className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-shell">
           <input type="checkbox" className="size-4 accent-primary" checked={selected.some(item => item.id === person.id)} disabled={busy}
@@ -199,10 +200,10 @@ function AddStudentDialog({ candidates, students, loadCandidates, onEnroll, onBa
           <span><span className="block text-sm font-semibold">{person.name}</span><PersonSubline studentCode={person.studentCode} email={person.email} /></span>
         </label>
       </li>)}
-      {!options.loading && !options.error && !rows.length && <li className="p-4 text-sm text-muted">Không có sinh viên phù hợp.</li>}
+      {!options.loading && !options.error && !rows.length && <li className="p-4 text-sm text-muted">{msg("academics.components.EnrollmentPanel.noMatchingStudents")}</li>}
     </ul>
-    {options.rows.length >= 200 && <p className="text-xs text-muted">Hiển thị tối đa 200 kết quả. Tìm tên, email hoặc MSSV để thu hẹp danh sách.</p>}
-    {selected.length > 200 && <p role="alert">Chọn tối đa 200 sinh viên mỗi lượt.</p>}
+    {options.rows.length >= 200 && <p className="text-xs text-muted">{msg("academics.components.EnrollmentPanel.showingUpTo200Results")}</p>}
+    {selected.length > 200 && <p role="alert">{msg("academics.components.EnrollmentPanel.selectUpTo200Students")}</p>}
     {results.length > 0 && <EnrollmentResultTable rows={results} />}
     {error && <p role="alert" className="text-sm text-danger">{error}</p>}
   </Dialog>;
@@ -246,49 +247,49 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
     try {
       const rows = await onBatch(input);
       const added = rows.filter((row) => OK_RESULTS.has(row.result)).length;
-      if (added) showToast(`Đã thêm ${added} sinh viên`);
+      if (added) showToast(msg("academics.components.EnrollmentPanel.addedStudents", { added: String(added) }));
       if (rows.every((row) => OK_RESULTS.has(row.result))) { onClose(); return; }
       setResults(rows); setPreview(null);
     } catch (cause) { setError(formatOperationError(cause)); } finally { setBusy(false); }
   }
   const shown = preview?.slice(page * PREVIEW_SIZE, (page + 1) * PREVIEW_SIZE) ?? [];
-  return <Section title="Thêm sinh viên theo danh sách" icon="upload_file"
-    actions={<button type="button" onClick={onClose} aria-label="Đóng" className="text-muted hover:text-ink"><Icon name="close" /></button>}>
-    <input ref={file} type="file" accept=".xlsx" aria-label="Chọn tệp Excel" className="sr-only" disabled={busy}
+  return <Section title={msg("academics.components.EnrollmentPanel.addStudentsFromAList")} icon="upload_file"
+    actions={<button type="button" onClick={onClose} aria-label={msg("academics.components.EnrollmentPanel.close")} className="text-muted hover:text-ink"><Icon name="close" /></button>}>
+    <input ref={file} type="file" accept=".xlsx" aria-label={msg("academics.components.EnrollmentPanel.chooseAnExcelFile")} className="sr-only" disabled={busy}
       data-testid="enrollment-excel-input" onChange={(event) => void choose(event.target.files?.[0])} />
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={`${id}-list`} className="text-xs font-semibold text-body">Danh sách email hoặc MSSV</label>
-      <p className="text-xs text-muted">Mỗi dòng một email hoặc MSSV.</p>
-      <textarea id={`${id}-list`} value={input} disabled={busy} onChange={(event) => edit(event.target.value)} data-testid="enrollment-list-input"
-        className="min-h-28 w-full rounded-lg border border-field px-3 py-2 font-mono text-[13px] text-ink outline-none focus:border-focus disabled:bg-sunken" />
+      <label htmlFor={`${id}-list`} className="text-xs font-semibold text-body">{msg("academics.components.EnrollmentPanel.emailsOrStudentIds")}</label>
+      <p className="text-xs text-muted">{msg("academics.components.EnrollmentPanel.oneEmailOrStudentId")}</p>
+      <Textarea id={`${id}-list`} value={input} disabled={busy} onChange={(event) => edit(event.target.value)} data-testid="enrollment-list-input"
+        className="min-h-28 font-mono text-[13px]" />
     </div>
     <div className="flex flex-wrap items-center gap-3">
       {fileName && <div className="flex min-w-0 items-center gap-2.5 rounded-xl border border-line bg-shell px-3 py-2">
         <Icon name="description" size={20} className="text-primary-ink" />
         <span className="min-w-0 truncate text-[13px] font-semibold text-ink">{fileName}</span>
       </div>}
-      <Button icon="folder_open" disabled={busy} onClick={() => file.current?.click()}>{fileName ? "Chọn tệp khác" : "Chọn tệp"}</Button>
-      <a href="/templates/enrollment-import.xlsx" download="mau-sinh-vien.xlsx" className="text-xs font-semibold text-primary-ink hover:underline">Tải tệp mẫu Excel</a>
-      <Button icon="check" disabled={busy || !input.trim()} onClick={() => review()} data-testid="enrollment-list-preview">Xem trước</Button>
+      <Button icon="folder_open" disabled={busy} onClick={() => file.current?.click()}>{fileName ? msg("academics.components.EnrollmentPanel.chooseAnotherFile") : msg("academics.components.EnrollmentPanel.chooseFile")}</Button>
+      <a href="/templates/enrollment-import.xlsx" download="mau-sinh-vien.xlsx" className="text-xs font-semibold text-primary-ink hover:underline">{msg("academics.components.EnrollmentPanel.downloadExcelTemplate")}</a>
+      <Button icon="check" disabled={busy || !input.trim()} onClick={() => review()} data-testid="enrollment-list-preview">{msg("academics.components.EnrollmentPanel.preview")}</Button>
     </div>
     {error && <p role="alert" className="text-sm text-danger">{error}</p>}
     {preview && <>
       <div className="flex flex-wrap items-center gap-2" role="status">
-        <Pill>{preview.length} dòng</Pill>
-        <Pill tone="success">{valid} hợp lệ</Pill>
-        {preview.length > valid && <Pill tone="danger">{preview.length - valid} lỗi</Pill>}
+        <Pill>{preview.length} {msg("academics.components.EnrollmentPanel.rows")}</Pill>
+        <Pill tone="success">{valid} {msg("academics.components.EnrollmentPanel.valid")}</Pill>
+        {preview.length > valid && <Pill tone="danger">{preview.length - valid} {msg("academics.components.EnrollmentPanel.errors")}</Pill>}
       </div>
       <TableFrame filledHead className="[&_table]:table-fixed">
-        <colgroup><col className="w-[72px]" /><col /><col className="w-[220px]" /></colgroup><thead><tr><Th className="w-16">Dòng</Th><Th>Email hoặc MSSV</Th><Th>Kết quả kiểm tra</Th></tr></thead>
+        <colgroup><col className="w-[72px]" /><col /><col className="w-[220px]" /></colgroup><thead><tr><Th className="w-16">{msg("academics.components.EnrollmentPanel.row")}</Th><Th>{msg("academics.components.EnrollmentPanel.emailOrStudentId")}</Th><Th>{msg("academics.components.EnrollmentPanel.checkResults")}</Th></tr></thead>
         <tbody>{shown.map((row) => <tr key={row.line}>
           <Td className="text-muted">{row.line}</Td>
           <Td>{row.email}</Td>
-          <Td>{row.error ? <Pill tone="danger">{ENROLLMENT_RESULT_LABELS[row.error]}</Pill> : <Pill tone="success">Hợp lệ</Pill>}</Td>
+          <Td>{row.error ? <Pill tone="danger">{ENROLLMENT_RESULT_LABELS[row.error]}</Pill> : <Pill tone="success">{msg("academics.components.EnrollmentPanel.valid2")}</Pill>}</Td>
         </tr>)}</tbody>
       </TableFrame>
-      <PageNav page={page} size={PREVIEW_SIZE} total={preview.length} onPage={setPage} />
+      <Pagination page={page} pageSize={PREVIEW_SIZE} total={preview.length} onPageChange={setPage} summary={false} />
       <div className="flex justify-end gap-2 border-t border-line pt-3.5">
-        <Button variant="primary" icon="check" disabled={busy || !valid} onClick={() => void handleSubmit()} data-testid="enrollment-list-submit">{`Thêm ${valid} sinh viên`}</Button>
+        <Button variant="primary" icon="check" disabled={busy || !valid} onClick={() => void handleSubmit()} data-testid="enrollment-list-submit">{msg("academics.components.EnrollmentPanel.addStudents2", { valid: String(valid) })}</Button>
       </div>
     </>}
     {results && <EnrollmentResultTable rows={results} />}

@@ -4,10 +4,11 @@ import { useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
-import { ChipToggleGroup, Field, Select, Switch, TextInput } from "@/shared/ui/inputs";
+import { ChipToggleGroup, Field, Select, Switch, TextInput } from "@/shared/ui/Inputs";
 import { updateSetting } from "../api";
 import type { SettingItem, SettingValue } from "../model/types";
-import { canBeEmpty, options, unitOf, validateSettingValue } from "../model/validation";
+import { canBeEmpty, listOptions, readUnit, validateSettingValue } from "../model/validation";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   item: SettingItem;
@@ -15,7 +16,7 @@ type Props = {
   onReload: () => void;
 };
 
-const LABEL = "Giá trị mới";
+const LABEL = msg("settings.components.SettingValueForm.newValue");
 
 /**
  * Ô nhập theo kiểu (UC 15). Kiểm ngay khi sửa và khóa nút Lưu khi giá trị sai; 400 hiện lý do,
@@ -38,7 +39,7 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
     setServerError(null);
   }
 
-  async function save(value: SettingValue) {
+  async function saveSetting(value: SettingValue) {
     if (validateSettingValue(item, value)) return;
     setSaving(true);
     setServerError(null);
@@ -49,9 +50,9 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
       if (e instanceof ApiError && e.problem.status === 409) {
         setConflict(true);
       } else if (e instanceof ApiError && e.problem.status === 400) {
-        setServerError(e.problem.detail ?? "Giá trị không hợp lệ");
+        setServerError(e.problem.detail ?? msg("settings.components.SettingValueForm.invalidValue"));
       } else {
-        setServerError("Không lưu được, thử lại sau");
+        setServerError(msg("settings.components.SettingValueForm.couldNotSavePleaseTry"));
       }
     } finally {
       setSaving(false);
@@ -64,29 +65,26 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
       className="flex flex-col gap-3.5"
       onSubmit={(event) => {
         event.preventDefault();
-        void save(draft);
+        void saveSetting(draft);
       }}
     >
       {conflict && (
         <Alert
           tone="warning"
           role="alert"
-          title="Người khác vừa sửa"
+          title={msg("settings.components.SettingValueForm.someoneElseJustEditedIt")}
           action={
             <Button size="sm" icon="refresh" onClick={onReload}>
-              Tải lại
-            </Button>
+              {msg("settings.components.SettingValueForm.reload")}</Button>
           }
         >
-          Cài đặt đã được người khác sửa. Tải lại để xem giá trị mới trước khi lưu.
-        </Alert>
+          {msg("settings.components.SettingValueForm.theSettingWasEditedBy")}</Alert>
       )}
       <ValueField item={item} value={draft} error={error} onChange={change} disabled={saving} />
       <div className="flex items-center justify-end gap-2">
         {canBeEmpty(item) && item.value !== null && (
-          <Button disabled={saving} onClick={() => void save(null)} className="mr-auto">
-            Bỏ trống
-          </Button>
+          <Button disabled={saving} onClick={() => void saveSetting(null)} className="mr-auto">
+            {msg("settings.components.SettingValueForm.leaveEmpty")}</Button>
         )}
         <Button
           disabled={saving || !changed}
@@ -96,10 +94,9 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
             setServerError(null);
           }}
         >
-          Hủy
-        </Button>
+          {msg("settings.components.SettingValueForm.cancel")}</Button>
         <Button type="submit" variant="primary" icon="save" disabled={saving || !changed || invalid !== null}>
-          {saving ? "Đang lưu…" : "Lưu"}
+          {saving ? msg("settings.components.SettingValueForm.saving") : msg("settings.components.SettingValueForm.save")}
         </Button>
       </div>
     </form>
@@ -126,7 +123,7 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
             type="number"
             inputMode="numeric"
             invalid={error !== null}
-            suffix={unitOf(item)}
+            suffix={readUnit(item)}
             wrapperClassName="w-[220px]"
             value={typeof value === "number" ? value : ""}
             min={Number(item.constraints?.min)}
@@ -143,14 +140,14 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
             ariaLabel={LABEL}
             checked={value === true}
             disabled={disabled}
-            label={value === true ? "Bật" : "Tắt"}
+            label={value === true ? msg("settings.components.SettingValueForm.on") : msg("settings.components.SettingValueForm.off")}
             onChange={onChange}
           />
         </Field>
       );
     case "TIME_OF_DAY":
       return (
-        <Field label={LABEL} htmlFor={id} required={required} error={error} hint="Giờ Việt Nam (Asia/Ho_Chi_Minh)">
+        <Field label={LABEL} htmlFor={id} required={required} error={error} hint={msg("settings.components.SettingValueForm.vietnamTimeAsiaHoChi")}>
           <TextInput
             id={id}
             type="time"
@@ -174,8 +171,8 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
             disabled={disabled}
             onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
           >
-            {value === null && <option value="">Chưa chọn</option>}
-            {options(item).map((option) => (
+            {value === null && <option value="">{msg("settings.components.SettingValueForm.notSelected")}</option>}
+            {listOptions(item).map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
@@ -188,7 +185,7 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
         <Field label={LABEL} required={required} error={error}>
           <ChipToggleGroup
             ariaLabel={LABEL}
-            options={options(item)}
+            options={listOptions(item)}
             value={Array.isArray(value) ? value : []}
             disabled={disabled}
             onChange={onChange}

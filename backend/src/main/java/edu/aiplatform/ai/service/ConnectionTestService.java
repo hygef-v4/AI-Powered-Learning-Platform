@@ -39,9 +39,9 @@ public class ConnectionTestService {
             return new Result(true, "Đạt", response.usage());
         } catch (OutputLimitException e) {
             // Probe chỉ kiểm key/model: provider đã chấp nhận, không cần dùng nội dung bị cắt.
-            return new Result(true, "Đạt", e.usage());
+            return new Result(true, "Đạt", e.readUsage());
         } catch (ProviderException e) {
-            return new Result(false, e.getMessage(), e.usage());
+            return new Result(false, e.getMessage(), e.readUsage());
         }
     }
 

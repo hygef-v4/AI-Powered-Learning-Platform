@@ -14,7 +14,7 @@ public record GradingFeedback(int schemaVersion, Summary summary, List<Item> ite
     /** Rejects unknown fields in structured feedback. */
     @JsonAnySetter
     public void createUnknownFeedback(String key, Object value) {
-        throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
+        throw ApiException.createBadRequest("INVALID_STRUCTURED_FEEDBACK",
                 "Unknown structuredFeedback field: " + key);
     }
 
@@ -29,8 +29,8 @@ public record GradingFeedback(int schemaVersion, Summary summary, List<Item> ite
             List<String> nextSteps) {
         /** Rejects unknown fields in a feedback summary. */
         @JsonAnySetter
-        public void unknown(String key, Object value) {
-            throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
+        public void rejectUnknownField(String key, Object value) {
+            throw ApiException.createBadRequest("INVALID_STRUCTURED_FEEDBACK",
                     "Unknown summary field: " + key);
         }
 
@@ -47,8 +47,8 @@ public record GradingFeedback(int schemaVersion, Summary summary, List<Item> ite
             String reviewReason) {
         /** Rejects unknown fields in a rubric feedback item. */
         @JsonAnySetter
-        public void unknown(String key, Object value) {
-            throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
+        public void rejectUnknownField(String key, Object value) {
+            throw ApiException.createBadRequest("INVALID_STRUCTURED_FEEDBACK",
                     "Unknown item field: " + key);
         }
 

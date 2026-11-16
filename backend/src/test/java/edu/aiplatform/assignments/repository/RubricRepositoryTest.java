@@ -43,9 +43,9 @@ class RubricRepositoryTest {
     }
 
     @Test void currentArrayRoundTripsWithoutChangingCriteriaOrPoints() {
-        var rubric = AssignmentRubric.empty(assignmentId, "part", Instant.now()).withCriteria(criteria, Instant.now());
+        var rubric = AssignmentRubric.createEmptyRubric(assignmentId, "part", Instant.now()).replaceCriteria(criteria, Instant.now());
         repository.insert(rubric);
-        assertThat(repository.find(rubric.id()).orElseThrow().criteria()).isEqualTo(criteria);
+        assertThat(repository.findRubric(rubric.id()).orElseThrow().criteria()).isEqualTo(criteria);
         assertThat(repository.listByAssignment(assignmentId)).singleElement()
                 .satisfies(value -> assertThat(value.totalPoints()).isEqualByComparingTo("2.50"));
     }
@@ -57,9 +57,9 @@ class RubricRepositoryTest {
         var rubric = repository.listByAssignment(assignmentId).get(0);
         assertThat(rubric.criteria()).isEqualTo(criteria);
         assertThat(rubric.totalPoints()).isEqualByComparingTo("2.50");
-        assertThat(rubric.locked()).isTrue();
+        assertThat(rubric.hasLocked()).isTrue();
         assertThat(rubric.version()).isEqualTo(7);
-        assertThat(repository.find(id).orElseThrow().criteria()).isEqualTo(criteria);
+        assertThat(repository.findRubric(id).orElseThrow().criteria()).isEqualTo(criteria);
         assertThat(jdbc.queryForObject("SELECT criteria = cast(? as jsonb) FROM assignment_rubrics WHERE id=?",
                 Boolean.class, envelope, id)).isTrue();
     }

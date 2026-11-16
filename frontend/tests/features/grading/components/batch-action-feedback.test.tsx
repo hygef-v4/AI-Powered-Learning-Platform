@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Toaster } from "@/shared/ui";
 import { BatchActionDialog } from "@/features/grading/components/BatchActionDialog";
 import type { BatchResult, ItemVersion } from "@/features/grading/model/types";
 
@@ -12,7 +13,7 @@ const success: BatchResult = { items: items.map((item) => ({ ...item, outcome: "
 
 function Harness({ action, selected = items }: { action: "finalize" | "publish"; selected?: ItemVersion[] }) {
   const [open, setOpen] = useState(true);
-  return <>{open && <BatchActionDialog action={action} items={selected} onClose={() => setOpen(false)} onDone={mocks.done} />}
+  return <><Toaster />{open && <BatchActionDialog action={action} items={selected} onClose={() => setOpen(false)} onDone={mocks.done} />}
     <button>Trang chấm bài</button></>;
 }
 
@@ -87,10 +88,10 @@ describe("grade action success feedback", () => {
 
   it("keeps the successful notice when refreshing a filtered list removes the selected rows", async () => {
     mocks.finalizeGrades.mockResolvedValue(success);
-    const { rerender } = render(<BatchActionDialog action="finalize" items={items} onClose={vi.fn()} onDone={mocks.done} />);
+    const { rerender } = render(<><Toaster /><BatchActionDialog action="finalize" items={items} onClose={vi.fn()} onDone={mocks.done} /></>);
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
     expect(await screen.findByRole("status")).toHaveTextContent("Đã chốt điểm cho 2 bài.");
-    rerender(<BatchActionDialog action="finalize" items={[]} onClose={vi.fn()} onDone={mocks.done} />);
+    rerender(<><Toaster /><BatchActionDialog action="finalize" items={[]} onClose={vi.fn()} onDone={mocks.done} /></>);
     expect(screen.getByRole("status")).toHaveTextContent("Đã chốt điểm cho 2 bài.");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

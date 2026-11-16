@@ -36,7 +36,7 @@ public class AssignmentSourceImageSource implements IAiImageSource {
             UUID draftId = UUID.fromString(parts[0]);
             int index = Integer.parseInt(parts[1]);
             if (index < 0 || index >= AssignmentAiDraftService.MAX_SOURCE_FILES) return Optional.empty();
-            var draft = drafts.find(draftId);
+            var draft = drafts.findDraft(draftId);
             if (draft.isEmpty()) return Optional.empty();
             var file = draft.get().provenance().path("sourceFiles").path(index);
             String mediaType = file.path("mediaType").asText("");

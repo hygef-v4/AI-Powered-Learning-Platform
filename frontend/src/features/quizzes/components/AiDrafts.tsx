@@ -3,16 +3,16 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { AiTaskStatus, PROVIDER_LABEL, type AiProvider, type SourceChoice } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, TextInput, useConfirmDialog } from "@/shared/ui";
-import { DIFFICULTY_LABELS, errorMessage, failureLabel, formatDateTime, TYPE_LABELS } from "../model/labels";
+import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, Textarea, TextInput, useConfirmDialog } from "@/shared/ui";
+import { DIFFICULTY_LABELS, describeError, describeFailure, formatDateTime, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
 import { MaterialSourceSelect } from "./MaterialSourceSelect";
-import { formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
+import { buildFormFrom, convertToContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type {
   AiDraft, AiDraftRequest, Difficulty, QuestionContent, QuestionType, SelectableMaterial, Violation,
 } from "../model/types";
+import { msg } from "@/i18n/msg";
 
-const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus";
 const POLL_MS = 3000;
 const MAX_COUNT = 50;
 const MAX_MATERIALS = 10;
@@ -36,8 +36,8 @@ export type DraftTargetApi = {
 type EntryState = "open" | "accepted" | "dropped";
 export type ProposalEntry = { form: QuestionForm; state: EntryState; editing: boolean; errors: FormErrors; serverViolations: Violation[] };
 
-const entriesOf = (draft: AiDraft): ProposalEntry[] => draft.questions.map((q) => ({
-  form: formOf(q.content), state: "open", editing: false, errors: {}, serverViolations: q.violations,
+const listEntries = (draft: AiDraft): ProposalEntry[] => draft.questions.map((q) => ({
+  form: buildFormFrom(q.content), state: "open", editing: false, errors: {}, serverViolations: q.violations,
 }));
 
 /**
@@ -65,14 +65,14 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
   const shown = useRef<AiDraft | null>(null);
   useEffect(() => { onDraftShown?.(draft?.id ?? null); }, [draft?.id, onDraftShown]);
   useEffect(() => {
-    if (mode !== "form") onDirtyChange?.(draft?.status === "READY" && JSON.stringify(entries) !== JSON.stringify(entriesOf(draft)));
+    if (mode !== "form") onDirtyChange?.(draft?.status === "READY" && JSON.stringify(entries) !== JSON.stringify(listEntries(draft)));
   }, [draft, entries, mode, onDirtyChange]);
   useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
 
   /** Chỉ dựng lại danh sách câu khi đổi đề xuất hoặc trạng thái, để không mất phần người soạn đang sửa. */
   const showDraft = (next: AiDraft | null) => {
     const current = shown.current;
-    if (next && (current?.id !== next.id || current.status !== next.status)) setEntries(entriesOf(next));
+    if (next && (current?.id !== next.id || current.status !== next.status)) setEntries(listEntries(next));
     if (!next) setEntries([]);
     shown.current = next;
     setDraft(next);
@@ -91,7 +91,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
       })
       .catch((failure: unknown) => {
         if (controller.signal.aborted) return;
-        setError(errorMessage(failure));
+        setError(describeError(failure));
         setMode("form");
       });
     return () => controller.abort();
@@ -106,7 +106,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     const timer = setTimeout(() => {
       api.get(pendingId)
         .then((next) => active && showDraft(next))
-        .catch((failure: unknown) => active && setError(errorMessage(failure)));
+        .catch((failure: unknown) => active && setError(describeError(failure)));
     }, POLL_MS);
     return () => {
       active = false;
@@ -115,7 +115,7 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingId, draft]);
 
-  const run = async (action: () => Promise<void>) => {
+  const runAction = async (action: () => Promise<void>) => {
     setBusy(true);
     onBusyChange?.(true);
     setError(null);
@@ -125,23 +125,23 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     } catch (failure) {
       const problem = failure instanceof ApiError ? (failure.problem as { violations?: Violation[] }) : {};
       setProblems(problem.violations ?? []);
-      setError(errorMessage(failure));
+      setError(describeError(failure));
     } finally {
       setBusy(false);
       onBusyChange?.(false);
     }
   };
 
-  const send = (values: AiDraftRequest) => void run(async () => {
+  const sendRequest = (values: AiDraftRequest) => void runAction(async () => {
     showDraft(await api.request(values));
   });
   const refresh = (draftId: string) => {
-    api.get(draftId).then(showDraft).catch((failure: unknown) => setError(errorMessage(failure)));
+    api.get(draftId).then(showDraft).catch((failure: unknown) => setError(describeError(failure)));
   };
 
   const accepted = entries.filter((e) => e.state === "accepted");
-  const saveAccepted = () => draft && void run(async () => {
-    await api.accept(draft.id, accepted.map((e) => toContent(e.form)));
+  const saveAccepted = () => draft && void runAction(async () => {
+    await api.accept(draft.id, accepted.map((e) => convertToContent(e.form)));
     onAccepted(accepted.length);
   });
   const acceptAll = () => {
@@ -149,13 +149,13 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
     const checked = entries.map((entry) => entry.state === "dropped" ? entry : { ...entry, errors: validateForm(entry.form) });
     if (checked.some((entry) => entry.state !== "dropped" && Object.keys(entry.errors).length > 0)) {
       setEntries(checked.map((entry) => Object.keys(entry.errors).length ? { ...entry, editing: true } : entry));
-      setError("Có câu chưa hợp lệ. Hãy sửa các câu được đánh dấu trước khi chấp nhận tất cả.");
+      setError(msg("quizzes.components.AiDrafts.someQuestionsAreInvalidFix"));
       return;
     }
-    const questions = checked.filter((entry) => entry.state !== "dropped").map((entry) => toContent(entry.form));
-    void run(async () => { await api.accept(draft.id, questions); onAccepted(questions.length); });
+    const questions = checked.filter((entry) => entry.state !== "dropped").map((entry) => convertToContent(entry.form));
+    void runAction(async () => { await api.accept(draft.id, questions); onAccepted(questions.length); });
   };
-  const discard = () => draft && void run(async () => {
+  const discard = () => draft && void runAction(async () => {
     await api.discard(draft.id);
     setRequest(null);
     showDraft(null);
@@ -170,21 +170,20 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
             if (draft.status !== "FAILED") setRequest(null);
             showDraft(null);
           };
-          if (draft.status === "READY" && JSON.stringify(entries) !== JSON.stringify(entriesOf(draft))) {
-            requestConfirm("Bỏ các chỉnh sửa đề xuất chưa lưu để tạo yêu cầu mới?", startNewRequest);
+          if (draft.status === "READY" && JSON.stringify(entries) !== JSON.stringify(listEntries(draft))) {
+            requestConfirm(msg("quizzes.components.AiDrafts.discardUnsavedProposalEditsTo"), startNewRequest);
             return;
           }
           startNewRequest();
-        }} disabled={busy} data-testid="ai-draft-new">{draft.status === "FAILED" && request ? "Thử lại yêu cầu" : "Yêu cầu mới"}</Button>
+        }} disabled={busy} data-testid="ai-draft-new">{draft.status === "FAILED" && request ? msg("quizzes.components.AiDrafts.retryRequest") : msg("quizzes.components.AiDrafts.newRequest")}</Button>
       )}
       {draft?.status === "READY" && (
         <>
-          <Button variant="danger" onClick={discard} disabled={busy} data-testid="ai-draft-discard">Bỏ đề xuất</Button>
+          <Button variant="danger" onClick={discard} disabled={busy} data-testid="ai-draft-discard">{msg("quizzes.components.AiDrafts.discardProposal")}</Button>
           <Button onClick={acceptAll} disabled={busy || entries.every((entry) => entry.state === "dropped")}
-            data-testid="ai-draft-accept-all">Chấp nhận tất cả</Button>
+            data-testid="ai-draft-accept-all">{msg("quizzes.components.AiDrafts.acceptAll")}</Button>
           <Button variant="primary" onClick={saveAccepted} disabled={busy || accepted.length === 0} data-testid="ai-draft-accept">
-            Lưu {accepted.length} câu đã chấp nhận
-          </Button>
+            {msg("quizzes.components.AiDrafts.save")}{accepted.length} {msg("quizzes.components.AiDrafts.acceptedQuestions")}</Button>
         </>
       )}
     </>
@@ -198,12 +197,12 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
             {problems.length > 0 && <ul className="mt-1 list-disc pl-4">{problems.map((p, i) => <li key={i}>{p.message}</li>)}</ul>}
           </Alert>
         )}
-        {mode === "loading" && <p role="status" className="py-6 text-center text-sm text-muted">Đang tải…</p>}
+        {mode === "loading" && <p role="status" className="py-6 text-center text-sm text-muted">{msg("quizzes.components.AiDrafts.loading")}</p>}
         {mode === "form" && (
           <DraftRequestForm api={api} busy={busy} initial={request} onDirtyChange={onDirtyChange}
             onSubmit={(values) => {
               setRequest(values);
-              send(values);
+              sendRequest(values);
             }} />
         )}
         {mode === "draft" && draft && (
@@ -214,9 +213,9 @@ export function AiDraftDialog({ api, initialDraftId, onClose, onAccepted, inline
         )}
       </div>
   );
-  if (inline) return <div role="region" aria-label="Soạn bằng AI" className="mt-3 flex min-w-0 flex-col gap-3">
+  if (inline) return <div role="region" aria-label={msg("quizzes.components.AiDrafts.writeWithAi")} className="mt-3 flex min-w-0 flex-col gap-3">
     {body}<div className="flex flex-wrap justify-end gap-2 border-t border-line pt-3">
-      <Button onClick={onClose} disabled={busy}>Đóng soạn AI</Button>{footer}
+      <Button onClick={onClose} disabled={busy}>{msg("quizzes.components.AiDrafts.closeAiWriter")}</Button>{footer}
     </div>
     {confirmDialog}
   </div>;
@@ -264,10 +263,10 @@ function DraftRequestForm({ api, busy, initial, onSubmit, onDirtyChange }: {
   const submit = () => {
     const found: Record<string, string> = {};
     const n = Number(count);
-    if ((!instructions.trim() && materialIds.length === 0) || instructions.trim().length > 2000) found.instructions = "Nhập yêu cầu hoặc chọn tài liệu nguồn, tối đa 2.000 ký tự";
-    if (!Number.isInteger(n) || n < 1 || n > MAX_COUNT) found.count = "Từ 1 đến 50 câu";
+    if ((!instructions.trim() && materialIds.length === 0) || instructions.trim().length > 2000) found.instructions = msg("quizzes.components.AiDrafts.enterARequestOrChoose");
+    if (!Number.isInteger(n) || n < 1 || n > MAX_COUNT) found.count = msg("quizzes.components.AiDrafts.from1To50Questions");
     if (materialIds.length > MAX_MATERIALS || materialIds.some((id) => !materials?.some((material) => material.materialId === id && material.hasText))) {
-      found.materialIds = "Có tài liệu nguồn không còn dùng được. Bỏ chọn tài liệu đó hoặc tải lại danh sách.";
+      found.materialIds = msg("quizzes.components.AiDrafts.someSourceDocumentsAreNo");
     }
     setErrors(found);
     if (Object.keys(found).length > 0) return;
@@ -276,43 +275,42 @@ function DraftRequestForm({ api, busy, initial, onSubmit, onDirtyChange }: {
 
   return (
     <fieldset disabled={busy} className="flex flex-col gap-3" data-testid="ai-draft-form">
-      <Field label="Yêu cầu" htmlFor={`${id}-instructions`} required={materialIds.length === 0} error={errors.instructions}
-        hint="Khi đã chọn tài liệu, có thể để trống: AI mặc định tạo quiz theo nội dung tài liệu. Không đưa thông tin sinh viên.">
-        <textarea id={`${id}-instructions`} rows={3} maxLength={2000} value={instructions} className={TEXTAREA}
-          placeholder="Tạo quiz theo nội dung tài liệu đã chọn."
+      <Field label={msg("quizzes.components.AiDrafts.request")} htmlFor={`${id}-instructions`} required={materialIds.length === 0} error={errors.instructions}
+        hint={msg("quizzes.components.AiDrafts.withDocumentsSelectedThisCan")}>
+        <Textarea id={`${id}-instructions`} rows={3} maxLength={2000} value={instructions}
+          placeholder={msg("quizzes.components.AiDrafts.createAQuizFromThe")}
           onChange={(event) => setInstructions(event.target.value)} data-testid="ai-draft-instructions" />
       </Field>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Field label="Số câu" htmlFor={`${id}-count`} required error={errors.count}>
+        <Field label={msg("quizzes.components.AiDrafts.questions")} htmlFor={`${id}-count`} required error={errors.count}>
           <TextInput id={`${id}-count`} inputMode="numeric" value={count} invalid={!!errors.count}
             onChange={(event) => setCount(event.target.value)} data-testid="ai-draft-count" />
         </Field>
-        <Field label="Loại câu" htmlFor={`${id}-type`}>
+        <Field label={msg("quizzes.components.AiDrafts.questionType")} htmlFor={`${id}-type`}>
           <Select id={`${id}-type`} value={type} onChange={(event) => setType(event.target.value as QuestionType | "")}>
-            <option value="">Tùy nội dung</option>
+            <option value="">{msg("quizzes.components.AiDrafts.dependsOnContent")}</option>
             {(Object.keys(TYPE_LABELS) as QuestionType[]).map((t) => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
           </Select>
         </Field>
-        <Field label="Độ khó" htmlFor={`${id}-difficulty`}>
+        <Field label={msg("quizzes.components.AiDrafts.difficulty")} htmlFor={`${id}-difficulty`}>
           <Select id={`${id}-difficulty`} value={difficulty} onChange={(event) => setDifficulty(event.target.value as Difficulty | "")}>
-            <option value="">Phân bổ hợp lý</option>
+            <option value="">{msg("quizzes.components.AiDrafts.balancedMix")}</option>
             {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((d) => <option key={d} value={d}>{DIFFICULTY_LABELS[d]}</option>)}
           </Select>
         </Field>
       </div>
       <div className="flex flex-col gap-1.5">
-        <p className="text-xs font-semibold text-body">Tài liệu nguồn cho AI <span className="font-normal text-muted">· tối đa 10, chỉ học liệu đã trích chữ</span></p>
+        <p className="text-xs font-semibold text-body">{msg("quizzes.components.AiDrafts.sourceDocumentsForTheAi")}<span className="font-normal text-muted">{msg("quizzes.components.AiDrafts.upTo10OnlyMaterials")}</span></p>
         {materialsError && <div role="alert" className="flex flex-wrap items-center gap-2 text-xs text-muted">
-          Chưa lấy được danh sách tài liệu; vẫn gửi được yêu cầu không kèm tài liệu.
-          <Button size="sm" onClick={() => { setMaterialsError(false); setMaterials(null); setMaterialsReload((value) => value + 1); }}>Tải lại tài liệu</Button>
+          {msg("quizzes.components.AiDrafts.couldNotGetTheDocument")}<Button size="sm" onClick={() => { setMaterialsError(false); setMaterials(null); setMaterialsReload((value) => value + 1); }}>{msg("quizzes.components.AiDrafts.reloadDocuments")}</Button>
         </div>}
-        {materials?.length === 0 && <p className="text-xs text-muted">Chưa có học liệu nào.</p>}
+        {materials?.length === 0 && <p className="text-xs text-muted">{msg("quizzes.components.AiDrafts.noLearningMaterialsYet")}</p>}
         <MaterialSourceSelect materials={materialsError ? [] : materials} value={materialIds} onChange={setMaterialIds} disabled={busy} />
         {errors.materialIds && <p role="alert" className="text-xs text-danger">{errors.materialIds}</p>}
       </div>
-      <p className="text-xs text-muted">Hệ thống tự chọn nguồn AI khả dụng. Chỉ các tài liệu đã chọn và có nội dung văn bản được đưa vào yêu cầu.</p>
+      <p className="text-xs text-muted">{msg("quizzes.components.AiDrafts.theSystemPicksAnAvailable")}</p>
       <div className="flex justify-end">
-        <Button variant="primary" icon="smart_toy" onClick={submit} data-testid="ai-draft-submit">Gửi yêu cầu</Button>
+        <Button variant="primary" icon="smart_toy" onClick={submit} data-testid="ai-draft-submit">{msg("quizzes.components.AiDrafts.sendRequest")}</Button>
       </div>
     </fieldset>
   );
@@ -327,17 +325,17 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
   onTaskFinished: () => void;
 }) {
   const origin = draft.origin === "MCP" ? `Agent: ${draft.agentLabel ?? "Agent"}`
-    : draft.source === "SHARED" ? "API của trường"
+    : draft.source === "SHARED" ? msg("quizzes.components.AiDrafts.schoolApi")
     : draft.source === "PERSONAL"
-      ? draft.provider ? `${PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider} cá nhân` : "API cá nhân"
-      : "Hệ thống tự chọn nguồn AI";
-  const update = (index: number, change: Partial<ProposalEntry>) =>
+      ? draft.provider ? msg("quizzes.components.AiDrafts.personal", { value: String(PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider) }) : msg("quizzes.components.AiDrafts.personalApi")
+      : msg("quizzes.components.AiDrafts.theSystemPicksTheAi");
+  const updateEntry = (index: number, change: Partial<ProposalEntry>) =>
     onEntries(entries.map((entry, i) => (i === index ? { ...entry, ...change } : entry)));
   const accept = (index: number) => {
     const entry = entries[index];
     if (!entry) return;
     const errors = validateForm(entry.form);
-    update(index, Object.keys(errors).length > 0 ? { errors, editing: true } : { errors, state: "accepted", editing: false });
+    updateEntry(index, Object.keys(errors).length > 0 ? { errors, editing: true } : { errors, state: "accepted", editing: false });
   };
   const acceptedCount = entries.filter((e) => e.state === "accepted").length;
 
@@ -347,27 +345,27 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
         <ul className="list-disc pl-4">{draft.sourceWarnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
       </Alert>}
       <p className="text-[12px] text-muted">
-        {origin} · gửi lúc {formatDateTime(draft.createdAt)}
-        {draft.materials.length > 0 && <> · tài liệu: {draft.materials.map((m) => m.title).join(", ")}</>}
+        {origin} {msg("quizzes.components.AiDrafts.sentAt")}{formatDateTime(draft.createdAt)}
+        {draft.materials.length > 0 && <> {msg("quizzes.components.AiDrafts.documents")}{draft.materials.map((m) => m.title).join(", ")}</>}
       </p>
       {draft.status === "PENDING" && (
         <>
-          <Alert tone="info" role="status">AI đang soạn đề xuất… Bạn có thể đóng phần soạn AI, đề xuất vẫn được giữ.</Alert>
+          <Alert tone="info" role="status">{msg("quizzes.components.AiDrafts.theAiIsWritingProposals")}</Alert>
           {/* M3: trạng thái task của U06 (cho hủy khi còn chờ); xong thì tải lại đề xuất ngay. */}
           {draft.taskId && <AiTaskStatus taskId={draft.taskId} onFinished={onTaskFinished} />}
         </>
       )}
       {draft.status === "FAILED" && (
         <div data-testid="ai-draft-failed">
-          <Alert tone="danger" role="alert">{failureLabel(draft.failureCode, draft.failureMessage)}</Alert>
+          <Alert tone="danger" role="alert">{describeFailure(draft.failureCode, draft.failureMessage)}</Alert>
         </div>
       )}
       {draft.status === "READY" && (
         <>
-          <p className="text-[13px] font-semibold text-ink">Đề xuất ({acceptedCount} đã chấp nhận / {entries.length})</p>
+          <p className="text-[13px] font-semibold text-ink">{msg("quizzes.components.AiDrafts.proposals")}{acceptedCount} {msg("quizzes.components.AiDrafts.accepted")}{entries.length})</p>
           <ol className="flex flex-col gap-3">
             {entries.map((entry, index) => (
-              <ProposalCard key={index} index={index} entry={entry} onChange={(change) => update(index, change)}
+              <ProposalCard key={index} index={index} entry={entry} onChange={(change) => updateEntry(index, change)}
                 onAccept={() => accept(index)} />
             ))}
           </ol>
@@ -389,18 +387,18 @@ function ProposalCard({ index, entry, onChange, onAccept }: {
     <li className={cx("rounded-xl border p-3", state === "accepted" ? "border-success/40 bg-success-soft/40"
       : state === "dropped" ? "border-line bg-shell opacity-60" : "border-line")} data-testid="ai-draft-question">
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <span className="text-[12px] font-semibold text-body">Câu {index + 1} · {TYPE_LABELS[form.type]}</span>
-        {state === "accepted" && <Pill tone="success">Đã chấp nhận</Pill>}
-        {state === "dropped" && <Pill tone="neutral">Đã bỏ</Pill>}
+        <span className="text-[12px] font-semibold text-body">{msg("quizzes.components.AiDrafts.question")}{index + 1} · {TYPE_LABELS[form.type]}</span>
+        {state === "accepted" && <Pill tone="success">{msg("quizzes.components.AiDrafts.accepted2")}</Pill>}
+        {state === "dropped" && <Pill tone="neutral">{msg("quizzes.components.AiDrafts.discarded")}</Pill>}
         <span className="ml-auto flex gap-1.5">
           {state !== "dropped" && (
             <Button size="sm" onClick={() => onChange({ editing: !entry.editing, state: "open" })} data-testid="ai-draft-edit">
-              {entry.editing ? "Xong" : "Sửa"}
+              {entry.editing ? "Xong" : msg("quizzes.components.AiDrafts.edit")}
             </Button>
           )}
           <Button size="sm" onClick={() => onChange({ state: state === "dropped" ? "open" : "dropped", editing: false })}
-            data-testid="ai-draft-drop">{state === "dropped" ? "Lấy lại" : "Bỏ"}</Button>
-          {state === "open" && <Button size="sm" variant="primary" onClick={onAccept} data-testid="ai-draft-accept-one">Chấp nhận</Button>}
+            data-testid="ai-draft-drop">{state === "dropped" ? msg("quizzes.components.AiDrafts.restore") : msg("quizzes.components.AiDrafts.discard")}</Button>
+          {state === "open" && <Button size="sm" variant="primary" onClick={onAccept} data-testid="ai-draft-accept-one">{msg("quizzes.components.AiDrafts.accept")}</Button>}
         </span>
       </div>
       {entry.editing ? (
@@ -414,14 +412,14 @@ function ProposalCard({ index, entry, onChange, onAccept }: {
               return (
                 <li key={option.id} className={cx("flex items-center gap-1.5 text-[12.5px]", correct ? "font-semibold text-success" : "text-body")}>
                   {correct ? <Icon name="check_circle" size={15} /> : <span aria-hidden className="inline-block size-[15px] text-center">·</span>}
-                  {option.text}{correct && <span className="sr-only"> (đáp án đúng)</span>}
+                  {option.text}{correct && <span className="sr-only"> {msg("quizzes.components.AiDrafts.correctAnswer")}</span>}
                 </li>
               );
             })}
           </ul>
-          {form.explanation && <p className="mt-1.5 text-[12px] text-muted">Giải thích: {form.explanation}</p>}
+          {form.explanation && <p className="mt-1.5 text-[12px] text-muted">{msg("quizzes.components.AiDrafts.explanation")}{form.explanation}</p>}
           {entry.serverViolations.length > 0 && state === "open" && (
-            <p className="mt-1.5 text-xs text-danger">Cần sửa: {entry.serverViolations.map((v) => v.message).join("; ")}</p>
+            <p className="mt-1.5 text-xs text-danger">{msg("quizzes.components.AiDrafts.needsFixing")}{entry.serverViolations.map((v) => v.message).join("; ")}</p>
           )}
         </>
       )}

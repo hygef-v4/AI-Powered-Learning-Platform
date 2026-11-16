@@ -7,7 +7,7 @@ import { handleTabListKey } from "./tabKeys";
 export type TabItem<T extends string> = { key: T; label: ReactNode; count?: number };
 
 /** Id của tab ứng với `key`, để vùng nội dung (`role="tabpanel"`, `id={panelId}`) đặt `aria-labelledby`. */
-export function tabId(panelId: string, key: string) {
+export function buildTabId(panelId: string, key: string) {
   return `${panelId}-tab-${key}`;
 }
 
@@ -55,7 +55,7 @@ export function Tabs<T extends string>({
             type="button"
             role="tab"
             aria-selected={on}
-            id={panelId ? tabId(panelId, item.key) : undefined}
+            id={panelId ? buildTabId(panelId, item.key) : undefined}
             aria-controls={panelId && on ? panelId : undefined}
             tabIndex={on ? 0 : -1}
             onClick={() => onChange(item.key)}

@@ -38,7 +38,7 @@ class DownloadTokenServiceTest {
     void resolvesTheGrantFromRedis() {
         when(redis.opsForValue()).thenReturn(values);
         UUID account = UUID.randomUUID();
-        when(values.get(DownloadTokenService.key("tok")))
+        when(values.get(DownloadTokenService.buildKey("tok")))
                 .thenReturn("{\"fileId\":\"file-1\",\"accountId\":\"" + account + "\"}");
 
         assertThat(service.resolve("tok")).contains(new DownloadTokenService.Grant("file-1", account));

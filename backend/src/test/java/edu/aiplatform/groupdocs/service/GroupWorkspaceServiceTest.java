@@ -4,9 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
@@ -31,6 +34,8 @@ import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groups.service.GroupAccess;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
+import edu.aiplatform.identity.contract.AccountContact;
+import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAccountLookup;
@@ -59,12 +64,13 @@ class GroupWorkspaceServiceTest {
     private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final GroupAccess groupAccess = new GroupAccess(authorization, classes, audit, clock);
+    private final IAccountLookup accounts = mock(IAccountLookup.class);
     private final GroupWorkspaceService service = new GroupWorkspaceService(documents, groups,
             new GroupDocAccess(documents, groups, groupAccess, assignments, clock), groupAccess,
-            mock(GroupDocumentService.class), assignments, mock(IAccountLookup.class));
+            mock(GroupDocumentService.class), assignments, accounts);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", member.accountId(), null, NOW,
             NOW, List.of(member.accountId()));
-    private final GroupDocument document = GroupDocument.create(UUID.randomUUID(), group.id(), assignmentId, classId,
+    private final GroupDocument document = GroupDocument.createDocument(UUID.randomUUID(), group.id(), assignmentId, classId,
             new DocumentModel(List.of()), true, NOW);
 
     @BeforeEach
@@ -80,28 +86,40 @@ class GroupWorkspaceServiceTest {
     }
 
     @Test
+    void workspaceMembersCarryStudentCodesWithoutLookingUpPeopleOutsideTheGroup() {
+        when(accounts.getContact(member.accountId())).thenReturn(Optional.of(
+                new AccountContact(member.accountId(), "an@school.test", "An",
+                        Role.STUDENT, AccountStatus.ACTIVE, "SE000001")));
+        var members = new ObjectMapper()
+                .valueToTree(service.loadWorkspace(member, document.id()).members());
+        assertThat(members.get(0).path("studentCode").asText()).isEqualTo("SE000001");
+        verify(accounts).getContact(member.accountId());
+        verifyNoMoreInteractions(accounts);
+    }
+
+    @Test
     void workspaceCarriesDiagramFlagFromTheAssignment() {
         when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(true)));
-        var view = service.workspace(member, document.id());
+        var view = service.loadWorkspace(member, document.id());
         assertThat(view.diagramEnabled()).isTrue();
         assertThat(view.activityMonitoring()).isTrue();
 
         when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(false)));
-        assertThat(service.workspace(member, document.id()).diagramEnabled()).isFalse();
+        assertThat(service.loadWorkspace(member, document.id()).diagramEnabled()).isFalse();
     }
 
     @Test
     void lastSubmissionCarriesSectionAuthorsCapturedAtSubmit() {
         when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(false)));
-        assertThat(service.workspace(member, document.id()).lastSubmission()).isNull();
+        assertThat(service.loadWorkspace(member, document.id()).lastSubmission()).isNull();
 
         List<SectionAuthor> authors = List.of(new SectionAuthor("p1", "Mục 1", member.accountId(), true),
                 new SectionAuthor("p2", "Mục 2", null, false));
-        GroupDocument submitted = document.withSubmission(new DocumentModel(List.of()), authors, member.accountId(),
+        GroupDocument submitted = document.recordSubmission(new DocumentModel(List.of()), authors, member.accountId(),
                 SubmitMode.MANUAL, NOW, false, "sha256:abc", List.of(), GroupDocument.Status.IN_PROGRESS);
         when(documents.findById(document.id())).thenReturn(Optional.of(submitted));
 
-        var submission = service.workspace(member, document.id()).lastSubmission();
+        var submission = service.loadWorkspace(member, document.id()).lastSubmission();
         assertThat(submission.authors()).containsExactlyElementsOf(authors);
         assertThat(submission.receiptHash()).isEqualTo("sha256:abc");
         assertThat(submission.changedSince()).isFalse();
@@ -114,7 +132,7 @@ class GroupWorkspaceServiceTest {
                 submitted.receiptHash(), submitted.warnings(), NOW.plusSeconds(60), submitted.version(),
                 submitted.createdAt());
         when(documents.findById(document.id())).thenReturn(Optional.of(edited));
-        assertThat(service.workspace(member, document.id()).lastSubmission().changedSince()).isTrue();
+        assertThat(service.loadWorkspace(member, document.id()).lastSubmission().changedSince()).isTrue();
     }
 
     @Test
@@ -127,14 +145,14 @@ class GroupWorkspaceServiceTest {
         GroupSection section = new GroupSection(UUID.randomUUID(), document.id(), "p1", UUID.randomUUID(), List.of(), 1,
                 "Mục 1", GroupSection.Status.CLAIMED, holder, claimedAt, null, null, draft, savedAt, null, 3);
 
-        SectionView other = SectionView.of(section, member.accountId());
+        SectionView other = SectionView.createSectionView(section, member.accountId());
         assertThat(other.claimedAt()).isEqualTo(claimedAt);
         assertThat(other.holderSavedAt()).isEqualTo(savedAt);
         assertThat(other.draftBlocks()).isNull();
         assertThat(other.draftSavedAt()).isNull();
-        assertThat(SectionView.of(section, holder).draftBlocks()).hasSize(1);
+        assertThat(SectionView.createSectionView(section, holder).draftBlocks()).hasSize(1);
 
-        SectionView done = SectionView.of(section.done(NOW), member.accountId());
+        SectionView done = SectionView.createSectionView(section.markDone(NOW), member.accountId());
         assertThat(done.claimedAt()).isNull();
         assertThat(done.holderSavedAt()).isNull();
     }

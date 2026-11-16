@@ -21,10 +21,10 @@ public class GroupDocCreateJobHandler implements IJobHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GroupDocCreateJobHandler.class);
 
-    private final GroupDocumentService documents;
+    private final GroupDocumentService groupDocumentService;
 
-    public GroupDocCreateJobHandler(GroupDocumentService documents) {
-        this.documents = documents;
+    public GroupDocCreateJobHandler(GroupDocumentService groupDocumentService) {
+        this.groupDocumentService = groupDocumentService;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class GroupDocCreateJobHandler implements IJobHandler {
             return;
         }
         try {
-            int created = documents.ensureDocuments(assignmentId);
+            int created = groupDocumentService.ensureDocuments(assignmentId);
             log.info("Tạo {} tài liệu nhóm cho bài {}", created, assignmentId);
         } catch (DataAccessException e) {
             throw new RetryableJobException("Không ghi được tài liệu nhóm", e);

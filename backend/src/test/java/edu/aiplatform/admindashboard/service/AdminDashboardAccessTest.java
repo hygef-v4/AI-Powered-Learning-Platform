@@ -38,13 +38,13 @@ class AdminDashboardAccessTest {
         try (var fixture = new DashboardFixture()) {
             doThrow(new IllegalStateException("secret")).when(fixture.audit).record(any());
             assertThatThrownBy(() -> fixture.adminDashboardService.loadDashboard(null)).isInstanceOfSatisfying(ApiException.class,
-                    problem -> assertThat(problem.code()).isEqualTo("DASHBOARD_AUDIT_UNAVAILABLE"));
+                    problem -> assertThat(problem.readCode()).isEqualTo("DASHBOARD_AUDIT_UNAVAILABLE"));
             verifyNoInteractions(fixture.accountLookup, fixture.subjectQuery, fixture.classAccess, fixture.backups, fixture.settings);
         }
     }
     private void assertProblem(Runnable action, int status) {
         assertThatThrownBy(action::run).isInstanceOfSatisfying(ApiException.class, problem -> {
-            assertThat(problem.status().value()).isEqualTo(status);
+            assertThat(problem.readStatus().value()).isEqualTo(status);
             assertThat(problem.getMessage()).doesNotContain("secret");
         });
     }

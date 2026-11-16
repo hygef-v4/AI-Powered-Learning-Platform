@@ -65,14 +65,14 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
                 """)
                                 .getSingleResult();
         if (!"read committed".equals(previous[0])) {
-            throw ApiException.unavailable(
+            throw ApiException.createUnavailable(
                     "SUBJECT_ISOLATION_UNSUPPORTED", "Thao tác môn cần transaction READ_COMMITTED");
         }
         long millis =
                 timeout.toMillis()
                         - java.time.Duration.ofNanos(System.nanoTime() - started).toMillis();
         if (millis <= 0) {
-            throw ApiException.unavailable(
+            throw ApiException.createUnavailable(
                     "SUBJECT_LIFECYCLE_TIMEOUT", "Kiểm tra môn quá thời gian, vui lòng thử lại");
         }
         long oldLock = Long.parseLong(previous[3].toString()),
@@ -112,7 +112,7 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
     @Override
     public List<Subject> findSubjectPage(String query, SubjectStatus status, int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "SUBJECT_PAGE_INVALID", "Trang phải từ 0, số dòng mỗi trang từ 1 đến 100");
         }
         return subjectJpaRepository

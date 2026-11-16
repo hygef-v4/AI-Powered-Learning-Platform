@@ -43,7 +43,7 @@ public class RabbitSseHub implements ISseHub, IGroupDocStreams {
 
     private final RabbitTemplate rabbit;
     private final SseChannels channels = new SseChannels();
-    private final ScheduledExecutorService heartbeat = Executors.newSingleThreadScheduledExecutor(r -> {
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread thread = new Thread(r, "sse-heartbeat");
         thread.setDaemon(true);
         return thread;
@@ -51,7 +51,7 @@ public class RabbitSseHub implements ISseHub, IGroupDocStreams {
 
     public RabbitSseHub(RabbitTemplate rabbit) {
         this.rabbit = rabbit;
-        heartbeat.scheduleAtFixedRate(channels::heartbeat, HEARTBEAT.toSeconds(), HEARTBEAT.toSeconds(), TimeUnit.SECONDS);
+        scheduledExecutorService.scheduleAtFixedRate(channels::sendHeartbeat, HEARTBEAT.toSeconds(), HEARTBEAT.toSeconds(), TimeUnit.SECONDS);
     }
 
     @Bean
@@ -64,20 +64,20 @@ public class RabbitSseHub implements ISseHub, IGroupDocStreams {
         Map<String, Object> message = new LinkedHashMap<>();
         message.put("channel", channelKey);
         message.put("event", event);
-        afterCommit(() -> send(message));
+        runAfterCommit(() -> sendMessage(message));
     }
 
     @Override
     public SseEmitter subscribe(String channelKey) {
         SseEmitter emitter = new SseEmitter(EMITTER_TIMEOUT.toMillis());
-        channels.add(channelKey, null, emitter);
+        channels.addEmitter(channelKey, null, emitter);
         return emitter;
     }
 
     @Override
     public SseEmitter open(UUID documentId, UUID accountId) {
         SseEmitter emitter = new SseEmitter(EMITTER_TIMEOUT.toMillis());
-        channels.add(GroupSectionService.channel(documentId), accountId.toString(), emitter);
+        channels.addEmitter(GroupSectionService.buildChannel(documentId), accountId.toString(), emitter);
         return emitter;
     }
 
@@ -88,8 +88,8 @@ public class RabbitSseHub implements ISseHub, IGroupDocStreams {
         }
         Map<String, Object> message = new LinkedHashMap<>();
         message.put("close", accountId.toString());
-        message.put("channels", documentIds.stream().map(GroupSectionService::channel).toList());
-        afterCommit(() -> send(message));
+        message.put("channels", documentIds.stream().map(GroupSectionService::buildChannel).toList());
+        runAfterCommit(() -> sendMessage(message));
     }
 
     /** Nhận từ mọi instance (kể cả chính mình) và đẩy tới emitter cục bộ. */
@@ -110,15 +110,15 @@ public class RabbitSseHub implements ISseHub, IGroupDocStreams {
         }
         Object channel = message.get("channel");
         if (channel != null) {
-            channels.send(String.valueOf(channel), message.get("event"));
+            channels.sendEvent(String.valueOf(channel), message.get("event"));
         }
     }
 
-    SseChannels channels() {
+    SseChannels readChannels() {
         return channels;
     }
 
-    private void send(Map<String, Object> message) {
+    private void sendMessage(Map<String, Object> message) {
         try {
             rabbit.convertAndSend(EXCHANGE, "", message);
         } catch (RuntimeException e) {
@@ -126,7 +126,7 @@ public class RabbitSseHub implements ISseHub, IGroupDocStreams {
         }
     }
 
-    private static void afterCommit(Runnable action) {
+    private static void runAfterCommit(Runnable action) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
@@ -141,6 +141,6 @@ public class RabbitSseHub implements ISseHub, IGroupDocStreams {
 
     @PreDestroy
     void stop() {
-        heartbeat.shutdownNow();
+        scheduledExecutorService.shutdownNow();
     }
 }

@@ -164,7 +164,7 @@ public class AcademicsReadRepository implements IAcademicsReadRepository {
      * Returns active and removed enrollment totals for each specified class ID.
      */
     @Override
-    public Map<UUID, EnrollmentCounts> enrollmentCounts(Collection<UUID> classIds) {
+    public Map<UUID, EnrollmentCounts> countEnrollments(Collection<UUID> classIds) {
         if (classIds.isEmpty())
             return Map.of();
         var counts = new HashMap<UUID, EnrollmentCounts>();

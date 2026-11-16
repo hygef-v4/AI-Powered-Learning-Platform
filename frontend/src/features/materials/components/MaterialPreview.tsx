@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { apiDownload } from "@/shared/api/client";
-import { Button, Icon } from "@/shared/ui";
+import { downloadApi } from "@/shared/api/client";
+import { Button, Card, Icon } from "@/shared/ui";
 import { materialApi, describeMaterialError } from "../api";
 import { DocumentViewer, detectDocumentKind } from "./DocumentViewer";
 import { describeFile, type Material } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Tải tệp hiện hành bằng link tải mới. */
 async function downloadMaterial(material: Material, classId?: string) {
@@ -36,8 +37,7 @@ export function DownloadButton({ material, classId }: { material: Material; clas
         disabled={busy}
         onClick={() => void handleDownload()}
       >
-        Tải xuống
-      </Button>
+        {msg("materials.components.MaterialPreview.download")}</Button>
       {error && (
         <span role="alert" className="text-xs text-danger">
           {error}
@@ -65,7 +65,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
     (async () => {
       try {
         const token = await materialApi.issueDownloadToken(materialId, classId);
-        const blob = await apiDownload(token.url, { signal: controller.signal });
+        const blob = await downloadApi(token.url, { signal: controller.signal });
         if (!cancelled) setLoaded({ key, blob });
       } catch (e) {
         if (!cancelled) setLoaded({ key, error: describeMaterialError(e) });
@@ -89,7 +89,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
           target="_blank"
           rel="noopener noreferrer"
         >
-          Mở trên YouTube <Icon name="arrow_forward" size={13} className="-rotate-45" />
+          {msg("materials.components.MaterialPreview.openOnYoutube")}<Icon name="arrow_forward" size={13} className="-rotate-45" />
         </a>
         {valid ? (
           <iframe
@@ -103,8 +103,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
           />
         ) : (
           <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-black text-sm text-white/70">
-            Không phát được video
-          </div>
+            {msg("materials.components.MaterialPreview.couldNotPlayTheVideo")}</div>
         )}
       </div>
     );
@@ -123,8 +122,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
             icon="refresh"
             onClick={() => setRevision((v) => v + 1)}
           >
-            Thử lại
-          </Button>
+            {msg("materials.components.MaterialPreview.retry")}</Button>
         </div>
       );
     if (!current?.blob)
@@ -133,8 +131,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
           role="status"
           className="flex h-[calc(100dvh-13rem)] min-h-[360px] sm:min-h-[560px] items-center justify-center rounded-xl bg-viewer text-sm text-white/75"
         >
-          Đang mở tệp…
-        </div>
+          {msg("materials.components.MaterialPreview.openingFile")}</div>
       );
     return (
       <DocumentViewer
@@ -146,7 +143,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
     );
   }
   return (
-    <div className="flex flex-col items-center gap-4 rounded-xl border border-line bg-surface px-6 py-14 text-center">
+    <Card padding="none" className="flex flex-col items-center gap-4 px-6 py-14 text-center">
       <span
         aria-hidden="true"
         className="flex size-16 items-center justify-center rounded-2xl bg-primary-soft text-primary-ink"
@@ -160,6 +157,6 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
         <p className="text-xs text-muted">{describeFile(material)}</p>
       </div>
       <DownloadButton material={material} classId={classId} />
-    </div>
+    </Card>
   );
 }

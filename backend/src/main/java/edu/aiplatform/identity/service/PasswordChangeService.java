@@ -20,6 +20,7 @@ import edu.aiplatform.shared.error.ApiException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -72,36 +73,37 @@ public class PasswordChangeService {
                 : authorization.authorize(actor, Actions.PASSWORD_CHANGE, ResourceRef.account(actor.accountId()));
         AuthorizationService.throwIfUnavailable(decision);
         if (!decision.allowed()) {
-            throw ApiException.forbidden("PASSWORD_CHANGE_FORBIDDEN");
+            throw ApiException.createForbidden("PASSWORD_CHANGE_FORBIDDEN");
         }
         Account account = accounts.findById(actor.accountId())
-                .orElseThrow(() -> ApiException.notFound("ACCOUNT_NOT_FOUND"));
-        if (!throttle.passwordChangeAllowed(account.id())) {
-            throw tooManyAttempts();
+                .orElseThrow(() -> ApiException.createNotFound("ACCOUNT_NOT_FOUND"));
+        if (!throttle.isPasswordChangeAllowed(account.id())) {
+            throw createTooManyAttemptsError();
         }
-        if (!currentMatches(currentPassword, account)) {
+        if (!isCurrentPasswordMatching(currentPassword, account)) {
             throttle.recordPasswordChangeFailure(account.id());
-            throw ApiException.badRequest(CURRENT_PASSWORD_INVALID, "Mật khẩu hiện tại không đúng");
+            throw ApiException.createBadRequest(CURRENT_PASSWORD_INVALID, "Mật khẩu hiện tại không đúng");
         }
-        Set<PasswordPolicy.Violation> violations = PasswordPolicy.check(newPassword, account.schoolEmail());
+        Set<PasswordPolicy.Violation> violations = PasswordPolicy.checkPassword(newPassword, account.schoolEmail());
         if (!violations.isEmpty()) {
             throw new PasswordPolicyException(violations);
         }
         String hash = passwordEncoder.encode(newPassword);
-        Instant now = clock.instant();
+        Instant now = clock.instant().truncatedTo(ChronoUnit.MILLIS);
         transactions.executeWithoutResult(status -> {
             accounts.updatePassword(account.id(), hash, now);
             audit.record(new AuditEvent(UUID.randomUUID(), account.id(), "PASSWORD_CHANGED", "ACCOUNT",
                     account.id().toString(), AuditResult.SUCCESS, null, Map.of(), now));
+            sessions.restampSession(currentSid, now.toEpochMilli());
             sessions.deleteAllExcept(account.id(), currentSid);
         });
         // Lặp lại sau commit để không sót phiên tạo chen giữa (P1).
         sessions.deleteAllExcept(account.id(), currentSid);
-        otpChallenges.delete(account.id(), OtpPurpose.PASSWORD_RESET);
+        otpChallenges.deleteChallenge(account.id(), OtpPurpose.PASSWORD_RESET);
         tickets.revoke(account.id(), OtpPurpose.PASSWORD_RESET);
     }
 
-    private boolean currentMatches(String currentPassword, Account account) {
+    private boolean isCurrentPasswordMatching(String currentPassword, Account account) {
         if (currentPassword == null || !account.hasPassword()
                 || currentPassword.getBytes(StandardCharsets.UTF_8).length > PasswordPolicy.MAX_BYTES) {
             return false;
@@ -109,7 +111,7 @@ public class PasswordChangeService {
         return passwordEncoder.matches(currentPassword, account.passwordHash());
     }
 
-    private static ApiException tooManyAttempts() {
+    private static ApiException createTooManyAttemptsError() {
         return new ApiException(HttpStatus.TOO_MANY_REQUESTS, TOO_MANY_ATTEMPTS,
                 "Nhập sai mật khẩu hiện tại quá nhiều lần, hãy thử lại sau ít phút");
     }

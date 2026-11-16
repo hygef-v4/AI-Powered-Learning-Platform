@@ -61,7 +61,7 @@ class AccountImportServiceTest {
     @BeforeEach
     void setUp() {
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
-        when(accounts.existingEmails(anyCollection())).thenReturn(Set.of("gv01@fpt.edu.vn"));
+        when(accounts.findExistingEmails(anyCollection())).thenReturn(Set.of("gv01@fpt.edu.vn"));
     }
 
     private static byte[] bytes(String text) {
@@ -110,8 +110,8 @@ class AccountImportServiceTest {
 
         assertThatThrownBy(() -> service.commit(admin, bytes(CSV)))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.status()).isEqualTo(org.springframework.http.HttpStatus.CONFLICT);
-                    assertThat(e.code()).isEqualTo("IMPORT_CONFLICT");
+                    assertThat(e.readStatus()).isEqualTo(org.springframework.http.HttpStatus.CONFLICT);
+                    assertThat(e.readCode()).isEqualTo("IMPORT_CONFLICT");
                 });
     }
 
@@ -132,7 +132,7 @@ class AccountImportServiceTest {
     @Test
     void fileProblemsAreRejectedAsAWhole() {
         assertThatThrownBy(() -> service.validate(admin, bytes("mail,name\nx,y\n")))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("IMPORT_FILE_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("IMPORT_FILE_INVALID"));
         assertThatThrownBy(() -> service.validate(admin, new byte[0])).isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> service.validate(admin, new byte[] {(byte) 0xC3, (byte) 0x28}))
                 .isInstanceOf(ApiException.class);
@@ -215,14 +215,14 @@ class AccountImportServiceTest {
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("ROLE"));
         assertThatThrownBy(() -> service.validate(new Actor(UUID.randomUUID(), Role.STUDENT), new byte[] {1}))
                 .isInstanceOfSatisfying(ApiException.class, error ->
-                        assertThat(error.status()).isEqualTo(org.springframework.http.HttpStatus.FORBIDDEN));
-        verify(accounts, never()).existingEmails(anyCollection());
+                        assertThat(error.readStatus()).isEqualTo(org.springframework.http.HttpStatus.FORBIDDEN));
+        verify(accounts, never()).findExistingEmails(anyCollection());
     }
 
     @Test
     void rejectsCorruptOversizedAndFormulaWorkbooks() throws IOException {
         assertThatThrownBy(() -> service.validate(admin, new byte[] {'P', 'K', 3, 4, 0}))
-                .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.code()).isEqualTo("IMPORT_FILE_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.readCode()).isEqualTo("IMPORT_FILE_INVALID"));
         assertThatThrownBy(() -> service.validate(admin, new byte[AccountImportService.MAX_BYTES + 1]))
                 .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.getMessage()).contains("1 MB"));
         try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
@@ -244,7 +244,7 @@ class AccountImportServiceTest {
     /** BR-U01-108: MSSV bắt buộc với STUDENT, cấm với role khác, kiểm định dạng và trùng sau các lỗi hiện có. */
     @Test
     void studentCodeColumnIsRequiredForStudentsAndCheckedForDuplicates() {
-        when(accounts.existingStudentCodes(anyCollection())).thenReturn(Set.of("SE999999"));
+        when(accounts.findExistingStudentCodes(anyCollection())).thenReturn(Set.of("SE999999"));
         String csv = """
                 email,display_name,role,student_code
                 a@fpt.edu.vn,A,STUDENT,se000001

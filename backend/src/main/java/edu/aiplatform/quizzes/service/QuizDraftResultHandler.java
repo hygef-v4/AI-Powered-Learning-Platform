@@ -71,8 +71,8 @@ public class QuizDraftResultHandler implements IAiTaskResultHandler {
         if (draft.status() != DraftStatus.PENDING) {
             return ApplyOutcome.STALE;
         }
-        if (draft.sourceRetryAttempted() && !java.util.Objects.equals(draft.taskId(), result.taskId())) return ApplyOutcome.STALE;
-        String problem = targetProblem(result.actor(), draft);
+        if (draft.hasSourceRetryAttempt() && !java.util.Objects.equals(draft.taskId(), result.taskId())) return ApplyOutcome.STALE;
+        String problem = findTargetProblem(result.actor(), draft);
         if (problem != null) {
             fail(draft, problem, "Đích của đề xuất không còn nhận câu mới");
             return ApplyOutcome.REJECTED;
@@ -87,7 +87,7 @@ public class QuizDraftResultHandler implements IAiTaskResultHandler {
         if ((!output.requestMatchesSources() || !output.questionsMatchSources())
                 && draft.provenance().get(AiDraftViews.MATERIALS) instanceof List<?> materials
                 && !materials.isEmpty()) {
-            if (draft.sourceRetryAttempted()) {
+            if (draft.hasSourceRetryAttempt()) {
                 fail(draft, "AI_SOURCE_MISMATCH", "AI vẫn tạo câu hỏi không bám tài liệu. Đề xuất đã bị chặn; hãy kiểm tra tài liệu hoặc gửi yêu cầu mới.");
                 return ApplyOutcome.REJECTED;
             }
@@ -96,11 +96,11 @@ public class QuizDraftResultHandler implements IAiTaskResultHandler {
                 existing.stream().filter(String.class::isInstance).map(String.class::cast).forEach(warnings::add);
             }
             warnings.add("Yêu cầu hoặc câu hỏi AI tạo có thể không liên quan đến tài liệu đã chọn. Hệ thống bỏ prompt bổ sung và tạo lại một lần chỉ theo tài liệu nguồn.");
-            if (!drafts.transition(draft.retryFromSources(warnings), DraftStatus.PENDING)) return ApplyOutcome.STALE;
+            if (!drafts.transitionDraft(draft.retryFromSources(warnings), DraftStatus.PENDING)) return ApplyOutcome.STALE;
             retryAfterCommit(result.actor(), draft.id());
             return ApplyOutcome.APPLIED;
         }
-        if (!drafts.transition(draft.ready(output.questions(), Map.of()), DraftStatus.PENDING)) {
+        if (!drafts.transitionDraft(draft.markReady(output.questions(), Map.of()), DraftStatus.PENDING)) {
             return ApplyOutcome.STALE;
         }
         if (result.taskId() != null) {
@@ -113,8 +113,8 @@ public class QuizDraftResultHandler implements IAiTaskResultHandler {
     public void onFailed(AiTaskFailure failure) {
         draftOf(failure.targetRef())
                 .filter(d -> d.status() == DraftStatus.PENDING)
-                .filter(d -> !d.sourceRetryAttempted() || java.util.Objects.equals(d.taskId(), failure.taskId()))
-                .ifPresent(d -> fail(d, QuizAiDraftService.failureCode(failure.state()), failure.safeError()));
+                .filter(d -> !d.hasSourceRetryAttempt() || java.util.Objects.equals(d.taskId(), failure.taskId()))
+                .ifPresent(d -> fail(d, QuizAiDraftService.resolveFailureCode(failure.state()), failure.safeError()));
     }
 
     private void retryAfterCommit(Actor actor, UUID draftId) {
@@ -132,12 +132,12 @@ public class QuizDraftResultHandler implements IAiTaskResultHandler {
     }
 
     /** {@code null} khi người yêu cầu vẫn có quyền và đích còn nhận câu. */
-    private String targetProblem(Actor actor, QuizAiDraft draft) {
+    private String findTargetProblem(Actor actor, QuizAiDraft draft) {
         if (actor == null) {
             return "AI_DRAFT_FORBIDDEN";
         }
         if (draft.target() == DraftTarget.QUIZ) {
-            Optional<Quiz> quiz = quizzes.find(draft.quizId());
+            Optional<Quiz> quiz = quizzes.findQuiz(draft.quizId());
             if (quiz.isEmpty()) {
                 return "QUIZ_NOT_FOUND";
             }
@@ -152,7 +152,7 @@ public class QuizDraftResultHandler implements IAiTaskResultHandler {
         try {
             activeSubjects.require(draft.subjectId());
         } catch (ApiException inactive) {
-            return inactive.code();
+            return inactive.readCode();
         }
         return null;
     }
@@ -162,13 +162,13 @@ public class QuizDraftResultHandler implements IAiTaskResultHandler {
             return Optional.empty();
         }
         try {
-            return drafts.find(UUID.fromString(targetRef.substring(QuizAiDraftService.TARGET_PREFIX.length())));
+            return drafts.findDraft(UUID.fromString(targetRef.substring(QuizAiDraftService.TARGET_PREFIX.length())));
         } catch (IllegalArgumentException malformed) {
             return Optional.empty();
         }
     }
 
     private void fail(QuizAiDraft draft, String code, String message) {
-        drafts.transition(draft.failed(code, message, clock.instant()), DraftStatus.PENDING);
+        drafts.transitionDraft(draft.markFailed(code, message, clock.instant()), DraftStatus.PENDING);
     }
 }

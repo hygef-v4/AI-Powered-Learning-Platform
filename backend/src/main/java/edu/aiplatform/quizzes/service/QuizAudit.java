@@ -21,11 +21,11 @@ class QuizAudit {
         this.clock = clock;
     }
 
-    void success(Actor actor, String action, String objectType, UUID objectId, Map<String, Object> details) {
+    void recordSuccess(Actor actor, String action, String objectType, UUID objectId, Map<String, Object> details) {
         record(actor, action, objectType, objectId, AuditResult.SUCCESS, null, details);
     }
 
-    void denied(Actor actor, String action, String objectType, UUID objectId, String reason) {
+    void recordDenied(Actor actor, String action, String objectType, UUID objectId, String reason) {
         record(actor, "ACCESS_DENIED", objectType, objectId, AuditResult.DENIED, reason, Map.of("action", action));
     }
 

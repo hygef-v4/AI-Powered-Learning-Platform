@@ -12,14 +12,14 @@ public record Question(UUID id, UUID lineageId, int versionNo, QuestionScope sco
                        Instant createdAt, Instant updatedAt, long version) {
 
     /** Câu ngân hàng mới: lineage mới, phiên bản 1, {@code DRAFT}. */
-    public static Question newBankDraft(UUID subjectId, QuestionContent content, UUID createdBy, Instant now) {
+    public static Question createBankDraft(UUID subjectId, QuestionContent content, UUID createdBy, Instant now) {
         UUID id = UUID.randomUUID();
         return new Question(id, id, 1, QuestionScope.BANK, subjectId, null, content, QuestionStatus.DRAFT, null,
                 createdBy, now, now, 0);
     }
 
     /** Câu riêng của Quiz (BR-U10-13): lineage riêng, luôn {@code DRAFT}, sửa được khi Quiz còn nháp. */
-    public static Question newInline(UUID quizId, UUID subjectId, QuestionContent content, UUID createdBy, Instant now) {
+    public static Question createInline(UUID quizId, UUID subjectId, QuestionContent content, UUID createdBy, Instant now) {
         UUID id = UUID.randomUUID();
         return new Question(id, id, 1, QuestionScope.QUIZ, subjectId, quizId, content, QuestionStatus.DRAFT, null,
                 createdBy, now, now, 0);
@@ -30,11 +30,11 @@ public record Question(UUID id, UUID lineageId, int versionNo, QuestionScope sco
         if (scope != QuestionScope.QUIZ) {
             throw new IllegalStateException("Chỉ sao câu riêng của Quiz");
         }
-        return newInline(targetQuizId, subjectId, content, actorId, now);
+        return createInline(targetQuizId, subjectId, content, actorId, now);
     }
 
     /** Câu giảng viên đề xuất vào ngân hàng: lineage mới, chờ Chủ nhiệm môn duyệt (BR-U10-09). */
-    public static Question newProposal(UUID subjectId, QuestionContent content, UUID createdBy, Instant now) {
+    public static Question createProposal(UUID subjectId, QuestionContent content, UUID createdBy, Instant now) {
         UUID id = UUID.randomUUID();
         return new Question(id, id, 1, QuestionScope.BANK, subjectId, null, content, QuestionStatus.PENDING, null,
                 createdBy, now, now, 0);
@@ -46,7 +46,7 @@ public record Question(UUID id, UUID lineageId, int versionNo, QuestionScope sco
     }
 
     /** Người đề xuất sửa rồi gửi lại: về {@code PENDING}. */
-    public Question resubmitted(QuestionContent newContent, Instant now) {
+    public Question markResubmitted(QuestionContent newContent, Instant now) {
         if (!isProposal()) {
             throw new IllegalStateException("Chỉ gửi lại được câu đề xuất");
         }
@@ -54,13 +54,13 @@ public record Question(UUID id, UUID lineageId, int versionNo, QuestionScope sco
                 createdBy, createdAt, now, version);
     }
 
-    public Question approved(Instant now) {
+    public Question markApproved(Instant now) {
         requireStatus(QuestionStatus.PENDING);
         return new Question(id, lineageId, versionNo, scope, subjectId, quizId, content, QuestionStatus.ACTIVE, now,
                 createdBy, createdAt, now, version);
     }
 
-    public Question rejected(Instant now) {
+    public Question markRejected(Instant now) {
         requireStatus(QuestionStatus.PENDING);
         return new Question(id, lineageId, versionNo, scope, subjectId, quizId, content, QuestionStatus.REJECTED, null,
                 createdBy, createdAt, now, version);
@@ -75,7 +75,7 @@ public record Question(UUID id, UUID lineageId, int versionNo, QuestionScope sco
         return status == QuestionStatus.DRAFT && activatedAt == null;
     }
 
-    public Question withContent(QuestionContent newContent, Instant now) {
+    public Question replaceContent(QuestionContent newContent, Instant now) {
         requireStatus(QuestionStatus.DRAFT);
         return new Question(id, lineageId, versionNo, scope, subjectId, quizId, newContent, status, activatedAt,
                 createdBy, createdAt, now, version);
@@ -94,7 +94,7 @@ public record Question(UUID id, UUID lineageId, int versionNo, QuestionScope sco
     }
 
     /** Bản nháp kế tiếp cùng lineage, chép nội dung của bản này; {@code nextVersionNo} lấy từ phiên bản lớn nhất. */
-    public Question nextDraft(int nextVersionNo, UUID actorId, Instant now) {
+    public Question createNextDraft(int nextVersionNo, UUID actorId, Instant now) {
         if (status == QuestionStatus.DRAFT || isProposal()) {
             throw new IllegalStateException("Bản nháp không mở bản nháp mới");
         }

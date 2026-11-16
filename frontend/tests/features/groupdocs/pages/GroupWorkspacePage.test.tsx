@@ -107,6 +107,23 @@ function backend(view: WorkspaceView) {
 }
 
 describe("GroupWorkspacePage", () => {
+  it("keeps student codes in the section holder and assignment picker and selects by account id", async () => {
+    const view = workspace(LEADER);
+    view.members = view.members.map((m, i) => ({ ...m, studentCode: `SE00000${i + 1}` }));
+    const calls = backend(view);
+    render(<GroupWorkspacePage documentId="doc1" />);
+    await screen.findByText("Nội dung đã xong");
+    expect(screen.getAllByText(/Bình · SE000002/).length).toBeGreaterThan(0);
+    fireEvent.click(within(screen.getByRole("region", { name: "Mục s3" })).getByRole("button", { name: "Giao mục" }));
+    const dialog = await screen.findByRole("dialog", { name: "Giao mục" });
+    const picker = within(dialog).getByLabelText("Thành viên nhận mục");
+    fireEvent.change(picker, { target: { value: "SE000002" } });
+    fireEvent.mouseDown(await screen.findByRole("option", { name: "Bình · SE000002" }));
+    expect(picker).toHaveAttribute("placeholder", "Bình · SE000002");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Giao mục" }));
+    await waitFor(() => expect(calls.find(c => c.url.endsWith("/sections/s3:assign"))?.body)
+      .toEqual({ assigneeId: MEMBER, replaceHolder: false }));
+  });
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.useRealTimers();
@@ -204,8 +221,9 @@ describe("GroupWorkspacePage", () => {
     await waitFor(() => expect(calls.find((c) => c.url.endsWith("/sections/s3:assign"))?.body).toEqual({ assigneeId: MEMBER, replaceHolder: false }));
   });
 
-  it("lịch sử mục chỉ xem: hiện từng bản với tác giả, không có khôi phục", async () => {
-    backend(workspace(LEADER));
+  it("lịch sử mục chỉ xem: hiện từng bản với tác giả và MSSV, không có khôi phục", async () => {
+    const view = workspace(LEADER);
+    backend({ ...view, members: view.members.map((member) => ({ ...member, studentCode: "SE000002" })) });
     render(<GroupWorkspacePage documentId="doc1" />);
     const item = await screen.findByRole("group", { name: "Mục s2" });
 
@@ -213,7 +231,7 @@ describe("GroupWorkspacePage", () => {
 
     const dialog = await screen.findByRole("dialog", { name: "Lịch sử" });
     // Bên trái chỉ ghi lúc lưu và người viết, không ghi Xong hay chưa.
-    expect(await within(dialog).findByText("Bình")).toBeInTheDocument();
+    expect(await within(dialog).findByText("Bình · SE000002")).toBeInTheDocument();
     expect(within(dialog).queryByText(/Xong/)).not.toBeInTheDocument();
     expect(within(dialog).getByText("Bản nháp cũ")).toBeInTheDocument();
     expect(within(dialog).queryByRole("button", { name: /Dùng bản này/ })).not.toBeInTheDocument();
@@ -266,7 +284,7 @@ describe("GroupWorkspacePage", () => {
 
     act(() => source!.onmessage!({ data: JSON.stringify({ type: "document.auto-submitted" }) }));
     const lock = await screen.findByRole("alertdialog", { name: "Đang nộp" });
-    expect(lock).toHaveTextContent(/Đã hết hạn nộp lúc 30\/10\/2026 17:00/);
+    expect(lock).toHaveTextContent(/Đã hết hạn nộp lúc 17:00 30\/10\/2026/);
     expect(lock.parentElement).toBe(document.body);
     await act(async () => resolveReload!());
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());

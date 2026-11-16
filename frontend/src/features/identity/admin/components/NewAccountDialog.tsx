@@ -7,10 +7,11 @@ import { isValidStudentCode, normalizeStudentCode, STUDENT_CODE_FORMAT_MESSAGE }
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
 import { Dialog } from "@/shared/ui/Dialog";
-import { Field, Select, TextInput } from "@/shared/ui/inputs";
+import { Field, Select, TextInput } from "@/shared/ui/Inputs";
 import { ROLE_LABELS } from "../../model/types";
 import { createAccount } from "../api";
 import { ADMIN_ERROR_LABELS } from "../model/labels";
+import { msg } from "@/i18n/msg";
 
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const ROLES: Role[] = ["STUDENT", "TEACHER", "SUBJECT_MANAGER", "ADMIN"];
@@ -43,10 +44,10 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
     event.preventDefault();
     const code = normalizeStudentCode(studentCode);
     const errors = {
-      email: EMAIL_FORMAT.test(email.trim()) ? undefined : "Email không hợp lệ.",
-      name: displayName.trim().length === 0 ? "Nhập họ và tên." : undefined,
+      email: EMAIL_FORMAT.test(email.trim()) ? undefined : msg("identity.admin.components.NewAccountDialog.invalidEmail"),
+      name: displayName.trim().length === 0 ? msg("identity.admin.components.NewAccountDialog.enterTheFullName") : undefined,
       studentCode: !student ? undefined
-        : !code ? "Nhập MSSV."
+        : !code ? msg("identity.admin.components.NewAccountDialog.enterTheStudentId")
           : isValidStudentCode(code) ? undefined : STUDENT_CODE_FORMAT_MESSAGE,
     };
     setFieldError(errors);
@@ -58,7 +59,7 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
       onCreated();
     } catch (e) {
       const code = e instanceof ApiError ? e.problem.code : undefined;
-      setError((code && ADMIN_ERROR_LABELS[code]) ?? "Không tạo được tài khoản, vui lòng thử lại.");
+      setError((code && ADMIN_ERROR_LABELS[code]) ?? msg("identity.admin.components.NewAccountDialog.couldNotCreateTheAccount"));
     } finally {
       setBusy(false);
     }
@@ -67,20 +68,19 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
   return (
     <Dialog
       open
-      title="Thêm tài khoản"
+      title={msg("identity.admin.components.NewAccountDialog.addAccount")}
       icon="person_add"
       onClose={onClose}
       footer={
         <>
           <Button type="submit" form={formId} variant="primary" icon="person_add" disabled={busy}>
-            Thêm tài khoản
-          </Button>
+            {msg("identity.admin.components.NewAccountDialog.addAccount")}</Button>
         </>
       }
     >
       <form id={formId} onSubmit={submit} noValidate className="flex flex-col gap-3.5">
         <Field
-          label="Email trường"
+          label={msg("identity.admin.components.NewAccountDialog.schoolEmail")}
           htmlFor={emailId}
           required
           error={fieldError.email}
@@ -94,10 +94,10 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
             onChange={(e) => setEmail(e.target.value)}
           />
         </Field>
-        <Field label="Họ và tên" htmlFor={nameId} required error={fieldError.name}>
+        <Field label={msg("identity.admin.components.NewAccountDialog.fullName")} htmlFor={nameId} required error={fieldError.name}>
           <TextInput id={nameId} value={displayName} invalid={!!fieldError.name} onChange={(e) => setDisplayName(e.target.value)} />
         </Field>
-        <Field label="Vai trò" htmlFor={roleId} required>
+        <Field label={msg("identity.admin.components.NewAccountDialog.role")} htmlFor={roleId} required>
           <Select id={roleId} value={role} onChange={(e) => chooseRole(e.target.value as Role)}>
             {ROLES.map((r) => (
               <option key={r} value={r}>
@@ -107,7 +107,7 @@ export function NewAccountDialog({ onClose, onCreated }: { onClose: () => void; 
           </Select>
         </Field>
         {student && (
-          <Field label="Mã số sinh viên" htmlFor={codeId} required error={fieldError.studentCode}>
+          <Field label={msg("identity.admin.components.NewAccountDialog.studentId")} htmlFor={codeId} required error={fieldError.studentCode}>
             <TextInput
               id={codeId}
               value={studentCode}

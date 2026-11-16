@@ -42,10 +42,10 @@ class AttemptActivityAssessor {
         try {
             summary = activity.summary(new WorkRef(WorkKind.QUIZ_ATTEMPT, scored.id(), scored.classId()), scored.accountId());
         } catch (RuntimeException unavailable) {
-            return scored.withOutcome(unavailable(raw), raw);
+            return scored.applyOutcome(createUnavailableOutcome(raw), raw);
         }
         if (summary == null) {
-            return scored.withOutcome(unavailable(raw), raw);
+            return scored.applyOutcome(createUnavailableOutcome(raw), raw);
         }
         LeavePenalty policy = scored.snapshot().settings().leavePenalty();
         Duration minAway = Duration.ofSeconds(policy == null ? 0 : policy.minAwaySeconds());
@@ -53,16 +53,16 @@ class AttemptActivityAssessor {
                 .filter(i -> i.certainty() == IntervalCertainty.KNOWN)
                 .filter(i -> i.end() != null && Duration.between(i.start(), i.end()).compareTo(minAway) >= 0)
                 .count();
-        return scored.withOutcome(new ActivityOutcome(raw, suggestedPenalty(policy, leaves, raw), BigDecimal.ZERO, leaves,
-                signalOf(summary, scored), null, null, null, null), raw);
+        return scored.applyOutcome(new ActivityOutcome(raw, calculateSuggestedPenalty(policy, leaves, raw), BigDecimal.ZERO, leaves,
+                resolveSignal(summary, scored), null, null, null, null), raw);
     }
 
-    private static ActivityOutcome unavailable(BigDecimal raw) {
+    private static ActivityOutcome createUnavailableOutcome(BigDecimal raw) {
         return new ActivityOutcome(raw, BigDecimal.ZERO, BigDecimal.ZERO, null, ActivitySignal.UNAVAILABLE, null, null, null,
                 null);
     }
 
-    static BigDecimal suggestedPenalty(LeavePenalty policy, int leaves, BigDecimal raw) {
+    static BigDecimal calculateSuggestedPenalty(LeavePenalty policy, int leaves, BigDecimal raw) {
         if (policy == null || leaves <= policy.freeLeaves()) {
             return BigDecimal.ZERO;
         }
@@ -73,7 +73,7 @@ class AttemptActivityAssessor {
         return penalty.min(raw);
     }
 
-    private static ActivitySignal signalOf(ActivitySummary summary, QuizAttempt attempt) {
+    private static ActivitySignal resolveSignal(ActivitySummary summary, QuizAttempt attempt) {
         if (summary.policyState() != ActivityPolicyState.AVAILABLE) {
             return ActivitySignal.NO_SIGNAL;
         }

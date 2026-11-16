@@ -4,9 +4,9 @@ import { formatDuration } from "@/shared/activity/ActivityTimeline";
 import { HEARTBEAT_MS, useActivityTracker } from "@/shared/activity/useActivityTracker";
 import { computeParts, type DocumentModel } from "@/shared/document";
 import { insertIntoPart } from "@/features/assignmentwork/pages/AssignmentWorkspacePage";
-import { remaining } from "@/features/assignmentwork/model/format";
+import { describeRemaining } from "@/features/assignmentwork/model/format";
 import type { StudentRow } from "@/features/assignmentwork/model/types";
-import { upcoming } from "@/features/assignmentwork/hooks/useStudentAssignments";
+import { isUpcoming } from "@/features/assignmentwork/hooks/useStudentAssignments";
 
 describe("insertIntoPart", () => {
   const heading = (id: string, style: "H1" | "H2", text: string): DocumentModel["blocks"][number] => ({ id, origin: "TEACHER", type: "HEADING", content: { style, text } });
@@ -28,17 +28,17 @@ describe("danh sách bài", () => {
     myStatus: "NOT_STARTED", attemptCount: 0, submittedCount: 0, inProgressAttemptId: null, lastSubmittedAt: null, group: null, ...patch,
   });
   it("sắp đến hạn là bài đang mở chưa nộp", () => {
-    expect(upcoming(row({}))).toBe(true);
-    expect(upcoming(row({ myStatus: "SUBMITTED" }))).toBe(false);
-    expect(upcoming(row({ status: "CLOSED" }))).toBe(false);
-    expect(upcoming(row({ myStatus: "GROUP", group: { groupDocumentId: "doc", submitted: true, submittedAt: "2026-11-11T00:00:00Z" } }))).toBe(false);
-    expect(upcoming(row({ myStatus: "GROUP", group: { groupDocumentId: "doc", submitted: false, submittedAt: null } }))).toBe(true);
+    expect(isUpcoming(row({}))).toBe(true);
+    expect(isUpcoming(row({ myStatus: "SUBMITTED" }))).toBe(false);
+    expect(isUpcoming(row({ status: "CLOSED" }))).toBe(false);
+    expect(isUpcoming(row({ myStatus: "GROUP", group: { groupDocumentId: "doc", submitted: true, submittedAt: "2026-11-11T00:00:00Z" } }))).toBe(false);
+    expect(isUpcoming(row({ myStatus: "GROUP", group: { groupDocumentId: "doc", submitted: false, submittedAt: null } }))).toBe(true);
   });
   it("đếm ngược tới hạn", () => {
     const now = Date.parse("2026-10-20T00:00:00Z");
-    expect(remaining("2026-10-21T02:30:00Z", now)).toBe("1 ngày 2 giờ");
-    expect(remaining("2026-10-20T00:10:00Z", now)).toBe("10 phút");
-    expect(remaining("2026-10-19T00:00:00Z", now)).toBe("Đã quá hạn");
+    expect(describeRemaining("2026-10-21T02:30:00Z", now)).toBe("1 ngày 2 giờ");
+    expect(describeRemaining("2026-10-20T00:10:00Z", now)).toBe("10 phút");
+    expect(describeRemaining("2026-10-19T00:00:00Z", now)).toBe("Đã quá hạn");
   });
   it("định dạng thời lượng ISO", () => {
     expect(formatDuration("PT1M5S")).toBe("1 phút 5 giây");

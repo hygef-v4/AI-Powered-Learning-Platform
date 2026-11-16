@@ -151,7 +151,7 @@ final class WorkFixtures {
     }
 
     AssignmentAttempt attempt(int no, AttemptStatus status, Instant deadline, boolean late) {
-        AttemptSnapshot snapshot = AttemptSnapshot.of(view, Map.of(DiagramType.CLASS, 1));
+        AttemptSnapshot snapshot = AttemptSnapshot.createSnapshot(view, Map.of(DiagramType.CLASS, 1));
         AssignmentAttempt a = new AssignmentAttempt(UUID.randomUUID(), assignmentId, classId, student.accountId(), no,
                 snapshot, skeleton, 0, status, status == AttemptStatus.SUBMITTED ? SubmitMode.MANUAL : null, late,
                 NOW.minus(Duration.ofHours(2)), deadline, NOW.minus(Duration.ofHours(1)),
@@ -175,17 +175,17 @@ final class WorkFixtures {
     }
 
     private void wireAttempts() {
-        when(attempts.find(any())).thenAnswer(i -> Optional.ofNullable(store.get(i.<UUID>getArgument(0))));
+        when(attempts.findAttempt(any())).thenAnswer(i -> Optional.ofNullable(store.get(i.<UUID>getArgument(0))));
         when(attempts.findForUpdate(any())).thenAnswer(i -> Optional.ofNullable(store.get(i.<UUID>getArgument(0))));
         doAnswer(i -> {
             AssignmentAttempt a = i.getArgument(0);
             store.put(a.id(), a);
             return null;
         }).when(attempts).insert(any());
-        when(attempts.inProgress(any(), any())).thenAnswer(i -> store.values().stream()
+        when(attempts.findInProgress(any(), any())).thenAnswer(i -> store.values().stream()
                 .filter(a -> a.assignmentId().equals(i.getArgument(0)) && a.accountId().equals(i.getArgument(1))
-                        && a.inProgress()).findFirst());
-        when(attempts.maxAttemptNo(any(), any())).thenAnswer(i -> store.values().stream()
+                        && a.hasInProgressStatus()).findFirst());
+        when(attempts.findMaxAttemptNo(any(), any())).thenAnswer(i -> store.values().stream()
                 .filter(a -> a.assignmentId().equals(i.getArgument(0)) && a.accountId().equals(i.getArgument(1)))
                 .mapToInt(AssignmentAttempt::attemptNo).max().orElse(0));
         when(attempts.listMine(any(UUID.class), any(UUID.class))).thenAnswer(i -> store.values().stream()
@@ -198,13 +198,13 @@ final class WorkFixtures {
         });
         when(attempts.listOfClass(any(), any())).thenAnswer(i -> store.values().stream()
                 .filter(a -> a.assignmentId().equals(i.getArgument(0)) && a.classId().equals(i.getArgument(1))).toList());
-        when(attempts.inProgressOf(any())).thenAnswer(i -> store.values().stream()
-                .filter(a -> a.assignmentId().equals(i.getArgument(0)) && a.inProgress()).map(AssignmentAttempt::id).toList());
-        when(attempts.overdue(any(), anyInt())).thenAnswer(i -> store.values().stream()
-                .filter(a -> a.inProgress() && a.deadlineAt().isBefore(i.getArgument(0))).map(AssignmentAttempt::id).toList());
+        when(attempts.listInProgress(any())).thenAnswer(i -> store.values().stream()
+                .filter(a -> a.assignmentId().equals(i.getArgument(0)) && a.hasInProgressStatus()).map(AssignmentAttempt::id).toList());
+        when(attempts.listOverdue(any(), anyInt())).thenAnswer(i -> store.values().stream()
+                .filter(a -> a.hasInProgressStatus() && a.deadlineAt().isBefore(i.getArgument(0))).map(AssignmentAttempt::id).toList());
         when(attempts.saveContent(any(), any(), anyLong(), any())).thenAnswer(i -> {
             AssignmentAttempt a = store.get(i.<UUID>getArgument(0));
-            if (a == null || !a.inProgress() || a.contentVersion() != i.<Long>getArgument(2)) {
+            if (a == null || !a.hasInProgressStatus() || a.contentVersion() != i.<Long>getArgument(2)) {
                 return 0;
             }
             store.put(a.id(), copy(a, i.getArgument(1), a.contentVersion() + 1, a.status(), a.submitMode(), a.late(),
@@ -214,7 +214,7 @@ final class WorkFixtures {
         when(attempts.extendDeadline(any(), any())).thenAnswer(i -> {
             AssignmentAttempt a = store.get(i.<UUID>getArgument(0));
             Instant deadline = i.getArgument(1);
-            if (a == null || !a.inProgress() || !a.deadlineAt().isBefore(deadline)) {
+            if (a == null || !a.hasInProgressStatus() || !a.deadlineAt().isBefore(deadline)) {
                 return 0;
             }
             store.put(a.id(), copy(a, a.content(), a.contentVersion(), a.status(), a.submitMode(), a.late(), deadline,
@@ -223,7 +223,7 @@ final class WorkFixtures {
         });
         when(attempts.submit(any(), any(), anyBoolean(), any(), any(), any())).thenAnswer(i -> {
             AssignmentAttempt a = store.get(i.<UUID>getArgument(0));
-            if (a == null || !a.inProgress()) {
+            if (a == null || !a.hasInProgressStatus()) {
                 return 0;
             }
             store.put(a.id(), copy(a, a.content(), a.contentVersion(), AttemptStatus.SUBMITTED, i.getArgument(1),

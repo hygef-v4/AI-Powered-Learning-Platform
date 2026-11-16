@@ -60,8 +60,8 @@ class QuizSupport {
         this.attemptPresence = attemptPresence;
     }
 
-    Quiz load(UUID id) {
-        return quizzes.find(id).orElseThrow(() -> ApiException.notFound(NOT_FOUND));
+    Quiz loadQuiz(UUID id) {
+        return quizzes.findQuiz(id).orElseThrow(() -> ApiException.createNotFound(NOT_FOUND));
     }
 
     /**
@@ -76,10 +76,10 @@ class QuizSupport {
         try {
             used = attemptPresence.hasAttempts(quiz.id());
         } catch (RuntimeException e) {
-            throw ApiException.unavailable("QUIZ_DEPENDENCY_UNAVAILABLE", "Chưa kiểm tra được lượt làm quiz, thử lại sau");
+            throw ApiException.createUnavailable("QUIZ_DEPENDENCY_UNAVAILABLE", "Chưa kiểm tra được lượt làm quiz, thử lại sau");
         }
         if (used) {
-            throw ApiException.conflict("QUIZ_HAS_ATTEMPTS",
+            throw ApiException.createConflict("QUIZ_HAS_ATTEMPTS",
                     "Quiz đang mở đã có lượt làm nên không sửa câu được; hãy tạo version mới");
         }
     }
@@ -101,16 +101,17 @@ class QuizSupport {
     }
 
     Quiz loadManaged(Actor actor, UUID id) {
-        Quiz quiz = load(id);
+        Quiz quiz = loadQuiz(id);
         requireManage(actor, quiz);
         return quiz;
     }
 
     /** Quiz đang soạn được: người có quyền, Quiz chưa lưu trữ, lớp/môn chưa lưu trữ. */
     Quiz loadEditable(Actor actor, UUID id, long version) {
+        quizzes.lockQuiz(id);
         Quiz quiz = loadManaged(actor, id);
         if (!quiz.isEditable()) {
-            throw ApiException.conflict("QUIZ_NOT_EDITABLE", "Quiz đã lưu trữ không sửa được");
+            throw ApiException.createConflict("QUIZ_NOT_EDITABLE", "Quiz đã lưu trữ không sửa được");
         }
         requireVersion(quiz, version);
         requireContainerActive(quiz);
@@ -125,11 +126,11 @@ class QuizSupport {
         if (quiz.scope() == QuizScope.SUBJECT && classId != null
                 && !access.allows(actor, Actions.QUIZ_SUBJECT_MANAGE, ResourceRef.subject(quiz.subjectId()))) {
             access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, OBJECT, quiz.id(), NOT_FOUND);
-            ClassRef ref = classRef(classId);
+            ClassRef ref = loadClassRef(classId);
             if (!ref.subjectId().equals(quiz.subjectId())
                     || (quiz.status() != QuizStatus.OPEN
                         && (quiz.status() != QuizStatus.RETIRED || quiz.publishedAt() == null))) {
-                throw ApiException.notFound(NOT_FOUND);
+                throw ApiException.createNotFound(NOT_FOUND);
             }
             return false;
         }
@@ -140,63 +141,63 @@ class QuizSupport {
     /** Môn còn {@code ACTIVE}; với Quiz của lớp, lớp chưa lưu trữ. */
     void requireContainerActive(Quiz quiz) {
         activeSubjects.require(quiz.subjectId());
-        if (quiz.scope() == QuizScope.CLASS && classRef(quiz.classId()).status() == ClassStatus.ARCHIVED) {
-            throw ApiException.conflict("CLASS_ARCHIVED", "Lớp đã lưu trữ, quiz của lớp chỉ xem");
+        if (quiz.scope() == QuizScope.CLASS && loadClassRef(quiz.classId()).status() == ClassStatus.ARCHIVED) {
+            throw ApiException.createConflict("CLASS_ARCHIVED", "Lớp đã lưu trữ, quiz của lớp chỉ xem");
         }
     }
 
-    ClassRef classRef(UUID classId) {
+    ClassRef loadClassRef(UUID classId) {
         try {
-            return classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+            return classes.getClassRef(classId).orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         } catch (ApiException rejected) {
             throw rejected;
         } catch (RuntimeException unavailable) {
-            throw ApiException.unavailable("CLASS_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
+            throw ApiException.createUnavailable("CLASS_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
         }
     }
 
     static void requireVersion(Quiz quiz, long version) {
         if (quiz.version() != version) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
     }
 
     /** Lưu thay đổi của Quiz (kiểm version); trả bản có version mới. */
-    Quiz save(Quiz quiz) {
-        if (!quizzes.update(quiz)) {
-            throw versionConflict();
+    Quiz saveQuiz(Quiz quiz) {
+        if (!quizzes.updateQuiz(quiz)) {
+            throw createVersionConflictError();
         }
-        return load(quiz.id());
+        return loadQuiz(quiz.id());
     }
 
-    static ApiException versionConflict() {
-        return ApiException.conflict("QUIZ_VERSION_CONFLICT", "Quiz đã được thay đổi ở phiên khác; hãy tải lại");
+    static ApiException createVersionConflictError() {
+        return ApiException.createConflict("QUIZ_VERSION_CONFLICT", "Quiz đã được thay đổi ở phiên khác; hãy tải lại");
     }
 
-    static BigDecimal maxScoreOf(List<DrawRule> rules) {
+    static BigDecimal sumMaxScore(List<DrawRule> rules) {
         return rules.stream().map(r -> r.pointsEach().multiply(BigDecimal.valueOf(r.questionCount())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    Map<UUID, Question> questionsOf(List<QuizItem> items) {
+    Map<UUID, Question> loadQuestions(List<QuizItem> items) {
         return questions.findAll(items.stream().map(QuizItem::questionId).toList()).stream()
                 .collect(Collectors.toMap(Question::id, Function.identity()));
     }
 
-    QuizDetail detail(Quiz quiz, boolean canManage) {
-        List<QuizItem> items = quizzes.items(quiz.id());
-        Map<UUID, Question> byId = questionsOf(items);
+    QuizDetail buildDetail(Quiz quiz, boolean canManage) {
+        List<QuizItem> items = quizzes.listItems(quiz.id());
+        Map<UUID, Question> byId = loadQuestions(items);
         List<QuizItemView> views = items.stream()
                 .filter(item -> byId.containsKey(item.questionId()))
                 .map(item -> {
                     Question q = byId.get(item.questionId());
                     return new QuizItemView(item.position(), item.points(), q.scope() == QuestionScope.QUIZ,
-                            QuestionView.of(q));
+                            QuestionView.createQuestionView(q));
                 })
                 .toList();
         List<DrawRule> rules = quizzes.drawRules(quiz.id());
-        BigDecimal max = quiz.generated() ? maxScoreOf(rules)
+        BigDecimal max = quiz.wasGenerated() ? sumMaxScore(rules)
                 : items.stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new QuizDetail(QuizInfo.of(quiz), views, rules.stream().map(DrawRuleView::of).toList(), max, canManage);
+        return new QuizDetail(QuizInfo.createQuizInfo(quiz), views, rules.stream().map(DrawRuleView::createDrawRuleView).toList(), max, canManage);
     }
 }

@@ -66,13 +66,13 @@ class GroupEvaluationTest {
             assertThat(root.submissionHash).isEqualTo("old");
             assertThat(root.score).isEqualByComparingTo("1");
             assertThat(member.score).isEqualByComparingTo("1");
-            verify(repo, never()).save(any());
+            verify(repo, never()).saveEvaluation(any());
             return;
         }
         assertThat(root.state).isEqualTo(EvaluationStatus.PENDING);
         assertThat(root.submissionHash).isEqualTo("new");
         assertThat(root.score).isNull();
-        assertThat(root.history()).hasSize(1);
+        assertThat(root.listHistory()).hasSize(1);
         assertThat(member.state).isEqualTo(EvaluationStatus.PENDING);
         assertThat(member.score).isNull();
         assertThat(member.publishedAt).isNull();
@@ -82,9 +82,9 @@ class GroupEvaluationTest {
         assertThat(root.feedback).isNull();
         assertThat(root.adjustment).isEqualByComparingTo("0");
         assertThat(root.rubricChecks).isEqualTo("{}");
-        verify(repo).save(argThat(e -> e.id.equals(root.id)));
-        verify(repo).save(argThat(e -> e.id.equals(member.id)));
+        verify(repo).saveEvaluation(argThat(e -> e.id.equals(root.id)));
+        verify(repo).saveEvaluation(argThat(e -> e.id.equals(member.id)));
         assertThat(previousGroupMember.state).isEqualTo(EvaluationStatus.SUPERSEDED);
-        verify(repo, times(3)).save(any());
+        verify(repo, times(3)).saveEvaluation(any());
     }
 }

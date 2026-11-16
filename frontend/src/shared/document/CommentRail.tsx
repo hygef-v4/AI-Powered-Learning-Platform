@@ -101,20 +101,20 @@ export function CommentRail({ paper, comments, activeKey, matchSectionHeight = f
   });
 
   useEffect(() => {
-    const run = () => layout.current();
+    const runLayout = () => layout.current();
     if (typeof ResizeObserver !== "undefined") {
-      observer.current = new ResizeObserver(run);
+      observer.current = new ResizeObserver(runLayout);
       if (paper.current) observer.current.observe(paper.current);
       cards.current.forEach((card) => observer.current?.observe(card));
     }
-    window.addEventListener("resize", run);
-    void document.fonts?.ready.then(run);
+    window.addEventListener("resize", runLayout);
+    void document.fonts?.ready.then(runLayout);
     return () => {
       observer.current?.disconnect();
       observer.current = null;
       sizedBodies.current.forEach((body) => { body.style.minHeight = ""; });
       sizedBodies.current.clear();
-      window.removeEventListener("resize", run);
+      window.removeEventListener("resize", runLayout);
     };
   }, [paper]);
 

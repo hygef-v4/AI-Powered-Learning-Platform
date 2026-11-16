@@ -61,7 +61,7 @@ class MyGroupServiceTest {
     void studentWithoutGroupSeesEmptyState() {
         when(groups.findGroupOf(classId, student.accountId())).thenReturn(Optional.empty());
 
-        var view = service.myGroup(student, classId);
+        var view = service.loadMyGroup(student, classId);
 
         assertThat(view.groupId()).isNull();
         assertThat(view.members()).isEmpty();
@@ -79,15 +79,15 @@ class MyGroupServiceTest {
         when(documents.listByGroup(group.id())).thenReturn(List.of());
         when(groups.findPending(group.id())).thenReturn(Optional.of(new LeaderChangeRequest(UUID.randomUUID(), group.id(),
                 UUID.randomUUID(), null, "Lý do của người khác", LeaderChangeRequest.Status.PENDING, null, null, null, null, NOW)));
-        when(groups.latestOf(group.id(), student.accountId(), 2)).thenReturn(List.of());
+        when(groups.listLatest(group.id(), student.accountId(), 2)).thenReturn(List.of());
 
-        var view = service.myGroup(student, classId);
+        var view = service.loadMyGroup(student, classId);
 
         assertThat(view.works()).extracting(MyGroupService.GroupWork::title).containsExactly("Bài nhóm 1");
         assertThat(view.pendingRequest()).isTrue();
         assertThat(view.myRequests()).isEmpty();
         assertThat(view.members()).hasSize(2);
-        verify(groups).latestOf(eq(group.id()), eq(student.accountId()), eq(2));
+        verify(groups).listLatest(eq(group.id()), eq(student.accountId()), eq(2));
     }
 
     private AssignmentView view(SubmissionMode mode, AssignmentStatus status, String title) {

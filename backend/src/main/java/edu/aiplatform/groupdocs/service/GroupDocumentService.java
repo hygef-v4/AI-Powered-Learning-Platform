@@ -61,7 +61,7 @@ public class GroupDocumentService {
         Set<UUID> active = new HashSet<>(classes.listActiveStudents(view.get().classId()));
         int created = 0;
         for (ClassGroup group : groups.listGroups(view.get().classId())) {
-            if (group.memberIds().stream().anyMatch(active::contains) && create(group, view.get(), content)) {
+            if (group.memberIds().stream().anyMatch(active::contains) && createDocument(group, view.get(), content)) {
                 created++;
             }
         }
@@ -85,7 +85,7 @@ public class GroupDocumentService {
                 continue;
             }
             for (UUID groupId : groupIds) {
-                groups.findGroup(groupId).ifPresent(group -> create(group, view, content.get()));
+                groups.findGroup(groupId).ifPresent(group -> createDocument(group, view, content.get()));
             }
         }
     }
@@ -104,14 +104,14 @@ public class GroupDocumentService {
         if (view.isEmpty() || content.isEmpty()) {
             return Optional.empty();
         }
-        create(group, view.get(), content.get());
+        createDocument(group, view.get(), content.get());
         return documents.findByGroupAndAssignment(group.id(), assignmentId);
     }
 
-    private boolean create(ClassGroup group, AssignmentView view, AssignmentContent content) {
+    private boolean createDocument(ClassGroup group, AssignmentView view, AssignmentContent content) {
         Instant now = clock.instant();
         DocumentModel shared = content.skeleton() == null ? new DocumentModel(List.of()) : content.skeleton();
-        GroupDocument document = GroupDocument.create(UUID.randomUUID(), group.id(), view.assignmentId(), group.classId(),
+        GroupDocument document = GroupDocument.createDocument(UUID.randomUUID(), group.id(), view.assignmentId(), group.classId(),
                 shared, view.activityMonitoringEnabled(), now);
         if (!documents.insertIfAbsent(document)) {
             return false;

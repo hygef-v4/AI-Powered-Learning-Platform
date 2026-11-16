@@ -129,11 +129,11 @@ class GroupProposalControllerTest {
     @Test
     void serviceErrorsAndUnreadableBodiesKeepTheirCodes() throws Exception {
         when(proposals.acceptInvitation(actor, proposalId))
-                .thenThrow(ApiException.conflict("STUDENT_IN_PROPOSAL", "Bạn đang ở một đề xuất khác"));
+                .thenThrow(ApiException.createConflict("STUDENT_IN_PROPOSAL", "Bạn đang ở một đề xuất khác"));
         mvc.perform(post("/api/v1/group-proposals/" + proposalId + ":accept"))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("STUDENT_IN_PROPOSAL"));
 
-        when(proposals.leaveProposal(actor, proposalId)).thenThrow(ApiException.notFound("GROUP_PROPOSAL_NOT_FOUND"));
+        when(proposals.leaveProposal(actor, proposalId)).thenThrow(ApiException.createNotFound("GROUP_PROPOSAL_NOT_FOUND"));
         mvc.perform(post("/api/v1/group-proposals/" + proposalId + ":leave")).andExpect(status().isNotFound());
 
         mvc.perform(post("/api/v1/group-proposals/not-a-uuid:accept")).andExpect(status().isBadRequest());

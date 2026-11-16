@@ -20,7 +20,7 @@ class AiDraftFormattingTest {
                   "guidanceFormat":{"align":"JUSTIFY","runs":[{"text":"Vẽ ","bold":true},{"text":"sơ đồ","color":"#123456"}]},
                   "rubric":[{"title":"Đúng","items":[{"text":"Đủ lớp","points":2}]}]}]}
                 """), true);
-        var built = AiDraftProposal.build(proposal);
+        var built = AiDraftProposal.buildProposal(proposal);
         assertThat(built.skeleton().blocks()).hasSize(3);
         JsonNode context = built.skeleton().blocks().get(0).content();
         assertThat(context.path("align").asText()).isEqualTo("CENTER");
@@ -42,7 +42,7 @@ class AiDraftFormattingTest {
         var proposal = AssignmentDraftRevision.normalize(json.readTree("""
                 {"blocks":[{"ref":"b1","type":"PARAGRAPH","text":"Hello","format":{"align":"RIGHT","bold":false}}]}
                 """), true);
-        var built = AssignmentDraftRevision.build(proposal, refs, current, "Test");
+        var built = AssignmentDraftRevision.buildRevision(proposal, refs, current, "Test");
         JsonNode next = built.skeleton().blocks().get(0).content();
         assertThat(next.path("align").asText()).isEqualTo("RIGHT");
         assertThat(next.path("runs").get(0).path("bold").asBoolean()).isFalse();

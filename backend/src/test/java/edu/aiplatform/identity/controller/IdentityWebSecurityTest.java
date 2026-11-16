@@ -130,7 +130,7 @@ class IdentityWebSecurityTest {
     @Test
     void validCookieInjectsActor() throws Exception {
         signedIn();
-        when(profileService.get(STUDENT)).thenReturn(new ProfileService.ProfileView(STUDENT.accountId(),
+        when(profileService.loadProfile(STUDENT)).thenReturn(new ProfileService.ProfileView(STUDENT.accountId(),
                 "taivm@fpt.edu.vn", "Tài", null, Role.STUDENT, AccountStatus.ACTIVE, "/classes"));
 
         mvc.perform(get("/api/v1/me/profile").cookie(new Cookie(AuthCookies.ACCESS, "good")))
@@ -235,7 +235,7 @@ class IdentityWebSecurityTest {
                         .content("{\"displayName\":\"Tài\",\"role\":\"ADMIN\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
-        verify(profileService, never()).update(any(), any(), any());
+        verify(profileService, never()).updateProfile(any(), any(), any());
     }
 
     @Test

@@ -22,28 +22,28 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 public class AssignmentExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public ProblemDetail problem(ApiException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.status(), exception.getMessage());
-        problem.setProperty("code", exception.code());
+    public ProblemDetail describeProblem(ApiException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.readStatus(), exception.getMessage());
+        problem.setProperty("code", exception.readCode());
         if (exception instanceof AssignmentProblem assignment) {
-            assignment.properties().forEach(problem::setProperty);
+            assignment.describeProperties().forEach(problem::setProperty);
         }
         return problem;
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)
-    public ProblemDetail conflict(OptimisticLockingFailureException exception) {
-        return problem(ApiException.conflict("ASSIGNMENT_VERSION_CONFLICT", "Bài đã thay đổi ở nơi khác. Hãy tải lại"));
+    public ProblemDetail describeConflict(OptimisticLockingFailureException exception) {
+        return describeProblem(ApiException.createConflict("ASSIGNMENT_VERSION_CONFLICT", "Bài đã thay đổi ở nơi khác. Hãy tải lại"));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ProblemDetail integrity(DataIntegrityViolationException exception) {
-        return problem(ApiException.conflict("ASSIGNMENT_DATA_CONFLICT", "Dữ liệu không hợp lệ hoặc đã thay đổi"));
+    public ProblemDetail describeIntegrityViolation(DataIntegrityViolationException exception) {
+        return describeProblem(ApiException.createConflict("ASSIGNMENT_DATA_CONFLICT", "Dữ liệu không hợp lệ hoặc đã thay đổi"));
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class, MissingServletRequestPartException.class})
-    public ProblemDetail invalid(Exception exception) {
+    public ProblemDetail describeInvalidRequest(Exception exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Dữ liệu yêu cầu không hợp lệ");
         problem.setProperty("code", "INVALID_REQUEST");
         return problem;

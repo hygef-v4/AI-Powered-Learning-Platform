@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { QuizPracticeHistoryPage } from "@/features/quizpractice/pages/QuizPracticeHistoryPage";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Luyện tập Quiz" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.quizpractice.page.quizPractice") };
+}
 
 // U11 #42 Quiz Practice History.
 export default function Page() {

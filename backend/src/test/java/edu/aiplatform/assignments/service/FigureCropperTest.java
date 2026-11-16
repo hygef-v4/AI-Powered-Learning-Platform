@@ -41,12 +41,12 @@ class FigureCropperTest {
 
     @Test
     void areaIsPaddedAndClampedInsideThePage() {
-        assertArea(FigureCropper.pixelArea(new Box(0.25, 0.5, 0.5, 0.25), 1000, 2000), 240, 980, 520, 540);
+        assertArea(FigureCropper.calculatePixelArea(new Box(0.25, 0.5, 0.5, 0.25), 1000, 2000), 240, 980, 520, 540);
         // Vùng tràn ra ngoài được kéo vào trong trang.
-        assertArea(FigureCropper.pixelArea(new Box(0.9, 0.95, 0.5, 0.5), 1000, 1000), 490, 490, 510, 510);
+        assertArea(FigureCropper.calculatePixelArea(new Box(0.9, 0.95, 0.5, 0.5), 1000, 1000), 490, 490, 510, 510);
         // Tối thiểu 2% mỗi chiều.
-        assertArea(FigureCropper.pixelArea(new Box(0.5, 0.5, 0, 0), 1000, 1000), 490, 490, 40, 40);
-        assertThat(FigureCropper.pixelArea(new Box(Double.NaN, -3, 7, 0.1), 100, 100)[0]).isZero();
+        assertArea(FigureCropper.calculatePixelArea(new Box(0.5, 0.5, 0, 0), 1000, 1000), 490, 490, 40, 40);
+        assertThat(FigureCropper.calculatePixelArea(new Box(Double.NaN, -3, 7, 0.1), 100, 100)[0]).isZero();
     }
 
     @Test

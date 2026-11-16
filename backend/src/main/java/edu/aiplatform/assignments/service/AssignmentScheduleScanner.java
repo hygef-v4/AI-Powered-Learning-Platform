@@ -39,7 +39,7 @@ public class AssignmentScheduleScanner implements IScheduledScanner {
 
     @Override
     public void scan(Instant now) {
-        for (UUID id : assignments.dueToOpen(now, BATCH)) {
+        for (UUID id : assignments.listDueToOpen(now, BATCH)) {
             try {
                 transaction.executeWithoutResult(status -> lifecycle.open(id, now));
             } catch (RuntimeException e) {

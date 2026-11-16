@@ -32,7 +32,7 @@ public class AccountLookupService implements IAccountLookup {
     @Override
     public List<AccountContact> listActiveAdmins(UUID afterId,int limit) {
         return accounts.listActiveAdmins(afterId,Math.max(1,Math.min(100,limit))).stream()
-                .map(AccountLookupService::contact).toList();
+                .map(AccountLookupService::buildContact).toList();
     }
 
     private final AccountRepository accounts;
@@ -45,14 +45,14 @@ public class AccountLookupService implements IAccountLookup {
     @Override
     public List<AccountContact> findStudents(String query, int limit) {
         return accounts.findForLookup(query, Set.of(Role.STUDENT), AccountStatus.ACTIVE, limit < 1 ? 20 : Math.min(limit, 200)).stream()
-                .map(AccountLookupService::contact).toList();
+                .map(AccountLookupService::buildContact).toList();
     }
 
     /** Mọi trạng thái; người gọi tự lọc theo {@code status} khi cần (ví dụ chỉ nhận ACTIVE, MSG30). */
     @Override
     public List<AccountContact> findAccounts(String query, Set<Role> roles, int limit) {
         return accounts.findForLookup(query, roles == null ? Set.of() : roles, null, clamp(limit)).stream()
-                .map(AccountLookupService::contact).toList();
+                .map(AccountLookupService::buildContact).toList();
     }
 
     @Override
@@ -62,7 +62,7 @@ public class AccountLookupService implements IAccountLookup {
         }
         List<String> normalized = emails.stream().map(EmailPolicy::normalize).filter(e -> !e.isEmpty())
                 .distinct().toList();
-        return accounts.findByEmails(normalized).stream().map(AccountLookupService::contact).toList();
+        return accounts.findByEmails(normalized).stream().map(AccountLookupService::buildContact).toList();
     }
 
     @Override
@@ -72,19 +72,19 @@ public class AccountLookupService implements IAccountLookup {
         }
         List<String> normalized = studentCodes.stream().map(StudentCodePolicy::normalize)
                 .filter(StudentCodePolicy::isValid).distinct().toList();
-        return accounts.findStudentsByCodes(normalized).stream().map(AccountLookupService::contact).toList();
+        return accounts.findStudentsByCodes(normalized).stream().map(AccountLookupService::buildContact).toList();
     }
 
     @Override
     public Optional<AccountContact> getContact(UUID accountId) {
-        return accountId == null ? Optional.empty() : accounts.findById(accountId).map(AccountLookupService::contact);
+        return accountId == null ? Optional.empty() : accounts.findById(accountId).map(AccountLookupService::buildContact);
     }
 
     @Override
     public Map<UUID, AccountContact> getContacts(Collection<UUID> accountIds) {
         List<UUID> ids = accountIds.stream().filter(Objects::nonNull).distinct().toList();
         Map<UUID, AccountContact> contacts = new LinkedHashMap<>();
-        accounts.findByIds(ids).forEach(account -> contacts.put(account.id(), contact(account)));
+        accounts.findByIds(ids).forEach(account -> contacts.put(account.id(), buildContact(account)));
         return contacts;
     }
 
@@ -92,7 +92,7 @@ public class AccountLookupService implements IAccountLookup {
     @Transactional(propagation = Propagation.MANDATORY)
     public Optional<AccountContact> lockContact(UUID accountId) {
         return accountId == null ? Optional.empty()
-                : accounts.findByIdForShare(accountId).map(AccountLookupService::contact);
+                : accounts.findByIdForShare(accountId).map(AccountLookupService::buildContact);
     }
 
     /** Số đếm cho Admin Dashboard (U15); không có dữ liệu cá nhân. */
@@ -105,7 +105,7 @@ public class AccountLookupService implements IAccountLookup {
         return limit < 1 ? MAX_RESULTS : Math.min(limit, MAX_RESULTS);
     }
 
-    private static AccountContact contact(Account account) {
+    private static AccountContact buildContact(Account account) {
         return new AccountContact(account.id(), account.schoolEmail(), account.displayName(), account.role(),
                 account.status(), account.studentCode());
     }

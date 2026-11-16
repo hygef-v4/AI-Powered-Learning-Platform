@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { GroupSectionEditorPage } from "@/features/groupdocs";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Soạn bài nhóm" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.groupdocs.id.edit.page.editGroupWork") };
+}
 
 export default async function Page({ params, searchParams }: {
   params: Promise<{ id: string }>;

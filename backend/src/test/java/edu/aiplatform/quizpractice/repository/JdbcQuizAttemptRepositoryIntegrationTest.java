@@ -24,6 +24,26 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Set;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.time.Clock;
+import edu.aiplatform.academics.contract.*;
+import edu.aiplatform.identity.contract.*;
+import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.assignmentwork.contract.IActivityQuery;
+import edu.aiplatform.subjects.contract.ISubjectQuery;
+import edu.aiplatform.quizzes.contract.*;
+import edu.aiplatform.quizzes.model.*;
+import edu.aiplatform.quizzes.repository.*;
+import edu.aiplatform.quizzes.service.QuizAuthoringService;
+import edu.aiplatform.quizzes.service.QuizScorer;
+import edu.aiplatform.quizpractice.service.QuizAttemptService;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import static org.mockito.Mockito.*;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -130,6 +150,103 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
     }
 
     @Test
+    void firstAttemptWaitsForQuestionEditAndUsesItsCommittedPaperAndKey() throws Exception {
+        JdbcClient app = JdbcClient.create(appDataSource);
+        ObjectMapper json = new ObjectMapper().findAndRegisterModules();
+        var quizzes = new JdbcQuizRepository(app, json);
+        var questions = new JdbcQuestionRepository(app, json);
+        var quiz = quizzes.findQuiz(quizId).orElseThrow();
+        questions.insert(Question.createInline(quizId, quiz.subjectId(), createQuestionContent("Old paper", "1"), student, NOW));
+        UUID questionId = questions.listInline(quizId).get(0).id();
+        quizzes.replaceItems(quizId, List.of(new QuizItem(quizId, questionId, 1, BigDecimal.ONE)));
+        assertThat(quizzes.updateQuiz(quiz.markPublished(Instant.now()))).isTrue();
+        long version = quizzes.findQuiz(quizId).orElseThrow().version();
+        CountDownLatch checkedPresence = new CountDownLatch(1);
+        CountDownLatch resumeEdit = new CountDownLatch(1);
+        CountDownLatch startedTransaction = new CountDownLatch(1);
+        IClassAccess classes = mock(IClassAccess.class);
+        when(classes.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId, quiz.subjectId(),
+                "SE1801", "Class", ClassStatus.OPEN, student, false)));
+        ISubjectQuery subjects = mock(ISubjectQuery.class);
+        when(subjects.isActive(quiz.subjectId())).thenReturn(true);
+        var executor = Executors.newFixedThreadPool(2);
+        try (var context = new AnnotationConfigApplicationContext()) {
+            context.registerBean(IQuizRepository.class, () -> quizzes);
+            context.registerBean(IQuestionRepository.class, () -> questions);
+            context.registerBean(IQuizAttemptRepository.class, () -> repository);
+            context.registerBean(IClassAccess.class, () -> classes);
+            context.registerBean(ISubjectQuery.class, () -> subjects);
+            context.registerBean(IAuthorization.class, () -> (actor, action, ref) -> AuthorizationDecision.allow());
+            context.registerBean(IAudit.class, () -> event -> { });
+            context.registerBean(IActivityQuery.class, () -> mock(IActivityQuery.class));
+            context.registerBean(Clock.class, Clock::systemUTC);
+            context.registerBean(IQuizAttemptPresence.class, () -> id -> {
+                boolean present = repository.existsForQuiz(id);
+                checkedPresence.countDown();
+                awaitLatch(resumeEdit);
+                return present;
+            });
+            for (String name : List.of("quizzes.service.QuizAuthoringService", "quizzes.service.QuizSupport",
+                    "quizzes.service.QuizAccess", "quizzes.service.QuizAudit", "quizzes.service.ActiveSubjects",
+                    "quizzes.service.QuizQueryService", "quizzes.service.QuizPaperService", "quizzes.service.QuizScorer",
+                    "quizpractice.service.QuizAttemptService", "quizpractice.service.PracticeSupport",
+                    "quizpractice.service.PracticeAccess", "quizpractice.service.AttemptActivityAssessor")) {
+                context.register(Class.forName("edu.aiplatform." + name));
+            }
+            context.refresh();
+            Actor actor = new Actor(student, Role.STUDENT);
+            var edit = executor.submit(() -> tx.execute(status -> context.getBean(QuizAuthoringService.class)
+                    .updateInline(actor, quizId, questionId, createQuestionContent("Updated paper", "2"), version)));
+            try {
+                assertThat(checkedPresence.await(5, TimeUnit.SECONDS)).isTrue();
+                var start = executor.submit(() -> tx.execute(status -> {
+                    startedTransaction.countDown();
+                    return context.getBean(QuizAttemptService.class).start(actor, quizId, classId);
+                }));
+                assertThat(startedTransaction.await(5, TimeUnit.SECONDS)).isTrue();
+                try {
+                    start.get(500, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException expectedWhileEditing) {
+                    // The attempt waits until the edit commits its paper and key.
+                }
+                resumeEdit.countDown();
+                edit.get(5, TimeUnit.SECONDS);
+                var taking = start.get(5, TimeUnit.SECONDS);
+                assertThat(taking.questions()).singleElement().satisfies(question ->
+                        assertThat(question.stem()).isEqualTo("Updated paper"));
+                assertThat(context.getBean(QuizScorer.class).score(quizId,
+                        List.of(new QuizAnswer(questionId, Set.of("2")))).total()).isEqualByComparingTo("1");
+                assertThatThrownBy(() -> tx.execute(status -> context.getBean(QuizAuthoringService.class)
+                        .updateInline(actor, quizId, questionId, createQuestionContent("Later paper", "1"), version + 1)))
+                        .isInstanceOf(edu.aiplatform.shared.error.ApiException.class)
+                        .extracting(error -> ((edu.aiplatform.shared.error.ApiException) error).readCode())
+                        .isEqualTo("QUIZ_HAS_ATTEMPTS");
+            } finally {
+                resumeEdit.countDown();
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    private static QuestionContent createQuestionContent(String stem, String correctOption) {
+        return QuestionContent.createContent(QuestionType.MCQ_SINGLE, stem,
+                List.of(new QuestionOption("1", "First"), new QuestionOption("2", "Second")),
+                List.of(correctOption), null, BigDecimal.ONE, Difficulty.MEDIUM, List.of());
+    }
+
+    private static void awaitLatch(CountDownLatch latch) {
+        try {
+            if (!latch.await(10, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Timed out waiting for edit release");
+            }
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(interrupted);
+        }
+    }
+
+    @Test
     void attemptRoundTripsWithSnapshotAnswersAndResult() {
         QuizAttempt attempt = attempt(1, 15);
         tx.executeWithoutResult(s -> {
@@ -138,19 +255,19 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         });
         UUID q = attempt.snapshot().questionOrder().get(0);
 
-        QuizAttempt saved = attempt.withAnswers(Map.of(q, List.of("2")), NOW.plusSeconds(5));
+        QuizAttempt saved = attempt.replaceAnswers(Map.of(q, List.of("2")), NOW.plusSeconds(5));
         assertThat(repository.saveAnswers(saved, 0)).isTrue();
         assertThat(repository.saveAnswers(saved, 0)).as("answerVersion cũ").isFalse();
-        QuizAttempt stale = attempt.submitted(SubmitMode.MANUAL, BigDecimal.ZERO, new BigDecimal("2"),
+        QuizAttempt stale = attempt.markSubmitted(SubmitMode.MANUAL, BigDecimal.ZERO, new BigDecimal("2"),
                 List.of(new QuestionResult(q, false, BigDecimal.ZERO, new BigDecimal("2"))), NOW.plusSeconds(7));
         assertThat(repository.submit(stale)).as("chấm trên answerVersion cũ").isFalse();
 
-        QuizAttempt submitted = saved.submitted(SubmitMode.MANUAL, new BigDecimal("2"), new BigDecimal("2"),
+        QuizAttempt submitted = saved.markSubmitted(SubmitMode.MANUAL, new BigDecimal("2"), new BigDecimal("2"),
                 List.of(new QuestionResult(q, true, new BigDecimal("2"), new BigDecimal("2"))), NOW.plusSeconds(9));
         assertThat(repository.submit(submitted)).isTrue();
         assertThat(repository.submit(submitted)).as("nộp lần hai").isFalse();
 
-        QuizAttempt read = repository.find(attempt.id()).orElseThrow();
+        QuizAttempt read = repository.findAttempt(attempt.id()).orElseThrow();
         assertThat(read.status()).isEqualTo(AttemptStatus.SUBMITTED);
         assertThat(read.snapshot()).isEqualTo(attempt.snapshot());
         assertThat(read.answers()).isEqualTo(Map.of(q, List.of("2")));
@@ -158,7 +275,7 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         assertThat(read.result()).singleElement().satisfies(r -> assertThat(r.correct()).isTrue());
         assertThat(read.correctCount()).isEqualTo(1);
         assertThat(repository.countAttempts(quizId, student)).isEqualTo(1);
-        assertThat(repository.quizzesAttemptedBy(student)).containsEntry(quizId, classId);
+        assertThat(repository.mapQuizzesAttemptedBy(student)).containsEntry(quizId, classId);
         assertThat(repository.listByQuizAndClass(quizId, classId)).hasSize(1);
     }
 
@@ -175,7 +292,7 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         repository.insert(fresh);
         assertThat(repository.findInProgress(quizId, student, newClass)).contains(fresh);
         assertThat(repository.countAttempts(quizId, student, newClass)).isEqualTo(1);
-        assertThat(repository.find(old.id())).contains(old);
+        assertThat(repository.findAttempt(old.id())).contains(old);
         assertThatThrownBy(() -> repository.insert(
                 QuizAttempt.start(quizId, newClass, student, 2, old.snapshot(), NOW)))
                 .isInstanceOf(DuplicateKeyException.class);
@@ -187,20 +304,20 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         repository.insert(attempt);
         UUID q = attempt.snapshot().questionOrder().get(0);
         BigDecimal raw = new BigDecimal("2");
-        QuizAttempt submitted = attempt.submitted(SubmitMode.MANUAL, raw, raw,
+        QuizAttempt submitted = attempt.markSubmitted(SubmitMode.MANUAL, raw, raw,
                 List.of(new QuestionResult(q, true, raw, raw)), NOW.plusSeconds(9));
-        assertThat(repository.submit(submitted.withOutcome(new ActivityOutcome(raw, new BigDecimal("1.50"), BigDecimal.ZERO, 3,
+        assertThat(repository.submit(submitted.applyOutcome(new ActivityOutcome(raw, new BigDecimal("1.50"), BigDecimal.ZERO, 3,
                 ActivitySignal.OK, null, null, null, null), raw))).isTrue();
 
-        QuizAttempt pending = repository.find(attempt.id()).orElseThrow();
+        QuizAttempt pending = repository.findAttempt(attempt.id()).orElseThrow();
         assertThat(pending.score()).isEqualByComparingTo("2");
         assertThat(pending.outcome().suggestedPenalty()).isEqualByComparingTo("1.5");
-        assertThat(pending.outcome().pendingDecision()).isTrue();
+        assertThat(pending.outcome().awaitsDecision()).isTrue();
 
         assertThat(repository.decidePenalty(attempt.id(), PenaltyDecision.APPLIED, new BigDecimal("3"), student, NOW, "Quá điểm gốc"))
                 .as("không trừ quá điểm gốc").isFalse();
         assertThat(repository.decidePenalty(attempt.id(), PenaltyDecision.APPLIED, new BigDecimal("1"), student, NOW, "Rời nhiều lần")).isTrue();
-        QuizAttempt applied = repository.find(attempt.id()).orElseThrow();
+        QuizAttempt applied = repository.findAttempt(attempt.id()).orElseThrow();
         assertThat(applied.score()).isEqualByComparingTo("1");
         assertThat(applied.outcome().penaltyPoints()).isEqualByComparingTo("1");
         assertThat(applied.outcome().decision()).isEqualTo(PenaltyDecision.APPLIED);
@@ -208,7 +325,7 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         assertThat(applied.outcome().decisionReason()).isEqualTo("Rời nhiều lần");
 
         assertThat(repository.decidePenalty(attempt.id(), PenaltyDecision.DISMISSED, BigDecimal.ZERO, student, NOW, "Báo nhầm")).isTrue();
-        QuizAttempt dismissed = repository.find(attempt.id()).orElseThrow();
+        QuizAttempt dismissed = repository.findAttempt(attempt.id()).orElseThrow();
         assertThat(dismissed.score()).as("đổi quyết định tính lại từ điểm gốc").isEqualByComparingTo("2");
         assertThat(dismissed.outcome().decision()).isEqualTo(PenaltyDecision.DISMISSED);
     }

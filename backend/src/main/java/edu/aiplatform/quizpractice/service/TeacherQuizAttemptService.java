@@ -66,30 +66,30 @@ public class TeacherQuizAttemptService {
     }
 
     @Transactional(readOnly = true)
-    public ClassAttempts list(Actor actor, UUID classId, UUID quizId) {
+    public ClassAttempts listAttempts(Actor actor, UUID classId, UUID quizId) {
         access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "QUIZ", quizId, PracticeSupport.QUIZ_NOT_FOUND);
-        ClassRef ref = support.classRef(classId);
-        QuizView quiz = support.quizInClass(quizId, ref);
+        ClassRef ref = support.loadClassRef(classId);
+        QuizView quiz = support.loadQuizInClass(quizId, ref);
         Map<UUID, List<QuizAttempt>> byStudent = attempts.listByQuizAndClass(quizId, classId).stream()
                 .collect(Collectors.groupingBy(QuizAttempt::accountId));
         Set<UUID> students = new LinkedHashSet<>(PracticeSupport.call(() -> classes.listActiveStudents(classId)));
         students.addAll(byStudent.keySet());
-        Map<UUID, AccountContact> contacts = contacts(students);
+        Map<UUID, AccountContact> contacts = loadContacts(students);
         List<StudentAttempts> rows = new ArrayList<>();
         for (UUID student : students) {
             List<QuizAttempt> own = byStudent.getOrDefault(student, List.of());
             AccountContact contact = contacts.get(student);
-            List<QuizAttempt> submitted = own.stream().filter(a -> !a.inProgress()).toList();
+            List<QuizAttempt> submitted = own.stream().filter(a -> !a.hasInProgressStatus()).toList();
             QuizAttempt last = submitted.stream().max(Comparator.comparing(QuizAttempt::submittedAt)).orElse(null);
             boolean warning = submitted.stream().anyMatch(a -> a.outcome() != null && a.outcome().signal() != null
                     && a.outcome().signal() != ActivitySignal.OK && a.outcome().signal() != ActivitySignal.DISABLED);
-            boolean pending = submitted.stream().anyMatch(a -> a.outcome() != null && a.outcome().pendingDecision());
+            boolean pending = submitted.stream().anyMatch(a -> a.outcome() != null && a.outcome().awaitsDecision());
             rows.add(new StudentAttempts(student, contact == null ? null : contact.displayName(),
                     contact == null ? null : contact.email(), own.size(),
                     submitted.stream().map(QuizAttempt::score).filter(Objects::nonNull).max(Comparator.naturalOrder())
                             .orElse(null),
                     last == null ? null : last.score(), last == null ? null : last.submittedAt(),
-                    own.stream().map(PracticeSupport::teacherRow).toList(),
+                    own.stream().map(PracticeSupport::buildTeacherRow).toList(),
                     last == null || last.outcome() == null ? null : last.outcome().leaveCount(), warning, pending,
                     contact == null ? null : contact.studentCode()));
         }
@@ -100,16 +100,16 @@ public class TeacherQuizAttemptService {
     }
 
     @Transactional(readOnly = true)
-    public TeacherAttemptDetail detail(Actor actor, UUID classId, UUID attemptId) {
+    public TeacherAttemptDetail loadAttempt(Actor actor, UUID classId, UUID attemptId) {
         access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, PracticeAccess.OBJECT, attemptId,
                 PracticeSupport.ATTEMPT_NOT_FOUND);
-        QuizAttempt attempt = attempts.find(attemptId)
+        QuizAttempt attempt = attempts.findAttempt(attemptId)
                 .filter(a -> a.classId().equals(classId))
-                .orElseThrow(() -> ApiException.notFound(PracticeSupport.ATTEMPT_NOT_FOUND));
-        if (attempt.inProgress()) {
-            throw ApiException.conflict("ATTEMPT_IN_PROGRESS", "Sinh viên chưa nộp lượt này");
+                .orElseThrow(() -> ApiException.createNotFound(PracticeSupport.ATTEMPT_NOT_FOUND));
+        if (attempt.hasInProgressStatus()) {
+            throw ApiException.createConflict("ATTEMPT_IN_PROGRESS", "Sinh viên chưa nộp lượt này");
         }
-        AccountContact contact = contact(attempt.accountId());
+        AccountContact contact = loadContact(attempt.accountId());
         ActivitySummary summary = null;
         if (attempt.snapshot().activityMonitoringEnabled()) {
             try {
@@ -124,7 +124,7 @@ public class TeacherQuizAttemptService {
                 summary = null;
             }
         }
-        return new TeacherAttemptDetail(support.result(attempt, true, false),
+        return new TeacherAttemptDetail(support.buildResult(attempt, true, false),
                 contact == null ? null : contact.displayName(), summary,
                 attempt.outcome() == null ? null : attempt.outcome().signal());
     }
@@ -139,37 +139,37 @@ public class TeacherQuizAttemptService {
                                               BigDecimal points, String reason) {
         access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, PracticeAccess.OBJECT, attemptId,
                 PracticeSupport.ATTEMPT_NOT_FOUND);
-        ActivityOutcome outcome = attempts.find(attemptId).filter(a -> a.classId().equals(classId))
-                .orElseThrow(() -> ApiException.notFound(PracticeSupport.ATTEMPT_NOT_FOUND)).outcome();
+        ActivityOutcome outcome = attempts.findAttempt(attemptId).filter(a -> a.classId().equals(classId))
+                .orElseThrow(() -> ApiException.createNotFound(PracticeSupport.ATTEMPT_NOT_FOUND)).outcome();
         String clean = reason == null ? "" : reason.strip();
         if (clean.isEmpty() || clean.codePointCount(0, clean.length()) > MAX_REASON) {
-            throw ApiException.badRequest("PENALTY_REASON_INVALID", "Cần lý do cho quyết định, tối đa 1.000 ký tự");
+            throw ApiException.createBadRequest("PENALTY_REASON_INVALID", "Cần lý do cho quyết định, tối đa 1.000 ký tự");
         }
-        if (outcome == null || !outcome.decidable()) {
-            throw notDecidable();
+        if (outcome == null || !outcome.canDecide()) {
+            throw createNotDecidableError();
         }
         boolean apply = decision == PenaltyDecision.APPLIED;
         if (apply && (points == null || points.signum() <= 0 || points.stripTrailingZeros().scale() > 2
                 || points.compareTo(outcome.rawScore()) > 0)) {
-            throw ApiException.badRequest("PENALTY_POINTS_INVALID",
+            throw ApiException.createBadRequest("PENALTY_POINTS_INVALID",
                     "Điểm trừ phải lớn hơn 0, không quá điểm gốc, tối đa 2 chữ số thập phân");
         }
         BigDecimal applied = apply ? points : BigDecimal.ZERO;
         if (!attempts.decidePenalty(attemptId, decision, applied, actor.accountId(), clock.instant(), clean)) {
-            throw notDecidable();
+            throw createNotDecidableError();
         }
-        access.success(actor, apply ? "QUIZ_PENALTY_APPLIED" : "QUIZ_PENALTY_DISMISSED", attemptId,
+        access.recordSuccess(actor, apply ? "QUIZ_PENALTY_APPLIED" : "QUIZ_PENALTY_DISMISSED", attemptId,
                 Map.of("classId", classId.toString(), "points", applied.toPlainString(),
                         "suggestedPenalty", outcome.suggestedPenalty().toPlainString()));
-        return detail(actor, classId, attemptId);
+        return loadAttempt(actor, classId, attemptId);
     }
 
-    private static ApiException notDecidable() {
-        return ApiException.conflict("PENALTY_NOT_DECIDABLE", "Lượt này không có mức trừ gợi ý");
+    private static ApiException createNotDecidableError() {
+        return ApiException.createConflict("PENALTY_NOT_DECIDABLE", "Lượt này không có mức trừ gợi ý");
     }
 
     /** Tên, email cả lớp trong một lần tra; U01 lỗi thì danh sách vẫn hiện, chỉ thiếu tên. */
-    private Map<UUID, AccountContact> contacts(Set<UUID> accountIds) {
+    private Map<UUID, AccountContact> loadContacts(Set<UUID> accountIds) {
         try {
             return accounts.getContacts(accountIds);
         } catch (RuntimeException unavailable) {
@@ -177,7 +177,7 @@ public class TeacherQuizAttemptService {
         }
     }
 
-    private AccountContact contact(UUID accountId) {
+    private AccountContact loadContact(UUID accountId) {
         try {
             return accounts.getContact(accountId).orElse(null);
         } catch (RuntimeException unavailable) {

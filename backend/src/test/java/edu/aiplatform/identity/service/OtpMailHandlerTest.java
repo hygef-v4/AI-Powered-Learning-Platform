@@ -102,10 +102,10 @@ class OtpMailHandlerTest {
 
     @Test
     void codeIsFixedPerJobAndDiffersAcrossJobs() {
-        assertThat(handler.codeFor("job-1")).matches("\\d{6}").isEqualTo(handler.codeFor("job-1"));
+        assertThat(handler.findCode("job-1")).matches("\\d{6}").isEqualTo(handler.findCode("job-1"));
         java.util.Set<String> codes = new java.util.HashSet<>();
         for (int i = 0; i < 50; i++) {
-            codes.add(handler.codeFor("job-" + i));
+            codes.add(handler.findCode("job-" + i));
         }
         assertThat(codes).as("mỗi job một mã").hasSizeGreaterThan(45);
     }
@@ -124,8 +124,8 @@ class OtpMailHandlerTest {
     @Test
     void codesKeepLeadingZeros() {
         for (int i = 0; i < 200; i++) {
-            assertThat(OtpMailHandler.newCode()).hasSize(6).containsOnlyDigits();
-            assertThat(handler.codeFor("job-" + i)).hasSize(6).containsOnlyDigits();
+            assertThat(OtpMailHandler.generateCode()).hasSize(6).containsOnlyDigits();
+            assertThat(handler.findCode("job-" + i)).hasSize(6).containsOnlyDigits();
         }
     }
 }

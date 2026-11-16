@@ -11,20 +11,21 @@ import { AuthToast, type AuthNotice } from "../../components/AuthToast";
 import { AUTH_BUTTON, AUTH_INPUT, AUTH_LABEL } from "../../components/authStyles";
 import { OtpInput } from "../../components/OtpInput";
 import { PasswordChecklist } from "../../components/PasswordChecklist";
-import { PasswordField } from "../../components/PasswordField";
+import { FieldError, PasswordField } from "../../components/PasswordField";
 import { Stepper } from "../../components/Stepper";
-import { PASSWORD_VIOLATION_MESSAGES, passwordAcceptable } from "../../model/passwordRules";
+import { PASSWORD_VIOLATION_MESSAGES, isPasswordAcceptable } from "../../model/passwordRules";
 import type { OtpPurpose } from "../../model/types";
 import { formatMmSs, useCountdown } from "../../hooks/useCountdown";
+import { msg } from "@/i18n/msg";
 
 const OTP_TTL_SECONDS = 10 * 60;
 const RESEND_COOLDOWN_SECONDS = 60;
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export const OTP_INVALID_MESSAGE = "Mã sai hoặc đã hết hạn.";
-export const TICKET_EXPIRED_MESSAGE = "Phiên đã hết hạn.";
-export const RESENT_MESSAGE = "Đã gửi lại mã.";
-const BUSY_MESSAGE = "Hệ thống bận, thử lại sau.";
+export const OTP_INVALID_MESSAGE = msg("identity.otp.components.OtpFlow.theCodeIsWrongOr");
+export const TICKET_EXPIRED_MESSAGE = msg("identity.otp.components.OtpFlow.theSessionHasExpired");
+export const RESENT_MESSAGE = msg("identity.otp.components.OtpFlow.aNewCodeHasBeen");
+const BUSY_MESSAGE = msg("identity.otp.components.OtpFlow.theSystemIsBusyPlease");
 
 type Step = 0 | 1 | 2;
 
@@ -63,8 +64,7 @@ export function OtpFlow({ copy, onComplete }: { copy: OtpFlowCopy; onComplete: (
     >
       <Link href="/login" className="inline-flex items-center gap-1.5 text-xs font-medium text-muted hover:text-ink">
         <Icon name="arrow_back" size={15} />
-        Quay lại đăng nhập
-      </Link>
+        {msg("identity.otp.components.OtpFlow.backToSignIn")}</Link>
       <h1 className="mt-5 font-display text-[32px] leading-[1.05] tracking-[-0.03em] text-ink">{copy.title(step)}</h1>
       <div className="mt-5">
         <Stepper steps={copy.steps} current={step} />
@@ -106,17 +106,8 @@ export function OtpFlow({ copy, onComplete }: { copy: OtpFlowCopy; onComplete: (
   );
 }
 
-function errorProblem(error: unknown) {
+function readErrorProblem(error: unknown) {
   return (error instanceof ApiError ? error.problem : { status: 0 }) as { status: number; code?: string; violations?: string[] };
-}
-
-function ErrorText({ children }: { children: ReactNode }) {
-  return (
-    <p role="alert" className="mt-2 flex items-start gap-1.5 text-[13px] text-danger">
-      <Icon name="error" size={16} className="mt-px" />
-      {children}
-    </p>
-  );
 }
 
 function SubmitButton({ busy, disabled, children }: { busy: boolean; disabled?: boolean; children: string }) {
@@ -146,7 +137,7 @@ function EmailStep({
     event.preventDefault();
     const value = email.trim();
     if (!EMAIL_FORMAT.test(value)) {
-      setError("Nhập đúng email do trường cấp.");
+      setError(msg("identity.otp.components.OtpFlow.enterTheEmailIssuedBy"));
       return;
     }
     setBusy(true);
@@ -164,8 +155,7 @@ function EmailStep({
   return (
     <form onSubmit={submit} noValidate className="mt-6">
       <label htmlFor={id} className={AUTH_LABEL}>
-        Email trường
-      </label>
+        {msg("identity.otp.components.OtpFlow.schoolEmail")}</label>
       <div className="relative mt-1.5">
         <input
           id={id}
@@ -177,7 +167,7 @@ function EmailStep({
         />
         <Icon name="mail" size={18} className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-muted" />
       </div>
-      {error && <ErrorText>{error}</ErrorText>}
+      {error && <FieldError>{error}</FieldError>}
       <SubmitButton busy={busy}>{copy.sendLabel}</SubmitButton>
     </form>
   );
@@ -205,7 +195,7 @@ function VerifyStep({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!/^\d{6}$/.test(code)) {
-      setError("Nhập đủ 6 chữ số.");
+      setError(msg("identity.otp.components.OtpFlow.enterAll6Digits"));
       return;
     }
     setBusy(true);
@@ -213,14 +203,14 @@ function VerifyStep({
     try {
       onVerified((await verifyOtp(copy.purpose, email, code)).otpTicket);
     } catch (e) {
-      setError(errorProblem(e).status === 400 ? OTP_INVALID_MESSAGE : BUSY_MESSAGE);
+      setError(readErrorProblem(e).status === 400 ? OTP_INVALID_MESSAGE : BUSY_MESSAGE);
       setCode("");
     } finally {
       setBusy(false);
     }
   }
 
-  async function resend() {
+  async function resendCode() {
     setError(null);
     setResending(true);
     try {
@@ -243,7 +233,7 @@ function VerifyStep({
       <div className="mt-3 flex items-center justify-between text-xs">
         <span
           className={cx("flex items-center gap-1.5 font-semibold tabular-nums", expiresIn > 0 ? "text-ink" : "text-danger")}
-          aria-label={`Thời gian hiệu lực của mã: ${formatMmSs(expiresIn)}`}
+          aria-label={msg("identity.otp.components.OtpFlow.codeValidFor", { value: String(formatMmSs(expiresIn)) })}
         >
           <Icon name="schedule" size={14} className="text-muted" />
           {formatMmSs(expiresIn)}
@@ -251,17 +241,15 @@ function VerifyStep({
         {/* Khóa đến khi được phép gửi lại (60 giây) và trong lúc đang gửi. */}
         <button
           type="button"
-          onClick={resend}
+          onClick={resendCode}
           disabled={resendIn > 0 || resending}
           className="font-semibold text-primary-ink hover:underline disabled:cursor-not-allowed disabled:text-muted disabled:no-underline"
         >
-          Gửi lại mã
-        </button>
+          {msg("identity.otp.components.OtpFlow.resendCode")}</button>
       </div>
-      {error && <ErrorText>{error}</ErrorText>}
+      {error && <FieldError>{error}</FieldError>}
       <SubmitButton busy={busy} disabled={code.length < 6}>
-        Xác nhận mã
-      </SubmitButton>
+        {msg("identity.otp.components.OtpFlow.confirmCode")}</SubmitButton>
     </form>
   );
 }
@@ -279,16 +267,16 @@ function PasswordStep({
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const acceptable = passwordAcceptable(password);
+  const acceptable = isPasswordAcceptable(password);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!acceptable) {
-      setError("Mật khẩu cần ít nhất 8 ký tự, có cả chữ và số.");
+      setError(msg("identity.otp.components.OtpFlow.thePasswordNeedsAtLeast"));
       return;
     }
     if (password !== confirm) {
-      setError("Hai mật khẩu chưa khớp.");
+      setError(msg("identity.otp.components.OtpFlow.theTwoPasswordsDoNot"));
       return;
     }
     setBusy(true);
@@ -296,14 +284,14 @@ function PasswordStep({
     try {
       await onSubmit(password);
     } catch (e) {
-      const problem = errorProblem(e);
+      const problem = readErrorProblem(e);
       if (problem.code === "TICKET_EXPIRED") {
         onTicketExpired();
         return;
       }
       setError(
         problem.code === "PASSWORD_POLICY"
-          ? (problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" ") || "Mật khẩu chưa đạt yêu cầu."
+          ? (problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" ") || msg("identity.otp.components.OtpFlow.thePasswordDoesNotMeet")
           : BUSY_MESSAGE,
       );
     } finally {
@@ -314,7 +302,7 @@ function PasswordStep({
   return (
     <form onSubmit={submit} noValidate className="mt-6">
       <PasswordField
-        label="Mật khẩu mới"
+        label={msg("identity.otp.components.OtpFlow.newPassword")}
         autoComplete="new-password"
         value={password}
         valid={acceptable}
@@ -322,14 +310,14 @@ function PasswordStep({
       />
       <PasswordField
         className="mt-4"
-        label="Nhập lại mật khẩu"
+        label={msg("identity.otp.components.OtpFlow.reEnterPassword")}
         autoComplete="new-password"
         value={confirm}
         valid={confirm.length > 0 && confirm === password}
         onChange={(e) => setConfirm(e.target.value)}
       />
       <PasswordChecklist password={password} />
-      {error && <ErrorText>{error}</ErrorText>}
+      {error && <FieldError>{error}</FieldError>}
       <SubmitButton busy={busy}>{copy.submitLabel}</SubmitButton>
     </form>
   );

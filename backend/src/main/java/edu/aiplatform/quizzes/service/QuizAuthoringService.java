@@ -92,10 +92,10 @@ public class QuizAuthoringService {
         int p = page == null ? 0 : page;
         int s = size == null ? DEFAULT_PAGE_SIZE : size;
         if (p < 0 || s < 1 || s > MAX_PAGE_SIZE) {
-            throw ApiException.badRequest("QUIZ_QUERY_INVALID", "page ≥ 0, size từ 1 đến 100");
+            throw ApiException.createBadRequest("QUIZ_QUERY_INVALID", "page ≥ 0, size từ 1 đến 100");
         }
         var result = quizzes.listSubjectQuizzes(subjectId, status, text, p, s);
-        return new QuizPage(result.items().stream().map(r -> QuizRow.of(r, false)).toList(), result.total(),
+        return new QuizPage(result.items().stream().map(r -> QuizRow.createQuizRow(r, false)).toList(), result.total(),
                 result.page(), result.size());
     }
 
@@ -103,41 +103,41 @@ public class QuizAuthoringService {
     @Transactional(readOnly = true)
     public List<QuizRow> listClass(Actor actor, UUID classId) {
         access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS", classId, "CLASS_NOT_FOUND");
-        ClassRef ref = support.classRef(classId);
+        ClassRef ref = support.loadClassRef(classId);
         List<QuizRow> rows = new ArrayList<>();
-        quizzes.listClassQuizzes(classId).forEach(s -> rows.add(QuizRow.of(s, false)));
+        quizzes.listClassQuizzes(classId).forEach(s -> rows.add(QuizRow.createQuizRow(s, false)));
         quizzes.listSubjectQuizzes(ref.subjectId(), List.of(QuizStatus.OPEN, QuizStatus.RETIRED))
                 .stream().filter(s -> s.quiz().status() == QuizStatus.OPEN || s.quiz().publishedAt() != null)
-                .forEach(s -> rows.add(QuizRow.of(s, true)));
+                .forEach(s -> rows.add(QuizRow.createQuizRow(s, true)));
         return rows;
     }
 
     @Transactional
     public QuizDetail createForSubject(Actor actor, UUID subjectId, String title) {
         access.requireSubject(actor, Actions.QUIZ_SUBJECT_MANAGE, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
-        return create(actor, Quiz.create(QuizScope.SUBJECT, null, subjectId, title, actor.accountId(), clock.instant()));
+        return createQuiz(actor, Quiz.createQuiz(QuizScope.SUBJECT, null, subjectId, title, actor.accountId(), clock.instant()));
     }
 
     @Transactional
     public QuizDetail createForClass(Actor actor, UUID classId, String title) {
         access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS", classId, "CLASS_NOT_FOUND");
-        ClassRef ref = support.classRef(classId);
-        return create(actor, Quiz.create(QuizScope.CLASS, classId, ref.subjectId(), title, actor.accountId(),
+        ClassRef ref = support.loadClassRef(classId);
+        return createQuiz(actor, Quiz.createQuiz(QuizScope.CLASS, classId, ref.subjectId(), title, actor.accountId(),
                 clock.instant()));
     }
 
-    private QuizDetail create(Actor actor, Quiz quiz) {
+    private QuizDetail createQuiz(Actor actor, Quiz quiz) {
         support.requireContainerActive(quiz);
         reject(QuizRules.validateDetails(quiz.title(), null, quiz.settings(), null));
         quizzes.insert(quiz);
-        audit.success(actor, "QUIZ_CREATED", QuizSupport.OBJECT, quiz.id(), Map.of("scope", quiz.scope().name()));
-        return support.detail(quiz, true);
+        audit.recordSuccess(actor, "QUIZ_CREATED", QuizSupport.OBJECT, quiz.id(), Map.of("scope", quiz.scope().name()));
+        return support.buildDetail(quiz, true);
     }
 
     @Transactional(readOnly = true)
-    public QuizDetail get(Actor actor, UUID id, UUID classId) {
-        Quiz quiz = support.load(id);
-        return support.detail(quiz, support.requireView(actor, quiz, classId));
+    public QuizDetail loadQuiz(Actor actor, UUID id, UUID classId) {
+        Quiz quiz = support.loadQuiz(id);
+        return support.buildDetail(quiz, support.requireView(actor, quiz, classId));
     }
 
     @Transactional
@@ -152,10 +152,10 @@ public class QuizAuthoringService {
         violations.addAll(QuizRules.validateActivity(details.activityMonitoringEnabled(), details.activityNotice()));
         violations.addAll(QuizRules.validatePenaltyNeedsMonitoring(details.activityMonitoringEnabled(), details.settings()));
         reject(violations);
-        Quiz changed = quiz.withDetails(title, blankToNull(instructions), details.settings(),
-                details.activityMonitoringEnabled(), blankToNull(details.activityNotice()), clock.instant());
-        if (details.instructionsDocument() != null) changed = changed.withInstructionsDocument(details.instructionsDocument());
-        return support.detail(support.save(changed), true);
+        Quiz changed = quiz.updateDetails(title, convertBlankToNull(instructions), details.settings(),
+                details.activityMonitoringEnabled(), convertBlankToNull(details.activityNotice()), clock.instant());
+        if (details.instructionsDocument() != null) changed = changed.replaceInstructionsDocument(details.instructionsDocument());
+        return support.buildDetail(support.saveQuiz(changed), true);
     }
 
     /**
@@ -166,7 +166,7 @@ public class QuizAuthoringService {
     public QuizDetail saveItems(Actor actor, UUID id, List<ItemInput> inputs, long version) {
         Quiz quiz = support.loadEditable(actor, id, version);
         support.requireNoAttemptsWhenOpen(quiz);
-        List<QuizItem> current = quizzes.items(id);
+        List<QuizItem> current = quizzes.listItems(id);
         Set<UUID> pinned = current.stream().map(QuizItem::questionId).collect(Collectors.toSet());
         Map<UUID, Question> byId = questions.findAll(inputs.stream().map(ItemInput::questionId).distinct().toList())
                 .stream().collect(Collectors.toMap(Question::id, q -> q));
@@ -201,38 +201,38 @@ public class QuizAuthoringService {
         reject(violations);
         Set<UUID> kept = items.stream().map(QuizItem::questionId).collect(Collectors.toSet());
         quizzes.replaceItems(id, items);
-        questions.inlineOf(id).stream().filter(q -> !kept.contains(q.id()))
+        questions.listInline(id).stream().filter(q -> !kept.contains(q.id()))
                 .forEach(q -> questions.deleteInline(q.id(), id));
-        return support.detail(support.save(quiz.edited(clock.instant())), true);
+        return support.buildDetail(support.saveQuiz(quiz.markEdited(clock.instant())), true);
     }
 
     /** Bốc thử N câu {@code ACTIVE} khớp bộ lọc, không trùng câu đã có, không vượt chỗ trống (BR-U10-14). */
     @Transactional(readOnly = true)
-    public RandomPreview randomPreview(Actor actor, UUID id, int count, Difficulty difficulty, String tag) {
+    public RandomPreview previewRandomQuestions(Actor actor, UUID id, int count, Difficulty difficulty, String tag) {
         Quiz quiz = support.loadManaged(actor, id);
-        List<QuizItem> items = quizzes.items(id);
+        List<QuizItem> items = quizzes.listItems(id);
         int free = QuizRules.MAX_ITEMS - items.size();
         if (count < 1 || count > free) {
-            throw ApiException.badRequest("QUIZ_RANDOM_COUNT_INVALID", "Số câu từ 1 đến " + Math.max(free, 0));
+            throw ApiException.createBadRequest("QUIZ_RANDOM_COUNT_INVALID", "Số câu từ 1 đến " + Math.max(free, 0));
         }
-        PickQuery query = new PickQuery(difficulty, tag, null, lineagesOf(items), 0, count);
-        List<QuestionView> picked = questions.randomActive(quiz.subjectId(), query, count).stream()
-                .map(QuestionView::of).toList();
+        PickQuery query = new PickQuery(difficulty, tag, null, collectLineages(items), 0, count);
+        List<QuestionView> picked = questions.pickRandomActive(quiz.subjectId(), query, count).stream()
+                .map(QuestionView::createQuestionView).toList();
         return new RandomPreview(picked, questions.countActive(quiz.subjectId(), query), free);
     }
 
     /** Câu {@code ACTIVE} của môn chứa Quiz để chọn tay (E2), trừ câu đã có trong Quiz. */
     @Transactional(readOnly = true)
-    public QuestionPage bankQuestions(Actor actor, UUID id, Difficulty difficulty, String tag, String text,
+    public QuestionPage listBankQuestions(Actor actor, UUID id, Difficulty difficulty, String tag, String text,
                                       Integer page, Integer size) {
         Quiz quiz = support.loadManaged(actor, id);
         int p = page == null ? 0 : page;
         int s = size == null ? DEFAULT_PAGE_SIZE : size;
         if (p < 0 || s < 1 || s > MAX_PAGE_SIZE) {
-            throw ApiException.badRequest("QUIZ_QUERY_INVALID", "page ≥ 0, size từ 1 đến 100");
+            throw ApiException.createBadRequest("QUIZ_QUERY_INVALID", "page ≥ 0, size từ 1 đến 100");
         }
         var result = questions.searchActive(quiz.subjectId(),
-                new PickQuery(difficulty, tag, text, lineagesOf(quizzes.items(id)), p, s));
+                new PickQuery(difficulty, tag, text, collectLineages(quizzes.listItems(id)), p, s));
         List<QuestionRow> rows = result.items().stream().map(row -> {
             Question q = row.question();
             return new QuestionRow(q.id(), q.lineageId(), q.versionNo(), q.content().type(), preview(q.content().stem()),
@@ -247,67 +247,67 @@ public class QuizAuthoringService {
         Quiz quiz = support.loadEditable(actor, id, version);
         support.requireNoAttemptsWhenOpen(quiz);
         rejectQuestion(QuestionRules.validate(content));
-        List<QuizItem> items = new ArrayList<>(quizzes.items(id));
+        List<QuizItem> items = new ArrayList<>(quizzes.listItems(id));
         if (items.size() >= QuizRules.MAX_ITEMS) {
-            throw ApiException.conflict("QUIZ_FULL", "Quiz tối đa 200 câu");
+            throw ApiException.createConflict("QUIZ_FULL", "Quiz tối đa 200 câu");
         }
-        Question inline = Question.newInline(id, quiz.subjectId(), content, actor.accountId(), clock.instant());
+        Question inline = Question.createInline(id, quiz.subjectId(), content, actor.accountId(), clock.instant());
         questions.insert(inline);
         items.add(new QuizItem(id, inline.id(), items.size() + 1, content.defaultPoints()));
         quizzes.replaceItems(id, items);
-        return support.detail(support.save(quiz.edited(clock.instant())), true);
+        return support.buildDetail(support.saveQuiz(quiz.markEdited(clock.instant())), true);
     }
 
     @Transactional
     public QuizDetail updateInline(Actor actor, UUID id, UUID questionId, QuestionContent content, long version) {
         Quiz quiz = support.loadEditable(actor, id, version);
         support.requireNoAttemptsWhenOpen(quiz);
-        Question q = inlineOf(id, questionId);
+        Question q = loadInline(id, questionId);
         rejectQuestion(QuestionRules.validate(content));
-        if (!questions.update(q.withContent(content, clock.instant()))) {
-            throw QuizSupport.versionConflict();
+        if (!questions.updateQuestion(q.replaceContent(content, clock.instant()))) {
+            throw QuizSupport.createVersionConflictError();
         }
-        return support.detail(support.save(quiz.edited(clock.instant())), true);
+        return support.buildDetail(support.saveQuiz(quiz.markEdited(clock.instant())), true);
     }
 
     @Transactional
     public QuizDetail deleteInline(Actor actor, UUID id, UUID questionId, long version) {
         Quiz quiz = support.loadEditable(actor, id, version);
         support.requireNoAttemptsWhenOpen(quiz);
-        inlineOf(id, questionId);
+        loadInline(id, questionId);
         List<QuizItem> remaining = new ArrayList<>();
-        for (QuizItem item : quizzes.items(id)) {
+        for (QuizItem item : quizzes.listItems(id)) {
             if (!item.questionId().equals(questionId)) {
                 remaining.add(new QuizItem(id, item.questionId(), remaining.size() + 1, item.points()));
             }
         }
         quizzes.replaceItems(id, remaining);
         questions.deleteInline(questionId, id);
-        return support.detail(support.save(quiz.edited(clock.instant())), true);
+        return support.buildDetail(support.saveQuiz(quiz.markEdited(clock.instant())), true);
     }
 
     /** Xóa Quiz chưa từng phát hành, kèm câu riêng và đề xuất AI (F12, BR-U10-24). */
     @Transactional
-    public void delete(Actor actor, UUID id, long version) {
+    public void deleteQuiz(Actor actor, UUID id, long version) {
         Quiz quiz = support.loadManaged(actor, id);
         if (!quiz.isDeletable()) {
-            throw ApiException.conflict("QUIZ_DELETE_BLOCKED", "Quiz đã phát hành không xóa được; hãy ngưng quiz");
+            throw ApiException.createConflict("QUIZ_DELETE_BLOCKED", "Quiz đã phát hành không xóa được; hãy ngưng quiz");
         }
         QuizSupport.requireVersion(quiz, version);
         listeners.orderedStream().forEach(listener -> listener.onDeleting(id));
-        if (!quizzes.delete(id, version)) {
-            throw QuizSupport.versionConflict();
+        if (!quizzes.deleteQuiz(id, version)) {
+            throw QuizSupport.createVersionConflictError();
         }
-        audit.success(actor, "QUIZ_DELETED", QuizSupport.OBJECT, id, Map.of("scope", quiz.scope().name()));
+        audit.recordSuccess(actor, "QUIZ_DELETED", QuizSupport.OBJECT, id, Map.of("scope", quiz.scope().name()));
     }
 
-    private Question inlineOf(UUID quizId, UUID questionId) {
-        return questions.find(questionId)
+    private Question loadInline(UUID quizId, UUID questionId) {
+        return questions.findQuestion(questionId)
                 .filter(q -> q.scope() == QuestionScope.QUIZ && quizId.equals(q.quizId()))
-                .orElseThrow(() -> ApiException.notFound("QUESTION_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("QUESTION_NOT_FOUND"));
     }
 
-    private Set<UUID> lineagesOf(List<QuizItem> items) {
+    private Set<UUID> collectLineages(List<QuizItem> items) {
         return questions.findAll(items.stream().map(QuizItem::questionId).toList()).stream()
                 .map(Question::lineageId).collect(Collectors.toSet());
     }
@@ -324,7 +324,7 @@ public class QuizAuthoringService {
         }
     }
 
-    private static String blankToNull(String value) {
+    private static String convertBlankToNull(String value) {
         return value == null || value.isBlank() ? null : value.strip();
     }
 

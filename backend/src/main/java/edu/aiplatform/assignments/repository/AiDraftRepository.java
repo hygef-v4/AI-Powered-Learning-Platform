@@ -32,15 +32,15 @@ public class AiDraftRepository {
                         + "cast(:provenance as jsonb), :baseVersion, :safeError, :createdBy, :createdAt, :decidedAt)")
                 .param("id", d.id()).param("assignmentId", d.assignmentId()).param("origin", d.origin().name())
                 .param("taskId", d.taskId()).param("requestRef", d.requestRef()).param("status", d.status().name())
-                .param("proposal", d.proposal() == null ? null : write(d.proposal()))
-                .param("provenance", write(d.provenance())).param("baseVersion", d.baseVersion())
+                .param("proposal", d.proposal() == null ? null : writeJson(d.proposal()))
+                .param("provenance", writeJson(d.provenance())).param("baseVersion", d.baseVersion())
                 .param("safeError", d.safeError()).param("createdBy", d.createdBy())
-                .param("createdAt", AssignmentRepository.ts(d.createdAt()))
-                .param("decidedAt", AssignmentRepository.ts(d.decidedAt()))
+                .param("createdAt", AssignmentRepository.convertTimestamp(d.createdAt()))
+                .param("decidedAt", AssignmentRepository.convertTimestamp(d.decidedAt()))
                 .update();
     }
 
-    public Optional<AssignmentAiDraft> find(UUID id) {
+    public Optional<AssignmentAiDraft> findDraft(UUID id) {
         return jdbc.sql("select * from assignment_ai_drafts where id = :id").param("id", id).query(this::map).optional();
     }
 
@@ -52,37 +52,37 @@ public class AiDraftRepository {
     public int attachTask(UUID id, UUID taskId, JsonNode provenance) {
         return jdbc.sql("update assignment_ai_drafts set task_id = :taskId, provenance = cast(:provenance as jsonb) "
                         + "where id = :id and task_id is null")
-                .param("id", id).param("taskId", taskId).param("provenance", write(provenance)).update();
+                .param("id", id).param("taskId", taskId).param("provenance", writeJson(provenance)).update();
     }
 
     public int updatePendingProvenance(UUID id, JsonNode provenance) {
         return jdbc.sql("update assignment_ai_drafts set provenance = cast(:provenance as jsonb) "
                         + "where id = :id and status = 'PENDING' and task_id is null")
-                .param("id", id).param("provenance", write(provenance)).update();
+                .param("id", id).param("provenance", writeJson(provenance)).update();
     }
 
     public int markReady(UUID id, JsonNode proposal, JsonNode provenance) {
         return jdbc.sql("update assignment_ai_drafts set status = 'READY', proposal = cast(:proposal as jsonb), "
                         + "provenance = cast(:provenance as jsonb) where id = :id and status = 'PENDING'")
-                .param("id", id).param("proposal", write(proposal)).param("provenance", write(provenance)).update();
+                .param("id", id).param("proposal", writeJson(proposal)).param("provenance", writeJson(provenance)).update();
     }
 
     public int markFailed(UUID id, String safeError, Instant now) {
         return jdbc.sql("update assignment_ai_drafts set status = 'FAILED', safe_error = :error, decided_at = :now "
                         + "where id = :id and status = 'PENDING'")
-                .param("id", id).param("error", safeError).param("now", AssignmentRepository.ts(now)).update();
+                .param("id", id).param("error", safeError).param("now", AssignmentRepository.convertTimestamp(now)).update();
     }
 
     public int markApplied(UUID id, Instant now) {
         return jdbc.sql("update assignment_ai_drafts set status = 'APPLIED', decided_at = :now "
                         + "where id = :id and status = 'READY'")
-                .param("id", id).param("now", AssignmentRepository.ts(now)).update();
+                .param("id", id).param("now", AssignmentRepository.convertTimestamp(now)).update();
     }
 
     public int markDiscarded(UUID id, Instant now) {
         return jdbc.sql("update assignment_ai_drafts set status = 'DISCARDED', decided_at = :now "
                         + "where id = :id and status in ('PENDING', 'READY')")
-                .param("id", id).param("now", AssignmentRepository.ts(now)).update();
+                .param("id", id).param("now", AssignmentRepository.convertTimestamp(now)).update();
     }
 
     private AssignmentAiDraft map(ResultSet rs, int row) throws SQLException {
@@ -90,12 +90,12 @@ public class AiDraftRepository {
         return new AssignmentAiDraft(rs.getObject("id", UUID.class), rs.getObject("assignment_id", UUID.class),
                 AssignmentAiDraft.Origin.valueOf(rs.getString("origin")), rs.getObject("task_id", UUID.class),
                 rs.getString("request_ref"), AssignmentAiDraft.Status.valueOf(rs.getString("status")),
-                proposal == null ? null : read(proposal), read(rs.getString("provenance")), rs.getLong("base_version"),
+                proposal == null ? null : parseJson(proposal), parseJson(rs.getString("provenance")), rs.getLong("base_version"),
                 rs.getString("safe_error"), rs.getObject("created_by", UUID.class),
-                AssignmentRepository.instant(rs, "created_at"), AssignmentRepository.instant(rs, "decided_at"));
+                AssignmentRepository.readInstant(rs, "created_at"), AssignmentRepository.readInstant(rs, "decided_at"));
     }
 
-    private String write(JsonNode value) {
+    private String writeJson(JsonNode value) {
         try {
             return json.writeValueAsString(value);
         } catch (JsonProcessingException e) {
@@ -103,7 +103,7 @@ public class AiDraftRepository {
         }
     }
 
-    private JsonNode read(String value) {
+    private JsonNode parseJson(String value) {
         try {
             return json.readTree(value);
         } catch (JsonProcessingException e) {

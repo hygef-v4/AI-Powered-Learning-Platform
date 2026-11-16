@@ -37,7 +37,7 @@ final class SvgSanitizer {
         try {
             Document document = SecureXml.parse(SecureXml.stripPrologue(svg));
             Element root = document.getDocumentElement();
-            if (!"svg".equals(DiagramXml.name(root))) {
+            if (!"svg".equals(DiagramXml.readNodeName(root))) {
                 return Optional.empty();
             }
             // Bản sao XML Draw.io gắn trong SVG (thuộc tính content) trùng với xml của block; bỏ cho nhẹ.
@@ -54,7 +54,7 @@ final class SvgSanitizer {
         List<Attr> remove = new ArrayList<>();
         for (int i = 0; i < attributes.getLength(); i++) {
             Attr attribute = (Attr) attributes.item(i);
-            String name = DiagramXml.name(attribute).toLowerCase(Locale.ROOT);
+            String name = DiagramXml.readNodeName(attribute).toLowerCase(Locale.ROOT);
             String value = attribute.getValue() == null ? "" : attribute.getValue().strip();
             if (name.startsWith("on")) {
                 remove.add(attribute);
@@ -76,7 +76,7 @@ final class SvgSanitizer {
         for (int i = 0; i < children.getLength(); i++) {
             Node child = children.item(i);
             if (child instanceof Element nested) {
-                String name = DiagramXml.name(nested).toLowerCase(Locale.ROOT);
+                String name = DiagramXml.readNodeName(nested).toLowerCase(Locale.ROOT);
                 if (FORBIDDEN.contains(name)) {
                     drop.add(nested);
                 } else if (name.equals("style")) {

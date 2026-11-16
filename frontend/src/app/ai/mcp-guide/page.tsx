@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { McpGuidePage } from "@/features/ai";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Hướng dẫn kết nối MCP" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.ai.mcpguide.page.mcpConnectionGuide") };
+}
 
 export default function Page() {
   return <McpGuidePage />;

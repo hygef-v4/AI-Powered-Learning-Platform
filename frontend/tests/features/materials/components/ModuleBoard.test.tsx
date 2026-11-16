@@ -8,7 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { ModuleBoard } from "@/features/materials/components/ModuleBoard";
 import {
   ClassMaterialsCard,
@@ -18,7 +18,7 @@ import { useMaterialResource } from "@/features/materials/hooks/useMaterialResou
 import type { Material, MaterialModule } from "@/features/materials/model/types";
 vi.mock("@/shared/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/api/client")>()),
-  apiFetch: vi.fn(),
+  fetchApi: vi.fn(),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
@@ -62,7 +62,7 @@ const mod = (id: string, title: string, changes: Partial<MaterialModule> = {}): 
 });
 
 function backend(modules: MaterialModule[], materials: Material[]) {
-  vi.mocked(apiFetch).mockImplementation(async (path, init) => {
+  vi.mocked(fetchApi).mockImplementation(async (path, init) => {
     if (init?.method && init.method !== "GET") return undefined;
     if (String(path).includes("/files/")) return [];
     return String(path).includes("/modules") ? modules : materials;
@@ -78,7 +78,7 @@ it("shows disabled material to staff with a state label but hides it from studen
   await waitFor(() => expect(screen.queryByText("Document off")).not.toBeInTheDocument());
 });
 beforeEach(() => {
-  vi.mocked(apiFetch).mockReset();
+  vi.mocked(fetchApi).mockReset();
 });
 afterEach(() => vi.useRealTimers());
 
@@ -150,7 +150,7 @@ it("students open materials and quizzes in the class context without management 
   );
   expect(screen.getByText("Quiz")).toHaveAttribute("href", "/quiz-practice/q1?classId=class1");
   expect(screen.queryByRole("button", { name: /Tải tệp/ })).not.toBeInTheDocument();
-  expect(apiFetch).toHaveBeenCalledWith("/api/v1/me/classes/class1/modules", expect.any(Object));
+  expect(fetchApi).toHaveBeenCalledWith("/api/v1/me/classes/class1/modules", expect.any(Object));
 });
 
 it("deletes a draft quiz permanently but archives a published one", async () => {
@@ -165,7 +165,7 @@ it("deletes a draft quiz permanently but archives a published one", async () => 
   const modules = [
     mod("m1", "Module 1", { quizzes: [quiz("q1", "Quiz tạo nhầm", "DRAFT"), quiz("q2", "Quiz chương 1", "OPEN")] }),
   ];
-  vi.mocked(apiFetch).mockImplementation(async (path, init) => {
+  vi.mocked(fetchApi).mockImplementation(async (path, init) => {
     if (init?.method && init.method !== "GET") return undefined;
     if (String(path).startsWith("/api/v1/quizzes/q1")) return { quiz: { version: 4 } };
     return String(path).includes("/modules") ? modules : [];
@@ -179,9 +179,9 @@ it("deletes a draft quiz permanently but archives a published one", async () => 
   expect(screen.getByText(/xóa vĩnh viễn/)).toBeInTheDocument();
   fireEvent.click(screen.getByTestId("material-archive-confirm"));
   await waitFor(() =>
-    expect(apiFetch).toHaveBeenCalledWith("/api/v1/quizzes/q1?version=4", { method: "DELETE" }),
+    expect(fetchApi).toHaveBeenCalledWith("/api/v1/quizzes/q1?version=4", { method: "DELETE" }),
   );
-  expect(apiFetch).not.toHaveBeenCalledWith("/api/v1/quizzes/q1/retire", expect.anything());
+  expect(fetchApi).not.toHaveBeenCalledWith("/api/v1/quizzes/q1/retire", expect.anything());
 });
 
 it("creates a module from the page header", async () => {
@@ -191,7 +191,7 @@ it("creates a module from the page header", async () => {
   fireEvent.change(screen.getByTestId("module-name-input"), { target: { value: "Use case" } });
   fireEvent.click(screen.getByTestId("module-name-save"));
   await waitFor(() =>
-    expect(apiFetch).toHaveBeenCalledWith(
+    expect(fetchApi).toHaveBeenCalledWith(
       "/api/v1/subjects/subject/modules",
       expect.objectContaining({ method: "POST", body: JSON.stringify({ title: "Use case" }) }),
     ),
@@ -217,13 +217,13 @@ it("adds a YouTube link into the chosen module", async () => {
   });
   fireEvent.click(screen.getByTestId("material-source-save"));
   await waitFor(() =>
-    expect(apiFetch).toHaveBeenCalledWith(
+    expect(fetchApi).toHaveBeenCalledWith(
       "/api/v1/classes/class1/materials",
       expect.objectContaining({ method: "POST" }),
     ),
   );
   const body = JSON.parse(
-    String(vi.mocked(apiFetch).mock.calls.find(([, init]) => init?.method === "POST")![1]!.body),
+    String(vi.mocked(fetchApi).mock.calls.find(([, init]) => init?.method === "POST")![1]!.body),
   );
   expect(body.moduleId).toBe("m1");
 });
@@ -233,7 +233,7 @@ it("refreshes pending extraction without user actions and stops after completion
   const pending = row("a");
   pending.current = { ...pending.current, textStatus: "PENDING" };
   let calls = 0;
-  vi.mocked(apiFetch).mockImplementation(async (path) =>
+  vi.mocked(fetchApi).mockImplementation(async (path) =>
     String(path).includes("/modules")
       ? [mod("m1", "Module 1")]
       : calls++ === 0
@@ -255,7 +255,7 @@ it("refreshes pending extraction without user actions and stops after completion
 it("pauses and resumes refresh while keeping the reload callback stable", async () => {
   const pending = row("a");
   pending.current = { ...pending.current, textStatus: "PENDING" };
-  vi.mocked(apiFetch)
+  vi.mocked(fetchApi)
     .mockResolvedValueOnce([pending])
     .mockResolvedValue([row("a")]);
   vi.useFakeTimers();
@@ -275,12 +275,12 @@ it("pauses and resumes refresh while keeping the reload callback stable", async 
   await act(async () => {
     await vi.advanceTimersByTimeAsync(20000);
   });
-  expect(apiFetch).toHaveBeenCalledOnce();
+  expect(fetchApi).toHaveBeenCalledOnce();
   view.rerender({ paused: false });
   await act(async () => {
     await vi.advanceTimersByTimeAsync(5000);
   });
-  expect(apiFetch).toHaveBeenCalledTimes(2);
+  expect(fetchApi).toHaveBeenCalledTimes(2);
   expect(view.result.current.data?.[0]?.current.textStatus).toBe("EXTRACTED");
   expect(view.result.current.reload).toBe(reload);
   view.unmount();
@@ -288,15 +288,15 @@ it("pauses and resumes refresh while keeping the reload callback stable", async 
 
 it("empty attachment slot makes no request", () => {
   render(<MaterialLinkList classId="class1" materialIds={[]} />);
-  expect(apiFetch).not.toHaveBeenCalled();
+  expect(fetchApi).not.toHaveBeenCalled();
   expect(screen.queryByText("Học liệu gắn kèm")).not.toBeInTheDocument();
 });
 
 it("attachment requests constrain IDs and class", async () => {
-  vi.mocked(apiFetch).mockResolvedValue([]);
+  vi.mocked(fetchApi).mockResolvedValue([]);
   render(<MaterialLinkList classId="class1" materialIds={["a", "b"]} />);
   await waitFor(() =>
-    expect(apiFetch).toHaveBeenCalledWith(
+    expect(fetchApi).toHaveBeenCalledWith(
       "/api/v1/me/classes/class1/materials?ids=a,b",
       expect.any(Object),
     ),

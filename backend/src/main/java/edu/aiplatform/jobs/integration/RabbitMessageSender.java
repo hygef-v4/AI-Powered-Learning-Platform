@@ -23,20 +23,20 @@ public class RabbitMessageSender implements IMessageSender {
 
     @Override
     public void sendJob(JobMessage message) {
-        send(JobRouting.JOBS_EXCHANGE, message.jobType(), message, JobRouting.priorityOf(message.jobType()));
+        sendMessage(JobRouting.JOBS_EXCHANGE, message.jobType(), message, JobRouting.resolvePriority(message.jobType()));
     }
 
     @Override
     public void sendRetry(JobMessage message, JobRouting.RetryDelay delay) {
-        send(delay.exchange(), message.jobType(), message, JobRouting.priorityOf(message.jobType()));
+        sendMessage(delay.exchange(), message.jobType(), message, JobRouting.resolvePriority(message.jobType()));
     }
 
     @Override
     public void sendEvent(DomainEvent event) {
-        send(JobRouting.EVENTS_EXCHANGE, event.eventType(), event, 0);
+        sendMessage(JobRouting.EVENTS_EXCHANGE, event.eventType(), event, 0);
     }
 
-    private void send(String exchange, String routingKey, Object body, int priority) {
+    private void sendMessage(String exchange, String routingKey, Object body, int priority) {
         MessagePostProcessor persistent = message -> {
             message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
             message.getMessageProperties().setPriority(priority);

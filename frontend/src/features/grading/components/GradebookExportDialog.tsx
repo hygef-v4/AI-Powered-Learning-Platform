@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Alert, Button, Dialog, Field, Segmented, Select } from "@/shared/ui";
 import { gradingApi } from "../api";
 import { formatErrorMessage } from "../model/format";
+import { msg } from "@/i18n/msg";
 export function GradebookExportDialog({
   classId,
   assignments,
@@ -25,7 +26,7 @@ export function GradebookExportDialog({
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = filename || `${assignments.find((item) => item.id === assignment)?.title || "Bảng điểm tổng hợp"}.${format}`;
+      anchor.download = filename || `${assignments.find((item) => item.id === assignment)?.title || msg("grading.components.GradebookExportDialog.summaryGradebook")}.${format}`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -40,27 +41,26 @@ export function GradebookExportDialog({
   return (
     <Dialog
       open
-      title="Xuất bảng điểm"
+      title={msg("grading.components.GradebookExportDialog.exportGradebook")}
       onClose={onClose}
       dismissible={!busy}
       footer={
         <>
           <Button variant="primary" icon="download" disabled={busy} onClick={() => void handleDownload()}>
-            {busy ? "Đang tạo tệp…" : "Xuất tệp"}
+            {busy ? msg("grading.components.GradebookExportDialog.creatingFile") : msg("grading.components.GradebookExportDialog.exportFile")}
           </Button>
         </>
       }
     >
-      <Field label="Định dạng">
-        <Segmented ariaLabel="Định dạng" value={format} onChange={setFormat} options={[{ value: "xlsx", label: "Excel" }, { value: "csv", label: "CSV" }]} />
+      <Field label={msg("grading.components.GradebookExportDialog.format")}>
+        <Segmented ariaLabel={msg("grading.components.GradebookExportDialog.format")} value={format} onChange={setFormat} options={[{ value: "xlsx", label: "Excel" }, { value: "csv", label: "CSV" }]} />
       </Field>
       <label className="flex flex-col gap-1.5 text-xs font-semibold text-body">
-        Phạm vi
-        <Select
+        {msg("grading.components.GradebookExportDialog.scope")}<Select
           value={assignment}
           onChange={(e) => setAssignment(e.target.value)}
         >
-          <option value="">Toàn bộ bài tính điểm</option>
+          <option value="">{msg("grading.components.GradebookExportDialog.allGradedAssignments")}</option>
           {assignments.map((a) => (
             <option key={a.id} value={a.id}>
               {a.title}
@@ -68,7 +68,7 @@ export function GradebookExportDialog({
           ))}
         </Select>
       </label>
-      <p className="text-xs text-muted">Xuất tất cả sinh viên trong phạm vi bài đã chọn, kể cả ngoài trang đang xem.</p>
+      <p className="text-xs text-muted">{msg("grading.components.GradebookExportDialog.exportsAllStudentsInThe")}</p>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
     </Dialog>
   );

@@ -30,14 +30,14 @@ public final class GradingCommands {
     /** Rejects grading batches that are empty or exceed the supported item limit. */
     static void validateBatchItems(List<ItemVersion> items) {
         if (items == null || items.isEmpty() || items.size() > 200)
-            throw ApiException.badRequest("INVALID_BATCH", "Batch must contain 1–200 items");
+            throw ApiException.createBadRequest("INVALID_BATCH", "Batch must contain 1–200 items");
     }
 
     public interface IStrictInput {
         /** Rejects JSON properties that are not declared by a grading input type. */
         @JsonAnySetter
-        default void unknown(String key, Object value) {
-            throw ApiException.badRequest("INVALID_REQUEST", "Unknown field: " + key);
+        default void rejectUnknownField(String key, Object value) {
+            throw ApiException.createBadRequest("INVALID_REQUEST", "Unknown field: " + key);
         }
     }
 

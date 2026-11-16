@@ -15,7 +15,7 @@ public record McpCredential(UUID id, UUID accountId, String label, Access access
         ACTIVE, EXPIRED, REVOKED
     }
 
-    public Status status(Instant now) {
+    public Status resolveStatus(Instant now) {
         if (revokedAt != null) {
             return Status.REVOKED;
         }

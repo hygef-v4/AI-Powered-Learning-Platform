@@ -34,7 +34,7 @@ public class GradingAccess {
     public void requireTeacher(Actor actor, UUID classId, String action) {
         requireAuthorization(actor, classId, action);
         if (Actions.GRADING_WRITE.equals(action) && !isClassWritable(classId)) {
-            throw ApiException.conflict("GRADING_CLASS_READ_ONLY",
+            throw ApiException.createConflict("GRADING_CLASS_READ_ONLY",
                     "Lớp đã lưu trữ hoặc chưa mở. Không thể chỉnh sửa điểm.");
         }
     }
@@ -42,12 +42,12 @@ public class GradingAccess {
     public boolean isClassWritable(UUID classId) {
         try {
             return classAccess.getClassRef(classId)
-                    .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"))
+                    .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"))
                     .status() == edu.aiplatform.academics.contract.ClassStatus.OPEN;
         } catch (ApiException ex) {
             throw ex;
         } catch (RuntimeException ex) {
-            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE",
+            throw ApiException.createUnavailable("GRADING_DEPENDENCY_UNAVAILABLE",
                     "Class service unavailable");
         }
     }
@@ -59,14 +59,14 @@ public class GradingAccess {
         try {
             enrolled = classAccess.isActiveStudent(actor.accountId(), classId);
         } catch (RuntimeException ex) {
-            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE",
+            throw ApiException.createUnavailable("GRADING_DEPENDENCY_UNAVAILABLE",
                     "Enrollment service unavailable");
         }
         if (!enrolled) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "ACCESS_DENIED",
                     "CLASS", String.valueOf(classId), AuditResult.DENIED, "ENROLLMENT_REQUIRED",
                     Map.of("action", Actions.MY_GRADE_READ), clock.instant()));
-            throw ApiException.notFound("GRADE_NOT_FOUND");
+            throw ApiException.createNotFound("GRADE_NOT_FOUND");
         }
     }
 
@@ -76,17 +76,17 @@ public class GradingAccess {
         try {
             decision = auth.authorize(actor, action, ResourceRef.courseClass(classId));
         } catch (RuntimeException ex) {
-            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE",
+            throw ApiException.createUnavailable("GRADING_DEPENDENCY_UNAVAILABLE",
                     "Access service unavailable");
         }
         if (decision == null || "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))
-            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE",
+            throw ApiException.createUnavailable("GRADING_DEPENDENCY_UNAVAILABLE",
                     "Access service unavailable");
         if (!decision.allowed()) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
                     "ACCESS_DENIED", "CLASS", String.valueOf(classId), AuditResult.DENIED,
                     "GRADING_SCOPE", Map.of("action", action), clock.instant()));
-            throw ApiException.notFound("GRADE_NOT_FOUND");
+            throw ApiException.createNotFound("GRADE_NOT_FOUND");
         }
     }
 }

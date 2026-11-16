@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { AttemptDiagramPage } from "@/features/assignmentwork/pages/AttemptDiagramPage";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Sơ đồ bài làm" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.attempts.attemptId.diagrams.blockId.page.submissionDiagram") };
+}
 
 // U08: trang xem sơ đồ mở từ link trong DOCX của bài làm.
 export default async function Page({ params }: { params: Promise<{ attemptId: string; blockId: string }> }) {

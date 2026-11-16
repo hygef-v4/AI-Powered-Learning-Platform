@@ -1,4 +1,5 @@
 import { checkFile, type PurposePolicy } from "@/features/files/model/purposes";
+import { msg } from "@/i18n/msg";
 
 /** Loại tệp nhập đề theo đuôi; máy chủ vẫn kiểm nội dung thật (BR-U07-88). */
 export type ImportFileKind = "IMAGE" | "PDF" | "DOCX";
@@ -20,16 +21,16 @@ export function importKindOf(file: { name: string }): ImportFileKind | null {
  * chính sách {@code ASSIGNMENT_IMPORT} (DOCX theo giới hạn nhập DOCX). Trả câu lỗi đầu tiên, hợp lệ thì {@code null}.
  */
 export function checkImportFiles(files: File[], policy: PurposePolicy | null): string | null {
-  if (files.length === 0) return "Chọn ảnh, PDF hoặc DOCX của đề cũ.";
+  if (files.length === 0) return msg("assignments.model.importFiles.chooseImagesAPdfOr");
   const kinds = files.map(importKindOf);
-  if (kinds.some((kind) => kind === null)) return "Chỉ nhận ảnh PNG, JPEG, WEBP, tệp PDF hoặc DOCX.";
-  if (new Set(kinds).size > 1) return "Không chọn chung ảnh với PDF hay DOCX trong một lần nhập.";
+  if (kinds.some((kind) => kind === null)) return msg("assignments.model.importFiles.onlyPngJpegWebpImages");
+  if (new Set(kinds).size > 1) return msg("assignments.model.importFiles.doNotMixImagesWith");
   const kind = kinds[0];
-  if (kind !== "IMAGE" && files.length > 1) return `Chỉ nhập 1 tệp ${kind} mỗi lần.`;
-  if (files.length > MAX_IMPORT_IMAGES) return `Chỉ nhập tối đa ${MAX_IMPORT_IMAGES} ảnh mỗi lần.`;
+  if (kind !== "IMAGE" && files.length > 1) return msg("assignments.model.importFiles.importOnly1FileAt", { kind: String(kind) });
+  if (files.length > MAX_IMPORT_IMAGES) return msg("assignments.model.importFiles.importAtMostImagesAt", { MAX_IMPORT_IMAGES: String(MAX_IMPORT_IMAGES) });
   for (const file of files) {
     if (kind === "DOCX") {
-      if (file.size > DOCX_MAX_MB * 1024 * 1024) return `Tệp DOCX tối đa ${DOCX_MAX_MB} MB.`;
+      if (file.size > DOCX_MAX_MB * 1024 * 1024) return msg("assignments.model.importFiles.docxFilesCanBeAt", { DOCX_MAX_MB: String(DOCX_MAX_MB) });
     } else if (policy) {
       const issue = checkFile(file, policy);
       if (issue) return `${file.name}: ${issue}`;

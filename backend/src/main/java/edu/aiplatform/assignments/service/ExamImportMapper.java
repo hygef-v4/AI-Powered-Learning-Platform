@@ -62,7 +62,7 @@ final class ExamImportMapper {
             String type = block.path("type").asText("");
             switch (type) {
                 case "HEADING" -> {
-                    ObjectNode content = paragraph(block, true);
+                    ObjectNode content = mapParagraph(block, true);
                     if (content != null) {
                         if (block.path("level").asInt(2) == 1 && !content.has("align")) {
                             content.put("align", "CENTER");
@@ -71,12 +71,12 @@ final class ExamImportMapper {
                         headings++;
                     }
                 }
-                case "PARAGRAPH" -> Optional.ofNullable(paragraph(block, false))
+                case "PARAGRAPH" -> Optional.ofNullable(mapParagraph(block, false))
                         .ifPresent(content -> blocks.add(block(BlockType.PARAGRAPH, content)));
-                case "LIST" -> Optional.ofNullable(list(block))
+                case "LIST" -> Optional.ofNullable(mapList(block))
                         .ifPresent(content -> blocks.add(block(BlockType.LIST, content)));
                 case "TABLE" -> {
-                    ObjectNode content = table(block);
+                    ObjectNode content = mapTable(block);
                     if (content != null) {
                         blocks.add(block(BlockType.TABLE, content));
                         tables++;
@@ -106,7 +106,7 @@ final class ExamImportMapper {
                                 .put("text", "[Hình: " + (caption.isEmpty() ? "không có mô tả" : caption) + "]")
                                 .put("italic", true)));
                         blocks.add(block(BlockType.PARAGRAPH, content));
-                        warnings.add(warning("FIGURE_CROP_FAILED", pageNo,
+                        warnings.add(buildWarning("FIGURE_CROP_FAILED", pageNo,
                                 "Không cắt được hình" + (pageNo > 0 ? " ở trang " + pageNo : "")
                                         + "; hãy chèn lại ảnh"));
                     }
@@ -118,7 +118,7 @@ final class ExamImportMapper {
         }
         for (JsonNode warning : output.path("warnings")) {
             String kind = warning.path("kind").asText("OTHER");
-            warnings.add(warning(WARNING_KINDS.contains(kind) ? kind : "OTHER", warning.path("page").asInt(0),
+            warnings.add(buildWarning(WARNING_KINDS.contains(kind) ? kind : "OTHER", warning.path("page").asInt(0),
                     limit(warning.path("message").asText(""), MAX_MESSAGE)));
         }
         DocumentModel document = new DocumentModel(List.copyOf(blocks));
@@ -138,8 +138,8 @@ final class ExamImportMapper {
         return new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, type, content);
     }
 
-    private static ObjectNode paragraph(JsonNode block, boolean bold) {
-        ArrayNode runs = runs(block.path("runs"), bold);
+    private static ObjectNode mapParagraph(JsonNode block, boolean bold) {
+        ArrayNode runs = mapRuns(block.path("runs"), bold);
         if (runs.isEmpty()) {
             return null;
         }
@@ -152,10 +152,10 @@ final class ExamImportMapper {
         return content;
     }
 
-    private static ObjectNode list(JsonNode block) {
+    private static ObjectNode mapList(JsonNode block) {
         ArrayNode items = NODES.arrayNode();
         for (JsonNode item : block.path("items")) {
-            ArrayNode runs = runs(item.path("runs"), false);
+            ArrayNode runs = mapRuns(item.path("runs"), false);
             if (!runs.isEmpty()) {
                 items.addObject().put("level", Math.max(0, Math.min(4, item.path("level").asInt(0))))
                         .set("runs", runs);
@@ -171,7 +171,7 @@ final class ExamImportMapper {
     }
 
     /** Bảng đều cột theo hàng dài nhất; bảng không có chữ nào thì bỏ. */
-    private static ObjectNode table(JsonNode block) {
+    private static ObjectNode mapTable(JsonNode block) {
         int columns = 0;
         for (JsonNode row : block.path("rows")) {
             columns = Math.max(columns, Math.min(DocumentModelService.MAX_CELLS, row.size()));
@@ -187,7 +187,7 @@ final class ExamImportMapper {
             }
             ArrayNode cells = rows.addArray();
             for (int i = 0; i < columns; i++) {
-                ArrayNode runs = runs(row.path(i).path("runs"), false);
+                ArrayNode runs = mapRuns(row.path(i).path("runs"), false);
                 hasText |= !runs.isEmpty();
                 cells.addObject().set("runs", runs);
             }
@@ -201,7 +201,7 @@ final class ExamImportMapper {
         return content;
     }
 
-    private static ArrayNode runs(JsonNode source, boolean forceBold) {
+    private static ArrayNode mapRuns(JsonNode source, boolean forceBold) {
         ArrayNode runs = NODES.arrayNode();
         for (JsonNode run : source) {
             String text = run.path("text").asText("");
@@ -250,7 +250,7 @@ final class ExamImportMapper {
         return count;
     }
 
-    private static ObjectNode warning(String kind, int page, String message) {
+    private static ObjectNode buildWarning(String kind, int page, String message) {
         ObjectNode warning = NODES.objectNode();
         warning.put("kind", kind);
         if (page > 0) {

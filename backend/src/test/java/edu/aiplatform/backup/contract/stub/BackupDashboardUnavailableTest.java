@@ -21,7 +21,7 @@ class BackupDashboardUnavailableTest {
             assertThatThrownBy(() -> port.history(PageRequest.of(0, 3))).isInstanceOf(ApiException.class);
             assertThatThrownBy(() -> port.summarize(Instant.EPOCH, Instant.now()))
                     .isInstanceOfSatisfying(ApiException.class,
-                            e -> assertThat(e.code()).isEqualTo("BACKUP_STATUS_UNAVAILABLE"));
+                            e -> assertThat(e.readCode()).isEqualTo("BACKUP_STATUS_UNAVAILABLE"));
         });
     }
 

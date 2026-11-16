@@ -1,10 +1,11 @@
 "use client";
+import { formatStudentLabel } from "@/shared/studentCode";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   DocumentEditor,
   RubricNote,
   ToolbarButton,
-  outlineOf,
+  buildOutline,
   publishOutline,
   type DocumentComment,
 } from "@/shared/document";
@@ -28,14 +29,15 @@ import {
   StudentPickerDropdown,
   TopBar,
   TotalCard,
-  noteCriteria,
+  listNoteCriteria,
   useSubmissionImages,
 } from "../components/GradingWorkspaceHeader";
 import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail } from "../model/types";
-import { toEditorDocument } from "../model/submissionDocument";
+import { convertToEditorDocument } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import type { NavigationFilters } from "../model/navigation";
 import { setGradingAiLabel } from "../model/gradingAiTasks";
+import { msg } from "@/i18n/msg";
 
 export function GradingWorkspacePage({
   evaluationId,
@@ -63,7 +65,7 @@ export function GradingWorkspacePage({
   ) : resource.error ? (
     <PageLoadError onRetry={() => void resource.refresh()}>{resource.error}</PageLoadError>
   ) : (
-    <PageLoading label="Đang tải bài làm…" />
+    <PageLoading label={msg("grading.pages.GradingWorkspacePage.loadingWork")} />
   );
 }
 
@@ -135,15 +137,15 @@ function Workspace({
       if (created.safeError) showErrorToast(created.safeError);
     } else if (created) {
       showToast(created.status === "READY"
-        ? "Đã có đề xuất AI mới. Mở Xem đề xuất AI để kiểm tra."
-        : "Đã gửi chấm AI. Bạn có thể tiếp tục làm việc.");
+        ? msg("grading.pages.GradingWorkspacePage.aNewAiProposalIs")
+        : msg("grading.pages.GradingWorkspacePage.aiGradingSentYouCan"));
     }
   };
 
   const handlePublish = async () => {
     if (busy || saving || disabled) return;
     if (membersDirty) {
-      showErrorToast("Bạn có đánh giá thành viên chưa lưu. Hãy lưu điểm thành viên trước khi công bố.");
+      showErrorToast(msg("grading.pages.GradingWorkspacePage.youHaveUnsavedMemberAssessments"));
       return;
     }
     if (dirty) {
@@ -167,13 +169,13 @@ function Workspace({
   );
   const studentName =
     [...new Set(submitters.map((row) => row.student.name))].join(", ") ||
-    (evaluation.kind === "GROUP_DOCUMENT" ? "Bài làm nhóm" : "Bài làm sinh viên");
+    (evaluation.kind === "GROUP_DOCUMENT" ? msg("grading.pages.GradingWorkspacePage.groupWork") : msg("grading.pages.GradingWorkspacePage.studentWork"));
   const studentEmail = [...new Set(submitters.map((row) => row.student.email))].join(", ") || "";
   const studentCode = [...new Set(submitters.map((row) => row.student.studentCode).filter(Boolean))].join(", ");
-  const paper = useMemo(() => toEditorDocument(detail.document), [detail.document]);
+  const paper = useMemo(() => convertToEditorDocument(detail.document), [detail.document]);
   const imageUrls = useSubmissionImages(evaluation.id, detail.document);
   const partTitles: Record<string, string> = {
-    ASSIGNMENT: "Toàn bài",
+    ASSIGNMENT: msg("grading.pages.GradingWorkspacePage.wholeAssignment"),
     ...Object.fromEntries(
       detail.document.blocks.flatMap((block) =>
         block.type === "HEADING" && typeof block.content.text === "string" ? [[block.id, block.content.text]] : [],
@@ -232,14 +234,14 @@ function Workspace({
   }, [dirty, aiAutoApplied, disabled, busy, saving, aiOpen, error, form]);
 
   useEffect(() => {
-    const keys = (event: KeyboardEvent) => {
+    const handleShortcutKeys = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         void save(false);
       }
     };
-    window.addEventListener("keydown", keys);
-    return () => window.removeEventListener("keydown", keys);
+    window.addEventListener("keydown", handleShortcutKeys);
+    return () => window.removeEventListener("keydown", handleShortcutKeys);
   }, [save]);
 
   useEffect(() => {
@@ -247,8 +249,8 @@ function Workspace({
     publishOutline({
       assignmentId: evaluation.assignmentId,
       backHref,
-      backLabel: "Chấm điểm",
-      entries: outlineOf(paper.blocks),
+      backLabel: msg("grading.pages.GradingWorkspacePage.grading"),
+      entries: buildOutline(paper.blocks),
       editable: false,
     });
   }, [evaluation.assignmentId, evaluation.classId, paper.blocks]);
@@ -265,13 +267,13 @@ function Workspace({
       anchorBlockId: blockIds.has(rubric.partId) ? rubric.partId : null,
       content: (
         <RubricNote
-          title={partTitles[rubric.partId] || `Phần ${index + 1}`}
-          criteria={noteCriteria(rubric)}
+          title={partTitles[rubric.partId] || msg("grading.pages.GradingWorkspacePage.part", { value: String(index + 1) })}
+          criteria={listNoteCriteria(rubric)}
           active={activePart === rubric.rubricId}
           onActivate={() => setActivePart(rubric.rubricId)}
           badge={
             <span className="sr-only">
-              Đạt {String(Number(calculateChecklistPoints([rubric], form.checks, form.itemScores).toFixed(2)))}
+              {msg("grading.pages.GradingWorkspacePage.score")}{String(Number(calculateChecklistPoints([rubric], form.checks, form.itemScores).toFixed(2)))}
             </span>
           }
           editor={
@@ -292,15 +294,15 @@ function Workspace({
   ];
   const activeHeading = evaluation.kind === "GROUP_DOCUMENT" && groupMode === "members"
     ? memberPart : detail.rubrics.find((rubric) => rubric.rubricId === activePart)?.partId ?? null;
-  const saveText = saving ? "Đang lưu…" : busy ? "Đang xử lý…" : dirty ? "Chưa lưu" : `Đã lưu ${formatPoints(evaluation.score, evaluation.maxScore)}`;
+  const saveText = saving ? msg("grading.pages.GradingWorkspacePage.saving") : busy ? msg("grading.pages.GradingWorkspacePage.processing") : dirty ? msg("grading.pages.GradingWorkspacePage.notSaved") : msg("grading.pages.GradingWorkspacePage.saved", { value: String(formatPoints(evaluation.score, evaluation.maxScore)) });
   const isGroupSubmission = evaluation.kind === "GROUP_DOCUMENT";
-  const assignmentKind = isGroupSubmission ? "Nhóm" : "Cá nhân";
-  const assignmentTitle = context.value?.title || "Bài tập";
+  const assignmentKind = isGroupSubmission ? msg("grading.pages.GradingWorkspacePage.group") : msg("grading.pages.GradingWorkspacePage.individual");
+  const assignmentTitle = context.value?.title || msg("grading.pages.GradingWorkspacePage.assignment");
   useEffect(() => {
     setGradingAiLabel(evaluation.id, `${assignmentTitle} — ${studentName}`);
   }, [evaluation.id, assignmentTitle, studentName]);
   const memberNames = Object.fromEntries(
-    (detail.memberActivities ?? []).map(({ student }) => [student.accountId, student.name]),
+    (detail.memberActivities ?? []).map(({ student }) => [student.accountId, formatStudentLabel(student)]),
   );
   const sectionBylines: Record<string, string> = {};
   const sectionActions: Record<string, ReactNode> = {};
@@ -315,22 +317,22 @@ function Workspace({
     const headings = new Set(paper.blocks.filter((block) => block.type === "HEADING").map((block) => block.id));
     const authors = new Map<string, Set<string>>();
     for (const { partId, accountId } of detail.sectionAuthors ?? []) {
-      const name = memberNames[accountId] ?? "Thành viên";
+      const name = memberNames[accountId] ?? msg("grading.pages.GradingWorkspacePage.member");
       if (headings.has(partId)) {
         const accounts = authors.get(partId) ?? new Set<string>();
         accounts.add(accountId);
         authors.set(partId, accounts);
         const parts = memberSections[accountId] ?? [];
-        if (!parts.some(part => part.partId === partId)) parts.push({ partId, title: partTitles[partId] ?? "Phần bài làm" });
+        if (!parts.some(part => part.partId === partId)) parts.push({ partId, title: partTitles[partId] ?? msg("grading.pages.GradingWorkspacePage.partOfTheWork") });
         memberSections[accountId] = parts;
       } else unanchoredAuthors.add(name);
     }
     for (const [partId, accounts] of authors) {
-      sectionBylines[partId] = `Người thực hiện: ${[...accounts].map(id => memberNames[id] ?? "Thành viên").join(", ")}`;
+      sectionBylines[partId] = msg("grading.pages.GradingWorkspacePage.doneBy", { value: String([...accounts].map(id => memberNames[id] ?? msg("grading.pages.GradingWorkspacePage.member")).join(", ")) });
       sectionActions[partId] = <div className="flex max-w-40 flex-wrap justify-end gap-1">
         {[...accounts].filter(accountId => detail.members.some(member => member.accountId === accountId)).map(accountId => (
           <Button key={accountId} size="sm" variant="ghost" className="max-w-full" onClick={() => openMember(accountId)}>
-            <span className="truncate">Đánh giá {memberNames[accountId] ?? "thành viên"}</span>
+            <span className="truncate">{msg("grading.pages.GradingWorkspacePage.assess")}{memberNames[accountId] ?? msg("grading.pages.GradingWorkspacePage.members")}</span>
           </Button>
         ))}
       </div>;
@@ -356,30 +358,27 @@ function Workspace({
         actions={
           <>
             <Button size="sm" variant="secondary" disabled={disabled || saving} onClick={() => void save(false)}>
-              Lưu thay đổi
-            </Button>
+              {msg("grading.pages.GradingWorkspacePage.saveChanges")}</Button>
             <Button
               size="sm"
               variant="primary"
               disabled={busy || saving || Boolean(error) || !detail.current || detail.editable === false || evaluation.state === "PUBLISHED"}
               onClick={() => void handlePublish()}
             >
-              Công bố điểm
-            </Button>
+              {msg("grading.pages.GradingWorkspacePage.publishGrade")}</Button>
           </>
         }
       />
 
-      {!detail.current && <Alert tone="info">Đây là lần nộp cũ, chỉ có thể xem lại.</Alert>}
+      {!detail.current && <Alert tone="info">{msg("grading.pages.GradingWorkspacePage.thisIsAnOldSubmission")}</Alert>}
       {detail.editable === false && detail.readOnlyReason && <Alert tone="info">{detail.readOnlyReason}</Alert>}
       {error && (
-        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại phiên bản</Button>}>{error}</Alert>
+        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>{msg("grading.pages.GradingWorkspacePage.reloadVersion")}</Button>}>{error}</Alert>
       )}
-      {!detail.rubrics.length && <Alert tone="warning">Bài chưa có rubric khả dụng.</Alert>}
+      {!detail.rubrics.length && <Alert tone="warning">{msg("grading.pages.GradingWorkspacePage.theAssignmentHasNoUsable")}</Alert>}
 
       {evaluation.state === "PUBLISHED" && <p className="text-xs text-muted">
-        Thay đổi sẽ hiển thị cho sinh viên sau khi lưu.
-      </p>}
+        {msg("grading.pages.GradingWorkspacePage.changesWillBeVisibleTo")}</p>}
       <DocumentEditor
         fullWidth
         matchCommentHeight
@@ -389,8 +388,8 @@ function Workspace({
         readOnly
         diagramEnabled={false}
         imageUrl={(blockId) => imageUrls[blockId] ?? null}
-        emptyLeafLabel="Sinh viên chưa làm phần này."
-        titleField={{ text: context.value?.title || "Bài làm đã nộp", readOnly: true, onText: () => {} }}
+        emptyLeafLabel={msg("grading.pages.GradingWorkspacePage.theStudentDidNotDo")}
+        titleField={{ text: context.value?.title || msg("grading.pages.GradingWorkspacePage.submittedWork"), readOnly: true, onText: () => {} }}
         header={
           <GradingHeaderSection
             assignmentKind={assignmentKind}
@@ -428,8 +427,8 @@ function Workspace({
           <>
             <ToolbarButton
               icon="chevron_left"
-              title="Bài trước"
-              aria-label="Bài trước"
+              title={msg("grading.pages.GradingWorkspacePage.previousSubmission")}
+              aria-label={msg("grading.pages.GradingWorkspacePage.previousSubmission")}
               disabled={currentIndex <= 0 || busy || saving}
               onClick={() => navigate(detail.navigationIds[currentIndex - 1]!)}
             />
@@ -444,8 +443,8 @@ function Workspace({
             />
             <ToolbarButton
               icon="chevron_right"
-              title="Bài sau"
-              aria-label="Bài sau"
+              title={msg("grading.pages.GradingWorkspacePage.nextSubmission")}
+              aria-label={msg("grading.pages.GradingWorkspacePage.nextSubmission")}
               disabled={currentIndex < 0 || currentIndex >= detail.navigationIds.length - 1 || busy || saving}
               onClick={() => navigate(detail.navigationIds[currentIndex + 1]!)}
             />
@@ -456,39 +455,39 @@ function Workspace({
           <div className="ml-2 flex items-center gap-2">
             {isGroupSubmission && detail.members.length > 0 && (
               <>
-              <ToolbarButton icon="description" title="Rubric nhóm" aria-label="Rubric nhóm" className="xl:hidden"
+              <ToolbarButton icon="description" title={msg("grading.pages.GradingWorkspacePage.groupRubric")} aria-label={msg("grading.pages.GradingWorkspacePage.groupRubric")} className="xl:hidden"
                 onClick={() => { setGroupMode("rubric"); setMemberPart(null); setGroupPanelOpen(true); }} />
               <ToolbarButton
                 icon="groups"
-                title="Điểm thành viên"
-                aria-label="Điểm thành viên"
+                title={msg("grading.pages.GradingWorkspacePage.memberScores")}
+                aria-label={msg("grading.pages.GradingWorkspacePage.memberScores")}
                 aria-controls="group-member-grades"
                 onClick={() => openMember()}
               >
-                <span className="hidden xl:inline">Điểm thành viên</span>
+                <span className="hidden xl:inline">{msg("grading.pages.GradingWorkspacePage.memberScores")}</span>
               </ToolbarButton>
               </>
             )}
             <ToolbarButton
               icon="history"
-              title="Xem đề xuất AI"
-              aria-label="Xem đề xuất AI"
+              title={msg("grading.pages.GradingWorkspacePage.viewAiProposal")}
+              aria-label={msg("grading.pages.GradingWorkspacePage.viewAiProposal")}
               aria-expanded={aiOpen}
               aria-controls={aiOpen ? "grading-ai-review" : undefined}
               onClick={() => setAiOpen((open) => !open)}
             >
-              <span className="hidden md:inline">Xem đề xuất AI</span>
+              <span className="hidden md:inline">{msg("grading.pages.GradingWorkspacePage.viewAiProposal")}</span>
             </ToolbarButton>
             <ToolbarButton
               icon="smart_toy"
-              title={evaluation.kind === "MEMBER" ? "Mở bài nộp nhóm để chấm bằng AI" : "Chấm bằng AI"}
-              aria-label="Chấm bằng AI"
+              title={evaluation.kind === "MEMBER" ? msg("grading.pages.GradingWorkspacePage.openTheGroupSubmissionTo") : msg("grading.pages.GradingWorkspacePage.gradeWithAi")}
+              aria-label={msg("grading.pages.GradingWorkspacePage.gradeWithAi")}
               className="h-9! gap-2! px-3! text-sm! font-semibold!"
               aria-busy={aiGenerating}
               disabled={disabled || busy || saving || (evaluation.kind === "MEMBER" ? !detail.groupEvaluationId : aiGenerating)}
               onClick={() => void handleAiGrade()}
             >
-              {aiGenerating ? "AI đang chấm…" : "Chấm bằng AI"}
+              {aiGenerating ? msg("grading.pages.GradingWorkspacePage.theAiIsGrading") : msg("grading.pages.GradingWorkspacePage.gradeWithAi")}
             </ToolbarButton>
           </div>
         }
@@ -498,10 +497,10 @@ function Workspace({
         <ActivityReview detail={detail} />
       </div>
       {aiOpen && (
-        <section id="grading-ai-review" aria-label="Chấm bằng AI" className="scroll-mt-52 border-t border-line pt-5">
+        <section id="grading-ai-review" aria-label={msg("grading.pages.GradingWorkspacePage.gradeWithAi")} className="scroll-mt-52 border-t border-line pt-5">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-ink">Chấm bằng AI</h2>
-            <Button size="sm" icon="close" onClick={() => setAiOpen(false)}>Đóng</Button>
+            <h2 className="text-lg font-semibold text-ink">{msg("grading.pages.GradingWorkspacePage.gradeWithAi")}</h2>
+            <Button size="sm" icon="close" onClick={() => setAiOpen(false)}>{msg("grading.pages.GradingWorkspacePage.close")}</Button>
           </div>
           <AiProposalPanel
             evaluationId={evaluation.id}

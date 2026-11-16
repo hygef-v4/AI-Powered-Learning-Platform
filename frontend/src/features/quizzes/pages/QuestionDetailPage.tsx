@@ -3,15 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, Field, PageHeader, Pill, Section } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, PageHeader, Pill, Section, Textarea } from "@/shared/ui";
 import { activateQuestion, approveQuestion, createQuestion, deleteQuestion, getQuestion, openDraft, rejectQuestion, retireQuestion, updateQuestion } from "../api";
-import { errorCode, errorMessage, STATUS_LABELS, STATUS_TONES } from "../model/labels";
+import { readErrorCode, describeError, STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import { McqEditor } from "../components/McqEditor";
 import { QuestionMetaPanel, QuestionVersionPanel } from "../components/QuestionSidePanels";
 import { SimilarQuestionsAlert } from "../components/SimilarQuestionsAlert";
-import { emptyForm, formOf, toContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
+import { createEmptyForm, buildFormFrom, convertToContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type { QuestionDetail, Violation } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { msg } from "@/i18n/msg";
 
 type Props = { id: string; subjectId?: string | null };
 type Confirm = "retire" | "delete" | "reject" | null;
@@ -26,7 +27,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
   const router = useRouter();
   const creating = id === "new";
   const [detail, setDetail] = useState<QuestionDetail | null>(null);
-  const [form, setForm] = useState<QuestionForm>(emptyForm);
+  const [form, setForm] = useState<QuestionForm>(createEmptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [violations, setViolations] = useState<Violation[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -37,7 +38,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
 
   const show = useCallback((next: QuestionDetail) => {
     setDetail(next);
-    setForm(formOf(next.question));
+    setForm(buildFormFrom(next.question));
     setErrors({});
     setViolations([]);
   }, []);
@@ -55,7 +56,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
         show(next);
       })
       .catch((error: unknown) => {
-        if (active) setLoadError(errorMessage(error));
+        if (active) setLoadError(describeError(error));
       });
     return () => {
       active = false;
@@ -64,7 +65,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
 
   const question = detail?.question;
   const ownerSubject = question?.subjectId ?? subjectId ?? null;
-  const dirty = useMemo(() => !question || JSON.stringify(form) !== JSON.stringify(formOf(question)), [form, question]);
+  const dirty = useMemo(() => !question || JSON.stringify(form) !== JSON.stringify(buildFormFrom(question)), [form, question]);
   const pending = question?.status === "PENDING";
   const rejected = question?.status === "REJECTED";
   const readOnly = question?.status === "RETIRED" || pending || rejected;
@@ -72,14 +73,14 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
   const fail = (error: unknown) => {
     if (error instanceof ApiError && error.problem.code === "QUESTION_INVALID") {
       setViolations((error.problem as { violations?: Violation[] }).violations ?? []);
-      setNotice({ tone: "danger", text: "Nội dung câu hỏi chưa hợp lệ." });
+      setNotice({ tone: "danger", text: msg("quizzes.pages.QuestionDetailPage.theQuestionContentIsInvalid") });
       return;
     }
-    setNotice({ tone: "danger", text: errorMessage(error) });
-    if (errorCode(error) === "QUESTION_VERSION_CONFLICT") reload();
+    setNotice({ tone: "danger", text: describeError(error) });
+    if (readErrorCode(error) === "QUESTION_VERSION_CONFLICT") reload();
   };
 
-  const run = async (action: () => Promise<void>) => {
+  const runAction = async (action: () => Promise<void>) => {
     setBusy(true);
     setNotice(null);
     try {
@@ -91,13 +92,13 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
     }
   };
 
-  const save = () => {
+  const saveQuestion = () => {
     const found = validateForm(form);
     setErrors(found);
     setViolations([]);
     if (Object.keys(found).length > 0) return;
-    const content = toContent(form);
-    void run(async () => {
+    const content = convertToContent(form);
+    void runAction(async () => {
       if (creating) {
         if (!subjectId) throw new Error("missing subject");
         const created = await createQuestion(subjectId, content);
@@ -107,7 +108,7 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
       if (!question) return;
       if (question.status === "DRAFT") {
         show(await updateQuestion(question.id, content, question.version));
-        setNotice({ tone: "success", text: "Đã lưu bản nháp." });
+        setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.draftSaved") });
         return;
       }
       // Câu đang dùng: mở bản nháp mới rồi lưu nội dung vào đó; quiz đã phát hành vẫn dùng phiên bản đã ghim.
@@ -117,27 +118,27 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
     });
   };
 
-  const activate = () => question && void run(async () => {
+  const activate = () => question && void runAction(async () => {
     show(await activateQuestion(question.id, question.version));
-    setNotice({ tone: "success", text: "Đã kích hoạt câu hỏi." });
+    setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.questionActivated") });
   });
 
-  const approve = () => question && void run(async () => {
+  const approve = () => question && void runAction(async () => {
     show(await approveQuestion(question.id, question.version));
-    setNotice({ tone: "success", text: "Đã duyệt: câu đã vào ngân hàng." });
+    setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.approvedTheQuestionIsNow") });
   });
 
-  const confirmAction = () => question && void run(async () => {
+  const confirmAction = () => question && void runAction(async () => {
     if (confirm === "retire") {
       const next = await retireQuestion(question.id, question.version);
       show(next);
       setNotice(next.quizzesShortOfQuestions?.length
-        ? { tone: "warning", text: `Đã ngưng dùng câu hỏi. Các quiz sinh đề đang mở không còn đủ câu, sinh viên sẽ chưa bắt đầu được: ${next.quizzesShortOfQuestions.join(", ")}.` }
-        : { tone: "success", text: "Đã ngưng dùng câu hỏi." });
+        ? { tone: "warning", text: msg("quizzes.pages.QuestionDetailPage.questionRetiredOpenGeneratedQuizzes", { value: String(next.quizzesShortOfQuestions.join(", ")) }) }
+        : { tone: "success", text: msg("quizzes.pages.QuestionDetailPage.questionRetired") });
     } else if (confirm === "reject") {
       show(await rejectQuestion(question.id, reason.trim(), question.version));
       setReason("");
-      setNotice({ tone: "success", text: "Đã từ chối và báo cho người đề xuất." });
+      setNotice({ tone: "success", text: msg("quizzes.pages.QuestionDetailPage.rejectedAndNotifiedTheProposer") });
     } else if (confirm === "delete") {
       await deleteQuestion(question.id, question.version);
       router.push(listHref(question.subjectId));
@@ -146,31 +147,31 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
   });
 
   if (creating && !subjectId) {
-    return <Alert tone="warning" title="Chưa chọn môn">Hãy mở Ngân hàng câu hỏi và chọn môn trước khi thêm câu.</Alert>;
+    return <Alert tone="warning" title={msg("quizzes.pages.QuestionDetailPage.noSubjectSelected")}>{msg("quizzes.pages.QuestionDetailPage.openTheQuestionBankAnd")}</Alert>;
   }
   if (loadError) {
     return <PageLoadError onRetry={reload}>{loadError}</PageLoadError>;
   }
-  if (!creating && !question) return <PageLoading label="Đang tải câu hỏi…" />;
+  if (!creating && !question) return <PageLoading label={msg("quizzes.pages.QuestionDetailPage.loadingQuestion")} />;
 
   return (
     <>
       <PageHeader
         backHref={listHref(ownerSubject)}
-        breadcrumb={[{ label: "Ngân hàng câu hỏi", href: listHref(ownerSubject) }, { label: creating ? "Câu hỏi mới" : "Câu hỏi" }]}
-        title={creating ? "Câu hỏi mới" : "Câu hỏi"}
+        breadcrumb={[{ label: msg("quizzes.pages.QuestionDetailPage.questionBank"), href: listHref(ownerSubject) }, { label: creating ? msg("quizzes.pages.QuestionDetailPage.newQuestion") : msg("quizzes.pages.QuestionDetailPage.question") }]}
+        title={creating ? msg("quizzes.pages.QuestionDetailPage.newQuestion") : msg("quizzes.pages.QuestionDetailPage.question")}
         subtitle={question && <span className="inline-flex items-center gap-2">
-          <Pill tone={STATUS_TONES[question.status]}>{STATUS_LABELS[question.status]}</Pill>Phiên bản {question.versionNo}
+          <Pill tone={STATUS_TONES[question.status]}>{STATUS_LABELS[question.status]}</Pill>{msg("quizzes.pages.QuestionDetailPage.version")}{question.versionNo}
         </span>}
         actions={<div className="flex flex-wrap gap-2">
-          {question?.status === "DRAFT" && <Button variant="ghost" disabled={busy} onClick={() => setConfirm("delete")} data-testid="question-detail-delete">Xóa</Button>}
-          {question?.status === "ACTIVE" && <Button disabled={busy} onClick={() => setConfirm("retire")} data-testid="question-detail-retire">Ngưng</Button>}
+          {question?.status === "DRAFT" && <Button variant="ghost" disabled={busy} onClick={() => setConfirm("delete")} data-testid="question-detail-delete">{msg("quizzes.pages.QuestionDetailPage.delete")}</Button>}
+          {question?.status === "ACTIVE" && <Button disabled={busy} onClick={() => setConfirm("retire")} data-testid="question-detail-retire">{msg("quizzes.pages.QuestionDetailPage.retire")}</Button>}
           {question?.status === "DRAFT" && (
-            <Button disabled={busy || dirty} title={dirty ? "Lưu thay đổi trước khi kích hoạt" : undefined} onClick={activate} data-testid="question-detail-activate">Kích hoạt</Button>
+            <Button disabled={busy || dirty} title={dirty ? msg("quizzes.pages.QuestionDetailPage.saveChangesBeforeActivating") : undefined} onClick={activate} data-testid="question-detail-activate">{msg("quizzes.pages.QuestionDetailPage.activate")}</Button>
           )}
-          {pending && <Button disabled={busy} onClick={() => setConfirm("reject")} data-testid="question-detail-reject">Từ chối</Button>}
-          {pending && <Button variant="primary" disabled={busy} onClick={approve} data-testid="question-detail-approve">Duyệt vào ngân hàng</Button>}
-          {!readOnly && <Button variant="primary" icon="save" disabled={busy || !dirty} onClick={save} data-testid="question-detail-save">Lưu thay đổi</Button>}
+          {pending && <Button disabled={busy} onClick={() => setConfirm("reject")} data-testid="question-detail-reject">{msg("quizzes.pages.QuestionDetailPage.reject")}</Button>}
+          {pending && <Button variant="primary" disabled={busy} onClick={approve} data-testid="question-detail-approve">{msg("quizzes.pages.QuestionDetailPage.approveIntoTheBank")}</Button>}
+          {!readOnly && <Button variant="primary" icon="save" disabled={busy || !dirty} onClick={saveQuestion} data-testid="question-detail-save">{msg("quizzes.pages.QuestionDetailPage.saveChanges")}</Button>}
         </div>}
       />
       {notice && <Alert tone={notice.tone} role={notice.tone === "danger" ? "alert" : "status"}>{notice.text}</Alert>}
@@ -180,14 +181,14 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
         </Alert>
       )}
       {question?.status === "ACTIVE" && (
-        <Alert tone="info">Đang dùng trong {detail?.usedInQuizzes ?? 0} quiz.</Alert>
+        <Alert tone="info">{msg("quizzes.pages.QuestionDetailPage.usedIn")}{detail?.usedInQuizzes ?? 0} quiz.</Alert>
       )}
-      {question?.status === "RETIRED" && <Alert tone="warning">Câu đã ngưng dùng.</Alert>}
-      {pending && <Alert tone="info">Câu do giảng viên đề xuất, đang chờ duyệt. Không sửa ở đây; nếu cần sửa, hãy từ chối kèm lý do.</Alert>}
-      {rejected && <Alert tone="warning" title="Đã từ chối">{detail?.review?.reason ?? "Không có lý do."}</Alert>}
+      {question?.status === "RETIRED" && <Alert tone="warning">{msg("quizzes.pages.QuestionDetailPage.thisQuestionIsRetired")}</Alert>}
+      {pending && <Alert tone="info">{msg("quizzes.pages.QuestionDetailPage.proposedByALecturerAwaiting")}</Alert>}
+      {rejected && <Alert tone="warning" title={msg("quizzes.pages.QuestionDetailPage.rejected")}>{detail?.review?.reason ?? msg("quizzes.pages.QuestionDetailPage.noReasonGiven")}</Alert>}
       {detail && <SimilarQuestionsAlert similar={detail.similar ?? []} />}
       <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Section title="Nội dung">
+        <Section title={msg("quizzes.pages.QuestionDetailPage.content")}>
           <McqEditor value={form} onChange={setForm} errors={errors} readOnly={readOnly} />
         </Section>
         <div className="flex flex-col gap-4">
@@ -196,18 +197,17 @@ export function QuestionDetailPage({ id, subjectId }: Props) {
         </div>
       </div>
       <Dialog open={confirm !== null} onClose={() => setConfirm(null)} tone={confirm === "delete" ? "danger" : "warning"}
-        title={confirm === "delete" ? "Xóa câu nháp?" : confirm === "reject" ? "Từ chối câu đề xuất?" : "Ngưng dùng câu hỏi?"}
+        title={confirm === "delete" ? msg("quizzes.pages.QuestionDetailPage.deleteDraftQuestion") : confirm === "reject" ? msg("quizzes.pages.QuestionDetailPage.rejectProposedQuestion") : msg("quizzes.pages.QuestionDetailPage.retireQuestion")}
         footer={<>
           <Button variant={confirm === "delete" ? "danger" : "primary"} disabled={busy || (confirm === "reject" && !reason.trim())} onClick={confirmAction} data-testid="question-detail-confirm">
-            {confirm === "delete" ? "Xóa" : confirm === "reject" ? "Từ chối" : "Ngưng dùng"}
+            {confirm === "delete" ? msg("quizzes.pages.QuestionDetailPage.delete") : confirm === "reject" ? msg("quizzes.pages.QuestionDetailPage.reject") : msg("quizzes.pages.QuestionDetailPage.retire2")}
           </Button>
         </>}>
         {confirm === "reject" ? (
-          <Field label="Lý do từ chối" required htmlFor="question-reject-reason" hint="Giảng viên thấy lý do này để sửa rồi gửi lại.">
-            <textarea id="question-reject-reason" rows={3} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)}
-              className="w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus" data-testid="question-detail-reason" />
+          <Field label={msg("quizzes.pages.QuestionDetailPage.rejectionReason")} required htmlFor="question-reject-reason" hint={msg("quizzes.pages.QuestionDetailPage.theLecturerSeesThisReason")}>
+            <Textarea id="question-reject-reason" rows={3} maxLength={1000} value={reason} onChange={(e) => setReason(e.target.value)} data-testid="question-detail-reason" />
           </Field>
-        ) : <p>{confirm === "delete" ? "Bạn có chắc muốn xóa câu hỏi nháp này không?" : "Bạn có chắc muốn ngưng dùng câu hỏi này không?"}</p>}
+        ) : <p>{confirm === "delete" ? msg("quizzes.pages.QuestionDetailPage.areYouSureYouWant") : msg("quizzes.pages.QuestionDetailPage.areYouSureYouWant2")}</p>}
       </Dialog>
     </>
   );

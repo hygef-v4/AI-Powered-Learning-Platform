@@ -109,7 +109,7 @@ public class AcademicsService {
         return executeGuarded(actor, "CLASS_STUDENTS_VIEW", id, () -> {
             requireAudience(actor, audience);
             if (audience.equals("student"))
-                throw ApiException.forbidden("ROLE_DENIED");
+                throw ApiException.createForbidden("ROLE_DENIED");
             requireClassAccess(actor, audience, id);
             validatePage(page, size);
             return enrollmentRepository
@@ -125,9 +125,9 @@ public class AcademicsService {
         return executeGuarded(actor, "CLASS_STUDENT_VIEW", id, () -> {
             requireAudience(actor, "teacher");
             requireClassAccess(actor, "teacher", id);
-            Enrollment enrollment = enrollmentRepository.find(id, studentId)
+            Enrollment enrollment = enrollmentRepository.findEnrollment(id, studentId)
                     .filter(e -> e.status() == EnrollmentStatus.ACTIVE)
-                    .orElseThrow(() -> ApiException.notFound("STUDENT_NOT_FOUND"));
+                    .orElseThrow(() -> ApiException.createNotFound("STUDENT_NOT_FOUND"));
             return mapStudentView(enrollment);
         });
     }
@@ -215,7 +215,7 @@ public class AcademicsService {
             CourseClass current = loadLockedClass(actor, id, version);
             CourseClass changed = current.updateInfo(name, description, startsOn,
                     clock.instant());
-            courseClassRepository.update(changed, version);
+            courseClassRepository.updateClass(changed, version);
             recordSuccess(actor, "CLASS_UPDATED", id, Map.of());
             return mapClassView(changed);
         });
@@ -233,7 +233,7 @@ public class AcademicsService {
             requireTeacher(teacherId);
             CourseClass current = loadLockedClass(actor, id, version);
             CourseClass changed = current.assignTeacher(teacherId, clock.instant());
-            courseClassRepository.update(changed, version);
+            courseClassRepository.updateClass(changed, version);
             recordSuccess(actor, "CLASS_TEACHER_CHANGED", id,
                     buildTeacherDetails(current.teacherId(), teacherId));
             return mapClassView(changed);
@@ -246,13 +246,13 @@ public class AcademicsService {
     public ClassView changeClassStatus(Actor actor, UUID id, ClassStatus status, long version) {
         return executeCommand(actor, "CLASS_STATUS_CHANGED", id, () -> {
             if (status == null)
-                throw ApiException.badRequest("INVALID_STATUS", "Chọn trạng thái lớp");
+                throw ApiException.createBadRequest("INVALID_STATUS", "Chọn trạng thái lớp");
             CourseClass current = loadLockedClass(actor, id, version);
             boolean subjectActive = false;
             if (status == ClassStatus.OPEN) {
                 requireTeacherStillEligible(current.teacherId());
                 subjectActive = subjectQuery.isActive(current.subjectId());
-                var conflicting = enrollmentRepository.conflictingStudents(id, current.subjectId());
+                var conflicting = enrollmentRepository.listConflictingStudents(id, current.subjectId());
                 if (!conflicting.isEmpty()) {
                     var conflictingNames = conflicting.stream()
                             .map(studentId -> accountLookup.getContact(studentId)
@@ -267,7 +267,7 @@ public class AcademicsService {
             }
             CourseClass changed = current.changeStatus(status, subjectActive, false,
                     clock.instant());
-            courseClassRepository.update(changed, version);
+            courseClassRepository.updateClass(changed, version);
             recordSuccess(actor, "CLASS_STATUS_CHANGED", id,
                     Map.of("before", current.status().name(), "after", status.name()));
             // Mở lớp lần đầu hay mở lại lớp đã lưu trữ: sinh viên đang ghi danh đều được báo lớp đã mở.
@@ -333,7 +333,7 @@ public class AcademicsService {
                         requireEditableClass(current);
                         return enrollLine(actor, current, account, EnrollmentSource.LIST);
                     });
-                results.add(new RowResult(row.lineNumber(), row.identifier(), result));
+                results.add(new RowResult(row.lineNumber(), row.readIdentifier(), result));
             }
             return List.copyOf(results);
         });
@@ -354,23 +354,23 @@ public class AcademicsService {
                 EnrollmentResult result = enrollLine(actor, current, account,
                         EnrollmentSource.MANUAL);
                 if (result == EnrollmentResult.IN_OTHER_CLASS)
-                    throw ApiException.conflict("IN_OTHER_CLASS",
+                    throw ApiException.createConflict("IN_OTHER_CLASS",
                             "Sinh viên đang ở lớp khác cùng môn");
                 if (result != EnrollmentResult.ENROLLED && result != EnrollmentResult.RESTORED
                         && result != EnrollmentResult.ALREADY_ENROLLED)
-                    throw ApiException.badRequest(result.name(),
+                    throw ApiException.createBadRequest(result.name(),
                             "Không thể khôi phục ghi danh. Kiểm tra tài khoản sinh viên");
                 return result;
             });
         return executeCommand(actor, "STUDENT_REMOVED", id, () -> {
             if (status == null)
-                throw ApiException.badRequest("INVALID_STATUS", "Chọn trạng thái ghi danh");
+                throw ApiException.createBadRequest("INVALID_STATUS", "Chọn trạng thái ghi danh");
             CourseClass current = loadLockedClass(actor, id, null);
             requireEditableClass(current);
-            Enrollment old = enrollmentRepository.find(id, accountId)
-                    .orElseThrow(() -> ApiException.notFound("ENROLLMENT_NOT_FOUND"));
+            Enrollment old = enrollmentRepository.findEnrollment(id, accountId)
+                    .orElseThrow(() -> ApiException.createNotFound("ENROLLMENT_NOT_FOUND"));
             if (old.status() == EnrollmentStatus.ACTIVE) {
-                enrollmentRepository.update(old.removeEnrollment(clock.instant()),
+                enrollmentRepository.updateEnrollment(old.removeEnrollment(clock.instant()),
                         EnrollmentStatus.ACTIVE);
                 recordSuccess(actor, "STUDENT_REMOVED", id,
                         Map.of("accountId", accountId.toString()));
@@ -387,9 +387,9 @@ public class AcademicsService {
             return EnrollmentResult.NOT_STUDENT;
         if (account.status() == AccountStatus.DISABLED)
             return EnrollmentResult.DISABLED;
-        var existing = enrollmentRepository.find(current.id(), account.accountId()).orElse(null);
+        var existing = enrollmentRepository.findEnrollment(current.id(), account.accountId()).orElse(null);
         var result = EnrollmentPolicy.resolveEnrollmentResult(current.status(), existing,
-                enrollmentRepository.activeInOtherClass(account.accountId(), current.subjectId(),
+                enrollmentRepository.hasActiveEnrollmentElsewhere(account.accountId(), current.subjectId(),
                         current.id()));
         if (result == EnrollmentResult.ENROLLED || result == EnrollmentResult.RESTORED) {
             Enrollment value = existing == null
@@ -399,7 +399,7 @@ public class AcademicsService {
             if (existing == null)
                 enrollmentRepository.insert(value);
             else
-                enrollmentRepository.update(value, EnrollmentStatus.REMOVED);
+                enrollmentRepository.updateEnrollment(value, EnrollmentStatus.REMOVED);
             recordSuccess(actor, "STUDENT_ENROLLED", current.id(),
                     Map.of("accountId", account.accountId().toString(), "result", result.name()));
             if (current.status() == ClassStatus.OPEN)
@@ -415,24 +415,24 @@ public class AcademicsService {
         CourseClass current = requireClassAccess(actor, "manager", id);
         requireManager(actor, current.subjectId());
         if (version != null && (version < 0 || current.version() != version))
-            throw ApiException.conflict("CLASS_VERSION_CONFLICT",
+            throw ApiException.createConflict("CLASS_VERSION_CONFLICT",
                     "Dữ liệu lớp đã thay đổi. Hãy tải lại");
         return current;
     }
 
     private CourseClass requireClassAccess(Actor actor, String audience, UUID id) {
-        CourseClass value = courseClassRepository.find(id)
-                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+        CourseClass value = courseClassRepository.findClass(id)
+                .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         boolean allowed = switch (audience) {
         case "manager" -> scope.isSubjectManager(actor.accountId(), value.subjectId());
         case "teacher" -> actor.accountId().equals(value.teacherId());
         case "student" ->
-            value.status() == ClassStatus.OPEN && enrollmentRepository.find(id, actor.accountId())
+            value.status() == ClassStatus.OPEN && enrollmentRepository.findEnrollment(id, actor.accountId())
                     .map(e -> e.status() == EnrollmentStatus.ACTIVE).orElse(false);
         default -> false;
         };
         if (!allowed)
-            throw ApiException.notFound("CLASS_OUT_OF_SCOPE");
+            throw ApiException.createNotFound("CLASS_OUT_OF_SCOPE");
         // Chủ nhiệm xem lớp của môn mình theo phạm vi môn (R2), không cần được giao dạy lớp đó.
         if (audience.equals("manager"))
             requireAuthorization(actor, Actions.CLASS_MANAGE,
@@ -445,7 +445,7 @@ public class AcademicsService {
     private void requireManager(Actor actor, UUID subjectId) {
         if (subjectId == null || !scope.isSubjectManager(actor.accountId(), subjectId)
                 || !actor.accountId().equals(loadSubject(subjectId).managerId()))
-            throw ApiException.notFound("SUBJECT_OUT_OF_SCOPE");
+            throw ApiException.createNotFound("SUBJECT_OUT_OF_SCOPE");
         requireAuthorization(actor, Actions.CLASS_MANAGE, ResourceRef.subject(subjectId), true);
     }
 
@@ -460,11 +460,11 @@ public class AcademicsService {
         default -> false;
         };
         if (!roleAllowed)
-            throw ApiException.forbidden("ROLE_DENIED");
+            throw ApiException.createForbidden("ROLE_DENIED");
         AccountContact contact = accountLookup.getContact(actor.accountId())
-                .orElseThrow(() -> ApiException.forbidden("ACCOUNT_INACTIVE"));
+                .orElseThrow(() -> ApiException.createForbidden("ACCOUNT_INACTIVE"));
         if (contact.status() != AccountStatus.ACTIVE || contact.role() != actor.role())
-            throw ApiException.forbidden("ACCOUNT_INACTIVE");
+            throw ApiException.createForbidden("ACCOUNT_INACTIVE");
         String action = switch (audience) {
         case "manager" -> Actions.CLASS_MANAGER;
         case "teacher" -> Actions.CLASS_TEACHER;
@@ -478,8 +478,8 @@ public class AcademicsService {
         var decision = authorization.authorize(actor, action, ref);
         if (decision == null || !decision.allowed()) {
             if (hideDeniedResource)
-                throw ApiException.notFound("CLASS_OUT_OF_SCOPE");
-            throw ApiException.forbidden("ACCESS_DENIED");
+                throw ApiException.createNotFound("CLASS_OUT_OF_SCOPE");
+            throw ApiException.createForbidden("ACCESS_DENIED");
         }
     }
 
@@ -488,9 +488,9 @@ public class AcademicsService {
         if (id == null)
             return;
         var contact = accountLookup.lockContact(id).orElseThrow(
-                () -> ApiException.badRequest("INVALID_TEACHER", "Không tìm thấy giảng viên"));
+                () -> ApiException.createBadRequest("INVALID_TEACHER", "Không tìm thấy giảng viên"));
         if (!isEligibleTeacher(contact))
-            throw ApiException.badRequest("INVALID_TEACHER", "Chọn giảng viên đang hoạt động");
+            throw ApiException.createBadRequest("INVALID_TEACHER", "Chọn giảng viên đang hoạt động");
     }
 
     /** Mở lại lớp với giảng viên đã gán: không tạo phân công mới nên không cần khóa tài khoản. */
@@ -498,9 +498,9 @@ public class AcademicsService {
         if (id == null)
             return;
         var contact = accountLookup.getContact(id).orElseThrow(
-                () -> ApiException.badRequest("INVALID_TEACHER", "Không tìm thấy giảng viên"));
+                () -> ApiException.createBadRequest("INVALID_TEACHER", "Không tìm thấy giảng viên"));
         if (!isEligibleTeacher(contact))
-            throw ApiException.badRequest("INVALID_TEACHER", "Chọn giảng viên đang hoạt động");
+            throw ApiException.createBadRequest("INVALID_TEACHER", "Chọn giảng viên đang hoạt động");
     }
 
     private boolean isEligibleTeacher(AccountContact contact) {
@@ -510,17 +510,17 @@ public class AcademicsService {
 
     private void requireEditableClass(CourseClass value) {
         if (value.status() == ClassStatus.ARCHIVED)
-            throw ApiException.conflict("CLASS_ARCHIVED", "Lớp đã lưu trữ chỉ được xem");
+            throw ApiException.createConflict("CLASS_ARCHIVED", "Lớp đã lưu trữ chỉ được xem");
     }
 
     private SubjectRef loadSubject(UUID id) {
         return subjectQuery.getSubject(id).orElseThrow(
-                () -> ApiException.unavailable("SUBJECT_UNAVAILABLE", "Không đọc được môn học"));
+                () -> ApiException.createUnavailable("SUBJECT_UNAVAILABLE", "Không đọc được môn học"));
     }
 
     private List<ClassView> mapClassViews(List<CourseClass> values) {
         var counts = academicsReadRepository
-                .enrollmentCounts(values.stream().map(CourseClass::id).toList());
+                .countEnrollments(values.stream().map(CourseClass::id).toList());
         return values
                 .stream().map(
                         courseClass -> mapClassView(courseClass,
@@ -538,13 +538,13 @@ public class AcademicsService {
         var subject = loadSubject(courseClass.subjectId());
         Person teacher = courseClass.teacherId() == null ? null
                 : mapPerson(accountLookup.getContact(courseClass.teacherId())
-                        .orElseThrow(() -> ApiException.unavailable("ACCOUNT_UNAVAILABLE",
+                        .orElseThrow(() -> ApiException.createUnavailable("ACCOUNT_UNAVAILABLE",
                                 "Không đọc được giảng viên")));
         return new ClassView(courseClass.id(),
                 new Subject(subject.subjectId(), subject.code(), subject.name()),
                 courseClass.code(), courseClass.name(),
                 Objects.requireNonNullElse(courseClass.description(), ""), courseClass.startsOn(),
-                courseClass.term(), courseClass.status(), teacher,
+                courseClass.deriveTerm(), courseClass.status(), teacher,
                 counts.active(), counts.removed(), courseClass.createdAt(),
                 courseClass.showGradeDistribution(), courseClass.version());
     }
@@ -561,7 +561,7 @@ public class AcademicsService {
 
     private Student mapStudentView(Enrollment enrollment) {
         var account = accountLookup.getContact(enrollment.accountId()).orElseThrow(
-                () -> ApiException.unavailable("ACCOUNT_UNAVAILABLE", "Không đọc được sinh viên"));
+                () -> ApiException.createUnavailable("ACCOUNT_UNAVAILABLE", "Không đọc được sinh viên"));
         return new Student(enrollment.accountId(), account.displayName(), account.email(),
                 enrollment.enrolledAt(), enrollment.status(), account.studentCode());
     }
@@ -608,14 +608,14 @@ public class AcademicsService {
             return work.get();
         } catch (RuntimeException failure) {
             ApiException problem = mapFailure(failure);
-            boolean denied = problem.status().value() == 401 || problem.status().value() == 403
-                    || problem.status().value() == 404;
+            boolean denied = problem.readStatus().value() == 401 || problem.readStatus().value() == 403
+                    || problem.readStatus().value() == 404;
             try {
                 recordAudit(actor, denied ? "ACCESS_DENIED" : action, id,
-                        denied ? AuditResult.DENIED : AuditResult.FAILURE, problem.code(),
+                        denied ? AuditResult.DENIED : AuditResult.FAILURE, problem.readCode(),
                         Map.of());
             } catch (RuntimeException auditFailure) {
-                throw ApiException.unavailable("AUDIT_UNAVAILABLE",
+                throw ApiException.createUnavailable("AUDIT_UNAVAILABLE",
                         "Không thể ghi nhật ký an toàn");
             }
             throw problem;
@@ -628,27 +628,27 @@ public class AcademicsService {
         if (failure instanceof AcademicRuleException rule) {
             if (Set.of("CLASS_EXISTS", "CLASS_VERSION_CONFLICT", "ENROLLMENT_EXISTS",
                     "ENROLLMENT_CONFLICT", "CLASS_ARCHIVED", "INVALID_CLASS_TRANSITION",
-                    "TEACHER_REQUIRED", "SUBJECT_INACTIVE").contains(rule.code()))
-                return ApiException.conflict(rule.code(), rule.getMessage());
-            if (rule.code().equals("LIST_TOO_LARGE"))
-                return ApiException.payloadTooLarge(rule.code(), rule.getMessage());
-            return ApiException.badRequest(rule.code(), rule.getMessage());
+                    "TEACHER_REQUIRED", "SUBJECT_INACTIVE").contains(rule.readCode()))
+                return ApiException.createConflict(rule.readCode(), rule.getMessage());
+            if (rule.readCode().equals("LIST_TOO_LARGE"))
+                return ApiException.createPayloadTooLarge(rule.readCode(), rule.getMessage());
+            return ApiException.createBadRequest(rule.readCode(), rule.getMessage());
         }
         if (failure instanceof OptimisticLockingFailureException)
-            return ApiException.conflict("CLASS_VERSION_CONFLICT",
+            return ApiException.createConflict("CLASS_VERSION_CONFLICT",
                     "Dữ liệu đã thay đổi. Hãy tải lại");
-        return ApiException.unavailable("ACADEMICS_DEPENDENCY_UNAVAILABLE",
+        return ApiException.createUnavailable("ACADEMICS_DEPENDENCY_UNAVAILABLE",
                 "Không thể hoàn thành yêu cầu. Hãy thử lại sau");
     }
 
     private void validatePage(int page, int size) {
         if (page < 1 || size < 1 || size > 100 || (long) (page - 1) * size > Integer.MAX_VALUE)
-            throw ApiException.badRequest("INVALID_PAGE",
+            throw ApiException.createBadRequest("INVALID_PAGE",
                     "Trang phải từ 1, kích thước từ 1 đến 100");
     }
 
     private void validateQuery(String query) {
         if (query != null && query.length() > 200)
-            throw ApiException.badRequest("INVALID_QUERY", "Từ khóa tối đa 200 ký tự");
+            throw ApiException.createBadRequest("INVALID_QUERY", "Từ khóa tối đa 200 ký tự");
     }
 }

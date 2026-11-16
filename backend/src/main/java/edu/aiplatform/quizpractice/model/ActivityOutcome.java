@@ -14,11 +14,11 @@ public record ActivityOutcome(BigDecimal rawScore, BigDecimal suggestedPenalty, 
                               Instant decidedAt, String decisionReason) {
 
     /** Chỉ lượt có mức trừ gợi ý mới cần giảng viên quyết định. */
-    public boolean decidable() {
+    public boolean canDecide() {
         return suggestedPenalty != null && suggestedPenalty.signum() > 0;
     }
 
-    public boolean pendingDecision() {
-        return decidable() && decision == null;
+    public boolean awaitsDecision() {
+        return canDecide() && decision == null;
     }
 }

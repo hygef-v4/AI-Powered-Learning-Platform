@@ -110,7 +110,7 @@ class QuestionControllerTest {
 
     @Test
     void createReturns201WithLocationAndParsesContent() throws Exception {
-        when(bank.create(eq(manager), eq(subject), any())).thenReturn(detail());
+        when(bank.createQuestion(eq(manager), eq(subject), any())).thenReturn(detail());
 
         mvc.perform(post("/api/v1/subjects/{s}/questions", subject).contentType(MediaType.APPLICATION_JSON).content(BODY))
                 .andExpect(status().isCreated())
@@ -118,7 +118,7 @@ class QuestionControllerTest {
                 .andExpect(jsonPath("$.question.status").value("DRAFT"));
 
         ArgumentCaptor<QuestionContent> content = ArgumentCaptor.forClass(QuestionContent.class);
-        verify(bank).create(eq(manager), eq(subject), content.capture());
+        verify(bank).createQuestion(eq(manager), eq(subject), content.capture());
         assertThat(content.getValue().defaultPoints()).isEqualByComparingTo("1.5");
         assertThat(content.getValue().options()).hasSize(2);
     }
@@ -136,12 +136,12 @@ class QuestionControllerTest {
                 .andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/subjects/{s}/questions", subject).param("sort", "x"))
                 .andExpect(status().isBadRequest());
-        verify(bank, never()).create(any(), any(), any());
+        verify(bank, never()).createQuestion(any(), any(), any());
     }
 
     @Test
     void invalidContentReturnsViolations() throws Exception {
-        when(bank.create(any(), any(), any())).thenThrow(new QuestionInvalidException(
+        when(bank.createQuestion(any(), any(), any())).thenThrow(new QuestionInvalidException(
                 List.of(new Violation("options", "OPTION_COUNT", "Cần 2–6 lựa chọn"))));
         mvc.perform(post("/api/v1/subjects/{s}/questions", subject).contentType(MediaType.APPLICATION_JSON).content(BODY))
                 .andExpect(status().isBadRequest())
@@ -151,11 +151,11 @@ class QuestionControllerTest {
 
     @Test
     void notFoundAndConflictKeepTheirCodes() throws Exception {
-        when(bank.detail(manager, questionId)).thenThrow(ApiException.notFound("QUESTION_NOT_FOUND"));
+        when(bank.loadQuestion(manager, questionId)).thenThrow(ApiException.createNotFound("QUESTION_NOT_FOUND"));
         mvc.perform(get("/api/v1/questions/{id}", questionId))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("QUESTION_NOT_FOUND"));
-        when(bank.update(eq(manager), eq(questionId), any(), eq(3L)))
-                .thenThrow(ApiException.conflict("QUESTION_VERSION_CONFLICT", "x"));
+        when(bank.updateQuestion(eq(manager), eq(questionId), any(), eq(3L)))
+                .thenThrow(ApiException.createConflict("QUESTION_VERSION_CONFLICT", "x"));
         mvc.perform(patch("/api/v1/questions/{id}", questionId).contentType(MediaType.APPLICATION_JSON)
                         .content(BODY.substring(0, BODY.lastIndexOf('}')) + ",\"version\":3}"))
                 .andExpect(status().isConflict());
@@ -163,12 +163,12 @@ class QuestionControllerTest {
 
     @Test
     void listPassesFilters() throws Exception {
-        when(bank.list(eq(manager), eq(subject), any())).thenReturn(new QuestionPage(List.of(), 0, 0, 20));
+        when(bank.listQuestions(eq(manager), eq(subject), any())).thenReturn(new QuestionPage(List.of(), 0, 0, 20));
         mvc.perform(get("/api/v1/subjects/{s}/questions", subject).param("type", "MCQ_MULTI").param("q", "đại số")
                         .param("status", "ACTIVE").param("size", "50"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0));
         ArgumentCaptor<QuestionBankService.Filter> filter = ArgumentCaptor.forClass(QuestionBankService.Filter.class);
-        verify(bank).list(eq(manager), eq(subject), filter.capture());
+        verify(bank).listQuestions(eq(manager), eq(subject), filter.capture());
         assertThat(filter.getValue()).isEqualTo(new QuestionBankService.Filter(QuestionType.MCQ_MULTI, null,
                 QuestionStatus.ACTIVE, "đại số", null, 50));
     }
@@ -194,7 +194,7 @@ class QuestionControllerTest {
                 .andExpect(status().isBadRequest());
         mvc.perform(delete("/api/v1/questions/{id}", questionId).param("version", "4"))
                 .andExpect(status().isNoContent());
-        verify(bank).delete(manager, questionId, 4);
+        verify(bank).deleteQuestion(manager, questionId, 4);
         mvc.perform(delete("/api/v1/questions/{id}", questionId)).andExpect(status().isBadRequest());
         when(bank.openDraft(manager, questionId)).thenReturn(detail());
         mvc.perform(post("/api/v1/questions/{id}/versions", questionId)).andExpect(status().isOk());

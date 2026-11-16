@@ -24,7 +24,7 @@ class AssignmentMcpAuthoringServiceTest {
     }
     @Test void replayRechecksOwnershipBeforeReturningStoredIds() {
         UUID id=UUID.randomUUID();
-        doThrow(ApiException.notFound("CLASS_NOT_FOUND")).when(access).requireClassManager(eq(actor),eq(id),anyString());
+        doThrow(ApiException.createNotFound("CLASS_NOT_FOUND")).when(access).requireClassManager(eq(actor),eq(id),anyString());
         assertThatThrownBy(() -> service.call(actor,"create_assignment_draft",Map.of("classId",id.toString(),
                 "requestRef","replay","title","Draft","draft",Map.of())))
                 .isInstanceOf(ApiException.class);

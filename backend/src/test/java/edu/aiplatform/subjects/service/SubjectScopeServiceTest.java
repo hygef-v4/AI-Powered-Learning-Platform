@@ -59,8 +59,8 @@ class SubjectScopeServiceTest {
     @Test
     void returnsManagedIdsForRoleChangeGuardWithoutCallingAuthorization() {
         UUID manager = UUID.randomUUID();
-        Subject first = Subject.create(UUID.randomUUID(), "SWR302", "A", null, manager, NOW);
-        Subject second = Subject.create(UUID.randomUUID(), "SWR303", "B", null, manager, NOW);
+        Subject first = Subject.createSubject(UUID.randomUUID(), "SWR302", "A", null, manager, NOW);
+        Subject second = Subject.createSubject(UUID.randomUUID(), "SWR303", "B", null, manager, NOW);
         when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(first, second));
         assertThat(
                 subjectScopeService
@@ -73,10 +73,10 @@ class SubjectScopeServiceTest {
     void releaseUnassignsEveryManagedSubjectBumpsVersionAndAuditsEach() {
         UUID manager = UUID.randomUUID();
         Subject first =
-                Subject.create(
+                Subject.createSubject(
                         UUID.randomUUID(), "SWR302", "A", null, manager, NOW.minusSeconds(60));
         Subject second =
-                Subject.create(
+                Subject.createSubject(
                         UUID.randomUUID(), "SWR303", "B", null, manager, NOW.minusSeconds(60));
         when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(first, second));
         when(subjectRepository.findByIdForUpdate(first.id())).thenReturn(Optional.of(first));
@@ -116,7 +116,7 @@ class SubjectScopeServiceTest {
     void releaseSkipsSubjectReassignedBeforeLockAndFailsOnLostUpdate() {
         UUID manager = UUID.randomUUID();
         Subject subject =
-                Subject.create(
+                Subject.createSubject(
                         UUID.randomUUID(), "SWR302", "A", null, manager, NOW.minusSeconds(60));
         when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(subject));
         when(subjectRepository.findByIdForUpdate(subject.id()))
@@ -129,7 +129,7 @@ class SubjectScopeServiceTest {
         assertThatThrownBy(() -> subjectScopeService.releaseManagerAssignments(manager, admin))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("SUBJECT_VERSION_CONFLICT"));
+                        error -> assertThat(error.readCode()).isEqualTo("SUBJECT_VERSION_CONFLICT"));
         verifyNoInteractions(audit);
     }
 
@@ -181,8 +181,8 @@ class SubjectScopeServiceTest {
     }
 
     private List<Subject> managedPair(UUID manager) {
-        Subject first = Subject.create(new UUID(0, 1), "FIRST", "A", null, manager, NOW.minusSeconds(60));
-        Subject second = Subject.create(new UUID(0, 2), "SECOND", "B", null, manager, NOW.minusSeconds(60));
+        Subject first = Subject.createSubject(new UUID(0, 1), "FIRST", "A", null, manager, NOW.minusSeconds(60));
+        Subject second = Subject.createSubject(new UUID(0, 2), "SECOND", "B", null, manager, NOW.minusSeconds(60));
         when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(second, first));
         when(subjectRepository.findByIdForUpdate(first.id())).thenReturn(Optional.of(first));
         when(subjectRepository.findByIdForUpdate(second.id())).thenReturn(Optional.of(second));

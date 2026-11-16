@@ -36,18 +36,18 @@ public class QuizPublicationService {
 
     private final IQuizRepository quizzes;
     private final QuizSupport support;
-    private final QuizPaperService papers;
+    private final QuizPaperService quizPaperService;
     private final ObjectProvider<IQuizLifecycleListener> listeners;
     private final IEventPublisher events;
     private final QuizAudit audit;
     private final Clock clock;
 
-    public QuizPublicationService(IQuizRepository quizzes, QuizSupport support, QuizPaperService papers,
+    public QuizPublicationService(IQuizRepository quizzes, QuizSupport support, QuizPaperService quizPaperService,
                                   ObjectProvider<IQuizLifecycleListener> listeners, IEventPublisher events,
                                   QuizAudit audit, Clock clock) {
         this.quizzes = quizzes;
         this.support = support;
-        this.papers = papers;
+        this.quizPaperService = quizPaperService;
         this.listeners = listeners;
         this.events = events;
         this.audit = audit;
@@ -62,18 +62,18 @@ public class QuizPublicationService {
     public QuizDetail publish(Actor actor, UUID id, long version) {
         Quiz quiz = support.loadManaged(actor, id);
         if (quiz.status() != QuizStatus.DRAFT) {
-            throw ApiException.conflict("QUIZ_NOT_DRAFT", "Chỉ phát hành được quiz đang nháp");
+            throw ApiException.createConflict("QUIZ_NOT_DRAFT", "Chỉ phát hành được quiz đang nháp");
         }
         QuizSupport.requireVersion(quiz, version);
         support.requireContainerActive(quiz);
-        if (quiz.scope() == QuizScope.CLASS && support.classRef(quiz.classId()).status() != ClassStatus.OPEN) {
-            throw ApiException.conflict("CLASS_NOT_OPEN", "Lớp chưa mở nên chưa phát hành được quiz của lớp");
+        if (quiz.scope() == QuizScope.CLASS && support.loadClassRef(quiz.classId()).status() != ClassStatus.OPEN) {
+            throw ApiException.createConflict("CLASS_NOT_OPEN", "Lớp chưa mở nên chưa phát hành được quiz của lớp");
         }
         requirePublishable(quiz);
         Instant now = clock.instant();
         quizzes.findOpenInVersionChain(id).ifPresent(old -> retire(actor, old, "Đã phát hành version " + quiz.versionNo(), now));
-        Quiz published = support.save(quiz.published(now));
-        audit.success(actor, "QUIZ_PUBLISHED", QuizSupport.OBJECT, id, Map.of("versionNo", quiz.versionNo()));
+        Quiz published = support.saveQuiz(quiz.markPublished(now));
+        audit.recordSuccess(actor, "QUIZ_PUBLISHED", QuizSupport.OBJECT, id, Map.of("versionNo", quiz.versionNo()));
         Map<String, Object> payload = new HashMap<>();
         payload.put("quizId", id.toString());
         payload.put("scope", quiz.scope().name());
@@ -84,15 +84,16 @@ public class QuizPublicationService {
         payload.put("title", quiz.title());
         events.publish(new DomainEvent(1, UUID.randomUUID(), EventTypes.QUIZ_PUBLISHED, "U10", now,
                 UUID.randomUUID().toString(), payload));
-        return support.detail(published, true);
+        return support.buildDetail(published, true);
     }
 
     /** Ngưng Quiz đang mở, lý do bắt buộc (BR-U10-23); lượt đang làm được U11 tự nộp trong cùng transaction. */
     @Transactional
     public QuizDetail retire(Actor actor, UUID id, String reason, long version) {
+        quizzes.lockQuiz(id);
         Quiz quiz = support.loadManaged(actor, id);
         if (quiz.status() == QuizStatus.RETIRED) {
-            throw ApiException.conflict("QUIZ_NOT_OPEN", "Quiz đã lưu trữ");
+            throw ApiException.createConflict("QUIZ_NOT_OPEN", "Quiz đã lưu trữ");
         }
         String cleanReason = reason == null || reason.isBlank() ? "Lưu trữ" : reason.strip();
         if (cleanReason.codePointCount(0, cleanReason.length()) > QuizRules.MAX_REASON) {
@@ -100,7 +101,7 @@ public class QuizPublicationService {
                     List.of(new Violation("reason", "REQUIRED", "Lý do ngưng bắt buộc, tối đa 1.000 ký tự")));
         }
         QuizSupport.requireVersion(quiz, version);
-        return support.detail(retire(actor, quiz, cleanReason, clock.instant()), true);
+        return support.buildDetail(retire(actor, quiz, cleanReason, clock.instant()), true);
     }
 
     /** Mở lại Quiz đã lưu trữ (Quiz đã phát hành mở lại, Quiz lưu trữ khi còn nháp về nháp). */
@@ -108,36 +109,36 @@ public class QuizPublicationService {
     public QuizDetail reopen(Actor actor, UUID id, long version) {
         Quiz quiz = support.loadManaged(actor, id);
         if (quiz.status() != QuizStatus.RETIRED) {
-            throw ApiException.conflict("QUIZ_NOT_RETIRED", "Quiz chưa lưu trữ");
+            throw ApiException.createConflict("QUIZ_NOT_RETIRED", "Quiz chưa lưu trữ");
         }
         QuizSupport.requireVersion(quiz, version);
         support.requireContainerActive(quiz);
         // Mở lại thành OPEN mà chuỗi đã có version khác đang mở thì người học thấy hai version cùng lúc.
         if (quiz.publishedAt() != null && quizzes.findOpenInVersionChain(id).isPresent()) {
-            throw ApiException.conflict("QUIZ_OTHER_VERSION_OPEN",
+            throw ApiException.createConflict("QUIZ_OTHER_VERSION_OPEN",
                     "Đang có version khác của quiz này mở; ngưng version đó trước khi mở lại version này");
         }
-        Quiz reopened = support.save(quiz.reopened(clock.instant()));
-        audit.success(actor, "QUIZ_REOPENED", QuizSupport.OBJECT, quiz.id(), Map.of("status", reopened.status().name()));
-        return support.detail(reopened, true);
+        Quiz reopened = support.saveQuiz(quiz.markReopened(clock.instant()));
+        audit.recordSuccess(actor, "QUIZ_REOPENED", QuizSupport.OBJECT, quiz.id(), Map.of("status", reopened.status().name()));
+        return support.buildDetail(reopened, true);
     }
 
     private Quiz retire(Actor actor, Quiz quiz, String reason, Instant now) {
-        Quiz retired = support.save(quiz.retired(reason, now));
+        Quiz retired = support.saveQuiz(quiz.markRetired(reason, now));
         listeners.orderedStream().forEach(listener -> listener.onRetired(quiz.id()));
-        audit.success(actor, "QUIZ_RETIRED", QuizSupport.OBJECT, quiz.id(), Map.of("reason", reason));
+        audit.recordSuccess(actor, "QUIZ_RETIRED", QuizSupport.OBJECT, quiz.id(), Map.of("reason", reason));
         return retired;
     }
 
     private void requirePublishable(Quiz quiz) {
         List<Violation> violations = new ArrayList<>();
-        if (quiz.generated()) {
+        if (quiz.wasGenerated()) {
             violations.addAll(QuizRules.validateDetails(quiz.title(), quiz.instructions(), quiz.settings(),
                     quiz.activityNotice()));
-            violations.addAll(papers.violationsOf(quiz));
+            violations.addAll(quizPaperService.listViolations(quiz));
         } else {
-            List<QuizItem> items = quizzes.items(quiz.id());
-            violations.addAll(QuizRules.validateForReview(quiz, items, support.questionsOf(items)));
+            List<QuizItem> items = quizzes.listItems(quiz.id());
+            violations.addAll(QuizRules.validateForReview(quiz, items, support.loadQuestions(items)));
         }
         violations.addAll(QuizRules.validateActivity(quiz.activityMonitoringEnabled(), quiz.activityNotice()));
         violations.addAll(QuizRules.validatePenaltyNeedsMonitoring(quiz.activityMonitoringEnabled(), quiz.settings()));

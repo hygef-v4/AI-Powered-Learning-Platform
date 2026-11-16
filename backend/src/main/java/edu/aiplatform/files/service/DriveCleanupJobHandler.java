@@ -43,12 +43,12 @@ public class DriveCleanupJobHandler implements IJobHandler {
         String ref = String.valueOf(message.payload().get("ref"));
         try {
             if ("FILES".equals(area)) {
-                storage.delete(ref);
+                storage.deleteFile(ref);
                 return;
             }
             for (IDriveCleanupTarget target : targets) {
-                if (target.area().equals(area)) {
-                    target.delete(ref);
+                if (target.describeArea().equals(area)) {
+                    target.deleteRef(ref);
                     return;
                 }
             }

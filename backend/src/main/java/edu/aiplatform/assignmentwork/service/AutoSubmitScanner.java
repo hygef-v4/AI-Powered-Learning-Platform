@@ -37,9 +37,9 @@ public class AutoSubmitScanner implements IScheduledScanner {
 
     @Override
     public void scan(Instant now) {
-        for (UUID id : attempts.overdue(now.minus(AssignmentAttempt.GRACE), BATCH)) {
+        for (UUID id : attempts.listOverdue(now.minus(AssignmentAttempt.GRACE), BATCH)) {
             try {
-                transaction.executeWithoutResult(status -> submitter.autoSubmit(id, SubmitMode.AUTO_DEADLINE, now));
+                transaction.executeWithoutResult(status -> submitter.submitAutomatically(id, SubmitMode.AUTO_DEADLINE, now));
             } catch (RuntimeException e) {
                 log.warn("Tự nộp lượt {} lỗi", id, e);
             }

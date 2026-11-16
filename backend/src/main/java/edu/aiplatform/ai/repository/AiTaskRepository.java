@@ -44,10 +44,10 @@ public class AiTaskRepository {
                         + ":inputVersion, :state, cast(:input as jsonb), cast(:schema as jsonb), cast(:result as jsonb), "
                         + ":maxOutput, :reserved, :quotaDay, :dispatchedAt, :providerRequestId, :applyResult, "
                         + ":handlerDone, :safeError, :createdAt, :finishedAt, 0)")
-                .params(params(t)).update();
+                .params(bindTaskParams(t)).update();
     }
 
-    public boolean update(AiTask t) {
+    public boolean updateTask(AiTask t) {
         return jdbc.sql("update ai_tasks set state = :state, source = :source, connection_id = :connectionId, "
                         + "provider = :provider, model = :model, max_output_tokens = :maxOutput, "
                         + "reserved_tokens = :reserved, quota_day = :quotaDay, input_payload = cast(:input as jsonb), "
@@ -55,7 +55,7 @@ public class AiTaskRepository {
                         + "dispatched_at = :dispatchedAt, provider_request_id = :providerRequestId, "
                         + "apply_result = :applyResult, handler_done = :handlerDone, safe_error = :safeError, "
                         + "finished_at = :finishedAt, version = version + 1 where id = :id and version = :version")
-                .params(params(t)).param("version", t.version()).update() == 1;
+                .params(bindTaskParams(t)).param("version", t.version()).update() == 1;
     }
 
     public Optional<AiTask> findById(UUID id) {
@@ -93,12 +93,12 @@ public class AiTaskRepository {
 
     /** Task đã kết thúc nhưng chưa chuyển xong cho handler (P3: lượt sau chỉ gọi handler). */
     public List<AiTask> listUnhandled(Instant before) {
-        return jdbc.sql("select " + COLUMNS + " from ai_tasks where state in ('READY', 'FAILED', 'UNKNOWN') "
+        return jdbc.sql("select " + COLUMNS + " from ai_tasks where state in ('READY', 'FAILED', 'UNKNOWN', 'CANCELLED') "
                         + "and handler_done = false and finished_at < :before order by finished_at limit 200")
                 .param("before", Timestamp.from(before)).query(AiTaskRepository::map).list();
     }
 
-    private static Map<String, Object> params(AiTask t) {
+    private static Map<String, Object> bindTaskParams(AiTask t) {
         Map<String, Object> p = new HashMap<>();
         p.put("id", t.id());
         p.put("requestRef", t.requestRef());
@@ -118,13 +118,13 @@ public class AiTaskRepository {
         p.put("maxOutput", t.maxOutputTokens());
         p.put("reserved", t.reservedTokens());
         p.put("quotaDay", t.quotaDay() == null ? null : Date.valueOf(t.quotaDay()));
-        p.put("dispatchedAt", ts(t.dispatchedAt()));
+        p.put("dispatchedAt", convertTimestamp(t.dispatchedAt()));
         p.put("providerRequestId", t.providerRequestId());
         p.put("applyResult", t.applyResult() == null ? null : t.applyResult().name());
         p.put("handlerDone", t.handlerDone());
         p.put("safeError", t.safeError());
-        p.put("createdAt", ts(t.createdAt()));
-        p.put("finishedAt", ts(t.finishedAt()));
+        p.put("createdAt", convertTimestamp(t.createdAt()));
+        p.put("finishedAt", convertTimestamp(t.finishedAt()));
         return p;
     }
 
@@ -137,17 +137,17 @@ public class AiTaskRepository {
                 rs.getString("model"), rs.getString("task_type"), rs.getString("target_ref"), rs.getLong("input_version"),
                 AiTaskState.valueOf(rs.getString("state")), rs.getString("input_payload"), rs.getString("output_schema"),
                 rs.getString("result_payload"), rs.getInt("max_output_tokens"), rs.getObject("reserved_tokens", Long.class),
-                quotaDay == null ? null : quotaDay.toLocalDate(), instant(rs.getTimestamp("dispatched_at")),
+                quotaDay == null ? null : quotaDay.toLocalDate(), convertInstant(rs.getTimestamp("dispatched_at")),
                 rs.getString("provider_request_id"), apply == null ? null : ApplyOutcome.valueOf(apply),
-                rs.getBoolean("handler_done"), rs.getString("safe_error"), instant(rs.getTimestamp("created_at")),
-                instant(rs.getTimestamp("finished_at")), rs.getLong("version"));
+                rs.getBoolean("handler_done"), rs.getString("safe_error"), convertInstant(rs.getTimestamp("created_at")),
+                convertInstant(rs.getTimestamp("finished_at")), rs.getLong("version"));
     }
 
-    private static Timestamp ts(Instant value) {
+    private static Timestamp convertTimestamp(Instant value) {
         return value == null ? null : Timestamp.from(value);
     }
 
-    private static Instant instant(Timestamp value) {
+    private static Instant convertInstant(Timestamp value) {
         return value == null ? null : value.toInstant();
     }
 }

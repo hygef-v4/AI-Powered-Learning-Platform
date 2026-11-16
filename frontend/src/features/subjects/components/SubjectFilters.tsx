@@ -2,6 +2,7 @@
 
 import { Segmented, TextInput } from "@/shared/ui";
 import type { SubjectStatus } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   search: string;
@@ -12,9 +13,9 @@ type Props = {
 };
 
 const TABS: { value: SubjectStatus | undefined; key: string; label: string }[] = [
-  { value: undefined, key: "ALL", label: "Tất cả" },
-  { value: "ACTIVE", key: "ACTIVE", label: "Hoạt động" },
-  { value: "ARCHIVED", key: "ARCHIVED", label: "Lưu trữ" },
+  { value: undefined, key: "ALL", label: msg("subjects.components.SubjectFilters.all") },
+  { value: "ACTIVE", key: "ACTIVE", label: msg("subjects.components.SubjectFilters.active") },
+  { value: "ARCHIVED", key: "ARCHIVED", label: msg("subjects.components.SubjectFilters.archived") },
 ];
 
 /** Tab trạng thái bên trái, ô tìm ngắn bên phải trên cùng một hàng. */
@@ -23,7 +24,7 @@ export function SubjectFilters({ search, status, onSearch, onStatus }: Props) {
     <div className="flex flex-wrap items-center gap-3">
       <Segmented
         as="tab"
-        ariaLabel="Trạng thái môn học"
+        ariaLabel={msg("subjects.components.SubjectFilters.subjectStatus")}
         value={status ?? "ALL"}
         onChange={(key) => onStatus(TABS.find((tab) => tab.key === key)?.value)}
         options={TABS.map((tab) => ({ value: tab.key, label: tab.label, testId: `subjects-filter-${tab.key}` }))}
@@ -32,8 +33,8 @@ export function SubjectFilters({ search, status, onSearch, onStatus }: Props) {
         <TextInput
           type="search"
           icon="search"
-          aria-label="Lọc theo mã hoặc tên môn"
-          placeholder="Lọc theo mã hoặc tên môn"
+          aria-label={msg("subjects.components.SubjectFilters.filterBySubjectCodeOr")}
+          placeholder={msg("subjects.components.SubjectFilters.filterBySubjectCodeOr")}
           value={search}
           maxLength={200}
           data-testid="subjects-search"

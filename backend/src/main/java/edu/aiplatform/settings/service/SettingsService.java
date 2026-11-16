@@ -92,7 +92,7 @@ public class SettingsService implements ISettings {
 
     @Override
     public <T> Optional<T> get(SettingKey<T> key) {
-        JsonNode value = currentValue(key.key());
+        JsonNode value = readCurrentValue(key.key());
         if (value == null || value.isNull()) {
             return Optional.empty();
         }
@@ -103,66 +103,66 @@ public class SettingsService implements ISettings {
         }
     }
 
-    JsonNode currentValue(String key) {
+    JsonNode readCurrentValue(String key) {
         Instant now = clock.instant();
         Cached cached = cache.get(key);
         if (cached != null && now.isBefore(cached.expiresAt())) {
             return cached.value();
         }
         try {
-            JsonNode value = repository.find(key).map(row -> parse(row.valueJson())).orElse(null);
+            JsonNode value = repository.findSetting(key).map(row -> parse(row.valueJson())).orElse(null);
             cache.put(key, new Cached(value, now.plus(cacheTtl)));
             return value;
         } catch (DataAccessException e) {
             if (cached != null) {
                 return cached.value();
             }
-            throw ApiException.unavailable("SETTINGS_UNAVAILABLE", "Không đọc được cài đặt, thử lại sau");
+            throw ApiException.createUnavailable("SETTINGS_UNAVAILABLE", "Không đọc được cài đặt, thử lại sau");
         }
     }
 
     // ---------- UC 14 (S1) ----------
 
-    public SettingsOverview overview(Actor actor) {
+    public SettingsOverview loadOverview(Actor actor) {
         requireAdmin(actor, "SETTINGS_VIEW");
-        Map<String, SettingRow> rows = rowsByKey();
+        Map<String, SettingRow> rows = mapRowsByKey();
         Map<SettingGroup, List<SettingItemView>> grouped = new LinkedHashMap<>();
         for (SettingGroup group : SettingGroup.values()) {
             grouped.put(group, new ArrayList<>());
         }
-        for (SettingDefinition definition : definitions.all()) {
+        for (SettingDefinition definition : definitions.listAll()) {
             grouped.get(definition.group()).add(view(definition, rows.get(definition.key())));
         }
         List<GroupView> groups = grouped.entrySet().stream().filter(entry -> !entry.getValue().isEmpty())
                 .map(entry -> new GroupView(entry.getKey(), entry.getValue())).toList();
-        return new SettingsOverview(groups, sections.summaries());
+        return new SettingsOverview(groups, sections.listSummaries());
     }
 
-    public SettingItemView detail(Actor actor, String key) {
+    public SettingItemView loadSetting(Actor actor, String key) {
         requireAdmin(actor, "SETTINGS_VIEW");
-        SettingDefinition definition = definition(key);
-        return view(definition, repository.find(key).orElse(null));
+        SettingDefinition definition = findDefinition(key);
+        return view(definition, repository.findSetting(key).orElse(null));
     }
 
     // ---------- UC 15 (S2) ----------
 
     @Transactional
-    public SettingItemView update(Actor actor, String key, JsonNode value, long version) {
+    public SettingItemView updateSetting(Actor actor, String key, JsonNode value, long version) {
         requireAdmin(actor, "SETTINGS_EDIT");
-        SettingDefinition definition = definition(key);
+        SettingDefinition definition = findDefinition(key);
         JsonNode normalized = SettingValidator.validate(definition, value);
-        Map<String, SettingRow> rows = rowsByKey();
+        Map<String, SettingRow> rows = mapRowsByKey();
         Map<String, JsonNode> current = new HashMap<>();
         rows.forEach((rowKey, row) -> current.put(rowKey, parse(row.valueJson())));
-        SettingValidator.validateCross(definition, normalized, definitions.all(), current);
+        SettingValidator.validateCross(definition, normalized, definitions.listAll(), current);
         SettingRow before = rows.get(key);
         Instant now = clock.instant();
         String json = normalized.isNull() ? null : normalized.toString();
         // Mục chưa có dòng hiện version 0: lưu với version 0 thì tạo dòng thay vì báo xung đột.
-        int written = before != null ? repository.update(key, json, version, actor.accountId(), now)
+        int written = before != null ? repository.updateSetting(key, json, version, actor.accountId(), now)
                 : version == 0 ? repository.insert(key, definition.group().name(), json, actor.accountId(), now) : 0;
         if (written == 0) {
-            throw ApiException.conflict("SETTING_VERSION_CONFLICT", "Cài đặt đã được người khác sửa, tải lại để xem");
+            throw ApiException.createConflict("SETTING_VERSION_CONFLICT", "Cài đặt đã được người khác sửa, tải lại để xem");
         }
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("key", key);
@@ -171,7 +171,7 @@ public class SettingsService implements ISettings {
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "SETTING_UPDATED", "SETTING", key,
                 AuditResult.SUCCESS, null, details, now));
         evictAfterCommit(key);
-        return view(definition, repository.find(key).orElseThrow());
+        return view(definition, repository.findSetting(key).orElseThrow());
     }
 
     // ---------- helpers ----------
@@ -198,15 +198,15 @@ public class SettingsService implements ISettings {
         if (!allowed) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                     "SETTINGS", null, AuditResult.DENIED, action, Map.of(), clock.instant()));
-            throw ApiException.forbidden("SETTINGS_FORBIDDEN");
+            throw ApiException.createForbidden("SETTINGS_FORBIDDEN");
         }
     }
 
-    private SettingDefinition definition(String key) {
-        return definitions.find(key).orElseThrow(() -> ApiException.notFound("SETTING_NOT_FOUND"));
+    private SettingDefinition findDefinition(String key) {
+        return definitions.findDefinition(key).orElseThrow(() -> ApiException.createNotFound("SETTING_NOT_FOUND"));
     }
 
-    private Map<String, SettingRow> rowsByKey() {
+    private Map<String, SettingRow> mapRowsByKey() {
         return repository.findAll().stream().collect(Collectors.toMap(SettingRow::key, Function.identity()));
     }
 

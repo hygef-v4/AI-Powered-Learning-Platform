@@ -46,10 +46,10 @@ class AiSourceServiceTest {
     void teacherSeesSharedQuotaAndSavedPersonalKeysOnly() {
         Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
         when(authorization.authorize(eq(teacher), any(), any())).thenReturn(AuthorizationDecision.allow());
-        AiConnection shared = AiConnection.create(UUID.randomUUID(), AiConnection.Scope.INSTITUTIONAL, null,
+        AiConnection shared = AiConnection.createConnection(UUID.randomUUID(), AiConnection.Scope.INSTITUTIONAL, null,
                 AiProvider.GEMINI, "gemini-2.5-flash", new AiConnection.EncryptedKey(new byte[] {1}, new byte[] {1}, 1),
                 "1111", NOW);
-        AiConnection mine = AiConnection.create(UUID.randomUUID(), AiConnection.Scope.PERSONAL, teacher.accountId(),
+        AiConnection mine = AiConnection.createConnection(UUID.randomUUID(), AiConnection.Scope.PERSONAL, teacher.accountId(),
                 AiProvider.CLAUDE, "claude-sonnet-5-5", new AiConnection.EncryptedKey(new byte[] {1}, new byte[] {1}, 1),
                 "3kQf", NOW);
         when(connections.findInstitutional(any())).thenReturn(Optional.empty());
@@ -57,10 +57,10 @@ class AiSourceServiceTest {
         when(connections.findPersonal(any(), any())).thenReturn(Optional.empty());
         when(connections.findPersonal(teacher.accountId(), AiProvider.CLAUDE)).thenReturn(Optional.of(mine));
         when(connections.listInstitutional()).thenReturn(java.util.List.of(shared));
-        when(quota.remaining(teacher.accountId())).thenReturn(new QuotaReservationService.Remaining(4_000, 10_000, 6_000,
+        when(quota.calculateRemaining(teacher.accountId())).thenReturn(new QuotaReservationService.Remaining(4_000, 10_000, 6_000,
                 ZonedDateTime.parse("2026-10-22T00:00+07:00")));
 
-        List<SourceOption> options = service.sources(teacher);
+        List<SourceOption> options = service.listSources(teacher);
 
         assertThat(options).hasSize(4);
         SourceOption first = options.get(0);
@@ -82,7 +82,7 @@ class AiSourceServiceTest {
                 .thenReturn(AuthorizationDecision.deny("ROLE"));
         when(connections.findPersonal(any(), any())).thenReturn(Optional.empty());
 
-        List<SourceOption> options = service.sources(student);
+        List<SourceOption> options = service.listSources(student);
 
         assertThat(options).extracting(SourceOption::source).containsOnly(AiSource.PERSONAL);
         assertThat(options).hasSize(AiProvider.values().length);
@@ -94,10 +94,10 @@ class AiSourceServiceTest {
         when(authorization.authorize(eq(teacher), any(), any())).thenReturn(AuthorizationDecision.allow());
         when(connections.findInstitutional(any())).thenReturn(Optional.empty());
         when(connections.findPersonal(any(), any())).thenReturn(Optional.empty());
-        when(preferences.find(teacher.accountId()))
+        when(preferences.findPreference(teacher.accountId()))
                 .thenReturn(Optional.of(new AiSourcePreference(AiSource.PERSONAL, AiProvider.OPENAI)));
 
-        List<SourceOption> options = service.sources(teacher);
+        List<SourceOption> options = service.listSources(teacher);
 
         assertThat(options).filteredOn(SourceOption::preferred).singleElement().satisfies(o -> {
             assertThat(o.provider()).isEqualTo(AiProvider.OPENAI);
@@ -111,10 +111,10 @@ class AiSourceServiceTest {
         when(authorization.authorize(eq(student), eq(Actions.AI_PERSONAL), any())).thenReturn(AuthorizationDecision.allow());
         when(authorization.authorize(eq(student), eq(Actions.AI_SHARED_USE), any()))
                 .thenReturn(AuthorizationDecision.deny("ROLE"));
-        when(preferences.find(student.accountId()))
+        when(preferences.findPreference(student.accountId()))
                 .thenReturn(Optional.of(new AiSourcePreference(AiSource.SHARED, null)));
 
-        assertThat(service.preference(student)).isEmpty();
+        assertThat(service.findPreference(student)).isEmpty();
     }
 
     @Test
@@ -128,12 +128,12 @@ class AiSourceServiceTest {
                 .isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> service.savePreference(student, AiSource.SHARED, null))
                 .isInstanceOf(ApiException.class);
-        verify(preferences, never()).save(any(), any(), any());
+        verify(preferences, never()).savePreference(any(), any(), any());
 
         assertThat(service.savePreference(student, AiSource.PERSONAL, AiProvider.CLAUDE))
                 .contains(new AiSourcePreference(AiSource.PERSONAL, AiProvider.CLAUDE));
-        verify(preferences).save(student.accountId(), new AiSourcePreference(AiSource.PERSONAL, AiProvider.CLAUDE), NOW);
+        verify(preferences).savePreference(student.accountId(), new AiSourcePreference(AiSource.PERSONAL, AiProvider.CLAUDE), NOW);
         assertThat(service.savePreference(student, null, null)).isEmpty();
-        verify(preferences).delete(student.accountId());
+        verify(preferences).deletePreference(student.accountId());
     }
 }

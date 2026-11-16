@@ -81,17 +81,17 @@ class GroupControllersTest {
     void saveGroupSetPassesDraftsAndReturnsIssuesWhenInvalid() throws Exception {
         UUID classId = UUID.randomUUID();
         UUID leader = UUID.randomUUID();
-        when(classGroups.save(eq(actor), eq(classId), any())).thenReturn(
+        when(classGroups.saveGroups(eq(actor), eq(classId), any())).thenReturn(
                 new GroupSetView(classId, "OPEN", 4, List.of(), List.of(), List.of()));
         String body = "{\"version\":3,\"groups\":[{\"key\":\"new-1\",\"name\":\"Nhóm 1\",\"leaderId\":\"" + leader
                 + "\",\"memberIds\":[\"" + leader + "\"]}]}";
 
         mvc.perform(put("/api/v1/classes/" + classId + "/groups").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(4));
-        verify(classGroups).save(eq(actor), eq(classId), eq(new ClassGroupService.SaveCommand(3L,
+        verify(classGroups).saveGroups(eq(actor), eq(classId), eq(new ClassGroupService.SaveCommand(3L,
                 List.of(new edu.aiplatform.groups.model.GroupSetRules.Draft("new-1", null, "Nhóm 1", leader, List.of(leader))))));
 
-        when(classGroups.save(eq(actor), eq(classId), any())).thenThrow(new GroupSetInvalidException(
+        when(classGroups.saveGroups(eq(actor), eq(classId), any())).thenThrow(new GroupSetInvalidException(
                 List.of(new Issue("new-1", "GROUP_NAME_DUPLICATE", "Tên nhóm bị trùng"))));
         mvc.perform(put("/api/v1/classes/" + classId + "/groups").contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("GROUP_SET_INVALID"))
@@ -106,7 +106,7 @@ class GroupControllersTest {
         UUID groupId = UUID.randomUUID();
         mvc.perform(post("/api/v1/classes/" + classId + "/groups:random-preview").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"maxSize\":4}")).andExpect(status().isOk());
-        verify(classGroups).randomPreview(actor, classId, 4);
+        verify(classGroups).previewRandomGroups(actor, classId, 4);
         mvc.perform(post("/api/v1/leader-requests/" + requestId + ":approve")).andExpect(status().isOk());
         verify(requests).approve(actor, requestId, null);
         mvc.perform(post("/api/v1/leader-requests/" + requestId + ":reject").contentType(MediaType.APPLICATION_JSON)
@@ -135,7 +135,7 @@ class GroupControllersTest {
                 .contentType(MediaType.APPLICATION_JSON).content("{\"version\":3,\"blocks\":[]}")).andExpect(status().isOk());
         verify(sections).saveDraft(actor, doc, section, 3L, List.of());
 
-        when(workspace.workspace(actor, doc)).thenThrow(ApiException.notFound("GROUP_NOT_FOUND"));
+        when(workspace.loadWorkspace(actor, doc)).thenThrow(ApiException.createNotFound("GROUP_NOT_FOUND"));
         mvc.perform(get("/api/v1/group-docs/" + doc)).andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("GROUP_NOT_FOUND"));
     }
@@ -147,7 +147,7 @@ class GroupControllersTest {
 
         mvc.perform(get("/api/v1/group-docs/" + doc + "/events")).andExpect(status().isOk())
                 .andExpect(header().string("X-Accel-Buffering", "no"));
-        verify(docAccess).read(actor, doc);
+        verify(docAccess).loadContext(actor, doc);
     }
 
     @Test

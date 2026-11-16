@@ -41,7 +41,7 @@ public class AuthService {
 
     private final AccountRepository accounts;
     private final SessionStore sessions;
-    private final JwtService jwt;
+    private final JwtService jwtService;
     private final RequestThrottle throttle;
     private final PasswordEncoder passwordEncoder;
     private final IAudit audit;
@@ -49,17 +49,17 @@ public class AuthService {
     private final Clock clock;
     private final String dummyHash;
 
-    public AuthService(AccountRepository accounts, SessionStore sessions, JwtService jwt, RequestThrottle throttle,
+    public AuthService(AccountRepository accounts, SessionStore sessions, JwtService jwtService, RequestThrottle throttle,
                        PasswordEncoder passwordEncoder, IAudit audit, IdentityProperties properties, Clock clock) {
         this.accounts = accounts;
         this.sessions = sessions;
-        this.jwt = jwt;
+        this.jwtService = jwtService;
         this.throttle = throttle;
         this.passwordEncoder = passwordEncoder;
         this.audit = audit;
         this.properties = properties;
         this.clock = clock;
-        this.dummyHash = passwordEncoder.encode(Hashing.randomToken(16));
+        this.dummyHash = passwordEncoder.encode(Hashing.generateRandomToken(16));
     }
 
     /** Phiên vừa cấp: thông tin cho frontend và hai token cho cookie. */
@@ -72,7 +72,7 @@ public class AuthService {
 
     public LoginResult login(String rawEmail, String rawPassword, String clientIp) {
         if (!throttle.loginAllowed(clientIp)) {
-            throw authFailed();
+            throw createAuthFailedError();
         }
         String email = EmailPolicy.normalize(rawEmail);
         String password = rawPassword == null ? "" : rawPassword;
@@ -80,18 +80,18 @@ public class AuthService {
         if (found.isEmpty()) {
             passwordEncoder.matches(password, dummyHash);
             record(null, "LOGIN_FAILED", null, AuditResult.FAILURE, "UNKNOWN_EMAIL");
-            throw failed(clientIp);
+            throw recordFailure(clientIp);
         }
         Account account = found.get();
         Instant now = clock.instant();
-        boolean passwordMatches = passwordMatches(password, account);
+        boolean passwordMatches = isPasswordMatching(password, account);
         if (account.isLocked(now)) {
             record(account.id(), "LOGIN_BLOCKED_LOCKED", account.id(), AuditResult.DENIED, "LOCKED");
-            throw failed(clientIp);
+            throw recordFailure(clientIp);
         }
         if (account.status() != AccountStatus.ACTIVE) {
             record(account.id(), "LOGIN_FAILED", account.id(), AuditResult.FAILURE, "STATUS_" + account.status());
-            throw failed(clientIp);
+            throw recordFailure(clientIp);
         }
         if (!passwordMatches) {
             boolean locked = accounts.recordFailedLogin(account.id(), properties.loginLockThreshold(),
@@ -100,7 +100,7 @@ public class AuthService {
             if (locked) {
                 record(account.id(), "ACCOUNT_TEMP_LOCKED", account.id(), AuditResult.DENIED, "TOO_MANY_FAILURES");
             }
-            throw failed(clientIp);
+            throw recordFailure(clientIp);
         }
         accounts.resetLoginThrottle(account.id());
         return startSession(account);
@@ -108,10 +108,11 @@ public class AuthService {
 
     /** Tạo phiên mới cho tài khoản {@code ACTIVE}; dùng cả khi kích hoạt xong (BR-U01-13). */
     public LoginResult startSession(Account account) {
-        SessionStore.IssuedSession session = sessions.create(account.id());
-        String accessToken = jwt.issue(account.id(), account.role(), session.sid());
+        SessionStore.IssuedSession session = sessions.createSession(account.id(),
+                account.passwordChangedAt() == null ? null : account.passwordChangedAt().toEpochMilli());
+        String accessToken = jwtService.issue(account.id(), account.role(), session.sid());
         SessionInfo info = new SessionInfo(account.id(), account.displayName(), account.role(),
-                HomePaths.of(account.role()));
+                HomePaths.resolveHomePath(account.role()));
         return new LoginResult(info, accessToken, session.refreshToken());
     }
 
@@ -124,13 +125,20 @@ public class AuthService {
         if (!(result instanceof SessionStore.Rotated rotated)) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, SESSION_EXPIRED, "Phiên đăng nhập đã hết hạn");
         }
-        Optional<Account> account = accounts.findById(rotated.accountId())
+        Optional<Account> account = accounts.findById(rotated.session().accountId())
                 .filter(a -> a.status() == AccountStatus.ACTIVE);
-        if (account.isEmpty()) {
-            sessions.delete(rotated.sid());
+        Optional<SessionStore.SessionRecord> session = Optional.of(rotated.session());
+        if (account.isPresent() && !rotated.session().isPasswordCurrent(account.get().passwordChangedAt())) {
+            session = sessions.findSession(rotated.sid())
+                    .filter(s -> s.accountId().equals(rotated.session().accountId()))
+                    .filter(s -> s.refreshHash().equals(rotated.session().refreshHash()));
+        }
+        if (account.isEmpty() || session.isEmpty()
+                || !session.get().isPasswordCurrent(account.get().passwordChangedAt())) {
+            sessions.deleteSession(rotated.sid());
             throw new ApiException(HttpStatus.UNAUTHORIZED, SESSION_EXPIRED, "Phiên đăng nhập đã hết hạn");
         }
-        String accessToken = jwt.issue(rotated.accountId(), account.get().role(), rotated.sid());
+        String accessToken = jwtService.issue(rotated.session().accountId(), account.get().role(), rotated.sid());
         return new RefreshResult(accessToken, rotated.refreshToken());
     }
 
@@ -140,13 +148,13 @@ public class AuthService {
      */
     public void logout(String sid, String refreshToken) {
         if (sid != null) {
-            sessions.delete(sid);
+            sessions.deleteSession(sid);
         }
-        sessions.sidOf(refreshToken).filter(other -> !other.equals(sid)).ifPresent(sessions::delete);
+        sessions.findSid(refreshToken).filter(other -> !other.equals(sid)).ifPresent(sessions::deleteSession);
     }
 
     /** Mật khẩu quá 72 byte không bao giờ đúng (NFR-U01-14); vẫn chạy bcrypt để thời gian đồng đều. */
-    private boolean passwordMatches(String password, Account account) {
+    private boolean isPasswordMatching(String password, Account account) {
         boolean tooLong = password.getBytes(StandardCharsets.UTF_8).length > PasswordPolicy.MAX_BYTES;
         if (tooLong || !account.hasPassword()) {
             passwordEncoder.matches("", dummyHash);
@@ -156,12 +164,12 @@ public class AuthService {
     }
 
     /** Lần thất bại trừ một lượt của IP (BR-U01-43); đăng nhập đúng không trừ. */
-    private ApiException failed(String clientIp) {
+    private ApiException recordFailure(String clientIp) {
         throttle.recordLoginFailure(clientIp);
-        return authFailed();
+        return createAuthFailedError();
     }
 
-    private static ApiException authFailed() {
+    private static ApiException createAuthFailedError() {
         return new ApiException(HttpStatus.UNAUTHORIZED, AUTH_FAILED, AUTH_FAILED_MESSAGE);
     }
 

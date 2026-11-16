@@ -95,20 +95,20 @@ final class DocxImporter {
     DocxImportPreview preview(Actor actor, byte[] bytes, BlockOrigin origin, boolean diagramEnabled,
                               IDiagramResolver resolver) {
         if (bytes == null || bytes.length == 0) {
-            throw ApiException.badRequest("DOCX_INVALID", "Chưa chọn tệp DOCX");
+            throw ApiException.createBadRequest("DOCX_INVALID", "Chưa chọn tệp DOCX");
         }
         if (bytes.length > MAX_DOCX_BYTES) {
-            throw ApiException.payloadTooLarge("DOCX_TOO_LARGE", "Tệp DOCX tối đa 20 MB");
+            throw ApiException.createPayloadTooLarge("DOCX_TOO_LARGE", "Tệp DOCX tối đa 20 MB");
         }
         checkZip(bytes);
         try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(bytes))) {
             Reader reader = new Reader(actor, doc, origin, diagramEnabled, resolver);
-            reader.read();
-            return new DocxImportPreview(new DocumentModel(List.copyOf(reader.blocks)), reader.warnings());
+            reader.readDocument();
+            return new DocxImportPreview(new DocumentModel(List.copyOf(reader.blocks)), reader.listWarnings());
         } catch (ApiException e) {
             throw e;
         } catch (IOException | RuntimeException e) {
-            throw ApiException.badRequest("DOCX_INVALID", "Không đọc được tệp DOCX");
+            throw ApiException.createBadRequest("DOCX_INVALID", "Không đọc được tệp DOCX");
         }
     }
 
@@ -121,24 +121,24 @@ final class DocxImporter {
             ZipEntry entry;
             while ((entry = zip.getNextEntry()) != null) {
                 if (++entries > MAX_ENTRIES) {
-                    throw ApiException.badRequest("DOCX_INVALID", "Tệp DOCX có quá nhiều thành phần");
+                    throw ApiException.createBadRequest("DOCX_INVALID", "Tệp DOCX có quá nhiều thành phần");
                 }
                 if (entry.getName().contains("..")) {
-                    throw ApiException.badRequest("DOCX_INVALID", "Tệp DOCX không hợp lệ");
+                    throw ApiException.createBadRequest("DOCX_INVALID", "Tệp DOCX không hợp lệ");
                 }
                 int n;
                 while ((n = zip.read(buffer)) > 0) {
                     total += n;
                     if (total > MAX_UNPACKED_BYTES) {
-                        throw ApiException.badRequest("DOCX_INVALID", "Tệp DOCX giải nén vượt 100 MB");
+                        throw ApiException.createBadRequest("DOCX_INVALID", "Tệp DOCX giải nén vượt 100 MB");
                     }
                 }
             }
         } catch (IOException e) {
-            throw ApiException.badRequest("DOCX_INVALID", "Không đọc được tệp DOCX");
+            throw ApiException.createBadRequest("DOCX_INVALID", "Không đọc được tệp DOCX");
         }
         if (entries == 0) {
-            throw ApiException.badRequest("DOCX_INVALID", "Không đọc được tệp DOCX");
+            throw ApiException.createBadRequest("DOCX_INVALID", "Không đọc được tệp DOCX");
         }
     }
 
@@ -166,13 +166,13 @@ final class DocxImporter {
             this.resolver = resolver;
         }
 
-        void read() {
+        void readDocument() {
             for (IBodyElement element : doc.getBodyElements()) {
                 if (element.getElementType() == BodyElementType.PARAGRAPH) {
-                    paragraph((XWPFParagraph) element);
+                    readParagraph((XWPFParagraph) element);
                 } else if (element.getElementType() == BodyElementType.TABLE) {
                     endList();
-                    table((XWPFTable) element);
+                    readTable((XWPFTable) element);
                 } else {
                     endList();
                     unsupported.merge("khối điều khiển nội dung (ví dụ mục lục)", 1, Integer::sum);
@@ -191,7 +191,7 @@ final class DocxImporter {
             }
         }
 
-        List<ValidationIssue> warnings() {
+        List<ValidationIssue> listWarnings() {
             List<ValidationIssue> all = new ArrayList<>(issues);
             if (!unsupported.isEmpty()) {
                 List<String> parts = new ArrayList<>();
@@ -211,25 +211,25 @@ final class DocxImporter {
         /** Căn lề của đoạn đang đọc. */
         private String align;
 
-        private void paragraph(XWPFParagraph p) {
+        private void readParagraph(XWPFParagraph p) {
             countUnsupported(p.getCTP().getDomNode());
-            String heading = headingStyle(p);
+            String heading = resolveHeadingStyle(p);
             String text = p.getText() == null ? "" : p.getText().replaceAll("\\s+", " ").strip();
             // Mục có đánh số (I., 1., 1.1, a. viết tay hoặc đánh số tự động của Word) thành mục của cây; bỏ số gốc vì
             // trình soạn tự đánh 1., 1.1. (yêu cầu 2026-11-05).
-            Marker marker = marker(p, heading != null, text);
+            Marker marker = detectMarker(p, heading != null, text);
             if (marker != null) {
                 endList();
-                int level = levelOf(marker);
+                int level = resolveMarkerLevel(marker);
                 {
                     // Mục chưa đặt tên ("2." đứng riêng) vẫn là một mục.
                     ObjectNode content = JsonNodeFactory.instance.objectNode();
                     content.put("style", "H" + level);
                     content.put("text", marker.text().length() > DocumentModelService.MAX_HEADING
                             ? marker.text().substring(0, DocumentModelService.MAX_HEADING) : marker.text());
-                    add(BlockType.HEADING, content);
+                    addBlock(BlockType.HEADING, content);
                 }
-                pictures(p);
+                readPictures(p);
                 return;
             }
             if (heading != null) {
@@ -242,12 +242,12 @@ final class DocxImporter {
                 }
                 runs.forEach(run -> ((ObjectNode) run).put("bold", true));
                 flushParagraph(runs);
-                pictures(p);
+                readPictures(p);
                 return;
             }
             if (p.getNumID() != null) {
                 listItem(p);
-                pictures(p);
+                readPictures(p);
                 return;
             }
             endList();
@@ -257,7 +257,7 @@ final class DocxImporter {
                 if (!run.getEmbeddedPictures().isEmpty()) {
                     flushParagraph(runs);
                     runs = JsonNodeFactory.instance.arrayNode();
-                    pictures(run);
+                    readPictures(run);
                 }
                 appendRun(runs, run);
             }
@@ -277,13 +277,13 @@ final class DocxImporter {
          * Dấu đánh số của đoạn nếu đoạn là đầu mục: đoạn kiểu tiêu đề có số; hoặc đoạn thường ngắn, in đậm cả đoạn, có số
          * (đề thi hay viết "I. PHẦN 1" in đậm mà không dùng kiểu tiêu đề).
          */
-        private Marker marker(XWPFParagraph p, boolean heading, String text) {
-            boolean candidate = heading || (allBold(p) && text.length() <= MAX_MARKED_CHARS);
+        private Marker detectMarker(XWPFParagraph p, boolean heading, String text) {
+            boolean candidate = heading || (isAllBold(p) && text.length() <= MAX_MARKED_CHARS);
             if (!candidate || text.isEmpty()) {
                 return null;
             }
             if (p.getNumID() != null) {
-                String kind = kindOfFormat(p.getNumFmt());
+                String kind = classifyFormat(p.getNumFmt());
                 if (kind == null) {
                     return null;
                 }
@@ -295,7 +295,7 @@ final class DocxImporter {
             return parseMarker(text);
         }
 
-        private boolean allBold(XWPFParagraph p) {
+        private boolean isAllBold(XWPFParagraph p) {
             boolean any = false;
             for (XWPFRun run : p.getRuns()) {
                 String t = run.text();
@@ -310,7 +310,7 @@ final class DocxImporter {
             return any;
         }
 
-        private int levelOf(Marker marker) {
+        private int resolveMarkerLevel(Marker marker) {
             int rank = kindRank.computeIfAbsent(marker.kind(), k -> kindRank.size());
             return Math.max(1, Math.min(MAX_LEVEL, rank + marker.extra() + 1));
         }
@@ -326,7 +326,7 @@ final class DocxImporter {
                 if (align != null) {
                     content.put("align", align);
                 }
-                add(BlockType.PARAGRAPH, content);
+                addBlock(BlockType.PARAGRAPH, content);
             }
         }
 
@@ -353,13 +353,13 @@ final class DocxImporter {
 
         private void endList() {
             if (list != null) {
-                add(BlockType.LIST, list);
+                addBlock(BlockType.LIST, list);
                 list = null;
                 listId = null;
             }
         }
 
-        private void table(XWPFTable table) {
+        private void readTable(XWPFTable table) {
             ObjectNode content = JsonNodeFactory.instance.objectNode();
             List<XWPFTableRow> rows = table.getRows();
             content.put("headerRow", !rows.isEmpty() && rows.get(0).isRepeatHeader());
@@ -395,7 +395,7 @@ final class DocxImporter {
             if (rows.size() > DocumentModelService.MAX_ROWS) {
                 unsupported.merge("hàng bảng vượt " + DocumentModelService.MAX_ROWS, 1, Integer::sum);
             }
-            add(BlockType.TABLE, content);
+            addBlock(BlockType.TABLE, content);
         }
 
         private void appendRun(ArrayNode runs, XWPFRun run) {
@@ -445,28 +445,28 @@ final class DocxImporter {
             }
         }
 
-        private void pictures(XWPFParagraph p) {
+        private void readPictures(XWPFParagraph p) {
             for (XWPFRun run : p.getRuns()) {
                 if (!run.getEmbeddedPictures().isEmpty()) {
-                    pictures(run);
+                    readPictures(run);
                 }
             }
         }
 
-        private void pictures(XWPFRun run) {
-            List<DrawingInfo> drawings = drawings(run);
-            String runLink = run instanceof XWPFHyperlinkRun hyperlinkRun ? url(hyperlinkRun) : null;
+        private void readPictures(XWPFRun run) {
+            List<DrawingInfo> drawings = listDrawings(run);
+            String runLink = run instanceof XWPFHyperlinkRun hyperlinkRun ? resolveUrl(hyperlinkRun) : null;
             List<XWPFPicture> pictures = run.getEmbeddedPictures();
             for (int i = 0; i < pictures.size(); i++) {
                 XWPFPicture picture = pictures.get(i);
                 DrawingInfo info = i < drawings.size() ? drawings.get(i) : new DrawingInfo(null, null);
                 String alt = info.description() != null && !info.description().isBlank() ? info.description()
                         : picture.getDescription();
-                picture(picture, alt == null ? "" : alt, info.link() != null ? info.link() : runLink);
+                readPicture(picture, alt == null ? "" : alt, info.link() != null ? info.link() : runLink);
             }
         }
 
-        private void picture(XWPFPicture picture, String alt, String link) {
+        private void readPicture(XWPFPicture picture, String alt, String link) {
             byte[] data = picture.getPictureData() == null ? null : picture.getPictureData().getData();
             String cleanAlt = CODE.matcher(alt).replaceAll("").strip();
             if (cleanAlt.length() > DocumentModelService.MAX_ALT) {
@@ -494,9 +494,9 @@ final class DocxImporter {
                 xml = PngChunks.readMxfile(data).filter(x -> DiagramXml.validate(x).isEmpty()).orElse(null);
                 how = "DIAGRAM_RESTORED_BY_PNG";
             }
-            String svg = svg(picture, data);
+            String svg = extractSvg(picture, data);
             if (xml == null && svg != null) {
-                xml = svgContent(svg);
+                xml = extractSvgContent(svg);
                 how = "DIAGRAM_RESTORED_BY_SVG";
             }
             UUID id = UUID.randomUUID();
@@ -508,7 +508,7 @@ final class DocxImporter {
                 if (svg != null) {
                     SvgSanitizer.sanitize(svg).ifPresent(clean -> content.put("svgPreview", clean));
                 }
-                if (add(id, BlockType.DIAGRAM, content)) {
+                if (addBlock(id, BlockType.DIAGRAM, content)) {
                     issues.add(new ValidationIssue(how, id, "Khôi phục sơ đồ"));
                 }
                 return;
@@ -537,8 +537,8 @@ final class DocxImporter {
             ObjectNode content = JsonNodeFactory.instance.objectNode();
             content.put(DocumentFiles.FILE_REF, ref.value());
             content.put("alt", alt);
-            PngChunks.size(data).ifPresent(size -> content.put("width", Math.max(16, Math.min(600, size[0]))));
-            add(id, BlockType.IMAGE, content);
+            PngChunks.readSize(data).ifPresent(size -> content.put("width", Math.max(16, Math.min(600, size[0]))));
+            addBlock(id, BlockType.IMAGE, content);
         }
 
         private String resolve(String ref) {
@@ -551,15 +551,15 @@ final class DocxImporter {
         }
 
         /** SVG của ảnh: chính ảnh nếu là SVG, hoặc phần {@code svgBlip} Word lưu kèm ảnh PNG dự phòng. */
-        private String svg(XWPFPicture picture, byte[] data) {
+        private String extractSvg(XWPFPicture picture, byte[] data) {
             if (data != null && looksLikeSvg(data)) {
                 return new String(data, java.nio.charset.StandardCharsets.UTF_8);
             }
-            Element blip = find(picture.getCTPicture().getDomNode(), "svgBlip");
+            Element blip = findElement(picture.getCTPicture().getDomNode(), "svgBlip");
             if (blip == null) {
                 return null;
             }
-            String rid = attribute(blip, "embed");
+            String rid = readAttribute(blip, "embed");
             if (rid == null) {
                 return null;
             }
@@ -579,7 +579,7 @@ final class DocxImporter {
             }
         }
 
-        private String svgContent(String svg) {
+        private String extractSvgContent(String svg) {
             try {
                 Element root = SecureXml.parse(SecureXml.stripPrologue(svg)).getDocumentElement();
                 String content = root.getAttribute("content");
@@ -589,20 +589,20 @@ final class DocxImporter {
             }
         }
 
-        private List<DrawingInfo> drawings(XWPFRun run) {
+        private List<DrawingInfo> listDrawings(XWPFRun run) {
             List<DrawingInfo> result = new ArrayList<>();
             for (CTDrawing drawing : run.getCTR().getDrawingList()) {
                 for (CTInline inline : drawing.getInlineList()) {
-                    result.add(info(inline.getDocPr()));
+                    result.add(readDrawingInfo(inline.getDocPr()));
                 }
                 for (CTAnchor anchor : drawing.getAnchorList()) {
-                    result.add(info(anchor.getDocPr()));
+                    result.add(readDrawingInfo(anchor.getDocPr()));
                 }
             }
             return result;
         }
 
-        private DrawingInfo info(CTNonVisualDrawingProps props) {
+        private DrawingInfo readDrawingInfo(CTNonVisualDrawingProps props) {
             if (props == null) {
                 return new DrawingInfo(null, null);
             }
@@ -618,7 +618,7 @@ final class DocxImporter {
             return new DrawingInfo(props.getDescr(), link);
         }
 
-        private String url(XWPFHyperlinkRun run) {
+        private String resolveUrl(XWPFHyperlinkRun run) {
             try {
                 XWPFHyperlink hyperlink = run.getHyperlink(doc);
                 return hyperlink == null ? null : hyperlink.getURL();
@@ -627,7 +627,7 @@ final class DocxImporter {
             }
         }
 
-        private String headingStyle(XWPFParagraph p) {
+        private String resolveHeadingStyle(XWPFParagraph p) {
             String id = p.getStyleID();
             if (id == null) {
                 return null;
@@ -659,7 +659,7 @@ final class DocxImporter {
             for (int i = 0; i < children.getLength(); i++) {
                 Node child = children.item(i);
                 if (child instanceof Element element) {
-                    String name = DiagramXml.name(element);
+                    String name = DiagramXml.readNodeName(element);
                     if (UNSUPPORTED.containsKey(name)) {
                         unsupported.merge(UNSUPPORTED.get(name), 1, Integer::sum);
                         continue;
@@ -677,11 +677,11 @@ final class DocxImporter {
             }
         }
 
-        private void add(BlockType type, ObjectNode content) {
-            add(UUID.randomUUID(), type, content);
+        private void addBlock(BlockType type, ObjectNode content) {
+            addBlock(UUID.randomUUID(), type, content);
         }
 
-        private boolean add(UUID id, BlockType type, ObjectNode content) {
+        private boolean addBlock(UUID id, BlockType type, ObjectNode content) {
             if (blocks.size() >= DocumentModelService.MAX_BLOCKS) {
                 truncated = true;
                 return false;
@@ -728,7 +728,7 @@ final class DocxImporter {
         return new Marker(Character.isUpperCase(letter.charAt(0)) ? "UPPER" : "LOWER", 0, rest);
     }
 
-    static String kindOfFormat(String numFmt) {
+    static String classifyFormat(String numFmt) {
         if (numFmt == null) {
             return null;
         }
@@ -748,13 +748,13 @@ final class DocxImporter {
         return head.contains("<svg");
     }
 
-    private static Element find(Node node, String localName) {
-        if (node instanceof Element element && localName.equals(DiagramXml.name(element))) {
+    private static Element findElement(Node node, String localName) {
+        if (node instanceof Element element && localName.equals(DiagramXml.readNodeName(element))) {
             return element;
         }
         NodeList children = node.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
-            Element found = find(children.item(i), localName);
+            Element found = findElement(children.item(i), localName);
             if (found != null) {
                 return found;
             }
@@ -762,18 +762,18 @@ final class DocxImporter {
         return null;
     }
 
-    private static String attribute(Element element, String localName) {
+    private static String readAttribute(Element element, String localName) {
         NamedNodeMap attributes = element.getAttributes();
         for (int i = 0; i < attributes.getLength(); i++) {
             Node attribute = attributes.item(i);
-            if (localName.equals(DiagramXml.name(attribute))) {
+            if (localName.equals(DiagramXml.readNodeName(attribute))) {
                 return attribute.getNodeValue();
             }
         }
         return null;
     }
 
-    static Optional<String> code(String alt) {
+    static Optional<String> parseCode(String alt) {
         Matcher matcher = CODE.matcher(alt == null ? "" : alt);
         return matcher.find() ? Optional.of(matcher.group(1)) : Optional.empty();
     }

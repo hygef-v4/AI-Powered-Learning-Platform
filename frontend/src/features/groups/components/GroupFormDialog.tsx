@@ -3,10 +3,11 @@
 import { useId, useState } from "react";
 import { Alert, Button, Dialog, Field, Pill, Select, TextInput, cx, showToast } from "@/shared/ui";
 import { saveGroups } from "../api";
-import { draftsFrom, freeNames, personLabel, saveErrorText, withdraw, type StudentRow } from "../model/groupDrafts";
+import { buildDraftsFrom, pickFreeNames, formatPersonLabel, saveErrorText, withdrawMembers, type StudentRow } from "../model/groupDrafts";
 import type { Draft, GroupSetView } from "../model/types";
-import { matchesPersonQuery } from "@/shared/studentCode";
+import { formatStudentLabel, matchesPersonQuery } from "@/shared/studentCode";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
+import { msg } from "@/i18n/msg";
 
 /**
  * Popup Tạo nhóm / Sửa nhóm (t02f, BR-U12-02–04): tên nhóm, chọn thành viên trong danh sách người chưa có nhóm có ô tìm
@@ -24,9 +25,9 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
   onSaved: (next: GroupSetView, name: string) => void;
 }) {
   const id = useId();
-  const drafts = draftsFrom(set);
+  const drafts = buildDraftsFrom(set);
   const others = drafts.filter((d) => d.key !== group?.key);
-  const [name, setName] = useState(group?.name ?? freeNames(drafts, 1)[0]!);
+  const [name, setName] = useState(group?.name ?? pickFreeNames(drafts, 1)[0]!);
   const [members, setMembers] = useState<string[]>(group?.memberIds ?? []);
   const [leaderId, setLeaderId] = useState<string | null>(group?.leaderId ?? null);
   const [query, setQuery] = useState("");
@@ -38,24 +39,24 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
   // Chỉ người chưa có nhóm (sửa nhóm thì thêm thành viên hiện tại, đứng đầu); trong mỗi phần theo tên.
   const rank = (accountId: string) => (group?.memberIds.includes(accountId) ? 0 : 1);
   const list = [...people]
-    .filter((p) => !groupOf(p.accountId) && matchesPersonQuery({ ...p, name: personLabel(p) }, q))
-    .sort((a, b) => rank(a.accountId) - rank(b.accountId) || personLabel(a).localeCompare(personLabel(b), "vi"));
+    .filter((p) => !groupOf(p.accountId) && matchesPersonQuery({ ...p, name: formatPersonLabel(p) }, q))
+    .sort((a, b) => rank(a.accountId) - rank(b.accountId) || formatPersonLabel(a).localeCompare(formatPersonLabel(b), "vi"));
   const allSelected = list.length > 0 && list.every(person => members.includes(person.accountId));
   const someSelected = list.some(person => members.includes(person.accountId));
   const leader = leaderId && members.includes(leaderId) ? leaderId : (members[0] ?? null);
-  const { rest, emptied } = withdraw(others, members);
+  const { rest, emptied } = withdrawMembers(others, members);
   const usedIds = new Set(set.groups.filter((g) => g.used).map((g) => g.id));
   const blocked = emptied.filter((d) => d.id && usedIds.has(d.id));
   const moved = members.filter((m) => groupOf(m)).length;
   const trimmed = name.trim();
   const duplicate = others.some((d) => d.name.trim().toLowerCase() === trimmed.toLowerCase());
-  const nameError = !trimmed ? "Nhập tên nhóm" : duplicate ? "Tên nhóm bị trùng" : null;
+  const nameError = !trimmed ? msg("groups.components.GroupFormDialog.enterAGroupName") : duplicate ? msg("groups.components.GroupFormDialog.theGroupNameIsAlready") : null;
   const valid = !nameError && members.length > 0 && blocked.length === 0;
 
   const toggle = (accountId: string) =>
     setMembers((all) => (all.includes(accountId) ? all.filter((x) => x !== accountId) : [...all, accountId]));
 
-  const save = async () => {
+  const saveGroup = async () => {
     const mine: Draft = { key: group?.key ?? "new-1", id: group?.id ?? null, name: trimmed, leaderId: leader, memberIds: members };
     // Sửa thì giữ nhóm ở chỗ cũ trong bộ nhóm, tạo thì thêm cuối.
     const next = group ? drafts.flatMap((d) => (d.key === group.key ? [mine] : rest.filter((r) => r.key === d.key))) : [...rest, mine];
@@ -63,7 +64,7 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
     setError(null);
     try {
       onSaved(await saveGroups(classId, set.version, next), trimmed);
-      showToast(group ? "Đã lưu nhóm" : `Đã tạo ${trimmed}`);
+      showToast(group ? msg("groups.components.GroupFormDialog.groupSaved") : msg("groups.components.GroupFormDialog.created", { trimmed: String(trimmed) }));
     } catch (e) {
       setError(saveErrorText(e, next));
     } finally {
@@ -72,59 +73,59 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
   };
 
   return (
-    <Dialog open title={leaderOnly ? `Đổi trưởng nhóm — ${group?.name}` : group ? `Sửa ${group.name}` : "Tạo nhóm"} size="lg" onClose={onClose} dismissible={!busy}
-      footer={<Button variant="primary" icon="save" disabled={!valid || busy} onClick={() => void save()}>{group ? "Lưu nhóm" : "Tạo nhóm"}</Button>}>
+    <Dialog open title={leaderOnly ? msg("groups.components.GroupFormDialog.changeLeader", { name: String(group?.name) }) : group ? msg("groups.components.GroupFormDialog.edit", { name: String(group.name) }) : msg("groups.components.GroupFormDialog.createGroup")} size="lg" onClose={onClose} dismissible={!busy}
+      footer={<Button variant="primary" icon="save" disabled={!valid || busy} onClick={() => void saveGroup()}>{group ? msg("groups.components.GroupFormDialog.saveGroup") : msg("groups.components.GroupFormDialog.createGroup")}</Button>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       <div className={cx("grid gap-4", !leaderOnly && "sm:grid-cols-2")}>
-        {!leaderOnly && <Field label="Tên nhóm" htmlFor={`${id}-name`} required error={nameError}>
+        {!leaderOnly && <Field label={msg("groups.components.GroupFormDialog.groupName")} htmlFor={`${id}-name`} required error={nameError}>
           <TextInput id={`${id}-name`} value={name} maxLength={100} disabled={busy} onChange={(e) => setName(e.target.value)} />
         </Field>}
-        <Field label="Trưởng nhóm" htmlFor={`${id}-leader`} required>
+        <Field label={msg("groups.components.GroupFormDialog.groupLeader")} htmlFor={`${id}-leader`} required>
           <Select id={`${id}-leader`} value={leader ?? ""} disabled={busy || members.length === 0} onChange={(e) => setLeaderId(e.target.value)}>
-            {members.length === 0 && <option value="">Chọn thành viên trước</option>}
-            {members.map((m) => <option key={m} value={m}>{personLabel(people.find((p) => p.accountId === m))}</option>)}
+            {members.length === 0 && <option value="">{msg("groups.components.GroupFormDialog.chooseMembersFirst")}</option>}
+            {members.map((m) => <option key={m} value={m}>{formatStudentLabel(people.find((p) => p.accountId === m))}</option>)}
           </Select>
         </Field>
       </div>
       {!leaderOnly && <div className="flex flex-col gap-2">
-        <span className="text-xs font-semibold text-body">Thành viên ({members.length})</span>
-        <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm sinh viên" value={query} disabled={busy} onChange={(e) => setQuery(e.target.value)} />
+        <span className="text-xs font-semibold text-body">{msg("groups.components.GroupFormDialog.members")}{members.length})</span>
+        <TextInput type="search" icon="search" aria-label={msg("groups.components.GroupFormDialog.findStudents")} placeholder={msg("groups.components.GroupFormDialog.findStudents")} value={query} disabled={busy} onChange={(e) => setQuery(e.target.value)} />
         <label className="flex items-center gap-3 text-xs font-semibold">
           <input type="checkbox" className="size-4 accent-primary" checked={allSelected} disabled={busy || !list.length}
             ref={node => { if (node) node.indeterminate = someSelected && !allSelected; }}
             onChange={() => setMembers(current => allSelected ? current.filter(member => !list.some(person => person.accountId === member))
               : [...new Set([...current, ...list.map(person => person.accountId)])])} />
-          Chọn tất cả kết quả lọc ({list.length})
+          {msg("groups.components.GroupFormDialog.selectAllFilteredResults")}{list.length})
         </label>
-        <ul aria-label="Chọn thành viên" className="max-h-72 overflow-y-auto rounded-lg border border-line [scrollbar-color:var(--c-muted)_transparent]">
+        <ul aria-label={msg("groups.components.GroupFormDialog.chooseMembers")} className="max-h-72 overflow-y-auto rounded-lg border border-line [scrollbar-color:var(--c-muted)_transparent]">
           {list.map((p) => {
             const picked = members.includes(p.accountId);
             const current = groupOf(p.accountId);
             return (
               <li key={p.accountId} className="border-b border-line last:border-b-0">
                 <label className={cx("flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors", picked ? "bg-primary-soft/50" : "hover:bg-shell")}>
-                  <input type="checkbox" className="size-4 accent-primary" checked={picked} disabled={busy} onChange={() => toggle(p.accountId)} aria-label={`Chọn ${personLabel(p)}`} />
+                  <input type="checkbox" className="size-4 accent-primary" checked={picked} disabled={busy} onChange={() => toggle(p.accountId)} aria-label={msg("groups.components.GroupFormDialog.select", { value: String(formatPersonLabel(p)) })} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13.5px] font-semibold text-ink">{personLabel(p)}</span>
+                    <span className="block truncate text-[13.5px] font-semibold text-ink">{formatPersonLabel(p)}</span>
                     <PersonSubline className="truncate" studentCode={p.studentCode} email={p.email} />
                   </span>
-                  {picked && p.accountId === leader && <Pill tone="warning">Trưởng nhóm</Pill>}
+                  {picked && p.accountId === leader && <Pill tone="warning">{msg("groups.components.GroupFormDialog.groupLeader")}</Pill>}
                   {current && <span className="shrink-0 text-xs text-muted">{current.name}</span>}
                 </label>
               </li>
             );
           })}
           {list.length === 0 && (
-            <li className="px-3 py-8 text-center text-[13px] text-muted">{q ? "Không có sinh viên phù hợp." : "Mọi sinh viên đã có nhóm."}</li>
+            <li className="px-3 py-8 text-center text-[13px] text-muted">{q ? msg("groups.components.GroupFormDialog.noMatchingStudents") : msg("groups.components.GroupFormDialog.allStudentsAlreadyHaveA")}</li>
           )}
         </ul>
       </div>}
       {(moved > 0 || emptied.length > 0) && (
         <p className={cx("text-[13px]", blocked.length ? "text-danger" : "text-muted")}>
-          {moved > 0 && `Chuyển ${moved} người từ nhóm khác sang. `}
+          {moved > 0 && msg("groups.components.GroupFormDialog.movesPeopleFromOtherGroups", { moved: String(moved) })}
           {blocked.length > 0
-            ? `${blocked.map((d) => d.name).join(", ")} đã có bài nên không được để trống.`
-            : emptied.length > 0 && `${emptied.map((d) => d.name).join(", ")} không còn ai sẽ bị xóa.`}
+            ? msg("groups.components.GroupFormDialog.alreadyHasASubmissionSo", { value: String(blocked.map((d) => d.name).join(", ")) })
+            : emptied.length > 0 && msg("groups.components.GroupFormDialog.willHaveNoOneLeft", { value: String(emptied.map((d) => d.name).join(", ")) })}
         </p>
       )}
     </Dialog>

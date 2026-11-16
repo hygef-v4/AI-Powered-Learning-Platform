@@ -37,25 +37,25 @@ public class AfterCommitExecutor {
         this.executor = executor;
     }
 
-    public void run(Runnable task) {
-        run(task, () -> log.warn("Hàng chờ gửi message đầy, bỏ một message"));
+    public void runAfterCommit(Runnable task) {
+        runAfterCommit(task, () -> log.warn("Hàng chờ gửi message đầy, bỏ một message"));
     }
 
     /** Như {@link #run(Runnable)}; hàng chờ gửi đầy thì gọi {@code onRejected} (không ném lỗi sau commit). */
-    public void run(Runnable task, Runnable onRejected) {
+    public void runAfterCommit(Runnable task, Runnable onRejected) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    execute(task, onRejected);
+                    executeTask(task, onRejected);
                 }
             });
         } else {
-            execute(task, onRejected);
+            executeTask(task, onRejected);
         }
     }
 
-    private void execute(Runnable task, Runnable onRejected) {
+    private void executeTask(Runnable task, Runnable onRejected) {
         try {
             executor.execute(task);
         } catch (RejectedExecutionException e) {

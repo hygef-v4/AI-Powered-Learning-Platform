@@ -63,7 +63,7 @@ class AcademicsReadRepositoryTest {
 
     @Test void emptyAggregateInputsDoNotGenerateInvalidInClause() {
         assertThat(academicsReadRepository.countClassesOfSubjects(List.of())).isEmpty();
-        assertThat(academicsReadRepository.enrollmentCounts(List.of())).isEmpty();
+        assertThat(academicsReadRepository.countEnrollments(List.of())).isEmpty();
         verifyNoInteractions(namedParameterJdbcTemplate);
     }
 }

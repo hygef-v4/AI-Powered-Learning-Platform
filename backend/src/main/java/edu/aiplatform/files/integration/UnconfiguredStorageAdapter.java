@@ -12,31 +12,31 @@ import java.util.Optional;
 public class UnconfiguredStorageAdapter implements IStorage {
 
     @Override
-    public boolean available() {
+    public boolean isAvailable() {
         return false;
     }
 
     @Override
-    public String put(ArtifactPurpose purpose, Path content, StoredMetadata metadata) {
-        throw unavailable();
+    public String putFile(ArtifactPurpose purpose, Path content, StoredMetadata metadata) {
+        throw createUnavailableError();
     }
 
     @Override
-    public Optional<StoredMetadata> metadata(String fileId) {
-        throw unavailable();
+    public Optional<StoredMetadata> loadMetadata(String fileId) {
+        throw createUnavailableError();
     }
 
     @Override
     public InputStream open(String fileId) {
-        throw unavailable();
+        throw createUnavailableError();
     }
 
     @Override
-    public void delete(String fileId) {
-        throw unavailable();
+    public void deleteFile(String fileId) {
+        throw createUnavailableError();
     }
 
-    private static StorageUnavailableException unavailable() {
+    private static StorageUnavailableException createUnavailableError() {
         return new StorageUnavailableException("Chưa cấu hình Google Drive", null);
     }
 }

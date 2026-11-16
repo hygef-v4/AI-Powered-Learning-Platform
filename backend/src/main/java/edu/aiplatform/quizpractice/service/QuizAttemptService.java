@@ -52,49 +52,49 @@ public class QuizAttemptService {
 
     /**
      * Bắt đầu lượt mới, hoặc mở lại lượt đang làm (BR-U11-10). Lớp phải đang mở, Quiz đang mở trong lớp, còn lượt.
-     * Khóa theo (Quiz, người học) để hai lần bấm không tạo hai lượt (NFR-U11-11).
+     * Khóa Quiz trước khi đọc đề, rồi (Quiz, người học), tới commit (NFR-U11-11).
      */
     @Transactional
     public TakingView start(Actor actor, UUID quizId, UUID classId) {
         access.requireClass(actor, Actions.QUIZ_PRACTICE, classId, "QUIZ", quizId, PracticeSupport.QUIZ_NOT_FOUND);
-        ClassRef ref = support.classRef(classId);
-        QuizView quiz = support.quizInClass(quizId, ref);
+        ClassRef ref = support.loadClassRef(classId);
         attempts.lockStart(quizId, actor.accountId());
+        QuizView quiz = support.loadQuizInClass(quizId, ref);
         var existing = attempts.findInProgress(quizId, actor.accountId(), classId);
         if (existing.isPresent()) {
-            return taking(existing.get());
+            return buildTakingView(existing.get());
         }
-        quiz = support.quizInClass(quizId, ref);
+        quiz = support.loadQuizInClass(quizId, ref);
         if (ref.status() != ClassStatus.OPEN || quiz.status() != QuizStatus.OPEN) {
-            access.rejected(actor, "QUIZ_SUBMIT_REJECTED", null, "QUIZ_NOT_OPEN");
-            throw ApiException.conflict("QUIZ_NOT_OPEN", "Quiz đã ngưng hoặc lớp không còn mở");
+            access.recordRejected(actor, "QUIZ_SUBMIT_REJECTED", null, "QUIZ_NOT_OPEN");
+            throw ApiException.createConflict("QUIZ_NOT_OPEN", "Quiz đã ngưng hoặc lớp không còn mở");
         }
         int used = attempts.countAttempts(quizId, actor.accountId(), classId);
         Integer max = quiz.settings().maxAttempts();
         if (max != null && used >= max) {
-            access.rejected(actor, "QUIZ_SUBMIT_REJECTED", null, "NO_ATTEMPTS_LEFT");
-            throw ApiException.conflict("NO_ATTEMPTS_LEFT", "Bạn đã dùng hết " + max + "/" + max + " lượt làm quiz này");
+            access.recordRejected(actor, "QUIZ_SUBMIT_REJECTED", null, "NO_ATTEMPTS_LEFT");
+            throw ApiException.createConflict("NO_ATTEMPTS_LEFT", "Bạn đã dùng hết " + max + "/" + max + " lượt làm quiz này");
         }
         Set<UUID> seen = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()
                 .flatMap(a -> a.snapshot().questionOrder().stream()).collect(Collectors.toSet());
         long seed = SEEDS.nextLong();
-        QuizStudentView view = support.newPaper(quizId, seen, seed);
+        QuizStudentView view = support.createPaper(quizId, seen, seed);
         int nextAttemptNo = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()
                 .filter(a -> a.classId().equals(classId)).mapToInt(QuizAttempt::attemptNo).max().orElse(0) + 1;
         QuizAttempt attempt = QuizAttempt.start(quizId, classId, actor.accountId(), nextAttemptNo,
-                AttemptSnapshot.of(view, seed), clock.instant());
+                AttemptSnapshot.createSnapshot(view, seed), clock.instant());
         attempts.insert(attempt);
-        return taking(attempt, view);
+        return buildTakingView(attempt, view);
     }
 
     /** Đề của lượt đang làm, không có đáp án (BR-U11-12, NFR-U11-30). */
     @Transactional(readOnly = true)
-    public TakingView get(Actor actor, UUID attemptId) {
-        QuizAttempt attempt = support.ownActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
-        if (!attempt.inProgress()) {
-            throw ApiException.conflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp; hãy xem kết quả");
+    public TakingView loadAttempt(Actor actor, UUID attemptId) {
+        QuizAttempt attempt = support.loadOwnActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        if (!attempt.hasInProgressStatus()) {
+            throw ApiException.createConflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp; hãy xem kết quả");
         }
-        return taking(attempt);
+        return buildTakingView(attempt);
     }
 
     /**
@@ -103,30 +103,30 @@ public class QuizAttemptService {
      */
     @Transactional
     public SaveResult saveAnswers(Actor actor, UUID attemptId, Map<UUID, List<String>> answers, long answerVersion) {
-        QuizAttempt attempt = support.ownActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        QuizAttempt attempt = support.loadOwnActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
         Instant now = clock.instant();
-        if (!attempt.inProgress()) {
-            throw ApiException.conflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp");
+        if (!attempt.hasInProgressStatus()) {
+            throw ApiException.createConflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp");
         }
         if (!attempt.acceptsAnswersAt(now)) {
-            throw ApiException.conflict("ATTEMPT_TIME_UP", "Đã hết thời gian làm bài");
+            throw ApiException.createConflict("ATTEMPT_TIME_UP", "Đã hết thời gian làm bài");
         }
         Map<UUID, List<String>> clean = new LinkedHashMap<>();
         for (var entry : answers.entrySet()) {
             List<String> options = entry.getValue().stream().distinct().toList();
             if (!attempt.snapshot().contains(entry.getKey(), options)) {
-                throw ApiException.badRequest("ANSWER_INVALID", "Câu hoặc lựa chọn không thuộc đề của lượt này");
+                throw ApiException.createBadRequest("ANSWER_INVALID", "Câu hoặc lựa chọn không thuộc đề của lượt này");
             }
             if (!options.isEmpty()) {
                 clean.put(entry.getKey(), options);
             }
         }
         if (attempt.answerVersion() != answerVersion) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
-        QuizAttempt saved = attempt.withAnswers(clean, now);
+        QuizAttempt saved = attempt.replaceAnswers(clean, now);
         if (!attempts.saveAnswers(saved, answerVersion)) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
         return new SaveResult(saved.answerVersion(), now);
     }
@@ -134,36 +134,36 @@ public class QuizAttemptService {
     /** Nộp tay (BR-U11-13): nộp lặp trả kết quả cũ; quá hạn cộng 30 giây thì từ chối, scanner sẽ tự nộp. */
     @Transactional
     public ResultView submit(Actor actor, UUID attemptId) {
-        QuizAttempt attempt = support.ownActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
-        if (attempt.inProgress()) {
+        QuizAttempt attempt = support.loadOwnActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        if (attempt.hasInProgressStatus()) {
             if (!attempt.acceptsAnswersAt(clock.instant())) {
-                access.rejected(actor, "QUIZ_SUBMIT_REJECTED", attemptId, "ATTEMPT_TIME_UP");
-                throw ApiException.conflict("ATTEMPT_TIME_UP", "Đã hết thời gian làm bài; lượt sẽ được tự nộp");
+                access.recordRejected(actor, "QUIZ_SUBMIT_REJECTED", attemptId, "ATTEMPT_TIME_UP");
+                throw ApiException.createConflict("ATTEMPT_TIME_UP", "Đã hết thời gian làm bài; lượt sẽ được tự nộp");
             }
             attempt = support.submit(actor, attempt, SubmitMode.MANUAL);
         }
-        return support.result(attempt, false, canRetry(actor, attempt));
+        return support.buildResult(attempt, false, canRetry(actor, attempt));
     }
 
     /** Kết quả lượt đã nộp của mình (UC 52, BR-U11-20). */
     @Transactional(readOnly = true)
-    public ResultView result(Actor actor, UUID attemptId) {
-        QuizAttempt attempt = support.ownAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
-        if (attempt.inProgress()) {
-            throw ApiException.conflict("ATTEMPT_IN_PROGRESS", "Lượt này chưa nộp");
+    public ResultView loadResult(Actor actor, UUID attemptId) {
+        QuizAttempt attempt = support.loadOwnAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        if (attempt.hasInProgressStatus()) {
+            throw ApiException.createConflict("ATTEMPT_IN_PROGRESS", "Lượt này chưa nộp");
         }
-        return support.result(attempt, false, canRetry(actor, attempt));
+        return support.buildResult(attempt, false, canRetry(actor, attempt));
     }
 
     private boolean canRetry(Actor actor, QuizAttempt attempt) {
-        if (!access.allowedClass(actor, Actions.QUIZ_PRACTICE, attempt.classId())) {
+        if (!access.isClassAllowed(actor, Actions.QUIZ_PRACTICE, attempt.classId())) {
             return false;
         }
-        ClassRef ref = support.classRef(attempt.classId());
+        ClassRef ref = support.loadClassRef(attempt.classId());
         if (ref.status() != ClassStatus.OPEN) {
             return false;
         }
-        QuizView quiz = support.quizInClass(attempt.quizId(), ref);
+        QuizView quiz = support.loadQuizInClass(attempt.quizId(), ref);
         if (quiz.status() != QuizStatus.OPEN) {
             return false;
         }
@@ -171,18 +171,18 @@ public class QuizAttemptService {
         return max == null || attempts.countAttempts(attempt.quizId(), attempt.accountId(), attempt.classId()) < max;
     }
 
-    private TakingView taking(QuizAttempt attempt) {
-        return taking(attempt, support.paperOf(attempt));
+    private TakingView buildTakingView(QuizAttempt attempt) {
+        return buildTakingView(attempt, support.loadPaper(attempt));
     }
 
-    private TakingView taking(QuizAttempt attempt, QuizStudentView view) {
+    private TakingView buildTakingView(QuizAttempt attempt, QuizStudentView view) {
         Map<UUID, QuizQuestionView> byId = view.questions().stream()
                 .collect(Collectors.toMap(QuizQuestionView::questionId, Function.identity()));
         List<TakingQuestion> questions = attempt.snapshot().questionOrder().stream()
                 .filter(byId::containsKey)
                 .map(id -> {
                     QuizQuestionView q = byId.get(id);
-                    return new TakingQuestion(id, q.type(), q.stem(), q.points(), PracticeSupport.ordered(q, attempt));
+                    return new TakingQuestion(id, q.type(), q.stem(), q.points(), PracticeSupport.orderOptions(q, attempt));
                 })
                 .toList();
         return new TakingView(attempt.id(), attempt.quizId(), attempt.classId(), attempt.snapshot().title(),
@@ -191,7 +191,7 @@ public class QuizAttemptService {
                 attempt.snapshot().activityNotice(), attempt.snapshot().settings().leavePenalty());
     }
 
-    private static ApiException versionConflict() {
-        return ApiException.conflict("ANSWER_VERSION_CONFLICT", "Câu trả lời đã được lưu từ nơi khác; hãy tải lại");
+    private static ApiException createVersionConflictError() {
+        return ApiException.createConflict("ANSWER_VERSION_CONFLICT", "Câu trả lời đã được lưu từ nơi khác; hãy tải lại");
     }
 }

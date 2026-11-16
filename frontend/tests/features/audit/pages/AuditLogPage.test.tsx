@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AuditLogPage } from "@/features/audit/pages/AuditLogPage";
-import { dayEnd, dayStart, defaultFilter } from "@/features/audit/model/labels";
+import { toDayEnd, toDayStart, defaultFilter } from "@/features/audit/model/labels";
 import type { AuditLogItem, AuditLogPage as Page } from "@/features/audit/model/types";
 
 let search = new URLSearchParams();
@@ -58,8 +58,8 @@ describe("AuditLogPage", () => {
     expect(await screen.findByText("phongdt@fpt.edu.vn")).toBeInTheDocument();
     const url = new URL(auditCalls(fetchMock)[0]!, "http://x");
     const filter = defaultFilter();
-    expect(url.searchParams.get("from")).toBe(dayStart(filter.fromDate));
-    expect(url.searchParams.get("to")).toBe(dayEnd(filter.toDate));
+    expect(url.searchParams.get("from")).toBe(toDayStart(filter.fromDate));
+    expect(url.searchParams.get("to")).toBe(toDayEnd(filter.toDate));
     expect(url.searchParams.get("size")).toBe("50");
     expect(url.searchParams.get("page")).toBe("0");
     expect(url.searchParams.has("actorId")).toBe(false);
@@ -180,7 +180,7 @@ describe("AuditLogPage", () => {
     const input = screen.getByTestId("audit-filters-from-input");
     fireEvent.change(input, { target: { value: "01/10/2026" } });
     await waitFor(() => expect(new URL(auditCalls(fetchMock).at(-1)!, "http://x")
-      .searchParams.get("from")).toBe(dayStart("2026-10-01")));
+      .searchParams.get("from")).toBe(toDayStart("2026-10-01")));
     fireEvent.change(input, { target: { value: "15/" } });
     expect(input).toHaveAttribute("aria-invalid", "true");
     fireEvent.click(screen.getByTestId("audit-filters-clear-button"));

@@ -18,24 +18,24 @@ public final class SectionNumbering {
     }
 
     /** {@code counters}: thứ tự (từ 1) của câu hỏi ở từng tầng, từ ngoài vào trong. */
-    public static String of(List<Integer> counters) {
+    public static String formatNumber(List<Integer> counters) {
         StringBuilder out = new StringBuilder();
         for (int depth = 0; depth < counters.size(); depth++) {
-            out.append(part(depth, Math.max(1, counters.get(depth)))).append('.');
+            out.append(formatPart(depth, Math.max(1, counters.get(depth)))).append('.');
         }
         return out.toString();
     }
 
-    static String part(int depth, int n) {
+    static String formatPart(int depth, int n) {
         return switch (depth) {
-            case 0 -> roman(n);
+            case 0 -> formatRoman(n);
             case 1 -> String.valueOf(n);
-            case 2 -> letters(n);
-            default -> letters(n).repeat(2);
+            case 2 -> formatLetters(n);
+            default -> formatLetters(n).repeat(2);
         };
     }
 
-    static String roman(int n) {
+    static String formatRoman(int n) {
         StringBuilder out = new StringBuilder();
         int rest = n;
         for (int i = 0; i < ROMAN_VALUES.length; i++) {
@@ -48,7 +48,7 @@ public final class SectionNumbering {
     }
 
     /** a, b, …, z, aa, ab, … (cơ số 26 không có số 0). */
-    static String letters(int n) {
+    static String formatLetters(int n) {
         StringBuilder out = new StringBuilder();
         int rest = n;
         while (rest > 0) {

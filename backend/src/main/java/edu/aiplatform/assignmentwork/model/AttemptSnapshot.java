@@ -20,7 +20,7 @@ public record AttemptSnapshot(int versionNo, String title, GradingMode gradingMo
         requiredDiagrams = requiredDiagrams == null ? Map.of() : Map.copyOf(requiredDiagrams);
     }
 
-    public static AttemptSnapshot of(AssignmentView view, Map<DiagramType, Integer> requiredDiagrams) {
+    public static AttemptSnapshot createSnapshot(AssignmentView view, Map<DiagramType, Integer> requiredDiagrams) {
         return new AttemptSnapshot(view.versionNo(), view.title(), view.gradingMode(), view.closesAt(),
                 view.lateUntil(), requiredDiagrams, view.diagramEnabled(), view.activityMonitoringEnabled(),
                 view.activityNotice(), view.maxAttempts() == null ? 1 : view.maxAttempts());

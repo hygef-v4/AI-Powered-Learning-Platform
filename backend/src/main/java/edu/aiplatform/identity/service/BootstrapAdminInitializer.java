@@ -50,7 +50,7 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         String email = EmailPolicy.normalize(properties.bootstrapAdminEmail());
-        if (email.isEmpty() || accounts.anyAdminExists()) {
+        if (email.isEmpty() || accounts.hasAnyAdmin()) {
             return;
         }
         if (!EmailPolicy.isValid(email)) {
@@ -62,7 +62,7 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
             name = "Quản trị viên";
         }
         Instant now = clock.instant();
-        Account admin = Account.newPending(UUID.randomUUID(), email, Role.ADMIN, name, null, now);
+        Account admin = Account.createPending(UUID.randomUUID(), email, Role.ADMIN, name, null, now);
         accounts.insert(admin);
         audit.record(new AuditEvent(UUID.randomUUID(), null, "ACCOUNT_CREATED", "ACCOUNT", admin.id().toString(),
                 AuditResult.SUCCESS, "BOOTSTRAP_ADMIN", Map.of("role", Role.ADMIN.name()), now));

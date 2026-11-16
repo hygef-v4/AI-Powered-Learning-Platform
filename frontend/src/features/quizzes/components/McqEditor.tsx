@@ -1,12 +1,12 @@
 "use client";
 
 import { useId } from "react";
-import { Button, cx, Field, Icon, TextInput } from "@/shared/ui";
+import { Button, cx, Field, Icon, Textarea, TextInput } from "@/shared/ui";
 import { TYPE_LABELS } from "../model/labels";
-import { MAX_OPTIONS, MIN_OPTIONS, nextOptionId, toggleCorrect, withType, type FormErrors, type QuestionForm } from "../model/questionForm";
+import { MAX_OPTIONS, MIN_OPTIONS, generateNextOptionId, toggleCorrect, changeType, type FormErrors, type QuestionForm } from "../model/questionForm";
 import type { QuestionType } from "../model/types";
+import { msg } from "@/i18n/msg";
 
-const TEXTAREA = "w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus disabled:bg-shell";
 
 type Props = {
   value: QuestionForm;
@@ -31,14 +31,14 @@ export function McqEditor({ value, onChange, errors, readOnly = false }: Props) 
       options: value.options.filter((option) => option.id !== optionId),
       correctOptionIds: value.correctOptionIds.filter((correct) => correct !== optionId),
     });
-  const addOption = () => onChange({ ...value, options: [...value.options, { id: nextOptionId(value.options), text: "" }] });
+  const addOption = () => onChange({ ...value, options: [...value.options, { id: generateNextOptionId(value.options), text: "" }] });
 
   return (
     <fieldset disabled={readOnly} className="flex min-w-0 flex-col gap-4" data-testid="mcq-editor">
-      <div role="radiogroup" aria-label="Loại câu hỏi" className="flex flex-wrap gap-2">
+      <div role="radiogroup" aria-label={msg("quizzes.components.McqEditor.questionType")} className="flex flex-wrap gap-2">
         {(Object.keys(TYPE_LABELS) as QuestionType[]).map((type) => (
           <button key={type} type="button" role="radio" aria-checked={value.type === type}
-            onClick={() => onChange(withType(value, type))} data-testid={`mcq-editor-type-${type}`}
+            onClick={() => onChange(changeType(value, type))} data-testid={`mcq-editor-type-${type}`}
             className={cx("rounded-full border px-3 py-1 text-xs font-semibold",
               value.type === type ? "border-primary/30 bg-primary-soft text-primary-ink" : "border-line-strong bg-surface text-body hover:bg-shell")}>
             {TYPE_LABELS[type]}
@@ -46,16 +46,16 @@ export function McqEditor({ value, onChange, errors, readOnly = false }: Props) 
         ))}
       </div>
 
-      <Field label="Nội dung câu hỏi" htmlFor={`${id}-stem`} required error={errors.stem}>
-        <textarea id={`${id}-stem`} value={value.stem} rows={4} aria-invalid={!!errors.stem}
-          onChange={(event) => onChange({ ...value, stem: event.target.value })} className={TEXTAREA} data-testid="mcq-editor-stem" />
+      <Field label={msg("quizzes.components.McqEditor.questionContent")} htmlFor={`${id}-stem`} required error={errors.stem}>
+        <Textarea id={`${id}-stem`} value={value.stem} rows={4} invalid={!!errors.stem}
+          onChange={(event) => onChange({ ...value, stem: event.target.value })} data-testid="mcq-editor-stem" />
       </Field>
 
       <div className="flex flex-col gap-2">
         <p className="text-xs font-semibold text-body">
-          Các lựa chọn ({MIN_OPTIONS}–{MAX_OPTIONS}) <span className="font-normal text-muted">· {single ? "chọn 1 đáp án đúng" : "chọn các đáp án đúng"}</span>
+          {msg("quizzes.components.McqEditor.options")}{MIN_OPTIONS}–{MAX_OPTIONS}) <span className="font-normal text-muted">· {single ? msg("quizzes.components.McqEditor.choose1CorrectAnswer") : msg("quizzes.components.McqEditor.chooseTheCorrectAnswers")}</span>
         </p>
-        <ul className="flex flex-col gap-2" aria-label="Các lựa chọn">
+        <ul className="flex flex-col gap-2" aria-label={msg("quizzes.components.McqEditor.options2")}>
           {value.options.map((option, index) => {
             const correct = value.correctOptionIds.includes(option.id);
             return (
@@ -63,13 +63,13 @@ export function McqEditor({ value, onChange, errors, readOnly = false }: Props) 
                 <label className="flex items-center gap-1.5 text-xs text-muted">
                   <input type={single ? "radio" : "checkbox"} name={`${id}-correct`} checked={correct}
                     onChange={() => onChange(toggleCorrect(value, option.id))}
-                    aria-label={`Lựa chọn ${index + 1} là đáp án đúng`} data-testid={`mcq-editor-correct-${index}`} />
+                    aria-label={msg("quizzes.components.McqEditor.optionIsACorrectAnswer", { value: String(index + 1) })} data-testid={`mcq-editor-correct-${index}`} />
                   {String.fromCharCode(65 + index)}
                 </label>
                 <TextInput value={option.text} onChange={(event) => setOption(option.id, event.target.value)}
-                  aria-label={`Nội dung lựa chọn ${index + 1}`} wrapperClassName="flex-1" invalid={!!errors.options}
+                  aria-label={msg("quizzes.components.McqEditor.contentOfOption", { value: String(index + 1) })} wrapperClassName="flex-1" invalid={!!errors.options}
                   data-testid={`mcq-editor-option-${index}`} />
-                <Button size="sm" variant="ghost" aria-label={`Xóa lựa chọn ${index + 1}`} disabled={value.options.length <= MIN_OPTIONS}
+                <Button size="sm" variant="ghost" aria-label={msg("quizzes.components.McqEditor.deleteOption", { value: String(index + 1) })} disabled={value.options.length <= MIN_OPTIONS}
                   onClick={() => removeOption(option.id)} data-testid={`mcq-editor-remove-${index}`}>
                   <Icon name="close" size={16} />
                 </Button>
@@ -80,23 +80,22 @@ export function McqEditor({ value, onChange, errors, readOnly = false }: Props) 
         {!readOnly && (
           <div>
             <Button size="sm" icon="add" onClick={addOption} disabled={value.options.length >= MAX_OPTIONS} data-testid="mcq-editor-add-option">
-              Thêm lựa chọn
-            </Button>
+              {msg("quizzes.components.McqEditor.addOption")}</Button>
           </div>
         )}
         {errors.options && <p role="alert" className="text-xs text-danger">{errors.options}</p>}
         {errors.correctOptionIds && <p role="alert" className="text-xs text-danger">{errors.correctOptionIds}</p>}
       </div>
 
-      <Field label="Điểm (mặc định)" htmlFor={`${id}-points`} required error={errors.defaultPoints}>
+      <Field label={msg("quizzes.components.McqEditor.pointsDefault")} htmlFor={`${id}-points`} required error={errors.defaultPoints}>
         <TextInput id={`${id}-points`} inputMode="decimal" value={value.defaultPoints} wrapperClassName="max-w-40"
           invalid={!!errors.defaultPoints} onChange={(event) => onChange({ ...value, defaultPoints: event.target.value })}
           data-testid="mcq-editor-points" />
       </Field>
 
-      <Field label="Giải thích (tùy chọn)" htmlFor={`${id}-explanation`} error={errors.explanation}>
-        <textarea id={`${id}-explanation`} value={value.explanation} rows={3}
-          onChange={(event) => onChange({ ...value, explanation: event.target.value })} className={TEXTAREA}
+      <Field label={msg("quizzes.components.McqEditor.explanationOptional")} htmlFor={`${id}-explanation`} error={errors.explanation}>
+        <Textarea id={`${id}-explanation`} value={value.explanation} rows={3}
+          onChange={(event) => onChange({ ...value, explanation: event.target.value })}
           data-testid="mcq-editor-explanation" />
       </Field>
     </fieldset>

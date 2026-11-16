@@ -74,13 +74,13 @@ public class OtpMailHandler implements IJobHandler {
             log.info("Bỏ qua OTP_DELIVERY {}: tài khoản không còn phù hợp", purpose);
             return;
         }
-        String code = codeFor(message.idempotencyKey());
+        String code = findCode(message.idempotencyKey());
         try {
             if (challenges.issue(accountId, purpose, code, message.idempotencyKey()) == OtpChallengeStore.Issue.STALE) {
                 log.info("Bỏ qua OTP_DELIVERY {}: mã của lần gửi này đã dùng hoặc đã có mã mới hơn", purpose);
                 return;
             }
-            mail.send(OtpMailTemplate.build(account.get().schoolEmail(), purpose, code, properties.otpTtl()));
+            mail.send(OtpMailTemplate.buildMessage(account.get().schoolEmail(), purpose, code, properties.otpTtl()));
         } catch (RuntimeException e) {
             throw new RetryableJobException("Gửi OTP lỗi: " + e.getClass().getSimpleName(), e);
         }
@@ -96,9 +96,9 @@ public class OtpMailHandler implements IJobHandler {
      * với chữ ký JWT): job chạy lại sau lỗi gửi mail gửi đúng mã đã ghi, không ra email thứ hai với mã khác. Khóa job là
      * UUID ngẫu nhiên do server tạo và không lộ ra ngoài; thiếu khóa thì dùng mã ngẫu nhiên.
      */
-    String codeFor(String jobKey) {
+    String findCode(String jobKey) {
         if (jobKey == null || jobKey.isBlank()) {
-            return newCode();
+            return generateCode();
         }
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
@@ -112,7 +112,7 @@ public class OtpMailHandler implements IJobHandler {
     }
 
     /** 6 chữ số, giữ số 0 ở đầu (BR-U01-20). */
-    static String newCode() {
+    static String generateCode() {
         return String.format("%06d", RANDOM.nextInt(1_000_000));
     }
 }

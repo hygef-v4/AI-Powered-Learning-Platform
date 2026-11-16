@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { describeMaterialError } from "../api";
 
 type ResourceOptions<T> = {
@@ -20,7 +20,7 @@ export function useMaterialResource<T>(
   useEffect(() => {
     if (!url) return;
     const controller = new AbortController();
-    apiFetch<T>(url, { signal: controller.signal }).then(
+    fetchApi<T>(url, { signal: controller.signal }).then(
       (data) => {
         if (!controller.signal.aborted) setState({ key, data });
       },

@@ -18,7 +18,7 @@ class QuestionRulesTest {
     static QuestionContent content(QuestionType type, List<String> correct, String... options) {
         List<QuestionOption> list = IntStream.range(0, options.length)
                 .mapToObj(i -> new QuestionOption(String.valueOf(i + 1), options[i])).toList();
-        return QuestionContent.of(type, "2 + 2 bằng mấy?", list, correct, null, new BigDecimal("1.5"),
+        return QuestionContent.createContent(type, "2 + 2 bằng mấy?", list, correct, null, new BigDecimal("1.5"),
                 Difficulty.EASY, List.of("số học"));
     }
 
@@ -57,10 +57,10 @@ class QuestionRulesTest {
     void typeAndStemAreRequiredAndTextIsBounded() {
         QuestionContent noType = content(null, List.of("1"), "3", "4");
         assertThat(codes(noType)).contains("TYPE_REQUIRED");
-        QuestionContent blankStem = QuestionContent.of(QuestionType.MCQ_SINGLE, "  ", single("3", "4").options(),
+        QuestionContent blankStem = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "  ", single("3", "4").options(),
                 List.of("1"), null, BigDecimal.ONE, null, null);
         assertThat(codes(blankStem)).contains("REQUIRED");
-        QuestionContent longStem = QuestionContent.of(QuestionType.MCQ_SINGLE, "a".repeat(20_001),
+        QuestionContent longStem = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "a".repeat(20_001),
                 single("3", "4").options(), List.of("1"), null, BigDecimal.ONE, null, null);
         assertThat(codes(longStem)).contains("TOO_LONG");
     }
@@ -68,11 +68,11 @@ class QuestionRulesTest {
     @Test
     void pointsArePositiveWithAtMostTwoDecimals() {
         for (String bad : new String[] {"0", "-1", "1.234", "10000"}) {
-            QuestionContent c = QuestionContent.of(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
+            QuestionContent c = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
                     List.of("1"), null, new BigDecimal(bad), null, null);
             assertThat(codes(c)).as(bad).contains("POINTS_INVALID");
         }
-        QuestionContent ok = QuestionContent.of(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
+        QuestionContent ok = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
                 List.of("1"), null, new BigDecimal("2.50"), null, null);
         assertThat(QuestionRules.validate(ok)).isEmpty();
     }
@@ -80,10 +80,10 @@ class QuestionRulesTest {
     @Test
     void atMostTenTagsAndDuplicatesIgnoringCaseAreDropped() {
         List<String> eleven = IntStream.range(0, 11).mapToObj(i -> "t" + i).toList();
-        QuestionContent many = QuestionContent.of(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
+        QuestionContent many = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
                 List.of("1"), null, BigDecimal.ONE, null, eleven);
         assertThat(codes(many)).contains("TAG_COUNT");
-        QuestionContent dup = QuestionContent.of(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
+        QuestionContent dup = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
                 List.of("1"), null, BigDecimal.ONE, null, List.of("Đại số", "đại số", " ", "Hình"));
         assertThat(dup.tags()).containsExactly("Đại số", "Hình");
         assertThat(dup.difficulty()).isEqualTo(Difficulty.MEDIUM);

@@ -23,5 +23,5 @@ public interface IGradingProposalRepository {
     List<GradingProposal> findForEvaluations(List<UUID> evaluationIds);
 
     /** Persists the proposal and returns its stored state. */
-    GradingProposal save(GradingProposal proposal);
+    GradingProposal saveProposal(GradingProposal proposal);
 }

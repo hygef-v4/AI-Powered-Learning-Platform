@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { emptyForm, nextOptionId, parseTags, toContent, toggleCorrect, validateForm, withType, type QuestionForm } from "@/features/quizzes/model/questionForm";
+import { createEmptyForm, generateNextOptionId, parseTags, convertToContent, toggleCorrect, validateForm, changeType, type QuestionForm } from "@/features/quizzes/model/questionForm";
 
 function filled(overrides: Partial<QuestionForm> = {}): QuestionForm {
   return {
-    ...emptyForm(),
+    ...createEmptyForm(),
     stem: "Thủ đô của Việt Nam?",
     options: [{ id: "1", text: "Hà Nội" }, { id: "2", text: "Huế" }],
     correctOptionIds: ["1"],
@@ -37,19 +37,19 @@ describe("questionForm (BR-U10-02, 03)", () => {
 
   it("đổi sang một đáp án chỉ giữ đáp án đầu; chọn đáp án theo loại", () => {
     const multi = filled({ type: "MCQ_MULTI", correctOptionIds: ["1", "2"] });
-    expect(withType(multi, "MCQ_SINGLE").correctOptionIds).toEqual(["1"]);
+    expect(changeType(multi, "MCQ_SINGLE").correctOptionIds).toEqual(["1"]);
     expect(toggleCorrect(filled(), "2").correctOptionIds).toEqual(["2"]);
     expect(toggleCorrect(multi, "2").correctOptionIds).toEqual(["1"]);
     expect(toggleCorrect(filled({ type: "MCQ_MULTI" }), "2").correctOptionIds).toEqual(["1", "2"]);
   });
 
   it("mã lựa chọn mới không trùng sau khi xóa; thẻ bỏ trùng không phân biệt hoa thường", () => {
-    expect(nextOptionId([{ id: "1", text: "" }, { id: "4", text: "" }])).toBe("5");
+    expect(generateNextOptionId([{ id: "1", text: "" }, { id: "4", text: "" }])).toBe("5");
     expect(parseTags("Đại số, đại số; Hình ,  ")).toEqual(["Đại số", "Hình"]);
   });
 
   it("chuyển sang nội dung gửi API", () => {
-    const content = toContent(filled({ defaultPoints: "2,5", explanation: "  ", tagsText: "a, b", correctOptionIds: ["1", "9"] }));
+    const content = convertToContent(filled({ defaultPoints: "2,5", explanation: "  ", tagsText: "a, b", correctOptionIds: ["1", "9"] }));
     expect(content).toMatchObject({ defaultPoints: 2.5, explanation: null, tags: ["a", "b"], correctOptionIds: ["1"] });
   });
 });

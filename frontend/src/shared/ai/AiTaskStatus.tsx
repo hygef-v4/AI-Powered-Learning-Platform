@@ -1,20 +1,21 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { usePollStatus } from "@/shared/status/usePollStatus";
 import { Button, Pill, type Tone } from "@/shared/ui";
 import type { AiTaskState, AiTaskView } from "./types";
+import { msg } from "@/i18n/msg";
 
 const FINAL: AiTaskState[] = ["READY", "FAILED", "UNKNOWN", "CANCELLED"];
 
 const LABEL: Record<AiTaskState, { text: string; tone: Tone }> = {
-  QUEUED: { text: "Đang chờ", tone: "neutral" },
-  RUNNING: { text: "Đang chạy", tone: "info" },
+  QUEUED: { text: msg("shared.ai.AiTaskStatus.pending"), tone: "neutral" },
+  RUNNING: { text: msg("shared.ai.AiTaskStatus.running"), tone: "info" },
   READY: { text: "Xong", tone: "success" },
-  FAILED: { text: "Lỗi", tone: "danger" },
-  UNKNOWN: { text: "Không rõ kết quả", tone: "warning" },
-  CANCELLED: { text: "Đã hủy", tone: "neutral" },
+  FAILED: { text: msg("shared.ai.AiTaskStatus.error"), tone: "danger" },
+  UNKNOWN: { text: msg("shared.ai.AiTaskStatus.unknownResult"), tone: "warning" },
+  CANCELLED: { text: msg("shared.ai.AiTaskStatus.cancelled"), tone: "neutral" },
 };
 
 type Props = {
@@ -27,7 +28,7 @@ type Props = {
 export function AiTaskStatus({ taskId, onFinished }: Props) {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
-  const fetcher = useCallback(() => apiFetch<AiTaskView>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}`), [taskId]);
+  const fetcher = useCallback(() => fetchApi<AiTaskView>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}`), [taskId]);
   const isFinal = useCallback(
     (task: AiTaskView) => {
       const done = FINAL.includes(task.state);
@@ -42,29 +43,28 @@ export function AiTaskStatus({ taskId, onFinished }: Props) {
     setCancelling(true);
     setCancelError(null);
     try {
-      await apiFetch<void>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}:cancel`, { method: "POST" });
+      await fetchApi<void>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}:cancel`, { method: "POST" });
     } catch {
-      setCancelError("Không hủy được, task có thể đã bắt đầu chạy.");
+      setCancelError(msg("shared.ai.AiTaskStatus.couldNotCancelTheTask"));
     } finally {
       setCancelling(false);
     }
   };
 
-  if (error && !data) return <p className="text-xs text-danger">Không xem được trạng thái yêu cầu AI.</p>;
-  if (!data) return <p className="text-xs text-muted">Đang tải trạng thái...</p>;
+  if (error && !data) return <p className="text-xs text-danger">{msg("shared.ai.AiTaskStatus.couldNotViewTheAi")}</p>;
+  if (!data) return <p className="text-xs text-muted">{msg("shared.ai.AiTaskStatus.loadingStatus")}</p>;
   const label = LABEL[data.state];
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
       <Pill tone={label.tone}>{label.text}</Pill>
       {data.state === "UNKNOWN" && (
-        <span className="text-muted">Nhà cung cấp không trả kết quả rõ ràng; kiểm tra lại trước khi gửi lần nữa.</span>
+        <span className="text-muted">{msg("shared.ai.AiTaskStatus.theProviderDidNotReturn")}</span>
       )}
       {data.safeError && data.state !== "UNKNOWN" && <span className="text-danger">{data.safeError}</span>}
-      {data.applyResult === "STALE" && <span className="text-warning">Dữ liệu đã đổi trong lúc chờ, kết quả không được áp dụng.</span>}
+      {data.applyResult === "STALE" && <span className="text-warning">{msg("shared.ai.AiTaskStatus.theDataChangedWhileWaiting")}</span>}
       {data.state === "QUEUED" && (
         <Button size="sm" onClick={() => void cancel()} disabled={cancelling}>
-          Hủy
-        </Button>
+          {msg("shared.ai.AiTaskStatus.cancel")}</Button>
       )}
       {cancelError && <span className="text-danger">{cancelError}</span>}
     </div>

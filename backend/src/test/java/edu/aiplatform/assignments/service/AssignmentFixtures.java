@@ -148,9 +148,9 @@ final class AssignmentFixtures {
                 teacher.accountId(), NOW, NOW, 3);
         store.put(a.id(), a);
         a.parts().forEach(part -> {
-            AssignmentRubric rubric = AssignmentRubric.empty(a.id(), part.partId(), NOW);
+            AssignmentRubric rubric = AssignmentRubric.createEmptyRubric(a.id(), part.partId(), NOW);
             if (completeRubrics) {
-                rubric = rubric.withCriteria(completeCriteria(), NOW);
+                rubric = rubric.replaceCriteria(completeCriteria(), NOW);
             }
             rubricStore.put(rubric.id(), rubric);
         });
@@ -158,7 +158,7 @@ final class AssignmentFixtures {
     }
 
     Assignment withStatus(Assignment a, AssignmentStatus status, Instant opensAt, Instant closesAt) {
-        Assignment next = a.withSchedule(status, opensAt, closesAt, null, 2, NOW);
+        Assignment next = a.applySchedule(status, opensAt, closesAt, null, 2, NOW);
         store.put(next.id(), next);
         return next;
     }
@@ -193,26 +193,26 @@ final class AssignmentFixtures {
     }
 
     private void wireAssignments() {
-        when(assignments.find(any())).thenAnswer(i -> Optional.ofNullable(store.get(i.<UUID>getArgument(0))));
+        when(assignments.findAssignment(any())).thenAnswer(i -> Optional.ofNullable(store.get(i.<UUID>getArgument(0))));
         when(assignments.findForUpdate(any())).thenAnswer(i -> Optional.ofNullable(store.get(i.<UUID>getArgument(0))));
         doAnswer(i -> {
             Assignment a = i.getArgument(0);
             store.put(a.id(), a);
             return null;
         }).when(assignments).insert(any());
-        when(assignments.save(any())).thenAnswer(i -> {
+        when(assignments.saveAssignment(any())).thenAnswer(i -> {
             Assignment a = i.getArgument(0);
             Assignment current = store.get(a.id());
             if (current == null || current.version() != a.version()) {
                 throw new OptimisticLockingFailureException("assignment");
             }
-            Assignment next = a.withVersion(a.version() + 1);
+            Assignment next = a.changeVersion(a.version() + 1);
             store.put(next.id(), next);
             return next;
         });
-        when(assignments.delete(any(), anyLong())).thenAnswer(i -> {
+        when(assignments.deleteAssignment(any(), anyLong())).thenAnswer(i -> {
             Assignment current = store.get(i.<UUID>getArgument(0));
-            if (current == null || current.version() != i.<Long>getArgument(1) || !current.editable()) {
+            if (current == null || current.version() != i.<Long>getArgument(1) || !current.canEdit()) {
                 return 0;
             }
             store.remove(current.id());
@@ -224,33 +224,33 @@ final class AssignmentFixtures {
             if (current == null || current.status() != AssignmentStatus.SCHEDULED || current.opensAt().isAfter(now)) {
                 return 0;
             }
-            store.put(current.id(), current.withStatus(AssignmentStatus.OPEN, now).withVersion(current.version() + 1));
+            store.put(current.id(), current.changeStatus(AssignmentStatus.OPEN, now).changeVersion(current.version() + 1));
             return 1;
         });
         when(assignments.hasOpenVersion(any())).thenAnswer(i -> store.values().stream().anyMatch(a ->
                 i.getArgument(0).equals(a.sourceAssignmentId()) && a.origin() == AssignmentOrigin.NEW_VERSION
-                        && a.editable()));
+                        && a.canEdit()));
         when(assignments.listOfClass(any())).thenAnswer(i -> store.values().stream()
                 .filter(a -> a.scope() == AssignmentScope.CLASS && i.getArgument(0).equals(a.classId())).toList());
         when(assignments.listForClass(any(), any())).thenAnswer(i -> store.values().stream()
                 .filter(a -> (a.scope() == AssignmentScope.CLASS && i.getArgument(0).equals(a.classId()))
-                        || (a.scope() == AssignmentScope.SUBJECT && a.published())).toList());
+                        || (a.scope() == AssignmentScope.SUBJECT && a.hasPublished())).toList());
         when(assignments.listOfSubject(any())).thenAnswer(i -> store.values().stream()
                 .filter(a -> a.scope() == AssignmentScope.SUBJECT).toList());
     }
 
     private void wireRubrics() {
         when(rubricRepository.listByAssignment(any())).thenAnswer(i -> rubricsOf(i.getArgument(0)));
-        when(rubricRepository.find(any())).thenAnswer(i -> Optional.ofNullable(rubricStore.get(i.<UUID>getArgument(0))));
+        when(rubricRepository.findRubric(any())).thenAnswer(i -> Optional.ofNullable(rubricStore.get(i.<UUID>getArgument(0))));
         doAnswer(i -> {
             AssignmentRubric r = i.getArgument(0);
             rubricStore.put(r.id(), r);
             return null;
         }).when(rubricRepository).insert(any());
-        when(rubricRepository.save(any())).thenAnswer(i -> {
+        when(rubricRepository.saveRubric(any())).thenAnswer(i -> {
             AssignmentRubric r = i.getArgument(0);
             AssignmentRubric current = rubricStore.get(r.id());
-            if (current == null || current.version() != r.version() || current.locked()) {
+            if (current == null || current.version() != r.version() || current.hasLocked()) {
                 throw new OptimisticLockingFailureException("rubric");
             }
             AssignmentRubric next = new AssignmentRubric(r.id(), r.assignmentId(), r.partId(), r.criteria(),
@@ -262,7 +262,7 @@ final class AssignmentFixtures {
             UUID id = i.getArgument(0);
             Collection<String> parts = i.getArgument(1);
             List<UUID> gone = rubricStore.values().stream().filter(r -> r.assignmentId().equals(id)
-                    && parts.contains(r.partId()) && !r.locked()).map(AssignmentRubric::id).toList();
+                    && parts.contains(r.partId()) && !r.hasLocked()).map(AssignmentRubric::id).toList();
             gone.forEach(rubricStore::remove);
             return gone.size();
         });
@@ -271,7 +271,7 @@ final class AssignmentFixtures {
             Instant now = i.getArgument(1);
             int count = 0;
             for (AssignmentRubric r : List.copyOf(rubricStore.values())) {
-                if (r.assignmentId().equals(id) && !r.locked()) {
+                if (r.assignmentId().equals(id) && !r.hasLocked()) {
                     rubricStore.put(r.id(), new AssignmentRubric(r.id(), r.assignmentId(), r.partId(), r.criteria(),
                             r.totalPoints(), now, r.createdAt(), now, r.version() + 1));
                     count++;

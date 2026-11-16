@@ -29,13 +29,13 @@ class BackupEncryptorTest {
 
     static byte[] encrypt(byte[] plain) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        BackupEncryptor.encrypt(new ByteArrayInputStream(plain), out, keys.getPublic());
+        BackupEncryptor.encryptArchive(new ByteArrayInputStream(plain), out, keys.getPublic());
         return out.toByteArray();
     }
 
     static byte[] decrypt(byte[] archive, KeyPair pair) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        BackupEncryptor.decrypt(new ByteArrayInputStream(archive), out, pair.getPrivate());
+        BackupEncryptor.decryptArchive(new ByteArrayInputStream(archive), out, pair.getPrivate());
         return out.toByteArray();
     }
 

@@ -1,6 +1,6 @@
 # Kết quả sửa các điểm rà soát trên nền staging — 2026-11-16
 
-[Kế hoạch và phạm vi](../plans/code-generation-plan/2026-11-16-review-fixes-on-staging.md). Nhánh `chi-cuongg/audit-project-bugs-docs` trên `origin/staging@f1c351dd`.
+[Kế hoạch và phạm vi](../plans/code-generation-plan/2026-11-16-review-fixes-on-staging.md). Nhánh `chi-cuongg/audit-project-bugs-docs`, làm trên `origin/staging@f1c351dd` rồi gộp `origin/staging@5f9c0173` (giao diện đa ngôn ngữ, Google Drive). Số liệu dưới đây là của bản đã gộp.
 
 ## Đã sửa
 
@@ -17,14 +17,14 @@
 
 | Kiểm tra | Kết quả |
 |---|---|
-| Backend `mvn -B verify`, JDK 21 (CI dùng JDK 17), có Docker | 2.492 test, 0 thất bại, 0 lỗi, 1 bỏ qua (`GradingAiEvaluationTest`, cần khóa AI thật); JAR đóng gói được |
+| Backend `mvn -B verify`, JDK 21 (CI dùng JDK 17), có Docker | 2.546 test, 0 thất bại, 0 lỗi, 1 bỏ qua (`GradingAiEvaluationTest`, cần khóa AI thật); JAR đóng gói được |
 | `scripts/assert-required-backend-tests.ps1` | Qua: 31, 7, 11, 1, 27 test của năm bộ bắt buộc, không bỏ qua; 58 ca tích hợp có truy vết |
 | Migration trên PostgreSQL thật (Testcontainers) | 48 migration áp xong, tới `v20261116.1010` |
 | Frontend ESLint, TypeScript | Qua |
-| Frontend Vitest | 1.134/1.134 qua, 156 file |
+| Frontend Vitest | 1.159/1.159 qua, 157 file |
 | Frontend production build | Qua |
 
-Lần chạy không có Docker trước đó cho 2.350 test, 0 thất bại, 5 lỗi và 170 bỏ qua, đều do thiếu Docker; lần có Docker ở trên thay thế kết quả đó.
+Trước khi gộp, trên `f1c351dd`: backend 2.492 test không thất bại, frontend 1.134/1.134. Khi gộp có 5 file xung đột: `aidlc-state.md`, `audit.md` và ba file frontend mà staging vừa chuyển sang khóa thông báo đa ngôn ngữ; ba file đó lấy bản staging rồi bỏ lại các dòng `GRADE_LOCKED` và nhãn đánh giá chéo, kèm ba khóa thông báo không còn dùng trong `en.json`, `ja.json`, `vi.json`.
 
 ## Chưa kiểm
 

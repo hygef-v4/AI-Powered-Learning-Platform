@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { SettingsSectionHost } from "@/features/settings/components/SettingsSectionHost";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Cài đặt" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.admin.settings.sections.sectionKey.page.settings") };
+}
 
 export default async function Page({
   params,

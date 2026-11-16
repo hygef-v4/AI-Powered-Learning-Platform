@@ -2,7 +2,8 @@
 export { DiagramEditor, decodeSvgDataUri, DRAWIO_ORIGIN } from "./DiagramEditor";
 export { DiagramViewPage, type DiagramData } from "./DiagramViewPage";
 export { CommentRail, useWideLayout, type DocumentComment } from "./CommentRail";
-export { AutoTextarea, DocumentEditor, ToolbarButton } from "./DocumentEditor";
+export { AutoTextarea, DocumentEditor } from "./DocumentEditor";
+export { ToolbarButton } from "./ToolbarButton";
 export { DocxImportDialog, type DocxPreview } from "./DocxImportDialog";
 export { BlockView, DocumentViewer, RunsView, type ImageUrl } from "./DocumentViewer";
 export { formatPoints, RubricNote, RubricViewer } from "./RubricViewer";

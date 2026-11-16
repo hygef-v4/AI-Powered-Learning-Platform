@@ -25,7 +25,7 @@ class AssignmentSourceImageSourceTest {
         var assignment = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
         AtomicReference<AssignmentAiDraft> saved = new AtomicReference<>();
         doAnswer(call -> { saved.set(call.getArgument(0)); return null; }).when(f.drafts).insert(any());
-        when(f.drafts.find(any())).thenAnswer(call -> Optional.ofNullable(saved.get()));
+        when(f.drafts.findDraft(any())).thenAnswer(call -> Optional.ofNullable(saved.get()));
         when(f.drafts.updatePendingProvenance(any(), any())).thenAnswer(call -> {
             ObjectNode next = ((ObjectNode) call.getArgument(1)).deepCopy();
             ((ObjectNode) saved.get().provenance()).removeAll().setAll(next);

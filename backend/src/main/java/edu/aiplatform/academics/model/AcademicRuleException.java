@@ -11,7 +11,7 @@ public class AcademicRuleException extends RuntimeException {
     }
 
     /** Returns the domain error code. */
-    public String code() {
+    public String readCode() {
         return code;
     }
 }

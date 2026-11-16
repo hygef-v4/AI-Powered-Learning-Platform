@@ -1,10 +1,11 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSession } from "@/features/identity/hooks/session";
+import { useSession } from "@/features/identity/hooks/SessionProvider";
 import { Icon } from "@/shared/ui/Icon";
 import { notificationsApi } from "../api";
 import { NotificationPopup } from "./NotificationPopup";
 import styles from "../styles/notifications.module.css";
+import { msg } from "@/i18n/msg";
 export function NotificationBell() {
   const session = useSession();
   return session.status === "authenticated" ? (
@@ -40,12 +41,12 @@ function Bell() {
     function connect() {
       if (stopped || typeof EventSource === "undefined") return;
       stream = new EventSource("/api/v1/me/notifications/events", { withCredentials: true });
-      const changed = () => {
+      const syncPermission = () => {
         attempts = 0;
         handleRefresh();
       };
-      stream.onmessage = changed;
-      stream.addEventListener("notification-changed", changed);
+      stream.onmessage = syncPermission;
+      stream.addEventListener("notification-changed", syncPermission);
       stream.onerror = () => {
         stream?.close();
         handleRefresh();
@@ -64,11 +65,11 @@ function Bell() {
   }, [handleRefresh]);
   useEffect(() => {
     if (!open) return;
-    const outside = (e: PointerEvent) => {
+    const closeOnOutside = (e: PointerEvent) => {
       if (e.target instanceof Node && !host.current?.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("pointerdown", outside);
-    return () => document.removeEventListener("pointerdown", outside);
+    document.addEventListener("pointerdown", closeOnOutside);
+    return () => document.removeEventListener("pointerdown", closeOnOutside);
   }, [open]);
   function handleClose() {
     setOpen(false);
@@ -81,7 +82,7 @@ function Bell() {
         data-testid="notification-bell"
         type="button"
         aria-label={
-          failed ? "Thông báo, chưa tải được số chưa đọc" : `Thông báo, ${count} chưa đọc`
+          failed ? msg("notifications.components.NotificationBell.notificationsUnreadCountNotLoaded") : msg("notifications.components.NotificationBell.notificationsUnread", { count: String(count) })
         }
         aria-expanded={open}
         aria-controls={open ? "notification-popup" : undefined}

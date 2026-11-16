@@ -14,17 +14,20 @@ import java.util.UUID;
 /** Bảng {@code quizzes}, {@code quiz_items}; chỉ dùng trong U10. Ghi có điều kiện {@code version} (NFR-U10-10). */
 public interface IQuizRepository {
 
-    Optional<Quiz> find(UUID id);
+    Optional<Quiz> findQuiz(UUID id);
+
+    /** Serialize paper edits, retirement and attempt starts until transaction commit. */
+    void lockQuiz(UUID id);
 
     void insert(Quiz quiz);
 
     /** Cập nhật khi {@code version} trong DB còn bằng {@code quiz.version()}; tăng version. */
-    boolean update(Quiz quiz);
+    boolean updateQuiz(Quiz quiz);
 
     /** Xóa Quiz chưa từng phát hành cùng câu, câu riêng, đề xuất AI (BR-U10-24). */
-    boolean delete(UUID id, long version);
+    boolean deleteQuiz(UUID id, long version);
 
-    List<QuizItem> items(UUID quizId);
+    List<QuizItem> listItems(UUID quizId);
 
     void replaceItems(UUID quizId, List<QuizItem> items);
 
@@ -52,7 +55,7 @@ public interface IQuizRepository {
     Optional<Quiz> findOpenInVersionChain(UUID quizId);
 
     /** Lớn nhất {@code version_no} trong chuỗi version bắt đầu từ Quiz gốc của {@code quizId}. */
-    int maxVersionNo(UUID quizId);
+    int findMaxVersionNo(UUID quizId);
 
     record QuizSummary(Quiz quiz, int itemCount, BigDecimal maxScore) {
     }

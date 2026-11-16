@@ -122,7 +122,7 @@ public class GradebookService {
 
         // Step 2: Find the matching student and map their gradebook row
         var student = data.students().stream().findFirst()
-                .orElseThrow(() -> ApiException.notFound("STUDENT_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("STUDENT_NOT_FOUND"));
         return mapGradebookRow(student, data);
     }
 
@@ -137,7 +137,7 @@ public class GradebookService {
     private GradebookData loadGradebook(UUID classId, UUID accountId) {
         // Step 1: Verify course class exists and load gradable assignment columns
         var courseClass = classAccess.getClassRef(classId)
-                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         var columns = listAssignmentColumns(courseClass);
 
         // Step 2: Index current submission progress (individual and group submissions)
@@ -211,7 +211,7 @@ public class GradebookService {
             if (column.submissionMode() == SubmissionMode.GROUP) {
                 var provider = groupSubmissionSourceProvider.getIfAvailable();
                 if (provider == null) {
-                    throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
+                    throw ApiException.createUnavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
                             "Group submission source unavailable");
                 }
                 for (var status : provider.listGroupSubmissions(column.id(), classId)) {
@@ -293,10 +293,10 @@ public class GradebookService {
     public StudentGradeView loadAttemptGrade(Actor actor, UUID attemptId) {
         // Step 1: Locate evaluation and verify that the caller is the student owner
         var evaluation = evaluationRepository.findByAttemptId(attemptId)
-                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         gradingAccess.requireStudent(actor, evaluation.classId);
         if (!actor.accountId().equals(evaluation.accountId))
-            throw ApiException.notFound("GRADE_NOT_FOUND");
+            throw ApiException.createNotFound("GRADE_NOT_FOUND");
 
         // Step 2: Hide score and feedback breakdown if grade is still DRAFT/FINALIZED (not yet PUBLISHED)
         if (evaluation.state != EvaluationStatus.PUBLISHED)
@@ -376,14 +376,14 @@ public class GradebookService {
 
         // Step 2: Validate class and assignment scope
         var courseClass = classAccess.getClassRef(classId)
-                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         var assignment = assignmentQuery.get(assignmentId)
-                .orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("ASSIGNMENT_NOT_FOUND"));
         SubmissionReviewService.requireAssignment(assignment, courseClass);
         if (assignment.scope() == AssignmentScope.SUBJECT
                 && (assignment.status() == AssignmentStatus.DRAFT
                         || assignment.status() == AssignmentStatus.REVIEWED))
-            throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
+            throw ApiException.createNotFound("ASSIGNMENT_NOT_FOUND");
 
         // Step 3: For students, check whether the teacher enabled grade distribution visibility
         if (student && !gradeDistributionVisibilityRepository.findVisibility(classId, assignmentId)
@@ -421,7 +421,7 @@ public class GradebookService {
         // Step 1: Check teacher export permission and format parameter (csv or xlsx)
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
         if (!Set.of("csv", "xlsx").contains(format))
-            throw ApiException.badRequest("INVALID_EXPORT_FORMAT", "Choose csv or xlsx");
+            throw ApiException.createBadRequest("INVALID_EXPORT_FORMAT", "Choose csv or xlsx");
 
         List<List<String>> output = new ArrayList<>();
 
@@ -431,7 +431,7 @@ public class GradebookService {
         var selectedColumns = data.columns().stream()
                 .filter(column -> assignmentId == null || assignmentId.equals(column.id())).toList();
         if (assignmentId != null && selectedColumns.isEmpty())
-            throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
+            throw ApiException.createNotFound("ASSIGNMENT_NOT_FOUND");
         var header = new ArrayList<>(List.of("STT", "MSSV", "Họ và tên", "Email"));
         for (var column : selectedColumns) {
             header.add(column.title() + " (/" + column.maxScore().stripTrailingZeros().toPlainString() + ")");

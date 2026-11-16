@@ -22,8 +22,8 @@ public class McpAuthoringRequirementsTools implements IMcpToolProvider {
             case "QUIZ"->{proposal="save_quiz_draft";create="create_quiz_draft";}
             case "BANK"->{proposal="save_question_bank_draft";create=proposal;}default->throw McpInput.invalid();}
         try {
-            var save=registry.find(proposal,actor.role(),Access.READ_WRITE).orElseThrow(McpInput::invalid);
-            var creation=registry.find(create,actor.role(),Access.READ_WRITE).orElseThrow(McpInput::invalid);
+            var save=registry.findTool(proposal,actor.role(),Access.READ_WRITE).orElseThrow(McpInput::invalid);
+            var creation=registry.findTool(create,actor.role(),Access.READ_WRITE).orElseThrow(McpInput::invalid);
             return new McpToolResult(false,Map.of("kind",kind,"proposalInputSchema",json.readTree(save.definition().parameterSchema()),
                     "createInputSchema",json.readTree(creation.definition().parameterSchema()),
                     "maxAiGradingRubricItems",AiGradingLimits.MAX_RUBRIC_ITEMS,

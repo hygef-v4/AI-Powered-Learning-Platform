@@ -34,13 +34,13 @@ public final class QuizRules {
         List<Violation> violations = new ArrayList<>();
         if (title == null || title.isBlank()) {
             violations.add(new Violation("title", "REQUIRED", "Tên quiz không được để trống"));
-        } else if (length(title) > MAX_TITLE) {
+        } else if (measureLength(title) > MAX_TITLE) {
             violations.add(new Violation("title", "TOO_LONG", "Tên quiz tối đa 200 ký tự"));
         }
-        if (instructions != null && length(instructions) > MAX_INSTRUCTIONS) {
+        if (instructions != null && measureLength(instructions) > MAX_INSTRUCTIONS) {
             violations.add(new Violation("instructions", "TOO_LONG", "Hướng dẫn tối đa 5.000 ký tự"));
         }
-        if (notice != null && length(notice) > MAX_NOTICE) {
+        if (notice != null && measureLength(notice) > MAX_NOTICE) {
             violations.add(new Violation("activityNotice", "TOO_LONG", "Lời báo tối đa 1.000 ký tự"));
         }
         violations.addAll(validateSettings(settings));
@@ -82,11 +82,11 @@ public final class QuizRules {
                 violations.add(new Violation("settings.leavePenalty.freeLeaves", "PENALTY_INVALID",
                         "Số lần được miễn từ 0 đến 50"));
             }
-            if (!validPoints(penalty.pointsPerLeave())) {
+            if (!isValidPoints(penalty.pointsPerLeave())) {
                 violations.add(new Violation("settings.leavePenalty.pointsPerLeave", "PENALTY_INVALID",
                         "Điểm trừ mỗi lần phải lớn hơn 0, tối đa 2 chữ số thập phân"));
             }
-            if (penalty.maxPenalty() != null && !validPoints(penalty.maxPenalty())) {
+            if (penalty.maxPenalty() != null && !isValidPoints(penalty.maxPenalty())) {
                 violations.add(new Violation("settings.leavePenalty.maxPenalty", "PENALTY_INVALID",
                         "Mức trừ tối đa phải lớn hơn 0, tối đa 2 chữ số thập phân"));
             }
@@ -117,7 +117,7 @@ public final class QuizRules {
         int total = 0;
         for (DrawRule rule : rules) {
             String field = "drawRules[" + rule.position() + "]";
-            if (rule.tag() == null || rule.tag().isBlank() || length(rule.tag()) > MAX_TAG) {
+            if (rule.tag() == null || rule.tag().isBlank() || measureLength(rule.tag()) > MAX_TAG) {
                 violations.add(new Violation(field, "TAG_INVALID", "Thẻ từ 1 đến 100 ký tự"));
             } else if (!seen.add(rule.tag().strip().toLowerCase(Locale.ROOT) + "/" + rule.difficulty())) {
                 violations.add(new Violation(field, "RULE_DUPLICATE", "Quy tắc " + rule.position()
@@ -126,7 +126,7 @@ public final class QuizRules {
             if (rule.questionCount() < 1 || rule.questionCount() > MAX_ITEMS) {
                 violations.add(new Violation(field, "COUNT_INVALID", "Số câu mỗi quy tắc từ 1 đến 200"));
             }
-            if (!validPoints(rule.pointsEach())) {
+            if (!isValidPoints(rule.pointsEach())) {
                 violations.add(new Violation(field, "POINTS_INVALID", "Điểm mỗi câu phải lớn hơn 0, tối đa 2 chữ số thập phân"));
             }
             total += Math.max(rule.questionCount(), 0);
@@ -148,7 +148,7 @@ public final class QuizRules {
             if (!seen.add(item.questionId())) {
                 violations.add(new Violation("items", "ITEM_DUPLICATE", "Một câu chỉ xuất hiện một lần trong quiz"));
             }
-            if (!validPoints(item.points())) {
+            if (!isValidPoints(item.points())) {
                 violations.add(new Violation("items", "POINTS_INVALID",
                         "Điểm câu phải lớn hơn 0, tối đa 2 chữ số thập phân"));
             }
@@ -188,12 +188,12 @@ public final class QuizRules {
         return List.copyOf(violations);
     }
 
-    public static boolean validPoints(BigDecimal points) {
+    public static boolean isValidPoints(BigDecimal points) {
         return points != null && points.signum() > 0 && points.compareTo(QuestionRules.MAX_POINTS) <= 0
                 && points.stripTrailingZeros().scale() <= 2;
     }
 
-    private static int length(String value) {
+    private static int measureLength(String value) {
         return value.codePointCount(0, value.length());
     }
 }

@@ -14,7 +14,7 @@ import edu.aiplatform.shared.error.ApiException;
 public class MaterialExceptionHandler {
     @ExceptionHandler(ApiException.class)
     public ProblemDetail handleApiException(ApiException failure) {
-        return createProblem(failure.status(), failure.code(), failure.getMessage());
+        return createProblem(failure.readStatus(), failure.readCode(), failure.getMessage());
     }
 
     @ExceptionHandler({

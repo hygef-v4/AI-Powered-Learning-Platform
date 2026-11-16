@@ -46,12 +46,12 @@ class GradingPromptBuilderTest {
         ((com.fasterxml.jackson.databind.node.ObjectNode) payload.path("itemScoresByRubric").path(rubricId.toString()))
                 .put(partialItem.toString(), new BigDecimal("0.25")).put(fullItem.toString(), BigDecimal.ONE);
         var checker = new edu.aiplatform.ai.service.JsonSchemaChecker(json);
-        assertThat(checker.check(schema, payload)).isEmpty();
+        assertThat(checker.validateValue(schema, payload)).isEmpty();
         var wrongTotal = payload.deepCopy().put("score", "9.50");
-        assertThat(checker.check(schema, wrongTotal)).isPresent();
+        assertThat(checker.validateValue(schema, wrongTotal)).isPresent();
         var contradictory = payload.deepCopy();
         contradictory.putObject("checks").putArray(rubricId.toString()).add(zeroItem.toString());
-        assertThat(checker.check(schema, contradictory)).isPresent();
+        assertThat(checker.validateValue(schema, contradictory)).isPresent();
         contradictory.put("score", "1.25");
         assertThatThrownBy(() -> new GradingProposalValidator(json).validateProposal(
                 contradictory, List.of(active), Set.of("active")))

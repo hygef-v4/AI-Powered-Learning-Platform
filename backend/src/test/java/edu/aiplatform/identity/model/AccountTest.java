@@ -13,7 +13,7 @@ class AccountTest {
     private static final Instant NOW = Instant.parse("2026-10-17T08:00:00Z");
 
     private static Account pending() {
-        return Account.newPending(UUID.randomUUID(), "taivm@fpt.edu.vn", Role.STUDENT, "Tài", null, NOW);
+        return Account.createPending(UUID.randomUUID(), "taivm@fpt.edu.vn", Role.STUDENT, "Tài", null, NOW);
     }
 
     private static Account withPasswordAndLock(Instant lockedUntil) {
@@ -32,8 +32,8 @@ class AccountTest {
 
     @Test
     void reopenReturnsToActiveOnlyWhenPasswordExists() {
-        assertThat(pending().statusAfterReopen()).isEqualTo(AccountStatus.PENDING);
-        assertThat(withPasswordAndLock(null).statusAfterReopen()).isEqualTo(AccountStatus.ACTIVE);
+        assertThat(pending().resolveStatusAfterReopen()).isEqualTo(AccountStatus.PENDING);
+        assertThat(withPasswordAndLock(null).resolveStatusAfterReopen()).isEqualTo(AccountStatus.ACTIVE);
     }
 
     @Test

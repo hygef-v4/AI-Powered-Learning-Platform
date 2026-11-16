@@ -3,10 +3,11 @@
 import { accountMenuEntries } from "@/features/identity/slots";
 import { settingsSectionRegistry } from "@/features/settings/slots";
 import { AiConnectionsPanel, TeacherQuotaPanel } from "./admin/components/AiSettingsPanels";
+import { msg } from "@/i18n/msg";
 
 accountMenuEntries.register({
   key: "ai-connection",
-  title: "Kết nối AI",
+  title: msg("ai.register.aiConnection"),
   href: "/ai/connection",
   icon: "smart_toy",
   roles: ["STUDENT", "TEACHER", "SUBJECT_MANAGER"],

@@ -84,7 +84,7 @@ public class SubmissionReviewService {
                 || !(assignment.scope() == AssignmentScope.CLASS
                         ? courseClass.classId().equals(assignment.classId())
                         : courseClass.subjectId().equals(assignment.subjectId())))
-            throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
+            throw ApiException.createNotFound("ASSIGNMENT_NOT_FOUND");
     }
 
     /**
@@ -92,7 +92,7 @@ public class SubmissionReviewService {
      */
     public static void validatePage(int page, int size) {
         if (page < 1 || size < 1 || size > 100 || page > 100000)
-            throw ApiException.badRequest("INVALID_PAGE", "Invalid page or size");
+            throw ApiException.createBadRequest("INVALID_PAGE", "Invalid page or size");
     }
 
     /**
@@ -133,9 +133,9 @@ public class SubmissionReviewService {
     Listing listRows(Actor actor, UUID classId, UUID assignmentId, String filter, Boolean late) {
         gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
         var courseClass = classAccess.getClassRef(classId)
-                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         var assignment = assignmentQuery.get(assignmentId)
-                .orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("ASSIGNMENT_NOT_FOUND"));
         requireAssignment(assignment, courseClass);
         var evals = evaluationRepository.findForAssignmentAndClass(assignmentId, classId);
         var students = classAccess.listActiveStudents(classId);
@@ -148,7 +148,7 @@ public class SubmissionReviewService {
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
         gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
         var courseClass = classAccess.getClassRef(classId)
-                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         var students = classAccess.listActiveStudents(classId);
         var contacts = accountLookup.getContacts(students);
         var all = evaluationRepository.findForClass(classId).stream()
@@ -174,7 +174,7 @@ public class SubmissionReviewService {
         if (assignment.submissionMode() == SubmissionMode.GROUP) {
             var provider = groupSubmissionSourceProvider.getIfAvailable();
             if (provider == null)
-                throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
+                throw ApiException.createUnavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
                         "Group submission source unavailable");
             for (var submission : provider.listGroupSubmissions(assignmentId, classId)) {
                 var evaluation = evals.stream()
@@ -235,7 +235,7 @@ public class SubmissionReviewService {
         if (filter != null && !filter.isBlank() && !filter.equals("ALL") && !Set
                 .of("PENDING", "DRAFT", "FINALIZED", "PUBLISHED", "NOT_SUBMITTED", "IN_PROGRESS")
                 .contains(filter))
-            throw ApiException.badRequest("INVALID_FILTER", "Unknown status filter");
+            throw ApiException.createBadRequest("INVALID_FILTER", "Unknown status filter");
         var filtered = rows.stream()
                 .filter(r -> filter == null || filter.isBlank() || filter.equals("ALL")
                         || r.status().equals(filter))
@@ -257,12 +257,12 @@ public class SubmissionReviewService {
      */
     public EvaluationDetail loadEvaluation(Actor actor, UUID id, String status, Boolean late) {
         var evaluation = evaluationRepository.findById(id)
-                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_REVIEW);
         var assignment = assignmentQuery.get(evaluation.assignmentId).orElseThrow(
-                () -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
+                () -> ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
         var courseClass = classAccess.getClassRef(evaluation.classId)
-                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         requireAssignment(assignment, courseClass);
         DocumentModel document;
         UUID activityOwner = evaluation.accountId;
@@ -270,25 +270,25 @@ public class SubmissionReviewService {
         List<GroupSectionAuthor> authors = List.of();
         if (evaluation.kind == EvaluationKind.ATTEMPT) {
             var submission = submissionQuery.getSubmission(evaluation.attemptId)
-                    .orElseThrow(() -> ApiException.unavailable("SUBMISSION_UNAVAILABLE",
+                    .orElseThrow(() -> ApiException.createUnavailable("SUBMISSION_UNAVAILABLE",
                             "Submission unavailable"));
             if (!evaluation.submissionHash.equals(submission.receiptHash()))
-                throw ApiException.conflict("SUBMISSION_CHANGED", "Submitted snapshot changed");
+                throw ApiException.createConflict("SUBMISSION_CHANGED", "Submitted snapshot changed");
             document = submission.content();
             ref = new WorkRef(WorkKind.ASSIGNMENT_ATTEMPT, evaluation.attemptId,
                     evaluation.classId);
         } else {
             var provider = groupSubmissionSourceProvider.getIfAvailable();
             if (provider == null)
-                throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
+                throw ApiException.createUnavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
                         "Group submission unavailable");
             var submission = provider.getGroupSubmission(evaluation.groupDocumentId)
-                    .orElseThrow(() -> ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
+                    .orElseThrow(() -> ApiException.createUnavailable("GROUP_SUBMISSIONS_UNAVAILABLE",
                             "Group submission unavailable"));
             if (!evaluation.submissionHash.equals(submission.submissionHash())
                     || !evaluation.classId.equals(submission.classId())
                     || !evaluation.assignmentId.equals(submission.assignmentId()))
-                throw ApiException.conflict("SUBMISSION_CHANGED", "Group submission changed");
+                throw ApiException.createConflict("SUBMISSION_CHANGED", "Group submission changed");
             document = submission.content();
             authors = submission.sectionAuthors();
             ref = new WorkRef(WorkKind.GROUP_DOCUMENT, evaluation.groupDocumentId,

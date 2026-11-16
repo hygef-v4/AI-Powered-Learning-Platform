@@ -52,8 +52,8 @@ public class AssignmentsContractStubs {
 
     static AssignmentView sampleAssignment(UUID assignmentId) {
         Instant now = Instant.now();
-        return new AssignmentView(assignmentId, AssignmentScope.CLASS, Stubs.derivedId("class", assignmentId),
-                Stubs.derivedId("subject", assignmentId), 1, "Bài mẫu", SubmissionMode.INDIVIDUAL, GradingMode.GRADED,
+        return new AssignmentView(assignmentId, AssignmentScope.CLASS, Stubs.deriveId("class", assignmentId),
+                Stubs.deriveId("subject", assignmentId), 1, "Bài mẫu", SubmissionMode.INDIVIDUAL, GradingMode.GRADED,
                 false, AssignmentStatus.OPEN, now.minus(Duration.ofDays(1)), now.plus(Duration.ofDays(7)), null, null,
                 false, null, List.of());
     }
@@ -64,7 +64,7 @@ public class AssignmentsContractStubs {
         return Stubs.announce(IAssignmentQuery.class, new IAssignmentQuery() {
             @Override
             public void lockSubmission(UUID assignmentId) {
-                throw edu.aiplatform.shared.error.ApiException.unavailable(
+                throw edu.aiplatform.shared.error.ApiException.createUnavailable(
                         "ASSIGNMENT_DEPENDENCY_UNAVAILABLE", "Assignment service unavailable");
             }
 

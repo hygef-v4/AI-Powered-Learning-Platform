@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
  * refresh, tối đa 7 ngày tính từ {@code issuedAt} (BR-U01-44). Lỗi Redis để nổi lên ({@code RedisConnectionFailureException}).
  * Token cũ dùng lại trong {@link #REUSE_GRACE} sau khi xoay là hai tab/request refresh cùng lúc, không phải bị lộ:
  * từ chối nhưng không thu hồi phiên, để bên thua dùng cookie mới bên thắng vừa đặt.
+ * Lua builds related keys internally; these scripts require the deployment's single Redis node.
  */
 @Component
 public class SessionStore {
@@ -30,6 +31,7 @@ public class SessionStore {
     static final String REFRESH_PREFIX = "session:refresh:";
     static final String ACCOUNT_SESSIONS_PREFIX = "account:sessions:";
     static final String USED_MARK = "used:";
+    private static final int CAS_ATTEMPTS = 3;
     /** Khoảng coi token cũ dùng lại là refresh đồng thời (nhiều tab), không phải bị lộ. */
     static final Duration REUSE_GRACE = Duration.ofSeconds(20);
 
@@ -44,6 +46,43 @@ public class SessionStore {
             redis.call('SET', KEYS[1], 'used:' .. v .. ':' .. ARGV[1], 'PX', ARGV[2])
             return v
             """, String.class);
+
+    static final RedisScript<Long> CREATE = new DefaultRedisScript<>("""
+            redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[3])
+            redis.call('SET', KEYS[2], ARGV[2], 'PX', ARGV[3])
+            redis.call('SADD', KEYS[3], ARGV[2])
+            redis.call('PEXPIRE', KEYS[3], ARGV[4])
+            return 1
+            """, Long.class);
+
+    static final RedisScript<Long> DELETE_SESSION = new DefaultRedisScript<>("""
+            local json = redis.call('GET', KEYS[1])
+            if not json then return 0 end
+            local ok, session = pcall(cjson.decode, json)
+            redis.call('DEL', KEYS[1])
+            if ok and type(session) == 'table' then
+                if type(session.refreshHash) == 'string' then
+                    redis.call('DEL', 'session:refresh:' .. session.refreshHash)
+                end
+                if type(session.accountId) == 'string' then
+                    redis.call('SREM', 'account:sessions:' .. session.accountId, ARGV[1])
+                end
+            end
+            return 1
+            """, Long.class);
+
+    static final RedisScript<Long> ROTATE_CAS = new DefaultRedisScript<>("""
+            if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
+            redis.call('SET', KEYS[1], ARGV[2], 'PX', ARGV[3])
+            redis.call('SET', KEYS[2], ARGV[4], 'PX', ARGV[3])
+            return 1
+            """, Long.class);
+
+    static final RedisScript<Long> RESTAMP_CAS = new DefaultRedisScript<>("""
+            if redis.call('GET', KEYS[1]) ~= ARGV[1] then return 0 end
+            redis.call('SET', KEYS[1], ARGV[2], 'KEEPTTL')
+            return 1
+            """, Long.class);
 
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
@@ -61,7 +100,14 @@ public class SessionStore {
     }
 
     /** Dữ liệu phiên lưu ở {@code session:{sid}}. */
-    public record SessionRecord(UUID accountId, Instant issuedAt, Instant lastUsedAt, String refreshHash) {
+    public record SessionRecord(UUID accountId, Instant issuedAt, Instant lastUsedAt, String refreshHash,
+                                Long pwdStamp) {
+
+        public boolean isPasswordCurrent(Instant passwordChangedAt) {
+            return passwordChangedAt == null
+                    || (pwdStamp == null ? !issuedAt.isBefore(passwordChangedAt)
+                    : pwdStamp >= passwordChangedAt.toEpochMilli());
+        }
     }
 
     /** Phiên mới: {@code refreshToken} là bản rõ, chỉ trả cho cookie, không lưu. */
@@ -71,7 +117,7 @@ public class SessionStore {
     public sealed interface IRotateResult {
     }
 
-    public record Rotated(String sid, UUID accountId, String refreshToken) implements IRotateResult {
+    public record Rotated(String sid, SessionRecord session, String refreshToken) implements IRotateResult {
     }
 
     public record Rejected(Reason reason) implements IRotateResult {
@@ -82,24 +128,23 @@ public class SessionStore {
         UNKNOWN, EXPIRED, REUSED, CONCURRENT
     }
 
-    public IssuedSession create(UUID accountId) {
+    public IssuedSession createSession(UUID accountId, Long pwdStamp) {
         Instant now = clock.instant();
         String sid = UUID.randomUUID().toString();
-        String refreshToken = Hashing.randomToken(32);
-        String refreshHash = Hashing.sha256Hex(refreshToken);
-        write(sid, new SessionRecord(accountId, now, now, refreshHash), idleTtl);
-        redis.opsForValue().set(REFRESH_PREFIX + refreshHash, sid, idleTtl);
-        String accountKey = ACCOUNT_SESSIONS_PREFIX + accountId;
-        redis.opsForSet().add(accountKey, sid);
-        redis.expire(accountKey, maxTtl);
+        String refreshToken = Hashing.generateRandomToken(32);
+        String refreshHash = Hashing.hashSha256Hex(refreshToken);
+        redis.execute(CREATE, List.of(SESSION_PREFIX + sid, REFRESH_PREFIX + refreshHash,
+                        ACCOUNT_SESSIONS_PREFIX + accountId),
+                serialize(new SessionRecord(accountId, now, now, refreshHash, pwdStamp)), sid,
+                String.valueOf(idleTtl.toMillis()), String.valueOf(maxTtl.toMillis()));
         return new IssuedSession(sid, refreshToken);
     }
 
     /** Phiên còn hiệu lực (chưa xóa, chưa quá 7 ngày); mỗi request đã xác thực đều gọi (BR-U01-44). */
-    public Optional<SessionRecord> find(String sid) {
-        Optional<SessionRecord> session = read(sid);
-        if (session.isPresent() && remaining(session.get().issuedAt(), clock.instant()).isZero()) {
-            delete(sid);
+    public Optional<SessionRecord> findSession(String sid) {
+        Optional<SessionRecord> session = readSession(sid);
+        if (session.isPresent() && calculateRemaining(session.get().issuedAt(), clock.instant()).isZero()) {
+            deleteSession(sid);
             return Optional.empty();
         }
         return session;
@@ -111,7 +156,7 @@ public class SessionStore {
             return new Rejected(Reason.UNKNOWN);
         }
         Instant now = clock.instant();
-        String hash = Hashing.sha256Hex(refreshToken);
+        String hash = Hashing.hashSha256Hex(refreshToken);
         String value = redis.execute(CLAIM_REFRESH, List.of(REFRESH_PREFIX + hash),
                 String.valueOf(now.toEpochMilli()), String.valueOf(idleTtl.toMillis()));
         if (value == null) {
@@ -121,25 +166,61 @@ public class SessionStore {
             return rejectUsed(value.substring(USED_MARK.length()), now);
         }
         String sid = value;
-        Optional<SessionRecord> current = read(sid);
-        if (current.isEmpty()) {
-            return new Rejected(Reason.UNKNOWN);
+        String newToken = Hashing.generateRandomToken(32);
+        String newHash = Hashing.hashSha256Hex(newToken);
+        for (int attempt = 0; attempt < CAS_ATTEMPTS; attempt++) {
+            String currentJson = redis.opsForValue().get(SESSION_PREFIX + sid);
+            Optional<SessionRecord> current = parse(sid, currentJson);
+            if (current.isEmpty()) {
+                return new Rejected(Reason.UNKNOWN);
+            }
+            SessionRecord session = current.get();
+            if (!hash.equals(session.refreshHash())) {
+                deleteSession(sid);
+                return new Rejected(Reason.REUSED);
+            }
+            Duration ttl = pickShorter(idleTtl, calculateRemaining(session.issuedAt(), now));
+            if (ttl.isZero()) {
+                deleteSession(sid);
+                return new Rejected(Reason.EXPIRED);
+            }
+            recordRead();
+            SessionRecord rotated = new SessionRecord(session.accountId(), session.issuedAt(), now,
+                    newHash, session.pwdStamp());
+            Long updated = redis.execute(ROTATE_CAS, List.of(SESSION_PREFIX + sid, REFRESH_PREFIX + newHash),
+                    currentJson, serialize(rotated), String.valueOf(ttl.toMillis()), sid);
+            if (Long.valueOf(1).equals(updated)) {
+                return new Rotated(sid, rotated, newToken);
+            }
         }
-        SessionRecord session = current.get();
-        if (!hash.equals(session.refreshHash())) {
-            delete(sid);
-            return new Rejected(Reason.REUSED);
+        return new Rejected(Reason.UNKNOWN);
+    }
+
+    void recordRead() {
+    }
+
+    /**
+     * Keeps the current session without extending its lifetime or restoring revocation.
+     * Exhausted CAS conflicts throw so the caller's password transaction rolls back.
+     */
+    public void restampSession(String sid, long pwdStamp) {
+        for (int attempt = 0; attempt < CAS_ATTEMPTS; attempt++) {
+            String json = redis.opsForValue().get(SESSION_PREFIX + sid);
+            Optional<SessionRecord> current = parse(sid, json);
+            if (current.isEmpty()) {
+                return;
+            }
+            SessionRecord session = current.get();
+            Long updated = redis.execute(RESTAMP_CAS, List.of(SESSION_PREFIX + sid),
+                    json, serialize(new SessionRecord(session.accountId(), session.issuedAt(), session.lastUsedAt(),
+                            session.refreshHash(), pwdStamp)));
+            if (Long.valueOf(1).equals(updated)) {
+                return;
+            }
         }
-        Duration ttl = min(idleTtl, remaining(session.issuedAt(), now));
-        if (ttl.isZero()) {
-            delete(sid);
-            return new Rejected(Reason.EXPIRED);
+        if (readSession(sid).isPresent()) {
+            throw new IllegalStateException("Không cập nhật được dấu mật khẩu của phiên");
         }
-        String newToken = Hashing.randomToken(32);
-        String newHash = Hashing.sha256Hex(newToken);
-        write(sid, new SessionRecord(session.accountId(), session.issuedAt(), now, newHash), ttl);
-        redis.opsForValue().set(REFRESH_PREFIX + newHash, sid, ttl);
-        return new Rotated(sid, session.accountId(), newToken);
     }
 
     /** Dấu {@code {sid}:{millis}}: trong {@link #REUSE_GRACE} là refresh đồng thời, quá thì là dùng lại (BR-U01-46). */
@@ -155,27 +236,22 @@ public class SessionStore {
                 // Dấu không có thời điểm: coi là dùng lại.
             }
         }
-        delete(colon > 0 ? mark.substring(0, colon) : mark);
+        deleteSession(colon > 0 ? mark.substring(0, colon) : mark);
         return new Rejected(Reason.REUSED);
     }
 
     /** {@code sid} mà refresh token còn hiệu lực trỏ tới; dùng khi đăng xuất lúc access token đã hết hạn. */
-    public Optional<String> sidOf(String refreshToken) {
+    public Optional<String> findSid(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return Optional.empty();
         }
-        String value = redis.opsForValue().get(REFRESH_PREFIX + Hashing.sha256Hex(refreshToken));
+        String value = redis.opsForValue().get(REFRESH_PREFIX + Hashing.hashSha256Hex(refreshToken));
         return value == null || value.startsWith(USED_MARK) ? Optional.empty() : Optional.of(value);
     }
 
     /** Đăng xuất: chỉ phiên này (BR-U01-45). */
-    public void delete(String sid) {
-        Optional<SessionRecord> session = read(sid);
-        redis.delete(SESSION_PREFIX + sid);
-        session.ifPresent(s -> {
-            redis.delete(REFRESH_PREFIX + s.refreshHash());
-            redis.opsForSet().remove(ACCOUNT_SESSIONS_PREFIX + s.accountId(), sid);
-        });
+    public void deleteSession(String sid) {
+        redis.execute(DELETE_SESSION, List.of(SESSION_PREFIX + sid), sid);
     }
 
     /** Đặt lại mật khẩu, đổi role, vô hiệu hóa: xóa mọi phiên (BR-U01-34, 63, 71). */
@@ -191,37 +267,47 @@ public class SessionStore {
         }
         for (String sid : sids) {
             if (!sid.equals(keepSid)) {
-                delete(sid);
+                deleteSession(sid);
             }
         }
     }
 
     /** Thời gian còn lại tới trần 7 ngày; không âm. */
-    Duration remaining(Instant issuedAt, Instant now) {
+    Duration calculateRemaining(Instant issuedAt, Instant now) {
         Duration left = Duration.between(now, issuedAt.plus(maxTtl));
         return left.isNegative() ? Duration.ZERO : left;
     }
 
-    private static Duration min(Duration a, Duration b) {
+    private static Duration pickShorter(Duration a, Duration b) {
         return a.compareTo(b) <= 0 ? a : b;
     }
 
-    private Optional<SessionRecord> read(String sid) {
-        String json = redis.opsForValue().get(SESSION_PREFIX + sid);
+    private Optional<SessionRecord> readSession(String sid) {
+        return parse(sid, redis.opsForValue().get(SESSION_PREFIX + sid));
+    }
+
+    private Optional<SessionRecord> parse(String sid, String json) {
         if (json == null) {
             return Optional.empty();
         }
         try {
-            return Optional.of(objectMapper.readValue(json, SessionRecord.class));
+            SessionRecord session = objectMapper.readValue(json, SessionRecord.class);
+            if (session == null || session.accountId() == null || session.issuedAt() == null
+                    || session.lastUsedAt() == null || session.refreshHash() == null
+                    || session.refreshHash().isBlank()) {
+                deleteSession(sid);
+                return Optional.empty();
+            }
+            return Optional.of(session);
         } catch (JsonProcessingException e) {
-            redis.delete(SESSION_PREFIX + sid);
+            deleteSession(sid);
             return Optional.empty();
         }
     }
 
-    private void write(String sid, SessionRecord session, Duration ttl) {
+    private String serialize(SessionRecord session) {
         try {
-            redis.opsForValue().set(SESSION_PREFIX + sid, objectMapper.writeValueAsString(session), ttl);
+            return objectMapper.writeValueAsString(session);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Không ghi được phiên", e);
         }

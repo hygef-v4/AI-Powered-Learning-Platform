@@ -83,7 +83,7 @@ public class GradingProposalTransactions {
     public Prepared prepareProposal(Actor actor, UUID evaluationId, AiRequest request) {
         requireAiSource(request);
         var evaluation = evaluationRepository.lockById(evaluationId)
-                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         gradingService.requireCurrent(actor, evaluation.id, evaluation.version);
         requireGradableTarget(evaluation, "AI requests require a pending or draft grade");
         var existing = gradingProposalRepository.findByRequestRef(request.requestRef());
@@ -105,7 +105,7 @@ public class GradingProposalTransactions {
         var prompt = gradingPromptBuilder.buildPrompt(
                 evaluation, document, content, activeRubrics, emptyPartIds);
         var outputSchema = gradingPromptBuilder.buildProviderSchema(activeRubrics);
-        var proposal = gradingProposalRepository.save(createProposal(actor, evaluation, request));
+        var proposal = gradingProposalRepository.saveProposal(createProposal(actor, evaluation, request));
         gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
         return new Prepared(proposal, prompt, true, outputSchema, maxOutputTokens);
     }
@@ -116,7 +116,7 @@ public class GradingProposalTransactions {
         proposal.proposal = GradingPromptBuilder.createZeroProposal(rubrics, objectMapper);
         proposal.status = "READY";
         proposal.completedAt = clock.instant();
-        gradingProposalRepository.save(proposal);
+        gradingProposalRepository.saveProposal(proposal);
         gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
         log.info("AI grading proposal completed immediately for empty submission evaluationId={} proposalId={}",
                 evaluation.id, proposal.id);
@@ -148,23 +148,23 @@ public class GradingProposalTransactions {
 
     private void requireGradableTarget(Evaluation evaluation, String stateMessage) {
         if (evaluation.kind == EvaluationKind.MEMBER) {
-            throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Use the group document");
+            throw ApiException.createBadRequest("GROUP_ROOT_REQUIRED", "Use the group document");
         }
         if (evaluation.state != EvaluationStatus.PENDING
                 && evaluation.state != EvaluationStatus.DRAFT
                 && evaluation.state != EvaluationStatus.FINALIZED
                 && evaluation.state != EvaluationStatus.PUBLISHED) {
-            throw ApiException.conflict("INVALID_GRADE_STATE", stateMessage);
+            throw ApiException.createConflict("INVALID_GRADE_STATE", stateMessage);
         }
     }
 
     private AssignmentContent loadValidatedAssignmentContent(Evaluation evaluation) {
         var content = assignmentQuery.getContent(evaluation.assignmentId)
-                .orElseThrow(() -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE",
+                .orElseThrow(() -> ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE",
                         "Assignment content unavailable"));
         if (!GradingJson.writeSnapshot(objectMapper, content.rubrics())
                 .equals(evaluation.rubricSnapshot)) {
-            throw ApiException.conflict("RUBRIC_CHANGED",
+            throw ApiException.createConflict("RUBRIC_CHANGED",
                     "Locked rubric no longer matches submitted snapshot");
         }
         return content;
@@ -174,7 +174,7 @@ public class GradingProposalTransactions {
         if (request == null || Evaluation.isBlankText(request.requestRef())
                 || request.requestRef().length() > 200
                 || request.provider() != null && request.source() != AiSource.PERSONAL) {
-            throw ApiException.badRequest("AI_SOURCE_REQUIRED", "Invalid AI source");
+            throw ApiException.createBadRequest("AI_SOURCE_REQUIRED", "Invalid AI source");
         }
     }
 
@@ -187,7 +187,7 @@ public class GradingProposalTransactions {
                         request.source() == null ? "AUTO" : request.source().name())
                 || !Objects.equals(proposal.provider,
                         request.provider() == null ? null : request.provider().name())) {
-            throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");
+            throw ApiException.createConflict("REQUEST_REF_CONFLICT", "Request reference already used");
         }
     }
 
@@ -215,7 +215,7 @@ public class GradingProposalTransactions {
         var proposal = gradingProposalRepository.findById(proposalId).orElseThrow();
         GradingProposalCallbackSupport.applyDispatchState(
                 proposal, task, error, objectMapper, clock);
-        return gradingProposalRepository.save(proposal);
+        return gradingProposalRepository.saveProposal(proposal);
     }
 
     /** Validates and stores a completed AI proposal, returning its application outcome. */
@@ -256,7 +256,7 @@ public class GradingProposalTransactions {
                 proposal.taskState = null;
                 proposal.safeError = "AI proposal cannot be applied to this submission";
                 proposal.completedAt = clock.instant();
-                gradingProposalRepository.save(proposal);
+                gradingProposalRepository.saveProposal(proposal);
             }
             return ApplyOutcome.REJECTED;
         }
@@ -274,7 +274,7 @@ public class GradingProposalTransactions {
             proposal.taskId = result.taskId();
             proposal.taskState = null;
             proposal.completedAt = clock.instant();
-            gradingProposalRepository.save(proposal);
+            gradingProposalRepository.saveProposal(proposal);
             return ApplyOutcome.STALE;
         }
         return null;
@@ -297,15 +297,15 @@ public class GradingProposalTransactions {
             proposal.taskId = result.taskId();
             proposal.taskState = null;
             proposal.completedAt = clock.instant();
-            gradingProposalRepository.save(proposal);
+            gradingProposalRepository.saveProposal(proposal);
             return ApplyOutcome.APPLIED;
         } catch (ApiException ex) {
-            if (ex.status().is5xxServerError()) {
+            if (ex.readStatus().is5xxServerError()) {
                 throw ex;
             }
             GradingProposalCallbackSupport.applyRejectionFromException(
                     proposal, result.taskId(), ex, clock);
-            gradingProposalRepository.save(proposal);
+            gradingProposalRepository.saveProposal(proposal);
             return "STALE".equals(proposal.status) ? ApplyOutcome.STALE : ApplyOutcome.REJECTED;
         }
     }
@@ -342,7 +342,7 @@ public class GradingProposalTransactions {
     @Transactional
     public void invalidateChangedSnapshot(UUID evaluationId) {
         var evaluation = evaluationRepository.lockById(evaluationId)
-                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         for (var proposal : gradingProposalRepository.findForEvaluation(evaluationId)) {
             if (Set.of("PENDING", "READY").contains(proposal.status)
                     && (!Objects.equals(proposal.submissionHash, evaluation.submissionHash)
@@ -351,7 +351,7 @@ public class GradingProposalTransactions {
                 proposal.status = "STALE";
                 proposal.taskState = null;
                 proposal.completedAt = clock.instant();
-                gradingProposalRepository.save(proposal);
+                gradingProposalRepository.saveProposal(proposal);
             }
         }
     }
@@ -367,7 +367,7 @@ public class GradingProposalTransactions {
         for (var proposal : gradingProposalRepository.findForEvaluation(evaluationId)) {
             if (GradingProposalCallbackSupport.matchesFailureTarget(proposal, failure)) {
                 GradingProposalCallbackSupport.applyFailure(proposal, failure, clock);
-                gradingProposalRepository.save(proposal);
+                gradingProposalRepository.saveProposal(proposal);
             }
         }
     }
@@ -381,15 +381,15 @@ public class GradingProposalTransactions {
     public Evaluation saveUsingProposal(Actor actor, UUID evaluationId, Save input) {
         var evaluation = gradingService.requireCurrent(actor, evaluationId, input.version());
         var proposal = gradingProposalRepository.findById(input.usedProposalId())
-                .orElseThrow(() -> ApiException.notFound("PROPOSAL_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("PROPOSAL_NOT_FOUND"));
         if (!evaluationId.equals(proposal.evaluationId) || !"READY".equals(proposal.status)
                 || !evaluation.submissionHash.equals(proposal.submissionHash)
                 || !evaluation.rubricSnapshot.equals(proposal.rubricFingerprint)) {
-            throw ApiException.conflict("STALE_PROPOSAL", "Proposal is stale or unavailable");
+            throw ApiException.createConflict("STALE_PROPOSAL", "Proposal is stale or unavailable");
         }
         var saved = gradingService.saveCheckedEvaluation(actor, evaluationId, input, proposal);
         proposal.usedAt = clock.instant();
-        gradingProposalRepository.save(proposal);
+        gradingProposalRepository.saveProposal(proposal);
         return saved;
     }
 
@@ -399,7 +399,7 @@ public class GradingProposalTransactions {
             String hash, String requestRef, JsonNode payload, String agentLabel) {
         var evaluation = gradingService.requireCurrent(actor, evaluationId, expectedVersion);
         if (!evaluation.submissionHash.equals(hash)) {
-            throw ApiException.conflict("STALE_PROPOSAL", "Submission changed");
+            throw ApiException.createConflict("STALE_PROPOSAL", "Submission changed");
         }
         requireGradableTarget(evaluation, "AI proposals require a pending or draft grade");
         var existing = gradingProposalRepository.findByRequestRef(requestRef);
@@ -413,19 +413,19 @@ public class GradingProposalTransactions {
         var proposal = buildMcpProposal(actor, evaluationId, hash, requestRef, payload,
                 agentLabel, evaluation);
         gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
-        return gradingProposalRepository.save(proposal);
+        return gradingProposalRepository.saveProposal(proposal);
     }
 
     private GradingProposal validateExistingMcpProposal(Actor actor, UUID evaluationId,
             String hash, JsonNode payload, Evaluation evaluation, GradingProposal proposal) {
         if (!Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot)) {
-            throw ApiException.conflict("STALE_PROPOSAL", "Rubric snapshot changed");
+            throw ApiException.createConflict("STALE_PROPOSAL", "Rubric snapshot changed");
         }
         if (!evaluationId.equals(proposal.evaluationId)
                 || !proposal.requesterId.equals(actor.accountId())
                 || !Objects.equals(proposal.submissionHash, hash)
                 || !Objects.equals(proposal.proposal, payload)) {
-            throw ApiException.conflict("REQUEST_REF_CONFLICT", "Request reference already used");
+            throw ApiException.createConflict("REQUEST_REF_CONFLICT", "Request reference already used");
         }
         return proposal;
     }

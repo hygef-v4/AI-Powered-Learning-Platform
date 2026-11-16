@@ -12,7 +12,7 @@ public record SubjectCode(String value) {
     public SubjectCode {
         value = value == null ? "" : value.trim().toUpperCase(Locale.ROOT);
         if (!FORMAT.matcher(value).matches()) {
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "SUBJECT_CODE_INVALID", "Mã môn phải gồm 1–20 ký tự chữ hoa, số hoặc dấu -");
         }
     }

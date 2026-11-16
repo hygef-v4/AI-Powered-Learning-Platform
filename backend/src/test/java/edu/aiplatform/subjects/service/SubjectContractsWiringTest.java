@@ -76,7 +76,7 @@ class SubjectContractsWiringTest {
                                                                     java.time.Duration.class)))
                                     .thenReturn(
                                             java.util.Optional.of(
-                                                    edu.aiplatform.subjects.model.Subject.create(
+                                                    edu.aiplatform.subjects.model.Subject.createSubject(
                                                             id,
                                                             "ABC",
                                                             "Name",

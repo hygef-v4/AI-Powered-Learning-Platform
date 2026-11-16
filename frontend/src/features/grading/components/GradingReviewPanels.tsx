@@ -1,34 +1,35 @@
+import { formatStudentLabel } from "@/shared/studentCode";
 import { ACTIVITY_LABELS, type Detail } from "../model/types";
+import { Card } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 export function ActivityReview({ detail }: { detail: Detail }) {
   const hasData = Boolean(detail.activity || (detail.memberActivities && detail.memberActivities.length > 0));
   return (
-    <details open={hasData} className="rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+    <Card as="details" padding="none" className="px-4 py-3 text-sm" open={hasData}>
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
-        <h2 className="inline text-sm font-bold text-ink">Hoạt động khi làm bài</h2>
+        <h2 className="inline text-sm font-bold text-ink">{msg("grading.components.GradingReviewPanels.activityWhileWorking")}</h2>
         <span className="text-xs text-muted">{ACTIVITY_LABELS[detail.activityState] ?? detail.activityState}</span>
       </summary>
       <div className="mt-2 space-y-1.5 border-t border-line-soft pt-2">
         {detail.activity && (
           <p>
-            {detail.activity.awayCount} lần rời trang · {detail.activity.unknownGaps} khoảng thiếu dữ
-            liệu. {detail.activity.reliabilityNote}
+            {detail.activity.awayCount} {msg("grading.components.GradingReviewPanels.timesLeftThePage")}{detail.activity.unknownGaps} {msg("grading.components.GradingReviewPanels.gapsInTheData")}{detail.activity.reliabilityNote}
           </p>
         )}
         <div>
           {detail.memberActivities?.map((m) => (
             <p key={m.student.accountId}>
-              {m.student.name}: {ACTIVITY_LABELS[m.state] ?? m.state}
+              {formatStudentLabel(m.student)}: {ACTIVITY_LABELS[m.state] ?? m.state}
               {m.activity
-                ? ` — ${m.activity.awayCount} lần rời trang, ${m.activity.unknownGaps} khoảng thiếu dữ liệu`
+                ? msg("grading.components.GradingReviewPanels.leftThePageTimesGaps", { awayCount: String(m.activity.awayCount), unknownGaps: String(m.activity.unknownGaps) })
                 : ""}
             </p>
           ))}
         </div>
         <p className="text-xs text-muted">
-          Chỉ để tham khảo; nền tảng không kết luận gian lận hoặc tự thay đổi điểm.
-        </p>
+          {msg("grading.components.GradingReviewPanels.forReferenceOnlyThePlatform")}</p>
       </div>
-    </details>
+    </Card>
   );
 }

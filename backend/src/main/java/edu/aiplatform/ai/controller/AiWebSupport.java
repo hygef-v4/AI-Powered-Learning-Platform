@@ -10,11 +10,11 @@ final class AiWebSupport {
     private AiWebSupport() {
     }
 
-    static AiProvider provider(String value) {
+    static AiProvider parseProvider(String value) {
         try {
             return AiProvider.valueOf(value.toUpperCase(Locale.ROOT));
         } catch (RuntimeException e) {
-            throw AiAccess.notFound();
+            throw AiAccess.createNotFoundError();
         }
     }
 }

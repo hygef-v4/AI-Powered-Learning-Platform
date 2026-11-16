@@ -35,7 +35,7 @@ public final class EnrollmentListParser {
         }
 
         /** Giá trị người dùng đã nhập, hiện lại trong kết quả (BR-U05-58). */
-        public String identifier() {
+        public String readIdentifier() {
             return studentCode != null ? studentCode : email;
         }
     }

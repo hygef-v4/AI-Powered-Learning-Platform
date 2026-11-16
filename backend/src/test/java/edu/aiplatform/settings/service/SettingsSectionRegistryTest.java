@@ -44,7 +44,7 @@ class SettingsSectionRegistryTest {
                     return "muộn";
                 })));
 
-        List<SettingsSectionRegistry.SectionView> views = registry.summaries();
+        List<SettingsSectionRegistry.SectionView> views = registry.listSummaries();
 
         assertThat(views).extracting(SettingsSectionRegistry.SectionView::available).containsExactly(true, false, false);
         assertThat(views.get(0).summary()).isEqualTo("Gemini ****1234");

@@ -1,5 +1,6 @@
-import { formatDateTime } from "@/features/groups/model/format";
+import { formatTime } from "@/shared/dateTime";
 import type { WorkspaceView } from "./types";
+import { msg } from "@/i18n/msg";
 
 /** Bắt đầu nhắc hạn trên trang tài liệu nhóm khi còn 30 phút. */
 export const DEADLINE_WARNING_MS = 30 * 60_000;
@@ -7,19 +8,11 @@ export const DEADLINE_WARNING_MS = 30 * 60_000;
 export type DeadlineNotice = { tone: "warning" | "danger"; title: string; details: string[] };
 
 function formatClock(iso: string): string {
-  return formatDateTime(iso).slice(-5);
+  return formatTime(iso);
 }
 
 function countMinutes(ms: number): number {
   return Math.max(1, Math.ceil(ms / 60_000));
-}
-
-/** "vừa xong", "5 phút trước", "2 giờ trước" so với `now`. */
-export function formatAgo(iso: string, now: number): string {
-  const elapsed = now - Date.parse(iso);
-  if (elapsed < 60_000) return "vừa xong";
-  if (elapsed < 60 * 60_000) return `${Math.floor(elapsed / 60_000)} phút trước`;
-  return `${Math.floor(elapsed / (60 * 60_000))} giờ trước`;
 }
 
 /**
@@ -41,29 +34,19 @@ export function describeDeadline(
   if (remaining <= 0 || (!late && remaining > DEADLINE_WARNING_MS)) return null;
 
   const title = late
-    ? `Đã quá hạn ${formatClock(view.closesAt)}, nộp bây giờ bị tính trễ. Còn ${countMinutes(remaining)} phút tới khi đóng nhận bài (${formatClock(cutoffIso)}).`
-    : `Còn ${countMinutes(remaining)} phút tới hạn nộp (${formatClock(view.closesAt)}).`;
+    ? msg("groupdocs.model.deadline.theDeadlineHasPassedSubmitting", { value: String(formatClock(view.closesAt)), value2: String(countMinutes(remaining)), value3: String(formatClock(cutoffIso)) })
+    : msg("groupdocs.model.deadline.minutesLeftUntilTheDeadline", { value: String(countMinutes(remaining)), value2: String(formatClock(view.closesAt)) });
   const open = view.sections.filter((s) => s.status === "OPEN").length;
   const claimed = view.sections.filter((s) => s.status === "CLAIMED").length;
   const details: string[] = [];
-  if (open > 0) details.push(`${open} mục chưa ai làm, sẽ không vào bản nộp.`);
+  if (open > 0) details.push(msg("groupdocs.model.deadline.sectionsNobodyHasWorkedOn", { open: String(open) }));
   if (claimed > 0) {
-    details.push(`${claimed} mục đang soạn: hãy bấm Xong. Khi đóng nhận bài, hệ thống tự chốt các mục này bằng bản nháp đã lưu.`);
+    details.push(msg("groupdocs.model.deadline.sectionsAreBeingWrittenClick", { claimed: String(claimed) }));
   }
-  if (open === 0 && claimed === 0) details.push("Mọi mục đã Xong.");
-  if (!view.lastSubmission) details.push("Nhóm chưa nộp bản nào; trưởng nhóm nên nộp trước hạn.");
+  if (open === 0 && claimed === 0) details.push(msg("groupdocs.model.deadline.allSectionsAreDone"));
+  if (!view.lastSubmission) details.push(msg("groupdocs.model.deadline.theGroupHasNotSubmitted"));
   return { tone: late || remaining <= 5 * 60_000 ? "danger" : "warning", title, details };
 }
 
 /** Thời gian còn lại tới `deadline` ("2 ngày 3 giờ", "45 phút"); đã qua hạn hoặc không có hạn thì `null`. */
-export function formatRemaining(deadline: string | null, now: number): string | null {
-  if (!deadline) return null;
-  const ms = Date.parse(deadline) - now;
-  if (ms <= 0) return null;
-  const minutes = Math.floor(ms / 60_000);
-  const days = Math.floor(minutes / 1440);
-  const hours = Math.floor((minutes % 1440) / 60);
-  if (days > 0) return `${days} ngày ${hours} giờ`;
-  if (hours > 0) return `${hours} giờ ${minutes % 60} phút`;
-  return `${Math.max(1, minutes)} phút`;
-}
+export { formatRemaining } from "@/shared/dateTime";

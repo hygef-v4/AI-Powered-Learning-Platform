@@ -25,14 +25,14 @@ public record QuizAiDraft(UUID id, DraftTarget target, UUID quizId, UUID subject
     }
 
     /** Đề xuất chờ task AI; {@code quizId} trống khi đích là ngân hàng. */
-    public static QuizAiDraft pending(DraftTarget target, UUID quizId, UUID subjectId, Long baseVersion,
+    public static QuizAiDraft createPending(DraftTarget target, UUID quizId, UUID subjectId, Long baseVersion,
                                       Map<String, Object> provenance, UUID createdBy, Instant now) {
         return new QuizAiDraft(UUID.randomUUID(), target, quizId, subjectId, DraftOrigin.AI_TASK, null,
                 DraftStatus.PENDING, List.of(), provenance, baseVersion, createdBy, now, null);
     }
 
     /** Đề xuất do agent ghi qua MCP, sẵn sàng để người soạn xem (F13 bước 2). */
-    public static QuizAiDraft fromMcp(UUID quizId, UUID subjectId, long baseVersion, List<DraftQuestion> questions,
+    public static QuizAiDraft createFromMcp(UUID quizId, UUID subjectId, long baseVersion, List<DraftQuestion> questions,
                                       Map<String, Object> provenance, UUID createdBy, Instant now) {
         return new QuizAiDraft(UUID.randomUUID(), DraftTarget.QUIZ, quizId, subjectId, DraftOrigin.MCP, null,
                 DraftStatus.READY, questions, provenance, baseVersion, createdBy, now, null);
@@ -43,52 +43,52 @@ public record QuizAiDraft(UUID id, DraftTarget target, UUID quizId, UUID subject
         return value == null ? null : value.toString();
     }
 
-    public QuizAiDraft ready(List<DraftQuestion> questions, Map<String, Object> extraProvenance) {
+    public QuizAiDraft markReady(List<DraftQuestion> questions, Map<String, Object> extraProvenance) {
         return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, DraftStatus.READY, questions,
-                merged(extraProvenance), baseVersion, createdBy, createdAt, null);
+                mergeProvenance(extraProvenance), baseVersion, createdBy, createdAt, null);
     }
 
-    public QuizAiDraft failed(String code, String message, Instant now) {
+    public QuizAiDraft markFailed(String code, String message, Instant now) {
         Map<String, Object> failure = new LinkedHashMap<>();
         failure.put(FAILURE_CODE, code);
         if (message != null) {
             failure.put(FAILURE_MESSAGE, message);
         }
         return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, DraftStatus.FAILED, List.of(),
-                merged(failure), baseVersion, createdBy, createdAt, now);
+                mergeProvenance(failure), baseVersion, createdBy, createdAt, now);
     }
 
-    public QuizAiDraft withSourceWarnings(List<String> warnings) {
+    public QuizAiDraft attachSourceWarnings(List<String> warnings) {
         return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, status, proposal,
-                merged(Map.of("sourceWarnings", List.copyOf(warnings))), baseVersion, createdBy, createdAt, decidedAt);
+                mergeProvenance(Map.of("sourceWarnings", List.copyOf(warnings))), baseVersion, createdBy, createdAt, decidedAt);
     }
 
     public boolean needsSourceRetry() {
         return status == DraftStatus.PENDING && Boolean.TRUE.equals(provenance.get("sourceRetryPending"));
     }
 
-    public boolean sourceRetryAttempted() {
+    public boolean hasSourceRetryAttempt() {
         return Boolean.TRUE.equals(provenance.get("sourceRetryAttempted"));
     }
 
     public QuizAiDraft retryFromSources(List<String> warnings) {
         return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, DraftStatus.PENDING, List.of(),
-                merged(Map.of("sourceWarnings", List.copyOf(warnings), "sourceRetryPending", true)),
+                mergeProvenance(Map.of("sourceWarnings", List.copyOf(warnings), "sourceRetryPending", true)),
                 baseVersion, createdBy, createdAt, null);
     }
 
-    public QuizAiDraft withSourceRetryTask(UUID nextTaskId) {
+    public QuizAiDraft attachSourceRetryTask(UUID nextTaskId) {
         return new QuizAiDraft(id, target, quizId, subjectId, origin, nextTaskId, DraftStatus.PENDING, List.of(),
-                merged(Map.of("sourceRetryPending", false, "sourceRetryAttempted", true)),
+                mergeProvenance(Map.of("sourceRetryPending", false, "sourceRetryAttempted", true)),
                 baseVersion, createdBy, createdAt, null);
     }
 
-    public QuizAiDraft decided(DraftStatus decision, Instant now) {
+    public QuizAiDraft recordDecision(DraftStatus decision, Instant now) {
         return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, decision, proposal, provenance,
                 baseVersion, createdBy, createdAt, now);
     }
 
-    private Map<String, Object> merged(Map<String, Object> extra) {
+    private Map<String, Object> mergeProvenance(Map<String, Object> extra) {
         Map<String, Object> result = new LinkedHashMap<>(provenance);
         if (extra != null) {
             result.putAll(extra);

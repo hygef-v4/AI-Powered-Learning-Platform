@@ -40,63 +40,63 @@ public class AssignmentController {
     static final MediaType DOCX = MediaType.parseMediaType(
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
-    private final AssignmentAuthoringService authoring;
-    private final AssignmentPublicationService publication;
-    private final AssignmentCopyService copies;
-    private final DocxService docx;
+    private final AssignmentAuthoringService assignmentAuthoringService;
+    private final AssignmentPublicationService assignmentPublicationService;
+    private final AssignmentCopyService assignmentCopyService;
+    private final DocxService docxService;
 
-    public AssignmentController(AssignmentAuthoringService authoring, AssignmentPublicationService publication,
-                                AssignmentCopyService copies, DocxService docx) {
-        this.authoring = authoring;
-        this.publication = publication;
-        this.copies = copies;
-        this.docx = docx;
+    public AssignmentController(AssignmentAuthoringService assignmentAuthoringService, AssignmentPublicationService assignmentPublicationService,
+                                AssignmentCopyService assignmentCopyService, DocxService docxService) {
+        this.assignmentAuthoringService = assignmentAuthoringService;
+        this.assignmentPublicationService = assignmentPublicationService;
+        this.assignmentCopyService = assignmentCopyService;
+        this.docxService = docxService;
     }
 
     @GetMapping
-    public AssignmentViews.Detail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return authoring.detail(actor, id);
+    public AssignmentViews.Detail loadAssignment(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return assignmentAuthoringService.loadAssignment(actor, id);
     }
 
     @PatchMapping(consumes = "application/json")
-    public AssignmentViews.Detail update(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public AssignmentViews.Detail updateDetails(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                          @RequestBody AssignmentRequests.Details body) {
-        return authoring.updateDetails(actor, id, body.command());
+        return assignmentAuthoringService.updateDetails(actor, id, body.buildCommand());
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> delete(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public ResponseEntity<Void> deleteAssignment(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                        @RequestParam Long version) {
-        authoring.delete(actor, id, AssignmentRequests.requireVersion(version));
+        assignmentAuthoringService.deleteAssignment(actor, id, AssignmentRequests.requireVersion(version));
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/selectable-materials")
-    public List<AssignmentViews.Material> materials(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return authoring.selectableMaterials(actor, id);
+    public List<AssignmentViews.Material> listMaterials(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return assignmentAuthoringService.listSelectableMaterials(actor, id);
     }
 
     @PutMapping(value = "/skeleton", consumes = "application/json")
-    public AssignmentViews.Detail skeleton(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public AssignmentViews.Detail applySkeleton(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                            @RequestBody AssignmentRequests.Skeleton body) {
-        return authoring.saveSkeleton(actor, id, body.command());
+        return assignmentAuthoringService.saveSkeleton(actor, id, body.buildCommand());
     }
 
     @PostMapping(value = "/skeleton:import-docx", consumes = "multipart/form-data")
     public AssignmentViews.ImportPreview importDocx(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                                     @RequestPart("file") MultipartFile file) {
-        return docx.importAssignment(actor, id, bytes(file));
+        return docxService.importAssignment(actor, id, readBytes(file));
     }
 
     @GetMapping("/docx")
     public ResponseEntity<byte[]> exportDocx(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return download(docx.exportAssignment(actor, id));
+        return download(docxService.exportAssignment(actor, id));
     }
 
     /** Rubric các phần thành tệp DOCX riêng, tách khỏi tệp đề (yêu cầu 2026-10-22). */
     @GetMapping("/rubric/docx")
     public ResponseEntity<byte[]> exportRubric(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return download(docx.exportRubric(actor, id));
+        return download(docxService.exportRubric(actor, id));
     }
 
     private static ResponseEntity<byte[]> download(DocxService.Export export) {
@@ -107,74 +107,74 @@ public class AssignmentController {
     }
 
     @GetMapping("/diagrams/{blockId}")
-    public AssignmentViews.Diagram diagram(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public AssignmentViews.Diagram loadDiagram(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                            @PathVariable UUID blockId) {
-        return authoring.diagram(actor, id, blockId);
+        return assignmentAuthoringService.loadDiagram(actor, id, blockId);
     }
 
     /** Ảnh trong khung: kiểm quyền rồi chuyển tới link tải 5 phút của U03. */
     @GetMapping("/blocks/{blockId}/image")
-    public ResponseEntity<Void> image(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public ResponseEntity<Void> redirectImage(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                       @PathVariable UUID blockId) {
-        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(authoring.imageUrl(actor, id, blockId)))
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(assignmentAuthoringService.resolveImageUrl(actor, id, blockId)))
                 .cacheControl(CacheControl.noStore()).build();
     }
 
     @PostMapping(value = "/review", consumes = "application/json")
     public AssignmentViews.Detail review(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                          @RequestBody AssignmentRequests.Version body) {
-        return authoring.review(actor, id, body.value());
+        return assignmentAuthoringService.review(actor, id, body.readVersion());
     }
 
     @PostMapping(value = "/publish", consumes = "application/json")
     public AssignmentViews.Detail publish(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                           @RequestBody AssignmentRequests.Publish body) {
-        return publication.publish(actor, id, body.command());
+        return assignmentPublicationService.publish(actor, id, body.buildCommand());
     }
 
     @PatchMapping(value = "/schedule", consumes = "application/json")
     public AssignmentViews.Detail schedule(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                            @RequestBody AssignmentRequests.Schedule body) {
-        return publication.changeSchedule(actor, id, body.command());
+        return assignmentPublicationService.changeSchedule(actor, id, body.buildCommand());
     }
 
     @PostMapping(value = "/retire", consumes = "application/json")
     public AssignmentViews.Detail retire(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                          @RequestBody AssignmentRequests.Retire body) {
-        return publication.retire(actor, id, body.command());
+        return assignmentPublicationService.retire(actor, id, body.buildCommand());
     }
 
     @PostMapping(value = "/close", consumes = "application/json")
     public AssignmentViews.Detail closeAssignment(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID id, @RequestBody AssignmentRequests.Close body) {
-        return publication.closeAssignment(actor, id, body.value());
+        return assignmentPublicationService.closeAssignment(actor, id, body.readVersion());
     }
 
     @PostMapping("/clone")
     public ResponseEntity<AssignmentViews.Detail> cloneAssignment(@AuthenticationPrincipal Actor actor,
                                                                   @PathVariable UUID id) {
-        AssignmentViews.Detail created = copies.cloneAssignment(actor, id);
+        AssignmentViews.Detail created = assignmentCopyService.cloneAssignment(actor, id);
         return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 
     @PostMapping("/versions")
-    public ResponseEntity<AssignmentViews.Detail> newVersion(@AuthenticationPrincipal Actor actor,
+    public ResponseEntity<AssignmentViews.Detail> createNewVersion(@AuthenticationPrincipal Actor actor,
                                                              @PathVariable UUID id) {
-        AssignmentViews.Detail created = copies.newVersion(actor, id);
+        AssignmentViews.Detail created = assignmentCopyService.createNewVersion(actor, id);
         return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 
-    static byte[] bytes(MultipartFile file) {
+    static byte[] readBytes(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw ApiException.badRequest("DOCX_INVALID", "Chưa chọn tệp DOCX");
+            throw ApiException.createBadRequest("DOCX_INVALID", "Chưa chọn tệp DOCX");
         }
         if (file.getSize() > 20L * 1024 * 1024) {
-            throw ApiException.payloadTooLarge("DOCX_TOO_LARGE", "Tệp DOCX tối đa 20 MB");
+            throw ApiException.createPayloadTooLarge("DOCX_TOO_LARGE", "Tệp DOCX tối đa 20 MB");
         }
         try {
             return file.getBytes();
         } catch (IOException e) {
-            throw ApiException.badRequest("DOCX_INVALID", "Không đọc được tệp DOCX");
+            throw ApiException.createBadRequest("DOCX_INVALID", "Không đọc được tệp DOCX");
         }
     }
 }

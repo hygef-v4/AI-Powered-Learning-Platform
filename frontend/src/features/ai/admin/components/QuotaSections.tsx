@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
 import { formatTokens } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, Field, IconButton, SettingsGroup, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, Card, Dialog, Field, IconButton, SettingsGroup, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import {
   deleteTeacherQuota,
   findTeachers,
@@ -15,9 +15,10 @@ import {
   type TeacherCandidate,
   type TeacherQuota,
 } from "../api";
+import { msg } from "@/i18n/msg";
 
 const MAX_TOKENS = 1_000_000_000;
-const TOKENS_ERROR = "Nhập số token nguyên từ 0 tới 1.000.000.000";
+const TOKENS_ERROR = msg("ai.admin.components.QuotaSections.enterAWholeNumberOf");
 
 /** Ô số token: rỗng hoặc không phải số nguyên 0…1 tỉ thì trả null. Dấu chấm phân nhóm bỏ đi trước khi gửi. */
 function parseTokens(value: string): number | null {
@@ -55,7 +56,7 @@ export function QuotaPolicySection() {
         if (active) show(loaded);
       },
       () => {
-        if (active) setError("Không tải được hạn mức, thử lại sau.");
+        if (active) setError(msg("ai.admin.components.QuotaSections.couldNotLoadTheQuota"));
       },
     );
     return () => {
@@ -81,8 +82,8 @@ export function QuotaPolicySection() {
       const problem = e instanceof ApiError ? e.problem : undefined;
       setError(
         problem?.status === 409
-          ? "Hạn mức vừa được thay đổi ở nơi khác, hãy tải lại trang."
-          : (problem?.detail ?? "Không lưu được hạn mức, thử lại sau."),
+          ? msg("ai.admin.components.QuotaSections.theQuotaWasJustChanged")
+          : (problem?.detail ?? msg("ai.admin.components.QuotaSections.couldNotSaveTheQuota")),
       );
     } finally {
       setBusy(false);
@@ -90,8 +91,8 @@ export function QuotaPolicySection() {
   };
 
   return (
-    <SettingsGroup id="ai-quota" title="Hạn mức chung">
-      {policy && !policy.configured && <Alert tone="warning">Chưa cấu hình hạn mức: giảng viên chưa dùng được API của trường.</Alert>}
+    <SettingsGroup id="ai-quota" title={msg("ai.admin.components.QuotaSections.sharedQuota")}>
+      {policy && !policy.configured && <Alert tone="warning">{msg("ai.admin.components.QuotaSections.noQuotaConfiguredLecturersCannot")}</Alert>}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -99,14 +100,12 @@ export function QuotaPolicySection() {
       )}
       {saved && !dirty && (
         <Alert tone="success" role="status">
-          Đã lưu hạn mức.
-        </Alert>
+          {msg("ai.admin.components.QuotaSections.quotaSaved")}</Alert>
       )}
       <div className="grid grid-cols-1 items-center gap-y-3 py-2 md:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] md:gap-x-6">
         <div className="flex items-center justify-between gap-3">
           <label htmlFor={ids.teacher} className="text-sm font-medium whitespace-nowrap text-ink">
-            Giảng viên / ngày
-          </label>
+            {msg("ai.admin.components.QuotaSections.perLecturerDay")}</label>
           <TextInput
             id={ids.teacher}
             inputMode="numeric"
@@ -124,8 +123,7 @@ export function QuotaPolicySection() {
         <span aria-hidden="true" className="hidden h-8 w-px bg-line-strong md:block" />
         <div className="flex items-center justify-between gap-3">
           <label htmlFor={ids.global} className="text-sm font-medium whitespace-nowrap text-ink">
-            Toàn hệ thống / ngày
-          </label>
+            {msg("ai.admin.components.QuotaSections.wholeSystemDay")}</label>
           <TextInput
             id={ids.global}
             inputMode="numeric"
@@ -152,8 +150,7 @@ export function QuotaPolicySection() {
           onClick={() => void submit()}
           disabled={!policy || busy || !dirty || teacherValue === null || globalValue === null}
         >
-          Lưu
-        </Button>
+          {msg("ai.admin.components.QuotaSections.save")}</Button>
       </div>
     </SettingsGroup>
   );
@@ -173,7 +170,7 @@ export function TeacherQuotaTable() {
           setQuotas(loaded);
           setError(null);
         },
-        () => setError("Không tải được mức riêng, thử lại sau."),
+        () => setError(msg("ai.admin.components.QuotaSections.couldNotLoadIndividualLimits")),
       ),
     [],
   );
@@ -185,7 +182,7 @@ export function TeacherQuotaTable() {
         if (active) setQuotas(loaded);
       },
       () => {
-        if (active) setError("Không tải được mức riêng, thử lại sau.");
+        if (active) setError(msg("ai.admin.components.QuotaSections.couldNotLoadIndividualLimits"));
       },
     );
     return () => {
@@ -193,23 +190,22 @@ export function TeacherQuotaTable() {
     };
   }, []);
 
-  const remove = async (quota: TeacherQuota) => {
+  const removeQuota = async (quota: TeacherQuota) => {
     setRemoving(null);
     try {
       await deleteTeacherQuota(quota.accountId);
       await reload();
     } catch {
-      setError("Không xóa được mức riêng, thử lại sau.");
+      setError(msg("ai.admin.components.QuotaSections.couldNotDeleteTheIndividual"));
     }
   };
 
   return (
     <SettingsGroup
-      title="Mức riêng từng giảng viên"
+      title={msg("ai.admin.components.QuotaSections.individualLimitPerLecturer")}
       action={
         <Button variant="primary" size="sm" icon="add" onClick={() => setEditing("new")}>
-          Thêm
-        </Button>
+          {msg("ai.admin.components.QuotaSections.add")}</Button>
       }
     >
       {error && (
@@ -217,15 +213,15 @@ export function TeacherQuotaTable() {
           {error}
         </Alert>
       )}
-      {!quotas && !error && <p className="py-3 text-[13px] text-muted">Đang tải…</p>}
+      {!quotas && !error && <p className="py-3 text-[13px] text-muted">{msg("ai.admin.components.QuotaSections.loading")}</p>}
       {quotas && (
         <TableFrame filledHead className="mt-2 [&_table]:table-fixed">
           <colgroup><col /><col className="w-[150px]" /><col className="w-[84px]" /></colgroup><thead>
             <tr>
-              <Th>Giảng viên</Th>
-              <Th className="text-right">Token / ngày</Th>
+              <Th>{msg("ai.admin.components.QuotaSections.lecturer")}</Th>
+              <Th className="text-right">{msg("ai.admin.components.QuotaSections.tokensDay")}</Th>
               <Th className="w-[1%]">
-                <span className="sr-only">Thao tác</span>
+                <span className="sr-only">{msg("ai.admin.components.QuotaSections.actions")}</span>
               </Th>
             </tr>
           </thead>
@@ -233,8 +229,7 @@ export function TeacherQuotaTable() {
             {quotas.length === 0 && (
               <tr>
                 <Td colSpan={3} className="py-6 text-center! text-muted">
-                  Chưa có mức riêng
-                </Td>
+                  {msg("ai.admin.components.QuotaSections.noIndividualLimitsYet")}</Td>
               </tr>
             )}
             {quotas.map((t) => (
@@ -243,13 +238,13 @@ export function TeacherQuotaTable() {
                   <p className="font-semibold">{t.name}</p>
                   <p className="text-xs text-muted">{t.email}</p>
                 </Td>
-                <Td className="text-right whitespace-nowrap tabular-nums">{t.dayTokens === 0 ? "0 · chặn" : formatTokens(t.dayTokens)}</Td>
+                <Td className="text-right whitespace-nowrap tabular-nums">{t.dayTokens === 0 ? msg("ai.admin.components.QuotaSections.n0Blocked") : formatTokens(t.dayTokens)}</Td>
                 <Td>
                   <div className="flex justify-end gap-1">
-                    <IconButton icon="edit" label={`Sửa mức riêng của ${t.name}`} onClick={() => setEditing(t)} />
+                    <IconButton icon="edit" label={msg("ai.admin.components.QuotaSections.editTheIndividualLimitOf", { name: String(t.name) })} onClick={() => setEditing(t)} />
                     <IconButton
                       icon="trash"
-                      label={`Xóa mức riêng của ${t.name}`}
+                      label={msg("ai.admin.components.QuotaSections.deleteTheIndividualLimitOf", { name: String(t.name) })}
                       className="text-danger! hover:bg-danger-soft"
                       onClick={() => setRemoving(t)}
                     />
@@ -272,17 +267,16 @@ export function TeacherQuotaTable() {
       )}
       <Dialog
         open={removing !== null}
-        title="Xóa mức riêng?"
+        title={msg("ai.admin.components.QuotaSections.deleteIndividualLimit")}
         icon="warning"
         tone="warning"
         onClose={() => setRemoving(null)}
         footer={
-          <Button variant="danger" onClick={() => removing && void remove(removing)}>
-            Xóa
-          </Button>
+          <Button variant="danger" onClick={() => removing && void removeQuota(removing)}>
+            {msg("ai.admin.components.QuotaSections.delete")}</Button>
         }
       >
-        <p>Bạn có chắc muốn xóa mức riêng của {removing?.name} không?</p>
+        <p>{msg("ai.admin.components.QuotaSections.areYouSureYouWant")}{removing?.name} {msg("ai.admin.components.QuotaSections.text")}</p>
       </Dialog>
     </SettingsGroup>
   );
@@ -328,7 +322,7 @@ function TeacherQuotaDialog({
 
   const shown = teacher || typed === "" ? [] : candidates;
 
-  const save = async () => {
+  const saveQuota = async () => {
     if (!teacher || value === null) return;
     setBusy(true);
     setError(null);
@@ -337,7 +331,7 @@ function TeacherQuotaDialog({
       await onSaved();
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(problem?.code === "AI_QUOTA_NOT_TEACHER" ? "Tài khoản này không phải giảng viên." : (problem?.detail ?? "Không lưu được mức riêng."));
+      setError(problem?.code === "AI_QUOTA_NOT_TEACHER" ? msg("ai.admin.components.QuotaSections.thisAccountIsNotA") : (problem?.detail ?? msg("ai.admin.components.QuotaSections.couldNotSaveTheIndividual")));
       setBusy(false);
     }
   };
@@ -345,14 +339,13 @@ function TeacherQuotaDialog({
   return (
     <Dialog
       open
-      title={current ? "Sửa mức riêng" : "Thêm mức riêng"}
+      title={current ? msg("ai.admin.components.QuotaSections.editIndividualLimit") : msg("ai.admin.components.QuotaSections.addIndividualLimit")}
       icon="person"
       onClose={onClose}
       dismissible={!busy}
       footer={
-        <Button variant="primary" onClick={() => void save()} disabled={busy || !teacher || value === null}>
-          Lưu
-        </Button>
+        <Button variant="primary" onClick={() => void saveQuota()} disabled={busy || !teacher || value === null}>
+          {msg("ai.admin.components.QuotaSections.save")}</Button>
       }
     >
       {current ? (
@@ -360,7 +353,7 @@ function TeacherQuotaDialog({
           <span className="font-semibold text-ink">{current.name}</span> · {current.email}
         </p>
       ) : (
-        <Field label="Email giảng viên" htmlFor={ids.email} required>
+        <Field label={msg("ai.admin.components.QuotaSections.lecturerEmail")} htmlFor={ids.email} required>
           <div>
             <TextInput
               id={ids.email}
@@ -380,12 +373,9 @@ function TeacherQuotaDialog({
               disabled={busy}
             />
             {shown.length > 0 && (
-              <ul
-                id={ids.list}
+              <Card as="ul" padding="none" className="mt-1 max-h-56 overflow-y-auto py-1" id={ids.list}
                 role="listbox"
-                aria-label="Giảng viên gợi ý"
-                className="mt-1 max-h-56 overflow-y-auto rounded-xl border border-line bg-surface py-1"
-              >
+                aria-label={msg("ai.admin.components.QuotaSections.suggestedLecturers")}>
                 {shown.map((c) => (
                   <li key={c.accountId} role="option" aria-selected={false}>
                     <button
@@ -398,14 +388,14 @@ function TeacherQuotaDialog({
                     </button>
                   </li>
                 ))}
-              </ul>
+              </Card>
             )}
           </div>
           {teacher && <p className="text-xs text-muted">{teacher.name}</p>}
         </Field>
       )}
       <Field
-        label="Token / ngày"
+        label={msg("ai.admin.components.QuotaSections.tokensDay")}
         htmlFor={ids.tokens}
         required
         error={tokens !== "" && value === null ? TOKENS_ERROR : error}

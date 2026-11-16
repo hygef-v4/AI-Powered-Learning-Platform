@@ -38,7 +38,7 @@ public class AmqpTopology {
             }
             Queue declared = builder.build();
             declarables.add(declared);
-            for (Map.Entry<String, JobQueue> route : JobRouting.all().entrySet()) {
+            for (Map.Entry<String, JobQueue> route : JobRouting.listAllQueues().entrySet()) {
                 if (route.getValue() == queue) {
                     declarables.add(BindingBuilder.bind(declared).to(jobs).with(route.getKey()));
                 }

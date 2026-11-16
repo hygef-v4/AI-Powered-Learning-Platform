@@ -31,38 +31,38 @@ public record GroupProposal(UUID id, UUID classId, String name, UUID leaderId, S
         return leaderId.equals(accountId);
     }
 
-    public GroupProposal renamed(String newName, Instant now) {
+    public GroupProposal renameProposal(String newName, Instant now) {
         return new GroupProposal(id, classId, newName, leaderId, status, submittedAt, decidedBy, decidedAt,
                 decisionReason, approvedGroupId, endReason, createdAt, now, version + 1);
     }
 
     /** Chỉ tăng {@code version}: thành viên hay lời mời của đề xuất vừa đổi. */
-    public GroupProposal touched(Instant now) {
+    public GroupProposal markTouched(Instant now) {
         return new GroupProposal(id, classId, name, leaderId, status, submittedAt, decidedBy, decidedAt,
                 decisionReason, approvedGroupId, endReason, createdAt, now, version + 1);
     }
 
-    public GroupProposal submitted(Instant now) {
+    public GroupProposal markSubmitted(Instant now) {
         return new GroupProposal(id, classId, name, leaderId, Status.SUBMITTED, now, null, null, null, null, null,
                 createdAt, now, version + 1);
     }
 
-    public GroupProposal backToDraft(Instant now) {
+    public GroupProposal returnToDraft(Instant now) {
         return new GroupProposal(id, classId, name, leaderId, Status.DRAFT, null, null, null, null, null, null,
                 createdAt, now, version + 1);
     }
 
-    public GroupProposal approved(UUID by, UUID groupId, Instant now) {
+    public GroupProposal markApproved(UUID by, UUID groupId, Instant now) {
         return new GroupProposal(id, classId, name, leaderId, Status.APPROVED, submittedAt, by, now, null, groupId,
                 null, createdAt, now, version + 1);
     }
 
-    public GroupProposal rejected(UUID by, String reason, Instant now) {
+    public GroupProposal markRejected(UUID by, String reason, Instant now) {
         return new GroupProposal(id, classId, name, leaderId, Status.REJECTED, submittedAt, by, now, reason, null,
                 null, createdAt, now, version + 1);
     }
 
-    public GroupProposal cancelled(EndReason reason, Instant now) {
+    public GroupProposal markCancelled(EndReason reason, Instant now) {
         return new GroupProposal(id, classId, name, leaderId, Status.CANCELLED, submittedAt, null, now, null, null,
                 reason, createdAt, now, version + 1);
     }

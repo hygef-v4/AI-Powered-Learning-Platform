@@ -7,11 +7,12 @@ import {
   getQuizMaterials, getSubjectMaterials, requestBankDraft, requestQuizDraft,
 } from "../api";
 import { AiDraftDialog, type DraftTargetApi } from "./AiDrafts";
-import { errorMessage, failureLabel, formatDateTime } from "../model/labels";
+import { describeError, describeFailure, formatDateTime } from "../model/labels";
 import type { AiDraft, AiDraftStatus, QuizDetail } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 const STATUS_LABELS: Record<AiDraftStatus, string> = {
-  PENDING: "AI đang soạn", READY: "Chờ chấp nhận", ACCEPTED: "Đã chấp nhận", DISCARDED: "Đã bỏ", FAILED: "Lỗi",
+  PENDING: msg("quizzes.components.AiDraftTargets.theAiIsWriting"), READY: msg("quizzes.components.AiDraftTargets.awaitingAcceptance"), ACCEPTED: msg("quizzes.components.AiDraftTargets.accepted"), DISCARDED: msg("quizzes.components.AiDraftTargets.discarded"), FAILED: msg("quizzes.components.AiDraftTargets.error"),
 };
 const STATUS_TONES = { PENDING: "info", READY: "warning", ACCEPTED: "success", DISCARDED: "neutral", FAILED: "danger" } as const;
 
@@ -22,9 +23,9 @@ export function QuestionAiDraftDialog({ subjectId, onClose, onAccepted }: {
   onAccepted: (count: number) => void;
 }) {
   const api = useMemo<DraftTargetApi>(() => ({
-    title: "Tạo nháp bằng AI",
-    taskLabel: "Sinh câu hỏi · Ngân hàng câu hỏi của môn",
-    acceptNote: "Câu được chấp nhận vào ngân hàng ở trạng thái Nháp; bạn kiểm tra lại trước khi kích hoạt.",
+    title: msg("quizzes.components.AiDraftTargets.draftWithAi"),
+    taskLabel: msg("quizzes.components.AiDraftTargets.generateQuestionsSubjectQuestionBank"),
+    acceptNote: msg("quizzes.components.AiDraftTargets.acceptedQuestionsEnterTheBank"),
     loadMaterials: (signal) => getSubjectMaterials(subjectId, signal),
     list: (signal) => getBankDrafts(subjectId, signal),
     request: (input) => requestBankDraft(subjectId, input),
@@ -86,14 +87,14 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
         setError(null);
         setDrafts(list);
       })
-      .catch((failure: unknown) => !controller.signal.aborted && setError(errorMessage(failure)));
+      .catch((failure: unknown) => !controller.signal.aborted && setError(describeError(failure)));
     return () => controller.abort();
   }, [quizId, reloadKey]);
 
   const api = useMemo<DraftTargetApi>(() => ({
-    title: "Tạo nháp bằng AI",
-    taskLabel: `Sinh câu hỏi · ${quizTitle}`,
-    acceptNote: "Câu được chấp nhận thành câu riêng ở cuối quiz; AI không tự duyệt hay phát hành quiz.",
+    title: msg("quizzes.components.AiDraftTargets.draftWithAi"),
+    taskLabel: msg("quizzes.components.AiDraftTargets.generateQuestions", { quizTitle: String(quizTitle) }),
+    acceptNote: msg("quizzes.components.AiDraftTargets.acceptedQuestionsBecomeSeparateQuestions"),
     loadMaterials: (signal) => getQuizMaterials(quizId, signal),
     list: (signal) => getQuizDrafts(quizId, signal),
     request: (input) => requestQuizDraft(quizId, input, version.current),
@@ -120,7 +121,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
       return;
     }
     if (draftDirty.current) {
-      requestConfirm("Bỏ các chỉnh sửa đề xuất chưa lưu?", complete);
+      requestConfirm(msg("quizzes.components.AiDraftTargets.discardUnsavedProposalEdits"), complete);
       return;
     }
     complete();
@@ -146,8 +147,8 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
               <Pill tone={STATUS_TONES[draft.status]}>{STATUS_LABELS[draft.status]}</Pill>
               <span>{draft.origin === "MCP" ? `Agent: ${draft.agentLabel ?? "Agent"}` : "AI"}</span>
               <span className="text-muted">
-                {draft.status === "FAILED" ? failureLabel(draft.failureCode, draft.failureMessage)
-                  : `${draft.questions.length || draft.requestedCount || 0} câu · ${formatDateTime(draft.createdAt)}`}
+                {draft.status === "FAILED" ? describeFailure(draft.failureCode, draft.failureMessage)
+                  : msg("quizzes.components.AiDraftTargets.questions", { value: String(draft.questions.length || draft.requestedCount || 0), value2: String(formatDateTime(draft.createdAt)) })}
               </span>
               <Button size="sm" className="ml-auto" disabled={disabled} aria-expanded={expanded} onClick={() => {
                 if (expanded) { close(); return; }
@@ -155,12 +156,12 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
                   if (!onRequestOpen || onRequestOpen()) setOpen({ draftId: draft.id });
                 };
                 if (draftDirty.current) {
-                  requestConfirm("Bỏ các chỉnh sửa chưa lưu để xem đề xuất khác?", viewDraft);
+                  requestConfirm(msg("quizzes.components.AiDraftTargets.discardUnsavedEditsToView"), viewDraft);
                   return;
                 }
                 viewDraft();
               }}
-                data-testid="quiz-ai-draft-view">{expanded ? "Thu gọn" : "Xem"}</Button>
+                data-testid="quiz-ai-draft-view">{expanded ? msg("quizzes.components.AiDraftTargets.collapse") : "Xem"}</Button>
             </li>
             );
           })}
@@ -172,5 +173,5 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
       )}
       {confirmDialog}
     </>;
-  return inline ? <div className="mt-4 flex flex-col gap-3" aria-label="Đề xuất AI">{body}</div> : <Section title="Đề xuất AI">{body}</Section>;
+  return inline ? <div className="mt-4 flex flex-col gap-3" aria-label={msg("quizzes.components.AiDraftTargets.aiProposal")}>{body}</div> : <Section title={msg("quizzes.components.AiDraftTargets.aiProposal")}>{body}</Section>;
 }

@@ -266,7 +266,7 @@ describe("U05 reference UI", () => {
   });
 
   it("never offers manager controls on a teacher class page", () => {
-    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} />);
     expect(screen.queryByRole("button", { name: /Phân công/ })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("tab", { name: /Sinh viên/ }));
     expect(screen.queryByRole("button", { name: /Gỡ/ })).not.toBeInTheDocument();
@@ -277,23 +277,23 @@ describe("U05 reference UI", () => {
 
   it("opens the tab named in ?tab= and ignores unknown names", () => {
     window.history.pushState({}, "", "/teaching/classes/class-1?tab=students");
-    const { unmount } = render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+    const { unmount } = render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} />);
     expect(screen.getByRole("tab", { name: /Sinh viên/ })).toHaveAttribute("aria-selected", "true");
     unmount();
     window.history.pushState({}, "", "/teaching/classes/class-1?tab=nope");
-    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} />);
     expect(screen.getByRole("tab", { name: /Thông tin lớp/ })).toHaveAttribute("aria-selected", "true");
     window.history.pushState({}, "", "/");
   });
 
   it("does not show removed enrollments to a teacher", () => {
-    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student, { ...student, accountId: "removed", name: "Đã gỡ", status: "REMOVED" }]} onBack={vi.fn()} />);
+    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student, { ...student, accountId: "removed", name: "Đã gỡ", status: "REMOVED" }]} />);
     fireEvent.click(screen.getByRole("tab", { name: /Sinh viên/ }));
     expect(screen.queryByText("Đã gỡ")).not.toBeInTheDocument();
   });
 
   it("does not present group membership as empty before group data has loaded", () => {
-    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} />);
     fireEvent.click(screen.getByRole("tab", { name: /Sinh viên/ }));
     expect(screen.queryByRole("columnheader", { name: "Nhóm" })).not.toBeInTheDocument();
   });
@@ -345,7 +345,6 @@ describe("U05 reference UI", () => {
         audience="teacher"
         value={{ ...course, description }}
         students={[student, removedStudent]}
-        onBack={vi.fn()}
       />,
     );
 
@@ -360,11 +359,11 @@ describe("U05 reference UI", () => {
     expect(container.querySelector("script")).toBeNull();
     expect(screen.queryByTestId("overview-students-card")).not.toBeInTheDocument();
 
-    rerender(<ReadOnlyClassPage audience="teacher" value={{ ...course, description: "  " }} students={[student]} onBack={vi.fn()} />);
+    rerender(<ReadOnlyClassPage audience="teacher" value={{ ...course, description: "  " }} students={[student]} />);
     expect(screen.queryByText("Chưa có mô tả.")).not.toBeInTheDocument();
     expect(screen.queryByText(description)).not.toBeInTheDocument();
 
-    rerender(<ReadOnlyClassPage audience="student" value={course} students={[student]} onBack={vi.fn()} />);
+    rerender(<ReadOnlyClassPage audience="student" value={course} students={[student]} />);
     expect(screen.getByRole("heading", { name: "Thông tin lớp", level: 2 })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Giảng viên" })).toBeInTheDocument();
   });
@@ -405,14 +404,14 @@ describe("enrollment CSV preview", () => {
 
 it("restores class tabs through Back and keeps unrelated query parameters", async () => {
   window.history.replaceState(null, "", "/teaching/classes/class-1?tab=students&keep=yes");
-  const view = render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+  const view = render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} />);
   expect(screen.getByRole("tab", { name: /Sinh viên/ })).toHaveAttribute("aria-selected", "true");
   fireEvent.click(screen.getByRole("tab", { name: "Chấm điểm" }));
   expect(new URLSearchParams(window.location.search).get("keep")).toBe("yes");
   expect(new URLSearchParams(window.location.search).get("tab")).toBe("gradebook");
   window.history.back();
   await waitFor(() => expect(new URLSearchParams(window.location.search).get("tab")).toBe("students"));
-  view.rerender(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} onBack={vi.fn()} />);
+  view.rerender(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} />);
   expect(screen.getByRole("tab", { name: /Sinh viên/ })).toHaveAttribute("aria-selected", "true");
 });
 

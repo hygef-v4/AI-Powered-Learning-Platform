@@ -1,5 +1,6 @@
 import { Button, Pill, Section } from "@/shared/ui";
 import type { SubjectDetail } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Thẻ Trạng thái của môn, cùng kiểu thẻ Trạng thái ở Chi tiết tài khoản: trạng thái, ngày tạo, nút lưu trữ / mở lại. */
 export function SubjectMetaCard({
@@ -13,7 +14,7 @@ export function SubjectMetaCard({
 }) {
   const created = new Date(subject.createdAt);
   const createdLabel = Number.isNaN(created.getTime())
-    ? "Không khả dụng"
+    ? msg("subjects.components.SubjectMetaCard.unavailable")
     : new Intl.DateTimeFormat("vi-VN", {
         timeZone: "Asia/Ho_Chi_Minh",
         day: "2-digit",
@@ -22,16 +23,16 @@ export function SubjectMetaCard({
       }).format(created);
   const archived = subject.status === "ARCHIVED";
   return (
-    <Section title="Trạng thái">
+    <Section title={msg("subjects.components.SubjectMetaCard.status")}>
       <dl className="flex flex-col gap-2.5 text-[13px]">
         <div className="flex items-center justify-between">
-          <dt className="text-muted">Trạng thái</dt>
+          <dt className="text-muted">{msg("subjects.components.SubjectMetaCard.status")}</dt>
           <dd>
-            <Pill tone={archived ? "danger" : "success"}>{archived ? "Lưu trữ" : "Hoạt động"}</Pill>
+            <Pill tone={archived ? "danger" : "success"}>{archived ? msg("subjects.components.SubjectMetaCard.archived") : msg("subjects.components.SubjectMetaCard.active")}</Pill>
           </dd>
         </div>
         <div className="flex items-center justify-between">
-          <dt className="text-muted">Ngày tạo</dt>
+          <dt className="text-muted">{msg("subjects.components.SubjectMetaCard.created")}</dt>
           <dd className="text-ink">{createdLabel}</dd>
         </div>
       </dl>
@@ -43,7 +44,7 @@ export function SubjectMetaCard({
         onClick={onStatus}
         data-testid="subject-status-open"
       >
-        {archived ? "Mở lại môn học" : "Lưu trữ môn học"}
+        {archived ? msg("subjects.components.SubjectMetaCard.reopenSubject") : msg("subjects.components.SubjectMetaCard.archiveSubject")}
       </Button>
     </Section>
   );

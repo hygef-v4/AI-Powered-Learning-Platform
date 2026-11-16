@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { Icon, TextInput } from "@/shared/ui";
 import { useCandidates, type CandidateLoader } from "../hooks/useCandidates";
 import type { PersonView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   label: string;
@@ -64,21 +65,21 @@ export function PersonPicker({ label, value, onChange, people = [], loader, clea
     <label htmlFor={`${id}-input`} className="text-xs font-semibold text-body">{label}{required && <span className="text-primary-ink"> *</span>}</label>
     <div ref={anchorRef}>
       <TextInput id={`${id}-input`} icon="search" role="combobox" invalid={invalid} aria-expanded={open} aria-controls={`${id}-list`} aria-autocomplete="list"
-        autoComplete="off" maxLength={200} disabled={disabled} placeholder={placeholder ?? "Gõ tên hoặc email"}
+        autoComplete="off" maxLength={200} disabled={disabled} placeholder={placeholder ?? msg("academics.components.PersonPicker.typeANameOrEmail")}
         value={open ? search : value?.email ?? ""}
         onFocus={() => setOpen(true)}
         onChange={(event) => { setSearch(event.target.value); setOpen(true); }}
         onKeyDown={(event) => { if (event.key === "Escape" && open) { event.stopPropagation(); setOpen(false); } }}
         onBlur={(event) => { if (!listRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false); }}
-        suffix={clearable && value && !disabled ? <button type="button" aria-label={`Bỏ chọn ${label.toLocaleLowerCase("vi")}`} className="flex text-muted hover:text-ink"
+        suffix={clearable && value && !disabled ? <button type="button" aria-label={msg("academics.components.PersonPicker.deselect", { value: String(label.toLocaleLowerCase("vi")) })} className="flex text-muted hover:text-ink"
           onMouseDown={(event) => event.preventDefault()} onClick={() => choose(null)}><Icon name="close" size={16} /></button> : undefined} />
     </div>
     {open && !disabled && typeof document !== "undefined" && createPortal(<div ref={listRef} id={`${id}-list`} role="listbox" aria-label={label}
       style={place ? { top: place.top, left: place.left, width: place.width } : { visibility: "hidden" }}
       className="fixed z-[110] max-h-56 overflow-auto rounded-lg border border-line bg-surface py-1 shadow-[var(--shadow-float)]">
-      {options.loading && <p role="status" className="px-3 py-2 text-xs text-muted">Đang tìm…</p>}
+      {options.loading && <p role="status" className="px-3 py-2 text-xs text-muted">{msg("academics.components.PersonPicker.searching")}</p>}
       {options.error && <p role="alert" className="px-3 py-2 text-xs text-danger">{options.error}</p>}
-      {!options.loading && !options.error && rows.length === 0 && <p className="px-3 py-2 text-xs text-muted">Không có người phù hợp.</p>}
+      {!options.loading && !options.error && rows.length === 0 && <p className="px-3 py-2 text-xs text-muted">{msg("academics.components.PersonPicker.noMatchingPeople")}</p>}
       {!options.loading && rows.map((person) => <button key={person.id} type="button" role="option" aria-selected={value?.id === person.id}
         className="flex w-full cursor-pointer flex-col px-3 py-2 text-left hover:bg-shell aria-selected:bg-primary-soft"
         onMouseDown={(event) => event.preventDefault()} onClick={() => choose(person)}>

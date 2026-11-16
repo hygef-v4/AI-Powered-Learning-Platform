@@ -2,6 +2,7 @@
 // Server vẫn kiểm lại; form chỉ giúp người soạn thấy lỗi sớm.
 
 import type { Difficulty, QuestionContent, QuestionOption, QuestionType } from "./types";
+import { msg } from "@/i18n/msg";
 
 export const MIN_OPTIONS = 2;
 export const MAX_OPTIONS = 6;
@@ -21,7 +22,7 @@ export type QuestionForm = {
 
 export type FormErrors = Partial<Record<"stem" | "options" | "correctOptionIds" | "defaultPoints" | "tags" | "explanation", string>>;
 
-export function emptyForm(): QuestionForm {
+export function createEmptyForm(): QuestionForm {
   return {
     type: "MCQ_SINGLE",
     stem: "",
@@ -34,7 +35,7 @@ export function emptyForm(): QuestionForm {
   };
 }
 
-export function formOf(question: QuestionContent): QuestionForm {
+export function buildFormFrom(question: QuestionContent): QuestionForm {
   return {
     type: question.type,
     stem: question.stem,
@@ -48,7 +49,7 @@ export function formOf(question: QuestionContent): QuestionForm {
 }
 
 /** Mã lựa chọn mới: lớn hơn mọi mã số đang có, để mã không đổi khi xóa lựa chọn ở giữa. */
-export function nextOptionId(options: QuestionOption[]): string {
+export function generateNextOptionId(options: QuestionOption[]): string {
   const max = options.reduce((acc, option) => Math.max(acc, Number(option.id) || 0), 0);
   return String(max + 1);
 }
@@ -62,7 +63,7 @@ export function parseTags(text: string): string[] {
 }
 
 /** Đổi loại câu sang một đáp án thì chỉ giữ đáp án đúng đầu tiên. */
-export function withType(form: QuestionForm, type: QuestionType): QuestionForm {
+export function changeType(form: QuestionForm, type: QuestionType): QuestionForm {
   return { ...form, type, correctOptionIds: type === "MCQ_SINGLE" ? form.correctOptionIds.slice(0, 1) : form.correctOptionIds };
 }
 
@@ -77,30 +78,30 @@ export function toggleCorrect(form: QuestionForm, optionId: string): QuestionFor
 
 export function validateForm(form: QuestionForm): FormErrors {
   const errors: FormErrors = {};
-  if (!form.stem.trim()) errors.stem = "Nội dung câu hỏi không được để trống";
-  else if ([...form.stem].length > MAX_TEXT) errors.stem = "Nội dung câu hỏi tối đa 20.000 ký tự";
-  if ([...form.explanation].length > MAX_TEXT) errors.explanation = "Giải thích tối đa 20.000 ký tự";
+  if (!form.stem.trim()) errors.stem = msg("quizzes.model.questionForm.theQuestionContentCannotBe");
+  else if ([...form.stem].length > MAX_TEXT) errors.stem = msg("quizzes.model.questionForm.theQuestionContentCanBe");
+  if ([...form.explanation].length > MAX_TEXT) errors.explanation = msg("quizzes.model.questionForm.theExplanationCanBeAt");
 
   const texts = form.options.map((option) => option.text.trim());
-  if (form.options.length < MIN_OPTIONS || form.options.length > MAX_OPTIONS) errors.options = "Cần 2–6 lựa chọn";
-  else if (texts.some((text) => !text)) errors.options = "Lựa chọn không được để trống";
-  else if (new Set(texts.map((text) => text.toLowerCase())).size !== texts.length) errors.options = "Các lựa chọn không được trùng nội dung";
+  if (form.options.length < MIN_OPTIONS || form.options.length > MAX_OPTIONS) errors.options = msg("quizzes.model.questionForm.n26OptionsAreRequired");
+  else if (texts.some((text) => !text)) errors.options = msg("quizzes.model.questionForm.optionsCannotBeEmpty");
+  else if (new Set(texts.map((text) => text.toLowerCase())).size !== texts.length) errors.options = msg("quizzes.model.questionForm.optionsMustNotHaveThe");
 
   const ids = new Set(form.options.map((option) => option.id));
   const correct = form.correctOptionIds.filter((id) => ids.has(id));
-  if (form.type === "MCQ_SINGLE" && correct.length !== 1) errors.correctOptionIds = "Chọn đúng 1 đáp án đúng";
-  if (form.type === "MCQ_MULTI" && correct.length < 1) errors.correctOptionIds = "Chọn ít nhất 1 đáp án đúng";
+  if (form.type === "MCQ_SINGLE" && correct.length !== 1) errors.correctOptionIds = msg("quizzes.model.questionForm.chooseExactly1CorrectAnswer");
+  if (form.type === "MCQ_MULTI" && correct.length < 1) errors.correctOptionIds = msg("quizzes.model.questionForm.chooseAtLeast1Correct");
 
   const points = Number(form.defaultPoints.replace(",", "."));
   if (!form.defaultPoints.trim() || !Number.isFinite(points) || points <= 0 || points > 9999.99
     || !/^\d+([.,]\d{1,2})?$/.test(form.defaultPoints.trim())) {
-    errors.defaultPoints = "Điểm phải lớn hơn 0, tối đa 2 chữ số thập phân";
+    errors.defaultPoints = msg("quizzes.model.questionForm.pointsMustBeGreaterThan");
   }
-  if (parseTags(form.tagsText).length > MAX_TAGS) errors.tags = "Tối đa 10 thẻ";
+  if (parseTags(form.tagsText).length > MAX_TAGS) errors.tags = msg("quizzes.model.questionForm.atMost10Tags");
   return errors;
 }
 
-export function toContent(form: QuestionForm): QuestionContent {
+export function convertToContent(form: QuestionForm): QuestionContent {
   const ids = new Set(form.options.map((option) => option.id));
   return {
     type: form.type,

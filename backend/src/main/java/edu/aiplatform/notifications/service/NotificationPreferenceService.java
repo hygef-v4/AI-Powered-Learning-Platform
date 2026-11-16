@@ -64,7 +64,7 @@ public class NotificationPreferenceService {
                 || !listTypesForRole(actor.role()).containsAll(values.keySet())
                 || values.values().stream().anyMatch(Objects::isNull)
                 || Boolean.FALSE.equals(values.get("BACKUP_FAILED")))
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "NOTIFICATION_PREFERENCE_INVALID", "Loại email không hợp lệ");
         values.forEach((type, enabled) -> notificationRepository.savePreference(id, type, enabled));
         return loadPreferences(actor);

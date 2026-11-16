@@ -29,10 +29,10 @@ public class UnattachedFileScanner implements IScheduledScanner {
 
     @Override
     public void scan(Instant now) {
-        for (String fileId : unattached.due(now, BATCH)) {
+        for (String fileId : unattached.listDue(now, BATCH)) {
             try {
-                storage.delete(fileId);
-                unattached.forget(fileId);
+                storage.deleteFile(fileId);
+                unattached.forgetFile(fileId);
             } catch (StorageUnavailableException e) {
                 log.warn("Chưa xóa được tệp không dùng; thử lại ở lượt sau");
             }

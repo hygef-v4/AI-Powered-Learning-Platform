@@ -20,39 +20,39 @@ public record AiConnection(UUID id, Scope scope, UUID ownerId, AiProvider provid
         ACTIVE, DISABLED, REVOKED
     }
 
-    public static AiConnection create(UUID id, Scope scope, UUID ownerId, AiProvider provider, String model,
+    public static AiConnection createConnection(UUID id, Scope scope, UUID ownerId, AiProvider provider, String model,
                                       EncryptedKey key, String hint, Instant now) {
         return new AiConnection(id, scope, ownerId, provider, model, key.ciphertext(), key.iv(), key.version(), hint,
                 Status.ACTIVE, null, null, now, now, 0);
     }
 
-    public AiConnection withKey(String newModel, EncryptedKey key, String hint, Instant now) {
+    public AiConnection replaceKey(String newModel, EncryptedKey key, String hint, Instant now) {
         return new AiConnection(id, scope, ownerId, provider, newModel, key.ciphertext(), key.iv(), key.version(), hint,
                 status, null, null, createdAt, now, version);
     }
 
-    public AiConnection withModel(String newModel, Instant now) {
+    public AiConnection replaceModel(String newModel, Instant now) {
         return new AiConnection(id, scope, ownerId, provider, newModel, keyCiphertext, keyIv, keyVersion, keyHint, status,
                 lastTestAt, lastTestResult, createdAt, now, version);
     }
 
-    public AiConnection withStatus(Status next, Instant now) {
+    public AiConnection changeStatus(Status next, Instant now) {
         return new AiConnection(id, scope, ownerId, provider, model, keyCiphertext, keyIv, keyVersion, keyHint, next,
                 lastTestAt, lastTestResult, createdAt, now, version);
     }
 
     /** Thu hồi xóa bản mã (BR-U06-03). */
-    public AiConnection revoked(Instant now) {
+    public AiConnection markRevoked(Instant now) {
         return new AiConnection(id, scope, ownerId, provider, model, null, null, null, keyHint, Status.REVOKED, lastTestAt,
                 lastTestResult, createdAt, now, version);
     }
 
-    public AiConnection withTest(String result, Instant at) {
+    public AiConnection recordTest(String result, Instant at) {
         return new AiConnection(id, scope, ownerId, provider, model, keyCiphertext, keyIv, keyVersion, keyHint, status, at,
                 result, createdAt, updatedAt, version);
     }
 
-    public EncryptedKey encryptedKey() {
+    public EncryptedKey readEncryptedKey() {
         return new EncryptedKey(keyCiphertext, keyIv, keyVersion == null ? 0 : keyVersion);
     }
 

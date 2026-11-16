@@ -53,7 +53,7 @@ class MaterialServiceTest {
         assertThat(changed.enabled()).isFalse();
         assertThat(changed.description()).isEqualTo("Mô tả");
         assertThat(changed.descriptionDocument()).isEqualTo(document);
-        assertThat(changed.revise("Title", changed.description(), 0, 2, Material.Status.ACTIVE, now).enabled()).isFalse();
+        assertThat(changed.reviseMaterial("Title", changed.description(), 0, 2, Material.Status.ACTIVE, now).enabled()).isFalse();
         assertThat(changed.moveToModule(UUID.randomUUID()).descriptionDocument())
                 .isEqualTo(document);
         when(materialRepository.findMaterial(id)).thenReturn(Optional.of(changed));
@@ -244,7 +244,7 @@ class MaterialServiceTest {
         assertThatThrownBy(() -> materialService.updateMaterial(actor, id,
                 new MaterialCommands.Update("Rejected", "", 0, 0L, null)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
         verifyNoInteractions(audit);
     }
 
@@ -277,7 +277,7 @@ class MaterialServiceTest {
                                         new MaterialCommands.Replace(
                                                 8L, new MaterialCommands.Source("signed", null))))
                 .isInstanceOfSatisfying(
-                        ApiException.class, e -> assertThat(e.status().value()).isEqualTo(409));
+                        ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(409));
         verifyNoInteractions(artifact, job, audit);
         verify(materialRepository, never()).updateMaterial(any(), anyLong());
     }
@@ -299,7 +299,7 @@ class MaterialServiceTest {
 
     @Test
     void deniedMutationDoesNotTouchArtifactOrWrite() {
-        doThrow(ApiException.notFound("MATERIAL_NOT_FOUND"))
+        doThrow(ApiException.createNotFound("MATERIAL_NOT_FOUND"))
                 .when(materialAccessPolicy)
                 .requireWriteAccess(actor, material);
         assertThatThrownBy(
@@ -449,7 +449,7 @@ class MaterialServiceTest {
                                                 foreignModule)))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_MODULE_INVALID"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_MODULE_INVALID"));
         Material scoped =
                 new Material(
                         id,
@@ -477,7 +477,7 @@ class MaterialServiceTest {
                                                 "Moved", "", 0, 0L, foreignModule)))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_MODULE_INVALID"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_MODULE_INVALID"));
         verify(materialRepository, never()).insertMaterial(any(), any());
         verify(materialRepository, never()).updateMaterial(any(), anyLong());
         verifyNoInteractions(artifact, job, audit);
@@ -513,7 +513,7 @@ class MaterialServiceTest {
                                                 1L, new MaterialCommands.Source("signed", null))))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
         verifyNoInteractions(artifact, job, audit);
         when(materialRepository.updateMaterial(any(), anyLong())).thenReturn(false);
         assertThatThrownBy(
@@ -525,7 +525,7 @@ class MaterialServiceTest {
                                                 0L, new MaterialCommands.Source("signed", null))))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
         verify(materialRepository, never()).insertVersion(any());
         verifyNoInteractions(job, audit);
     }

@@ -37,7 +37,7 @@ class ImportFileReaderTest {
             action.run();
             return null;
         } catch (ApiException e) {
-            return e.code();
+            return e.readCode();
         }
     }
 
@@ -77,11 +77,11 @@ class ImportFileReaderTest {
     @Test
     void fileServiceRejectionsBecomeImportErrorsWithoutReadingMore() {
         when(artifacts.inspect(any(), any(), eq("a.gif"), any()))
-                .thenThrow(ApiException.unsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "x"));
+                .thenThrow(ApiException.createUnsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "x"));
         when(artifacts.inspect(any(), any(), eq("big.png"), any()))
-                .thenThrow(ApiException.payloadTooLarge("FILE_TOO_LARGE", "Tệp vượt 10 MB"));
+                .thenThrow(ApiException.createPayloadTooLarge("FILE_TOO_LARGE", "Tệp vượt 10 MB"));
         when(artifacts.inspect(any(), any(), eq("staff.png"), any()))
-                .thenThrow(ApiException.forbidden("FILE_UPLOAD_FORBIDDEN"));
+                .thenThrow(ApiException.createForbidden("FILE_UPLOAD_FORBIDDEN"));
 
         assertThat(code(() -> reader.readFiles(teacher, List.of(file("a.gif"), file("b.png")))))
                 .isEqualTo("ASSIGNMENT_IMPORT_FILE_INVALID");
@@ -90,6 +90,6 @@ class ImportFileReaderTest {
                 .isEqualTo("ASSIGNMENT_IMPORT_TOO_LARGE");
         assertThatThrownBy(() -> reader.readFiles(teacher, List.of(file("staff.png"))))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("FILE_UPLOAD_FORBIDDEN"));
+                        e -> assertThat(e.readCode()).isEqualTo("FILE_UPLOAD_FORBIDDEN"));
     }
 }

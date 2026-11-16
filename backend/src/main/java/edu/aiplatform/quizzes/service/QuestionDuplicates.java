@@ -32,7 +32,7 @@ class QuestionDuplicates {
     void requireUnique(UUID subjectId, QuestionContent content, UUID excludeLineage) {
         questions.lockSubject(subjectId);
         duplicateOf(subjectId, content, excludeLineage).ifPresent(message -> {
-            throw ApiException.conflict("QUESTION_DUPLICATE", message);
+            throw ApiException.createConflict("QUESTION_DUPLICATE", message);
         });
     }
 
@@ -42,11 +42,11 @@ class QuestionDuplicates {
                 .map(found -> "Câu này trùng với câu đã có trong ngân hàng: \"" + preview(found.content().stem()) + "\"");
     }
 
-    List<SimilarQuestion> similarTo(UUID subjectId, String stem, UUID excludeLineage) {
+    List<SimilarQuestion> findSimilar(UUID subjectId, String stem, UUID excludeLineage) {
         String normalized = QuestionFingerprint.normalize(stem);
         List<SimilarQuestion> found = new ArrayList<>();
-        for (var entry : questions.bankStems(subjectId, excludeLineage)) {
-            double score = QuestionFingerprint.similarity(normalized, entry.normalizedStem());
+        for (var entry : questions.listBankStems(subjectId, excludeLineage)) {
+            double score = QuestionFingerprint.calculateSimilarity(normalized, entry.normalizedStem());
             if (score >= SIMILAR_FROM) {
                 found.add(new SimilarQuestion(entry.id(), entry.stem(), entry.status(), (int) Math.round(score * 100)));
             }

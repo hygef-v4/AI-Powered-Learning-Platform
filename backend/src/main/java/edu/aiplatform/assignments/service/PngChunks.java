@@ -26,30 +26,30 @@ final class PngChunks {
     }
 
     /** Ảnh đại diện 480×270: khung, ba hình chữ nhật nối nhau; XML sơ đồ ghi vào chunk {@code tEXt mxfile}. */
-    static byte[] diagramPlaceholder(String xml) {
-        return diagramPlaceholder(xml, true);
+    static byte[] drawDiagramPlaceholder(String xml) {
+        return drawDiagramPlaceholder(xml, true);
     }
 
     /** {@code drawn} sai (sơ đồ chưa vẽ gì): chỉ có khung trống, không vẽ hình đại diện (lỗi 2026-11-12). */
-    static byte[] diagramPlaceholder(String xml, boolean drawn) {
+    static byte[] drawDiagramPlaceholder(String xml, boolean drawn) {
         int width = 480;
         int height = 270;
         int[] pixels = new int[width * height];
         Arrays.fill(pixels, 0xF8FAFC);
-        rect(pixels, width, 0, 0, width, height, 0xCBD5E1, false);
+        drawRect(pixels, width, 0, 0, width, height, 0xCBD5E1, false);
         if (drawn) {
-            box(pixels, width, 40, 100, 110, 70);
-            box(pixels, width, 185, 100, 110, 70);
-            box(pixels, width, 330, 100, 110, 70);
-            rect(pixels, width, 150, 133, 35, 4, 0x475569, true);
-            rect(pixels, width, 295, 133, 35, 4, 0x475569, true);
+            drawBox(pixels, width, 40, 100, 110, 70);
+            drawBox(pixels, width, 185, 100, 110, 70);
+            drawBox(pixels, width, 330, 100, 110, 70);
+            drawRect(pixels, width, 150, 133, 35, 4, 0x475569, true);
+            drawRect(pixels, width, 295, 133, 35, 4, 0x475569, true);
         }
         byte[] png = encode(pixels, width, height);
-        return xml == null ? png : withText(png, MXFILE, encodeUri(xml));
+        return xml == null ? png : addTextChunk(png, MXFILE, encodeUri(xml));
     }
 
     /** Chèn chunk {@code tEXt} ngay sau IHDR. */
-    static byte[] withText(byte[] png, String keyword, String latin1Text) {
+    static byte[] addTextChunk(byte[] png, String keyword, String latin1Text) {
         byte[] key = keyword.getBytes(StandardCharsets.ISO_8859_1);
         byte[] text = latin1Text.getBytes(StandardCharsets.ISO_8859_1);
         byte[] data = new byte[key.length + 1 + text.length];
@@ -80,7 +80,7 @@ final class PngChunks {
                 break;
             }
             if (length <= MAX_TEXT_BYTES && (type.equals("tEXt") || type.equals("zTXt") || type.equals("iTXt"))) {
-                Optional<String> text = text(type, Arrays.copyOfRange(png, dataStart, dataStart + length));
+                Optional<String> text = decodeText(type, Arrays.copyOfRange(png, dataStart, dataStart + length));
                 if (text.isPresent()) {
                     return text;
                 }
@@ -91,7 +91,7 @@ final class PngChunks {
     }
 
     /** Kích thước điểm ảnh của PNG, GIF, JPEG; không đọc được thì rỗng. */
-    static Optional<int[]> size(byte[] image) {
+    static Optional<int[]> readSize(byte[] image) {
         if (image == null || image.length < 24) {
             return Optional.empty();
         }
@@ -131,7 +131,7 @@ final class PngChunks {
         return URLEncoder.encode(text, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
-    private static Optional<String> text(String type, byte[] data) {
+    private static Optional<String> decodeText(String type, byte[] data) {
         int zero = indexOf(data, 0, 0);
         if (zero < 0) {
             return Optional.empty();
@@ -144,7 +144,7 @@ final class PngChunks {
             String raw;
             switch (type) {
                 case "tEXt" -> raw = new String(data, zero + 1, data.length - zero - 1, StandardCharsets.ISO_8859_1);
-                case "zTXt" -> raw = new String(inflate(Arrays.copyOfRange(data, zero + 2, data.length)),
+                case "zTXt" -> raw = new String(inflateData(Arrays.copyOfRange(data, zero + 2, data.length)),
                         StandardCharsets.ISO_8859_1);
                 default -> {
                     boolean compressed = data[zero + 1] == 1;
@@ -154,7 +154,7 @@ final class PngChunks {
                         return Optional.empty();
                     }
                     byte[] body = Arrays.copyOfRange(data, translated + 1, data.length);
-                    raw = new String(compressed ? inflate(body) : body, StandardCharsets.UTF_8);
+                    raw = new String(compressed ? inflateData(body) : body, StandardCharsets.UTF_8);
                 }
             }
             String xml = raw.stripLeading().startsWith("<") ? raw : URLDecoder.decode(raw, StandardCharsets.UTF_8);
@@ -164,7 +164,7 @@ final class PngChunks {
         }
     }
 
-    private static byte[] inflate(byte[] data) throws DataFormatException {
+    private static byte[] inflateData(byte[] data) throws DataFormatException {
         Inflater inflater = new Inflater();
         try {
             inflater.setInput(data);
@@ -215,12 +215,12 @@ final class PngChunks {
         return out.toByteArray();
     }
 
-    private static void box(int[] pixels, int width, int x, int y, int w, int h) {
-        rect(pixels, width, x, y, w, h, 0xDBEAFE, true);
-        rect(pixels, width, x, y, w, h, 0x2563EB, false);
+    private static void drawBox(int[] pixels, int width, int x, int y, int w, int h) {
+        drawRect(pixels, width, x, y, w, h, 0xDBEAFE, true);
+        drawRect(pixels, width, x, y, w, h, 0x2563EB, false);
     }
 
-    private static void rect(int[] pixels, int width, int x, int y, int w, int h, int color, boolean fill) {
+    private static void drawRect(int[] pixels, int width, int x, int y, int w, int h, int color, boolean fill) {
         int height = pixels.length / width;
         for (int j = y; j < y + h && j < height; j++) {
             for (int i = x; i < x + w && i < width; i++) {

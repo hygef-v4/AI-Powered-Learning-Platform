@@ -5,14 +5,15 @@ import { Alert, Button, Dialog, Pill, Section, Select, TextInput } from "@/share
 import { getBankTags, previewPaper, saveDrawRules } from "../api";
 import { DIFFICULTY_LABELS, formatPoints } from "../model/labels";
 import type { BankTag, Difficulty, PaperPreview, QuizDetail, QuizPaperMode } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 type Row = { key: number; tag: string; difficulty: Difficulty | ""; questionCount: string; pointsEach: string };
 
 const POINTS = /^\d+([.,]\d{1,2})?$/;
-const decimal = (value: string) => Number(value.trim().replace(",", "."));
-const validRow = (r: Row) => r.tag.trim() !== "" && Number.isInteger(Number(r.questionCount)) && Number(r.questionCount) >= 1
-  && POINTS.test(r.pointsEach.trim()) && decimal(r.pointsEach) > 0;
-const rowsOf = (detail: QuizDetail): Row[] => detail.drawRules.map((r) => ({ key: r.position, tag: r.tag, difficulty: r.difficulty ?? "",
+const parseDecimal = (value: string) => Number(value.trim().replace(",", "."));
+const isValidRow = (r: Row) => r.tag.trim() !== "" && Number.isInteger(Number(r.questionCount)) && Number(r.questionCount) >= 1
+  && POINTS.test(r.pointsEach.trim()) && parseDecimal(r.pointsEach) > 0;
+const buildRows = (detail: QuizDetail): Row[] => detail.drawRules.map((r) => ({ key: r.position, tag: r.tag, difficulty: r.difficulty ?? "",
   questionCount: String(r.questionCount), pointsEach: String(r.pointsEach) }));
 
 /**
@@ -30,14 +31,14 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
 }) {
   const id = useId();
   const [mode, setMode] = useState<QuizPaperMode>(detail.quiz.paperMode);
-  const [rows, setRows] = useState<Row[]>(() => rowsOf(detail));
+  const [rows, setRows] = useState<Row[]>(() => buildRows(detail));
   const [tags, setTags] = useState<BankTag[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<PaperPreview | null>(null);
   const [nextKey, setNextKey] = useState(1000);
 
   const quizId = detail.quiz.id;
-  const saved = useMemo(() => JSON.stringify([detail.quiz.paperMode, rowsOf(detail).map(({ tag, difficulty, questionCount, pointsEach }) => [tag, difficulty, questionCount, pointsEach])]), [detail]);
+  const saved = useMemo(() => JSON.stringify([detail.quiz.paperMode, buildRows(detail).map(({ tag, difficulty, questionCount, pointsEach }) => [tag, difficulty, questionCount, pointsEach])]), [detail]);
   const current = JSON.stringify([mode, rows.map(({ tag, difficulty, questionCount, pointsEach }) => [tag, difficulty, questionCount, pointsEach])]);
   const dirty = saved !== current;
 
@@ -49,22 +50,22 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
   }, [editable, mode, quizId]);
 
   // Số câu trong kho khớp thẻ và độ khó của quy tắc; null khi chưa tải được danh sách thẻ.
-  const available = (row: Row) => {
+  const countAvailable = (row: Row) => {
     if (!tags) return null;
     const found = tags.find((t) => t.tag.toLowerCase() === row.tag.trim().toLowerCase());
     if (!found) return 0;
     return row.difficulty ? found.byDifficulty[row.difficulty] ?? 0 : found.activeCount;
   };
-  const update = (key: number, patch: Partial<Row>) => setRows((list) => list.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const updateRow = (key: number, patch: Partial<Row>) => setRows((list) => list.map((r) => (r.key === key ? { ...r, ...patch } : r)));
   const total = rows.reduce((sum, r) => sum + (Number(r.questionCount) || 0), 0);
-  const totalPoints = rows.reduce((sum, r) => sum + (Number(r.questionCount) || 0) * (decimal(r.pointsEach) || 0), 0);
-  const invalid = mode === "GENERATED" && (rows.length === 0 || rows.some((r) => !validRow(r)));
+  const totalPoints = rows.reduce((sum, r) => sum + (Number(r.questionCount) || 0) * (parseDecimal(r.pointsEach) || 0), 0);
+  const invalid = mode === "GENERATED" && (rows.length === 0 || rows.some((r) => !isValidRow(r)));
 
-  const save = async () => {
+  const saveRules = async () => {
     setBusy(true);
     try {
       onSaved(await saveDrawRules(quizId, mode, rows.map((r) => ({ tag: r.tag.trim(), difficulty: r.difficulty || null,
-        questionCount: Number(r.questionCount), pointsEach: decimal(r.pointsEach) })), detail.quiz.version));
+        questionCount: Number(r.questionCount), pointsEach: parseDecimal(r.pointsEach) })), detail.quiz.version));
     } catch (failure) {
       onError(failure);
     } finally {
@@ -84,41 +85,41 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
   };
 
   return (
-    <Section title="Cách lập đề" icon="tune" actions={editable && dirty
-      ? <Button size="sm" variant="primary" disabled={busy || disabled || invalid} onClick={() => void save()} data-testid="draw-rules-save">Lưu cách lập đề</Button>
+    <Section title={msg("quizzes.components.DrawRulesPanel.howTheQuizIsBuilt")} icon="tune" actions={editable && dirty
+      ? <Button size="sm" variant="primary" disabled={busy || disabled || invalid} onClick={() => void saveRules()} data-testid="draw-rules-save">{msg("quizzes.components.DrawRulesPanel.saveBuildMethod")}</Button>
       : undefined}>
       <fieldset disabled={!editable || busy} className="flex flex-col gap-3" data-testid="draw-rules">
-        <Select aria-label="Cách lập đề" value={mode} onChange={(event) => setMode(event.target.value as QuizPaperMode)} data-testid="draw-rules-mode">
-          <option value="FIXED">Đề cố định: mọi lượt cùng danh sách câu</option>
-          <option value="GENERATED">Sinh đề mới cho mỗi lượt làm</option>
+        <Select aria-label={msg("quizzes.components.DrawRulesPanel.howTheQuizIsBuilt")} value={mode} onChange={(event) => setMode(event.target.value as QuizPaperMode)} data-testid="draw-rules-mode">
+          <option value="FIXED">{msg("quizzes.components.DrawRulesPanel.fixedQuizEveryAttemptHas")}</option>
+          <option value="GENERATED">{msg("quizzes.components.DrawRulesPanel.generateANewQuizFor")}</option>
         </Select>
         {mode === "GENERATED" && <>
-          <datalist id={`${id}-tags`}>{tags?.map((t) => <option key={t.tag} value={t.tag}>{t.activeCount} câu</option>)}</datalist>
+          <datalist id={`${id}-tags`}>{tags?.map((t) => <option key={t.tag} value={t.tag}>{t.activeCount} {msg("quizzes.components.DrawRulesPanel.questions")}</option>)}</datalist>
           <ul className="flex flex-col gap-2">
             {rows.map((row, index) => {
               const hasTag = row.tag.trim() !== "";
-              const count = available(row);
-              const level = row.difficulty ? ` mức ${DIFFICULTY_LABELS[row.difficulty]}` : "";
+              const count = countAvailable(row);
+              const level = row.difficulty ? msg("quizzes.components.DrawRulesPanel.atLevel", { value: String(DIFFICULTY_LABELS[row.difficulty]) }) : "";
               const requested = Number(row.questionCount);
               const short = hasTag && count !== null && Number.isInteger(requested) && requested > count;
               return (
                 <li key={row.key} className="flex flex-col gap-1 rounded-lg border border-line p-2" data-testid="draw-rule">
-                  <TextInput aria-label={`Thẻ của quy tắc ${index + 1}`} placeholder="Thẻ, ví dụ Chương 1" list={`${id}-tags`} value={row.tag}
-                    onChange={(event) => update(row.key, { tag: event.target.value })} data-testid={`draw-rule-tag-${index}`} />
+                  <TextInput aria-label={msg("quizzes.components.DrawRulesPanel.tagsOfRule", { value: String(index + 1) })} placeholder={msg("quizzes.components.DrawRulesPanel.tagEGChapter1")} list={`${id}-tags`} value={row.tag}
+                    onChange={(event) => updateRow(row.key, { tag: event.target.value })} data-testid={`draw-rule-tag-${index}`} />
                   <div className="grid grid-cols-3 gap-1">
-                    <Select aria-label={`Độ khó của quy tắc ${index + 1}`} value={row.difficulty} onChange={(event) => update(row.key, { difficulty: event.target.value as Difficulty | "" })}>
-                      <option value="">Mọi độ khó</option>
+                    <Select aria-label={msg("quizzes.components.DrawRulesPanel.difficultyOfRule", { value: String(index + 1) })} value={row.difficulty} onChange={(event) => updateRow(row.key, { difficulty: event.target.value as Difficulty | "" })}>
+                      <option value="">{msg("quizzes.components.DrawRulesPanel.allDifficulties")}</option>
                       {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((d) => <option key={d} value={d}>{DIFFICULTY_LABELS[d]}</option>)}
                     </Select>
-                    <TextInput aria-label={`Số câu của quy tắc ${index + 1}`} inputMode="numeric" suffix="câu" value={row.questionCount}
-                      onChange={(event) => update(row.key, { questionCount: event.target.value })} data-testid={`draw-rule-count-${index}`} />
-                    <TextInput aria-label={`Điểm mỗi câu của quy tắc ${index + 1}`} inputMode="decimal" suffix="điểm" value={row.pointsEach}
-                      onChange={(event) => update(row.key, { pointsEach: event.target.value })} data-testid={`draw-rule-points-${index}`} />
+                    <TextInput aria-label={msg("quizzes.components.DrawRulesPanel.questionsOfRule", { value: String(index + 1) })} inputMode="numeric" suffix={msg("quizzes.components.DrawRulesPanel.questions2")} value={row.questionCount}
+                      onChange={(event) => updateRow(row.key, { questionCount: event.target.value })} data-testid={`draw-rule-count-${index}`} />
+                    <TextInput aria-label={msg("quizzes.components.DrawRulesPanel.pointsPerQuestionOfRule", { value: String(index + 1) })} inputMode="decimal" suffix={msg("quizzes.components.DrawRulesPanel.points")} value={row.pointsEach}
+                      onChange={(event) => updateRow(row.key, { pointsEach: event.target.value })} data-testid={`draw-rule-points-${index}`} />
                   </div>
-                  {short && <p role="status" className="text-xs font-medium text-warning" data-testid={`draw-rule-shortage-${index}`}>Cần {requested} câu, kho chỉ có {count} câu; chưa phát hành được.</p>}
+                  {short && <p role="status" className="text-xs font-medium text-warning" data-testid={`draw-rule-shortage-${index}`}>{msg("quizzes.components.DrawRulesPanel.needs")}{requested} {msg("quizzes.components.DrawRulesPanel.questionsTheBankOnlyHas")}{count} {msg("quizzes.components.DrawRulesPanel.questionsCannotPublishYet")}</p>}
                   <div className="flex items-center justify-between gap-2 text-xs text-muted">
-                    <span>{!hasTag ? "Chọn thẻ để xem số câu trong kho" : count === null ? "" : count === 0 ? `Kho chưa có câu${level} mang thẻ này` : `Kho có ${count} câu${level} đang dùng mang thẻ này`}</span>
-                    {editable && <Button size="sm" variant="ghost" onClick={() => setRows((list) => list.filter((r) => r.key !== row.key))} aria-label={`Bỏ quy tắc ${index + 1}`}>Bỏ</Button>}
+                    <span>{!hasTag ? msg("quizzes.components.DrawRulesPanel.chooseTagsToSeeThe") : count === null ? "" : count === 0 ? msg("quizzes.components.DrawRulesPanel.theBankHasNoQuestions", { level: String(level) }) : msg("quizzes.components.DrawRulesPanel.theBankHasActiveQuestions", { count: String(count), level: String(level) })}</span>
+                    {editable && <Button size="sm" variant="ghost" onClick={() => setRows((list) => list.filter((r) => r.key !== row.key))} aria-label={msg("quizzes.components.DrawRulesPanel.removeRule", { value: String(index + 1) })}>{msg("quizzes.components.DrawRulesPanel.remove")}</Button>}
                   </div>
                 </li>
               );
@@ -126,28 +127,28 @@ export function DrawRulesPanel({ detail, editable, disabled, onSaved, onError }:
           </ul>
           {editable && (
             <Button size="sm" icon="add" onClick={() => { setRows((list) => [...list, { key: nextKey, tag: "", difficulty: "", questionCount: "1", pointsEach: "1" }]); setNextKey((k) => k + 1); }}
-              data-testid="draw-rule-add">Thêm quy tắc</Button>
+              data-testid="draw-rule-add">{msg("quizzes.components.DrawRulesPanel.addRule")}</Button>
           )}
-          <p className="text-[13px] text-body" data-testid="draw-rules-total">Mỗi lượt: {total} câu · {formatPoints(totalPoints)} điểm</p>
-          <p className="text-xs text-muted">Danh sách câu bên dưới không dùng khi sinh đề. Câu lấy từ ngân hàng của môn; kho không đủ câu thì chưa phát hành được.</p>
+          <p className="text-[13px] text-body" data-testid="draw-rules-total">{msg("quizzes.components.DrawRulesPanel.eachAttempt")}{total} {msg("quizzes.components.DrawRulesPanel.questions3")}{formatPoints(totalPoints)} {msg("quizzes.components.DrawRulesPanel.points2")}</p>
+          <p className="text-xs text-muted">{msg("quizzes.components.DrawRulesPanel.theQuestionListBelowIs")}</p>
           {!dirty && rows.length > 0 && (
-            <Button size="sm" icon="visibility" onClick={() => void openPreview()} data-testid="draw-rules-preview">Xem thử đề mẫu</Button>
+            <Button size="sm" icon="visibility" onClick={() => void openPreview()} data-testid="draw-rules-preview">{msg("quizzes.components.DrawRulesPanel.previewASampleQuiz")}</Button>
           )}
         </>}
       </fieldset>
       {preview && (
-        <Dialog open size="lg" onClose={() => setPreview(null)} icon="visibility" title="Đề mẫu">
+        <Dialog open size="lg" onClose={() => setPreview(null)} icon="visibility" title={msg("quizzes.components.DrawRulesPanel.sampleQuiz")}>
           <div className="flex flex-col gap-3 text-[13px]" data-testid="paper-preview">
             {preview.shortages.length > 0 && (
-              <Alert tone="warning" title="Kho chưa đủ câu">
-                <ul className="list-disc pl-4">{preview.shortages.map((s) => <li key={s.position}>Quy tắc {s.position} (thẻ {s.tag}): cần {s.required} câu, kho chỉ cấp được {s.available} câu.</li>)}</ul>
+              <Alert tone="warning" title={msg("quizzes.components.DrawRulesPanel.theBankDoesNotHave")}>
+                <ul className="list-disc pl-4">{preview.shortages.map((s) => <li key={s.position}>{msg("quizzes.components.DrawRulesPanel.rule")}{s.position} {msg("quizzes.components.DrawRulesPanel.tag")}{s.tag}{msg("quizzes.components.DrawRulesPanel.needs2")}{s.required} {msg("quizzes.components.DrawRulesPanel.questionsTheBankCanOnly")}{s.available} {msg("quizzes.components.DrawRulesPanel.questions4")}</li>)}</ul>
               </Alert>
             )}
-            <p className="text-muted">Mỗi lượt làm sẽ nhận một đề khác. Đề này chỉ để xem, không được lưu. Tổng {formatPoints(preview.maxScore)} điểm.</p>
+            <p className="text-muted">{msg("quizzes.components.DrawRulesPanel.eachAttemptGetsADifferent")}{formatPoints(preview.maxScore)} {msg("quizzes.components.DrawRulesPanel.points3")}</p>
             <ol className="flex flex-col gap-3">
               {preview.items.map((item, index) => (
                 <li key={item.question.id}>
-                  <p className="flex items-center gap-2 font-semibold">Câu {index + 1} ({formatPoints(item.points)} điểm) <Pill>Quy tắc {item.rulePosition}</Pill></p>
+                  <p className="flex items-center gap-2 font-semibold">{msg("quizzes.components.DrawRulesPanel.question")}{index + 1} ({formatPoints(item.points)} {msg("quizzes.components.DrawRulesPanel.points4")}<Pill>{msg("quizzes.components.DrawRulesPanel.rule")}{item.rulePosition}</Pill></p>
                   <p className="whitespace-pre-wrap">{item.question.stem}</p>
                   <ul className="mt-1 list-[upper-alpha] pl-6">{item.question.options.map((o) => <li key={o.id}>{o.text}</li>)}</ul>
                 </li>

@@ -126,17 +126,17 @@ class JdbcQuizRepositoryIntegrationTest {
     }
 
     private Question activeBank(Difficulty difficulty, String tag) {
-        Question q = Question.newBankDraft(subject, QuestionContent.of(QuestionType.MCQ_SINGLE, "Câu " + tag,
+        Question q = Question.createBankDraft(subject, QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Câu " + tag,
                 List.of(new QuestionOption("1", "A"), new QuestionOption("2", "B")), List.of("1"), null,
                 BigDecimal.ONE, difficulty, List.of(tag)), author, NOW);
         questions.insert(q);
         Question active = q.activate(NOW);
-        assertThat(questions.update(active)).isTrue();
-        return questions.find(q.id()).orElseThrow();
+        assertThat(questions.updateQuestion(active)).isTrue();
+        return questions.findQuestion(q.id()).orElseThrow();
     }
 
     private Quiz subjectQuiz() {
-        Quiz quiz = Quiz.create(QuizScope.SUBJECT, null, subject, "Luyện tập", author, NOW);
+        Quiz quiz = Quiz.createQuiz(QuizScope.SUBJECT, null, subject, "Luyện tập", author, NOW);
         quizzes.insert(quiz);
         return quiz;
     }
@@ -148,50 +148,50 @@ class JdbcQuizRepositoryIntegrationTest {
                         edu.aiplatform.shared.content.FormattedText.Type.UL,
                         edu.aiplatform.shared.content.FormattedText.Align.CENTER, 1,
                         List.of(new edu.aiplatform.shared.content.FormattedText.Run("Mô tả quiz", true, null, null)))));
-        Quiz original = Quiz.create(QuizScope.SUBJECT, null, subject, "Rich quiz", author, NOW)
-                .withInstructionsDocument(document);
+        Quiz original = Quiz.createQuiz(QuizScope.SUBJECT, null, subject, "Rich quiz", author, NOW)
+                .replaceInstructionsDocument(document);
         quizzes.insert(original);
-        Quiz stored = quizzes.find(original.id()).orElseThrow();
+        Quiz stored = quizzes.findQuiz(original.id()).orElseThrow();
         assertThat(stored.instructions()).isEqualTo("Mô tả quiz");
         assertThat(stored.instructionsDocument()).isEqualTo(document);
-        assertThat(quizzes.update(stored.withDetails("Renamed", stored.instructions(), stored.settings(), false,
+        assertThat(quizzes.updateQuiz(stored.updateDetails("Renamed", stored.instructions(), stored.settings(), false,
                 null, NOW))).isTrue();
-        Quiz updated = quizzes.find(original.id()).orElseThrow();
+        Quiz updated = quizzes.findQuiz(original.id()).orElseThrow();
         assertThat(updated.instructionsDocument()).isEqualTo(document);
         Quiz copy = updated.copyAs(QuizOrigin.CLONE, 1, null, author, NOW);
         quizzes.insert(copy);
-        assertThat(quizzes.find(copy.id()).orElseThrow().instructionsDocument()).isEqualTo(document);
+        assertThat(quizzes.findQuiz(copy.id()).orElseThrow().instructionsDocument()).isEqualTo(document);
     }
 
     @Test
     void retiringUnpublishedQuizKeepsPublicationNullAndReopensAsDeletableDraft() {
         Quiz draft = subjectQuiz();
-        assertThat(quizzes.update(draft.retired("Lưu trữ", NOW))).isTrue();
-        Quiz retired = quizzes.find(draft.id()).orElseThrow();
+        assertThat(quizzes.updateQuiz(draft.markRetired("Lưu trữ", NOW))).isTrue();
+        Quiz retired = quizzes.findQuiz(draft.id()).orElseThrow();
         assertThat(retired.status()).isEqualTo(QuizStatus.RETIRED);
         assertThat(retired.publishedAt()).isNull();
         assertThat(retired.retiredAt()).isEqualTo(NOW);
-        assertThat(quizzes.update(retired.reopened(NOW))).isTrue();
-        Quiz reopened = quizzes.find(draft.id()).orElseThrow();
+        assertThat(quizzes.updateQuiz(retired.markReopened(NOW))).isTrue();
+        Quiz reopened = quizzes.findQuiz(draft.id()).orElseThrow();
         assertThat(reopened.status()).isEqualTo(QuizStatus.DRAFT);
         assertThat(reopened.publishedAt()).isNull();
-        assertThat(quizzes.delete(reopened.id(), reopened.version())).isTrue();
+        assertThat(quizzes.deleteQuiz(reopened.id(), reopened.version())).isTrue();
     }
 
     @Test
     void publishedQuizRetiredAtPublicationInstantReopensAsOpenAfterRoundTrip() {
         Quiz draft = subjectQuiz();
-        assertThat(quizzes.update(draft.published(NOW))).isTrue();
-        Quiz open = quizzes.find(draft.id()).orElseThrow();
-        assertThat(quizzes.update(open.retired("Hết đợt", NOW))).isTrue();
-        Quiz retired = quizzes.find(draft.id()).orElseThrow();
+        assertThat(quizzes.updateQuiz(draft.markPublished(NOW))).isTrue();
+        Quiz open = quizzes.findQuiz(draft.id()).orElseThrow();
+        assertThat(quizzes.updateQuiz(open.markRetired("Hết đợt", NOW))).isTrue();
+        Quiz retired = quizzes.findQuiz(draft.id()).orElseThrow();
         assertThat(retired.publishedAt()).isEqualTo(retired.retiredAt());
-        assertThat(quizzes.update(retired.reopened(NOW))).isTrue();
-        Quiz reopened = quizzes.find(draft.id()).orElseThrow();
+        assertThat(quizzes.updateQuiz(retired.markReopened(NOW))).isTrue();
+        Quiz reopened = quizzes.findQuiz(draft.id()).orElseThrow();
         assertThat(reopened.status()).isEqualTo(QuizStatus.OPEN);
         assertThat(reopened.publishedAt()).isEqualTo(NOW);
         assertThat(reopened.retiredAt()).isNull();
-        assertThat(quizzes.delete(reopened.id(), reopened.version())).isFalse();
+        assertThat(quizzes.deleteQuiz(reopened.id(), reopened.version())).isFalse();
     }
 
     @Test
@@ -199,15 +199,15 @@ class JdbcQuizRepositoryIntegrationTest {
         Quiz quiz = subjectQuiz();
         Question q = activeBank(Difficulty.EASY, "a");
         quizzes.replaceItems(quiz.id(), List.of(new QuizItem(quiz.id(), q.id(), 1, new BigDecimal("2.50"))));
-        Quiz changed = quiz.withDetails("Bài 1", "Đọc kỹ", new QuizSettings(true, false, 45, null, true, true), false,
+        Quiz changed = quiz.updateDetails("Bài 1", "Đọc kỹ", new QuizSettings(true, false, 45, null, true, true), false,
                 null, NOW);
 
-        assertThat(quizzes.update(changed)).isTrue();
-        Quiz read = quizzes.find(quiz.id()).orElseThrow();
+        assertThat(quizzes.updateQuiz(changed)).isTrue();
+        Quiz read = quizzes.findQuiz(quiz.id()).orElseThrow();
         assertThat(read.settings()).isEqualTo(changed.settings());
         assertThat(read.version()).isEqualTo(1);
-        assertThat(quizzes.update(changed)).as("version cũ").isFalse();
-        assertThat(quizzes.items(quiz.id())).singleElement().satisfies(i -> assertThat(i.points()).isEqualByComparingTo("2.5"));
+        assertThat(quizzes.updateQuiz(changed)).as("version cũ").isFalse();
+        assertThat(quizzes.listItems(quiz.id())).singleElement().satisfies(i -> assertThat(i.points()).isEqualByComparingTo("2.5"));
         var page = quizzes.listSubjectQuizzes(subject, null, "bài", 0, 20);
         assertThat(page.total()).isEqualTo(1);
         assertThat(page.items().get(0).itemCount()).isEqualTo(1);
@@ -218,34 +218,34 @@ class JdbcQuizRepositoryIntegrationTest {
     @Test
     void deleteRemovesUnpublishedQuizWithItemsAndInlineQuestionsOnly() {
         Quiz quiz = subjectQuiz();
-        Question inline = Question.newInline(quiz.id(), subject, QuestionContent.of(QuestionType.MCQ_SINGLE, "Riêng",
+        Question inline = Question.createInline(quiz.id(), subject, QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Riêng",
                 List.of(new QuestionOption("1", "A"), new QuestionOption("2", "B")), List.of("1"), null, BigDecimal.ONE,
                 null, null), author, NOW);
         questions.insert(inline);
         quizzes.replaceItems(quiz.id(), List.of(new QuizItem(quiz.id(), inline.id(), 1, BigDecimal.ONE)));
-        assertThat(questions.inlineOf(quiz.id())).hasSize(1);
+        assertThat(questions.listInline(quiz.id())).hasSize(1);
 
-        assertThat(quizzes.delete(quiz.id(), 0)).isTrue();
-        assertThat(quizzes.find(quiz.id())).isEmpty();
-        assertThat(questions.find(inline.id())).isEmpty();
+        assertThat(quizzes.deleteQuiz(quiz.id(), 0)).isTrue();
+        assertThat(quizzes.findQuiz(quiz.id())).isEmpty();
+        assertThat(questions.findQuestion(inline.id())).isEmpty();
 
-        Quiz open = subjectQuiz().published(NOW);
-        quizzes.update(open);
-        assertThat(quizzes.delete(open.id(), 1)).isFalse();
+        Quiz open = subjectQuiz().markPublished(NOW);
+        quizzes.updateQuiz(open);
+        assertThat(quizzes.deleteQuiz(open.id(), 1)).isFalse();
     }
 
     @Test
     void versionChainFindsOpenSiblingAndAllowsOneDraftVersion() {
         Quiz v1 = subjectQuiz();
-        quizzes.update(v1.published(NOW));
-        Quiz v2 = quizzes.find(v1.id()).orElseThrow().copyAs(QuizOrigin.NEW_VERSION, 2, null, author, NOW);
+        quizzes.updateQuiz(v1.markPublished(NOW));
+        Quiz v2 = quizzes.findQuiz(v1.id()).orElseThrow().copyAs(QuizOrigin.NEW_VERSION, 2, null, author, NOW);
         quizzes.insert(v2);
 
-        assertThat(quizzes.maxVersionNo(v1.id())).isEqualTo(2);
-        assertThat(quizzes.maxVersionNo(v2.id())).isEqualTo(2);
+        assertThat(quizzes.findMaxVersionNo(v1.id())).isEqualTo(2);
+        assertThat(quizzes.findMaxVersionNo(v2.id())).isEqualTo(2);
         assertThat(quizzes.findOpenInVersionChain(v2.id())).map(Quiz::id).hasValue(v1.id());
         assertThat(quizzes.findOpenInVersionChain(v1.id())).isEmpty();
-        Quiz another = quizzes.find(v1.id()).orElseThrow().copyAs(QuizOrigin.NEW_VERSION, 3, null, author, NOW);
+        Quiz another = quizzes.findQuiz(v1.id()).orElseThrow().copyAs(QuizOrigin.NEW_VERSION, 3, null, author, NOW);
         assertThatThrownBy(() -> quizzes.insert(another)).isInstanceOf(DuplicateKeyException.class);
         assertThat(quizzes.listSubjectQuizzes(subject, List.of(QuizStatus.OPEN))).extracting(s -> s.quiz().id())
                 .containsExactly(v1.id());
@@ -256,13 +256,13 @@ class JdbcQuizRepositoryIntegrationTest {
         Question easy = activeBank(Difficulty.EASY, "đại số");
         Question hard = activeBank(Difficulty.HARD, "hình học");
         Question retired = activeBank(Difficulty.EASY, "đại số");
-        assertThat(questions.update(retired.retire(NOW))).isTrue();
+        assertThat(questions.updateQuestion(retired.retire(NOW))).isTrue();
 
         PickQuery all = new PickQuery(null, null, null, Set.of(), 0, 20);
         assertThat(questions.countActive(subject, all)).isEqualTo(2);
         assertThat(questions.searchActive(subject, new PickQuery(null, null, null, Set.of(easy.lineageId()), 0, 20)).items())
                 .extracting(r -> r.question().id()).containsExactly(hard.id());
-        assertThat(questions.randomActive(subject, new PickQuery(Difficulty.EASY, null, null, Set.of(), 0, 5), 5))
+        assertThat(questions.pickRandomActive(subject, new PickQuery(Difficulty.EASY, null, null, Set.of(), 0, 5), 5))
                 .extracting(Question::id).containsExactly(easy.id());
         assertThat(questions.countActive(subject, new PickQuery(null, "HÌNH HỌC", null, Set.of(), 0, 20))).isEqualTo(1);
     }
@@ -273,9 +273,9 @@ class JdbcQuizRepositoryIntegrationTest {
         quizzes.replaceDrawRules(quiz.id(), List.of(
                 new DrawRule(quiz.id(), 1, "Chương 1", null, 4, new BigDecimal("0.50")),
                 new DrawRule(quiz.id(), 2, "Chương 2", Difficulty.HARD, 3, new BigDecimal("2.00"))));
-        quizzes.update(quiz.withPaperMode(QuizPaperMode.GENERATED, NOW));
+        quizzes.updateQuiz(quiz.changePaperMode(QuizPaperMode.GENERATED, NOW));
 
-        assertThat(quizzes.find(quiz.id()).orElseThrow().paperMode()).isEqualTo(QuizPaperMode.GENERATED);
+        assertThat(quizzes.findQuiz(quiz.id()).orElseThrow().paperMode()).isEqualTo(QuizPaperMode.GENERATED);
         assertThat(quizzes.drawRules(quiz.id())).extracting(DrawRule::tag).containsExactly("Chương 1", "Chương 2");
         assertThat(quizzes.drawRules(quiz.id()).get(1).difficulty()).isEqualTo(Difficulty.HARD);
         var summary = quizzes.listSubjectQuizzes(subject, null, null, 0, 20).items().get(0);
@@ -286,7 +286,7 @@ class JdbcQuizRepositoryIntegrationTest {
     @Test
     void aiDraftRoundTripsAndTransitionsOnlyFromExpectedStatus() {
         Quiz quiz = subjectQuiz();
-        QuizAiDraft pending = QuizAiDraft.pending(DraftTarget.QUIZ, quiz.id(), subject, 3L,
+        QuizAiDraft pending = QuizAiDraft.createPending(DraftTarget.QUIZ, quiz.id(), subject, 3L,
                 Map.of(QuizAiDraft.REQUEST_REF, "req-1", "source", "SHARED"), author, NOW);
         drafts.insert(pending);
         UUID task = UUID.randomUUID();
@@ -295,31 +295,31 @@ class JdbcQuizRepositoryIntegrationTest {
 
         assertThat(drafts.findByRequest(author, "req-1")).map(QuizAiDraft::id).contains(pending.id());
         assertThat(drafts.findByRequest(UUID.randomUUID(), "req-1")).isEmpty();
-        QuizAiDraft stored = drafts.find(pending.id()).orElseThrow();
+        QuizAiDraft stored = drafts.findDraft(pending.id()).orElseThrow();
         assertThat(stored.taskId()).isEqualTo(task);
         assertThat(stored.baseVersion()).isEqualTo(3L);
 
-        DraftQuestion question = DraftQuestion.of(QuestionContent.of(QuestionType.MCQ_MULTI, "Chọn số chẵn",
+        DraftQuestion question = DraftQuestion.createDraftQuestion(QuestionContent.createContent(QuestionType.MCQ_MULTI, "Chọn số chẵn",
                 List.of(new QuestionOption("1", "2"), new QuestionOption("2", "3")), List.of("1"), "Vì 2 chẵn",
                 BigDecimal.ONE, Difficulty.EASY, List.of()));
-        assertThat(drafts.transition(stored.ready(List.of(question), Map.of()), DraftStatus.PENDING)).isTrue();
-        assertThat(drafts.transition(stored.failed("X", null, NOW), DraftStatus.PENDING)).isFalse();
+        assertThat(drafts.transitionDraft(stored.markReady(List.of(question), Map.of()), DraftStatus.PENDING)).isTrue();
+        assertThat(drafts.transitionDraft(stored.markFailed("X", null, NOW), DraftStatus.PENDING)).isFalse();
 
-        QuizAiDraft ready = drafts.find(pending.id()).orElseThrow();
+        QuizAiDraft ready = drafts.findDraft(pending.id()).orElseThrow();
         assertThat(ready.status()).isEqualTo(DraftStatus.READY);
         assertThat(ready.taskId()).isEqualTo(task);
         assertThat(ready.proposal()).containsExactly(question);
         assertThat(drafts.listOpenForQuiz(quiz.id())).extracting(QuizAiDraft::id).containsExactly(pending.id());
 
-        assertThat(drafts.transition(ready.decided(DraftStatus.ACCEPTED, NOW), DraftStatus.READY)).isTrue();
+        assertThat(drafts.transitionDraft(ready.recordDecision(DraftStatus.ACCEPTED, NOW), DraftStatus.READY)).isTrue();
         assertThat(drafts.listOpenForQuiz(quiz.id())).isEmpty();
-        assertThat(drafts.find(pending.id()).orElseThrow().decidedAt()).isEqualTo(NOW);
+        assertThat(drafts.findDraft(pending.id()).orElseThrow().decidedAt()).isEqualTo(NOW);
     }
 
     @Test
     void sourceRetryDraftLockSerializesSubmissionsAndRetryMetadataRollsBack() throws Exception {
         Quiz quiz = subjectQuiz();
-        QuizAiDraft pending = QuizAiDraft.pending(DraftTarget.QUIZ, quiz.id(), subject, 0L,
+        QuizAiDraft pending = QuizAiDraft.createPending(DraftTarget.QUIZ, quiz.id(), subject, 0L,
                 Map.of("requestedCount", 5), author, NOW).retryFromSources(List.of("Nguồn không khớp"));
         drafts.insert(pending);
         try (var first = appDataSource.getConnection(); var second = appDataSource.getConnection()) {
@@ -337,22 +337,22 @@ class JdbcQuizRepositoryIntegrationTest {
             }
             second.rollback();
             UUID retryTask = UUID.randomUUID();
-            assertThat(lockedRepository.transition(pending.withSourceRetryTask(retryTask), DraftStatus.PENDING)).isTrue();
+            assertThat(lockedRepository.transitionDraft(pending.attachSourceRetryTask(retryTask), DraftStatus.PENDING)).isTrue();
             first.rollback();
         }
-        QuizAiDraft restored = drafts.find(pending.id()).orElseThrow();
+        QuizAiDraft restored = drafts.findDraft(pending.id()).orElseThrow();
         assertThat(restored.needsSourceRetry()).isTrue();
-        assertThat(restored.sourceRetryAttempted()).isFalse();
+        assertThat(restored.hasSourceRetryAttempt()).isFalse();
         assertThat(restored.taskId()).isNull();
     }
 
     @Test
     void bankDraftsListedBySubjectOnly() {
-        QuizAiDraft bank = QuizAiDraft.pending(DraftTarget.BANK, null, subject, null, Map.of(), author, NOW);
+        QuizAiDraft bank = QuizAiDraft.createPending(DraftTarget.BANK, null, subject, null, Map.of(), author, NOW);
         drafts.insert(bank);
-        drafts.insert(QuizAiDraft.pending(DraftTarget.QUIZ, subjectQuiz().id(), subject, 0L, Map.of(), author, NOW));
+        drafts.insert(QuizAiDraft.createPending(DraftTarget.QUIZ, subjectQuiz().id(), subject, 0L, Map.of(), author, NOW));
 
         assertThat(drafts.listOpenForBank(subject)).extracting(QuizAiDraft::id).containsExactly(bank.id());
-        assertThat(drafts.find(bank.id()).orElseThrow().baseVersion()).isNull();
+        assertThat(drafts.findDraft(bank.id()).orElseThrow().baseVersion()).isNull();
     }
 }

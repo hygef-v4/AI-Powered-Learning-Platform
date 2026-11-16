@@ -41,7 +41,7 @@ public interface IAcademicsReadRepository {
     long countActiveEnrollments();
 
     /** Returns active and removed enrollment counts keyed by class ID. */
-    Map<UUID, EnrollmentCounts> enrollmentCounts(Collection<UUID> classIds);
+    Map<UUID, EnrollmentCounts> countEnrollments(Collection<UUID> classIds);
 
     record EnrollmentCounts(long active, long removed) {
     }

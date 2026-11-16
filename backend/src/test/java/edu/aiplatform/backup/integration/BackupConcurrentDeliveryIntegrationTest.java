@@ -73,7 +73,7 @@ class BackupConcurrentDeliveryIntegrationTest {
             var oldRun = runs.createIfAbsent(LocalDate.of(2026, 10, 20), oldSnapshot).orElseThrow();
             runs.markRunning(oldRun, oldSnapshot);
             Path oldArchive = Files.writeString(dir.resolve("old.alapbk"), "old encrypted archive");
-            store.put(oldRun, oldArchive);
+            store.putArchive(oldRun, oldArchive);
             runs.markSuccess(oldRun, oldSnapshot, "test", "test", oldRun.toString(), "a".repeat(64),
                     Files.size(oldArchive), oldSnapshot);
             context.register(Transactions.class);
@@ -96,10 +96,10 @@ class BackupConcurrentDeliveryIntegrationTest {
                 first.get(5, TimeUnit.SECONDS);
                 second.get(5, TimeUnit.SECONDS);
                 assertThat(dumps.get()).isEqualTo(1);
-                assertThat(runs.find(runId).orElseThrow().state()).isEqualTo(BackupState.SUCCESS);
+                assertThat(runs.findRun(runId).orElseThrow().state()).isEqualTo(BackupState.SUCCESS);
                 assertThat(dir.resolve("archives").resolve(runId.toString()).resolve("archive.alapbk"))
                         .isRegularFile();
-                assertThat(runs.find(oldRun).orElseThrow().purgedAt()).isEqualTo(now);
+                assertThat(runs.findRun(oldRun).orElseThrow().purgedAt()).isEqualTo(now);
                 assertThat(dir.resolve("archives").resolve(oldRun.toString())).doesNotExist();
             } finally {
                 releaseDump.countDown();

@@ -11,7 +11,6 @@ public final class SafeJobErrors {
             UNKNOWN,
             "Quá thời gian xử lý",
             "Không đủ dung lượng tạm để dump database",
-            "Chưa cấu hình U03_BACKUP_PUBLIC_KEY",
             "U03_BACKUP_PUBLIC_KEY không hợp lệ",
             "Không chạy được pg_dump trong worker",
             "pg_dump quá thời gian",

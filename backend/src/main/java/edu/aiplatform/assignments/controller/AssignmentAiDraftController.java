@@ -19,22 +19,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/assignments/{id}/ai-drafts")
 public class AssignmentAiDraftController {
 
-    private final AssignmentAiDraftService drafts;
+    private final AssignmentAiDraftService assignmentAiDraftService;
 
-    public AssignmentAiDraftController(AssignmentAiDraftService drafts) {
-        this.drafts = drafts;
+    public AssignmentAiDraftController(AssignmentAiDraftService assignmentAiDraftService) {
+        this.assignmentAiDraftService = assignmentAiDraftService;
     }
 
     @PostMapping(consumes = "application/json")
     public AssignmentViews.AiDraft request(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                            @RequestBody AssignmentRequests.AiDraft body) {
-        return drafts.request(actor, id, body.command());
+        return assignmentAiDraftService.request(actor, id, body.buildCommand());
     }
 
     @GetMapping("/{draftId}")
-    public AssignmentViews.AiDraft get(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public AssignmentViews.AiDraft loadDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                        @PathVariable UUID draftId) {
-        return drafts.get(actor, id, draftId);
+        return assignmentAiDraftService.loadDraft(actor, id, draftId);
     }
 
     /** Đề mẫu của môn để chọn khi soạn bằng AI; {@code own=true} thêm các đề cũ người soạn quản lý được. */
@@ -42,25 +42,25 @@ public class AssignmentAiDraftController {
     public List<AssignmentViews.AiTemplateOption> listTemplates(@AuthenticationPrincipal Actor actor,
                                                                @PathVariable UUID id,
                                                                @RequestParam(defaultValue = "false") boolean own) {
-        return drafts.listTemplates(actor, id, own);
+        return assignmentAiDraftService.listTemplates(actor, id, own);
     }
 
     @PostMapping(value = "/sources:preview", consumes = "application/json")
     public List<AssignmentViews.AiSourcePreview> previewSources(@AuthenticationPrincipal Actor actor,
                                                                @PathVariable UUID id,
                                                                @RequestBody AssignmentRequests.AiSources body) {
-        return drafts.previewSources(actor, id, body.sourceFileRefs());
+        return assignmentAiDraftService.previewSources(actor, id, body.sourceFileRefs());
     }
 
     @PostMapping(value = "/{draftId}:apply", consumes = "application/json")
-    public AssignmentViews.Detail apply(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public AssignmentViews.Detail applyDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                         @PathVariable UUID draftId, @RequestBody AssignmentRequests.Apply body) {
-        return drafts.apply(actor, id, draftId, body.command());
+        return assignmentAiDraftService.applyDraft(actor, id, draftId, body.buildCommand());
     }
 
     @PostMapping("/{draftId}:discard")
     public AssignmentViews.AiDraft discard(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                            @PathVariable UUID draftId) {
-        return drafts.discard(actor, id, draftId);
+        return assignmentAiDraftService.discard(actor, id, draftId);
     }
 }

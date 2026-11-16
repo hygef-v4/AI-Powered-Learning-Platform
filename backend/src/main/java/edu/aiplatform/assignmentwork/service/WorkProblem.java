@@ -16,11 +16,11 @@ public class WorkProblem extends ApiException {
         this.properties = Map.copyOf(properties);
     }
 
-    public static WorkProblem issues(HttpStatus status, String code, String message, List<ValidationIssue> issues) {
+    public static WorkProblem createIssuesProblem(HttpStatus status, String code, String message, List<ValidationIssue> issues) {
         return new WorkProblem(status, code, message, Map.of("issues", List.copyOf(issues)));
     }
 
-    public Map<String, Object> properties() {
+    public Map<String, Object> describeProperties() {
         return properties;
     }
 }

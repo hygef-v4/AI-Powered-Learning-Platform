@@ -41,10 +41,10 @@ public class ImportFileReader {
 
     public CheckedFiles readFiles(Actor actor, List<ImportFile> files) {
         if (files == null || files.isEmpty()) {
-            throw ApiException.badRequest("ASSIGNMENT_IMPORT_FILE_INVALID", "Chọn ít nhất một ảnh hoặc PDF đề cũ");
+            throw ApiException.createBadRequest("ASSIGNMENT_IMPORT_FILE_INVALID", "Chọn ít nhất một ảnh hoặc PDF đề cũ");
         }
         if (files.size() > MAX_IMAGES) {
-            throw ApiException.badRequest("ASSIGNMENT_IMPORT_TOO_MANY_FILES", "Chỉ nhập tối đa 5 ảnh mỗi lần");
+            throw ApiException.createBadRequest("ASSIGNMENT_IMPORT_TOO_MANY_FILES", "Chỉ nhập tối đa 5 ảnh mỗi lần");
         }
         List<CheckedFile> checked = new ArrayList<>();
         long total = 0;
@@ -55,10 +55,10 @@ public class ImportFileReader {
         }
         long pdfs = checked.stream().filter(f -> PDF.equals(f.mediaType())).count();
         if (pdfs > 0 && pdfs < checked.size()) {
-            throw ApiException.badRequest("ASSIGNMENT_IMPORT_MIXED", "Không chọn chung ảnh với PDF trong một lần nhập");
+            throw ApiException.createBadRequest("ASSIGNMENT_IMPORT_MIXED", "Không chọn chung ảnh với PDF trong một lần nhập");
         }
         if (pdfs > 1) {
-            throw ApiException.badRequest("ASSIGNMENT_IMPORT_TOO_MANY_FILES", "Chỉ nhập 1 PDF mỗi lần");
+            throw ApiException.createBadRequest("ASSIGNMENT_IMPORT_TOO_MANY_FILES", "Chỉ nhập 1 PDF mỗi lần");
         }
         return new CheckedFiles(pdfs == 1 ? FileKind.PDF : FileKind.IMAGE, List.copyOf(checked), total);
     }
@@ -67,9 +67,9 @@ public class ImportFileReader {
         try {
             return artifacts.inspect(actor, ArtifactPurpose.ASSIGNMENT_IMPORT, fileName, content);
         } catch (ApiException e) {
-            throw switch (e.code()) {
-                case "FILE_TOO_LARGE" -> ApiException.badRequest("ASSIGNMENT_IMPORT_TOO_LARGE", e.getMessage());
-                case "FILE_TYPE_NOT_ALLOWED" -> ApiException.badRequest("ASSIGNMENT_IMPORT_FILE_INVALID",
+            throw switch (e.readCode()) {
+                case "FILE_TOO_LARGE" -> ApiException.createBadRequest("ASSIGNMENT_IMPORT_TOO_LARGE", e.getMessage());
+                case "FILE_TYPE_NOT_ALLOWED" -> ApiException.createBadRequest("ASSIGNMENT_IMPORT_FILE_INVALID",
                         "Chỉ nhận ảnh PNG, JPEG, WEBP hoặc PDF");
                 default -> e;
             };

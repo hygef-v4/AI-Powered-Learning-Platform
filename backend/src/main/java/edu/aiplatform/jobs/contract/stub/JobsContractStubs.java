@@ -17,13 +17,13 @@ public class JobsContractStubs {
     @ConditionalOnMissingBean
     IJob jobStub() {
         return Stubs.announce(IJob.class, (jobType, payload, idempotencyKey) ->
-                Stubs.called(IJob.class, "bỏ qua việc " + jobType + " key=" + idempotencyKey));
+                Stubs.recordCall(IJob.class, "bỏ qua việc " + jobType + " key=" + idempotencyKey));
     }
 
     @Bean
     @ConditionalOnMissingBean
     IEventPublisher eventPublisherStub() {
         return Stubs.announce(IEventPublisher.class, event ->
-                Stubs.called(IEventPublisher.class, "bỏ qua sự kiện " + event.eventType()));
+                Stubs.recordCall(IEventPublisher.class, "bỏ qua sự kiện " + event.eventType()));
     }
 }

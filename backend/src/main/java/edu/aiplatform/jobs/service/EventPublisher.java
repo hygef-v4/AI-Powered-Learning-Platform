@@ -24,8 +24,8 @@ public class EventPublisher implements IEventPublisher {
 
     @Override
     public void publish(DomainEvent event) {
-        ForbiddenKeyGuard.check(event.payload() == null ? Map.of() : event.payload());
-        afterCommit.run(() -> {
+        ForbiddenKeyGuard.checkForbiddenKeys(event.payload() == null ? Map.of() : event.payload());
+        afterCommit.runAfterCommit(() -> {
             try {
                 sender.sendEvent(event);
             } catch (RuntimeException e) {

@@ -19,13 +19,13 @@ public final class Hashing {
     }
 
     /** Chuỗi Base64 URL không padding từ {@code bytes} byte ngẫu nhiên. */
-    public static String randomToken(int bytes) {
+    public static String generateRandomToken(int bytes) {
         byte[] buffer = new byte[bytes];
         RANDOM.nextBytes(buffer);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(buffer);
     }
 
-    public static String sha256Hex(String value) {
+    public static String hashSha256Hex(String value) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             return HexFormat.of().formatHex(digest.digest(value.getBytes(StandardCharsets.UTF_8)));

@@ -47,7 +47,7 @@ class GroupProposalCleanupTest {
     void placedMemberLeavesAndSubmittedProposalBelowMinimumReturnsToDraft() {
         UUID leader = UUID.randomUUID();
         UUID member = UUID.randomUUID();
-        GroupProposal proposal = GroupProposal.draft(UUID.randomUUID(), classId, "A", leader, NOW).submitted(NOW);
+        GroupProposal proposal = GroupProposal.draft(UUID.randomUUID(), classId, "A", leader, NOW).markSubmitted(NOW);
         when(proposals.listActiveMemberships(classId, List.of(member))).thenReturn(List.of(row(proposal, member, true)));
         when(proposals.lockProposal(proposal.id())).thenReturn(Optional.of(proposal));
         when(proposals.listMembers(proposal.id())).thenReturn(List.of(row(proposal, leader, true),

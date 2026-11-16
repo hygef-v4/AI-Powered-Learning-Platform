@@ -17,6 +17,7 @@
   "dependencies": {
     "docx-preview": "0.3.7",
     "next": "16.4.3",
+    "next-intl": "4.15.1",
     "pdfjs-dist": "6.4.299",
     "pptx-preview": "1.0.7",
     "react": "19.3.0",

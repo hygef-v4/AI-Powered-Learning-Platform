@@ -65,8 +65,14 @@ public class JdbcQuizRepository implements IQuizRepository {
     }
 
     @Override
-    public Optional<Quiz> find(UUID id) {
+    public Optional<Quiz> findQuiz(UUID id) {
         return jdbc.sql("select " + COLUMNS + " from quizzes where id = :id").param("id", id).query(this::map).optional();
+    }
+
+    @Override
+    public void lockQuiz(UUID id) {
+        jdbc.sql("select id from quizzes where id = :id for update")
+                .param("id", id).query(UUID.class).optional();
     }
 
     @Override
@@ -84,18 +90,18 @@ public class JdbcQuizRepository implements IQuizRepository {
                 .param("id", q.id()).param("scope", q.scope().name()).param("classId", q.classId())
                 .param("subjectId", q.subjectId()).param("sourceQuizId", q.sourceQuizId())
                 .param("origin", q.origin().name()).param("versionNo", q.versionNo()).param("title", q.title())
-                .param("instructions", q.instructions()).param("settings", write(q.settings()))
+                .param("instructions", q.instructions()).param("settings", writeJson(q.settings()))
                 .param("monitoring", q.activityMonitoringEnabled()).param("notice", q.activityNotice())
                 .param("paperMode", q.paperMode().name()).param("status", q.status().name())
-                .param("publishedAt", timestamp(q.publishedAt())).param("retiredAt", timestamp(q.retiredAt()))
+                .param("publishedAt", convertTimestamp(q.publishedAt())).param("retiredAt", convertTimestamp(q.retiredAt()))
                 .param("retiredReason", q.retiredReason()).param("createdBy", q.createdBy())
-                .param("createdAt", timestamp(q.createdAt())).param("updatedAt", timestamp(q.updatedAt()))
-                .param("version", q.version()).param("instructionsDocument", write(q.instructionsDocument()))
+                .param("createdAt", convertTimestamp(q.createdAt())).param("updatedAt", convertTimestamp(q.updatedAt()))
+                .param("version", q.version()).param("instructionsDocument", writeJson(q.instructionsDocument()))
                 .update();
     }
 
     @Override
-    public boolean update(Quiz q) {
+    public boolean updateQuiz(Quiz q) {
         return jdbc.sql("""
                         update quizzes set title = :title, instructions = :instructions,
                             instructions_document = cast(:instructionsDocument as jsonb),
@@ -106,17 +112,17 @@ public class JdbcQuizRepository implements IQuizRepository {
                         where id = :id and version = :version
                         """)
                 .param("title", q.title()).param("instructions", q.instructions())
-                .param("instructionsDocument", write(q.instructionsDocument()))
-                .param("settings", write(q.settings())).param("monitoring", q.activityMonitoringEnabled())
+                .param("instructionsDocument", writeJson(q.instructionsDocument()))
+                .param("settings", writeJson(q.settings())).param("monitoring", q.activityMonitoringEnabled())
                 .param("notice", q.activityNotice()).param("paperMode", q.paperMode().name())
-                .param("status", q.status().name()).param("publishedAt", timestamp(q.publishedAt()))
-                .param("retiredAt", timestamp(q.retiredAt())).param("retiredReason", q.retiredReason())
-                .param("updatedAt", timestamp(q.updatedAt())).param("id", q.id()).param("version", q.version())
+                .param("status", q.status().name()).param("publishedAt", convertTimestamp(q.publishedAt()))
+                .param("retiredAt", convertTimestamp(q.retiredAt())).param("retiredReason", q.retiredReason())
+                .param("updatedAt", convertTimestamp(q.updatedAt())).param("id", q.id()).param("version", q.version())
                 .update() == 1;
     }
 
     @Override
-    public boolean delete(UUID id, long version) {
+    public boolean deleteQuiz(UUID id, long version) {
         boolean deletable = jdbc.sql("""
                         select 1 from quizzes where id = :id and version = :version and published_at is null
                             and status = 'DRAFT'
@@ -133,7 +139,7 @@ public class JdbcQuizRepository implements IQuizRepository {
     }
 
     @Override
-    public List<QuizItem> items(UUID quizId) {
+    public List<QuizItem> listItems(UUID quizId) {
         return jdbc.sql("select quiz_id, question_id, position, points from quiz_items where quiz_id = :id order by position")
                 .param("id", quizId)
                 .query((rs, n) -> new QuizItem(rs.getObject("quiz_id", UUID.class), rs.getObject("question_id", UUID.class),
@@ -174,7 +180,7 @@ public class JdbcQuizRepository implements IQuizRepository {
         long[] total = {0};
         List<QuizSummary> items = sql.query((rs, n) -> {
             total[0] = rs.getLong("total");
-            return summary(rs, n);
+            return mapSummary(rs, n);
         }).list();
         return new QuizPage(items, total[0], page, size);
     }
@@ -183,7 +189,7 @@ public class JdbcQuizRepository implements IQuizRepository {
     public List<QuizSummary> listClassQuizzes(UUID classId) {
         return jdbc.sql("select " + SUMMARY + " from quizzes where scope = 'CLASS' and class_id = :classId"
                         + " order by updated_at desc, id")
-                .param("classId", classId).query(this::summary).list();
+                .param("classId", classId).query(this::mapSummary).list();
     }
 
     @Override
@@ -191,7 +197,7 @@ public class JdbcQuizRepository implements IQuizRepository {
         return jdbc.sql("select " + SUMMARY + " from quizzes where scope = 'SUBJECT' and subject_id = :subjectId"
                         + " and status in (:statuses) order by updated_at desc, id")
                 .param("subjectId", subjectId).param("statuses", statuses.stream().map(Enum::name).toList())
-                .query(this::summary).list();
+                .query(this::mapSummary).list();
     }
 
     @Override
@@ -202,7 +208,7 @@ public class JdbcQuizRepository implements IQuizRepository {
         return jdbc.sql("select " + SUMMARY + " from quizzes where scope = 'CLASS' and class_id in (:classIds)"
                         + " and class_id <> :exclude order by updated_at desc, id")
                 .param("classIds", List.copyOf(classIds)).param("exclude", excludeClassId)
-                .query(this::summary).list();
+                .query(this::mapSummary).list();
     }
 
     @Override
@@ -246,12 +252,12 @@ public class JdbcQuizRepository implements IQuizRepository {
     }
 
     @Override
-    public int maxVersionNo(UUID quizId) {
+    public int findMaxVersionNo(UUID quizId) {
         return jdbc.sql(VERSION_CHAIN + "select coalesce(max(version_no), 0) from quizzes where id in (select id from down)")
                 .param("id", quizId).query(Integer.class).single();
     }
 
-    private QuizSummary summary(ResultSet rs, int row) throws SQLException {
+    private QuizSummary mapSummary(ResultSet rs, int row) throws SQLException {
         return new QuizSummary(map(rs, row), rs.getInt("item_count"), rs.getBigDecimal("max_score"));
     }
 
@@ -260,17 +266,17 @@ public class JdbcQuizRepository implements IQuizRepository {
                 rs.getObject("class_id", UUID.class), rs.getObject("subject_id", UUID.class),
                 rs.getObject("source_quiz_id", UUID.class), QuizOrigin.valueOf(rs.getString("origin")),
                 rs.getInt("version_no"), rs.getString("title"), rs.getString("instructions"),
-                read(rs.getString("settings"), QuizSettings.class), rs.getBoolean("activity_monitoring_enabled"),
+                readJson(rs.getString("settings"), QuizSettings.class), rs.getBoolean("activity_monitoring_enabled"),
                 rs.getString("activity_notice"), QuizPaperMode.valueOf(rs.getString("paper_mode")),
-                QuizStatus.valueOf(rs.getString("status")), instant(rs.getTimestamp("published_at")),
-                instant(rs.getTimestamp("retired_at")), rs.getString("retired_reason"),
-                rs.getObject("created_by", UUID.class), instant(rs.getTimestamp("created_at")),
-                instant(rs.getTimestamp("updated_at")), rs.getLong("version"),
+                QuizStatus.valueOf(rs.getString("status")), convertInstant(rs.getTimestamp("published_at")),
+                convertInstant(rs.getTimestamp("retired_at")), rs.getString("retired_reason"),
+                rs.getObject("created_by", UUID.class), convertInstant(rs.getTimestamp("created_at")),
+                convertInstant(rs.getTimestamp("updated_at")), rs.getLong("version"),
                 rs.getString("instructions_document") == null ? null
-                        : read(rs.getString("instructions_document"), FormattedText.class));
+                        : readJson(rs.getString("instructions_document"), FormattedText.class));
     }
 
-    private String write(Object value) {
+    private String writeJson(Object value) {
         if (value == null) return null;
         try {
             return json.writeValueAsString(value);
@@ -279,7 +285,7 @@ public class JdbcQuizRepository implements IQuizRepository {
         }
     }
 
-    private <T> T read(String value, Class<T> type) {
+    private <T> T readJson(String value, Class<T> type) {
         try {
             return json.readValue(value, type);
         } catch (JsonProcessingException e) {
@@ -287,7 +293,7 @@ public class JdbcQuizRepository implements IQuizRepository {
         }
     }
 
-    private <T> T read(String value, TypeReference<T> type) {
+    private <T> T readJson(String value, TypeReference<T> type) {
         try {
             return json.readValue(value, type);
         } catch (JsonProcessingException e) {
@@ -295,11 +301,11 @@ public class JdbcQuizRepository implements IQuizRepository {
         }
     }
 
-    private static Timestamp timestamp(Instant value) {
+    private static Timestamp convertTimestamp(Instant value) {
         return value == null ? null : Timestamp.from(value);
     }
 
-    private static Instant instant(Timestamp value) {
+    private static Instant convertInstant(Timestamp value) {
         return value == null ? null : value.toInstant();
     }
 }

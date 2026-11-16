@@ -34,12 +34,12 @@ import org.springframework.web.multipart.MultipartFile;
 @Validated
 public class AdminAccountController {
 
-    private final AccountAdminService admin;
-    private final AccountImportService imports;
+    private final AccountAdminService accountAdminService;
+    private final AccountImportService accountImportService;
 
-    public AdminAccountController(AccountAdminService admin, AccountImportService imports) {
-        this.admin = admin;
-        this.imports = imports;
+    public AdminAccountController(AccountAdminService accountAdminService, AccountImportService accountImportService) {
+        this.accountAdminService = accountAdminService;
+        this.accountImportService = accountImportService;
     }
 
     public static class CreateRequest extends StrictRequest {
@@ -85,33 +85,33 @@ public class AdminAccountController {
     }
 
     @GetMapping
-    public AccountViews.Page list(@AuthenticationPrincipal Actor actor,
+    public AccountViews.Page listAccounts(@AuthenticationPrincipal Actor actor,
                                   @RequestParam(required = false) Role role,
                                   @RequestParam(required = false) AccountStatus status,
                                   @RequestParam(required = false) String q,
                                   @RequestParam(defaultValue = "0") int page,
                                   @RequestParam(defaultValue = "20") int size) {
-        return admin.list(actor, new AccountSearch(role, status, q, page, size));
+        return accountAdminService.listAccounts(actor, new AccountSearch(role, status, q, page, size));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public AccountViews.Detail create(@AuthenticationPrincipal Actor actor,
+    public AccountViews.Detail createAccount(@AuthenticationPrincipal Actor actor,
                                       @RequestBody @Validated CreateRequest request) {
         request.rejectUnknownFields();
-        return admin.create(actor, request.email, request.displayName, request.role, request.studentCode);
+        return accountAdminService.createAccount(actor, request.email, request.displayName, request.role, request.studentCode);
     }
 
     @GetMapping("/{id}")
-    public AccountViews.Detail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return admin.detail(actor, id);
+    public AccountViews.Detail loadAccount(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return accountAdminService.loadAccount(actor, id);
     }
 
     @PatchMapping("/{id}")
-    public AccountViews.Detail update(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public AccountViews.Detail updateAccount(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                       @RequestBody @Validated UpdateRequest request) {
         request.rejectUnknownFields();
-        return admin.update(actor, id, request.displayName, request.phoneNumber, request.studentCode,
+        return accountAdminService.updateAccount(actor, id, request.displayName, request.phoneNumber, request.studentCode,
                 request.version);
     }
 
@@ -119,41 +119,41 @@ public class AdminAccountController {
     public AccountViews.Detail changeRole(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                           @RequestBody @Validated RoleRequest request) {
         request.rejectUnknownFields();
-        return admin.changeRole(actor, id, request.role, request.version);
+        return accountAdminService.changeRole(actor, id, request.role, request.version);
     }
 
     @PutMapping("/{id}/status")
     public AccountViews.Detail changeStatus(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                             @RequestBody @Validated StatusRequest request) {
         request.rejectUnknownFields();
-        return admin.changeStatus(actor, id, request.status, request.version);
+        return accountAdminService.changeStatus(actor, id, request.status, request.version);
     }
 
     @PostMapping("/imports:validate")
     public AccountImportService.ImportResult validateImport(@AuthenticationPrincipal Actor actor,
                                                             @RequestParam("file") MultipartFile file) {
-        return imports.validate(actor, read(file));
+        return accountImportService.validate(actor, readBytes(file));
     }
 
     @PostMapping("/imports:commit")
     public AccountImportService.ImportResult commitImport(@AuthenticationPrincipal Actor actor,
                                                           @RequestParam("file") MultipartFile file) {
-        return imports.commit(actor, read(file));
+        return accountImportService.commit(actor, readBytes(file));
     }
 
     /** Nhận Excel .xlsx và CSV cũ, tối đa 1 MB. */
-    private static byte[] read(MultipartFile file) {
+    private static byte[] readBytes(MultipartFile file) {
         String name = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase(Locale.ROOT);
         if (!name.endsWith(".xlsx") && !name.endsWith(".csv")) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Chỉ nhận tệp .xlsx hoặc .csv");
+            throw ApiException.createBadRequest("IMPORT_FILE_INVALID", "Chỉ nhận tệp .xlsx hoặc .csv");
         }
         if (file.getSize() > AccountImportService.MAX_BYTES) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Tệp nhập vượt 1 MB");
+            throw ApiException.createBadRequest("IMPORT_FILE_INVALID", "Tệp nhập vượt 1 MB");
         }
         try {
             return file.getBytes();
         } catch (IOException e) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Không đọc được tệp nhập");
+            throw ApiException.createBadRequest("IMPORT_FILE_INVALID", "Không đọc được tệp nhập");
         }
     }
 }

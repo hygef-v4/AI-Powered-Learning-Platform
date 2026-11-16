@@ -16,15 +16,15 @@ class GradingMcpReplayTest {
         var e=Evaluation.createPendingEvaluation(UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID(),UUID.randomUUID(),"hash",BigDecimal.TEN,"[]",Instant.now());
         var grading=mock(GradingService.class);when(grading.requireCurrent(actor,e.id,0L)).thenReturn(e);
         var proposals=mock(IGradingProposalRepository.class);var review=mock(SubmissionReviewService.class);
-        when(review.loadEvaluation(actor,e.id)).thenThrow(ApiException.unavailable("ASSIGNMENT_UNAVAILABLE","Unavailable"));
+        when(review.loadEvaluation(actor,e.id)).thenThrow(ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE","Unavailable"));
         var tx=new GradingProposalTransactions(null,proposals,grading,null,review,null,null,new GradingProposalValidator(json),json,Clock.systemUTC());
         var payload=json.readTree("""
                 {"checks":{},"score":"0","itemScoresByRubric":{},"structuredFeedback":{
                   "schemaVersion":1,"summary":{"strengths":[],"improvements":[],"nextSteps":[]},"items":[]}}
                 """);
         assertThatThrownBy(() -> tx.recordMcpProposal(actor,e.id,0,"hash","new",payload,"Agent"))
-                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.code()).isEqualTo("ASSIGNMENT_UNAVAILABLE"));
-        verify(proposals,never()).save(any());
+                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.readCode()).isEqualTo("ASSIGNMENT_UNAVAILABLE"));
+        verify(proposals,never()).saveProposal(any());
     }
     @Test void exactLegacyReplayDoesNotRevalidateHistoricalPayload() {
         var json=new ObjectMapper();var actor=new Actor(UUID.randomUUID(),Role.TEACHER);
@@ -37,7 +37,7 @@ class GradingMcpReplayTest {
         var tx=new GradingProposalTransactions(null,proposals,grading,null,null,null,null,validator,json,Clock.systemUTC());
         assertThat(tx.recordMcpProposal(actor,e.id,0,"hash","retry",existing.proposal,"Agent")).isSameAs(existing);
         verifyNoInteractions(validator);
-        verify(proposals,never()).save(any());
+        verify(proposals,never()).saveProposal(any());
     }
     @Test void retryCannotReturnAProposalFromAnOlderRubricSnapshot() {
         var json=new ObjectMapper();var actor=new Actor(UUID.randomUUID(),Role.TEACHER);
@@ -49,6 +49,6 @@ class GradingMcpReplayTest {
         when(proposals.findByRequestRef("retry")).thenReturn(Optional.of(existing));
         var tx=new GradingProposalTransactions(null,proposals,grading,null,null,null,null,mock(GradingProposalValidator.class),json,Clock.systemUTC());
         assertThatThrownBy(() -> tx.recordMcpProposal(actor,evaluation.id,0,"hash","retry",json.createObjectNode(),"Agent"))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("STALE_PROPOSAL"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("STALE_PROPOSAL"));
     }
 }

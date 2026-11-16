@@ -34,15 +34,15 @@ public class AiConnectionRepository {
     public void insert(AiConnection c) {
         jdbc.sql("insert into ai_connections (" + COLUMNS + ") values (:id, :scope, :ownerId, :provider, :model, :cipher, "
                         + ":iv, :keyVersion, :hint, :status, :lastTestAt, :lastTestResult, :createdAt, :updatedAt, 0)")
-                .params(params(c)).update();
+                .params(bindConnectionParams(c)).update();
     }
 
-    public boolean update(AiConnection c) {
+    public boolean updateConnection(AiConnection c) {
         return jdbc.sql("update ai_connections set model = :model, key_ciphertext = :cipher, key_iv = :iv, "
                         + "key_version = :keyVersion, key_hint = :hint, status = :status, last_test_at = :lastTestAt, "
                         + "last_test_result = :lastTestResult, updated_at = :updatedAt, version = version + 1 "
                         + "where id = :id and version = :version")
-                .params(params(c)).param("version", c.version()).update() == 1;
+                .params(bindConnectionParams(c)).param("version", c.version()).update() == 1;
     }
 
     /** Ghi kết quả kiểm tra, không đổi {@code version} (kiểm tra không phải thay đổi cấu hình). */
@@ -101,7 +101,7 @@ public class AiConnectionRepository {
                 .param("iv", next.iv()).param("keyVersion", next.version()).update() == 1;
     }
 
-    private static Map<String, Object> params(AiConnection c) {
+    private static Map<String, Object> bindConnectionParams(AiConnection c) {
         Map<String, Object> p = new HashMap<>();
         p.put("id", c.id());
         p.put("scope", c.scope().name());

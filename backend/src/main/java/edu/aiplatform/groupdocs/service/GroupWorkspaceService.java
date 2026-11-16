@@ -34,37 +34,37 @@ public class GroupWorkspaceService {
     private final GroupRepository groups;
     private final GroupDocAccess docAccess;
     private final GroupAccess access;
-    private final GroupDocumentService creator;
+    private final GroupDocumentService groupDocumentService;
     private final IAssignmentQuery assignments;
     private final IAccountLookup accounts;
 
     public GroupWorkspaceService(GroupDocumentRepository documents, GroupRepository groups, GroupDocAccess docAccess,
-                                 GroupAccess access, GroupDocumentService creator, IAssignmentQuery assignments,
+                                 GroupAccess access, GroupDocumentService groupDocumentService, IAssignmentQuery assignments,
                                  IAccountLookup accounts) {
         this.documents = documents;
         this.groups = groups;
         this.docAccess = docAccess;
         this.access = access;
-        this.creator = creator;
+        this.groupDocumentService = groupDocumentService;
         this.assignments = assignments;
         this.accounts = accounts;
     }
 
     /** Sinh viên mở bài nhóm từ Assignment Detail: tìm nhóm của mình trong lớp của bài. */
     @Transactional
-    public WorkspaceView myGroupDocument(Actor actor, UUID assignmentId) {
+    public WorkspaceView loadMyGroupDocument(Actor actor, UUID assignmentId) {
         AssignmentView assignment = assignments.get(assignmentId).filter(a -> a.classId() != null)
-                .orElseThrow(GroupAccess::notFound);
+                .orElseThrow(GroupAccess::createNotFoundError);
         access.requireStudent(actor, assignment.classId());
         ClassGroup group = groups.findGroupOf(assignment.classId(), actor.accountId())
-                .orElseThrow(() -> ApiException.notFound("GROUP_NONE"));
-        GroupDocument document = creator.ensureFor(group, assignmentId).orElseThrow(GroupAccess::notFound);
-        return view(docAccess.context(actor, document), assignment);
+                .orElseThrow(() -> ApiException.createNotFound("GROUP_NONE"));
+        GroupDocument document = groupDocumentService.ensureFor(group, assignmentId).orElseThrow(GroupAccess::createNotFoundError);
+        return view(docAccess.buildContext(actor, document), assignment);
     }
 
     @Transactional(readOnly = true)
-    public WorkspaceView workspace(Actor actor, UUID documentId) {
-        GroupDocContext ctx = docAccess.read(actor, documentId);
+    public WorkspaceView loadWorkspace(Actor actor, UUID documentId) {
+        GroupDocContext ctx = docAccess.loadContext(actor, documentId);
         AssignmentView assignment = assignments.get(ctx.document().assignmentId()).orElse(null);
         return view(ctx, assignment);
     }
@@ -72,13 +72,13 @@ public class GroupWorkspaceService {
     private WorkspaceView view(GroupDocContext ctx, AssignmentView assignment) {
         GroupDocument d = ctx.document();
         List<SectionView> sections = documents.listSections(d.id()).stream()
-                .map(s -> SectionView.of(s, ctx.actorId())).toList();
-        List<Member> members = ctx.group().memberIds().stream().map(id -> member(id, ctx.group())).toList();
+                .map(s -> SectionView.createSectionView(s, ctx.actorId())).toList();
+        List<Member> members = ctx.group().memberIds().stream().map(id -> buildMember(id, ctx.group())).toList();
         SubmissionWindow window = assignment == null ? SubmissionWindow.CLOSED
-                : docAccess.window(d.assignmentId(), false);
+                : docAccess.resolveWindow(d.assignmentId(), false);
         Submission submission = d.submittedAt() == null ? null : new Submission(d.submittedBy(), d.submitMode().name(),
                 d.submittedAt(), d.late(), d.receiptHash(),
-                d.sectionAuthors() == null ? List.of() : d.sectionAuthors(), d.changedSinceSubmit());
+                d.sectionAuthors() == null ? List.of() : d.sectionAuthors(), d.hasChangedSinceSubmit());
         return new WorkspaceView(d.id(), d.assignmentId(), assignment == null ? null : assignment.title(),
                 assignment == null ? null : assignment.closesAt(), assignment == null ? null : assignment.lateUntil(),
                 d.classId(), ctx.group().id(), ctx.group().name(), ctx.group().leaderId(), members, d.status().name(),
@@ -88,14 +88,15 @@ public class GroupWorkspaceService {
                 ctx.actorId());
     }
 
-    private Member member(UUID id, ClassGroup group) {
+    private Member buildMember(UUID id, ClassGroup group) {
         Optional<AccountContact> contact;
         try {
             contact = accounts.getContact(id);
         } catch (RuntimeException e) {
             contact = Optional.empty();
         }
-        return new Member(id, contact.map(AccountContact::displayName).orElse(null), id.equals(group.leaderId()));
+        return new Member(id, contact.map(AccountContact::displayName).orElse(null), id.equals(group.leaderId()),
+                contact.map(AccountContact::studentCode).orElse(null));
     }
 
     public record WorkspaceView(UUID documentId, UUID assignmentId, String assignmentTitle, Instant closesAt,
@@ -105,7 +106,7 @@ public class GroupWorkspaceService {
                                 boolean activityMonitoring, boolean diagramEnabled, long version, UUID viewerId) {
     }
 
-    public record Member(UUID accountId, String name, boolean leader) {
+    public record Member(UUID accountId, String name, boolean leader, String studentCode) {
     }
 
     public record Role(boolean member, boolean leader, boolean teacher) {

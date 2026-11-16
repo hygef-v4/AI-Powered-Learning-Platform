@@ -11,6 +11,7 @@ import {
   useSubjectMutation,
   type SubjectMutationProps,
 } from "../hooks/useSubjectMutation";
+import { msg } from "@/i18n/msg";
 
 /**
  * Popup Đổi chủ nhiệm môn, cùng kiểu popup Đổi vai trò: một ô chọn, mặc định là chủ nhiệm hiện tại; bỏ chọn (x) là bỏ
@@ -49,7 +50,7 @@ export function ManagerChangeDialog({
   return (
     <Dialog
       open
-      title="Đổi chủ nhiệm môn"
+      title={msg("subjects.components.ManagerChangeDialog.changeSubjectManager")}
       size="lg"
       onClose={handleClose}
       dismissible={!mutation.busy}
@@ -60,8 +61,7 @@ export function ManagerChangeDialog({
           disabled={mutation.busy || conflict || !changed}
           data-testid="subject-manager-save"
         >
-          Lưu
-        </Button>
+          {msg("subjects.components.ManagerChangeDialog.save")}</Button>
       }
     >
       <ManagerPicker

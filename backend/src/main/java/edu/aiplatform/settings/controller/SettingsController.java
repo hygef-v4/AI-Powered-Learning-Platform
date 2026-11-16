@@ -19,28 +19,28 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class SettingsController {
 
-    private final SettingsService settings;
+    private final SettingsService settingsService;
 
-    public SettingsController(SettingsService settings) {
-        this.settings = settings;
+    public SettingsController(SettingsService settingsService) {
+        this.settingsService = settingsService;
     }
 
     public record UpdateRequest(JsonNode value, @NotNull Long version) {
     }
 
     @GetMapping
-    public SettingsService.SettingsOverview list(@AuthenticationPrincipal Actor actor) {
-        return settings.overview(actor);
+    public SettingsService.SettingsOverview loadOverview(@AuthenticationPrincipal Actor actor) {
+        return settingsService.loadOverview(actor);
     }
 
     @GetMapping("/{key}")
-    public SettingsService.SettingItemView detail(@AuthenticationPrincipal Actor actor, @PathVariable String key) {
-        return settings.detail(actor, key);
+    public SettingsService.SettingItemView loadSetting(@AuthenticationPrincipal Actor actor, @PathVariable String key) {
+        return settingsService.loadSetting(actor, key);
     }
 
     @PatchMapping("/{key}")
-    public SettingsService.SettingItemView update(@AuthenticationPrincipal Actor actor, @PathVariable String key,
+    public SettingsService.SettingItemView updateSetting(@AuthenticationPrincipal Actor actor, @PathVariable String key,
                                                   @RequestBody @Validated UpdateRequest request) {
-        return settings.update(actor, key, request.value(), request.version());
+        return settingsService.updateSetting(actor, key, request.value(), request.version());
     }
 }

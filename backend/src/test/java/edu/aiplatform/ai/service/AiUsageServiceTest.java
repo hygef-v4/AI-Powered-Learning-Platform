@@ -78,7 +78,7 @@ class AiUsageServiceTest {
         Actor student = new Actor(account, Role.STUDENT);
         when(authorization.authorize(eq(student), any(), any())).thenReturn(AuthorizationDecision.allow());
         when(repository.countOwn(account, null, null, null)).thenReturn(1L);
-        when(repository.totalsOwn(account, null, null)).thenReturn(Map.of(Source.MCP, new long[] {4, 0}));
+        when(repository.sumOwnTotals(account, null, null)).thenReturn(Map.of(Source.MCP, new long[] {4, 0}));
 
         var page = service.listOwn(student, null, null, null, 0, 50);
 
@@ -86,9 +86,9 @@ class AiUsageServiceTest {
         assertThat(page.mcp()).containsExactly(4, 0);
         assertThat(page.shared()).containsExactly(0, 0);
         assertThatThrownBy(() -> service.listOwn(student, null, null, null, 0, 101))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_USAGE_PAGE_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_USAGE_PAGE_INVALID"));
         assertThatThrownBy(() -> service.listOwn(student, null, NOW, NOW.minusSeconds(1), 0, 10))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_USAGE_RANGE_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_USAGE_RANGE_INVALID"));
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         when(authorization.authorize(eq(admin), any(), any())).thenReturn(AuthorizationDecision.deny("ROLE"));
         assertThatThrownBy(() -> service.listOwn(admin, null, null, null, 0, 10)).isInstanceOf(ApiException.class);

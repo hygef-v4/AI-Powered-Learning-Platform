@@ -39,9 +39,9 @@ class QuizPaperPlannerTest {
         all.addAll(pool("t3", 9));
         var plan = QuizPaperPlanner.plan(List.of(rule(1, "t1", null, 4), rule(2, "t2", null, 5), rule(3, "t3", null, 7)),
                 all, Set.of(), 7L);
-        assertThat(plan.picked(1)).isEqualTo(4);
-        assertThat(plan.picked(2)).isEqualTo(5);
-        assertThat(plan.picked(3)).isEqualTo(7);
+        assertThat(plan.readPicked(1)).isEqualTo(4);
+        assertThat(plan.readPicked(2)).isEqualTo(5);
+        assertThat(plan.readPicked(3)).isEqualTo(7);
         assertThat(plan.picks().get(1)).allSatisfy(e -> assertThat(e.tags()).contains("t1"));
     }
 
@@ -71,14 +71,14 @@ class QuizPaperPlannerTest {
     void aQuestionIsNeverUsedTwiceAndShortageIsReported() {
         PoolEntry both = entry("x", Difficulty.EASY, "a", "b");
         var plan = QuizPaperPlanner.plan(List.of(rule(1, "a", null, 1), rule(2, "b", null, 1)), List.of(both), Set.of(), 3L);
-        assertThat(plan.picked(1) + plan.picked(2)).isEqualTo(1);
+        assertThat(plan.readPicked(1) + plan.readPicked(2)).isEqualTo(1);
     }
 
     @Test
     void identicalContentCountsOnceAndDifficultyAndCaseAreRespected() {
         var duplicates = QuizPaperPlanner.plan(List.of(rule(1, "a", null, 2)),
                 List.of(entry("same", Difficulty.EASY, "a"), entry("same", Difficulty.EASY, "a")), Set.of(), 1L);
-        assertThat(duplicates.picked(1)).isEqualTo(1);
+        assertThat(duplicates.readPicked(1)).isEqualTo(1);
         var hard = QuizPaperPlanner.plan(List.of(rule(1, " CHƯƠNG 1 ", Difficulty.HARD, 5)),
                 List.of(entry("h", Difficulty.HARD, "chương 1"), entry("e", Difficulty.EASY, "chương 1")), Set.of(), 1L);
         assertThat(hard.picks().get(1)).singleElement().satisfies(e -> assertThat(e.contentHash()).isEqualTo("h"));
@@ -93,6 +93,6 @@ class QuizPaperPlannerTest {
             assertThat(plan.picks().get(1)).noneMatch(e -> seen.contains(e.lineageId()));
         }
         var reuse = QuizPaperPlanner.plan(List.of(rule(1, "t", null, 15)), all, seen, 5L);
-        assertThat(reuse.picked(1)).as("hết câu mới thì dùng lại câu đã gặp").isEqualTo(15);
+        assertThat(reuse.readPicked(1)).as("hết câu mới thì dùng lại câu đã gặp").isEqualTo(15);
     }
 }

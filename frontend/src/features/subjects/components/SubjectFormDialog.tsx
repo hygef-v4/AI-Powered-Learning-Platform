@@ -2,7 +2,7 @@
 
 import { useCallback, useId, useRef, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
-import { Button, Dialog, Field, TextInput } from "@/shared/ui";
+import { Button, Dialog, Field, Textarea, TextInput } from "@/shared/ui";
 import { createSubject } from "../api";
 import { ManagerPicker } from "./ManagerPicker";
 import type { ManagerCandidate, SearchSubjectManagers } from "../model/managerSearch";
@@ -12,6 +12,7 @@ import {
   validateCreateSubject,
   type SubjectFieldErrors,
 } from "../model/validation";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   onClose: () => void;
@@ -54,18 +55,18 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
     } catch (error: unknown) {
       const problem = error instanceof ApiError ? error.problem : null;
       if (problem?.code === "SUBJECT_CODE_DUPLICATE")
-        setErrors({ code: "Mã môn đã tồn tại, hãy dùng mã khác." });
+        setErrors({ code: msg("subjects.components.SubjectFormDialog.theSubjectCodeAlreadyExists") });
       else if (problem?.code === "SUBJECT_MANAGER_INVALID")
         setErrors({
-          managerId: "Chủ nhiệm đã chọn không còn hợp lệ. Hãy chọn lại hoặc bỏ lựa chọn.",
+          managerId: msg("subjects.components.SubjectFormDialog.theSelectedManagerIsNo"),
         });
       else
         setMessage(
           problem?.status === 401
-            ? "Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại."
+            ? msg("subjects.components.SubjectFormDialog.yourSessionIsNoLonger")
             : problem?.status === 403
-              ? "Bạn không có quyền thêm môn học."
-              : "Chưa xác nhận tạo môn thành công. Dữ liệu nhập được giữ lại; hãy kiểm tra danh sách trước khi thử lại.",
+              ? msg("subjects.components.SubjectFormDialog.youDoNotHavePermission")
+              : msg("subjects.components.SubjectFormDialog.couldNotConfirmThatThe"),
         );
       pending.current = false;
       setBusy(false);
@@ -78,7 +79,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
   return (
     <Dialog
       open
-      title="Thêm môn học"
+      title={msg("subjects.components.SubjectFormDialog.addSubject")}
       icon="menu_book"
       onClose={handleClose}
       dismissible={!busy}
@@ -91,7 +92,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
           disabled={busy}
           data-testid="subject-create-submit"
         >
-          {busy ? "Đang thêm…" : "Thêm môn học"}
+          {busy ? msg("subjects.components.SubjectFormDialog.adding") : msg("subjects.components.SubjectFormDialog.addSubject")}
         </Button>
       }
     >
@@ -104,7 +105,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
         className="flex flex-col gap-3.5"
       >
         <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3.5">
-          <Field label="Mã môn" htmlFor={`${formId}-code`} required error={errors.code}>
+          <Field label={msg("subjects.components.SubjectFormDialog.subjectCode")} htmlFor={`${formId}-code`} required error={errors.code}>
             <TextInput
               id={`${formId}-code`}
               value={code}
@@ -117,7 +118,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
               data-testid="subject-create-code"
             />
           </Field>
-          <Field label="Tên môn" htmlFor={`${formId}-name`} required error={errors.name}>
+          <Field label={msg("subjects.components.SubjectFormDialog.subjectName")} htmlFor={`${formId}-name`} required error={errors.name}>
             <TextInput
               id={`${formId}-name`}
               value={name}
@@ -144,8 +145,8 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
               {errors.managerId}
             </p>
           )}
-          <Field label="Mô tả" htmlFor={`${formId}-description`} error={errors.description}>
-            <textarea
+          <Field label={msg("subjects.components.SubjectFormDialog.description")} htmlFor={`${formId}-description`} error={errors.description}>
+            <Textarea
               id={`${formId}-description`}
               value={description}
               maxLength={2000}
@@ -155,7 +156,7 @@ export function SubjectFormDialog({ onClose, onCreated, searchManagers }: Props)
                 setErrors((current) => ({ ...current, description: undefined }));
               }}
               data-testid="subject-create-description"
-              className="min-h-20 w-full rounded-lg border border-line-strong px-3 py-2 text-[13px] text-ink focus-visible:outline-focus"
+              className="min-h-20"
             />
           </Field>
         </fieldset>

@@ -26,7 +26,7 @@ public class AcademicsContractStubs {
             /** Loads the lightweight class reference for a class ID. */
             @Override
             public Optional<ClassRef> getClassRef(UUID classId) {
-                return Optional.of(new ClassRef(classId, Stubs.derivedId("subject", classId), "MAU",
+                return Optional.of(new ClassRef(classId, Stubs.deriveId("subject", classId), "MAU",
                         "Lớp mẫu", ClassStatus.OPEN, null, false));
             }
 

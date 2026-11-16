@@ -110,7 +110,7 @@ class HttpProviderGatewayTest {
         KeyCipher cipher = new KeyCipher(properties);
         UUID id = UUID.randomUUID();
         UUID ownerId = UUID.randomUUID();
-        AiConnection connection = AiConnection.create(id, AiConnection.Scope.PERSONAL, ownerId, provider,
+        AiConnection connection = AiConnection.createConnection(id, AiConnection.Scope.PERSONAL, ownerId, provider,
                 "selected-model", cipher.encryptConnectionKey(id, AiConnection.Scope.PERSONAL, ownerId,
                         provider, "secret-key"), "-key", Instant.now());
         return new ConnectionTestService(gateway, cipher, properties).test(connection);
@@ -126,24 +126,24 @@ class HttpProviderGatewayTest {
         };
         assertThatThrownBy(() -> gateway.call(provider, request(SCHEMA)))
                 .isInstanceOfSatisfying(ProviderException.class, e -> {
-                    assertThat(e.kind()).isEqualTo(FailureKind.CHARGED);
+                    assertThat(e.readKind()).isEqualTo(FailureKind.CHARGED);
                     assertThat(e).isInstanceOf(edu.aiplatform.ai.service.IProviderGateway.OutputLimitException.class);
-                    assertThat(e.usage().outputTokens()).isEqualTo(500);
+                    assertThat(e.readUsage().outputTokens()).isEqualTo(500);
                     assertThat(e.getMessage()).contains("giới hạn token", "phản hồi").doesNotContain("hạn mức");
                 });
     }
 
     @Test
     void quotaAndRateLimitMessagesUseExplicitProviderCodesWithoutExposingTheBody() {
-        assertThat(gateway.safeMessage(429,
+        assertThat(gateway.buildSafeMessage(429,
                 "{\"error\":{\"code\":\"insufficient_quota\",\"message\":\"secret-key\"}}"))
                 .contains("hạn mức", "số dư").doesNotContain("secret-key", "tần suất");
-        assertThat(gateway.safeMessage(429,
+        assertThat(gateway.buildSafeMessage(429,
                 "{\"error\":{\"code\":\"rate_limit_exceeded\"}}"))
                 .contains("tần suất").doesNotContain("hết hạn mức");
-        assertThat(gateway.safeMessage(429, "{}"))
+        assertThat(gateway.buildSafeMessage(429, "{}"))
                 .contains("tần suất hoặc hết hạn mức");
-        assertThat(gateway.safeMessage(429, " ")).contains("HTTP 429");
+        assertThat(gateway.buildSafeMessage(429, " ")).contains("HTTP 429");
     }
 
     @Test
@@ -313,7 +313,7 @@ class HttpProviderGatewayTest {
         reply = "{\"error\":{\"code\":400,\"message\":\"API key not valid. Please pass a valid API key.\",\"status\":\"INVALID_ARGUMENT\",\"details\":[{\"reason\":\"API_KEY_INVALID\"}]}}";
         assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(null)))
                 .isInstanceOfSatisfying(ProviderException.class, e -> {
-                    assertThat(e.kind()).isEqualTo(FailureKind.REJECTED);
+                    assertThat(e.readKind()).isEqualTo(FailureKind.REJECTED);
                     assertThat(e.getMessage()).isEqualTo("Key API không hợp lệ (HTTP 400)");
                 });
         status = 400;
@@ -329,23 +329,23 @@ class HttpProviderGatewayTest {
         reply = "{\"error\":\"invalid key secret-key\"}";
         assertThatThrownBy(() -> gateway.call(AiProvider.OPENAI, request(SCHEMA)))
                 .isInstanceOfSatisfying(ProviderException.class, e -> {
-                    assertThat(e.kind()).isEqualTo(FailureKind.REJECTED);
+                    assertThat(e.readKind()).isEqualTo(FailureKind.REJECTED);
                     assertThat(e.getMessage()).doesNotContain("secret-key").contains("401");
                 });
         status = 429;
         assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(SCHEMA)))
-                .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.kind()).isEqualTo(FailureKind.REJECTED));
+                .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.readKind()).isEqualTo(FailureKind.REJECTED));
     }
 
     @Test
     void serverErrorsAndTimeoutsAreUnknown() {
         status = 500;
         assertThatThrownBy(() -> gateway.call(AiProvider.CLAUDE, request(SCHEMA)))
-                .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.kind()).isEqualTo(FailureKind.UNKNOWN));
+                .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.readKind()).isEqualTo(FailureKind.UNKNOWN));
         status = 200;
         delayMillis = 3000;
         assertThatThrownBy(() -> gateway.call(AiProvider.OPENAI, request(SCHEMA)))
-                .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.kind()).isEqualTo(FailureKind.UNKNOWN));
+                .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.readKind()).isEqualTo(FailureKind.UNKNOWN));
     }
 
     @Test
@@ -353,8 +353,8 @@ class HttpProviderGatewayTest {
         reply = "{\"choices\":[{\"message\":{\"content\":\"\"}}],\"usage\":{\"prompt_tokens\":50,\"completion_tokens\":500}}";
         assertThatThrownBy(() -> gateway.call(AiProvider.OPENAI, request(SCHEMA)))
                 .isInstanceOfSatisfying(ProviderException.class, e -> {
-                    assertThat(e.kind()).isEqualTo(FailureKind.CHARGED);
-                    assertThat(e.usage().outputTokens()).isEqualTo(500);
+                    assertThat(e.readKind()).isEqualTo(FailureKind.CHARGED);
+                    assertThat(e.readUsage().outputTokens()).isEqualTo(500);
                 });
     }
 
@@ -364,8 +364,8 @@ class HttpProviderGatewayTest {
         reply = "{\"candidates\":[{\"finishReason\":\"RECITATION\"}],\"usageMetadata\":{\"promptTokenCount\":900}}";
         assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(SCHEMA)))
                 .isInstanceOfSatisfying(ProviderException.class, e -> {
-                    assertThat(e.kind()).isEqualTo(FailureKind.CHARGED);
-                    assertThat(e.usage().inputTokens()).isEqualTo(900);
+                    assertThat(e.readKind()).isEqualTo(FailureKind.CHARGED);
+                    assertThat(e.readUsage().inputTokens()).isEqualTo(900);
                     assertThat(e.getMessage()).contains("dừng", "RECITATION", "trùng văn bản có sẵn");
                 });
 
@@ -388,18 +388,18 @@ class HttpProviderGatewayTest {
         reply = "{\"candidates\":[{\"finishReason\":\"STOP\",\"content\":{\"parts\":[]}}]}";
         assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(SCHEMA)))
                 .hasMessage(HttpProviderGateway.EMPTY_OUTPUT);
-        assertThat(HttpProviderGateway.emptyOutputMessage("NEW_REASON", false))
+        assertThat(HttpProviderGateway.describeEmptyOutput("NEW_REASON", false))
                 .isEqualTo("Nhà cung cấp AI dừng mà không trả nội dung (NEW_REASON)");
     }
 
     @Test
     void overloadIsRejectedAndUnreachableProviderIsRejected() {
-        assertThat(HttpProviderGateway.kindOf(529)).isEqualTo(FailureKind.REJECTED);
-        assertThat(HttpProviderGateway.kindOf(503)).isEqualTo(FailureKind.REJECTED);
-        assertThat(HttpProviderGateway.kindOf(502)).isEqualTo(FailureKind.UNKNOWN);
+        assertThat(HttpProviderGateway.classifyFailure(529)).isEqualTo(FailureKind.REJECTED);
+        assertThat(HttpProviderGateway.classifyFailure(503)).isEqualTo(FailureKind.REJECTED);
+        assertThat(HttpProviderGateway.classifyFailure(502)).isEqualTo(FailureKind.UNKNOWN);
         server.stop(0);
         assertThatThrownBy(() -> gateway.call(AiProvider.GEMINI, request(SCHEMA)))
-                .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.kind()).isEqualTo(FailureKind.REJECTED));
+                .isInstanceOfSatisfying(ProviderException.class, e -> assertThat(e.readKind()).isEqualTo(FailureKind.REJECTED));
     }
 
     private static Request imageRequest() {
@@ -469,7 +469,7 @@ class HttpProviderGatewayTest {
 
         assertThatThrownBy(() -> gateway.call(AiProvider.OPENAI, imageRequest()))
                 .isInstanceOfSatisfying(ProviderException.class, e -> {
-                    assertThat(e.kind()).isEqualTo(FailureKind.REJECTED);
+                    assertThat(e.readKind()).isEqualTo(FailureKind.REJECTED);
                     assertThat(e.getMessage()).contains("không đọc được ảnh").doesNotContain("secret-detail");
                 });
     }

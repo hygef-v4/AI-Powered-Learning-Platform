@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { Icon } from "@/shared/ui/Icon";
+import { msg } from "@/i18n/msg";
 
 /**
  * Thanh 3 bước của Kích hoạt và Khôi phục (design `c02a`–`c04`): bước xong là vòng xanh lá có dấu ✓, bước hiện tại là vòng
@@ -8,7 +9,7 @@ import { Icon } from "@/shared/ui/Icon";
  */
 export function Stepper({ steps, current }: { steps: string[]; current: number }) {
   return (
-    <ol className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 text-xs font-semibold whitespace-nowrap" aria-label="Các bước">
+    <ol className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 text-xs font-semibold whitespace-nowrap" aria-label={msg("identity.components.Stepper.steps")}>
       {steps.map((label, index) => {
         const state = index < current ? "done" : index === current ? "current" : "todo";
         return (

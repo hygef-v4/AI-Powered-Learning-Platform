@@ -111,7 +111,7 @@ class GroupFormationServiceTest {
 
     private void assertCode(UpdateFormationCommand command, String code) {
         assertThatThrownBy(() -> service.updateFormation(teacher, classId, command))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(code));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo(code));
     }
 
     private void classStatus(ClassStatus status) {

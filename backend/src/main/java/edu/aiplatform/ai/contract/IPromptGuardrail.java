@@ -18,7 +18,7 @@ public interface IPromptGuardrail {
         if (verdict == null || !verdict.isAllowed()) {
             String message = verdict == null || verdict.message() == null
                     ? "Yêu cầu chưa được gửi tới AI. Hãy điều chỉnh nội dung và thử lại." : verdict.message();
-            throw ApiException.badRequest(REJECTED_CODE, message);
+            throw ApiException.createBadRequest(REJECTED_CODE, message);
         }
     }
 }

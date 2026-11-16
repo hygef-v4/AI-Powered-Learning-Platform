@@ -12,7 +12,7 @@ class GradingProposalErrorTest {
     @Test
     void totalMismatchExplainsTheScoreErrorRatherThanImplyingTokenExhaustion() {
         var proposal = new GradingProposal();
-        var error = ApiException.badRequest("INVALID_AI_PROPOSAL", "AI total does not match rubric item scores");
+        var error = ApiException.createBadRequest("INVALID_AI_PROPOSAL", "AI total does not match rubric item scores");
         GradingProposalCallbackSupport.applyRejectionFromException(proposal, UUID.randomUUID(), error, Clock.systemUTC());
         assertThat(proposal.safeError).contains("Tổng điểm", "không khớp")
                 .doesNotContain("PROPOSAL_", "token");

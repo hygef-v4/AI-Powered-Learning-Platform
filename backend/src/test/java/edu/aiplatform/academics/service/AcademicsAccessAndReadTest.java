@@ -57,15 +57,15 @@ class AcademicsAccessAndReadTest {
         when(scope.isSubjectManager(managerId,subjectId)).thenReturn(true);
         when(scope.listManagedSubjects(managerId)).thenReturn(List.of(subjectId));
         when(subjectQuery.getSubject(subjectId)).thenReturn(Optional.of(subject(subjectId,managerId)));
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(classId,ClassStatus.OPEN,teacherId)));
-        when(enrollmentRepository.find(classId,studentId)).thenReturn(Optional.of(enrollment(studentId)));
+        when(courseClassRepository.findClass(classId)).thenReturn(Optional.of(course(classId,ClassStatus.OPEN,teacherId)));
+        when(enrollmentRepository.findEnrollment(classId,studentId)).thenReturn(Optional.of(enrollment(studentId)));
     }
 
     @AfterEach void readsAndDeniedMutationsNeverWrite() {
         verify(courseClassRepository,never()).insert(any());
-        verify(courseClassRepository,never()).update(any(),anyLong());
+        verify(courseClassRepository,never()).updateClass(any(),anyLong());
         verify(enrollmentRepository,never()).insert(any());
-        verify(enrollmentRepository,never()).update(any(),any());
+        verify(enrollmentRepository,never()).updateEnrollment(any(),any());
         verifyNoInteractions(eventPublisher);
     }
 
@@ -175,7 +175,7 @@ class AcademicsAccessAndReadTest {
         when(subjectQuery.getSubject(subjectId)).thenReturn(Optional.of(subject(subjectId,UUID.randomUUID())));
         assertProblem(() -> academicsService.updateClassInfo(actor(Role.SUBJECT_MANAGER),classId,"Changed",null,LocalDate.of(2027, 1, 10),7),404,"SUBJECT_OUT_OF_SCOPE");
         verify(subjectMutationGuard).lockActive(org.mockito.ArgumentMatchers.eq(subjectId),org.mockito.ArgumentMatchers.any());
-        verify(courseClassRepository,never()).update(any(),anyLong());
+        verify(courseClassRepository,never()).updateClass(any(),anyLong());
         verifyNoInteractions(academicsReadRepository);
         assertDenialAudit();
     }
@@ -193,7 +193,7 @@ class AcademicsAccessAndReadTest {
         when(academicsReadRepository.listForStudent(studentId,"CS 101",ClassStatus.OPEN,null,7,14)).thenReturn(List.of(expected));
         when(academicsReadRepository.listForTeacher(teacherId,"CS 101",ClassStatus.OPEN,null,7,14)).thenReturn(List.of(expected));
         when(academicsReadRepository.listForManager(List.of(subjectId),"CS 101",ClassStatus.OPEN,null,7,14)).thenReturn(List.of(expected));
-        when(academicsReadRepository.enrollmentCounts(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(12,3)));
+        when(academicsReadRepository.countEnrollments(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(12,3)));
 
         var result = academicsService.listClasses(actor(role),audience,null,"CS 101",ClassStatus.OPEN,null,3,7);
 
@@ -235,16 +235,16 @@ class AcademicsAccessAndReadTest {
     @ParameterizedTest
     @CsvSource({"STUDENT,student", "TEACHER,teacher", "SUBJECT_MANAGER,manager"})
     void successfulDetailReturnsSubjectTeacherAndCountsWithoutWriting(Role role,String audience) {
-        when(academicsReadRepository.enrollmentCounts(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(12,3)));
+        when(academicsReadRepository.countEnrollments(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(12,3)));
         assertClassDto(academicsService.loadClass(actor(role),audience,classId),12,3);
         if (role==Role.SUBJECT_MANAGER) verify(authorization).authorize(actor(role),"CLASS_MANAGE",ResourceRef.subject(subjectId));
         else verify(authorization).authorize(actor(role),"CLASS_VIEW",ResourceRef.courseClass(classId));
-        if (role==Role.STUDENT) verify(enrollmentRepository).find(classId,studentId);
+        if (role==Role.STUDENT) verify(enrollmentRepository).findEnrollment(classId,studentId);
         verifyNoInteractions(audit);
     }
 
     @Test void subjectManagerCanReadTeachingDetailWhenCurrentlyAssigned() {
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(classId,ClassStatus.DRAFT,managerId)));
+        when(courseClassRepository.findClass(classId)).thenReturn(Optional.of(course(classId,ClassStatus.DRAFT,managerId)));
         ClassView view = academicsService.loadClass(actor(Role.SUBJECT_MANAGER),"teacher",classId);
         assertThat(view.id()).isEqualTo(classId);
         assertThat(view.teacher().id()).isEqualTo(managerId);
@@ -253,7 +253,7 @@ class AcademicsAccessAndReadTest {
     }
 
     @Test void draftWithNoTeacherUsesNullTeacherAndZeroCounts() {
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(classId,ClassStatus.DRAFT,null)));
+        when(courseClassRepository.findClass(classId)).thenReturn(Optional.of(course(classId,ClassStatus.DRAFT,null)));
         var view = academicsService.loadClass(actor(Role.SUBJECT_MANAGER),"manager",classId);
         assertThat(view.teacher()).isNull();
         assertThat(view.activeStudentCount()).isZero();
@@ -264,16 +264,16 @@ class AcademicsAccessAndReadTest {
     @ParameterizedTest
     @EnumSource(value=ClassStatus.class,names={"DRAFT","ARCHIVED"})
     void studentDetailHidesClassesThatAreNotOpen(ClassStatus status) {
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(classId,status,teacherId)));
+        when(courseClassRepository.findClass(classId)).thenReturn(Optional.of(course(classId,status,teacherId)));
         assertProblem(() -> academicsService.loadClass(actor(Role.STUDENT),"student",classId),404,"CLASS_OUT_OF_SCOPE");
-        verify(enrollmentRepository,never()).find(any(),any());
+        verify(enrollmentRepository,never()).findEnrollment(any(),any());
         verifyNoInteractions(academicsReadRepository,subjectQuery);
     }
 
     @ParameterizedTest
     @ValueSource(booleans={false,true})
     void studentDetailHidesRemovedOrMissingEnrollment(boolean removed) {
-        when(enrollmentRepository.find(classId,studentId)).thenReturn(removed?Optional.of(enrollment(studentId).removeEnrollment(now)):Optional.empty());
+        when(enrollmentRepository.findEnrollment(classId,studentId)).thenReturn(removed?Optional.of(enrollment(studentId).removeEnrollment(now)):Optional.empty());
         assertProblem(() -> academicsService.loadClass(actor(Role.STUDENT),"student",classId),404,"CLASS_OUT_OF_SCOPE");
         verifyNoInteractions(academicsReadRepository,subjectQuery);
         assertDenialAudit();
@@ -300,21 +300,21 @@ class AcademicsAccessAndReadTest {
         Enrollment value = enrollment(studentId);
         var result = academicsService.loadStudent(actor(Role.TEACHER),classId,studentId);
         assertThat(result).isEqualTo(new AcademicsDtos.Student(studentId,"STUDENT name","student@example.com",value.enrolledAt(),EnrollmentStatus.ACTIVE));
-        verify(enrollmentRepository).find(classId,studentId);
+        verify(enrollmentRepository).findEnrollment(classId,studentId);
         verifyNoInteractions(academicsReadRepository,subjectQuery,audit);
     }
 
     @ParameterizedTest
     @ValueSource(booleans={false,true})
     void teacherStudentPopupHidesRemovedOrUnknownStudentWithoutLookingUpContact(boolean removed) {
-        when(enrollmentRepository.find(classId,studentId)).thenReturn(removed?Optional.of(enrollment(studentId).removeEnrollment(now)):Optional.empty());
+        when(enrollmentRepository.findEnrollment(classId,studentId)).thenReturn(removed?Optional.of(enrollment(studentId).removeEnrollment(now)):Optional.empty());
         assertProblem(() -> academicsService.loadStudent(actor(Role.TEACHER),classId,studentId),404,"STUDENT_NOT_FOUND");
         verify(accountLookup,never()).getContact(studentId);
         assertDenialAudit();
     }
 
     @Test void staleTeacherCannotRetrieveStudentContactsAfterAssignmentChanged() {
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(classId,ClassStatus.OPEN,managerId)));
+        when(courseClassRepository.findClass(classId)).thenReturn(Optional.of(course(classId,ClassStatus.OPEN,managerId)));
         assertProblem(() -> academicsService.loadStudent(actor(Role.TEACHER),classId,studentId),404,"CLASS_OUT_OF_SCOPE");
         verifyNoInteractions(enrollmentRepository,academicsReadRepository,subjectQuery);
         verify(accountLookup,never()).getContact(studentId);
@@ -355,7 +355,7 @@ class AcademicsAccessAndReadTest {
     void missingClassDetailDependencyFailsSafelyInsteadOfReturningPartialData(String dependency) {
         if (dependency.equals("subject")) when(subjectQuery.getSubject(subjectId)).thenReturn(Optional.empty());
         else if (dependency.equals("teacher")) when(accountLookup.getContact(teacherId)).thenReturn(Optional.empty());
-        else when(academicsReadRepository.enrollmentCounts(any())).thenThrow(new IllegalStateException("upstream secret"));
+        else when(academicsReadRepository.countEnrollments(any())).thenThrow(new IllegalStateException("upstream secret"));
         String code = dependency.equals("subject")?"SUBJECT_UNAVAILABLE":dependency.equals("teacher")?"ACCOUNT_UNAVAILABLE":"ACADEMICS_DEPENDENCY_UNAVAILABLE";
         assertProblem(() -> academicsService.loadClass(actor(Role.STUDENT),"student",classId),503,code);
         verify(audit).record(argThat(e -> e.result()==AuditResult.FAILURE));
@@ -476,8 +476,8 @@ class AcademicsAccessAndReadTest {
     }
     private void assertProblem(Runnable call,int status,String code) {
         assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class,error -> {
-            assertThat(error.status().value()).isEqualTo(status);
-            assertThat(error.code()).isEqualTo(code);
+            assertThat(error.readStatus().value()).isEqualTo(status);
+            assertThat(error.readCode()).isEqualTo(code);
             assertThat(error.getMessage()).doesNotContain("upstream secret","private policy reason","sensitive scope");
         });
     }

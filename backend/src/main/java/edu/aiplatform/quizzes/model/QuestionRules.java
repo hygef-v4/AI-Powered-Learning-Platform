@@ -27,15 +27,15 @@ public final class QuestionRules {
         if (content.type() == null) {
             violations.add(new Violation("type", "TYPE_REQUIRED", "Chọn loại câu: một đáp án hoặc nhiều đáp án"));
         }
-        text(violations, "stem", content.stem(), true, "Nội dung câu hỏi");
-        text(violations, "explanation", content.explanation(), false, "Giải thích");
-        options(violations, content);
-        points(violations, content.defaultPoints());
-        tags(violations, content.tags());
+        validateText(violations, "stem", content.stem(), true, "Nội dung câu hỏi");
+        validateText(violations, "explanation", content.explanation(), false, "Giải thích");
+        validateOptions(violations, content);
+        validatePoints(violations, content.defaultPoints());
+        validateTags(violations, content.tags());
         return List.copyOf(violations);
     }
 
-    private static void text(List<Violation> violations, String field, String value, boolean required, String label) {
+    private static void validateText(List<Violation> violations, String field, String value, boolean required, String label) {
         if (value == null || value.isEmpty()) {
             if (required) {
                 violations.add(new Violation(field, "REQUIRED", label + " không được để trống"));
@@ -47,7 +47,7 @@ public final class QuestionRules {
         }
     }
 
-    private static void options(List<Violation> violations, QuestionContent content) {
+    private static void validateOptions(List<Violation> violations, QuestionContent content) {
         List<QuestionOption> options = content.options();
         if (options.size() < MIN_OPTIONS || options.size() > MAX_OPTIONS) {
             violations.add(new Violation("options", "OPTION_COUNT", "Cần 2–6 lựa chọn"));
@@ -78,14 +78,14 @@ public final class QuestionRules {
         }
     }
 
-    private static void points(List<Violation> violations, BigDecimal points) {
+    private static void validatePoints(List<Violation> violations, BigDecimal points) {
         if (points == null || points.signum() <= 0 || points.compareTo(MAX_POINTS) > 0
                 || points.stripTrailingZeros().scale() > 2) {
             violations.add(new Violation("defaultPoints", "POINTS_INVALID", "Điểm phải lớn hơn 0, tối đa 2 chữ số thập phân"));
         }
     }
 
-    private static void tags(List<Violation> violations, List<String> tags) {
+    private static void validateTags(List<Violation> violations, List<String> tags) {
         if (tags.size() > MAX_TAGS) {
             violations.add(new Violation("tags", "TAG_COUNT", "Tối đa 10 thẻ"));
         }

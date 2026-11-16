@@ -25,8 +25,8 @@ class BackupStatusServiceTest {
 
     @Test void dashboardMetadataPreservesStoredStartAndDoesNotChangeLegacyView() {
         var run = run(BackupState.SUCCESS, "private exception");
-        when(runs.latest()).thenReturn(Optional.of(run));
-        when(runs.page(any())).thenReturn(new PageImpl<>(List.of(run)));
+        when(runs.findLatestRun()).thenReturn(Optional.of(run));
+        when(runs.listRunPage(any())).thenReturn(new PageImpl<>(List.of(run)));
         var view = service.latestRun().orElseThrow();
         assertThat(view.startedAt()).isEqualTo(from.plusSeconds(2));
         assertThat(view.snapshotAt()).isEqualTo(from.plusSeconds(1));
@@ -34,7 +34,7 @@ class BackupStatusServiceTest {
         assertThat(view.safeError()).isNull();
         assertThat(service.history(PageRequest.of(0, 3)).getContent()).containsExactly(view);
         assertThat(service.latest().orElseThrow()).isEqualTo(run.view());
-        when(runs.latest()).thenReturn(Optional.of(run(BackupState.CREATED, null)));
+        when(runs.findLatestRun()).thenReturn(Optional.of(run(BackupState.CREATED, null)));
         assertThat(service.latestRun().orElseThrow().startedAt()).isNull();
     }
 
@@ -48,12 +48,12 @@ class BackupStatusServiceTest {
 
     @Test void failedProjectionDoesNotExposeStoredException() {
         for (String error : Arrays.asList("password=secret /private/archive", null, "<script>")) {
-            when(runs.latest()).thenReturn(Optional.of(run(BackupState.FAILED, error)));
+            when(runs.findLatestRun()).thenReturn(Optional.of(run(BackupState.FAILED, error)));
             assertThat(service.latestRun().orElseThrow().safeError())
                     .isEqualTo("Backup thất bại. Vui lòng liên hệ người vận hành.");
         }
         for (String error : List.of("Quá thời gian xử lý", "Hết lượt thử lại: Quá thời gian xử lý")) {
-            when(runs.latest()).thenReturn(Optional.of(run(BackupState.FAILED, error)));
+            when(runs.findLatestRun()).thenReturn(Optional.of(run(BackupState.FAILED, error)));
             assertThat(service.latestRun().orElseThrow().safeError()).isEqualTo("Backup quá thời gian xử lý.");
         }
     }

@@ -101,7 +101,7 @@ class MaterialQueryAndReferenceTest {
 
     @Test
     void extractedTextCarriesActualCurrentVersionProvenance() {
-        Material current = material.revise("Current title", "", 0, 2, Material.Status.ACTIVE, now);
+        Material current = material.reviseMaterial("Current title", "", 0, 2, Material.Status.ACTIVE, now);
         when(materialRepository.findMaterial(id)).thenReturn(Optional.of(current));
         when(materialRepository.findVersion(id, 2)).thenReturn(Optional.of(new MaterialVersion(
                 id, 2, "current-file", "new.pdf", "application/pdf", 120L,
@@ -127,7 +127,7 @@ class MaterialQueryAndReferenceTest {
 
     @Test
     void deniedDownloadNeverCallsStorage() {
-        doThrow(ApiException.notFound("MATERIAL_NOT_FOUND"))
+        doThrow(ApiException.createNotFound("MATERIAL_NOT_FOUND"))
                 .when(materialAccessPolicy)
                 .requireReadAccess(actor, material, classId);
         assertThatThrownBy(() -> materialQueryService.issueDownloadToken(actor, id, classId, null))
@@ -137,7 +137,7 @@ class MaterialQueryAndReferenceTest {
 
     @Test
     void studentsCannotDownloadOldVersions() {
-        material = material.revise("Title", "", 0, 2, Material.Status.ACTIVE, now);
+        material = material.reviseMaterial("Title", "", 0, 2, Material.Status.ACTIVE, now);
         when(materialRepository.findMaterial(id)).thenReturn(Optional.of(material));
         var currentVersion = new MaterialVersion(
                 id, 2, "current-file", "new.pdf", "application/pdf", 120L,
@@ -148,7 +148,7 @@ class MaterialQueryAndReferenceTest {
         clearInvocations(materialRepository);
         assertThatThrownBy(() -> materialQueryService.issueDownloadToken(actor, id, classId, 1))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_NOT_FOUND"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
         verifyNoInteractions(artifact);
         materialQueryService.issueDownloadToken(actor, id, classId, null);
         verify(artifact).issueDownloadToken("current-file", actor.accountId());
@@ -206,13 +206,13 @@ class MaterialQueryAndReferenceTest {
                 material.moduleId(), material.kind(), "Hidden", "", 0, Material.Status.ACTIVE,
                 1, actor.accountId(), now, now, 0);
         when(materialRepository.findMaterial(second)).thenReturn(Optional.of(forbidden));
-        doThrow(ApiException.notFound("MATERIAL_NOT_FOUND"))
+        doThrow(ApiException.createNotFound("MATERIAL_NOT_FOUND"))
                 .when(materialAccessPolicy)
                 .requireReadAccess(actor, forbidden, null);
         assertThatThrownBy(
                 () -> referenceMaterialService.extractText(actor, List.of(id, second), 100))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_NOT_FOUND"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
         verify(materialRepository, never()).findVersion(any(), anyInt());
     }
 
@@ -311,7 +311,7 @@ class MaterialQueryAndReferenceTest {
     @Test
     void mcpRejectsUnauthorizedIdAndInvalidArguments() {
         var tools = new MaterialMcpTools(materialQueryService, materialRepository);
-        doThrow(ApiException.notFound("MATERIAL_NOT_FOUND"))
+        doThrow(ApiException.createNotFound("MATERIAL_NOT_FOUND"))
                 .when(materialAccessPolicy)
                 .requireReadAccess(actor, material, null);
         assertThat(
@@ -389,7 +389,7 @@ class MaterialQueryAndReferenceTest {
     @Test
     void staffMcpCanReadArchivedReferenceButNewAiSelectionCannotUseIt() {
         Material archived =
-                material.revise(material.title(), "", 0, 1, Material.Status.ARCHIVED, now);
+                material.reviseMaterial(material.title(), "", 0, 1, Material.Status.ARCHIVED, now);
         when(materialRepository.findMaterial(id)).thenReturn(Optional.of(archived));
         Actor teacher = new Actor(actor.accountId(), Role.TEACHER);
         var result =

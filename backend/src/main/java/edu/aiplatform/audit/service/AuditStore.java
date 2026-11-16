@@ -36,7 +36,7 @@ public class AuditStore implements IAudit {
 
     @Override
     public void record(AuditEvent event) {
-        AuditRow row = toRow(event);
+        AuditRow row = mapRow(event);
         if (event.result() == AuditResult.SUCCESS) {
             repository.insertIfAbsent(row);
         } else {
@@ -45,18 +45,18 @@ public class AuditStore implements IAudit {
     }
 
     /** Kiểm sự kiện trước khi ghi; sai là lỗi lập trình của unit gọi nên ném {@link IllegalArgumentException}. */
-    private AuditRow toRow(AuditEvent event) {
+    private AuditRow mapRow(AuditEvent event) {
         if (event == null || event.id() == null || event.result() == null || event.occurredAt() == null
                 || event.action() == null || event.action().isBlank()) {
             throw new IllegalArgumentException("Sự kiện audit thiếu id, action, result hoặc occurredAt");
         }
         Map<String, Object> details = event.details() == null ? Map.of() : event.details();
-        ForbiddenKeyGuard.check(details);
+        ForbiddenKeyGuard.checkForbiddenKeys(details);
         return new AuditRow(event.id(), event.actorId(), event.action(), event.objectType(), event.objectId(),
-                event.result().name(), event.reason(), toJson(details), event.occurredAt());
+                event.result().name(), event.reason(), writeJson(details), event.occurredAt());
     }
 
-    private String toJson(Map<String, Object> details) {
+    private String writeJson(Map<String, Object> details) {
         try {
             return objectMapper.writeValueAsString(details);
         } catch (JsonProcessingException e) {

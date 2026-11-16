@@ -32,7 +32,7 @@ class FakeAiTaskRepository extends AiTaskRepository {
     }
 
     @Override
-    public boolean update(AiTask t) {
+    public boolean updateTask(AiTask t) {
         AiTask current = rows.get(t.id());
         if (current == null || current.version() != t.version()) {
             return false;
@@ -64,7 +64,7 @@ class FakeAiTaskRepository extends AiTaskRepository {
 
     @Override
     public int countActive(UUID actorId) {
-        return (int) rows.values().stream().filter(r -> r.actorId().equals(actorId) && r.active()).count();
+        return (int) rows.values().stream().filter(r -> r.actorId().equals(actorId) && r.hasActiveStatus()).count();
     }
 
     @Override
@@ -74,8 +74,11 @@ class FakeAiTaskRepository extends AiTaskRepository {
 
     @Override
     public List<AiTask> listUnhandled(Instant before) {
-        return rows.values().stream().filter(r -> r.finished() && !r.handlerDone() && r.finishedAt().isBefore(before))
-                .toList();
+        return rows.values().stream()
+                .filter(r -> List.of(AiTaskState.READY, AiTaskState.FAILED, AiTaskState.UNKNOWN,
+                        AiTaskState.CANCELLED).contains(r.state()))
+                .filter(r -> !r.handlerDone() && r.finishedAt() != null && r.finishedAt().isBefore(before))
+                .sorted(java.util.Comparator.comparing(AiTask::finishedAt)).limit(200).toList();
     }
 
     static AiTask copy(AiTask t, long version) {

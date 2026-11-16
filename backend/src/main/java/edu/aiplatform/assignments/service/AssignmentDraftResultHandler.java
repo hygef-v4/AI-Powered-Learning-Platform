@@ -10,10 +10,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class AssignmentDraftResultHandler implements IAiTaskResultHandler {
 
-    private final AssignmentAiDraftService drafts;
+    private final AssignmentAiDraftService assignmentAiDraftService;
 
-    public AssignmentDraftResultHandler(AssignmentAiDraftService drafts) {
-        this.drafts = drafts;
+    public AssignmentDraftResultHandler(AssignmentAiDraftService assignmentAiDraftService) {
+        this.assignmentAiDraftService = assignmentAiDraftService;
     }
 
     @Override
@@ -23,11 +23,11 @@ public class AssignmentDraftResultHandler implements IAiTaskResultHandler {
 
     @Override
     public ApplyOutcome onReady(AiTaskResult result) {
-        return drafts.onReady(result);
+        return assignmentAiDraftService.handleReadyResult(result);
     }
 
     @Override
     public void onFailed(AiTaskFailure failure) {
-        drafts.onFailed(failure);
+        assignmentAiDraftService.handleFailedResult(failure);
     }
 }

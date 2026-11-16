@@ -146,7 +146,7 @@ class GroupRepositoriesIntegrationTest {
         assertThat(groups.listPendingOfClass(classId)).hasSize(1);
         groups.updateRequest(request.decide(LeaderChangeRequest.Status.APPROVED, studentB, studentA, null, NOW));
         assertThat(groups.findPending(groupId)).isEmpty();
-        assertThat(groups.latestOf(groupId, studentB, 2)).singleElement()
+        assertThat(groups.listLatest(groupId, studentB, 2)).singleElement()
                 .satisfies(r -> assertThat(r.status()).isEqualTo(LeaderChangeRequest.Status.APPROVED));
 
         groups.removeMembers(classId, List.of(studentB));
@@ -163,10 +163,10 @@ class GroupRepositoriesIntegrationTest {
                 + "(?, 'CLASS', ?, ?, 'MANUAL', 'GROUP', 'GRADED', 'Bài nhóm', '{\"blocks\":[]}'::jsonb, '[]'::jsonb, "
                 + "'OPEN', now() - interval '1 hour', now() + interval '1 hour', 1, ?, now(), now())")
                 .params(assignment, classId, subject, teacher).update();
-        GroupDocument doc = GroupDocument.create(UUID.randomUUID(), groupId, assignment, classId,
+        GroupDocument doc = GroupDocument.createDocument(UUID.randomUUID(), groupId, assignment, classId,
                 new DocumentModel(List.of()), false, NOW);
         assertThat(documents.insertIfAbsent(doc)).isTrue();
-        assertThat(documents.insertIfAbsent(GroupDocument.create(UUID.randomUUID(), groupId, assignment, classId,
+        assertThat(documents.insertIfAbsent(GroupDocument.createDocument(UUID.randomUUID(), groupId, assignment, classId,
                 new DocumentModel(List.of()), false, NOW))).as("không tạo trùng").isFalse();
         GroupSection section = new GroupSection(UUID.randomUUID(), doc.id(), "p1", null, List.of(UUID.randomUUID()), 1,
                 "1. Tổng quan", GroupSection.Status.OPEN, null, null, null, null, null, null, null, 0);
@@ -174,24 +174,24 @@ class GroupRepositoriesIntegrationTest {
         assertThat(documents.groupHasContent(groupId)).isFalse();
 
         GroupSection locked = documents.lockSection(doc.id(), section.id()).orElseThrow();
-        assertThat(documents.updateSection(locked.claimedBy(studentA, studentA, NOW))).isTrue();
-        assertThat(documents.updateSection(locked.claimedBy(studentB, studentB, NOW))).as("version cũ").isFalse();
+        assertThat(documents.updateSection(locked.markClaimed(studentA, studentA, NOW))).isTrue();
+        assertThat(documents.updateSection(locked.markClaimed(studentB, studentB, NOW))).as("version cũ").isFalse();
         List<DocumentBlock> blocks = List.of(new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.PARAGRAPH,
                 JsonNodeFactory.instance.objectNode().put("text", "Xin chào")));
         GroupSection claimed = documents.lockSection(doc.id(), section.id()).orElseThrow();
-        assertThat(documents.updateSection(claimed.withDraft(blocks, NOW))).isTrue();
+        assertThat(documents.updateSection(claimed.replaceDraft(blocks, NOW))).isTrue();
         assertThat(documents.lockSectionsHeldBy(groupId, studentA)).hasSize(1);
         GroupSection drafted = documents.lockSection(doc.id(), section.id()).orElseThrow();
         assertThat(drafted.draftBlocks()).isEqualTo(blocks);
-        assertThat(documents.updateSection(drafted.done(NOW))).isTrue();
+        assertThat(documents.updateSection(drafted.markDone(NOW))).isTrue();
         documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), studentA, blocks, NOW));
         assertThat(documents.groupHasContent(groupId)).isTrue();
 
         GroupDocument current = documents.lockDocument(doc.id()).orElseThrow();
-        GroupDocument submitted = current.withSubmission(new DocumentModel(blocks),
+        GroupDocument submitted = current.recordSubmission(new DocumentModel(blocks),
                 List.of(new SectionAuthor("p1", "1. Tổng quan", studentA, true)), studentA, SubmitMode.MANUAL, NOW, false,
                 "abc", List.of(), GroupDocument.Status.IN_PROGRESS);
-        assertThat(documents.update(submitted)).isTrue();
+        assertThat(documents.updateDocument(submitted)).isTrue();
         GroupDocument read = documents.findById(doc.id()).orElseThrow();
         assertThat(read.submittedDocument().blocks()).hasSize(1);
         assertThat(read.sectionAuthors()).singleElement().satisfies(a -> assertThat(a.accountId()).isEqualTo(studentA));

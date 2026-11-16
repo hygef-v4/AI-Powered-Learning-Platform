@@ -29,31 +29,31 @@ public class LocalFolderStorageAdapter implements IStorage {
     }
 
     @Override
-    public boolean available() {
+    public boolean isAvailable() {
         return true;
     }
 
     @Override
-    public String put(ArtifactPurpose purpose, Path content, StoredMetadata metadata) {
+    public String putFile(ArtifactPurpose purpose, Path content, StoredMetadata metadata) {
         String fileId = "local-" + UUID.randomUUID();
         try {
             Files.createDirectories(root);
-            Files.copy(content, data(fileId), StandardCopyOption.REPLACE_EXISTING);
-            JSON.writeValue(meta(fileId).toFile(), metadata);
+            Files.copy(content, resolveDataPath(fileId), StandardCopyOption.REPLACE_EXISTING);
+            JSON.writeValue(resolveMetaPath(fileId).toFile(), metadata);
             return fileId;
         } catch (IOException e) {
-            delete(fileId);
+            deleteFile(fileId);
             throw new StorageUnavailableException("Không ghi được tệp local", e);
         }
     }
 
     @Override
-    public Optional<StoredMetadata> metadata(String fileId) {
-        if (!valid(fileId) || !Files.exists(meta(fileId))) {
+    public Optional<StoredMetadata> loadMetadata(String fileId) {
+        if (!isValidFileId(fileId) || !Files.exists(resolveMetaPath(fileId))) {
             return Optional.empty();
         }
         try {
-            return Optional.of(JSON.readValue(meta(fileId).toFile(), StoredMetadata.class));
+            return Optional.of(JSON.readValue(resolveMetaPath(fileId).toFile(), StoredMetadata.class));
         } catch (IOException e) {
             throw new StorageUnavailableException("Không đọc được thuộc tính tệp", e);
         }
@@ -61,11 +61,11 @@ public class LocalFolderStorageAdapter implements IStorage {
 
     @Override
     public InputStream open(String fileId) {
-        if (!valid(fileId)) {
+        if (!isValidFileId(fileId)) {
             throw new StorageUnavailableException("Tệp không tồn tại", null);
         }
         try {
-            return Files.newInputStream(data(fileId));
+            return Files.newInputStream(resolveDataPath(fileId));
         } catch (NoSuchFileException e) {
             throw new StorageUnavailableException("Tệp không tồn tại", e);
         } catch (IOException e) {
@@ -74,27 +74,27 @@ public class LocalFolderStorageAdapter implements IStorage {
     }
 
     @Override
-    public void delete(String fileId) {
-        if (!valid(fileId)) {
+    public void deleteFile(String fileId) {
+        if (!isValidFileId(fileId)) {
             return;
         }
         try {
-            Files.deleteIfExists(data(fileId));
-            Files.deleteIfExists(meta(fileId));
+            Files.deleteIfExists(resolveDataPath(fileId));
+            Files.deleteIfExists(resolveMetaPath(fileId));
         } catch (IOException e) {
             throw new StorageUnavailableException("Không xóa được tệp", e);
         }
     }
 
-    private static boolean valid(String fileId) {
+    private static boolean isValidFileId(String fileId) {
         return fileId != null && FILE_ID.matcher(fileId).matches();
     }
 
-    private Path data(String fileId) {
+    private Path resolveDataPath(String fileId) {
         return root.resolve(fileId + ".bin");
     }
 
-    private Path meta(String fileId) {
+    private Path resolveMetaPath(String fileId) {
         return root.resolve(fileId + ".json");
     }
 }

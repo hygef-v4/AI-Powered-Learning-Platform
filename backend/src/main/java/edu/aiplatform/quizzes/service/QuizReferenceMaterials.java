@@ -38,20 +38,20 @@ public class QuizReferenceMaterials {
 
     /** Tài liệu đưa được vào popup AI của Quiz. */
     @Transactional(readOnly = true)
-    public List<SelectableMaterial> forQuiz(Actor actor, UUID quizId) {
+    public List<SelectableMaterial> listForQuiz(Actor actor, UUID quizId) {
         Quiz quiz = support.loadManaged(actor, quizId);
-        return list(actor, scopeOf(quiz));
+        return listMaterials(actor, resolveScope(quiz));
     }
 
     /** Tài liệu của môn cho popup AI của ngân hàng câu hỏi. */
     @Transactional(readOnly = true)
-    public List<SelectableMaterial> forSubject(Actor actor, UUID subjectId) {
+    public List<SelectableMaterial> listForSubject(Actor actor, UUID subjectId) {
         access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId,
                 "SUBJECT_NOT_FOUND");
-        return list(actor, ResourceRef.subject(subjectId));
+        return listMaterials(actor, ResourceRef.subject(subjectId));
     }
 
-    static ResourceRef scopeOf(Quiz quiz) {
+    static ResourceRef resolveScope(Quiz quiz) {
         return quiz.scope() == QuizScope.CLASS ? ResourceRef.courseClass(quiz.classId())
                 : ResourceRef.subject(quiz.subjectId());
     }
@@ -62,13 +62,13 @@ public class QuizReferenceMaterials {
         if (ids == null || ids.isEmpty()) {
             return List.of();
         }
-        Map<UUID, SelectableMaterial> selectable = list(actor, scope).stream()
+        Map<UUID, SelectableMaterial> selectable = listMaterials(actor, scope).stream()
                 .collect(Collectors.toMap(SelectableMaterial::materialId, Function.identity(), (a, b) -> a));
         List<SelectableMaterial> chosen = new ArrayList<>();
         for (UUID id : ids) {
             SelectableMaterial material = selectable.get(id);
             if (material == null || (needText && !material.hasText())) {
-                throw ApiException.badRequest("MATERIAL_NOT_SELECTABLE",
+                throw ApiException.createBadRequest("MATERIAL_NOT_SELECTABLE",
                         needText ? "Có tài liệu không chọn được hoặc chưa trích được chữ"
                                 : "Có tài liệu không chọn được");
             }
@@ -78,7 +78,7 @@ public class QuizReferenceMaterials {
     }
 
     /** Chữ của tài liệu cho prompt, tổng tối đa {@link QuizDraftPrompt#MAX_MATERIAL_CHARS} ký tự. */
-    List<MaterialText> texts(Actor actor, List<UUID> ids) {
+    List<MaterialText> loadTexts(Actor actor, List<UUID> ids) {
         if (ids.isEmpty()) {
             return List.of();
         }
@@ -87,23 +87,23 @@ public class QuizReferenceMaterials {
         } catch (ApiException rejected) {
             throw rejected;
         } catch (RuntimeException unavailable) {
-            throw unavailable();
+            throw createUnavailableError();
         }
     }
 
-    private List<SelectableMaterial> list(Actor actor, ResourceRef scope) {
+    private List<SelectableMaterial> listMaterials(Actor actor, ResourceRef scope) {
         try {
             List<SelectableMaterial> result = materials.listSelectable(actor, scope);
             return result == null ? List.of() : result;
         } catch (ApiException rejected) {
             throw rejected;
         } catch (RuntimeException unavailable) {
-            throw unavailable();
+            throw createUnavailableError();
         }
     }
 
-    private static ApiException unavailable() {
-        return ApiException.unavailable("MATERIAL_SERVICE_UNAVAILABLE",
+    private static ApiException createUnavailableError() {
+        return ApiException.createUnavailable("MATERIAL_SERVICE_UNAVAILABLE",
                 "Chưa lấy được tài liệu tham khảo, vui lòng thử lại");
     }
 }

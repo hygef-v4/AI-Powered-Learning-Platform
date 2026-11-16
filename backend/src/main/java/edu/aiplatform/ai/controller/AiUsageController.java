@@ -29,14 +29,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AiUsageController {
 
-    private final AiUsageService usage;
-    private final AiSourceService sources;
-    private final AiTaskService tasks;
+    private final AiUsageService aiUsageService;
+    private final AiSourceService aiSourceService;
+    private final AiTaskService aiTaskService;
 
-    public AiUsageController(AiUsageService usage, AiSourceService sources, AiTaskService tasks) {
-        this.usage = usage;
-        this.sources = sources;
-        this.tasks = tasks;
+    public AiUsageController(AiUsageService aiUsageService, AiSourceService aiSourceService, AiTaskService aiTaskService) {
+        this.aiUsageService = aiUsageService;
+        this.aiSourceService = aiSourceService;
+        this.aiTaskService = aiTaskService;
     }
 
     /** Một dòng lịch sử; token rỗng là "không có số liệu", không đổi thành 0 (BR-U06-40). */
@@ -44,7 +44,7 @@ public class AiUsageController {
                             String taskType, String toolName, String outcome, Long inputTokens, Long outputTokens,
                             Long cachedTokens, Long reasoningTokens, UsageMeasurement provenance) {
 
-        static UsageItem of(AiUsageRecord r) {
+        static UsageItem mapUsageItem(AiUsageRecord r) {
             return new UsageItem(r.id(), r.createdAt(), r.source(), r.provider(), r.model(), r.taskType(), r.toolName(),
                     r.outcome(), r.inputTokens(), r.outputTokens(), r.cachedTokens(), r.reasoningTokens(),
                     r.provenance());
@@ -53,7 +53,7 @@ public class AiUsageController {
 
     public record Totals(long requests, long tokens) {
 
-        static Totals of(long[] values) {
+        static Totals sumTotals(long[] values) {
             return new Totals(values[0], values[1]);
         }
     }
@@ -63,41 +63,41 @@ public class AiUsageController {
     }
 
     @GetMapping("/api/v1/me/ai-usage")
-    public UsageResponse history(@AuthenticationPrincipal Actor actor,
+    public UsageResponse listUsageHistory(@AuthenticationPrincipal Actor actor,
                                  @RequestParam(required = false) String source,
                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
                                  @RequestParam(defaultValue = "0") int page,
                                  @RequestParam(defaultValue = "50") int size) {
-        UsagePage result = usage.listOwn(actor, source(source), from, to, page, size);
-        return new UsageResponse(result.items().stream().map(UsageItem::of).toList(), result.page(), result.size(),
-                result.total(), Totals.of(result.shared()), Totals.of(result.personal()), Totals.of(result.mcp()));
+        UsagePage result = aiUsageService.listOwn(actor, parseSource(source), from, to, page, size);
+        return new UsageResponse(result.items().stream().map(UsageItem::mapUsageItem).toList(), result.page(), result.size(),
+                result.total(), Totals.sumTotals(result.shared()), Totals.sumTotals(result.personal()), Totals.sumTotals(result.mcp()));
     }
 
     @GetMapping("/api/v1/ai/sources")
-    public List<SourceOption> sources(@AuthenticationPrincipal Actor actor) {
-        return sources.sources(actor);
+    public List<SourceOption> listSources(@AuthenticationPrincipal Actor actor) {
+        return aiSourceService.listSources(actor);
     }
 
     @GetMapping("/api/v1/ai/tasks/{id}")
-    public AiTaskView task(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return tasks.getOwn(actor, id);
+    public AiTaskView loadTask(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return aiTaskService.getOwn(actor, id);
     }
 
     @PostMapping("/api/v1/ai/tasks/{id}:cancel")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void cancel(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        tasks.cancel(actor, id);
+        aiTaskService.cancel(actor, id);
     }
 
-    private static Source source(String value) {
+    private static Source parseSource(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
         try {
             return Source.valueOf(value);
         } catch (IllegalArgumentException e) {
-            throw ApiException.badRequest("AI_USAGE_SOURCE_INVALID", "Nguồn không hợp lệ");
+            throw ApiException.createBadRequest("AI_USAGE_SOURCE_INVALID", "Nguồn không hợp lệ");
         }
     }
 }

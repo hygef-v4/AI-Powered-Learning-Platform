@@ -27,7 +27,7 @@ class GroupSectionTest {
 
     @Test
     void claimStartsDraftFromPublishedAndOnlyHolderEdits() {
-        GroupSection claimed = open().claimedBy(holder, holder, NOW);
+        GroupSection claimed = open().markClaimed(holder, holder, NOW);
         assertThat(claimed.status()).isEqualTo(Status.CLAIMED);
         assertThat(SectionRules.canEdit(claimed, holder)).isNull();
         assertThat(SectionRules.canEdit(claimed, other)).isEqualTo("SECTION_NOT_HELD");
@@ -37,7 +37,7 @@ class GroupSectionTest {
 
     @Test
     void doneMovesDraftToPublishedAndRecordsAuthor() {
-        GroupSection done = open().claimedBy(holder, holder, NOW).withDraft(text, NOW).done(NOW);
+        GroupSection done = open().markClaimed(holder, holder, NOW).replaceDraft(text, NOW).markDone(NOW);
         assertThat(done.status()).isEqualTo(Status.DONE);
         assertThat(done.publishedBlocks()).isEqualTo(text);
         assertThat(done.draftBlocks()).isNull();
@@ -48,19 +48,19 @@ class GroupSectionTest {
 
     @Test
     void releaseDropsDraftAndReturnsToOpenOrDone() {
-        GroupSection empty = open().claimedBy(holder, holder, NOW).withDraft(text, NOW).released();
+        GroupSection empty = open().markClaimed(holder, holder, NOW).replaceDraft(text, NOW).markReleased();
         assertThat(empty.status()).isEqualTo(Status.OPEN);
         assertThat(empty.draftBlocks()).isNull();
 
-        GroupSection published = open().claimedBy(holder, holder, NOW).withDraft(text, NOW).done(NOW)
-                .claimedBy(other, other, NOW).released();
+        GroupSection published = open().markClaimed(holder, holder, NOW).replaceDraft(text, NOW).markDone(NOW)
+                .markClaimed(other, other, NOW).markReleased();
         assertThat(published.status()).isEqualTo(Status.DONE);
         assertThat(published.publishedBlocks()).isEqualTo(text);
     }
 
     @Test
     void releaseAllowedForHolderLeaderAndTeacherOnly() {
-        GroupSection claimed = open().claimedBy(holder, holder, NOW);
+        GroupSection claimed = open().markClaimed(holder, holder, NOW);
         assertThat(SectionRules.canRelease(claimed, holder, false, false)).isNull();
         assertThat(SectionRules.canRelease(claimed, other, true, false)).isNull();
         assertThat(SectionRules.canRelease(claimed, other, false, true)).isNull();

@@ -33,8 +33,8 @@ public class GroupDocImageService {
     }
 
     @Transactional(readOnly = true)
-    public String imageUrl(Actor actor, UUID documentId, UUID blockId) {
-        GroupDocContext ctx = access.read(actor, documentId);
+    public String resolveImageUrl(Actor actor, UUID documentId, UUID blockId) {
+        GroupDocContext ctx = access.loadContext(actor, documentId);
         GroupDocument document = ctx.document();
         List<DocumentModel> sources = new ArrayList<>();
         sources.add(document.sharedBlocks());
@@ -51,7 +51,7 @@ public class GroupDocImageService {
         }
         String fileId = sources.stream().map(source -> DocumentFiles.fileId(source, blockId))
                 .flatMap(Optional::stream).findFirst()
-                .orElseThrow(() -> ApiException.notFound("IMAGE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("IMAGE_NOT_FOUND"));
         return artifacts.issueDownloadToken(fileId, actor.accountId()).url();
     }
 }

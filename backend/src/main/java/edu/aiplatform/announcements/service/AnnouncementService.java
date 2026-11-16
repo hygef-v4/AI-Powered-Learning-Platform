@@ -44,7 +44,7 @@ public class AnnouncementService {
     @Transactional(readOnly = true, timeout = 10)
     public AnnouncementViews.Feed listAnnouncements(Actor actor, UUID classId, int page, int size) {
         if (page < 1 || page > 100000 || size < 1 || size > 50)
-            throw ApiException.badRequest("PAGE_INVALID", "Trang phải từ1, tối đa50 mục");
+            throw ApiException.createBadRequest("PAGE_INVALID", "Trang phải từ1, tối đa50 mục");
         var all = announcementAccessPolicy.listReadableClasses(actor, null);
         if (classId != null) announcementAccessPolicy.requireClassAccess(actor, classId, false);
         var allowed =
@@ -96,7 +96,7 @@ public class AnnouncementService {
             Actor actor, UUID classId, AnnouncementCommands.Create input) {
         var courseClass = announcementAccessPolicy.requireClassAccess(actor, classId, true);
         var announcement =
-                Announcement.create(
+                Announcement.createAnnouncement(
                         classId,
                         actor.accountId(),
                         input.title(),
@@ -149,7 +149,7 @@ public class AnnouncementService {
         var announcement = loadAnnouncement(actor, id);
         announcementAccessPolicy.requireClassAccess(actor, announcement.classId, true);
         requireVersion(announcement, version);
-        announcement.delete(actor.accountId(), clock.instant());
+        announcement.markDeleted(actor.accountId(), clock.instant());
         saveAnnouncement(announcement, version);
         recordAudit(actor, "ANNOUNCEMENT_DELETED", announcement, buildAuditMetadata(announcement));
     }
@@ -163,13 +163,13 @@ public class AnnouncementService {
 
     private void requireVersion(Announcement announcement, long version) {
         if (version < 0 || announcement.version != version)
-            throw ApiException.conflict("ANNOUNCEMENT_STALE", "Thông báo đã thay đổi, hãy tải lại");
+            throw ApiException.createConflict("ANNOUNCEMENT_STALE", "Thông báo đã thay đổi, hãy tải lại");
     }
 
     /** Ghi có điều kiện version; câu UPDATE tăng version trong database nên bản trả về cũng phải mang version mới. */
     private void saveAnnouncement(Announcement announcement, long version) {
         if (!announcementRepository.updateAnnouncement(announcement, version))
-            throw ApiException.conflict("ANNOUNCEMENT_STALE", "Thông báo đã thay đổi, hãy tải lại");
+            throw ApiException.createConflict("ANNOUNCEMENT_STALE", "Thông báo đã thay đổi, hãy tải lại");
         announcement.version = version + 1;
     }
 

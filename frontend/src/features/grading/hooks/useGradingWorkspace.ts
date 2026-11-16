@@ -28,8 +28,9 @@ import type {
   StructuredFeedbackItem,
   StructuredFeedbackSummary,
 } from "../model/types";
+import { msg } from "@/i18n/msg";
 
-const UNSAVED_CHANGES_MESSAGE = "Bạn có thay đổi chưa lưu. Rời bài này?";
+const UNSAVED_CHANGES_MESSAGE = msg("grading.hooks.useGradingWorkspace.youHaveUnsavedChangesLeave");
 
 export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>,
   filters: NavigationFilters = {}, additionalDirty = false) {
@@ -57,14 +58,14 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     additionalDirtyRef.current = additionalDirty;
   }, [dirty, additionalDirty]);
   useEffect(() => {
-    function beforeUnload(event: BeforeUnloadEvent) {
+    function warnBeforeUnload(event: BeforeUnloadEvent) {
       if (dirtyRef.current || additionalDirtyRef.current) {
         event.preventDefault();
         event.returnValue = "";
       }
     }
-    window.addEventListener("beforeunload", beforeUnload);
-    return () => window.removeEventListener("beforeunload", beforeUnload);
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
   }, []);
 
   function updateForm(patch: Partial<GradingFormValues>) {
@@ -133,7 +134,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
 
   function navigateEvaluation(id: string, keepFilters = true) {
     const go = () => router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
-    if (dirty || additionalDirty) requestConfirm(UNSAVED_CHANGES_MESSAGE, go, "Bỏ thay đổi");
+    if (dirty || additionalDirty) requestConfirm(UNSAVED_CHANGES_MESSAGE, go, msg("grading.hooks.useGradingWorkspace.discardChanges"));
     else go();
   }
 
@@ -149,11 +150,11 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     setError("");
     try {
       if (hasInvalidItemScores(detail.rubrics, form.itemScores)) {
-        throw new Error("Kiểm tra điểm từng mục: từ 0 đến điểm tối đa, với tối đa 2 chữ số thập phân.");
+        throw new Error(msg("grading.hooks.useGradingWorkspace.checkEachItemsPointsFrom"));
       }
       const supportsItemScores = evaluation.rubricItemScores !== undefined;
       if (!supportsItemScores && hasPartialPoints(detail.rubrics, form.checks, form.itemScores)) {
-        throw new Error("Máy chủ chưa hỗ trợ lưu điểm lẻ. Cần cập nhật máy chủ rồi tải lại phiên bản; điểm bạn đang nhập vẫn được giữ.");
+        throw new Error(msg("grading.hooks.useGradingWorkspace.theServerDoesNotSupport"));
       }
       const hasStructuredPayload = Boolean(
         form.structuredFeedback ||
@@ -205,7 +206,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
             }
           } catch {
             setDetail((current) => ({ ...current, evaluation: saved, editable: false }));
-            setError("Đã lưu điểm nhóm. Tải lại bài để cập nhật điểm và phiên bản thành viên.");
+            setError(msg("grading.hooks.useGradingWorkspace.groupScoreSavedReloadThe"));
           }
         }
         const preserveEdits = !replacementForm && editRevision.current !== savedRevision;

@@ -37,7 +37,7 @@ final class PromptFlowMachine {
     }
 
     /** Trạng thái sau thao tác; rỗng khi thao tác không hợp lệ ở trạng thái hiện tại. */
-    static Optional<PromptFlowState> next(PromptFlowState state, PromptAction action) {
+    static Optional<PromptFlowState> findNextState(PromptFlowState state, PromptAction action) {
         if (state == null || action == null) {
             return Optional.empty();
         }

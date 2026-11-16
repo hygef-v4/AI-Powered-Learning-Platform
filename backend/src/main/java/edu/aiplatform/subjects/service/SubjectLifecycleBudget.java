@@ -10,7 +10,7 @@ final class SubjectLifecycleBudget {
 
     SubjectLifecycleBudget(Duration timeout) {
         if (timeout == null || timeout.isNegative() || timeout.isZero()) {
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "SUBJECT_TIMEOUT_INVALID", "Ngân sách thời gian phải dương");
         }
         nanos =
@@ -22,7 +22,7 @@ final class SubjectLifecycleBudget {
     Duration calculateRemaining() {
         long left = nanos - (System.nanoTime() - start);
         if (left <= 0) {
-            throw ApiException.unavailable(
+            throw ApiException.createUnavailable(
                     "SUBJECT_LIFECYCLE_TIMEOUT", "Kiểm tra môn quá thời gian, vui lòng thử lại");
         }
         return Duration.ofNanos(left);

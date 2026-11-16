@@ -77,7 +77,7 @@ class GroupSectionServiceTest {
             documentModel, sse, audit, artifacts, new ObjectMapper(), clock);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", leader.accountId(), null, NOW,
             NOW, List.of(leader.accountId(), member.accountId()));
-    private final GroupDocument document = GroupDocument.create(UUID.randomUUID(), group.id(), assignmentId, classId,
+    private final GroupDocument document = GroupDocument.createDocument(UUID.randomUUID(), group.id(), assignmentId, classId,
             new DocumentModel(List.of()), false, NOW);
     private final UUID sectionId = UUID.randomUUID();
 
@@ -101,7 +101,7 @@ class GroupSectionServiceTest {
         section(Status.CLAIMED, leader.accountId(), null, 2);
 
         assertThatThrownBy(() -> service.claim(member, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_CLAIMED_BY_OTHER"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("SECTION_CLAIMED_BY_OTHER"));
         verify(documents, never()).updateSection(any());
     }
 
@@ -123,7 +123,7 @@ class GroupSectionServiceTest {
     void leaderMustReleaseBeforeReassigningAndAssignmentIsAudited() {
         section(Status.CLAIMED, leader.accountId(), null, 2);
         assertThatThrownBy(() -> service.assign(leader, document.id(), sectionId, member.accountId(), false))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_CLAIMED_BY_OTHER"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("SECTION_CLAIMED_BY_OTHER"));
 
         var view = service.assign(leader, document.id(), sectionId, member.accountId(), true);
 
@@ -134,7 +134,7 @@ class GroupSectionServiceTest {
         assertThat(events.getAllValues()).extracting(AuditEvent::action)
                 .containsExactly("GROUP_SECTION_RELEASED", "GROUP_SECTION_ASSIGNED");
         assertThatThrownBy(() -> service.assign(member, document.id(), sectionId, member.accountId(), true))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
     }
 
     @Test
@@ -152,9 +152,9 @@ class GroupSectionServiceTest {
         section(Status.CLAIMED, member.accountId(), null, 5);
 
         assertThatThrownBy(() -> service.saveDraft(member, document.id(), sectionId, 4L, List.of(block())))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_VERSION_CONFLICT"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("SECTION_VERSION_CONFLICT"));
         assertThatThrownBy(() -> service.saveDraft(leader, document.id(), sectionId, 5L, List.of(block())))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_NOT_HELD"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("SECTION_NOT_HELD"));
         var saved = service.saveDraft(member, document.id(), sectionId, 5L, List.of(block()));
         assertThat(saved.draftBlocks()).hasSize(1);
         verify(documents).touch(document.id(), NOW);
@@ -163,10 +163,10 @@ class GroupSectionServiceTest {
     @Test
     void doneMovesDraftToPublishedAndKeepsRevision() {
         section(Status.CLAIMED, member.accountId(), null, 1);
-        GroupSection held = documents.lockSection(document.id(), sectionId).orElseThrow().withDraft(List.of(block()), NOW);
+        GroupSection held = documents.lockSection(document.id(), sectionId).orElseThrow().replaceDraft(List.of(block()), NOW);
         when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(held));
 
-        var done = service.done(member, document.id(), sectionId);
+        var done = service.markSectionDone(member, document.id(), sectionId);
 
         assertThat(done.status()).isEqualTo(Status.DONE);
         assertThat(done.publishedBlocks()).hasSize(1);
@@ -180,19 +180,19 @@ class GroupSectionServiceTest {
     void outsiderGetsNotFoundTeacherCannotEditAndDeadlineStopsEdits() {
         section(Status.OPEN, null, null, 0);
         assertThatThrownBy(() -> service.claim(outsider, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(GroupAccess.NOT_FOUND));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo(GroupAccess.NOT_FOUND));
         assertThatThrownBy(() -> service.claim(teacher, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_MEMBER_ONLY"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_MEMBER_ONLY"));
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.CLOSED);
         assertThatThrownBy(() -> service.claim(member, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_DEADLINE_PASSED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_DEADLINE_PASSED"));
     }
 
     @Test
     void draftIsCheckedInsideTheSharedSkeletonByTheRealValidator() {
         DocumentBlock first = heading("1. Phân tích");
         DocumentBlock second = heading("2. Thiết kế");
-        GroupDocument withSkeleton = GroupDocument.create(document.id(), group.id(), assignmentId, classId,
+        GroupDocument withSkeleton = GroupDocument.createDocument(document.id(), group.id(), assignmentId, classId,
                 new DocumentModel(List.of(first, second)), false, NOW);
         when(documents.findById(document.id())).thenReturn(Optional.of(withSkeleton));
         GroupSection held = new GroupSection(sectionId, document.id(), "p1", first.id(), List.of(), 1, "1. Phân tích",
@@ -207,7 +207,7 @@ class GroupSectionServiceTest {
 
         assertThat(saved.draftBlocks()).hasSize(1);
         assertThatThrownBy(() -> real.saveDraft(member, document.id(), sectionId, 2L, List.of(first)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_CONTENT_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("SECTION_CONTENT_INVALID"));
     }
 
     @Test
@@ -225,7 +225,7 @@ class GroupSectionServiceTest {
         assertThat(service.saveDraft(member, document.id(), sectionId, 1L, List.of(block())).draftBlocks()).hasSize(1);
         section(Status.OPEN, null, null, 0);
         assertThatThrownBy(() -> service.claim(member, document.id(), sectionId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_DEADLINE_PASSED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_DEADLINE_PASSED"));
     }
 
     private static DocumentBlock heading(String text) {
@@ -259,9 +259,9 @@ class GroupSectionServiceTest {
         SectionRevision newer = new SectionRevision(UUID.randomUUID(), sectionId, member.accountId(), List.of(block()), NOW);
         when(documents.listRevisions(sectionId, GroupSectionService.MAX_REVISIONS)).thenReturn(List.of(newer));
 
-        assertThat(service.revisions(member, document.id(), sectionId)).extracting(GroupSectionService.RevisionView::id)
+        assertThat(service.listRevisions(member, document.id(), sectionId)).extracting(GroupSectionService.RevisionView::id)
                 .containsExactly(newer.id());
-        assertThat(service.revisions(teacher, document.id(), sectionId)).hasSize(1);
+        assertThat(service.listRevisions(teacher, document.id(), sectionId)).hasSize(1);
     }
 
     @Test

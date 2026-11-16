@@ -103,11 +103,11 @@ public class DashboardSourceReader implements AutoCloseable {
     public <T, R> Section<R> readSection(PendingSource<T> pending, Function<T, R> mapper) {
         var result = awaitSource(pending);
         if (!result.available() || result.value() == null)
-            return Section.unavailable();
+            return Section.markUnavailable();
         try {
-            return Section.available(mapper.apply(result.value()));
+            return Section.wrapAvailable(mapper.apply(result.value()));
         } catch (RuntimeException invalidData) {
-            return Section.unavailable();
+            return Section.markUnavailable();
         }
     }
 

@@ -29,7 +29,7 @@ public class CourseClassRepository implements ICourseClassRepository {
 
     /** Finds a course class by its unique ID. */
     @Override
-    public Optional<CourseClass> find(UUID classId) {
+    public Optional<CourseClass> findClass(UUID classId) {
         return namedParameterJdbcTemplate.query("select * from course_classes where id = :id",
                 Map.of("id", classId), CourseClassRepository::mapCourseClass).stream()
                 .findFirst();
@@ -59,7 +59,7 @@ public class CourseClassRepository implements ICourseClassRepository {
                             values (:id, :subjectId, :code, :name, :description, :startsOn, :status, :teacherId,
                                 :distribution, :createdAt, :updatedAt, :version)
                             """,
-                    params(value));
+                    bindClassParams(value));
         } catch (DuplicateKeyException ex) {
             throw new AcademicRuleException("CLASS_EXISTS", CLASS_EXISTS_MESSAGE);
         }
@@ -67,14 +67,14 @@ public class CourseClassRepository implements ICourseClassRepository {
 
     /** Updates course class fields checking for version concurrency conflict. */
     @Override
-    public void update(CourseClass value, long expectedVersion) {
+    public void updateClass(CourseClass value, long expectedVersion) {
         PersistenceChecks.requireWritableTransaction();
         if (expectedVersion < 0 || expectedVersion == Long.MAX_VALUE
                 || value.version() != expectedVersion + 1) {
             throw new IllegalArgumentException(
                     "Updated class must advance expected version by one");
         }
-        var args = params(value);
+        var args = bindClassParams(value);
         args.put("expectedVersion", expectedVersion);
         int count;
         try {
@@ -97,7 +97,7 @@ public class CourseClassRepository implements ICourseClassRepository {
     }
 
     /** Builds the named SQL parameters for the supplied record. */
-    private static Map<String, Object> params(CourseClass value) {
+    private static Map<String, Object> bindClassParams(CourseClass value) {
         var args = new HashMap<String, Object>();
         args.put("id", value.id());
         args.put("subjectId", value.subjectId());

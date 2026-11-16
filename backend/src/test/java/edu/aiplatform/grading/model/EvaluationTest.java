@@ -35,7 +35,7 @@ class EvaluationTest {
         assertThat(e.score()).isEqualByComparingTo("3.00");
         e.saveGrade("{}", new BigDecimal("4"), new BigDecimal("-1"), "late", "feedback", null, actor, now);
         assertThat(e.score()).isEqualByComparingTo("3.00");
-        assertThat(e.status()).isEqualTo(EvaluationStatus.DRAFT);
+        assertThat(e.resolveStatus()).isEqualTo(EvaluationStatus.DRAFT);
         e.saveGrade("{}", new BigDecimal("4"), new BigDecimal("100"), "bonus", null, null, actor, now);
         assertThat(e.score()).isEqualByComparingTo("10.00");
     }
@@ -52,22 +52,22 @@ class EvaluationTest {
         assertThat(e.memberOverride).isTrue();
         assertThat(e.state).isEqualTo(EvaluationStatus.PUBLISHED);
         assertThat(e.score).isEqualByComparingTo("10");
-        assertThat(e.history()).hasSize(2);
+        assertThat(e.listHistory()).hasSize(2);
     }
 
     @Test
     void resubmissionSupersedesOldGradeIncludingPublished() {
         var e = evaluation();
-        e.supersede();
-        assertThat(e.status()).isEqualTo(EvaluationStatus.SUPERSEDED);
+        e.supersedeEvaluation();
+        assertThat(e.resolveStatus()).isEqualTo(EvaluationStatus.SUPERSEDED);
         assertThatThrownBy(() -> e.saveGrade("{}", BigDecimal.ONE, BigDecimal.ZERO, null, null, null, actor, now))
                 .hasMessageContaining("superseded");
         var p = evaluation();
         p.saveGrade("{}", BigDecimal.ONE, BigDecimal.ZERO, null, null, null, actor, now);
         p.finalizeGrade(actor, now);
         p.publishGrade(actor, now);
-        p.supersede();
-        assertThat(p.status()).isEqualTo(EvaluationStatus.SUPERSEDED);
+        p.supersedeEvaluation();
+        assertThat(p.resolveStatus()).isEqualTo(EvaluationStatus.SUPERSEDED);
     }
 
     @Test
@@ -83,7 +83,7 @@ class EvaluationTest {
         var root = evaluation();
         root.saveGrade("{}", new BigDecimal("6"), BigDecimal.ONE, "bonus", "old", null, actor, now);
         root.saveGrade("{}", new BigDecimal("7"), BigDecimal.ONE, "bonus", "new", "correction", actor, now.plusSeconds(1));
-        assertThat(root.history()).singleElement().satisfies(h -> {
+        assertThat(root.listHistory()).singleElement().satisfies(h -> {
             assertThat(h.before()).isEqualByComparingTo("7");
             assertThat(h.after()).isEqualByComparingTo("8");
             assertThat(h.previousFeedback()).isEqualTo("old");

@@ -1,4 +1,4 @@
-import { ApiError, apiFetch } from "@/shared/api/client";
+import { ApiError, fetchApi } from "@/shared/api/client";
 import { ENROLLMENT_RESULT_LABELS } from "../model/types";
 import type {
   ClassInfoInput,
@@ -11,6 +11,7 @@ import type {
   PersonView,
   SubjectView,
 } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 export type Scope = "me" | "teaching" | "manager";
 export type ListQuery = {
@@ -42,43 +43,43 @@ function buildQuery(input: ListQuery = {}) {
 }
 
 function writeRequest<T>(path: string, method: string, body: unknown) {
-  return apiFetch<T>(API_BASE + path, { method, body: JSON.stringify(body) });
+  return fetchApi<T>(API_BASE + path, { method, body: JSON.stringify(body) });
 }
 
 export const academicsApi = {
   listClasses: (scope: Scope, input: ListQuery = {}, signal?: AbortSignal) =>
-    apiFetch<CourseClassView[]>(`${API_BASE}${scope}/classes?${buildQuery(input)}`, { signal }),
+    fetchApi<CourseClassView[]>(`${API_BASE}${scope}/classes?${buildQuery(input)}`, { signal }),
   loadClass: (scope: Scope, id: string, signal?: AbortSignal) =>
-    apiFetch<CourseClassView>(`${API_BASE}${scope}/classes/${encodeId(id)}`, { signal }),
+    fetchApi<CourseClassView>(`${API_BASE}${scope}/classes/${encodeId(id)}`, { signal }),
   listStudents: (
     scope: "teaching" | "manager",
     id: string,
     input: ListQuery = {},
     signal?: AbortSignal,
   ) =>
-    apiFetch<EnrollmentView[]>(
+    fetchApi<EnrollmentView[]>(
       `${API_BASE}${scope}/classes/${encodeId(id)}/students?${buildQuery(input)}`,
       { signal },
     ),
   loadStudent: (id: string, accountId: string, signal?: AbortSignal) =>
-    apiFetch<EnrollmentView>(
+    fetchApi<EnrollmentView>(
       `${API_BASE}teaching/classes/${encodeId(id)}/students/${encodeId(accountId)}`,
       { signal },
     ),
   listSubjects: (signal?: AbortSignal) =>
-    apiFetch<ManagedSubject[]>(`${API_BASE}manager/subjects`, { signal }),
+    fetchApi<ManagedSubject[]>(`${API_BASE}manager/subjects`, { signal }),
   loadSubject: (id: string, signal?: AbortSignal) =>
-    apiFetch<ManagedSubject>(`${API_BASE}manager/subjects/${encodeId(id)}`, { signal }),
+    fetchApi<ManagedSubject>(`${API_BASE}manager/subjects/${encodeId(id)}`, { signal }),
   listStudentCandidates: (id: string, q: string, signal?: AbortSignal) => {
     const params = new URLSearchParams({ q, limit: "20" });
-    return apiFetch<PersonView[]>(
+    return fetchApi<PersonView[]>(
       `${API_BASE}manager/classes/${encodeId(id)}/student-candidates?${params}`,
       { signal },
     );
   },
   listCandidates: (kind: "teacher" | "student", q: string, signal?: AbortSignal) => {
     const params = new URLSearchParams({ q, limit: "20" });
-    return apiFetch<PersonView[]>(`${API_BASE}manager/${kind}-candidates?${params}`, { signal });
+    return fetchApi<PersonView[]>(`${API_BASE}manager/${kind}-candidates?${params}`, { signal });
   },
   createClass: (input: CreateClassInput) =>
     writeRequest<CourseClassView>("manager/classes", "POST", input),
@@ -101,7 +102,7 @@ export const academicsApi = {
       { accountId },
     );
     if (!["ENROLLED", "RESTORED", "ALREADY_ENROLLED"].includes(response.result)) {
-      throw new Error(ENROLLMENT_RESULT_LABELS[response.result] ?? "Không thể ghi danh sinh viên.");
+      throw new Error(ENROLLMENT_RESULT_LABELS[response.result] ?? msg("academics.api.index.couldNotEnrollTheStudent"));
     }
     return response;
   },

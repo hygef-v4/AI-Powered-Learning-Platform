@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 
 class McpRolePolicyTest {
     @Test void learnerAndEducatorsCanConnectButAdminCannot() {
-        assertThat(AccessPolicy.ruleFor(Actions.MCP_SELF).orElseThrow().roles())
+        assertThat(AccessPolicy.findRule(Actions.MCP_SELF).orElseThrow().roles())
                 .containsExactlyInAnyOrder(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER);
-        assertThat(AccessPolicy.ruleFor(Actions.AI_ADMIN).orElseThrow().roles())
+        assertThat(AccessPolicy.findRule(Actions.AI_ADMIN).orElseThrow().roles())
                 .containsExactly(Role.ADMIN);
-        assertThat(AccessPolicy.ruleFor(Actions.AI_SHARED_USE).orElseThrow().roles())
+        assertThat(AccessPolicy.findRule(Actions.AI_SHARED_USE).orElseThrow().roles())
                 .doesNotContain(Role.STUDENT, Role.ADMIN);
     }
 }

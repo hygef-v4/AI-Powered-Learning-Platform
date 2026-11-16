@@ -11,6 +11,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
@@ -27,6 +28,8 @@ import edu.aiplatform.groups.service.GroupProposalService.InviteMembersCommand;
 import edu.aiplatform.groups.service.GroupProposalService.MyProposalView;
 import edu.aiplatform.groups.service.GroupProposalService.RenameProposalCommand;
 import edu.aiplatform.groups.service.GroupProposalService.VersionCommand;
+import edu.aiplatform.identity.contract.AccountContact;
+import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAccountLookup;
@@ -66,9 +69,10 @@ class GroupProposalServiceTest {
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final GroupAccess access = new GroupAccess(authorization, classes, audit, clock);
     private final GroupProposalCleanup cleanup = new GroupProposalCleanup(proposals);
+    private final IAccountLookup accounts = mock(IAccountLookup.class);
     private final GroupProposalService service = new GroupProposalService(proposals, groups,
             new GroupFormationService(proposals, access, audit, clock), cleanup, access, classes,
-            mock(IAccountLookup.class), audit, events, clock);
+            accounts, audit, events, clock);
     private final GroupProposal draft = GroupProposal.draft(UUID.randomUUID(), classId, "Nhóm Mây", leader.accountId(),
             NOW.minusSeconds(60));
 
@@ -81,6 +85,17 @@ class GroupProposalServiceTest {
         when(classes.listActiveStudents(classId)).thenReturn(students);
         settings(true, 2, 3);
         when(proposals.lockProposal(draft.id())).thenReturn(Optional.of(draft));
+    }
+
+    @Test
+    void invitationsCarryTheVisibleLeadersStudentCode() {
+        when(proposals.listInvitingProposals(classId, invitee.accountId())).thenReturn(List.of(draft));
+        when(accounts.getContact(leader.accountId())).thenReturn(Optional.of(
+                new AccountContact(leader.accountId(), "an@school.test", "An",
+                        Role.STUDENT, AccountStatus.ACTIVE, "SE000001")));
+        var invitations = new ObjectMapper()
+                .valueToTree(service.loadMyProposal(invitee, classId).invitations());
+        assertThat(invitations.get(0).path("leaderStudentCode").asText()).isEqualTo("SE000001");
     }
 
     @Test
@@ -158,7 +173,7 @@ class GroupProposalServiceTest {
 
         assertThatThrownBy(() -> service.renameProposal(invitee, draft.id(), new RenameProposalCommand("B", 0L)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("GROUP_PROPOSAL_NOT_FOUND"));
+                        e -> assertThat(e.readCode()).isEqualTo("GROUP_PROPOSAL_NOT_FOUND"));
         ArgumentCaptor<AuditEvent> denied = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(denied.capture());
         assertThat(denied.getValue().action()).isEqualTo("ACCESS_DENIED");
@@ -213,7 +228,7 @@ class GroupProposalServiceTest {
 
     @Test
     void submittedProposalIsLockedUntilWithdrawn() {
-        GroupProposal submitted = draft.submitted(NOW);
+        GroupProposal submitted = draft.markSubmitted(NOW);
         when(proposals.lockProposal(draft.id())).thenReturn(Optional.of(submitted));
         members(member(leader.accountId(), ProposalMember.Status.ACCEPTED, true),
                 member(invitee.accountId(), ProposalMember.Status.ACCEPTED, true));
@@ -290,6 +305,6 @@ class GroupProposalServiceTest {
 
     private static void assertCode(Runnable call, String code) {
         assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class,
-                e -> assertThat(e.code()).isEqualTo(code));
+                e -> assertThat(e.readCode()).isEqualTo(code));
     }
 }

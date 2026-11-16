@@ -9,11 +9,11 @@ import Link from "next/link";
 import { BackLink } from "@/shared/navigation/BackLink";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/navigation";
-import { showErrorToast, showToast } from "@/shared/ui";
+import { Card, showErrorToast, showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
-import { Icon, type IconName } from "@/shared/ui/Icon";
+import { Icon } from "@/shared/ui/Icon";
 import { buildContextQuery, buildMaterialPath } from "../api";
 import { ArchiveItemDialog, ModuleItemDialog, resolveRemovalAction, describeRemoval } from "./MaterialDialogs";
 import { CollapseBody, canEditItem, reopen } from "./ModuleBoard";
@@ -31,15 +31,13 @@ import {
 } from "../model/outline";
 import { useMaterialResource } from "../hooks/useMaterialResource";
 import type { Material, MaterialModule } from "../model/types";
+import { SidebarToolButton } from "@/shared/layout/SidebarToolButton";
+import { msg } from "@/i18n/msg";
 
 type Source = { kind: "material" | "quiz" | "practice"; id: string };
 type Dialogs =
   | { type: "item"; module: MaterialModule; item?: OutlineItem }
   | { type: "archive"; item: OutlineItem; active: boolean };
-
-/** Nút nhỏ trên sidebar; ẩn khi sidebar thu gọn. */
-const TOOL =
-  "flex size-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-sunken hover:text-ink md:group-data-[collapsed]/sidebar:hidden";
 
 /** Mũi tên đóng / mở của module: vẫn hiện khi thu gọn sidebar (đứng giữa), để đầu module không trống trơn. */
 const CHEVRON =
@@ -63,7 +61,7 @@ export function resolveModuleContext({ pathname, search }: NavLocation): NavCont
     const attemptId = decodeURIComponent(attempt[1]!);
     return {
       key: `quiz-attempt-modules:${attemptId}`,
-      label: "Danh sách module",
+      label: msg("materials.components.ModuleNav.moduleList"),
       header: <AttemptModuleNav attemptId={attemptId} submitted={Boolean(attempt[2])} />,
       items: [],
     };
@@ -73,7 +71,7 @@ export function resolveModuleContext({ pathname, search }: NavLocation): NavCont
   if (!source) return null;
   return {
     key: `material-modules:${classId ?? "subject"}`,
-    label: "Danh sách module",
+    label: msg("materials.components.ModuleNav.moduleList"),
     header: <ModuleNav source={source} classId={classId} />,
     items: [],
   };
@@ -88,7 +86,7 @@ function AttemptModuleNav({ attemptId, submitted }: { attemptId: string; submitt
     const controller = new AbortController();
     const path = `/api/v1/quiz-attempts/${encodeURIComponent(attemptId)}`;
     const fetchAttemptOwner = (suffix: string) =>
-      apiFetch<AttemptOwner>(`${path}${suffix}`, { signal: controller.signal });
+      fetchApi<AttemptOwner>(`${path}${suffix}`, { signal: controller.signal });
     // Lượt đã nộp chỉ đọc được qua kết quả, lượt đang làm chỉ đọc được qua trang làm: thử đúng loại trước.
     fetchAttemptOwner(submitted ? "/result" : "").catch(() => fetchAttemptOwner(submitted ? "" : "/result")).then(
       (found) => { if (!controller.signal.aborted) setOwner({ quizId: found.quizId, classId: found.classId }); },
@@ -99,10 +97,10 @@ function AttemptModuleNav({ attemptId, submitted }: { attemptId: string; submitt
   if (!owner) {
     return (
       <div className="mb-3 shrink-0 border-b border-line pb-3.5">
-        <BackLink href="/quiz-practice" title="Luyện tập Quiz"
+        <BackLink href="/quiz-practice" title={msg("materials.components.ModuleNav.quizPractice")}
           className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink">
           <Icon name="arrow_back" size={17} className="shrink-0" />
-          <span className={FADE_LABEL}>Luyện tập Quiz</span>
+          <span className={FADE_LABEL}>{msg("materials.components.ModuleNav.quizPractice")}</span>
         </BackLink>
       </div>
     );
@@ -149,22 +147,22 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
       <div className="mb-3 shrink-0 border-b border-line pb-3.5">
         <BackLink
           href={back}
-          title="Học liệu"
+          title={msg("materials.components.ModuleNav.learningMaterials")}
           className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink"
         >
           <Icon name="arrow_back" size={17} className="shrink-0" />
-          <span className={FADE_LABEL}>Học liệu</span>
+          <span className={FADE_LABEL}>{msg("materials.components.ModuleNav.learningMaterials")}</span>
         </BackLink>
       </div>
       <nav
-        aria-label="Danh sách module"
+        aria-label={msg("materials.components.ModuleNav.moduleList")}
         className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
       >
         {!outline && (
-          <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>Đang tải…</span>
+          <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>{msg("materials.components.ModuleNav.loading")}</span>
         )}
         {scope && outline && outline.length > 0 && (
-          <div className="flex flex-col rounded-xl border border-line bg-surface p-1 shadow-xs">
+          <Card padding="none" className="flex flex-col p-1 shadow-xs">
             {outline.map(({ module, items }, index) => {
               const open = !collapsed.has(module.id);
               return (
@@ -184,26 +182,24 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                       {module.title}
                     </span>
                     {staff && (staff.kind === "class" || module.canManage) && (
-                      <button
-                        type="button"
-                        className={TOOL}
-                        aria-label={`Tạo học liệu trong ${module.title}`}
-                        title="Tạo học liệu"
+                      <SidebarToolButton
+                        icon="add"
+                        iconSize={15}
+                        label={msg("materials.components.ModuleNav.createLearningMaterialIn", { title: String(module.title) })}
+                        title={msg("materials.components.ModuleNav.createLearningMaterial")}
                         onClick={(event) => {
                           event.stopPropagation();
                           setDialog({ type: "item", module });
                         }}
-                      >
-                        <Icon name="add" size={15} />
-                      </button>
+                      />
                     )}
                     <button
                       type="button"
                       className={CHEVRON}
                       aria-expanded={open}
                       aria-controls={`nav-module-${module.id}`}
-                      aria-label={open ? `Thu gọn ${module.title}` : `Mở ${module.title}`}
-                      title={open ? "Thu gọn" : "Mở"}
+                      aria-label={open ? msg("materials.components.ModuleNav.collapse", { title: String(module.title) }) : msg("materials.components.ModuleNav.expand", { title: String(module.title) })}
+                      title={open ? msg("materials.components.ModuleNav.collapse2") : msg("materials.components.ModuleNav.expand2")}
                     >
                       <Icon
                         name="expand_more"
@@ -219,8 +215,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                     <div className="flex flex-col gap-0.5 pb-0.5">
                       {items.length === 0 && (
                         <span className={cx("px-2.5 py-1 text-[12.5px] text-faint", FADE_LABEL)}>
-                          Chưa có học liệu
-                        </span>
+                          {msg("materials.components.ModuleNav.noLearningMaterialsYet")}</span>
                       )}
                       {items.map((item) => {
                         const active = isActive(item);
@@ -258,16 +253,16 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                             </Link>
                             {reopenable && (
                               <span className="absolute top-1/2 right-1.5 hidden -translate-y-1/2 items-center group-hover/item:flex group-focus-within/item:flex">
-                                <ItemTool
+                                <SidebarToolButton
                                   icon="lock_open"
-                                  label={`Mở lại ${resolveItemTitle(item)}`}
+                                  label={msg("materials.components.ModuleNav.reopen", { value: String(resolveItemTitle(item)) })}
                                   onClick={() =>
                                     void reopen(item.quiz.quizId, scope).then(
                                       () => {
-                                        showToast("Đã mở lại quiz");
+                                        showToast(msg("materials.components.ModuleNav.quizReopened"));
                                         notifyOutlineChanged();
                                       },
-                                      () => showErrorToast("Không mở lại được quiz"),
+                                      () => showErrorToast(msg("materials.components.ModuleNav.couldNotReopenTheQuiz")),
                                     )
                                   }
                                 />
@@ -275,14 +270,14 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                             )}
                             {editable && (
                               <span className="absolute top-1/2 right-1.5 hidden -translate-y-1/2 items-center gap-0.5 group-hover/item:flex group-focus-within/item:flex">
-                                <ItemTool
+                                <SidebarToolButton
                                   icon="edit"
-                                  label={`Sửa ${resolveItemTitle(item)}`}
+                                  label={msg("materials.components.ModuleNav.edit", { value: String(resolveItemTitle(item)) })}
                                   onClick={() => setDialog({ type: "item", module, item })}
                                 />
-                                <ItemTool
+                                <SidebarToolButton
                                   icon={resolveRemovalAction(item).icon}
-                                  danger
+                                  tone="danger"
                                   label={`${resolveRemovalAction(item).label} ${resolveItemTitle(item)}`}
                                   onClick={() => setDialog({ type: "archive", item, active })}
                                 />
@@ -296,7 +291,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                 </div>
               );
             })}
-          </div>
+          </Card>
         )}
       </nav>
       {dialog?.type === "item" && staff && (
@@ -330,35 +325,5 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
         />
       )}
     </div>
-  );
-}
-
-function ItemTool({
-  icon,
-  label,
-  danger = false,
-  success = false,
-  onClick,
-}: {
-  icon: IconName;
-  label: string;
-  danger?: boolean;
-  success?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className={cx(
-        TOOL,
-        danger && "text-danger hover:bg-danger-soft hover:text-danger",
-        success && "text-success hover:bg-success-soft hover:text-success",
-      )}
-    >
-      <Icon name={icon} size={14} />
-    </button>
   );
 }

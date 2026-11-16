@@ -31,7 +31,7 @@ class GradingAccessTest {
         } else {
             assertThatThrownBy(() -> access.requireTeacher(teacher, classId, Actions.GRADING_WRITE))
                     .isInstanceOfSatisfying(ApiException.class,
-                            error -> assertThat(error.code()).isEqualTo("GRADING_CLASS_READ_ONLY"));
+                            error -> assertThat(error.readCode()).isEqualTo("GRADING_CLASS_READ_ONLY"));
         }
     }
     @Test
@@ -42,7 +42,7 @@ class GradingAccessTest {
         when(auth.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.deny("OUT_OF_CLASS_SCOPE"));
         var access = new GradingAccess(auth, mock(IClassAccess.class), audit, Clock.systemUTC());
         assertThatThrownBy(() -> access.requireTeacher(actor, UUID.randomUUID(), Actions.GRADING_WRITE))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(404));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(404));
         verify(audit).record(argThat(event -> event.result() == AuditResult.DENIED));
     }
 
@@ -53,7 +53,7 @@ class GradingAccessTest {
         var access = new GradingAccess(auth, mock(IClassAccess.class), mock(IAudit.class), Clock.systemUTC());
         assertThatThrownBy(() -> access.requireTeacher(new Actor(UUID.randomUUID(), Role.TEACHER), UUID.randomUUID(),
                 Actions.GRADING_REVIEW))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(503))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(503))
                 .hasMessageNotContaining("internal detail");
     }
 
@@ -65,6 +65,6 @@ class GradingAccessTest {
         when(classes.isActiveStudent(any(), any())).thenThrow(new IllegalStateException());
         var access = new GradingAccess(auth, classes, mock(IAudit.class), Clock.systemUTC());
         assertThatThrownBy(() -> access.requireStudent(new Actor(UUID.randomUUID(), Role.STUDENT), UUID.randomUUID()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(503));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(503));
     }
 }

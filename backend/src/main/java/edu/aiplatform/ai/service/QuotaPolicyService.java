@@ -45,17 +45,17 @@ public class QuotaPolicyService {
     static final int MAX_QUERY = 100;
 
     private final QuotaRepository quota;
-    private final QuotaReservationService reservations;
+    private final QuotaReservationService quotaReservationService;
     private final AiUsageRepository usage;
     private final IAccountLookup accounts;
     private final AiAccess access;
     private final IAudit audit;
     private final Clock clock;
 
-    public QuotaPolicyService(QuotaRepository quota, QuotaReservationService reservations, AiUsageRepository usage,
+    public QuotaPolicyService(QuotaRepository quota, QuotaReservationService quotaReservationService, AiUsageRepository usage,
                               IAccountLookup accounts, AiAccess access, IAudit audit, Clock clock) {
         this.quota = quota;
-        this.reservations = reservations;
+        this.quotaReservationService = quotaReservationService;
         this.usage = usage;
         this.accounts = accounts;
         this.access = access;
@@ -64,9 +64,9 @@ public class QuotaPolicyService {
     }
 
     @Transactional(readOnly = true)
-    public QuotaPolicy policy(Actor actor) {
+    public QuotaPolicy loadPolicy(Actor actor) {
         access.require(actor, Actions.AI_ADMIN);
-        return quota.policy();
+        return quota.loadPolicy();
     }
 
     @Transactional
@@ -74,11 +74,11 @@ public class QuotaPolicyService {
         access.require(actor, Actions.AI_ADMIN);
         if (defaultDay == null || globalDay == null || defaultDay < 0 || globalDay < 0 || defaultDay > MAX_TOKENS
                 || globalDay > MAX_TOKENS) {
-            throw ApiException.badRequest("AI_QUOTA_INVALID", "Hạn mức phải là số token từ 0 trở lên");
+            throw ApiException.createBadRequest("AI_QUOTA_INVALID", "Hạn mức phải là số token từ 0 trở lên");
         }
-        QuotaPolicy before = quota.policy();
+        QuotaPolicy before = quota.loadPolicy();
         if (!quota.savePolicy(defaultDay, globalDay, version == null ? -1 : version, actor.accountId(), clock.instant())) {
-            throw ApiException.conflict("AI_QUOTA_VERSION_CONFLICT", "Hạn mức vừa được thay đổi, hãy tải lại");
+            throw ApiException.createConflict("AI_QUOTA_VERSION_CONFLICT", "Hạn mức vừa được thay đổi, hãy tải lại");
         }
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("defaultBefore", before.defaultDayTokens());
@@ -86,14 +86,14 @@ public class QuotaPolicyService {
         details.put("defaultAfter", defaultDay);
         details.put("globalAfter", globalDay);
         record(actor, "QUOTA_POLICY", details);
-        return quota.policy();
+        return quota.loadPolicy();
     }
 
     @Transactional(readOnly = true)
-    public List<TeacherQuotaView> teacherQuotas(Actor actor) {
+    public List<TeacherQuotaView> listTeacherQuotas(Actor actor) {
         access.require(actor, Actions.AI_ADMIN);
         return quota.listTeacherQuotas().stream().map(q -> {
-            Optional<AccountContact> contact = contact(q.accountId());
+            Optional<AccountContact> contact = findContact(q.accountId());
             return new TeacherQuotaView(q.accountId(), contact.map(AccountContact::displayName).orElse(null),
                     contact.map(AccountContact::email).orElse(null), q.dayTokens(), q.updatedAt());
         }).toList();
@@ -104,11 +104,11 @@ public class QuotaPolicyService {
     public void setTeacherQuota(Actor actor, UUID accountId, Long dayTokens) {
         access.require(actor, Actions.AI_ADMIN);
         if (dayTokens == null || dayTokens < 0 || dayTokens > MAX_TOKENS) {
-            throw ApiException.badRequest("AI_QUOTA_INVALID", "Hạn mức phải là số token từ 0 trở lên");
+            throw ApiException.createBadRequest("AI_QUOTA_INVALID", "Hạn mức phải là số token từ 0 trở lên");
         }
-        AccountContact contact = contact(accountId).filter(c -> TEACHING.contains(c.role()))
-                .orElseThrow(() -> ApiException.badRequest("AI_QUOTA_NOT_TEACHER", "Chỉ đặt mức riêng cho giảng viên"));
-        Long before = quota.teacherQuota(accountId).map(TeacherQuota::dayTokens).orElse(null);
+        AccountContact contact = findContact(accountId).filter(c -> TEACHING.contains(c.role()))
+                .orElseThrow(() -> ApiException.createBadRequest("AI_QUOTA_NOT_TEACHER", "Chỉ đặt mức riêng cho giảng viên"));
+        Long before = quota.findTeacherQuota(accountId).map(TeacherQuota::dayTokens).orElse(null);
         quota.upsertTeacherQuota(contact.accountId(), dayTokens, actor.accountId(), clock.instant());
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("accountId", accountId.toString());
@@ -120,7 +120,7 @@ public class QuotaPolicyService {
     @Transactional
     public void deleteTeacherQuota(Actor actor, UUID accountId) {
         access.require(actor, Actions.AI_ADMIN);
-        Long before = quota.teacherQuota(accountId).map(TeacherQuota::dayTokens).orElseThrow(AiAccess::notFound);
+        Long before = quota.findTeacherQuota(accountId).map(TeacherQuota::dayTokens).orElseThrow(AiAccess::createNotFoundError);
         quota.deleteTeacherQuota(accountId);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("accountId", accountId.toString());
@@ -130,26 +130,26 @@ public class QuotaPolicyService {
     }
 
     @Transactional(readOnly = true)
-    public List<AccountContact> teacherCandidates(Actor actor, String query) {
+    public List<AccountContact> listTeacherCandidates(Actor actor, String query) {
         access.require(actor, Actions.AI_ADMIN);
         String q = query == null ? "" : query.trim();
         if (q.length() > MAX_QUERY) {
-            throw ApiException.badRequest("AI_QUERY_TOO_LONG", "Từ khóa tìm tối đa 100 ký tự");
+            throw ApiException.createBadRequest("AI_QUERY_TOO_LONG", "Từ khóa tìm tối đa 100 ký tự");
         }
         return accounts.findAccounts(q, TEACHING, 20);
     }
 
     /** Tổng hợp API chung (BR-U06-41): hôm nay trên trần, tổng kỳ, số giảng viên đã dùng, theo ngày, người, model. */
     @Transactional(readOnly = true)
-    public UsageSummary summary(Actor actor, int days) {
+    public UsageSummary summarizeUsage(Actor actor, int days) {
         access.require(actor, Actions.AI_ADMIN);
         int span = days == 30 ? 30 : 7;
-        LocalDate today = reservations.today();
+        LocalDate today = quotaReservationService.resolveToday();
         Instant from = today.minusDays(span - 1L).atStartOfDay(QuotaReservationService.VN).toInstant();
         Instant to = today.plusDays(1).atStartOfDay(QuotaReservationService.VN).toInstant();
-        List<SharedRow> rows = usage.sharedSummary(from, to);
-        QuotaPolicy policy = quota.policy();
-        long todayUsed = quota.findWindow(QuotaRepository.GLOBAL, today).map(Window::consumed).orElse(0L);
+        List<SharedRow> rows = usage.listSharedSummary(from, to);
+        QuotaPolicy policy = quota.loadPolicy();
+        long todayUsed = quota.findWindow(QuotaRepository.GLOBAL, today).map(Window::sumConsumed).orElse(0L);
         Map<LocalDate, Long> byDay = new TreeMap<>();
         for (int i = span - 1; i >= 0; i--) {
             byDay.put(today.minusDays(i), 0L);
@@ -171,9 +171,9 @@ public class QuotaPolicyService {
         }
         List<TeacherUsage> teachers = new ArrayList<>();
         for (Map.Entry<UUID, long[]> entry : byTeacher.entrySet()) {
-            Optional<AccountContact> contact = contact(entry.getKey());
-            Long limit = reservations.limitOf(entry.getKey());
-            long usedToday = quota.findWindow(entry.getKey().toString(), today).map(Window::consumed).orElse(0L);
+            Optional<AccountContact> contact = findContact(entry.getKey());
+            Long limit = quotaReservationService.limitOf(entry.getKey());
+            long usedToday = quota.findWindow(entry.getKey().toString(), today).map(Window::sumConsumed).orElse(0L);
             teachers.add(new TeacherUsage(entry.getKey(), contact.map(AccountContact::displayName).orElse(null),
                     contact.map(AccountContact::email).orElse(null), entry.getValue()[0], usedToday, limit,
                     entry.getValue()[1]));
@@ -188,7 +188,7 @@ public class QuotaPolicyService {
                 byDay.entrySet().stream().map(e -> new DayUsage(e.getKey(), e.getValue())).toList(), teachers, models);
     }
 
-    private Optional<AccountContact> contact(UUID accountId) {
+    private Optional<AccountContact> findContact(UUID accountId) {
         try {
             return accounts.getContact(accountId);
         } catch (RuntimeException e) {

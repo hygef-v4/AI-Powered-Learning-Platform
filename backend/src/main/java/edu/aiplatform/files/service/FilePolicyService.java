@@ -22,13 +22,13 @@ public class FilePolicyService {
                                     List<String> extensions, List<String> mediaTypes) {
     }
 
-    public List<PurposePolicyView> policies() {
+    public List<PurposePolicyView> listPolicies() {
         return Arrays.stream(ArtifactPurpose.values()).map(purpose -> {
-            PurposeLimits limits = policy.limits(purpose);
+            PurposeLimits limits = policy.resolveLimits(purpose);
             List<FileType> types = limits.allowedTypes().stream().sorted().toList();
             return new PurposePolicyView(purpose, limits.maxSizeMb(), types.stream().map(Enum::name).toList(),
-                    types.stream().flatMap(type -> type.extensions().stream()).toList(),
-                    types.stream().map(FileType::mediaType).toList());
+                    types.stream().flatMap(type -> type.listExtensions().stream()).toList(),
+                    types.stream().map(FileType::readMediaType).toList());
         }).toList();
     }
 }

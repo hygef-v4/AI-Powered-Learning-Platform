@@ -1,9 +1,10 @@
 "use client";
 
-import { useId, useState, type InputHTMLAttributes, type Ref } from "react";
+import { useId, useState, type InputHTMLAttributes, type Ref, type ReactNode } from "react";
 import { cx } from "@/shared/ui/cx";
 import { Icon } from "@/shared/ui/Icon";
 import { AUTH_INPUT, AUTH_LABEL } from "./authStyles";
+import { msg } from "@/i18n/msg";
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "id"> & {
   label: string;
@@ -14,7 +15,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "id"> & {
 };
 
 /** Lỗi của một ô trên màn chưa đăng nhập, nằm ngay dưới ô. */
-export function FieldError({ id, children }: { id: string; children: string }) {
+export function FieldError({ id, children }: { id?: string; children: ReactNode }) {
   return (
     <p id={id} role="alert" className="mt-1.5 flex items-start gap-1.5 text-[13px] text-danger">
       <Icon name="error" size={16} className="mt-px" />
@@ -48,7 +49,7 @@ export function PasswordField({ label, valid, error, inputRef, className, ...inp
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
-            aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+            aria-label={visible ? msg("identity.components.PasswordField.hidePassword") : msg("identity.components.PasswordField.showPassword")}
             className="-mr-1 flex size-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink"
           >
             <Icon name={visible ? "visibility_off" : "visibility"} size={18} />

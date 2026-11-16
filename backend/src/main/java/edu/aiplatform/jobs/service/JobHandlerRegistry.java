@@ -27,7 +27,7 @@ public class JobHandlerRegistry {
         }
     }
 
-    public Optional<IJobHandler> find(String jobType) {
+    public Optional<IJobHandler> findHandler(String jobType) {
         return Optional.ofNullable(handlers.get(jobType));
     }
 }

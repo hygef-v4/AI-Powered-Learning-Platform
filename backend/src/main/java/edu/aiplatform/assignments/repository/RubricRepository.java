@@ -34,7 +34,7 @@ public class RubricRepository {
                 .param("id", assignmentId).query(this::map).list();
     }
 
-    public Optional<AssignmentRubric> find(UUID rubricId) {
+    public Optional<AssignmentRubric> findRubric(UUID rubricId) {
         return jdbc.sql("select * from assignment_rubrics where id = :id").param("id", rubricId)
                 .query(this::map).optional();
     }
@@ -44,19 +44,19 @@ public class RubricRepository {
                         + "created_at, updated_at, version) values (:id, :assignmentId, :partId, cast(:criteria as jsonb), "
                         + ":total, :lockedAt, :createdAt, :updatedAt, :version)")
                 .param("id", r.id()).param("assignmentId", r.assignmentId()).param("partId", r.partId())
-                .param("criteria", write(r.criteria())).param("total", r.totalPoints())
-                .param("lockedAt", AssignmentRepository.ts(r.lockedAt()))
-                .param("createdAt", AssignmentRepository.ts(r.createdAt()))
-                .param("updatedAt", AssignmentRepository.ts(r.updatedAt())).param("version", r.version())
+                .param("criteria", writeCriteria(r.criteria())).param("total", r.totalPoints())
+                .param("lockedAt", AssignmentRepository.convertTimestamp(r.lockedAt()))
+                .param("createdAt", AssignmentRepository.convertTimestamp(r.createdAt()))
+                .param("updatedAt", AssignmentRepository.convertTimestamp(r.updatedAt())).param("version", r.version())
                 .update();
     }
 
-    public AssignmentRubric save(AssignmentRubric r) {
+    public AssignmentRubric saveRubric(AssignmentRubric r) {
         int updated = jdbc.sql("update assignment_rubrics set criteria = cast(:criteria as jsonb), total_points = :total, "
                         + "updated_at = :now, version = version + 1 where id = :id and version = :version "
                         + "and locked_at is null")
-                .param("id", r.id()).param("criteria", write(r.criteria())).param("total", r.totalPoints())
-                .param("now", AssignmentRepository.ts(r.updatedAt())).param("version", r.version()).update();
+                .param("id", r.id()).param("criteria", writeCriteria(r.criteria())).param("total", r.totalPoints())
+                .param("now", AssignmentRepository.convertTimestamp(r.updatedAt())).param("version", r.version()).update();
         if (updated != 1) {
             throw new OptimisticLockingFailureException("rubric " + r.id());
         }
@@ -78,17 +78,17 @@ public class RubricRepository {
     public int lockAll(UUID assignmentId, Instant now) {
         return jdbc.sql("update assignment_rubrics set locked_at = :now, version = version + 1 "
                         + "where assignment_id = :id and locked_at is null")
-                .param("id", assignmentId).param("now", AssignmentRepository.ts(now)).update();
+                .param("id", assignmentId).param("now", AssignmentRepository.convertTimestamp(now)).update();
     }
 
     private AssignmentRubric map(ResultSet rs, int row) throws SQLException {
         return new AssignmentRubric(rs.getObject("id", UUID.class), rs.getObject("assignment_id", UUID.class),
-                rs.getString("part_id"), read(rs.getString("criteria")), rs.getBigDecimal("total_points"),
-                AssignmentRepository.instant(rs, "locked_at"), AssignmentRepository.instant(rs, "created_at"),
-                AssignmentRepository.instant(rs, "updated_at"), rs.getLong("version"));
+                rs.getString("part_id"), readCriteria(rs.getString("criteria")), rs.getBigDecimal("total_points"),
+                AssignmentRepository.readInstant(rs, "locked_at"), AssignmentRepository.readInstant(rs, "created_at"),
+                AssignmentRepository.readInstant(rs, "updated_at"), rs.getLong("version"));
     }
 
-    private String write(List<RubricCriterion> criteria) {
+    private String writeCriteria(List<RubricCriterion> criteria) {
         try {
             return json.writeValueAsString(criteria);
         } catch (JsonProcessingException e) {
@@ -96,7 +96,7 @@ public class RubricRepository {
         }
     }
 
-    private List<RubricCriterion> read(String value) {
+    private List<RubricCriterion> readCriteria(String value) {
         try {
             var stored = json.readTree(value);
             // Historical authoring builds stored criteria inside an object with additional metadata.
