@@ -22,9 +22,13 @@ final class AssignmentDraftPromptBuilder {
                           AssignmentCommands.DraftOptions requestedOptions) {
         AssignmentCommands.DraftOptions options = requestedOptions == null
                 ? new AssignmentCommands.DraftOptions("AUTO", "VI", null, null) : requestedOptions;
-        boolean english = "EN".equals(options.language());
-        String language = english ? "English" : "AUTO".equals(options.language())
-                ? "the same language as the instructor's format template" : "Vietnamese";
+        // Ngôn ngữ của đề AI (yêu cầu 2026-11-16 thêm tiếng Nhật); AUTO theo mẫu đề.
+        String language = switch (options.language() == null ? "VI" : options.language()) {
+            case "EN" -> "English";
+            case "JA" -> "Japanese";
+            case "AUTO" -> "the same language as the instructor's format template";
+            default -> "Vietnamese";
+        };
         String system = "You help university instructors prepare assessment drafts. Write all student-facing content in "
                 + language + ". This language setting takes priority over any language mentioned in the instructor "
                 + "request or used by the template or sources. Return exactly one JSON object matching the schema. Use a coherent business context, "

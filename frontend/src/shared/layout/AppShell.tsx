@@ -22,8 +22,10 @@ import { Icon, type IconName } from "@/shared/ui/Icon";
 import { Logo } from "@/shared/ui/Logo";
 import { Menu, MenuItem } from "@/shared/ui/Menu";
 import { SOFT_TONES } from "@/shared/ui/tones";
+import { LanguageDialog } from "./LanguageDialog";
 import { LogoutDialog } from "./LogoutDialog";
 import { AVATAR_TONES, FADE_LABEL, ROLE_LABELS, activeHref, initials, type NavContext, type NavItem, type NavLocation } from "./navigation";
+import { msg } from "@/i18n/msg";
 
 export type HeaderLink = { href: string; label: string; icon?: IconName };
 
@@ -84,6 +86,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
   const user = sessionUser === undefined ? fetchedUser : sessionUser;
   const [theme, toggleTheme] = useTheme();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
   const [drawer, setDrawer] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(storedCollapsed);
   const wide = useWide();
@@ -146,29 +149,28 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
         href="#main"
         className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[120] focus-visible:rounded-lg focus-visible:bg-primary focus-visible:px-3.5 focus-visible:py-2 focus-visible:text-[13px] focus-visible:font-semibold focus-visible:text-on-primary"
       >
-        Bỏ qua tới nội dung
-      </a>
+        {msg("shared.layout.AppShell.boQuaToiNoiDung")}</a>
       <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-1.5 border-b border-line bg-nav pr-3 pl-2.5 md:pr-4">
         <button
           ref={menuButton}
           type="button"
-          aria-label={sidebarOpen ? "Thu gọn menu" : "Mở menu"}
+          aria-label={sidebarOpen ? msg("shared.layout.AppShell.thuGonMenu") : msg("shared.layout.AppShell.moMenu")}
           aria-expanded={sidebarOpen}
-          title={sidebarOpen ? "Thu gọn menu" : "Mở menu"}
+          title={sidebarOpen ? msg("shared.layout.AppShell.thuGonMenu") : msg("shared.layout.AppShell.moMenu")}
           onClick={toggleSidebar}
           className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-body transition-colors hover:bg-sunken hover:text-ink"
         >
           <ToggleIcon open={sidebarOpen} />
         </button>
-        <Link href="/" className="rounded-lg px-1.5 py-1" aria-label="Nền tảng học tập, trang chủ">
+        <Link href="/" className="rounded-lg px-1.5 py-1" aria-label={msg("shared.layout.AppShell.nenTangHocTapTrangChu")}>
           <Logo className="[&>span:last-child]:hidden sm:[&>span:last-child]:inline" />
         </Link>
         <div className="ml-auto flex items-center gap-1">
           <button
             type="button"
             onClick={toggleTheme}
-            aria-label={theme === "dark" ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
-            title={theme === "dark" ? "Giao diện sáng" : "Giao diện tối"}
+            aria-label={theme === "dark" ? msg("shared.layout.AppShell.chuyenGiaoDienSang") : msg("shared.layout.AppShell.chuyenGiaoDienToi")}
+            title={theme === "dark" ? msg("shared.layout.AppShell.giaoDienSang") : msg("shared.layout.AppShell.giaoDienToi")}
             className="inline-flex size-9 items-center justify-center rounded-lg text-body transition-colors hover:bg-sunken hover:text-ink"
           >
             <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
@@ -177,7 +179,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
           <Menu
             align="right"
             variant="tool"
-            ariaLabel="Tài khoản"
+            ariaLabel={msg("shared.layout.AppShell.taiKhoan")}
             summaryClassName="!h-10 gap-2.5 !pl-1.5 !pr-2"
             label={
               <>
@@ -191,14 +193,16 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
               </>
             }
           >
-            <AccountLink href="/profile" icon="person" label="Hồ sơ" />
+            <AccountLink href="/profile" icon="person" label={msg("shared.layout.AppShell.hoSo")} />
             {headerLinks.map((link) => (
               <AccountLink key={link.href} href={link.href} icon={link.icon} label={link.label} />
             ))}
+            {/* Ngôn ngữ (yêu cầu 2026-11-16): một dòng trong menu, bấm mở popup chọn ngôn ngữ. */}
+            <MenuItem icon="language" data-testid="open-language" onClick={() => setLanguageOpen(true)}>
+              {msg("shared.layout.AppShell.ngonNgu")}</MenuItem>
             <hr className="my-1 border-line" />
             <MenuItem icon="logout" tone="danger" onClick={() => setLogoutOpen(true)}>
-              Đăng xuất
-            </MenuItem>
+              {msg("shared.layout.AppShell.dangXuat")}</MenuItem>
           </Menu>
         </div>
       </header>
@@ -238,6 +242,7 @@ export function AppShell({ role, nav, headerLinks = [], headerWidgets, user: ses
         </div>
       </div>
       <LogoutDialog open={logoutOpen} onClose={closeLogout} />
+      {languageOpen && <LanguageDialog open onClose={() => setLanguageOpen(false)} />}
     </div>
   );
 }
@@ -348,8 +353,8 @@ function NavList({ label, items, pathname, header, collapsed, branches }: { labe
             </Link>
             {/* Mũi tên cuối hàng: chỉ mở, đóng nhánh; nằm đè lên hàng nên trông như một phần của mục, không phải nút thêm. */}
             {isParent && (
-              <button type="button" aria-expanded={open} aria-label={`${open ? "Thu gọn" : "Mở"} ${item.label}`}
-                title={open ? "Thu gọn" : "Mở"}
+              <button type="button" aria-expanded={open} aria-label={`${open ? msg("shared.layout.AppShell.thuGon") : msg("shared.layout.AppShell.mo")} ${item.label}`}
+                title={open ? msg("shared.layout.AppShell.thuGon") : msg("shared.layout.AppShell.mo")}
                 onClick={() => setToggled((previous) => ({ ...previous, [item.href]: !open }))}
                 className="absolute top-1/2 right-1 inline-flex size-7 -translate-y-1/2 items-center justify-center rounded-md text-muted transition-colors hover:bg-sidebar-hover hover:text-ink pointer-coarse:right-0 pointer-coarse:size-10 md:group-data-[collapsed]/sidebar:hidden">
                 <Icon name="expand_more" size={16} className={cx("transition-transform duration-200", !open && "-rotate-90")} />

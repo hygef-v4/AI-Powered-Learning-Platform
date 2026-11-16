@@ -1,0 +1,4749 @@
+{
+  "app": {
+    "auth": {
+      "activate": {
+        "page": {
+          "kichHoatTaiKhoan": "アカウントの有効化"
+        }
+      },
+      "login": {
+        "page": {
+          "dangNhap": "ログイン"
+        }
+      },
+      "resetpassword": {
+        "page": {
+          "khoiPhucMatKhau": "パスワードの再設定"
+        }
+      }
+    },
+    "admin": {
+      "accounts": {
+        "page": {
+          "taiKhoan": "アカウント"
+        },
+        "id": {
+          "page": {
+            "taiKhoan": "アカウント"
+          }
+        }
+      },
+      "audit": {
+        "page": {
+          "nhatKyAudit": "監査ログ"
+        }
+      },
+      "page": {
+        "tongQuan": "概要"
+      },
+      "settings": {
+        "page": {
+          "caiDat": "設定"
+        },
+        "sections": {
+          "sectionKey": {
+            "page": {
+              "caiDat": "設定"
+            }
+          }
+        },
+        "key": {
+          "page": {
+            "caiDat": "設定"
+          }
+        }
+      },
+      "subjects": {
+        "page": {
+          "monHoc": "科目"
+        },
+        "id": {
+          "page": {
+            "monHoc": "科目"
+          }
+        }
+      }
+    },
+    "ai": {
+      "connection": {
+        "page": {
+          "ketNoiAi": "AI接続"
+        }
+      },
+      "mcpguide": {
+        "page": {
+          "huongDanKetNoiMcp": "MCP接続ガイド"
+        }
+      }
+    },
+    "announcements": {
+      "page": {
+        "tatCaThongBao": "すべてのお知らせ"
+      }
+    },
+    "assignments": {
+      "id": {
+        "diagrams": {
+          "blockId": {
+            "page": {
+              "soDoBaiTap": "課題の図"
+            }
+          }
+        },
+        "page": {
+          "baiTap": "課題"
+        }
+      }
+    },
+    "attempts": {
+      "attemptId": {
+        "diagrams": {
+          "blockId": {
+            "page": {
+              "soDoBaiLam": "提出物の図"
+            }
+          }
+        },
+        "page": {
+          "lamBaiTap": "課題に取り組む"
+        }
+      }
+    },
+    "classes": {
+      "page": {
+        "lopHoc": "クラス"
+      },
+      "id": {
+        "announcements": {
+          "page": {
+            "thongBaoLop": "クラスのお知らせ"
+          }
+        },
+        "group": {
+          "page": {
+            "nhom": "グループ"
+          }
+        },
+        "page": {
+          "lopHoc": "クラス"
+        }
+      }
+    },
+    "groupdocs": {
+      "id": {
+        "edit": {
+          "page": {
+            "soanBaiNhom": "グループ課題の作成"
+          }
+        },
+        "page": {
+          "taiLieuNhom": "グループ文書"
+        }
+      }
+    },
+    "manager": {
+      "assignments": {
+        "page": {
+          "baiTap": "課題"
+        }
+      },
+      "classes": {
+        "page": {
+          "lopCuaMon": "科目のクラス"
+        },
+        "id": {
+          "page": {
+            "lopCuaMon": "科目のクラス"
+          }
+        }
+      },
+      "materials": {
+        "page": {
+          "hocLieu": "教材"
+        }
+      },
+      "page": {
+        "tongQuan": "概要"
+      },
+      "questions": {
+        "page": {
+          "cauHoi": "問題"
+        },
+        "id": {
+          "page": {
+            "cauHoi": "問題"
+          }
+        }
+      },
+      "subjects": {
+        "page": {
+          "thongTinMon": "科目情報"
+        },
+        "id": {
+          "page": {
+            "thongTinMon": "科目情報"
+          }
+        }
+      }
+    },
+    "materials": {
+      "id": {
+        "page": {
+          "hocLieu": "教材"
+        },
+        "view": {
+          "page": {
+            "hocLieu": "教材"
+          }
+        }
+      }
+    },
+    "myassignments": {
+      "page": {
+        "baiTap": "課題"
+      },
+      "assignmentId": {
+        "history": {
+          "page": {
+            "lichSuNopBai": "提出履歴"
+          }
+        },
+        "page": {
+          "baiTap": "課題"
+        }
+      }
+    },
+    "notfound": {
+      "khongTimThayTrang": "ページが見つかりません"
+    },
+    "opengraphimage": {
+      "lopHocTaiLieu": "クラスと教材",
+      "baiTapDeThi": "課題と試験",
+      "troLyAi": "AIアシスタント",
+      "nenTang": "学習",
+      "hocTap": "プラットフォーム",
+      "dayVaHocHieuQuaHon": "AIアシスタントで、もっと効果的な授業と学習を"
+    },
+    "privacy": {
+      "page": {
+        "chinhSachQuyenRiengTu": "プライバシーポリシー",
+        "capNhatLanCuoi1511": "最終更新日：2026年11月15日",
+        "laHeThongPhucVuDay": "は、科目単位の授業と学習のためのシステムで、各クラスの教員、科目責任者、学生が<b>内部で利用</b>します。",
+        "quyenTruyCapGoogleDrive": "Google ドライブへのアクセス",
+        "tichHopGoogleCuaHeThong": "本システムの Google 連携が要求するスコープは ",
+        "heThongChiNhinThayTao": " のみです。本システムが参照・作成・管理できるのは ",
+        "dungCacTepVaThuMuc": "本システム自身が作成したファイルとフォルダーだけ",
+        "duLieuHeThongLuu": "本システムが保存するデータ",
+        "tepNguoiDungTaiLenHoc": "<b>ユーザーがアップロードしたファイル</b>。接続された Google ドライブまたはサーバーに保存されます。",
+        "thongTinTaiKhoanCanCho": "運用に必要な<b>アカウント情報</b>と<b>学習データ</b>。本システムのデータベースに保存されます。",
+        "nhungDieuHeThongKhongLam": "本システムが行わないこと",
+        "khongBanHayChiaSeDu": "ユーザーデータを第三者に<b>販売・共有することはありません</b>。",
+        "khongDungDuLieuGoogleCua": "ユーザーの Google データを広告やプロファイリングに<b>使用することはありません</b>。",
+        "thongTinXacThucGoogleOauth": "Google の認証情報は<b>サーバー設定内にのみ保管</b>され、ユーザー側に公開されることはありません。",
+        "lienHe": "お問い合わせ",
+        "thacMacVeChinhSachNay": "本ポリシーに関するご質問は、クラスの<b>システム管理者</b>にお問い合わせいただくか、次の場所で issue を作成してください：",
+        "khoMaNguon": "ソースコードリポジトリ",
+        "trongMyDriveCuaTaiKhoan": "で、接続アカウントのマイドライブ内にあります。それ以外のファイルを本システムが<b>読み取ることはできません</b>。"
+      }
+    },
+    "profile": {
+      "page": {
+        "hoSo": "プロフィール"
+      }
+    },
+    "quizattempts": {
+      "attemptId": {
+        "page": {
+          "lamQuiz": "クイズに解答"
+        },
+        "result": {
+          "page": {
+            "ketQuaQuiz": "クイズの結果"
+          }
+        }
+      }
+    },
+    "quizpractice": {
+      "page": {
+        "luyenTapQuiz": "クイズ練習"
+      },
+      "quizId": {
+        "page": {
+          "luyenTapQuiz": "クイズ練習"
+        }
+      }
+    },
+    "teaching": {
+      "classes": {
+        "page": {
+          "lopDuocPhanCong": "担当クラス"
+        },
+        "id": {
+          "announcements": {
+            "page": {
+              "thongBaoLop": "クラスのお知らせ"
+            }
+          },
+          "page": {
+            "lopDuocPhanCong": "担当クラス"
+          }
+        }
+      },
+      "evaluations": {
+        "evaluationId": {
+          "page": {
+            "chamBai": "採点"
+          }
+        }
+      }
+    }
+  },
+  "academics": {
+    "api": {
+      "index": {
+        "khongTheGhiDanhSinhVien": "学生を登録できませんでした。"
+      }
+    },
+    "components": {
+      "ClassDialogs": {
+        "khongTheMoLaiLopVi": "同じ科目の別クラスに在籍している学生がいるため、クラスを再開できません。",
+        "moLaiLop": "クラスを再開",
+        "moLop": "クラスを開講",
+        "luuTruLop": "クラスをアーカイブ",
+        "daLuuTruLop": "クラスをアーカイブしました",
+        "daMoLop": "クラスを開講しました",
+        "moLai": "再開",
+        "luuTru": "アーカイブ",
+        "banCoChacMuon": "",
+        "lop": "：クラス ",
+        "khong": " を実行してもよろしいですか？",
+        "daDoiGiangVien": "教員を変更しました",
+        "daBoPhanCongGiangVien": "教員の割り当てを解除しました",
+        "doiGiangVien": "教員を変更",
+        "luu": "保存",
+        "giangVien": "教員",
+        "chuaPhanCong": "未割り当て",
+        "thongTinSinhVien": "学生情報",
+        "ngayGhiDanh": "登録日",
+        "trangThai": "ステータス",
+        "dangHoc": "在籍中"
+      },
+      "ClassFormDialog": {
+        "nhapMaLop": "クラスコードを入力してください。",
+        "daTaoLop": "クラスを作成しました",
+        "taoLop": "クラスを作成",
+        "maLop": "クラスコード",
+        "ngayBatDau": "開始日",
+        "hocKy": "学期：",
+        "giangVien": "教員",
+        "moTa": "説明"
+      },
+      "ClassInfoForm": {
+        "daLuuThayDoi": "変更を保存しました",
+        "thongTinLop": "クラス情報",
+        "maMon": "科目コード",
+        "maLop": "クラスコード",
+        "ngayBatDau": "開始日",
+        "hocKy": "学期",
+        "hocKy2": "学期：",
+        "moTa": "説明",
+        "huy": "キャンセル",
+        "luuThayDoi": "変更を保存"
+      },
+      "ClassNavContexts": {
+        "monDuocPhanCong": "担当科目",
+        "thongTinLop": "クラス情報",
+        "sinhVien": "学生",
+        "hocLieu": "教材",
+        "baiTap": "課題",
+        "chamDiem": "採点",
+        "thongBaoLop": "クラスのお知らせ",
+        "nhomCuaToi": "マイグループ",
+        "lopDuocPhanCong": "担当クラス",
+        "lopCuaToi": "マイクラス",
+        "cacMonDuocPhanCong": "担当科目",
+        "chonMon": "科目を選択",
+        "cac": "{value}一覧",
+        "chonLop": "クラスを選択"
+      },
+      "EnrollmentPanel": {
+        "dangHoc": "在籍中",
+        "daGo": "削除済み",
+        "ketQuaTungDong": "行ごとの結果",
+        "dong": "行",
+        "emailHoacMssv": "メールアドレスまたは学籍番号",
+        "ketQua": "結果",
+        "daGoSinhVien": "学生を削除しました",
+        "daThemLaiSinhVien": "学生を再追加しました",
+        "themTheoDanhSach": "リストから追加",
+        "themSinhVien": "学生を追加",
+        "sinhVienTrongLop": "クラスの学生",
+        "trangThaiSinhVien": "学生のステータス",
+        "locTheoNhom": "グループで絞り込み",
+        "tatCa": "すべて",
+        "chuaCoNhom": "グループ未所属",
+        "locTheoTenEmailHoacMssv": "氏名、メールアドレス、学籍番号で絞り込み",
+        "hoTen": "氏名",
+        "nhom": "グループ",
+        "ngayVaoLop": "参加日",
+        "thaoTac": "操作",
+        "truongNhom": "リーダー",
+        "go": "{name} を削除",
+        "themLai": "{name} を再追加",
+        "khongCoSinhVienPhuHop": "該当する学生はいません。",
+        "goSinhVienKhoiLop": "学生をクラスから削除しますか？",
+        "goSinhVien": "学生を削除",
+        "banCoChacMuonGo": "",
+        "khoiLopKhong": " をクラスから削除してもよろしいですか？",
+        "daThemSinhVien": "{added} 人の学生を追加しました",
+        "daThemSinhVien2": "学生を追加しました",
+        "them": "",
+        "sinhVien": " 人の学生を追加",
+        "timSinhVien": "学生を検索",
+        "timTenEmailHoacMssv": "氏名、メールアドレス、学籍番号で検索",
+        "chonTatCaKetQuaLoc": "絞り込み結果をすべて選択（",
+        "daChon": "選択中：",
+        "dangTaiSinhVien": "学生を読み込み中…",
+        "chonSinhVien": "学生を選択",
+        "hienThiToiDa200Ket": "最大200件まで表示します。氏名、メールアドレス、学籍番号で検索して絞り込んでください。",
+        "chonToiDa200SinhVien": "一度に選択できる学生は最大200人です。",
+        "themSinhVienTheoDanhSach": "リストから学生を追加",
+        "dong2": "閉じる",
+        "chonTepExcel": "Excelファイルを選択",
+        "danhSachEmailHoacMssv": "メールアドレスまたは学籍番号の一覧",
+        "moiDongMotEmailHoacMssv": "1行に1つのメールアドレスまたは学籍番号を入力します。",
+        "chonTepKhac": "別のファイルを選択",
+        "chonTep": "ファイルを選択",
+        "taiTepMauExcel": "Excelテンプレートをダウンロード",
+        "xemTruoc": "プレビュー",
+        "dong3": " 行",
+        "hopLe": " 件有効",
+        "loi": " 件エラー",
+        "ketQuaKiemTra": "チェック結果",
+        "hopLe2": "有効",
+        "themSinhVien2": "{valid} 人の学生を追加"
+      },
+      "PersonPicker": {
+        "goTenHoacEmail": "氏名またはメールアドレスを入力",
+        "boChon": "{value} の選択を解除",
+        "dangTim": "検索中…",
+        "khongCoNguoiPhuHop": "該当する人はいません。"
+      },
+      "SubjectClassesOverview": {
+        "lopDangMo": "開講中のクラス",
+        "sinhVien": "学生",
+        "lopChuaCoGiangVien": "教員未割り当てのクラス",
+        "tongQuanLop": "クラスの概要",
+        "thuTaiLai": "再読み込み",
+        "dangTaiTongQuan": "概要を読み込み中…",
+        "tatCaLop": "すべてのクラス",
+        "chuaCoLopDangMo": "開講中のクラスはまだありません。",
+        "chuaPhanCongGiangVien": "教員未割り当て",
+        "sinhVien2": " 人の学生"
+      }
+    },
+    "hooks": {
+      "useCandidates": {
+        "khongTaiDuocDanhSachVui": "一覧を読み込めませんでした。もう一度お試しください。"
+      }
+    },
+    "model": {
+      "enrollmentList": {
+        "danhSachToiDa100Kb": "リストは最大100KBまでです。",
+        "danhSachToiDa200Dong": "リストは最大200行までです。",
+        "vuiLongNhapItNhatMot": "メールアドレスまたは学籍番号を1つ以上入力してください。"
+      },
+      "enrollmentWorkbook": {
+        "danhSachToiDa100Kb": "リストは最大100KBまでです。",
+        "chiNhanTepExcelXlsx": "Excel（.xlsx）ファイルのみ受け付けます。",
+        "khongPhaiTepExcelXlsx": "Excel（.xlsx）ファイルではありません。",
+        "khongDocDuocTepExcelXlsx": "Excel（.xlsx）ファイルを読み込めませんでした。",
+        "tepExcelTrong": "Excelファイルが空です。",
+        "danhSachToiDa200Dong": "リストは最大200行までです。",
+        "tepExcelChiDuocCoMot": "Excelファイルには、テンプレートどおりメールアドレスまたは学籍番号の列を1列だけ含めてください。",
+        "tepExcelCanCotEmailHoac": "テンプレートどおり、セルA1にメールアドレス（または student_code、mssv）の列が必要です。",
+        "dongChuaCongThucOLoi": "{value} 行目に数式、エラーのセル、または1つのセル内の複数行が含まれています。"
+      },
+      "format": {
+        "duLieuDaThayDoiVui": "データが変更されました。続行する前に再読み込みしてください。",
+        "khongTheHoanTatThaoTac": "操作を完了できませんでした。もう一度お試しください。",
+        "chonNgayBatDau": "開始日を選択",
+        "ngayBatDauPhaiTrongKhoang": "開始日は2000年から2099年の範囲で指定してください",
+        "maLopDaTonTaiTrong": "この学期の科目内に同じクラスコードがすでに存在します"
+      },
+      "types": {
+        "nhap": "下書き",
+        "dangMo": "開講中",
+        "luuTru": "アーカイブ済み",
+        "daThem": "追加済み",
+        "daThemLai": "再追加済み",
+        "daCoTrongLop": "すでにクラスに在籍",
+        "khongTimThayTaiKhoan": "アカウントが見つかりません",
+        "khongPhaiSinhVien": "学生ではありません",
+        "taiKhoanVoHieuHoa": "アカウントは無効です",
+        "dangOLopKhacCungMon": "同じ科目の別クラスに在籍中",
+        "khongPhaiEmailHayMssvHop": "有効なメールアドレスまたは学籍番号ではありません",
+        "trungTrongDanhSach": "リスト内で重複しています"
+      }
+    },
+    "pages": {
+      "ClassDashboardPage": {
+        "dangHoc": "在籍中",
+        "daKetThuc": "終了",
+        "sapMo": "開講予定",
+        "dangDay": "担当中",
+        "ketThuc": "終了",
+        "chuaCoLopDaKetThuc": "終了したクラスはまだありません。",
+        "banChuaHocLopNao": "まだ受講しているクラスはありません。",
+        "chuaCoLopTrongMucNay": "この区分のクラスはまだありません。",
+        "lopCuaToi": "マイクラス",
+        "lopDuocPhanCong": "担当クラス",
+        "locLop": "クラスを絞り込み",
+        "xemLop": "クラス {code} を表示"
+      },
+      "ClassListPage": {
+        "tatCa": "すべて",
+        "lopHoc": "クラス",
+        "taoLop": "クラスを作成",
+        "danhSachLop": "クラス一覧",
+        "trangThaiLop": "クラスのステータス",
+        "locTheoMaLop": "クラスコードで絞り込み",
+        "maLop": "クラスコード",
+        "hocKy": "学期",
+        "giangVien": "教員",
+        "trangThai": "ステータス",
+        "chiTiet": "詳細",
+        "xemLop": "クラス {code} を表示",
+        "chuaPhanCong": "未割り当て",
+        "khongCoLopPhuHop": "該当するクラスはありません。"
+      },
+      "ClassRoutes": {
+        "duLieuDaThayDoiDa": "データが変更されたため、最新の情報を再読み込みしました。続行する前に確認してください。",
+        "banChuaDuocGiaoQuanLy": "管理を担当している科目はありません"
+      },
+      "ManagedClassPage": {
+        "thongTin": "情報",
+        "sinhVien": "学生",
+        "lopHoc": "クラス",
+        "chiTietLop": "クラスの詳細",
+        "trangThai": "ステータス",
+        "ngayTao": "作成日",
+        "giangVien": "教員",
+        "doiGiangVien": "教員を変更",
+        "phanCong": "割り当て",
+        "chuaPhanCong": "未割り当て"
+      },
+      "ManagerDashboardPage": {
+        "monDuocPhanCong": "担当科目",
+        "locMon": "科目を絞り込み",
+        "hoatDong": "有効",
+        "luuTru": "アーカイブ済み",
+        "chuaCoMonLuuTru": "アーカイブ済みの科目はまだありません。",
+        "banChuaDuocGiaoQuanLy": "管理を担当している科目はありません。",
+        "moMon": "科目 {code} を開く",
+        "dangMoLuuTru": "開講中 {open} · アーカイブ {archived}",
+        "dangMo": "開講中 {open}",
+        "thongTinMon": "科目情報",
+        "maMon": "科目コード",
+        "tenMonHoc": "科目名",
+        "soLop": "クラス数",
+        "trangThai": "ステータス"
+      },
+      "ReadOnlyClassPage": {
+        "chiTietLop": "クラスの詳細",
+        "lopHienKhongKhaDung": "このクラスは現在利用できません",
+        "thongTinLop": "クラス情報",
+        "sinhVien": "学生",
+        "hocLieu": "教材",
+        "baiTap": "課題",
+        "chamDiem": "採点",
+        "bangDiem": "成績表",
+        "noiDungLop": "クラスの内容",
+        "monHoc": "科目",
+        "maLop": "クラスコード",
+        "hocKy": "学期",
+        "trangThai": "ステータス"
+      },
+      "StudentClassPage": {
+        "hocLieu": "教材",
+        "thongTinLop": "クラス情報",
+        "maMon": "科目コード",
+        "maLop": "クラスコード",
+        "ngayBatDau": "開始日",
+        "hocKy": "学期",
+        "moTa": "説明",
+        "chuaCoMoTa": "説明はまだありません。",
+        "giangVien": "教員",
+        "chuaPhanCong": "未割り当て"
+      }
+    },
+    "register": {
+      "monDuocPhanCong": "担当科目",
+      "lopDuocPhanCong": "担当クラス",
+      "lopCuaToi": "マイクラス",
+      "thongTinMon": "科目情報",
+      "lopHoc": "クラス"
+    }
+  },
+  "admindashboard": {
+    "components": {
+      "BackupStatus": {
+        "dangCho": "待機中",
+        "dangChay": "実行中",
+        "thanhCong": "成功",
+        "thatBai": "失敗",
+        "trangThaiSaoLuu": "バックアップの状態",
+        "khongKhaDung": "利用不可",
+        "saoLuuDaBat": "バックアップ有効",
+        "saoLuuChuaBat": "バックアップ無効",
+        "caiDatSaoLuu": "バックアップ設定",
+        "hangNgay": "毎日 ",
+        "lanToi": "）· 次回：",
+        "lanGanNhat": "前回",
+        "chuaCoLanSaoLuuNao": "バックアップはまだありません",
+        "batDau": "開始",
+        "ketThuc": "終了",
+        "dungLuong": "サイズ",
+        "thanhCongGanNhat": "前回の成功",
+        "chuaCoBanSaoLuuThanh": "成功したバックアップはまだありません",
+        "thatBaiTrong7Ngay": "7日間の失敗：",
+        "anLichSuSaoLuu": "バックアップ履歴を隠す",
+        "xemLichSuSaoLuu": "バックアップ履歴を表示",
+        "lichSuSaoLuu": "バックアップ履歴",
+        "thuLai": "再試行",
+        "khongTaiDuocLichSuSao": "バックアップ履歴を読み込めませんでした。",
+        "dangTaiLichSuSaoLuu": "バックアップ履歴を読み込み中…",
+        "chuaCoLichSuSaoLuu": "バックアップ履歴はまだありません。",
+        "cacLanSaoLuu": "バックアップの実行",
+        "ngay": "日付",
+        "trangThai": "ステータス",
+        "batDauKetThuc": "開始 / 終了",
+        "loi": "エラー",
+        "lanSaoLuu": "件のバックアップ"
+      },
+      "DashboardCharts": {
+        "giu": "固定",
+        "hien": "表示",
+        "bamDeSo": "{label}：クリックして数値を{value}"
+      }
+    },
+    "pages": {
+      "AdminDashboardPage": {
+        "caNhan": "個人",
+        "nhom": "グループ",
+        "luyenTap": "練習",
+        "sinhVien": "学生",
+        "giangVien": "教員",
+        "chuNhiemMon": "科目責任者",
+        "quanTriVien": "管理者",
+        "mo": "開講中",
+        "nhap": "下書き",
+        "luuTru": "アーカイブ済み",
+        "thanhCong": "成功",
+        "thatBai": "失敗",
+        "dangChay": "実行中",
+        "khongChay": "未実行",
+        "truyCapBiChan": "アクセスがブロックされました",
+        "dangNhapKhongThanh": "ログイン失敗",
+        "dangNhapKhiDangKhoa": "ロック中のログイン",
+        "taiKhoanBiKhoaTam": "アカウントの一時ロック",
+        "xacThucThatBai": "認証失敗",
+        "voHieuHoaTaiKhoan": "アカウントの無効化",
+        "datLaiMatKhau": "パスワードの再設定",
+        "tongQuan": "概要",
+        "khongCoQuyenXemTongQuan": "システム概要を表示する権限がありません。",
+        "khongTaiDuocTongQuanHe": "システム概要を読み込めませんでした。",
+        "trucTiep": "ライブ",
+        "matKetNoi": "接続が切れました",
+        "taiKhoanHoatDong": "有効なアカウント",
+        "khongDoiHomNay": "本日の変化なし",
+        "homNay": "本日 {value}{value2}",
+        "monDangMo": "開講中の科目",
+        "luuTru2": " 件アーカイブ",
+        "lopDangMo": "開講中のクラス",
+        "nhap2": " 件下書き",
+        "tokenAiHeThong": "システムのAIトークン",
+        "khongGioiHan": "無制限",
+        "baiTap": "課題",
+        "trong7NgayGanNhat": "過去7日間",
+        "soBaiTapDuocGiaoMoi": "種類別の1日あたりの出題数",
+        "saoLuu": "バックアップ",
+        "trong30NgayGanNhat": "過去30日間",
+        "taiKhoan": "アカウント",
+        "theoVaiTro": "役割別",
+        "taiKhoanTheoVaiTro": "役割別のアカウント",
+        "lopVaMonHoc": "クラスと科目",
+        "theoTrangThai": "ステータス別",
+        "lopVaMonHocTheoTrang": "ステータス別のクラスと科目",
+        "lop": "クラス",
+        "monHoc": "科目",
+        "tokenAiHeThong2": "システムのAIトークン",
+        "theoNgay": "日別",
+        "tokenAiHeThongTheoNgay": "日別のシステムAIトークン",
+        "hoatDongDangNgo": "不審なアクティビティ",
+        "cacSuViecDangChuY": "最近の注目すべき出来事",
+        "moNhatKy": "監査ログを開く",
+        "dangTai": "読み込み中…",
+        "khongKhaDung": "利用不可",
+        "ketQuaSaoLuuTheoNgay": "日別のバックアップ結果",
+        "khongCoHoatDongDangNgo": "過去30日間に不審なアクティビティはありません。",
+        "thoiGian": "日時",
+        "suViec": "イベント",
+        "lyDo": "理由",
+        "biTuChoi": "拒否：{value}",
+        "khongRo": "不明"
+      }
+    },
+    "register": {
+      "tongQuan": "概要"
+    }
+  },
+  "ai": {
+    "admin": {
+      "components": {
+        "AiSettingsPanels": {
+          "lichSuSuDung": "利用履歴",
+          "caiDat": "設定",
+          "caiDatAi": "AI設定"
+        },
+        "InstitutionalKeysSection": {
+          "khoaApiCuaTruong": "学校のAPIキー",
+          "thuHoiKhoaCuaTruong": "学校のキーを取り消しますか？",
+          "khongTaiDuocKhoaApiCua": "学校のAPIキーを読み込めませんでした。しばらくしてからもう一度お試しください。"
+        },
+        "QuotaSections": {
+          "nhapSoTokenNguyenTu0": "0〜1,000,000,000 の整数でトークン数を入力してください",
+          "khongTaiDuocHanMucThu": "利用上限を読み込めませんでした。しばらくしてからもう一度お試しください。",
+          "hanMucVuaDuocThayDoi": "利用上限が別の場所で変更されました。ページを再読み込みしてください。",
+          "khongLuuDuocHanMucThu": "利用上限を保存できませんでした。しばらくしてからもう一度お試しください。",
+          "hanMucChung": "共通の利用上限",
+          "chuaCauHinhHanMucGiang": "利用上限が未設定のため、教員はまだ学校のAPIを利用できません。",
+          "daLuuHanMuc": "利用上限を保存しました。",
+          "giangVienNgay": "教員ごと / 日",
+          "toanHeThongNgay": "システム全体 / 日",
+          "luu": "保存",
+          "khongTaiDuocMucRiengThu": "個別の上限を読み込めませんでした。しばらくしてからもう一度お試しください。",
+          "khongXoaDuocMucRiengThu": "個別の上限を削除できませんでした。しばらくしてからもう一度お試しください。",
+          "mucRiengTungGiangVien": "教員ごとの個別上限",
+          "them": "追加",
+          "dangTai": "読み込み中…",
+          "giangVien": "教員",
+          "tokenNgay": "トークン / 日",
+          "thaoTac": "操作",
+          "chuaCoMucRieng": "個別の上限はまだありません",
+          "t0Chan": "0 · ブロック",
+          "suaMucRiengCua": "{name} の個別上限を編集",
+          "xoaMucRiengCua": "{name} の個別上限を削除",
+          "xoaMucRieng": "個別の上限を削除しますか？",
+          "xoa": "削除",
+          "banCoChacMuonXoaMuc": "",
+          "khong": " の個別上限を削除してもよろしいですか？",
+          "taiKhoanNayKhongPhaiGiang": "このアカウントは教員ではありません。",
+          "khongLuuDuocMucRieng": "個別の上限を保存できませんでした。",
+          "suaMucRieng": "個別の上限を編集",
+          "themMucRieng": "個別の上限を追加",
+          "emailGiangVien": "教員のメールアドレス",
+          "giangVienGoiY": "候補の教員"
+        },
+        "SharedUsageTab": {
+          "khongTaiDuocUsageApiCua": "学校のAPI利用状況を読み込めませんでした。しばらくしてからもう一度お試しください。",
+          "dangTai": "読み込み中…",
+          "homNay": "本日",
+          "giangVienDaDungHomNay": "本日利用した教員",
+          "ngay": "{days}日間",
+          "khoangThoiGian": "期間",
+          "ngay2": "日間",
+          "tokenTheoNgayTrongNgay": "{days}日間の日別トークン数",
+          "giangVienDaDungTrongNgay": "{days}日間に利用した教員",
+          "theoGiangVien": "教員別",
+          "giangVien": "教員",
+          "yeuCau": "リクエスト",
+          "homNayHanMucNgay": "本日 / 1日の上限",
+          "tokenTrongNgay": "{days}日間のトークン",
+          "chuaGiangVienNaoDungTrong": "この期間に利用した教員はいません",
+          "chan": "ブロック",
+          "theoNhaCungCap": "プロバイダー別",
+          "nhaCungCap": "プロバイダー",
+          "moHinh": "モデル",
+          "chuaCoYeuCauTrongKy": "この期間のリクエストはありません"
+        }
+      }
+    },
+    "components": {
+      "ApiKeyDialog": {
+        "hayNhapKhoaApi": "APIキーを入力してください。",
+        "khongLuuDuocKhoaThuLai": "キーを保存できませんでした。しばらくしてからもう一度お試しください。",
+        "khongKiemTraDuoc": "確認できませんでした",
+        "suaKhoaApi": "APIキーを編集",
+        "themKhoaApi": "APIキーを追加",
+        "luuKhoa": "キーを保存",
+        "nhaCungCap": "プロバイダー",
+        "khoaApi": "APIキー",
+        "danKhoaApi": "APIキーを貼り付け",
+        "anKhoa": "キーを隠す",
+        "xemKhoa": "キーを表示",
+        "daSaoChep": "コピーしました",
+        "saoChepKhoa": "キーをコピー",
+        "moHinh": "モデル",
+        "kiemTra": "確認",
+        "kiemTraCoTheTinhPhi": "確認には少額の料金がかかる場合があります。"
+      },
+      "KeysSection": {
+        "khoaVuaDuocThayDoiO": "キーが別の場所で変更されました。再読み込みしてください。",
+        "dat": "成功",
+        "khongDoiDuocTrangThaiKhoa": "キーの状態を変更できませんでした。",
+        "themKhoa": "キーを追加",
+        "taiLai": "再読み込み",
+        "dangTai": "読み込み中…",
+        "nhaCungCap": "プロバイダー",
+        "khoa": "キー",
+        "moHinh": "モデル",
+        "kiemTra": "確認",
+        "batVaThaoTac": "有効化と操作",
+        "chuaCoKhoa": "キーはまだありません",
+        "khongKiemTraDuocKetNoi": "接続を確認できませんでした。",
+        "dangKiemTra": "確認中…",
+        "batKhoa": "キー {label} ••••{value} を有効化",
+        "thayKhoa": "キー {label} を差し替え",
+        "thuHoiKhoa": "キー {label} を取り消し",
+        "kiemTraCoTheTinhPhi": "確認には少額の料金がかかる場合があります。",
+        "khongThuHoiDuocKhoa": "キーを取り消せませんでした。",
+        "thuHoi": "取り消し",
+        "banCoChacMuonThuHoi": "キー ",
+        "khong": " を取り消してもよろしいですか？"
+      },
+      "McpAgentSection": {
+        "khongThuHoiDuocAgentThu": "エージェントを取り消せませんでした。しばらくしてからもう一度お試しください。",
+        "ketNoiAgentMoi": "新しいエージェントを接続",
+        "nhanVaToken": "ラベルとトークン",
+        "quyen": "権限",
+        "hanDung": "有効期限",
+        "trangThai": "ステータス",
+        "thaoTac": "操作",
+        "chuaCoAgent": "エージェントはまだありません",
+        "suaAgent": "エージェント {label} を編集",
+        "thuHoiAgent": "エージェント {label} を取り消し",
+        "thuHoiAgent2": "エージェントを取り消しますか？",
+        "thuHoi": "取り消し",
+        "banCoChacMuonThuHoi": "エージェント「",
+        "khong": "」を取り消してもよろしいですか？",
+        "nhanCan160KyTu": "ラベルは1〜60文字で入力してください。",
+        "khongLuuDuocAgentThuLai": "エージェントを保存できませんでした。しばらくしてからもう一度お試しください。",
+        "khongTaoDuocTokenThuLai": "トークンを作成できませんでした。しばらくしてからもう一度お試しください。",
+        "suaAgent2": "エージェントを編集",
+        "luu": "保存",
+        "taoToken": "トークンを作成",
+        "nhan": "ラベル",
+        "ngay": "日間",
+        "banDangCo": "有効なエージェントは ",
+        "agentConHieuLuc": " 件です。",
+        "khongXemDuocTokenThuLai": "トークンを表示できませんでした。しばらくしてからもう一度お試しください。",
+        "tokenCuKhongXemLaiDuoc": "古いトークンのため再表示できません",
+        "anToken": "トークンを隠す",
+        "tokenCuKhongSaoChepDuoc": "古いトークンのためコピーできません",
+        "daSaoChep": "コピーしました",
+        "saoChepToken": "トークンをコピー",
+        "dong": "閉じる",
+        "hetHan": "期限切れ"
+      },
+      "McpAgentsTab": {
+        "taiLai": "再読み込み",
+        "khongTaiDuocAgentMcpThu": "MCPエージェントを読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "dangTai": "読み込み中…"
+      },
+      "SetupGuides": {
+        "moGoogleAiStudioAistudioGoogle": "Google AI Studio（aistudio.google.com）を開き、Google アカウントでログインします。",
+        "chonGetApiKeyCreateApi": "Get API key → Create API key を選択します。",
+        "saoChepKhoaVaDanVao": "キーをコピーし、「キーを追加」ポップアップに貼り付けます。",
+        "moPlatformOpenaiComApiKeys": "platform.openai.com → API keys を開きます。",
+        "bamCreateNewSecretKeyDat": "Create new secret key をクリックし、わかりやすい名前を付けます。",
+        "napTinDungChoTaiKhoan": "アカウントにクレジットがない場合はチャージしてから、キーをポップアップに貼り付けます。",
+        "moConsoleAnthropicComApiKeys": "console.anthropic.com → API keys を開きます。",
+        "bamCreateKeyChonWorkspace": "Create Key をクリックし、ワークスペースを選択します。",
+        "saoChepKhoaChiHienMot": "キーをコピー（一度だけ表示されます）して、ポップアップに貼り付けます。",
+        "huongDanLayKhoaApi": "APIキーの取得方法",
+        "khongChiaSeKhoaChoNguoi": "キーを他人と共有しないでください。",
+        "tokenCuaBan": "'<'あなたのトークン>",
+        "noRealTokenIsProvidedGuide": "No real token is provided. Guide me to create one under AI接続 (AI connection) → MCP エージェント (MCP agents) and enter it directly in my personal configuration file; do not ask me to paste the token into chat. Never authenticate with a placeholder token.",
+        "ungDungAgent": "エージェントアプリ",
+        "mauTheoTaiLieuChinhThuc": "公式ドキュメントに基づくサンプルです。現在の環境では、このアプリとの実際の接続は検証していません。",
+        "daSaoChepPromptDanVao": "プロンプトをコピーしました。エージェントに貼り付けて設定してください。",
+        "khongSaoChepDuocMoXem": "コピーできませんでした。「プロンプトを表示」を開いて手動でコピーしてください。",
+        "saoChepPrompt": "プロンプトをコピー",
+        "danVaoAgentDeNhoTu": "エージェントに貼り付けると、MCPの設定を任せられます。",
+        "promptChuaTokenCuaBanChi": "プロンプトにはあなたのトークンが含まれています。信頼できるエージェントにのみ貼り付けてください。",
+        "taoToken": "トークンを作成します。",
+        "bamKetNoiAgentMoiChon": "「新しいエージェントを接続」をクリックします。データを閲覧するだけなら「読み取り専用」、課題の作成や採点案の保存も行うなら「読み取りと書き込み」を選びます。",
+        "moCauHinh": "設定を開きます。",
+        "moSettingsCustomizationsInstalledMcpServers": "Settings → Customizations → Installed MCP Servers → Open MCP Config を開きます。旧バージョン：MCP Servers → Manage MCP Servers → View raw config。",
+        "moFileBenDuoiBangTrinh": "以下のファイルをテキストエディターで開きます。存在しない場合は作成してください。",
+        "dauLaThuMucNguoiDung": "。~ はユーザーのホームフォルダーで、Windows では通常 C:\\Users\\ユーザー名 です。",
+        "danCauHinhBenDuoi": "以下の設定を貼り付けます。",
+        "ghepVaoCauHinhHienCo": "既存の設定に統合し、他のサーバーはそのまま残してください。",
+        "cauHinhDaChuaTokenVua": "設定には作成したばかりのトークンが含まれています。",
+        "thayTokenCuaBanBangToken": "'<'あなたのトークン> を作成したトークンに置き換えてください。",
+        "luuTrongCauHinhCaNhan": "個人用の設定に保存し、トークンを含むファイルを Git にコミットしないでください。",
+        "saoChepCauHinh": "設定をコピー",
+        "daSaoChep": "コピーしました",
+        "khongSaoChepDuocHayChon": "コピーできませんでした。設定部分を選択して手動でコピーしてください。",
+        "t4KiemTraKetNoi": "4. 接続を確認します。",
+        "taiLaiMcpTrongUngDung": "アプリでMCPを再読み込みします。再起動が必要なバージョンの場合は、先に作業を保存してください。エージェントに「get_my_capabilities を呼び出し、その後アカウントで許可されている読み取り専用ツールを1つ使って」と依頼します。実際のデータを読み取れた場合のみ接続成功とみなしてください。",
+        "troGiupMcp": "MCPヘルプ",
+        "taiLieuMcp": "MCPドキュメント",
+        "cachKetNoiUngDungTao": "アプリの接続、課題の作成、採点、各ツールの使い方。",
+        "xemTaiLieuMcp": "MCPドキュメントを表示"
+      }
+    },
+    "model": {
+      "labels": {
+        "chiDoc": "読み取り専用",
+        "docVaGhi": "読み取りと書き込み",
+        "hieuLuc": "有効",
+        "hetHan": "期限切れ",
+        "thuHoi": "取り消し済み",
+        "apiHeThong": "システムAPI",
+        "apiCaNhan": "個人API",
+        "nhaCungCapDo": "プロバイダー計測",
+        "uocTinh": "推定",
+        "agentTuBao": "エージェント報告",
+        "khongCoSoLieu": "データなし",
+        "biTuChoi": "拒否",
+        "loi": "エラー",
+        "khongCoQuyen": "権限なし",
+        "khongRoKetQua": "結果不明",
+        "daHuy": "キャンセル済み",
+        "taoNhapBaiTap": "課題の下書き作成",
+        "taoNhapCauHoi": "問題の下書き作成",
+        "deXuatChamBai": "採点案",
+        "gopYBaiLuyenTap": "練習へのフィードバック",
+        "kiemTraKetNoi": "接続確認",
+        "heThongChuaBatMaHoa": "システムでAPIキーの暗号化が有効になっていません。管理者に連絡してください。",
+        "duLieuVuaDuocThayDoi": "データが別の場所で変更されました。再読み込みしてください。",
+        "banDaCo5AgentCon": "有効なエージェントがすでに5件あります。いくつか取り消してください。",
+        "dat": "成功",
+        "saiKhoa": "キーが不正",
+        "gioiHanToken": "トークン上限",
+        "tanSuatHanMuc": "頻度 / 利用上限",
+        "gioiHanTanSuat": "頻度制限",
+        "hetHanMuc": "利用上限超過",
+        "quaTai": "過負荷",
+        "quaGio": "タイムアウト",
+        "matKetNoi": "接続切れ",
+        "khongDat": "失敗"
+      },
+      "mcpGuide": {
+        "khamPhaVaHuongDan": "探索とガイド",
+        "giangVienVaChuNhiemMon": "教員と科目責任者。get_my_capabilities は学生も利用できます。",
+        "choBietVaiTroQuyenToken": "役割、トークンの権限、アカウントが呼び出せるツールを返します。まずここから始めてください。実際の利用時にもクラス・課題・科目ごとに権限が確認されます。",
+        "docHuongDanDayDuTu": "サーバーから完全なガイドを読み込みます。課題の作成は AUTHOR_ASSIGNMENT、採点は GRADE_WITH_RUBRIC。スキルをダウンロードする必要はありません。",
+        "docSchemaVaGioiHanHien": "ASSIGNMENT、QUIZ、BANK を作成する前に現在のスキーマと制限を読み込み、形式の誤った内容を送らないようにします。",
+        "timLopDuocPhanCongGiang": "名前・コード・ステータスで担当クラスを検索し、正確な classId を取得します。IDを推測したり、同名のクラスを勝手に選んだりしません。",
+        "timMonTuLopDangDay": "担当クラスの科目と管理担当の科目を検索します。科目単位の内容を作成するときは subjectId を使います。",
+        "hocLieuLamNguon": "情報源としての教材",
+        "giangVienVaChuNhiemMon2": "教員と科目責任者（許可された範囲内）。",
+        "timHocLieuCuaLopMon": "クラス・科目の教材を検索します。textStatus で、情報源として使える抽出テキストがあるかを確認します。",
+        "docNoiDungHocLieuDuoc": "許可された教材の内容を読み込みます。長い文書は offset と expectedVersion で続きを読む必要があります。文書の内容が権限やツールを変更する指示として扱われることはありません。",
+        "raDeAssignment": "課題の作成",
+        "giangVienVaChuNhiemMon3": "教員と科目責任者。学生は read_assignment_context で課題情報を見るだけで、このツールから課題文やルーブリックは受け取りません。",
+        "timBaiTheoDungMotLop": "1つのクラスまたは科目内で、名前とステータスから課題を検索します。編集する課題の選択や、作成した下書きの確認に使います。",
+        "giangVienDocHuongDanKhung": "教員は説明、構成、パート、ルーブリック、バージョンを読み込みます。学生は閲覧が許可された形式・モード・スケジュールのみ受け取ります。",
+        "taoBaiDraftVaDeXuat": "内容・ルーブリックの提案（適用待ち）付きで DRAFT の課題を作成します。クラスまたは科目、課題の要望、重複防止の requestRef が必要です。学生への配布は行いません。",
+        "luuDeXuatChinhSuaVao": "既存の課題に編集提案を expectedVersion 付きで保存します。適用済みの内容を自ら置き換えることはなく、教員が画面上で確認して適用します。",
+        "quizVaNganHangCauHoi": "クイズと問題バンク",
+        "giangVienChuNhiemMonDung": "教員・科目責任者はクイズのツールを使います。問題バンクの3つのツールは担当科目の科目責任者専用です。",
+        "timQuizDuocPhepTheoLop": "閲覧、下書きの編集、作成結果の確認のため、許可されたクイズをクラスまたは科目で検索します。",
+        "docQuizCoQuyenSuaCai": "編集権限のあるクイズを読み込みます：設定、問題、選択肢、正解、解説、バージョン。",
+        "taoQuizDraftCungDeXuat": "問題の提案付きで DRAFT のクイズを requestRef とともに作成します。作成者の確認と適用が必要で、クイズを自動で公開することはありません。",
+        "luuDeXuatCauHoiCho": "下書きのクイズに問題の提案を expectedVersion 付きで保存します。クイズを自ら編集・承認・公開することはありません。",
+        "chuNhiemMonTimCauHoi": "科目責任者が担当科目の問題バンクを、種類・難易度・ステータスで絞り込んで検索します。",
+        "chuNhiemMonDocNguCanh": "科目責任者が提案を作成する前に、科目・問題バンクの文脈と選択した問題の詳細を読み込みます。",
+        "chuNhiemMonLuuDeXuat": "科目責任者が科目の問題バンクに問題の提案を requestRef 付きで保存します。有効な問題として使うには承認が必要です。",
+        "docBaiNopVaDeXuat": "提出物の閲覧と採点案",
+        "giangVienDuocGiaoDayLop": "クラスを担当する教員。科目責任者にも該当クラスの担当権限が必要です。",
+        "lietKeSinhVienNhomVa": "学生・グループと提出状況、採点状況、点数、evaluationId を一覧表示します。ページングとフィルターに対応。evaluationId が空の場合は、採点できるスナップショットがまだありません。",
+        "docSnapshotBaiDaNopQua": "担当クラス内の提出済み解答のスナップショットを attemptId で読み込みます。ルーブリック採点には、完全な文脈とフィンガープリントを得るため read_grading_context を使ってください。",
+        "docDungBaiNopDeVa": "対象の提出物、課題文、現在のルーブリックを正確に読み込みます。complete=true になるまで全ページを読み、提案を書き込む前に同じ version / submissionHash / snapshotFingerprint を保持してください。",
+        "docNguCanhNhieuBaiMoi": "複数の提出物の文脈を読み込みます。各提出物に個別の結果・エラーと continuation があります。読み込みが完了していない提出物には採点案を書き込めません。",
+        "luuDeXuatDiemVaGiai": "文脈をすべて読んだ後、ルーブリック項目ごとの提案点と説明を保存します。現在の version、submissionHash、snapshotFingerprint が必要です。正式な成績は保存しません。",
+        "luuNhieuDeXuatChamKiem": "複数の採点案を保存し、提出物ごとに個別に検証します。どれが成功したかは各項目の結果で確認してください。成績の確定・公開は行いません。",
+        "xemDanhSachTrangThaiDe": "評価の提案一覧と状態を表示し、システム上で該当の提案を開くレビュー用リンクを返します。",
+        "docThongKeNopChamHien": "クラスまたは課題の現在の提出・採点統計を、出典と時刻付きで読み込みます。品質や不正について結論は出しません。",
+        "docPhanBoDiemDaCong": "公開済み成績の分布を、システムの権限とプライバシー規則に従って集計形式で読み込みます。",
+        "sinhVienGopYBaiLuyen": "学生：練習へのフィードバック",
+        "chiBaiPracticeDaNopCua": "学生本人が提出した練習課題のみ対象です。グループ課題や正式な採点には適用されません。",
+        "docBaiPracticeDaNopCua": "自分が提出した練習課題とスナップショットのハッシュを読み込みます。ルーブリックや正式な成績は返しません。",
+        "luuGopYRiengChoBai": "読み込んだ練習課題への個別フィードバックを submissionHash 付きで保存します。提出物の変更や成績表への記録は行いません。"
+      }
+    },
+    "pages": {
+      "AiConnectionPage": {
+        "lichSuSuDung": "利用履歴",
+        "apiCaNhan": "個人API",
+        "ketNoiAi": "AI接続",
+        "khoaApiCaNhan": "個人のAPIキー",
+        "thuHoiKhoaApi": "APIキーを取り消しますか？",
+        "khongTaiDuocKetNoiAi": "AI接続を読み込めませんでした。しばらくしてからもう一度お試しください。"
+      },
+      "AiUsageHistoryPage": {
+        "tatCa": "すべて",
+        "apiCaNhan": "個人API",
+        "khongTaiDuocLichSuSu": "AIの利用履歴を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "apiHeThong": "システムAPI",
+        "lichSuSuDung": "利用履歴",
+        "nguon": "ソース",
+        "tuNgay": "開始日",
+        "denNgay": "終了日",
+        "denNgayPhaiSauTuNgay": "終了日は開始日より後にしてください",
+        "dangTai": "読み込み中…",
+        "thoiGian": "日時",
+        "tacVu": "タスク",
+        "moHinh": "モデル",
+        "tokenVaoRa": "トークン 入力 / 出力",
+        "trangThai": "ステータス",
+        "chuaCoLuotSuDungNao": "この期間の利用はありません。",
+        "khongCoSoLieu": "データなし"
+      },
+      "McpGuidePage": {
+        "mcpDungDeLamGi": "MCPでできること",
+        "ketNoiUngDung": "アプリを接続",
+        "cachSuDung": "使い方",
+        "danhSachTool": "ツール一覧",
+        "khiGapLoi": "エラーが起きたとき",
+        "taiLieuChinhThuc": "公式ドキュメント",
+        "taiLieuMcp": "MCPドキュメント",
+        "ketNoiAgentCuaBanVoi": "エージェントを学習プラットフォームに接続します。",
+        "quanLyKetNoiMcp": "MCP接続を管理",
+        "huongDanMcp": "MCPガイド",
+        "mcpChoPhepBanTroChuyen": "MCP を使うと、Codex、Claude Code、OpenCode、Antigravity での会話から、システム上で許可されたデータを操作できます。エージェントはそのアプリ自身のモデルを使います。MCP トークンは AI の API キーではなく、ここに保存した API キーも使用しません。",
+        "banNeuYeuCauVaTrao": "外部アプリでエージェントに要望を伝えてやり取りします。課題の作成や採点では、エージェントがプラットフォーム上の該当の下書き・提案を開くリンクを返すので、内容を確認して判断してください。",
+        "chiDoc": "読み取り専用",
+        "xemDuLieuMaVaiTro": "役割で許可されたデータを閲覧します。下書きの作成や提案の保存は行いません。",
+        "docVaGhi": "読み取りと書き込み",
+        "coThemCacToolGhiDuoc": "下書きの作成やフィードバックの保存など、役割で許可された書き込みツールが追加されます。成績を自動で確定・公開することはありません。",
+        "giangVienLamViecTrongLop": "教員：担当クラス内で作業します。科目責任者：担当科目の内容に対する権限が加わりますが、採点にはそのクラスの担当権限が必要です。",
+        "sinhVienXinGopYCho": "学生：自分が提出した練習課題へのフィードバックを依頼できます。正式な採点やグループ課題でのAI利用はできません。",
+        "adminKhongCoQuyenKetNoi": "管理者は MCP に接続できません。実際のツール一覧は役割とトークンの権限の両方によって決まり、get_my_capabilities で返されます。",
+        "trongQuanLyKetNoiMcp": "「MCP接続を管理」で ",
+        "ketNoiAgentMoi": "新しいエージェントを接続",
+        "datNhanDeNhoVaChon": " をクリックし、わかりやすいラベルを付けて適切な権限を選びます。次に下からアプリを選びます。最も簡単なのは英語のプロンプトをコピーしてエージェントに設定を任せる方法です。設定ファイルを開いて手動で統合することもできます。",
+        "huongDanKhongBatBuocDung": "このガイドではターミナルは必須ではありません。Codex の個人設定は、同じ設定に対応するインターフェース間で共有されます。Claude Code の場合は Claude Code の設定であり、Claude Desktop の設定ファイルではありません。",
+        "giuTokenTrongCauHinhCa": "トークンは個人用の設定に保管してください。ドキュメントページにはプレースホルダーのみ表示されます。トークンを会話、スクリーンショット、URL、Git に貼り付けないでください。漏えいした場合は、その接続を取り消して新しいトークンを作成してください。",
+        "deNgatKetNoiTatHoac": "接続を解除するには、エージェントアプリで nen-tang-hoc-tap サーバーを無効化または削除します。今後使わない場合は「MCP接続を管理」に戻ってトークンを取り消してください。そのトークンを使う接続は認証できなくなります。",
+        "t1TaoHoacChinhDeAssignment": "1. 課題を作成・編集する",
+        "neuRoLopMonChuDe": "クラス・科目、テーマ、問題数、難易度、合計点、個人・グループ、練習・評価対象を明確に伝えます。必要に応じて画像や資料を送り、不足している点はエージェントから質問させてください。",
+        "agentDocQuyenHuongDanRa": "エージェントは権限、サーバーの課題作成ガイド、現在のスキーマを読み込み、作成前に正しいクラス・科目を特定します。既存の課題を編集するには最新のバージョンを読む必要があります。",
+        "agentTaoDraftCungDeXuat": "エージェントは内容・ルーブリックの提案付きで DRAFT を作成し、レビュー用リンクを返します。作成直後の下書きには、まだ内容が適用されていない場合があります。",
+        "moLienKetXemDeVa": "リンクを開き、課題文とルーブリックを確認してから ",
+        "apDungDeXuat": "提案を適用",
+        "chinhSuaVaLuuTrenGiao": " をクリックします。画面上で編集・保存してください。課題の配布やスケジュール設定はあなたが判断します。",
+        "t2DeXuatChamBaiTheo": "2. ルーブリックに基づく採点案",
+        "choAgentBietLopVaBai": "採点するクラスと課題をエージェントに伝えます。エージェントが提出物を一覧表示するので、1件または複数を選びます。",
+        "agentDocHuongDanChamDe": "エージェントは採点ガイド、課題文、ルーブリック、提出物のスナップショット全体を読み込みます。長い内容は、提案を書き込む前に同じフィンガープリントで全ページを読む必要があります。",
+        "yeuCauDiemTungMucBang": "項目ごとの点数、根拠、理由を求め、情報が不足する場合は教員の確認が必要というフラグを付けさせます。読み取れない図や画像の部分を推測させないでください。",
+        "moLienKetReviewOTrang": "採点ページでレビュー用リンクを開き、各項目と説明を確認します。下書きに適用したら、権限に応じてシステム上で保存・確定・公開してください。MCP が正式な判断を行うことはありません。",
+        "mcpKhongBaoDamAiCham": "MCP は AI がルーブリックどおり正しく採点することを保証しません。システムは権限、スナップショット、構造、文脈を十分に読んだかを確認しますが、モデルが課題を正しく理解したことを証明するものではありません。確定前に、不自然な点数、根拠、レビューが必要とされた項目を教員が確認してください。",
+        "t3QuizNganHangCauHoi": "3. クイズ、問題バンク、練習",
+        "quizDungDeXuatCauHoi": "クイズには専用の問題提案を使います。問題バンクは科目責任者向けで、承認が必要です。学生は練習課題の提出後に個別のフィードバックを依頼できます。フィードバックが提出物を変更したり成績表に記録されたりすることはありません。",
+        "promptMauDeBatDauTieng": "始めるためのサンプルプロンプト（英語）",
+        "taoDe": "課題作成",
+        "chamBai": "採点",
+        "khongCanTaiSkillHoacHook": "スキルやフックをダウンロードする必要はありません。教員は read_agent_workflow でサーバーのガイドを利用します。ローカルのスキル・フックは任意で、追加の権限は付与されません。",
+        "toolLaThaoTacAgentGoi": "ツールは、エージェントがシステム上で呼び出す操作です。",
+        "khongTaoBanGhiNghiepVu": " は業務データを作成しません。",
+        "ghiNhapGopY": "下書き・フィードバックの書き込み",
+        "canTokenDocVaGhiDay": " には「読み取りと書き込み」のトークンが必要です。これは機能別の一覧であり、実際に使えるツールは get_my_capabilities の現在の権限と対象ごとの確認によって決まります。",
+        "t401HoacKhongXacThucDuoc": "401 または認証できない",
+        "kiemTraTokenConHanChua": "トークンが期限切れ・取り消し済みでないこと、Authorization ヘッダーが正しいことを確認してください。プレースホルダーのトークンは使わず、紛失した場合は新しいトークンを作成してください。",
+        "khongThayToolHoacBiTu": "ツールが見つからない、または権限が拒否される",
+        "docLaiCapabilitiesTokenChiDoc": "capabilities を読み直してください。「読み取り専用」トークンには書き込みツールがありません。科目責任者の役割だけで全クラスの採点権限が得られるわけではありません。権限の変更やサーバーの更新後は、アプリで MCP・ツール一覧を再読み込みしてください。",
+        "khongTruyCapDuocDiaChi": "サーバーのアドレスにアクセスできない",
+        "localhostLaMayChayAgentAgent": "localhost はエージェントを実行しているマシンを指します。コンテナ内、別のマシン、リモートサービス上のエージェントには、アクセス可能なプラットフォームのアドレスが必要です。ブラウザーの localhost を前提にしないでください。ネットワーク経由の接続ではプラットフォームの HTTPS アドレスを使います。",
+        "contextChuaDocDuHoacKhong": "文脈の読み込みが不足している、または最新ではない",
+        "voiMcpContextReadRequiredDoc": "MCP_CONTEXT_READ_REQUIRED の場合は最初のページから読み直してください。VERSION_CONFLICT、SUBMISSION_CHANGED、古い提案の場合は、新しいデータを読み込んで採点し直してください。チェックを回避するためにフィンガープリントやバージョンを変更しないでください。確定・公開済みの成績は MCP で変更できません。",
+        "hetThoiGianChoKhiTao": "下書きの作成や提案の保存中にタイムアウトした",
+        "kiemTraXemThaoTacDa": "操作がすでに成功していないか確認してください。requestRef に対応するツールは、同じ requestRef と同じ内容で再試行する必要があります。新しいリクエストを作成しないでください。requestRef のないツールは、再度書き込む前に画面上で提案を確認してください。",
+        "taoXongNhungBaiVanTrong": "作成したのに課題が空のまま",
+        "moDungReviewurlAgentTraVe": "エージェントが返した reviewUrl を開き、提案を適用してください。DRAFT や提案があっても、内容が適用済み、または課題が配布済みという意味ではありません。",
+        "menuVaNoiLuuCauHinh": "メニューや設定ファイルの場所はバージョンによって変わる場合があります。Antigravity では、正しいファイルを確認するためアプリ自体から設定を開くことをおすすめします。",
+        "codexKetNoiMcp": "Codex：MCP接続",
+        "claudeCodeMcpVaPhamVi": "Claude Code：MCPと設定スコープ",
+        "opencodeMcpServersVaXacThuc": "OpenCode：MCPサーバーと認証",
+        "antigravityThietLapMcpTrongUng": "Antigravity：アプリでのMCP設定",
+        "mucLucTaiLieuMcp": "MCPドキュメントの目次",
+        "trongTaiLieuNay": "このドキュメントの内容"
+      }
+    },
+    "register": {
+      "ketNoiAi": "AI接続"
+    }
+  },
+  "announcements": {
+    "components": {
+      "AnnouncementDialogs": {
+        "daDangThongBao": "お知らせを投稿しました",
+        "chuaDangDuocO": "{names} には投稿できませんでした。{message}",
+        "taoThongBao": "お知らせを作成",
+        "dang": "投稿",
+        "tieuDe": "タイトル",
+        "noiDung": "内容",
+        "quanTrong": "重要",
+        "guiEmail": "メールを送信",
+        "tatCaLop": "すべてのクラス（{length}）",
+        "lop": "クラス ",
+        "goMaLopHoacMaMon": "クラスコードまたは科目コードを入力",
+        "chonLop": "クラスを選択",
+        "lop2": "クラス",
+        "chonCacLopDangTim": "検索中のクラスを選択",
+        "chonTatCa": "すべて選択",
+        "khongCoLopPhuHop": "該当するクラスはありません。",
+        "daLuuThayDoi": "変更を保存しました",
+        "suaThongBao": "お知らせを編集",
+        "luu": "保存",
+        "daXoaThongBao": "お知らせを削除しました",
+        "xoaThongBao": "お知らせを削除しますか？",
+        "xoa": "削除",
+        "banCoChacMuonXoaThong": "お知らせ「",
+        "khong": "」を削除してもよろしいですか？"
+      },
+      "AnnouncementFeed": {
+        "danhSachThongBao": "お知らせ一覧",
+        "chuaCoThongBao": "お知らせはまだありません。",
+        "quanTrong": "重要",
+        "sua": "{title} を編集",
+        "xoa": "{title} を削除"
+      }
+    },
+    "pages": {
+      "ClassAnnouncementsPage": {
+        "dangTaiThongBao": "お知らせを読み込み中…",
+        "thongBaoLop": "クラスのお知らせ",
+        "tatCaThongBao": "すべてのお知らせ",
+        "taoThongBao": "お知らせを作成",
+        "thuLai": "再試行",
+        "phanTrangThongBao": "お知らせのページ",
+        "truoc": "前へ"
+      }
+    },
+    "register": {
+      "tatCaThongBao": "すべてのお知らせ"
+    }
+  },
+  "assignments": {
+    "components": {
+      "AiChatAttachments": {
+        "tepGuiKemYeuCau": "リクエストの添付ファイル",
+        "mauDe": "テンプレート",
+        "dungLamThamKhao": "参考資料として使う",
+        "go": "{templateName} を削除",
+        "thamKhaoHocLieu": "参考資料 · 教材",
+        "go2": "{title} を削除",
+        "thamKhaoTep": "参考資料 · ファイル",
+        "dangTai": "アップロード中 {percent}%",
+        "dangDoc": "読み込み中…",
+        "sanSang": "準備完了",
+        "thuLai": "再試行",
+        "dungLamMauDe": "{name} をテンプレートとして使う",
+        "dungLamMauDe2": "テンプレートとして使う",
+        "go3": "{name} を削除",
+        "dangChuyenVaiTroTep": "ファイルの役割を変更中…",
+        "thamKhao3Tep2Mb": "参考資料：3ファイル、各2MBまで。テンプレート：DOCX 1件、20MBまで。"
+      },
+      "AiDraftDialog": {
+        "aiKhongTraKetQua": "AIから結果が返りませんでした。",
+        "banVanSoanThuCongDuoc": "{value} 手動で作成することもできます。",
+        "hayDoiTaiXongHoacGo": "課題を作成する前に、アップロードの完了を待つか、エラーのファイルを削除してください。",
+        "baiTapChuaDatTen": "無題の課題",
+        "soCauHoiTu1Den": "問題数は1〜10で指定してください。",
+        "tongDiemLonHon0Toi": "合計点は0より大きく、1,000以下、小数点以下2桁までで指定してください。",
+        "taoNhapBangAi": "AIで下書きを作成",
+        "boDeXuat": "提案を破棄",
+        "suaYeuCauVaTaoLai": "要望を修正して再生成",
+        "taoDe": "課題を作成",
+        "moTaDeBanCanAi": "必要な課題を説明すると、AI が採点用ルーブリック付きの問題を作成してページに直接書き込みます。元に戻すには Ctrl+Z を押します。以下の項目はすべて任意です。",
+        "mauDe": "テンプレート",
+        "khongDungDeMau": "テンプレートを使わない",
+        "deMauCuaMon": "科目のテンプレート",
+        "taiDeMauLen": "テンプレートをアップロード…",
+        "taiDeMauLen2": "テンプレートをアップロード",
+        "ngonNgu": "言語",
+        "tiengViet": "ベトナム語",
+        "soCauHoi": "問題数",
+        "aiTuChon": "AIが決定",
+        "tongDiem": "合計点",
+        "aiTuChia": "AIが配分",
+        "taiLieuThamKhao": "参考資料",
+        "yeuCau": "要望",
+        "viDuDePhanTichThiet": "例：図書館管理システムの分析・設計課題。ユースケース図とクラス図を含み、難易度は中程度。",
+        "baiChuaBiThayDoi": "課題は変更されていません。",
+        "dangTaoBanNhap": "下書きを作成中",
+        "dangDoc": "読み込み中…",
+        "cauHoi": "{questionCount} 問",
+        "daDoc": "読み込み済み",
+        "thuLai": "再試行",
+        "chonHocLieuCuaMonHoac": "AIが参照する科目の教材を選ぶか、ファイルをアップロード",
+        "chuaCoHocLieuDungDuoc": "利用できる教材はまだありません。",
+        "khongTimThayHocLieu": "教材が見つかりません。",
+        "taiTaiLieuLen": "資料をアップロード{value}",
+        "taiLieuDaChon": "選択した資料",
+        "bo": "{title} を外す",
+        "thuLai2": "{name} を再試行",
+        "go": "{name} を削除",
+        "taiTaiLieuLen2": "資料をアップロード"
+      },
+      "AiDraftPreview": {
+        "ketQuaKiemTraDe": "課題のチェック結果",
+        "canSuaTruocKhiApDung": "適用前に修正が必要",
+        "kiemTraDat": "チェックに合格",
+        "canRaSoat": "要確認",
+        "cau": " 問",
+        "phanCoRubric": " パートにルーブリックあり",
+        "diem": " 点",
+        "deXuatChuaCoKetQua": "この提案にはチェック結果がありません。現在のバージョンで再生成してください。",
+        "aiChuaTaoCauHoiVa": "AIはまだ問題とルーブリックを作成していません。「要望を修正して再生成」を選んで新しく作成してください。現在の内容は課題に追加されていません。",
+        "boiCanhNghiepVu": "業務の背景 ",
+        "khongTinhDiemBamDeMo": "· 採点対象外 · クリックで展開/折りたたみ",
+        "huongDanLamVaNopBai": "取り組み方と提出方法",
+        "cauHoiVaRubric": "問題とルーブリック",
+        "cauHoiVaTieuChiCham": "問題と採点基準",
+        "khongCoCauHoiDeHien": "表示する問題はありません。背景や説明は問題やルーブリックの代わりにはなりません。",
+        "cau2": "問 {value}",
+        "yeuCauSanPhamCanNop": "要件 / 提出物",
+        "chuaCoMoTaYeuCau": "要件の説明はまだありません。",
+        "rubricTieuChiVaDiem": "ルーブリック · 基準と配点",
+        "rubricDuocDatTaiCacCau": "ルーブリックは小問に設定されています。",
+        "cauNayChuaCoRubricCan": "この問題にはまだルーブリックがありません。課題を再生成して基準と配点を追加してください。"
+      },
+      "AiReviseChat": {
+        "hayDoiTaiXongHoacGo": "送信する前に、アップロードの完了を待つか、エラーのファイルを削除してください。",
+        "aiKhongTraKetQua": "AIから結果が返りませんでした。",
+        "deChuaThayDoi": "{value} 課題は変更されていません。",
+        "aiChuaThayDoiGiHay": "AIは何も変更しませんでした。修正内容をもっと具体的に伝えてください。",
+        "khongApDungDuoc": "適用できませんでした：{value}",
+        "luuY": "注意：{message}",
+        "vaLuuYKhac": "…ほか {value} 件の注意。",
+        "daSuaDeTheoYeuCau": "要望どおりに課題を修正しました。Ctrl+Z で前のバージョンに戻せます。",
+        "deDaDuocCapNhatNhung": "課題は更新されましたが、再読み込みできませんでした。ページを再読み込みしてください。",
+        "chuaXacNhanDuocKetQua": "{value} 適用結果を確認できませんでした。再試行する前に課題を再読み込みして確認してください。",
+        "deChuaThayDoi2": "課題は変更されていません。",
+        "yeuCauChuaDuocXacNhan": "要望は確認されませんでした。内容とファイルは保持されているので再試行できます。",
+        "doiChuyenVaiTroTepXong": "ファイルの役割の変更が終わってから画像を貼り付けてください。",
+        "chonTepCuTheKhongKeo": "フォルダーではなく個別のファイルを選択してください。",
+        "suaDeBangAi": "AIで課題を修正",
+        "thaTepDeDinhKem": "ドロップして添付",
+        "dongTroLyAi": "AIアシスタントを閉じる",
+        "khoiPhucYeuCau": "要望を復元",
+        "tepGuiKem": "添付ファイル",
+        "mauDe": "テンプレート：",
+        "taiLieuThamKhao": "参考資料：",
+        "aiDangSuaDe": "AIが課題を修正中…",
+        "themMauDeHoacTaiLieu": "テンプレートまたは参考資料を追加",
+        "chonDeMauCoSan": "既存のテンプレートを選択",
+        "chonHocLieuCuaMon": "科目の教材を選択",
+        "taiTuMay": "コンピューターからアップロード",
+        "quayLai": "戻る",
+        "timMauDe": "テンプレートを検索",
+        "timTaiLieuThamKhao": "参考資料を検索",
+        "timTheoTen": "名前で検索",
+        "yeuCauSuaDe": "修正の要望",
+        "viDuDichToanBoDe": "例：課題全体を英語に翻訳する",
+        "guiYeuCau": "要望を送信",
+        "taiTepTuMay": "コンピューターからファイルをアップロード",
+        "thayMauDe": "テンプレートを置き換えますか？",
+        "thayMauDe2": "テンプレートを置き換え",
+        "mauMoiSeThayMauDang": "新しいテンプレートは読み込みに成功すると現在のテンプレートと置き換わります。その他の参考資料はそのまま残ります。",
+        "aiPhanHoiQuaLau": "AIの応答に時間がかかりすぎました。"
+      },
+      "AssignmentListCard": {
+        "dangMo": "受付中",
+        "khongCoBaiDangMo": "受付中の課題はありません。",
+        "nhap": "下書き",
+        "khongCoBaiNhap": "下書きの課題はありません。",
+        "hoanTat": "確定済み",
+        "khongCoBaiHoanTat": "確定済みの課題はありません。",
+        "daDong": "締切済み",
+        "chuaCoBaiDaDong": "締切済みの課題はまだありません。",
+        "caNhan": "個人",
+        "nhom": "グループ",
+        "luyenTap": "練習",
+        "danhSachBaiTap": "課題一覧",
+        "trangThaiBai": "課題のステータス",
+        "loaiBai": "課題の種類",
+        "moiLoai": "すべての種類",
+        "timBaiTap": "課題を検索",
+        "timTheoTen": "名前で検索",
+        "thuLai": "再試行",
+        "baiTap": "課題",
+        "loai": "種類",
+        "phamVi": "範囲",
+        "hanNop": "締切",
+        "trangThai": "ステータス",
+        "baiNop": "提出物",
+        "moBai": "課題を開く",
+        "mon": "科目",
+        "lop": "クラス",
+        "dangTaiBaiTap": "課題を読み込み中…",
+        "khongCoBaiTapPhuHop": "該当する課題はありません。"
+      },
+      "assignmentNav": {
+        "cacPhanCuaBai": "課題のパート",
+        "baiTap": "課題",
+        "dangTai": "読み込み中…",
+        "cauHoi": "問題",
+        "themCauHoi": "問題を追加",
+        "baiChuaCoCauHoi": "課題にはまだ問題がありません",
+        "themYVao": "{number} に項目を追加"
+      },
+      "AssignmentSettingsPanel": {
+        "moiSinhVienNopMotBai": "学生ごとに1件提出します。",
+        "moiNhomNopChungMotBai": "グループごとに共同で1件提出します。",
+        "tinhVaoSoDiem": "成績表に反映されます。",
+        "tuLuyenKhongTinhDiem": "自主練習のため採点されません。",
+        "hinhThuc": "形式",
+        "caNhan": "個人",
+        "nhom": "グループ",
+        "cheDo": "モード",
+        "ghiNhanHoatDong": "アクティビティの記録",
+        "ghiLaiKhiSinhVienRoi": "学生が解答中にページを離れたことを記録します。",
+        "loiBaoChoSinhVien": "学生へのお知らせ"
+      },
+      "ClassAssignmentsSection": {
+        "taoBaiTap": "課題を作成"
+      },
+      "CreateAssignmentDialog": {
+        "soanTuDauCoTheTai": "一から作成します。過去の課題の DOCX、画像、PDF をアップロードして枠組みにできます。",
+        "copyMotDeCoSanRoi": "既存の課題をコピーして編集を続けます。",
+        "aiSoanDeKemRubricTong": "AIがルーブリック付きで課題を作成します（合計10点）。",
+        "moiSinhVienNopMotBai": "学生ごとに1件提出します。",
+        "moiNhomNopChungMotBai": "グループごとに共同で1件提出します。",
+        "tuLuyenKhongTinhDiem": "自主練習のため採点されません。",
+        "taiTepLenKhongThanhCong": "アップロードに失敗しました",
+        "chiChonToiDa3Tep": "参考ファイルは最大3件まで選択できます。",
+        "mauDeKhongCoNoiDung": "テンプレートに読み取れる内容がありません。",
+        "daDongPopup": "ポップアップを閉じました。",
+        "aiKhongTraKetQua": "AIから結果が返りませんでした。",
+        "aiChuaSoanDuocDeHop": "AIは有効な課題を作成できませんでした：{reason}",
+        "aiChuaSoanDuocDeHop2": "AIは有効な課題を作成できませんでした。",
+        "nhapTieuDeBaiTap": "課題のタイトルを入力してください。",
+        "chonMotDeCoSanDe": "コピーする既存の課題を選択してください。",
+        "hayDoiTaiXongHoacGo": "アップロードの完了を待つか、エラーのファイルを削除してください。",
+        "daTaoBaiChuaNhapTep": "課題を作成しましたが、ファイルはまだ取り込まれていません：{value}",
+        "baiTapMoi": "新しい課題",
+        "deMauMoi": "新しいテンプレート",
+        "moBai": "課題を開く",
+        "thuLai": "再試行",
+        "tao": "作成",
+        "tieuDe": "タイトル",
+        "loai": "種類",
+        "caNhan": "個人",
+        "nhom": "グループ",
+        "lopChuaDungDuocBaiNhom": "このクラスではまだグループ課題を利用できません",
+        "luyenTap": "練習",
+        "cachTao": "作成方法",
+        "deCoSan": "既存の課題",
+        "deMoi": "新しい課題",
+        "taoTuAi": "AIで作成",
+        "timTheoTenBai": "課題名で検索",
+        "chuaCoDeNaoDeCopy": "コピーできる課題はまだありません。",
+        "boBaiDaChon": "選択した課題を外す",
+        "mauDe": "テンプレート",
+        "taiDocxAnhHoacPdfDe": "過去の課題の DOCX、画像、PDF をアップロード",
+        "ngonNgu": "言語",
+        "tiengViet": "ベトナム語",
+        "chonDeMauHoacTaiDocx": "テンプレートを選択するか DOCX をアップロード",
+        "monChuaCoDeMau": "この科目にはまだテンプレートがありません。",
+        "boMauDe": "テンプレートを外す",
+        "taiDeMauLen": "テンプレートをアップロード",
+        "taiLieuThamKhao": "参考資料",
+        "yeuCau": "要望",
+        "moTaDeBanCanChu": "必要な課題を説明してください：テーマ、内容、難易度…"
+      },
+      "ExamImportDialog": {
+        "daNhapDeNhanCtrlZ": "課題を取り込みました。Ctrl+Z で前のバージョンに戻せます。",
+        "aiKhongDocDuocDeHay": "AIは課題を読み取れませんでした。もう一度お試しください。",
+        "bo": "破棄",
+        "chenVaoCuoi": "末尾に挿入",
+        "thayToanBo": "すべて置き換え",
+        "ghiVaoDe": "課題に書き込む",
+        "chuyenThanhDe": "課題に変換",
+        "nhapDeTuTep": "ファイルから課題を取り込む",
+        "chonToiDa5AnhPng": "画像（PNG、JPEG、WEBP）最大5枚、または10ページ以内の PDF 1件、または DOCX ファイル1件を選択してください。AI が過去の課題を原文どおり枠組みに書き写すので、それを編集できます。画像と PDF は AI の利用上限に含まれます。",
+        "keoThaHoacBamDeChon": "ドラッグ＆ドロップまたはクリックして画像、PDF、DOCX を選択",
+        "chonTepDeCu": "過去の課題ファイルを選択",
+        "tepDaChon": "選択したファイル",
+        "duaLenTruoc": "{name} を前へ移動",
+        "duaXuongSau": "{name} を後ろへ移動",
+        "bo2": "{name} を外す",
+        "dangDocDeCoTheMat": "課題を読み取り中…最大1分ほどかかる場合があります",
+        "huy": "キャンセル",
+        "tieuDe": " 見出し · ",
+        "bang": " 表 · ",
+        "hinh": " 画像",
+        "choKhongDocRo": " 箇所が判読困難",
+        "canKiemTraLai": "要確認",
+        "dung": "「",
+        "lamTenBai": "」をタイトルにする"
+      },
+      "RubricEditor": {
+        "mucCham": "評価項目 {value}",
+        "tieuChi": "評価項目",
+        "diemMuc": "項目 {value} の点数",
+        "diem": "点数",
+        "diemToiDa2ChuSo": "点数は小数点以下2桁まで",
+        "xoaMucCham": "評価項目 {value} を削除",
+        "xoa": "削除",
+        "themMucCham": "評価項目を追加"
+      },
+      "ScheduleForm": {
+        "ngay": "{label}（日付）",
+        "gio": "{label}（時刻）",
+        "thieuHanNop": "締切が未設定",
+        "thieuNgayMo": "公開日が未設定",
+        "hanNopKhongSauLucMo": "締切は公開日時より後にしてください",
+        "thieuHanNopMuon": "遅延提出の期限が未設定",
+        "hanNopMuonKhongSauHan": "遅延提出の期限は締切より後にしてください",
+        "hanNopMuonQua30Ngay": "遅延提出の期限が締切から30日を超えています",
+        "soLuotNgoai110": "回数は1〜10で指定してください",
+        "henGioMo": "公開日時を予約",
+        "moLuc": "公開日時",
+        "hanNop": "締切",
+        "choNopMuon": "遅延提出を許可",
+        "nopMuonDen": "遅延提出の期限",
+        "soLuotLam": "回数",
+        "coSinhVienChuaCoNhom": "グループ未所属の学生がいます",
+        "vanPhatHanh": "このまま公開",
+        "xepLich": "スケジュール",
+        "phatHanhNgay": "今すぐ公開",
+        "luuLich": "スケジュールを保存"
+      },
+      "SearchPicker": {
+        "khongCoKetQua": "結果はありません。",
+        "goiY": "候補 {value}",
+        "dangTai": "読み込み中…"
+      },
+      "SourceImagePreview": {
+        "anhNguon": "元画像：{name}"
+      },
+      "sourceUploads": {
+        "mauDePhaiLaDocx": "テンプレートは DOCX にしてください。",
+        "tepDocxPhaiCoNoiDung": "DOCX ファイルは内容があり、20MB以下である必要があります。",
+        "mauDeKhongCoNoiDung": "テンプレートに読み取れる内容がありません。",
+        "khongTaiDuocGioiHanTep": "参考ファイルの制限を読み込めませんでした。",
+        "chuaTaiDuocChinhSachTep": "参考ファイルのポリシーをまだ読み込めていません。",
+        "chiChonToiDa3Tep": "参考ファイルは最大3件まで選択できます。",
+        "tepKhongCoNoiDung": "ファイルに内容がありません。",
+        "khongDocDuocNoiDungTep": "ファイルの内容を読み取れませんでした。",
+        "taiTepLenKhongThanhCong": "アップロードに失敗しました",
+        "chiChonToiDa3Tep2": "参考ファイルは最大3件までです。{value} 件は追加されませんでした。"
+      },
+      "TemplateFileField": {
+        "uploadDeMau": "テンプレートをアップロード",
+        "tep": " ファイル",
+        "boTep": "ファイルを外す"
+      }
+    },
+    "hooks": {
+      "useAiChatAttachments": {
+        "khongDocDuocMauDe": "テンプレートを読み取れませんでした。",
+        "khongTheDungTepLamTham": "このファイルは参考資料として使えません。"
+      }
+    },
+    "model": {
+      "format": {
+        "khongThucHienDuocHayThu": "実行できませんでした。もう一度お試しください。",
+        "khongTimThayHoacBanKhong": "見つからないか、権限がありません。"
+      },
+      "importFiles": {
+        "chonAnhPdfHoacDocxCua": "過去の課題の画像、PDF、DOCX を選択してください。",
+        "chiNhanAnhPngJpegWebp": "PNG、JPEG、WEBP の画像、PDF、DOCX ファイルのみ受け付けます。",
+        "khongChonChungAnhVoiPdf": "1回の取り込みで画像と PDF・DOCX を混在させないでください。",
+        "chiNhap1TepMoiLan": "{kind} ファイルは一度に1件のみ取り込めます。",
+        "chiNhapToiDaAnhMoi": "画像は一度に最大 {MAX_IMPORT_IMAGES} 枚まで取り込めます。",
+        "tepDocxToiDaMb": "DOCX ファイルは最大 {DOCX_MAX_MB}MB までです。"
+      },
+      "types": {
+        "nhap": "下書き",
+        "hoanTat": "確定済み",
+        "daLenLich": "予約済み",
+        "dangMo": "受付中",
+        "daDong": "締切済み",
+        "ngungGiao": "配布停止",
+        "caNhan": "個人",
+        "nhom": "グループ",
+        "taoMoi": "新規",
+        "nhanBan": "複製",
+        "versionMoi": "新バージョン",
+        "copyTuBaiKhac": "他の課題からコピー"
+      }
+    },
+    "pages": {
+      "AssignmentFormPage": {
+        "diemMoiMucToiDa2": "各項目の点数は小数点以下2桁まで",
+        "toanBai": "課題全体",
+        "tongDiemCuaRubricPhaiLon": "ルーブリックの合計点は0より大きくしてください",
+        "coMucChamThieuNoiDung": "内容または点数が未入力の評価項目があります",
+        "baiCanTieuDe": "課題にはタイトルが必要です",
+        "baiLamChuaCoRubricCham": "課題にまだ採点用ルーブリックがありません",
+        "rubricBiLoiDiem": "{length} 件のルーブリックで点数にエラーがあります",
+        "deConChoLoi": "課題にまだエラーがあります",
+        "chuaLuu": "未保存：{POINTS_INVALID}",
+        "chuaLuu2": "未保存：{value}",
+        "khongApDungDuocViCon": "未保存の内容があるため適用できません。保存状態を確認してからもう一度お試しください。",
+        "de": "課題",
+        "khongTaiDuocTep": "{value} のファイルをダウンロードできませんでした。{value2}",
+        "baiTap": "課題",
+        "dangTaiBaiTap": "課題を読み込み中…",
+        "chiXem": "閲覧のみ",
+        "dangLuu": "保存中…",
+        "chuaLuu3": "未保存",
+        "daLuuLuc": "{value} に保存しました",
+        "daLuu": "保存済み",
+        "chuaTaiDuocTieuChiCham": "採点基準を読み込めませんでした。",
+        "dangTaiTieuChiCham": "採点基準を読み込み中…",
+        "luyenTap": "練習",
+        "baiChuaDatTen": "無題の課題",
+        "thaoTacKhac": "その他の操作",
+        "nhapDeTuTep": "ファイルから課題を取り込む",
+        "taiDeDocx": "課題をダウンロード（DOCX）",
+        "taiRubricDocx": "ルーブリックをダウンロード（DOCX）",
+        "taoVersionMoi": "新しいバージョンを作成",
+        "ngungGiao": "配布を停止",
+        "xoaBanNhap": "下書きを削除",
+        "chinhSua": "編集",
+        "xemTruoc": "プレビュー",
+        "dongNhanBai": "提出の受付を締め切る",
+        "hoanTat": "確定",
+        "xepLich": "スケジュール設定",
+        "doiLich": "スケジュールを変更",
+        "taiLai": "再読み込み",
+        "baiDaThayDoiONoi": "課題が別の場所で変更されたため、編集中の内容は保存されていません",
+        "rubricCo": "ルーブリックには ",
+        "mucVuotGioiHan": " 項目あり、AI採点1回あたりの上限 ",
+        "mucChoMotLuotChamAi": " 項目を超えています。手動での作成と採点は引き続き可能です。",
+        "taiLaiTieuChi": "基準を再読み込み",
+        "khongTaiDuocTieuChiCham": "採点基準を読み込めませんでした：",
+        "lop": "クラス",
+        "mon": "科目",
+        "daLuuTruChiXem": " はアーカイブ済み · 閲覧のみ",
+        "baiCuaMonChiXem": "科目の課題 · 閲覧のみ",
+        "daNgungGiao": "配布停止済み",
+        "tenBaiTap": "課題名",
+        "caiDatBai": "課題の設定",
+        "daPhatHanh": "公開しました",
+        "daLenLich": "予約しました",
+        "daLuuLich": "スケジュールを保存しました",
+        "daGhiDeAiLenTrang": "AIが作成した課題をページに書き込みました。Ctrl+Z で前のバージョンに戻せます。",
+        "daSuaDeBangAiNhan": "AIで課題を修正しました。Ctrl+Z で前のバージョンに戻せます。",
+        "dongNhanBai2": "提出の受付を締め切りますか？",
+        "daDongNhanBai": "提出の受付を締め切りました",
+        "sinhVienKhongTheSuaHoac": "締切後、学生は編集・提出できなくなります。採点を可能にする前に、解答中のものはサーバーに保存された内容で自動的に提出されます。元の締切日時は変更されません。",
+        "xoaBanNhap2": "下書きを削除しますか？",
+        "xoa": "削除",
+        "banCoChacMuonXoaBan": "この下書きを削除してもよろしいですか？",
+        "ngungGiaoBai": "課題の配布を停止",
+        "banCoChacMuonNgungGiao": "この課題の配布を停止してもよろしいですか？",
+        "lyDo": "理由"
+      },
+      "SubjectAssignmentListPage": {
+        "deMauBaiTap": "課題テンプレート",
+        "taoDeMau": "テンプレートを作成",
+        "banChuaDuocGiaoQuanLy": "管理を担当している科目はありません。"
+      }
+    },
+    "register": {
+      "deMau": "テンプレート"
+    }
+  },
+  "assignmentwork": {
+    "components": {
+      "ClassTodoCard": {
+        "baiCaNhan": "個人課題",
+        "khongConBaiCaNhanCan": "取り組むべき個人課題はありません。",
+        "baiNhom": "グループ課題",
+        "khongConBaiNhomCanLam": "取り組むべきグループ課題はありません。",
+        "luyenTap": "練習",
+        "khongConBaiLuyenTapCan": "取り組むべき練習はありません。",
+        "tongQuanBaiTap": "課題の概要",
+        "chuaLam": "未着手",
+        "dangLam": "取り組み中",
+        "daNop": "提出済み",
+        "baiTapCanLam": "取り組むべき課題",
+        "tatCaBaiTap": "すべての課題",
+        "loaiBai": "課題の種類",
+        "khongTaiDuocBaiTap": "課題を読み込めませんでした。",
+        "dangTaiBaiTap": "課題を読み込み中…"
+      },
+      "DeadlineChip": {
+        "khongHan": "締切なし",
+        "quaHan": "期限切れ",
+        "conDuoi1Gio": "残り1時間未満",
+        "conGio": "残り {hours} 時間",
+        "conNgay": "残り {days} 日"
+      },
+      "PracticeFeedbackPanel": {
+        "gopYAi": " AIフィードバック",
+        "taiLaiGopY": "フィードバックを再読み込み",
+        "aiDangGopY": "AIがフィードバックを作成中…",
+        "dangTaiGopY": "フィードバックを読み込み中…",
+        "chuaCoGopY": "フィードバックはまだありません。",
+        "gopYThamKhao": "参考フィードバック",
+        "dangCho": "待機中",
+        "khongNhanDuocGopY": "フィードバックを受け取れませんでした",
+        "apiCaNhan": "個人API",
+        "nhanXetChung": "総評",
+        "diemManh": "良い点",
+        "canCaiThien": "改善点",
+        "theoTungPhan": "パート別",
+        "aiVanDangXuLy": "AIはまだ処理中です。",
+        "kiemTraLaiGopY": "フィードバックを再確認",
+        "banCoTheQuanLyKhoa": "個人のAPIキーは次の場所で管理できます：",
+        "ketNoiAi": "AI接続",
+        "nhanGopYLai": "もう一度フィードバックを受ける",
+        "nhanGopYAi": "AIフィードバックを受ける"
+      },
+      "PublishedFeedback": {
+        "diemManh": "良い点",
+        "canCaiThien": "改善点",
+        "buocTiepTheo": "次のステップ"
+      },
+      "ResultSummaryCard": {
+        "ketQua": "結果",
+        "khongTaiDuocKetQua": "結果を読み込めませんでした。",
+        "dangTaiKetQua": "結果を読み込み中…",
+        "chuaCoDiemCongBo": "公開された成績はまだありません。",
+        "tongDiem": "合計点",
+        "xemChiTietChamDiem": "採点の詳細を表示"
+      }
+    },
+    "model": {
+      "attemptResult": {
+        "bai": "課題"
+      },
+      "format": {
+        "daQuaHan": "期限切れ",
+        "khongThucHienDuocHayThu": "実行できませんでした。もう一度お試しください。",
+        "khongTimThayHoacBanKhong": "見つからないか、権限がありません。"
+      },
+      "types": {
+        "chuaLam": "未着手",
+        "dangLam": "取り組み中",
+        "daNop": "提出済み",
+        "nopTre": "遅延提出",
+        "hetHan": "期限切れ",
+        "baiNhom": "グループ課題",
+        "nopTay": "手動提出",
+        "tuNopKhiDongNhanBai": "受付締切時に自動提出",
+        "tuNopKhiNgungGiao": "配布停止時に自動提出",
+        "baiNhomLamTrongTaiLieu": "グループ課題はグループ文書で取り組みます",
+        "baiDaHetHanNhanBai": "この課題の受付は終了しました",
+        "daHetLuot": "残り回数がありません"
+      }
+    },
+    "pages": {
+      "AssignmentWorkspacePage": {
+        "baiDangMoONoiKhac": "別の場所で開かれているため、編集中の内容は保存されていません",
+        "matKetNoiChuaLuu": "接続が切れたため保存されていません",
+        "chuaLuu": "未保存：{value}",
+        "baiTap": "課題",
+        "dangMoBaiLam": "解答を開いています…",
+        "dangLuu": "保存中…",
+        "coThayDoiChuaLuu": "未保存の変更があります",
+        "daLuuLuc": "{value} に保存しました",
+        "daLuu": "保存済み",
+        "luyenTap": "練習",
+        "nhom": "グループ",
+        "caNhan": "個人",
+        "hanNop": "締切：{value}",
+        "con": "残り ",
+        "thaoTacKhac": "その他の操作",
+        "taiDocx": "DOCXをダウンロード",
+        "nhapDocx": "DOCXを取り込む",
+        "nopBai": "提出",
+        "taiLai": "再読み込み",
+        "daNopLuc": "提出日時 ",
+        "chiXem": " · 閲覧のみ",
+        "daQuaHan": "締切を過ぎています",
+        "baiCoGhiNhanHoatDong": "アクティビティが記録されます",
+        "baiChuaLuu": "解答が保存されていません",
+        "nhapDocxVaoPhan": "パート「{value}」に DOCX を取り込む",
+        "nhapDocxVaoPhanCuoiCua": "最後のパートに DOCX を取り込む"
+      },
+      "StudentAssignmentDetailPage": {
+        "luyenTap": "練習",
+        "nhom": "グループ",
+        "caNhan": "個人",
+        "thieuLopCuaBai": "課題のクラスが指定されていません。",
+        "dangTaiBaiTap": "課題を読み込み中…",
+        "baiTap": "課題",
+        "thongTinBai": "課題の情報",
+        "loai": "種類",
+        "trangThai": "ステータス",
+        "hanNopTre": "遅延提出の期限",
+        "hanNop": "締切",
+        "soBai": "解答",
+        "baiCoGhiNhanHoatDong": "アクティビティが記録されます",
+        "lamBai": "課題に取り組む",
+        "luotDaDungToiDa": "使用回数 / 上限",
+        "luot": " 回",
+        "cacLuotLam": "解答の履歴",
+        "baiNop": "提出物",
+        "luot2": "回目 ",
+        "tiepTucLamBai": "続きから取り組む",
+        "suaVaNopLai": "修正して再提出",
+        "batDauLamBai": "取り組みを開始",
+        "xemLichSuNopBai": "提出履歴を表示"
+      },
+      "StudentAssignmentsPage": {
+        "chuaLam": "未着手",
+        "dangLam": "取り組み中",
+        "daNop": "提出済み",
+        "daDong": "締切済み",
+        "caNhan": "個人",
+        "nhom": "グループ",
+        "luyenTap": "練習",
+        "baiTap": "課題",
+        "danhSachBaiTap": "課題一覧",
+        "nhomBai": "課題のグループ",
+        "loaiBai": "課題の種類",
+        "moiLoai": "すべての種類",
+        "timBaiTap": "課題を検索",
+        "lop": "クラス",
+        "monHoc": "科目",
+        "loai": "種類",
+        "hanNop": "締切",
+        "trangThai": "ステータス",
+        "diem": "点数",
+        "moBai": "課題を開く",
+        "dangTaiBaiTap": "課題を読み込み中…",
+        "khongConBaiChuaLam": "未着手の課題はありません。",
+        "khongCoBaiDangLam": "取り組み中の課題はありません。",
+        "khongCoBaiDaDongChua": "締切済みで未提出の課題はありません。",
+        "chuaNopBaiNao": "まだ提出した課題はありません。"
+      },
+      "SubmissionHistoryPage": {
+        "baiTap": "課題",
+        "thieuLopCuaBai": "課題のクラスが指定されていません。",
+        "dangTaiLichSuNopBai": "提出履歴を読み込み中…",
+        "banChuaNopBaiNao": "まだ何も提出していません。",
+        "lichSuNopBaiHienSau": "提出履歴は、提出して締切を過ぎた後に表示されます。",
+        "toanBai": "課題全体",
+        "thaoTacKhac": "その他の操作",
+        "taiDocx": "DOCXをダウンロード",
+        "luyenTap": "練習",
+        "nhom": "グループ",
+        "caNhan": "個人",
+        "dangTaiBaiNop": "提出物を読み込み中…",
+        "chuaLamPhanNay": "このパートは未回答です。",
+        "baiNopTruoc": "前の提出物",
+        "chonBaiNop": "提出物を選択",
+        "banNopMuon": "遅延提出版",
+        "banDungHan": "期限内提出版",
+        "baiNopSau": "次の提出物",
+        "diemCaNhanDaDuocGiang": "個人の点数は教員によって個別に調整されました。"
+      }
+    },
+    "register": {
+      "baiTap": "課題"
+    }
+  },
+  "audit": {
+    "components": {
+      "AuditFilters": {
+        "ngayBatDauPhaiTruocNgay": "開始日は終了日より前にしてください。",
+        "nguoiThucHien": "実行者",
+        "hanhDong": "操作",
+        "tatCa": "すべて",
+        "doiTuong": "対象",
+        "ketQua": "結果",
+        "thoiGian": "日時",
+        "tuNgay": "開始日",
+        "denNgay": "終了日",
+        "xoaLoc": "絞り込みを解除"
+      },
+      "AuditTable": {
+        "heThong": "システム",
+        "thoiGian": "日時",
+        "nguoiThucHien": "実行者",
+        "hanhDong": "操作",
+        "doiTuong": "対象",
+        "ketQua": "結果",
+        "lyDo": "理由",
+        "khongCoBanGhiNaoPhu": "該当する記録はありません。"
+      }
+    },
+    "model": {
+      "labels": {
+        "thanhCong": "成功",
+        "tuChoi": "拒否",
+        "thatBai": "失敗",
+        "dangNhap": "ログイン",
+        "truyCapBiTuChoi": "アクセス拒否",
+        "doiVaiTro": "役割の変更",
+        "taoTaiKhoan": "アカウント作成",
+        "suaTaiKhoan": "アカウント編集",
+        "doiTrangThaiTaiKhoan": "アカウントのステータス変更",
+        "suaCaiDat": "設定の編集",
+        "saoLuuDuLieu": "データのバックアップ",
+        "saoLuuThatBai": "バックアップ失敗",
+        "congBoDiem": "成績の公開",
+        "traCuuAudit": "監査ログの検索",
+        "doiKhoaApiAi": "AI APIキーの変更",
+        "kiemTraKhoaApiAi": "AI APIキーの確認",
+        "doiHanMucAi": "AI利用上限の変更",
+        "taoTokenAgentMcp": "MCPエージェントのトークン作成",
+        "thuHoiTokenAgentMcp": "MCPエージェントのトークン取り消し",
+        "agentMcpGoiCongCu": "MCPエージェントのツール呼び出し",
+        "taoNhom": "グループ作成",
+        "doiTenNhom": "グループ名の変更",
+        "suaNhom": "グループ編集",
+        "xoaNhom": "グループ削除",
+        "doiTruongNhom": "リーダーの変更",
+        "guiYeuCauDoiTruongNhom": "リーダー変更の申請",
+        "huyYeuCauDoiTruongNhom": "リーダー変更申請の取り消し",
+        "duyetYeuCauDoiTruongNhom": "リーダー変更申請の承認",
+        "tuChoiYeuCauDoiTruong": "リーダー変更申請の却下",
+        "giaoMucTaiLieuNhom": "グループ文書のセクション割り当て",
+        "nhaMucTaiLieuNhom": "グループ文書のセクション解放",
+        "nopBaiNhom": "グループ課題の提出",
+        "caiDatTuChiaNhom": "自主グループ編成の設定",
+        "guiDeXuatNhom": "グループ案の提出",
+        "duyetDeXuatNhom": "グループ案の承認",
+        "tuChoiDeXuatNhom": "グループ案の却下",
+        "taoThongBao": "お知らせの作成",
+        "moLaiQuiz": "クイズの再開",
+        "truDiemLuotQuiz": "クイズ解答の減点",
+        "quyetDinhKhongTruDiemLuot": "クイズ解答を減点しない決定",
+        "deXuatCauVaoNganHang": "問題バンクへの問題提案",
+        "duyetCauDeXuat": "提案問題の承認",
+        "tuChoiCauDeXuat": "提案問題の却下",
+        "luuTruQuiz": "クイズのアーカイブ",
+        "nopBaiQuiz": "クイズの提出",
+        "taoCauHoi": "問題の作成",
+        "kichHoatCauHoi": "問題の有効化",
+        "ngungDungCauHoi": "問題の使用停止",
+        "xoaCauHoi": "問題の削除",
+        "nhapCauHoi": "問題の取り込み",
+        "taoQuiz": "クイズの作成",
+        "phatHanhQuiz": "クイズの公開",
+        "xoaQuiz": "クイズの削除",
+        "nhanBanQuiz": "クイズの複製",
+        "saoChepQuiz": "クイズのコピー",
+        "taoPhienBanQuiz": "クイズのバージョン作成",
+        "chapNhanDeXuatAiCho": "クイズへのAI提案の採用",
+        "kichHoatTaiKhoan": "アカウントの有効化",
+        "voHieuHoaTaiKhoan": "アカウントの無効化",
+        "batLaiTaiKhoan": "アカウントの再有効化",
+        "khoaTamTaiKhoan": "アカウントの一時ロック",
+        "nhapDanhSachTaiKhoan": "アカウント一覧の取り込み",
+        "dangNhapThatBai": "ログイン失敗",
+        "chanDangNhapDoDangKhoa": "一時ロックによるログインのブロック",
+        "xacThucThatBai": "認証失敗",
+        "doiMatKhau": "パスワードの変更",
+        "datLaiMatKhau": "パスワードの再設定",
+        "suaHoSo": "プロフィールの編集",
+        "taoMon": "科目の作成",
+        "suaMon": "科目の編集",
+        "luuTruMon": "科目のアーカイブ",
+        "moLaiMon": "科目の再開",
+        "doiChuNhiemMon": "科目責任者の変更",
+        "taoLop": "クラスの作成",
+        "suaLop": "クラスの編集",
+        "doiTrangThaiLop": "クラスのステータス変更",
+        "doiGiangVienCuaLop": "クラス担当教員の変更",
+        "ghiDanhSinhVien": "学生の登録",
+        "xoaSinhVienKhoiLop": "クラスからの学生の削除",
+        "xemKhoaApiAi": "AI APIキーの閲覧",
+        "suaTokenAgentMcp": "MCPエージェントのトークン編集",
+        "taoBaiTap": "課題の作成",
+        "suaBaiTap": "課題の編集",
+        "xoaBaiTap": "課題の削除",
+        "duyetBaiTap": "課題の確定",
+        "phatHanhBaiTap": "課題の公開",
+        "luuTruBaiTap": "課題のアーカイブ",
+        "nhanBanBaiTap": "課題の複製",
+        "saoChepBaiTap": "課題のコピー",
+        "taoPhienBanBaiTap": "課題のバージョン作成",
+        "doiLichBaiTap": "課題のスケジュール変更",
+        "dongNhanBai": "提出受付の締切",
+        "nhapBaiTapTuDocx": "DOCXからの課題の取り込み",
+        "luuKhungBaiLam": "解答の枠組みの保存",
+        "yeuCauAiSoanBaiTap": "AIによる課題作成の依頼",
+        "luuDeXuatAiChoBai": "課題へのAI提案の保存",
+        "apDungDeXuatAiCho": "課題へのAI提案の適用",
+        "boDeXuatAiChoBai": "課題へのAI提案の破棄",
+        "suaRubric": "ルーブリックの編集",
+        "batDauLamBai": "解答の開始",
+        "luuBaiLam": "解答の保存",
+        "nopBai": "解答の提出",
+        "tuChoiNopBai": "提出の拒否",
+        "nhapBaiLamTuDocx": "DOCXからの解答の取り込み",
+        "xuatBaiLamRaDocx": "解答のDOCX書き出し",
+        "yeuCauGopYBaiLuyen": "練習へのフィードバック依頼",
+        "luuDiem": "点数の保存",
+        "doiDiemChinhThuc": "正式な成績の変更",
+        "chotDiem": "成績の確定",
+        "doiHienThiPhanBoDiem": "成績分布の表示設定の変更",
+        "xuatSoDiem": "成績表の書き出し",
+        "nhapTaiLieuNhom": "グループ文書の取り込み",
+        "luuDanhGiaCheo": "相互評価の保存",
+        "chotPhanCongTaiLieuNhom": "グループ文書の担当の確定",
+        "moChotPhanCongTaiLieu": "グループ文書の担当の確定解除",
+        "khoaMucTaiLieuNhom": "グループ文書のセクションのロック",
+        "moKhoaMucTaiLieuNhom": "グループ文書のセクションのロック解除",
+        "khoiPhucMucTaiLieuNhom": "グループ文書のセクションの復元",
+        "nhanLaiMucTaiLieuNhom": "グループ文書のセクションの再取得",
+        "taoHocLieu": "教材の作成",
+        "suaHocLieu": "教材の編集",
+        "luuTruHocLieu": "教材のアーカイブ",
+        "taoPhienBanHocLieu": "教材のバージョン作成",
+        "taoModule": "モジュールの作成",
+        "suaModule": "モジュールの編集",
+        "xoaModule": "モジュールの削除",
+        "ganQuizVaoModule": "モジュールへのクイズの追加",
+        "goQuizKhoiModule": "モジュールからのクイズの削除",
+        "suaThongBao": "お知らせの編集",
+        "xoaThongBao": "お知らせの削除",
+        "taiKhoan": "アカウント",
+        "caiDat": "設定",
+        "trangCaiDat": "設定ページ",
+        "banSaoLuu": "バックアップ",
+        "monHoc": "科目",
+        "lop": "クラス",
+        "lanSaoLuu": "バックアップの実行",
+        "hocLieu": "教材",
+        "moduleHocLieu": "教材モジュール",
+        "thongBaoCaNhan": "個人通知",
+        "cauHoi": "問題",
+        "deXuatAiChoQuiz": "クイズへのAI提案",
+        "luotLamQuiz": "クイズの解答",
+        "luotLamBaiTap": "課題の解答",
+        "baiTap": "課題",
+        "baiNop": "提出物",
+        "nhatKyAudit": "監査ログ",
+        "khoaApiAi": "AI APIキー",
+        "hanMucAi": "AI利用上限",
+        "hanMucAiChung": "共通のAI利用上限",
+        "congCuMcp": "MCPツール",
+        "nhomCuaLop": "クラスのグループ",
+        "yeuCauDoiTruongNhom": "リーダー変更の申請",
+        "taiLieuNhom": "グループ文書",
+        "mucTaiLieuNhom": "グループ文書のセクション",
+        "thongBao": "お知らせ",
+        "luotLamBai": "解答",
+        "saiVaiTro": "役割が不正",
+        "saiMatKhau": "パスワードが不正",
+        "taiKhoanKhoa": "アカウントのロック",
+        "thuQuaNhieu": "試行回数の超過",
+        "quaGioiHan": "上限超過",
+        "ngoaiPhamVi": "範囲外",
+        "khongSoHuu": "所有者ではない",
+        "chuaGhiDanh": "未登録",
+        "saiTaiKhoan": "アカウントが不正",
+        "loiCongCu": "ツールのエラー",
+        "duLieuQuaLon": "データが大きすぎる",
+        "biChan": "ブロック",
+        "saiKhoaApi": "APIキーが不正",
+        "aiQuaTai": "AIの過負荷",
+        "khongCoQuyen": "権限なし",
+        "khongTimThay": "見つからない",
+        "khongHopLe": "無効",
+        "quaLon": "大きすぎる",
+        "tamNgung": "一時停止",
+        "biXungDot": "競合",
+        "biTuChoi": "拒否",
+        "saiKhoa": "キーが不正",
+        "hetHanMuc": "利用上限超過",
+        "quaGio": "タイムアウト"
+      }
+    },
+    "pages": {
+      "AuditLogPage": {
+        "banKhongCoQuyenXemNhat": "ログを閲覧する権限がありません。",
+        "khongTaiDuocNhatKyAudit": "監査ログを読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "nhatKy": "ログ",
+        "dangTai": "読み込み中…"
+      }
+    },
+    "register": {
+      "nhatKy": "ログ"
+    }
+  },
+  "files": {
+    "api": {
+      "index": {
+        "matKetNoiKhiTaiTep": "ファイルのアップロード中に接続が切れました",
+        "daHuy": "キャンセルしました",
+        "heThongTamBanVuiLong": "システムが混み合っています。しばらくしてからもう一度お試しください",
+        "taiTepLenKhongThanhCong": "アップロードに失敗しました"
+      }
+    },
+    "components": {
+      "FileLink": {
+        "khongMoDuocTep": "ファイルを開けませんでした"
+      },
+      "FileUploader": {
+        "chonTep": "ファイルを選択",
+        "chuaChonTep": "ファイルが選択されていません",
+        "huy": "キャンセル"
+      }
+    },
+    "hooks": {
+      "useFileUpload": {
+        "khongTaiDuocGioiHanTep": "ファイルの制限を読み込めませんでした",
+        "taiTepLenKhongThanhCong": "アップロードに失敗しました"
+      }
+    },
+    "model": {
+      "purposes": {
+        "chiNhanTep": "{value} ファイルのみ受け付けます",
+        "tepVuotMb": "ファイルが {maxSizeMb}MB を超えています"
+      }
+    }
+  },
+  "grading": {
+    "components": {
+      "AiProposalPanel": {
+        "dangChoXuLy": "処理待ち",
+        "sanSangDeXem": "確認できます",
+        "khongTaoDuocDeXuat": "提案を作成できませんでした",
+        "deXuatDaCu": "提案が古くなっています",
+        "deXuatKhongHopLe": "提案が無効です",
+        "daNhanKetQuaAiDang": "AIの結果を受信し、応答を処理中です",
+        "aiDangChamBai": "AIが採点中です",
+        "daNhanKetQuaTuNha": "AIプロバイダーからの結果を受信し、ルーブリックと照合しています。待っている間も手動で採点できます。",
+        "aiDangDocBaiLamVa": "AIが解答とルーブリックを読み込んで提案を作成しています。待っている間も手動で採点できます。",
+        "yeuCauChamAiDangXep": "AI採点の依頼は処理待ちの列に入っています。待っている間も手動で採点できます。",
+        "phanHoiAiDangMatNhieu": "AIの応答に予想より時間がかかっています。",
+        "yeuCauHienTaiVanDang": "現在の依頼はまだ処理中です。新しいAI依頼を送らずにこの依頼の状態を再確認するか、手動での採点を続けてください。",
+        "kiemTraLai": "再確認",
+        "baiNopHoacRubricDaThay": "提出物またはルーブリックが変更されました。新しい提案を依頼してください。",
+        "diemAiDeXuat": "AIの提案点：",
+        "diemDangNhapChuaHopLe": "入力中の点数が無効です（エラー表示の項目を確認してください）",
+        "diemDangCham": "採点中の点数：",
+        "aiDeXuat": "AIの提案：",
+        "lech": "差 ",
+        "khopDiemRubric": "ルーブリックの点数と一致",
+        "co": "⚠ ",
+        "mucAiDanhDauCanGiang": " 項目がAIにより教員の手動確認が必要とされています",
+        "viDuMinhChungChuaDoc": "（例：判読しにくい根拠、または有効な別解の設計）。",
+        "tomTatNhanXetCauTruc": "AIによる構造化フィードバックの要約",
+        "soSanhTheoTungPhanMuc": "パート・ルーブリック項目ごとの比較",
+        "phan": "パート {value}",
+        "chuaCoDuLieu": "データはまだありません",
+        "chuaHopLe": "無効",
+        "dangCham": "採点中：",
+        "nhanXetTongHopTuAi": "AIによる総合フィードバック",
+        "nhanXetTungPhan": "パートごとのフィードバック（",
+        "apDungVaoBanNhap": "下書きに適用",
+        "chiTichSanChecklistVaDien": "チェックリストへの事前チェックとフィードバックの入力のみ行います。保存前に修正できます。",
+        "deXuatAi": "AIの提案",
+        "kiemTraDeXuatVaLuu": "提案を確認し、保存して点数を更新してください。",
+        "yeuCauDeXuatMoi": "新しい提案を依頼",
+        "tacVuAiKhongThanhCong": "AIのタスクが失敗しました。接続を確認するか、設定済みのAIソースで再試行してください。",
+        "banVanCoTheChamThu": "ルーブリックに沿って手動で採点することもできます。点数は変更されていません。",
+        "kiemTraKetNoiAi": "AI接続を確認",
+        "chuaCoDeXuatBanCo": "提案はまだありません。ルーブリックに沿って自分で採点するか、AIに支援を依頼できます。",
+        "khongTimThayDeXuatTu": "リンクの提案が見つかりません。下の提案履歴を確認してください。点数は変更されていません。",
+        "chuaKhaDung": "まだ利用できません",
+        "apiCaNhan": "個人API",
+        "apiTruong": "学校API",
+        "lan": "{versionNo} 回目 · {value}",
+        "taoLuc": "作成日時 ",
+        "deXuatTruocDo": "以前の提案",
+        "diem": " · {value} 点",
+        "deXuatTuLienKet": "リンクからの提案"
+      },
+      "BatchActionDialog": {
+        "baiNayDaDuocChotDiem": "この提出物の成績はすでに確定済みです。点数はそのまま維持されます。",
+        "baiNayDaDuocCongBo": "この提出物の成績はすでに公開済みです。点数はそのまま維持されます。",
+        "trangThaiBaiDaThayDoi": "提出物の状態が変わったか、この操作に適していません。一覧を再読み込みして確認してください。",
+        "baiChamDaDuocCapNhat": "採点が更新されました。一覧を再読み込みして最新のバージョンを使ってください。",
+        "diemDaDuocKhoaTaiLai": "成績はロックされています。一覧を再読み込みして現在の状態を確認してください。",
+        "lopDaLuuTruHoacChua": "クラスがアーカイブ済みか未開講のため、成績の編集や公開はできません。",
+        "baiTapDangNhanBaiDong": "課題はまだ提出を受け付けています。採点や成績の公開の前に受付を締め切ってください。",
+        "baiBiChonTrungChiXu": "同じ提出物が重複して選択されたため、1回だけ処理します。",
+        "chuaNhanDuKetQuaXu": "処理結果をすべて受信できませんでした。一覧を再読み込みして確認してください。",
+        "conMucNhanXetCanGiang": "公開前、または公開済みの成績を保存する前に、教員の確認・承認が必要なフィードバック項目が残っています。",
+        "coMucDaThayDoiDiem": "点数が変更されたのに、フィードバックの説明が更新・再確認されていない項目があります。",
+        "daCongBoDiemChoBai": "{changed} 件の成績を公開しました。",
+        "daChotDiemChoBai": "{changed} 件の成績を確定しました。",
+        "cacBaiDaDuocChotHoac": "選択した提出物はすでに確定または公開済みです。点数はそのまま維持されます。",
+        "baiDaHoanTatTruocDo": " {skipped} 件はすでに完了していたため、点数はそのまま維持されます。",
+        "congBoDiem": "成績を公開",
+        "chotDiem": "成績を確定",
+        "deXuatAiHangLoat": "AIによる一括提案",
+        "dong": "閉じる",
+        "dangXuLy": "処理中…",
+        "xacNhan": "確認",
+        "baiDaChon": "件の提出物を選択中",
+        "dangUocTinhToken": "トークンを見積もり中…",
+        "uocTinhKhoangToken": "約 {value} トークンと見積もられます。",
+        "chuaUocTinhDuocToken": "トークンを見積もれませんでした。",
+        "khongTheThucHienThaoTac": "操作を実行できませんでした。一覧を再読み込みしてもう一度お試しください。",
+        "bai": "提出物 ",
+        "thanhCong": "成功",
+        "daGuiYeuCauAi": "AIへの依頼を送信しました",
+        "daCoDeXuatAi": "AIの提案あり",
+        "boQua": "スキップ",
+        "chuaThucHienDuoc": "未完了"
+      },
+      "ClassGradebookTab": {
+        "chuaNopBai": "未提出",
+        "chamBai": "採点",
+        "tiepTucCham": "採点を続ける",
+        "xemDiem": "成績を見る",
+        "nhom": "グループ",
+        "caNhan": "個人",
+        "bangDiem": "成績表",
+        "timSinhVien": "学生を検索",
+        "timTenEmailHoacMssv": "氏名、メールアドレス、学籍番号で検索",
+        "timNhom": "グループを検索",
+        "timBaiTap": "課題を検索",
+        "locTheoTrangThai": "ステータスで絞り込み",
+        "moiTrangThai": "すべてのステータス",
+        "chamDiem": "採点",
+        "cheDoChamDiem": "採点の表示方法",
+        "theoBaiTap": "課題別",
+        "theoSinhVien": "学生別",
+        "thuTaiLai": "再読み込み",
+        "dangTaiBangChamDiem": "採点表を読み込み中…",
+        "chuaCoBaiTinhDiemTrong": "このクラスにはまだ採点対象の課題がありません。",
+        "baiTap": "課題",
+        "sinhVien": "学生",
+        "khongCoBaiPhuHop": "該当する課題はありません。",
+        "khongCoSinhVienPhuHop": "該当する学生はいません。",
+        "diemThanhVien": "メンバーの点数",
+        "diem": "点数",
+        "trangThai": "ステータス",
+        "thaoTac": "操作",
+        "tre": "遅延"
+      },
+      "ClassProgressSection": {
+        "tongQuanBaiTap": "課題の概要",
+        "thuTaiLai": "再読み込み",
+        "dangTaiTongQuan": "概要を読み込み中…",
+        "baiDangMo": "受付中の課題",
+        "baiNopChoCham": "採点待ちの提出物",
+        "baiDaChamChuaCongBo": "採点済み・未公開",
+        "hanNopSapToi": "近日の締切",
+        "tatCaBaiTap": "すべての課題",
+        "chuaCoHanNopSapToi": "近日の締切はありません。",
+        "luyenTap": "練習",
+        "nhom": "グループ",
+        "caNhan": "個人"
+      },
+      "GradebookBatchControls": {
+        "thuLai": "再試行",
+        "dangTaiBaiNop": "提出物を読み込み中…",
+        "baiTapChiChoPhepXem": "この課題では提出物の閲覧のみ可能です。",
+        "thaoTacBaiDaChon": "選択した提出物の操作",
+        "daChon": "選択中：",
+        "bai": " 件",
+        "chamBangAi": "AIで採点（",
+        "congBoDiem": "成績を公開（",
+        "boChon": "選択を解除",
+        "chonToanBo": "該当する ",
+        "baiPhuHop": " 件をすべて選択",
+        "toiDa100BaiMoiLan": "一度に最大100件までです。",
+        "baiNopCuaNhom": "グループの提出物",
+        "baiNopCuaSinhVien": "学生の提出物",
+        "chonTatCaTrenTrang": "ページ内をすべて選択",
+        "nhom": "グループ",
+        "sinhVien": "学生",
+        "diem": "点数",
+        "trangThai": "ステータス",
+        "thaoTac": "操作",
+        "xemBanNopChungCua": "{name} の共同提出物を表示",
+        "xemBai": "解答を表示",
+        "chamBai": "採点",
+        "tiepTucCham": "採点を続ける",
+        "xemDiem": "成績を見る",
+        "chon": "{name} を選択",
+        "tre": "遅延",
+        "khongCoBaiPhuHop": "該当する提出物はありません。"
+      },
+      "GradebookExportDialog": {
+        "bangDiemTongHop": "成績一覧表",
+        "xuatBangDiem": "成績表を書き出す",
+        "dangTaoTep": "ファイルを作成中…",
+        "xuatTep": "ファイルを書き出す",
+        "dinhDang": "形式",
+        "phamVi": "範囲",
+        "toanBoBaiTinhDiem": "すべての採点対象の課題",
+        "xuatTatCaSinhVienTrong": "選択した課題の範囲にいる全学生を書き出します（表示中のページ外も含む）。"
+      },
+      "GradebookMatrix": {
+        "xuatBangDiem": "成績表を書き出す",
+        "quayLaiChamDiem": "採点に戻る",
+        "baiTap": "課題",
+        "toanBoBaiTinhDiem": "すべての採点対象の課題",
+        "timSinhVien": "学生を検索",
+        "timTenEmailHoacMssv": "氏名、メールアドレス、学籍番号で検索",
+        "thuTaiLai": "再読み込み",
+        "dangTaiBangDiem": "成績表を読み込み中…",
+        "chuaCoBaiTinhDiemTrong": "このクラスにはまだ採点対象の課題がありません。",
+        "diemTheoSinhVienVaBai": "学生・課題別の点数",
+        "sinhVien": "学生",
+        "diem": " 点",
+        "chuaNop": "未提出",
+        "khongCoSinhVienPhuHop": "該当する学生はいません。",
+        "sinhVien2": "人の学生"
+      },
+      "GradeDistributionSettings": {
+        "khongTaiDuocCaiDatPho": "成績分布の設定を読み込めませんでした。再読み込みしてもう一度お試しください。",
+        "caiDatPhoDiemDaThay": "成績分布の設定が別の場所で変更されました。変更する前に再読み込みしてください。",
+        "chuaLuuDuocCaiDatPho": "成績分布の設定を保存できませんでした。再読み込みして状態を確認してから、もう一度お試しください。",
+        "choSinhVienXemPhoDiem": "学生に成績分布を表示",
+        "phoDiem": "成績分布",
+        "sinhVienXemDuocPhoDiem": "学生はクラス全体の成績分布を見ることができます。",
+        "dangLuuCaiDatPhoDiem": "成績分布の設定を保存中…",
+        "taiLaiCaiDatPhoDiem": "成績分布の設定を再読み込み"
+      },
+      "GradingReviewPanels": {
+        "hoatDongKhiLamBai": "解答中のアクティビティ",
+        "lanRoiTrang": " 回ページを離脱 · ",
+        "khoangThieuDuLieu": " 件のデータ欠落。",
+        "lanRoiTrangKhoangThieuDu": " — ページ離脱 {awayCount} 回、データ欠落 {unknownGaps} 件",
+        "chiDeThamKhaoNenTang": "参考情報です。プラットフォームが不正と判断したり、点数を自動で変更したりすることはありません。"
+      },
+      "GradingWorkspaceHeader": {
+        "diemTamTinh": "暫定点",
+        "chonSinhVien": "学生を選択",
+        "timSinhVien": "学生を検索",
+        "tenEmailHoacMssv": "氏名、メールアドレス、学籍番号",
+        "khongTaiDuocDanhSach": "一覧を読み込めませんでした。",
+        "thuLai": "再試行",
+        "dangTaiSinhVien": "学生を読み込み中…",
+        "baiNopSinhVien": "学生の提出物",
+        "khongCoBaiNopPhuHop": "該当する提出物はありません。",
+        "nguoiThucHien": "実施者：",
+        "nhanXetChung": "総評",
+        "nhapNhanXetChungChoBai": "解答への総評を入力…",
+        "diemCongTru": "加点・減点",
+        "ghiChuThayDoiTuyChon": "変更メモ（任意）",
+        "ghiChuThayDoi": "変更メモ",
+        "diemManhVaDiemCanCai": "良い点と改善点"
+      },
+      "GroupGradingPanel": {
+        "chamBaiNhom": "グループ課題の採点",
+        "rubricNhom": "グループのルーブリック",
+        "thanhVien": "メンバー",
+        "chamNhom": "グループ採点",
+        "dongKhungCham": "採点パネルを閉じる",
+        "dong": "閉じる"
+      },
+      "MemberContributionPanel": {
+        "diemThanhVien": "メンバーの点数",
+        "diemNhom": "グループの点数：",
+        "chuaCham": "未採点",
+        "thanhVienMacDinhNhanDiem": "メンバーには既定でグループの点数が付きます。教員は個別に調整できます。",
+        "cachDanhGia": "評価の仕方",
+        "muc1LaCaoNhatMuc": "レベル1が最高、レベル5が最低です。レベルが自動で点数に換算されることはありません。",
+        "chamBaiNhomTheoRubricTruoc": "まずルーブリックに沿ってグループ課題を採点します。担当作業、成果物、貢献の記録、発表・口頭試問を照らし合わせてレベルを選び、0から課題の満点までで個人の点数を入力し、調整する場合は具体的な根拠を記入してください。",
+        "viDuNhom810Thanh": "例：グループが 8/10 で、エラーフローが欠けているメンバーは「一部達成」と評価して 7/10 とすることができます。これは例示であり、このレベルの固定点ではありません。",
+        "luuDiemThanhVienRoiCong": "メンバーの点数を保存し、確認が済んだら公開してください。個別に保存した点数は、グループの点数が変わっても維持されます。グループが新しいバージョンを提出した場合は再評価が必要です。",
+        "thanhVien": "メンバー",
+        "chuaLuu": " · 未保存",
+        "thanhVienTruoc": "前のメンバー",
+        "truoc": "前へ",
+        "thanhVienSau": "次のメンバー",
+        "chuaLuu2": "未保存",
+        "phanPhuTrach": "担当パート",
+        "xemPhan": "パート {title} を表示",
+        "chuaCoThongTinPhanPhu": "担当パートの情報はまだありません。",
+        "mucDongGopTuyChon": "貢献度（任意）",
+        "chuaDanhGia": "未評価",
+        "diemCaNhan": "個人の点数",
+        "canCuDanhGia": "評価の根拠",
+        "phanPhuTrachChatLuongHoan": "担当パート、完成度、口頭試問の結果…",
+        "luuDiemThanhVien": "メンバーの点数を保存"
+      },
+      "RubricChecklistPanel": {
+        "phanNayChuaCoMucCham": "このパートにはまだ評価項目がありません。",
+        "diemMuc": "項目 {text} の点数",
+        "chamTheoRubric": "ルーブリックで採点",
+        "tichMucDatMoiMucDat": "達成した項目にチェックします。達成した項目には満点が付きます。",
+        "baiChuaCoRubricKhaDung": "課題に使用できるルーブリックがありません。課題の設定を確認してください。",
+        "phan": "パート {value}",
+        "diem": " 点"
+      },
+      "StructuredFeedbackSection": {
+        "y": "{label}、項目 {value}",
+        "xoaY": "項目 {value} を削除：{label}",
+        "themY": "項目を追加：{label}",
+        "themY2": "項目を追加",
+        "t5Y": "/5 項目",
+        "tomTatNhanXetCauTruc": "構造化フィードバックの要約",
+        "diemManh": "良い点",
+        "diemCanCaiThien": "改善点",
+        "lamTot": "✓ よくできています",
+        "canSua": "! 要修正",
+        "goiYThemKhongTruDiem": "追加の提案（減点なし）",
+        "cachCaiThien": "改善方法",
+        "nhanXetMinhChung": "フィードバックと根拠",
+        "canGiangVienKiemTra": "教員の確認が必要",
+        "daXacNhan": "確認済み",
+        "canGiangVienKiemTraThu": "⚠ 教員による手動確認が必要：",
+        "minhChungChuaDocRoHoac": "根拠が判読しにくいか、有効な別解の設計があります。",
+        "minhChungTuBaiLam": "解答からの根拠",
+        "minhChung": "根拠：{itemText}",
+        "giaiThichDiem": "点数の説明",
+        "giaiThichDiem2": "点数の説明：{itemText}",
+        "goiY": "提案：{itemText}",
+        "minhChung2": "根拠：",
+        "giaiThichDiem3": "点数の説明：",
+        "diToiDoanBaiLam": "解答の該当箇所へ移動",
+        "doanThamChieuKhongConTrong": "参照箇所は提出物に含まれていません。",
+        "daKiemTraVaXacNhan": "説明を確認・承認しました：{itemText}",
+        "daKiemTraNhanXetVa": "フィードバックと点数を確認済み"
+      },
+      "StudentGradesSection": {
+        "baiNopVaDiem": "提出物と点数",
+        "dangTaiBaiNopVaDiem": "提出物と点数を読み込み中…",
+        "daNop": "提出済み ",
+        "baiTinhDiemNopTre": " 件の採点対象課題 · 遅延 ",
+        "bai": "課題",
+        "hinhThuc": "形式",
+        "nop": "提出",
+        "diem": "点数",
+        "nhom": "グループ",
+        "caNhan": "個人",
+        "tre": "遅延",
+        "dungHan": "期限内",
+        "chuaNop": "未提出",
+        "chuaCoBaiTinhDiemTrong": "このクラスにはまだ採点対象の課題がありません。"
+      },
+      "StudentPublishedFeedback": {
+        "thuLai": "再試行",
+        "ketQua": "結果",
+        "tongDiem": "合計点",
+        "diemCaNhanDaDuocGiang": "個人の点数は教員によって個別に調整されました。",
+        "mucDongGop": "貢献度：",
+        "khongTaiDuocPhanBoDiem": "成績分布を読み込めませんでした。",
+        "phanBoDiem": "成績分布",
+        "phanBoDiemCuaLop": "クラスの成績分布"
+      },
+      "SubmissionsLink": {
+        "chamDiem": "採点"
+      },
+      "SubmissionViewer": {
+        "lienKetAnhKhongHopLe": "画像のリンクが無効です。",
+        "dangTaiAnh": "画像を読み込み中…",
+        "taiLaiAnh": "画像を再読み込み",
+        "xemAnhBaiNop": "提出された画像を表示",
+        "soDoBaiNop": "提出された図",
+        "xemSoDo": "図を表示",
+        "cuonNgangVaDocDeXem": "横・縦にスクロールして詳細を確認できます。これは提出済みの版で、閲覧のみです。",
+        "chuaCoAnhXemTruocSo": "図のプレビューはまだありません。",
+        "duLieuSoDoDrawIo": "Draw.io の図のデータ",
+        "khongCoXml": "XMLなし",
+        "baiLamDaNop": "提出済みの解答",
+        "baiLamDaNopChiDoc": "提出済みの解答 — 閲覧のみ",
+        "anhBaiNop": "提出された画像",
+        "chuaCoNoiDungBaiLam": "表示できる解答の内容はまだありません。"
+      }
+    },
+    "hooks": {
+      "useGradingWorkspace": {
+        "banCoThayDoiChuaLuu": "未保存の変更があります。この提出物を離れますか？",
+        "boThayDoi": "変更を破棄",
+        "kiemTraDiemTungMucTu": "各項目の点数を確認してください：0から項目の満点まで、小数点以下2桁まで。",
+        "mayChuChuaHoTroLuu": "サーバーはまだ小数の点数の保存に対応していません。サーバーを更新してバージョンを再読み込みしてください。入力中の点数は保持されます。",
+        "daLuuDiemNhomTaiLai": "グループの点数を保存しました。提出物を再読み込みして、メンバーの点数とバージョンを更新してください。"
+      },
+      "useSubmissionContext": {
+        "khongTaiDuocThongTinBai": "課題・クラスの情報を読み込めませんでした。"
+      }
+    },
+    "model": {
+      "contributionLevels": {
+        "vuotKyVong": "期待以上",
+        "hoanThanhTotPhanDuocGiao": "担当部分を十分に仕上げ、課題をよく理解しており、追加の貢献やグループへの支援があった。",
+        "datYeuCau": "要件を満たす",
+        "hoanThanhDayDuPhanDuoc": "担当部分をすべて仕上げ、品質は要件を満たし、取り組み方を説明できる。",
+        "datMotPhan": "一部達成",
+        "coDongGopNhungConThieu": "貢献はあるが、内容の不足、品質不足、または説明が不明確な点がある。",
+        "canHoTroNhieu": "多くの支援が必要",
+        "canDuocHuongDanNhacNho": "完了までに多くの指導や声かけが必要で、自分の担当部分をまだ説明できない。",
+        "khongHoanThanh": "未完了",
+        "khongHoanThanhPhanDuocGiao": "担当部分を完了していない、または確認できる貢献がない。"
+      },
+      "format": {
+        "nhapLyDoKhiCongHoac": "加点・減点する場合は理由を入力してください。",
+        "lopDaLuuTruHoacChua": "クラスがアーカイブ済みか未開講のため、成績の閲覧のみ可能です。編集中の内容は保持されます。",
+        "diemDaChotKhongTheChinh": "確定済みの成績は編集できません。再読み込みしてロックされた採点を確認してください。編集中の内容は保持されます。",
+        "baiNopDaThayDoiMo": "提出物が変更されました。採点を続ける前に現在の提出物を開いて確認してください。編集中の内容は保持されます。",
+        "rubricDaThayDoiTaiLai": "ルーブリックが変更されました。採点を続ける前に再読み込みしてルーブリックを確認してください。編集中の内容は保持されます。",
+        "duLieuDaThayDoiTai": "データが変更されました。再読み込みして新しいバージョンを確認してください。編集中の内容は保持されます。"
+      },
+      "gradingAiTasks": {
+        "baiCham": "採点",
+        "deXuatAiChoDaSan": "{label} のAI提案の準備ができました。「AIの提案を見る」を開いて確認してください。",
+        "khongTaoDuocDeXuatAi": "{label} のAI提案を作成できませんでした。"
+      },
+      "types": {
+        "choCham": "採点待ち",
+        "daCham": "採点済み",
+        "daCongBo": "公開済み",
+        "baiNopCu": "古い提出物",
+        "chuaNop": "未提出",
+        "khongBatTheoDoiHoatDong": "アクティビティの記録なし",
+        "chuaCoDuLieuHoatDong": "アクティビティのデータはまだありません",
+        "coDuLieuHoatDong": "アクティビティのデータあり",
+        "duLieuHoatDongDaHet": "アクティビティのデータの保存期間が終了しました",
+        "tamThoiKhongDocDuocDu": "アクティビティのデータを一時的に読み込めません",
+        "hoatDongTheoTungThanhVien": "メンバー別のアクティビティ"
+      }
+    },
+    "pages": {
+      "GradingWorkspacePage": {
+        "dangTaiBaiLam": "解答を読み込み中…",
+        "daCoDeXuatAiMoi": "新しいAI提案があります。「AIの提案を見る」を開いて確認してください。",
+        "daGuiChamAiBanCo": "AI採点を依頼しました。作業を続けられます。",
+        "banCoDanhGiaThanhVien": "未保存のメンバー評価があります。公開する前にメンバーの点数を保存してください。",
+        "baiLamNhom": "グループの解答",
+        "baiLamSinhVien": "学生の解答",
+        "toanBai": "課題全体",
+        "chamDiem": "採点",
+        "phan": "パート {value}",
+        "dat": "得点 ",
+        "dangLuu": "保存中…",
+        "dangXuLy": "処理中…",
+        "chuaLuu": "未保存",
+        "daLuu": "{value} に保存",
+        "nhom": "グループ",
+        "caNhan": "個人",
+        "baiTap": "課題",
+        "thanhVien": "メンバー",
+        "phanBaiLam": "解答のパート",
+        "nguoiThucHien": "実施者：{value}",
+        "danhGia": "評価 ",
+        "thanhVien2": "メンバー",
+        "luuThayDoi": "変更を保存",
+        "congBoDiem": "成績を公開",
+        "dayLaLanNopCuChi": "これは古い提出物のため、閲覧のみ可能です。",
+        "taiLaiPhienBan": "バージョンを再読み込み",
+        "baiChuaCoRubricKhaDung": "課題に使用できるルーブリックがありません。",
+        "thayDoiSeHienThiCho": "変更は保存後に学生に表示されます。",
+        "sinhVienChuaLamPhanNay": "学生はこのパートに解答していません。",
+        "baiLamDaNop": "提出済みの解答",
+        "baiTruoc": "前の提出物",
+        "baiSau": "次の提出物",
+        "rubricNhom": "グループのルーブリック",
+        "diemThanhVien": "メンバーの点数",
+        "xemDeXuatAi": "AIの提案を見る",
+        "moBaiNopNhomDeCham": "AIで採点するにはグループの提出物を開いてください",
+        "chamBangAi": "AIで採点",
+        "aiDangCham": "AIが採点中…",
+        "dong": "閉じる"
+      },
+      "SubmissionDetailPage": {
+        "chamBai": "採点",
+        "tiepTucCham": "採点を続ける",
+        "xemDiem": "成績を見る",
+        "chamXem": "採点 / 閲覧",
+        "veLopHoc": "クラスに戻る",
+        "baiTapChuaCoTieuDe": "無題の課題",
+        "baiNop": "提出物 — {value}",
+        "baiNop2": "提出物",
+        "lop": "クラス：{ownerName}",
+        "chuaCoThongTinLop": "クラスの情報はまだありません",
+        "thuTaiLaiThongTinBai": "課題・クラスの情報を再読み込み",
+        "thuLai": "再試行",
+        "dangTaiThongTinBaiTap": "課題・クラスの情報を読み込み中です。",
+        "dangTaiBaiNop": "提出物を読み込み中…",
+        "baiTapChiChoPhepXem": "この課題では提出物の閲覧のみ可能です。",
+        "daNop": "提出済み",
+        "dangLam": "取り組み中",
+        "chuaNop": "未提出",
+        "nopTre": "遅延提出",
+        "trangThai": "ステータス",
+        "moiTrangThai": "すべてのステータス",
+        "nopBai": "提出",
+        "dungHanVaTre": "期限内と遅延",
+        "dungHan": "期限内",
+        "daChon": "選択中：",
+        "bai": " 件",
+        "aiDeXuat": "AIの提案",
+        "congBoDiem": "成績を公開",
+        "boChon": "選択を解除",
+        "chonTatCaBaiTrongTrang": "ページ内の提出物をすべて選択",
+        "sinhVienNhom": "学生 / グループ",
+        "nopLuc": "提出日時",
+        "diem": "点数",
+        "chon": "{name} を選択",
+        "tre": "遅延",
+        "xemBai": "解答を表示",
+        "danhGiaChuaSanSang": "評価の準備ができていません",
+        "khongCoBaiNopPhuHop": "該当する提出物はありません。"
+      }
+    }
+  },
+  "groupdocs": {
+    "components": {
+      "groupDocNav": {
+        "cacPhanCuaBai": "課題のパート"
+      },
+      "GroupProgressCard": {
+        "tienDo": "進捗",
+        "mucXong": "完了したセクション",
+        "cacMuc": "セクション"
+      },
+      "OpenGroupWorkButton": {
+        "baiNop": "提出物",
+        "nopTre": "遅延提出",
+        "daNop": "提出済み",
+        "moTaiLieuNhom": "グループ文書を開く"
+      },
+      "SectionDialogs": {
+        "duLieuVuaThayDoiHay": "データが変更されました。再読み込みしてください。",
+        "khongGiaoDuocMuc": "セクションを割り当てられませんでした。",
+        "giaoMuc": "セクションを割り当て",
+        "thanhVienNhanMuc": "セクションの担当メンバー",
+        "timThanhVien": "メンバーを検索",
+        "khongCoThanhVienPhuHop": "該当するメンバーはいません。",
+        "boChonThanhVien": "メンバーの選択を解除",
+        "giaoChoNguoiKhacSeNha": "別の人に割り当てると、前の担当者からは解放されます。",
+        "chuaAiNhan": "未担当",
+        "chuaNopDuocViConMuc": "未完了のセクションがあるため、まだ提出できません。",
+        "khongNopDuocThuLaiSau": "提出できませんでした。しばらくしてからもう一度お試しください。",
+        "nopTaiLieuNhom": "グループ文書を提出しますか？",
+        "quayLai": "戻る",
+        "vanNop": "このまま提出",
+        "nop": "提出",
+        "muc": "セクション",
+        "nguoiGiu": "担当者",
+        "trangThai": "ステータス"
+      },
+      "SectionHistoryDialog": {
+        "ban": "あなた",
+        "thanhVienDaRoiNhom": "グループを離れたメンバー",
+        "khongTaiDuocLichSuMuc": "セクションの履歴を読み込めませんでした。",
+        "lichSu": "履歴",
+        "dangTai": "読み込み中…",
+        "mucChuaCoBanLichSu": "このセクションにはまだ履歴がありません。",
+        "cacBanLichSu": "履歴の版",
+        "banNayTrong": "この版は空です。"
+      }
+    },
+    "hooks": {
+      "useMyGroupDoc": {
+        "banChuaCoNhomChoBai": "この課題のグループにまだ所属していません。",
+        "chuaMoDuocTaiLieuNhom": "グループ文書をまだ開けません。"
+      }
+    },
+    "model": {
+      "deadline": {
+        "daQuaHanNopBayGio": "締切 {value} を過ぎているため、今提出すると遅延扱いになります。受付終了（{value3}）まであと {value2} 分です。",
+        "conPhutToiHanNop": "締切（{value2}）まであと {value} 分です。",
+        "mucChuaAiLamSeKhong": "{open} 件のセクションは誰も取り組んでおらず、提出物には含まれません。",
+        "mucDangSoanHayBamXong": "{claimed} 件のセクションが作成中です。「完了」をクリックしてください。受付終了時には、保存済みの下書きで自動的に確定されます。",
+        "moiMucDaXong": "すべてのセクションが完了しています。",
+        "nhomChuaNopBanNaoTruong": "グループはまだ提出していません。リーダーは締切前に提出してください。"
+      },
+      "status": {
+        "chuaLam": "未着手",
+        "dangLam": "取り組み中",
+        "chuaAiNhan": "未担当",
+        "ban": "あなた",
+        "thanhVien": "メンバー"
+      }
+    },
+    "pages": {
+      "GroupSectionEditorPage": {
+        "duLieuVuaThayDoiHay": "データが変更されました。再読み込みしてください。",
+        "banKhongConGiuMucDa": "セクション {value} の担当ではなくなりました（解放されたか、別の人に割り当てられました）。未保存の内容は保持されませんでした。",
+        "khongTimThayTaiLieuNhom": "グループ文書が見つかりません。",
+        "khongTaiDuocTaiLieuNhom": "グループ文書を読み込めませんでした。",
+        "khongLuuDuocBanNhap": "下書きを保存できませんでした。",
+        "taiLieuNhom": "グループ文書",
+        "daXongMuc": "セクション「{title}」を完了にしました",
+        "khongDanhDauXongDuoc": "完了にできませんでした。",
+        "daHoanThanhTatCaCac": "すべてのセクションが完了しました",
+        "dangMoTrangSoan": "編集画面を開いています…",
+        "baiNhom": "グループ課題",
+        "nhapDocx": "DOCXを取り込む",
+        "nhom": "グループ",
+        "hanNop": "締切：{value}",
+        "con": "残り ",
+        "hoanThanhTatCa": "すべて完了",
+        "daHetHanNopTaiLieu": "締切を過ぎたため、文書は閲覧のみです。",
+        "nenBamXongTruocHan": " 締切前に「完了」をクリックしてください。",
+        "banChuaGiuMucNaoDe": "作成中のセクションはありません。",
+        "veTaiLieuNhom": "グループ文書に戻る",
+        "nhapDocxVaoMuc": "セクション「{title}」に DOCX を取り込む"
+      },
+      "GroupWorkspacePage": {
+        "khongTimThayTaiLieuNhom": "グループ文書が見つかりません。",
+        "khongTaiDuocTaiLieuNhom": "グループ文書を読み込めませんでした。",
+        "baiTap": "課題",
+        "khongTaiDuocDocx": "DOCXをダウンロードできませんでした。",
+        "khongNhanDuocMuc": "セクションを担当できませんでした。",
+        "dangTaiTaiLieuNhom": "グループ文書を読み込み中…",
+        "lichSu": "履歴",
+        "nguoiLam": "担当者",
+        "suaMuc": "セクションを編集",
+        "nhanMuc": "セクションを担当",
+        "soanTiep": "作成を続ける",
+        "giaoMuc": "セクションを割り当て",
+        "nhaMuc": "セクションを解放",
+        "mucNayChuaXong": "このセクションはまだ完了していません。",
+        "baiNhom": "グループ課題",
+        "nhom": "グループ",
+        "hanNop": "締切：{value}",
+        "con": "残り ",
+        "thaoTacKhac": "その他の操作",
+        "taiDocx": "DOCXをダウンロード",
+        "nopTaiLieu": "文書を提出",
+        "daHetHanNopTaiLieu": "締切を過ぎたため、文書は閲覧のみです。",
+        "chuaCoNoiDung": "内容はまだありません。",
+        "daNopTaiLieuNhom": "グループ文書を提出しました",
+        "khongNhaDuocMuc": "セクションを解放できませんでした。",
+        "nhaMuc2": "セクション ",
+        "cua": " （",
+        "banNhapDangLamCuaMuc": "）を解放しますか？このセクションの作成中の下書きは破棄されます。以前に完了した内容は保持され、メンバーは再びセクションを担当できます。",
+        "quayLai": "戻る",
+        "mucHienTaiDaCoNguoi": "現在のセクションはすでに他の人が担当しています。",
+        "dangNop": "提出中",
+        "dangNop2": "提出中…",
+        "daHetHanNop": "締切を過ぎました",
+        "luc": "（{value}）",
+        "heThongDangTuNopBan": "。システムが各セクションの最新版を自動提出しています。提出中はページがロックされます。"
+      }
+    }
+  },
+  "groups": {
+    "components": {
+      "ClassGroupsPanel": {
+        "khongTaiDuocNhomCuaLop": "クラスのグループを読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "taiLai": "再読み込み",
+        "dangTaiSinhVienVaNhom": "学生とグループを読み込み中…",
+        "daXoa": "{name} を削除しました",
+        "chuaCoNhom": "グループ未所属",
+        "tatCaSinhVien": "すべての学生",
+        "nhom": "グループ",
+        "taoNhom": "グループを作成",
+        "chiaNgauNhien": "ランダムに分ける",
+        "timNhom": "グループを検索",
+        "danhSachNhom": "グループ一覧",
+        "tatCa": "すべて",
+        "sinhVien": "学生 {length} 人",
+        "doiTruongNhom": "{name} のリーダーを変更",
+        "doiTruongNhom2": "リーダーを変更",
+        "sua": "{name} を編集",
+        "khongXoaDuocNhomDaCo": "{name} を削除できません：グループにはすでに文書または提出物があります",
+        "xoa": "{name} を削除",
+        "khongCoNhomPhuHop": "該当するグループはありません。",
+        "sinhVien2": "学生 {ungroupedCount} 人",
+        "sinhVienTrongLop": "クラスの学生",
+        "locTheoTenEmailHoacMssv": "氏名、メールアドレス、学籍番号で絞り込み",
+        "hoTen": "氏名",
+        "ngayVaoLop": "参加日",
+        "bangDiem": "成績表",
+        "truongNhom": "リーダー",
+        "khongCoSinhVienPhuHop": "該当する学生はいません。",
+        "xoa2": "{name} を削除しますか？",
+        "xoaNhom": "グループを削除",
+        "banCoChacMuonXoa": "",
+        "khong": " を削除してもよろしいですか？"
+      },
+      "GroupFormDialog": {
+        "nhapTenNhom": "グループ名を入力してください",
+        "tenNhomBiTrung": "グループ名が重複しています",
+        "daLuuNhom": "グループを保存しました",
+        "daTao": "{trimmed} を作成しました",
+        "doiTruongNhom": "リーダーを変更 — {name}",
+        "sua": "{name} を編集",
+        "taoNhom": "グループを作成",
+        "luuNhom": "グループを保存",
+        "tenNhom": "グループ名",
+        "truongNhom": "リーダー",
+        "chonThanhVienTruoc": "先にメンバーを選択してください",
+        "thanhVien": "メンバー（",
+        "timSinhVien": "学生を検索",
+        "chonTatCaKetQuaLoc": "絞り込み結果をすべて選択（",
+        "chonThanhVien": "メンバーを選択",
+        "chon": "{value} を選択",
+        "khongCoSinhVienPhuHop": "該当する学生はいません。",
+        "moiSinhVienDaCoNhom": "すべての学生がグループに所属しています。",
+        "chuyenNguoiTuNhomKhacSang": "{moved} 人を他のグループから移動します。",
+        "daCoBaiNenKhongDuoc": "{value} にはすでに提出物があるため、空にすることはできません。",
+        "khongConAiSeBiXoa": "{value} はメンバーがいなくなるため削除されます。"
+      },
+      "GroupProgressTable": {
+        "khongTaiDuocDanhSachBai": "グループ課題の一覧を読み込めませんでした。",
+        "khongTaiDuocTienDoBai": "グループ課題の進捗を読み込めませんでした。",
+        "tienDoBaiNhom": "グループ課題の進捗",
+        "baiNhom": "グループ課題",
+        "han": " · 締切 {value}",
+        "nhom": "グループ",
+        "truongNhom": "リーダー",
+        "mucXong": "完了したセクション",
+        "trangThai": "ステータス",
+        "dangSoan": "作成中",
+        "thaoTac": "操作",
+        "daNopTre": "提出済み · 遅延",
+        "daNop": "提出済み",
+        "dangLam": "取り組み中",
+        "chuaBatDau": "未着手",
+        "xemTaiLieu": "文書を表示"
+      },
+      "GroupProposalSection": {
+        "khongTaiDuocDeXuatNhom": "グループ案を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "taiLai": "再読み込み",
+        "dangTaiDeXuatNhom": "グループ案を読み込み中…",
+        "deXuatBiTuChoi": "グループ案「{name}」は却下されました",
+        "lyDo": "理由：{reason}",
+        "giangVienKhongGhiLyDo": "教員は理由を記入していません。",
+        "banCoTheLapHoacVao": " 別のグループ案を作成するか、参加することができます。",
+        "daGuiDeXuatChoGiang": "グループ案を教員に送信しました",
+        "daRutDeXuatVeNhap": "グループ案を下書きに戻しました",
+        "huyDeXuat": "グループ案 {name} を取り消しますか？",
+        "daHuyDeXuat": "グループ案を取り消しました",
+        "huyDeXuat2": "グループ案を取り消す",
+        "roiDeXuat": "グループ案 {name} から抜けますか？",
+        "daRoiDeXuat": "グループ案から抜けました",
+        "roiDeXuat2": "グループ案から抜ける",
+        "lapNhomRoiMoiBanCung": "グループを作ってクラスメートを招待しましょう。人数がそろったら教員に承認を依頼します。",
+        "taoDeXuatNhom": "グループ案を作成",
+        "daVaoNhom": "グループに参加しました",
+        "daTuChoiLoiMoi": "招待を辞退しました",
+        "banChuaCoNhomTrongLop": "このクラスではまだグループに所属していません。教員がグループを割り当てます。",
+        "tao": "作成",
+        "daTaoDeXuatNhom": "グループ案を作成しました",
+        "doiTenNhom": "グループ名を変更",
+        "luu": "保存",
+        "daDoiTenNhom": "グループ名を変更しました",
+        "daGuiLoiMoi": "招待を送信しました",
+        "tuChiaNhom": "自主グループ編成",
+        "giangVienSeXepNhomCho": " 教員があなたのグループを割り当てます。",
+        "loiMoiVaoNhom": "グループへの招待",
+        "loiMoiVaoNhom2": "グループへの招待（",
+        "truongNhom": "リーダー ",
+        "chuaRoTen": "名前不明",
+        "thanhVien": " 人のメンバー",
+        "loiMoiDaHetHan": " · 招待の期限切れ",
+        "roiDeXuatHienTaiDe": " · 承諾するには現在のグループ案から抜けてください",
+        "tuChoi": "辞退",
+        "chapNhan": "承諾",
+        "deXuatNhomCuaBan": "あなたのグループ案",
+        "canThemNguoiDeGuiDuyet": " · 承認を依頼するにはあと {missing} 人必要です",
+        "choGiangVienDuyetRutVe": " · 教員の承認待ち。修正が必要なら取り下げてください",
+        "doiTen": "名前を変更",
+        "moiBan": "招待",
+        "guiDuyet": "承認を依頼",
+        "rutVeDeSua": "取り下げて修正",
+        "thanhVienDeXuat": "提案メンバー",
+        "truongNhom2": "リーダー",
+        "loiMoiHetHan": "招待の期限切れ",
+        "dangChoTraLoi": "返答待ち",
+        "thuHoi": "取り消し",
+        "chuaRoTen2": "名前不明"
+      },
+      "LeaderRequestList": {
+        "yeuCauDoiTruongNhom": "リーダー変更の申請",
+        "khongXuLyDuocYeuCau": "申請を処理できませんでした",
+        "truongNhomMoiCua": "{groupName} の新しいリーダー",
+        "chonTruongNhomMoi": "新しいリーダーを選択",
+        "duocDeXuat": "（提案）",
+        "tuChoi": "却下",
+        "duyet": "承認",
+        "tuChoiYeuCau": "申請を却下しますか？",
+        "banCoChacMuonTuChoi": "",
+        "khong": " のリーダー変更の申請を却下してもよろしいですか？"
+      },
+      "MyGroup": {
+        "khongTaiDuocNhomCuaBan": "あなたのグループを読み込めませんでした。",
+        "nhomCuaToi": "マイグループ",
+        "moNhom": "グループを開く",
+        "dangTaiNhom": "グループを読み込み中…",
+        "nhom": "グループ",
+        "thanhVien": "メンバー",
+        "truongNhom": "リーダー",
+        "chuaRoTen": "名前不明",
+        "chuaCo": "未設定",
+        "banChuaCoNhomTrongLop": "このクラスではまだグループに所属していません。",
+        "tuChiaNhom": "自主グループ編成：",
+        "deXuat": "グループ案 ",
+        "thanhVien2": " 人のメンバー",
+        "banCo": "",
+        "loiMoiVaoNhom": " 件のグループ招待があります。",
+        "moNhomCuaToi": "マイグループを開く",
+        "dangChoDuyet": "承認待ち",
+        "yeuCauDoiTruongNhom": "リーダー変更の申請",
+        "thanhVienNhom": "グループのメンバー",
+        "baiNhom": "グループ課題",
+        "tenNhomCan1100Ky": "グループ名は1〜100文字で入力してください。",
+        "daDoiTenNhom": "グループ名を変更しました",
+        "khongDoiDuocTenNhom": "グループ名を変更できませんでした。",
+        "suaTenNhom": "グループ名を編集",
+        "tenNhom": "グループ名",
+        "luu": "保存",
+        "huy": "キャンセル",
+        "khongGuiDuocYeuCau": "申請を送信できませんでした",
+        "guiYeuCau": "申請を送信",
+        "truongNhomHienTai": "現在のリーダー",
+        "truongNhomMoi": "新しいリーダー",
+        "khongDeXuat": "提案なし"
+      },
+      "ProposalDialogs": {
+        "tenNhom": "グループ名",
+        "moiBanVaoNhom": "グループに招待",
+        "moiNguoi": "{length} 人を招待",
+        "moi": "招待",
+        "con": "残り ",
+        "choNguoiDuocMoiCanChap": " 人分の空きがあります。招待された人が承諾するとグループに参加します。",
+        "timTheoTenEmailHoacMssv": "氏名、メールアドレス、学籍番号で検索",
+        "khongCoSinhVienPhuHop": "該当する学生はいません。",
+        "sinhVienChuaCoNhom": "グループ未所属の学生",
+        "chuaRoTen": "名前不明",
+        "dangODeXuatKhac": "別のグループ案に参加中"
+      },
+      "ProposalReviewList": {
+        "khongTaiDuocDeXuatNhom": "グループ案を読み込めませんでした。",
+        "taiLai": "再読み込み",
+        "daDuyetDeXuatThanhNhom": "{length} 件のグループ案を承認してグループにしました",
+        "deXuatChuaDuyetDuocXem": "{length} 件のグループ案を承認できませんでした。各カードで理由を確認してください。",
+        "khongDuyetDuocDeXuat": "グループ案を承認できませんでした。",
+        "sinhVienTuChiaNhom": "学生による自主グループ編成",
+        "tuChiaNhom": "自主グループ編成：{value}",
+        "caiDat": "設定",
+        "batDeSinhVienTuLap": "有効にすると、学生が自分でグループを作り、あなたに承認を依頼できます。",
+        "choDuyet": "承認待ち（",
+        "duyetDaChon": "選択を承認（",
+        "chuaCoDeXuatChoDuyet": "承認待ちのグループ案はありません。",
+        "dangLap": "編成中（",
+        "daLuuCaiDatTuChia": "自主グループ編成の設定を保存しました",
+        "daTuChoi": "{name} を却下しました",
+        "chon": "{name} を選択",
+        "truongNhom": "リーダー ",
+        "chuaRoTen": "名前不明",
+        "thanhVien": " 人のメンバー",
+        "loiMoiCho": " · 返答待ちの招待 {pendingInvitations} 件",
+        "tuChoi": "却下",
+        "duyet": "承認",
+        "moiSinhVienDaCoNhom": "すべての学生がグループに所属しています。",
+        "chuaCoNhom": "グループ未所属（",
+        "chuaRoTen2": "名前不明",
+        "chuaCoDeXuat": "グループ案なし",
+        "khongTuChoiDuocDeXuat": "グループ案を却下できませんでした。",
+        "tuChoiDeXuat": "グループ案 {name} を却下しますか？",
+        "lyDoTuyChon": "理由（任意）",
+        "lyDoToiDa1000": "理由は最大1,000文字までです。",
+        "thanhVienDuocBaoVaCo": "メンバーに通知され、別のグループ案を作成または参加できます。"
+      },
+      "RandomSplitDialog": {
+        "daChiaNhom": "グループを編成しました",
+        "chiaNgauNhien": "ランダムに分ける",
+        "chiaLai": "もう一度分ける",
+        "luu": "",
+        "nhom": " 個のグループを保存",
+        "xemTruoc": "プレビュー",
+        "soThanhVienToiDaMoi": "グループあたりの最大人数",
+        "tu2Den20": "2〜20",
+        "nhom2": "グループ",
+        "thanhVien": "メンバー",
+        "truongNhom": "リーダー"
+      },
+      "SelfGroupingSettingsDialog": {
+        "khongTaiDuocCaiDat": "設定を読み込めませんでした。",
+        "khongLuuDuocCaiDat": "設定を保存できませんでした。",
+        "sinhVienTuChiaNhom": "学生による自主グループ編成",
+        "luu": "保存",
+        "dangTaiCaiDat": "設定を読み込み中…",
+        "choSinhVienTuChiaNhom": "学生に自主的なグループ編成を許可",
+        "sinhVienChuaCoNhomTu": "グループ未所属の学生がグループ案を作成してクラスメートを招待します。あなたが承認すると正式なグループになります。",
+        "siSoToiThieu": "最少人数",
+        "siSoToiDa": "最大人数",
+        "hanChotTuyChonGioViet": "締切（任意、ベトナム時間）",
+        "hanChotGio": "締切（時刻）",
+        "deXuatDangChoDuyetVan": "承認待ちのグループ案は、受付期間の終了後も承認できます。"
+      },
+      "TeacherGroupWidgets": {
+        "nhom": "グループ：",
+        "thanhVien": " 人のメンバー",
+        "truongNhom": "リーダー",
+        "chuaCoNhom": "グループ未所属",
+        "lopChuaCoNhom": "クラスにはまだグループがありません。",
+        "coNhomChuaCoTruongNhom": "リーダーのいないグループがあります。",
+        "coNhomKhongCoThanhVien": "在籍中のメンバーがいないグループがあります。",
+        "kiemTraSanSang": "準備状況の確認 · ",
+        "nhom2": " グループ",
+        "chuaPhatHanhDuoc": "まだ公開できません",
+        "sinhVienChuaCoNhomXac": " 人の学生がグループ未所属です。それでも課題を配布する場合は、公開時に確認してください。",
+        "lopDaSanSangChoBai": "クラスはグループ課題の準備ができています。",
+        "moTabSinhVien": "「学生」タブを開く",
+        "suaNhomOTabMoiQuay": "新しいタブでグループを編集してください。戻るとこの欄が自動で更新されます。"
+      }
+    },
+    "model": {
+      "groupDrafts": {
+        "khongRoTen": "名前不明",
+        "nhom": "グループ {n}",
+        "nhom2": "グループ {n}",
+        "chuaLuu": "未保存：{value}",
+        "lopDaLuuTruChiXem": "クラスはアーカイブ済みのため、グループは閲覧のみです。",
+        "nhomVuaDuocThayDoiO": "グループが別の場所で変更されました。ページを再読み込みしてください。",
+        "khongLuuDuocNhomThuLai": "グループを保存できませんでした。しばらくしてからもう一度お試しください。"
+      },
+      "proposals": {
+        "nhap": "下書き",
+        "choDuyet": "承認待ち",
+        "daDuyet": "承認済み",
+        "biTuChoi": "却下",
+        "daHuy": "取り消し済み",
+        "truongNhomDaRoiLopHoac": "リーダーがクラスを離れたか、すでにグループに所属しています",
+        "chuaDuSiSoToiThieu": "最少人数に達していません",
+        "vuotSiSoToiDa": "最大人数を超えています",
+        "tuDenNguoi": "{minSize}〜{maxSize} 人",
+        "dangMoDenNhom": "{value} まで受付中、グループは {size}。",
+        "dangMoNhom": "受付中、グループは {size}。",
+        "lopChuaMoNenChuaTu": "クラスがまだ開講していないため、自主グループ編成は利用できません。",
+        "daHetHanLuc": "{value} に終了しました。",
+        "dangTat": "無効です。",
+        "tenNhomCan1100Ky": "グループ名は1〜100文字で入力してください。",
+        "nhapSoNguyenTu2Den": "2〜20の整数を入力してください。",
+        "toiDaPhaiLonHonHoac": "最大人数は最少人数以上にしてください。",
+        "hanChotPhaiOTuongLai": "締切は未来の日時にしてください。",
+        "khongThucHienDuocThuLai": "実行できませんでした。しばらくしてからもう一度お試しください。",
+        "khongTimThayDeXuatHoac": "グループ案が見つからないか、権限がありません。",
+        "deXuatVuaThayDoiDa": "グループ案が変更されました。再読み込みしたので、もう一度お試しください。"
+      }
+    }
+  },
+  "identity": {
+    "admin": {
+      "components": {
+        "AccountDialogs": {
+          "khongThucHienDuocVuiLong": "実行できませんでした。もう一度お試しください。",
+          "doiVaiTro": "役割を変更",
+          "vaiTro": "役割",
+          "mon": "科目",
+          "lop": "クラス",
+          "khongDoiDuocVaiTro": "役割を変更できませんでした",
+          "dangGiuCacMonHoacLop": " はまだ科目またはクラスを担当しています。",
+          "loai": "種類",
+          "ma": "コード",
+          "ten": "名前",
+          "chuaTaiDuocMa": "コードを読み込めませんでした",
+          "moLaiTaiKhoan": "アカウントを再開しますか？",
+          "voHieuHoaTaiKhoan": "アカウントを無効化しますか？",
+          "moLai": "再開",
+          "voHieuHoa": "無効化",
+          "banCoChacMuon": "",
+          "moLai2": "再開",
+          "voHieuHoa2": "無効化",
+          "taiKhoan": " するアカウント：",
+          "khong": "。よろしいですか？"
+        },
+        "ImportAccountsPanel": {
+          "tepKhongHopLe": "無効なファイルです。",
+          "khongXuLyDuocTepVui": "ファイルを処理できませんでした。もう一度お試しください。",
+          "nhapTaiKhoanTuExcel": "Excelからアカウントを取り込む",
+          "dong": "閉じる",
+          "cotEmailDisplayNameRoleStudent": "列：email、display_name、role、student_code（学生は学籍番号が必須）。",
+          "chonTepExcel": "Excelファイルを選択",
+          "chonTepKhac": "別のファイルを選択",
+          "chonTep": "ファイルを選択",
+          "taiTepMau": "テンプレートをダウンロード",
+          "dangKiemTraTep": "ファイルを確認中...",
+          "dong2": " 行",
+          "daTao": "作成済み",
+          "hopLe": "有効",
+          "loi": " 件エラー",
+          "dong3": "行",
+          "hoTen": "氏名",
+          "vaiTro": "役割",
+          "ketQuaKiemTra": "チェック結果",
+          "daTao2": "作成済み",
+          "hopLe2": "有効",
+          "dong4": "行",
+          "huy": "キャンセル",
+          "nhapTaiKhoan": "{validCount} 件のアカウントを取り込む"
+        },
+        "NewAccountDialog": {
+          "emailKhongHopLe": "無効なメールアドレスです。",
+          "nhapHoVaTen": "氏名を入力してください。",
+          "nhapMssv": "学籍番号を入力してください。",
+          "khongTaoDuocTaiKhoanVui": "アカウントを作成できませんでした。もう一度お試しください。",
+          "themTaiKhoan": "アカウントを追加",
+          "emailTruong": "学校のメールアドレス",
+          "hoVaTen": "氏名",
+          "vaiTro": "役割",
+          "maSoSinhVien": "学籍番号"
+        }
+      },
+      "model": {
+        "labels": {
+          "choKichHoat": "有効化待ち",
+          "hoatDong": "有効",
+          "voHieuHoa": "無効",
+          "thieuEmailHoTenHoacVai": "メールアドレス、氏名、役割のいずれかが未入力",
+          "emailKhongHopLe": "無効なメールアドレス",
+          "emailTrungDongKhacTrongTep": "メールアドレスがファイル内の他の行と重複",
+          "emailDaTonTai": "メールアドレスはすでに存在します",
+          "hoTenQuaDai": "氏名が長すぎます",
+          "vaiTroKhongHopLe": "無効な役割",
+          "thieuMssvCuaSinhVien": "学生の学籍番号が未入力",
+          "mssvSaiDinhDang": "学籍番号の形式が不正",
+          "chiSinhVienMoiCoMssv": "学籍番号を持てるのは学生のみです",
+          "mssvTrungDongKhacTrongTep": "学籍番号がファイル内の他の行と重複",
+          "mssvDaThuocTaiKhoanKhac": "学籍番号はすでに別のアカウントで使用されています",
+          "emailDaCoTaiKhoan": "このメールアドレスにはすでにアカウントがあります。",
+          "emailKhongHopLe2": "無効なメールアドレスです。",
+          "duLieuDaDuocThayDoi": "データが別のセッションで変更されました。再読み込みしたので、もう一度編集してください。",
+          "phaiConItNhatMotQuan": "有効な管理者が少なくとも1人必要です。",
+          "khongTheTuDoiVaiTro": "自分自身の役割を変更したり、自分を無効化したりすることはできません。",
+          "taiKhoanConPhuTrachMon": "このアカウントはまだ科目またはクラスを担当しています。役割を変更する前に担当を変更してください。",
+          "khongDoiDuocVaiTroVao": "学生との間で役割を変更することはできません。",
+          "duLieuVuaThayDoiHay": "データが変更されました。ファイルを再確認してください。"
+        }
+      },
+      "pages": {
+        "AccountDetailPage": {
+          "khongTimThayTaiKhoan": "アカウントが見つかりません。",
+          "khongTaiDuocTaiKhoan": "アカウントを読み込めませんでした。",
+          "khongTaiLaiDuocTaiKhoan": "アカウントを再読み込みできませんでした。ページを再読み込みしてください。",
+          "taiKhoan": "アカウント",
+          "daLuuThayDoi": "変更を保存しました",
+          "trangThai": "ステータス",
+          "ngayTao": "作成日",
+          "moLaiTaiKhoan": "アカウントを再開",
+          "voHieuHoaTaiKhoan": "アカウントを無効化",
+          "lichSu": "履歴",
+          "moNhatKyCuaTaiKhoan": "アカウントのログを開く",
+          "daDoiVaiTro": "役割を変更しました",
+          "daVoHieuHoaTaiKhoan": "アカウントを無効化しました",
+          "daMoLaiTaiKhoan": "アカウントを再開しました",
+          "nhapHoVaTen": "氏名を入力してください。",
+          "soDienThoaiGom815": "電話番号は8〜15桁の数字で、先頭に + を付けることができます。",
+          "khongXoaTrongDuocMssvDa": "登録済みの学籍番号は空にできません。",
+          "khongLuuDuocVuiLongThu": "保存できませんでした。もう一度お試しください。",
+          "thongTinTaiKhoan": "アカウント情報",
+          "hoVaTen": "氏名",
+          "soDienThoaiTuyChon": "電話番号（任意）",
+          "emailTruong": "学校のメールアドレス",
+          "vaiTro": "役割",
+          "doiVaiTro": "役割を変更",
+          "khongDoiDuocVaiTroCua": "学生アカウントの役割は変更できません。",
+          "maSoSinhVien": "学籍番号",
+          "chuaCoMssv": "学籍番号なし",
+          "chiSuaDuocKhiSinhVien": "学生がアカウントを有効化する前のみ編集できます。",
+          "mssvKhongDoiDuocSauKhi": "学生がアカウントを有効化した後は学籍番号を変更できません。",
+          "huy": "キャンセル",
+          "luuThayDoi": "変更を保存"
+        },
+        "AccountListPage": {
+          "tatCa": "すべて",
+          "khongTaiDuocDanhSachTai": "アカウント一覧を読み込めませんでした。",
+          "taiKhoan": "アカウント",
+          "nhapExcel": "Excelを取り込む",
+          "themTaiKhoan": "アカウントを追加",
+          "daTaoTaiKhoan": "{count} 件のアカウントを作成しました",
+          "timTheoEmailTenHoacMssv": "メールアドレス、氏名、学籍番号で検索",
+          "vaiTro": "役割",
+          "trangThai": "ステータス",
+          "trangThaiTatCa": "ステータス：すべて",
+          "trangThai2": "ステータス：",
+          "taiLai": "再読み込み",
+          "hoTen": "氏名",
+          "mo": "開く",
+          "dangTai": "読み込み中…",
+          "khongCoTaiKhoanPhuHop": "該当するアカウントはありません。",
+          "daThemTaiKhoan": "アカウントを追加しました"
+        }
+      }
+    },
+    "components": {
+      "AuthLayout": {
+        "chuyenGiaoDienSang": "ライトモードに切り替え",
+        "chuyenGiaoDienToi": "ダークモードに切り替え",
+        "t2026NenTangHocTap": "© 2026 学習プラットフォーム"
+      },
+      "LoginForm": {
+        "emailHoacMatKhauKhongDung": "メールアドレスまたはパスワードが正しくないか、アカウントの準備ができていません。",
+        "heThongTamBanVuiLong": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+        "nhapDungEmailDoTruongCap": "学校発行のメールアドレスを入力してください。",
+        "nhapMatKhau": "パスワードを入力してください。",
+        "dangNhap": "ログイン",
+        "matKhau": "パスワード",
+        "dangDangNhap": "ログイン中…",
+        "quenMatKhau": "パスワードをお忘れですか？",
+        "lanDauSuDung": "初めてご利用ですか？",
+        "kichHoatTaiKhoan": "アカウントを有効化"
+      },
+      "OtpInput": {
+        "maXacThucOtp": "OTP 認証コード",
+        "chuSo": "{value} 桁目"
+      },
+      "PasswordChecklist": {
+        "itNhat8KyTu": "8文字以上",
+        "coCaChuVaSo": "英字と数字の両方を含む",
+        "dat": "（達成）",
+        "chuaDat": "（未達成）"
+      },
+      "PasswordField": {
+        "anMatKhau": "パスワードを隠す",
+        "hienMatKhau": "パスワードを表示"
+      },
+      "PostLoginRedirect": {
+        "dangChuyenTrang": "移動中..."
+      },
+      "SecretInput": {
+        "anMatKhau": "パスワードを隠す",
+        "hienMatKhau": "パスワードを表示"
+      },
+      "Stepper": {
+        "cacBuoc": "手順"
+      }
+    },
+    "hooks": {
+      "session": {
+        "usesessionPhaiNamTrongSessionprovider": "useSession は SessionProvider の内側で使用してください"
+      }
+    },
+    "model": {
+      "passwordRules": {
+        "matKhauCanItNhat8": "パスワードは8文字以上にしてください。",
+        "matKhauQuaDaiToiDa": "パスワードが長すぎます（最大72バイト）。",
+        "matKhauCanCoChuCai": "パスワードには英字を含めてください。",
+        "matKhauCanCoChuSo": "パスワードには数字を含めてください。",
+        "matKhauKhongDuocChuaTen": "パスワードにメールアドレスの名前部分を含めないでください。"
+      },
+      "types": {
+        "sinhVien": "学生",
+        "giangVien": "教員",
+        "chuNhiemMon": "科目責任者",
+        "quanTriVien": "管理者"
+      }
+    },
+    "otp": {
+      "components": {
+        "OtpFlow": {
+          "maSaiHoacDaHetHan": "コードが正しくないか、有効期限が切れています。",
+          "phienDaHetHan": "セッションの有効期限が切れました。",
+          "daGuiLaiMa": "コードを再送しました。",
+          "heThongBanThuLaiSau": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+          "quayLaiDangNhap": "ログインに戻る",
+          "nhapDungEmailDoTruongCap": "学校発行のメールアドレスを入力してください。",
+          "emailTruong": "学校のメールアドレス",
+          "nhapDu6ChuSo": "6桁すべて入力してください。",
+          "thoiGianHieuLucCuaMa": "コードの有効期限：{value}",
+          "guiLaiMa": "コードを再送",
+          "xacNhanMa": "コードを確認",
+          "matKhauCanItNhat8": "パスワードは英字と数字を含む8文字以上にしてください。",
+          "haiMatKhauChuaKhop": "2つのパスワードが一致しません。",
+          "matKhauChuaDatYeuCau": "パスワードが要件を満たしていません。",
+          "matKhauMoi": "新しいパスワード",
+          "nhapLaiMatKhau": "パスワードを再入力"
+        }
+      },
+      "pages": {
+        "ActivationPage": {
+          "kichHoatTaiKhoan": "アカウントの有効化",
+          "maOtp": "OTP コード",
+          "datMatKhau": "パスワードを設定",
+          "guiMaKichHoat": "有効化コードを送信",
+          "maKichHoat": "有効化コード",
+          "kichHoatVaDangNhap": "有効化してログイン",
+          "lanDauSuDung": "初めてご利用ですか？",
+          "huongDanKichHoatTaiKhoan": "アカウントの有効化方法",
+          "dungEmailTruongDaDuocCap": "発行された学校のメールアドレスを使用してください。",
+          "maOtpCoHieuLuc10": "OTP コードの有効期限は10分です。"
+        },
+        "PasswordResetPage": {
+          "datLaiMatKhau": "パスワードを再設定",
+          "khoiPhucMatKhau": "パスワードの復旧",
+          "maOtp": "OTP コード",
+          "matKhauMoi": "新しいパスワード",
+          "guiMaKhoiPhuc": "復旧コードを送信",
+          "maXacThucOtp": "OTP 認証コード",
+          "baoMatTaiKhoan": "アカウントのセキュリティ",
+          "luuYKhiDatLaiMat": "パスワード再設定の注意事項",
+          "dangNhapLaiBangMatKhau": "完了後、新しいパスワードで再度ログインしてください。",
+          "chinhSachBaoVeTaiKhoan": "FPT アカウント保護ポリシー",
+          "khoiPhucSeDangXuatMoi": "復旧すると、すべての使用中のデバイスからログアウトされます。"
+        }
+      }
+    },
+    "pages": {
+      "LoginPage": {
+        "daDatLaiMatKhau": "パスワードを再設定しました",
+        "lanDauSuDung": "初めてご利用ですか？",
+        "taiKhoanDoPhongDaoTao": "アカウントは教務課から発行されます",
+        "kichHoatBangEmailTruongVa": "学校のメールアドレスと OTP コードで有効化します。パスワードを忘れた場合は、メールに届くコードで復旧できます。"
+      }
+    },
+    "profile": {
+      "components": {
+        "PasswordChangeForm": {
+          "daDoiMatKhau": "パスワードを変更しました",
+          "nhapMatKhauHienTai": "現在のパスワードを入力してください。",
+          "matKhauMoiCanItNhat": "新しいパスワードは英字と数字を含む8文字以上にしてください。",
+          "haiMatKhauMoiChuaKhop": "2つの新しいパスワードが一致しません。",
+          "matKhauHienTaiKhongDung": "現在のパスワードが正しくありません。",
+          "nhapSaiMatKhauHienTai": "現在のパスワードの入力ミスが多すぎます。数分後にもう一度お試しください。",
+          "heThongTamBanVuiLong": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+          "doiMatKhau": "パスワードを変更",
+          "cacThietBiKhacSeBi": "他のデバイスはログアウトされます。現在のセッションは維持されます。",
+          "matKhauHienTai": "現在のパスワード",
+          "matKhauMoi": "新しいパスワード",
+          "nhapLaiMatKhauMoi": "新しいパスワードを再入力"
+        },
+        "ProfileForm": {
+          "hoVaTenCanTu1": "氏名は1〜150文字で入力してください。",
+          "soDienThoaiGom815": "電話番号は8〜15桁の数字で、先頭に + を付けることができます。",
+          "daLuuThayDoi": "変更を保存しました",
+          "khongLuuDuocVuiLongThu": "保存できませんでした。しばらくしてからもう一度お試しください。",
+          "thongTinCaNhan": "個人情報",
+          "emailTruongVaiTroVaTrang": "学校のメールアドレス、役割、ステータスは管理者が管理します。",
+          "hoVaTen": "氏名",
+          "soDienThoai": "電話番号",
+          "emailTruong": "学校のメールアドレス",
+          "vaiTro": "役割",
+          "maSoSinhVien": "学籍番号",
+          "chuaCoMssv": "学籍番号なし",
+          "luuThayDoi": "変更を保存"
+        }
+      },
+      "pages": {
+        "ProfilePage": {
+          "hoSo": "プロフィール"
+        }
+      }
+    },
+    "register": {
+      "taiKhoan": "アカウント"
+    },
+    "shell": {
+      "components": {
+        "RoleGuard": {
+          "dangTai": "読み込み中…"
+        }
+      }
+    }
+  },
+  "materials": {
+    "api": {
+      "index": {
+        "hocLieuDaThayDoiHoac": "教材が変更されたか、閲覧のみになっています。続行する前にデータを再読み込みしてください。",
+        "khongTimThayHocLieuHoac": "教材が見つからないか、アクセス権がありません。",
+        "phienDangNhapDaHetHan": "ログインセッションの有効期限が切れました。",
+        "khongTaiDuocHocLieuVui": "教材を読み込めませんでした。もう一度お試しください。"
+      }
+    },
+    "components": {
+      "DocumentViewer": {
+        "khongMoDuocTepHayTai": "ファイルを開けませんでした。ダウンロードして表示してください。",
+        "thuNho": "縮小",
+        "phongTo": "拡大",
+        "thoatToanManHinh": "全画面を終了",
+        "toanManHinh": "全画面",
+        "taiXuong": "ダウンロード",
+        "sheetTrong": "空のシート",
+        "dangMoTep": "ファイルを開いています…"
+      },
+      "MaterialDialogs": {
+        "nhapTenHocLieu": "教材名を入力してください。",
+        "danLinkCuaMotVideoYoutube": "YouTube 動画のリンクを貼り付けてください。",
+        "chonTep": "ファイルを選択してください。",
+        "daLuuThayDoi": "変更を保存しました",
+        "daTaoQuiz": "クイズを作成しました",
+        "daThemHocLieu": "教材を追加しました",
+        "suaHocLieu": "教材を編集",
+        "taoHocLieu": "教材を作成",
+        "luu": "保存",
+        "tao": "作成",
+        "tenHocLieu": "教材名",
+        "batHocLieu": "教材を有効化",
+        "bat": "オン",
+        "tat": "オフ",
+        "tatDeAnVoiSinhVien": "オフにすると学生に表示されなくなり、新たなAIの情報源としても使われません。",
+        "noiDung": "内容 ",
+        "noiDung2": "内容",
+        "tep": "ファイル",
+        "quizTrong": "空のクイズ",
+        "taoTuQuizCu": "過去のクイズから作成",
+        "moTa": "説明",
+        "luuTru": "アーカイブ",
+        "xoa": "削除",
+        "daXoaHocLieu": "教材を削除しました",
+        "daXoaQuiz": "クイズを削除しました",
+        "daLuuTruQuiz": "クイズをアーカイブしました",
+        "hocLieu": "教材",
+        "banCoChacMuon": "",
+        "khong": " を実行してもよろしいですか？",
+        "quizNhapSeBiXoaVinh": " 下書きのクイズは完全に削除され、復元できません。"
+      },
+      "MaterialList": {
+        "hocLieu": "教材",
+        "dangTaiMonHoc": "科目を読み込み中…",
+        "banChuaDuocPhanCongMon": "担当している科目はありません。"
+      },
+      "MaterialPreview": {
+        "taiXuong": "ダウンロード",
+        "moTrenYoutube": "YouTube で開く ",
+        "khongPhatDuocVideo": "動画を再生できませんでした",
+        "thuLai": "再試行",
+        "dangMoTep": "ファイルを開いています…"
+      },
+      "MaterialSections": {
+        "hocLieuGanKem": "添付の教材",
+        "dangTaiHocLieu": "教材を読み込み中…",
+        "thuLai": "再試行",
+        "chuaCoHocLieu": "教材はまだありません。",
+        "cuaLop": " · クラス"
+      },
+      "ModuleBoard": {
+        "themModule": "モジュールを追加",
+        "hocLieu": "教材",
+        "taiLai": "再読み込み",
+        "dangTaiHocLieu": "教材を読み込み中…",
+        "chuaCoModule": "モジュールはまだありません",
+        "taoHocLieu": "教材を作成",
+        "thaoTacModule": "モジュール {title} の操作",
+        "doiTen": "名前を変更",
+        "lenTren": "上へ移動",
+        "xuongDuoi": "下へ移動",
+        "xoaModule": "モジュールを削除",
+        "thuGon": "{title} を折りたたむ",
+        "mo": "{title} を展開",
+        "thuGon2": "折りたたむ",
+        "mo2": "展開",
+        "chuaCoHocLieu": "教材はまだありません",
+        "daMoLaiQuiz": "クイズを再開しました",
+        "daThemModule": "モジュールを追加しました",
+        "doiTenModule": "モジュール名を変更",
+        "daLuuThayDoi": "変更を保存しました",
+        "xoaModule2": "モジュールを削除しますか？",
+        "daXoaModule": "モジュールを削除しました",
+        "xoa": "削除",
+        "banCoChacMuonXoaModule": "モジュール ",
+        "khong": " を削除してもよろしいですか？",
+        "tat": "オフ",
+        "moLai": "{title} を再開",
+        "sua": "{title} を編集",
+        "luu": "保存",
+        "tenModule": "モジュール名",
+        "nhapTenModule": "モジュール名を入力してください。"
+      },
+      "ModuleNav": {
+        "danhSachModule": "モジュール一覧",
+        "luyenTapQuiz": "クイズ練習",
+        "hocLieu": "教材",
+        "dangTai": "読み込み中…",
+        "taoHocLieuTrong": "{title} に教材を作成",
+        "taoHocLieu": "教材を作成",
+        "thuGon": "{title} を折りたたむ",
+        "mo": "{title} を展開",
+        "thuGon2": "折りたたむ",
+        "mo2": "展開",
+        "chuaCoHocLieu": "教材はまだありません",
+        "moLai": "{value} を再開",
+        "daMoLaiQuiz": "クイズを再開しました",
+        "khongMoLaiDuocQuiz": "クイズを再開できませんでした",
+        "sua": "{value} を編集"
+      },
+      "ModulePlace": {
+        "hocLieuTruocVaSauDau": "前後の教材（ページ上部）",
+        "hocLieuTruocVaSau": "前後の教材",
+        "truoc": "前へ"
+      }
+    },
+    "model": {
+      "types": {
+        "dangXuLy": "処理中",
+        "daTrich": "抽出済み",
+        "khongCoChu": "テキストなし",
+        "loi": "エラー",
+        "tep": "ファイル"
+      },
+      "xlsx": {
+        "khongPhaiTepExcel": "Excelファイルではありません"
+      }
+    },
+    "pages": {
+      "LearningMaterialPage": {
+        "dangTaiHocLieu": "教材を読み込み中…",
+        "batHocLieu": "教材を有効化",
+        "bat": "オン",
+        "tat": "オフ",
+        "sua": "編集",
+        "xoa": "削除",
+        "moTa": "説明",
+        "daXoaHocLieu": "教材を削除しました"
+      }
+    },
+    "register": {
+      "hocLieu": "教材"
+    }
+  },
+  "notifications": {
+    "components": {
+      "EmailPreferencePanel": {
+        "khongTheTaiTuyChonEmail": "メール設定を読み込めませんでした。",
+        "chuaLuuDuocTuyChonHay": "設定を保存できませんでした。もう一度お試しください。",
+        "guiEmailChoToiKhiCo": "次の場合にメールで通知",
+        "thuLai": "再試行",
+        "dangTai": "読み込み中…",
+        "emailSaoLuuThatBaiLa": "バックアップ失敗のメールは必須の警告のため、オフにできません。",
+        "tatEmailVanNhanThongBao": "メールをオフにしても、アプリ内の通知は届きます。"
+      },
+      "NotificationBell": {
+        "thongBaoChuaTaiDuocSo": "通知、未読件数を読み込めません",
+        "thongBaoChuaDoc": "通知、未読 {count} 件"
+      },
+      "NotificationPopup": {
+        "khongTheTaiThongBao": "通知を読み込めませんでした。",
+        "lienKetKhongHopLe": "無効なリンクです。",
+        "chuaDanhDauDaDocDuoc": "既読にできませんでした。もう一度お試しください。",
+        "khongTheDanhDauTatCa": "すべてを既読にできませんでした。",
+        "thongBao": "通知",
+        "quayLaiThongBao": "通知に戻る",
+        "caiDat": "設定",
+        "caiDatThongBao": "通知設定",
+        "locThongBao": "通知を絞り込み",
+        "tatCa": "すべて",
+        "chuaDoc": "未読（",
+        "danhDauDaDoc": "既読にする",
+        "thuLai": "再試行",
+        "dangTai": "読み込み中…",
+        "banDaDocTatCaThong": "すべての通知を読みました。",
+        "chuaCoThongBao": "通知はまだありません。",
+        "taiThem": "さらに読み込む"
+      }
+    },
+    "model": {
+      "types": {
+        "ghiDanhVaoLop": "クラスへの登録",
+        "baiTapMoiMo": "新しい課題の公開",
+        "nhacHanNop": "締切のリマインダー",
+        "congBoDiem": "成績の公開",
+        "thongBaoQuanTrongCuaLop": "クラスの重要なお知らせ",
+        "yeuCauDoiTruongNhom": "リーダー変更の申請",
+        "deXuatCauHoiChoDuyet": "承認待ちの問題提案",
+        "ketQuaDuyetCauHoi": "問題の審査結果",
+        "saoLuuThatBai": "バックアップの失敗"
+      }
+    }
+  },
+  "quizpractice": {
+    "components": {
+      "QuestionPager": {
+        "cau": "問 {value}",
+        "cauTruoc": "前の問題",
+        "cauTiep": "次の問題"
+      },
+      "ResultQuestions": {
+        "cau": "問 {value}",
+        "cau2": "問 ",
+        "boTrong": "未回答",
+        "dung": "正解",
+        "diem": " 点",
+        "dapAnDung": "正解",
+        "banChon": "あなたの選択",
+        "giaiThich": "解説：",
+        "danhSachCau": "問題一覧"
+      },
+      "TeacherQuizSections": {
+        "diemGoc": "元の点数 ",
+        "roiTrang": " · ページ離脱 ",
+        "lanGoiYTru": " 回 · 減点の目安 ",
+        "diem": " 点",
+        "daTru": "減点 ",
+        "diem2": " 点：",
+        "daQuyetDinhKhongTru": "減点しないと決定：",
+        "chuaQuyetDinhDiemChuaBi": "未決定のため、まだ減点されていません。",
+        "soDiemTru": "減点する点数",
+        "lyDoQuyetDinh": "決定の理由",
+        "truDiem": "減点する",
+        "khongTru": "減点しない",
+        "luotLamCuaSinhVien": "学生の解答",
+        "dangTaiLuotLam": "解答を読み込み中…",
+        "sinhVien": "学生",
+        "luot": "回数",
+        "diemCaoNhat": "最高点",
+        "roiTrang2": "ページ離脱",
+        "mo": "開く",
+        "lopChuaCoSinhVien": "クラスにはまだ学生がいません。",
+        "lanGanNhat": "前回 ",
+        "lan": "{lastLeaveCount} 回",
+        "thieuTinHieu": "信号なし",
+        "choQuyetDinh": "決定待ち",
+        "luotLam": "解答 · {value}",
+        "lan2": "回目 ",
+        "dangLam": "解答中",
+        "roiTrangLan": " · ページ離脱 {leaveCount} 回",
+        "goiYTru": "減点の目安 ",
+        "daTruDiem": " · 減点済み",
+        "khongTruDiem": " · 減点なし",
+        "xemBai": "解答を表示",
+        "lan3": "{value} · {attemptNo} 回目",
+        "diem3": "点数 ",
+        "nopLuc": " · 提出日時 ",
+        "dongThoiGianHoatDong": "アクティビティのタイムライン",
+        "khongCoDuLieuHoatDong": "この解答にはアクティビティのデータがありません。",
+        "tinHieuDoTrinhDuyetTu": "信号はブラウザーが自己申告するもので、誤りやブロックの可能性があります。あくまで目安であり、プラットフォームが不正と判断することはありません。",
+        "sinhVienDaLam": " 人の学生が解答"
+      }
+    },
+    "model": {
+      "labels": {
+        "heThongTamBanVuiLong": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+        "khongTimThayQuizHoacBan": "クイズが見つからないか、このクラスに在籍していません。",
+        "khongTimThayLuotLam": "解答が見つかりません。",
+        "quizDaNgungHoacLopKhong": "クイズが停止されたか、クラスが開講していません。",
+        "cauTraLoiVuaDuocLuu": "別の場所で解答が保存されました。最新のデータを再読み込みしました。",
+        "daHetThoiGianLamBai": "解答時間が終了しました。",
+        "luotNayDaNop": "この解答は提出済みです。",
+        "chiSinhVienLamQuizPractice": "クイズ練習は学生のみ解答できます。",
+        "luotNayKhongCoMucTru": "この解答には減点の目安がありません。",
+        "diemTruPhaiLonHon0": "減点は0より大きく、元の点数以下、小数点以下2桁までで指定してください。",
+        "phut": "{minutes} 分",
+        "luotKhongGioiHan": "{used} 回 · 無制限",
+        "luot": "{used} / {max} 回",
+        "khongNhanDuocTinHieu": "信号を受信できません",
+        "matTinHieuMotPhan": "信号が一部途切れました",
+        "khongDocDuocDuLieuLuc": "提出時にデータを読み取れませんでした",
+        "duocMienLanDauRoiTrang": "最初の {freeLeaves} 回のページ離脱は対象外で、それ以降は1回ごとに",
+        "moiLanRoiTrang": "ページを離れるごとに",
+        "toiDaDiem": "（最大 {value} 点）",
+        "chiTinhKhiRoiTuGiay": " {minAwaySeconds} 秒以上離れた場合のみ対象です。",
+        "coTheBiTruDiemDo": "{free}{value} 点が減点される場合があります{max}。教員が解答を確認して判断します。{min}",
+        "roiTrangLan": "ページ離脱 {value} 回",
+        "diemGocGiangVienTruDiem": "元の点数 {value} · {value2} · 教員が {value3} 点減点：{decisionReason}",
+        "giangVienQuyetDinhKhongTru": "{leaves} · 教員は減点しないと決定：{decisionReason}",
+        "chuaBiTruDiemGiangVien": "{leaves} · まだ減点されていません。教員が確認します。",
+        "tuNopKhiHetGio": "時間切れで自動提出",
+        "tuNopKhiQuizBiNgung": "クイズの停止により自動提出"
+      }
+    },
+    "pages": {
+      "QuizPracticeDetailPage": {
+        "dangTaiQuiz": "クイズを読み込み中…",
+        "luyenTapQuiz": "クイズ練習",
+        "quizKhongCoTrongLopBan": "クイズが受講中のクラスにないか、停止されています。",
+        "thongTin": "情報",
+        "soCau": "問題数",
+        "cau": " 問",
+        "thoiGian": "時間",
+        "phut": "{timeLimitMinutes} 分",
+        "khongGioiHan": "無制限",
+        "moTa": "説明",
+        "lamBai": "解答する",
+        "luotDaDungToiDa": "使用回数 / 上限",
+        "luot": "{attemptsUsed} 回",
+        "tiepTucLamBai": "続きから解答",
+        "lamLai": "もう一度解答",
+        "batDauLamBai": "解答を開始",
+        "ketQua": "結果",
+        "lan": "回",
+        "batDau": "開始",
+        "diem": "点数",
+        "mo": "開く",
+        "chuaCoLanLam": "解答はまだありません",
+        "lan2": "回目 ",
+        "dangLam": "解答中"
+      },
+      "QuizPracticeHistoryPage": {
+        "luyenTapQuiz": "クイズ練習",
+        "locTheoLop": "クラスで絞り込み",
+        "moiLop": "すべてのクラス",
+        "lop": "クラス",
+        "soLanLam": "回数",
+        "diemCaoNhat": "最高点",
+        "lanGanNhat": "前回",
+        "dangTaiQuiz": "クイズを読み込み中…",
+        "chuaCoQuizLuyenTap": "練習用のクイズはまだありません。",
+        "luyenTap": "練習",
+        "chuaLam": "未解答",
+        "batDau": "開始"
+      },
+      "QuizResultPage": {
+        "dangTaiKetQua": "結果を読み込み中…",
+        "luyenTapQuiz": "クイズ練習",
+        "ketQua": "結果 · {title}",
+        "lan": "{attemptNo} 回目",
+        "nopLuc": "提出日時 {value}",
+        "lamTrong": "所要時間 {value}",
+        "veDanhSach": "一覧に戻る",
+        "lamLai": "もう一度解答",
+        "diem": "点数",
+        "dung": "正解 ",
+        "boTrong": " · 未回答 ",
+        "practiceKhongTinhVaoSoDiem": "練習 · 成績表には反映されません",
+        "daNopBai": "提出しました",
+        "quizNayKhongHienDiemSau": "このクイズは提出後に点数を表示しません。",
+        "quizNayKhongHienDapAn": "このクイズは提出後に正解を表示しません。"
+      },
+      "QuizTakingPage": {
+        "conDuoi5Phut": "残り5分未満です。",
+        "conDuoi1Phut": "残り1分未満です。",
+        "con10Giay": "残り10秒です。",
+        "dangTaiDe": "問題を読み込み中…",
+        "daTuDongLuu": "自動保存しました",
+        "chuaLuu": "未保存…",
+        "dangLuu": "保存中…",
+        "chuaLuuDuoc": "保存できませんでした",
+        "quizNayGhiNhanHoatDong": "このクイズでは解答中のアクティビティが記録されます",
+        "nopBai": "提出しますか？",
+        "lamTiep": "解答を続ける",
+        "nopBai2": "提出",
+        "con": "未回答の問題が ",
+        "cauChuaTraLoiCau": " 問あります：問 ",
+        "cauChuaTraLoiDuocTinh": "。未回答の問題は不正解として扱われます。",
+        "banDaTraLoiTatCa": "すべての問題に回答しました。",
+        "thoiGianConLai": "残り時間：",
+        "sauKhiNopLuotNayKet": "提出すると、この解答は終了します。",
+        "thoatKhoiBai": "クイズを終了しますか？",
+        "thoat": "終了",
+        "cacCauDaChonDuocLuu": "選択した解答は保存されますが、ページを離れてもタイマーは進み続けます。時間内に戻って続きを解答してください。",
+        "hetThoiGianLamBai": "解答時間が終了しました",
+        "cacCauDaChonDuocTu": "選択した解答は自動保存され、提出されました。結果ページに移動しています…",
+        "luyenTap": "練習",
+        "thuLai": "再試行",
+        "cau": "問 {value}",
+        "cau2": "問 ",
+        "nhieuDapAn": "複数回答",
+        "motDapAn": "単一回答",
+        "diem": " 点",
+        "danhSachCau": "問題一覧",
+        "daLam": "解答済み ",
+        "daTraLoi": " 問回答済み",
+        "cau3": "問 {value}{value2}"
+      }
+    }
+  },
+  "quizzes": {
+    "components": {
+      "AiDrafts": {
+        "coCauChuaHopLeHay": "無効な問題があります。すべてを採用する前に、マークされた問題を修正してください。",
+        "boCacChinhSuaDeXuat": "未保存の提案の編集を破棄して、新しいリクエストを作成しますか？",
+        "thuLaiYeuCau": "リクエストを再試行",
+        "yeuCauMoi": "新しいリクエスト",
+        "boDeXuat": "提案を破棄",
+        "chapNhanTatCa": "すべて採用",
+        "luu": "",
+        "cauDaChapNhan": " 件の採用した問題を保存",
+        "dangTai": "読み込み中…",
+        "soanBangAi": "AIで作成",
+        "dongSoanAi": "AI作成を閉じる",
+        "nhapYeuCauHoacChonTai": "要望を入力するか資料を選択してください（最大2,000文字）",
+        "tu1Den50Cau": "1〜50問",
+        "coTaiLieuNguonKhongCon": "使用できなくなった資料があります。選択を外すか、一覧を再読み込みしてください。",
+        "yeuCau": "要望",
+        "khiDaChonTaiLieuCo": "資料を選択している場合は空欄でもかまいません。既定では資料の内容に沿ってAIがクイズを作成します。学生の情報は含めないでください。",
+        "taoQuizTheoNoiDungTai": "選択した資料の内容に沿ってクイズを作成します。",
+        "soCau": "問題数",
+        "loaiCau": "問題の種類",
+        "tuyNoiDung": "内容に応じて",
+        "doKho": "難易度",
+        "phanBoHopLy": "バランスよく配分",
+        "taiLieuNguonChoAi": "AIの資料 ",
+        "toiDa10ChiHocLieu": "· 最大10件、テキスト抽出済みの教材のみ",
+        "chuaLayDuocDanhSachTai": "資料の一覧を取得できませんでした。資料なしでリクエストを送ることはできます。",
+        "taiLaiTaiLieu": "資料を再読み込み",
+        "chuaCoHocLieuNao": "教材はまだありません。",
+        "heThongTuChonNguonAi": "システムが利用可能なAIソースを自動で選択します。リクエストには、選択したテキストのある資料のみが含まれます。",
+        "guiYeuCau": "リクエストを送信",
+        "apiCuaTruong": "学校API",
+        "caNhan": "個人の {value}",
+        "apiCaNhan": "個人API",
+        "heThongTuChonNguonAi2": "システムがAIソースを自動選択",
+        "guiLuc": " · 送信日時 ",
+        "taiLieu": " · 資料：",
+        "aiDangSoanDeXuatBan": "AIが提案を作成中です…AI作成を閉じても提案は保持されます。",
+        "deXuat": "提案（",
+        "daChapNhan": " 件採用 / ",
+        "cau": "問 ",
+        "daChapNhan2": "採用済み",
+        "daBo": "破棄済み",
+        "sua": "編集",
+        "layLai": "元に戻す",
+        "bo": "破棄",
+        "chapNhan": "採用",
+        "dapAnDung": "（正解）",
+        "giaiThich": "解説：",
+        "canSua": "要修正："
+      },
+      "AiDraftTargets": {
+        "aiDangSoan": "AIが作成中",
+        "choChapNhan": "採用待ち",
+        "daChapNhan": "採用済み",
+        "daBo": "破棄済み",
+        "loi": "エラー",
+        "taoNhapBangAi": "AIで下書きを作成",
+        "sinhCauHoiNganHangCau": "問題を生成 · 科目の問題バンク",
+        "cauDuocChapNhanVaoNgan": "採用した問題は下書きとして問題バンクに追加されます。有効化する前に確認してください。",
+        "sinhCauHoi": "問題を生成 · {quizTitle}",
+        "cauDuocChapNhanThanhCau": "採用した問題はクイズの末尾に個別の問題として追加されます。AIがクイズを自ら承認・公開することはありません。",
+        "boCacChinhSuaDeXuat": "未保存の提案の編集を破棄しますか？",
+        "cau": "{value} 問 · {value2}",
+        "boCacChinhSuaChuaLuu": "未保存の編集を破棄して別の提案を表示しますか？",
+        "thuGon": "折りたたむ",
+        "deXuatAi": "AIの提案"
+      },
+      "BankQuestionPicker": {
+        "soCauTu1Den": "問題数は1〜{freeSlots}です。",
+        "huyChonCau": "選択を解除",
+        "themCau": "{length} 問を追加",
+        "luuCauVaoQuiz": "{length} 問をクイズに保存",
+        "cachLayCau": "問題の選び方",
+        "chonTay": "手動で選択",
+        "bocNgauNhien": "ランダムに抽出",
+        "doKho": "難易度",
+        "moiDoKho": "すべての難易度",
+        "the": "タグ",
+        "timCauHoi": "問題を検索",
+        "timNoiDung": "内容を検索",
+        "soCau": "問題数",
+        "bocLai": "もう一度抽出",
+        "bocThu": "試しに抽出",
+        "con": "クイズの空き枠は残り ",
+        "choTrongTrongQuiz": " 問です。",
+        "daChonCau": "{length} 問を選択しました。",
+        "coCauPhuHop": "該当する問題は {matching} 問です。",
+        "soCauChonVuotChoTrong": "選択数がクイズの空き枠を超えています。",
+        "chon": "選択",
+        "cauHoi": "問題",
+        "loai": "種類",
+        "chonCau": "問題 {stem} を選択",
+        "bo": "外す",
+        "layCauHoiTuNganHang": "問題バンクから問題を取得"
+      },
+      "ClassQuizzesSection": {
+        "taoQuiz": "クイズを作成",
+        "thuLai": "再試行",
+        "dangTaiQuiz": "クイズを読み込み中…",
+        "phamVi": "範囲",
+        "trangThai": "ステータス",
+        "baiNop": "提出数",
+        "lopChuaCoQuiz": "クラスにはまだクイズがありません。",
+        "cauLuyenTap": " 問 · 練習",
+        "cuaMon": "科目",
+        "cuaLop": "クラス"
+      },
+      "CreateQuizDialog": {
+        "tenQuizTu1Den200": "クイズ名は1〜200文字で入力してください。",
+        "quizMoi": "新しいクイズ",
+        "taoQuiz": "クイズを作成",
+        "tenQuiz": "クイズ名",
+        "onTapChuong3": "第3章の復習",
+        "copyQuizTuLopKhac": "別のクラスからクイズをコピー",
+        "khongCoQuizOLopKhac": "別のクラスにクイズはありません",
+        "copyTuLopKhac": "別のクラスからコピー",
+        "cau": " 問"
+      },
+      "DrawRulesPanel": {
+        "cachLapDe": "出題方法",
+        "luuCachLapDe": "出題方法を保存",
+        "deCoDinhMoiLuotCung": "固定：すべての解答で同じ問題",
+        "sinhDeMoiChoMoiLuot": "解答ごとに新しく出題",
+        "cau": " 問",
+        "muc": "（難易度：{value}）",
+        "theCuaQuyTac": "ルール {value} のタグ",
+        "theViDuChuong1": "タグ（例：第1章）",
+        "doKhoCuaQuyTac": "ルール {value} の難易度",
+        "moiDoKho": "すべての難易度",
+        "soCauCuaQuyTac": "ルール {value} の問題数",
+        "cau2": "問",
+        "diemMoiCauCuaQuyTac": "ルール {value} の1問あたりの点数",
+        "diem": "点",
+        "can": "",
+        "cauKhoChiCo": " 問が必要ですが、問題バンクには ",
+        "cauChuaPhatHanhDuoc": " 問しかないため、まだ公開できません。",
+        "chonTheDeXemSoCau": "タグを選ぶと問題バンク内の問題数を表示します",
+        "khoChuaCoCauMangThe": "このタグの問題{level}は問題バンクにまだありません",
+        "khoCoCauDangDungMang": "このタグの有効な問題{level}は問題バンクに {count} 問あります",
+        "boQuyTac": "ルール {value} を削除",
+        "bo": "削除",
+        "themQuyTac": "ルールを追加",
+        "moiLuot": "解答ごと：",
+        "cau3": " 問 · ",
+        "diem2": " 点",
+        "danhSachCauBenDuoiKhong": "以下の問題一覧は出題時には使われません。問題は科目の問題バンクから取得されます。問題が足りない場合はまだ公開できません。",
+        "xemThuDeMau": "サンプルをプレビュー",
+        "deMau": "サンプル",
+        "khoChuaDuCau": "問題バンクの問題が足りません",
+        "quyTac": "ルール ",
+        "the": "（タグ ",
+        "can2": "）：必要数 ",
+        "cauKhoChiCapDuoc": " 問、問題バンクから取得できるのは ",
+        "cau4": " 問です。",
+        "moiLuotLamSeNhanMot": "解答ごとに異なる問題が出題されます。これはプレビュー用で、保存されません。合計 ",
+        "diem3": " 点。",
+        "cau5": "問 ",
+        "diem4": " 点）"
+      },
+      "MaterialSourceSelect": {
+        "taiLieuDaChon": "{length} 件の資料を選択中",
+        "chonTaiLieuNguon": "資料を選択",
+        "taiLieuNguonChoAi": "AIの資料",
+        "timTaiLieuNguon": "資料を検索",
+        "timTaiLieu": "資料を検索…",
+        "chonKetQuaTimKiem": "検索結果を選択",
+        "boChonTatCa": "すべて選択解除",
+        "danhSachTaiLieuNguon": "資料一覧",
+        "chuaCoNoiDungVanBan": "テキストがまだありません",
+        "dangTaiTaiLieu": "資料を読み込み中…",
+        "khongCoTaiLieuPhuHop": "該当する資料はありません。",
+        "chuaCoNguonVanBanDung": "利用できるテキストの資料はまだありません。テキストを含む資料をアップロードするか、資料なしで作成してください。",
+        "daChon": "選択中：",
+        "taiLieu": " 件の資料",
+        "taiLieuDaChon2": "選択した資料",
+        "taiLieuKhongConKhaDung": "資料は利用できなくなりました",
+        "bo": "{title} を外す"
+      },
+      "McqEditor": {
+        "loaiCauHoi": "問題の種類",
+        "noiDungCauHoi": "問題文",
+        "cacLuaChon": "選択肢（",
+        "chon1DapAnDung": "正解を1つ選択",
+        "chonCacDapAnDung": "正解をすべて選択",
+        "cacLuaChon2": "選択肢",
+        "luaChonLaDapAnDung": "選択肢 {value} は正解",
+        "noiDungLuaChon": "選択肢 {value} の内容",
+        "xoaLuaChon": "選択肢 {value} を削除",
+        "themLuaChon": "選択肢を追加",
+        "diemMacDinh": "点数（既定）",
+        "giaiThichTuyChon": "解説（任意）"
+      },
+      "QuestionImportDialog": {
+        "tepToiDa5Mb": "ファイルは最大5MBまでです。",
+        "nhapCauHoiTuExcel": "Excelから問題を取り込む",
+        "nhap": "",
+        "cauHopLe": " 件の有効な問題を取り込む",
+        "tepExcelXlsxTheoMauNoi": "テンプレートに沿った Excel（.xlsx）ファイル：問題文、種類、選択肢、正解、難易度、タグ。最大500行、5MB。",
+        "taiTepMau": "テンプレートをダウンロード",
+        "tepCauHoi": "問題ファイル",
+        "dangKiemTep": "ファイルを確認中…",
+        "dong": " 行",
+        "hopLe": " 件有効",
+        "loi": " 件エラー",
+        "cauNhapVaoOTrangThai": "取り込んだ問題は下書きの状態になります。",
+        "dong2": "行",
+        "cauHoi": "問題",
+        "soLuaChon": "選択肢の数",
+        "ketQua": "結果",
+        "hopLe2": "有効"
+      },
+      "QuestionProposalsSection": {
+        "daGuiDeXuatChoChu": "提案を科目責任者に送信しました",
+        "daRutDeXuat": "提案を取り下げました",
+        "cauHoiDeXuatVaoNgan": "問題バンクへの提案問題",
+        "deXuatCau": "問題を提案",
+        "dangTaiDeXuat": "提案を読み込み中…",
+        "chuaCoDeXuatChuNhiem": "提案はまだありません。科目責任者が承認すると、問題は科目の問題バンクに追加されます。",
+        "lyDoTuChoi": "却下の理由：",
+        "suaVaGuiLai": "修正して再提出",
+        "rutDeXuat": "提案を取り下げる",
+        "deXuatCauHoi": "問題を提案",
+        "suaCauDeXuat": "提案問題を編集"
+      },
+      "QuestionSidePanels": {
+        "phanLoai": "分類",
+        "doKho": "難易度",
+        "the": "タグ",
+        "cachNhauBangDauPhayToi": "カンマ区切りで最大10個",
+        "umlSoDoLop": "uml, クラス図",
+        "trangThai": "ステータス",
+        "phienBan": "バージョン",
+        "quizDangDung": "使用中のクイズ",
+        "moBanNhapMoiCuaCau": "この問題の新しい下書きを開く",
+        "lichSuPhienBan": "バージョン履歴",
+        "dangXem": "（表示中）"
+      },
+      "QuizDetailParts": {
+        "quizChuaCoCauHoi": "クイズにはまだ問題がありません。",
+        "cauHoiCuaQuiz": "クイズの問題",
+        "cau": "問 ",
+        "cauRiengCuaQuiz": "クイズ専用の問題",
+        "tuNganHangV": "問題バンクから · v{versionNo}",
+        "daNgungTrongNganHang": "問題バンクで使用停止",
+        "diemCau": "問 {value} の点数",
+        "diem": "点",
+        "duaCauLen": "問 {value} を上へ移動",
+        "len": "上へ",
+        "duaCauXuong": "問 {value} を下へ移動",
+        "xuong": "下へ",
+        "suaCau": "問題を編集",
+        "deXuatVaoNganHang": "問題バンクに提案",
+        "boKhoiQuiz": "クイズから外す",
+        "chuaLuuDuocCauHoi": "問題を保存できませんでした。",
+        "huySoanCau": "問題の編集をキャンセル",
+        "huy": "キャンセル",
+        "luuCau": "問題を保存",
+        "suaCauHoi": "問題を編集",
+        "soanCauMoi": "新しい問題を作成",
+        "suaCauRiengCuaQuiz": "クイズ専用の問題を編集",
+        "themCauRieng": "クイズ専用の問題を追加",
+        "canBatGhiNhanHoatDong": "減点の目安を出すにはアクティビティの記録を有効にする必要があります",
+        "tu0Den50Lan": "0〜50回",
+        "lonHon0ToiDa2": "0より大きく、小数点以下2桁まで",
+        "lonHon0HoacDeTrong": "0より大きい値、または空欄",
+        "tu0Den600Giay": "0〜600秒",
+        "tenQuizTu1Den200": "クイズ名は1〜200文字",
+        "tu1Den300PhutHoac": "1〜300分、または空欄",
+        "tu1Den10HoacDe": "1〜10、または空欄",
+        "canLoiBaoChoSinhVien": "アクティビティの記録を有効にする場合は学生へのお知らせが必要です",
+        "loiBaoToiDa1000": "お知らせは最大1,000文字まで",
+        "cauHinh": "設定",
+        "thoiGianLamBai": "制限時間",
+        "deTrongLaKhongGioiHan": "空欄の場合は無制限",
+        "khongGioiHan": "無制限",
+        "phut": "分",
+        "soLuotToiDa": "最大回数",
+        "hienDiemSauKhiNop": "提出後に点数を表示",
+        "hienDapAnSauKhiNop": "提出後に正解を表示",
+        "daoThuTuCau": "問題の順序をシャッフル",
+        "daoThuTuLuaChon": "選択肢の順序をシャッフル",
+        "ghiNhanHoatDong": "アクティビティの記録",
+        "loiBaoChoSinhVien": "学生へのお知らせ",
+        "sinhVienThayLoiBaoNay": "学生は解答前と解答中にこのお知らせを見ます。",
+        "goiYTruDiemKhiRoi": "ページ離脱時の減点の目安",
+        "soLanDuocMien": "対象外の回数",
+        "diemTruMoiLan": "1回あたりの減点",
+        "truToiDa": "減点の上限",
+        "trongLaKhongGioiHan": "空欄の場合は無制限",
+        "chiTinhKhiRoiTu": "離脱をカウントする最短時間",
+        "giay": "秒",
+        "heThongKhongTuTruDiem": "システムが自動で減点することはありません。目安を算出するだけで、各解答について教員が判断します。信号はブラウザーが自己申告するため、誤りやブロックの可能性があります。",
+        "xemTruoc": "プレビュー：{title}",
+        "diem2": " 点）"
+      },
+      "SimilarQuestionsAlert": {
+        "coCauGanGiongTrongNgan": "問題バンクに類似した問題があります"
+      }
+    },
+    "hooks": {
+      "useAuthoringGuard": {
+        "banCoNoiDungChuaLuu": "未保存の内容があります。変更を破棄しますか？"
+      }
+    },
+    "model": {
+      "labels": {
+        "motDapAn": "単一回答",
+        "nhieuDapAn": "複数回答",
+        "de": "易",
+        "trungBinh": "中",
+        "kho": "難",
+        "nhap": "下書き",
+        "choDuyet": "承認待ち",
+        "biTuChoi": "却下",
+        "dangDung": "使用中",
+        "ngung": "使用停止",
+        "heThongTamBanVuiLong": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+        "khongTimThayCauHoiHoac": "問題が見つからないか、この科目の管理者ではありません。",
+        "khongTimThayMonHoacBan": "科目が見つからないか、この科目の管理者ではありません。",
+        "monDaLuuTruNganHang": "科目はアーカイブ済みのため、問題バンクは閲覧のみです。",
+        "cauHoiDaDuocThayDoi": "問題が別のセッションで変更されました。最新のデータを再読み込みしました。",
+        "cauDaKichHoatKhongXoa": "有効化済みの問題は削除できません。代わりに使用停止にしてください。",
+        "chiNhanTepXlsxHoacCsv": ".xlsx または UTF-8 の .csv ファイルのみ受け付けます。",
+        "tepToiDa5Mb": "ファイルは最大5MBまでです。",
+        "toiDa500DongMoiLan": "1回の取り込みは最大500行までです。",
+        "khongTimThayQuizHoacBan": "クイズが見つからないか、このクイズへの権限がありません。",
+        "khongTimThayLopHoacBan": "クラスが見つからないか、このクラスの担当ではありません。",
+        "quizDaDuocThayDoiO": "クイズが別のセッションで変更されました。最新のデータを再読み込みしました。",
+        "quizDaPhatHanhKhongSua": "公開済みのクイズは編集できません。新しいバージョンを作成してください。",
+        "quizDaPhatHanhKhongXoa": "公開済みのクイズは削除できません。代わりにクイズを停止してください。",
+        "quizNayDaCoMotVersion": "このクイズにはすでに編集中の新しいバージョンがあります。",
+        "lopChuaMoNenChuaPhat": "クラスがまだ開講していないため、クラスのクイズを公開できません。",
+        "lopDaLuuTruQuizCua": "クラスはアーカイブ済みのため、クラスのクイズは閲覧のみです。",
+        "chiCopyQuizGiuaCacLop": "クイズは同じ科目のクラス間でのみコピーできます。",
+        "quizToiDa200Cau": "クイズの問題は最大200問までです。",
+        "khongTimThayDeXuatAi": "AIの提案が見つかりません。",
+        "deXuatDaDuocChapNhan": "提案は別のセッションで採用または破棄されました。",
+        "aiChuaSoanXongDeXuat": "AIはまだ提案の作成を終えていません。",
+        "coCauChuaHopLeHay": "無効な問題があります。採用する前に修正してください。",
+        "coTaiLieuKhongChonDuoc": "選択できない資料、またはテキストが抽出されていない資料があります。",
+        "chuaLayDuocTaiLieuNguon": "資料を取得できませんでした。もう一度お試しください。",
+        "chuaGuiDuocYeuCauAi": "AIへのリクエストを送信できませんでした。もう一度お試しください。",
+        "ketQuaAiKhongDungDinh": "AIの結果が問題の形式になっていません。リクエストを再送してください。",
+        "aiChuaSoanDuocDeXuat": "AIは提案を作成できませんでした。",
+        "dangMo": "公開中",
+        "luuTru": "アーカイブ済み"
+      },
+      "questionForm": {
+        "noiDungCauHoiKhongDuoc": "問題文を入力してください",
+        "noiDungCauHoiToiDa": "問題文は最大20,000文字まで",
+        "giaiThichToiDa20000": "解説は最大20,000文字まで",
+        "can26LuaChon": "選択肢は2〜6個必要です",
+        "luaChonKhongDuocDeTrong": "選択肢を空にすることはできません",
+        "cacLuaChonKhongDuocTrung": "選択肢の内容が重複しています",
+        "chonDung1DapAnDung": "正解をちょうど1つ選択してください",
+        "chonItNhat1DapAn": "正解を1つ以上選択してください",
+        "diemPhaiLonHon0Toi": "点数は0より大きく、小数点以下2桁までで指定してください",
+        "toiDa10The": "タグは最大10個まで"
+      }
+    },
+    "pages": {
+      "QuestionDetailPage": {
+        "noiDungCauHoiChuaHop": "問題の内容が無効です。",
+        "daLuuBanNhap": "下書きを保存しました。",
+        "daKichHoatCauHoi": "問題を有効化しました。",
+        "daDuyetCauDaVaoNgan": "承認しました。問題は問題バンクに追加されました。",
+        "daNgungDungCauHoiCac": "問題を使用停止にしました。公開中の自動出題クイズの問題が足りなくなったため、学生はまだ開始できません：{value}。",
+        "daNgungDungCauHoi": "問題を使用停止にしました。",
+        "daTuChoiVaBaoCho": "却下し、提案者に通知しました。",
+        "chuaChonMon": "科目が選択されていません",
+        "hayMoNganHangCauHoi": "問題を追加する前に、問題バンクを開いて科目を選択してください。",
+        "dangTaiCauHoi": "問題を読み込み中…",
+        "nganHangCauHoi": "問題バンク",
+        "cauHoiMoi": "新しい問題",
+        "cauHoi": "問題",
+        "phienBan": "バージョン ",
+        "xoa": "削除",
+        "ngung": "使用停止",
+        "luuThayDoiTruocKhiKich": "有効化する前に変更を保存してください",
+        "kichHoat": "有効化",
+        "tuChoi": "却下",
+        "duyetVaoNganHang": "承認して問題バンクに追加",
+        "luuThayDoi": "変更を保存",
+        "dangDungTrong": "使用中：",
+        "cauDaNgungDung": "この問題は使用停止です。",
+        "cauDoGiangVienDeXuat": "教員が提案した問題で、承認待ちです。ここでは編集しないでください。修正が必要な場合は理由を添えて却下してください。",
+        "daTuChoi": "却下済み",
+        "khongCoLyDo": "理由はありません。",
+        "noiDung": "内容",
+        "xoaCauNhap": "下書きの問題を削除しますか？",
+        "tuChoiCauDeXuat": "提案問題を却下しますか？",
+        "ngungDungCauHoi": "問題を使用停止にしますか？",
+        "ngungDung": "使用停止",
+        "lyDoTuChoi": "却下の理由",
+        "giangVienThayLyDoNay": "教員はこの理由を見て修正し、再提出します。",
+        "banCoChacMuonXoaCau": "この下書きの問題を削除してもよろしいですか？",
+        "banCoChacMuonNgungDung": "この問題を使用停止にしてもよろしいですか？"
+      },
+      "QuestionListPage": {
+        "tatCa": "すべて",
+        "cauCauChuaXuLyDuoc": "{done}：{succeeded} 問。{length} 問は処理できませんでした：{value}",
+        "cau": "{done}：{succeeded} 問。",
+        "daKichHoat": "有効化",
+        "daDuyet": "承認",
+        "daTuChoi": "却下",
+        "dangTaiMonHoc": "科目を読み込み中…",
+        "banChuaDuocGiaoQuanLy": "管理を担当している科目はありません。",
+        "nganHangCauHoi": "問題バンク",
+        "cauTrongNganHangCuaMon": "科目の問題バンクに {total} 問",
+        "chonMon": "科目を選択",
+        "cauTrung": "重複問題",
+        "themCauHoi": "問題を追加",
+        "soanCauMoi": "新しい問題を作成",
+        "nhapExcel": "Excelを取り込む",
+        "soanBangAi": "AIで作成",
+        "monDaLuuTruNganHang": "科目はアーカイブ済みのため、問題バンクは閲覧のみです。",
+        "loaiCau": "問題の種類",
+        "doKho": "難易度",
+        "moiDoKho": "すべての難易度",
+        "daChon": "選択中：",
+        "cau2": " 問",
+        "kichHoat": "有効化",
+        "duyet": "承認",
+        "tuChoi": "却下",
+        "trangThai": "ステータス",
+        "moiTrangThai": "すべてのステータス",
+        "locTheoNoiDungHoacThe": "内容またはタグで絞り込み",
+        "thuLai": "再試行",
+        "dangTaiCauHoi": "問題を読み込み中…",
+        "chon": "選択",
+        "cauHoi": "問題",
+        "loai": "種類",
+        "capNhat": "更新日",
+        "chuaCoCauHoiPhuHop": "該当する問題はまだありません。",
+        "chonCau": "問題 {stem} を選択",
+        "coBanNhapMoi": "新しい下書きあり",
+        "cauHoi2": "問",
+        "tuChoiCauDeXuat": "{length} 件の提案問題を却下しますか？",
+        "lyDoTuChoi": "却下の理由",
+        "giangVienThayLyDoNay": "教員はこの理由を見て修正し、再提出します。",
+        "cauGiongHetNhauTrongNgan": "問題バンク内の同一の問題",
+        "khongCoCauTrung": "重複はありません。",
+        "nhom": "グループ ",
+        "heThongKhongTuXoaHay": "：システムは自動で削除しません。問題を開いて使用停止または削除してください。",
+        "daLuuCauOTrangThai": "{count} 問を下書きとして保存しました。",
+        "daNhapCauOTrangThai": "{created} 問を下書きとして取り込みました。"
+      },
+      "QuizDetailPage": {
+        "cauHinhChuaHopLe": "設定が無効です。",
+        "diemMoiCauPhaiLonHon": "1問あたりの点数は0より大きく、小数点以下2桁までで指定してください。",
+        "daLuuThayDoi": "変更を保存しました",
+        "daThemCauTuDeXuat": "AIの提案から問題を追加しました",
+        "daThemCauTuNganHang": "問題バンクから {length} 問を追加しました",
+        "daPhatHanhQuiz": "クイズを公開しました",
+        "daGuiDeXuatChoChu": "提案を科目責任者に送信しました",
+        "dangTaiQuiz": "クイズを読み込み中…",
+        "xemTruoc": "プレビュー",
+        "luuThayDoi": "変更を保存",
+        "luuThayDoiTruocKhiPhat": "公開する前に変更を保存してください",
+        "phatHanh": "公開",
+        "daMoLaiQuiz": "クイズを再開しました",
+        "moLai": "再開",
+        "sua": "編集",
+        "canSuaTruocKhiPhatHanh": "公開前に修正が必要",
+        "cauHoi": "問題",
+        "themCauHoi": "問題を追加",
+        "soanCauMoi": "新しい問題を作成",
+        "layTuNganHang": "問題バンクから取得",
+        "soanBangAi": "AIで作成",
+        "cachThemCauHoi": "問題の追加方法",
+        "nganHang": "問題バンク",
+        "moTa": "説明",
+        "phatHanhQuiz": "クイズを公開しますか？",
+        "moiLuotLamNhanMotDe": "解答ごとに {questionCount} 問の新しい問題が出題されます",
+        "quizCoCau": "クイズは {questionCount} 問です",
+        "tong": "、合計 ",
+        "diemSauKhiPhatHanhSinh": " 点。公開すると、クラスまたは科目の学生がすぐに解答できます。"
+      },
+      "SubjectQuizListPage": {
+        "tatCa": "すべて",
+        "dangTaiMonHoc": "科目を読み込み中…",
+        "banChuaDuocGiaoQuanLy": "管理を担当している科目はありません。",
+        "quizCuaMon": "科目のクイズ",
+        "chonMon": "科目を選択",
+        "taoQuiz": "クイズを作成",
+        "monDaLuuTruQuizCua": "科目はアーカイブ済みのため、科目のクイズは閲覧のみです。",
+        "trangThaiQuiz": "クイズのステータス",
+        "timTheoTenQuiz": "クイズ名で検索",
+        "thuLai": "再試行",
+        "dangTaiQuiz": "クイズを読み込み中…",
+        "soCau": "問題数",
+        "thoiGian": "時間",
+        "trangThai": "ステータス",
+        "capNhat": "更新日",
+        "chuaCoQuizPhuHop": "該当するクイズはまだありません。",
+        "cau": " 問 · ",
+        "diem": " 点",
+        "phut": "{timeLimitMinutes} 分",
+        "khongGioiHan": "無制限"
+      }
+    },
+    "register": {
+      "nganHangCauHoi": "問題バンク"
+    }
+  },
+  "settings": {
+    "components": {
+      "SettingRow": {
+        "vuaCoNguoiSuaMucNay": "この項目が他の人によって編集されたため、新しい値を再読み込みしました。",
+        "giaTriKhongHopLe": "無効な値",
+        "khongLuuDuocThuLaiSau": "保存できませんでした。しばらくしてからもう一度お試しください",
+        "chuaChon": "未選択",
+        "luu": "保存"
+      },
+      "SettingsSectionHost": {
+        "caiDat": "設定",
+        "phanCaiDatNayHienKhong": "この設定セクションは現在利用できません。"
+      },
+      "SettingValueForm": {
+        "giaTriMoi": "新しい値",
+        "giaTriKhongHopLe": "無効な値",
+        "khongLuuDuocThuLaiSau": "保存できませんでした。しばらくしてからもう一度お試しください",
+        "nguoiKhacVuaSua": "他の人が編集しました",
+        "taiLai": "再読み込み",
+        "caiDatDaDuocNguoiKhac": "設定が他の人によって編集されました。保存する前に再読み込みして新しい値を確認してください。",
+        "boTrong": "空欄にする",
+        "huy": "キャンセル",
+        "dangLuu": "保存中…",
+        "luu": "保存",
+        "bat": "オン",
+        "tat": "オフ",
+        "gioVietNamAsiaHoChi": "ベトナム時間（Asia/Ho_Chi_Minh）",
+        "chuaChon": "未選択"
+      }
+    },
+    "model": {
+      "types": {
+        "tep": "ファイル",
+        "gioiHanKhiTaiHocLieu": "教材と文書内の画像をアップロードする際の制限",
+        "saoLuu": "バックアップ",
+        "saoLuuCoSoDuLieu": "データベースを Google ドライブにバックアップ · 7日間保存（固定）",
+        "hoatDongLamBai": "解答中のアクティビティ",
+        "duLieuRoiTrangAnTab": "アクティビティの記録が有効な課題でのページ離脱・タブ非表示のデータ",
+        "soNguyen": "整数",
+        "batTat": "オン / オフ",
+        "gioPhut": "時:分",
+        "chonMot": "単一選択",
+        "chonNhieu": "複数選択"
+      },
+      "validation": {
+        "mucNayPhaiCoGiaTri": "この項目には値が必要です",
+        "giaTriPhaiLaSoNguyen": "値は整数にしてください",
+        "giaTriPhaiTuDen": "値は {min}〜{max} にしてください",
+        "giaTriPhaiLaBatHoac": "値はオンまたはオフにしてください",
+        "gioPhaiCoDangGioPhut": "時刻は 時:分 の形式で入力してください（例：02:30）",
+        "giaTriKhongNamTrongDanh": "値が許可された一覧にありません",
+        "giaTriPhaiLaDanhSach": "値は一覧にしてください",
+        "coGiaTriKhongNamTrong": "許可された一覧にない値があります",
+        "phaiChonItNhatMotGia": "値を1つ以上選択してください",
+        "chuaCauHinh": "未設定",
+        "bat": "オン",
+        "tat": "オフ",
+        "soNguyenTuDen": "{min}〜{max} の整数",
+        "soNguyen": "整数",
+        "batHoacTat": "オンまたはオフ",
+        "gioPhutTheoGioVietNam": "ベトナム時間の 時:分（例：02:30）",
+        "motTrong": "次のいずれか：{value}",
+        "chonTrong": "次から選択：{value}",
+        "itNhatMot": "{base}（1つ以上）"
+      }
+    },
+    "pages": {
+      "SettingDetailPage": {
+        "khongTaiDuocCaiDatThu": "設定を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "caiDat": "設定",
+        "dangTai": "読み込み中…",
+        "giaTri": "値",
+        "kieu": "種類：{value}",
+        "giaTriHienHanh": "現在の値",
+        "chuaCauHinh": "未設定",
+        "gioiHanHopLe": "有効な範囲",
+        "suaGanNhat": "最終編集",
+        "khongRo": "不明",
+        "chuaSuaDangDungGiaTri": "未編集（初期値を使用中）"
+      },
+      "SettingListPage": {
+        "khongTaiDuocCaiDatThu": "設定を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "caiDat": "設定",
+        "dangTai": "読み込み中…",
+        "caiDatAi": "AI設定",
+        "khongKhaDung": "利用不可"
+      }
+    },
+    "register": {
+      "caiDat": "設定"
+    }
+  },
+  "subjects": {
+    "components": {
+      "ManagerCard": {
+        "chuNhiemMon": "科目責任者",
+        "phanCong": "割り当て",
+        "doiChuNhiem": "責任者を変更",
+        "chuaPhanCong": "未割り当て",
+        "khongTraDuocThongTinChu": "科目責任者の情報を取得できませんでした。"
+      },
+      "ManagerChangeDialog": {
+        "doiChuNhiemMon": "科目責任者を変更",
+        "luu": "保存"
+      },
+      "ManagerPicker": {
+        "chuNhiemMon": "科目責任者",
+        "chuaPhanCong": "未割り当て",
+        "boChuNhiem": "責任者を外す",
+        "dangTimChuNhiem": "責任者を検索中…",
+        "khongCoChuNhiemPhuHop": "該当する責任者はいません。",
+        "vuiLongDangNhapLaiDe": "責任者を検索するには再度ログインしてください。",
+        "banKhongCoQuyenTimChu": "責任者を検索する権限がありません。",
+        "khongTaiDuocDanhSachChu": "責任者の一覧を読み込めませんでした。未割り当てのままにして、後でもう一度お試しください。",
+        "thuLai": "再試行"
+      },
+      "SubjectClassesTab": {
+        "tatCa": "すべて",
+        "nhap": "下書き",
+        "dangMo": "開講中",
+        "luuTru": "アーカイブ済み",
+        "trangThaiLop": "クラスのステータス",
+        "locTheoMaLop": "クラスコードで絞り込み"
+      },
+      "SubjectClassesTable": {
+        "lopCuaMonHocChiXem": "科目のクラス（閲覧のみ）",
+        "maLop": "クラスコード",
+        "hocKy": "学期",
+        "giangVien": "教員",
+        "trangThai": "ステータス",
+        "chuaPhanCong": "未割り当て",
+        "dangMo": "開講中",
+        "nhap": "下書き",
+        "luuTru": "アーカイブ済み",
+        "khongCoLopPhuHop": "該当するクラスはありません。"
+      },
+      "SubjectEditForm": {
+        "maMon": "科目コード",
+        "tenMonHoc": "科目名",
+        "moTa": "説明",
+        "huy": "キャンセル",
+        "luuThayDoi": "変更を保存"
+      },
+      "SubjectFilters": {
+        "tatCa": "すべて",
+        "hoatDong": "有効",
+        "luuTru": "アーカイブ済み",
+        "trangThaiMonHoc": "科目のステータス",
+        "locTheoMaHoacTenMon": "科目コードまたは科目名で絞り込み"
+      },
+      "SubjectFormDialog": {
+        "maMonDaTonTaiHay": "科目コードはすでに存在します。別のコードを使用してください。",
+        "chuNhiemDaChonKhongCon": "選択した責任者は無効になりました。選び直すか、選択を解除してください。",
+        "phienDangNhapKhongConHop": "ログインセッションが無効になりました。再度ログインしてください。",
+        "banKhongCoQuyenThemMon": "科目を追加する権限がありません。",
+        "chuaXacNhanTaoMonThanh": "科目の作成を確認できませんでした。入力内容は保持されています。再試行する前に一覧を確認してください。",
+        "themMonHoc": "科目を追加",
+        "dangThem": "追加中…",
+        "maMon": "科目コード",
+        "tenMon": "科目名",
+        "moTa": "説明"
+      },
+      "SubjectInfoTab": {
+        "thongTinMonHoc": "科目情報"
+      },
+      "SubjectMetaCard": {
+        "khongKhaDung": "利用不可",
+        "trangThai": "ステータス",
+        "luuTru": "アーカイブ済み",
+        "hoatDong": "有効",
+        "ngayTao": "作成日",
+        "moLaiMonHoc": "科目を再開",
+        "luuTruMonHoc": "科目をアーカイブ"
+      },
+      "SubjectReadError": {
+        "vuiLongDangNhapDeXem": "科目を表示するにはログインしてください。",
+        "banKhongCoQuyenQuanTri": "科目を管理する権限がありません。",
+        "khongTimThayMonHoc": "科目が見つかりません。",
+        "khongTaiDuocDuLieuMon": "科目のデータを読み込めませんでした。もう一度お試しください。",
+        "thuLai": "再試行"
+      },
+      "SubjectStatusActions": {
+        "moLaiMonHoc": "科目を再開しますか？",
+        "luuTruMonHoc": "科目をアーカイブしますか？",
+        "moLai": "再開",
+        "luuTru": "アーカイブ",
+        "banCoChacMuon": "",
+        "moLai2": "再開",
+        "luuTru2": "アーカイブ",
+        "monHoc": " する科目：",
+        "khong": "。よろしいですか？",
+        "cacLopNhapVaDangMo": "下書きと開講中のクラスもアーカイブされます。科目責任者は外されます。登録情報と学習履歴は保持されます。"
+      },
+      "SubjectTable": {
+        "danhSachMonHoc": "科目一覧",
+        "maMon": "科目コード",
+        "tenMon": "科目名",
+        "chuNhiemMon": "科目責任者",
+        "trangThai": "ステータス",
+        "mo": "開く",
+        "chuaPhanCong": "未割り当て",
+        "khongTraDuocChuNhiem": "責任者を取得できませんでした",
+        "hoatDong": "有効",
+        "luuTru": "アーカイブ済み",
+        "chiTietMonHoc": "科目 {code} の詳細",
+        "khongCoMonHocPhuHop": "該当する科目はありません。"
+      }
+    },
+    "hooks": {
+      "useSubjectMutation": {
+        "duLieuMonDaThayDoi": "科目のデータが変更されました。入力内容は保持されています。再読み込みすると現在の下書きは破棄されます。",
+        "phienDangNhapKhongConHop": "ログインセッションが無効になりました。再度ログインしてください。",
+        "banKhongCoQuyenThucHien": "この操作を実行する権限がありません。",
+        "monHocKhongConTonTai": "科目は存在しません。データを再読み込みしてください。",
+        "chuNhiemDaChonKhongCon": "選択した責任者は無効になりました。選び直すか、割り当てを解除してください。",
+        "tenMonLaBatBuocVa": "科目名は必須で、最大200文字です。",
+        "moTaMonToiDa2": "科目の説明は最大2,000文字です。",
+        "chuaKiemTraDuocLopCua": "科目のクラスを確認できなかったため、まだアーカイブできません。しばらくしてからもう一度お試しください。",
+        "chuaXacNhanLuuThayDoi": "変更の保存を確認できませんでした。入力内容は保持されています。再試行する前にデータを再読み込みして確認してください。",
+        "taiLaiDuLieuVaBo": "データを再読み込みして下書きを破棄"
+      }
+    },
+    "model": {
+      "validation": {
+        "tenMonLaBatBuocVa": "科目名は必須で、最大200文字",
+        "moTaMonToiDa2": "科目の説明は最大2,000文字",
+        "maMonPhaiGom120": "科目コードは英大文字、数字、- の1〜20文字"
+      }
+    },
+    "pages": {
+      "SubjectDetailPage": {
+        "monHoc": "科目",
+        "dangTaiMonHoc": "科目を読み込み中…",
+        "thongTin": "情報",
+        "lopHoc": "クラス",
+        "noiDungMonHoc": "科目の内容",
+        "daLuuThayDoi": "変更を保存しました",
+        "dangTaiLopHoc": "クラスを読み込み中…",
+        "danhSachLop": "クラス一覧",
+        "duLieuLopHienKhongKha": "クラスのデータは現在利用できません。",
+        "thuLai": "再試行",
+        "daBoChuNhiemMon": "科目責任者を外しました",
+        "daDoiChuNhiemMon": "科目責任者を変更しました",
+        "daLuuTruMonHoc": "科目をアーカイブしました",
+        "daMoLaiMonHoc": "科目を再開しました"
+      },
+      "SubjectListPage": {
+        "monHoc": "科目",
+        "themMonHoc": "科目を追加",
+        "daThemMonHoc": "科目を追加しました",
+        "dangTaiMonHoc": "科目を読み込み中…"
+      }
+    },
+    "register": {
+      "monHoc": "科目"
+    }
+  },
+  "shared": {
+    "activity": {
+      "ActivityTimeline": {
+        "gio": "{hours} 時間",
+        "phut": "{minutes} 分",
+        "giay": "{rest} 秒",
+        "baiKhongBatGhiNhanHoat": "この課題ではアクティビティの記録が有効になっていません。",
+        "duLieuDaQuaThoiHan": "データは保存期間を過ぎています。",
+        "chuaCoDuLieuHoatDong": "アクティビティのデータはまだありません。",
+        "roiTrang": "ページ離脱 ",
+        "lanTongThoiGianDaBiet": " 回 · 判明している合計時間 ",
+        "roiTrang2": "ページ離脱",
+        "khongRo": "不明"
+      }
+    },
+    "ai": {
+      "AiSourcePicker": {
+        "khongTaiDuocDanhSachNguon": "AIソースの一覧を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "chonNguonAi": "AIソースを選択",
+        "huy": "キャンセル",
+        "guiYeuCau": "リクエストを送信",
+        "dangGuiBangNguonMacDinh": "既定のソースで送信中：",
+        "nguonMacDinh": "既定のソース ",
+        "chuaDungDuoc": " は利用できません",
+        "chonNguonKhacChoLanNay": "。今回は別のソースを選択してください。",
+        "dangTai": "読み込み中…",
+        "nguonAi": "AIソース",
+        "doiNguonMacDinh": "既定のソースを変更",
+        "khongMuonChonMoiLanDat": "毎回選びたくない場合は、既定のソースを設定できます",
+        "o": "：",
+        "ketNoiAi": "AI接続",
+        "agentMcpKhongPhaiNguonO": "。MCPエージェントはここでのソースではありません。エージェントはお使いのアプリからプラットフォームのツールを直接呼び出します。",
+        "apiCuaTruong": "学校API",
+        "apiCaNhan": "個人API · {value}",
+        "macDinh": "既定",
+        "truongChiuChiPhi": "学校負担",
+        "banChiuChiPhi": "自己負担",
+        "moHinh": "モデル {model}",
+        "moHinhDoQuanTriVien": "管理者が設定したモデル",
+        "conTokenHomNay": " · 本日の残り {value} / {value2} トークン",
+        "khongGioiHanBoiTruong": " · 学校による上限なし",
+        "uocTinhToken": " · 推定 {value} トークン"
+      },
+      "AiTaskStatus": {
+        "dangCho": "待機中",
+        "dangChay": "実行中",
+        "loi": "エラー",
+        "khongRoKetQua": "結果不明",
+        "daHuy": "キャンセル済み",
+        "khongHuyDuocTaskCoThe": "キャンセルできませんでした。タスクがすでに開始している可能性があります。",
+        "khongXemDuocTrangThaiYeu": "AIリクエストの状態を表示できませんでした。",
+        "dangTaiTrangThai": "状態を読み込み中...",
+        "nhaCungCapKhongTraKet": "プロバイダーから明確な結果が返りませんでした。再送する前に確認してください。",
+        "duLieuDaDoiTrongLuc": "待機中にデータが変更されたため、結果は適用されませんでした。",
+        "huy": "キャンセル"
+      }
+    },
+    "api": {
+      "client": {
+        "heThongTamBanVuiLong": "システムが混み合っています。しばらくしてからもう一度お試しください"
+      },
+      "messages": {
+        "khongTheTaiDuLieuVui": "データを読み込めませんでした。もう一度お試しください。"
+      }
+    },
+    "dateTime": {
+      "ngayGio": "{days} 日 {hours} 時間",
+      "gioPhut": "{hours} 時間 {value} 分",
+      "phut": "{minutes} 分",
+      "giay": "{value} 秒",
+      "vuaXong": "たった今",
+      "phutTruoc": "{value} 分前",
+      "gioTruoc": "{value} 時間前",
+      "homQua": "昨日 {value}",
+      "ngayTruoc": "{days} 日前",
+      "conPhut": "残り {value} 分",
+      "conGio": "残り {value} 時間",
+      "conNgay": "残り {value} 日"
+    },
+    "document": {
+      "DiagramEditor": {
+        "keoDeDoiDoRong": "ドラッグして幅を変更",
+        "dangMoDrawIo": "Draw.io を開いています…",
+        "dong": "✕ 閉じる"
+      },
+      "DiagramViewPage": {
+        "khongTimThaySoDoHoac": "図が見つからないか、閲覧する権限がありません。",
+        "khongTaiDuocSoDo": "図を読み込めませんでした",
+        "dangTaiSoDo": "図を読み込み中…",
+        "taiTepDrawio": ".drawio ファイルをダウンロード",
+        "soDo": "図",
+        "soDoChuaCoAnhXem": "図にはプレビュー画像がありません。.drawio ファイルをダウンロードして Draw.io で開いてください。"
+      },
+      "DocumentEditor": {
+        "vietCauTraLoi": "解答を入力…",
+        "damCtrlB": "太字（Ctrl+B）",
+        "nghiengCtrlI": "斜体（Ctrl+I）",
+        "gachChanCtrlU": "下線（Ctrl+U）",
+        "gachNgang": "取り消し線",
+        "canTrai": "左揃え",
+        "canGiua": "中央揃え",
+        "canPhai": "右揃え",
+        "canDeu": "両端揃え",
+        "xoaSoDo": "図を削除",
+        "xoaAnh": "画像を削除",
+        "soDoCuaDe": "課題の図",
+        "anhCuaDe": "課題の画像",
+        "text": "{row} × {col}",
+        "text2": "{rows} × {cols}",
+        "bang": "表",
+        "xoaCauHoi": "問題を削除",
+        "duaCauHoiLen": "問題を上へ移動",
+        "duaCauHoiXuong": "問題を下へ移動",
+        "taiAnhKhongThanhCong": "画像のアップロードに失敗しました",
+        "deCuaGiangVienKhongSua": "教員が作成した課題文のため編集できません",
+        "vietVaoPhanNay": "このパートに記入",
+        "baiLamCuaBan": "あなたの解答",
+        "vietNoiDungCauHoi": "問題文を入力…",
+        "nhapDeBaiBoiCanhHe": "課題文、システムの背景、全体の要件などを入力…",
+        "dongCuoi": "最終行",
+        "themY": "項目を追加",
+        "themCauHoi": "問題を追加",
+        "keoDeDoiChoCauHoi": "ドラッグして問題を並べ替え",
+        "chuyenPhanDauTrang": "パートを切り替え（ページ上部）",
+        "chuyenPhan": "パートを切り替え",
+        "phanTruoc": "前のパート",
+        "phan": "パート ",
+        "phanSau": "次のパート",
+        "cheDoXem": "表示モード",
+        "caTrang": "ページ全体",
+        "tungPhan": "パートごと",
+        "thanhCongCu": "ツールバー",
+        "dinhDangVaChen": "書式と挿入",
+        "hoanTacCtrlZ": "元に戻す（Ctrl+Z）",
+        "hoanTac": "元に戻す",
+        "lamLaiCtrlY": "やり直す（Ctrl+Y）",
+        "lamLai": "やり直す",
+        "themCauHoiTaiChoCon": "カーソル位置に問題を追加",
+        "cauHoi": "問題",
+        "mauChu": "文字の色",
+        "macDinh": "既定",
+        "mauToNen": "背景の色",
+        "khongTo": "背景なし",
+        "danhSachCham": "箇条書き",
+        "danhSachSo": "番号付きリスト",
+        "chenBang": "表を挿入",
+        "chenAnh": "画像を挿入",
+        "chenSoDoDrawIo": "Draw.io の図を挿入",
+        "baiChuaDatTen": "無題の課題",
+        "tenBai": "課題名",
+        "batDauViet": "書き始める",
+        "vietTiepOCuoiTaiLieu": "文書の末尾に書き足す",
+        "noiDungTieuDe": "見出しの内容",
+        "tenCauHoi": "問題のタイトル",
+        "doanVan": "段落",
+        "chonAnh": "画像を選択",
+        "dangTaiAnh": "画像を読み込み中…",
+        "muc": "セクション {value}",
+        "hangCuaDe": "課題の行",
+        "xoaBang": "表を削除",
+        "xoaHang": "行を削除",
+        "cotCuaDe": "課題の列",
+        "xoaCot": "列を削除",
+        "o": "セル {value}-{value2}",
+        "keoDeDoiDoRongCot": "ドラッグして列 {value} の幅を変更",
+        "chenCotBenPhai": "右に列を挿入",
+        "chenHangBenDuoi": "下に行を挿入",
+        "bangCuaDe": "課題の表"
+      },
+      "DocumentViewer": {
+        "suaSoDo": "図を編集",
+        "veSoDo": "図を描く",
+        "chuaCoSoDo": "図はまだありません",
+        "taiLieuTrong": "空の文書です。"
+      },
+      "DocxImportDialog": {
+        "khongDocDuocTepDocx": "DOCXファイルを読み込めませんでした",
+        "theoMaTrongAltText": "代替テキストのコードから",
+        "tuDuLieuTrongAnhPng": "PNG画像内のデータから",
+        "tuAnhSvg": "SVG画像から",
+        "nhapDocx": "DOCXを取り込む",
+        "tepDocxToiDa20Mb": "DOCXファイルは最大20MBまで",
+        "nhap": "取り込む",
+        "tepDocx": "DOCXファイル",
+        "toiDa20MbTepChi": "最大20MB。ファイルはメモリ上で読み込むだけで、保存されません。",
+        "chonTepKhac": "別のファイルを選択",
+        "chonTep": "ファイルを選択",
+        "dangDocTep": "ファイルを読み込み中…",
+        "khoi": " ブロック · ",
+        "anh": " 画像 · ",
+        "soDo": " 図",
+        "muc": "セクション",
+        "doDai": "長さ",
+        "khoi2": " ブロック",
+        "soDoKhoiPhucDuoc": "復元できた図",
+        "soDo2": "{value} {count} 件の図",
+        "cachNhap": "取り込み方法",
+        "thayKhungHienTai": "現在の枠組みを置き換え",
+        "themVaoCuoi": "末尾に追加"
+      },
+      "FormattedTextEditor": {
+        "toiDaKyTu": "{label} は最大 {value} 文字までです。",
+        "noiDungCoQuaNhieuDoan": "内容の段落数または書式が多すぎます。",
+        "boSoan": "{label} のエディター",
+        "dinhDang": "{label} の書式",
+        "dam": "太字",
+        "nghieng": "斜体",
+        "gachChan": "下線",
+        "canTrai": "左揃え",
+        "canGiua": "中央揃え",
+        "canPhai": "右揃え",
+        "canDeu": "両端揃え",
+        "danhSachCham": "箇条書き",
+        "danhSachSo": "番号付きリスト",
+        "giamThutLe": "インデントを減らす",
+        "tangThutLe": "インデントを増やす",
+        "hoanTac": "元に戻す",
+        "lamLai": "やり直す",
+        "doan": "{label}、段落 {value}"
+      },
+      "RubricViewer": {
+        "chuaCoRubric": "ルーブリックはまだありません。",
+        "mucCham": "評価項目",
+        "diem": "点数",
+        "chuaCoNoiDung": "（内容なし）",
+        "tong": "合計",
+        "tongDiem": "合計 {value} 点",
+        "diem2": "{value} 点",
+        "chuaCoMucChamBamVao": "評価項目はまだありません。カードをクリックして追加してください。",
+        "chuaCoMucCham": "評価項目はまだありません。"
+      },
+      "types": {
+        "tieuDe": "タイトル",
+        "phuDe": "サブタイトル",
+        "tieuDe1": "見出し 1",
+        "tieuDe2": "見出し 2",
+        "tieuDe3": "見出し 3",
+        "tieuDe4": "見出し 4",
+        "tieuDe5": "見出し 5",
+        "tieuDe6": "見出し 6",
+        "soDoLop": "クラス図",
+        "soDoTuanTu": "シーケンス図",
+        "soDoHoatDong": "アクティビティ図",
+        "soDoEr": "ER図",
+        "soDoThanhPhan": "コンポーネント図",
+        "soDoTrangThai": "状態遷移図",
+        "loaiKhac": "その他",
+        "doanVan": "段落",
+        "danhSach": "リスト",
+        "bang": "表",
+        "anh": "画像",
+        "soDo": "図",
+        "toanBai": "課題全体"
+      }
+    },
+    "layout": {
+      "AppShell": {
+        "boQuaToiNoiDung": "コンテンツへスキップ",
+        "thuGonMenu": "メニューを折りたたむ",
+        "moMenu": "メニューを開く",
+        "nenTangHocTapTrangChu": "学習プラットフォーム、ホーム",
+        "chuyenGiaoDienSang": "ライトモードに切り替え",
+        "chuyenGiaoDienToi": "ダークモードに切り替え",
+        "giaoDienSang": "ライトモード",
+        "giaoDienToi": "ダークモード",
+        "taiKhoan": "アカウント",
+        "hoSo": "プロフィール",
+        "dangXuat": "ログアウト",
+        "thuGon": "折りたたむ",
+        "mo": "展開",
+        "ngonNgu": "言語"
+      },
+      "LogoutDialog": {
+        "khongDangXuatDuocThuLai": "ログアウトできませんでした。しばらくしてからもう一度お試しください。",
+        "dangXuat": "ログアウトしますか？",
+        "dangXuat2": "ログアウト"
+      },
+      "navigation": {
+        "sinhVien": "学生",
+        "giangVien": "教員",
+        "chuNhiemMon": "科目責任者",
+        "quanTriVien": "管理者"
+      },
+      "NavTree": {
+        "dangTai": "読み込み中…",
+        "chuaCoMucNao": "項目はまだありません。"
+      }
+    },
+    "siteMetadata": {
+      "nenTangHocTap": "学習プラットフォーム",
+      "dayVaHocHieuQuaHon": "AIアシスタントで、もっと効果的な授業と学習を",
+      "quanLyLopHocTaiLieu": "クラス、教材、課題、試験を管理し、AIアシスタントで練習して即座にフィードバックを得られます。"
+    },
+    "studentCode": {
+      "mssvGom2ChuCaiVa": "学籍番号は英字2文字と数字6桁です（例：SE123456）。",
+      "mssvNayDaDuocDungCho": "この学籍番号はすでに別のアカウントで使用されています。",
+      "mssvDaKhoaViSinhVien": "学生がアカウントを有効化したため、学籍番号はロックされています。",
+      "canNhapMssvChoTaiKhoan": "学生アカウントには学籍番号が必要です。",
+      "chiTaiKhoanSinhVienMoi": "学籍番号を持てるのは学生アカウントのみです。"
+    },
+    "ui": {
+      "ClassFilter": {
+        "locTheoLop": "クラスで絞り込み",
+        "tatCaLop": "すべてのクラス"
+      },
+      "ConfirmDialog": {
+        "boChinhSua": "編集を破棄"
+      },
+      "DateInput": {
+        "chonNgayTuLich": "カレンダーから日付を選択",
+        "nhapNgayHopLeTheoDd": "dd/MM/yyyy 形式で有効な日付を入力してください。"
+      },
+      "Dialog": {
+        "dong": "閉じる"
+      },
+      "ErrorPage": {
+        "khongTimThayTrang": "ページが見つかりません",
+        "duongDanKhongTonTaiHoac": "リンクが存在しないか、変更されています。",
+        "heThongDangBan": "システムが混み合っています",
+        "mayChuChuaPhanHoi": "サーバーから応答がありません。",
+        "matKetNoiMang": "ネットワーク接続が切れました",
+        "thietBiDangKhongCoMang": "デバイスがオフラインです。",
+        "daXayRaLoi": "エラーが発生しました",
+        "heThongKhongHoanTatDuoc": "システムはリクエストを完了できませんでした。",
+        "nenTangHocTapTrangChu": "学習プラットフォーム - ホーム",
+        "chuyenGiaoDienSang": "ライトモードに切り替え",
+        "chuyenGiaoDienToi": "ダークモードに切り替え",
+        "loi": "エラー ",
+        "taiLaiTrang": "ページを再読み込み",
+        "veTrangChu": "ホームへ移動",
+        "t2026NenTangHocTap": "© 2026 学習プラットフォーム"
+      },
+      "InfoTip": {
+        "giaiThich": "説明：{label}"
+      },
+      "Logo": {
+        "nenTang": "学習",
+        "hocTap": "プラットフォーム"
+      },
+      "PageHeader": {
+        "duongDan": "パンくずリスト",
+        "quayLai": "戻る"
+      },
+      "PageStatus": {
+        "dangTai": "読み込み中…",
+        "taiLaiTrang": "ページを再読み込み"
+      },
+      "Pagination": {
+        "banGhi": "件",
+        "khongCo": "{itemLabel}はありません",
+        "hienThiTrong": "{value3} {itemLabel}中 {value}–{value2} を表示",
+        "phanTrang": "ページ送り",
+        "trangTruoc": "前のページ"
+      },
+      "ScoreCards": {
+        "tongDiem": "合計点"
+      },
+      "Skeleton": {
+        "dangTai": "読み込み中…"
+      },
+      "TermFilter": {
+        "locTheoHocKy": "学期で絞り込み",
+        "tatCaHocKy": "すべての学期"
+      },
+      "Toast": {
+        "dongThongBao": "通知を閉じる"
+      }
+    }
+  }
+}

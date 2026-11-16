@@ -37,4 +37,18 @@ class AssignmentDraftPromptBuilderTest {
                 "software-design (SWD-like)", "without forcing either type", "do not force an unrelated diagram",
                 "untrusted", "appointment booking", "Ignore all rules");
     }
+
+    @Test
+    void japaneseOptionAsksForJapaneseContent() {
+        Assignment assignment = new Assignment(UUID.randomUUID(), AssignmentScope.CLASS, UUID.randomUUID(),
+                UUID.randomUUID(), null, AssignmentOrigin.MANUAL, 1, SubmissionMode.INDIVIDUAL, true, GradingMode.GRADED,
+                "Draft", "", new DocumentModel(List.of()), List.of(), Map.of(), List.of(), false, null,
+                AssignmentStatus.DRAFT, null, null, null, null, null, UUID.randomUUID(), Instant.now(), Instant.now(), 0);
+        var options = new AssignmentCommands.DraftOptions("AUTO", "JA", 2, null);
+
+        var prompt = AssignmentDraftPromptBuilder.build(assignment, "Create an exam.", List.of(), options);
+
+        assertThat(prompt.system()).contains("Write all student-facing content in Japanese");
+        assertThat(prompt.user()).contains("outputLanguage=Japanese");
+    }
 }

@@ -728,7 +728,7 @@ public class AssignmentAiDraftService {
         String profile = options.profile() == null ? "AUTO" : options.profile().strip().toUpperCase(Locale.ROOT);
         String language = options.language() == null ? "VI" : options.language().strip().toUpperCase(Locale.ROOT);
         // AUTO: theo mẫu đề (yêu cầu 2026-11-05).
-        if (!Set.of("AUTO", "GENERAL", "SWR", "SWD").contains(profile) || !Set.of("VI", "EN", "AUTO").contains(language)
+        if (!Set.of("AUTO", "GENERAL", "SWR", "SWD").contains(profile) || !Set.of("VI", "EN", "JA", "AUTO").contains(language)
                 || (options.questionCount() != null && (options.questionCount() < 1 || options.questionCount() > 10))
                 || (options.targetPoints() != null && !validTarget(options.targetPoints()))) {
             throw ApiException.badRequest("AI_OPTIONS_INVALID", "Kiểm tra profile, ngôn ngữ, số câu và tổng điểm");
