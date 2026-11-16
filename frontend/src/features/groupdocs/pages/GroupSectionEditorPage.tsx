@@ -16,15 +16,17 @@ import { useGroupDocStream } from "../hooks/useGroupDocStream";
 import { describeDeadline, formatRemaining } from "../model/deadline";
 import { assembleEditorDocument, assembleGroupDocument, splitDrafts } from "../model/document";
 import type { DocumentBlock, DocumentModel, SectionView, WorkspaceView } from "../model/types";
+import { NOOP } from "@/shared/noop";
+import { WorkspaceTopBar } from "@/shared/layout/WorkspaceTopBar";
+import { msg } from "@/i18n/msg";
 
 export const AUTOSAVE_MS = 10_000;
-const NOOP = () => {};
 
 type Drafts = Record<string, DocumentBlock[]>;
 
 function problemMessage(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
-    if (e.problem.status === 409) return e.problem.detail ?? "Dữ liệu vừa thay đổi, hãy tải lại.";
+    if (e.problem.status === 409) return e.problem.detail ?? msg("groupdocs.pages.GroupSectionEditorPage.duLieuVuaThayDoiHay");
     return e.problem.detail ?? fallback;
   }
   return fallback;
@@ -86,14 +88,14 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
     setDrafts((prev) => Object.fromEntries(mine.map((s) => [s.id, prev[s.id] ?? s.draftBlocks ?? s.publishedBlocks ?? []])));
     setDirty((prev) => prev.filter((id) => ids.has(id)));
     if (lost.length > 0) {
-      setNotice(`Bạn không còn giữ mục ${lost.join(", ")} (đã được nhả hoặc giao cho người khác); phần chưa lưu không được giữ.`);
+      setNotice(msg("groupdocs.pages.GroupSectionEditorPage.banKhongConGiuMucDa", { value: String(lost.join(", ")) }));
     }
     setView(loaded);
   }, []);
 
   const reload = useCallback(
     () => getWorkspace(documentId).then(applyView, (e: unknown) => {
-      setLoadError(e instanceof ApiError && e.problem.status === 404 ? "Không tìm thấy tài liệu nhóm." : "Không tải được tài liệu nhóm.");
+      setLoadError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupSectionEditorPage.khongTimThayTaiLieuNhom") : msg("groupdocs.pages.GroupSectionEditorPage.khongTaiDuocTaiLieuNhom"));
     }),
     [documentId, applyView],
   );
@@ -125,7 +127,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
         setDirty((prev) => (latest.current.drafts[id] === blocks ? prev.filter((d) => d !== id) : prev));
         setError(null);
       } catch (e) {
-        setError(problemMessage(e, "Không lưu được bản nháp."));
+        setError(problemMessage(e, msg("groupdocs.pages.GroupSectionEditorPage.khongLuuDuocBanNhap")));
         ok = false;
       }
     }
@@ -170,7 +172,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
       const title = number && entry.title.startsWith(number) ? entry.title.slice(number.length).trim() : entry.title;
       return { ...entry, number, title };
     });
-    publishOutline({ assignmentId: view.assignmentId, backHref: workspaceHref, backLabel: "Tài liệu nhóm", entries });
+    publishOutline({ assignmentId: view.assignmentId, backHref: workspaceHref, backLabel: msg("groupdocs.pages.GroupSectionEditorPage.taiLieuNhom"), entries });
     // Chỉ đăng lại khi đổi các phần, không đăng lại mỗi lần gõ.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, headingKey, workspaceHref, numbers]);
@@ -202,11 +204,11 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
     try {
       await finishSection(documentId, s.id);
       finished.current.add(s.id);
-      showToast(`Đã Xong mục “${s.title}”`);
+      showToast(msg("groupdocs.pages.GroupSectionEditorPage.daXongMuc", { title: String(s.title) }));
       await reload();
       if (held.current.size === 0) router.push(workspaceHref);
     } catch (e) {
-      setError(problemMessage(e, "Không đánh dấu Xong được."));
+      setError(problemMessage(e, msg("groupdocs.pages.GroupSectionEditorPage.khongDanhDauXongDuoc")));
     }
     setBusy(null);
   };
@@ -224,61 +226,57 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
         await finishSection(documentId, s.id);
         finished.current.add(s.id);
       }
-      showToast("Đã hoàn thành tất cả các mục");
+      showToast(msg("groupdocs.pages.GroupSectionEditorPage.daHoanThanhTatCaCac"));
       router.push(workspaceHref);
     } catch (e) {
-      setError(problemMessage(e, "Không đánh dấu Xong được."));
+      setError(problemMessage(e, msg("groupdocs.pages.GroupSectionEditorPage.khongDanhDauXongDuoc")));
       void reload();
       setBusy(null);
     }
   };
 
   if (loadError && !view) return <PageLoadError>{loadError}</PageLoadError>;
-  if (!view || !editorDocument) return <PageLoading label="Đang mở trang soạn…" />;
+  if (!view || !editorDocument) return <PageLoading label={msg("groupdocs.pages.GroupSectionEditorPage.dangMoTrangSoan")} />;
 
   const mine = heldBy(view);
-  const title = view.assignmentTitle ?? "Bài nhóm";
+  const title = view.assignmentTitle ?? msg("groupdocs.pages.GroupSectionEditorPage.baiNhom");
   const deadline = describeDeadline(view, now);
   const cutoff = view.window === "LATE" ? view.lateUntil : view.closesAt;
   const left = editable ? formatRemaining(cutoff, now) : null;
   const actions = Object.fromEntries(mine.map((s) => [s.partId, (
     <div key={s.id} role="group" aria-label={s.title} className="flex items-center gap-1.5">
-      <Button size="sm" variant="ghost" icon="upload_file" disabled={!editable || busy !== null} onClick={() => setImporting(s)}>Nhập DOCX</Button>
+      <Button size="sm" variant="ghost" icon="upload_file" disabled={!editable || busy !== null} onClick={() => setImporting(s)}>{msg("groupdocs.pages.GroupSectionEditorPage.nhapDocx")}</Button>
       <Button size="sm" variant="primary" icon="check" disabled={!editable || busy !== null} onClick={() => void done(s)}>Xong</Button>
     </div>
   )]));
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
-      <p className="text-[13px] text-muted" data-testid="assignment-kind">Nhóm</p>
+      <p className="text-[13px] text-muted" data-testid="assignment-kind">{msg("groupdocs.pages.GroupSectionEditorPage.nhom")}</p>
     </div>
   );
 
   return (
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
-      <header ref={headerRef} className="sticky top-14 z-30 main-bleed -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] py-3 backdrop-blur-md md:-mt-10">
-        <div className="flex min-w-0 flex-1 items-center gap-x-3">
-          <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={title}>{title}</h1>
-          {left && <span title={`Hạn nộp: ${formatDateTime(cutoff!)}`}><Pill tone="warning">Còn {left}</Pill></span>}
-        </div>
-        <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
-        <div className="flex items-center justify-end">
+      <WorkspaceTopBar barRef={headerRef} title={title} setViewSlot={setViewSlot}
+        status={<>
+          {left && <span title={msg("groupdocs.pages.GroupSectionEditorPage.hanNop", { value: String(formatDateTime(cutoff!)) })}><Pill tone="warning">{msg("groupdocs.pages.GroupSectionEditorPage.con")}{left}</Pill></span>}
+        </>}
+        actions={<>
           {editable && mine.length > 0 && (
             <Button variant="primary" icon="check_circle" disabled={busy !== null || saving} onClick={() => void finishAll()}>
-              Hoàn thành tất cả
-            </Button>
+              {msg("groupdocs.pages.GroupSectionEditorPage.hoanThanhTatCa")}</Button>
           )}
-        </div>
-      </header>
+        </>} />
 
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {notice && <Alert tone="warning">{notice}</Alert>}
-      {!editable && <Alert tone="info">Đã hết hạn nộp; tài liệu chỉ còn xem.</Alert>}
-      {deadline && editable && <Alert tone={deadline.tone}>{deadline.title} Nên bấm Xong trước hạn.</Alert>}
+      {!editable && <Alert tone="info">{msg("groupdocs.pages.GroupSectionEditorPage.daHetHanNopTaiLieu")}</Alert>}
+      {deadline && editable && <Alert tone={deadline.tone}>{deadline.title} {msg("groupdocs.pages.GroupSectionEditorPage.nenBamXongTruocHan")}</Alert>}
 
       {mine.length === 0 ? (
         <Card padding="none" className="flex flex-col items-start gap-3 p-6">
-          <p className="text-[13.5px] text-body">Bạn chưa giữ mục nào để soạn.</p>
-          <ButtonLink href={workspaceHref}>Về tài liệu nhóm</ButtonLink>
+          <p className="text-[13.5px] text-body">{msg("groupdocs.pages.GroupSectionEditorPage.banChuaGiuMucNaoDe")}</p>
+          <ButtonLink href={workspaceHref}>{msg("groupdocs.pages.GroupSectionEditorPage.veTaiLieuNhom")}</ButtonLink>
         </Card>
       ) : (
         <DocumentEditor fullWidth document={editorDocument} onChange={edit} mode="student" readOnly={!editable} answerGuidance
@@ -296,7 +294,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
       {importing && (
         <DocxImportDialog
           allowReplace={false}
-          title={`Nhập DOCX vào mục “${importing.title}”`}
+          title={msg("groupdocs.pages.GroupSectionEditorPage.nhapDocxVaoMuc", { title: String(importing.title) })}
           preview={(file) => previewSectionDocx(documentId, importing.id, file)}
           onClose={() => setImporting(null)}
           onImport={(imported) => {

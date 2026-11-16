@@ -11,11 +11,12 @@ import {ManagedClassPage, type ManagedClassActions} from "./ManagedClassPage";
 import {ManagerDashboardPage, MySubjectPage} from "./ManagerDashboardPage";
 import {ClassFormDialog} from "../components/ClassFormDialog";
 import {ReopenConflictError} from "../components/ClassDialogs";
-import { EmptyState } from "../components/AcademicsUi";
+import { EmptyState } from "@/shared/ui";
 import { formatOperationError } from "../model/format";
 import type {SubjectView, CourseClassView, EnrollmentView} from "../model/types";
 import styles from "../styles/academics.module.css";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { msg } from "@/i18n/msg";
 
 type ResourceLoader<T> = (signal: AbortSignal) => Promise<T>;
 type ResourceState<T> = {
@@ -123,7 +124,7 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
       return result;
     } catch (error) {
       if (error instanceof ApiError && error.problem.status === 409) {
-        setMutationConflict({classId: id, message: "Dữ liệu đã thay đổi. Đã tải lại thông tin mới nhất; vui lòng kiểm tra trước khi tiếp tục."});
+        setMutationConflict({classId: id, message: msg("academics.pages.ClassRoutes.duLieuDaThayDoiDa")});
         await state.refresh().catch(() => {});
         const details = error.problem as typeof error.problem & {conflictingStudents?: unknown[]};
         if (details.conflictingStudents?.length) {
@@ -152,8 +153,7 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
       loadTeachers={loadTeachers} loadCandidates={loadCandidates}
       onBack={() => router.push("/manager/classes")} actions={actions}/>;
   } else {
-    content = <ReadOnlyClassPage audience={scope === "me" ? "student" : "teacher"} value={value} students={students}
-      onBack={() => { if (window.history.length > 1) window.history.back(); else router.push(scope === "me" ? "/classes" : "/teaching/classes"); }}/>;
+    content = <ReadOnlyClassPage audience={scope === "me" ? "student" : "teacher"} value={value} students={students}/>;
   }
   return <>
     {mutationConflict?.classId === id && <p role="alert" className={styles.error} data-testid="class-mutation-conflict">{mutationConflict.message}</p>}
@@ -181,7 +181,7 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
       onSubject={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}/>;
   } else if (view === "subjects") {
     content = subject ? <MySubjectPage subject={subject}/>
-      : <EmptyState title="Bạn chưa được giao quản lý môn"/>;
+      : <EmptyState title={msg("academics.pages.ClassRoutes.banChuaDuocGiaoQuanLy")}/>;
   } else {
     content = <ClassListPage key={initialSubjectId ?? ""} initialSubjectId={initialSubjectId} subjects={subjects} classes={classes}
       onOpen={id => router.push(`/manager/classes/${encodeURIComponent(id)}`)} onCreate={setCreating}/>;

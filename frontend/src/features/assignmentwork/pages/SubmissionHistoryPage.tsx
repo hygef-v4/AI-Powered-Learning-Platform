@@ -12,35 +12,14 @@ import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
 import { studentGradeDistributions, type AttemptResult } from "../slots";
 import { PublishedFeedback, PublishedRubricItems } from "../components/PublishedFeedback";
 import type { Attempt, AttemptSummary, StudentDetail } from "../model/types";
+import { NOOP } from "@/shared/noop";
+import { WorkspaceTopBar } from "@/shared/layout/WorkspaceTopBar";
+import { msg } from "@/i18n/msg";
 
 function attemptTime(a: AttemptSummary) {
   return formatDateTime(a.submittedAt ?? a.lastSavedAt ?? a.startedAt);
 }
 
-const NOOP = () => {};
-
-/**
- * Thanh trên cùng giống trang làm bài (yêu cầu 2026-11-05): tên bài và trạng thái bên trái, chỗ đặt nút Cả trang / Từng
- * phần ở giữa, thao tác bên phải.
- */
-function TopBar({ barRef, title, status, setViewSlot, actions }: {
-  barRef: (element: HTMLElement | null) => void;
-  title: string;
-  status?: ReactNode;
-  setViewSlot: (element: HTMLElement | null) => void;
-  actions?: ReactNode;
-}) {
-  return (
-    <header ref={barRef} className="sticky top-14 z-30 main-bleed -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] py-3 backdrop-blur-md md:-mt-10">
-      <div className="flex min-w-0 flex-1 items-center gap-x-3">
-        <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={title}>{title}</h1>
-        {status}
-      </div>
-      <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
-      <div className="flex flex-wrap items-center justify-end gap-2">{actions}</div>
-    </header>
-  );
-}
 
 /**
  * #41 Submission History (F8, UC 40): bài nộp hiện như trang tài liệu chỉ đọc (kiểu Docs ở chế độ chỉ xem):
@@ -103,7 +82,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
     const focus = `focus=${encodeURIComponent(assignmentId)}`;
     const backHref = general ? `/my-assignments?${focus}` : `/my-assignments?classId=${encodeURIComponent(classId)}&${focus}`;
     const blocks = attempt && attempt.attemptId === selected ? attempt.content.blocks : [];
-    publishOutline({ assignmentId, backHref, backLabel: "Bài tập", entries: outlineOf(blocks) });
+    publishOutline({ assignmentId, backHref, backLabel: msg("assignmentwork.pages.SubmissionHistoryPage.baiTap"), entries: outlineOf(blocks) });
   }, [assignmentId, attempt, classId, detail, general, selected]);
   useEffect(() => () => publishOutline(null), []);
 
@@ -111,9 +90,9 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const { result } = useAttemptResult(current?.graded ? current.attemptId : null);
   const shownResult = result?.score != null && attempt?.attemptId === selected ? result : null;
 
-  if (!classId) return <Alert tone="danger" role="alert">Thiếu lớp của bài.</Alert>;
+  if (!classId) return <Alert tone="danger" role="alert">{msg("assignmentwork.pages.SubmissionHistoryPage.thieuLopCuaBai")}</Alert>;
   if (error) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
-  if (!detail || !attempts) return <PageLoading label="Đang tải lịch sử nộp bài…" />;
+  if (!detail || !attempts) return <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.dangTaiLichSuNopBai")} />;
 
   // Quay lại nằm ở sidebar mục lục của bài (về trang Bài tập, đúng tab đang chứa bài).
   const shell = (bar: ReactNode, body: ReactNode) => (
@@ -123,9 +102,9 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
     </div>
   );
   if (attempts.length === 0) {
-    return shell(<TopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
+    return shell(<WorkspaceTopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
       <Card as="p" padding="none" className="p-8 text-center text-[13.5px] text-muted">
-        {historyOpen(detail, true) ? "Bạn chưa nộp bài nào." : "Lịch sử nộp bài hiện sau khi đã nộp và qua hạn nộp."}
+        {historyOpen(detail, true) ? msg("assignmentwork.pages.SubmissionHistoryPage.banChuaNopBaiNao") : msg("assignmentwork.pages.SubmissionHistoryPage.lichSuNopBaiHienSau")}
       </Card>);
   }
 
@@ -142,7 +121,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         <PracticeFeedbackPanel
           attemptId={shown.attemptId}
           partTitles={{
-            ASSIGNMENT: "Toàn bài",
+            ASSIGNMENT: msg("assignmentwork.pages.SubmissionHistoryPage.toanBai"),
             ...Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])),
           }}
         />
@@ -151,43 +130,43 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   }
 
   const bar = (
-    <TopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot}
+    <WorkspaceTopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot}
       actions={current && (
-        <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
-          <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(current.attemptId); }}>Tải DOCX</MenuItem>
+        <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.SubmissionHistoryPage.thaoTacKhac")} align="right">
+          <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(current.attemptId); }}>{msg("assignmentwork.pages.SubmissionHistoryPage.taiDocx")}</MenuItem>
         </Menu>
       )} />
   );
   const kind = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
       <p className="text-[13px] text-muted" data-testid="assignment-kind">
-        {detail.gradingMode === "PRACTICE" ? "Luyện tập" : detail.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}
+        {detail.gradingMode === "PRACTICE" ? msg("assignmentwork.pages.SubmissionHistoryPage.luyenTap") : detail.submissionMode === "GROUP" ? msg("assignmentwork.pages.SubmissionHistoryPage.nhom") : msg("assignmentwork.pages.SubmissionHistoryPage.caNhan")}
       </p>
     </div>
   );
 
   return shell(bar, <>
-    {!shown || !current ? <PageLoading label="Đang tải bài nộp…" /> : (
+    {!shown || !current ? <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.dangTaiBaiNop")} /> : (
       <DocumentEditor fullWidth document={shown.content} onChange={NOOP} mode="student" readOnly diagramEnabled={false}
         imageUrl={attemptImageUrl(current.attemptId)}
-        emptyLeafLabel="Chưa làm phần này."
+        emptyLeafLabel={msg("assignmentwork.pages.SubmissionHistoryPage.chuaLamPhanNay")}
         comments={comments}
         titleField={{ text: detail.title, readOnly: true, onText: NOOP }}
         header={kind}
         viewSlot={viewSlot}
         // Chuyển qua lại giữa các bài nộp; chỉ có khi có hơn một bản (bài cá nhân: bản đúng hạn và bản nộp muộn).
         toolbarCenter={ordered.length < 2 ? undefined : <>
-          <ToolbarButton icon="chevron_left" title="Bài nộp trước" aria-label="Bài nộp trước" disabled={index < 0 || index >= ordered.length - 1}
+          <ToolbarButton icon="chevron_left" title={msg("assignmentwork.pages.SubmissionHistoryPage.baiNopTruoc")} aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.baiNopTruoc")} disabled={index < 0 || index >= ordered.length - 1}
             onClick={() => setSelected(ordered[index + 1]!.attemptId)} />
-          <select aria-label="Chọn bài nộp" value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
+          <select aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.chonBaiNop")} value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
             className="h-7 rounded-md border border-line bg-surface px-2 font-mono text-xs text-ink outline-none focus:border-focus">
             {ordered.map((a) => (
               <option key={a.attemptId} value={a.attemptId}>
-                {detail.gradingMode === "PRACTICE" ? attemptTime(a) : `${a.late ? "Bản nộp muộn" : "Bản đúng hạn"} – ${attemptTime(a)}`}
+                {detail.gradingMode === "PRACTICE" ? attemptTime(a) : `${a.late ? msg("assignmentwork.pages.SubmissionHistoryPage.banNopMuon") : msg("assignmentwork.pages.SubmissionHistoryPage.banDungHan")} – ${attemptTime(a)}`}
               </option>
             ))}
           </select>
-          <ToolbarButton icon="chevron_right" title="Bài nộp sau" aria-label="Bài nộp sau" disabled={index <= 0}
+          <ToolbarButton icon="chevron_right" title={msg("assignmentwork.pages.SubmissionHistoryPage.baiNopSau")} aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.baiNopSau")} disabled={index <= 0}
             onClick={() => setSelected(ordered[index - 1]!.attemptId)} />
         </>}
       />
@@ -218,7 +197,7 @@ function TotalCard({ result }: { result: AttemptResult }) {
   return (
     <TotalScoreCard score={result.score} maxScore={result.maxScore} format={formatPoints}>
       <div className="mt-3"><PublishedFeedback feedback={result.feedback} summary={result.summary} /></div>
-      {result.memberOverride && <p className="mt-2 text-xs text-muted">Điểm cá nhân đã được giảng viên điều chỉnh riêng.</p>}
+      {result.memberOverride && <p className="mt-2 text-xs text-muted">{msg("assignmentwork.pages.SubmissionHistoryPage.diemCaNhanDaDuocGiang")}</p>}
     </TotalScoreCard>
   );
 }

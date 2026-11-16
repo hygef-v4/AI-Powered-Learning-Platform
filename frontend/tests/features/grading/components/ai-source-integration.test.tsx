@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AiProposalPanel } from "@/features/grading/components/AiProposalPanel";
+import { Toaster } from "@/shared/ui";
 import { BatchActionDialog } from "@/features/grading/components/BatchActionDialog";
 
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), requestBatch: vi.fn(), estimateBatch: vi.fn() }));
@@ -38,7 +39,7 @@ describe("U09 AI requests choose their source automatically", () => {
     const api = await import("@/features/grading/api");
     const perform = vi.fn().mockResolvedValue({ items: [{ evaluationId: "e", outcome: "SUCCESS" }] });
     Object.assign(api.gradingApi, { [action === "finalize" ? "finalizeGrades" : "publishGrades"]: perform });
-    render(<BatchActionDialog action={action} items={items} onClose={vi.fn()} onDone={vi.fn()} />);
+    render(<><Toaster /><BatchActionDialog action={action} items={items} onClose={vi.fn()} onDone={vi.fn()} /></>);
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
     expect(await screen.findByRole("status")).toHaveTextContent(action === "publish" ? "Đã công bố điểm cho 1 bài." : "Đã chốt điểm cho 1 bài.");
     expect(perform).toHaveBeenCalledExactlyOnceWith(items);
@@ -47,7 +48,7 @@ describe("U09 AI requests choose their source automatically", () => {
 
   it.each(["QUEUED", "PENDING"])("shows the token estimate and accepts a %s batch AI request", async (outcome) => {
     mocks.requestBatch.mockResolvedValue({ items: [{ evaluationId: "e", outcome }] });
-    render(<BatchActionDialog action="ai" items={items} onClose={vi.fn()} onDone={vi.fn()} />);
+    render(<><Toaster /><BatchActionDialog action="ai" items={items} onClose={vi.fn()} onDone={vi.fn()} /></>);
     expect(await screen.findByText("Ước tính khoảng 5.123 token.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
     await waitFor(() => expect(mocks.requestBatch).toHaveBeenCalledExactlyOnceWith(items, { requestRef: expect.any(String) }));

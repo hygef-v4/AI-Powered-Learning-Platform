@@ -1,16 +1,6 @@
-import { Fragment } from "react";
 import { FORMATTED_ALIGN, type FormattedBlock, type FormattedText } from "./formattedText";
 import { cx } from "@/shared/ui";
-
-function TextRuns({ block }: { block: FormattedBlock }) {
-  return block.runs.map((run, index) => {
-    let text = <Fragment>{run.text}</Fragment>;
-    if (run.bold) text = <strong>{text}</strong>;
-    if (run.italic) text = <em>{text}</em>;
-    if (run.underline) text = <u>{text}</u>;
-    return <Fragment key={index}>{text}</Fragment>;
-  });
-}
+import { RunsView } from "./DocumentViewer";
 
 export function FormattedTextView({ document, text, className }: {
   document?: FormattedText | null;
@@ -32,10 +22,10 @@ export function FormattedTextView({ document, text, className }: {
     {groups.map(({ blocks, start }) => {
       const first = blocks[0]!;
       const style = { textAlign: FORMATTED_ALIGN[first.align], marginInlineStart: `${first.indent * 1.25}rem` };
-      if (first.type === "PARAGRAPH") return <p key={start} style={style} className="min-h-[1.5em]"><TextRuns block={first} /></p>;
+      if (first.type === "PARAGRAPH") return <p key={start} style={style} className="min-h-[1.5em]"><RunsView runs={first.runs} /></p>;
       const Tag = first.type === "OL" ? "ol" : "ul";
       return <Tag key={start} style={style} className={cx("ps-8", first.type === "OL" ? "list-decimal" : "list-disc")}>
-        {blocks.map((block, index) => <li key={start + index} className="min-h-[1.5em]"><TextRuns block={block} /></li>)}
+        {blocks.map((block, index) => <li key={start + index} className="min-h-[1.5em]"><RunsView runs={block.runs} /></li>)}
       </Tag>;
     })}
   </div>;

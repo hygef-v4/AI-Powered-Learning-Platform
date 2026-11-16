@@ -19,8 +19,10 @@ import { assembleGroupDocument } from "../model/document";
 import { SECTION_STATUS, memberName, sectionPerson } from "../model/status";
 import { findSectionForHeading } from "../model/outline";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { NOOP } from "@/shared/noop";
+import { WorkspaceTopBar } from "@/shared/layout/WorkspaceTopBar";
+import { msg } from "@/i18n/msg";
 
-const NOOP = () => {};
 
 function dateTime(iso: string | null | undefined): string {
   return iso ? formatDateTime(iso) : "—";
@@ -66,7 +68,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           setView(loaded);
           setError(null);
         },
-        (e: unknown) => setError(e instanceof ApiError && e.problem.status === 404 ? "Không tìm thấy tài liệu nhóm." : "Không tải được tài liệu nhóm."),
+        (e: unknown) => setError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupWorkspacePage.khongTimThayTaiLieuNhom") : msg("groupdocs.pages.GroupWorkspacePage.khongTaiDuocTaiLieuNhom")),
       ),
     [documentId],
   );
@@ -78,7 +80,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         if (active) setView(loaded);
       },
       (e: unknown) => {
-        if (active) setError(e instanceof ApiError && e.problem.status === 404 ? "Không tìm thấy tài liệu nhóm." : "Không tải được tài liệu nhóm.");
+        if (active) setError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupWorkspacePage.khongTimThayTaiLieuNhom") : msg("groupdocs.pages.GroupWorkspacePage.khongTaiDuocTaiLieuNhom"));
       },
     );
     return () => {
@@ -119,7 +121,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     const entries = outlineOf(view.sharedBlocks.blocks).map((entry) =>
       entry.number && entry.title.startsWith(entry.number) ? { ...entry, title: entry.title.slice(entry.number.length).trim() } : entry,
     );
-    publishOutline({ assignmentId: view.assignmentId, backHref, backLabel: "Bài tập", entries });
+    publishOutline({ assignmentId: view.assignmentId, backHref, backLabel: msg("groupdocs.pages.GroupWorkspacePage.baiTap"), entries });
   }, [view]);
   useEffect(() => () => publishOutline(null), []);
 
@@ -139,7 +141,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      setNotice("Không tải được DOCX.");
+      setNotice(msg("groupdocs.pages.GroupWorkspacePage.khongTaiDuocDocx"));
     }
   };
 
@@ -162,12 +164,12 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       clearInvalid(s.id);
       openEditor(claimed);
     } catch (e) {
-      setNotice(e instanceof ApiError ? (e.problem.detail ?? "Không nhận được mục.") : "Không nhận được mục.");
+      setNotice(e instanceof ApiError ? (e.problem.detail ?? msg("groupdocs.pages.GroupWorkspacePage.khongNhanDuocMuc")) : msg("groupdocs.pages.GroupWorkspacePage.khongNhanDuocMuc"));
     }
   };
 
   if (error && !view) return <PageLoadError>{error}</PageLoadError>;
-  if (!view || !groupDocument) return <PageLoading label="Đang tải tài liệu nhóm…" />;
+  if (!view || !groupDocument) return <PageLoading label={msg("groupdocs.pages.GroupWorkspacePage.dangTaiTaiLieuNhom")} />;
 
   const me = view.role;
   const editable = view.status === "IN_PROGRESS" && view.window !== "CLOSED";
@@ -192,7 +194,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const nodeActions = Object.fromEntries(view.sections.map((s) => [s.partId, (
     <div key={s.id} role="group" aria-label={s.title} className="flex items-center gap-1.5">
       <Pill tone={SECTION_STATUS[s.status].tone}>{SECTION_STATUS[s.status].text}</Pill>
-      <Button size="sm" variant="ghost" icon="history" onClick={() => setHistory(s)}>Lịch sử</Button>
+      <Button size="sm" variant="ghost" icon="history" onClick={() => setHistory(s)}>{msg("groupdocs.pages.GroupWorkspacePage.lichSu")}</Button>
     </div>
   )]));
   // Thẻ phân công bên phải, ngang tiêu đề mục như thẻ rubric: người làm và các nút nhận, giao, nhả mục.
@@ -209,57 +211,53 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
           <p className="flex items-center gap-2 text-[13px]">
             <Icon name="person" size={16} filled={sectionPerson(s) !== null}
               className={cx("shrink-0", sectionPerson(s) !== null ? "text-primary-ink" : "text-muted")} />
-            <span className="text-muted">Người làm</span>
+            <span className="text-muted">{msg("groupdocs.pages.GroupWorkspacePage.nguoiLam")}</span>
             <span className="ml-auto min-w-0 truncate font-semibold text-ink">{name(sectionPerson(s))}</span>
           </p>
           {editable && (me.member || me.teacher) && (
             <div className="flex flex-wrap gap-1.5">
               {claimable(s) && (
-                <Button size="sm" variant="primary" onClick={() => handleClaim(s)}>{s.status === "DONE" ? "Sửa mục" : "Nhận mục"}</Button>
+                <Button size="sm" variant="primary" onClick={() => handleClaim(s)}>{s.status === "DONE" ? msg("groupdocs.pages.GroupWorkspacePage.suaMuc") : msg("groupdocs.pages.GroupWorkspacePage.nhanMuc")}</Button>
               )}
-              {mine && <Button size="sm" variant="primary" onClick={() => openEditor(s)}>Soạn tiếp</Button>}
-              {me.leader && <Button size="sm" onClick={() => setAssigning(s)}>Giao mục</Button>}
+              {mine && <Button size="sm" variant="primary" onClick={() => openEditor(s)}>{msg("groupdocs.pages.GroupWorkspacePage.soanTiep")}</Button>}
+              {me.leader && <Button size="sm" onClick={() => setAssigning(s)}>{msg("groupdocs.pages.GroupWorkspacePage.giaoMuc")}</Button>}
               {s.status === "CLAIMED" && (mine || me.leader || me.teacher) && (
-                <Button size="sm" variant="ghost" className="text-danger! hover:bg-danger-soft" onClick={() => setReleasing(s)}>Nhả mục</Button>
+                <Button size="sm" variant="ghost" className="text-danger! hover:bg-danger-soft" onClick={() => setReleasing(s)}>{msg("groupdocs.pages.GroupWorkspacePage.nhaMuc")}</Button>
               )}
             </div>
           )}
-          {failed.has(s.id) && <p className="text-xs text-danger">Mục này chưa xong.</p>}
+          {failed.has(s.id) && <p className="text-xs text-danger">{msg("groupdocs.pages.GroupWorkspacePage.mucNayChuaXong")}</p>}
         </section>
       ),
     };
   });
-  const title = view.assignmentTitle ?? "Bài nhóm";
+  const title = view.assignmentTitle ?? msg("groupdocs.pages.GroupWorkspacePage.baiNhom");
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
-      <p className="text-[13px] text-muted" data-testid="assignment-kind">Nhóm</p>
+      <p className="text-[13px] text-muted" data-testid="assignment-kind">{msg("groupdocs.pages.GroupWorkspacePage.nhom")}</p>
     </div>
   );
 
   return (
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
-      <header ref={headerRef} className="sticky top-14 z-30 main-bleed -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] py-3 backdrop-blur-md md:-mt-10">
-        <div className="flex min-w-0 flex-1 items-center gap-x-3">
-          <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={title}>{title}</h1>
-          {left && <span title={`Hạn nộp: ${dateTime(cutoff)}`}><Pill tone="warning">Còn {left}</Pill></span>}
-        </div>
-        <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
-        <div className="flex flex-wrap items-center justify-end gap-2">
+      <WorkspaceTopBar barRef={headerRef} title={title} setViewSlot={setViewSlot}
+        status={<>
+          {left && <span title={msg("groupdocs.pages.GroupWorkspacePage.hanNop", { value: String(dateTime(cutoff)) })}><Pill tone="warning">{msg("groupdocs.pages.GroupWorkspacePage.con")}{left}</Pill></span>}
+        </>}
+        actions={<>
           {me.member && (
-            <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
-              {me.member && <MenuItem icon="download" onClick={() => void download()}>Tải DOCX</MenuItem>}
+            <Menu label="" icon="more_horiz" ariaLabel={msg("groupdocs.pages.GroupWorkspacePage.thaoTacKhac")} align="right">
+              {me.member && <MenuItem icon="download" onClick={() => void download()}>{msg("groupdocs.pages.GroupWorkspacePage.taiDocx")}</MenuItem>}
             </Menu>
           )}
           {me.leader && editable && (
             <Button variant="primary" icon="check_circle" onClick={() => setSubmitting(true)}>
-              Nộp tài liệu
-            </Button>
+              {msg("groupdocs.pages.GroupWorkspacePage.nopTaiLieu")}</Button>
           )}
-        </div>
-      </header>
+        </>} />
 
       {notice && <Alert tone="danger" role="alert">{notice}</Alert>}
-      {!editable && view.status === "IN_PROGRESS" && <Alert tone="info">Đã hết hạn nộp; tài liệu chỉ còn xem.</Alert>}
+      {!editable && view.status === "IN_PROGRESS" && <Alert tone="info">{msg("groupdocs.pages.GroupWorkspacePage.daHetHanNopTaiLieu")}</Alert>}
       {deadline && !me.teacher && (
         <Alert tone={deadline.tone} title={deadline.title}>
           <ul className="list-disc pl-4">
@@ -274,7 +272,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         header={header}
         sectionActions={nodeActions}
         comments={assignmentCards}
-        emptyLeafLabel="Chưa có nội dung."
+        emptyLeafLabel={msg("groupdocs.pages.GroupWorkspacePage.chuaCoNoiDung")}
         viewSlot={viewSlot} />
 
       {history && <SectionHistoryDialog view={view} section={history} onClose={() => setHistory(null)} />}
@@ -287,7 +285,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
             setSubmitting(false);
             setNotice(null);
             setInvalid([]);
-            showToast("Đã nộp tài liệu nhóm");
+            showToast(msg("groupdocs.pages.GroupWorkspacePage.daNopTaiLieuNhom"));
             // Nộp xong về trang chi tiết bài.
             router.push(`/my-assignments/${encodeURIComponent(view.assignmentId)}?classId=${encodeURIComponent(view.classId)}`);
           }}
@@ -303,7 +301,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
       )}
       <Dialog
         open={releasing !== null}
-        title="Nhả mục"
+        title={msg("groupdocs.pages.GroupWorkspacePage.nhaMuc")}
         icon="warning"
         tone="warning"
         onClose={() => setReleasing(null)}
@@ -314,25 +312,23 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
               onClick={() => {
                 const s = releasing;
                 setReleasing(null);
-                if (s) void act(() => releaseSection(view.documentId, s.id), "Không nhả được mục.", s.id);
+                if (s) void act(() => releaseSection(view.documentId, s.id), msg("groupdocs.pages.GroupWorkspacePage.khongNhaDuocMuc"), s.id);
               }}
             >
-              Nhả mục
-            </Button>
+              {msg("groupdocs.pages.GroupWorkspacePage.nhaMuc")}</Button>
           </>
         }
       >
-        {releasing && <p>Nhả mục <strong>{sectionName(releasing)}</strong> của <strong>{name(sectionPerson(releasing))}</strong>?
-          Bản nháp đang làm của mục này sẽ bị bỏ. Nội dung đã hoàn thành trước đó được giữ lại; thành viên có thể nhận lại mục.</p>}
+        {releasing && <p>{msg("groupdocs.pages.GroupWorkspacePage.nhaMuc2")}<strong>{sectionName(releasing)}</strong> {msg("groupdocs.pages.GroupWorkspacePage.cua")}<strong>{name(sectionPerson(releasing))}</strong>{msg("groupdocs.pages.GroupWorkspacePage.banNhapDangLamCuaMuc")}</p>}
       </Dialog>
       <Dialog
         open={confirmingEdit !== null}
-        title="Sửa mục"
+        title={msg("groupdocs.pages.GroupWorkspacePage.suaMuc")}
         icon="edit"
         onClose={() => setConfirmingEdit(null)}
         footer={
           <>
-            <Button onClick={() => setConfirmingEdit(null)}>Quay lại</Button>
+            <Button onClick={() => setConfirmingEdit(null)}>{msg("groupdocs.pages.GroupWorkspacePage.quayLai")}</Button>
             <Button
               variant="primary"
               onClick={() => {
@@ -341,20 +337,17 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
                 if (s) void claimAndEdit(s);
               }}
             >
-              Sửa mục
-            </Button>
+              {msg("groupdocs.pages.GroupWorkspacePage.suaMuc")}</Button>
           </>
         }
       >
-        <Alert tone="warning">Mục hiện tại đã có người làm.</Alert>
+        <Alert tone="warning">{msg("groupdocs.pages.GroupWorkspacePage.mucHienTaiDaCoNguoi")}</Alert>
       </Dialog>
       {autoSubmitting && (
-        <BusyOverlay label="Đang nộp">
-          <p className="text-[16px] font-bold text-ink">Đang nộp…</p>
+        <BusyOverlay label={msg("groupdocs.pages.GroupWorkspacePage.dangNop")}>
+          <p className="text-[16px] font-bold text-ink">{msg("groupdocs.pages.GroupWorkspacePage.dangNop2")}</p>
           <p className="mt-2 text-[13px] text-body">
-            Đã hết hạn nộp{view.closesAt && ` lúc ${dateTime(view.closesAt)}`}. Hệ thống đang tự nộp bản mới nhất của các mục; trang bị khóa trong
-            lúc nộp.
-          </p>
+            {msg("groupdocs.pages.GroupWorkspacePage.daHetHanNop")}{view.closesAt && msg("groupdocs.pages.GroupWorkspacePage.luc", { value: String(dateTime(view.closesAt)) })}{msg("groupdocs.pages.GroupWorkspacePage.heThongDangTuNopBan")}</p>
         </BusyOverlay>
       )}
     </div>

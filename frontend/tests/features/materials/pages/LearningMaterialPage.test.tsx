@@ -23,7 +23,7 @@ beforeEach(() => { context.student = false; vi.mocked(apiFetch).mockReset(); });
 it("renders formatted description and persists visibility with its current version", async () => {
   vi.mocked(apiFetch).mockResolvedValue({ ...material, enabled: false, version: 4 });
   const { container } = render(<LearningMaterialPage id="m" />);
-  expect(container.querySelector("ul li strong")).toHaveTextContent("Nội dung chính");
+  expect(container.querySelector("ul li .font-bold")).toHaveTextContent("Nội dung chính");
   fireEvent.click(screen.getByRole("switch", { name: "Bật học liệu" }));
   await waitFor(() => expect(apiFetch).toHaveBeenCalledWith("/api/v1/materials/m", expect.objectContaining({ method: "PATCH" })));
   expect(JSON.parse(String(vi.mocked(apiFetch).mock.calls[0]![1]!.body))).toMatchObject({ enabled: false, version: 3 });

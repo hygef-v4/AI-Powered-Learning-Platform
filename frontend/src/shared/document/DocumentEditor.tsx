@@ -8,17 +8,18 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type ButtonHTMLAttributes,
   type KeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
   type TextareaHTMLAttributes,
 } from "react";
 import { createPortal } from "react-dom";
-import { Icon, cx, type IconName } from "@/shared/ui";
+import { Icon, cx } from "@/shared/ui";
 import { CommentRail, useWideLayout, type DocumentComment } from "./CommentRail";
 import { DiagramEditor } from "./DiagramEditor";
 import { BlockView, HEADING_CLASS, PARAGRAPH_CLASS, RunsView, alignClass, type ImageUrl } from "./DocumentViewer";
+import { Glyph, type GlyphName } from "./Glyph";
+import { ToolbarButton } from "./ToolbarButton";
 import { RichText, getCaret, setCaret, type Caret } from "./RichText";
 import { colorRange, formatOf, joinLines, runLines, sliceRuns, splitRuns, toggleFlagRange, type RunFlag } from "./runs";
 import {
@@ -44,11 +45,12 @@ import {
   type TableCell,
   type ValidationIssue,
 } from "./types";
+import { msg } from "@/i18n/msg";
 
 type Mode = "author" | "student";
 
 /** Chữ gợi ý ở ô Bài làm của bạn (yêu cầu 2026-11-10), ngắn như chữ gợi ý của người soạn. */
-const ANSWER_PLACEHOLDER = "Viết câu trả lời…";
+const ANSWER_PLACEHOLDER = msg("shared.document.DocumentEditor.vietCauTraLoi");
 
 /** Mục có chữ riêng (ngoài các mục con): có khối khác đoạn trống. */
 function hasOwnText(section: DocSection): boolean {
@@ -130,10 +132,10 @@ type Selected = { blockId: string; field: number; start: number; end: number };
  */
 
 const FLAGS: { key: RunFlag; label: string; title: string; className: string }[] = [
-  { key: "bold", label: "B", title: "Đậm (Ctrl+B)", className: "font-bold" },
-  { key: "italic", label: "I", title: "Nghiêng (Ctrl+I)", className: "font-serif italic" },
-  { key: "underline", label: "U", title: "Gạch chân (Ctrl+U)", className: "underline" },
-  { key: "strike", label: "S", title: "Gạch ngang", className: "line-through" },
+  { key: "bold", label: "B", title: msg("shared.document.DocumentEditor.damCtrlB"), className: "font-bold" },
+  { key: "italic", label: "I", title: msg("shared.document.DocumentEditor.nghiengCtrlI"), className: "font-serif italic" },
+  { key: "underline", label: "U", title: msg("shared.document.DocumentEditor.gachChanCtrlU"), className: "underline" },
+  { key: "strike", label: "S", title: msg("shared.document.DocumentEditor.gachNgang"), className: "line-through" },
 ];
 
 const TEXT_COLORS = ["#202124", "#5F6368", "#C5221F", "#E37400", "#188038", "#1A73E8", "#9334E6", "#B80672"];
@@ -142,15 +144,15 @@ const HIGHLIGHTS = ["#FFF475", "#CCFF90", "#A7FFEB", "#AECBFA", "#D7AEFB", "#FDC
 // Nền các tầng mục: biến theme (globals.css) đậm dần theo tầng, tự đổi theo sáng/tối.
 const SECTION_BG = ["var(--c-tier-1)", "var(--c-tier-2)", "var(--c-tier-3)", "var(--c-tier-4)"];
 const ALIGNS: { value: Align; title: string; glyph: GlyphName }[] = [
-  { value: "LEFT", title: "Căn trái", glyph: "alignLeft" },
-  { value: "CENTER", title: "Căn giữa", glyph: "alignCenter" },
-  { value: "RIGHT", title: "Căn phải", glyph: "alignRight" },
-  { value: "JUSTIFY", title: "Căn đều", glyph: "justify" },
+  { value: "LEFT", title: msg("shared.document.DocumentEditor.canTrai"), glyph: "alignLeft" },
+  { value: "CENTER", title: msg("shared.document.DocumentEditor.canGiua"), glyph: "alignCenter" },
+  { value: "RIGHT", title: msg("shared.document.DocumentEditor.canPhai"), glyph: "alignRight" },
+  { value: "JUSTIFY", title: msg("shared.document.DocumentEditor.canDeu"), glyph: "justify" },
 ];
 /** Nút ✕ ở góc block; bảng có nút ✕ riêng nằm cùng hàng với các nút + − của bảng. */
-const REMOVE_LABELS: Partial<Record<DocumentBlock["type"], string>> = { DIAGRAM: "Xóa sơ đồ", IMAGE: "Xóa ảnh" };
+const REMOVE_LABELS: Partial<Record<DocumentBlock["type"], string>> = { DIAGRAM: msg("shared.document.DocumentEditor.xoaSoDo"), IMAGE: msg("shared.document.DocumentEditor.xoaAnh") };
 /** Người học: sơ đồ, ảnh của đề trong phần vẫn có nút ✕ nhưng mờ, như "−" của hàng, cột của đề. */
-const LOCKED_LABELS: Partial<Record<DocumentBlock["type"], string>> = { DIAGRAM: "Sơ đồ của đề", IMAGE: "Ảnh của đề" };
+const LOCKED_LABELS: Partial<Record<DocumentBlock["type"], string>> = { DIAGRAM: msg("shared.document.DocumentEditor.soDoCuaDe"), IMAGE: msg("shared.document.DocumentEditor.anhCuaDe") };
 const IMAGE_TYPES = ".png,.jpg,.jpeg";
 const HISTORY_GAP_MS = 700;
 
@@ -362,22 +364,6 @@ function fit(field: HTMLTextAreaElement) {
   if (window.scrollY !== y) window.scrollTo({ top: y });
 }
 
-/** Nút trên thanh công cụ của trang soạn; giữ con trỏ trong ô đang gõ khi bấm. */
-export function ToolbarButton({ icon, active, className, children, ...rest }: ButtonHTMLAttributes<HTMLButtonElement> & {
-  icon?: IconName;
-  active?: boolean;
-}) {
-  return (
-    <button type="button" aria-pressed={active} onMouseDown={(event) => event.preventDefault()}
-      className={cx("inline-flex h-7 min-w-7 items-center justify-center gap-1 rounded-md px-1.5 text-[13px] font-medium whitespace-nowrap text-body transition-colors enabled:cursor-pointer enabled:hover:bg-line-strong enabled:focus-visible:bg-line-strong disabled:cursor-default disabled:opacity-35",
-        active && "bg-primary-soft text-ink", className)}
-      {...rest}>
-      {icon && <Icon name={icon} size={18} />}
-      {children}
-    </button>
-  );
-}
-
 const EMPTY_RUNS: Run[] = [{ text: "" }];
 const TITLE_CLASS = "font-display text-[28px] leading-tight tracking-[-0.025em] text-ink";
 
@@ -462,32 +448,6 @@ function Separator() {
   return <span aria-hidden className="mx-1 h-5 w-px bg-line-strong" />;
 }
 
-type GlyphName = "undo" | "redo" | "alignLeft" | "alignCenter" | "alignRight" | "justify" | "bullets" | "numbers"
-  | "image" | "table" | "diagram" | "highlight";
-
-const GLYPHS: Record<GlyphName, ReactNode> = {
-  undo: <><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" /></>,
-  redo: <><path d="m15 14 5-5-5-5" /><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" /></>,
-  alignLeft: <><path d="M4 6h16M4 10h10M4 14h16M4 18h10" /></>,
-  alignCenter: <><path d="M4 6h16M7 10h10M4 14h16M7 18h10" /></>,
-  alignRight: <><path d="M4 6h16M10 10h10M4 14h16M10 18h10" /></>,
-  justify: <><path d="M4 6h16M4 10h16M4 14h16M4 18h16" /></>,
-  bullets: <><path d="M10 7h10M10 12h10M10 17h10" /><circle cx="5" cy="7" r="1" /><circle cx="5" cy="12" r="1" /><circle cx="5" cy="17" r="1" /></>,
-  numbers: <><path d="M10 7h10M10 12h10M10 17h10M4 5h1.5v4M4 9h3M4 15.5c.5-.8 2.5-.8 2.5.5S4 17.5 4 19h3" /></>,
-  image: <><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" /><path d="m21 16-5-5L6 20" /></>,
-  table: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18M3 15h18M9 4v16M15 4v16" /></>,
-  diagram: <><rect x="3" y="3" width="7" height="6" rx="1" /><rect x="14" y="15" width="7" height="6" rx="1" /><path d="M6.5 9v4.5a1.5 1.5 0 0 0 1.5 1.5h6" /></>,
-  highlight: <><path d="m9 11-6 6v3h6l3-3" /><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" /></>,
-};
-
-function Glyph({ name }: { name: GlyphName }) {
-  return (
-    <svg aria-hidden viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      {GLYPHS[name]}
-    </svg>
-  );
-}
-
 /** Ô bật ra dưới nút trên thanh công cụ (bảng màu, chọn kích thước bảng); bấm ra ngoài thì đóng. */
 function ToolPopover({ title, label, disabled, children }: {
   title: string;
@@ -545,13 +505,13 @@ function TablePicker({ onPick }: { onPick: (rows: number, cols: number) => void 
           const col = (i % 10) + 1;
           const on = row <= hover.rows && col <= hover.cols;
           return (
-            <button key={i} type="button" aria-label={`${row} × ${col}`} onMouseEnter={() => setHover({ rows: row, cols: col })}
+            <button key={i} type="button" aria-label={msg("shared.document.DocumentEditor.text", { row: String(row), col: String(col) })} onMouseEnter={() => setHover({ rows: row, cols: col })}
               onClick={() => onPick(row, col)}
               className={cx("size-[18px] rounded-[2px] border p-0", on ? "border-primary bg-primary-soft" : "border-line-strong bg-sunken")} />
           );
         })}
       </div>
-      <p className="text-center text-xs text-body">{hover.rows > 0 ? `${hover.rows} × ${hover.cols}` : "Bảng"}</p>
+      <p className="text-center text-xs text-body">{hover.rows > 0 ? msg("shared.document.DocumentEditor.text2", { rows: String(hover.rows), cols: String(hover.cols) }) : msg("shared.document.DocumentEditor.bang")}</p>
     </div>
   );
 }
@@ -578,9 +538,9 @@ function Square({ label, danger = false, disabled = false, onClick, children }: 
 function SectionTools({ shown, onRemove, onUp, onDown }: { shown: boolean; onRemove: () => void; onUp?: () => void; onDown?: () => void }) {
   return (
     <span className={cx("absolute top-0 -left-7 z-10 flex flex-col gap-1 py-1 pr-2.5 pl-1 transition-opacity", shown ? "opacity-100" : "pointer-events-none opacity-0")}>
-      <Square danger label="Xóa câu hỏi" onClick={onRemove}>✕</Square>
-      <Square label="Đưa câu hỏi lên" disabled={!onUp} onClick={() => onUp?.()}>↑</Square>
-      <Square label="Đưa câu hỏi xuống" disabled={!onDown} onClick={() => onDown?.()}>↓</Square>
+      <Square danger label={msg("shared.document.DocumentEditor.xoaCauHoi")} onClick={onRemove}>✕</Square>
+      <Square label={msg("shared.document.DocumentEditor.duaCauHoiLen")} disabled={!onUp} onClick={() => onUp?.()}>↑</Square>
+      <Square label={msg("shared.document.DocumentEditor.duaCauHoiXuong")} disabled={!onDown} onClick={() => onDown?.()}>↓</Square>
     </span>
   );
 }
@@ -1022,7 +982,7 @@ export function DocumentEditor({
       const now = latest.current;
       onChange({ ...now, blocks: now.blocks.map((b) => (b.id === blockId && b.type === "IMAGE" ? { ...b, content: { ...b.content, fileRef, hasFile: false } } : b)) });
     } catch (error) {
-      setUploadError((current) => ({ ...current, [blockId]: error instanceof Error ? error.message : "Tải ảnh không thành công" }));
+      setUploadError((current) => ({ ...current, [blockId]: error instanceof Error ? error.message : msg("shared.document.DocumentEditor.taiAnhKhongThanhCong") }));
     }
   }
   function insertImage(file: File) {
@@ -1166,7 +1126,7 @@ export function DocumentEditor({
     const blockIssues = issues.filter((issue) => issue.blockId === block.id);
     return (
       <div key={block.id} data-testid={`block-${block.id}`} data-block-id={block.id} tabIndex={-1}
-        title={muted && !readOnly ? "Đề của giảng viên, không sửa được" : undefined}
+        title={muted && !readOnly ? msg("shared.document.DocumentEditor.deCuaGiangVienKhongSua") : undefined}
         onFocusCapture={() => focusBlock(block.id)} onMouseDownCapture={() => focusBlock(block.id)}
         onKeyDown={removeLabel ? (event) => { if ((event.key === "Delete" || event.key === "Backspace") && event.target === event.currentTarget) { event.preventDefault(); remove(block.id, true); } } : undefined}
         className={cx("group/block relative -mx-1 rounded px-1 py-0.5 outline-none",
@@ -1223,7 +1183,7 @@ export function DocumentEditor({
         : section.blocks.length === 0 ? <div className="h-7" /> : null;
     }
     return (
-      <button type="button" aria-label="Viết vào phần này" data-testid={`write-part-${key}`}
+      <button type="button" aria-label={msg("shared.document.DocumentEditor.vietVaoPhanNay")} data-testid={`write-part-${key}`}
         onClick={() => insertAfter(last.id, newBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-focus" : "h-7")}>
         {guided && ANSWER_PLACEHOLDER}
       </button>
@@ -1251,7 +1211,7 @@ export function DocumentEditor({
       {section.blocks.slice(0, splitAt).map(renderBlock)}
       <div data-testid={`answer-${key}`} className="mt-4 rounded-lg border border-line bg-surface p-3 focus-within:border-focus focus-within:ring-2 focus-within:ring-focus/15">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2">
-          <p className="text-sm font-semibold text-ink">Bài làm của bạn</p>
+          <p className="text-sm font-semibold text-ink">{msg("shared.document.DocumentEditor.baiLamCuaBan")}</p>
         </div>
         {section.blocks.slice(splitAt).map(renderBlock)}
         {emptyLeaf(section, key)}
@@ -1277,8 +1237,8 @@ export function DocumentEditor({
     const tailKey = end ? `tail-end-${key}` : `tail-${key}`;
     // Ô còn trống: gợi ý cho người mới (yêu cầu 2026-11-10); ngoài mọi câu hỏi chỉ nhắc bấm + để thêm câu hỏi.
     const placeholder = hasOwnText(section) || section.children.length > 0 ? undefined
-      : section.heading ? "Viết nội dung câu hỏi…"
-        : "Nhập đề bài, bối cảnh hệ thống, yêu cầu chung…";
+      : section.heading ? msg("shared.document.DocumentEditor.vietNoiDungCauHoi")
+        : msg("shared.document.DocumentEditor.nhapDeBaiBoiCanhHe");
     return (
       <div key={`${tailKey}-${blocks.length}`} data-block-id={tailKey} data-testid={tailKey}
         className="border-b border-dashed border-line-strong py-0.5 transition-colors focus-within:border-primary"
@@ -1287,7 +1247,7 @@ export function DocumentEditor({
           setCursorLine({ afterId: anchor?.id ?? null, sectionKey: key, tailKey });
         }}>
         <TailList list={tailStyles[tailKey]?.list}>
-        <RichText runs={tailRuns(tailKey)} aria-label="Dòng cuối" placeholder={placeholder} className={cx(PARAGRAPH_CLASS, alignClass(tailStyles[tailKey]?.align))}
+        <RichText runs={tailRuns(tailKey)} aria-label={msg("shared.document.DocumentEditor.dongCuoi")} placeholder={placeholder} className={cx(PARAGRAPH_CLASS, alignClass(tailStyles[tailKey]?.align))}
           onChange={(runs) => {
             if (!runsText(runs)) return;
             const preset = tailStyles[tailKey];
@@ -1361,7 +1321,7 @@ export function DocumentEditor({
     return (
       <div className="flex flex-wrap items-center gap-1 pt-1" data-testid={`quick-add-${section.heading?.id ?? "DOCUMENT"}`}
         onMouseDown={(event) => event.preventDefault()}>
-        <AddBar label={section.heading ? "Thêm ý" : "Thêm câu hỏi"} onClick={() => addChild(section)} />
+        <AddBar label={section.heading ? msg("shared.document.DocumentEditor.themY") : msg("shared.document.DocumentEditor.themCauHoi")} onClick={() => addChild(section)} />
       </div>
     );
   }
@@ -1437,7 +1397,7 @@ export function DocumentEditor({
         {/* Số thứ tự I., I.1., II. đứng trước tiêu đề, không sửa được; người soạn kéo số để đổi chỗ mục trong cùng cha. */}
         <div className="flex items-start gap-1.5">
           <span data-testid={`number-${key}`} draggable={authoring || undefined}
-            title={authoring ? "Kéo để đổi chỗ câu hỏi" : undefined}
+            title={authoring ? msg("shared.document.DocumentEditor.keoDeDoiChoCauHoi") : undefined}
             onDragStart={authoring ? (event) => { event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", key); setDragKey(key); } : undefined}
             onDragEnd={authoring ? () => { setDragKey(null); setDropAt(null); } : undefined}
             className={cx(HEADING_CLASS[headingStyle] ?? HEADING_CLASS.H1, "shrink-0 py-0.5 tabular-nums", authoring && "cursor-grab active:cursor-grabbing")}><SectionNumber value={numbers.get(key) ?? ""} /></span>
@@ -1493,14 +1453,14 @@ export function DocumentEditor({
   }
   /** Hai mũi tên chuyển trang, không ghi tên phần; có ở trên đầu (trên tên bài) và cuối trang. */
   const stepNav = (place: "top" | "bottom") => (
-    <nav aria-label={place === "top" ? "Chuyển phần (đầu trang)" : "Chuyển phần"} data-testid={place === "top" ? "step-nav-top" : "step-nav"}
+    <nav aria-label={place === "top" ? msg("shared.document.DocumentEditor.chuyenPhanDauTrang") : msg("shared.document.DocumentEditor.chuyenPhan")} data-testid={place === "top" ? "step-nav-top" : "step-nav"}
       className={cx("flex items-center justify-between gap-2", place === "top" ? "-mt-6 mb-4 border-b border-line pb-3 sm:-mt-8" : "mt-4 border-t border-line pt-3")}>
-      <button type="button" aria-label="Phần trước" title="Phần trước" disabled={stepIndex === 0} onClick={() => goPage(stepIndex - 1)}
+      <button type="button" aria-label={msg("shared.document.DocumentEditor.phanTruoc")} title={msg("shared.document.DocumentEditor.phanTruoc")} disabled={stepIndex === 0} onClick={() => goPage(stepIndex - 1)}
         className="inline-flex size-8 items-center justify-center rounded-lg text-body hover:bg-sunken disabled:opacity-35">
         <Icon name="arrow_back" size={17} />
       </button>
-      {place === "bottom" && <span className="sr-only" role="status">Phần {stepIndex + 1} / {leaves.length}</span>}
-      <button type="button" aria-label="Phần sau" title="Phần sau" disabled={stepIndex >= leaves.length - 1} onClick={() => goPage(stepIndex + 1)}
+      {place === "bottom" && <span className="sr-only" role="status">{msg("shared.document.DocumentEditor.phan")}{stepIndex + 1} / {leaves.length}</span>}
+      <button type="button" aria-label={msg("shared.document.DocumentEditor.phanSau")} title={msg("shared.document.DocumentEditor.phanSau")} disabled={stepIndex >= leaves.length - 1} onClick={() => goPage(stepIndex + 1)}
         className="inline-flex size-8 items-center justify-center rounded-lg text-body hover:bg-sunken disabled:opacity-35">
         <Icon name="arrow_forward" size={17} />
       </button>
@@ -1510,15 +1470,15 @@ export function DocumentEditor({
   // công cụ.
   // Luôn hiện, kể cả khi bài chưa có câu hỏi (yêu cầu 2026-11-10).
   const viewToggle = (
-    <span role="radiogroup" aria-label="Chế độ xem" className="flex items-center gap-0.5 rounded-lg bg-line/60 p-0.5">
-      <ViewButton label="Cả trang" on={!stepping} onClick={() => {
+    <span role="radiogroup" aria-label={msg("shared.document.DocumentEditor.cheDoXem")} className="flex items-center gap-0.5 rounded-lg bg-line/60 p-0.5">
+      <ViewButton label={msg("shared.document.DocumentEditor.caTrang")} on={!stepping} onClick={() => {
         pinned.current = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : null;
         // Về Cả trang thì cuộn tới đúng mục đang xem, không về đầu trang.
         const id = currentLeaf?.heading?.id;
         setView("page");
         if (id) requestAnimationFrame(() => scrollToSection(id));
       }}><PageGlyph /></ViewButton>
-      <ViewButton label="Từng phần" on={stepping} onClick={() => {
+      <ViewButton label={msg("shared.document.DocumentEditor.tungPhan")} on={stepping} onClick={() => {
         // Mở đúng trang của mục đang xem (theo chỗ đã cuộn tới), không thì theo chỗ con trỏ (yêu cầu 2026-11-05).
         const viewing = lastCurrent.current ? leaves.findIndex((leaf) => (leaf.heading?.id ?? "DOCUMENT") === lastCurrent.current) : -1;
         const at = viewing >= 0 ? viewing
@@ -1580,7 +1540,7 @@ export function DocumentEditor({
       {viewSlot && viewToggle && createPortal(viewToggle, viewSlot)}
       {readOnly && toolbarCenter && (
         // Cùng lưới với trang giấy và cột ghi chú bên dưới, để nút giữa nằm thẳng giữa trang giấy.
-        <div ref={measureToolbar} role="toolbar" aria-label="Thanh công cụ"
+        <div ref={measureToolbar} role="toolbar" aria-label={msg("shared.document.DocumentEditor.thanhCongCu")}
           className={`sticky top-[var(--doc-toolbar-top,4rem)] z-20 rounded-xl border border-line bg-sunken px-3 py-1 ${TOOLBAR_COVER}`}>
           <div className={rail ? "grid grid-cols-[minmax(0,816px)_300px] items-center justify-center gap-5" : "grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr] sm:gap-0"}>
             {!rail && <span className="hidden sm:block" />}
@@ -1591,20 +1551,19 @@ export function DocumentEditor({
         </div>
       )}
       {(!readOnly || (toolbarExtra && !toolbarCenter)) && (
-        <div ref={measureToolbar} role="toolbar" aria-label="Định dạng và chèn"
+        <div ref={measureToolbar} role="toolbar" aria-label={msg("shared.document.DocumentEditor.dinhDangVaChen")}
           className={`sticky top-[var(--doc-toolbar-top,4rem)] z-20 flex flex-wrap items-center gap-0.5 rounded-xl bg-sunken px-3 py-1 border border-line ${TOOLBAR_COVER}`}>
           {!readOnly && (
             <>
-              <ToolbarButton title="Hoàn tác (Ctrl+Z)" aria-label="Hoàn tác" disabled={history.past === 0} onClick={undo}><Glyph name="undo" /></ToolbarButton>
-              <ToolbarButton title="Làm lại (Ctrl+Y)" aria-label="Làm lại" disabled={history.future === 0} onClick={redo}><Glyph name="redo" /></ToolbarButton>
+              <ToolbarButton title={msg("shared.document.DocumentEditor.hoanTacCtrlZ")} aria-label={msg("shared.document.DocumentEditor.hoanTac")} disabled={history.past === 0} onClick={undo}><Glyph name="undo" /></ToolbarButton>
+              <ToolbarButton title={msg("shared.document.DocumentEditor.lamLaiCtrlY")} aria-label={msg("shared.document.DocumentEditor.lamLai")} disabled={history.future === 0} onClick={redo}><Glyph name="redo" /></ToolbarButton>
               <Separator />
               {!student && (
                 <>
-                  <ToolbarButton title="Thêm câu hỏi tại chỗ con trỏ" aria-label="Thêm câu hỏi" className="gap-1 pr-2"
+                  <ToolbarButton title={msg("shared.document.DocumentEditor.themCauHoiTaiChoCon")} aria-label={msg("shared.document.DocumentEditor.themCauHoi")} className="gap-1 pr-2"
                     data-testid="add-block" disabled={!addSectionAllowed || !canAddChild(addAtEnd ? tree : cursorSection ?? tree)}
                     onClick={() => (addAtEnd ? addChild(tree) : addAtCursor(cursorSection))}>
-                    <Icon name="add" size={16} />Câu hỏi
-                  </ToolbarButton>
+                    <Icon name="add" size={16} />{msg("shared.document.DocumentEditor.cauHoi")}</ToolbarButton>
                   <Separator />
                 </>
               )}
@@ -1615,12 +1574,12 @@ export function DocumentEditor({
                   <span className={flag.className}>{flag.label}</span>
                 </ToolbarButton>
               ))}
-              <ToolPopover title="Màu chữ" disabled={!formatTarget}
+              <ToolPopover title={msg("shared.document.DocumentEditor.mauChu")} disabled={!formatTarget}
                 label={<span className="flex flex-col items-center leading-none"><span className="font-semibold">A</span><span className="mt-0.5 h-1 w-4 rounded-sm" style={{ backgroundColor: shownRuns[0]?.color ?? "#202124" }} /></span>}>
-                {(close) => <Swatches colors={TEXT_COLORS} noneLabel="Mặc định" onPick={(color) => { paint("color", color); close(); }} />}
+                {(close) => <Swatches colors={TEXT_COLORS} noneLabel={msg("shared.document.DocumentEditor.macDinh")} onPick={(color) => { paint("color", color); close(); }} />}
               </ToolPopover>
-              <ToolPopover title="Màu tô nền" disabled={!formatTarget} label={<Glyph name="highlight" />}>
-                {(close) => <Swatches colors={HIGHLIGHTS} noneLabel="Không tô" onPick={(color) => { paint("highlight", color); close(); }} />}
+              <ToolPopover title={msg("shared.document.DocumentEditor.mauToNen")} disabled={!formatTarget} label={<Glyph name="highlight" />}>
+                {(close) => <Swatches colors={HIGHLIGHTS} noneLabel={msg("shared.document.DocumentEditor.khongTo")} onPick={(color) => { paint("highlight", color); close(); }} />}
               </ToolPopover>
               <Separator />
               {ALIGNS.map((align) => (
@@ -1631,16 +1590,16 @@ export function DocumentEditor({
                 </ToolbarButton>
               ))}
               <Separator />
-              <ToolbarButton title="Danh sách chấm" aria-label="Danh sách chấm" disabled={!listAllowed} active={tailStyle ? tailStyle.list === "UL" : style === "UL"}
+              <ToolbarButton title={msg("shared.document.DocumentEditor.danhSachCham")} aria-label={msg("shared.document.DocumentEditor.danhSachCham")} disabled={!listAllowed} active={tailStyle ? tailStyle.list === "UL" : style === "UL"}
                 onClick={() => toggleList("UL")}><Glyph name="bullets" /></ToolbarButton>
-              <ToolbarButton title="Danh sách số" aria-label="Danh sách số" disabled={!listAllowed} active={tailStyle ? tailStyle.list === "OL" : style === "OL"}
+              <ToolbarButton title={msg("shared.document.DocumentEditor.danhSachSo")} aria-label={msg("shared.document.DocumentEditor.danhSachSo")} disabled={!listAllowed} active={tailStyle ? tailStyle.list === "OL" : style === "OL"}
                 onClick={() => toggleList("OL")}><Glyph name="numbers" /></ToolbarButton>
               <Separator />
-              <ToolPopover title="Chèn bảng" disabled={!insertAllowed} label={<Glyph name="table" />}>
+              <ToolPopover title={msg("shared.document.DocumentEditor.chenBang")} disabled={!insertAllowed} label={<Glyph name="table" />}>
                 {(close) => <TablePicker onPick={(rows, cols) => { insertTable(rows, cols); close(); }} />}
               </ToolPopover>
               {uploadImage && (
-                <label title="Chèn ảnh" aria-label="Chèn ảnh" onMouseDown={(event) => event.preventDefault()}
+                <label title={msg("shared.document.DocumentEditor.chenAnh")} aria-label={msg("shared.document.DocumentEditor.chenAnh")} onMouseDown={(event) => event.preventDefault()}
                   className={cx("inline-flex h-7 min-w-7 items-center justify-center rounded-md px-1.5 text-body transition-colors", insertAllowed ? "cursor-pointer hover:bg-line-strong focus-within:bg-line-strong has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus" : "pointer-events-none opacity-35")}>
                   <Glyph name="image" />
                   <input type="file" accept={IMAGE_TYPES} className="sr-only" data-testid="add-IMAGE" disabled={!insertAllowed}
@@ -1648,7 +1607,7 @@ export function DocumentEditor({
                 </label>
               )}
               {diagramEnabled && (
-                <ToolbarButton title="Chèn sơ đồ Draw.io" aria-label="Chèn sơ đồ Draw.io" data-testid="add-DIAGRAM" disabled={!insertAllowed}
+                <ToolbarButton title={msg("shared.document.DocumentEditor.chenSoDoDrawIo")} aria-label={msg("shared.document.DocumentEditor.chenSoDoDrawIo")} data-testid="add-DIAGRAM" disabled={!insertAllowed}
                   onClick={insertDiagram}><Glyph name="diagram" /></ToolbarButton>
               )}
             </>
@@ -1687,8 +1646,8 @@ export function DocumentEditor({
               <div data-block-id="TITLE" data-invalid={titleField.invalid || undefined}
                 className={cx("mb-2", titleField.invalid && "rounded-lg px-2 py-1 outline-2 outline-danger")} onFocusCapture={() => { setInHeader(true); if (cursorLine) setCursorLine(null); }}>
                 {titleField.readOnly || readOnly
-                  ? <h2 className={cx(TITLE_CLASS, alignClass(document.title?.align))}>{titleField.text ? <RunsView runs={titleRuns} /> : "Bài chưa đặt tên"}</h2>
-                  : <RichText aria-label="Tên bài" runs={titleRuns} placeholder={titleField.placeholder}
+                  ? <h2 className={cx(TITLE_CLASS, alignClass(document.title?.align))}>{titleField.text ? <RunsView runs={titleRuns} /> : msg("shared.document.DocumentEditor.baiChuaDatTen")}</h2>
+                  : <RichText aria-label={msg("shared.document.DocumentEditor.tenBai")} runs={titleRuns} placeholder={titleField.placeholder}
                       className={cx(TITLE_CLASS, alignClass(document.title?.align), titleField.invalid && "rounded-md bg-danger-soft")}
                       onChange={(runs) => setTitle({ ...document.title, runs })}
                       onKey={(event) => { if (event.key === "Enter") event.preventDefault(); }} />}
@@ -1698,12 +1657,12 @@ export function DocumentEditor({
             {inlineComments(null)}
             {blocks.length === 0 && (readOnly
               ? <div className="h-16" />
-              : student && <button type="button" aria-label="Bắt đầu viết" data-testid="write-document"
+              : student && <button type="button" aria-label={msg("shared.document.DocumentEditor.batDauViet")} data-testid="write-document"
                 onClick={() => insertAfter(null, newBlock("PARAGRAPH", origin))} className="block h-16 w-full cursor-text" />)}
             {currentLeaf ? renderSection(topOf(currentLeaf), null, currentLeaf) : renderSection(tree)}
           </div>
           {student && !readOnly && !stepping && blocks.length > 0 && atEndInPart && (
-            <button type="button" aria-label="Viết tiếp ở cuối tài liệu" onClick={continueAtEnd} className="block h-14 w-full cursor-text" />
+            <button type="button" aria-label={msg("shared.document.DocumentEditor.vietTiepOCuoiTaiLieu")} onClick={continueAtEnd} className="block h-14 w-full cursor-text" />
           )}
           {stepping && stepNav("bottom")}
         </div>
@@ -1751,7 +1710,7 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
     case "HEADING":
       // Tiêu đề mục định dạng được (đậm, nghiêng, màu…, yêu cầu 2026-11-04), một dòng: Enter mở đoạn mới bên dưới.
       return (
-        <RichText aria-label="Nội dung tiêu đề" placeholder="Tên câu hỏi" runs={headingRuns(block)}
+        <RichText aria-label={msg("shared.document.DocumentEditor.noiDungTieuDe")} placeholder={msg("shared.document.DocumentEditor.tenCauHoi")} runs={headingRuns(block)}
           className={cx(HEADING_CLASS[block.content.style] ?? HEADING_CLASS.H1, alignClass(block.content.align))}
           onChange={(runs) => ops.change(withHeadingRuns(block, runs))}
           onKey={(event, caret) => keys(event, caret, {
@@ -1762,7 +1721,7 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
       );
     case "PARAGRAPH":
       return (
-        <RichText aria-label="Đoạn văn" placeholder={placeholder} runs={block.content.runs} className={cx(PARAGRAPH_CLASS, alignClass(block.content.align))}
+        <RichText aria-label={msg("shared.document.DocumentEditor.doanVan")} placeholder={placeholder} runs={block.content.runs} className={cx(PARAGRAPH_CLASS, alignClass(block.content.align))}
           onChange={(runs) => ops.change({ ...block, content: { ...block.content, runs } })}
           onKey={(event, caret) => keys(event, caret, {
             enter: ({ start, end }) => {
@@ -1783,13 +1742,13 @@ function BlockEditor({ block, ops, imageUrl, previewUrl, onUpload, uploadError, 
       const pick = onUpload && !src && !block.content.fileRef ? onUpload : undefined;
       return (
         <figure className="flex flex-col items-center gap-1 py-1">
-          <label title={pick ? "Chọn ảnh" : undefined} className={cx("block w-full", pick && "cursor-pointer")}>
+          <label title={pick ? msg("shared.document.DocumentEditor.chonAnh") : undefined} className={cx("block w-full", pick && "cursor-pointer")}>
             {src ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={src} alt={block.content.alt ?? ""} style={{ width: block.content.width ? `${block.content.width}px` : undefined }} className="mx-auto max-w-full" />
             ) : (
               <span className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-line-strong p-6 text-xs text-muted hover:border-primary hover:text-primary-ink">
-                <Icon name="upload_file" size={20} />{block.content.fileRef ? "Đang tải ảnh…" : "Chọn ảnh"}
+                <Icon name="upload_file" size={20} />{block.content.fileRef ? msg("shared.document.DocumentEditor.dangTaiAnh") : msg("shared.document.DocumentEditor.chonAnh")}
               </span>
             )}
             {pick && (
@@ -1857,7 +1816,7 @@ function ListEditor({ block, ops }: { block: Extract<DocumentBlock, { type: "LIS
     <Tag className={cx(block.content.ordered ? "list-decimal" : "list-disc", "pl-6", PARAGRAPH_CLASS, alignClass(block.content.align))}>
       {items.map((item, i) => (
         <li key={i} style={{ marginLeft: `${(item.level ?? 0) * 24}px` }}>
-          <RichText aria-label={`Mục ${i + 1}`} runs={item.runs} className={cx(PARAGRAPH_CLASS, alignClass(block.content.align))}
+          <RichText aria-label={msg("shared.document.DocumentEditor.muc", { value: String(i + 1) })} runs={item.runs} className={cx(PARAGRAPH_CLASS, alignClass(block.content.align))}
             onChange={(runs) => set(items.map((x, j) => (j === i ? { ...x, runs } : x)))}
             onKey={(event, caret) => itemKeys(event, caret, item, i)} />
         </li>
@@ -1919,8 +1878,8 @@ function TableEditor({ block, onChange, onRemove, guard }: {
   const insertColumn = (c: number) => set(rows.map((cells) => { const all = full(cells); return [...all.slice(0, c + 1), fresh(), ...all.slice(c + 1)]; }));
   const deleteRow = (r: number) => (rows.length <= 1 && !guard ? onRemove() : set(rows.filter((_, i) => i !== r)));
   const deleteColumn = (c: number) => (columns <= 1 && !guard ? onRemove() : set(rows.map((cells) => full(cells).filter((_, j) => j !== c))));
-  const rowLabel = (r: number) => (!canDeleteRow(r) ? "Hàng của đề" : rows.length <= 1 && !guard ? "Xóa bảng" : "Xóa hàng");
-  const columnLabel = (c: number) => (!canDeleteColumn(c) ? "Cột của đề" : columns <= 1 && !guard ? "Xóa bảng" : "Xóa cột");
+  const rowLabel = (r: number) => (!canDeleteRow(r) ? msg("shared.document.DocumentEditor.hangCuaDe") : rows.length <= 1 && !guard ? msg("shared.document.DocumentEditor.xoaBang") : msg("shared.document.DocumentEditor.xoaHang"));
+  const columnLabel = (c: number) => (!canDeleteColumn(c) ? msg("shared.document.DocumentEditor.cotCuaDe") : columns <= 1 && !guard ? msg("shared.document.DocumentEditor.xoaBang") : msg("shared.document.DocumentEditor.xoaCot"));
   return (
     <div className="py-1" onMouseLeave={() => setHoverCol(null)}
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocusCol(null); }}>
@@ -1933,12 +1892,12 @@ function TableEditor({ block, onChange, onRemove, guard }: {
                 <td key={c} onMouseEnter={() => setHoverCol(c)}
                   className={cx("relative border border-line-strong align-top break-words", header && r === 0 && "bg-canvas")}>
                   {/* Ô chữ định dạng được như đoạn văn: bôi đen rồi đậm, nghiêng, màu (yêu cầu 2026-11-04). */}
-                  <RichText aria-label={`Ô ${r + 1}-${c + 1}`} runs={row[c]?.runs ?? EMPTY_RUNS} onFocus={() => setFocusCol(c)}
+                  <RichText aria-label={msg("shared.document.DocumentEditor.o", { value: String(r + 1), value2: String(c + 1) })} runs={row[c]?.runs ?? EMPTY_RUNS} onFocus={() => setFocusCol(c)}
                     className={cx("px-2 py-1.5 text-[13px] leading-snug text-ink", header && r === 0 && "font-semibold", alignClass(row[c]?.align))}
                     onChange={(runs) => set(rows.map((cells, i) => i !== r ? cells : full(cells).map((cell, j) =>
                       j === c ? { ...cell, runs } : cell)))} />
                   {r === 0 && c < columns - 1 && (
-                    <span role="separator" aria-orientation="vertical" aria-label={`Kéo để đổi độ rộng cột ${c + 1}`} data-testid={`column-resize-${c}`}
+                    <span role="separator" aria-orientation="vertical" aria-label={msg("shared.document.DocumentEditor.keoDeDoiDoRongCot", { value: String(c + 1) })} data-testid={`column-resize-${c}`}
                       onMouseDown={(event) => startResize(c, event)}
                       className="absolute top-0 -right-[3px] z-10 h-full w-1.5 cursor-col-resize hover:bg-primary/40" />
                   )}
@@ -1947,21 +1906,21 @@ function TableEditor({ block, onChange, onRemove, guard }: {
                     <span data-testid={`column-tools-${c}`}
                       className={cx("absolute bottom-full left-1/2 z-10 flex -translate-x-1/2 gap-[3px] pb-[3px] transition-opacity",
                         activeCol === c ? "opacity-100" : "pointer-events-none opacity-0")}>
-                      {columns < 30 && <Square label="Chèn cột bên phải" onClick={() => insertColumn(c)}>+</Square>}
+                      {columns < 30 && <Square label={msg("shared.document.DocumentEditor.chenCotBenPhai")} onClick={() => insertColumn(c)}>+</Square>}
                       <Square danger label={columnLabel(c)} disabled={!canDeleteColumn(c)} onClick={() => deleteColumn(c)}>−</Square>
                     </span>
                   )}
                   {c === 0 && (
                     <span data-testid={`row-tools-${r}`}
                       className="pointer-events-none absolute top-1/2 right-full z-10 flex -translate-y-1/2 gap-[3px] pr-1.5 opacity-0 transition-opacity group-focus-within/row:pointer-events-auto group-focus-within/row:opacity-100 group-hover/row:pointer-events-auto group-hover/row:opacity-100">
-                      {rows.length < 200 && <Square label="Chèn hàng bên dưới" onClick={() => insertRow(r)}>+</Square>}
+                      {rows.length < 200 && <Square label={msg("shared.document.DocumentEditor.chenHangBenDuoi")} onClick={() => insertRow(r)}>+</Square>}
                       <Square danger label={rowLabel(r)} disabled={!canDeleteRow(r)} onClick={() => deleteRow(r)}>−</Square>
                     </span>
                   )}
                   {r === 0 && c === 0 && (
                     // ✕ xóa bảng ở góc trên trái: cùng hàng với nút của cột, thẳng cột với nút của hàng; bảng của đề thì mờ.
                     <span className="pointer-events-none absolute right-full bottom-full z-10 flex pr-1.5 pb-[3px] opacity-0 transition-opacity group-focus-within/block:pointer-events-auto group-focus-within/block:opacity-100 group-hover/block:pointer-events-auto group-hover/block:opacity-100">
-                      <Square danger label={guard ? "Bảng của đề" : "Xóa bảng"} disabled={guard} onClick={onRemove}>✕</Square>
+                      <Square danger label={guard ? msg("shared.document.DocumentEditor.bangCuaDe") : msg("shared.document.DocumentEditor.xoaBang")} disabled={guard} onClick={onRemove}>✕</Square>
                     </span>
                   )}
                 </td>

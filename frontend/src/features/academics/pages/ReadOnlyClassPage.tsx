@@ -7,11 +7,11 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { teacherClassTabs } from "../slots";
 import { StudentClassPage } from "./StudentClassPage";
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
-import { PageHeader, Section } from "@/shared/ui";
-import { EmptyState, PageHeading, Tabs } from "../components/AcademicsUi";
+import { EmptyState, PageHeader, Section, Tabs } from "@/shared/ui";
 import { CLASS_STATUS_LABELS, type CourseClassView, type EnrollmentView } from "../model/types";
 
 import styles from "../styles/academics.module.css";
+import { msg } from "@/i18n/msg";
 
 type ClassTab = "info" | "students" | "materials" | "evals" | "gradebook";
 const CLASS_TABS: readonly ClassTab[] = ["info", "students", "materials", "evals", "gradebook"];
@@ -20,12 +20,10 @@ export function ReadOnlyClassPage({
   audience,
   value,
   students,
-  onBack,
 }: {
   audience: "student" | "teacher";
   value: CourseClassView;
   students?: EnrollmentView[];
-  onBack: () => void;
 }) {
   const [tab, openTab] = useUrlState<ClassTab>("tab", "info", CLASS_TABS);
   const params = useSearchParams();
@@ -46,10 +44,10 @@ export function ReadOnlyClassPage({
   if (audience === "student" && value.status !== "OPEN") {
     return (
       <>
-        <PageHeading title="Chi tiết lớp" onBack={onBack} />
+        <PageHeader title={msg("academics.pages.ReadOnlyClassPage.chiTietLop")} backHref="/classes" />
         <section className={styles.panel}>
           <EmptyState
-            title="Lớp hiện không khả dụng"
+            title={msg("academics.pages.ReadOnlyClassPage.lopHienKhongKhaDung")}
           />
         </section>
       </>
@@ -59,34 +57,34 @@ export function ReadOnlyClassPage({
   if (audience === "student") return <StudentClassPage value={value} tab={tab === "materials" ? "materials" : "info"} />;
 
   const tabs = [
-    { key: "info" as const, label: "Thông tin lớp" },
-    { key: "students" as const, label: "Sinh viên", count: studentSummaryCount },
-    { key: "materials" as const, label: "Học liệu" },
-    { key: "evals" as const, label: "Bài tập" },
-    { key: "gradebook" as const, label: "Chấm điểm" },
+    { key: "info" as const, label: msg("academics.pages.ReadOnlyClassPage.thongTinLop") },
+    { key: "students" as const, label: msg("academics.pages.ReadOnlyClassPage.sinhVien"), count: studentSummaryCount },
+    { key: "materials" as const, label: msg("academics.pages.ReadOnlyClassPage.hocLieu") },
+    { key: "evals" as const, label: msg("academics.pages.ReadOnlyClassPage.baiTap") },
+    { key: "gradebook" as const, label: msg("academics.pages.ReadOnlyClassPage.chamDiem") },
   ];
 
   return (
     <>
       {/* Tiêu đề là tên trang đang mở; quay về danh sách lớp bằng sidebar của lớp. */}
       <PageHeader
-        title={tab === "gradebook" && params?.get("gradebookView") === "matrix" ? "Bảng điểm" : tabs.find((t) => t.key === tab)?.label}
+        title={tab === "gradebook" && params?.get("gradebookView") === "matrix" ? msg("academics.pages.ReadOnlyClassPage.bangDiem") : tabs.find((t) => t.key === tab)?.label}
         actions={<div ref={setHeaderActions} className="flex flex-wrap items-center gap-2" />} />
       {/* Màn rộng đã có các tab này trên sidebar của lớp. */}
-      <div className="md:hidden"><Tabs items={tabs} value={tab} onChange={openTab} label="Nội dung lớp" /></div>
+      <div className="md:hidden"><Tabs items={tabs} value={tab} onChange={openTab} label={msg("academics.pages.ReadOnlyClassPage.noiDungLop")} testIdPrefix="class-tab-" /></div>
       {(
         // Đổi tab thì dựng lại khung này để nội dung mới mờ vào, khớp với gạch chân đang trượt.
         <div key={tab} role="tabpanel" aria-label={tabs.find((t) => t.key === tab)?.label} className={styles.tabPanel}>
         {tab === "info" && (
           <div className="flex flex-col gap-4" data-teacher-overview="true">
-            <Section title="Thông tin lớp">
+            <Section title={msg("academics.pages.ReadOnlyClassPage.thongTinLop")}>
               <dl className="grid min-w-0 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-5">
                 {[
-                  ["Môn học", `${value.subject.code} · ${value.subject.name}`],
-                  ["Mã lớp", value.code],
-                  ["Học kỳ", value.term],
-                  ["Sinh viên", String(studentSummaryCount)],
-                  ["Trạng thái", CLASS_STATUS_LABELS[value.status]],
+                  [msg("academics.pages.ReadOnlyClassPage.monHoc"), `${value.subject.code} · ${value.subject.name}`],
+                  [msg("academics.pages.ReadOnlyClassPage.maLop"), value.code],
+                  [msg("academics.pages.ReadOnlyClassPage.hocKy"), value.term],
+                  [msg("academics.pages.ReadOnlyClassPage.sinhVien"), String(studentSummaryCount)],
+                  [msg("academics.pages.ReadOnlyClassPage.trangThai"), CLASS_STATUS_LABELS[value.status]],
                 ].map(([label, content]) => (
                   <div key={label} className="min-w-0">
                     <dt className="mb-1 text-xs text-muted">{label}</dt>

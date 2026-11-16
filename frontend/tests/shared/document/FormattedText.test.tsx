@@ -18,7 +18,7 @@ it("keeps old plain descriptions readable and renders runs as text instead of HT
   rerender(<FormattedTextView text="" document={{ blocks: [{ type: "UL", align: "RIGHT", indent: 1,
     runs: [{ text: "<img src=x onerror=alert(1)>", bold: true }] }] }} />);
   expect(container.querySelector("img")).toBeNull();
-  expect(container.querySelector("ul li strong")).toHaveTextContent("<img src=x onerror=alert(1)>");
+  expect(container.querySelector("ul li .font-bold")).toHaveTextContent("<img src=x onerror=alert(1)>");
   expect(container.querySelector("ul")).toHaveStyle({ textAlign: "right" });
 });
 

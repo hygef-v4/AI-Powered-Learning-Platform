@@ -6,6 +6,8 @@ import { BackLink } from "@/shared/navigation/BackLink";
 import { Card, cx, Icon } from "@/shared/ui";
 import { MAX_SECTION_DEPTH, SectionNumber } from "@/shared/document";
 import { addPart, showPart, useAssignmentOutline } from "../model/outline";
+import { SidebarToolButton } from "@/shared/layout/SidebarToolButton";
+import { msg } from "@/i18n/msg";
 
 const WHEN_OPEN = "md:group-data-[collapsed]/sidebar:hidden";
 const WHEN_COLLAPSED = "hidden md:group-data-[collapsed]/sidebar:block";
@@ -14,7 +16,7 @@ const WHEN_COLLAPSED = "hidden md:group-data-[collapsed]/sidebar:block";
 export function assignmentContext({ pathname }: NavLocation): NavContext | null {
   const match = /^\/assignments\/([^/]+)$/.exec(pathname) ?? /^\/teaching\/evaluations\/([^/]+)$/.exec(pathname);
   if (!match) return null;
-  return { key: `assignment:${match[1]}`, label: "Các phần của bài", header: <AssignmentNav />, items: [] };
+  return { key: `assignment:${match[1]}`, label: msg("assignments.components.assignmentNav.cacPhanCuaBai"), header: <AssignmentNav />, items: [] };
 }
 
 /**
@@ -24,17 +26,7 @@ export function assignmentContext({ pathname }: NavLocation): NavContext | null 
 export function studentAssignmentContext({ pathname }: NavLocation): NavContext | null {
   const match = /^\/attempts\/([^/]+)$/.exec(pathname) ?? /^\/my-assignments\/([^/]+)\/history$/.exec(pathname);
   if (!match) return null;
-  return { key: `assignment-work:${match[1]}`, label: "Các phần của bài", header: <AssignmentNav />, items: [] };
-}
-
-/** Nút "+" nhỏ trên sidebar: thêm mục con (hàng của mục) hoặc mục ngoài cùng (header Mục lục). */
-function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button type="button" aria-label={label} title={label} onClick={onClick}
-      className={cx(WHEN_OPEN, "flex size-6 shrink-0 items-center justify-center rounded-md text-muted transition-colors hover:bg-primary-soft hover:text-primary-ink")}>
-      <Icon name="add" size={15} />
-    </button>
-  );
+  return { key: `assignment-work:${match[1]}`, label: msg("assignments.components.assignmentNav.cacPhanCuaBai"), header: <AssignmentNav />, items: [] };
 }
 
 /**
@@ -54,21 +46,21 @@ export function AssignmentNav() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="mb-3 shrink-0 border-b border-line pb-3.5">
-        <BackLink href={outline?.backHref ?? "/teaching/classes"} title={outline?.backLabel ?? "Bài tập"}
+        <BackLink href={outline?.backHref ?? "/teaching/classes"} title={outline?.backLabel ?? msg("assignments.components.assignmentNav.baiTap")}
           className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink">
           <Icon name="arrow_back" size={17} className="shrink-0" />
-          <span className={FADE_LABEL}>{outline?.backLabel ?? "Bài tập"}</span>
+          <span className={FADE_LABEL}>{outline?.backLabel ?? msg("assignments.components.assignmentNav.baiTap")}</span>
         </BackLink>
       </div>
-      <nav aria-label="Các phần của bài" className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
-        {!outline && <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>Đang tải…</span>}
+      <nav aria-label={msg("assignments.components.assignmentNav.cacPhanCuaBai")} className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto">
+        {!outline && <span className={cx("px-2.5 py-2 text-[13px] text-muted", FADE_LABEL)}>{msg("assignments.components.assignmentNav.dangTai")}</span>}
         {outline && (
           <Card padding="none" className="flex flex-col p-1 shadow-xs">
           <div className={cx(WHEN_OPEN, "flex items-center justify-between gap-2 border-b border-line py-1 pr-1 pl-2.5")}>
-            <span className="text-xs font-semibold tracking-[.04em] text-muted uppercase">Câu hỏi</span>
-            {outline.editable && <AddButton label="Thêm câu hỏi" onClick={() => addPart(null)} />}
+            <span className="text-xs font-semibold tracking-[.04em] text-muted uppercase">{msg("assignments.components.assignmentNav.cauHoi")}</span>
+            {outline.editable && <SidebarToolButton icon="add" tone="primary" iconSize={15} label={msg("assignments.components.assignmentNav.themCauHoi")} onClick={() => addPart(null)} />}
           </div>
-          {outline.entries.length === 0 && <span className={cx("px-2.5 py-2 text-[12.5px] text-faint", FADE_LABEL)}>Bài chưa có câu hỏi</span>}
+          {outline.entries.length === 0 && <span className={cx("px-2.5 py-2 text-[12.5px] text-faint", FADE_LABEL)}>{msg("assignments.components.assignmentNav.baiChuaCoCauHoi")}</span>}
           {outline.entries.length > 0 && (
           <ol className="flex flex-col gap-0.5 pt-1" data-testid="assignment-outline">
             {outline.entries.map((entry) => {
@@ -91,7 +83,7 @@ export function AssignmentNav() {
                       {loose ? title : <><SectionNumber value={entry.number} />{entry.title ? ` ${entry.title}` : ""}</>}
                     </span>
                   </button>
-                  {outline.editable && !loose && entry.depth < MAX_SECTION_DEPTH && <AddButton label={`Thêm ý vào ${entry.number}`} onClick={() => addPart(entry.id)} />}
+                  {outline.editable && !loose && entry.depth < MAX_SECTION_DEPTH && <SidebarToolButton icon="add" tone="primary" iconSize={15} label={msg("assignments.components.assignmentNav.themYVao", { number: String(entry.number) })} onClick={() => addPart(entry.id)} />}
                 </li>
               );
             })}
