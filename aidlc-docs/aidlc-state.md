@@ -1,5 +1,19 @@
 # AI-DLC State Tracking
 
+## Rà soát MSSV trên danh sách và bộ chọn sinh viên — 2026-11-16
+
+- [x] Đối chiếu yêu cầu SC-10/SC-11, component hiện có và đường truyền `studentCode`.
+- [x] Xác minh 8 nhóm vị trí thiếu mã; lập [kết quả/phạm vi](inception/requirements/2026-11-16-student-code-ui-completeness.md).
+- [x] Người dùng quyết định [duyệt phạm vi hay chỉ rà soát](inception/requirements/2026-11-16-student-code-ui-completeness-questions.md).
+- [x] Sau khi duyệt: lập kế hoạch Code Generation, sửa và kiểm thử.
+
+Người dùng chọn “Duyệt phạm vi, tiếp tục sửa và kiểm thử”. Đã sửa đủ 8 nhóm, thêm hai trường DTO nullable và nhãn dùng chung. [Kế hoạch/kết quả](construction/plans/code-generation-plan/2026-11-16-student-code-ui-completeness.md): frontend 338/338, backend groups/groupdocs 141/141; ESLint, TypeScript và diff check đạt; review độc lập không có finding. Backend đã restart, `/health` UP; frontend `/login` 200. Đã kiểm tra browser đăng nhập giảng viên/sinh viên rộng/hẹp: [kết quả UI](construction/build-and-test/2026-11-16-student-code-ui-browser-results.md). Lượt UI đầu MSSV local đều null, ca có mã dùng fixture GET đã gỡ. Theo yêu cầu tiếp theo, đã backfill 6 sinh viên seed local bằng HE190001–HE190006, kiểm tra SQL/unique/idempotence đạt; API và browser Nhóm của tôi hiển thị 5 mã thật của lớp, không có fixture. Giao mục, duyệt đề xuất/lời mời và chi tiết quiz còn thiếu dữ liệu/trạng thái phù hợp, không tính browser PASS. Có thông báo CSP inline style trên quiz chưa xác định nguồn. Chưa chạy production build/module ngoài phạm vi. Giữ nguyên ba báo cáo AUDIT chưa theo dõi; không commit/push. Security/Resiliency compliant trong phạm vi; PBT disabled.
+
+
+Theo ảnh phản hồi tiếp theo, đã tách cột MSSV/Email và cân chữ/độ rộng trong bảng Sinh viên (ClassGroupsPanel). Groups 50/50 test, ESLint, TypeScript đạt; browser dữ liệu thật ở 1920/1440/390px xác minh 6 cột, tìm kiếm, empty colspan và link ID. Màn hẹp cuộn trong bảng, không tràn trang. Xem phần bổ sung cuối báo cáo browser. Không đổi backend/database/commit/push.
+
+Người dùng tiếp tục yêu cầu “giúp tôi commit”: cho phép commit local phần source, test và tài liệu MSSV trong phiên; ba báo cáo AUDIT gốc vẫn không đưa vào Git, không push. Backfill HE19 ở DB local và ảnh/script dưới .tmp không thuộc nội dung commit.
+
 ## Audit staging và sửa lỗi quan trọng (AUD-001..008) — 2026-11-16
 
 User yêu cầu audit nhánh staging, tạo nhánh mới để audit/sửa lỗi, chưa commit/push.

@@ -94,10 +94,11 @@ describe("GroupProposalSection", () => {
   });
 
   it("lời mời: chấp nhận gọi đúng API; đang ở đề xuất khác thì không có nút chấp nhận", async () => {
-    const invitation = { proposalId: "p9", proposalName: "Nhóm Sao", status: "DRAFT" as const, leaderName: "Giang", memberCount: 1, expired: false, canAccept: true };
+    const invitation = { proposalId: "p9", proposalName: "Nhóm Sao", status: "DRAFT" as const, leaderName: "Giang", leaderStudentCode: "SE000009", memberCount: 1, expired: false, canAccept: true };
     const calls = stub(base({ invitations: [invitation] }), () => json(base()));
     const { unmount } = render(<GroupProposalSection classId="c1" onGrouped={vi.fn()} />);
 
+    expect(await screen.findByText(/Trưởng nhóm Giang · SE000009/)).toBeInTheDocument();
     fireEvent.click(await screen.findByTestId("invitation-accept-p9"));
     await waitFor(() => expect(calls.at(-1)).toMatchObject({ url: "/api/v1/group-proposals/p9:accept", method: "POST" }));
     unmount();

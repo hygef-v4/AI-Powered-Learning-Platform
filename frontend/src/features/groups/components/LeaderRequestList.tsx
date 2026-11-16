@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, Dialog, Section, Select } from "@/shared/ui";
 import { approveRequest, rejectRequest } from "../api";
-import { personLabel } from "../model/groupDrafts";
+import { formatStudentLabel } from "@/shared/studentCode";
 import type { GroupSetView, LeaderRequestView } from "../model/types";
 
 /**
@@ -57,7 +57,7 @@ function RequestRow({ request, set, onChanged }: { request: LeaderRequestView; s
           <option value="">Chọn trưởng nhóm mới</option>
           {candidates.map((m) => (
             <option key={m.accountId} value={m.accountId}>
-              {personLabel(m)}
+              {formatStudentLabel(m)}
               {request.proposedLeader?.accountId === m.accountId ? " (được đề xuất)" : ""}
             </option>
           ))}

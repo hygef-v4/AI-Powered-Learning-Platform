@@ -15146,3 +15146,77 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: User cho phép push và tạo PR. Chỉ thêm tài liệu bàn giao. Kết quả test trong PR thuộc đợt trước vòng sửa cuối ở mức toàn suite; CI sẽ kiểm head PR, trong đó shellcheck chạy lần đầu trên restore-isolated.sh. Trạng thái CI chưa kiểm tại thời điểm ghi.
 
 ---
+
+## Rà soát MSSV trên danh sách sinh viên và bộ chọn
+**Timestamp**: 2026-11-16T04:40:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check lại giao diện chỗ nào có danh sách sinh viên thì nênđi kèm với mssv"
+**AI Response**: "Đối chiếu yêu cầu SC-10/SC-11 và component/DTO hiện tại. Xác minh 8 nhóm vị trí còn thiếu MSSV: bộ chọn/tiêu đề bảng chấm theo sinh viên, chấm thành viên và tác giả từng phần, hoạt động khi chấm, duyệt đề xuất nhóm, đổi trưởng nhóm, lời mời đề xuất, tài liệu nhóm và ngữ cảnh chi tiết lượt quiz. Các bảng chính đã có MSSV được giữ nguyên. Viết kết quả/phạm vi và file câu hỏi duyệt trong inception/requirements/2026-11-16-student-code-ui-completeness*.md; chờ người dùng quyết định chỉ rà soát hoặc tiếp tục sửa theo gate của CLAUDE.md."
+**Context**: Requirements Analysis, brownfield trên audit-staging. Chỉ sửa tài liệu hiện hành; chưa sửa mã ứng dụng, chạy test mới, đăng nhập browser, commit/push hoặc thay dữ liệu. Không mở rộng quyền đọc MSSV; giữ Security/Resiliency hiện hữu, PBT disabled.
+
+---
+
+## Duyệt bổ sung MSSV và triển khai
+**Timestamp**: 2026-11-16T04:54:53Z
+**Requested by:** Quang Hung
+**User Input**: "> Mình đã xác minh 8 nhóm vị trí còn thiếu MSSV trong aidlc-docs/inception/requirements/2026-11-16-student-code-ui-completeness.md. Bạn muốn mình tiếp tục sửa theo phạm vi đó hay chỉ nhận kết quả rà soát? CLAUDE.md yêu cầu duyệt rõ phạm vi trước khi triển khai.
+
+Duyệt phạm vi, tiếp tục sửa và kiểm thử"
+**AI Response**: "Ghi kế hoạch construction/plans/code-generation-plan/2026-11-16-student-code-ui-completeness.md và thực hiện sửa/kiểm thử trong phạm vi đã duyệt. Giữ quyền đọc, ID lựa chọn, dữ liệu và logic điểm; không commit/push. Thực hiện liên tục theo phê duyệt tiếp tục sửa và kiểm thử, không xin lại cùng phạm vi. RED xác minh: 7 test frontend mới thiếu mã/helper và 2 test DTO backend thiếu trường; test fake getContacts sai kiểu đã sửa trước khi xác minh RED backend."
+**Context**: Code Generation + Build and Test đã được người dùng cho phép. Hiện có worktree Orca riêng, không cần tạo checkout khác.
+
+---
+
+
+## 2026-11-16 12:03:09 — Student code UI completeness: implementation verified
+
+- Requester: Quang Hung (GitHub display name đã xác minh trong phiên).
+- Authorization: “Duyệt phạm vi, tiếp tục sửa và kiểm thử”; tám nhóm trong requirements ngày 2026-11-16.
+- Changes: nhãn một dòng dùng helper shared, dòng phụ dùng PersonSubline; thêm nullable studentCode cho member tài liệu nhóm và leaderStudentCode cho lời mời; quiz lấy mã theo attemptId từ dữ liệu lớp. Không đổi ID payload, quyền, lưu điểm, prompt/log, dependency/schema.
+- Verification: frontend 40 file/338 test đạt; backend groups/groupdocs 26 suite/141 test đạt không skip, gồm database/broker Testcontainers; ESLint file đổi, TypeScript cấu hình gốc, git diff --check đạt. Review độc lập chỉ đọc không có finding. Backend restart thành công, /health UP; frontend /login 200.
+- Limits: không có tab browser Orca/phiên đăng nhập để kiểm tra trực quan rộng/hẹp; chưa chạy production build hoặc suite ngoài phạm vi. Cảnh báo test React/jsdom hiện hữu được ghi trong kế hoạch.
+- Extensions: Security/Resiliency compliant trong phạm vi sửa (quyền đọc và fallback giữ nguyên); PBT disabled, không thi hành.
+- Artifacts: kế hoạch/kết quả construction/plans/code-generation-plan/2026-11-16-student-code-ui-completeness.md; requirements, câu hỏi duyệt và aidlc-state đã cập nhật. Không commit/push, giữ ba báo cáo AUDIT chưa theo dõi.
+
+
+## 2026-11-16 12:28:23 — Browser UI verification for student codes
+
+- Requester: Quang Hung (GitHub display name đã xác minh trong phiên).
+- User request (verbatim): “Giúp tôi mơt browser chạy test ui luôn”. Người dùng tiếp đó cung cấp ảnh tài khoản kiểm thử local; không ghi lại mật khẩu.
+- Opened Orca browser; đăng nhập giảng viên/sinh viên, kiểm tra 1440×900 và 390×844. Dữ liệu gốc có 5 MSSV null; kiểm tra fallback thật và nhãn có mã bằng fixture chỉ trong JSON GET ở browser. Giữ ID/quyền/trạng thái, không lưu/gửi thao tác học tập. Hai lượt tracker ghi nhận 0 request ghi; fixture đã gỡ bằng reload và xác minh không còn mã mô phỏng trên trang.
+- Verified: gradebook/list/header, tìm client theo mã, trưởng nhóm ở tiến độ, bộ chọn trưởng nhóm, chấm thành viên/byline/hoạt động, lịch sử người khác và Bạn · MSSV; các màn kiểm tra không tràn trang ngang ở 390px.
+- Limits: giao mục bị khóa bởi CLOSED; tự chia nhóm tắt và thiếu ngữ cảnh đề xuất/lời mời; quiz có 0 lượt nên chưa mở hộp chi tiết. Thông báo CSP inline style trên quiz được ghi nhận, chưa quy nguồn hoặc kết luận regression. Không giả PASS cho các ca này.
+- Report: construction/build-and-test/2026-11-16-student-code-ui-browser-results.md; screenshots local ignored tại .tmp/student-code-ui. Không sửa source/MSSV/dữ liệu học tập, commit/push.
+
+
+## Local seed database: assign student codes
+**Timestamp**: 2026-11-16T05:34:44Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi insert mssv vào seed db có định dạng HE19xxxx"
+**User clarification**: "x là số"
+**AI Response**: Gán mã thật HE190001–HE190005 cho u05.student@school.test và u05.student2–5@school.test; HE190006 cho qa.u15.20261023@school.test. Chỉ cập nhật student_code đang null trên 6 tài khoản STUDENT nêu rõ, tăng version và updated_at theo quy ước repository. Không đổi role, trạng thái, mật khẩu hoặc dữ liệu học tập khác.
+**Context**: Thao tác dữ liệu local được yêu cầu rõ, tiếp nối kiểm tra UI MSSV; không phải thay đổi tính năng/schema. Target đã xác minh là Docker platform-postgres-1, PostgreSQL platform/public.accounts, cổng local 5432. Không sửa script e2e seed cho bộ tài khoản *.test@fpt.edu.vn khác với bộ local u05.
+**Verification**: Đã chạy transaction thử rồi ROLLBACK; transaction thật UPDATE 6 và COMMIT với assertion đủ 6 mã đúng mapping, regex HE19[0-9]{4}, unique index hiện có. Truy vấn sau ghi: 0 sinh viên thiếu/sai định dạng, 0 mã ở role khác STUDENT. Chạy lại UPDATE 0, assertion vẫn đạt. API group-docs HTTP 200 trả 5 mã thật của lớp, fixtureActive=false; browser Nhóm của tôi hiển thị đủ 5 mã, không tràn ngang ở 1440px. Ảnh local .tmp/student-code-ui/real-he19-student-group.png. SQL local có thể chạy lại tại .tmp/seed-student-codes.sql; không commit/push.
+
+
+## Student table: separate student code and email columns
+**Timestamp**: 2026-11-16T05:40:37Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] tách cột mssv với email ra đừng để sát nhau như này, format lại text cho đẹp"
+**Context**: Ảnh chỉ bảng Sinh viên của giảng viên. Yêu cầu sửa trực tiếp và cụ thể, tiếp nối phạm vi MSSV đã được duyệt; thực hiện thay đổi trình bày tối thiểu trong ClassGroupsPanel với component bảng hiện có. Code Generation bổ sung trong kế hoạch ngày 2026-11-16; kiểm tra bằng suite hiện có và browser, không thay nghiệp vụ/database.
+
+
+## Student table columns: validation complete
+**Timestamp**: 2026-11-16T05:44:19Z
+**Requested by:** Quang Hung
+**Context**: Hoàn tất yêu cầu tách MSSV và Email theo ảnh. Chỉ sửa frontend/src/features/groups/components/ClassGroupsPanel.tsx: 6 cột, font/width/tooltip phù hợp, empty colspan=6; giữ ID/callback/tìm kiếm.
+**Verification**: 9 file/50 test groups đạt; ESLint file sửa, TypeScript cấu hình gốc và git diff --check đạt. Browser Orca với HE19 thật, không fixture, kiểm 1920/1440/390px: mã/email tách riêng, tìm mã trả đúng người, empty colspan=6, link Bảng điểm đúng UUID, cuộn ngang trong bảng trên màn hẹp không làm tràn trang. Ảnh local .tmp/student-code-ui/student-columns-*.png, báo cáo trong construction/build-and-test/2026-11-16-student-code-ui-browser-results.md.
+**Limits**: Chưa production build/cross-engine. Không đổi backend/database/commit/push; không thêm test chỉ để khóa bố cục CSS. Security/Resiliency giữ ràng buộc hiện hữu; PBT disabled.
+
+
+## Commit authorization for student-code UI changes
+**Timestamp**: 2026-11-16T05:51:52Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: Chuẩn bị một commit local cho source/backend/frontend, test và tài liệu MSSV đã thực hiện trong phiên; giữ ba báo cáo AUDIT gốc ngoài phạm vi, không push. Thao tác backfill seed database local không phải nội dung Git; không thêm file tạm, ảnh local, cấu hình hoặc bí mật.
+**Context**: Yêu cầu mới thay thế giới hạn không commit trước đó; không thay đổi phạm vi triển khai hoặc kết quả kiểm thử đã ghi nhận.

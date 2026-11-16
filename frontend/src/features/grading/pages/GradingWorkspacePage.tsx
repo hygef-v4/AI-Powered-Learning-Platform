@@ -1,4 +1,5 @@
 "use client";
+import { formatStudentLabel } from "@/shared/studentCode";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   DocumentEditor,
@@ -300,7 +301,7 @@ function Workspace({
     setGradingAiLabel(evaluation.id, `${assignmentTitle} — ${studentName}`);
   }, [evaluation.id, assignmentTitle, studentName]);
   const memberNames = Object.fromEntries(
-    (detail.memberActivities ?? []).map(({ student }) => [student.accountId, student.name]),
+    (detail.memberActivities ?? []).map(({ student }) => [student.accountId, formatStudentLabel(student)]),
   );
   const sectionBylines: Record<string, string> = {};
   const sectionActions: Record<string, ReactNode> = {};

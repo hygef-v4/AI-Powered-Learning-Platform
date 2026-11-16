@@ -36,6 +36,16 @@ function json(body: unknown, status = 200) {
 }
 
 describe("MyGroupPage", () => {
+  it("keeps student codes in current and proposed leader controls without changing the selected id", async () => {
+    vi.stubGlobal("fetch", vi.fn(() => json({ ...VIEW, members: VIEW.members.map((m, i) => ({
+      ...m, studentCode: `SE00000${i + 1}`,
+    })) })));
+    render(<MyGroupPage classId="c1" />);
+    fireEvent.click(await screen.findByRole("button", { name: /Yêu cầu đổi trưởng nhóm/ }));
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByLabelText("Trưởng nhóm hiện tại")).toHaveValue("An · SE000001");
+    expect(within(dialog).getByRole("option", { name: "Bình · SE000002" })).toHaveValue("b");
+  });
   afterEach(() => vi.unstubAllGlobals());
 
   it("mỗi thành viên một thẻ, nhãn Trưởng nhóm trên thẻ trưởng nhóm; bài nhóm chỉ là link sang trang Bài tập", async () => {

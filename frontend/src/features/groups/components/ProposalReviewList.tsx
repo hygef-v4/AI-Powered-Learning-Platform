@@ -1,5 +1,6 @@
 "use client";
 
+import { formatStudentLabel } from "@/shared/studentCode";
 import { useCallback, useEffect, useId, useState } from "react";
 import { Alert, Button, Dialog, Field, Pill, Section, cx, showToast } from "@/shared/ui";
 import { approveProposals, getClassProposals, rejectProposal } from "../api";
@@ -150,10 +151,10 @@ function ProposalRow({ proposal, failure, busy, readOnly, checked, onToggle, onA
             <Pill tone={proposal.status === "SUBMITTED" ? "warning" : "neutral"}>{PROPOSAL_STATUS_LABELS[proposal.status]}</Pill>
           </div>
           <p className="text-xs text-muted">
-            Trưởng nhóm {proposal.leader.name ?? proposal.leader.email ?? "chưa rõ tên"} · {proposal.members.length} thành viên
+            Trưởng nhóm {formatStudentLabel({ ...proposal.leader, name: proposal.leader.name ?? proposal.leader.email ?? "chưa rõ tên" })} · {proposal.members.length} thành viên
             {proposal.pendingInvitations > 0 && ` · ${proposal.pendingInvitations} lời mời chờ`}
           </p>
-          <p className="mt-1 text-[13px] text-ink">{proposal.members.map((m) => m.name ?? m.email).join(", ")}</p>
+          <p className="mt-1 text-[13px] text-ink">{proposal.members.map(formatStudentLabel).join(", ")}</p>
           {proposal.warnings.map((w) => <p key={w} className="mt-1 text-xs text-warning">{WARNING_LABELS[w]}</p>)}
         </div>
         {reviewable && (

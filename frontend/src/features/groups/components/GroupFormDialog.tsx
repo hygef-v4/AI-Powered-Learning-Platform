@@ -5,7 +5,7 @@ import { Alert, Button, Dialog, Field, Pill, Select, TextInput, cx, showToast } 
 import { saveGroups } from "../api";
 import { draftsFrom, freeNames, personLabel, saveErrorText, withdraw, type StudentRow } from "../model/groupDrafts";
 import type { Draft, GroupSetView } from "../model/types";
-import { matchesPersonQuery } from "@/shared/studentCode";
+import { formatStudentLabel, matchesPersonQuery } from "@/shared/studentCode";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
 
 /**
@@ -82,7 +82,7 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
         <Field label="Trưởng nhóm" htmlFor={`${id}-leader`} required>
           <Select id={`${id}-leader`} value={leader ?? ""} disabled={busy || members.length === 0} onChange={(e) => setLeaderId(e.target.value)}>
             {members.length === 0 && <option value="">Chọn thành viên trước</option>}
-            {members.map((m) => <option key={m} value={m}>{personLabel(people.find((p) => p.accountId === m))}</option>)}
+            {members.map((m) => <option key={m} value={m}>{formatStudentLabel(people.find((p) => p.accountId === m))}</option>)}
           </Select>
         </Field>
       </div>

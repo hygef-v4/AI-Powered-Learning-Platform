@@ -1,5 +1,6 @@
 "use client";
 
+import { formatStudentLabel } from "@/shared/studentCode";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Button, Icon, Pill, cx, showToast, useConfirmDialog } from "@/shared/ui";
 import { initials } from "@/shared/layout/navigation";
@@ -171,7 +172,7 @@ function InvitationList({ invitations, busy, inProposal, onAccept, onDecline }: 
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13.5px] font-semibold text-ink">{i.proposalName}</p>
               <p className="text-xs text-muted">
-                Trưởng nhóm {i.leaderName ?? "chưa rõ tên"} · {i.memberCount} thành viên
+                Trưởng nhóm {formatStudentLabel({ name: i.leaderName ?? "chưa rõ tên", studentCode: i.leaderStudentCode })} · {i.memberCount} thành viên
                 {i.expired && " · Lời mời đã hết hạn"}
                 {!i.expired && inProposal && " · Rời đề xuất hiện tại để chấp nhận"}
               </p>

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatStudentLabel } from "@/shared/studentCode";
 import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { SearchPicker } from "@/features/assignments/components/SearchPicker";
@@ -63,9 +64,9 @@ export function AssignSectionDialog({
       <Field label="Thành viên nhận mục" htmlFor="assign-member">
         <SearchPicker id="assign-member" label="Thành viên nhận mục" placeholder="Tìm thành viên" optionIcon="person"
           emptyText="Không có thành viên phù hợp."
-          options={view.members.filter((m) => m.accountId !== assignee).map((m) => ({ id: m.accountId, label: m.name ?? m.accountId }))}
+          options={view.members.filter((m) => m.accountId !== assignee).map((m) => ({ id: m.accountId, label: formatStudentLabel({ ...m, name: m.name ?? m.accountId }) }))}
           onPick={setAssignee}
-          selected={chosen ? { label: chosen.name ?? chosen.accountId, clearLabel: "Bỏ chọn thành viên", onClear: () => setAssignee("") } : undefined} />
+          selected={chosen ? { label: formatStudentLabel({ ...chosen, name: chosen.name ?? chosen.accountId }), clearLabel: "Bỏ chọn thành viên", onClear: () => setAssignee("") } : undefined} />
       </Field>
       {heldByOther && <Alert tone="warning">Giao cho người khác sẽ nhả mục trước đó.</Alert>}
       {error && (
@@ -94,7 +95,10 @@ export function SubmitGroupDialog({
 }) {
   const [busy, setBusy] = useState(false);
   const undone = view.sections.filter((s) => s.status !== "DONE");
-  const name = (id: string | null) => view.members.find((m) => m.accountId === id)?.name ?? "Chưa ai nhận";
+  const name = (id: string | null) => {
+    const member = view.members.find((m) => m.accountId === id);
+    return formatStudentLabel({ name: member?.name ?? "Chưa ai nhận", studentCode: member?.studentCode });
+  };
   const submit = async () => {
     setBusy(true);
     try {

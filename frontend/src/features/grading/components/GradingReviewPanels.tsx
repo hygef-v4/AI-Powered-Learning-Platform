@@ -1,3 +1,4 @@
+import { formatStudentLabel } from "@/shared/studentCode";
 import { ACTIVITY_LABELS, type Detail } from "../model/types";
 
 export function ActivityReview({ detail }: { detail: Detail }) {
@@ -18,7 +19,7 @@ export function ActivityReview({ detail }: { detail: Detail }) {
         <div>
           {detail.memberActivities?.map((m) => (
             <p key={m.student.accountId}>
-              {m.student.name}: {ACTIVITY_LABELS[m.state] ?? m.state}
+              {formatStudentLabel(m.student)}: {ACTIVITY_LABELS[m.state] ?? m.state}
               {m.activity
                 ? ` — ${m.activity.awayCount} lần rời trang, ${m.activity.unknownGaps} khoảng thiếu dữ liệu`
                 : ""}

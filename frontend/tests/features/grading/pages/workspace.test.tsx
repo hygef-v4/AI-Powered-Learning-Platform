@@ -83,6 +83,20 @@ function mockGroupWorkspace(wide = true) {
   return group;
 }
 
+it("distinguishes group members by student code in grading controls and activity", async () => {
+  const group = mockGroupWorkspace();
+  group.memberActivities = group.memberActivities.map((entry, index) => ({
+    ...entry, student: { ...entry.student, name: "An", studentCode: `SE00000${index + 1}` },
+  }));
+  render(<GradingWorkspacePage evaluationId="e" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Đánh giá An · SE000002" }));
+  expect(screen.getByRole("combobox", { name: "Thành viên" })).toHaveValue("s2");
+  expect(screen.getByRole("option", { name: "An · SE000001" })).toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "An · SE000002" })).toBeInTheDocument();
+  const activity = screen.getByRole("heading", { name: "Hoạt động khi làm bài" }).closest("details")!;
+  expect(within(activity).getByText("An · SE000002: Chưa có dữ liệu hoạt động")).toBeInTheDocument();
+});
+
 it("grades a member beside the paper and opens the right person from a section", async () => {
   mockGroupWorkspace();
   const scrollIntoView = vi.fn();

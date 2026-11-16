@@ -129,6 +129,7 @@ export type InvitationView = {
   proposalName: string;
   status: ProposalStatus;
   leaderName: string | null;
+  leaderStudentCode?: string | null;
   memberCount: number;
   expired: boolean;
   canAccept: boolean;

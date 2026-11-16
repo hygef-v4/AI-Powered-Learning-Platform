@@ -149,7 +149,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
                     title={assignment.title} meta={kindLabel(assignment)} />
                 )) : data.rows.map((row) => (
                   <PickItem key={row.student.accountId} active={row.student.accountId === activeStudent?.student.accountId}
-                    onPick={() => setSelectedStudentId(row.student.accountId)} title={row.student.name} meta={row.student.email} />
+                    onPick={() => setSelectedStudentId(row.student.accountId)} title={row.student.name} meta={<PersonSubline studentCode={row.student.studentCode} email={row.student.email} />} />
                 ))}
                 {mode === "assignment" && shownAssignments.length === 0 && <li className="py-6 text-center text-[13px] text-muted">Không có bài phù hợp.</li>}
                 {mode === "student" && data.rows.length === 0 && <li className="py-6 text-center text-[13px] text-muted">Không có sinh viên phù hợp.</li>}
@@ -184,7 +184,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
               )}
               {mode === "student" && activeStudent && (
                 <>
-                  <DetailHead title={activeStudent.student.name} meta={activeStudent.student.email} search={assignmentSearch} filter={statusFilter} />
+                  <DetailHead title={activeStudent.student.name} meta={<PersonSubline studentCode={activeStudent.student.studentCode} email={activeStudent.student.email} />} search={assignmentSearch} filter={statusFilter} />
                   <GradeTable first="Bài tập">
                     {studentRows.map(({ assignment, grade }) => (
                       <GradeRow key={assignment.id} grade={grade} maxScore={assignment.maxScore}
@@ -204,7 +204,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
 }
 
 /** Đầu cột phải: tên mục đang chọn (dài thì cắt bằng dấu ...), dòng phụ, lọc trạng thái rồi ô tìm, cùng một hàng. */
-function DetailHead({ title, meta, search, filter }: { title: string; meta: string; search: ReactNode; filter: ReactNode }) {
+function DetailHead({ title, meta, search, filter }: { title: string; meta: ReactNode; search: ReactNode; filter: ReactNode }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1">
@@ -235,7 +235,7 @@ function EmptyRow({ text }: { text: string }) {
 }
 
 /** Một mục trong danh sách chọn bên trái. */
-function PickItem({ title, meta, active, onPick }: { title: string; meta: string; active: boolean; onPick: () => void }) {
+function PickItem({ title, meta, active, onPick }: { title: string; meta: ReactNode; active: boolean; onPick: () => void }) {
   return (
     <li>
       <button type="button" aria-pressed={active} onClick={onPick}
