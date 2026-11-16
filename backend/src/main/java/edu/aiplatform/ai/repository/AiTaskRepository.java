@@ -93,7 +93,7 @@ public class AiTaskRepository {
 
     /** Task đã kết thúc nhưng chưa chuyển xong cho handler (P3: lượt sau chỉ gọi handler). */
     public List<AiTask> listUnhandled(Instant before) {
-        return jdbc.sql("select " + COLUMNS + " from ai_tasks where state in ('READY', 'FAILED', 'UNKNOWN') "
+        return jdbc.sql("select " + COLUMNS + " from ai_tasks where state in ('READY', 'FAILED', 'UNKNOWN', 'CANCELLED') "
                         + "and handler_done = false and finished_at < :before order by finished_at limit 200")
                 .param("before", Timestamp.from(before)).query(AiTaskRepository::map).list();
     }
