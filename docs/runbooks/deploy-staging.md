@@ -41,6 +41,7 @@ cp .env.staging.example .env && chmod 600 .env
 Điền `.env`:
 - Mọi mật khẩu và khóa phải **khác production**. Tạo bằng `openssl rand -base64 32`.
 - `DOMAIN`, `APP_PUBLIC_URL` (có `:8443`), `U01_BOOTSTRAP_ADMIN_EMAIL`.
+- Mẫu đặt `U03_REQUIRE_DRIVE=false` nên tệp lưu trên đĩa. Muốn staging lưu lên Google Drive thì thêm các biến ở [deploy-vps.md](deploy-vps.md) mục 6. Dùng chung tài khoản Gmail với production thì đặt `GOOGLE_DRIVE_FOLDER_NAME` khác production, nếu không tệp và backup của hai môi trường nằm chung thư mục.
 - `IMAGE_TAG` là SHA của lần CI thành công mới nhất trên `staging`:
 
   ```bash

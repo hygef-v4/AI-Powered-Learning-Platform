@@ -100,6 +100,7 @@ Người soạn có quyền lựa chọn nguồn AI chung hoặc cá nhân; agen
 - Người soạn sửa/duyệt trước phát hành. Không AI tự publish, không thêm bài Code.
 - Không có AI hoặc hết quota vẫn soạn thủ công được; không tự đổi sang kết nối cá nhân.
 - Không mặc định mọi agent hỗ trợ MCP; hướng dẫn và compatibility phải được thử cho từng client.
+- Khi soạn Assignment bằng AI, người soạn chọn ngôn ngữ bản nháp: tiếng Việt, tiếng Anh hoặc tiếng Nhật; yêu cầu không gửi ngôn ngữ thì bản nháp bằng tiếng Anh (as-built 2026-11-16).
 
 ### FR-007 - Assignment và Quiz; phát hành và giao bài
 
@@ -157,6 +158,8 @@ Hỗ trợ hai kênh: ALAP gọi API (Gemini/OpenAI/Claude), và agent riêng g�
 ### FR-013 - Lưu trữ tệp
 
 Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riêng tư, cấp quyền truy cập ngắn hạn và không công khai trực tiếp object chứa dữ liệu học tập. Dung lượng tối đa theo mục đích do Administrator chỉnh trên Settings trong giới hạn hệ thống (FR-033). Riêng học liệu MATERIAL có định dạng cố định PDF, DOCX, PPTX, XLSX; Admin không bật/tắt từng định dạng học liệu. Các purpose khác giữ chính sách riêng. XLSX được xem/tải và trích nội dung làm nguồn AI theo quyền; không tự gọi AI khi upload.
+
+As-built 2026-11-16: dịch vụ lưu trữ là Google Drive theo một trong hai cách, Shared Drive với service account hoặc Drive cá nhân (Gmail) qua OAuth scope `drive.file`; có cả hai thì dùng Shared Drive. Môi trường demo có thể lưu trên đĩa máy chủ. Cấu hình ở [runbook deploy](../../../docs/runbooks/deploy-vps.md) mục 6.
 
 ### FR-014 - Audit nghiệp vụ và bảo mật
 
@@ -329,7 +332,7 @@ Có hướng dẫn kết nối API cho Gemini/OpenAI/Claude và hướng dẫn M
 
 ### FR-038 - Backup và khôi phục dữ liệu lên Google Drive
 
-U03 chỉ backup database: dump PostgreSQL nhất quán lên thư mục Drive riêng tư, tách lưu trữ đang dùng, giữ các bản trong 7 ngày gần nhất; Admin xem trạng thái/lịch sử (UC 66) và chỉnh lịch qua Settings. Archive mã hóa, khóa giải mã giữ riêng; không export secrets dạng rõ.
+U03 chỉ backup database: dump PostgreSQL nhất quán lên thư mục Drive riêng tư, tách lưu trữ đang dùng, giữ các bản trong 7 ngày gần nhất; Admin xem trạng thái/lịch sử (UC 66) và chỉnh lịch qua Settings. Archive mã hóa, khóa giải mã giữ riêng; không export secrets dạng rõ. As-built 2026-11-16: khóa mã hóa `U03_BACKUP_PUBLIC_KEY` là tùy chọn; để trống thì backup vẫn chạy và archive là bản dump không mã hóa, có cảnh báo trong log. Production nên đặt khóa.
 
 **Tiêu chí chấp nhận:**
 - Chỉ SUCCESS khi dump/upload/checksum đầy đủ; lỗi không xóa bản tốt gần nhất, retry hữu hạn, phát failure event cho U14.
@@ -377,6 +380,8 @@ Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc �
 - Giao diện người học phải desktop-first và tối ưu cho trình duyệt máy tính, đặc biệt canvas Draw.io và các luồng làm bài; tablet/mobile vẫn phải responsive cho đăng nhập, đọc nội dung, thông báo và xem kết quả nhưng không phải mục tiêu chính cho thao tác vẽ/làm bài phức tạp.
 - Các luồng cốt lõi phải dùng được bằng bàn phím và có nhãn hỗ trợ công nghệ trợ năng.
 - Thông báo lỗi phải nêu hành động khắc phục mà không lộ chi tiết nội bộ.
+- Giao diện có ba ngôn ngữ: tiếng Anh (mặc định), tiếng Việt và tiếng Nhật. Người dùng đổi ngôn ngữ ở màn đăng nhập hoặc menu tài khoản; lựa chọn lưu trong cookie `locale` một năm. Câu chưa dịch ở một ngôn ngữ thì hiện bằng tiếng Anh (as-built 2026-11-16).
+- Trang `/privacy` xem được khi chưa đăng nhập, nêu phạm vi truy cập Google Drive và dữ liệu hệ thống lưu (as-built 2026-11-16).
 
 ### NFR-003 - Quy mô và hiệu năng
 

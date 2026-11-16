@@ -68,3 +68,9 @@ User approved additive IBackupDashboardStatus plus metadata/summary records. Bac
 
 - Bỏ cài đặt `files.material.allowedTypes` và `files.documentImage.allowedTypes`: loại tệp cố định trong `PurposePolicy`, học liệu PDF, DOCX, PPTX; ảnh trong tài liệu PNG, JPEG (bỏ GIF, SVG). Vẫn giữ cài đặt dung lượng tối đa.
 - Thêm Drive cá nhân (Gmail) bên cạnh Shared Drive: `GOOGLE_DRIVE_OAUTH_CLIENT_ID`, `GOOGLE_DRIVE_OAUTH_CLIENT_SECRET`, `GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN` (scope `drive.file`). `DriveFolders` tạo thư mục `AI Learning Platform` trong My Drive, mỗi purpose một thư mục con, backup trong `backups`; có cả hai cấu hình thì dùng Shared Drive. Khác thiết kế: thiết kế chỉ có Shared Drive với service account.
+
+## Thay đổi 2026-11-16
+
+- Thư mục gốc của Drive cá nhân cấu hình được: `GOOGLE_DRIVE_FOLDER_NAME` (tên, mặc định `AI Learning Platform`) hoặc `GOOGLE_DRIVE_FOLDER_ID` (thư mục do ứng dụng tạo từ trước; không truy cập được thì quay về theo tên).
+- `U03_BACKUP_PUBLIC_KEY` là tùy chọn: để trống thì `BackupJobHandler` ghi cảnh báo và lưu bản dump không mã hóa; `BackupDecryptTool` nhận ra archive không mã hóa và chép nguyên trạng. Khác thiết kế: `nfr-design-patterns.md` và `logical-components.md` của U03 mô tả archive luôn được bọc khóa RSA.
+- `StorageConfig` dùng Drive mỗi khi có cấu hình Drive, không xét `U03_REQUIRE_DRIVE`; biến này chỉ quyết định hành vi khi không có Drive. Cấu hình vận hành: [deploy-vps.md](../../../../docs/runbooks/deploy-vps.md) mục 6.

@@ -10,8 +10,8 @@ Trong runbook: `<VPS_IP>` là IP của VPS, `<DOMAIN>` là tên miền trỏ v�
 |---|---|---|
 | Tên miền trỏ về `<VPS_IP>` (ví dụ subdomain DuckDNS miễn phí) | Chứng chỉ HTTPS của Let's Encrypt; cookie đăng nhập đặt cờ `Secure` nên phải chạy HTTPS | Có |
 | Tài khoản Brevo: SMTP login và SMTP key (hoặc API key nếu VPS chặn SMTP), email người gửi thuộc tên miền đã xác thực | Gửi OTP kích hoạt tài khoản (cả Admin đầu tiên) và email thông báo | Có |
-| Service account Google Drive, Shared Drive, thư mục backup | Lưu tệp người dùng và backup database | Không, xem mục 6 |
-| Cặp khóa RSA của người vận hành | Mã hóa backup (xem `restore-isolated.md`) | Khi bật backup |
+| Google Drive: service account với Shared Drive, hoặc OAuth client và refresh token của một tài khoản Gmail | Lưu tệp người dùng và backup database | Không, xem mục 6 |
+| Cặp khóa RSA của người vận hành | Mã hóa backup (xem `restore-isolated.md`) | Không; thiếu thì backup lưu bản dump không mã hóa |
 
 ## 1. Đăng nhập và cập nhật máy
 
@@ -98,14 +98,25 @@ Lưu bản sao `.env` ở nơi an toàn ngoài VPS (trình quản lý mật kh�
 
 Mặc định `U03_REQUIRE_DRIVE=true`. Thiếu cấu hình Drive thì ứng dụng vẫn chạy nhưng upload, tải tệp và backup báo tạm thời không khả dụng.
 
-**Cách A, Google Drive (khuyến nghị cho production).** Điền vào `.env`:
+Ứng dụng chọn nơi lưu theo thứ tự: Shared Drive (cách A1) nếu có đủ biến, không thì Drive cá nhân (cách A2), không thì theo `U03_REQUIRE_DRIVE` (cách B hoặc báo không khả dụng). **Có cấu hình Drive thì luôn dùng Drive**, kể cả khi đã đặt `U03_REQUIRE_DRIVE=false` và thư mục local của cách B. Tệp đã lưu ở nơi cũ không tự chuyển sang nơi mới: muốn đổi nơi lưu trên một môi trường đã có dữ liệu thì phải chép tệp sang trước, nếu không các tệp cũ không mở được.
+
+**Cách A1, Shared Drive với service account (Google Workspace).** Điền vào `.env`:
 
 - `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY`: tệp JSON key của service account, mã hóa base64 trên một dòng (`base64 -w0 key.json`).
 - `GOOGLE_SHARED_DRIVE_ID`: ID Shared Drive đã thêm service account làm thành viên.
-- `GOOGLE_BACKUP_FOLDER_ID`: ID thư mục backup trong Shared Drive.
-- `U03_BACKUP_PUBLIC_KEY`: phần base64 của `public-key.pem` trên một dòng (bỏ hai dòng `-----BEGIN/END-----`).
+- `GOOGLE_BACKUP_FOLDER_ID`: ID thư mục backup trong Shared Drive. Thiếu biến này thì tệp vẫn lưu trên Shared Drive nhưng backup không dùng Drive.
 
-**Cách B, lưu trên đĩa VPS (demo).** Tạo `infra/docker-compose.override.yml`. Compose tự ghép tệp này khi chạy không có `-f`:
+**Cách A2, Drive cá nhân (Gmail) với OAuth.** Dùng khi không có Google Workspace. Tạo OAuth client loại Web application, lấy refresh token của tài khoản Gmail chứa tệp với scope `drive.file`, rồi điền vào `.env`:
+
+- `GOOGLE_DRIVE_OAUTH_CLIENT_ID`, `GOOGLE_DRIVE_OAUTH_CLIENT_SECRET`, `GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN`: phải có đủ cả ba.
+- `GOOGLE_DRIVE_FOLDER_NAME` (tùy chọn): tên thư mục gốc ứng dụng tự tạo trong My Drive, bỏ trống là `AI Learning Platform`. Mỗi loại tệp nằm trong một thư mục con; backup nằm trong thư mục con `backups`, không dùng `GOOGLE_BACKUP_FOLDER_ID`.
+- `GOOGLE_DRIVE_FOLDER_ID` (tùy chọn): ID một thư mục gốc do chính ứng dụng tạo từ trước. Scope `drive.file` không thấy thư mục tạo tay; ID không truy cập được thì ứng dụng quay về tìm hoặc tạo theo tên.
+
+Nhiều môi trường dùng chung một tài khoản Gmail (ví dụ production và staging) thì đặt `GOOGLE_DRIVE_FOLDER_NAME` khác nhau cho từng môi trường. Để mặc định thì tệp và backup của các môi trường nằm chung một thư mục. Trang `/privacy` của ứng dụng là URL chính sách quyền riêng tư cần khai khi publish màn hình đồng ý OAuth; nội dung gốc ở [PRIVACY.md](../../PRIVACY.md).
+
+**Mã hóa backup (tùy chọn, áp dụng cho cả A1, A2 và B).** `U03_BACKUP_PUBLIC_KEY` là phần base64 của `public-key.pem` trên một dòng (bỏ hai dòng `-----BEGIN/END-----`). Bỏ trống thì backup vẫn chạy nhưng archive là bản dump thường, ứng dụng ghi cảnh báo trong log; ai đọc được thư mục backup là đọc được dữ liệu. Production nên đặt khóa.
+
+**Cách B, lưu trên đĩa VPS (demo).** Chỉ có tác dụng khi các biến Drive ở A1 và A2 để trống. Tạo `infra/docker-compose.override.yml`. Compose tự ghép tệp này khi chạy không có `-f`:
 
 ```yaml
 services:
