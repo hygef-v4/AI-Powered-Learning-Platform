@@ -309,7 +309,7 @@ class PlatformWorkflowIntegrationTest {
     @Test
     void redisSessionAndCurrentAccountStatusProtectRealSecurityFilter() throws Exception {
         Actor admin = actor(Role.ADMIN);
-        var session = sessionStore.create(admin.accountId(), null);
+        var session = sessionStore.createSession(admin.accountId(), null);
         Cookie cookie = new Cookie("access_token", jwtService.issue(admin.accountId(), admin.role(), session.sid()));
         mvc.perform(get("/api/v1/admin/subjects").cookie(cookie)).andExpect(status().isOk());
         jdbc.update("update accounts set status='DISABLED',version=version+1 where id=?", admin.accountId());
@@ -431,14 +431,14 @@ class PlatformWorkflowIntegrationTest {
     @Test
     void settingUpdateInvalidatesConsumerCacheAndRejectsStaleVersion() {
         String key = PurposePolicy.MATERIAL_MAX_MB.key();
-        var before = settingsService.detail(actor(Role.ADMIN), key);
+        var before = settingsService.loadSetting(actor(Role.ADMIN), key);
         settings.get(PurposePolicy.MATERIAL_MAX_MB);
         int changedValue = before.value() != null && before.value().asInt() == 20 ? 25 : 20;
-        var changed = settingsService.update(actor(Role.ADMIN), key, json.valueToTree(changedValue), before.version());
+        var changed = settingsService.updateSetting(actor(Role.ADMIN), key, json.valueToTree(changedValue), before.version());
         assertThat(settings.get(PurposePolicy.MATERIAL_MAX_MB)).contains(changedValue);
-        assertThatThrownBy(() -> settingsService.update(actor(Role.ADMIN), key, json.valueToTree(30), before.version()))
+        assertThatThrownBy(() -> settingsService.updateSetting(actor(Role.ADMIN), key, json.valueToTree(30), before.version()))
                 .isInstanceOf(ApiException.class);
-        assertThat(settingsService.detail(actor(Role.ADMIN), key).version()).isEqualTo(changed.version());
+        assertThat(settingsService.loadSetting(actor(Role.ADMIN), key).version()).isEqualTo(changed.version());
         assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='SETTING_UPDATED'", Long.class))
                 .isEqualTo(1);
     }
@@ -472,7 +472,7 @@ class PlatformWorkflowIntegrationTest {
             var properties = new org.springframework.amqp.core.MessageProperties();
             properties.setDeliveryTag(delivery.getEnvelope().getDeliveryTag());
             new edu.aiplatform.jobs.integration.JobListener(jobDispatcher, json)
-                    .email(new org.springframework.amqp.core.Message(delivery.getBody(), properties), channel);
+                    .receiveEmail(new org.springframework.amqp.core.Message(delivery.getBody(), properties), channel);
             channel.basicRecover(true);
             assertThat(channel.basicGet("jobs.email", true)).isNull();
             return null;
@@ -496,7 +496,7 @@ class PlatformWorkflowIntegrationTest {
                 new AssignmentCommands.RubricUpdate(prepared.version(), List.of(new RubricCriterion(UUID.randomUUID(),
                         "Correctness", "", CriterionKind.TEXT,
                         List.of(new RubricItem(UUID.randomUUID(), "Correct answer", BigDecimal.TEN))))));
-        prepared = assignmentAuthoringService.detail(teacher, prepared.id());
+        prepared = assignmentAuthoringService.loadAssignment(teacher, prepared.id());
         assertThat(rubric.complete()).isTrue();
         // Hoàn tất bài rồi mới xếp lịch giao (yêu cầu 2026-11-11).
         prepared = assignmentAuthoringService.review(teacher, prepared.id(), prepared.version());
@@ -521,14 +521,14 @@ class PlatformWorkflowIntegrationTest {
         var started = attemptService.start(actor(Role.STUDENT), published.id(), classId);
         var attempt = started.attempt();
         assertThat(attemptService.start(actor(Role.STUDENT), published.id(), classId).created()).isFalse();
-        var saved = attemptService.save(actor(Role.STUDENT), attempt.attemptId(), attempt.contentVersion(), answer(attempt.content()));
+        var saved = attemptService.saveAttempt(actor(Role.STUDENT), attempt.attemptId(), attempt.contentVersion(), answer(attempt.content()));
         attemptService.submit(actor(Role.STUDENT), attempt.attemptId(), saved.contentVersion());
         assertThat(jdbc.queryForObject("select status from assignment_attempts where id=?", String.class, attempt.attemptId()))
                 .isEqualTo("SUBMITTED");
         assertThat(jdbc.queryForObject("select status from evaluations where attempt_id=?", String.class, attempt.attemptId()))
                 .isEqualTo("PENDING");
         assertThat(count("evaluations")).isEqualTo(1);
-        assertThatThrownBy(() -> attemptService.get(actor(Role.TEACHER), attempt.attemptId())).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> attemptService.loadAttempt(actor(Role.TEACHER), attempt.attemptId())).isInstanceOf(ApiException.class);
     }
 
     @Test
@@ -537,12 +537,12 @@ class PlatformWorkflowIntegrationTest {
         var student = actor(Role.STUDENT);
         var attempt = attemptService.start(student, published.id(), classId).attempt();
         var content = answer(attempt.content());
-        var saved = attemptService.save(student, attempt.attemptId(), attempt.contentVersion(), content);
-        assertThatThrownBy(() -> attemptService.save(student, attempt.attemptId(), attempt.contentVersion(), content))
+        var saved = attemptService.saveAttempt(student, attempt.attemptId(), attempt.contentVersion(), content);
+        assertThatThrownBy(() -> attemptService.saveAttempt(student, attempt.attemptId(), attempt.contentVersion(), content))
                 .isInstanceOf(ApiException.class);
-        assertThat(attemptService.get(student, attempt.attemptId()).contentVersion()).isEqualTo(saved.contentVersion());
+        assertThat(attemptService.loadAttempt(student, attempt.attemptId()).contentVersion()).isEqualTo(saved.contentVersion());
         academicsService.changeEnrollmentStatus(actor(Role.SUBJECT_MANAGER), classId, student.accountId(), EnrollmentStatus.REMOVED);
-        assertThatThrownBy(() -> attemptService.get(student, attempt.attemptId())).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> attemptService.loadAttempt(student, attempt.attemptId())).isInstanceOf(ApiException.class);
         assertThat(jdbc.queryForObject("select content_version from assignment_attempts where id=?", Long.class,
                 attempt.attemptId())).isEqualTo(saved.contentVersion());
         assertThat(count("evaluations")).isZero();
@@ -565,7 +565,7 @@ class PlatformWorkflowIntegrationTest {
     void quizPublicationPinsQuestionsAndRealAttemptScoresWithoutGradebookEntry() {
         var teacher = actor(Role.TEACHER);
         var created = quizAuthoringService.createForClass(teacher, classId, "Integration quiz");
-        var content = QuestionContent.of(QuestionType.MCQ_SINGLE, "Which option is correct?",
+        var content = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Which option is correct?",
                 List.of(new QuestionOption("A", "Correct"), new QuestionOption("B", "Incorrect")),
                 List.of("A"), "Explanation", BigDecimal.TEN, Difficulty.EASY, List.of());
         var prepared = quizAuthoringService.addInline(teacher, created.quiz().id(), content, created.quiz().version());
@@ -579,7 +579,7 @@ class PlatformWorkflowIntegrationTest {
         assertThat(jdbc.queryForObject("select score from quiz_attempts where id=?", BigDecimal.class,
                 taking.attemptId())).isEqualByComparingTo(BigDecimal.TEN);
         assertThat(count("evaluations")).isZero();
-        assertThatThrownBy(() -> quizAttemptService.result(teacher, taking.attemptId())).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> quizAttemptService.loadResult(teacher, taking.attemptId())).isInstanceOf(ApiException.class);
     }
 
     @Test
@@ -597,11 +597,11 @@ class PlatformWorkflowIntegrationTest {
         var teacher = actor(Role.TEACHER);
         var before = classGroupService.view(teacher, classId);
         UUID student = actor(Role.STUDENT).accountId();
-        var saved = classGroupService.save(teacher, classId, new ClassGroupService.SaveCommand(before.version(),
+        var saved = classGroupService.saveGroups(teacher, classId, new ClassGroupService.SaveCommand(before.version(),
                 List.of(new Draft("new", null, "Integration group", student, List.of(student)))));
         assertThat(saved.groups()).hasSize(1);
         assertThat(saved.groups().get(0).leaderId()).isEqualTo(student);
-        assertThatThrownBy(() -> classGroupService.save(teacher, classId,
+        assertThatThrownBy(() -> classGroupService.saveGroups(teacher, classId,
                 new ClassGroupService.SaveCommand(before.version(), List.of()))).isInstanceOf(ApiException.class);
         assertThat(classGroupService.view(teacher, classId).groups()).hasSize(1);
         assertThatThrownBy(() -> classGroupService.view(actor(Role.STUDENT), classId)).isInstanceOf(ApiException.class);
@@ -609,15 +609,15 @@ class PlatformWorkflowIntegrationTest {
 
     UUID submitIndividual(AssignmentViews.Detail assignment) {
         var attempt = attemptService.start(actor(Role.STUDENT), assignment.id(), classId).attempt();
-        var saved = attemptService.save(actor(Role.STUDENT), attempt.attemptId(), attempt.contentVersion(), answer(attempt.content()));
+        var saved = attemptService.saveAttempt(actor(Role.STUDENT), attempt.attemptId(), attempt.contentVersion(), answer(attempt.content()));
         attemptService.submit(actor(Role.STUDENT), attempt.attemptId(), saved.contentVersion());
         return attempt.attemptId();
     }
 
     void publishGrade(UUID evaluationId, AssignmentViews.Detail assignment) {
-        var current = assignmentAuthoringService.detail(actor(Role.TEACHER), assignment.id());
+        var current = assignmentAuthoringService.loadAssignment(actor(Role.TEACHER), assignment.id());
         assignmentPublicationService.closeAssignment(actor(Role.TEACHER), assignment.id(), current.version());
-        var rubric = assignmentAuthoringService.rubric(actor(Role.TEACHER), assignment.id(), assignment.parts().get(0).partId());
+        var rubric = assignmentAuthoringService.loadRubric(actor(Role.TEACHER), assignment.id(), assignment.parts().get(0).partId());
         var checks = Map.of(rubric.rubricId(), Set.of(rubric.criteria().get(0).items().get(0).itemId()));
         gradingService.saveEvaluation(actor(Role.TEACHER), evaluationId, new GradingCommands.Save(
                 evaluationRepository.findById(evaluationId).orElseThrow().version, checks, BigDecimal.ZERO,
@@ -690,7 +690,7 @@ class PlatformWorkflowIntegrationTest {
     void individualEvaluationFailureRollsBackSubmissionAndRetriesOnce() throws Exception {
         var assignment = publishAssignment(GradingMode.GRADED);
         var attempt = attemptService.start(actor(Role.STUDENT), assignment.id(), classId).attempt();
-        var saved = attemptService.save(actor(Role.STUDENT), attempt.attemptId(), attempt.contentVersion(), answer(attempt.content()));
+        var saved = attemptService.saveAttempt(actor(Role.STUDENT), attempt.attemptId(), attempt.contentVersion(), answer(attempt.content()));
         try {
             rejectEvaluationInsert("ATTEMPT");
             assertThatThrownBy(() -> attemptService.submit(actor(Role.STUDENT), attempt.attemptId(), saved.contentVersion()))
@@ -714,7 +714,7 @@ class PlatformWorkflowIntegrationTest {
         academicsService.enrollStudent(actor(Role.SUBJECT_MANAGER), classId, id);
         UUID leader = actor(Role.STUDENT).accountId();
         var before = classGroupService.view(actor(Role.TEACHER), classId);
-        classGroupService.save(actor(Role.TEACHER), classId, new ClassGroupService.SaveCommand(before.version(),
+        classGroupService.saveGroups(actor(Role.TEACHER), classId, new ClassGroupService.SaveCommand(before.version(),
                 List.of(new Draft("new", null, "Integration group", leader, List.of(leader, id)))));
         return new Actor(id, Role.STUDENT);
     }
@@ -724,7 +724,7 @@ class PlatformWorkflowIntegrationTest {
         var teacher = actor(Role.TEACHER);
         var assignment = publishAssignment(GradingMode.GRADED);
         var attempt = attemptService.start(actor(Role.STUDENT), assignment.id(), classId).attempt();
-        var saved = attemptService.save(actor(Role.STUDENT), attempt.attemptId(), attempt.contentVersion(),
+        var saved = attemptService.saveAttempt(actor(Role.STUDENT), attempt.attemptId(), attempt.contentVersion(),
                 answer(attempt.content()));
         try {
             rejectEvaluationInsert("ATTEMPT");
@@ -745,22 +745,22 @@ class PlatformWorkflowIntegrationTest {
         assertThat(closed.closesAt()).isEqualTo(assignment.closesAt());
         assertThat(jdbc.queryForObject("select status from assignment_attempts where id=?", String.class,
                 attempt.attemptId())).isEqualTo("SUBMITTED");
-        assertThat(attemptService.get(actor(Role.STUDENT), attempt.attemptId()).content()).isEqualTo(saved.content());
+        assertThat(attemptService.loadAttempt(actor(Role.STUDENT), attempt.attemptId()).content()).isEqualTo(saved.content());
         assertThat(count("evaluations")).isEqualTo(1);
-        assertThatThrownBy(() -> attemptService.save(actor(Role.STUDENT), attempt.attemptId(),
+        assertThatThrownBy(() -> attemptService.saveAttempt(actor(Role.STUDENT), attempt.attemptId(),
                 saved.contentVersion(), saved.content())).isInstanceOf(ApiException.class);
     }
 
     GroupWorkspaceService.WorkspaceView prepareGroupSection(UUID assignmentId) {
-        var workspace = groupWorkspaceService.myGroupDocument(actor(Role.STUDENT), assignmentId);
+        var workspace = groupWorkspaceService.loadMyGroupDocument(actor(Role.STUDENT), assignmentId);
         UUID sectionId = workspace.sections().get(0).id();
         var claimed = groupSectionService.claim(actor(Role.STUDENT), workspace.documentId(), sectionId);
         var paragraph = json.createObjectNode();
         paragraph.putArray("runs").addObject().put("text", "Integration answer revision " + workspace.version());
         var content = List.of(new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.PARAGRAPH, paragraph));
         groupSectionService.saveDraft(actor(Role.STUDENT), workspace.documentId(), sectionId, claimed.version(), content);
-        groupSectionService.done(actor(Role.STUDENT), workspace.documentId(), sectionId);
-        return groupWorkspaceService.workspace(actor(Role.STUDENT), workspace.documentId());
+        groupSectionService.markSectionDone(actor(Role.STUDENT), workspace.documentId(), sectionId);
+        return groupWorkspaceService.loadWorkspace(actor(Role.STUDENT), workspace.documentId());
     }
 
     @Test
@@ -836,7 +836,7 @@ class PlatformWorkflowIntegrationTest {
         consumer.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         consumer.setPrefetchCount(1);
         consumer.setMessageListener((ChannelAwareMessageListener) (message, channel) -> {
-            listener.email(message, channel);
+            listener.receiveEmail(message, channel);
             handledEmailDeliveries.incrementAndGet();
         });
         consumer.start();
@@ -912,7 +912,7 @@ class PlatformWorkflowIntegrationTest {
                 try {
                     transaction.executeWithoutResult(status -> quotaReservationService.reserve(account, tokens));
                     return "RESERVED";
-                } catch (ApiException exception) { return exception.code(); }
+                } catch (ApiException exception) { return exception.readCode(); }
             }));
             assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
             start.countDown();
@@ -922,7 +922,7 @@ class PlatformWorkflowIntegrationTest {
 
     void configureQuota(long own, long global) {
         workflowClock.freeze();
-        quotaPolicyService.savePolicy(actor(Role.ADMIN), own, global, quotaPolicyService.policy(actor(Role.ADMIN)).version());
+        quotaPolicyService.savePolicy(actor(Role.ADMIN), own, global, quotaPolicyService.loadPolicy(actor(Role.ADMIN)).version());
     }
 
     long quotaCounter(String scope, String column) {
@@ -937,9 +937,9 @@ class PlatformWorkflowIntegrationTest {
         assertThat(raceReservations(List.of(account, account), 70)).containsExactlyInAnyOrder("RESERVED", "AI_QUOTA_EXCEEDED");
         assertThat(quotaCounter(account.toString(), "reserved_tokens")).isEqualTo(70);
         assertThat(quotaCounter("GLOBAL", "reserved_tokens")).isEqualTo(70);
-        transaction.executeWithoutResult(status -> quotaReservationService.settle(account, quotaReservationService.today(), 70, 40));
-        assertThat(quotaReservationService.remaining(account).used()).isEqualTo(40);
-        assertThat(quotaReservationService.remaining(account).left()).isEqualTo(60);
+        transaction.executeWithoutResult(status -> quotaReservationService.settle(account, quotaReservationService.resolveToday(), 70, 40));
+        assertThat(quotaReservationService.calculateRemaining(account).used()).isEqualTo(40);
+        assertThat(quotaReservationService.calculateRemaining(account).left()).isEqualTo(60);
         transaction.executeWithoutResult(status -> {
             var reservation = quotaReservationService.reserve(account, 60);
             quotaReservationService.release(account, reservation.day(), reservation.tokens());
@@ -961,7 +961,7 @@ class PlatformWorkflowIntegrationTest {
         assertThat(quotaCounter("GLOBAL", "reserved_tokens")).isEqualTo(70);
         assertThat(quotaCounter(winner.toString(), "reserved_tokens")).isEqualTo(70);
         assertThat(quotaCounter(loser.toString(), "reserved_tokens")).isZero();
-        transaction.executeWithoutResult(status -> quotaReservationService.release(winner, quotaReservationService.today(), 70));
+        transaction.executeWithoutResult(status -> quotaReservationService.release(winner, quotaReservationService.resolveToday(), 70));
         transaction.executeWithoutResult(status -> { quotaReservationService.reserve(loser, 80); status.setRollbackOnly(); });
         for (String scope : List.of("GLOBAL", winner.toString(), loser.toString())) {
             assertThat(quotaCounter(scope, "reserved_tokens")).isZero();
@@ -969,7 +969,7 @@ class PlatformWorkflowIntegrationTest {
         }
         transaction.executeWithoutResult(status -> quotaReservationService.reserve(loser, 100));
         assertThat(quotaCounter("GLOBAL", "reserved_tokens")).isEqualTo(100);
-        assertThat(quotaReservationService.remaining(winner).left()).isZero();
+        assertThat(quotaReservationService.calculateRemaining(winner).left()).isZero();
     }
 
     @Test

@@ -49,7 +49,7 @@ class AssignmentAuthoringServiceTest {
         try {
             action.run();
         } catch (ApiException e) {
-            return e.code();
+            return e.readCode();
         }
         throw new AssertionError("Cần lỗi nghiệp vụ");
     }
@@ -59,7 +59,7 @@ class AssignmentAuthoringServiceTest {
         try {
             action.run();
         } catch (AssignmentProblem e) {
-            return (List<ValidationIssue>) e.properties().get("issues");
+            return (List<ValidationIssue>) e.describeProperties().get("issues");
         }
         throw new AssertionError("Cần lỗi có danh sách chỗ cần sửa");
     }
@@ -114,9 +114,9 @@ class AssignmentAuthoringServiceTest {
         when(f.materials.listSelectable(any(), argThat(ref -> ResourceRef.subject(f.subjectId).equals(ref))))
                 .thenReturn(List.of(new SelectableMaterial(erd, "ERD", false)));
 
-        assertThat(f.authoring.selectableMaterialsForClass(f.teacher, f.classId))
+        assertThat(f.authoring.listSelectableMaterialsForClass(f.teacher, f.classId))
                 .containsExactly(new AssignmentViews.Material(uml, "UML", true));
-        assertThat(f.authoring.selectableMaterialsForSubject(f.manager, f.subjectId))
+        assertThat(f.authoring.listSelectableMaterialsForSubject(f.manager, f.subjectId))
                 .containsExactly(new AssignmentViews.Material(erd, "ERD", false));
     }
 
@@ -131,7 +131,7 @@ class AssignmentAuthoringServiceTest {
         assertThat(template.warnings()).extracting(ValidationIssue::code).doesNotContain("GROUP_NOT_SUPPORTED");
         assertThat(code(() -> f.copies.copyToClass(f.teacher, f.classId, template.id(), null)))
                 .as("lớp chưa dùng được bài nhóm thì không copy đề mẫu nhóm về").isEqualTo("GROUP_NOT_SUPPORTED");
-        assertThat(code(() -> AssignmentAuthoringService.modes(SubmissionMode.GROUP, GradingMode.PRACTICE)))
+        assertThat(code(() -> AssignmentAuthoringService.validateModes(SubmissionMode.GROUP, GradingMode.PRACTICE)))
                 .isEqualTo("GROUP_MUST_BE_GRADED");
     }
 
@@ -175,7 +175,7 @@ class AssignmentAuthoringServiceTest {
                 new AssignmentCommands.Skeleton(a.version() - 1, new DocumentModel(List.of()), null, false))))
                 .isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
         // Bài cũ lưu diagramEnabled = false vẫn được thêm sơ đồ.
-        Assignment legacy = f.store.computeIfPresent(a.id(), (id, x) -> x.withDetails(x.title(), x.instructions(), false,
+        Assignment legacy = f.store.computeIfPresent(a.id(), (id, x) -> x.updateDetails(x.title(), x.instructions(), false,
                 x.gradingMode(), x.requiredDiagrams(), x.referenceMaterialIds(), false, null, x.updatedAt()));
         assertThat(legacy.diagramEnabled()).isTrue();
         AssignmentViews.Detail saved = f.authoring.saveSkeleton(f.teacher, legacy.id(), new AssignmentCommands.Skeleton(
@@ -254,7 +254,7 @@ class AssignmentAuthoringServiceTest {
         assertThat(saved.partTitle()).isEqualTo("Toàn bài");
         assertThat(saved.complete()).isTrue();
         assertThat(f.rubrics.listRubrics(a.id()).get(0).partId()).isEqualTo(RubricService.WHOLE);
-        AssignmentViews.Detail detail = f.authoring.detail(f.teacher, a.id());
+        AssignmentViews.Detail detail = f.authoring.loadAssignment(f.teacher, a.id());
         assertThat(detail.parts()).extracting(AssignmentViews.Part::partId)
                 .containsExactly(RubricService.WHOLE, a.parts().get(0).partId());
         assertThat(detail.totalPoints()).isEqualByComparingTo("6.00");
@@ -309,9 +309,9 @@ class AssignmentAuthoringServiceTest {
     @Test
     void onlyUnpublishedAssignmentsCanBeDeleted() {
         Assignment open = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
-        assertThat(code(() -> f.authoring.delete(f.teacher, open.id(), open.version()))).isEqualTo("ASSIGNMENT_NOT_EDITABLE");
+        assertThat(code(() -> f.authoring.deleteAssignment(f.teacher, open.id(), open.version()))).isEqualTo("ASSIGNMENT_NOT_EDITABLE");
         Assignment draft = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
-        f.authoring.delete(f.teacher, draft.id(), draft.version());
+        f.authoring.deleteAssignment(f.teacher, draft.id(), draft.version());
         assertThat(f.store).doesNotContainKey(draft.id());
         verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_DELETED")));
     }
@@ -328,10 +328,10 @@ class AssignmentAuthoringServiceTest {
         });
         when(f.classScope.listTaughtClasses(f.teacher.accountId())).thenReturn(List.of(taught));
         when(f.classScope.subjectOfClass(taught)).thenReturn(Optional.of(f.subjectId));
-        AssignmentViews.Detail detail = f.authoring.detail(f.teacher, open.id());
+        AssignmentViews.Detail detail = f.authoring.loadAssignment(f.teacher, open.id());
         assertThat(detail.permissions().canManage()).isFalse();
         assertThat(detail.permissions().canEditContent()).isFalse();
-        assertThat(code(() -> f.authoring.detail(f.teacher, draft.id()))).isEqualTo("ASSIGNMENT_NOT_FOUND");
-        verify(f.rubricRepository, never()).save(any());
+        assertThat(code(() -> f.authoring.loadAssignment(f.teacher, draft.id()))).isEqualTo("ASSIGNMENT_NOT_FOUND");
+        verify(f.rubricRepository, never()).saveRubric(any());
     }
 }

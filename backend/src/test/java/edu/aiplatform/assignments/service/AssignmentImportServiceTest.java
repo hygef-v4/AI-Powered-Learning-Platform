@@ -93,7 +93,7 @@ class AssignmentImportServiceTest {
             draftStore.put(d.id(), d);
             return null;
         }).when(f.drafts).insert(any());
-        when(f.drafts.find(any())).thenAnswer(i -> Optional.ofNullable(draftStore.get(i.<UUID>getArgument(0))));
+        when(f.drafts.findDraft(any())).thenAnswer(i -> Optional.ofNullable(draftStore.get(i.<UUID>getArgument(0))));
         when(f.drafts.findByRequest(any(), any())).thenAnswer(i -> draftStore.values().stream()
                 .filter(d -> d.assignmentId().equals(i.getArgument(0)) && i.getArgument(1).equals(d.requestRef()))
                 .findFirst());
@@ -185,12 +185,12 @@ class AssignmentImportServiceTest {
     void publishedAssignmentOrMissingVisionModelIsRejectedBeforeAnyDraft() {
         when(f.aiTasks.sourceOrder(any(), any(), anyInt())).thenReturn(List.of());
         assertThatThrownBy(() -> start("imp-3")).isInstanceOfSatisfying(ApiException.class,
-                e -> assertThat(e.code()).isEqualTo("AI_VISION_UNAVAILABLE"));
+                e -> assertThat(e.readCode()).isEqualTo("AI_VISION_UNAVAILABLE"));
 
         assignment = f.withStatus(assignment, AssignmentStatus.OPEN, AssignmentFixtures.NOW.minusSeconds(60),
                 AssignmentFixtures.NOW.plusSeconds(3600));
         assertThatThrownBy(() -> start("imp-4")).isInstanceOfSatisfying(ApiException.class,
-                e -> assertThat(e.code()).isEqualTo("ASSIGNMENT_NOT_EDITABLE"));
+                e -> assertThat(e.readCode()).isEqualTo("ASSIGNMENT_NOT_EDITABLE"));
         verify(f.drafts, never()).insert(any());
         verify(f.aiTasks, never()).submit(any());
     }
@@ -216,7 +216,7 @@ class AssignmentImportServiceTest {
         when(f.artifacts.issuePreviewToken(new FileRef("fig-ref"), f.teacher)).thenReturn(Optional.of(
                 new edu.aiplatform.files.contract.DownloadToken("/api/v1/files/download/tok", AssignmentFixtures.NOW)));
 
-        AssignmentViews.AiDraft view = f.aiDrafts.get(f.teacher, assignment.id(), draftId);
+        AssignmentViews.AiDraft view = f.aiDrafts.loadDraft(f.teacher, assignment.id(), draftId);
 
         String figureId = view.proposal().at("/document/blocks/2/id").asText();
         assertThat(view.proposal().at("/previews/" + figureId).asText()).isEqualTo("/api/v1/files/download/tok");
@@ -243,7 +243,7 @@ class AssignmentImportServiceTest {
         UUID draftId = start("imp-8").draftId();
         service.acceptResult(result(draftId, OUTPUT));
 
-        AssignmentViews.Detail detail = f.aiDrafts.apply(f.teacher, assignment.id(), draftId,
+        AssignmentViews.Detail detail = f.aiDrafts.applyDraft(f.teacher, assignment.id(), draftId,
                 new AssignmentCommands.ApplyDraft(assignment.version(), false, true, "APPEND"));
 
         Assignment saved = f.store.get(assignment.id());
@@ -262,7 +262,7 @@ class AssignmentImportServiceTest {
         UUID draftId = start("imp-9").draftId();
         service.acceptResult(result(draftId, OUTPUT));
 
-        f.aiDrafts.apply(f.teacher, assignment.id(), draftId,
+        f.aiDrafts.applyDraft(f.teacher, assignment.id(), draftId,
                 new AssignmentCommands.ApplyDraft(assignment.version(), false, false, null));
 
         Assignment saved = f.store.get(assignment.id());
@@ -277,15 +277,15 @@ class AssignmentImportServiceTest {
         UUID draftId = start("imp-10").draftId();
         service.acceptResult(result(draftId, OUTPUT));
 
-        assertThatThrownBy(() -> f.aiDrafts.apply(f.teacher, assignment.id(), draftId,
+        assertThatThrownBy(() -> f.aiDrafts.applyDraft(f.teacher, assignment.id(), draftId,
                 new AssignmentCommands.ApplyDraft(assignment.version(), false, false, "MIDDLE")))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("IMPORT_PLACEMENT_INVALID"));
+                        e -> assertThat(e.readCode()).isEqualTo("IMPORT_PLACEMENT_INVALID"));
         when(f.artifacts.attach(any(), any(), any()))
-                .thenThrow(ApiException.badRequest("FILE_REF_EXPIRED", "hết hạn"));
-        assertThatThrownBy(() -> f.aiDrafts.apply(f.teacher, assignment.id(), draftId,
+                .thenThrow(ApiException.createBadRequest("FILE_REF_EXPIRED", "hết hạn"));
+        assertThatThrownBy(() -> f.aiDrafts.applyDraft(f.teacher, assignment.id(), draftId,
                 new AssignmentCommands.ApplyDraft(assignment.version(), false, false, "REPLACE")))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_DRAFT_EXPIRED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_DRAFT_EXPIRED"));
     }
 
     @Test

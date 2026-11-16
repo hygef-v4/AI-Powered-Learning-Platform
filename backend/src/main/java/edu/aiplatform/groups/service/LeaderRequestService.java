@@ -52,23 +52,23 @@ public class LeaderRequestService {
 
     @Transactional
     public RequestResult submit(Actor actor, UUID groupId, String reason, UUID proposedLeaderId) {
-        ClassGroup group = groups.findGroup(groupId).orElseThrow(GroupAccess::notFound);
+        ClassGroup group = groups.findGroup(groupId).orElseThrow(GroupAccess::createNotFoundError);
         ClassRef ref = access.requireStudent(actor, group.classId());
         if (!group.isMember(actor.accountId())) {
-            throw GroupAccess.notFound();
+            throw GroupAccess.createNotFoundError();
         }
         GroupAccess.requireOpen(ref);
         // Lý do không bắt buộc (yêu cầu 2026-10-29): bỏ trống thì lưu chuỗi rỗng, tối đa 1.000 ký tự.
         String why = reason == null ? "" : reason.trim();
         if (why.length() > MAX_REASON) {
-            throw ApiException.badRequest("LEADER_REQUEST_REASON_INVALID", "Lý do tối đa 1.000 ký tự");
+            throw ApiException.createBadRequest("LEADER_REQUEST_REASON_INVALID", "Lý do tối đa 1.000 ký tự");
         }
         if (proposedLeaderId != null && (!group.isMember(proposedLeaderId) || proposedLeaderId.equals(group.leaderId()))) {
-            throw ApiException.badRequest("LEADER_REQUEST_PROPOSAL_INVALID",
+            throw ApiException.createBadRequest("LEADER_REQUEST_PROPOSAL_INVALID",
                     "Người được đề cử phải là thành viên khác trưởng nhóm hiện tại");
         }
         if (groups.findPending(groupId).isPresent()) {
-            throw pending();
+            throw createPendingError();
         }
         Instant now = clock.instant();
         LeaderChangeRequest request = new LeaderChangeRequest(UUID.randomUUID(), groupId, actor.accountId(),
@@ -76,101 +76,101 @@ public class LeaderRequestService {
         try {
             groups.insertRequest(request);
         } catch (DuplicateKeyException e) {
-            throw pending();
+            throw createPendingError();
         }
-        Map<String, Object> details = details(group);
+        Map<String, Object> details = collectDetails(group);
         details.put("proposedLeaderId", proposedLeaderId == null ? null : proposedLeaderId.toString());
         record(actor, "LEADER_REQUEST_SUBMITTED", request.id(), details);
         publish(EventTypes.GROUP_LEADER_CHANGE_REQUESTED, group, request.id(),
                 ref.teacherId() == null ? List.of() : List.of(ref.teacherId()));
-        return RequestResult.of(request);
+        return RequestResult.createRequestResult(request);
     }
 
     @Transactional
     public RequestResult cancel(Actor actor, UUID requestId) {
-        LeaderChangeRequest request = groups.lockRequest(requestId).orElseThrow(GroupAccess::notFound);
-        ClassGroup group = groups.findGroup(request.groupId()).orElseThrow(GroupAccess::notFound);
+        LeaderChangeRequest request = groups.lockRequest(requestId).orElseThrow(GroupAccess::createNotFoundError);
+        ClassGroup group = groups.findGroup(request.groupId()).orElseThrow(GroupAccess::createNotFoundError);
         ClassRef ref = access.requireStudent(actor, group.classId());
         if (!request.requestedBy().equals(actor.accountId())) {
-            throw GroupAccess.notFound();
+            throw GroupAccess.createNotFoundError();
         }
         GroupAccess.requireOpen(ref);
         requirePending(request);
         LeaderChangeRequest cancelled = request.decide(Status.CANCELLED, null, actor.accountId(), null, clock.instant());
         groups.updateRequest(cancelled);
-        record(actor, "LEADER_REQUEST_CANCELLED", requestId, details(group));
-        return RequestResult.of(cancelled);
+        record(actor, "LEADER_REQUEST_CANCELLED", requestId, collectDetails(group));
+        return RequestResult.createRequestResult(cancelled);
     }
 
     /** Duyệt: chọn trưởng nhóm mới, mặc định người được đề cử; bắt buộc chọn khi không có đề cử (BR-U12-11). */
     @Transactional
     public RequestResult approve(Actor actor, UUID requestId, UUID newLeaderId) {
-        LeaderChangeRequest request = groups.lockRequest(requestId).orElseThrow(GroupAccess::notFound);
-        ClassGroup group = groups.findGroup(request.groupId()).orElseThrow(GroupAccess::notFound);
+        LeaderChangeRequest request = groups.lockRequest(requestId).orElseThrow(GroupAccess::createNotFoundError);
+        ClassGroup group = groups.findGroup(request.groupId()).orElseThrow(GroupAccess::createNotFoundError);
         ClassRef ref = access.requireTeacher(actor, group.classId());
         GroupAccess.requireEditable(ref);
         requirePending(request);
         UUID leader = newLeaderId != null ? newLeaderId : request.proposedLeaderId();
         if (leader == null) {
-            throw ApiException.badRequest("LEADER_REQUIRED", "Cần chọn trưởng nhóm mới");
+            throw ApiException.createBadRequest("LEADER_REQUIRED", "Cần chọn trưởng nhóm mới");
         }
-        if (!group.isMember(leader) || !activeStudent(leader, group.classId())) {
-            throw ApiException.badRequest("LEADER_NOT_MEMBER", "Trưởng nhóm mới phải là thành viên đang học của nhóm");
+        if (!group.isMember(leader) || !isActiveStudent(leader, group.classId())) {
+            throw ApiException.createBadRequest("LEADER_NOT_MEMBER", "Trưởng nhóm mới phải là thành viên đang học của nhóm");
         }
         Instant now = clock.instant();
         groups.setLeader(group.id(), leader, now);
         groups.bumpSetVersion(group.classId(), groups.setVersion(group.classId()), now);
         LeaderChangeRequest approved = request.decide(Status.APPROVED, leader, actor.accountId(), null, now);
         groups.updateRequest(approved);
-        Map<String, Object> change = details(group);
+        Map<String, Object> change = collectDetails(group);
         change.put("before", group.leaderId() == null ? null : group.leaderId().toString());
         change.put("after", leader.toString());
         record(actor, "LEADER_REQUEST_APPROVED", requestId, change);
         record(actor, "GROUP_LEADER_CHANGED", group.id(), change);
         publish(EventTypes.GROUP_LEADER_CHANGED, group, requestId, group.memberIds());
-        return RequestResult.of(approved);
+        return RequestResult.createRequestResult(approved);
     }
 
     @Transactional
     public RequestResult reject(Actor actor, UUID requestId, String reason) {
-        LeaderChangeRequest request = groups.lockRequest(requestId).orElseThrow(GroupAccess::notFound);
-        ClassGroup group = groups.findGroup(request.groupId()).orElseThrow(GroupAccess::notFound);
+        LeaderChangeRequest request = groups.lockRequest(requestId).orElseThrow(GroupAccess::createNotFoundError);
+        ClassGroup group = groups.findGroup(request.groupId()).orElseThrow(GroupAccess::createNotFoundError);
         ClassRef ref = access.requireTeacher(actor, group.classId());
         GroupAccess.requireEditable(ref);
         requirePending(request);
         // Từ chối không cần lý do (yêu cầu 2026-10-29); có gửi thì vẫn lưu, tối đa 1.000 ký tự.
         String why = reason == null || reason.isBlank() ? null : reason.trim();
         if (why != null && why.length() > MAX_REASON) {
-            throw ApiException.badRequest("REJECT_REASON_INVALID", "Lý do từ chối tối đa 1.000 ký tự");
+            throw ApiException.createBadRequest("REJECT_REASON_INVALID", "Lý do từ chối tối đa 1.000 ký tự");
         }
         LeaderChangeRequest rejected = request.decide(Status.REJECTED, null, actor.accountId(), why, clock.instant());
         groups.updateRequest(rejected);
-        Map<String, Object> details = details(group);
+        Map<String, Object> details = collectDetails(group);
         details.put("reason", why);
         record(actor, "LEADER_REQUEST_REJECTED", requestId, details);
         publish(EventTypes.GROUP_LEADER_REQUEST_REJECTED, group, requestId, List.of(request.requestedBy()));
-        return RequestResult.of(rejected);
+        return RequestResult.createRequestResult(rejected);
     }
 
-    private boolean activeStudent(UUID accountId, UUID classId) {
+    private boolean isActiveStudent(UUID accountId, UUID classId) {
         try {
             return classes.isActiveStudent(accountId, classId);
         } catch (RuntimeException e) {
-            throw ApiException.unavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
+            throw ApiException.createUnavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
         }
     }
 
     private static void requirePending(LeaderChangeRequest request) {
         if (request.status() != Status.PENDING) {
-            throw ApiException.conflict("LEADER_REQUEST_CLOSED", "Yêu cầu đã được xử lý hoặc đã hủy");
+            throw ApiException.createConflict("LEADER_REQUEST_CLOSED", "Yêu cầu đã được xử lý hoặc đã hủy");
         }
     }
 
-    private static ApiException pending() {
-        return ApiException.conflict("LEADER_REQUEST_PENDING", "Nhóm đang có một yêu cầu đổi trưởng nhóm chờ duyệt");
+    private static ApiException createPendingError() {
+        return ApiException.createConflict("LEADER_REQUEST_PENDING", "Nhóm đang có một yêu cầu đổi trưởng nhóm chờ duyệt");
     }
 
-    private static Map<String, Object> details(ClassGroup group) {
+    private static Map<String, Object> collectDetails(ClassGroup group) {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("classId", group.classId().toString());
         details.put("groupId", group.id().toString());
@@ -194,7 +194,7 @@ public class LeaderRequestService {
     public record RequestResult(UUID id, UUID groupId, Status status, UUID proposedLeaderId, UUID newLeaderId,
                                 String decisionReason, Instant createdAt, Instant decidedAt) {
 
-        static RequestResult of(LeaderChangeRequest r) {
+        static RequestResult createRequestResult(LeaderChangeRequest r) {
             return new RequestResult(r.id(), r.groupId(), r.status(), r.proposedLeaderId(), r.newLeaderId(),
                     r.decisionReason(), r.createdAt(), r.decidedAt());
         }

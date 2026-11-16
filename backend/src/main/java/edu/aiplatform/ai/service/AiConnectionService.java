@@ -35,20 +35,20 @@ public class AiConnectionService {
     private final AiConnectionRepository repository;
     private final KeyCipher cipher;
     private final ProviderCatalog catalog;
-    private final ConnectionTestService tester;
-    private final AiUsageService usage;
+    private final ConnectionTestService connectionTestService;
+    private final AiUsageService aiUsageService;
     private final AiAccess access;
     private final IAudit audit;
     private final Clock clock;
 
     public AiConnectionService(AiConnectionRepository repository, KeyCipher cipher, ProviderCatalog catalog,
-                               ConnectionTestService tester, AiUsageService usage, AiAccess access, IAudit audit,
+                               ConnectionTestService connectionTestService, AiUsageService aiUsageService, AiAccess access, IAudit audit,
                                Clock clock) {
         this.repository = repository;
         this.cipher = cipher;
         this.catalog = catalog;
-        this.tester = tester;
-        this.usage = usage;
+        this.connectionTestService = connectionTestService;
+        this.aiUsageService = aiUsageService;
         this.access = access;
         this.audit = audit;
         this.clock = clock;
@@ -68,23 +68,23 @@ public class AiConnectionService {
     @Transactional
     public ConnectionView addPersonal(Actor actor, AiProvider provider, SaveCommand command) {
         access.require(actor, Actions.AI_PERSONAL);
-        return save(actor, Scope.PERSONAL, actor.accountId(), provider, command, Optional.empty());
+        return saveConnection(actor, Scope.PERSONAL, actor.accountId(), provider, command, Optional.empty());
     }
 
     @Transactional
     public ConnectionView replacePersonal(Actor actor, UUID id, SaveCommand command) {
         access.require(actor, Actions.AI_PERSONAL);
-        AiConnection connection = personal(actor, id);
-        return save(actor, Scope.PERSONAL, actor.accountId(), connection.provider(), command, Optional.of(connection));
+        AiConnection connection = loadPersonalConnection(actor, id);
+        return saveConnection(actor, Scope.PERSONAL, actor.accountId(), connection.provider(), command, Optional.of(connection));
     }
 
     /** Công tắc khóa cá nhân: tắt vẫn giữ key, không dùng khi gọi AI. */
     @Transactional
     public ConnectionView setPersonalEnabled(Actor actor, UUID id, boolean enabled, Long version) {
         access.require(actor, Actions.AI_PERSONAL);
-        AiConnection connection = personal(actor, id);
+        AiConnection connection = loadPersonalConnection(actor, id);
         checkVersion(connection, version);
-        AiConnection next = connection.withStatus(enabled ? Status.ACTIVE : Status.DISABLED, clock.instant());
+        AiConnection next = connection.changeStatus(enabled ? Status.ACTIVE : Status.DISABLED, clock.instant());
         store(next);
         auditChange(actor, connection, enabled ? "ENABLE" : "DISABLE");
         return view(connection.provider(), repository.findById(connection.id()).orElse(next));
@@ -93,29 +93,29 @@ public class AiConnectionService {
     @Transactional
     public void revokePersonal(Actor actor, UUID id) {
         access.require(actor, Actions.AI_PERSONAL);
-        AiConnection connection = personal(actor, id);
-        store(connection.revoked(clock.instant()));
+        AiConnection connection = loadPersonalConnection(actor, id);
+        store(connection.markRevoked(clock.instant()));
         auditChange(actor, connection, "REVOKE");
     }
 
     @Transactional
     public ConnectionView testPersonal(Actor actor, UUID id) {
         access.require(actor, Actions.AI_PERSONAL);
-        return test(actor, personal(actor, id), Source.PERSONAL);
+        return test(actor, loadPersonalConnection(actor, id), Source.PERSONAL);
     }
 
     @Transactional
     public TestResult testPersonalDraft(Actor actor, AiProvider provider, UUID id, SaveCommand command) {
         access.require(actor, Actions.AI_PERSONAL);
         return testDraft(actor, Scope.PERSONAL, actor.accountId(), provider,
-                id == null ? null : personal(actor, id), command, Source.PERSONAL);
+                id == null ? null : loadPersonalConnection(actor, id), command, Source.PERSONAL);
     }
 
-    private AiConnection personal(Actor actor, UUID id) {
+    private AiConnection loadPersonalConnection(Actor actor, UUID id) {
         return repository.findById(id)
                 .filter(c -> c.scope() == Scope.PERSONAL && actor.accountId().equals(c.ownerId())
                         && c.status() != Status.REVOKED)
-                .orElseThrow(AiAccess::notFound);
+                .orElseThrow(AiAccess::createNotFoundError);
     }
 
     // ---- API chung của trường -------------------------------------------------------------------------------
@@ -131,24 +131,24 @@ public class AiConnectionService {
     @Transactional
     public ConnectionView addInstitutional(Actor actor, AiProvider provider, SaveCommand command) {
         access.require(actor, Actions.AI_ADMIN);
-        return save(actor, Scope.INSTITUTIONAL, null, provider, command, Optional.empty());
+        return saveConnection(actor, Scope.INSTITUTIONAL, null, provider, command, Optional.empty());
     }
 
     /** Thay khóa hoặc model của một khóa chung, kèm {@code version}. */
     @Transactional
     public ConnectionView replaceInstitutional(Actor actor, UUID id, SaveCommand command) {
         access.require(actor, Actions.AI_ADMIN);
-        AiConnection connection = institutional(id);
-        return save(actor, Scope.INSTITUTIONAL, null, connection.provider(), command, Optional.of(connection));
+        AiConnection connection = loadInstitutionalConnection(id);
+        return saveConnection(actor, Scope.INSTITUTIONAL, null, connection.provider(), command, Optional.of(connection));
     }
 
     /** Công tắc API chung: tắt vẫn giữ key, không dùng cho yêu cầu mới (BR-U06-05). */
     @Transactional
     public ConnectionView setInstitutionalEnabled(Actor actor, UUID id, boolean enabled, Long version) {
         access.require(actor, Actions.AI_ADMIN);
-        AiConnection connection = institutional(id);
+        AiConnection connection = loadInstitutionalConnection(id);
         checkVersion(connection, version);
-        AiConnection next = connection.withStatus(enabled ? Status.ACTIVE : Status.DISABLED, clock.instant());
+        AiConnection next = connection.changeStatus(enabled ? Status.ACTIVE : Status.DISABLED, clock.instant());
         store(next);
         auditChange(actor, connection, enabled ? "ENABLE" : "DISABLE");
         return view(connection.provider(), repository.findById(connection.id()).orElse(next));
@@ -157,15 +157,15 @@ public class AiConnectionService {
     @Transactional
     public void revokeInstitutional(Actor actor, UUID id) {
         access.require(actor, Actions.AI_ADMIN);
-        AiConnection connection = institutional(id);
-        store(connection.revoked(clock.instant()));
+        AiConnection connection = loadInstitutionalConnection(id);
+        store(connection.markRevoked(clock.instant()));
         auditChange(actor, connection, "REVOKE");
     }
 
     @Transactional
     public ConnectionView testInstitutional(Actor actor, UUID id) {
         access.require(actor, Actions.AI_ADMIN);
-        return test(actor, institutional(id), Source.SHARED);
+        return test(actor, loadInstitutionalConnection(id), Source.SHARED);
     }
 
     /**
@@ -175,30 +175,30 @@ public class AiConnectionService {
     @Transactional
     public TestResult testInstitutionalDraft(Actor actor, AiProvider provider, UUID id, SaveCommand command) {
         access.require(actor, Actions.AI_ADMIN);
-        return testDraft(actor, Scope.INSTITUTIONAL, null, provider, id == null ? null : institutional(id), command,
+        return testDraft(actor, Scope.INSTITUTIONAL, null, provider, id == null ? null : loadInstitutionalConnection(id), command,
                 Source.SHARED);
     }
 
     private TestResult testDraft(Actor actor, Scope scope, UUID ownerId, AiProvider provider, AiConnection saved,
                                  SaveCommand command, Source source) {
-        String model = allowedModel(provider, command.model());
-        String key = validKey(command.apiKey());
+        String model = requireAllowedModel(provider, command.model());
+        String key = requireValidKey(command.apiKey());
         Instant now = clock.instant();
         AiConnection probe;
         if (key != null) {
             UUID probeId = saved == null ? UUID.randomUUID() : saved.id();
-            probe = AiConnection.create(probeId, scope, ownerId, provider, model,
-                    cipher.encryptConnectionKey(probeId, scope, ownerId, provider, key), KeyCipher.hint(key), now);
+            probe = AiConnection.createConnection(probeId, scope, ownerId, provider, model,
+                    cipher.encryptConnectionKey(probeId, scope, ownerId, provider, key), KeyCipher.buildHint(key), now);
         } else if (saved != null) {
             if (saved.provider() != provider) {
-                throw ApiException.badRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
+                throw ApiException.createBadRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
             }
-            probe = saved.withModel(model, now);
+            probe = saved.replaceModel(model, now);
         } else {
-            throw ApiException.badRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
+            throw ApiException.createBadRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
         }
-        ConnectionTestService.Result result = tester.test(probe);
-        usage.recordProvider(actor.accountId(), source, null, provider, model, "CONNECTION_TEST",
+        ConnectionTestService.Result result = connectionTestService.test(probe);
+        aiUsageService.recordProvider(actor.accountId(), source, null, provider, model, "CONNECTION_TEST",
                 result.ok() ? "OK" : "FAILED", result.usage(), null);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("provider", provider.name());
@@ -211,65 +211,65 @@ public class AiConnectionService {
         return new TestResult(result.ok(), result.message());
     }
 
-    private AiConnection institutional(UUID id) {
+    private AiConnection loadInstitutionalConnection(UUID id) {
         return repository.findById(id)
                 .filter(c -> c.scope() == Scope.INSTITUTIONAL && c.status() != Status.REVOKED)
-                .orElseThrow(AiAccess::notFound);
+                .orElseThrow(AiAccess::createNotFoundError);
     }
 
     // ---- chung ---------------------------------------------------------------------------------------------
 
-    private ConnectionView save(Actor actor, Scope scope, UUID ownerId, AiProvider provider, SaveCommand command,
+    private ConnectionView saveConnection(Actor actor, Scope scope, UUID ownerId, AiProvider provider, SaveCommand command,
                                 Optional<AiConnection> existing) {
-        String model = allowedModel(provider, command.model());
-        String key = validKey(command.apiKey());
+        String model = requireAllowedModel(provider, command.model());
+        String key = requireValidKey(command.apiKey());
         Instant now = clock.instant();
         if (existing.isEmpty()) {
             if (key == null) {
-                throw ApiException.badRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
+                throw ApiException.createBadRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
             }
             UUID id = UUID.randomUUID();
-            AiConnection created = AiConnection.create(id, scope, ownerId, provider, model,
-                    cipher.encryptConnectionKey(id, scope, ownerId, provider, key), KeyCipher.hint(key), now);
+            AiConnection created = AiConnection.createConnection(id, scope, ownerId, provider, model,
+                    cipher.encryptConnectionKey(id, scope, ownerId, provider, key), KeyCipher.buildHint(key), now);
             repository.insert(created);
             auditChange(actor, created, "ADD");
             return view(provider, created);
         }
         AiConnection connection = existing.get();
         checkVersion(connection, command.version());
-        AiConnection next = key == null ? connection.withModel(model, now)
-                : connection.withKey(model, cipher.encryptConnectionKey(connection.id(), connection.scope(),
-                        connection.ownerId(), connection.provider(), key), KeyCipher.hint(key), now);
+        AiConnection next = key == null ? connection.replaceModel(model, now)
+                : connection.replaceKey(model, cipher.encryptConnectionKey(connection.id(), connection.scope(),
+                        connection.ownerId(), connection.provider(), key), KeyCipher.buildHint(key), now);
         store(next);
         auditChange(actor, next, key == null ? "MODEL" : "REPLACE");
         return view(provider, repository.findById(connection.id()).orElse(next));
     }
 
-    private String allowedModel(AiProvider provider, String raw) {
+    private String requireAllowedModel(AiProvider provider, String raw) {
         String model = raw == null ? null : raw.trim();
-        if (!catalog.allowed(provider, model)) {
-            throw ApiException.badRequest("AI_MODEL_NOT_ALLOWED", "Mô hình không nằm trong danh sách cho phép");
+        if (!catalog.isAllowed(provider, model)) {
+            throw ApiException.createBadRequest("AI_MODEL_NOT_ALLOWED", "Mô hình không nằm trong danh sách cho phép");
         }
         return model;
     }
 
     /** Khóa đã bỏ khoảng trắng hai đầu; rỗng là {@code null} (giữ khóa cũ). */
-    private static String validKey(String raw) {
+    private static String requireValidKey(String raw) {
         String key = raw == null || raw.isBlank() ? null : raw.trim();
         if (key != null && (key.length() < MIN_KEY || key.length() > MAX_KEY || key.chars().anyMatch(Character::isWhitespace))) {
-            throw ApiException.badRequest("AI_KEY_INVALID", "Khóa API không hợp lệ");
+            throw ApiException.createBadRequest("AI_KEY_INVALID", "Khóa API không hợp lệ");
         }
         return key;
     }
 
     private ConnectionView test(Actor actor, AiConnection connection, Source source) {
         if (connection.status() == Status.REVOKED) {
-            throw AiAccess.notFound();
+            throw AiAccess.createNotFoundError();
         }
-        ConnectionTestService.Result result = tester.test(connection);
+        ConnectionTestService.Result result = connectionTestService.test(connection);
         Instant now = clock.instant();
         repository.saveTest(connection.id(), result.message(), now);
-        usage.recordProvider(actor.accountId(), source, null, connection.provider(), connection.model(), "CONNECTION_TEST",
+        aiUsageService.recordProvider(actor.accountId(), source, null, connection.provider(), connection.model(), "CONNECTION_TEST",
                 result.ok() ? "OK" : "FAILED", result.usage(), null);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("provider", connection.provider().name());
@@ -278,7 +278,7 @@ public class AiConnectionService {
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AI_CONNECTION_TESTED", "AI_CONNECTION",
                 connection.id().toString(), result.ok() ? AuditResult.SUCCESS : AuditResult.FAILURE,
                 result.ok() ? null : result.message(), details, now));
-        return view(connection.provider(), connection.withTest(result.message(), now));
+        return view(connection.provider(), connection.recordTest(result.message(), now));
     }
 
     private void auditChange(Actor actor, AiConnection connection, String change) {
@@ -294,18 +294,18 @@ public class AiConnectionService {
 
     private static void checkVersion(AiConnection connection, Long version) {
         if (version == null || connection.version() != version) {
-            throw conflict();
+            throw createConflictError();
         }
     }
 
     private void store(AiConnection connection) {
-        if (!repository.update(connection)) {
-            throw conflict();
+        if (!repository.updateConnection(connection)) {
+            throw createConflictError();
         }
     }
 
-    private static ApiException conflict() {
-        return ApiException.conflict("AI_CONNECTION_VERSION_CONFLICT", "Kết nối vừa được thay đổi, hãy tải lại");
+    private static ApiException createConflictError() {
+        return ApiException.createConflict("AI_CONNECTION_VERSION_CONFLICT", "Kết nối vừa được thay đổi, hãy tải lại");
     }
 
     static ConnectionView view(AiProvider provider, AiConnection c) {

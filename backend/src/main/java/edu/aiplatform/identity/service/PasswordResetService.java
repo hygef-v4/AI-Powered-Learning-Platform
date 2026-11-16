@@ -51,16 +51,16 @@ public class PasswordResetService {
 
     public void complete(String ticket, String newPassword) {
         UUID accountId = tickets.peek(ticket, OtpPurpose.PASSWORD_RESET)
-                .orElseThrow(ActivationService::ticketExpired);
+                .orElseThrow(ActivationService::createTicketExpiredError);
         Account account = accounts.findById(accountId)
                 .filter(OtpPurpose.PASSWORD_RESET::appliesTo)
-                .orElseThrow(ActivationService::ticketExpired);
-        Set<PasswordPolicy.Violation> violations = PasswordPolicy.check(newPassword, account.schoolEmail());
+                .orElseThrow(ActivationService::createTicketExpiredError);
+        Set<PasswordPolicy.Violation> violations = PasswordPolicy.checkPassword(newPassword, account.schoolEmail());
         if (!violations.isEmpty()) {
             throw new PasswordPolicyException(violations);
         }
         if (!tickets.take(ticket, OtpPurpose.PASSWORD_RESET, accountId)) {
-            throw ActivationService.ticketExpired();
+            throw ActivationService.createTicketExpiredError();
         }
         String hash = passwordEncoder.encode(newPassword);
         Instant now = clock.instant();
@@ -72,6 +72,6 @@ public class PasswordResetService {
             sessions.deleteAll(accountId);
         });
         sessions.deleteAll(accountId);
-        otpChallenges.delete(accountId, OtpPurpose.PASSWORD_RESET);
+        otpChallenges.deleteChallenge(accountId, OtpPurpose.PASSWORD_RESET);
     }
 }

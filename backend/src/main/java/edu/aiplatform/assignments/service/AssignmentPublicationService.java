@@ -30,8 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class AssignmentPublicationService {
 
     private final AssignmentRepository assignments;
-    private final AssignmentAuthoringService authoring;
-    private final RubricService rubrics;
+    private final AssignmentAuthoringService assignmentAuthoringService;
+    private final RubricService rubricService;
     private final AssignmentAccess access;
     private final AssignmentSupport support;
     private final AssignmentLifecycle lifecycle;
@@ -39,13 +39,13 @@ public class AssignmentPublicationService {
     private final ISubjectQuery subjects;
     private final Clock clock;
 
-    public AssignmentPublicationService(AssignmentRepository assignments, AssignmentAuthoringService authoring,
-                                        RubricService rubrics, AssignmentAccess access, AssignmentSupport support,
+    public AssignmentPublicationService(AssignmentRepository assignments, AssignmentAuthoringService assignmentAuthoringService,
+                                        RubricService rubricService, AssignmentAccess access, AssignmentSupport support,
                                         AssignmentLifecycle lifecycle, AssignmentAudit audit, ISubjectQuery subjects,
                                         Clock clock) {
         this.assignments = assignments;
-        this.authoring = authoring;
-        this.rubrics = rubrics;
+        this.assignmentAuthoringService = assignmentAuthoringService;
+        this.rubricService = rubricService;
         this.access = access;
         this.support = support;
         this.lifecycle = lifecycle;
@@ -64,39 +64,39 @@ public class AssignmentPublicationService {
         Assignment current = support.lock(actor, id, command.version(), "ASSIGNMENT_PUBLISHED");
         // Bài của môn chỉ là đề mẫu (yêu cầu 2026-11-09): giảng viên copy về lớp rồi tự giao.
         if (current.scope() == AssignmentScope.SUBJECT) {
-            throw ApiException.conflict("SUBJECT_TEMPLATE_NOT_PUBLISHABLE",
+            throw ApiException.createConflict("SUBJECT_TEMPLATE_NOT_PUBLISHABLE",
                     "Bài của môn là đề mẫu, giảng viên tạo bài ở lớp từ đề mẫu rồi giao");
         }
-        if (!current.editable()) {
-            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ phát hành bài nháp");
+        if (!current.canEdit()) {
+            throw ApiException.createConflict("ASSIGNMENT_STATUS_INVALID", "Chỉ phát hành bài nháp");
         }
         // Hoàn tất bài rồi mới giao (yêu cầu 2026-11-11); sửa bài sau khi hoàn tất thì bài về nháp, phải hoàn tất lại.
         if (current.status() != AssignmentStatus.REVIEWED) {
-            throw ApiException.conflict("ASSIGNMENT_NOT_FINALIZED", "Hoàn tất bài trước khi xếp lịch");
+            throw ApiException.createConflict("ASSIGNMENT_NOT_FINALIZED", "Hoàn tất bài trước khi xếp lịch");
         }
-        List<ValidationIssue> issues = authoring.readinessIssues(current);
+        List<ValidationIssue> issues = assignmentAuthoringService.listReadinessIssues(current);
         if (!issues.isEmpty()) {
-            throw AssignmentProblem.issues(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để phát hành",
+            throw AssignmentProblem.createIssuesProblem(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để phát hành",
                     issues);
         }
         requireOwnerOpen(current);
         Instant now = clock.instant();
         Instant opensAt = command.openNow() ? now : command.opensAt();
-        Integer maxAttempts = attemptsFor(current, command.maxAttempts());
+        Integer maxAttempts = resolveAttempts(current, command.maxAttempts());
         validateSchedule(opensAt, command.closesAt(), command.lateUntil(), maxAttempts, current.gradingMode(), now);
         if (current.submissionMode() == SubmissionMode.GROUP) {
             requireGroupsReady(current.classId(), command.confirmUngroupedStudents());
         }
-        Assignment saved = assignments.save(current.withSchedule(AssignmentStatus.SCHEDULED, opensAt,
+        Assignment saved = assignments.saveAssignment(current.applySchedule(AssignmentStatus.SCHEDULED, opensAt,
                 command.closesAt(), command.lateUntil(), maxAttempts, now));
-        rubrics.lockAll(saved.id(), now);
-        audit.success(actor, "ASSIGNMENT_PUBLISHED", saved.id(), AssignmentAudit.details("scope", saved.scope(),
+        rubricService.lockAll(saved.id(), now);
+        audit.recordSuccess(actor, "ASSIGNMENT_PUBLISHED", saved.id(), AssignmentAudit.collectDetails("scope", saved.scope(),
                 "classId", saved.classId(), "subjectId", saved.subjectId(), "opensAt", opensAt,
                 "closesAt", saved.closesAt(), "lateUntil", saved.lateUntil(), "maxAttempts", saved.maxAttempts()));
         if (!opensAt.isAfter(now)) {
             lifecycle.open(saved.id(), now);
         }
-        return support.detail(actor, assignments.find(saved.id()).orElseThrow(), List.of());
+        return support.buildDetail(actor, assignments.findAssignment(saved.id()).orElseThrow(), List.of());
     }
 
     /** F11 sửa lịch (BR-U07-35): SCHEDULED sửa tự do; OPEN chỉ kéo dài hạn, không đổi số lượt. */
@@ -105,7 +105,7 @@ public class AssignmentPublicationService {
         Assignment current = support.lock(actor, id, command.version(), "ASSIGNMENT_SCHEDULE_CHANGED");
         Instant now = clock.instant();
         Instant opensAt = command.opensAt() == null ? current.opensAt() : command.opensAt();
-        Integer maxAttempts = attemptsFor(current, command.maxAttempts() == null ? current.maxAttempts() : command.maxAttempts());
+        Integer maxAttempts = resolveAttempts(current, command.maxAttempts() == null ? current.maxAttempts() : command.maxAttempts());
         Instant closesAt = command.closesAt() == null ? current.closesAt() : command.closesAt();
         Instant lateUntil = command.lateUntil();
         switch (current.status()) {
@@ -113,27 +113,27 @@ public class AssignmentPublicationService {
             case OPEN -> {
                 if (!opensAt.equals(current.opensAt()) || (Assignment.limitsAttempts(current.gradingMode())
                         && !Objects.equals(maxAttempts, current.maxAttempts()))) {
-                    throw ApiException.badRequest("SCHEDULE_OPEN_LOCKED",
+                    throw ApiException.createBadRequest("SCHEDULE_OPEN_LOCKED",
                             "Bài đang mở chỉ kéo dài hạn nộp, không đổi ngày mở và số lượt");
                 }
                 if (closesAt.isBefore(current.closesAt())
                         || (current.lateUntil() != null && (lateUntil == null || lateUntil.isBefore(current.lateUntil())))) {
-                    throw ApiException.badRequest("SCHEDULE_SHORTENED", "Bài đang mở không rút ngắn hạn nộp");
+                    throw ApiException.createBadRequest("SCHEDULE_SHORTENED", "Bài đang mở không rút ngắn hạn nộp");
                 }
                 // Đang trong hạn nộp trễ thì hạn nộp đã qua; chỉ cần hạn cuối nhận bài còn ở tương lai.
                 validateOrder(opensAt, closesAt, lateUntil);
                 if (!(lateUntil != null ? lateUntil : closesAt).isAfter(now)) {
-                    throw ApiException.badRequest("SCHEDULE_INVALID", "Hạn nộp phải ở tương lai");
+                    throw ApiException.createBadRequest("SCHEDULE_INVALID", "Hạn nộp phải ở tương lai");
                 }
             }
-            default -> throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID",
+            default -> throw ApiException.createConflict("ASSIGNMENT_STATUS_INVALID",
                     "Chỉ sửa lịch bài đã lên lịch hoặc đang mở");
         }
-        Assignment saved = assignments.save(current.withSchedule(current.status(), opensAt, closesAt, lateUntil,
+        Assignment saved = assignments.saveAssignment(current.applySchedule(current.status(), opensAt, closesAt, lateUntil,
                 maxAttempts, now));
-        audit.success(actor, "ASSIGNMENT_SCHEDULE_CHANGED", saved.id(), AssignmentAudit.details(
+        audit.recordSuccess(actor, "ASSIGNMENT_SCHEDULE_CHANGED", saved.id(), AssignmentAudit.collectDetails(
                 "before", schedule(current), "after", schedule(saved)));
-        return support.detail(actor, saved, List.of());
+        return support.buildDetail(actor, saved, List.of());
     }
 
     /** Closes a teacher's open class assignment after saved work has been finalized. */
@@ -141,18 +141,18 @@ public class AssignmentPublicationService {
     public AssignmentViews.Detail closeAssignment(Actor actor, UUID id, long version) {
         Assignment current = support.lock(actor, id, version, "ASSIGNMENT_CLOSED");
         if (current.scope() != AssignmentScope.CLASS || current.status() != AssignmentStatus.OPEN) {
-            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ đóng nhận bài của lớp đang mở");
+            throw ApiException.createConflict("ASSIGNMENT_STATUS_INVALID", "Chỉ đóng nhận bài của lớp đang mở");
         }
-        if (access.classRef(current.classId()).status() != ClassStatus.OPEN) {
-            throw ApiException.conflict("CLASS_NOT_OPEN", "Lớp không mở, chỉ xem được bài");
+        if (access.loadClassRef(current.classId()).status() != ClassStatus.OPEN) {
+            throw ApiException.createConflict("CLASS_NOT_OPEN", "Lớp không mở, chỉ xem được bài");
         }
         Instant now = clock.instant();
         lifecycle.closeAssignment(id, now, false);
-        Assignment closed = assignments.find(id).orElseThrow();
-        audit.success(actor, "ASSIGNMENT_CLOSED", id, AssignmentAudit.details(
-                "early", current.finalDeadline() != null && now.isBefore(current.finalDeadline()),
+        Assignment closed = assignments.findAssignment(id).orElseThrow();
+        audit.recordSuccess(actor, "ASSIGNMENT_CLOSED", id, AssignmentAudit.collectDetails(
+                "early", current.calculateFinalDeadline() != null && now.isBefore(current.calculateFinalDeadline()),
                 "closesAt", current.closesAt(), "lateUntil", current.lateUntil()));
-        return support.detail(actor, closed, List.of());
+        return support.buildDetail(actor, closed, List.of());
     }
 
     /** F11 ngưng giao (BR-U07-36): lý do bắt buộc; listener U08, U12 tự nộp bài đang làm trong cùng transaction. */
@@ -160,36 +160,36 @@ public class AssignmentPublicationService {
     public AssignmentViews.Detail retire(Actor actor, UUID id, AssignmentCommands.Retire command) {
         String reason = command.reason() == null ? "" : command.reason().strip();
         if (reason.isEmpty() || reason.length() > Assignment.REASON_MAX) {
-            throw ApiException.badRequest("RETIRE_REASON_INVALID", "Nhập lý do ngưng giao, tối đa 500 ký tự");
+            throw ApiException.createBadRequest("RETIRE_REASON_INVALID", "Nhập lý do ngưng giao, tối đa 500 ký tự");
         }
         Assignment current = assignments.findForUpdate(id).orElseThrow(() -> access.deny(actor, "ASSIGNMENT_RETIRED",
                 AssignmentAudit.OBJECT_ASSIGNMENT, id, "NOT_FOUND"));
         access.requireManage(actor, current, "ASSIGNMENT_RETIRED");
         AssignmentSupport.requireVersion(current, command.version());
         if (current.status() != AssignmentStatus.SCHEDULED && current.status() != AssignmentStatus.OPEN) {
-            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ ngưng giao bài đã lên lịch hoặc đang mở");
+            throw ApiException.createConflict("ASSIGNMENT_STATUS_INVALID", "Chỉ ngưng giao bài đã lên lịch hoặc đang mở");
         }
-        Assignment saved = assignments.save(current.retired(reason, clock.instant()));
-        lifecycle.retired(saved.id());
-        audit.success(actor, "ASSIGNMENT_RETIRED", saved.id(), AssignmentAudit.details("reason", reason,
+        Assignment saved = assignments.saveAssignment(current.markRetired(reason, clock.instant()));
+        lifecycle.markRetired(saved.id());
+        audit.recordSuccess(actor, "ASSIGNMENT_RETIRED", saved.id(), AssignmentAudit.collectDetails("reason", reason,
                 "previousStatus", current.status()));
-        return support.detail(actor, saved, List.of());
+        return support.buildDetail(actor, saved, List.of());
     }
 
     private void requireOwnerOpen(Assignment assignment) {
         if (assignment.scope() == AssignmentScope.CLASS) {
-            if (access.classRef(assignment.classId()).status() != ClassStatus.OPEN) {
-                throw ApiException.conflict("CLASS_NOT_OPEN", "Lớp chưa mở, chưa phát hành được bài");
+            if (access.loadClassRef(assignment.classId()).status() != ClassStatus.OPEN) {
+                throw ApiException.createConflict("CLASS_NOT_OPEN", "Lớp chưa mở, chưa phát hành được bài");
             }
         } else {
             boolean active;
             try {
                 active = subjects.isActive(assignment.subjectId());
             } catch (RuntimeException e) {
-                throw ApiException.unavailable("ASSIGNMENT_DEPENDENCY_UNAVAILABLE", "Chưa đọc được môn học, thử lại sau");
+                throw ApiException.createUnavailable("ASSIGNMENT_DEPENDENCY_UNAVAILABLE", "Chưa đọc được môn học, thử lại sau");
             }
             if (!active) {
-                throw ApiException.conflict("SUBJECT_NOT_ACTIVE", "Môn không còn hoạt động, chưa phát hành được bài");
+                throw ApiException.createConflict("SUBJECT_NOT_ACTIVE", "Môn không còn hoạt động, chưa phát hành được bài");
             }
         }
     }
@@ -207,7 +207,7 @@ public class AssignmentPublicationService {
     }
 
     /** Bài có chấm không lưu số lượt (yêu cầu 2026-11-10): nộp không giới hạn khi còn hạn. */
-    private static Integer attemptsFor(Assignment assignment, Integer requested) {
+    private static Integer resolveAttempts(Assignment assignment, Integer requested) {
         return Assignment.limitsAttempts(assignment.gradingMode()) ? requested : null;
     }
 
@@ -219,7 +219,7 @@ public class AssignmentPublicationService {
                                  GradingMode gradingMode, Instant now) {
         if (Assignment.limitsAttempts(gradingMode)
                 && (maxAttempts == null || maxAttempts < 1 || maxAttempts > Assignment.ATTEMPTS_MAX)) {
-            throw ApiException.badRequest("SCHEDULE_INVALID", "Số lượt nộp tối đa từ 1 đến 10");
+            throw ApiException.createBadRequest("SCHEDULE_INVALID", "Số lượt nộp tối đa từ 1 đến 10");
         }
         validateDeadlines(opensAt, closesAt, lateUntil, now);
     }
@@ -227,19 +227,19 @@ public class AssignmentPublicationService {
     private static void validateDeadlines(Instant opensAt, Instant closesAt, Instant lateUntil, Instant now) {
         validateOrder(opensAt, closesAt, lateUntil);
         if (!closesAt.isAfter(now)) {
-            throw ApiException.badRequest("SCHEDULE_INVALID", "Hạn nộp phải ở tương lai");
+            throw ApiException.createBadRequest("SCHEDULE_INVALID", "Hạn nộp phải ở tương lai");
         }
     }
 
     private static void validateOrder(Instant opensAt, Instant closesAt, Instant lateUntil) {
         if (opensAt == null || closesAt == null) {
-            throw ApiException.badRequest("SCHEDULE_INVALID", "Cần ngày mở và hạn nộp");
+            throw ApiException.createBadRequest("SCHEDULE_INVALID", "Cần ngày mở và hạn nộp");
         }
         if (!closesAt.isAfter(opensAt)) {
-            throw ApiException.badRequest("SCHEDULE_INVALID", "Hạn nộp phải sau ngày mở");
+            throw ApiException.createBadRequest("SCHEDULE_INVALID", "Hạn nộp phải sau ngày mở");
         }
         if (lateUntil != null && (!lateUntil.isAfter(closesAt) || lateUntil.isAfter(closesAt.plus(Assignment.LATE_MAX)))) {
-            throw ApiException.badRequest("SCHEDULE_INVALID", "Hạn nộp trễ phải sau hạn nộp, không quá 30 ngày");
+            throw ApiException.createBadRequest("SCHEDULE_INVALID", "Hạn nộp trễ phải sau hạn nộp, không quá 30 ngày");
         }
     }
 

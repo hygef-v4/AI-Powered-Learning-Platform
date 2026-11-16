@@ -63,7 +63,7 @@ public class GradingProposalRepository implements IGradingProposalRepository {
 
     /** Inserts or updates a grading proposal using optimistic version checks. */
     @Transactional
-    public GradingProposal save(GradingProposal proposal) {
+    public GradingProposal saveProposal(GradingProposal proposal) {
         var versions = namedParameterJdbcTemplate.queryForList(
                 "select version from grading_proposals where id=:id for update",
                 Map.of("id", proposal.id), Long.class);

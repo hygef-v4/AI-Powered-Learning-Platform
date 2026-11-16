@@ -67,12 +67,12 @@ class SubjectMutationGuardTest {
     }
 
     private Subject subject() {
-        return Subject.create(id, "ABC", "Name", null, null, Instant.now());
+        return Subject.createSubject(id, "ABC", "Name", null, null, Instant.now());
     }
 
     private void code(Runnable call, String expected) {
         assertThatThrownBy(call::run)
                 .isInstanceOfSatisfying(
-                        ApiException.class, error -> assertThat(error.code()).isEqualTo(expected));
+                        ApiException.class, error -> assertThat(error.readCode()).isEqualTo(expected));
     }
 }

@@ -11,11 +11,11 @@ import java.util.UUID;
 public record QuotaPolicy(Long defaultDayTokens, Long globalDayTokens, long version, UUID updatedBy,
                           Instant updatedAt) {
 
-    public static QuotaPolicy empty() {
+    public static QuotaPolicy createEmptyPolicy() {
         return new QuotaPolicy(null, null, 0, null, null);
     }
 
-    public boolean configured() {
+    public boolean hasLimits() {
         return defaultDayTokens != null && globalDayTokens != null;
     }
 
@@ -26,7 +26,7 @@ public record QuotaPolicy(Long defaultDayTokens, Long globalDayTokens, long vers
     /** Bộ đếm một cửa sổ ngày ({@code scopeKey} là accountId hoặc {@code GLOBAL}). */
     public record Window(String scopeKey, LocalDate day, long reservedTokens, long usedTokens) {
 
-        public long consumed() {
+        public long sumConsumed() {
             return reservedTokens + usedTokens;
         }
     }

@@ -80,7 +80,7 @@ class MaterialDownloadPolicyTest {
         when(tokens.resolve("student-token")).thenReturn(Optional.of(new DownloadTokenService.Grant("file", student.accountId())));
         when(tokens.resolve("staff-token")).thenReturn(Optional.of(new DownloadTokenService.Grant("file", managerId)));
         var storage = mock(IStorage.class);
-        when(storage.metadata("file")).thenReturn(Optional.of(new StoredMetadata(managerId,
+        when(storage.loadMetadata("file")).thenReturn(Optional.of(new StoredMetadata(managerId,
                 ArtifactPurpose.MATERIAL, "ref.pdf", "application/pdf", 1, "sha")));
         when(storage.open("file")).thenAnswer(call -> new ByteArrayInputStream(new byte[] {1}));
         var downloadService = new DownloadService(tokens, storage, mock(FileAudit.class),
@@ -91,7 +91,7 @@ class MaterialDownloadPolicyTest {
         }
         current.set(material.changePresentation(false, null));
         assertThatThrownBy(() -> downloadService.open(student, "student-token"))
-                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.code()).isEqualTo("MATERIAL_NOT_FOUND"));
+                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
         verify(storage, times(1)).open("file");
         try (var content = downloadService.open(manager, "staff-token").content()) {
             assertThat(content.read()).isEqualTo(1);
@@ -100,7 +100,7 @@ class MaterialDownloadPolicyTest {
         try (var content = downloadService.open(student, "student-token").content()) {
             assertThat(content.read()).isEqualTo(1);
         }
-        current.set(material.revise(material.title(), "", 0, 2, Material.Status.ACTIVE, now));
+        current.set(material.reviseMaterial(material.title(), "", 0, 2, Material.Status.ACTIVE, now));
         assertThatThrownBy(() -> downloadService.open(student, "student-token"))
                 .isInstanceOf(ApiException.class);
         verify(storage, times(3)).open("file");

@@ -25,25 +25,25 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/subjects/{subjectId}/quizzes")
 public class SubjectQuizController {
 
-    private final QuizAuthoringService authoring;
+    private final QuizAuthoringService quizAuthoringService;
 
-    public SubjectQuizController(QuizAuthoringService authoring) {
-        this.authoring = authoring;
+    public SubjectQuizController(QuizAuthoringService quizAuthoringService) {
+        this.quizAuthoringService = quizAuthoringService;
     }
 
     @GetMapping
-    public QuizPage list(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+    public QuizPage listQuizzes(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                          @RequestParam(required = false) QuizStatus status, @RequestParam(required = false) String q,
                          @RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size,
                          @RequestParam MultiValueMap<String, String> params) {
         QuizRequests.query(params, Set.of("status", "q", "page", "size"));
-        return authoring.listSubject(actor, subjectId, status, q, page, size);
+        return quizAuthoringService.listSubject(actor, subjectId, status, q, page, size);
     }
 
     @PostMapping(consumes = "application/json")
-    public ResponseEntity<QuizDetail> create(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+    public ResponseEntity<QuizDetail> createQuiz(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                              @RequestBody JsonNode body) {
-        QuizDetail created = authoring.createForSubject(actor, subjectId, QuizRequests.title(body));
+        QuizDetail created = quizAuthoringService.createForSubject(actor, subjectId, QuizRequests.readTitle(body));
         return ResponseEntity.created(URI.create("/api/v1/quizzes/" + created.quiz().id())).body(created);
     }
 }

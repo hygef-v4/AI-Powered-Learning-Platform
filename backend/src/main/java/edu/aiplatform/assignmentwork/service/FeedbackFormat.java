@@ -38,8 +38,8 @@ final class FeedbackFormat {
         ObjectNode out = JsonNodeFactory.instance.objectNode();
         out.put("label", LABEL);
         out.put("summary", cut(raw.path("summary").asText()));
-        strings(raw.path("strengths"), out.putArray("strengths"));
-        strings(raw.path("suggestions"), out.putArray("suggestions"));
+        copyStrings(raw.path("strengths"), out.putArray("strengths"));
+        copyStrings(raw.path("suggestions"), out.putArray("suggestions"));
         ArrayNode parts = out.putArray("parts");
         for (JsonNode part : raw.path("parts")) {
             if (parts.size() >= MAX_ITEMS || !part.path("partId").isTextual()) {
@@ -51,7 +51,7 @@ final class FeedbackFormat {
         return out;
     }
 
-    private static void strings(JsonNode source, ArrayNode target) {
+    private static void copyStrings(JsonNode source, ArrayNode target) {
         for (JsonNode value : source) {
             if (value.isTextual() && target.size() < MAX_ITEMS) {
                 target.add(cut(value.asText()));

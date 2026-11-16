@@ -29,30 +29,30 @@ public class GoogleDriveStorageAdapter implements IStorage {
     }
 
     @Override
-    public boolean available() {
+    public boolean isAvailable() {
         return true;
     }
 
     @Override
-    public String put(ArtifactPurpose purpose, Path content, StoredMetadata metadata) {
+    public String putFile(ArtifactPurpose purpose, Path content, StoredMetadata metadata) {
         File file = new File()
                 .setName(metadata.originalFileName())
-                .setParents(List.of(folder(purpose)))
+                .setParents(List.of(resolveFolder(purpose)))
                 .setAppProperties(Map.of(
                         "ownerAccountId", metadata.ownerAccountId().toString(),
                         "purpose", purpose.name(),
                         "mediaType", metadata.mediaType(),
                         "sha256", metadata.sha256()));
-        File created = DriveClientFactory.withRetry(() -> clients.drive().files()
+        File created = DriveClientFactory.runWithRetry(() -> clients.createDrive().files()
                 .create(file, new FileContent(metadata.mediaType(), content.toFile()))
                 .setSupportsAllDrives(true).setFields("id").execute());
         return created.getId();
     }
 
     @Override
-    public Optional<StoredMetadata> metadata(String fileId) {
+    public Optional<StoredMetadata> loadMetadata(String fileId) {
         try {
-            File file = DriveClientFactory.withRetry(() -> clients.drive().files().get(fileId)
+            File file = DriveClientFactory.runWithRetry(() -> clients.createDrive().files().get(fileId)
                     .setSupportsAllDrives(true).setFields("id,name,size,appProperties").execute());
             Map<String, String> props = file.getAppProperties() == null ? Map.of() : file.getAppProperties();
             return Optional.of(new StoredMetadata(UUID.fromString(props.get("ownerAccountId")),
@@ -66,7 +66,7 @@ public class GoogleDriveStorageAdapter implements IStorage {
     @Override
     public InputStream open(String fileId) {
         try {
-            return clients.drive().files().get(fileId).setSupportsAllDrives(true).executeMediaAsInputStream();
+            return clients.createDrive().files().get(fileId).setSupportsAllDrives(true).executeMediaAsInputStream();
         } catch (GoogleJsonResponseException e) {
             if (isAbuse(e)) {
                 throw new FileAbusiveException(fileId);
@@ -78,17 +78,17 @@ public class GoogleDriveStorageAdapter implements IStorage {
     }
 
     @Override
-    public void delete(String fileId) {
+    public void deleteFile(String fileId) {
         try {
-            DriveClientFactory.withRetry(() -> clients.drive().files().delete(fileId).setSupportsAllDrives(true)
+            DriveClientFactory.runWithRetry(() -> clients.createDrive().files().delete(fileId).setSupportsAllDrives(true)
                     .execute());
         } catch (DriveClientFactory.DriveNotFoundException e) {
             // Đã xóa từ trước.
         }
     }
 
-    private String folder(ArtifactPurpose purpose) {
-        return folders.child(folders.root(), purpose.name());
+    private String resolveFolder(ArtifactPurpose purpose) {
+        return folders.ensureChild(folders.resolveRoot(), purpose.name());
     }
 
     static boolean isAbuse(GoogleJsonResponseException e) {

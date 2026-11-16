@@ -16,7 +16,7 @@ class QuestionBankMcpToolsTest {
     @Test void detailedContextCannotMixSubjectAndQuestionIds() {
         UUID subject=UUID.randomUUID(),question=UUID.randomUUID();
         var view=mock(QuestionViews.QuestionView.class);when(view.subjectId()).thenReturn(UUID.randomUUID());
-        when(bank.detail(manager,question)).thenReturn(new QuestionViews.QuestionDetail(view,List.of(),0,null));
+        when(bank.loadQuestion(manager,question)).thenReturn(new QuestionViews.QuestionDetail(view,List.of(),0,null));
         assertThatThrownBy(() -> tools.call(manager,"read_question_bank_context",Map.of("subjectId",subject.toString(),"questionId",question.toString())))
                 .isInstanceOf(ApiException.class);
     }
@@ -24,7 +24,7 @@ class QuestionBankMcpToolsTest {
         for(var role:List.of(Role.TEACHER,Role.ADMIN,Role.STUDENT))
             assertThatThrownBy(() -> tools.call(new Actor(UUID.randomUUID(),role),"list_bank_questions",Map.of())).isInstanceOf(ApiException.class);
         UUID subject=UUID.randomUUID();
-        doThrow(ApiException.notFound("SUBJECT_NOT_FOUND")).when(access).requireSubject(eq(manager),anyString(),eq(subject),anyString(),eq(subject),anyString());
+        doThrow(ApiException.createNotFound("SUBJECT_NOT_FOUND")).when(access).requireSubject(eq(manager),anyString(),eq(subject),anyString(),eq(subject),anyString());
         assertThatThrownBy(() -> tools.call(manager,"save_question_bank_draft",Map.of("subjectId",subject.toString(),"requestRef","retry")))
                 .isInstanceOf(ApiException.class);
         verifyNoInteractions(bank,writes);

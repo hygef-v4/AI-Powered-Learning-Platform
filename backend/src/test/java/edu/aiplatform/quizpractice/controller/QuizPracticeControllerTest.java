@@ -123,7 +123,7 @@ class QuizPracticeControllerTest {
                         .content("{\"answers\":{\"not-a-uuid\":[\"1\"]},\"answerVersion\":3}"))
                 .andExpect(status().isBadRequest());
         when(attempts.saveAnswers(eq(student), eq(attemptId), any(), eq(1L)))
-                .thenThrow(ApiException.conflict("ANSWER_VERSION_CONFLICT", "x"));
+                .thenThrow(ApiException.createConflict("ANSWER_VERSION_CONFLICT", "x"));
         mvc.perform(put("/api/v1/quiz-attempts/{a}/answers", attemptId).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"answers\":{},\"answerVersion\":1}"))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("ANSWER_VERSION_CONFLICT"));
@@ -144,7 +144,7 @@ class QuizPracticeControllerTest {
                         .content("{\"events\":[{\"kind\":\"BOGUS\"}]}"))
                 .andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/classes/{c}/quizzes/{q}/attempts", classId, quizId)).andExpect(status().isOk());
-        verify(teacher).list(student, classId, quizId);
-        verify(queries, never()).detail(any(), any(), any());
+        verify(teacher).listAttempts(student, classId, quizId);
+        verify(queries, never()).loadQuiz(any(), any(), any());
     }
 }

@@ -17,7 +17,7 @@ public final class ForbiddenKeyGuard {
     }
 
     /** Ném {@link IllegalArgumentException} kèm đường dẫn khóa nếu gặp khóa bị cấm. */
-    public static void check(Map<String, ?> data) {
+    public static void checkForbiddenKeys(Map<String, ?> data) {
         walk(data, "$");
     }
 

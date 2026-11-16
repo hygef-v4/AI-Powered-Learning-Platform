@@ -14,7 +14,7 @@ import java.util.UUID;
 /** Bảng {@code quiz_attempts}; chỉ dùng trong U11. Lưu, nộp là câu lệnh có điều kiện (NFR-U11-10). */
 public interface IQuizAttemptRepository {
 
-    Optional<QuizAttempt> find(UUID id);
+    Optional<QuizAttempt> findAttempt(UUID id);
 
     /** Lock the quiz row, then (quiz, learner), until commit to protect its paper and prevent duplicate starts. */
     void lockStart(UUID quizId, UUID accountId);
@@ -25,7 +25,7 @@ public interface IQuizAttemptRepository {
 
     default Optional<QuizAttempt> findInProgress(UUID quizId, UUID accountId, UUID classId) {
         return listByQuizAndClass(quizId, classId).stream()
-                .filter(a -> a.accountId().equals(accountId) && a.inProgress()).findFirst();
+                .filter(a -> a.accountId().equals(accountId) && a.hasInProgressStatus()).findFirst();
     }
 
     default int countAttempts(UUID quizId, UUID accountId, UUID classId) {
@@ -51,7 +51,7 @@ public interface IQuizAttemptRepository {
     List<QuizAttempt> listByAccount(UUID accountId, Collection<UUID> quizIds);
 
     /** Mọi Quiz người học đã có lượt, kèm lớp đã làm. */
-    Map<UUID, UUID> quizzesAttemptedBy(UUID accountId);
+    Map<UUID, UUID> mapQuizzesAttemptedBy(UUID accountId);
 
     /** Lượt đang làm đã quá hạn cộng ân hạn, hạn sớm trước (scanner); không khóa, mỗi lượt nộp trong transaction riêng. */
     List<QuizAttempt> findOverdue(Instant cutoff, int limit);

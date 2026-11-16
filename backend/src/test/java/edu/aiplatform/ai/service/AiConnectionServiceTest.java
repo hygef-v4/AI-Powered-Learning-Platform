@@ -63,13 +63,13 @@ class AiConnectionServiceTest {
         when(authorization.authorize(eq(admin), eq(Actions.AI_PERSONAL), any()))
                 .thenReturn(AuthorizationDecision.deny("ROLE"));
         when(repository.findPersonal(any(), any())).thenReturn(Optional.empty());
-        when(repository.update(any())).thenReturn(true);
+        when(repository.updateConnection(any())).thenReturn(true);
     }
 
     @Test
     void adminHasNoPersonalConnection() {
         assertThatThrownBy(() -> service.listPersonal(admin))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status()).isEqualTo(HttpStatus.NOT_FOUND));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus()).isEqualTo(HttpStatus.NOT_FOUND));
         ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(event.capture());
         assertThat(event.getValue().action()).isEqualTo("ACCESS_DENIED");
@@ -96,13 +96,13 @@ class AiConnectionServiceTest {
     void modelOutsideTheAllowedListAndBadKeysAreRejected() {
         assertThatThrownBy(() -> service.addPersonal(teacher, AiProvider.GEMINI, new SaveCommand("AIzaSy-key-123",
                 "gemini-ultra", null)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_MODEL_NOT_ALLOWED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_MODEL_NOT_ALLOWED"));
         assertThatThrownBy(() -> service.addPersonal(teacher, AiProvider.GEMINI, new SaveCommand("short",
                 "gemini-2.5-flash", null)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_KEY_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_KEY_INVALID"));
         assertThatThrownBy(() -> service.addPersonal(teacher, AiProvider.GEMINI, new SaveCommand(null,
                 "gemini-2.5-flash", null)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_KEY_REQUIRED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_KEY_REQUIRED"));
         verify(repository, never()).insert(any());
     }
 
@@ -113,11 +113,11 @@ class AiConnectionServiceTest {
 
         assertThatThrownBy(() -> service.replacePersonal(teacher, existing.id(), new SaveCommand("AIzaSy-new-key-9999",
                 "gemini-2.5-pro", 9L)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status()).isEqualTo(HttpStatus.CONFLICT));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus()).isEqualTo(HttpStatus.CONFLICT));
 
         service.replacePersonal(teacher, existing.id(), new SaveCommand(null, "gemini-2.5-pro", 2L));
         ArgumentCaptor<AiConnection> updated = ArgumentCaptor.forClass(AiConnection.class);
-        verify(repository).update(updated.capture());
+        verify(repository).updateConnection(updated.capture());
         assertThat(updated.getValue().model()).isEqualTo("gemini-2.5-pro");
         assertThat(updated.getValue().keyCiphertext()).isEqualTo(existing.keyCiphertext());
     }
@@ -130,7 +130,7 @@ class AiConnectionServiceTest {
         service.revokePersonal(teacher, mine.id());
 
         ArgumentCaptor<AiConnection> updated = ArgumentCaptor.forClass(AiConnection.class);
-        verify(repository).update(updated.capture());
+        verify(repository).updateConnection(updated.capture());
         assertThat(updated.getValue().status()).isEqualTo(Status.REVOKED);
         assertThat(updated.getValue().keyCiphertext()).isNull();
     }
@@ -182,7 +182,7 @@ class AiConnectionServiceTest {
         service.setInstitutionalEnabled(admin, shared.id(), false, 2L);
 
         ArgumentCaptor<AiConnection> updated = ArgumentCaptor.forClass(AiConnection.class);
-        verify(repository).update(updated.capture());
+        verify(repository).updateConnection(updated.capture());
         assertThat(updated.getValue().status()).isEqualTo(Status.DISABLED);
         assertThat(updated.getValue().keyCiphertext()).isNotNull();
     }
@@ -202,7 +202,7 @@ class AiConnectionServiceTest {
         service.replacePersonal(teacher, personal.id(), new SaveCommand("AIzaSy-new-key-7777", "gemini-2.5-flash", 2L));
 
         ArgumentCaptor<AiConnection> updated = ArgumentCaptor.forClass(AiConnection.class);
-        verify(repository).update(updated.capture());
+        verify(repository).updateConnection(updated.capture());
         assertThat(cipher.decryptConnectionKey(updated.getValue())).isEqualTo("AIzaSy-new-key-7777");
         AiConnection other = existing(AiConnection.Scope.PERSONAL);
         AiConnection copied = new AiConnection(other.id(), other.scope(), other.ownerId(), other.provider(),
@@ -232,13 +232,13 @@ class AiConnectionServiceTest {
         verify(repository, org.mockito.Mockito.never()).insert(any());
         assertThatThrownBy(() -> service.testInstitutionalDraft(admin, AiProvider.GEMINI, null,
                 new SaveCommand(" ", "gemini-2.5-flash", null)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_KEY_REQUIRED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_KEY_REQUIRED"));
     }
 
     private AiConnection existing(AiConnection.Scope scope) {
         UUID id = UUID.randomUUID();
         UUID ownerId = scope == AiConnection.Scope.PERSONAL ? teacher.accountId() : null;
-        AiConnection created = AiConnection.create(id, scope, ownerId, AiProvider.GEMINI, "gemini-2.5-flash",
+        AiConnection created = AiConnection.createConnection(id, scope, ownerId, AiProvider.GEMINI, "gemini-2.5-flash",
                 cipher.encryptConnectionKey(id, scope, ownerId, AiProvider.GEMINI, "AIzaSy-old-key-0000"), "0000", NOW);
         return new AiConnection(created.id(), created.scope(), created.ownerId(), created.provider(), created.model(),
                 created.keyCiphertext(), created.keyIv(), created.keyVersion(), created.keyHint(), created.status(), null,

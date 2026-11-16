@@ -123,7 +123,7 @@ class SubmissionReviewNavigationTest {
         var values = fixture();
         when(classAccess.listActiveStudents(classId)).thenReturn(List.of(values.get(0).accountId));
         assertThat(submissionReviewService.loadEvaluation(actor, values.get(0).id, "ALL", null).navigationIds()).containsExactly(values.get(0).id);
-        doThrow(ApiException.notFound("GRADE_NOT_FOUND")).when(gradingAccess).requireTeacher(actor, classId, Actions.GRADING_REVIEW);
+        doThrow(ApiException.createNotFound("GRADE_NOT_FOUND")).when(gradingAccess).requireTeacher(actor, classId, Actions.GRADING_REVIEW);
         assertThatThrownBy(() -> submissionReviewService.loadEvaluation(actor, values.get(0).id, "ALL", null)).isInstanceOf(ApiException.class);
     }
 

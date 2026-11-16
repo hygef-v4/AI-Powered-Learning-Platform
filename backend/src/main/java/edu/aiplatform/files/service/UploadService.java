@@ -77,40 +77,40 @@ public class UploadService {
 
     public UploadResult upload(Actor actor, ArtifactPurpose purpose, FileUpload file) {
         if (!purpose.storable()) {
-            throw ApiException.badRequest("FILE_PURPOSE_NOT_STORABLE", "Mục đích tệp này không lưu được");
+            throw ApiException.createBadRequest("FILE_PURPOSE_NOT_STORABLE", "Mục đích tệp này không lưu được");
         }
         if (!permits.tryAcquire()) {
-            throw ApiException.unavailable("UPLOAD_BUSY", "Hệ thống đang bận, thử lại sau");
+            throw ApiException.createUnavailable("UPLOAD_BUSY", "Hệ thống đang bận, thử lại sau");
         }
         Path temp = null;
         try {
             checkAllowed(actor, purpose);
-            PurposeLimits limits = policy.limits(purpose);
+            PurposeLimits limits = policy.resolveLimits(purpose);
             String name = FileNameSanitizer.sanitize(file.originalFileName());
-            if (file.byteSize() > limits.maxBytes()) {
-                throw tooLarge(actor, purpose, limits);
+            if (file.byteSize() > limits.calculateMaxBytes()) {
+                throw createTooLargeError(actor, purpose, limits);
             }
             Files.createDirectories(tmpDir);
             temp = Files.createTempFile(tmpDir, "upload-", ".tmp");
-            CopyResult copy = copyWithLimit(file.content(), temp, limits.maxBytes());
+            CopyResult copy = copyWithLimit(file.content(), temp, limits.calculateMaxBytes());
             if (copy.tooLarge()) {
-                throw tooLarge(actor, purpose, limits);
+                throw createTooLargeError(actor, purpose, limits);
             }
             Optional<FileType> type = inspector.detect(temp, name);
             if (type.isEmpty() || !limits.allowedTypes().contains(type.get())) {
                 fileAudit.uploadDenied(actor.accountId(), "FILE_TYPE_NOT_ALLOWED",
                         Map.of("purpose", purpose.name(), "detected", type.map(Enum::name).orElse("UNKNOWN")));
-                throw ApiException.unsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "Loại tệp không được phép");
+                throw ApiException.createUnsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "Loại tệp không được phép");
             }
-            if (!storage.available()) {
-                throw ApiException.unavailable("STORAGE_UNAVAILABLE", "Lưu trữ tệp tạm thời không khả dụng");
+            if (!storage.isAvailable()) {
+                throw ApiException.createUnavailable("STORAGE_UNAVAILABLE", "Lưu trữ tệp tạm thời không khả dụng");
             }
-            StoredMetadata metadata = new StoredMetadata(actor.accountId(), purpose, name, type.get().mediaType(),
+            StoredMetadata metadata = new StoredMetadata(actor.accountId(), purpose, name, type.get().readMediaType(),
                     copy.bytes(), copy.sha256());
             String fileId = store(purpose, temp, metadata);
             return sign(fileId, metadata);
         } catch (IOException e) {
-            throw ApiException.unavailable("UPLOAD_FAILED", "Không nhận được tệp, thử lại sau");
+            throw ApiException.createUnavailable("UPLOAD_FAILED", "Không nhận được tệp, thử lại sau");
         } finally {
             deleteQuietly(temp);
             permits.release();
@@ -120,9 +120,9 @@ public class UploadService {
     /** Kiểm quyền, dung lượng và loại theo nội dung như {@link #upload}, không lưu; trả media type (BR-U03-99). */
     public String inspectFile(Actor actor, ArtifactPurpose purpose, String originalFileName, byte[] content) {
         checkAllowed(actor, purpose);
-        PurposeLimits limits = policy.limits(purpose);
-        if (content == null || content.length > limits.maxBytes()) {
-            throw tooLarge(actor, purpose, limits);
+        PurposeLimits limits = policy.resolveLimits(purpose);
+        if (content == null || content.length > limits.calculateMaxBytes()) {
+            throw createTooLargeError(actor, purpose, limits);
         }
         String name = FileNameSanitizer.sanitize(originalFileName);
         Path temp = null;
@@ -134,11 +134,11 @@ public class UploadService {
             if (type.isEmpty() || !limits.allowedTypes().contains(type.get())) {
                 fileAudit.uploadDenied(actor.accountId(), "FILE_TYPE_NOT_ALLOWED",
                         Map.of("purpose", purpose.name(), "detected", type.map(Enum::name).orElse("UNKNOWN")));
-                throw ApiException.unsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "Loại tệp không được phép");
+                throw ApiException.createUnsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "Loại tệp không được phép");
             }
-            return type.get().mediaType();
+            return type.get().readMediaType();
         } catch (IOException e) {
-            throw ApiException.unavailable("UPLOAD_FAILED", "Không nhận được tệp, thử lại sau");
+            throw ApiException.createUnavailable("UPLOAD_FAILED", "Không nhận được tệp, thử lại sau");
         } finally {
             deleteQuietly(temp);
         }
@@ -148,25 +148,25 @@ public class UploadService {
         AuthorizationDecision decision = authorization.authorize(actor, "FILE_UPLOAD", ResourceRef.none());
         // U01 không kiểm được (database tạm lỗi): báo bận, không ghi từ chối oan cho người dùng (BR-U01-93, 95).
         if (decision == null || (!decision.allowed() && DEPENDENCY_UNAVAILABLE.equals(decision.reason()))) {
-            throw ApiException.unavailable("UPLOAD_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, thử lại sau");
+            throw ApiException.createUnavailable("UPLOAD_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, thử lại sau");
         }
         if (!decision.allowed() || !policy.canUpload(actor.role(), purpose)) {
             fileAudit.uploadDenied(actor.accountId(), "ROLE_NOT_ALLOWED", Map.of("purpose", purpose.name()));
-            throw ApiException.forbidden("FILE_UPLOAD_FORBIDDEN");
+            throw ApiException.createForbidden("FILE_UPLOAD_FORBIDDEN");
         }
     }
 
-    private ApiException tooLarge(Actor actor, ArtifactPurpose purpose, PurposeLimits limits) {
+    private ApiException createTooLargeError(Actor actor, ArtifactPurpose purpose, PurposeLimits limits) {
         fileAudit.uploadDenied(actor.accountId(), "FILE_TOO_LARGE",
                 Map.of("purpose", purpose.name(), "maxSizeMb", limits.maxSizeMb()));
-        return ApiException.payloadTooLarge("FILE_TOO_LARGE", "Tệp vượt " + limits.maxSizeMb() + " MB");
+        return ApiException.createPayloadTooLarge("FILE_TOO_LARGE", "Tệp vượt " + limits.maxSizeMb() + " MB");
     }
 
     private String store(ArtifactPurpose purpose, Path temp, StoredMetadata metadata) {
         try {
-            return storage.put(purpose, temp, metadata);
+            return storage.putFile(purpose, temp, metadata);
         } catch (StorageUnavailableException e) {
-            throw ApiException.unavailable("STORAGE_UNAVAILABLE", "Lưu trữ tệp tạm thời không khả dụng");
+            throw ApiException.createUnavailable("STORAGE_UNAVAILABLE", "Lưu trữ tệp tạm thời không khả dụng");
         }
     }
 
@@ -181,7 +181,7 @@ public class UploadService {
             trackUnattached(fileId, expiresAt);
             return result;
         } catch (RuntimeException e) {
-            compensate(fileId);
+            compensateUpload(fileId);
             throw e;
         }
     }
@@ -192,7 +192,7 @@ public class UploadService {
             return;
         }
         try {
-            unattached.add(fileId, expiresAt);
+            unattached.addFile(fileId, expiresAt);
         } catch (RuntimeException e) {
             log.warn("Chưa ghi được tệp chờ gắn: {}", e.getClass().getSimpleName());
         }
@@ -204,10 +204,10 @@ public class UploadService {
     }
 
     /** Xóa tệp đã lên Drive khi bước sau lỗi; xóa không được thì gửi việc dọn (BR-U03-06). */
-    void compensate(String fileId) {
+    void compensateUpload(String fileId) {
         for (int attempt = 1; attempt <= DELETE_ATTEMPTS; attempt++) {
             try {
-                storage.delete(fileId);
+                storage.deleteFile(fileId);
                 return;
             } catch (RuntimeException e) {
                 log.warn("Xóa tệp dở dang lỗi, lần {}", attempt);

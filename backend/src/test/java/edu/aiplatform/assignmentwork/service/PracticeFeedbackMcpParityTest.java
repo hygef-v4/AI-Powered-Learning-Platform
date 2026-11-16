@@ -102,7 +102,7 @@ class PracticeFeedbackMcpParityTest {
         var write=new McpCredential(UUID.randomUUID(),f.student.accountId(),"Own practice agent",
                 McpCredential.Access.READ_WRITE,"hash","hint",NOW.plusSeconds(60),null,null,NOW);
         var principal=new McpCredentialService.McpPrincipal(write,f.student);
-        var list=server.handle(principal,f.json.valueToTree(Map.of("jsonrpc","2.0","id",1,"method","tools/list"))).orElseThrow();
+        var list=server.handleMessage(principal,f.json.valueToTree(Map.of("jsonrpc","2.0","id",1,"method","tools/list"))).orElseThrow();
         assertThat(list.at("/result/tools").toString()).contains("read_own_work","record_private_feedback")
                 .doesNotContain("read_grading_context","read_quiz_context");
         Map<String,Object> valid=Map.of("summary","Góp ý","parts",java.util.List.of(Map.of("partId","DOCUMENT","comment","Ổn")),
@@ -112,10 +112,10 @@ class PracticeFeedbackMcpParityTest {
                         "submissionHash",a.receiptHash(),"feedback",valid))));
         var readOnly=new McpCredential(write.id(),write.accountId(),write.label(),McpCredential.Access.READ_ONLY,
                 write.tokenHash(),write.tokenHint(),write.expiresAt(),null,null,NOW);
-        var denied=server.handle(new McpCredentialService.McpPrincipal(readOnly,f.student),request).orElseThrow();
+        var denied=server.handleMessage(new McpCredentialService.McpPrincipal(readOnly,f.student),request).orElseThrow();
         assertThat(denied.has("error") || denied.at("/result/isError").asBoolean()).isTrue();
         verify(f.feedback,never()).insert(any());
-        var response=server.handle(principal,request).orElseThrow();
+        var response=server.handleMessage(principal,request).orElseThrow();
         assertThat(response.at("/result/isError").isBoolean()).isTrue();
         assertThat(response.at("/result/isError").asBoolean()).isFalse();
         assertThat(response.at("/result/content/0/text").asText()).contains("feedbackId","READY");

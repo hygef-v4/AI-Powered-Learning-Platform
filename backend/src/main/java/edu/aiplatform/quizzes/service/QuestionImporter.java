@@ -91,17 +91,17 @@ public class QuestionImporter {
         access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
         activeSubjects.require(subjectId);
         if (bytes == null || bytes.length == 0) {
-            throw ApiException.badRequest("IMPORT_FILE_EMPTY", "Tệp rỗng");
+            throw ApiException.createBadRequest("IMPORT_FILE_EMPTY", "Tệp rỗng");
         }
         if (bytes.length > MAX_BYTES) {
-            throw ApiException.payloadTooLarge("IMPORT_FILE_TOO_LARGE", "Tệp tối đa 5 MB");
+            throw ApiException.createPayloadTooLarge("IMPORT_FILE_TOO_LARGE", "Tệp tối đa 5 MB");
         }
         List<Map<String, String>> rows = isZip(bytes) ? readXlsx(bytes) : readCsv(bytes);
         if (rows.isEmpty()) {
-            throw ApiException.badRequest("IMPORT_FILE_EMPTY", "Tệp không có dòng câu hỏi nào");
+            throw ApiException.createBadRequest("IMPORT_FILE_EMPTY", "Tệp không có dòng câu hỏi nào");
         }
         if (rows.size() > MAX_ROWS) {
-            throw ApiException.badRequest("IMPORT_TOO_MANY_ROWS", "Tối đa 500 dòng mỗi lần nhập");
+            throw ApiException.createBadRequest("IMPORT_TOO_MANY_ROWS", "Tối đa 500 dòng mỗi lần nhập");
         }
 
         Instant now = clock.instant();
@@ -112,7 +112,7 @@ public class QuestionImporter {
         for (Map<String, String> row : rows) {
             int rowNumber = Integer.parseInt(row.get(ROW_NUMBER));
             List<Violation> reasons = new ArrayList<>();
-            QuestionContent content = toContent(row, reasons);
+            QuestionContent content = parseContent(row, reasons);
             reasons.addAll(QuestionRules.validate(content));
             if (reasons.isEmpty()) {
                 duplicates.duplicateOf(subjectId, content, null)
@@ -124,12 +124,12 @@ public class QuestionImporter {
             results.add(new RowResult(rowNumber, preview(content.stem()), content.options().size(), ok,
                     List.copyOf(reasons)));
             if (ok) {
-                valid.add(Question.newBankDraft(subjectId, content, actor.accountId(), now));
+                valid.add(Question.createBankDraft(subjectId, content, actor.accountId(), now));
             }
         }
         if (!dryRun) {
             valid.forEach(questions::insert);
-            audit.success(actor, "QUESTIONS_IMPORTED", "SUBJECT", subjectId, Map.of(
+            audit.recordSuccess(actor, "QUESTIONS_IMPORTED", "SUBJECT", subjectId, Map.of(
                     "total", rows.size(), "created", valid.size(), "failed", rows.size() - valid.size()));
         }
         return new ImportResult(dryRun, rows.size(), valid.size(), rows.size() - valid.size(),
@@ -137,8 +137,8 @@ public class QuestionImporter {
     }
 
 
-    static QuestionContent toContent(Map<String, String> row, List<Violation> reasons) {
-        QuestionType type = type(row.get("loai"), reasons);
+    static QuestionContent parseContent(Map<String, String> row, List<Violation> reasons) {
+        QuestionType type = parseType(row.get("loai"), reasons);
         List<QuestionOption> options = new ArrayList<>();
         for (int i = 1; i <= OPTION_COLUMNS; i++) {
             String text = row.get("lua_chon_" + i);
@@ -148,12 +148,12 @@ public class QuestionImporter {
         }
         String answers = row.getOrDefault("dap_an_dung", "");
         List<String> correct = answers.isBlank() ? List.of() : List.of(answers.strip().split("\\s*[,;\\s]\\s*"));
-        return QuestionContent.of(type, row.get("noi_dung"), options, correct, row.get("giai_thich"),
-                points(row.get("diem"), reasons), difficulty(row.get("do_kho"), reasons), tags(row.get("tag")));
+        return QuestionContent.createContent(type, row.get("noi_dung"), options, correct, row.get("giai_thich"),
+                parsePoints(row.get("diem"), reasons), parseDifficulty(row.get("do_kho"), reasons), parseTags(row.get("tag")));
     }
 
-    private static QuestionType type(String value, List<Violation> reasons) {
-        String key = key(value);
+    private static QuestionType parseType(String value, List<Violation> reasons) {
+        String key = normalizeKey(value);
         return switch (key) {
             case "MCQ_SINGLE", "SINGLE", "MOT_DAP_AN" -> QuestionType.MCQ_SINGLE;
             case "MCQ_MULTI", "MULTI", "NHIEU_DAP_AN" -> QuestionType.MCQ_MULTI;
@@ -165,8 +165,8 @@ public class QuestionImporter {
         };
     }
 
-    private static Difficulty difficulty(String value, List<Violation> reasons) {
-        String key = key(value);
+    private static Difficulty parseDifficulty(String value, List<Violation> reasons) {
+        String key = normalizeKey(value);
         return switch (key) {
             case "" -> Difficulty.MEDIUM;
             case "EASY", "DE" -> Difficulty.EASY;
@@ -179,7 +179,7 @@ public class QuestionImporter {
         };
     }
 
-    private static BigDecimal points(String value, List<Violation> reasons) {
+    private static BigDecimal parsePoints(String value, List<Violation> reasons) {
         if (value == null || value.isBlank()) {
             return DEFAULT_POINTS;
         }
@@ -191,12 +191,12 @@ public class QuestionImporter {
         }
     }
 
-    private static List<String> tags(String value) {
+    private static List<String> parseTags(String value) {
         return value == null || value.isBlank() ? List.of() : List.of(value.split("[;|]"));
     }
 
     /** Bỏ dấu, viết hoa, khoảng trắng thành "_" để nhận cả "Một đáp án", "trung bình". */
-    private static String key(String value) {
+    private static String normalizeKey(String value) {
         if (value == null) {
             return "";
         }
@@ -213,7 +213,7 @@ public class QuestionImporter {
                     .onUnmappableCharacter(CodingErrorAction.REPORT)
                     .decode(ByteBuffer.wrap(bytes)).toString();
         } catch (CharacterCodingException notText) {
-            throw ApiException.unsupportedMediaType("IMPORT_FILE_TYPE", "Chỉ nhận tệp .xlsx hoặc .csv UTF-8");
+            throw ApiException.createUnsupportedMediaType("IMPORT_FILE_TYPE", "Chỉ nhận tệp .xlsx hoặc .csv UTF-8");
         }
         if (text.startsWith("﻿")) {
             text = text.substring(1);
@@ -224,7 +224,7 @@ public class QuestionImporter {
         CSVFormat format = CSVFormat.DEFAULT.builder().setDelimiter(delimiter).setHeader().setSkipHeaderRecord(true)
                 .setIgnoreEmptyLines(true).setAllowMissingColumnNames(true).build();
         try (CSVParser parser = CSVParser.parse(new StringReader(text), format)) {
-            List<String> headers = parser.getHeaderNames().stream().map(QuestionImporter::header).toList();
+            List<String> headers = parser.getHeaderNames().stream().map(QuestionImporter::normalizeHeader).toList();
             requireColumns(headers);
             List<Map<String, String>> rows = new ArrayList<>();
             for (CSVRecord record : parser) {
@@ -242,7 +242,7 @@ public class QuestionImporter {
             }
             return rows;
         } catch (IOException | IllegalArgumentException | IllegalStateException unreadable) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Không đọc được tệp CSV");
+            throw ApiException.createBadRequest("IMPORT_FILE_INVALID", "Không đọc được tệp CSV");
         }
     }
 
@@ -259,7 +259,7 @@ public class QuestionImporter {
             }
             Map<Integer, String> headers = new LinkedHashMap<>();
             for (Cell cell : headerRow) {
-                headers.put(cell.getColumnIndex(), header(formatter.formatCellValue(cell)));
+                headers.put(cell.getColumnIndex(), normalizeHeader(formatter.formatCellValue(cell)));
             }
             requireColumns(List.copyOf(headers.values()));
             List<Map<String, String>> rows = new ArrayList<>();
@@ -280,19 +280,19 @@ public class QuestionImporter {
         } catch (ApiException rejected) {
             throw rejected;
         } catch (IOException | RuntimeException unreadable) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Không đọc được tệp .xlsx");
+            throw ApiException.createBadRequest("IMPORT_FILE_INVALID", "Không đọc được tệp .xlsx");
         }
     }
 
     private static void requireColumns(List<String> headers) {
         List<String> missing = REQUIRED_COLUMNS.stream().filter(c -> !headers.contains(c)).toList();
         if (!missing.isEmpty()) {
-            throw ApiException.badRequest("IMPORT_HEADER_INVALID",
+            throw ApiException.createBadRequest("IMPORT_HEADER_INVALID",
                     "Tệp thiếu cột theo mẫu: " + String.join(", ", missing));
         }
     }
 
-    private static String header(String name) {
+    private static String normalizeHeader(String name) {
         return name == null ? "" : name.replace("﻿", "").strip().toLowerCase(Locale.ROOT);
     }
 

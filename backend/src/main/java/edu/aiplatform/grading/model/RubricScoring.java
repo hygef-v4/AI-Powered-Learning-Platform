@@ -25,7 +25,7 @@ public final class RubricScoring {
     public static BigDecimal calculateScore(List<RubricView> rubrics, Map<UUID, Set<UUID>> checks,
             Map<UUID, Map<UUID, BigDecimal>> itemScores) {
         if (checks == null)
-            throw ApiException.badRequest("INVALID_RUBRIC", "Missing rubric checks");
+            throw ApiException.createBadRequest("INVALID_RUBRIC", "Missing rubric checks");
         itemScores = itemScores == null ? Map.of() : itemScores;
         Set<UUID> known = new HashSet<>();
         BigDecimal total = BigDecimal.ZERO;
@@ -40,7 +40,7 @@ public final class RubricScoring {
                 for (var item : criterion.items()) {
                     if (item.points() == null) {
                         if (item.text() == null || item.text().isBlank()) continue;
-                        throw ApiException.badRequest("INVALID_RUBRIC", "Rubric item is missing points");
+                        throw ApiException.createBadRequest("INVALID_RUBRIC", "Rubric item is missing points");
                     }
                     allowed.add(item.itemId());
                     if (awarded.containsKey(item.itemId())) {
@@ -55,10 +55,10 @@ public final class RubricScoring {
                 }
             }
             if (!allowed.containsAll(selected) || !allowed.containsAll(awarded.keySet()))
-                throw ApiException.badRequest("INVALID_RUBRIC", "Unknown rubric item");
+                throw ApiException.createBadRequest("INVALID_RUBRIC", "Unknown rubric item");
         }
         if (!known.containsAll(checks.keySet()) || !known.containsAll(itemScores.keySet()))
-            throw ApiException.badRequest("INVALID_RUBRIC", "Unknown rubric");
+            throw ApiException.createBadRequest("INVALID_RUBRIC", "Unknown rubric");
         return total;
     }
 
@@ -137,7 +137,7 @@ public final class RubricScoring {
 
     /** Creates the validation error used for invalid rubric item scores. */
     private static ApiException createInvalidItemScore() {
-        return ApiException.badRequest("INVALID_RUBRIC_SCORE",
+        return ApiException.createBadRequest("INVALID_RUBRIC_SCORE",
                 "Điểm từng mục phải từ 0 đến điểm tối đa, với tối đa 2 chữ số thập phân.");
     }
 }

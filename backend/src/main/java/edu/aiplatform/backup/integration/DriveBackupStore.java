@@ -29,17 +29,17 @@ public class DriveBackupStore implements IBackupStore {
     }
 
     @Override
-    public boolean available() {
+    public boolean isAvailable() {
         return true;
     }
 
     @Override
-    public StoredArchive put(UUID runId, Path archive) {
+    public StoredArchive putArchive(UUID runId, Path archive) {
         String parent = folderId.get();
-        String runFolder = folders.find(parent, runId.toString())
-                .orElseGet(() -> folders.create(parent, runId.toString()));
+        String runFolder = folders.findFolder(parent, runId.toString())
+                .orElseGet(() -> folders.createFolder(parent, runId.toString()));
         File metadata = new File().setName("archive.alapbk").setParents(List.of(runFolder));
-        File created = DriveClientFactory.withRetry(() -> clients.drive().files()
+        File created = DriveClientFactory.runWithRetry(() -> clients.createDrive().files()
                 .create(metadata, new FileContent("application/octet-stream", archive.toFile()))
                 .setSupportsAllDrives(true).setFields("id,size,md5Checksum").execute());
         return new StoredArchive(created.getId(), created.getSize() == null ? -1 : created.getSize(),
@@ -47,13 +47,13 @@ public class DriveBackupStore implements IBackupStore {
     }
 
     @Override
-    public void delete(String runId) {
-        Optional<String> folder = folders.find(folderId.get(), runId);
+    public void deleteArchive(String runId) {
+        Optional<String> folder = folders.findFolder(folderId.get(), runId);
         if (folder.isEmpty()) {
             return;
         }
         try {
-            DriveClientFactory.withRetry(() -> clients.drive().files().delete(folder.get()).setSupportsAllDrives(true)
+            DriveClientFactory.runWithRetry(() -> clients.createDrive().files().delete(folder.get()).setSupportsAllDrives(true)
                     .execute());
         } catch (DriveClientFactory.DriveNotFoundException e) {
             // Đã xóa từ trước.

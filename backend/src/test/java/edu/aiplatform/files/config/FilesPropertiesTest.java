@@ -13,17 +13,17 @@ class FilesPropertiesTest {
     @Test
     void personalDriveNeedsClientAndRefreshToken() {
         FilesProperties personal = props(null, null, "client", "secret", "token");
-        assertThat(personal.personalDriveConfigured()).isTrue();
-        assertThat(personal.sharedDriveConfigured()).isFalse();
-        assertThat(personal.driveConfigured()).isTrue();
-        assertThat(props(null, null, "client", "secret", " ").driveConfigured()).isFalse();
+        assertThat(personal.hasPersonalDrive()).isTrue();
+        assertThat(personal.hasSharedDrive()).isFalse();
+        assertThat(personal.hasDrive()).isTrue();
+        assertThat(props(null, null, "client", "secret", " ").hasDrive()).isFalse();
     }
 
     @Test
     void sharedDriveWinsWhenBothAreConfigured() {
         FilesProperties both = props("key", "drive", "client", "secret", "token");
-        assertThat(both.sharedDriveConfigured()).isTrue();
-        assertThat(both.personalDriveConfigured()).isFalse();
-        assertThat(props("key", null, null, null, null).driveConfigured()).isFalse();
+        assertThat(both.hasSharedDrive()).isTrue();
+        assertThat(both.hasPersonalDrive()).isFalse();
+        assertThat(props("key", null, null, null, null).hasDrive()).isFalse();
     }
 }

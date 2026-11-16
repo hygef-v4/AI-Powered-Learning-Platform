@@ -55,7 +55,7 @@ class GradingMcpQueryServiceTest {
     @Test void oversizedSingleBlockIsExplicitErrorInsteadOfSuccessfulTruncation() {
         var e=evaluation();setup(e,List.of(new DocumentBlock(UUID.randomUUID(),null,BlockType.PARAGRAPH,objectMapper.createObjectNode().put("text","x".repeat(250000)))));
         assertThatThrownBy(() -> gradingMcpQueryService.loadGradingContext(teacher,Map.of("evaluationId",e.id.toString())))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("MCP_CONTEXT_TOO_LARGE"));
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.readCode()).isEqualTo("MCP_CONTEXT_TOO_LARGE"));
     }
     @Test void studentCannotReadAndOffsetRequiresSnapshot() {
         assertThatThrownBy(() -> gradingMcpQueryService.loadGradingContext(new Actor(UUID.randomUUID(),Role.STUDENT),Map.of())).isInstanceOf(ApiException.class);
@@ -75,9 +75,9 @@ class GradingMcpQueryServiceTest {
     }
     @Test void unavailableReadProgressCannotBecomeAContextSuccess() {
         var e=evaluation();setup(e,List.of());
-        doThrow(ApiException.unavailable("MCP_CONTEXT_READ_UNAVAILABLE","Unavailable")).when(progress).advanceProgress(any(),any(),any(),anyInt(),anyInt());
+        doThrow(ApiException.createUnavailable("MCP_CONTEXT_READ_UNAVAILABLE","Unavailable")).when(progress).advanceProgress(any(),any(),any(),anyInt(),anyInt());
         assertThatThrownBy(() -> gradingMcpQueryService.loadGradingContext(teacher,Map.of("evaluationId",e.id.toString())))
-                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.code()).isEqualTo("MCP_CONTEXT_READ_UNAVAILABLE"));
+                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.readCode()).isEqualTo("MCP_CONTEXT_READ_UNAVAILABLE"));
     }
     @Test void completedReadOfOldAssignmentCannotAuthorizeANewWrite() {
         var e=evaluation();setup(e,List.of());
@@ -85,7 +85,7 @@ class GradingMcpQueryServiceTest {
         when(assignmentQuery.getContent(e.assignmentId)).thenReturn(Optional.of(new AssignmentContent(e.assignmentId,2,
                 "Changed instructions",new DocumentModel(List.of()),List.of(),Map.of(),List.of())));
         assertThatThrownBy(() -> gradingMcpQueryService.requireCompleteRead(teacher,e.id,e.version,e.submissionHash,(String)context.get("snapshotFingerprint")))
-                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.code()).isEqualTo("SUBMISSION_CHANGED"));
+                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.readCode()).isEqualTo("SUBMISSION_CHANGED"));
         verify(progress,never()).requireCompleteRead(any(),any(),any(),anyInt());
     }
     @Test void changedAssignmentInstructionsInvalidateContinuationEvenWithTheSameSubmissionHash() {
@@ -97,7 +97,7 @@ class GradingMcpQueryServiceTest {
         when(assignmentQuery.getContent(e.assignmentId)).thenReturn(Optional.of(new AssignmentContent(e.assignmentId,1,
                 "Changed instructions",new DocumentModel(List.of()),List.of(),Map.of(),List.of())));
         assertThatThrownBy(() -> gradingMcpQueryService.loadGradingContext(teacher,(Map<String,Object>)first.get("continuation")))
-                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.code()).isEqualTo("SUBMISSION_CHANGED"));
+                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.readCode()).isEqualTo("SUBMISSION_CHANGED"));
     }
     @Test void discoveryDoesNotLoadSubmissionDocuments() {
         var e=evaluation();

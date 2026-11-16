@@ -70,7 +70,7 @@ public class AiTaskService implements IAiTask {
     private final AiConnectionRepository connections;
     private final AiUsageRepository usage;
     private final AiTaskResultHandlerRegistry handlers;
-    private final QuotaReservationService quota;
+    private final QuotaReservationService quotaReservationService;
     private final ProviderCatalog catalog;
     private final JsonSchemaChecker schemas;
     private final AiAccess access;
@@ -80,10 +80,10 @@ public class AiTaskService implements IAiTask {
     private final ObjectMapper json;
     private final TransactionTemplate transactions;
     private final Clock clock;
-    private AiImageSourceRegistry imageSources = AiImageSourceRegistry.of(List.of());
+    private AiImageSourceRegistry imageSources = AiImageSourceRegistry.createRegistry(List.of());
 
     public AiTaskService(AiTaskRepository tasks, AiConnectionRepository connections, AiUsageRepository usage,
-                         AiTaskResultHandlerRegistry handlers, QuotaReservationService quota, ProviderCatalog catalog,
+                         AiTaskResultHandlerRegistry handlers, QuotaReservationService quotaReservationService, ProviderCatalog catalog,
                          JsonSchemaChecker schemas, AiAccess access, IPromptGuardrail promptGuardrail,
                          AiTaskDelivery delivery, IJob jobs, ObjectMapper json,
                          PlatformTransactionManager transactionManager, Clock clock) {
@@ -91,7 +91,7 @@ public class AiTaskService implements IAiTask {
         this.connections = connections;
         this.usage = usage;
         this.handlers = handlers;
-        this.quota = quota;
+        this.quotaReservationService = quotaReservationService;
         this.catalog = catalog;
         this.schemas = schemas;
         this.access = access;
@@ -113,15 +113,15 @@ public class AiTaskService implements IAiTask {
     public AiTaskView submit(AiTaskRequest requested) {
         validate(requested);
         requireGuardedInput(requested);
-        String fingerprint = fingerprint(requested);
+        String fingerprint = computeFingerprint(requested);
         Optional<AiTask> existing = tasks.findByRequestRef(requested.requestRef());
         if (existing.isPresent()) {
-            return sameOrConflict(existing.get(), fingerprint);
+            return reuseOrConflict(existing.get(), fingerprint);
         }
         AiTaskRequest request = resolveSource(requested);
         Actor actor = request.actor();
-        AiConnection connection = connectionFor(actor, request.source(), request.provider(), request.prompt().hasImages());
-        int max = Math.min(request.maxOutputTokens(), catalog.maxOutputTokens(connection.provider()));
+        AiConnection connection = resolveConnection(actor, request.source(), request.provider(), request.prompt().hasImages());
+        int max = Math.min(request.maxOutputTokens(), catalog.readMaxOutputTokens(connection.provider()));
         tasks.lockActor(actor.accountId());
         if (tasks.countActive(actor.accountId()) >= MAX_ACTIVE) {
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "AI_TOO_MANY_TASKS",
@@ -131,7 +131,7 @@ public class AiTaskService implements IAiTask {
         Long reserved = null;
         LocalDate day = null;
         if (request.source() == AiSource.SHARED) {
-            QuotaReservationService.Reservation reservation = quota.reserve(actor.accountId(),
+            QuotaReservationService.Reservation reservation = quotaReservationService.reserve(actor.accountId(),
                     QuotaReservationService.estimate(promptChars(request.prompt()), max));
             reserved = reservation.tokens();
             day = reservation.day();
@@ -143,7 +143,7 @@ public class AiTaskService implements IAiTask {
         try {
             tasks.insert(task);
         } catch (DuplicateKeyException e) {
-            throw ApiException.conflict("AI_REQUEST_REF_CONFLICT", "Yêu cầu này đang được xử lý, hãy tải lại");
+            throw ApiException.createConflict("AI_REQUEST_REF_CONFLICT", "Yêu cầu này đang được xử lý, hãy tải lại");
         }
         jobs.enqueue(JobTypes.AI_TASK, Map.of("taskId", task.id().toString()), task.id().toString());
         return view(task);
@@ -159,7 +159,7 @@ public class AiTaskService implements IAiTask {
     @Transactional(readOnly = true)
     public AiTaskView getOwn(Actor actor, UUID taskId) {
         return tasks.findById(taskId).filter(t -> actor != null && t.actorId().equals(actor.accountId()))
-                .map(this::view).orElseThrow(AiAccess::notFound);
+                .map(this::view).orElseThrow(AiAccess::createNotFoundError);
     }
 
     /** Người gửi hủy task {@code QUEUED}; giữ chỗ được giải phóng (BR-U06-26). */
@@ -171,21 +171,21 @@ public class AiTaskService implements IAiTask {
 
     private void cancelQueued(Actor actor, UUID taskId) {
         AiTask task = tasks.lock(taskId).filter(t -> actor != null && t.actorId().equals(actor.accountId()))
-                .orElseThrow(AiAccess::notFound);
+                .orElseThrow(AiAccess::createNotFoundError);
         if (task.state() != AiTaskState.QUEUED) {
-            throw ApiException.conflict("AI_TASK_NOT_CANCELLABLE", "Yêu cầu đã được gửi tới nhà cung cấp, không hủy được");
+            throw ApiException.createConflict("AI_TASK_NOT_CANCELLABLE", "Yêu cầu đã được gửi tới nhà cung cấp, không hủy được");
         }
         if (task.reservedTokens() != null) {
-            quota.release(task.actorId(), task.quotaDay(), task.reservedTokens());
+            quotaReservationService.release(task.actorId(), task.quotaDay(), task.reservedTokens());
         }
-        if (!tasks.update(task.moveTo(AiTaskState.CANCELLED, clock.instant()).withError("Người dùng đã hủy"))) {
-            throw ApiException.conflict("AI_TASK_VERSION_CONFLICT", "Yêu cầu vừa thay đổi, hãy tải lại");
+        if (!tasks.updateTask(task.moveTo(AiTaskState.CANCELLED, clock.instant()).failWithError("Người dùng đã hủy"))) {
+            throw ApiException.createConflict("AI_TASK_VERSION_CONFLICT", "Yêu cầu vừa thay đổi, hãy tải lại");
         }
     }
 
-    private AiTaskView sameOrConflict(AiTask task, String fingerprint) {
+    private AiTaskView reuseOrConflict(AiTask task, String fingerprint) {
         if (!task.fingerprint().equals(fingerprint)) {
-            throw ApiException.conflict("AI_REQUEST_REF_CONFLICT", "Mã yêu cầu đã dùng cho một yêu cầu khác");
+            throw ApiException.createConflict("AI_REQUEST_REF_CONFLICT", "Mã yêu cầu đã dùng cho một yêu cầu khác");
         }
         return view(task);
     }
@@ -193,15 +193,15 @@ public class AiTaskService implements IAiTask {
     @Override
     public void requireSource(Actor actor, AiSource source, AiProvider provider) {
         if (actor == null) {
-            throw ApiException.badRequest("AI_TASK_INVALID", "Yêu cầu AI thiếu thông tin");
+            throw ApiException.createBadRequest("AI_TASK_INVALID", "Yêu cầu AI thiếu thông tin");
         }
         if (source == null || source == AiSource.PERSONAL && provider == null) {
-            if (candidates(actor, source, new AiPrompt(null, "x"), 1).isEmpty()) {
-                throw unavailable();
+            if (listCandidates(actor, source, new AiPrompt(null, "x"), 1).isEmpty()) {
+                throw createUnavailableError();
             }
             return;
         }
-        connectionFor(actor, source, provider, false);
+        resolveConnection(actor, source, provider, false);
     }
 
     /**
@@ -213,9 +213,9 @@ public class AiTaskService implements IAiTask {
         if (request.source() == AiSource.SHARED || request.provider() != null) {
             return request;
         }
-        List<AiSourceChoice> order = candidates(request.actor(), request.source(), request.prompt(), request.maxOutputTokens());
+        List<AiSourceChoice> order = listCandidates(request.actor(), request.source(), request.prompt(), request.maxOutputTokens());
         if (order.isEmpty()) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         AiSourceChoice choice = order.get(0);
         return new AiTaskRequest(request.actor(), choice.source(), choice.provider(), request.taskType(),
@@ -223,13 +223,13 @@ public class AiTaskService implements IAiTask {
                 request.maxOutputTokens(), request.userInput());
     }
 
-    private List<AiSourceChoice> candidates(Actor actor, AiSource only, AiPrompt prompt, int maxOutputTokens) {
+    private List<AiSourceChoice> listCandidates(Actor actor, AiSource only, AiPrompt prompt, int maxOutputTokens) {
         List<AiSourceChoice> order = sourceOrder(actor, prompt, maxOutputTokens);
         return only == null ? order : order.stream().filter(choice -> choice.source() == only).toList();
     }
 
-    private static ApiException unavailable() {
-        return ApiException.badRequest("AI_SOURCE_UNAVAILABLE",
+    private static ApiException createUnavailableError() {
+        return ApiException.createBadRequest("AI_SOURCE_UNAVAILABLE",
                 "Không có nguồn AI dùng được: API chung không đủ hạn mức cho lượt này và chưa có khóa API cá nhân đang bật");
     }
 
@@ -240,70 +240,70 @@ public class AiTaskService implements IAiTask {
         if (actor == null || prompt == null || prompt.user() == null) {
             return order;
         }
-        if (access.allowed(actor, Actions.AI_SHARED_USE)) {
-            Optional<AiConnection> shared = usable(connections.listInstitutional(), prompt.hasImages()).stream()
+        if (access.canPerform(actor, Actions.AI_SHARED_USE)) {
+            Optional<AiConnection> shared = filterUsable(connections.listInstitutional(), prompt.hasImages()).stream()
                     .findFirst();
             if (shared.isPresent()) {
-                int max = Math.min(maxOutputTokens, catalog.maxOutputTokens(shared.get().provider()));
-                QuotaReservationService.Remaining left = quota.remaining(actor.accountId());
+                int max = Math.min(maxOutputTokens, catalog.readMaxOutputTokens(shared.get().provider()));
+                QuotaReservationService.Remaining left = quotaReservationService.calculateRemaining(actor.accountId());
                 if (left != null && left.limit() > 0
                         && left.left() >= QuotaReservationService.estimate(promptChars(prompt), max)) {
                     order.add(new AiSourceChoice(AiSource.SHARED, null));
                 }
             }
         }
-        if (access.allowed(actor, Actions.AI_PERSONAL)) {
-            usable(connections.listPersonal(actor.accountId()), prompt.hasImages())
+        if (access.canPerform(actor, Actions.AI_PERSONAL)) {
+            filterUsable(connections.listPersonal(actor.accountId()), prompt.hasImages())
                     .forEach(c -> order.add(new AiSourceChoice(AiSource.PERSONAL, c.provider())));
         }
         return order;
     }
 
     /** Nguồn đúng như người dùng chọn; không có hoặc không dùng được thì báo lỗi, không đổi nguồn (BR-U06-10). */
-    private AiConnection connectionFor(Actor actor, AiSource source, AiProvider provider, boolean images) {
+    private AiConnection resolveConnection(Actor actor, AiSource source, AiProvider provider, boolean images) {
         if (source == AiSource.SHARED) {
-            if (!access.allowed(actor, Actions.AI_SHARED_USE)) {
-                throw ApiException.forbidden("AI_SHARED_NOT_ALLOWED");
+            if (!access.canPerform(actor, Actions.AI_SHARED_USE)) {
+                throw ApiException.createForbidden("AI_SHARED_NOT_ALLOWED");
             }
             // Khóa chung tốt nhất theo thứ tự thử: Claude, GPT, Gemini; mô hình tốt trước (yêu cầu 2026-11-05).
-            return usable(connections.listInstitutional(), images).stream().findFirst()
-                    .orElseThrow(() -> ApiException.badRequest("AI_SHARED_NOT_CONFIGURED",
+            return filterUsable(connections.listInstitutional(), images).stream().findFirst()
+                    .orElseThrow(() -> ApiException.createBadRequest("AI_SHARED_NOT_CONFIGURED",
                             "API của trường chưa được bật; hãy chọn API cá nhân"));
         }
-        if (!access.allowed(actor, Actions.AI_PERSONAL)) {
-            throw ApiException.forbidden("AI_PERSONAL_NOT_ALLOWED");
+        if (!access.canPerform(actor, Actions.AI_PERSONAL)) {
+            throw ApiException.createForbidden("AI_PERSONAL_NOT_ALLOWED");
         }
         if (provider == null) {
-            throw ApiException.badRequest("AI_PROVIDER_REQUIRED", "Cần chọn nhà cung cấp cho API cá nhân");
+            throw ApiException.createBadRequest("AI_PROVIDER_REQUIRED", "Cần chọn nhà cung cấp cho API cá nhân");
         }
         // Khóa cá nhân tốt nhất của provider (một provider có thể có nhiều khóa).
-        return usable(connections.listPersonal(actor.accountId()), images).stream()
+        return filterUsable(connections.listPersonal(actor.accountId()), images).stream()
                 .filter(c -> c.provider() == provider).findFirst()
                 .filter(c -> c.status() == Status.ACTIVE)
-                .orElseThrow(() -> ApiException.badRequest("AI_PERSONAL_NOT_CONFIGURED",
+                .orElseThrow(() -> ApiException.createBadRequest("AI_PERSONAL_NOT_CONFIGURED",
                         "Bạn chưa lưu khóa API cho nhà cung cấp này"));
     }
 
     private void validate(AiTaskRequest request) {
         if (request == null || request.actor() == null || request.prompt() == null
                 || request.prompt().user() == null || request.taskType() == null || request.targetRef() == null) {
-            throw ApiException.badRequest("AI_TASK_INVALID", "Yêu cầu AI thiếu thông tin");
+            throw ApiException.createBadRequest("AI_TASK_INVALID", "Yêu cầu AI thiếu thông tin");
         }
         if (request.requestRef() == null || request.requestRef().isBlank() || request.requestRef().length() > MAX_REQUEST_REF) {
-            throw ApiException.badRequest("AI_REQUEST_REF_INVALID", "Mã yêu cầu không hợp lệ");
+            throw ApiException.createBadRequest("AI_REQUEST_REF_INVALID", "Mã yêu cầu không hợp lệ");
         }
-        if (handlers.find(request.taskType()).isEmpty()) {
-            throw ApiException.badRequest("AI_TASK_TYPE_UNKNOWN", "Loại yêu cầu AI chưa được hỗ trợ");
+        if (handlers.findHandler(request.taskType()).isEmpty()) {
+            throw ApiException.createBadRequest("AI_TASK_TYPE_UNKNOWN", "Loại yêu cầu AI chưa được hỗ trợ");
         }
         if (request.maxOutputTokens() <= 0) {
-            throw ApiException.badRequest("AI_TASK_INVALID", "Số token ra phải lớn hơn 0");
+            throw ApiException.createBadRequest("AI_TASK_INVALID", "Số token ra phải lớn hơn 0");
         }
-        if (request.outputSchema() == null || !schemas.validSchema(request.outputSchema())) {
-            throw ApiException.badRequest("AI_TASK_INVALID", "Schema kết quả không hợp lệ");
+        if (request.outputSchema() == null || !schemas.isValidSchema(request.outputSchema())) {
+            throw ApiException.createBadRequest("AI_TASK_INVALID", "Schema kết quả không hợp lệ");
         }
         validateImages(request.prompt().images());
         if (promptChars(request.prompt()) > MAX_PROMPT_CHARS) {
-            throw ApiException.badRequest("AI_PROMPT_TOO_LARGE", "Nội dung gửi AI quá dài");
+            throw ApiException.createBadRequest("AI_PROMPT_TOO_LARGE", "Nội dung gửi AI quá dài");
         }
     }
 
@@ -315,13 +315,13 @@ public class AiTaskService implements IAiTask {
         UserPromptInput userInput = request.userInput();
         if (userInput == null) {
             if (FREE_TEXT_TASK_TYPES.contains(request.taskType())) {
-                throw ApiException.badRequest(IPromptGuardrail.REJECTED_CODE,
+                throw ApiException.createBadRequest(IPromptGuardrail.REJECTED_CODE,
                         "Yêu cầu AI chưa qua bước kiểm duyệt nội dung nên chưa được gửi");
             }
             return;
         }
         if (userInput.actor() == null || !userInput.actor().equals(request.actor())) {
-            throw ApiException.badRequest(IPromptGuardrail.REJECTED_CODE, "Yêu cầu AI không khớp người gửi");
+            throw ApiException.createBadRequest(IPromptGuardrail.REJECTED_CODE, "Yêu cầu AI không khớp người gửi");
         }
         promptGuardrail.requireValid(userInput);
     }
@@ -329,19 +329,19 @@ public class AiTaskService implements IAiTask {
     /** Ảnh trong prompt: tối đa 10, JPEG/PNG, nguồn đã đăng ký (BR-U06-54). */
     private void validateImages(List<AiImageRef> images) {
         if (images.size() > MAX_IMAGES) {
-            throw ApiException.badRequest("AI_TASK_INVALID", "Tối đa 10 ảnh mỗi yêu cầu AI");
+            throw ApiException.createBadRequest("AI_TASK_INVALID", "Tối đa 10 ảnh mỗi yêu cầu AI");
         }
         for (AiImageRef image : images) {
             if (image == null || image.ref() == null || image.ref().isBlank()
-                    || !IMAGE_TYPES.contains(image.mediaType()) || imageSources.find(image.source()).isEmpty()) {
-                throw ApiException.badRequest("AI_TASK_INVALID", "Ảnh gửi AI không hợp lệ");
+                    || !IMAGE_TYPES.contains(image.mediaType()) || imageSources.findSource(image.source()).isEmpty()) {
+                throw ApiException.createBadRequest("AI_TASK_INVALID", "Ảnh gửi AI không hợp lệ");
             }
         }
     }
 
     /** Kết nối đang bật theo thứ tự thử; prompt có ảnh thì chỉ giữ model đọc được ảnh (BR-U06-58). */
-    private List<AiConnection> usable(List<AiConnection> all, boolean images) {
-        List<AiConnection> ordered = ConnectionOrder.active(all, catalog);
+    private List<AiConnection> filterUsable(List<AiConnection> all, boolean images) {
+        List<AiConnection> ordered = ConnectionOrder.filterActive(all, catalog);
         return images ? ordered.stream().filter(c -> catalog.supportsImages(c.provider(), c.model())).toList()
                 : ordered;
     }
@@ -367,7 +367,7 @@ public class AiTaskService implements IAiTask {
     }
 
     /** Băm của người gọi, loại task, đích, {@code inputVersion}, nguồn (BR-U06-21). */
-    static String fingerprint(AiTaskRequest r) {
+    static String computeFingerprint(AiTaskRequest r) {
         String raw = r.actor().accountId() + "|" + r.taskType() + "|" + r.targetRef() + "|" + r.inputVersion() + "|"
                 + r.source() + "|" + (r.provider() == null ? "" : r.provider());
         if (r.prompt() != null && r.prompt().hasImages()) {
@@ -381,7 +381,7 @@ public class AiTaskService implements IAiTask {
     }
 
     AiTaskView view(AiTask task) {
-        AiUsageSummary summary = usage.summaryOfTask(task.id()).orElse(null);
+        AiUsageSummary summary = usage.findTaskSummary(task.id()).orElse(null);
         return new AiTaskView(task.id(), task.state(), task.source(), task.provider(), task.model(), task.applyResult(),
                 task.safeError(), summary);
     }

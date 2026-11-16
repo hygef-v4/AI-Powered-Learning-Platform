@@ -55,13 +55,13 @@ class ExamImportMapperTest {
     @Test
     void sampleOutputMatchesTheSchemaSentToTheModel() throws Exception {
         JsonSchemaChecker checker = new JsonSchemaChecker(json);
-        assertThat(checker.validSchema(ExamImportPrompt.OUTPUT_SCHEMA)).isTrue();
+        assertThat(checker.isValidSchema(ExamImportPrompt.OUTPUT_SCHEMA)).isTrue();
         com.fasterxml.jackson.databind.node.ObjectNode valid = (com.fasterxml.jackson.databind.node.ObjectNode)
                 json.readTree(SWR302);
         ((com.fasterxml.jackson.databind.node.ObjectNode) valid.at("/blocks/4/items/2")).put("level", 4);
         ((com.fasterxml.jackson.databind.node.ArrayNode) valid.path("warnings")).remove(1);
-        assertThat(checker.check(ExamImportPrompt.OUTPUT_SCHEMA, valid)).isEmpty();
-        assertThat(checker.check(ExamImportPrompt.OUTPUT_SCHEMA, json.readTree(SWR302))).as("level 9, kind lạ")
+        assertThat(checker.validateValue(ExamImportPrompt.OUTPUT_SCHEMA, valid)).isEmpty();
+        assertThat(checker.validateValue(ExamImportPrompt.OUTPUT_SCHEMA, json.readTree(SWR302))).as("level 9, kind lạ")
                 .isPresent();
     }
 
@@ -115,7 +115,7 @@ class ExamImportMapperTest {
         assertThat(schema.at("/properties/figures/items/required")).extracting(JsonNode::asText)
                 .containsExactlyInAnyOrder("page", "box", "caption");
         JsonSchemaChecker checker = new JsonSchemaChecker(json);
-        assertThat(checker.check(ExamImportPrompt.OUTPUT_SCHEMA, json.readTree(
+        assertThat(checker.validateValue(ExamImportPrompt.OUTPUT_SCHEMA, json.readTree(
                 "{\"title\":\"\",\"blocks\":[{\"type\":\"PARAGRAPH\"}],\"figures\":[],\"warnings\":[]}")))
                 .as("khối thiếu runs").isPresent();
     }

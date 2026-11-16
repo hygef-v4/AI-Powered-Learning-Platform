@@ -89,7 +89,7 @@ public class GroupProposalService {
         requireEligible(ctx, actor.accountId());
         String name = requireName(command == null ? null : command.name());
         if (proposalRepository.findActiveProposalOf(classId, actor.accountId()).isPresent()) {
-            throw inProposal();
+            throw createInProposalError();
         }
         requireUniqueName(ctx, name, null);
         Instant now = clock.instant();
@@ -98,7 +98,7 @@ public class GroupProposalService {
         try {
             proposalRepository.insertActiveMember(proposal.id(), classId, actor.accountId(), now);
         } catch (DataIntegrityViolationException e) {
-            throw inProposal();
+            throw createInProposalError();
         }
         return buildView(actor, ctx);
     }
@@ -110,7 +110,7 @@ public class GroupProposalService {
         requireOpen(locked.ctx());
         String name = requireName(command.name());
         requireUniqueName(locked.ctx(), name, proposalId);
-        proposalRepository.updateProposal(locked.proposal().renamed(name, clock.instant()));
+        proposalRepository.updateProposal(locked.proposal().renameProposal(name, clock.instant()));
         return buildView(actor, locked.ctx());
     }
 
@@ -125,32 +125,32 @@ public class GroupProposalService {
         if (invitees.isEmpty() || invitees.size() > ctx.settings().maxSize()
                 || invitees.stream().anyMatch(Objects::isNull)
                 || new HashSet<>(invitees).size() != invitees.size()) {
-            throw ApiException.badRequest("PROPOSAL_INVITE_INVALID", "Danh sách người mời không hợp lệ");
+            throw ApiException.createBadRequest("PROPOSAL_INVITE_INVALID", "Danh sách người mời không hợp lệ");
         }
         List<ProposalMember> members = proposalRepository.listMembers(proposalId);
         Set<UUID> present = new HashSet<>();
         members.stream().filter(m -> m.isActiveMember() || m.isInvited()).forEach(m -> present.add(m.accountId()));
         for (UUID invitee : invitees) {
             if (present.contains(invitee)) {
-                throw ApiException.conflict("PROPOSAL_MEMBER_EXISTS", "Người này đã ở trong hoặc đã được mời vào đề xuất");
+                throw ApiException.createConflict("PROPOSAL_MEMBER_EXISTS", "Người này đã ở trong hoặc đã được mời vào đề xuất");
             }
             if (!ctx.activeStudents().contains(invitee)) {
-                throw ApiException.badRequest("STUDENT_NOT_INVITABLE", "Chỉ mời được sinh viên đang học của lớp");
+                throw ApiException.createBadRequest("STUDENT_NOT_INVITABLE", "Chỉ mời được sinh viên đang học của lớp");
             }
             if (ctx.groupedStudents().contains(invitee)) {
-                throw alreadyGrouped();
+                throw createAlreadyGroupedError();
             }
         }
         long accepted = ProposalRules.countEffectiveMembers(members, ctx.activeStudents(), ctx.groupedStudents());
         long pending = members.stream().filter(ProposalMember::isInvited).count();
         if (ProposalRules.countFreeSeats(ctx.settings().maxSize(), (int) accepted, (int) pending) < invitees.size()) {
-            throw ApiException.conflict("PROPOSAL_FULL", "Đề xuất đã đủ sĩ số tối đa");
+            throw ApiException.createConflict("PROPOSAL_FULL", "Đề xuất đã đủ sĩ số tối đa");
         }
         Instant now = clock.instant();
         for (UUID invitee : invitees) {
             proposalRepository.upsertInvitation(proposalId, ctx.ref().classId(), invitee, actor.accountId(), now);
         }
-        proposalRepository.updateProposal(proposal.touched(now));
+        proposalRepository.updateProposal(proposal.markTouched(now));
         publish(EventTypes.GROUP_PROPOSAL_INVITED, proposal, invitees);
         return buildView(actor, ctx);
     }
@@ -159,11 +159,11 @@ public class GroupProposalService {
     public MyProposalView revokeInvitation(Actor actor, UUID proposalId, UUID accountId, VersionCommand command) {
         Locked locked = lockAsLeader(actor, proposalId, command == null ? null : command.version());
         requireDraft(locked.proposal());
-        ProposalMember invitation = locked.memberOf(accountId).filter(ProposalMember::isInvited)
-                .orElseThrow(() -> ApiException.notFound("PROPOSAL_INVITATION_NOT_FOUND"));
+        ProposalMember invitation = locked.findMember(accountId).filter(ProposalMember::isInvited)
+                .orElseThrow(() -> ApiException.createNotFound("PROPOSAL_INVITATION_NOT_FOUND"));
         Instant now = clock.instant();
         proposalRepository.updateMember(proposalId, invitation.accountId(), ProposalMember.Status.REVOKED, false, now);
-        proposalRepository.updateProposal(locked.proposal().touched(now));
+        proposalRepository.updateProposal(locked.proposal().markTouched(now));
         return buildView(actor, locked.ctx());
     }
 
@@ -177,16 +177,16 @@ public class GroupProposalService {
         requireOpen(ctx);
         requireEligible(ctx, actor.accountId());
         if (proposalRepository.findActiveProposalOf(ctx.ref().classId(), actor.accountId()).isPresent()) {
-            throw inProposal();
+            throw createInProposalError();
         }
         Instant now = clock.instant();
         try {
             proposalRepository.updateMember(proposalId, actor.accountId(), ProposalMember.Status.ACCEPTED, true, now);
         } catch (DataIntegrityViolationException e) {
-            throw inProposal();
+            throw createInProposalError();
         }
         proposalRepository.revokeInvitationsOf(ctx.ref().classId(), List.of(actor.accountId()), proposalId, now);
-        proposalRepository.updateProposal(locked.proposal().touched(now));
+        proposalRepository.updateProposal(locked.proposal().markTouched(now));
         return buildView(actor, ctx);
     }
 
@@ -194,26 +194,26 @@ public class GroupProposalService {
     public MyProposalView declineInvitation(Actor actor, UUID proposalId) {
         Locked locked = lockAsInvitee(actor, proposalId);
         if (!locked.proposal().status().isActive()) {
-            throw notActive();
+            throw createNotActiveError();
         }
         Instant now = clock.instant();
         proposalRepository.updateMember(proposalId, actor.accountId(), ProposalMember.Status.DECLINED, false, now);
-        proposalRepository.updateProposal(locked.proposal().touched(now));
+        proposalRepository.updateProposal(locked.proposal().markTouched(now));
         return buildView(actor, locked.ctx());
     }
 
     @Transactional
     public MyProposalView leaveProposal(Actor actor, UUID proposalId) {
         Locked locked = lockForStudent(actor, proposalId);
-        ProposalMember membership = locked.memberOf(actor.accountId()).filter(ProposalMember::isActiveMember)
+        ProposalMember membership = locked.findMember(actor.accountId()).filter(ProposalMember::isActiveMember)
                 .orElseThrow(() -> access.denyProposal(actor, proposalId, "NOT_MEMBER"));
         if (locked.proposal().isLeader(actor.accountId())) {
-            throw ApiException.conflict("PROPOSAL_LEADER_CANNOT_LEAVE", "Trưởng nhóm hủy đề xuất thay vì rời");
+            throw ApiException.createConflict("PROPOSAL_LEADER_CANNOT_LEAVE", "Trưởng nhóm hủy đề xuất thay vì rời");
         }
         requireDraft(locked.proposal());
         Instant now = clock.instant();
         proposalRepository.updateMember(proposalId, membership.accountId(), ProposalMember.Status.LEFT, false, now);
-        proposalRepository.updateProposal(locked.proposal().touched(now));
+        proposalRepository.updateProposal(locked.proposal().markTouched(now));
         return buildView(actor, locked.ctx());
     }
 
@@ -238,10 +238,10 @@ public class GroupProposalService {
         long members = ProposalRules.countEffectiveMembers(proposalRepository.listMembers(proposalId),
                 ctx.activeStudents(), ctx.groupedStudents());
         if (members < ctx.settings().minSize()) {
-            throw ApiException.conflict("PROPOSAL_BELOW_MIN", "Đề xuất chưa đủ sĩ số tối thiểu");
+            throw ApiException.createConflict("PROPOSAL_BELOW_MIN", "Đề xuất chưa đủ sĩ số tối thiểu");
         }
         proposalRepository.closeInvitations(proposalId, ProposalMember.Status.REVOKED, now);
-        GroupProposal submitted = proposal.submitted(now);
+        GroupProposal submitted = proposal.markSubmitted(now);
         proposalRepository.updateProposal(submitted);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("classId", ctx.ref().classId().toString());
@@ -258,9 +258,9 @@ public class GroupProposalService {
     public MyProposalView withdrawProposal(Actor actor, UUID proposalId, VersionCommand command) {
         Locked locked = lockAsLeader(actor, proposalId, command == null ? null : command.version());
         if (locked.proposal().status() != Status.SUBMITTED) {
-            throw ApiException.conflict("PROPOSAL_NOT_SUBMITTED", "Đề xuất không ở trạng thái chờ duyệt");
+            throw ApiException.createConflict("PROPOSAL_NOT_SUBMITTED", "Đề xuất không ở trạng thái chờ duyệt");
         }
-        proposalRepository.updateProposal(locked.proposal().backToDraft(clock.instant()));
+        proposalRepository.updateProposal(locked.proposal().returnToDraft(clock.instant()));
         return buildView(actor, locked.ctx());
     }
 
@@ -275,21 +275,21 @@ public class GroupProposalService {
 
     private Locked lockAsLeader(Actor actor, UUID proposalId, Long version) {
         if (version == null) {
-            throw ApiException.badRequest("PROPOSAL_VERSION_REQUIRED", "Cần gửi version của đề xuất");
+            throw ApiException.createBadRequest("PROPOSAL_VERSION_REQUIRED", "Cần gửi version của đề xuất");
         }
         Locked locked = lockForStudent(actor, proposalId);
         if (!locked.proposal().isLeader(actor.accountId())) {
             throw access.denyProposal(actor, proposalId, "NOT_LEADER");
         }
         if (locked.proposal().version() != version) {
-            throw ApiException.conflict("PROPOSAL_VERSION_CONFLICT", "Đề xuất vừa thay đổi, hãy tải lại");
+            throw ApiException.createConflict("PROPOSAL_VERSION_CONFLICT", "Đề xuất vừa thay đổi, hãy tải lại");
         }
         return locked;
     }
 
     private Locked lockAsInvitee(Actor actor, UUID proposalId) {
         Locked locked = lockForStudent(actor, proposalId);
-        locked.memberOf(actor.accountId()).filter(ProposalMember::isInvited)
+        locked.findMember(actor.accountId()).filter(ProposalMember::isInvited)
                 .orElseThrow(() -> access.denyProposal(actor, proposalId, "NOT_INVITED"));
         return locked;
     }
@@ -311,7 +311,7 @@ public class GroupProposalService {
                 EndReason reason = ctx.activeStudents().contains(member.accountId())
                         ? EndReason.LEADER_PLACED : EndReason.LEADER_LEFT_CLASS;
                 groupProposalCleanup.cancelProposal(proposal, reason, now);
-                throw notActive();
+                throw createNotActiveError();
             }
             proposalRepository.updateMember(proposal.id(), member.accountId(), ProposalMember.Status.LEFT, false, now);
             changed = true;
@@ -319,7 +319,7 @@ public class GroupProposalService {
         if (!changed) {
             return proposal;
         }
-        GroupProposal touched = proposal.touched(now);
+        GroupProposal touched = proposal.markTouched(now);
         proposalRepository.updateProposal(touched);
         return touched;
     }
@@ -331,69 +331,69 @@ public class GroupProposalService {
         try {
             active = new LinkedHashSet<>(classes.listActiveStudents(classId));
         } catch (RuntimeException e) {
-            throw ApiException.unavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
+            throw ApiException.createUnavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
         }
         List<ClassGroup> groups = groupRepository.listGroups(classId);
         Set<UUID> grouped = new HashSet<>();
         Set<String> groupNames = new HashSet<>();
         for (ClassGroup group : groups) {
             grouped.addAll(group.memberIds());
-            groupNames.add(ProposalRules.nameKey(group.name()));
+            groupNames.add(ProposalRules.normalizeNameKey(group.name()));
         }
         Instant now = clock.instant();
-        return new Context(ref, settings, settings.closedReason(ref.status(), now), active, grouped, groupNames);
+        return new Context(ref, settings, settings.resolveClosedReason(ref.status(), now), active, grouped, groupNames);
     }
 
     private static void requireOpen(Context ctx) {
         GroupAccess.requireOpen(ctx.ref());
         if (ctx.closedReason() != null) {
-            throw ApiException.conflict("FORMATION_CLOSED", "Đợt tự chia nhóm đang đóng");
+            throw ApiException.createConflict("FORMATION_CLOSED", "Đợt tự chia nhóm đang đóng");
         }
     }
 
     private static void requireEligible(Context ctx, UUID accountId) {
         if (ctx.groupedStudents().contains(accountId)) {
-            throw alreadyGrouped();
+            throw createAlreadyGroupedError();
         }
     }
 
     private static void requireDraft(GroupProposal proposal) {
         if (!proposal.status().isActive()) {
-            throw notActive();
+            throw createNotActiveError();
         }
         if (proposal.status() != Status.DRAFT) {
-            throw ApiException.conflict("PROPOSAL_NOT_DRAFT", "Đề xuất đang chờ duyệt, rút về để sửa");
+            throw ApiException.createConflict("PROPOSAL_NOT_DRAFT", "Đề xuất đang chờ duyệt, rút về để sửa");
         }
     }
 
     private static String requireName(String raw) {
         String name = ProposalRules.cleanName(raw);
         if (name == null) {
-            throw ApiException.badRequest("PROPOSAL_NAME_INVALID", "Tên nhóm cần 1–100 ký tự");
+            throw ApiException.createBadRequest("PROPOSAL_NAME_INVALID", "Tên nhóm cần 1–100 ký tự");
         }
         return name;
     }
 
     private void requireUniqueName(Context ctx, String name, UUID ownProposalId) {
-        String key = ProposalRules.nameKey(name);
+        String key = ProposalRules.normalizeNameKey(name);
         boolean taken = ctx.groupNames().contains(key)
                 || proposalRepository.listActiveProposals(ctx.ref().classId()).stream()
-                .anyMatch(p -> !p.id().equals(ownProposalId) && ProposalRules.nameKey(p.name()).equals(key));
+                .anyMatch(p -> !p.id().equals(ownProposalId) && ProposalRules.normalizeNameKey(p.name()).equals(key));
         if (taken) {
-            throw ApiException.conflict("GROUP_NAME_DUPLICATE", "Tên nhóm đã được dùng trong lớp");
+            throw ApiException.createConflict("GROUP_NAME_DUPLICATE", "Tên nhóm đã được dùng trong lớp");
         }
     }
 
-    private static ApiException inProposal() {
-        return ApiException.conflict("STUDENT_IN_PROPOSAL", "Bạn đang ở một đề xuất khác, hãy rời trước");
+    private static ApiException createInProposalError() {
+        return ApiException.createConflict("STUDENT_IN_PROPOSAL", "Bạn đang ở một đề xuất khác, hãy rời trước");
     }
 
-    private static ApiException alreadyGrouped() {
-        return ApiException.conflict("STUDENT_ALREADY_GROUPED", "Sinh viên đã có nhóm chính thức");
+    private static ApiException createAlreadyGroupedError() {
+        return ApiException.createConflict("STUDENT_ALREADY_GROUPED", "Sinh viên đã có nhóm chính thức");
     }
 
-    private static ApiException notActive() {
-        return ApiException.conflict("PROPOSAL_NOT_ACTIVE", "Đề xuất đã kết thúc");
+    private static ApiException createNotActiveError() {
+        return ApiException.createConflict("PROPOSAL_NOT_ACTIVE", "Đề xuất đã kết thúc");
     }
 
     // ---- dựng màn ------------------------------------------------------------------------------------------------
@@ -410,19 +410,19 @@ public class GroupProposalService {
         }
         ProposalPeople people = new ProposalPeople(accounts);
         Optional<GroupProposal> mine = proposalRepository.findActiveProposalOf(classId, me);
-        ProposalView proposal = mine.map(p -> proposalView(p, me, ctx, people)).orElse(null);
+        ProposalView proposal = mine.map(p -> buildProposalView(p, me, ctx, people)).orElse(null);
         List<InvitationView> invitations = proposalRepository.listInvitingProposals(classId, me).stream()
-                .map(p -> invitationView(p, ctx, people, mine.isPresent())).toList();
+                .map(p -> buildInvitationView(p, ctx, people, mine.isPresent())).toList();
         RejectedView rejected = mine.isPresent() ? null : proposalRepository.findLatestRejectedOf(classId, me)
                 .map(p -> new RejectedView(p.id(), p.name(), p.decisionReason(), p.decidedAt())).orElse(null);
         List<CandidateView> candidates = proposal != null && proposal.leader() && Status.DRAFT.name()
                 .equals(proposal.status()) && ctx.closedReason() == null
-                ? candidates(ctx, mine.get(), people) : List.of();
+                ? listCandidates(ctx, mine.get(), people) : List.of();
         return new MyProposalView(classId, ctx.ref().status().name(), false, formation, proposal, invitations, rejected,
                 candidates);
     }
 
-    private ProposalView proposalView(GroupProposal p, UUID me, Context ctx, ProposalPeople people) {
+    private ProposalView buildProposalView(GroupProposal p, UUID me, Context ctx, ProposalPeople people) {
         List<ProposalMember> rows = proposalRepository.listMembers(p.id());
         List<MemberView> members = new ArrayList<>();
         List<MemberView> invited = new ArrayList<>();
@@ -430,9 +430,9 @@ public class GroupProposalService {
         for (ProposalMember row : rows) {
             if (row.isActiveMember()
                     && ProposalRules.isEligible(row.accountId(), ctx.activeStudents(), ctx.groupedStudents())) {
-                members.add(MemberView.of(people.loadPerson(row.accountId()), p.isLeader(row.accountId()), false));
+                members.add(MemberView.createMemberView(people.loadPerson(row.accountId()), p.isLeader(row.accountId()), false));
             } else if (row.isInvited()) {
-                invited.add(MemberView.of(people.loadPerson(row.accountId()), false, expired));
+                invited.add(MemberView.createMemberView(people.loadPerson(row.accountId()), false, expired));
             }
         }
         int pending = expired ? 0 : invited.size();
@@ -441,7 +441,7 @@ public class GroupProposalService {
                 p.submittedAt());
     }
 
-    private InvitationView invitationView(GroupProposal p, Context ctx, ProposalPeople people, boolean inProposal) {
+    private InvitationView buildInvitationView(GroupProposal p, Context ctx, ProposalPeople people, boolean inProposal) {
         long members = ProposalRules.countEffectiveMembers(proposalRepository.listMembers(p.id()),
                 ctx.activeStudents(), ctx.groupedStudents());
         boolean canAccept = !inProposal && p.status() == Status.DRAFT && ctx.closedReason() == null;
@@ -450,7 +450,7 @@ public class GroupProposalService {
                 (int) members, ctx.closedReason() != null, canAccept, leader.studentCode());
     }
 
-    private List<CandidateView> candidates(Context ctx, GroupProposal mine, ProposalPeople people) {
+    private List<CandidateView> listCandidates(Context ctx, GroupProposal mine, ProposalPeople people) {
         Map<UUID, UUID> memberships = proposalRepository.mapActiveMemberships(ctx.ref().classId());
         Set<UUID> present = new HashSet<>();
         proposalRepository.listMembers(mine.id()).stream().filter(m -> m.isActiveMember() || m.isInvited())
@@ -481,7 +481,7 @@ public class GroupProposalService {
 
     private record Locked(GroupProposal proposal, Context ctx, List<ProposalMember> members) {
 
-        Optional<ProposalMember> memberOf(UUID accountId) {
+        Optional<ProposalMember> findMember(UUID accountId) {
             return members.stream().filter(m -> m.accountId().equals(accountId)).findFirst();
         }
     }
@@ -517,7 +517,7 @@ public class GroupProposalService {
     public record MemberView(UUID accountId, String name, String email, boolean leader, boolean expired,
                              String studentCode) {
 
-        static MemberView of(Person person, boolean leader, boolean expired) {
+        static MemberView createMemberView(Person person, boolean leader, boolean expired) {
             return new MemberView(person.accountId(), person.name(), person.email(), leader, expired,
                     person.studentCode());
         }

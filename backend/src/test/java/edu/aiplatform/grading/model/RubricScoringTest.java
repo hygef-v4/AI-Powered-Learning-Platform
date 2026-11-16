@@ -27,7 +27,7 @@ class RubricScoringTest {
         for (String points : List.of("-0.01", "2.51", "1.255"))
             assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, checks,
                     Map.of(rubricId, Map.of(itemId, new BigDecimal(points)))))
-                    .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("INVALID_RUBRIC_SCORE"));
+                    .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.readCode()).isEqualTo("INVALID_RUBRIC_SCORE"));
         var nullItem = new HashMap<UUID, BigDecimal>();
         nullItem.put(itemId, null);
         assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, checks, Map.of(rubricId, nullItem)))
@@ -37,7 +37,7 @@ class RubricScoringTest {
     @Test void rejectsUnknownRubricsItemsAndNullChecks() {
         assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, null)).isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, Map.of(UUID.randomUUID(), Set.of())))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("INVALID_RUBRIC"));
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.readCode()).isEqualTo("INVALID_RUBRIC"));
         assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, Map.of(rubricId, Set.of(UUID.randomUUID()))))
                 .isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> RubricScoring.calculateScore(rubrics, checks, Map.of(rubricId, Map.of(UUID.randomUUID(), BigDecimal.ONE))))

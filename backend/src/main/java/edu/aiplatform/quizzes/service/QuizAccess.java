@@ -48,10 +48,10 @@ class QuizAccess {
         try {
             decision = authorization.authorize(actor, action, resource);
         } catch (RuntimeException unavailable) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         if (decision == null || (!decision.allowed() && DEPENDENCY_UNAVAILABLE.equals(decision.reason()))) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         return decision.allowed();
     }
@@ -65,22 +65,22 @@ class QuizAccess {
         try {
             decision = authorization.authorize(actor, action, resource);
         } catch (RuntimeException unavailable) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         if (decision == null || (!decision.allowed() && DEPENDENCY_UNAVAILABLE.equals(decision.reason()))) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         if (!decision.allowed()) {
             try {
-                audit.denied(actor, action, objectType, objectId, notFoundCode);
+                audit.recordDenied(actor, action, objectType, objectId, notFoundCode);
             } catch (RuntimeException auditDown) {
-                throw ApiException.unavailable("QUIZ_AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
+                throw ApiException.createUnavailable("QUIZ_AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
             }
-            throw ApiException.notFound(notFoundCode);
+            throw ApiException.createNotFound(notFoundCode);
         }
     }
 
-    private static ApiException unavailable() {
-        return ApiException.unavailable("QUIZ_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, vui lòng thử lại");
+    private static ApiException createUnavailableError() {
+        return ApiException.createUnavailable("QUIZ_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, vui lòng thử lại");
     }
 }

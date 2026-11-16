@@ -23,7 +23,7 @@ public final class QuestionViews {
                                QuestionStatus status, Instant activatedAt, UUID createdBy, Instant createdAt,
                                Instant updatedAt, long version) {
 
-        static QuestionView of(Question q) {
+        static QuestionView createQuestionView(Question q) {
             QuestionContent c = q.content();
             return new QuestionView(q.id(), q.lineageId(), q.versionNo(), q.subjectId(), c.type(), c.stem(),
                     c.options(), c.correctOptionIds(), c.explanation(), c.defaultPoints(), c.difficulty(), c.tags(),

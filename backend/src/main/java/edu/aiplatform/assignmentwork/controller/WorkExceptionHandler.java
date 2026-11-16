@@ -20,23 +20,23 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 public class WorkExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public ProblemDetail problem(ApiException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.status(), exception.getMessage());
-        problem.setProperty("code", exception.code());
+    public ProblemDetail describeProblem(ApiException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.readStatus(), exception.getMessage());
+        problem.setProperty("code", exception.readCode());
         if (exception instanceof WorkProblem work) {
-            work.properties().forEach(problem::setProperty);
+            work.describeProperties().forEach(problem::setProperty);
         }
         return problem;
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ProblemDetail integrity(DataIntegrityViolationException exception) {
-        return problem(ApiException.conflict("ATTEMPT_CONFLICT", "Dữ liệu đã thay đổi, hãy tải lại"));
+    public ProblemDetail describeIntegrityViolation(DataIntegrityViolationException exception) {
+        return describeProblem(ApiException.createConflict("ATTEMPT_CONFLICT", "Dữ liệu đã thay đổi, hãy tải lại"));
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class, MissingServletRequestPartException.class})
-    public ProblemDetail invalid(Exception exception) {
+    public ProblemDetail describeInvalidRequest(Exception exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Dữ liệu yêu cầu không hợp lệ");
         problem.setProperty("code", "INVALID_REQUEST");
         return problem;

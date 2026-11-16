@@ -114,12 +114,12 @@ final class GradingProposalCallbackSupport {
 
     static void applyRejectionFromException(GradingProposal proposal, UUID taskId,
             ApiException ex, Clock clock) {
-        proposal.status = ex.status().value() == 409 ? "STALE" : "REJECTED";
+        proposal.status = ex.readStatus().value() == 409 ? "STALE" : "REJECTED";
         proposal.taskId = taskId;
         proposal.taskState = null;
-        proposal.safeError = "INVALID_AI_PROPOSAL".equals(ex.code())
+        proposal.safeError = "INVALID_AI_PROPOSAL".equals(ex.readCode())
                 ? formatTaskError(GradingProposalValidator.buildRejectionDiagnostic(ex))
-                : formatTaskError(ex.code());
+                : formatTaskError(ex.readCode());
         proposal.completedAt = clock.instant();
     }
 

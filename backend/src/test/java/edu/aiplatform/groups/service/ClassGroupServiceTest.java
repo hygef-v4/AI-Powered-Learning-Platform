@@ -80,8 +80,8 @@ class ClassGroupServiceTest {
                 new Draft("a", null, "Nhóm 1", students.get(0), List.of(students.get(0), students.get(1))),
                 new Draft("b", null, "nhóm 1", students.get(5), List.of(students.get(1), students.get(2))));
 
-        assertThatThrownBy(() -> service.save(teacher, classId, new SaveCommand(3L, drafts)))
-                .isInstanceOfSatisfying(GroupSetInvalidException.class, e -> assertThat(e.issues())
+        assertThatThrownBy(() -> service.saveGroups(teacher, classId, new SaveCommand(3L, drafts)))
+                .isInstanceOfSatisfying(GroupSetInvalidException.class, e -> assertThat(e.listIssues())
                         .extracting(i -> i.code())
                         .contains("GROUP_NAME_DUPLICATE", "GROUP_WITHOUT_LEADER", "MEMBER_IN_TWO_GROUPS"));
         verify(groups, never()).bumpSetVersion(any(), anyLong(), any());
@@ -94,19 +94,19 @@ class ClassGroupServiceTest {
         when(groups.listGroups(classId)).thenReturn(List.of(used));
         when(documents.groupHasContent(used.id())).thenReturn(true);
 
-        assertThatThrownBy(() -> service.save(teacher, classId, new SaveCommand(3L, List.of())))
+        assertThatThrownBy(() -> service.saveGroups(teacher, classId, new SaveCommand(3L, List.of())))
                 .isInstanceOfSatisfying(GroupSetInvalidException.class,
-                        e -> assertThat(e.issues()).extracting(i -> i.code()).containsExactly("GROUP_IN_USE"));
+                        e -> assertThat(e.listIssues()).extracting(i -> i.code()).containsExactly("GROUP_IN_USE"));
         verify(groups, never()).deleteGroup(any());
     }
 
     @Test
     void staleVersionAndArchivedClassAreRefused() {
-        assertThatThrownBy(() -> service.save(teacher, classId, new SaveCommand(2L, List.of())))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_SET_VERSION_CONFLICT"));
+        assertThatThrownBy(() -> service.saveGroups(teacher, classId, new SaveCommand(2L, List.of())))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_SET_VERSION_CONFLICT"));
         classStatus(ClassStatus.ARCHIVED);
-        assertThatThrownBy(() -> service.save(teacher, classId, new SaveCommand(3L, List.of())))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_CLASS_ARCHIVED"));
+        assertThatThrownBy(() -> service.saveGroups(teacher, classId, new SaveCommand(3L, List.of())))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_CLASS_ARCHIVED"));
     }
 
     @Test
@@ -120,7 +120,7 @@ class ClassGroupServiceTest {
         when(documents.updateSection(any())).thenReturn(true);
 
         // Học sinh 1 chuyển từ A sang B; trưởng nhóm B đổi sang học sinh 3.
-        service.save(teacher, classId, new SaveCommand(3L, List.of(
+        service.saveGroups(teacher, classId, new SaveCommand(3L, List.of(
                 new Draft(null, a.id(), "Nhóm A", students.get(0), List.of(students.get(0))),
                 new Draft(null, b.id(), "Nhóm B", students.get(3), List.of(students.get(2), students.get(3), students.get(1))))));
 
@@ -156,7 +156,7 @@ class ClassGroupServiceTest {
         ClassGroup a = group("Nhóm A", students.get(0), students.get(0), left);
         when(groups.listGroups(classId)).thenReturn(List.of(a));
 
-        service.save(teacher, classId, new SaveCommand(3L, List.of(
+        service.saveGroups(teacher, classId, new SaveCommand(3L, List.of(
                 new Draft(null, a.id(), "Nhóm A", students.get(0), List.of(students.get(0), left)))));
 
         verify(groups).removeMembers(classId, java.util.Set.of(left));
@@ -168,15 +168,15 @@ class ClassGroupServiceTest {
         ClassGroup a = group("Nhóm 1", students.get(0), students.get(0));
         when(groups.listGroups(classId)).thenReturn(List.of(a));
 
-        var preview = service.randomPreview(teacher, classId, 4);
+        var preview = service.previewRandomGroups(teacher, classId, 4);
 
         assertThat(preview.get(0).id()).isEqualTo(a.id());
         var generated = preview.stream().filter(ClassGroupService.DraftView::generated).toList();
         assertThat(generated).extracting(d -> d.memberIds().size()).containsExactlyInAnyOrder(3, 3);
         assertThat(generated).extracting(ClassGroupService.DraftView::name).containsExactly("Nhóm 2", "Nhóm 3");
         generated.forEach(d -> assertThat(d.memberIds()).contains(d.leaderId()).doesNotContain(students.get(0)));
-        assertThatThrownBy(() -> service.randomPreview(teacher, classId, 21))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_SIZE_INVALID"));
+        assertThatThrownBy(() -> service.previewRandomGroups(teacher, classId, 21))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_SIZE_INVALID"));
         verify(groups, never()).insertGroup(any());
     }
 
@@ -186,7 +186,7 @@ class ClassGroupServiceTest {
         when(authorization.authorize(eq(other), any(), any())).thenReturn(AuthorizationDecision.deny("OUT_OF_CLASS_SCOPE"));
 
         assertThatThrownBy(() -> service.view(other, classId))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(GroupAccess.NOT_FOUND));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo(GroupAccess.NOT_FOUND));
         verify(audit).record(any());
     }
 
@@ -196,8 +196,8 @@ class ClassGroupServiceTest {
         var command = new SaveCommand(3L, List.of(new Draft("new", null, "New group", students.get(0),
                 List.of(students.get(0), students.get(1)))));
 
-        assertThatThrownBy(() -> service.save(teacher, classId, command))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_SET_VERSION_CONFLICT"));
+        assertThatThrownBy(() -> service.saveGroups(teacher, classId, command))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_SET_VERSION_CONFLICT"));
 
         verify(groups, never()).insertGroup(any());
         verify(groups, never()).removeMembers(any(), any());
@@ -214,7 +214,7 @@ class ClassGroupServiceTest {
                         List.of(students.get(0), students.get(1), students.get(2))),
                 new Draft("new", null, "Nhóm B", students.get(3), List.of(students.get(3), students.get(4))));
 
-        service.save(teacher, classId, new SaveCommand(3L, drafts));
+        service.saveGroups(teacher, classId, new SaveCommand(3L, drafts));
 
         verify(proposalCleanup).releasePlacedStudents(classId,
                 java.util.Set.of(students.get(2), students.get(3), students.get(4)), NOW);
@@ -245,7 +245,7 @@ class ClassGroupServiceTest {
 
         assertThatThrownBy(() -> service.addApprovedGroups(teacher, classId, 3L, List.of()))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("GROUP_SET_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("GROUP_SET_VERSION_CONFLICT"));
         verify(groups, never()).insertGroup(any());
     }
 

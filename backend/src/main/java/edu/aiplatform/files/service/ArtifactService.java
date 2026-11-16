@@ -22,18 +22,18 @@ public class ArtifactService implements IArtifact {
 
     static final String DOWNLOAD_PATH = "/api/v1/files/download/";
 
-    private final UploadService uploads;
+    private final UploadService uploadService;
     private final FileRefSigner signer;
-    private final DownloadTokenService tokens;
+    private final DownloadTokenService downloadTokenService;
     private final IStorage storage;
     private final Clock clock;
     private UnattachedFiles unattached;
 
-    public ArtifactService(UploadService uploads, FileRefSigner signer, DownloadTokenService tokens, IStorage storage,
+    public ArtifactService(UploadService uploadService, FileRefSigner signer, DownloadTokenService downloadTokenService, IStorage storage,
                            Clock clock) {
-        this.uploads = uploads;
+        this.uploadService = uploadService;
         this.signer = signer;
-        this.tokens = tokens;
+        this.downloadTokenService = downloadTokenService;
         this.storage = storage;
         this.clock = clock;
     }
@@ -45,31 +45,31 @@ public class ArtifactService implements IArtifact {
 
     @Override
     public FileRef store(Actor actor, ArtifactPurpose purpose, FileUpload file) {
-        return uploads.upload(actor, purpose, file).fileRef();
+        return uploadService.upload(actor, purpose, file).fileRef();
     }
 
     @Override
     public String inspect(Actor actor, ArtifactPurpose purpose, String originalFileName, byte[] content) {
-        return uploads.inspectFile(actor, purpose, originalFileName, content);
+        return uploadService.inspectFile(actor, purpose, originalFileName, content);
     }
 
     /** Kiểm chữ ký, hạn, người gắn là người tải lên và đúng {@code purpose} (BR-U03-30). */
     @Override
     public StoredFileInfo attach(FileRef fileRef, Actor actor, ArtifactPurpose purpose) {
         FileRefSigner.Payload payload = signer.verify(fileRef)
-                .orElseThrow(() -> ApiException.badRequest("FILE_REF_INVALID", "Tham chiếu tệp không hợp lệ"));
-        if (payload.expiresAt().isBefore(clock.instant())) {
-            throw ApiException.badRequest("FILE_REF_EXPIRED", "Tham chiếu tệp đã hết hạn, tải tệp lên lại");
+                .orElseThrow(() -> ApiException.createBadRequest("FILE_REF_INVALID", "Tham chiếu tệp không hợp lệ"));
+        if (payload.calculateExpiresAt().isBefore(clock.instant())) {
+            throw ApiException.createBadRequest("FILE_REF_EXPIRED", "Tham chiếu tệp đã hết hạn, tải tệp lên lại");
         }
         if (!payload.ownerAccountId().equals(actor.accountId()) || payload.purpose() != purpose) {
-            throw ApiException.forbidden("FILE_REF_NOT_OWNED");
+            throw ApiException.createForbidden("FILE_REF_NOT_OWNED");
         }
         if (unattached != null) {
             try {
                 unattached.markAttached(payload.fileId());
             } catch (RuntimeException e) {
                 // Không bỏ được khỏi danh sách chờ thì không gắn, để tệp đang dùng không bị dọn nhầm.
-                throw ApiException.unavailable("FILE_ATTACH_UNAVAILABLE", "Chưa gắn được tệp, vui lòng thử lại");
+                throw ApiException.createUnavailable("FILE_ATTACH_UNAVAILABLE", "Chưa gắn được tệp, vui lòng thử lại");
             }
         }
         return new StoredFileInfo(payload.fileId(), payload.ownerAccountId(), payload.purpose(),
@@ -79,7 +79,7 @@ public class ArtifactService implements IArtifact {
     /** Unit sở hữu gọi sau khi đã tự kiểm quyền (BR-U03-20). */
     @Override
     public DownloadToken issueDownloadToken(String fileId, UUID accountId) {
-        String token = tokens.issue(fileId, accountId);
+        String token = downloadTokenService.issue(fileId, accountId);
         return new DownloadToken(DOWNLOAD_PATH + token, clock.instant().plus(DownloadTokenService.TTL));
     }
 
@@ -91,7 +91,7 @@ public class ArtifactService implements IArtifact {
     @Override
     public Optional<DownloadToken> issuePreviewToken(FileRef fileRef, Actor actor) {
         return signer.verify(fileRef)
-                .filter(payload -> !payload.expiresAt().isBefore(clock.instant()))
+                .filter(payload -> !payload.calculateExpiresAt().isBefore(clock.instant()))
                 .filter(payload -> payload.ownerAccountId().equals(actor.accountId()))
                 .map(payload -> issueDownloadToken(payload.fileId(), actor.accountId()));
     }

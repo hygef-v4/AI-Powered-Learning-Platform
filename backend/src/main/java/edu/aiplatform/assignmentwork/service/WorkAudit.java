@@ -29,25 +29,25 @@ class WorkAudit {
         this.clock = clock;
     }
 
-    void success(UUID actorId, String action, String objectType, UUID objectId, Map<String, Object> details) {
+    void recordSuccess(UUID actorId, String action, String objectType, UUID objectId, Map<String, Object> details) {
         audit.record(new AuditEvent(UUID.randomUUID(), actorId, action, objectType, objectId.toString(),
                 AuditResult.SUCCESS, null, clean(details), clock.instant()));
     }
 
     /** Từ chối nghiệp vụ (quá hạn, hết lượt): U02 ghi bằng transaction riêng nên còn lại khi thao tác rollback. */
-    void rejected(Actor actor, String action, String objectType, UUID objectId, String reason, Map<String, Object> details) {
+    void recordRejected(Actor actor, String action, String objectType, UUID objectId, String reason, Map<String, Object> details) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), action, objectType,
                 objectId == null ? null : objectId.toString(), AuditResult.FAILURE, reason, clean(details),
                 clock.instant()));
     }
 
-    void denied(Actor actor, String attemptedAction, String objectType, UUID objectId, String reason) {
+    void recordDenied(Actor actor, String attemptedAction, String objectType, UUID objectId, String reason) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                 objectType, objectId == null ? null : objectId.toString(), AuditResult.DENIED, reason,
                 Map.of("attemptedAction", attemptedAction), clock.instant()));
     }
 
-    static Map<String, Object> details(Object... keyValues) {
+    static Map<String, Object> collectDetails(Object... keyValues) {
         Map<String, Object> out = new LinkedHashMap<>();
         for (int i = 0; i + 1 < keyValues.length; i += 2) {
             out.put((String) keyValues[i], keyValues[i + 1]);

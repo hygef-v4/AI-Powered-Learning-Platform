@@ -60,7 +60,7 @@ public class QuestionProposalService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProposalView> list(Actor actor, UUID classId) {
+    public List<ProposalView> listProposals(Actor actor, UUID classId) {
         requireClass(actor, classId);
         return questions.listProposals(classId, actor.accountId()).stream().map(this::view).toList();
     }
@@ -68,15 +68,15 @@ public class QuestionProposalService {
     @Transactional
     public ProposalView propose(Actor actor, UUID classId, QuestionContent content) {
         requireClass(actor, classId);
-        ClassRef ref = support.classRef(classId);
+        ClassRef ref = support.loadClassRef(classId);
         activeSubjects.require(ref.subjectId());
         validate(content);
         duplicates.requireUnique(ref.subjectId(), content, null);
         Instant now = clock.instant();
-        Question q = Question.newProposal(ref.subjectId(), content, actor.accountId(), now);
+        Question q = Question.createProposal(ref.subjectId(), content, actor.accountId(), now);
         questions.insert(q);
         questions.insertProposal(q.id(), classId, now);
-        audit.success(actor, "QUESTION_PROPOSED", QuestionBankService.OBJECT, q.id(),
+        audit.recordSuccess(actor, "QUESTION_PROPOSED", QuestionBankService.OBJECT, q.id(),
                 Map.of("subjectId", ref.subjectId().toString(), "classId", classId.toString()));
         notifyManager(q, now);
         return view(q);
@@ -84,44 +84,44 @@ public class QuestionProposalService {
 
     /** Sửa đề xuất đang chờ hoặc đã bị từ chối; lưu là gửi lại để duyệt. */
     @Transactional
-    public ProposalView resubmit(Actor actor, UUID classId, UUID id, QuestionContent content, long version) {
-        Question q = own(actor, classId, id, version);
+    public ProposalView resubmitProposal(Actor actor, UUID classId, UUID id, QuestionContent content, long version) {
+        Question q = loadOwnProposal(actor, classId, id, version);
         activeSubjects.require(q.subjectId());
         validate(content);
         duplicates.requireUnique(q.subjectId(), content, q.lineageId());
         Instant now = clock.instant();
-        Question changed = q.resubmitted(content, now);
-        if (!questions.update(changed)) {
-            throw versionConflict();
+        Question changed = q.markResubmitted(content, now);
+        if (!questions.updateQuestion(changed)) {
+            throw createVersionConflictError();
         }
-        audit.success(actor, "QUESTION_PROPOSED", QuestionBankService.OBJECT, id,
+        audit.recordSuccess(actor, "QUESTION_PROPOSED", QuestionBankService.OBJECT, id,
                 Map.of("subjectId", q.subjectId().toString(), "classId", classId.toString(), "resubmitted", true));
         notifyManager(changed, now);
-        return view(questions.find(id).orElseThrow(() -> ApiException.notFound(NOT_FOUND)));
+        return view(questions.findQuestion(id).orElseThrow(() -> ApiException.createNotFound(NOT_FOUND)));
     }
 
     /** Rút đề xuất chưa được duyệt. */
     @Transactional
-    public void withdraw(Actor actor, UUID classId, UUID id, long version) {
-        Question q = own(actor, classId, id, version);
+    public void withdrawProposal(Actor actor, UUID classId, UUID id, long version) {
+        Question q = loadOwnProposal(actor, classId, id, version);
         if (!questions.deleteProposal(id, version)) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
-        audit.success(actor, "QUESTION_DELETED", QuestionBankService.OBJECT, id,
+        audit.recordSuccess(actor, "QUESTION_DELETED", QuestionBankService.OBJECT, id,
                 Map.of("subjectId", q.subjectId().toString(), "withdrawn", true));
     }
 
-    private Question own(Actor actor, UUID classId, UUID id, long version) {
+    private Question loadOwnProposal(Actor actor, UUID classId, UUID id, long version) {
         requireClass(actor, classId);
-        Question q = questions.find(id)
+        Question q = questions.findQuestion(id)
                 .filter(found -> found.scope() == QuestionScope.BANK && actor.accountId().equals(found.createdBy()))
-                .filter(found -> questions.proposalClass(id).filter(classId::equals).isPresent())
-                .orElseThrow(() -> ApiException.notFound(NOT_FOUND));
+                .filter(found -> questions.findProposalClass(id).filter(classId::equals).isPresent())
+                .orElseThrow(() -> ApiException.createNotFound(NOT_FOUND));
         if (!q.isProposal()) {
-            throw ApiException.conflict("QUESTION_NOT_PENDING", "Câu đã được duyệt, không sửa được nữa");
+            throw ApiException.createConflict("QUESTION_NOT_PENDING", "Câu đã được duyệt, không sửa được nữa");
         }
         if (q.version() != version) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
         return q;
     }
@@ -131,10 +131,10 @@ public class QuestionProposalService {
     }
 
     private ProposalView view(Question q) {
-        ReviewInfo review = questions.latestReview(q.id())
+        ReviewInfo review = questions.findLatestReview(q.id())
                 .map(r -> new ReviewInfo(r.decision(), r.reason(), r.createdAt())).orElse(null);
-        return new ProposalView(QuestionView.of(q), review,
-                q.isProposal() ? duplicates.similarTo(q.subjectId(), q.content().stem(), q.lineageId()) : List.of());
+        return new ProposalView(QuestionView.createQuestionView(q), review,
+                q.isProposal() ? duplicates.findSimilar(q.subjectId(), q.content().stem(), q.lineageId()) : List.of());
     }
 
     /** Thông báo Chủ nhiệm môn; U04 lỗi thì vẫn lưu đề xuất, người duyệt thấy ở tab Chờ duyệt. */
@@ -163,7 +163,7 @@ public class QuestionProposalService {
         }
     }
 
-    private static ApiException versionConflict() {
-        return ApiException.conflict("QUESTION_VERSION_CONFLICT", "Câu hỏi đã được thay đổi ở phiên khác; hãy tải lại");
+    private static ApiException createVersionConflictError() {
+        return ApiException.createConflict("QUESTION_VERSION_CONFLICT", "Câu hỏi đã được thay đổi ở phiên khác; hãy tải lại");
     }
 }

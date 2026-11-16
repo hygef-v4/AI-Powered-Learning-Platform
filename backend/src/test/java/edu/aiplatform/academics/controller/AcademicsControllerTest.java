@@ -51,7 +51,7 @@ class AcademicsControllerTest {
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
     }
     @Test void downstreamUnavailableRemains503() throws Exception {
-        when(academicsService.loadClass(actor,"manager",id)).thenThrow(ApiException.unavailable("DEPENDENCY_UNAVAILABLE","Try later"));
+        when(academicsService.loadClass(actor,"manager",id)).thenThrow(ApiException.createUnavailable("DEPENDENCY_UNAVAILABLE","Try later"));
         mvc.perform(get("/api/v1/manager/classes/"+id)).andExpect(status().isServiceUnavailable()).andExpect(jsonPath("$.code").value("DEPENDENCY_UNAVAILABLE"));
     }
 }

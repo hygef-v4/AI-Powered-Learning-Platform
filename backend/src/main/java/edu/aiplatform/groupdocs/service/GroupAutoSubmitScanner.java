@@ -23,13 +23,13 @@ public class GroupAutoSubmitScanner implements IScheduledScanner {
     private static final Logger log = LoggerFactory.getLogger(GroupAutoSubmitScanner.class);
 
     private final GroupDocumentRepository documents;
-    private final GroupSubmissionService submissions;
+    private final GroupSubmissionService groupSubmissionService;
     private final IAssignmentQuery assignments;
 
-    public GroupAutoSubmitScanner(GroupDocumentRepository documents, GroupSubmissionService submissions,
+    public GroupAutoSubmitScanner(GroupDocumentRepository documents, GroupSubmissionService groupSubmissionService,
                                   IAssignmentQuery assignments) {
         this.documents = documents;
-        this.submissions = submissions;
+        this.groupSubmissionService = groupSubmissionService;
         this.assignments = assignments;
     }
 
@@ -54,7 +54,7 @@ public class GroupAutoSubmitScanner implements IScheduledScanner {
         }
         for (UUID documentId : documents.listDueForAutoSubmit(overdue)) {
             try {
-                submissions.autoSubmit(documentId);
+                groupSubmissionService.submitAutomatically(documentId);
             } catch (RuntimeException e) {
                 log.warn("Tự nộp tài liệu {} lỗi, thử lại lượt sau: {}", documentId, e.getClass().getName());
             }

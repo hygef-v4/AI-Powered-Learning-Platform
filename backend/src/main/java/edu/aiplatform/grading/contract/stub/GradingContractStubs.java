@@ -27,7 +27,7 @@ public class GradingContractStubs {
     IGroupEvaluation groupEvaluationStub() {
         return Stubs.announce(IGroupEvaluation.class,
                 (groupDocumentId, submissionHash, assignmentId, classId, memberIds) -> Stubs
-                        .called(IGroupEvaluation.class, "bỏ qua nộp bài nhóm " + groupDocumentId));
+                        .recordCall(IGroupEvaluation.class, "bỏ qua nộp bài nhóm " + groupDocumentId));
     }
 
     /** Supplies a group submission source that reports unavailable until implemented. */
@@ -38,7 +38,7 @@ public class GradingContractStubs {
             /** Reports that group submission lookup is unavailable. */
             @Override
             public Optional<GroupSubmissionView> getGroupSubmission(UUID groupDocumentId) {
-                throw edu.aiplatform.shared.error.ApiException.unavailable(
+                throw edu.aiplatform.shared.error.ApiException.createUnavailable(
                         "GROUP_SUBMISSIONS_UNAVAILABLE",
                         "Group submission provider is not implemented");
             }
@@ -47,7 +47,7 @@ public class GradingContractStubs {
             @Override
             public List<GroupSubmissionStatus> listGroupSubmissions(UUID assignmentId,
                     UUID classId) {
-                throw edu.aiplatform.shared.error.ApiException.unavailable(
+                throw edu.aiplatform.shared.error.ApiException.createUnavailable(
                         "GROUP_SUBMISSIONS_UNAVAILABLE",
                         "Group submission provider is not implemented");
             }

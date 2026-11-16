@@ -31,16 +31,16 @@ public class TeacherQuotaSection implements ISettingsSectionProvider {
 
     @Override
     public String summary() {
-        QuotaPolicy policy = quota.policy();
-        if (!policy.configured()) {
+        QuotaPolicy policy = quota.loadPolicy();
+        if (!policy.hasLimits()) {
             return "Chưa cấu hình";
         }
         int custom = quota.listTeacherQuotas().size();
-        return "Mặc định " + tokens(policy.defaultDayTokens()) + " token/ngày · trần chung "
-                + tokens(policy.globalDayTokens()) + " token/ngày · " + custom + " giảng viên có mức riêng";
+        return "Mặc định " + formatTokens(policy.defaultDayTokens()) + " token/ngày · trần chung "
+                + formatTokens(policy.globalDayTokens()) + " token/ngày · " + custom + " giảng viên có mức riêng";
     }
 
-    static String tokens(long value) {
+    static String formatTokens(long value) {
         return NumberFormat.getIntegerInstance(Locale.forLanguageTag("vi-VN")).format(value);
     }
 }

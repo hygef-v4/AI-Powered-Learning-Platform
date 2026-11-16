@@ -40,25 +40,25 @@ public class GroupDocAccess {
     }
 
     /** Thành viên hoặc giảng viên của lớp xem tài liệu. */
-    public GroupDocContext read(Actor actor, UUID documentId) {
-        GroupDocument document = documents.findById(documentId).orElseThrow(GroupAccess::notFound);
-        return context(actor, document);
+    public GroupDocContext loadContext(Actor actor, UUID documentId) {
+        GroupDocument document = documents.findById(documentId).orElseThrow(GroupAccess::createNotFoundError);
+        return buildContext(actor, document);
     }
 
     /** Như {@link #read} nhưng khóa dòng tài liệu (nộp, tự nộp). */
     public GroupDocContext lock(Actor actor, UUID documentId) {
-        GroupDocument snapshot = documents.findById(documentId).orElseThrow(GroupAccess::notFound);
+        GroupDocument snapshot = documents.findById(documentId).orElseThrow(GroupAccess::createNotFoundError);
         assignments.lockSubmission(snapshot.assignmentId());
-        GroupDocument document = documents.lockDocument(documentId).orElseThrow(GroupAccess::notFound);
-        return context(actor, document);
+        GroupDocument document = documents.lockDocument(documentId).orElseThrow(GroupAccess::createNotFoundError);
+        return buildContext(actor, document);
     }
 
-    public GroupDocContext context(Actor actor, GroupDocument document) {
-        ClassGroup group = groups.findGroup(document.groupId()).orElseThrow(GroupAccess::notFound);
+    public GroupDocContext buildContext(Actor actor, GroupDocument document) {
+        ClassGroup group = groups.findGroup(document.groupId()).orElseThrow(GroupAccess::createNotFoundError);
         if (actor != null && actor.role() == Role.STUDENT) {
             ClassRef ref = access.requireStudent(actor, document.classId());
             if (!group.isMember(actor.accountId())) {
-                throw GroupAccess.notFound();
+                throw GroupAccess.createNotFoundError();
             }
             return new GroupDocContext(document, group, ref, actor.accountId(), true,
                     actor.accountId().equals(group.leaderId()), false);
@@ -70,17 +70,17 @@ public class GroupDocAccess {
     /** Thành viên mới được sửa (giảng viên chỉ xem và nhả khóa). */
     public static void requireMember(GroupDocContext ctx) {
         if (!ctx.member()) {
-            throw ApiException.forbidden("GROUP_DOC_MEMBER_ONLY");
+            throw ApiException.createForbidden("GROUP_DOC_MEMBER_ONLY");
         }
     }
 
     /** Tài liệu {@code IN_PROGRESS} và bài còn nhận bài; {@code withGrace} cho lần lưu nháp cuối (BR-U12-32). */
     public void requireEditable(GroupDocContext ctx, boolean withGrace) {
         if (ctx.document().status() != GroupDocument.Status.IN_PROGRESS) {
-            throw ApiException.conflict("GROUP_DOC_CLOSED", "Tài liệu đã đóng, không sửa được nữa");
+            throw ApiException.createConflict("GROUP_DOC_CLOSED", "Tài liệu đã đóng, không sửa được nữa");
         }
-        if (window(ctx.document().assignmentId(), withGrace) == SubmissionWindow.CLOSED) {
-            throw ApiException.conflict("GROUP_DOC_DEADLINE_PASSED", "Đã hết hạn nộp bài");
+        if (resolveWindow(ctx.document().assignmentId(), withGrace) == SubmissionWindow.CLOSED) {
+            throw ApiException.createConflict("GROUP_DOC_DEADLINE_PASSED", "Đã hết hạn nộp bài");
         }
     }
 
@@ -89,7 +89,7 @@ public class GroupDocAccess {
         requireEditable(ctx, withGrace);
     }
 
-    public SubmissionWindow window(UUID assignmentId, boolean withGrace) {
+    public SubmissionWindow resolveWindow(UUID assignmentId, boolean withGrace) {
         Instant now = clock.instant();
         try {
             SubmissionWindow window = assignments.submissionWindow(assignmentId, now);
@@ -99,7 +99,7 @@ public class GroupDocAccess {
             }
             return window;
         } catch (RuntimeException e) {
-            throw ApiException.unavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
+            throw ApiException.createUnavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
         }
     }
 }

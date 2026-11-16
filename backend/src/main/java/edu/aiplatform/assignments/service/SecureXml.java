@@ -35,7 +35,7 @@ final class SecureXml {
 
     static Document parse(String xml) {
         try {
-            DocumentBuilder builder = factory().newDocumentBuilder();
+            DocumentBuilder builder = createFactory().newDocumentBuilder();
             builder.setErrorHandler(new DefaultHandler());
             builder.setEntityResolver((publicId, systemId) -> {
                 throw new SAXException("Không cho tham chiếu ngoài");
@@ -69,7 +69,7 @@ final class SecureXml {
         }
     }
 
-    private static DocumentBuilderFactory factory() throws ParserConfigurationException {
+    private static DocumentBuilderFactory createFactory() throws ParserConfigurationException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
         factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);

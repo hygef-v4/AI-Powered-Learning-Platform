@@ -411,7 +411,7 @@ class SubjectAdminCommandTest {
     }
 
     private Subject subject(UUID manager) {
-        return Subject.create(
+        return Subject.createSubject(
                 subjectId, "SWR302", "Name", "Description", manager, NOW.minusSeconds(60));
     }
 
@@ -436,6 +436,6 @@ class SubjectAdminCommandTest {
     private void code(Runnable call, String code) {
         assertThatThrownBy(call::run)
                 .isInstanceOfSatisfying(
-                        ApiException.class, error -> assertThat(error.code()).isEqualTo(code));
+                        ApiException.class, error -> assertThat(error.readCode()).isEqualTo(code));
     }
 }

@@ -56,13 +56,13 @@ public class MaterialMcpTools implements IMcpToolProvider {
             var material = materialQueryService.loadAuthorizedMaterial(actor, id, null);
             if (input.has("expectedVersion")
                     && input.version("expectedVersion") != material.currentVersionNo())
-                throw ApiException.conflict(
+                throw ApiException.createConflict(
                         "MATERIAL_VERSION_CONFLICT", "Học liệu đã thay đổi, hãy đọc lại từ đầu");
             if (offset > 0 && !input.has("expectedVersion")) throw McpInput.invalid();
             var version =
                     materialRepository
                             .findVersion(id, material.currentVersionNo())
-                            .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                            .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
             String text =
                     material.kind() == Material.Kind.YOUTUBE_LINK
                             ? material.title()
@@ -105,7 +105,7 @@ public class MaterialMcpTools implements IMcpToolProvider {
                             "complete",
                             !truncated));
         } catch (ApiException e) {
-            return new McpToolResult(true, Map.of("code", e.code()));
+            return new McpToolResult(true, Map.of("code", e.readCode()));
         } catch (IllegalArgumentException e) {
             return new McpToolResult(true, Map.of("code", "INVALID_ARGUMENT"));
         }

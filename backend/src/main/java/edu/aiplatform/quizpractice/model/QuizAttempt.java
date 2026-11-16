@@ -42,22 +42,22 @@ public record QuizAttempt(UUID id, UUID quizId, UUID classId, UUID accountId, in
                 AttemptStatus.IN_PROGRESS, null, now, deadline, null, null, null, null, null, null);
     }
 
-    public boolean inProgress() {
+    public boolean hasInProgressStatus() {
         return status == AttemptStatus.IN_PROGRESS;
     }
 
     /** Còn nhận lưu và nộp tay: chưa nộp, chưa quá hạn cộng ân hạn. */
     public boolean acceptsAnswersAt(Instant now) {
-        return inProgress() && (deadlineAt == null || !now.isAfter(deadlineAt.plus(GRACE)));
+        return hasInProgressStatus() && (deadlineAt == null || !now.isAfter(deadlineAt.plus(GRACE)));
     }
 
     /** Quá hạn cộng ân hạn: scanner tự nộp. */
-    public boolean overdueAt(Instant now) {
-        return inProgress() && deadlineAt != null && now.isAfter(deadlineAt.plus(GRACE));
+    public boolean isOverdueAt(Instant now) {
+        return hasInProgressStatus() && deadlineAt != null && now.isAfter(deadlineAt.plus(GRACE));
     }
 
-    public QuizAttempt withAnswers(Map<UUID, List<String>> newAnswers, Instant now) {
-        if (!inProgress()) {
+    public QuizAttempt replaceAnswers(Map<UUID, List<String>> newAnswers, Instant now) {
+        if (!hasInProgressStatus()) {
             throw new IllegalStateException("Lượt đã nộp");
         }
         return new QuizAttempt(id, quizId, classId, accountId, attemptNo, snapshot, newAnswers, answerVersion + 1,
@@ -65,15 +65,15 @@ public record QuizAttempt(UUID id, UUID quizId, UUID classId, UUID accountId, in
     }
 
     /** Gắn số liệu rời trang và điểm cuối sau khi chấm (BR-U11-33). */
-    public QuizAttempt withOutcome(ActivityOutcome newOutcome, BigDecimal finalScore) {
+    public QuizAttempt applyOutcome(ActivityOutcome newOutcome, BigDecimal finalScore) {
         return new QuizAttempt(id, quizId, classId, accountId, attemptNo, snapshot, answers, answerVersion, status,
                 submitMode, startedAt, deadlineAt, lastSavedAt, submittedAt, finalScore, maxScore, correctCount, result,
                 newOutcome);
     }
 
-    public QuizAttempt submitted(SubmitMode mode, BigDecimal newScore, BigDecimal newMax, List<QuestionResult> results,
+    public QuizAttempt markSubmitted(SubmitMode mode, BigDecimal newScore, BigDecimal newMax, List<QuestionResult> results,
                                  Instant now) {
-        if (!inProgress()) {
+        if (!hasInProgressStatus()) {
             throw new IllegalStateException("Lượt đã nộp");
         }
         int correct = (int) results.stream().filter(QuestionResult::correct).count();

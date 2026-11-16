@@ -44,9 +44,9 @@ class AttemptActivityAssessorTest {
         QuizAttempt attempt = QuizAttempt.start(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1, snapshot,
                 NOW.minus(Duration.ofHours(1)));
         if (lastSaved != null) {
-            attempt = attempt.withAnswers(Map.of(), lastSaved);
+            attempt = attempt.replaceAnswers(Map.of(), lastSaved);
         }
-        return attempt.submitted(SubmitMode.MANUAL, new BigDecimal(raw), new BigDecimal("10"), List.<QuestionResult>of(), NOW);
+        return attempt.markSubmitted(SubmitMode.MANUAL, new BigDecimal(raw), new BigDecimal("10"), List.<QuestionResult>of(), NOW);
     }
 
     private static ActivityInterval away(int seconds, IntervalCertainty certainty) {
@@ -67,7 +67,7 @@ class AttemptActivityAssessorTest {
         assertThat(result.outcome().rawScore()).isEqualByComparingTo("8");
         assertThat(result.outcome().suggestedPenalty()).isEqualByComparingTo("1.5");
         assertThat(result.outcome().penaltyPoints()).isEqualByComparingTo("0");
-        assertThat(result.outcome().pendingDecision()).isTrue();
+        assertThat(result.outcome().awaitsDecision()).isTrue();
         assertThat(result.outcome().leaveCount()).isEqualTo(4);
         assertThat(result.outcome().signal()).isEqualTo(ActivitySignal.OK);
         assertThat(result.score()).as("không tự trừ khi chưa có quyết định").isEqualByComparingTo("8");
@@ -79,17 +79,17 @@ class AttemptActivityAssessorTest {
         QuizAttempt result = assessor.assess(scored(true, policy(), "8", null));
         assertThat(result.outcome().leaveCount()).isEqualTo(1);
         assertThat(result.outcome().suggestedPenalty()).isEqualByComparingTo("0");
-        assertThat(result.outcome().pendingDecision()).isFalse();
+        assertThat(result.outcome().awaitsDecision()).isFalse();
         assertThat(result.score()).isEqualByComparingTo("8");
     }
 
     @Test
     void suggestionIsCappedByMaximumAndNeverBelowZero() {
-        assertThat(AttemptActivityAssessor.suggestedPenalty(new LeavePenalty(0, new BigDecimal("2"), new BigDecimal("3"), 0), 5, new BigDecimal("8")))
+        assertThat(AttemptActivityAssessor.calculateSuggestedPenalty(new LeavePenalty(0, new BigDecimal("2"), new BigDecimal("3"), 0), 5, new BigDecimal("8")))
                 .isEqualByComparingTo("3");
-        assertThat(AttemptActivityAssessor.suggestedPenalty(new LeavePenalty(0, new BigDecimal("2"), null, 0), 5, new BigDecimal("1")))
+        assertThat(AttemptActivityAssessor.calculateSuggestedPenalty(new LeavePenalty(0, new BigDecimal("2"), null, 0), 5, new BigDecimal("1")))
                 .isEqualByComparingTo("1");
-        assertThat(AttemptActivityAssessor.suggestedPenalty(null, 5, new BigDecimal("8"))).isEqualByComparingTo("0");
+        assertThat(AttemptActivityAssessor.calculateSuggestedPenalty(null, 5, new BigDecimal("8"))).isEqualByComparingTo("0");
     }
 
     @Test

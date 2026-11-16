@@ -115,7 +115,7 @@ class GroupWorkQueryServiceTest {
         UUID workingMember = UUID.randomUUID(), workingPeer = UUID.randomUUID();
         UUID removedMember = UUID.randomUUID(), workingGroup = UUID.randomUUID();
         GroupDocument submitted = doc(true);
-        GroupDocument working = GroupDocument.create(UUID.randomUUID(), workingGroup,
+        GroupDocument working = GroupDocument.createDocument(UUID.randomUUID(), workingGroup,
                 assignmentId, classId, new DocumentModel(List.of()), false, NOW);
         when(groups.listGroupIdsOf(member.accountId())).thenReturn(List.of(g1.id()));
         when(documents.listByGroups(List.of(g1.id()), List.of(assignmentId))).thenReturn(List.of(submitted));
@@ -149,7 +149,7 @@ class GroupWorkQueryServiceTest {
         when(documents.listSections(d.id())).thenReturn(List.of(
                 section(d, GroupSection.Status.DONE), section(d, GroupSection.Status.CLAIMED), section(d, GroupSection.Status.OPEN)));
 
-        var progress = service.progress(teacher, classId, assignmentId);
+        var progress = service.listProgress(teacher, classId, assignmentId);
 
         assertThat(progress.get(0).done()).isEqualTo(1);
         assertThat(progress.get(0).claimed()).isEqualTo(1);
@@ -172,16 +172,16 @@ class GroupWorkQueryServiceTest {
         GroupDocument off = doc(false);
         when(documents.findById(off.id())).thenReturn(Optional.of(off));
         assertThatThrownBy(() -> service.recordActivity(member, off.id(), events))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_ACTIVITY_OFF"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_ACTIVITY_OFF"));
         assertThatThrownBy(() -> service.recordActivity(teacher, monitored.id(), events))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_MEMBER_ONLY"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_MEMBER_ONLY"));
         verify(activity).record(any(), any(), any());
     }
 
     private GroupDocument doc(boolean submitted) {
-        GroupDocument d = GroupDocument.create(UUID.randomUUID(), g1.id(), assignmentId, classId, new DocumentModel(List.of()),
+        GroupDocument d = GroupDocument.createDocument(UUID.randomUUID(), g1.id(), assignmentId, classId, new DocumentModel(List.of()),
                 false, NOW.minusSeconds(60));
-        return submitted ? d.withSubmission(new DocumentModel(List.of()), List.of(
+        return submitted ? d.recordSubmission(new DocumentModel(List.of()), List.of(
                 new SectionAuthor("p1", "Mục 1", member.accountId(), true), new SectionAuthor("p2", "Mục 2", null, false)),
                 member.accountId(), GroupDocument.SubmitMode.MANUAL, NOW, false, "sha256:x", List.of(),
                 GroupDocument.Status.IN_PROGRESS) : d;

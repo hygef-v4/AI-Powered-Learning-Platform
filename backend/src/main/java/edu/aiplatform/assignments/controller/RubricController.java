@@ -17,21 +17,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/assignments/{id}/parts/{partId}/rubric")
 public class RubricController {
 
-    private final AssignmentAuthoringService authoring;
+    private final AssignmentAuthoringService assignmentAuthoringService;
 
-    public RubricController(AssignmentAuthoringService authoring) {
-        this.authoring = authoring;
+    public RubricController(AssignmentAuthoringService assignmentAuthoringService) {
+        this.assignmentAuthoringService = assignmentAuthoringService;
     }
 
     @GetMapping
-    public AssignmentViews.Rubric get(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public AssignmentViews.Rubric loadRubric(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                       @PathVariable String partId) {
-        return authoring.rubric(actor, id, partId);
+        return assignmentAuthoringService.loadRubric(actor, id, partId);
     }
 
     @PutMapping(consumes = "application/json")
-    public AssignmentViews.Rubric update(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public AssignmentViews.Rubric updateRubric(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                          @PathVariable String partId, @RequestBody AssignmentRequests.Rubric body) {
-        return authoring.updateRubric(actor, id, partId, body.command());
+        return assignmentAuthoringService.updateRubric(actor, id, partId, body.buildCommand());
     }
 }

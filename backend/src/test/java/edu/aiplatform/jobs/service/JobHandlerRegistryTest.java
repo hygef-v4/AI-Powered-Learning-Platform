@@ -31,8 +31,8 @@ class JobHandlerRegistryTest {
     void findsTheHandlerOfEachJobType() {
         JobHandlerRegistry registry = new JobHandlerRegistry(List.of(new Handler("BACKUP_RUN", JobQueue.BACKUP)));
 
-        assertThat(registry.find("BACKUP_RUN")).isPresent();
-        assertThat(registry.find("EMAIL_SEND")).isEmpty();
+        assertThat(registry.findHandler("BACKUP_RUN")).isPresent();
+        assertThat(registry.findHandler("EMAIL_SEND")).isEmpty();
     }
 
     @Test
@@ -47,7 +47,7 @@ class JobHandlerRegistryTest {
 
     @Test
     void otpHasTheHighestPriorityOnTheEmailQueue() {
-        assertThat(JobRouting.priorityOf("OTP_DELIVERY")).isGreaterThan(JobRouting.priorityOf("EMAIL_SEND"));
+        assertThat(JobRouting.resolvePriority("OTP_DELIVERY")).isGreaterThan(JobRouting.resolvePriority("EMAIL_SEND"));
         assertThat(JobRouting.queueOf("OTP_DELIVERY")).contains(JobQueue.EMAIL);
     }
 }

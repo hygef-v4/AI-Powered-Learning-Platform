@@ -22,23 +22,23 @@ class ClassTermPolicyTest {
         "2000-01-01,SP00", "2099-12-31,FA99-BL5", "2009-04-30,SP09-BL5"
     })
     void calculatesTermFromStartMonthAndYear(LocalDate startsOn, String expected) {
-        assertThat(ClassTermPolicy.termOf(startsOn)).isEqualTo(expected);
+        assertThat(ClassTermPolicy.deriveTerm(startsOn)).isEqualTo(expected);
         assertThat(ClassTermPolicy.TERM_PATTERN.matcher(expected).matches()).isTrue();
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"1999-12-31", "2100-01-01"})
     void rejectsStartDatesOutsideSupportedRange(LocalDate startsOn) {
-        assertThatThrownBy(() -> ClassTermPolicy.termOf(startsOn))
+        assertThatThrownBy(() -> ClassTermPolicy.deriveTerm(startsOn))
                 .isInstanceOfSatisfying(AcademicRuleException.class,
-                        error -> assertThat(error.code()).isEqualTo("INVALID_CLASS_START_DATE"));
+                        error -> assertThat(error.readCode()).isEqualTo("INVALID_CLASS_START_DATE"));
     }
 
     @Test
     void rejectsMissingStartDate() {
         assertThatThrownBy(() -> ClassTermPolicy.requireValidStart(null))
                 .isInstanceOfSatisfying(AcademicRuleException.class,
-                        error -> assertThat(error.code()).isEqualTo("INVALID_CLASS_START_DATE"));
+                        error -> assertThat(error.readCode()).isEqualTo("INVALID_CLASS_START_DATE"));
     }
 
     @ParameterizedTest
@@ -59,7 +59,7 @@ class ClassTermPolicyTest {
     void rejectsMalformedTermFilters(String term) {
         assertThatThrownBy(() -> ClassTermPolicy.parseFilter(term))
                 .isInstanceOfSatisfying(AcademicRuleException.class,
-                        error -> assertThat(error.code()).isEqualTo("INVALID_CLASS_TERM"));
+                        error -> assertThat(error.readCode()).isEqualTo("INVALID_CLASS_TERM"));
     }
 
     @Test

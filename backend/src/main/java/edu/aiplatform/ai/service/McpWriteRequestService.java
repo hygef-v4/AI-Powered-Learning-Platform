@@ -34,7 +34,7 @@ public class McpWriteRequestService implements IMcpWriteRequest {
                     +"where account_id=? and operation=? and request_ref=?",actor.accountId(),operation,requestRef);
             if(!rows.isEmpty()) {
                 var row=rows.get(0);
-                if(!fingerprint.equals(row.get("fingerprint")))throw ApiException.conflict("MCP_REQUEST_CONFLICT",
+                if(!fingerprint.equals(row.get("fingerprint")))throw ApiException.createConflict("MCP_REQUEST_CONFLICT",
                         "requestRef đã dùng với nội dung khác");
                 try { return json.readValue((String)row.get("response"),new TypeReference<Map<String,Object>>(){}); }
                 catch(Exception e){throw new IllegalStateException("Invalid stored MCP response",e);}

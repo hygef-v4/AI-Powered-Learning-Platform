@@ -23,7 +23,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
 
     /** Finds an enrollment record by class ID and account ID. */
     @Override
-    public Optional<Enrollment> find(UUID classId, UUID accountId) {
+    public Optional<Enrollment> findEnrollment(UUID classId, UUID accountId) {
         return namedParameterJdbcTemplate.query(
                 "select * from enrollments where class_id = :classId and account_id = :accountId",
                 Map.of("classId", classId, "accountId", accountId),
@@ -44,7 +44,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
 
     /** Checks if a student is already actively enrolled in another open class of the same subject. */
     @Override
-    public boolean activeInOtherClass(UUID accountId, UUID subjectId, UUID excludedClassId) {
+    public boolean hasActiveEnrollmentElsewhere(UUID accountId, UUID subjectId, UUID excludedClassId) {
         Boolean result = namedParameterJdbcTemplate.queryForObject(
                 """
                         select exists (select 1 from enrollments e join course_classes c on c.id = e.class_id
@@ -58,7 +58,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
 
     /** Finds student IDs in this class who are concurrently active in another class of the same subject. */
     @Override
-    public List<UUID> conflictingStudents(UUID classId, UUID subjectId) {
+    public List<UUID> listConflictingStudents(UUID classId, UUID subjectId) {
         return namedParameterJdbcTemplate.queryForList(
                 """
                         select e.account_id from enrollments e where e.class_id = :classId and e.status = 'ACTIVE'
@@ -80,7 +80,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
                             insert into enrollments (class_id, account_id, status, source, enrolled_at, removed_at)
                             values (:classId, :accountId, :status, :source, :enrolledAt, :removedAt)
                             """,
-                    params(value));
+                    bindEnrollmentParams(value));
         } catch (DuplicateKeyException ex) {
             throw new AcademicRuleException("ENROLLMENT_EXISTS",
                     "Ghi danh đã tồn tại; tải lại dữ liệu trước khi thêm lại");
@@ -89,9 +89,9 @@ public class EnrollmentRepository implements IEnrollmentRepository {
 
     /** Updates an enrollment record checking expected previous status for concurrency safety. */
     @Override
-    public void update(Enrollment value, EnrollmentStatus expectedStatus) {
+    public void updateEnrollment(Enrollment value, EnrollmentStatus expectedStatus) {
         PersistenceChecks.requireWritableTransaction();
-        var args = params(value);
+        var args = bindEnrollmentParams(value);
         args.put("expectedStatus", expectedStatus.name());
         int count = namedParameterJdbcTemplate.update(
                 """
@@ -104,7 +104,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
                     "Ghi danh đã thay đổi. Hãy tải lại");
     }
 
-    private static Map<String, Object> params(Enrollment value) {
+    private static Map<String, Object> bindEnrollmentParams(Enrollment value) {
         var args = new HashMap<String, Object>();
         args.put("classId", value.classId());
         args.put("accountId", value.accountId());

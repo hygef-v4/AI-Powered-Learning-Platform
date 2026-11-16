@@ -54,8 +54,8 @@ public class AssignmentAuthoringService {
             AssignmentStatus.RETIRED);
 
     private final AssignmentRepository assignments;
-    private final RubricService rubrics;
-    private final DocumentModelService documents;
+    private final RubricService rubricService;
+    private final DocumentModelService documentModelService;
     private final AssignmentAccess access;
     private final AssignmentSupport support;
     private final AssignmentAudit audit;
@@ -63,13 +63,13 @@ public class AssignmentAuthoringService {
     private final IReferenceMaterial materials;
     private final Clock clock;
 
-    public AssignmentAuthoringService(AssignmentRepository assignments, RubricService rubrics,
-                                      DocumentModelService documents, AssignmentAccess access,
+    public AssignmentAuthoringService(AssignmentRepository assignments, RubricService rubricService,
+                                      DocumentModelService documentModelService, AssignmentAccess access,
                                       AssignmentSupport support, AssignmentAudit audit, IArtifact artifacts,
                                       IReferenceMaterial materials, Clock clock) {
         this.assignments = assignments;
-        this.rubrics = rubrics;
-        this.documents = documents;
+        this.rubricService = rubricService;
+        this.documentModelService = documentModelService;
         this.access = access;
         this.support = support;
         this.audit = audit;
@@ -85,7 +85,7 @@ public class AssignmentAuthoringService {
         ClassRef ref = access.requireClassManager(actor, classId, "ASSIGNMENT_LIST");
         boolean archived = ref.status() == ClassStatus.ARCHIVED;
         List<Assignment> all = assignments.listForClass(classId, ref.subjectId());
-        return page(all, a -> archived || a.scope() == AssignmentScope.SUBJECT, statuses, includeClosed, query,
+        return buildPage(all, a -> archived || a.scope() == AssignmentScope.SUBJECT, statuses, includeClosed, query,
                 gradingMode, support.groupSupported(classId), archived);
     }
 
@@ -94,8 +94,8 @@ public class AssignmentAuthoringService {
     public AssignmentViews.Page listForSubject(Actor actor, UUID subjectId, Set<AssignmentStatus> statuses,
                                                boolean includeClosed, String query, GradingMode gradingMode) {
         access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_LIST");
-        boolean archived = support.subjectArchived(subjectId);
-        return page(assignments.listOfSubject(subjectId), a -> archived, statuses, includeClosed, query, gradingMode,
+        boolean archived = support.isSubjectArchived(subjectId);
+        return buildPage(assignments.listOfSubject(subjectId), a -> archived, statuses, includeClosed, query, gradingMode,
                 false, archived);
     }
 
@@ -104,29 +104,29 @@ public class AssignmentAuthoringService {
     public AssignmentViews.Detail createForClass(Actor actor, UUID classId, AssignmentCommands.Create command) {
         ClassRef ref = access.requireClassManager(actor, classId, "ASSIGNMENT_CREATED");
         if (ref.status() == ClassStatus.ARCHIVED) {
-            throw ApiException.conflict("ASSIGNMENT_READ_ONLY", "Lớp đã lưu trữ, không tạo bài được");
+            throw ApiException.createConflict("ASSIGNMENT_READ_ONLY", "Lớp đã lưu trữ, không tạo bài được");
         }
-        modes(command.submissionMode(), command.gradingMode());
+        validateModes(command.submissionMode(), command.gradingMode());
         if (command.submissionMode() == SubmissionMode.GROUP && !support.groupSupported(classId)) {
-            throw ApiException.badRequest("GROUP_NOT_SUPPORTED", "Chưa dùng được bài nhóm cho lớp này");
+            throw ApiException.createBadRequest("GROUP_NOT_SUPPORTED", "Chưa dùng được bài nhóm cho lớp này");
         }
-        return create(actor, AssignmentScope.CLASS, classId, ref.subjectId(), command);
+        return createAssignment(actor, AssignmentScope.CLASS, classId, ref.subjectId(), command);
     }
 
     /** F3 đề mẫu của môn, Chủ nhiệm môn soạn (BR-U07-02); có cả bài nhóm (yêu cầu 2026-11-09). */
     @Transactional
     public AssignmentViews.Detail createForSubject(Actor actor, UUID subjectId, AssignmentCommands.Create command) {
         access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_CREATED");
-        if (support.subjectArchived(subjectId)) {
-            throw ApiException.conflict("ASSIGNMENT_READ_ONLY", "Môn đã lưu trữ, không tạo bài được");
+        if (support.isSubjectArchived(subjectId)) {
+            throw ApiException.createConflict("ASSIGNMENT_READ_ONLY", "Môn đã lưu trữ, không tạo bài được");
         }
-        modes(command.submissionMode(), command.gradingMode());
-        return create(actor, AssignmentScope.SUBJECT, null, subjectId, command);
+        validateModes(command.submissionMode(), command.gradingMode());
+        return createAssignment(actor, AssignmentScope.SUBJECT, null, subjectId, command);
     }
 
     @Transactional(readOnly = true)
-    public AssignmentViews.Detail detail(Actor actor, UUID id) {
-        return support.detail(actor, support.readable(actor, id, "ASSIGNMENT_VIEW"), List.of());
+    public AssignmentViews.Detail loadAssignment(Actor actor, UUID id) {
+        return support.buildDetail(actor, support.loadReadable(actor, id, "ASSIGNMENT_VIEW"), List.of());
     }
 
     /**
@@ -136,21 +136,21 @@ public class AssignmentAuthoringService {
     @Transactional
     public AssignmentViews.Detail updateDetails(Actor actor, UUID id, AssignmentCommands.Details command) {
         Assignment current = support.lockEditable(actor, id, command.version(), "ASSIGNMENT_UPDATED");
-        String title = command.title() == null ? current.title() : title(command.title());
+        String title = command.title() == null ? current.title() : normalizeTitle(command.title());
         String instructions = command.instructions() == null ? current.instructions()
-                : instructions(command.instructions());
+                : normalizeInstructions(command.instructions());
         GradingMode grading = command.gradingMode() == null ? current.gradingMode() : command.gradingMode();
-        modes(current.submissionMode(), grading);
+        validateModes(current.submissionMode(), grading);
         Map<DiagramType, Integer> required = command.requiredDiagrams() == null ? current.requiredDiagrams()
-                : requiredDiagrams(command.requiredDiagrams());
+                : normalizeRequiredDiagrams(command.requiredDiagrams());
         List<UUID> chosen = command.referenceMaterialIds() == null ? current.referenceMaterialIds()
-                : materials(actor, current, command.referenceMaterialIds());
+                : resolveMaterials(actor, current, command.referenceMaterialIds());
         boolean activity = command.activityMonitoringEnabled() == null ? current.activityMonitoringEnabled()
                 : command.activityMonitoringEnabled();
-        String notice = command.activityNotice() == null ? current.activityNotice() : notice(command.activityNotice());
-        Assignment saved = assignments.save(current.withDetails(title, instructions, true, grading, required,
+        String notice = command.activityNotice() == null ? current.activityNotice() : normalizeNotice(command.activityNotice());
+        Assignment saved = assignments.saveAssignment(current.updateDetails(title, instructions, true, grading, required,
                 chosen, activity, notice, clock.instant()));
-        return support.detail(actor, saved, List.of());
+        return support.buildDetail(actor, saved, List.of());
     }
 
     /** F4 bước 4–6: lưu khung, tính lại phần, đồng bộ rubric (BR-U07-10…12, 20; P1). */
@@ -158,16 +158,16 @@ public class AssignmentAuthoringService {
     public AssignmentViews.Detail saveSkeleton(Actor actor, UUID id, AssignmentCommands.Skeleton command) {
         Assignment current = support.lockEditable(actor, id, command.version(), "ASSIGNMENT_SKELETON_SAVED");
         if (command.skeleton() == null || command.skeleton().blocks() == null) {
-            throw ApiException.badRequest("SKELETON_INVALID", "Khung tài liệu không hợp lệ");
+            throw ApiException.createBadRequest("SKELETON_INVALID", "Khung tài liệu không hợp lệ");
         }
         String instructions = command.instructions() == null ? current.instructions()
-                : instructions(command.instructions());
+                : normalizeInstructions(command.instructions());
         StoredSkeleton stored = storeSkeleton(actor, current, command.skeleton(), instructions, current.title());
         if (command.fromDocx()) {
-            audit.success(actor, "ASSIGNMENT_DOCX_IMPORTED", stored.saved().id(), AssignmentAudit.details(
+            audit.recordSuccess(actor, "ASSIGNMENT_DOCX_IMPORTED", stored.saved().id(), AssignmentAudit.collectDetails(
                     "blockCount", stored.saved().skeleton().blocks().size(), "partCount", stored.partCount()));
         }
-        return support.detail(actor, stored.saved(), stored.warnings());
+        return support.buildDetail(actor, stored.saved(), stored.warnings());
     }
 
     /**
@@ -178,9 +178,9 @@ public class AssignmentAuthoringService {
     public AssignmentViews.Detail saveImportedSkeleton(Actor actor, UUID id, long version, DocumentModel skeleton,
                                                        String title) {
         Assignment current = support.lockEditable(actor, id, version, "ASSIGNMENT_IMPORT_APPLIED");
-        String nextTitle = title == null || title.isBlank() ? current.title() : title(title);
+        String nextTitle = title == null || title.isBlank() ? current.title() : normalizeTitle(title);
         StoredSkeleton stored = storeSkeleton(actor, current, skeleton, current.instructions(), nextTitle);
-        return support.detail(actor, stored.saved(), stored.warnings());
+        return support.buildDetail(actor, stored.saved(), stored.warnings());
     }
 
     private record StoredSkeleton(Assignment saved, int partCount, List<ValidationIssue> warnings) {
@@ -188,33 +188,33 @@ public class AssignmentAuthoringService {
 
     private StoredSkeleton storeSkeleton(Actor actor, Assignment current, DocumentModel skeleton, String instructions,
                                          String title) {
-        DocumentModel pending = DocumentFiles.resolveFiles(current.skeleton(), documents.sanitize(skeleton), null);
-        ValidationResult result = documents.validateSkeleton(pending);
+        DocumentModel pending = DocumentFiles.resolveFiles(current.skeleton(), documentModelService.sanitize(skeleton), null);
+        ValidationResult result = documentModelService.validateSkeleton(pending);
         List<ValidationIssue> errors = new ArrayList<>(result.errors());
         if (!current.diagramEnabled()) {
             pending.blocks().stream().filter(b -> b != null && b.type() == BlockType.DIAGRAM).forEach(b -> errors.add(
                     new ValidationIssue("DIAGRAM_DISABLED", b.id(), "Bài chưa bật sơ đồ")));
         }
         if (!errors.isEmpty()) {
-            throw AssignmentProblem.issues(HttpStatus.BAD_REQUEST, "SKELETON_INVALID", "Khung tài liệu có lỗi", errors);
+            throw AssignmentProblem.createIssuesProblem(HttpStatus.BAD_REQUEST, "SKELETON_INVALID", "Khung tài liệu có lỗi", errors);
         }
         DocumentModel stored = DocumentFiles.resolveFiles(current.skeleton(), pending,
                 ref -> artifacts.attach(new FileRef(ref), actor, ArtifactPurpose.DOCUMENT_IMAGE).fileId());
         Instant now = clock.instant();
         List<DocumentPart> parts = PartCalculator.compute(stored);
-        Assignment saved = assignments.save(current.withAuthoring(title, instructions, stored, parts, now));
-        rubrics.syncParts(saved.id(), parts, now);
+        Assignment saved = assignments.saveAssignment(current.updateAuthoring(title, instructions, stored, parts, now));
+        rubricService.syncParts(saved.id(), parts, now);
         return new StoredSkeleton(saved, parts.size(), result.warnings());
     }
 
     /** F14 (BR-U07-31): chỉ bài chưa phát hành; rubric, đề xuất AI xóa theo. */
     @Transactional
-    public void delete(Actor actor, UUID id, long version) {
+    public void deleteAssignment(Actor actor, UUID id, long version) {
         Assignment current = support.lockEditable(actor, id, version, "ASSIGNMENT_DELETED");
-        if (assignments.delete(current.id(), version) != 1) {
-            throw AssignmentSupport.versionConflict();
+        if (assignments.deleteAssignment(current.id(), version) != 1) {
+            throw AssignmentSupport.createVersionConflictError();
         }
-        audit.success(actor, "ASSIGNMENT_DELETED", current.id(), AssignmentAudit.details("scope", current.scope(),
+        audit.recordSuccess(actor, "ASSIGNMENT_DELETED", current.id(), AssignmentAudit.collectDetails("scope", current.scope(),
                 "classId", current.classId(), "subjectId", current.subjectId(), "status", current.status()));
     }
 
@@ -226,22 +226,22 @@ public class AssignmentAuthoringService {
     public AssignmentViews.Detail review(Actor actor, UUID id, long version) {
         Assignment current = support.lockEditable(actor, id, version, "ASSIGNMENT_REVIEWED");
         if (current.status() != AssignmentStatus.DRAFT) {
-            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ hoàn tất bài đang nháp");
+            throw ApiException.createConflict("ASSIGNMENT_STATUS_INVALID", "Chỉ hoàn tất bài đang nháp");
         }
-        List<ValidationIssue> issues = readinessIssues(current);
+        List<ValidationIssue> issues = listReadinessIssues(current);
         if (!issues.isEmpty()) {
-            throw AssignmentProblem.issues(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để hoàn tất", issues);
+            throw AssignmentProblem.createIssuesProblem(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để hoàn tất", issues);
         }
-        Assignment saved = assignments.save(current.withStatus(AssignmentStatus.REVIEWED, clock.instant()));
-        audit.success(actor, "ASSIGNMENT_REVIEWED", saved.id(), AssignmentAudit.details("versionNo", saved.versionNo()));
-        return support.detail(actor, saved, List.of());
+        Assignment saved = assignments.saveAssignment(current.changeStatus(AssignmentStatus.REVIEWED, clock.instant()));
+        audit.recordSuccess(actor, "ASSIGNMENT_REVIEWED", saved.id(), AssignmentAudit.collectDetails("versionNo", saved.versionNo()));
+        return support.buildDetail(actor, saved, List.of());
     }
 
     /** F5 bước 1: rubric của một phần; bài đã phát hành chỉ xem. */
     @Transactional(readOnly = true)
-    public AssignmentViews.Rubric rubric(Actor actor, UUID id, String partId) {
-        Assignment assignment = support.readable(actor, id, "RUBRIC_VIEW");
-        return rubricView(actor, assignment, partId);
+    public AssignmentViews.Rubric loadRubric(Actor actor, UUID id, String partId) {
+        Assignment assignment = support.loadReadable(actor, id, "RUBRIC_VIEW");
+        return buildRubricView(actor, assignment, partId);
     }
 
     /** F5 bước 3–4: ghi đè rubric; bài đã duyệt về nháp (BR-U07-21, 23). */
@@ -249,53 +249,53 @@ public class AssignmentAuthoringService {
     public AssignmentViews.Rubric updateRubric(Actor actor, UUID id, String partId,
                                                AssignmentCommands.RubricUpdate command) {
         Assignment current = support.lockEditable(actor, id, command.version(), "RUBRIC_UPDATED");
-        DocumentPart part = part(current, partId);
-        AssignmentRubric rubric = RubricService.WHOLE.equals(part.partId()) ? rubrics.ensureWhole(current, clock.instant())
-                : rubrics.forPart(current, part.partId()).orElseThrow(() -> ApiException.notFound("RUBRIC_NOT_FOUND"));
-        if (rubric.locked()) {
-            throw ApiException.conflict("RUBRIC_LOCKED", "Rubric đã khóa khi phát hành");
+        DocumentPart part = findPart(current, partId);
+        AssignmentRubric rubric = RubricService.WHOLE.equals(part.partId()) ? rubricService.ensureWhole(current, clock.instant())
+                : rubricService.findPartRubric(current, part.partId()).orElseThrow(() -> ApiException.createNotFound("RUBRIC_NOT_FOUND"));
+        if (rubric.hasLocked()) {
+            throw ApiException.createConflict("RUBRIC_LOCKED", "Rubric đã khóa khi phát hành");
         }
         Instant now = clock.instant();
-        AssignmentRubric next = rubrics.save(rubric.withCriteria(
+        AssignmentRubric next = rubricService.saveRubric(rubric.replaceCriteria(
                 RubricService.normalize(command.criteria(), current.diagramEnabled()), now));
-        Assignment saved = assignments.save(current.touched(now));
-        audit.success(actor, "RUBRIC_UPDATED", saved.id(), AssignmentAudit.details("partId", part.partId(),
+        Assignment saved = assignments.saveAssignment(current.markTouched(now));
+        audit.recordSuccess(actor, "RUBRIC_UPDATED", saved.id(), AssignmentAudit.collectDetails("partId", part.partId(),
                 "criteriaCount", next.criteria().size(), "totalPoints", next.totalPoints()));
-        return rubricView(actor, saved, part.partId());
+        return buildRubricView(actor, saved, part.partId());
     }
 
     /** Tài liệu tham khảo được chọn (BR-U07-17); chưa có U13 thì rỗng. */
     @Transactional(readOnly = true)
-    public List<AssignmentViews.Material> selectableMaterials(Actor actor, UUID id) {
-        Assignment assignment = support.manageable(actor, id, "ASSIGNMENT_MATERIALS_VIEW");
-        return materialViews(selectable(actor, assignment));
+    public List<AssignmentViews.Material> listSelectableMaterials(Actor actor, UUID id) {
+        Assignment assignment = support.loadManageable(actor, id, "ASSIGNMENT_MATERIALS_VIEW");
+        return mapMaterialViews(listSelectableMaterials(actor, assignment));
     }
 
     /** Tài liệu tham khảo của lớp khi tạo bài bằng AI, lúc bài chưa có (yêu cầu 2026-11-10). */
     @Transactional(readOnly = true)
-    public List<AssignmentViews.Material> selectableMaterialsForClass(Actor actor, UUID classId) {
+    public List<AssignmentViews.Material> listSelectableMaterialsForClass(Actor actor, UUID classId) {
         access.requireClassManager(actor, classId, "ASSIGNMENT_MATERIALS_VIEW");
-        return materialViews(selectable(actor, ResourceRef.courseClass(classId)));
+        return mapMaterialViews(listSelectableMaterials(actor, ResourceRef.courseClass(classId)));
     }
 
     /** Tài liệu tham khảo của môn khi tạo đề mẫu bằng AI, lúc bài chưa có (yêu cầu 2026-11-10). */
     @Transactional(readOnly = true)
-    public List<AssignmentViews.Material> selectableMaterialsForSubject(Actor actor, UUID subjectId) {
+    public List<AssignmentViews.Material> listSelectableMaterialsForSubject(Actor actor, UUID subjectId) {
         access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_MATERIALS_VIEW");
-        return materialViews(selectable(actor, ResourceRef.subject(subjectId)));
+        return mapMaterialViews(listSelectableMaterials(actor, ResourceRef.subject(subjectId)));
     }
 
-    private static List<AssignmentViews.Material> materialViews(List<SelectableMaterial> list) {
+    private static List<AssignmentViews.Material> mapMaterialViews(List<SelectableMaterial> list) {
         return list.stream().map(m -> new AssignmentViews.Material(m.materialId(), m.title(), m.hasText())).toList();
     }
 
     /** Trang xem sơ đồ (link trong DOCX); trang tự kiểm quyền đọc bài. */
     @Transactional(readOnly = true)
-    public AssignmentViews.Diagram diagram(Actor actor, UUID id, UUID blockId) {
-        Assignment assignment = support.readable(actor, id, "ASSIGNMENT_DIAGRAM_VIEW");
+    public AssignmentViews.Diagram loadDiagram(Actor actor, UUID id, UUID blockId) {
+        Assignment assignment = support.loadReadable(actor, id, "ASSIGNMENT_DIAGRAM_VIEW");
         DocumentBlock block = assignment.skeleton().blocks().stream()
                 .filter(b -> blockId.equals(b.id()) && b.type() == BlockType.DIAGRAM).findFirst()
-                .orElseThrow(() -> ApiException.notFound("DIAGRAM_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("DIAGRAM_NOT_FOUND"));
         return new AssignmentViews.Diagram(assignment.id(), blockId, assignment.title(),
                 block.content().path("diagramType").asText(), block.content().path("alt").asText(""),
                 block.content().path("xml").asText(""), block.content().path("svgPreview").asText(null));
@@ -303,27 +303,27 @@ public class AssignmentAuthoringService {
 
     /** Ảnh trong khung: kiểm quyền đọc bài rồi cấp link tải 5 phút của U03. */
     @Transactional(readOnly = true)
-    public String imageUrl(Actor actor, UUID id, UUID blockId) {
-        Assignment assignment = support.readable(actor, id, "ASSIGNMENT_IMAGE_VIEW");
+    public String resolveImageUrl(Actor actor, UUID id, UUID blockId) {
+        Assignment assignment = support.loadReadable(actor, id, "ASSIGNMENT_IMAGE_VIEW");
         String fileId = DocumentFiles.fileId(assignment.skeleton(), blockId)
-                .orElseThrow(() -> ApiException.notFound("IMAGE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("IMAGE_NOT_FOUND"));
         return artifacts.issueDownloadToken(fileId, actor.accountId()).url();
     }
 
     /** Lỗi chặn duyệt, phát hành (BR-U07-24, 32). */
-    List<ValidationIssue> readinessIssues(Assignment assignment) {
+    List<ValidationIssue> listReadinessIssues(Assignment assignment) {
         List<ValidationIssue> issues = new ArrayList<>();
         if (assignment.title() == null || assignment.title().isBlank()) {
             issues.add(new ValidationIssue("TITLE_REQUIRED", null, "Bài cần tiêu đề"));
         }
-        ValidationResult skeleton = documents.validateSkeleton(assignment.skeleton());
+        ValidationResult skeleton = documentModelService.validateSkeleton(assignment.skeleton());
         issues.addAll(skeleton.errors());
         skeleton.warnings().stream().filter(w -> w.code().equals("HEADING_EMPTY")).forEach(issues::add);
         if (!assignment.diagramEnabled()) {
             assignment.skeleton().blocks().stream().filter(b -> b.type() == BlockType.DIAGRAM).forEach(b -> issues.add(
                     new ValidationIssue("DIAGRAM_DISABLED", b.id(), "Bài chưa bật sơ đồ")));
         }
-        issues.addAll(rubrics.readinessIssues(assignment));
+        issues.addAll(rubricService.listReadinessIssues(assignment));
         // Đề mẫu của môn không thuộc lớp nào: lớp nhận bản copy mới kiểm bài nhóm.
         if (assignment.submissionMode() == SubmissionMode.GROUP && assignment.scope() == AssignmentScope.CLASS
                 && !support.groupSupported(assignment.classId())) {
@@ -338,29 +338,29 @@ public class AssignmentAuthoringService {
         return issues;
     }
 
-    private AssignmentViews.Detail create(Actor actor, AssignmentScope scope, UUID classId, UUID subjectId,
+    private AssignmentViews.Detail createAssignment(Actor actor, AssignmentScope scope, UUID classId, UUID subjectId,
                                           AssignmentCommands.Create command) {
         Instant now = clock.instant();
         DocumentModel skeleton = new DocumentModel(List.of());
         List<DocumentPart> parts = PartCalculator.compute(skeleton);
-        String title = command.title() == null || command.title().isBlank() ? DEFAULT_TITLE : title(command.title());
+        String title = command.title() == null || command.title().isBlank() ? DEFAULT_TITLE : normalizeTitle(command.title());
         Assignment assignment = new Assignment(UUID.randomUUID(), scope, classId, subjectId, null,
                 AssignmentOrigin.MANUAL, 1, command.submissionMode(), true, command.gradingMode(),
                 title, "", skeleton, parts, Map.of(), List.of(), false, null, AssignmentStatus.DRAFT, null, null, null,
                 null, null, actor.accountId(), now, now, 0);
         assignments.insert(assignment);
-        rubrics.syncParts(assignment.id(), parts, now);
-        audit.success(actor, "ASSIGNMENT_CREATED", assignment.id(), AssignmentAudit.details("scope", scope,
+        rubricService.syncParts(assignment.id(), parts, now);
+        audit.recordSuccess(actor, "ASSIGNMENT_CREATED", assignment.id(), AssignmentAudit.collectDetails("scope", scope,
                 "classId", classId, "subjectId", subjectId, "submissionMode", command.submissionMode(),
                 "gradingMode", command.gradingMode()));
-        return support.detail(actor, assignment, List.of());
+        return support.buildDetail(actor, assignment, List.of());
     }
 
-    private AssignmentViews.Page page(List<Assignment> all, Predicate<Assignment> readOnly,
+    private AssignmentViews.Page buildPage(List<Assignment> all, Predicate<Assignment> readOnly,
                                       Set<AssignmentStatus> statuses, boolean includeClosed, String query,
                                       GradingMode gradingMode, boolean groupSupported, boolean archived) {
         if (query != null && query.length() > 200) {
-            throw ApiException.badRequest("INVALID_QUERY", "Từ khóa tối đa 200 ký tự");
+            throw ApiException.createBadRequest("INVALID_QUERY", "Từ khóa tối đa 200 ký tự");
         }
         Map<AssignmentStatus, Long> counts = new EnumMap<>(AssignmentStatus.class);
         all.forEach(a -> counts.merge(a.status(), 1L, Long::sum));
@@ -382,56 +382,56 @@ public class AssignmentAuthoringService {
                 hidden++;
                 continue;
             }
-            rows.add(support.row(a, readOnly.test(a)));
+            rows.add(support.buildRow(a, readOnly.test(a)));
         }
         return new AssignmentViews.Page(List.copyOf(rows), hidden, counts, groupSupported, archived);
     }
 
-    private AssignmentViews.Rubric rubricView(Actor actor, Assignment assignment, String partId) {
-        DocumentPart part = part(assignment, partId);
+    private AssignmentViews.Rubric buildRubricView(Actor actor, Assignment assignment, String partId) {
+        DocumentPart part = findPart(assignment, partId);
         // Toàn bài của bài cũ chưa có thì coi như trống (tạo khi sửa lần đầu).
-        AssignmentRubric rubric = rubrics.forPart(assignment, part.partId())
+        AssignmentRubric rubric = rubricService.findPartRubric(assignment, part.partId())
                 .or(() -> RubricService.WHOLE.equals(part.partId())
-                        ? java.util.Optional.of(AssignmentRubric.empty(assignment.id(), RubricService.WHOLE, clock.instant()))
+                        ? java.util.Optional.of(AssignmentRubric.createEmptyRubric(assignment.id(), RubricService.WHOLE, clock.instant()))
                         : java.util.Optional.empty())
-                .orElseThrow(() -> ApiException.notFound("RUBRIC_NOT_FOUND"));
-        boolean editable = assignment.editable() && !rubric.locked() && access.canManage(actor, assignment)
-                && !access.ownerArchived(assignment);
+                .orElseThrow(() -> ApiException.createNotFound("RUBRIC_NOT_FOUND"));
+        boolean editable = assignment.canEdit() && !rubric.hasLocked() && access.canManage(actor, assignment)
+                && !access.isOwnerArchived(assignment);
         return new AssignmentViews.Rubric(rubric.id(), assignment.id(), part.partId(), part.title(), rubric.criteria(),
-                rubric.totalPoints(), rubric.locked(), rubric.complete(), assignment.diagramEnabled(), editable,
+                rubric.totalPoints(), rubric.hasLocked(), rubric.complete(), assignment.diagramEnabled(), editable,
                 assignment.version());
     }
 
-    private static DocumentPart part(Assignment assignment, String partId) {
+    private static DocumentPart findPart(Assignment assignment, String partId) {
         if (RubricService.WHOLE.equals(partId) && RubricService.hasWhole(assignment.parts())) {
-            return RubricService.wholePart();
+            return RubricService.createWholePart();
         }
         return assignment.parts().stream().filter(p -> p.partId().equals(partId)).findFirst()
-                .orElseThrow(() -> ApiException.notFound("PART_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("PART_NOT_FOUND"));
     }
 
-    private List<UUID> materials(Actor actor, Assignment assignment, List<UUID> requested) {
+    private List<UUID> resolveMaterials(Actor actor, Assignment assignment, List<UUID> requested) {
         Set<UUID> unique = new LinkedHashSet<>(requested);
         if (unique.size() > Assignment.MATERIALS_MAX) {
-            throw ApiException.badRequest("TOO_MANY_MATERIALS", "Gắn tối đa 10 tài liệu tham khảo");
+            throw ApiException.createBadRequest("TOO_MANY_MATERIALS", "Gắn tối đa 10 tài liệu tham khảo");
         }
         if (unique.isEmpty()) {
             return List.of();
         }
-        Set<UUID> allowed = selectable(actor, assignment).stream().map(SelectableMaterial::materialId)
+        Set<UUID> allowed = listSelectableMaterials(actor, assignment).stream().map(SelectableMaterial::materialId)
                 .collect(Collectors.toSet());
         if (!allowed.containsAll(unique)) {
-            throw ApiException.badRequest("MATERIAL_NOT_ALLOWED", "Có tài liệu ngoài phạm vi của bài");
+            throw ApiException.createBadRequest("MATERIAL_NOT_ALLOWED", "Có tài liệu ngoài phạm vi của bài");
         }
         return List.copyOf(unique);
     }
 
-    private List<SelectableMaterial> selectable(Actor actor, Assignment assignment) {
-        return selectable(actor, assignment.scope() == AssignmentScope.CLASS
+    private List<SelectableMaterial> listSelectableMaterials(Actor actor, Assignment assignment) {
+        return listSelectableMaterials(actor, assignment.scope() == AssignmentScope.CLASS
                 ? ResourceRef.courseClass(assignment.classId()) : ResourceRef.subject(assignment.subjectId()));
     }
 
-    private List<SelectableMaterial> selectable(Actor actor, ResourceRef scope) {
+    private List<SelectableMaterial> listSelectableMaterials(Actor actor, ResourceRef scope) {
         try {
             List<SelectableMaterial> list = materials.listSelectable(actor, scope);
             return list == null ? List.of() : list;
@@ -440,45 +440,45 @@ public class AssignmentAuthoringService {
         }
     }
 
-    static Map<DiagramType, Integer> requiredDiagrams(Map<DiagramType, Integer> requested) {
+    static Map<DiagramType, Integer> normalizeRequiredDiagrams(Map<DiagramType, Integer> requested) {
         Map<DiagramType, Integer> out = new EnumMap<>(DiagramType.class);
         requested.forEach((type, count) -> {
             if (type == null || count == null || count < 1 || count > Assignment.REQUIRED_DIAGRAM_MAX) {
-                throw ApiException.badRequest("REQUIRED_DIAGRAMS_INVALID", "Số sơ đồ bắt buộc mỗi loại từ 1 đến 20");
+                throw ApiException.createBadRequest("REQUIRED_DIAGRAMS_INVALID", "Số sơ đồ bắt buộc mỗi loại từ 1 đến 20");
             }
             out.put(type, count);
         });
         return out;
     }
 
-    static void modes(SubmissionMode submissionMode, GradingMode gradingMode) {
+    static void validateModes(SubmissionMode submissionMode, GradingMode gradingMode) {
         if (submissionMode == null || gradingMode == null) {
-            throw ApiException.badRequest("MODE_REQUIRED", "Chọn hình thức và chế độ của bài");
+            throw ApiException.createBadRequest("MODE_REQUIRED", "Chọn hình thức và chế độ của bài");
         }
         if (submissionMode == SubmissionMode.GROUP && gradingMode != GradingMode.GRADED) {
-            throw ApiException.badRequest("GROUP_MUST_BE_GRADED", "Bài nhóm chỉ có chế độ Graded");
+            throw ApiException.createBadRequest("GROUP_MUST_BE_GRADED", "Bài nhóm chỉ có chế độ Graded");
         }
     }
 
-    static String title(String value) {
+    static String normalizeTitle(String value) {
         String title = value == null ? "" : value.strip();
         if (title.isEmpty() || title.length() > Assignment.TITLE_MAX) {
-            throw ApiException.badRequest("TITLE_INVALID", "Tiêu đề từ 1 đến 200 ký tự");
+            throw ApiException.createBadRequest("TITLE_INVALID", "Tiêu đề từ 1 đến 200 ký tự");
         }
         return title;
     }
 
-    static String instructions(String value) {
+    static String normalizeInstructions(String value) {
         if (value.length() > Assignment.INSTRUCTIONS_MAX) {
-            throw ApiException.badRequest("INSTRUCTIONS_TOO_LONG", "Hướng dẫn tối đa 20.000 ký tự");
+            throw ApiException.createBadRequest("INSTRUCTIONS_TOO_LONG", "Hướng dẫn tối đa 20.000 ký tự");
         }
         return value;
     }
 
-    static String notice(String value) {
+    static String normalizeNotice(String value) {
         String notice = value.strip();
         if (notice.length() > Assignment.NOTICE_MAX) {
-            throw ApiException.badRequest("NOTICE_TOO_LONG", "Lời báo tối đa 1.000 ký tự");
+            throw ApiException.createBadRequest("NOTICE_TOO_LONG", "Lời báo tối đa 1.000 ký tự");
         }
         return notice.isEmpty() ? null : notice;
     }

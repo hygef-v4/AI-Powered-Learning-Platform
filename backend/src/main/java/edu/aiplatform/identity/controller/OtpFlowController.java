@@ -31,16 +31,16 @@ public class OtpFlowController {
     public static final String NEUTRAL_MESSAGE =
             "Nếu email hợp lệ, mã gồm 6 chữ số sẽ được gửi. Mã có hiệu lực 10 phút.";
 
-    private final OtpService otp;
-    private final ActivationService activation;
-    private final PasswordResetService passwordReset;
+    private final OtpService otpService;
+    private final ActivationService activationService;
+    private final PasswordResetService passwordResetService;
     private final AuthCookies cookies;
 
-    public OtpFlowController(OtpService otp, ActivationService activation, PasswordResetService passwordReset,
+    public OtpFlowController(OtpService otpService, ActivationService activationService, PasswordResetService passwordResetService,
                              AuthCookies cookies) {
-        this.otp = otp;
-        this.activation = activation;
-        this.passwordReset = passwordReset;
+        this.otpService = otpService;
+        this.activationService = activationService;
+        this.passwordResetService = passwordResetService;
         this.cookies = cookies;
     }
 
@@ -60,22 +60,22 @@ public class OtpFlowController {
     @PostMapping("/activation/request")
     public ResponseEntity<Map<String, String>> requestActivation(@RequestBody @Validated EmailRequest request,
                                                                  HttpServletRequest http) {
-        otp.request(request.email(), OtpPurpose.ACTIVATION, http.getRemoteAddr());
-        return accepted();
+        otpService.request(request.email(), OtpPurpose.ACTIVATION, http.getRemoteAddr());
+        return respondAccepted();
     }
 
     @PostMapping("/activation/verify")
     public TicketResponse verifyActivation(@RequestBody @Validated VerifyRequest request, HttpServletRequest http) {
-        return new TicketResponse(otp.verify(request.email(), OtpPurpose.ACTIVATION, request.otp(),
+        return new TicketResponse(otpService.verify(request.email(), OtpPurpose.ACTIVATION, request.otp(),
                 http.getRemoteAddr()));
     }
 
     /** Kích hoạt xong thì tự đăng nhập (BR-U01-13): trả phiên và đặt cookie như đăng nhập. */
     @PostMapping("/activation/complete")
     public ResponseEntity<SessionInfo> completeActivation(@RequestBody @Validated CompleteRequest request) {
-        AuthService.LoginResult result = activation.complete(request.otpTicket(), request.newPassword());
+        AuthService.LoginResult result = activationService.complete(request.otpTicket(), request.newPassword());
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookies.access(result.accessToken()).toString())
+                .header(HttpHeaders.SET_COOKIE, cookies.buildAccessCookie(result.accessToken()).toString())
                 .header(HttpHeaders.SET_COOKIE, cookies.refresh(result.refreshToken()).toString())
                 .header(HttpHeaders.SET_COOKIE, cookies.clearLegacyRefresh().toString())
                 .body(result.info());
@@ -84,20 +84,20 @@ public class OtpFlowController {
     @PostMapping("/password-reset/request")
     public ResponseEntity<Map<String, String>> requestPasswordReset(@RequestBody @Validated EmailRequest request,
                                                                     HttpServletRequest http) {
-        otp.request(request.email(), OtpPurpose.PASSWORD_RESET, http.getRemoteAddr());
-        return accepted();
+        otpService.request(request.email(), OtpPurpose.PASSWORD_RESET, http.getRemoteAddr());
+        return respondAccepted();
     }
 
     @PostMapping("/password-reset/verify")
     public TicketResponse verifyPasswordReset(@RequestBody @Validated VerifyRequest request, HttpServletRequest http) {
-        return new TicketResponse(otp.verify(request.email(), OtpPurpose.PASSWORD_RESET, request.otp(),
+        return new TicketResponse(otpService.verify(request.email(), OtpPurpose.PASSWORD_RESET, request.otp(),
                 http.getRemoteAddr()));
     }
 
     /** Đặt lại xong không tự đăng nhập; mọi phiên cũ đã bị xóa (BR-U01-34). */
     @PostMapping("/password-reset/complete")
     public ResponseEntity<Void> completePasswordReset(@RequestBody @Validated CompleteRequest request) {
-        passwordReset.complete(request.otpTicket(), request.newPassword());
+        passwordResetService.complete(request.otpTicket(), request.newPassword());
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, cookies.clearAccess().toString())
                 .header(HttpHeaders.SET_COOKIE, cookies.clearRefresh().toString())
@@ -105,7 +105,7 @@ public class OtpFlowController {
                 .build();
     }
 
-    private static ResponseEntity<Map<String, String>> accepted() {
+    private static ResponseEntity<Map<String, String>> respondAccepted() {
         return ResponseEntity.accepted().body(Map.of("message", NEUTRAL_MESSAGE));
     }
 }

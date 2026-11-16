@@ -23,28 +23,28 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class GroupExceptionHandler {
 
     @ExceptionHandler(GroupSetInvalidException.class)
-    public ProblemDetail invalidSet(GroupSetInvalidException e) {
-        ProblemDetail problem = problem(e.status(), e.code(), e.getMessage());
-        problem.setProperty("issues", e.issues().stream()
+    public ProblemDetail describeInvalidSet(GroupSetInvalidException e) {
+        ProblemDetail problem = buildProblem(e.readStatus(), e.readCode(), e.getMessage());
+        problem.setProperty("issues", e.listIssues().stream()
                 .map(i -> Map.of("groupKey", i.groupKey(), "code", i.code(), "message", i.message())).toList());
         return problem;
     }
 
     @ExceptionHandler(SubmitInvalidException.class)
-    public ProblemDetail invalidSubmit(SubmitInvalidException e) {
-        ProblemDetail problem = problem(e.status(), e.code(), e.getMessage());
-        problem.setProperty("issues", e.issues().stream()
+    public ProblemDetail describeInvalidSubmit(SubmitInvalidException e) {
+        ProblemDetail problem = buildProblem(e.readStatus(), e.readCode(), e.getMessage());
+        problem.setProperty("issues", e.listIssues().stream()
                 .map(i -> Map.of("code", i.code(), "message", i.message(),
                         "blockId", i.blockId() == null ? "" : i.blockId().toString())).toList());
         return problem;
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
-    public ProblemDetail unreadable(Exception e) {
-        return problem(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "Dữ liệu yêu cầu không hợp lệ");
+    public ProblemDetail describeUnreadable(Exception e) {
+        return buildProblem(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "Dữ liệu yêu cầu không hợp lệ");
     }
 
-    private static ProblemDetail problem(HttpStatusCode status, String code, String message) {
+    private static ProblemDetail buildProblem(HttpStatusCode status, String code, String message) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, message);
         problem.setProperty("code", code);
         return problem;

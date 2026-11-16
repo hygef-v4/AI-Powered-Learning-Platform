@@ -21,7 +21,7 @@ public final class PasswordPolicy {
     }
 
     /** Trả các vi phạm; rỗng là hợp lệ. {@code schoolEmail} đã chuẩn hóa. */
-    public static Set<Violation> check(String password, String schoolEmail) {
+    public static Set<Violation> checkPassword(String password, String schoolEmail) {
         Set<Violation> violations = EnumSet.noneOf(Violation.class);
         String value = password == null ? "" : password;
         if (value.codePointCount(0, value.length()) < MIN_LENGTH) {
@@ -36,7 +36,7 @@ public final class PasswordPolicy {
         if (value.chars().noneMatch(c -> c >= '0' && c <= '9')) {
             violations.add(Violation.NEED_DIGIT);
         }
-        String name = schoolEmail == null ? "" : EmailPolicy.localPart(schoolEmail);
+        String name = schoolEmail == null ? "" : EmailPolicy.extractLocalPart(schoolEmail);
         if (name.length() >= MIN_EMAIL_NAME_LENGTH && value.toLowerCase(Locale.ROOT).contains(name)) {
             violations.add(Violation.CONTAINS_EMAIL_NAME);
         }

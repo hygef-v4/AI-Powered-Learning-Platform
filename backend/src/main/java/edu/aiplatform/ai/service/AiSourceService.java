@@ -28,27 +28,27 @@ public class AiSourceService {
 
     private final AiConnectionRepository connections;
     private final AiSourcePreferenceRepository preferences;
-    private final QuotaReservationService quota;
+    private final QuotaReservationService quotaReservationService;
     private final AiAccess access;
     private final Clock clock;
 
     public AiSourceService(AiConnectionRepository connections, AiSourcePreferenceRepository preferences,
-                           QuotaReservationService quota, AiAccess access, Clock clock) {
+                           QuotaReservationService quotaReservationService, AiAccess access, Clock clock) {
         this.connections = connections;
         this.preferences = preferences;
-        this.quota = quota;
+        this.quotaReservationService = quotaReservationService;
         this.access = access;
         this.clock = clock;
     }
 
     @Transactional(readOnly = true)
-    public List<SourceOption> sources(Actor actor) {
+    public List<SourceOption> listSources(Actor actor) {
         access.require(actor, Actions.AI_PERSONAL);
-        Optional<AiSourcePreference> preferred = preference(actor);
+        Optional<AiSourcePreference> preferred = findPreference(actor);
         List<SourceOption> options = new ArrayList<>();
         // Student, Admin không dùng API của trường (BR-U06-11): popup chỉ có API cá nhân.
-        if (access.allowed(actor, Actions.AI_SHARED_USE)) {
-            options.add(shared(actor, preferred.filter(p -> p.source() == AiSource.SHARED).isPresent()));
+        if (access.canPerform(actor, Actions.AI_SHARED_USE)) {
+            options.add(buildSharedOption(actor, preferred.filter(p -> p.source() == AiSource.SHARED).isPresent()));
         }
         for (AiProvider provider : AiProvider.values()) {
             boolean mine = preferred.filter(p -> p.source() == AiSource.PERSONAL && p.provider() == provider).isPresent();
@@ -64,10 +64,10 @@ public class AiSourceService {
 
     /** Nguồn mặc định; API chung mà người dùng không còn quyền dùng thì coi như chưa đặt. */
     @Transactional(readOnly = true)
-    public Optional<AiSourcePreference> preference(Actor actor) {
+    public Optional<AiSourcePreference> findPreference(Actor actor) {
         access.require(actor, Actions.AI_PERSONAL);
-        return preferences.find(actor.accountId())
-                .filter(p -> p.source() != AiSource.SHARED || access.allowed(actor, Actions.AI_SHARED_USE));
+        return preferences.findPreference(actor.accountId())
+                .filter(p -> p.source() != AiSource.SHARED || access.canPerform(actor, Actions.AI_SHARED_USE));
     }
 
     /**
@@ -78,28 +78,28 @@ public class AiSourceService {
     public Optional<AiSourcePreference> savePreference(Actor actor, AiSource source, AiProvider provider) {
         access.require(actor, Actions.AI_PERSONAL);
         if (source == null) {
-            preferences.delete(actor.accountId());
+            preferences.deletePreference(actor.accountId());
             return Optional.empty();
         }
         if (source == AiSource.SHARED) {
             access.require(actor, Actions.AI_SHARED_USE);
         } else if (provider == null) {
-            throw ApiException.badRequest("AI_PREFERENCE_INVALID", "Chọn nhà cung cấp cho API cá nhân");
+            throw ApiException.createBadRequest("AI_PREFERENCE_INVALID", "Chọn nhà cung cấp cho API cá nhân");
         }
         AiSourcePreference preference = new AiSourcePreference(source, source == AiSource.SHARED ? null : provider);
-        preferences.save(actor.accountId(), preference, clock.instant());
+        preferences.savePreference(actor.accountId(), preference, clock.instant());
         return Optional.of(preference);
     }
 
-    private SourceOption shared(Actor actor, boolean preferred) {
+    private SourceOption buildSharedOption(Actor actor, boolean preferred) {
         Optional<AiConnection> connection = connections.listInstitutional().stream()
                 .filter(c -> c.status() == Status.ACTIVE)
-                .min(java.util.Comparator.comparingInt(c -> ConnectionOrder.providerRank(c.provider())));
+                .min(java.util.Comparator.comparingInt(c -> ConnectionOrder.rankProvider(c.provider())));
         if (connection.isEmpty()) {
             return new SourceOption(AiSource.SHARED, null, null, null, false, "API của trường chưa được bật", null,
                     "SCHOOL", preferred);
         }
-        QuotaReservationService.Remaining remaining = quota.remaining(actor.accountId());
+        QuotaReservationService.Remaining remaining = quotaReservationService.calculateRemaining(actor.accountId());
         if (remaining == null) {
             return new SourceOption(AiSource.SHARED, connection.get().provider(), connection.get().model(), null, false,
                     "API của trường chưa được cấu hình hạn mức", null, "SCHOOL", preferred);

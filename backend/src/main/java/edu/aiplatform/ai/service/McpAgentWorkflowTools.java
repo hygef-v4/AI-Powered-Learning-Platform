@@ -19,8 +19,8 @@ public class McpAgentWorkflowTools implements IMcpToolProvider {
      * Initializes the workflow tool provider and pre-loads bundled workflow instruction skills.
      */
     public McpAgentWorkflowTools(ObjectMapper json) {
-        workflows=Map.of("AUTHOR_ASSIGNMENT",load(json,"AUTHOR_ASSIGNMENT","author-assignment"),
-                "GRADE_WITH_RUBRIC",load(json,"GRADE_WITH_RUBRIC","grade-with-rubric"));
+        workflows=Map.of("AUTHOR_ASSIGNMENT",loadWorkflow(json,"AUTHOR_ASSIGNMENT","author-assignment"),
+                "GRADE_WITH_RUBRIC",loadWorkflow(json,"GRADE_WITH_RUBRIC","grade-with-rubric"));
     }
 
     /**
@@ -51,7 +51,7 @@ public class McpAgentWorkflowTools implements IMcpToolProvider {
     /**
      * Loads markdown workflow instructions from classpath resources and generates fingerprint version.
      */
-    private static Map<String,Object> load(ObjectMapper json,String workflow,String directory) {
+    private static Map<String,Object> loadWorkflow(ObjectMapper json,String workflow,String directory) {
         try {
             String instructions=new ClassPathResource("agent-workflows/"+directory+"/SKILL.md")
                     .getContentAsString(StandardCharsets.UTF_8).replace("\r\n","\n");

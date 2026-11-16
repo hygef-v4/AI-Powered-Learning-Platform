@@ -44,36 +44,36 @@ public class JobListener {
     }
 
     @RabbitListener(queues = "jobs.triggered", ackMode = "MANUAL", concurrency = "2")
-    public void triggered(Message message, Channel channel) throws IOException {
-        handle(message, channel);
+    public void receiveTriggered(Message message, Channel channel) throws IOException {
+        handleDelivery(message, channel);
     }
 
     @RabbitListener(queues = "jobs.email", ackMode = "MANUAL", concurrency = "1")
-    public void email(Message message, Channel channel) throws IOException {
-        handle(message, channel);
+    public void receiveEmail(Message message, Channel channel) throws IOException {
+        handleDelivery(message, channel);
     }
 
     @RabbitListener(queues = "jobs.ai", ackMode = "MANUAL", concurrency = "4")
-    public void ai(Message message, Channel channel) throws IOException {
-        handle(message, channel);
+    public void receiveAi(Message message, Channel channel) throws IOException {
+        handleDelivery(message, channel);
     }
 
     @RabbitListener(queues = "jobs.drive", ackMode = "MANUAL", concurrency = "1")
-    public void drive(Message message, Channel channel) throws IOException {
-        handle(message, channel);
+    public void receiveDrive(Message message, Channel channel) throws IOException {
+        handleDelivery(message, channel);
     }
 
     @RabbitListener(queues = "jobs.backup", ackMode = "MANUAL", concurrency = "1")
-    public void backup(Message message, Channel channel) throws IOException {
-        handle(message, channel);
+    public void receiveBackup(Message message, Channel channel) throws IOException {
+        handleDelivery(message, channel);
     }
 
-    void handle(Message message, Channel channel) throws IOException {
+    void handleDelivery(Message message, Channel channel) throws IOException {
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         JobMessage job;
         try {
             JsonNode envelope = objectMapper.readTree(message.getBody());
-            if (!validEnvelope(envelope)) {
+            if (!isValidEnvelope(envelope)) {
                 channel.basicAck(deliveryTag, false);
                 return;
             }
@@ -106,7 +106,7 @@ public class JobListener {
         }
     }
 
-    private static boolean validEnvelope(JsonNode value) {
+    private static boolean isValidEnvelope(JsonNode value) {
         if (value == null || !value.isObject()) {
             return false;
         }
@@ -114,11 +114,11 @@ public class JobListener {
         return schema.isIntegralNumber() && schema.canConvertToInt() && schema.intValue() > 0
                 && attempt.isIntegralNumber() && attempt.canConvertToInt()
                 && attempt.intValue() >= 0 && attempt.intValue() <= JobRouting.MAX_ATTEMPT
-                && nonBlank(value.path("jobType")) && nonBlank(value.path("idempotencyKey"))
-                && nonBlank(value.path("correlationId")) && value.path("payload").isObject();
+                && isNonBlank(value.path("jobType")) && isNonBlank(value.path("idempotencyKey"))
+                && isNonBlank(value.path("correlationId")) && value.path("payload").isObject();
     }
 
-    private static boolean nonBlank(JsonNode value) {
+    private static boolean isNonBlank(JsonNode value) {
         return value.isTextual() && !value.textValue().isBlank();
     }
 }

@@ -11,13 +11,13 @@ class ForbiddenKeyGuardTest {
 
     @Test
     void allowsOrdinaryKeys() {
-        assertThatCode(() -> ForbiddenKeyGuard.check(Map.of("assignmentId", "a1", "inputTokens", 120)))
+        assertThatCode(() -> ForbiddenKeyGuard.checkForbiddenKeys(Map.of("assignmentId", "a1", "inputTokens", 120)))
                 .doesNotThrowAnyException();
     }
 
     @Test
     void rejectsForbiddenKeyIgnoringCase() {
-        assertThatThrownBy(() -> ForbiddenKeyGuard.check(Map.of("Password", "x")))
+        assertThatThrownBy(() -> ForbiddenKeyGuard.checkForbiddenKeys(Map.of("Password", "x")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("$.Password");
     }
@@ -25,7 +25,7 @@ class ForbiddenKeyGuardTest {
     @Test
     void rejectsForbiddenKeyInNestedMapsAndLists() {
         Map<String, Object> data = Map.of("items", List.of(Map.of("ok", 1), Map.of("meta", Map.of("otp", "123456"))));
-        assertThatThrownBy(() -> ForbiddenKeyGuard.check(data))
+        assertThatThrownBy(() -> ForbiddenKeyGuard.checkForbiddenKeys(data))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("$.items[1].meta.otp");
     }

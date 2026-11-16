@@ -34,25 +34,25 @@ public class DriveFolders {
     }
 
     /** Thư mục gốc chứa mọi thư mục của app. */
-    public String root() {
-        if (properties.sharedDriveConfigured()) {
+    public String resolveRoot() {
+        if (properties.hasSharedDrive()) {
             return properties.sharedDriveId();
         }
-        return cache.computeIfAbsent(ROOT, key -> configuredRoot().orElseGet(() ->
-                find("root", properties.rootFolderName()).orElseGet(() -> create("root", properties.rootFolderName()))));
+        return cache.computeIfAbsent(ROOT, key -> findConfiguredRoot().orElseGet(() ->
+                findFolder("root", properties.resolveRootFolderName()).orElseGet(() -> createFolder("root", properties.resolveRootFolderName()))));
     }
 
     /**
      * {@code GOOGLE_DRIVE_FOLDER_ID} đặt thì dùng thẳng id đó; id không truy cập được (thư mục tạo tay, đã xóa,
      * hoặc của app khác) thì cảnh báo rồi quay về tìm hoặc tạo theo tên.
      */
-    private Optional<String> configuredRoot() {
+    private Optional<String> findConfiguredRoot() {
         String id = properties.driveFolderId();
         if (id == null || id.isBlank()) {
             return Optional.empty();
         }
         try {
-            DriveClientFactory.withRetry(() -> clients.drive().files().get(id.strip()).setFields("id").execute());
+            DriveClientFactory.runWithRetry(() -> clients.createDrive().files().get(id.strip()).setFields("id").execute());
             return Optional.of(id.strip());
         } catch (DriveClientFactory.DriveNotFoundException e) {
             log.warn("GOOGLE_DRIVE_FOLDER_ID không truy cập được (scope drive.file chỉ thấy thư mục do app tạo); "
@@ -62,30 +62,30 @@ public class DriveFolders {
     }
 
     /** Thư mục con cố định (theo purpose, thư mục backup), nhớ id sau lần đầu. */
-    public String child(String parentId, String name) {
+    public String ensureChild(String parentId, String name) {
         return cache.computeIfAbsent(parentId + "/" + name,
-                key -> find(parentId, name).orElseGet(() -> create(parentId, name)));
+                key -> findFolder(parentId, name).orElseGet(() -> createFolder(parentId, name)));
     }
 
     /** Tên thư mục gốc lấy từ cấu hình nên thoát {@code \} và {@code '} trước khi ghép vào câu truy vấn. */
-    public Optional<String> find(String parentId, String name) {
+    public Optional<String> findFolder(String parentId, String name) {
         String escaped = name.replace("\\", "\\\\").replace("'", "\\'");
         String query = "'" + parentId + "' in parents and name = '" + escaped + "' and mimeType = '" + FOLDER_MIME
                 + "' and trashed = false";
-        FileList found = DriveClientFactory.withRetry(() -> list(query).execute());
+        FileList found = DriveClientFactory.runWithRetry(() -> listFiles(query).execute());
         return found.getFiles() == null || found.getFiles().isEmpty() ? Optional.empty()
                 : Optional.of(found.getFiles().get(0).getId());
     }
 
-    public String create(String parentId, String name) {
+    public String createFolder(String parentId, String name) {
         File folder = new File().setName(name).setMimeType(FOLDER_MIME).setParents(List.of(parentId));
-        return DriveClientFactory.withRetry(() -> clients.drive().files().create(folder).setSupportsAllDrives(true)
+        return DriveClientFactory.runWithRetry(() -> clients.createDrive().files().create(folder).setSupportsAllDrives(true)
                 .setFields("id").execute()).getId();
     }
 
-    private Drive.Files.List list(String query) throws IOException {
-        Drive.Files.List list = clients.drive().files().list().setQ(query).setFields("files(id)");
-        if (properties.sharedDriveConfigured()) {
+    private Drive.Files.List listFiles(String query) throws IOException {
+        Drive.Files.List list = clients.createDrive().files().list().setQ(query).setFields("files(id)");
+        if (properties.hasSharedDrive()) {
             list.setCorpora("drive").setDriveId(properties.sharedDriveId()).setIncludeItemsFromAllDrives(true)
                     .setSupportsAllDrives(true);
         }

@@ -43,14 +43,14 @@ public class PracticeFeedbackRepository {
                 .param("id", f.id()).param("attemptId", f.attemptId()).param("accountId", f.accountId())
                 .param("origin", f.origin().name()).param("taskId", f.taskId()).param("requestRef", f.requestRef())
                 .param("status", f.status().name()).param("hash", f.submissionHash())
-                .param("feedback", f.feedback() == null ? null : write(f.feedback()))
-                .param("provenance", write(f.provenance())).param("safeError", f.safeError())
-                .param("createdAt", AttemptRepository.ts(f.createdAt()))
-                .param("completedAt", AttemptRepository.ts(f.completedAt()))
+                .param("feedback", f.feedback() == null ? null : writeJson(f.feedback()))
+                .param("provenance", writeJson(f.provenance())).param("safeError", f.safeError())
+                .param("createdAt", AttemptRepository.convertTimestamp(f.createdAt()))
+                .param("completedAt", AttemptRepository.convertTimestamp(f.completedAt()))
                 .update();
     }
 
-    public Optional<PracticeFeedback> find(UUID id) {
+    public Optional<PracticeFeedback> findFeedback(UUID id) {
         return jdbc.sql("select * from practice_feedback where id = :id").param("id", id).query(this::map).optional();
     }
 
@@ -72,11 +72,11 @@ public class PracticeFeedbackRepository {
     /** Số yêu cầu của một người từ {@code since} (web và MCP cộng chung, BR-U08-44). */
     public long countSince(UUID accountId, Instant since) {
         return jdbc.sql("select count(*) from practice_feedback where account_id = :id and created_at >= :since")
-                .param("id", accountId).param("since", AttemptRepository.ts(since)).query(Long.class).single();
+                .param("id", accountId).param("since", AttemptRepository.convertTimestamp(since)).query(Long.class).single();
     }
 
     /** Số phản hồi READY theo lượt, cho danh sách lượt. */
-    public Map<UUID, Long> readyCounts(Collection<UUID> attemptIds) {
+    public Map<UUID, Long> countReadyFeedback(Collection<UUID> attemptIds) {
         if (attemptIds.isEmpty()) {
             return Map.of();
         }
@@ -90,21 +90,21 @@ public class PracticeFeedbackRepository {
     public int attachTask(UUID id, UUID taskId, JsonNode provenance) {
         return jdbc.sql("update practice_feedback set task_id = :taskId, provenance = cast(:provenance as jsonb) "
                         + "where id = :id and task_id is null")
-                .param("id", id).param("taskId", taskId).param("provenance", write(provenance)).update();
+                .param("id", id).param("taskId", taskId).param("provenance", writeJson(provenance)).update();
     }
 
     public int markReady(UUID id, JsonNode feedback, JsonNode provenance, Instant now) {
         return jdbc.sql("update practice_feedback set status = 'READY', feedback = cast(:feedback as jsonb), "
                         + "provenance = cast(:provenance as jsonb), completed_at = :now where id = :id "
                         + "and status = 'PENDING'")
-                .param("id", id).param("feedback", write(feedback)).param("provenance", write(provenance))
-                .param("now", AttemptRepository.ts(now)).update();
+                .param("id", id).param("feedback", writeJson(feedback)).param("provenance", writeJson(provenance))
+                .param("now", AttemptRepository.convertTimestamp(now)).update();
     }
 
     public int markFailed(UUID id, String safeError, Instant now) {
         return jdbc.sql("update practice_feedback set status = 'FAILED', safe_error = :error, completed_at = :now "
                         + "where id = :id and status = 'PENDING'")
-                .param("id", id).param("error", safeError).param("now", AttemptRepository.ts(now)).update();
+                .param("id", id).param("error", safeError).param("now", AttemptRepository.convertTimestamp(now)).update();
     }
 
     private PracticeFeedback map(ResultSet rs, int row) throws SQLException {
@@ -113,11 +113,11 @@ public class PracticeFeedbackRepository {
                 rs.getObject("account_id", UUID.class), PracticeFeedback.Origin.valueOf(rs.getString("origin")),
                 rs.getObject("task_id", UUID.class), rs.getString("request_ref"),
                 PracticeFeedback.Status.valueOf(rs.getString("status")), rs.getString("submission_hash"),
-                feedback == null ? null : read(feedback), read(rs.getString("provenance")), rs.getString("safe_error"),
-                AttemptRepository.instant(rs, "created_at"), AttemptRepository.instant(rs, "completed_at"));
+                feedback == null ? null : readJson(feedback), readJson(rs.getString("provenance")), rs.getString("safe_error"),
+                AttemptRepository.readInstant(rs, "created_at"), AttemptRepository.readInstant(rs, "completed_at"));
     }
 
-    private String write(JsonNode value) {
+    private String writeJson(JsonNode value) {
         try {
             return json.writeValueAsString(value);
         } catch (JsonProcessingException e) {
@@ -125,7 +125,7 @@ public class PracticeFeedbackRepository {
         }
     }
 
-    private JsonNode read(String value) {
+    private JsonNode readJson(String value) {
         try {
             return json.readTree(value);
         } catch (JsonProcessingException e) {

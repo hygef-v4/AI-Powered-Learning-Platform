@@ -8,8 +8,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AssignmentMcpQueryTools implements IMcpToolProvider {
-    private final AssignmentAuthoringService authoring;
-    public AssignmentMcpQueryTools(AssignmentAuthoringService authoring){this.authoring=authoring;}
+    private final AssignmentAuthoringService assignmentAuthoringService;
+    public AssignmentMcpQueryTools(AssignmentAuthoringService assignmentAuthoringService){this.assignmentAuthoringService=assignmentAuthoringService;}
     @Override public List<McpToolDefinition> tools(){return List.of(McpSchemas.read("list_assignments",
             "Tìm bài tập được phép của một lớp hoặc môn. Chọn đúng một classId hoặc subjectId; lọc OPEN cho bài đã giao đang mở.",
             McpSchemas.SCOPE+","+McpSchemas.PAGE+",\"query\":"+McpSchemas.TEXT+",\"status\":{\"enum\":[\"DRAFT\",\"REVIEWED\",\"SCHEDULED\",\"OPEN\",\"CLOSED\",\"RETIRED\"]},\"gradingMode\":{\"enum\":[\"PRACTICE\",\"GRADED\"]}"));}
@@ -18,8 +18,8 @@ public class AssignmentMcpQueryTools implements IMcpToolProvider {
         var in=new McpInput(args);int page=in.page(),size=in.size();if(in.has("classId")==in.has("subjectId"))throw McpInput.invalid();
         var state=in.choice("status",AssignmentStatus.class,null);Set<AssignmentStatus> states=state==null?Set.of():Set.of(state);
         var mode=in.choice("gradingMode",GradingMode.class,null);
-        var result=in.has("classId")?authoring.listForClass(actor,in.uuid("classId"),states,true,in.text("query",null),mode)
-                :authoring.listForSubject(actor,in.uuid("subjectId"),states,true,in.text("query",null),mode);
+        var result=in.has("classId")?assignmentAuthoringService.listForClass(actor,in.uuid("classId"),states,true,in.text("query",null),mode)
+                :assignmentAuthoringService.listForSubject(actor,in.uuid("subjectId"),states,true,in.text("query",null),mode);
         return new McpToolResult(false,McpInput.page(result.items(),page,size));
     }
 }

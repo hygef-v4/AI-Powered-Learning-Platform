@@ -15,9 +15,9 @@ public class AdminDashboardExceptionHandler {
      */
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ProblemDetail> handleApiProblem(ApiException error) {
-        ProblemDetail detail = ProblemDetail.forStatusAndDetail(error.status(), error.getMessage());
-        detail.setProperty("code", error.code());
-        return ResponseEntity.status(error.status()).cacheControl(CacheControl.noStore())
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(error.readStatus(), error.getMessage());
+        detail.setProperty("code", error.readCode());
+        return ResponseEntity.status(error.readStatus()).cacheControl(CacheControl.noStore())
                 .body(detail);
     }
 
@@ -26,7 +26,7 @@ public class AdminDashboardExceptionHandler {
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ProblemDetail> handleUnexpectedError(RuntimeException error) {
-        return handleApiProblem(ApiException.unavailable("DASHBOARD_UNAVAILABLE",
+        return handleApiProblem(ApiException.createUnavailable("DASHBOARD_UNAVAILABLE",
                 "Không đọc được tổng quan hệ thống"));
     }
 }

@@ -109,10 +109,10 @@ public class AssignmentImportService {
     public AssignmentViews.AiDraft startImport(Actor actor, UUID id, List<ImportFile> files, StartImport command) {
         String requestRef = command.requestRef() == null ? "" : command.requestRef().strip();
         if (requestRef.isEmpty() || requestRef.length() > MAX_REQUEST_REF) {
-            throw ApiException.badRequest("REQUEST_REF_INVALID", "Thiếu mã yêu cầu");
+            throw ApiException.createBadRequest("REQUEST_REF_INVALID", "Thiếu mã yêu cầu");
         }
         if (command.provider() != null && command.source() != AiSource.PERSONAL) {
-            throw ApiException.badRequest("AI_SOURCE_INVALID", "Nguồn AI không hợp lệ");
+            throw ApiException.createBadRequest("AI_SOURCE_INVALID", "Nguồn AI không hợp lệ");
         }
         Assignment assignment = transaction.execute(status -> requireImportable(actor, id));
         var existing = drafts.findByRequest(id, requestRef);
@@ -123,9 +123,9 @@ public class AssignmentImportService {
         NormalizedPages normalized = importPageNormalizer.normalizePages(checked);
         UUID draftId = UUID.randomUUID();
         AiPrompt prompt = ExamImportPrompt.buildPrompt(draftId, normalized.pages());
-        List<AiSourceChoice> order = sourceOrder(actor, command, prompt);
+        List<AiSourceChoice> order = orderSources(actor, command, prompt);
         if (order.isEmpty()) {
-            throw ApiException.badRequest("AI_VISION_UNAVAILABLE", VISION_UNAVAILABLE);
+            throw ApiException.createBadRequest("AI_VISION_UNAVAILABLE", VISION_UNAVAILABLE);
         }
         Instant now = clock.instant();
         ObjectNode provenance = JsonNodeFactory.instance.objectNode();
@@ -146,7 +146,7 @@ public class AssignmentImportService {
         transaction.executeWithoutResult(status -> {
             drafts.insert(draft);
             importPages.insertPages(draftId, normalized.pages(), now);
-            audit.success(actor, "ASSIGNMENT_IMPORT_REQUESTED", id, AssignmentAudit.details("draftId", draftId,
+            audit.recordSuccess(actor, "ASSIGNMENT_IMPORT_REQUESTED", id, AssignmentAudit.collectDetails("draftId", draftId,
                     "fileKind", checked.kind().name(), "pageCount", normalized.pages().size(),
                     "totalBytes", checked.totalBytes()));
         });
@@ -168,13 +168,13 @@ public class AssignmentImportService {
                 if (e instanceof ApiException api) {
                     throw api;
                 }
-                return AssignmentAiDraftService.view(drafts.find(draftId).orElseThrow());
+                return AssignmentAiDraftService.view(drafts.findDraft(draftId).orElseThrow());
             }
         }
         AiTaskView submitted = task;
         AiSourceChoice chosen = picked;
         transaction.executeWithoutResult(status -> {
-            ObjectNode next = drafts.find(draftId).orElseThrow().provenance().deepCopy();
+            ObjectNode next = drafts.findDraft(draftId).orElseThrow().provenance().deepCopy();
             next.put("source", chosen.source().name());
             if (chosen.provider() != null) {
                 next.put("provider", chosen.provider().name());
@@ -187,20 +187,20 @@ public class AssignmentImportService {
         if (submitted.state() == AiTaskState.FAILED || submitted.state() == AiTaskState.CANCELLED) {
             failDraft(draftId, submitted.safeError() == null ? "AI không trả kết quả" : submitted.safeError());
         }
-        return AssignmentAiDraftService.view(drafts.find(draftId).orElseThrow());
+        return AssignmentAiDraftService.view(drafts.findDraft(draftId).orElseThrow());
     }
 
     private Assignment requireImportable(Actor actor, UUID id) {
-        Assignment assignment = support.manageable(actor, id, "ASSIGNMENT_IMPORT_REQUESTED");
+        Assignment assignment = support.loadManageable(actor, id, "ASSIGNMENT_IMPORT_REQUESTED");
         access.requireOwnerWritable(assignment);
-        if (!assignment.editable()) {
-            throw ApiException.conflict("ASSIGNMENT_NOT_EDITABLE", "Bài đã phát hành, không nhập đề được");
+        if (!assignment.canEdit()) {
+            throw ApiException.createConflict("ASSIGNMENT_NOT_EDITABLE", "Bài đã phát hành, không nhập đề được");
         }
         return assignment;
     }
 
     /** Nguồn chọn đích danh, hoặc thứ tự tự chọn của U06 (đã chỉ còn model đọc được ảnh, BR-U07-100). */
-    private List<AiSourceChoice> sourceOrder(Actor actor, StartImport command, AiPrompt prompt) {
+    private List<AiSourceChoice> orderSources(Actor actor, StartImport command, AiPrompt prompt) {
         if (command.source() != null && command.provider() != null) {
             return List.of(new AiSourceChoice(command.source(), command.provider()));
         }
@@ -217,7 +217,7 @@ public class AssignmentImportService {
         if (draftId == null) {
             return ApplyOutcome.REJECTED;
         }
-        AssignmentAiDraft draft = drafts.find(draftId).orElse(null);
+        AssignmentAiDraft draft = drafts.findDraft(draftId).orElse(null);
         if (draft == null || draft.status() != AssignmentAiDraft.Status.PENDING) {
             importPages.deletePages(draftId);
             return ApplyOutcome.REJECTED;
@@ -287,7 +287,7 @@ public class AssignmentImportService {
      * Bản nháp nhập đề READY: thêm {@code proposal.previews} (id khối → link tải 5 phút) cho hình đã cắt chưa gắn,
      * để màn xem trước hiện được hình (FR-IMP-05.1). Không lưu; mỗi lần đọc cấp link mới.
      */
-    static AssignmentViews.AiDraft withPreviews(AssignmentViews.AiDraft view, Actor actor, IArtifact artifacts) {
+    static AssignmentViews.AiDraft attachPreviews(AssignmentViews.AiDraft view, Actor actor, IArtifact artifacts) {
         if (artifacts == null || !"READY".equals(view.status()) || !isImport(view.proposal())) {
             return view;
         }
@@ -313,15 +313,15 @@ public class AssignmentImportService {
     AssignmentViews.Detail applyImport(Actor actor, UUID id, UUID draftId, AssignmentCommands.ApplyDraft command) {
         String placement = command.placement() == null ? "REPLACE" : command.placement();
         if (!"REPLACE".equals(placement) && !"APPEND".equals(placement)) {
-            throw ApiException.badRequest("IMPORT_PLACEMENT_INVALID", "Cách ghi đề không hợp lệ");
+            throw ApiException.createBadRequest("IMPORT_PLACEMENT_INVALID", "Cách ghi đề không hợp lệ");
         }
         try {
             return transaction.execute(status -> {
                 Assignment current = support.lockEditable(actor, id, command.version(), "ASSIGNMENT_IMPORT_APPLIED");
-                AssignmentAiDraft draft = drafts.find(draftId).filter(d -> d.assignmentId().equals(id))
-                        .orElseThrow(() -> ApiException.notFound("AI_DRAFT_NOT_FOUND"));
+                AssignmentAiDraft draft = drafts.findDraft(draftId).filter(d -> d.assignmentId().equals(id))
+                        .orElseThrow(() -> ApiException.createNotFound("AI_DRAFT_NOT_FOUND"));
                 if (draft.status() != AssignmentAiDraft.Status.READY || !isImport(draft.proposal())) {
-                    throw ApiException.conflict("AI_DRAFT_NOT_READY", "Đề xuất chưa sẵn sàng hoặc đã xử lý");
+                    throw ApiException.createConflict("AI_DRAFT_NOT_READY", "Đề xuất chưa sẵn sàng hoặc đã xử lý");
                 }
                 DocumentModel imported = readDocument(draft.proposal().path("document"));
                 List<DocumentBlock> blocks = new ArrayList<>();
@@ -335,17 +335,17 @@ public class AssignmentImportService {
                 AssignmentViews.Detail detail = assignmentAuthoringService.saveImportedSkeleton(actor, id,
                         command.version(), skeleton, title);
                 if (drafts.markApplied(draftId, clock.instant()) != 1) {
-                    throw ApiException.conflict("AI_DRAFT_NOT_READY", "Đề xuất đã được xử lý");
+                    throw ApiException.createConflict("AI_DRAFT_NOT_READY", "Đề xuất đã được xử lý");
                 }
-                audit.success(actor, "ASSIGNMENT_IMPORT_APPLIED", id, AssignmentAudit.details("draftId", draftId,
+                audit.recordSuccess(actor, "ASSIGNMENT_IMPORT_APPLIED", id, AssignmentAudit.collectDetails("draftId", draftId,
                         "placement", placement, "blockCount", imported.blocks().size(),
                         "imageCount", draft.proposal().path("counts").path("images").asInt(0),
                         "replacedTitle", title != null && !title.isBlank()));
                 return detail;
             });
         } catch (ApiException e) {
-            if ("FILE_REF_EXPIRED".equals(e.code()) || "FILE_REF_INVALID".equals(e.code())) {
-                throw ApiException.conflict("AI_DRAFT_EXPIRED",
+            if ("FILE_REF_EXPIRED".equals(e.readCode()) || "FILE_REF_INVALID".equals(e.readCode())) {
+                throw ApiException.createConflict("AI_DRAFT_EXPIRED",
                         "Hình trong bản nhập đã quá hạn; hãy nhập lại tệp đề");
             }
             throw e;
@@ -356,11 +356,11 @@ public class AssignmentImportService {
         try {
             DocumentModel document = json.treeToValue(node, DocumentModel.class);
             if (document == null || document.blocks() == null || document.blocks().isEmpty()) {
-                throw ApiException.conflict("AI_DRAFT_INVALID", "Bản nhập không có nội dung");
+                throw ApiException.createConflict("AI_DRAFT_INVALID", "Bản nhập không có nội dung");
             }
             return document;
         } catch (JsonProcessingException e) {
-            throw ApiException.conflict("AI_DRAFT_INVALID", "Bản nhập không đọc được");
+            throw ApiException.createConflict("AI_DRAFT_INVALID", "Bản nhập không đọc được");
         }
     }
 

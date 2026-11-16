@@ -27,7 +27,7 @@ public class ImportPageRepository {
                             + ":textHint, :createdAt)")
                     .param("draftId", draftId).param("pageNo", page.pageNo()).param("mediaType", page.mediaType())
                     .param("width", page.width()).param("height", page.height()).param("bytes", page.bytes())
-                    .param("textHint", page.textHint()).param("createdAt", AssignmentRepository.ts(now))
+                    .param("textHint", page.textHint()).param("createdAt", AssignmentRepository.convertTimestamp(now))
                     .update();
         }
     }
@@ -49,7 +49,7 @@ public class ImportPageRepository {
 
     public int deletePagesOlderThan(Instant cutoff) {
         return jdbc.sql("delete from assignment_import_pages where created_at < :cutoff")
-                .param("cutoff", AssignmentRepository.ts(cutoff)).update();
+                .param("cutoff", AssignmentRepository.convertTimestamp(cutoff)).update();
     }
 
     private ImportPage map(ResultSet rs, int row) throws SQLException {

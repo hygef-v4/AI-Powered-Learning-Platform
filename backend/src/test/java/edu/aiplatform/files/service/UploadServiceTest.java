@@ -83,7 +83,7 @@ class UploadServiceTest {
         FileRefSigner.Payload payload = signer.verify(result.fileRef()).orElseThrow();
         assertThat(payload.ownerAccountId()).isEqualTo(teacher.accountId());
         assertThat(payload.sha256()).hasSize(64);
-        assertThat(storage.metadata(payload.fileId())).isPresent();
+        assertThat(storage.loadMetadata(payload.fileId())).isPresent();
         assertThat(dir.resolve("tmp")).isEmptyDirectory();
     }
 
@@ -123,7 +123,7 @@ class UploadServiceTest {
 
         assertThatThrownBy(() -> service.upload(teacher, ArtifactPurpose.DOCUMENT_IMAGE, lying))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
-        verify(storage, never()).put(any(), any(), any());
+        verify(storage, never()).putFile(any(), any(), any());
     }
 
     @Test
@@ -131,7 +131,7 @@ class UploadServiceTest {
         String mediaType = service.inspectFile(teacher, ArtifactPurpose.ASSIGNMENT_IMPORT, "de.pdf", TestFiles.PDF);
 
         assertThat(mediaType).isEqualTo("application/pdf");
-        verify(storage, never()).put(any(), any(), any());
+        verify(storage, never()).putFile(any(), any(), any());
         assertThat(dir.resolve("tmp")).isEmptyDirectory();
     }
 
@@ -151,7 +151,7 @@ class UploadServiceTest {
     void examImportPurposeCannotBeStored() {
         assertThatThrownBy(() -> service.upload(teacher, ArtifactPurpose.ASSIGNMENT_IMPORT, upload("a.png", TestFiles.PNG)))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.BAD_REQUEST);
-        verify(storage, never()).put(any(), any(), any());
+        verify(storage, never()).putFile(any(), any(), any());
     }
 
     @Test
@@ -164,7 +164,7 @@ class UploadServiceTest {
     @Test
     void reportsUnavailableWhenStorageIsDown() {
         IStorage down = mock(IStorage.class);
-        when(down.available()).thenReturn(false);
+        when(down.isAvailable()).thenReturn(false);
         FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null,
                 dir.resolve("tmp").toString(), null, null, null, null, null, null, null);
         UploadService offline = new UploadService(authorization, new PurposePolicy(settings), new ContentInspector(),
@@ -176,11 +176,11 @@ class UploadServiceTest {
 
     @Test
     void enqueuesCleanupWhenDeletingAPartialFileKeepsFailing() {
-        doThrow(new StorageUnavailableException("down", null)).when(storage).delete(anyString());
+        doThrow(new StorageUnavailableException("down", null)).when(storage).deleteFile(anyString());
 
-        service.compensate("local-00000000-0000-0000-0000-000000000000");
+        service.compensateUpload("local-00000000-0000-0000-0000-000000000000");
 
-        verify(storage, times(UploadService.DELETE_ATTEMPTS)).delete(anyString());
+        verify(storage, times(UploadService.DELETE_ATTEMPTS)).deleteFile(anyString());
         verify(jobs).enqueue(eq(JobTypes.DRIVE_CLEANUP), anyMap(), anyString());
     }
 

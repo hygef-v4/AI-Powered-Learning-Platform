@@ -30,7 +30,7 @@ public final class BackupDecryptTool {
         var privateKey = BackupEncryptor.parsePrivateKey(Files.readString(Path.of(args[1])));
         try (InputStream in = Files.newInputStream(Path.of(args[0]));
              OutputStream out = Files.newOutputStream(Path.of(args[2]))) {
-            BackupEncryptor.decrypt(in, out, privateKey);
+            BackupEncryptor.decryptArchive(in, out, privateKey);
         }
         System.out.println("Đã giải mã " + args[0] + " -> " + args[2]);
     }

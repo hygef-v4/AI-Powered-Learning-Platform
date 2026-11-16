@@ -22,31 +22,31 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 public class QuizzesExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public ProblemDetail api(ApiException failure) {
-        ProblemDetail result = problem(failure.status(), failure.code(), failure.getMessage());
+    public ProblemDetail describeApiError(ApiException failure) {
+        ProblemDetail result = buildProblem(failure.readStatus(), failure.readCode(), failure.getMessage());
         if (failure instanceof RuleViolationException invalid) {
-            result.setProperty("violations", invalid.violations());
+            result.setProperty("violations", invalid.listViolations());
         }
         return result;
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class, MissingServletRequestPartException.class})
-    public ProblemDetail invalid(Exception failure) {
-        return problem(HttpStatus.BAD_REQUEST, "QUESTION_REQUEST_INVALID", "JSON, tham số hoặc tệp không hợp lệ");
+    public ProblemDetail describeInvalidRequest(Exception failure) {
+        return buildProblem(HttpStatus.BAD_REQUEST, "QUESTION_REQUEST_INVALID", "JSON, tham số hoặc tệp không hợp lệ");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ProblemDetail integrity(DataIntegrityViolationException failure) {
-        return problem(HttpStatus.CONFLICT, "QUESTION_DATA_CONFLICT", "Dữ liệu câu hỏi đã thay đổi, vui lòng tải lại");
+    public ProblemDetail describeIntegrityViolation(DataIntegrityViolationException failure) {
+        return buildProblem(HttpStatus.CONFLICT, "QUESTION_DATA_CONFLICT", "Dữ liệu câu hỏi đã thay đổi, vui lòng tải lại");
     }
 
     @ExceptionHandler(DataAccessException.class)
-    public ProblemDetail storage(DataAccessException failure) {
-        return problem(HttpStatus.SERVICE_UNAVAILABLE, "SYSTEM_BUSY", "Chưa truy cập được dữ liệu, vui lòng thử lại");
+    public ProblemDetail describeStorageError(DataAccessException failure) {
+        return buildProblem(HttpStatus.SERVICE_UNAVAILABLE, "SYSTEM_BUSY", "Chưa truy cập được dữ liệu, vui lòng thử lại");
     }
 
-    private static ProblemDetail problem(HttpStatus status, String code, String detail) {
+    private static ProblemDetail buildProblem(HttpStatus status, String code, String detail) {
         ProblemDetail result = ProblemDetail.forStatusAndDetail(status, detail);
         result.setProperty("code", code);
         return result;

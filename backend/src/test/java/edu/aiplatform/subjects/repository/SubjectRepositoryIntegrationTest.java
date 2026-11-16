@@ -268,7 +268,7 @@ class SubjectRepositoryIntegrationTest {
     }
 
     private Subject subject(String code, String name, UUID managerId) {
-        return Subject.create(UUID.randomUUID(), code, name, "Description", managerId, CREATED);
+        return Subject.createSubject(UUID.randomUUID(), code, name, "Description", managerId, CREATED);
     }
 
     @Test
@@ -664,7 +664,7 @@ class SubjectRepositoryIntegrationTest {
                                                 "New", "Description", 1L)))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("SUBJECT_VERSION_CONFLICT"));
+                        error -> assertThat(error.readCode()).isEqualTo("SUBJECT_VERSION_CONFLICT"));
         verify(audit, times(2)).record(any());
     }
 
@@ -709,7 +709,7 @@ class SubjectRepositoryIntegrationTest {
                                 new SubjectCommandService.Create("CMD-RACE", "Name", null, null));
                         return "SUCCESS";
                     } catch (ApiException error) {
-                        return error.code();
+                        return error.readCode();
                     }
                 };
         try {
@@ -923,7 +923,7 @@ class SubjectRepositoryIntegrationTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         error ->
-                                assertThat(error.code())
+                                assertThat(error.readCode())
                                         .isEqualTo("SUBJECT_ISOLATION_UNSUPPORTED"));
     }
 
@@ -953,7 +953,7 @@ class SubjectRepositoryIntegrationTest {
                                                                                                                 150)));
                                                         return "UNEXPECTED_SUCCESS";
                                                     } catch (ApiException expected) {
-                                                        return expected.code();
+                                                        return expected.readCode();
                                                     }
                                                 });
                                 try {
@@ -990,7 +990,7 @@ class SubjectRepositoryIntegrationTest {
                                                 SubjectStatus.ARCHIVED, 1L)))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("SUBJECT_CLASSES_UNAVAILABLE"));
+                        error -> assertThat(error.readCode()).isEqualTo("SUBJECT_CLASSES_UNAVAILABLE"));
         assertThat(subjectRepository.findById(original.id())).contains(original);
         verifyNoInteractions(audit);
     }
@@ -1069,7 +1069,7 @@ class SubjectRepositoryIntegrationTest {
                                                     });
                                     return "UNEXPECTED_SUCCESS";
                                 } catch (ApiException expected) {
-                                    return expected.code();
+                                    return expected.readCode();
                                 }
                             });
             allowArchive.countDown();
@@ -1149,7 +1149,7 @@ class SubjectRepositoryIntegrationTest {
                     new SubjectStatusService.ChangeStatus(SubjectStatus.ARCHIVED, 1L));
             return "SUCCESS";
         } catch (ApiException expected) {
-            return expected.code();
+            return expected.readCode();
         }
     }
 
@@ -1192,7 +1192,7 @@ class SubjectRepositoryIntegrationTest {
                                                                         null))))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        error -> assertThat(error.code()).isEqualTo("SUBJECT_FORBIDDEN"));
+                        error -> assertThat(error.readCode()).isEqualTo("SUBJECT_FORBIDDEN"));
         JdbcTemplate jdbc = new JdbcTemplate(dataSource);
         assertThat(
                         jdbc.queryForObject(

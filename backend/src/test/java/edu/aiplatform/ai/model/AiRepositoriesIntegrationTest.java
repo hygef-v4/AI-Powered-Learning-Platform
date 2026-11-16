@@ -102,7 +102,7 @@ class AiRepositoriesIntegrationTest {
     @Test
     void personalKeysCanBeManyPerProviderAndKeepCiphertext() {
         AiConnectionRepository repo = new AiConnectionRepository(jdbc);
-        AiConnection c = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.CLAUDE,
+        AiConnection c = AiConnection.createConnection(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.CLAUDE,
                 "claude-sonnet-5-5", new EncryptedKey(new byte[] {1, 2, 3}, new byte[] {9}, 1), "3kQf", NOW);
         repo.insert(c);
         assertThat(repo.findPersonal(account, AiProvider.CLAUDE)).hasValueSatisfying(found -> {
@@ -110,12 +110,12 @@ class AiRepositoriesIntegrationTest {
             assertThat(found.keyVersion()).isEqualTo(1);
         });
         // Nhiều khóa cá nhân cho cùng một provider (yêu cầu 2026-11-05).
-        AiConnection second = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.CLAUDE,
+        AiConnection second = AiConnection.createConnection(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.CLAUDE,
                 "claude-sonnet-5-5", new EncryptedKey(new byte[] {1}, new byte[] {9}, 1), "zzzz", NOW.plusSeconds(1));
         repo.insert(second);
         assertThat(repo.listPersonal(account)).extracting(AiConnection::id).containsExactly(c.id(), second.id());
-        assertThat(repo.update(c.revoked(NOW))).isTrue();
-        assertThat(repo.update(c.revoked(NOW))).as("version cũ").isFalse();
+        assertThat(repo.updateConnection(c.markRevoked(NOW))).isTrue();
+        assertThat(repo.updateConnection(c.markRevoked(NOW))).as("version cũ").isFalse();
         assertThat(repo.findPersonal(account, AiProvider.CLAUDE)).hasValueSatisfying(found ->
                 assertThat(found.id()).isEqualTo(second.id()));
     }
@@ -123,13 +123,13 @@ class AiRepositoriesIntegrationTest {
     @Test
     void keyCiphertextIsReplacedOnlyWhileItIsStillTheExpectedOne() {
         AiConnectionRepository repo = new AiConnectionRepository(jdbc);
-        AiConnection legacy = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.OPENAI,
+        AiConnection legacy = AiConnection.createConnection(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.OPENAI,
                 "gpt-4.1-mini", new EncryptedKey(new byte[] {7, 7}, new byte[] {1}, 1), "abcd", NOW);
-        AiConnection revoked = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.OPENAI,
+        AiConnection revoked = AiConnection.createConnection(UUID.randomUUID(), Scope.PERSONAL, account, AiProvider.OPENAI,
                 "gpt-4.1-mini", new EncryptedKey(new byte[] {8}, new byte[] {1}, 1), "efgh", NOW);
         repo.insert(legacy);
         repo.insert(revoked);
-        repo.update(revoked.revoked(NOW));
+        repo.updateConnection(revoked.markRevoked(NOW));
 
         assertThat(repo.listWithKey()).extracting(AiConnection::id).contains(legacy.id()).doesNotContain(revoked.id());
         EncryptedKey resealed = new EncryptedKey(new byte[] {5, 5, 5}, new byte[] {2}, 2);
@@ -147,8 +147,8 @@ class AiRepositoriesIntegrationTest {
     void multipleInstitutionalKeysPreferActiveThenCreationTimeAndId() {
         AiConnectionRepository repo = new AiConnectionRepository(jdbc);
         AiConnection disabledOld = institutional(1, AiProvider.CLAUDE, NOW.minusSeconds(60))
-                .withStatus(Status.DISABLED, NOW);
-        AiConnection revokedOld = institutional(2, AiProvider.CLAUDE, NOW.minusSeconds(120)).revoked(NOW);
+                .changeStatus(Status.DISABLED, NOW);
+        AiConnection revokedOld = institutional(2, AiProvider.CLAUDE, NOW.minusSeconds(120)).markRevoked(NOW);
         AiConnection earlierId = institutional(3, AiProvider.CLAUDE, NOW);
         AiConnection laterId = institutional(4, AiProvider.CLAUDE, NOW);
         AiConnection newest = institutional(5, AiProvider.CLAUDE, NOW.plusSeconds(60));
@@ -168,19 +168,19 @@ class AiRepositoriesIntegrationTest {
         assertThat(repo.listInstitutional()).extracting(AiConnection::id)
                 .containsExactly(disabledOld.id(), earlierId.id(), laterId.id(), newest.id(), otherProvider.id());
 
-        assertThat(repo.update(earlierId.withStatus(Status.DISABLED, NOW))).isTrue();
+        assertThat(repo.updateConnection(earlierId.changeStatus(Status.DISABLED, NOW))).isTrue();
         assertThat(repo.findInstitutional(AiProvider.CLAUDE)).hasValueSatisfying(found ->
                 assertThat(found.id()).isEqualTo(laterId.id()));
-        assertThat(repo.update(laterId.withStatus(Status.DISABLED, NOW))).isTrue();
+        assertThat(repo.updateConnection(laterId.changeStatus(Status.DISABLED, NOW))).isTrue();
         assertThat(repo.findInstitutional(AiProvider.CLAUDE)).hasValueSatisfying(found ->
                 assertThat(found.id()).isEqualTo(newest.id()));
-        assertThat(repo.update(newest.withStatus(Status.DISABLED, NOW.plusSeconds(60)))).isTrue();
+        assertThat(repo.updateConnection(newest.changeStatus(Status.DISABLED, NOW.plusSeconds(60)))).isTrue();
         assertThat(repo.findInstitutional(AiProvider.CLAUDE)).hasValueSatisfying(found ->
                 assertThat(found.id()).isEqualTo(disabledOld.id()));
     }
 
     private AiConnection institutional(long id, AiProvider provider, Instant createdAt) {
-        return AiConnection.create(new UUID(0, id), Scope.INSTITUTIONAL, null, provider, "test-model",
+        return AiConnection.createConnection(new UUID(0, id), Scope.INSTITUTIONAL, null, provider, "test-model",
                 new EncryptedKey(new byte[] {1, 2, 3}, new byte[] {9}, 1), "hint", createdAt);
     }
 
@@ -192,7 +192,7 @@ class AiRepositoriesIntegrationTest {
                 "{\"system\":\"s\",\"user\":\"u\"}", "{\"type\":\"object\"}", null, 500, 700L, LocalDate.of(2026, 10, 30), null, null,
                 null, false, null, NOW, null, 0);
         tasks.insert(task);
-        assertThat(tasks.update(task.moveTo(AiTaskState.CANCELLED, NOW))).isTrue();
+        assertThat(tasks.updateTask(task.moveTo(AiTaskState.CANCELLED, NOW))).isTrue();
         assertThat(tasks.listUnhandled(NOW.plusSeconds(1))).extracting(AiTask::id)
                 .containsExactly(task.id());
         assertThat(tasks.listUnhandled(NOW)).isEmpty();
@@ -209,7 +209,7 @@ class AiRepositoriesIntegrationTest {
         tasks.lockActor(account);
         assertThat(tasks.countActive(account)).isEqualTo(1);
         AiTask locked = tasks.lock(task.id()).orElseThrow();
-        assertThat(tasks.update(locked.moveTo(AiTaskState.RUNNING, NOW))).isTrue();
+        assertThat(tasks.updateTask(locked.moveTo(AiTaskState.RUNNING, NOW))).isTrue();
         assertThat(tasks.findByRequestRef(task.requestRef())).hasValueSatisfying(t -> {
             assertThat(t.state()).isEqualTo(AiTaskState.RUNNING);
             assertThat(t.inputPayload()).contains("system");
@@ -226,7 +226,7 @@ class AiRepositoriesIntegrationTest {
         quota.adjust(key, day, -700, 650);
         assertThat(quota.lockWindow(key, day).usedTokens()).isEqualTo(650);
         quota.upsertTeacherQuota(account, 0, account, NOW);
-        assertThat(quota.teacherQuota(account)).hasValueSatisfying(t -> assertThat(t.dayTokens()).isZero());
+        assertThat(quota.findTeacherQuota(account)).hasValueSatisfying(t -> assertThat(t.dayTokens()).isZero());
         assertThat(quota.deleteTeacherQuota(account)).isEqualTo(1);
 
         AiUsageRepository usage = new AiUsageRepository(jdbc);
@@ -237,9 +237,9 @@ class AiRepositoriesIntegrationTest {
                 "record_grading_proposal", "OK", null, null, null, null, UsageMeasurement.UNAVAILABLE, NOW));
         assertThat(usage.listOwn(account, null, null, null, 0, 10)).hasSize(2);
         assertThat(usage.countOwn(account, AiUsageRecord.Source.MCP, null, null)).isEqualTo(1);
-        assertThat(usage.totalsOwn(account, NOW.minusSeconds(60), NOW.plusSeconds(60)).get(AiUsageRecord.Source.SHARED))
+        assertThat(usage.sumOwnTotals(account, NOW.minusSeconds(60), NOW.plusSeconds(60)).get(AiUsageRecord.Source.SHARED))
                 .containsExactly(1, 650);
-        assertThat(usage.sharedSummary(NOW.minusSeconds(60), NOW.plusSeconds(60)))
+        assertThat(usage.listSharedSummary(NOW.minusSeconds(60), NOW.plusSeconds(60)))
                 .anySatisfy(r -> assertThat(r.tokens()).isEqualTo(650));
 
         McpCredentialRepository credentials = new McpCredentialRepository(jdbc);
@@ -251,7 +251,7 @@ class AiRepositoriesIntegrationTest {
         assertThat(credentials.revoke(credential.id(), NOW)).isEqualTo(1);
         assertThat(credentials.revoke(credential.id(), NOW)).isZero();
         assertThat(credentials.listOwn(account)).singleElement()
-                .satisfies(c -> assertThat(c.status(NOW)).isEqualTo(McpCredential.Status.REVOKED));
+                .satisfies(c -> assertThat(c.resolveStatus(NOW)).isEqualTo(McpCredential.Status.REVOKED));
     }
 
     @Test
@@ -262,14 +262,14 @@ class AiRepositoriesIntegrationTest {
 
         assertThat(credentials.findByHash(legacy.tokenHash())).hasValue(legacy);
         assertThat(credentials.findSecret(legacy.id())).isEmpty();
-        assertThat(credentials.revealableIds(account)).isEmpty();
+        assertThat(credentials.listRevealableIds(account)).isEmpty();
         credentials.saveSecret(legacy.id(), new EncryptedKey(new byte[] {4, 5, 6}, new byte[] {7, 8}, 2));
         assertThat(credentials.findSecret(legacy.id())).hasValueSatisfying(secret -> {
             assertThat(secret.ciphertext()).containsExactly(4, 5, 6);
             assertThat(secret.iv()).containsExactly(7, 8);
             assertThat(secret.version()).isEqualTo(2);
         });
-        assertThat(credentials.revealableIds(account)).containsExactly(legacy.id());
+        assertThat(credentials.listRevealableIds(account)).containsExactly(legacy.id());
         assertThat(credentials.findByHash(legacy.tokenHash())).hasValue(legacy);
     }
 

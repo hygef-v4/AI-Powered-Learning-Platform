@@ -78,7 +78,7 @@ public record Material(
             throw new IllegalArgumentException("Invalid material information");
     }
 
-    public Material revise(
+    public Material reviseMaterial(
             String title,
             String description,
             int order,

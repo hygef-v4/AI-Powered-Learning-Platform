@@ -45,7 +45,7 @@ public class PurposePolicy {
         return UPLOADERS.get(purpose).contains(role);
     }
 
-    public PurposeLimits limits(ArtifactPurpose purpose) {
+    public PurposeLimits resolveLimits(ArtifactPurpose purpose) {
         int cap = HARD_CAP_MB.get(purpose);
         SettingKey<Integer> sizeKey = switch (purpose) {
             case MATERIAL -> MATERIAL_MAX_MB;

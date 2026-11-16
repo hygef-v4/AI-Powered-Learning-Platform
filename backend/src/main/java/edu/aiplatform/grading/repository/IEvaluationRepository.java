@@ -23,7 +23,7 @@ public interface IEvaluationRepository {
     List<Evaluation> findForClass(UUID classId);
 
     /** Persists the evaluation and returns its stored state. */
-    Evaluation save(Evaluation evaluation);
+    Evaluation saveEvaluation(Evaluation evaluation);
 
     /** Locks the identity used to coordinate evaluations for a submission subject. */
     void lockIdentity(UUID classId, UUID assignmentId, UUID subjectId);

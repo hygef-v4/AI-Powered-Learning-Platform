@@ -62,15 +62,15 @@ public class AiUsageService {
     public UsagePage listOwn(Actor actor, Source source, Instant from, Instant to, int page, int size) {
         access.require(actor, Actions.AI_PERSONAL);
         if (page < 0 || size < 1 || size > MAX_PAGE) {
-            throw ApiException.badRequest("AI_USAGE_PAGE_INVALID", "Trang không hợp lệ (tối đa 100 dòng)");
+            throw ApiException.createBadRequest("AI_USAGE_PAGE_INVALID", "Trang không hợp lệ (tối đa 100 dòng)");
         }
         if (from != null && to != null && from.isAfter(to)) {
-            throw ApiException.badRequest("AI_USAGE_RANGE_INVALID", "Ngày bắt đầu phải trước ngày kết thúc");
+            throw ApiException.createBadRequest("AI_USAGE_RANGE_INVALID", "Ngày bắt đầu phải trước ngày kết thúc");
         }
         long total = repository.countOwn(actor.accountId(), source, from, to);
         List<AiUsageRecord> items = total == 0 ? List.of()
                 : repository.listOwn(actor.accountId(), source, from, to, page * size, size);
-        Map<Source, long[]> totals = repository.totalsOwn(actor.accountId(), from, to);
+        Map<Source, long[]> totals = repository.sumOwnTotals(actor.accountId(), from, to);
         return new UsagePage(items, page, size, total, totals.getOrDefault(Source.SHARED, new long[2]),
                 totals.getOrDefault(Source.PERSONAL, new long[2]), totals.getOrDefault(Source.MCP, new long[2]));
     }

@@ -44,7 +44,7 @@ public class Announcement {
 
     public Announcement() {}
 
-    public static Announcement create(
+    public static Announcement createAnnouncement(
             UUID classId,
             UUID actor,
             String title,
@@ -53,7 +53,7 @@ public class Announcement {
             boolean email,
             Instant now) {
         if (email && !important)
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "ANNOUNCEMENT_EMAIL_INVALID", "Chỉ thông báo quan trọng mới có email");
         var announcement = new Announcement();
         announcement.id = UUID.randomUUID();
@@ -78,7 +78,7 @@ public class Announcement {
         updatedAt = now;
     }
 
-    public void delete(UUID actor, Instant now) {
+    public void markDeleted(UUID actor, Instant now) {
         status = Status.DELETED;
         deletedBy = actor;
         deletedAt = now;
@@ -89,7 +89,7 @@ public class Announcement {
     private static String requireTextLength(String text, int max) {
         String value = text == null ? "" : text.strip();
         if (value.isEmpty() || value.codePointCount(0, value.length()) > max)
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "ANNOUNCEMENT_INVALID", "Kiểm tra độ dài tiêu đề và nội dung");
         return value;
     }
@@ -97,7 +97,7 @@ public class Announcement {
     private static String cleanTitle(String title) {
         String value = requireTextLength(title, 200);
         if (!Jsoup.isValid(value, Safelist.none()))
-            throw ApiException.badRequest("ANNOUNCEMENT_INVALID", "Tiêu đề phải là văn bản thuần");
+            throw ApiException.createBadRequest("ANNOUNCEMENT_INVALID", "Tiêu đề phải là văn bản thuần");
         return value;
     }
 

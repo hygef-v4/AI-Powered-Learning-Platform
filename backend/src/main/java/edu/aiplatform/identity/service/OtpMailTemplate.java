@@ -10,7 +10,7 @@ final class OtpMailTemplate {
     private OtpMailTemplate() {
     }
 
-    static MailMessage build(String to, OtpPurpose purpose, String code, Duration ttl) {
+    static MailMessage buildMessage(String to, OtpPurpose purpose, String code, Duration ttl) {
         String action = purpose == OtpPurpose.ACTIVATION ? "kích hoạt tài khoản" : "đặt lại mật khẩu";
         String subject = "Mã xác thực " + action + " - Nền tảng học tập";
         long minutes = ttl.toMinutes();

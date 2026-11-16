@@ -81,7 +81,7 @@ class PasswordCompletionTest {
 
         assertThatThrownBy(() -> activation.complete("t", "abc"))
                 .isInstanceOfSatisfying(PasswordPolicyException.class,
-                        e -> assertThat(e.violations()).contains(PasswordPolicy.Violation.TOO_SHORT));
+                        e -> assertThat(e.listViolations()).contains(PasswordPolicy.Violation.TOO_SHORT));
         verify(tickets, never()).take(anyString(), any(), any());
         verify(accounts, never()).activate(any(), anyString(), any());
     }
@@ -95,7 +95,7 @@ class PasswordCompletionTest {
 
         assertThatThrownBy(() -> reset.complete("t", "matkhaumoi9"))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo(ActivationService.TICKET_EXPIRED));
+                        e -> assertThat(e.readCode()).isEqualTo(ActivationService.TICKET_EXPIRED));
         verify(accounts, never()).updatePassword(any(), anyString(), any());
         assertThat(audits).isEmpty();
     }
@@ -106,7 +106,7 @@ class PasswordCompletionTest {
 
         assertThatThrownBy(() -> activation.complete("t", "hocbai2026"))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo(ActivationService.TICKET_EXPIRED));
+                        e -> assertThat(e.readCode()).isEqualTo(ActivationService.TICKET_EXPIRED));
         assertThatThrownBy(() -> reset.complete("t", "hocbai2026")).isInstanceOf(ApiException.class);
     }
 
@@ -130,7 +130,7 @@ class PasswordCompletionTest {
 
         verify(accounts).updatePassword(eq(active.id()), anyString(), eq(NOW));
         verify(sessions, times(2)).deleteAll(active.id());
-        verify(otpChallenges).delete(active.id(), OtpPurpose.PASSWORD_RESET);
+        verify(otpChallenges).deleteChallenge(active.id(), OtpPurpose.PASSWORD_RESET);
         verify(auth, never()).startSession(any());
         assertThat(audits).extracting(AuditEvent::action).containsExactly("PASSWORD_RESET");
     }

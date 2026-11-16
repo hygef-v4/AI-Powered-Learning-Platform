@@ -86,11 +86,11 @@ class RequestThrottleIntegrationTest {
     void passwordChangeIsBlockedPerAccountAfterFailures() {
         UUID account = UUID.randomUUID();
         for (int i = 0; i < PASSWORD_CHANGE_FAILURES; i++) {
-            assertThat(throttle.passwordChangeAllowed(account)).isTrue();
+            assertThat(throttle.isPasswordChangeAllowed(account)).isTrue();
             throttle.recordPasswordChangeFailure(account);
         }
-        assertThat(throttle.passwordChangeAllowed(account)).isFalse();
-        assertThat(throttle.passwordChangeAllowed(UUID.randomUUID())).isTrue();
+        assertThat(throttle.isPasswordChangeAllowed(account)).isFalse();
+        assertThat(throttle.isPasswordChangeAllowed(UUID.randomUUID())).isTrue();
     }
 
     @Test
@@ -105,7 +105,7 @@ class RequestThrottleIntegrationTest {
 
         // Email chỉ nằm trong khóa ở dạng băm.
         Set<String> keys = redis.keys(RequestThrottle.PREFIX + "*");
-        assertThat(keys).contains(RequestThrottle.PREFIX + "otp-email:" + Hashing.sha256Hex("taivm@fpt.edu.vn"));
+        assertThat(keys).contains(RequestThrottle.PREFIX + "otp-email:" + Hashing.hashSha256Hex("taivm@fpt.edu.vn"));
         assertThat(keys).noneMatch(k -> k.contains("@"));
     }
 

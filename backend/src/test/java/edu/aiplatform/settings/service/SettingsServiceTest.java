@@ -78,7 +78,7 @@ class SettingsServiceTest {
     void onlyAdminsSeeSettingsAndDenialsAreAudited() {
         Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
 
-        assertThatThrownBy(() -> service.overview(teacher)).isInstanceOf(ApiException.class)
+        assertThatThrownBy(() -> service.loadOverview(teacher)).isInstanceOf(ApiException.class)
                 .extracting("status").isEqualTo(HttpStatus.FORBIDDEN);
         ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(event.capture());
@@ -89,7 +89,7 @@ class SettingsServiceTest {
     void deniedWhenAuthorizationFailsEvenForAdminRole() {
         when(authorization.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.deny("disabled"));
 
-        assertThatThrownBy(() -> service.detail(admin, "files.material.maxSizeMb")).isInstanceOf(ApiException.class)
+        assertThatThrownBy(() -> service.loadSetting(admin, "files.material.maxSizeMb")).isInstanceOf(ApiException.class)
                 .extracting("status").isEqualTo(HttpStatus.FORBIDDEN);
     }
 
@@ -98,7 +98,7 @@ class SettingsServiceTest {
         when(repository.findAll()).thenReturn(List.of(row("files.material.maxSizeMb", "20", 3),
                 row("backup.dailyAt", null, 1)));
 
-        SettingsService.SettingsOverview overview = service.overview(admin);
+        SettingsService.SettingsOverview overview = service.loadOverview(admin);
 
         assertThat(overview.groups()).extracting(SettingsService.GroupView::group)
                 .containsExactly(SettingGroup.FILES, SettingGroup.BACKUP);
@@ -111,9 +111,9 @@ class SettingsServiceTest {
     @Test
     void updateWithStaleVersionIsAConflict() {
         when(repository.findAll()).thenReturn(List.of(row("files.material.maxSizeMb", "50", 4)));
-        when(repository.update(eq("files.material.maxSizeMb"), eq("20"), eq(3L), any(), any())).thenReturn(0);
+        when(repository.updateSetting(eq("files.material.maxSizeMb"), eq("20"), eq(3L), any(), any())).thenReturn(0);
 
-        assertThatThrownBy(() -> service.update(admin, "files.material.maxSizeMb", objectMapper.valueToTree(20), 3))
+        assertThatThrownBy(() -> service.updateSetting(admin, "files.material.maxSizeMb", objectMapper.valueToTree(20), 3))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.CONFLICT);
         verify(audit, never()).record(any());
     }
@@ -123,13 +123,13 @@ class SettingsServiceTest {
         when(repository.findAll()).thenReturn(List.of());
         when(repository.insert(eq("files.material.maxSizeMb"), eq("FILES"), eq("20"), eq(admin.accountId()), any()))
                 .thenReturn(1);
-        when(repository.find("files.material.maxSizeMb")).thenReturn(Optional.of(row("files.material.maxSizeMb", "20", 1)));
+        when(repository.findSetting("files.material.maxSizeMb")).thenReturn(Optional.of(row("files.material.maxSizeMb", "20", 1)));
 
-        SettingsService.SettingItemView saved = service.update(admin, "files.material.maxSizeMb",
+        SettingsService.SettingItemView saved = service.updateSetting(admin, "files.material.maxSizeMb",
                 objectMapper.valueToTree(20), 0);
 
         assertThat(saved.value().asInt()).isEqualTo(20);
-        verify(repository, never()).update(anyString(), any(), anyLong(), any(), any());
+        verify(repository, never()).updateSetting(anyString(), any(), anyLong(), any(), any());
         ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(event.capture());
         assertThat(event.getValue().details()).containsEntry("before", null).containsEntry("after", "20");
@@ -139,41 +139,41 @@ class SettingsServiceTest {
     void missingRowWithNonZeroVersionOrConcurrentCreateIsAConflict() {
         when(repository.findAll()).thenReturn(List.of());
 
-        assertThatThrownBy(() -> service.update(admin, "files.material.maxSizeMb", objectMapper.valueToTree(20), 2))
+        assertThatThrownBy(() -> service.updateSetting(admin, "files.material.maxSizeMb", objectMapper.valueToTree(20), 2))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.CONFLICT);
         verify(repository, never()).insert(anyString(), anyString(), any(), any(), any());
 
         when(repository.insert(anyString(), anyString(), any(), any(), any())).thenReturn(0);
-        assertThatThrownBy(() -> service.update(admin, "files.material.maxSizeMb", objectMapper.valueToTree(20), 0))
+        assertThatThrownBy(() -> service.updateSetting(admin, "files.material.maxSizeMb", objectMapper.valueToTree(20), 0))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.CONFLICT);
         verify(audit, never()).record(any());
     }
 
     @Test
     void invalidValueIsRejectedWithoutWriting() {
-        assertThatThrownBy(() -> service.update(admin, "files.material.maxSizeMb", objectMapper.valueToTree(80), 1))
+        assertThatThrownBy(() -> service.updateSetting(admin, "files.material.maxSizeMb", objectMapper.valueToTree(80), 1))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.BAD_REQUEST);
-        verify(repository, never()).update(anyString(), any(), anyLong(), any(), any());
+        verify(repository, never()).updateSetting(anyString(), any(), anyLong(), any(), any());
     }
 
     @Test
     void unknownKeyIsNotFound() {
-        assertThatThrownBy(() -> service.update(admin, "khong.co", objectMapper.valueToTree(1), 1))
+        assertThatThrownBy(() -> service.updateSetting(admin, "khong.co", objectMapper.valueToTree(1), 1))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     void successfulUpdateIsAuditedAndVisibleImmediatelyOnThisInstance() {
         SettingKey<Integer> key = new SettingKey<>("files.material.maxSizeMb", Integer.class);
-        when(repository.find("files.material.maxSizeMb")).thenReturn(Optional.of(row("files.material.maxSizeMb", "50", 4)));
+        when(repository.findSetting("files.material.maxSizeMb")).thenReturn(Optional.of(row("files.material.maxSizeMb", "50", 4)));
         assertThat(service.get(key)).contains(50);
 
         when(repository.findAll()).thenReturn(List.of(row("files.material.maxSizeMb", "50", 4)));
-        when(repository.update(eq("files.material.maxSizeMb"), eq("20"), eq(4L), eq(admin.accountId()), any()))
+        when(repository.updateSetting(eq("files.material.maxSizeMb"), eq("20"), eq(4L), eq(admin.accountId()), any()))
                 .thenReturn(1);
-        when(repository.find("files.material.maxSizeMb")).thenReturn(Optional.of(row("files.material.maxSizeMb", "20", 5)));
+        when(repository.findSetting("files.material.maxSizeMb")).thenReturn(Optional.of(row("files.material.maxSizeMb", "20", 5)));
 
-        SettingsService.SettingItemView updated = service.update(admin, "files.material.maxSizeMb",
+        SettingsService.SettingItemView updated = service.updateSetting(admin, "files.material.maxSizeMb",
                 objectMapper.valueToTree(20), 4);
 
         assertThat(updated.version()).isEqualTo(5);
@@ -187,29 +187,29 @@ class SettingsServiceTest {
     @Test
     void valuesAreCachedForThirtySeconds() {
         SettingKey<Integer> key = new SettingKey<>("files.material.maxSizeMb", Integer.class);
-        when(repository.find("files.material.maxSizeMb")).thenReturn(Optional.of(row("files.material.maxSizeMb", "50", 1)));
+        when(repository.findSetting("files.material.maxSizeMb")).thenReturn(Optional.of(row("files.material.maxSizeMb", "50", 1)));
 
         service.get(key);
         clock.advance(Duration.ofSeconds(29));
         service.get(key);
-        verify(repository, times(1)).find("files.material.maxSizeMb");
+        verify(repository, times(1)).findSetting("files.material.maxSizeMb");
 
         clock.advance(Duration.ofSeconds(2));
         service.get(key);
-        verify(repository, times(2)).find("files.material.maxSizeMb");
+        verify(repository, times(2)).findSetting("files.material.maxSizeMb");
     }
 
     @Test
     void staleCacheIsUsedWhenTheDatabaseFailsAndNoCacheMeansUnavailable() {
         SettingKey<LocalTime> time = new SettingKey<>("backup.dailyAt", LocalTime.class);
-        when(repository.find("backup.dailyAt")).thenReturn(Optional.of(row("backup.dailyAt", "\"02:30\"", 2)));
+        when(repository.findSetting("backup.dailyAt")).thenReturn(Optional.of(row("backup.dailyAt", "\"02:30\"", 2)));
         assertThat(service.get(time)).contains(LocalTime.of(2, 30));
 
         clock.advance(Duration.ofMinutes(5));
-        when(repository.find("backup.dailyAt")).thenThrow(new DataAccessResourceFailureException("db down"));
+        when(repository.findSetting("backup.dailyAt")).thenThrow(new DataAccessResourceFailureException("db down"));
         assertThat(service.get(time)).contains(LocalTime.of(2, 30));
 
-        when(repository.find("files.material.maxSizeMb")).thenThrow(new DataAccessResourceFailureException("db down"));
+        when(repository.findSetting("files.material.maxSizeMb")).thenThrow(new DataAccessResourceFailureException("db down"));
         assertThatThrownBy(() -> service.get(new SettingKey<>("files.material.maxSizeMb", Integer.class)))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
     }
@@ -223,7 +223,7 @@ class SettingsServiceTest {
 
         verify(repository).insertIfAbsent(eq("files.material.maxSizeMb"), eq("FILES"), eq("50"), any());
         verify(repository).insertIfAbsent(eq("backup.dailyAt"), eq("BACKUP"), eq(null), any());
-        verify(repository, never()).update(anyString(), any(), anyLong(), any(), any());
+        verify(repository, never()).updateSetting(anyString(), any(), anyLong(), any(), any());
     }
 
     @Test

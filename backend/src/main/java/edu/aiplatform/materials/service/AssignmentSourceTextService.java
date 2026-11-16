@@ -24,7 +24,7 @@ public class AssignmentSourceTextService implements IAssignmentSourceTextExtract
     @Override
     public List<AssignmentSourceText> extract(List<AssignmentSourceFile> files, int maxChars) {
         if (files == null || files.size() > MAX_FILES || maxChars < 1) {
-            throw ApiException.badRequest("ASSIGNMENT_SOURCE_LIMIT", "Chọn tối đa 3 tệp nguồn");
+            throw ApiException.createBadRequest("ASSIGNMENT_SOURCE_LIMIT", "Chọn tối đa 3 tệp nguồn");
         }
         int remaining = maxChars;
         List<AssignmentSourceText> result = new ArrayList<>();
@@ -39,25 +39,25 @@ public class AssignmentSourceTextService implements IAssignmentSourceTextExtract
                                     "application/pdf",
                                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                             .contains(file.mediaType())) {
-                throw ApiException.badRequest(
+                throw ApiException.createBadRequest(
                         "ASSIGNMENT_SOURCE_INVALID", "Một tệp nguồn không hợp lệ hoặc vượt 2 MB");
             }
             final String text;
             try {
                 text = materialTextExtractor.extractText(file.fileId(), file.mediaType()).text();
             } catch (MaterialTextExtractor.BusyException e) {
-                throw ApiException.unavailable(
+                throw ApiException.createUnavailable(
                         "ASSIGNMENT_SOURCE_BUSY",
                         "Hệ thống đang đọc nhiều tệp cùng lúc, vui lòng thử lại sau ít phút");
             } catch (RuntimeException e) {
-                throw ApiException.badRequest(
+                throw ApiException.createBadRequest(
                         "ASSIGNMENT_SOURCE_UNREADABLE",
                         "Không đọc được "
                                 + file.fileName()
                                 + ". Dùng TXT UTF-8 hoặc PDF/DOCX có lớp chữ.");
             }
             if (text == null || text.isBlank()) {
-                throw ApiException.badRequest(
+                throw ApiException.createBadRequest(
                         "ASSIGNMENT_SOURCE_NO_TEXT",
                         "Không tìm thấy chữ trong "
                                 + file.fileName()

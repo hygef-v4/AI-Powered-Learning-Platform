@@ -30,7 +30,7 @@ final class GradingJson {
             return json.readValue(value, new TypeReference<List<RubricView>>() {
             });
         } catch (Exception ex) {
-            throw ApiException.unavailable("INVALID_RUBRIC_SNAPSHOT",
+            throw ApiException.createUnavailable("INVALID_RUBRIC_SNAPSHOT",
                     "Rubric snapshot unavailable");
         }
     }

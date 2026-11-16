@@ -30,7 +30,7 @@ public class SubmissionImageService {
                 .anyMatch(b -> b.type() == BlockType.IMAGE
                         && fileId.equals(b.content().path("fileId").asText()));
         if (!attached)
-            throw ApiException.notFound("SUBMISSION_IMAGE_NOT_FOUND");
+            throw ApiException.createNotFound("SUBMISSION_IMAGE_NOT_FOUND");
 
         // Step 3: Issue authorized temporary download token from artifact storage
         return artifacts.issueDownloadToken(fileId, actor.accountId());

@@ -34,20 +34,20 @@ class DownloadServiceTest {
     @Test
     void materialDownloadFailsClosedWithoutAnOwnerPolicy() {
         when(tokens.resolve("tok")).thenReturn(Optional.of(new DownloadTokenService.Grant("f", student.accountId())));
-        when(storage.metadata("f")).thenReturn(Optional.of(meta("application/pdf", "a.pdf")));
+        when(storage.loadMetadata("f")).thenReturn(Optional.of(meta("application/pdf", "a.pdf")));
         assertThatThrownBy(() -> new DownloadService(tokens, storage, fileAudit).open(student, "tok"))
-                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.code()).isEqualTo("FILE_ACCESS_UNAVAILABLE"));
+                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.readCode()).isEqualTo("FILE_ACCESS_UNAVAILABLE"));
         org.mockito.Mockito.verify(storage, org.mockito.Mockito.never()).open("f");
     }
 
     @Test
     void rechecksMaterialPolicyBeforeOpeningPreviouslyGrantedFile() {
         when(tokens.resolve("tok")).thenReturn(Optional.of(new DownloadTokenService.Grant("f", student.accountId())));
-        when(storage.metadata("f")).thenReturn(Optional.of(meta("application/pdf", "a.pdf")));
-        org.mockito.Mockito.doThrow(ApiException.notFound("MATERIAL_NOT_FOUND"))
+        when(storage.loadMetadata("f")).thenReturn(Optional.of(meta("application/pdf", "a.pdf")));
+        org.mockito.Mockito.doThrow(ApiException.createNotFound("MATERIAL_NOT_FOUND"))
                 .when(policy).requireDownload(student, "f");
         assertThatThrownBy(() -> service.open(student, "tok"))
-                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.code()).isEqualTo("MATERIAL_NOT_FOUND"));
+                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
         org.mockito.Mockito.verify(storage, org.mockito.Mockito.never()).open("f");
     }
 
@@ -67,7 +67,7 @@ class DownloadServiceTest {
     @Test
     void abusiveFileIsGoneAndAudited() {
         when(tokens.resolve("tok")).thenReturn(Optional.of(new DownloadTokenService.Grant("f", student.accountId())));
-        when(storage.metadata("f")).thenReturn(Optional.of(meta("application/pdf", "a.pdf")));
+        when(storage.loadMetadata("f")).thenReturn(Optional.of(meta("application/pdf", "a.pdf")));
         when(storage.open("f")).thenThrow(new FileAbusiveException("f"));
 
         assertThatThrownBy(() -> service.open(student, "tok")).isInstanceOf(ApiException.class)
@@ -77,7 +77,7 @@ class DownloadServiceTest {
 
     @Test
     void svgIsSandboxedAndNeverSniffed() {
-        HttpHeaders headers = DownloadService.headers(meta("image/svg+xml", "so-do.svg"));
+        HttpHeaders headers = DownloadService.buildHeaders(meta("image/svg+xml", "so-do.svg"));
 
         assertThat(headers.getFirst("Content-Security-Policy")).isEqualTo(DownloadService.SVG_CSP);
         assertThat(headers.getFirst("X-Content-Type-Options")).isEqualTo("nosniff");
@@ -87,8 +87,8 @@ class DownloadServiceTest {
 
     @Test
     void pdfOpensInlineButOfficeFilesDownload() {
-        assertThat(DownloadService.headers(meta("application/pdf", "a.pdf")).getContentDisposition().isInline()).isTrue();
-        HttpHeaders docx = DownloadService.headers(meta(
+        assertThat(DownloadService.buildHeaders(meta("application/pdf", "a.pdf")).getContentDisposition().isInline()).isTrue();
+        HttpHeaders docx = DownloadService.buildHeaders(meta(
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "bài.docx"));
         assertThat(docx.getContentDisposition().isAttachment()).isTrue();
         assertThat(docx.getContentDisposition().getFilename()).isEqualTo("bài.docx");

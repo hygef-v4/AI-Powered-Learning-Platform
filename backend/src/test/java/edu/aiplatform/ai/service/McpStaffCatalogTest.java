@@ -35,14 +35,14 @@ class McpStaffCatalogTest {
     @Test void allSchemasCompileAndEveryRoleTokenCombinationHasCorrectCatalog() {
         var providers=catalog();var checker=new JsonSchemaChecker(json);
         var definitions=providers.stream().flatMap(p -> p.tools().stream()).toList();
-        assertThat(definitions).allMatch(d -> checker.validSchema(d.parameterSchema()));
+        assertThat(definitions).allMatch(d -> checker.isValidSchema(d.parameterSchema()));
         assertThat(definitions).extracting(McpToolDefinition::name).doesNotHaveDuplicates()
                 .contains("read_own_work","record_private_feedback");
         ObjectProvider<IMcpToolProvider> source=mock(ObjectProvider.class);
         when(source.orderedStream()).thenAnswer(call -> providers.stream());
         var registry=new McpToolRegistry(source);
         for(var access:Access.values()) {
-            var learner=registry.visible(Role.STUDENT,access);
+            var learner=registry.listVisibleTools(Role.STUDENT,access);
             assertThat(learner).extracting(McpToolDefinition::name)
                     .contains("get_my_capabilities","read_assignment_context","read_own_work")
                     .doesNotContain("read_agent_workflow","read_ai_usage_summary","read_platform_health_summary","read_grading_context",
@@ -50,9 +50,9 @@ class McpStaffCatalogTest {
             assertThat(learner.stream().anyMatch(d -> "record_private_feedback".equals(d.name())))
                     .isEqualTo(access==Access.READ_WRITE);
             if(access==Access.READ_ONLY)assertThat(learner).allMatch(d -> d.kind()==McpToolKind.READ);
-            assertThat(registry.visible(Role.ADMIN,access)).isEmpty();
+            assertThat(registry.listVisibleTools(Role.ADMIN,access)).isEmpty();
             for(var role:List.of(Role.TEACHER,Role.SUBJECT_MANAGER)) {
-                var tools=registry.visible(role,access);
+                var tools=registry.listVisibleTools(role,access);
                 assertThat(tools).extracting(McpToolDefinition::name).contains("read_agent_workflow");
                 assertThat(tools).extracting(McpToolDefinition::name).contains("get_my_capabilities","read_grading_context","list_my_classes")
                         .doesNotContain("read_ai_usage_summary","read_platform_health_summary");
@@ -78,14 +78,14 @@ class McpStaffCatalogTest {
             var actor=new Actor(UUID.randomUUID(),role);var now=java.time.Instant.now();
             var principal=new McpCredentialService.McpPrincipal(new edu.aiplatform.ai.model.McpCredential(UUID.randomUUID(),actor.accountId(),
                     "fixture",access,"hash","test",now.plusSeconds(60),null,null,now),actor);
-            var initialized=server.handle(principal,json.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\"}}" )).orElseThrow();
+            var initialized=server.handleMessage(principal,json.readTree("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\"}}" )).orElseThrow();
             assertThat(initialized.at("/result/serverInfo/name").asText()).isEqualTo("ai-learning-platform");
-            var listed=server.handle(principal,json.readTree("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}")).orElseThrow();
-            assertThat(listed.at("/result/tools").size()).isEqualTo(registry.visible(role,access).size());
-            for(var tool:registry.visible(role,access)) {
+            var listed=server.handleMessage(principal,json.readTree("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}")).orElseThrow();
+            assertThat(listed.at("/result/tools").size()).isEqualTo(registry.listVisibleTools(role,access).size());
+            for(var tool:registry.listVisibleTools(role,access)) {
                 ObjectNode request=json.createObjectNode();request.put("jsonrpc","2.0").put("id",3).put("method","tools/call");
                 request.putObject("params").put("name",tool.name()).set("arguments",sample(json.readTree(tool.parameterSchema())));
-                var response=server.handle(principal,request).orElseThrow();
+                var response=server.handleMessage(principal,request).orElseThrow();
                 assertThat(response.has("error")).as(role+" "+access+" "+tool.name()+" "+response).isFalse();
                 assertThat(response.at("/result/isError").asBoolean()).as(tool.name()).isFalse();
                 if("get_my_capabilities".equals(tool.name())) {

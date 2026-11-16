@@ -26,14 +26,14 @@ final class PromptPolicyEngine {
             return reject(GuardrailCategory.HARMFUL_MALICIOUS, "T2_INCOMPLETE_INPUT",
                     PromptContextPolicy.UNAVAILABLE_MESSAGE);
         }
-        PromptContextPolicy policy = PromptContextPolicy.of(input.context());
+        PromptContextPolicy policy = PromptContextPolicy.createPolicy(input.context());
         if (input.action().context() != input.context()) {
-            return reject(GuardrailCategory.OFF_TOPIC, "T2_ACTION_CONTEXT", policy.offTopicMessage());
+            return reject(GuardrailCategory.OFF_TOPIC, "T2_ACTION_CONTEXT", policy.describeOffTopic());
         }
         if (!policy.allows(input.actor().role())) {
             return reject(GuardrailCategory.HARMFUL_MALICIOUS, "T2_RBAC_ROLE", PromptContextPolicy.PERMISSION_MESSAGE);
         }
-        if (PromptFlowMachine.next(input.state(), input.action()).isEmpty()) {
+        if (PromptFlowMachine.findNextState(input.state(), input.action()).isEmpty()) {
             return reject(GuardrailCategory.OFF_TOPIC, "T2_FLOW_STATE", PromptContextPolicy.STATE_MESSAGE);
         }
         String text = PromptTextNormalizer.clean(input.text()).strip();
@@ -45,8 +45,8 @@ final class PromptPolicyEngine {
 
     private static Optional<GuardrailVerdict> evaluateContent(UserPromptInput input, PromptContextPolicy policy,
                                                               String text) {
-        List<PromptTextAnalysis.Segment> segments = PromptTextAnalysis.segments(text);
-        String directive = PromptTextAnalysis.directiveText(segments);
+        List<PromptTextAnalysis.Segment> segments = PromptTextAnalysis.splitSegments(text);
+        String directive = PromptTextAnalysis.joinDirectiveText(segments);
         Tokens directiveTokens = PromptTextAnalysis.tokenize(directive);
         Tokens allTokens = PromptTextAnalysis.tokenize(text);
 
@@ -54,7 +54,7 @@ final class PromptPolicyEngine {
             return rejectContent(GuardrailCategory.PROMPT_INJECTION, "T2_PRIVILEGE_ESCALATION",
                     PromptContextPolicy.INJECTION_MESSAGE);
         }
-        for (String sentence : PromptTextAnalysis.sentences(directive)) {
+        for (String sentence : PromptTextAnalysis.splitSentences(directive)) {
             if (targetsSystem(PromptTextAnalysis.tokenize(sentence))) {
                 return rejectContent(GuardrailCategory.PROMPT_INJECTION, "T2_SYSTEM_DIRECTIVE",
                         PromptContextPolicy.INJECTION_MESSAGE);
@@ -64,19 +64,19 @@ final class PromptPolicyEngine {
             return rejectContent(GuardrailCategory.HARMFUL_MALICIOUS, "T2_HARMFUL_CONTENT",
                     PromptContextPolicy.HARMFUL_MESSAGE);
         }
-        for (String sentence : PromptTextAnalysis.sentences(text)) {
+        for (String sentence : PromptTextAnalysis.splitSentences(text)) {
             if (requestsHarm(PromptTextAnalysis.tokenize(sentence))) {
                 return rejectContent(GuardrailCategory.HARMFUL_MALICIOUS, "T2_HARMFUL_REQUEST",
                         PromptContextPolicy.HARMFUL_MESSAGE);
             }
         }
-        if (PromptLexicon.forbiddenIntentOf(input.context()).matches(directiveTokens)) {
-            return rejectContent(GuardrailCategory.OFF_TOPIC, "T2_FORBIDDEN_INTENT", policy.offTopicMessage());
+        if (PromptLexicon.findForbiddenIntents(input.context()).matches(directiveTokens)) {
+            return rejectContent(GuardrailCategory.OFF_TOPIC, "T2_FORBIDDEN_INTENT", policy.describeOffTopic());
         }
-        PhraseSet scope = PromptLexicon.scopeOf(input.context());
+        PhraseSet scope = PromptLexicon.findScopePhrases(input.context());
         boolean offTopicSignal = PromptLexicon.OFF_TOPIC.matches(allTokens);
         if (scope.count(allTokens) == 0 && (offTopicSignal || PromptLexicon.requiresScopeSignal(input.context()))) {
-            return rejectContent(GuardrailCategory.OFF_TOPIC, "T2_OFF_TOPIC", policy.offTopicMessage());
+            return rejectContent(GuardrailCategory.OFF_TOPIC, "T2_OFF_TOPIC", policy.describeOffTopic());
         }
         return Optional.empty();
     }

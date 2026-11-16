@@ -24,11 +24,11 @@ public class BackupConfig {
     @Bean
     IBackupStore backupStore(BackupProperties backup, FilesProperties files, DriveClientFactory clients,
                              DriveFolders folders) {
-        if (files.sharedDriveConfigured() && backup.folderId() != null && !backup.folderId().isBlank()) {
+        if (files.hasSharedDrive() && backup.folderId() != null && !backup.folderId().isBlank()) {
             return new DriveBackupStore(clients, folders, backup::folderId);
         }
-        if (files.personalDriveConfigured()) {
-            return new DriveBackupStore(clients, folders, () -> folders.child(folders.root(), "backups"));
+        if (files.hasPersonalDrive()) {
+            return new DriveBackupStore(clients, folders, () -> folders.ensureChild(folders.resolveRoot(), "backups"));
         }
         if (files.requireDrive()) {
             return new UnconfiguredBackupStore();

@@ -159,7 +159,7 @@ class RequirementsCoverageIntegrationTest {
     private MockHttpServletRequestBuilder signedRequest(MockHttpServletRequestBuilder request, Role role) {
         UUID id = accountIds.get(role);
         String sid = "fixture-" + id;
-        when(sessionStore.find(sid)).thenReturn(Optional.of(new SessionStore.SessionRecord(id, NOW, NOW, "hash", null)));
+        when(sessionStore.findSession(sid)).thenReturn(Optional.of(new SessionStore.SessionRecord(id, NOW, NOW, "hash", null)));
         String csrf = UUID.randomUUID().toString();
         return request.cookie(new Cookie("access_token", jwtService.issue(id, role, sid)),
                 new Cookie("XSRF-TOKEN", csrf)).header("X-XSRF-TOKEN", csrf).contentType(MediaType.APPLICATION_JSON);
@@ -207,7 +207,7 @@ class RequirementsCoverageIntegrationTest {
         assertThat(text.text()).isEqualTo("New evidence");
         assertThatThrownBy(() -> materialService.archiveMaterial(manager, materialId, 1))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
         materialService.archiveMaterial(manager, materialId, 2);
         assertThat(materialRepository.listVersions(materialId))
                 .extracting(MaterialVersion::versionNo)
@@ -220,7 +220,7 @@ class RequirementsCoverageIntegrationTest {
         assertThatThrownBy(() -> materialService.updateMaterial(manager, materialId,
                 new MaterialCommands.Update("Forbidden", "", 0, 3L, null)))
                 .isInstanceOfSatisfying(edu.aiplatform.shared.error.ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_ARCHIVED"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_ARCHIVED"));
     }
 
     @Test

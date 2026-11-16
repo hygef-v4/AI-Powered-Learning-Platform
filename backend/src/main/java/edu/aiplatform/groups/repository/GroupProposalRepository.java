@@ -37,7 +37,7 @@ public class GroupProposalRepository {
     public Optional<GroupFormationSettings> findSettings(UUID classId) {
         return jdbc.sql("select class_id, enabled, min_size, max_size, deadline, updated_by, updated_at, version "
                         + "from group_formation_settings where class_id = :classId")
-                .param("classId", classId).query(GroupProposalRepository::settings).optional();
+                .param("classId", classId).query(GroupProposalRepository::mapSettings).optional();
     }
 
     /**
@@ -50,9 +50,9 @@ public class GroupProposalRepository {
         params.put("enabled", settings.enabled());
         params.put("minSize", settings.minSize());
         params.put("maxSize", settings.maxSize());
-        params.put("deadline", timestamp(settings.deadline()));
+        params.put("deadline", convertTimestamp(settings.deadline()));
         params.put("updatedBy", settings.updatedBy());
-        params.put("updatedAt", timestamp(settings.updatedAt()));
+        params.put("updatedAt", convertTimestamp(settings.updatedAt()));
         params.put("version", settings.version());
         params.put("expected", expected);
         if (expected == 0) {
@@ -77,7 +77,7 @@ public class GroupProposalRepository {
                         + "decided_at, decision_reason, approved_group_id, end_reason, created_at, updated_at, version) "
                         + "values (:id, :classId, :name, :leaderId, :status, :submittedAt, :decidedBy, :decidedAt, "
                         + ":decisionReason, :approvedGroupId, :endReason, :createdAt, :updatedAt, :version)")
-                .params(proposalParams(proposal)).update();
+                .params(bindProposalParams(proposal)).update();
     }
 
     /** Ghi mọi trường thay đổi được của đề xuất đang giữ khóa. */
@@ -86,19 +86,19 @@ public class GroupProposalRepository {
                         + "decided_by = :decidedBy, decided_at = :decidedAt, decision_reason = :decisionReason, "
                         + "approved_group_id = :approvedGroupId, end_reason = :endReason, updated_at = :updatedAt, "
                         + "version = :version where id = :id")
-                .params(proposalParams(proposal)).update();
+                .params(bindProposalParams(proposal)).update();
     }
 
     /** Khóa dòng đề xuất để các thao tác trên cùng đề xuất không chạy chồng nhau. */
     public Optional<GroupProposal> lockProposal(UUID proposalId) {
         return jdbc.sql("select " + PROPOSAL_COLUMNS + " from group_proposals p where p.id = :id for update")
-                .param("id", proposalId).query(GroupProposalRepository::proposal).optional();
+                .param("id", proposalId).query(GroupProposalRepository::mapProposal).optional();
     }
 
     public List<GroupProposal> listActiveProposals(UUID classId) {
         return jdbc.sql("select " + PROPOSAL_COLUMNS + " from group_proposals p where p.class_id = :classId "
                         + "and p.status in ('DRAFT', 'SUBMITTED') order by p.created_at, p.id")
-                .param("classId", classId).query(GroupProposalRepository::proposal).list();
+                .param("classId", classId).query(GroupProposalRepository::mapProposal).list();
     }
 
     /** Đề xuất đang hoạt động mà sinh viên là thành viên. */
@@ -107,7 +107,7 @@ public class GroupProposalRepository {
                         + "on m.proposal_id = p.id where m.class_id = :classId and m.account_id = :accountId "
                         + "and m.active")
                 .param("classId", classId).param("accountId", accountId)
-                .query(GroupProposalRepository::proposal).optional();
+                .query(GroupProposalRepository::mapProposal).optional();
     }
 
     /** Đề xuất bị từ chối gần nhất mà sinh viên là thành viên lúc gửi duyệt (BR-U12-86). */
@@ -116,7 +116,7 @@ public class GroupProposalRepository {
                         + "on m.proposal_id = p.id where m.class_id = :classId and m.account_id = :accountId "
                         + "and m.status = 'ACCEPTED' and p.status = 'REJECTED' order by p.decided_at desc limit 1")
                 .param("classId", classId).param("accountId", accountId)
-                .query(GroupProposalRepository::proposal).optional();
+                .query(GroupProposalRepository::mapProposal).optional();
     }
 
     /** Đề xuất đang hoạt động có lời mời chờ gửi tới sinh viên. */
@@ -125,7 +125,7 @@ public class GroupProposalRepository {
                         + "on m.proposal_id = p.id where m.class_id = :classId and m.account_id = :accountId "
                         + "and m.status = 'INVITED' and p.status in ('DRAFT', 'SUBMITTED') order by m.created_at")
                 .param("classId", classId).param("accountId", accountId)
-                .query(GroupProposalRepository::proposal).list();
+                .query(GroupProposalRepository::mapProposal).list();
     }
 
     // ---- thành viên và lời mời -----------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ public class GroupProposalRepository {
     public List<ProposalMember> listMembers(UUID proposalId) {
         return jdbc.sql("select " + MEMBER_COLUMNS + " from group_proposal_members m where m.proposal_id = :id "
                         + "order by m.created_at, m.account_id")
-                .param("id", proposalId).query(GroupProposalRepository::member).list();
+                .param("id", proposalId).query(GroupProposalRepository::mapMember).list();
     }
 
     public List<ProposalMember> listMembersOf(Collection<UUID> proposalIds) {
@@ -142,7 +142,7 @@ public class GroupProposalRepository {
         }
         return jdbc.sql("select " + MEMBER_COLUMNS + " from group_proposal_members m where m.proposal_id in (:ids) "
                         + "order by m.created_at, m.account_id")
-                .param("ids", proposalIds).query(GroupProposalRepository::member).list();
+                .param("ids", proposalIds).query(GroupProposalRepository::mapMember).list();
     }
 
     /** Dòng thành viên đang hoạt động của các sinh viên trong lớp. */
@@ -152,7 +152,7 @@ public class GroupProposalRepository {
         }
         return jdbc.sql("select " + MEMBER_COLUMNS + " from group_proposal_members m where m.class_id = :classId "
                         + "and m.account_id in (:ids) and m.active")
-                .param("classId", classId).param("ids", accountIds).query(GroupProposalRepository::member).list();
+                .param("classId", classId).param("ids", accountIds).query(GroupProposalRepository::mapMember).list();
     }
 
     /** Sinh viên đang ở đề xuất đang hoạt động nào của lớp: tài khoản → đề xuất. */
@@ -229,55 +229,55 @@ public class GroupProposalRepository {
 
     // ---- ánh xạ -------------------------------------------------------------------------------------------------
 
-    private static Map<String, Object> proposalParams(GroupProposal p) {
+    private static Map<String, Object> bindProposalParams(GroupProposal p) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("id", p.id());
         params.put("classId", p.classId());
         params.put("name", p.name());
         params.put("leaderId", p.leaderId());
         params.put("status", p.status().name());
-        params.put("submittedAt", timestamp(p.submittedAt()));
+        params.put("submittedAt", convertTimestamp(p.submittedAt()));
         params.put("decidedBy", p.decidedBy());
-        params.put("decidedAt", timestamp(p.decidedAt()));
+        params.put("decidedAt", convertTimestamp(p.decidedAt()));
         params.put("decisionReason", p.decisionReason());
         params.put("approvedGroupId", p.approvedGroupId());
         params.put("endReason", p.endReason() == null ? null : p.endReason().name());
-        params.put("createdAt", timestamp(p.createdAt()));
-        params.put("updatedAt", timestamp(p.updatedAt()));
+        params.put("createdAt", convertTimestamp(p.createdAt()));
+        params.put("updatedAt", convertTimestamp(p.updatedAt()));
         params.put("version", p.version());
         return params;
     }
 
-    private static GroupFormationSettings settings(ResultSet rs, int n) throws SQLException {
+    private static GroupFormationSettings mapSettings(ResultSet rs, int n) throws SQLException {
         return new GroupFormationSettings(rs.getObject("class_id", UUID.class), rs.getBoolean("enabled"),
-                rs.getInt("min_size"), rs.getInt("max_size"), instant(rs, "deadline"),
-                rs.getObject("updated_by", UUID.class), instant(rs, "updated_at"), rs.getLong("version"));
+                rs.getInt("min_size"), rs.getInt("max_size"), readInstant(rs, "deadline"),
+                rs.getObject("updated_by", UUID.class), readInstant(rs, "updated_at"), rs.getLong("version"));
     }
 
-    private static GroupProposal proposal(ResultSet rs, int n) throws SQLException {
+    private static GroupProposal mapProposal(ResultSet rs, int n) throws SQLException {
         String endReason = rs.getString("end_reason");
         return new GroupProposal(rs.getObject("id", UUID.class), rs.getObject("class_id", UUID.class),
                 rs.getString("name"), rs.getObject("leader_id", UUID.class),
-                GroupProposal.Status.valueOf(rs.getString("status")), instant(rs, "submitted_at"),
-                rs.getObject("decided_by", UUID.class), instant(rs, "decided_at"), rs.getString("decision_reason"),
+                GroupProposal.Status.valueOf(rs.getString("status")), readInstant(rs, "submitted_at"),
+                rs.getObject("decided_by", UUID.class), readInstant(rs, "decided_at"), rs.getString("decision_reason"),
                 rs.getObject("approved_group_id", UUID.class),
-                endReason == null ? null : GroupProposal.EndReason.valueOf(endReason), instant(rs, "created_at"),
-                instant(rs, "updated_at"), rs.getLong("version"));
+                endReason == null ? null : GroupProposal.EndReason.valueOf(endReason), readInstant(rs, "created_at"),
+                readInstant(rs, "updated_at"), rs.getLong("version"));
     }
 
-    private static ProposalMember member(ResultSet rs, int n) throws SQLException {
+    private static ProposalMember mapMember(ResultSet rs, int n) throws SQLException {
         return new ProposalMember(rs.getObject("proposal_id", UUID.class), rs.getObject("class_id", UUID.class),
                 rs.getObject("account_id", UUID.class), ProposalMember.Status.valueOf(rs.getString("status")),
-                rs.getBoolean("active"), rs.getObject("invited_by", UUID.class), instant(rs, "created_at"),
-                instant(rs, "responded_at"));
+                rs.getBoolean("active"), rs.getObject("invited_by", UUID.class), readInstant(rs, "created_at"),
+                readInstant(rs, "responded_at"));
     }
 
-    private static Instant instant(ResultSet rs, String column) throws SQLException {
+    private static Instant readInstant(ResultSet rs, String column) throws SQLException {
         Timestamp value = rs.getTimestamp(column);
         return value == null ? null : value.toInstant();
     }
 
-    private static Timestamp timestamp(Instant value) {
+    private static Timestamp convertTimestamp(Instant value) {
         return value == null ? null : Timestamp.from(value);
     }
 }

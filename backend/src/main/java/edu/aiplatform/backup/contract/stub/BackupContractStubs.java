@@ -27,7 +27,7 @@ public class BackupContractStubs {
         return Stubs.announce(IBackupDashboardStatus.class,
                 new IBackupDashboardStatus() {
             private RuntimeException unavailable() {
-                return ApiException.unavailable(
+                return ApiException.createUnavailable(
                         "BACKUP_STATUS_UNAVAILABLE", "Không đọc được trạng thái backup");
             }
             @Override public Optional<BackupDashboardRunView> latestRun() {

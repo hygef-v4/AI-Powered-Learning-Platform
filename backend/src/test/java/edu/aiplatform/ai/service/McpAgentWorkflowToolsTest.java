@@ -55,8 +55,8 @@ class McpAgentWorkflowToolsTest {
         assertThatThrownBy(() -> provider.call(teacher,"unknown_tool",Map.of("workflow","AUTHOR_ASSIGNMENT")))
                 .isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> provider.call(teacher,"read_agent_workflow",Map.of())).isInstanceOf(ApiException.class);
-        assertThat(McpCapabilitiesTools.workflow(Role.TEACHER)).contains("read_agent_workflow","AUTHOR_ASSIGNMENT","GRADE_WITH_RUBRIC");
-        assertThat(McpCapabilitiesTools.workflow(Role.STUDENT)).doesNotContain("AUTHOR_ASSIGNMENT","GRADE_WITH_RUBRIC");
+        assertThat(McpCapabilitiesTools.describeWorkflow(Role.TEACHER)).contains("read_agent_workflow","AUTHOR_ASSIGNMENT","GRADE_WITH_RUBRIC");
+        assertThat(McpCapabilitiesTools.describeWorkflow(Role.STUDENT)).doesNotContain("AUTHOR_ASSIGNMENT","GRADE_WITH_RUBRIC");
     }
 
     @Test void realProtocolCanReadWorkflowWithAReadOnlyCredentialAndNoLocalSkill() throws Exception {
@@ -68,7 +68,7 @@ class McpAgentWorkflowToolsTest {
         var now=Instant.now();var credential=new McpCredential(UUID.randomUUID(),teacher.accountId(),"fixture",
                 McpCredential.Access.READ_ONLY,"hash","test",now.plusSeconds(60),null,null,now);
         var principal=new McpCredentialService.McpPrincipal(credential,teacher);
-        var response=server.handle(principal,json.readTree("""
+        var response=server.handleMessage(principal,json.readTree("""
                 {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
                   "name":"read_agent_workflow","arguments":{"workflow":"GRADE_WITH_RUBRIC"}}}
                 """)).orElseThrow();
@@ -83,7 +83,7 @@ class McpAgentWorkflowToolsTest {
     void authoringRequirementsRouteOnlyAssignmentsToTheAssignmentWorkflow(String kind) {
         var registry=mock(McpToolRegistry.class);
         var definition=new McpToolDefinition("fixture","fixture","{\"type\":\"object\"}",McpToolKind.WRITE,McpSchemas.STAFF);
-        when(registry.find(anyString(),eq(Role.TEACHER),eq(McpCredential.Access.READ_WRITE)))
+        when(registry.findTool(anyString(),eq(Role.TEACHER),eq(McpCredential.Access.READ_WRITE)))
                 .thenReturn(Optional.of(new McpToolRegistry.Entry(definition,provider)));
         var requirements=new McpAuthoringRequirementsTools(registry,json);
         var content=(Map<String,Object>)requirements.call(teacher,"read_authoring_requirements",Map.of("kind",kind)).content();

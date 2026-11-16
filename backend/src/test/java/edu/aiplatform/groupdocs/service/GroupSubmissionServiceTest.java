@@ -93,7 +93,7 @@ class GroupSubmissionServiceTest {
 
     @BeforeEach
     void setUp() {
-        document = GroupDocument.create(UUID.randomUUID(), group.id(), assignmentId, classId, skeleton, false,
+        document = GroupDocument.createDocument(UUID.randomUUID(), group.id(), assignmentId, classId, skeleton, false,
                 NOW.minusSeconds(3600));
         when(authorization.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.allow());
         when(classes.isActiveStudent(any(), eq(classId))).thenReturn(true);
@@ -108,7 +108,7 @@ class GroupSubmissionServiceTest {
                 AssignmentStatus.OPEN, NOW.minusSeconds(86400), NOW.plusSeconds(3600), null, null, false, null, List.of())));
         when(assignments.getContent(assignmentId)).thenReturn(Optional.empty());
         when(documentModel.validateForSubmit(any(), any(), any())).thenReturn(new ValidationResult(List.of(), List.of()));
-        when(documents.update(any())).thenReturn(true);
+        when(documents.updateDocument(any())).thenReturn(true);
         when(documents.updateSection(any())).thenReturn(true);
     }
 
@@ -124,7 +124,7 @@ class GroupSubmissionServiceTest {
         assertThat(receipt.receiptHash()).startsWith("sha256:");
         assertThat(receipt.warnings()).anyMatch(w -> w.contains("chưa Xong"));
         ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
-        verify(documents).update(saved.capture());
+        verify(documents).updateDocument(saved.capture());
         assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.IN_PROGRESS);
         assertThat(saved.getValue().submittedDocument().blocks()).extracting(DocumentBlock::id)
                 .containsExactly(heading1, skeleton.blocks().get(1).id(), answer.id(), heading2);
@@ -137,12 +137,12 @@ class GroupSubmissionServiceTest {
     void memberCannotSubmitAndInvalidDocumentIsRejectedWithIssues() {
         when(documents.listSections(document.id())).thenReturn(List.of());
         assertThatThrownBy(() -> service.submit(member, document.id(), 0L))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
         when(documentModel.validateForSubmit(any(), any(), any())).thenReturn(new ValidationResult(
                 List.of(new ValidationIssue("DIAGRAM_REQUIRED", null, "Thiếu sơ đồ lớp")), List.of()));
         assertThatThrownBy(() -> service.submit(leader, document.id(), 0L))
                 .isInstanceOfSatisfying(GroupSubmissionService.SubmitInvalidException.class,
-                        e -> assertThat(e.issues()).extracting(ValidationIssue::code).containsExactly("DIAGRAM_REQUIRED"));
+                        e -> assertThat(e.listIssues()).extracting(ValidationIssue::code).containsExactly("DIAGRAM_REQUIRED"));
         verify(evaluation, never()).onGroupSubmitted(any(), anyString(), any(), any(), any());
     }
 
@@ -150,17 +150,17 @@ class GroupSubmissionServiceTest {
     void autoSubmitFinalizesHeldDraftAndClosesTheDocument() {
         DocumentBlock draft = block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp chưa Xong");
         GroupSection held = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
-                .withDraft(List.of(draft), NOW.minusSeconds(40));
+                .replaceDraft(List.of(draft), NOW.minusSeconds(40));
         when(documents.lockSections(document.id())).thenReturn(List.of(held));
-        when(documents.listSections(document.id())).thenReturn(List.of(held.done(NOW)));
-        var receipt = service.autoSubmit(document.id()).orElseThrow();
+        when(documents.listSections(document.id())).thenReturn(List.of(held.markDone(NOW)));
+        var receipt = service.submitAutomatically(document.id()).orElseThrow();
         assertThat(receipt.mode()).isEqualTo("AUTO_DEADLINE");
         assertThat(receipt.submittedBy()).isNull();
         ArgumentCaptor<SectionRevision> revision = ArgumentCaptor.forClass(SectionRevision.class);
         verify(documents).insertRevision(revision.capture());
         assertThat(revision.getValue().authorId()).isEqualTo(member.accountId());
         ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
-        verify(documents).update(saved.capture());
+        verify(documents).updateDocument(saved.capture());
         assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.CLOSED);
         verify(evaluation).onGroupSubmitted(eq(document.id()), anyString(), eq(assignmentId), eq(classId), any());
     }
@@ -173,18 +173,18 @@ class GroupSubmissionServiceTest {
                 AssignmentStatus.CLOSED, NOW.minusSeconds(86400), closesAt, null, null, false, null, List.of())));
         DocumentBlock draft = block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp");
         GroupSection held = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
-                .withDraft(List.of(draft), closesAt.minusSeconds(60));
+                .replaceDraft(List.of(draft), closesAt.minusSeconds(60));
         when(documents.lockSections(document.id())).thenReturn(List.of(held));
-        when(documents.listSections(document.id())).thenReturn(List.of(held.done(NOW)));
-        assertThat(service.autoSubmit(document.id()).orElseThrow().late())
+        when(documents.listSections(document.id())).thenReturn(List.of(held.markDone(NOW)));
+        assertThat(service.submitAutomatically(document.id()).orElseThrow().late())
                 .as("tài liệu sửa lần cuối lúc tạo, trước hạn").isFalse();
     }
 
     @Test
     void autoSubmitOnClosedDocumentDoesNothing() {
-        when(documents.lockDocument(document.id())).thenReturn(Optional.of(document.closed()));
-        assertThat(service.autoSubmit(document.id())).isEmpty();
-        verify(documents, never()).update(any());
+        when(documents.lockDocument(document.id())).thenReturn(Optional.of(document.markClosed()));
+        assertThat(service.submitAutomatically(document.id())).isEmpty();
+        verify(documents, never()).updateDocument(any());
         verify(evaluation, never()).onGroupSubmitted(any(), anyString(), any(), any(), any());
     }
 
@@ -192,22 +192,22 @@ class GroupSubmissionServiceTest {
     void retiredAssignmentUsesRetiredMode() {
         DocumentBlock draft = block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp");
         GroupSection held = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
-                .withDraft(List.of(draft), NOW.minusSeconds(30));
-        document = document.withAutoSubmitReason(GroupDocument.SubmitMode.AUTO_RETIRED);
+                .replaceDraft(List.of(draft), NOW.minusSeconds(30));
+        document = document.recordAutoSubmitReason(GroupDocument.SubmitMode.AUTO_RETIRED);
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(document));
         when(documents.lockSections(document.id())).thenReturn(List.of(held));
-        when(documents.listSections(document.id())).thenReturn(List.of(held.done(NOW)));
+        when(documents.listSections(document.id())).thenReturn(List.of(held.markDone(NOW)));
 
-        assertThat(service.autoSubmit(document.id()).orElseThrow().mode()).isEqualTo("AUTO_RETIRED");
+        assertThat(service.submitAutomatically(document.id()).orElseThrow().mode()).isEqualTo("AUTO_RETIRED");
     }
 
     @Test
     void autoSubmitOnUntouchedDocumentSimplyClosesWithoutCreatingSubmission() {
         when(documents.lockSections(document.id())).thenReturn(List.of(
                 section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)));
-        assertThat(service.autoSubmit(document.id())).isEmpty();
+        assertThat(service.submitAutomatically(document.id())).isEmpty();
         ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
-        verify(documents).update(saved.capture());
+        verify(documents).updateDocument(saved.capture());
         assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.CLOSED);
         assertThat(saved.getValue().submittedAt()).isNull();
         verifyNoInteractions(evaluation, events, audit);
@@ -218,7 +218,7 @@ class GroupSubmissionServiceTest {
         when(documents.listSections(document.id())).thenReturn(List.of());
         var receipt = service.submit(leader, document.id(), 0L);
         ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
-        verify(documents).update(saved.capture());
+        verify(documents).updateDocument(saved.capture());
         GroupDocument submitted = saved.getValue();
         GroupDocument touchedLater = new GroupDocument(submitted.id(), submitted.groupId(), submitted.assignmentId(),
                 submitted.classId(), submitted.status(), submitted.sharedBlocks(), submitted.activityMonitoring(),
@@ -226,16 +226,16 @@ class GroupSubmissionServiceTest {
                 submitted.submittedBy(), submitted.submitMode(), submitted.submittedAt(), submitted.late(),
                 submitted.receiptHash(), submitted.warnings(), NOW.plusSeconds(120), 1, submitted.createdAt());
         GroupSection heldWithDraft = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
-                .withDraft(List.of(block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp sau nộp")), NOW.plusSeconds(120));
+                .replaceDraft(List.of(block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp sau nộp")), NOW.plusSeconds(120));
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(touchedLater));
         when(documents.lockSections(document.id())).thenReturn(List.of(heldWithDraft));
         clearInvocations(documents, evaluation, events, audit, sse);
-        assertThat(service.autoSubmit(document.id())).isEmpty();
+        assertThat(service.submitAutomatically(document.id())).isEmpty();
         verify(documents).updateSection(argThat(s -> s.status() == Status.DONE && s.claimedBy() == null
                 && s.publishedBlocks().equals(heldWithDraft.draftBlocks())));
         verify(documents).insertRevision(argThat(revision -> revision.blocks().equals(heldWithDraft.draftBlocks())
                 && revision.authorId().equals(member.accountId())));
-        verify(documents).update(saved.capture());
+        verify(documents).updateDocument(saved.capture());
         assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.CLOSED);
         assertThat(saved.getValue().submittedDocument()).isEqualTo(submitted.submittedDocument());
         assertThat(saved.getValue().receiptHash()).isEqualTo(receipt.receiptHash());
@@ -247,8 +247,8 @@ class GroupSubmissionServiceTest {
     void staleSubmissionVersionHasNoPersistenceOrDeliverySideEffects() {
         assertThatThrownBy(() -> service.submit(leader, document.id(), 1L))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("GROUP_DOC_VERSION_CONFLICT"));
-        verify(documents, never()).update(any());
+                        e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_VERSION_CONFLICT"));
+        verify(documents, never()).updateDocument(any());
         verify(documents, never()).listSections(any());
         verifyNoInteractions(documentModel, evaluation, events, sse, audit);
     }
@@ -256,11 +256,11 @@ class GroupSubmissionServiceTest {
     @Test
     void lostDocumentCasDoesNotPublishAReceiptOrTriggerGrading() {
         when(documents.listSections(document.id())).thenReturn(List.of());
-        when(documents.update(any())).thenReturn(false);
+        when(documents.updateDocument(any())).thenReturn(false);
 
         assertThatThrownBy(() -> service.submit(leader, document.id(), 0L))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("GROUP_DOC_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_VERSION_CONFLICT"));
 
         verifyNoInteractions(evaluation, events, sse, audit);
     }
@@ -273,7 +273,7 @@ class GroupSubmissionServiceTest {
                 section("p1", heading1, 1, Status.DONE, null, List.of(first), member.accountId())));
         var firstReceipt = service.submit(leader, document.id(), 0L);
         ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
-        verify(documents).update(saved.capture());
+        verify(documents).updateDocument(saved.capture());
         GroupDocument originalSnapshot = saved.getValue();
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(persistedVersion(originalSnapshot, 1)));
         when(documents.listSections(document.id())).thenReturn(List.of(
@@ -281,7 +281,7 @@ class GroupSubmissionServiceTest {
 
         var secondReceipt = service.submit(leader, document.id(), 1L);
 
-        verify(documents, times(2)).update(saved.capture());
+        verify(documents, times(2)).updateDocument(saved.capture());
         GroupDocument newSnapshot = saved.getValue();
         assertThat(newSnapshot.version()).isEqualTo(1);
         assertThat(originalSnapshot.submittedDocument().blocks()).extracting(DocumentBlock::id)
@@ -300,34 +300,34 @@ class GroupSubmissionServiceTest {
         when(documents.listSections(document.id())).thenReturn(List.of());
         var receipt = service.submit(leader, document.id(), 0L);
         ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
-        verify(documents).update(saved.capture());
+        verify(documents).updateDocument(saved.capture());
         GroupDocument submitted = saved.getValue();
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(submitted));
         when(documents.lockSections(document.id())).thenReturn(List.of());
         clearInvocations(documents, evaluation, events, audit, sse);
 
-        assertThat(service.autoSubmit(document.id())).isEmpty();
+        assertThat(service.submitAutomatically(document.id())).isEmpty();
 
-        verify(documents).update(saved.capture());
+        verify(documents).updateDocument(saved.capture());
         assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.CLOSED);
         assertThat(saved.getValue().submittedDocument()).isEqualTo(submitted.submittedDocument());
         assertThat(saved.getValue().receiptHash()).isEqualTo(receipt.receiptHash());
         assertThat(saved.getValue().submitMode()).isEqualTo(GroupDocument.SubmitMode.MANUAL);
         verifyNoInteractions(evaluation, events, audit);
-        verify(sse).publish(eq(GroupSectionService.channel(document.id())),
+        verify(sse).publish(eq(GroupSectionService.buildChannel(document.id())),
                 eq(java.util.Map.of("type", "document.closed", "documentId", document.id().toString())));
     }
 
     @Test
     void lostCasWhileClosingUnchangedSubmissionHasNoDeliverySideEffects() {
-        GroupDocument submitted = document.withSubmission(skeleton, List.of(), leader.accountId(),
+        GroupDocument submitted = document.recordSubmission(skeleton, List.of(), leader.accountId(),
                 GroupDocument.SubmitMode.MANUAL, NOW, false, "existing-receipt", List.of(),
                 GroupDocument.Status.IN_PROGRESS);
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(submitted));
         when(documents.lockSections(document.id())).thenReturn(List.of());
-        when(documents.update(any())).thenReturn(false);
+        when(documents.updateDocument(any())).thenReturn(false);
 
-        assertThat(service.autoSubmit(document.id())).isEmpty();
+        assertThat(service.submitAutomatically(document.id())).isEmpty();
 
         verifyNoInteractions(evaluation, events, audit, sse);
     }

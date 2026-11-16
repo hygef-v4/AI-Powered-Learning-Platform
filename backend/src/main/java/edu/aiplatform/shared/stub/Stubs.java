@@ -23,12 +23,12 @@ public final class Stubs {
     }
 
     /** Ghi một lời gọi tới bản tạm không làm gì (gửi mail, ghi audit, gửi việc nền...). */
-    public static void called(Class<?> type, String what) {
+    public static void recordCall(Class<?> type, String what) {
         log.info("{} (bản tạm): {}", type.getSimpleName(), what);
     }
 
     /** ID mẫu cố định suy từ ID khác, để cùng một đầu vào luôn trả cùng kết quả. */
-    public static UUID derivedId(String kind, UUID source) {
+    public static UUID deriveId(String kind, UUID source) {
         return UUID.nameUUIDFromBytes((kind + ":" + source).getBytes(StandardCharsets.UTF_8));
     }
 }

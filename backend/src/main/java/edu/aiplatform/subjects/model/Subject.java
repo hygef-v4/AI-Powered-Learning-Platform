@@ -35,7 +35,7 @@ public record Subject(
         }
     }
 
-    public static Subject create(
+    public static Subject createSubject(
             UUID id, String code, String name, String description, UUID managerId, Instant now) {
         return new Subject(
                 id,
@@ -52,7 +52,7 @@ public record Subject(
     /** Kiểm cả trước no-op: request cũ không được coi là thành công chỉ vì giá trị đang giống nhau. */
     public void requireVersion(long expectedVersion) {
         if (expectedVersion != version) {
-            throw ApiException.conflict(
+            throw ApiException.createConflict(
                     "SUBJECT_VERSION_CONFLICT",
                     "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
         }
@@ -107,7 +107,7 @@ public record Subject(
     private static String validateName(String name) {
         String normalized = name == null ? "" : name.trim();
         if (normalized.isBlank() || normalized.length() > 200) {
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "SUBJECT_NAME_INVALID", "Tên môn là bắt buộc và tối đa 200 ký tự");
         }
         return normalized;
@@ -115,7 +115,7 @@ public record Subject(
 
     private static void validateDescription(String description) {
         if (description != null && description.length() > 2000) {
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "SUBJECT_DESCRIPTION_INVALID", "Mô tả môn tối đa 2.000 ký tự");
         }
     }

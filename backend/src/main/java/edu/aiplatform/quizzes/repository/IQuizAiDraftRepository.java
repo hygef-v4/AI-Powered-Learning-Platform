@@ -12,7 +12,7 @@ public interface IQuizAiDraftRepository {
 
     void insert(QuizAiDraft draft);
 
-    Optional<QuizAiDraft> find(UUID id);
+    Optional<QuizAiDraft> findDraft(UUID id);
 
     /** Giữ khóa trong transaction khi lên lịch tạo lại theo nguồn để không gửi trùng task. */
     Optional<QuizAiDraft> findForUpdate(UUID id);
@@ -27,7 +27,7 @@ public interface IQuizAiDraftRepository {
     List<QuizAiDraft> listOpenForBank(UUID subjectId);
 
     /** Ghi trạng thái, đề xuất, provenance mới nếu trạng thái hiện tại là {@code expected}. */
-    boolean transition(QuizAiDraft next, DraftStatus expected);
+    boolean transitionDraft(QuizAiDraft next, DraftStatus expected);
 
     /** Ghi {@code taskId} sau khi gửi task; kết quả có thể đã về trước. */
     void attachTask(UUID id, UUID taskId);

@@ -9,7 +9,7 @@ public record DraftQuestion(QuestionContent content, List<Violation> violations)
         violations = violations == null ? List.of() : List.copyOf(violations);
     }
 
-    public static DraftQuestion of(QuestionContent content) {
+    public static DraftQuestion createDraftQuestion(QuestionContent content) {
         return new DraftQuestion(content, QuestionRules.validate(content));
     }
 }

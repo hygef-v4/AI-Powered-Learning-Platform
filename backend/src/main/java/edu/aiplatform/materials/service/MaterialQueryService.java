@@ -37,7 +37,7 @@ public class MaterialQueryService {
     public List<MaterialViews.Detail> listClassMaterials(
             Actor actor, UUID classId, boolean student, List<UUID> ids) {
         if (ids != null && ids.size() > 100)
-            throw ApiException.badRequest("MATERIAL_IDS_LIMIT", "Tối đa 100 học liệu");
+            throw ApiException.createBadRequest("MATERIAL_IDS_LIMIT", "Tối đa 100 học liệu");
         var c = materialAccessPolicy.requireClassListAccess(actor, classId, student);
         return materialRepository.listMaterials(c.subjectId(), classId).stream()
                 .filter(m -> !student || m.status() == Material.Status.ACTIVE && m.enabled())
@@ -50,7 +50,7 @@ public class MaterialQueryService {
         Material m =
                 materialRepository
                         .findMaterial(id)
-                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
         materialAccessPolicy.requireReadAccess(actor, m, classId);
         return m;
     }
@@ -64,11 +64,11 @@ public class MaterialQueryService {
         int number = versionNo == null ? m.currentVersionNo() : versionNo;
         if (m.kind() != Material.Kind.FILE
                 || (actor.role() == Role.STUDENT && number != m.currentVersionNo()))
-            throw ApiException.notFound("MATERIAL_NOT_FOUND");
+            throw ApiException.createNotFound("MATERIAL_NOT_FOUND");
         MaterialVersion v =
                 materialRepository
                         .findVersion(id, number)
-                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
         return artifact.issueDownloadToken(v.fileId(), actor.accountId());
     }
 
@@ -77,7 +77,7 @@ public class MaterialQueryService {
         MaterialVersion current =
                 materialRepository
                         .findVersion(material.id(), material.currentVersionNo())
-                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
         boolean editable =
                 actor.role() != Role.STUDENT
                         && !(contextClassId != null && material.scope() == Material.Scope.SUBJECT)
@@ -93,9 +93,9 @@ public class MaterialQueryService {
                 !history
                         ? List.of()
                         : actor.role() == Role.STUDENT
-                                ? List.of(MaterialViews.Version.of(current))
+                                ? List.of(MaterialViews.Version.createVersion(current))
                                 : materialRepository.listVersions(material.id()).stream()
-                                        .map(MaterialViews.Version::of)
+                                        .map(MaterialViews.Version::createVersion)
                                         .toList();
         return new MaterialViews.Detail(
                 material.id(),
@@ -112,7 +112,7 @@ public class MaterialQueryService {
                 material.version(),
                 material.updatedAt(),
                 editable,
-                MaterialViews.Version.of(current),
+                MaterialViews.Version.createVersion(current),
                 versions,
                 material.enabled(),
                 material.descriptionDocument());

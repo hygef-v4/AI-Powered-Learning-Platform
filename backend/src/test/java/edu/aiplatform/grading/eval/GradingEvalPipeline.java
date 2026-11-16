@@ -112,7 +112,7 @@ final class GradingEvalPipeline {
                 var response = providerCall.callProvider(evalCase.caseKey(), runIndex, request);
                 output = response.output();
                 usage = response.usage();
-                var schemaError = schemaChecker.check(request.outputSchema(), output);
+                var schemaError = schemaChecker.validateValue(request.outputSchema(), output);
                 if (schemaError.isPresent()) {
                     return createFailedRun(evalCase, runIndex, RunStatus.INVALID_OUTPUT, "SCHEMA_MISMATCH",
                             schemaError.get(), true, output, usage, started);
@@ -139,9 +139,9 @@ final class GradingEvalPipeline {
                     evalCase.injection(), items, output, usage, elapsedMillis(started));
         } catch (IProviderGateway.ProviderException ex) {
             return createFailedRun(evalCase, runIndex, RunStatus.PROVIDER_ERROR, describeProviderFailure(ex),
-                    ex.getMessage(), true, output, ex.usage(), started);
+                    ex.getMessage(), true, output, ex.readUsage(), started);
         } catch (ApiException ex) {
-            return createFailedRun(evalCase, runIndex, RunStatus.INVALID_OUTPUT, ex.code(), ex.getMessage(),
+            return createFailedRun(evalCase, runIndex, RunStatus.INVALID_OUTPUT, ex.readCode(), ex.getMessage(),
                     request != null, output, usage, started);
         } catch (RuntimeException ex) {
             return createFailedRun(evalCase, runIndex, RunStatus.INVALID_OUTPUT, ex.getClass().getSimpleName(),
@@ -245,9 +245,9 @@ final class GradingEvalPipeline {
 
     /** App xếp cả 401/403 lẫn 503/429 vào REJECTED; chỉ lỗi xác thực mới đáng dừng cả lượt đánh giá. */
     static String describeProviderFailure(IProviderGateway.ProviderException ex) {
-        boolean auth = ex.kind() == IProviderGateway.FailureKind.REJECTED
-                && (ex.status() == 401 || ex.status() == 403);
-        return auth ? AUTH_REJECTED : ex.kind().name() + (ex.status() > 0 ? "_" + ex.status() : "");
+        boolean auth = ex.readKind() == IProviderGateway.FailureKind.REJECTED
+                && (ex.readStatus() == 401 || ex.readStatus() == 403);
+        return auth ? AUTH_REJECTED : ex.readKind().name() + (ex.readStatus() > 0 ? "_" + ex.readStatus() : "");
     }
 
     private CaseRun createFailedRun(EvalCase evalCase, int runIndex, RunStatus status, String code, String detail,

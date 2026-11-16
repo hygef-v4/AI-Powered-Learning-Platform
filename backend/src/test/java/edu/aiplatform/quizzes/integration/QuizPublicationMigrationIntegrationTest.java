@@ -56,16 +56,16 @@ class QuizPublicationMigrationIntegrationTest {
 
             Flyway.configure().dataSource(pool).locations("classpath:db/migration").load().migrate();
 
-            assertThat(quizzes.find(reviewed.id()).orElseThrow().status()).as("bỏ REVIEWED").isEqualTo(QuizStatus.DRAFT);
+            assertThat(quizzes.findQuiz(reviewed.id()).orElseThrow().status()).as("bỏ REVIEWED").isEqualTo(QuizStatus.DRAFT);
             for (Quiz source : List.of(noProof, denied, wrongType)) {
-                Quiz migrated = quizzes.find(source.id()).orElseThrow();
+                Quiz migrated = quizzes.findQuiz(source.id()).orElseThrow();
                 assertThat(migrated.status()).isEqualTo(QuizStatus.RETIRED);
                 assertThat(migrated.publishedAt()).as("unproven publication must not grant OPEN on reopen").isNull();
-                assertThat(migrated.reopened(NOW).status()).isEqualTo(QuizStatus.DRAFT);
+                assertThat(migrated.markReopened(NOW).status()).isEqualTo(QuizStatus.DRAFT);
             }
-            Quiz migratedPublished = quizzes.find(proven.id()).orElseThrow();
+            Quiz migratedPublished = quizzes.findQuiz(proven.id()).orElseThrow();
             assertThat(migratedPublished.publishedAt()).isEqualTo(NOW);
-            assertThat(migratedPublished.reopened(NOW).status()).isEqualTo(QuizStatus.OPEN);
+            assertThat(migratedPublished.markReopened(NOW).status()).isEqualTo(QuizStatus.OPEN);
         }
     }
 

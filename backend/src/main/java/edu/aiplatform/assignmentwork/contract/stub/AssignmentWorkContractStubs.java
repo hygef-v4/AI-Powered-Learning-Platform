@@ -41,8 +41,8 @@ public class AssignmentWorkContractStubs {
 
             @Override
             public Optional<SubmissionView> getSubmission(UUID attemptId) {
-                return Optional.of(new SubmissionView(attemptId, Stubs.derivedId("assignment", attemptId),
-                        Stubs.derivedId("class", attemptId), Stubs.derivedId("account", attemptId),
+                return Optional.of(new SubmissionView(attemptId, Stubs.deriveId("assignment", attemptId),
+                        Stubs.deriveId("class", attemptId), Stubs.deriveId("account", attemptId),
                         new DocumentModel(List.of()), "", Instant.now(), false, SubmitMode.MANUAL));
             }
 

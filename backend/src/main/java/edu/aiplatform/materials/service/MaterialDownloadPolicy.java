@@ -39,9 +39,9 @@ public class MaterialDownloadPolicy implements IArtifactDownloadPolicy {
                                 .isEmpty()) continue;
                 return;
             } catch (ApiException rejected) {
-                if (rejected.status() != HttpStatus.NOT_FOUND) throw rejected;
+                if (rejected.readStatus() != HttpStatus.NOT_FOUND) throw rejected;
             }
         }
-        throw ApiException.notFound("MATERIAL_NOT_FOUND");
+        throw ApiException.createNotFound("MATERIAL_NOT_FOUND");
     }
 }

@@ -17,7 +17,7 @@ public final class AccountViews {
     public record Summary(UUID id, String email, String displayName, Role role, AccountStatus status,
                           Instant createdAt, Instant updatedAt, String studentCode) {
 
-        static Summary of(Account a) {
+        static Summary createSummary(Account a) {
             return new Summary(a.id(), a.schoolEmail(), a.displayName(), a.role(), a.status(), a.createdAt(),
                     a.updatedAt(), a.studentCode());
         }
@@ -34,7 +34,7 @@ public final class AccountViews {
                          AccountStatus status, Instant createdAt, Instant updatedAt, long version,
                          String studentCode, boolean studentCodeEditable) {
 
-        static Detail of(Account a) {
+        static Detail createDetail(Account a) {
             boolean editable = a.role() == Role.STUDENT && a.status() == AccountStatus.PENDING;
             return new Detail(a.id(), a.schoolEmail(), a.displayName(), a.phoneNumber(), a.role(), a.status(),
                     a.createdAt(), a.updatedAt(), a.version(), a.studentCode(), editable);

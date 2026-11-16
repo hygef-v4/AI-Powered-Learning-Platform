@@ -114,13 +114,13 @@ class JdbcQuestionRepositoryIntegrationTest {
     }
 
     private static QuestionContent content(String stem, QuestionType type, Difficulty difficulty, String... tags) {
-        return QuestionContent.of(type, stem,
+        return QuestionContent.createContent(type, stem,
                 List.of(new QuestionOption("1", "Đúng"), new QuestionOption("2", "Sai")), List.of("1"),
                 "Giải thích", new BigDecimal("1.25"), difficulty, List.of(tags));
     }
 
     private Question draft(String stem) {
-        Question q = Question.newBankDraft(subject, content(stem, QuestionType.MCQ_SINGLE, Difficulty.EASY, "chương 1"),
+        Question q = Question.createBankDraft(subject, content(stem, QuestionType.MCQ_SINGLE, Difficulty.EASY, "chương 1"),
                 author, NOW);
         repository.insert(q);
         return q;
@@ -128,15 +128,15 @@ class JdbcQuestionRepositoryIntegrationTest {
 
     private Question activate(Question q) {
         Question active = q.activate(NOW);
-        assertThat(repository.update(active)).isTrue();
-        return repository.find(q.id()).orElseThrow();
+        assertThat(repository.updateQuestion(active)).isTrue();
+        return repository.findQuestion(q.id()).orElseThrow();
     }
 
     @Test
     void insertedQuestionReadsBackWithJsonFields() {
         Question q = draft("Câu một");
 
-        Question read = repository.find(q.id()).orElseThrow();
+        Question read = repository.findQuestion(q.id()).orElseThrow();
         assertThat(read).isEqualTo(q);
         assertThat(read.content().options()).extracting(QuestionOption::text).containsExactly("Đúng", "Sai");
         assertThat(read.content().tags()).containsExactly("chương 1");
@@ -146,43 +146,43 @@ class JdbcQuestionRepositoryIntegrationTest {
     @Test
     void updateNeedsMatchingVersionAndBumpsIt() {
         Question q = draft("Câu một");
-        Question changed = q.withContent(content("Câu một sửa", QuestionType.MCQ_SINGLE, Difficulty.HARD), NOW);
+        Question changed = q.replaceContent(content("Câu một sửa", QuestionType.MCQ_SINGLE, Difficulty.HARD), NOW);
 
-        assertThat(repository.update(changed)).isTrue();
-        Question read = repository.find(q.id()).orElseThrow();
+        assertThat(repository.updateQuestion(changed)).isTrue();
+        Question read = repository.findQuestion(q.id()).orElseThrow();
         assertThat(read.version()).isEqualTo(1);
         assertThat(read.content().stem()).isEqualTo("Câu một sửa");
-        assertThat(repository.update(changed)).as("version cũ").isFalse();
+        assertThat(repository.updateQuestion(changed)).as("version cũ").isFalse();
     }
 
     @Test
     void lineageKeepsAtMostOneDraftAndVersionsInOrder() {
         Question active = activate(draft("Câu một"));
-        Question v2 = active.nextDraft(repository.maxVersionNo(active.lineageId()) + 1, author, NOW);
+        Question v2 = active.createNextDraft(repository.findMaxVersionNo(active.lineageId()) + 1, author, NOW);
         repository.insert(v2);
 
         assertThat(repository.findBankDraft(active.lineageId())).map(Question::id).hasValue(v2.id());
-        assertThat(repository.lineage(active.lineageId())).extracting(Question::versionNo).containsExactly(2, 1);
-        Question another = active.nextDraft(3, author, NOW);
+        assertThat(repository.listLineage(active.lineageId())).extracting(Question::versionNo).containsExactly(2, 1);
+        Question another = active.createNextDraft(3, author, NOW);
         assertThatThrownBy(() -> repository.insert(another)).isInstanceOf(DuplicateKeyException.class);
     }
 
     @Test
     void deleteOnlyRemovesDraftsWithMatchingVersion() {
         Question active = activate(draft("Câu một"));
-        assertThat(repository.delete(active.id(), active.version())).isFalse();
+        assertThat(repository.deleteQuestion(active.id(), active.version())).isFalse();
         Question q = draft("Câu hai");
-        assertThat(repository.delete(q.id(), 5)).isFalse();
-        assertThat(repository.delete(q.id(), 0)).isTrue();
-        assertThat(repository.find(q.id())).isEmpty();
+        assertThat(repository.deleteQuestion(q.id(), 5)).isFalse();
+        assertThat(repository.deleteQuestion(q.id(), 0)).isTrue();
+        assertThat(repository.findQuestion(q.id())).isEmpty();
     }
 
     @Test
     void bankListShowsOneRowPerLineageWithDraftFlagAndFilters() {
         Question first = activate(draft("Phương trình bậc hai"));
-        repository.insert(first.nextDraft(2, author, NOW));
+        repository.insert(first.createNextDraft(2, author, NOW));
         draft("Hệ phương trình");
-        Question multi = Question.newBankDraft(subject,
+        Question multi = Question.createBankDraft(subject,
                 content("Chọn số nguyên tố", QuestionType.MCQ_MULTI, Difficulty.HARD, "số học"), author, NOW);
         repository.insert(multi);
 
@@ -213,11 +213,11 @@ class JdbcQuestionRepositoryIntegrationTest {
     @Test
     void retiredNewerVersionDoesNotHideActiveOlderVersionInLineage() {
         Question v1 = activate(draft("Câu phiên bản 1 đang hoạt động"));
-        Question v2Draft = v1.nextDraft(2, author, NOW);
+        Question v2Draft = v1.createNextDraft(2, author, NOW);
         repository.insert(v2Draft);
         Question v2Active = activate(v2Draft);
         Question v2Retired = v2Active.retire(NOW.plusSeconds(10));
-        assertThat(repository.update(v2Retired)).isTrue();
+        assertThat(repository.updateQuestion(v2Retired)).isTrue();
 
         var bankAll = repository.searchBank(subject, new BankQuery(null, null, null, null, 0, 20));
         assertThat(bankAll.items()).singleElement().satisfies(row -> {
@@ -226,14 +226,14 @@ class JdbcQuestionRepositoryIntegrationTest {
         });
         var bankActive = repository.searchBank(subject, new BankQuery(null, null, QuestionStatus.ACTIVE, null, 0, 20));
         assertThat(bankActive.items()).extracting(r -> r.question().id()).containsExactly(v1.id());
-        assertThat(repository.activePool(subject)).extracting(IQuestionRepository.PoolEntry::id).containsExactly(v1.id());
+        assertThat(repository.listActivePool(subject)).extracting(IQuestionRepository.PoolEntry::id).containsExactly(v1.id());
         assertThat(repository.countActive(subject, new IQuestionRepository.PickQuery(null, null, null, java.util.Set.of(), 0, 20)))
                 .isEqualTo(1);
     }
 
     @Test
     void databaseRejectsInvalidQuestionsEvenIfCodeIsBypassed() {
-        Question q = Question.newBankDraft(subject, QuestionContent.of(QuestionType.MCQ_SINGLE, "Câu",
+        Question q = Question.createBankDraft(subject, QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Câu",
                 List.of(new QuestionOption("1", "A"), new QuestionOption("2", "B")), List.of("1", "2"), null,
                 BigDecimal.ONE, Difficulty.EASY, List.of()), author, NOW);
         assertThatThrownBy(() -> repository.insert(q)).isInstanceOf(DataIntegrityViolationException.class);

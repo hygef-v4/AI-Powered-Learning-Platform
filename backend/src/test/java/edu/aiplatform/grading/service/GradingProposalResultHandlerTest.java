@@ -28,7 +28,7 @@ class GradingProposalResultHandlerTest {
         when(proposals.findForEvaluation(e.id)).thenReturn(List.of(p));
         when(proposals.findEvaluationId(p.id)).thenReturn(Optional.of(e.id));
         when(proposals.findById(p.id)).thenReturn(Optional.of(p));
-        when(proposals.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(proposals.saveProposal(any())).thenAnswer(i -> i.getArgument(0));
         var json = new ObjectMapper().findAndRegisterModules();
         var tx = new GradingProposalTransactions(repo, proposals, mock(GradingService.class), mock(GradingAccess.class),
                 mock(SubmissionReviewService.class), mock(IAssignmentQuery.class), mock(GradingPromptBuilder.class),
@@ -63,7 +63,7 @@ class GradingProposalResultHandlerTest {
         when(proposals.findForEvaluation(e.id)).thenReturn(List.of(p));
         when(proposals.findEvaluationId(p.id)).thenReturn(Optional.of(e.id));
         when(proposals.findById(p.id)).thenReturn(Optional.of(p));
-        when(proposals.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(proposals.saveProposal(any())).thenAnswer(i -> i.getArgument(0));
         var json = new ObjectMapper().findAndRegisterModules();
         var tx = new GradingProposalTransactions(repo, proposals, mock(GradingService.class), mock(GradingAccess.class),
                 mock(SubmissionReviewService.class), mock(IAssignmentQuery.class), mock(GradingPromptBuilder.class),
@@ -118,7 +118,7 @@ class GradingProposalResultHandlerTest {
         when(proposals.findForEvaluation(e.id)).thenReturn(List.of(p));
         when(proposals.findEvaluationId(p.id)).thenReturn(Optional.of(e.id));
         when(proposals.findById(p.id)).thenReturn(Optional.of(p));
-        when(proposals.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(proposals.saveProposal(any())).thenAnswer(i -> i.getArgument(0));
         var handler = new GradingProposalResultHandler(new GradingProposalTransactions(
                 repo, proposals, grading, access, mock(SubmissionReviewService.class),
                 mock(IAssignmentQuery.class), mock(GradingPromptBuilder.class),
@@ -138,7 +138,7 @@ class GradingProposalResultHandlerTest {
 
         // Duplicate delivery is idempotent and does not re-save or alter proposal.
         assertThat(handler.onReady(result)).isEqualTo(ApplyOutcome.APPLIED);
-        verify(proposals, times(1)).save(p);
+        verify(proposals, times(1)).saveProposal(p);
     }
 
     @Test
@@ -159,9 +159,9 @@ class GradingProposalResultHandlerTest {
         p.requesterId = UUID.randomUUID();
         when(repo.lockById(e.id)).thenReturn(Optional.of(e));
         when(proposals.findForEvaluation(e.id)).thenReturn(List.of(p));
-        when(proposals.save(any())).thenAnswer(i -> i.getArgument(0));
-        doThrow(ApiException.unavailable("SUBMISSION_UNAVAILABLE", "Submission service temporarily unavailable"))
-                .doThrow(ApiException.forbidden("OUT_OF_CLASS_SCOPE"))
+        when(proposals.saveProposal(any())).thenAnswer(i -> i.getArgument(0));
+        doThrow(ApiException.createUnavailable("SUBMISSION_UNAVAILABLE", "Submission service temporarily unavailable"))
+                .doThrow(ApiException.createForbidden("OUT_OF_CLASS_SCOPE"))
                 .when(access).requireTeacher(any(), eq(e.classId), eq(Actions.GRADING_WRITE));
         var tx = new GradingProposalTransactions(repo, proposals, grading, access,
                 mock(SubmissionReviewService.class), mock(IAssignmentQuery.class), mock(GradingPromptBuilder.class),
@@ -172,7 +172,7 @@ class GradingProposalResultHandlerTest {
         // First attempt: 503 rethrows so worker retries handler without losing proposal.
         assertThatThrownBy(() -> tx.acceptProposal(result)).isInstanceOf(ApiException.class);
         assertThat(p.status).isEqualTo("PENDING");
-        verify(proposals, never()).save(any());
+        verify(proposals, never()).saveProposal(any());
 
         // Second attempt: 403 marks proposal REJECTED and leaves official grade untouched.
         assertThat(tx.acceptProposal(result)).isEqualTo(ApplyOutcome.REJECTED);
@@ -200,7 +200,7 @@ class GradingProposalResultHandlerTest {
         p.requesterId = UUID.randomUUID();
         when(repo.lockById(e.id)).thenReturn(Optional.of(e));
         when(proposals.findForEvaluation(e.id)).thenReturn(List.of(p));
-        when(proposals.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(proposals.saveProposal(any())).thenAnswer(i -> i.getArgument(0));
         var tx = new GradingProposalTransactions(repo, proposals, grading, access,
                 mock(SubmissionReviewService.class), mock(IAssignmentQuery.class), mock(GradingPromptBuilder.class),
                 new GradingProposalValidator(json), json, Clock.systemUTC());
@@ -233,7 +233,7 @@ class GradingProposalResultHandlerTest {
         p.requesterId = UUID.randomUUID();
         when(repo.lockById(e.id)).thenReturn(Optional.of(e));
         when(proposals.findForEvaluation(e.id)).thenReturn(List.of(p));
-        when(proposals.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(proposals.saveProposal(any())).thenAnswer(i -> i.getArgument(0));
         var tx = new GradingProposalTransactions(repo, proposals, grading, access, review, assignments,
                 new GradingPromptBuilder(mock(IDocumentModel.class), json), new GradingProposalValidator(json), json,
                 Clock.systemUTC());
@@ -257,7 +257,7 @@ class GradingProposalResultHandlerTest {
         when(proposals.findEvaluationId(p.id)).thenReturn(Optional.of(p.evaluationId));
         when(repo.lockById(p.evaluationId)).thenReturn(Optional.of(new Evaluation()));
         when(proposals.findById(p.id)).thenReturn(Optional.of(p));
-        when(proposals.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(proposals.saveProposal(any())).thenAnswer(i -> i.getArgument(0));
         var json = new ObjectMapper().findAndRegisterModules();
         var tx = new GradingProposalTransactions(repo, proposals, mock(GradingService.class), mock(GradingAccess.class),
                 mock(SubmissionReviewService.class), mock(IAssignmentQuery.class), mock(GradingPromptBuilder.class),
@@ -294,7 +294,7 @@ class GradingProposalResultHandlerTest {
         tx.invalidateChangedSnapshot(e.id);
         assertThat(p.status).isEqualTo("STALE");
         assertThat(e.score).isNull();
-        verify(proposals).save(p);
+        verify(proposals).saveProposal(p);
     }
 
     @Test
@@ -335,7 +335,7 @@ class GradingProposalResultHandlerTest {
             p.requesterId = UUID.randomUUID();
             when(repo.lockById(e.id)).thenReturn(Optional.of(e));
             when(proposals.findForEvaluation(e.id)).thenReturn(List.of(p));
-            when(proposals.save(any())).thenAnswer(i -> i.getArgument(0));
+            when(proposals.saveProposal(any())).thenAnswer(i -> i.getArgument(0));
             var handler = new GradingProposalResultHandler(new GradingProposalTransactions(
                     repo, proposals, mock(GradingService.class), mock(GradingAccess.class),
                     mock(SubmissionReviewService.class), mock(IAssignmentQuery.class),

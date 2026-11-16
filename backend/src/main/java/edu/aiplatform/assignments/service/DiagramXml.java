@@ -40,7 +40,7 @@ final class DiagramXml {
             return Optional.of("DIAGRAM_TOO_LARGE");
         }
         try {
-            graphModels(xml);
+            listGraphModels(xml);
             return Optional.empty();
         } catch (IllegalArgumentException e) {
             return Optional.of("DIAGRAM_XML_INVALID");
@@ -48,11 +48,11 @@ final class DiagramXml {
     }
 
     /** Số hình và đường nối; 0 là sơ đồ rỗng. XML lỗi trả 0. */
-    static int cellCount(String xml) {
+    static int countCells(String xml) {
         try {
             int count = 0;
-            for (Element model : graphModels(xml)) {
-                count += cells(model).size();
+            for (Element model : listGraphModels(xml)) {
+                count += listCells(model).size();
             }
             return count;
         } catch (IllegalArgumentException e) {
@@ -71,12 +71,12 @@ final class DiagramXml {
         Set<String> tokens = new HashSet<>();
         boolean arrows = false;
         try {
-            for (Element model : graphModels(xml)) {
+            for (Element model : listGraphModels(xml)) {
                 NodeList all = model.getElementsByTagNameNS("*", "*");
                 for (int i = 0; i < all.getLength(); i++) {
                     Element element = (Element) all.item(i);
                     boolean edge = "1".equals(element.getAttribute("edge"));
-                    if (!"mxCell".equals(name(element)) || (!edge && !"1".equals(element.getAttribute("vertex")))) {
+                    if (!"mxCell".equals(readNodeName(element)) || (!edge && !"1".equals(element.getAttribute("vertex")))) {
                         continue;
                     }
                     String style = element.getAttribute("style");
@@ -126,15 +126,15 @@ final class DiagramXml {
     }
 
     /** Dạng chữ ngắn gọn: mỗi trang liệt kê hình (nhãn, kiểu) và đường nối (nguồn → đích, nét đứt, nhãn). */
-    static String compact(String xml, int maxChars) {
+    static String compactXml(String xml, int maxChars) {
         StringBuilder out = new StringBuilder();
         try {
-            List<Element> models = graphModels(xml);
+            List<Element> models = listGraphModels(xml);
             Document document = SecureXml.parse(xml);
             Element root = document.getDocumentElement();
             List<Element> pages = new ArrayList<>();
-            if ("mxfile".equals(name(root))) {
-                pages.addAll(children(root, "diagram"));
+            if ("mxfile".equals(readNodeName(root))) {
+                pages.addAll(listChildren(root, "diagram"));
             }
             for (int i = 0; i < models.size(); i++) {
                 String page = i < pages.size() ? pages.get(i).getAttribute("name") : "";
@@ -143,7 +143,7 @@ final class DiagramXml {
                     out.append(" \"").append(clean(page)).append('"');
                 }
                 out.append(":\n");
-                for (Cell cell : cells(models.get(i))) {
+                for (Cell cell : listCells(models.get(i))) {
                     if (cell.edge()) {
                         out.append("- nối ").append(cell.source()).append(" -> ").append(cell.target());
                         if (cell.dashed()) {
@@ -172,11 +172,11 @@ final class DiagramXml {
     }
 
     /** Các {@code mxGraphModel}: gốc là model, hoặc mỗi {@code diagram} của {@code mxfile} (giải nén nếu cần). */
-    static List<Element> graphModels(String xml) {
-        return graphModels(xml, MAX_INFLATED_BYTES);
+    static List<Element> listGraphModels(String xml) {
+        return listGraphModels(xml, MAX_INFLATED_BYTES);
     }
 
-    static List<Element> graphModels(String xml, int maxExpandedBytes) {
+    static List<Element> listGraphModels(String xml, int maxExpandedBytes) {
         if (xml == null) {
             throw new IllegalArgumentException("Sơ đồ không hợp lệ");
         }
@@ -187,7 +187,7 @@ final class DiagramXml {
         int[] remainingBytes = {maxExpandedBytes - xmlBytes};
         Document document = SecureXml.parse(xml);
         Element root = document.getDocumentElement();
-        String rootName = name(root);
+        String rootName = readNodeName(root);
         if ("mxGraphModel".equals(rootName)) {
             return List.of(root);
         }
@@ -195,12 +195,12 @@ final class DiagramXml {
             throw new IllegalArgumentException("Gốc phải là mxfile hoặc mxGraphModel");
         }
         List<Element> models = new ArrayList<>();
-        List<Element> diagrams = children(root, "diagram");
+        List<Element> diagrams = listChildren(root, "diagram");
         if (diagrams.size() > MAX_PAGES) {
             throw new IllegalArgumentException("Sơ đồ có quá nhiều trang");
         }
         for (Element diagram : diagrams) {
-            List<Element> inline = children(diagram, "mxGraphModel");
+            List<Element> inline = listChildren(diagram, "mxGraphModel");
             if (!inline.isEmpty()) {
                 models.add(inline.get(0));
                 continue;
@@ -209,8 +209,8 @@ final class DiagramXml {
             if (packed.isEmpty()) {
                 continue;
             }
-            Element model = SecureXml.parse(inflate(packed, remainingBytes)).getDocumentElement();
-            if (!"mxGraphModel".equals(name(model))) {
+            Element model = SecureXml.parse(inflateXml(packed, remainingBytes)).getDocumentElement();
+            if (!"mxGraphModel".equals(readNodeName(model))) {
                 throw new IllegalArgumentException("Trang sơ đồ không hợp lệ");
             }
             models.add(model);
@@ -219,7 +219,7 @@ final class DiagramXml {
     }
 
     /** Trang nén của Draw.io: base64 → raw deflate → URL-decode. */
-    private static String inflate(String packed, int[] remainingBytes) {
+    private static String inflateXml(String packed, int[] remainingBytes) {
         byte[] compressed;
         try {
             compressed = Base64.getDecoder().decode(packed.replaceAll("\\s", ""));
@@ -250,12 +250,12 @@ final class DiagramXml {
         }
     }
 
-    private static List<Cell> cells(Element model) {
+    private static List<Cell> listCells(Element model) {
         List<Cell> cells = new ArrayList<>();
         NodeList all = model.getElementsByTagNameNS("*", "*");
         for (int i = 0; i < all.getLength(); i++) {
             Element element = (Element) all.item(i);
-            if (!"mxCell".equals(name(element))) {
+            if (!"mxCell".equals(readNodeName(element))) {
                 continue;
             }
             boolean vertex = "1".equals(element.getAttribute("vertex"));
@@ -266,18 +266,18 @@ final class DiagramXml {
             String id = element.getAttribute("id");
             String label = element.getAttribute("value");
             Node parent = element.getParentNode();
-            if (parent instanceof Element wrapper && ("UserObject".equals(name(wrapper)) || "object".equals(name(wrapper)))) {
+            if (parent instanceof Element wrapper && ("UserObject".equals(readNodeName(wrapper)) || "object".equals(readNodeName(wrapper)))) {
                 id = wrapper.getAttribute("id");
                 label = wrapper.getAttribute("label");
             }
             String style = element.getAttribute("style");
             cells.add(new Cell(id, edge, element.getAttribute("source"), element.getAttribute("target"),
-                    clean(label), shape(style), style.contains("dashed=1")));
+                    clean(label), resolveShape(style), style.contains("dashed=1")));
         }
         return cells;
     }
 
-    private static String shape(String style) {
+    private static String resolveShape(String style) {
         if (style == null || style.isBlank()) {
             return "";
         }
@@ -304,15 +304,15 @@ final class DiagramXml {
         return text.length() > MAX_LABEL ? text.substring(0, MAX_LABEL) + "…" : text;
     }
 
-    static String name(Node node) {
+    static String readNodeName(Node node) {
         return node.getLocalName() != null ? node.getLocalName() : node.getNodeName();
     }
 
-    private static List<Element> children(Element parent, String localName) {
+    private static List<Element> listChildren(Element parent, String localName) {
         List<Element> result = new ArrayList<>();
         NodeList nodes = parent.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
-            if (nodes.item(i) instanceof Element child && localName.equals(name(child))) {
+            if (nodes.item(i) instanceof Element child && localName.equals(readNodeName(child))) {
                 result.add(child);
             }
         }

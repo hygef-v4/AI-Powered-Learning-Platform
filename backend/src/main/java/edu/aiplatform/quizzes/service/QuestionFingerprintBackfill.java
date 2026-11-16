@@ -29,11 +29,11 @@ class QuestionFingerprintBackfill {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    void run() {
+    void runBackfill() {
         try {
             int done = 0;
             for (;;) {
-                List<Question> batch = questions.withoutFingerprint(BATCH);
+                List<Question> batch = questions.listWithoutFingerprint(BATCH);
                 if (batch.isEmpty()) {
                     break;
                 }

@@ -40,7 +40,7 @@ public class SubmissionReviewController {
      * Aggregates grading progress summaries for all gradable assignments in a course class.
      */
     @GetMapping("/submission-progress")
-    public Map<UUID, SubmissionPage> progress(@AuthenticationPrincipal Actor actor,
+    public Map<UUID, SubmissionPage> loadProgress(@AuthenticationPrincipal Actor actor,
             @PathVariable UUID classId) {
         return submissionReviewService.loadProgress(actor, classId);
     }

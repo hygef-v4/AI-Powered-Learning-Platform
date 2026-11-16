@@ -14,14 +14,14 @@ abstract class StrictRequest {
     private final List<String> unknownFields = new ArrayList<>();
 
     @JsonAnySetter
-    void unknown(String name, Object value) {
+    void rejectUnknownField(String name, Object value) {
         unknownFields.add(name);
     }
 
     /** Có field không được phép (avatar, email, role, status, accountId...) thì trả 400 trước khi ghi. */
     void rejectUnknownFields() {
         if (!unknownFields.isEmpty()) {
-            throw ApiException.badRequest("INVALID_REQUEST",
+            throw ApiException.createBadRequest("INVALID_REQUEST",
                     "Dữ liệu gửi lên không hợp lệ hoặc có trường không được phép sửa");
         }
     }

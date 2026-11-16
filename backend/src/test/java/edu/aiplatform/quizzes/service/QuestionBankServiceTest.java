@@ -64,28 +64,28 @@ class QuestionBankServiceTest {
                 mock(QuizPaperService.class), event -> { }, Clock.fixed(NOW, ZoneOffset.UTC));
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
         when(subjects.isActive(subject)).thenReturn(true);
-        when(repo.update(any())).thenReturn(true);
-        when(repo.lineage(any())).thenReturn(List.of());
+        when(repo.updateQuestion(any())).thenReturn(true);
+        when(repo.listLineage(any())).thenReturn(List.of());
         when(repo.findBankDraft(any())).thenReturn(Optional.empty());
     }
 
     static QuestionContent content() {
-        return QuestionContent.of(QuestionType.MCQ_SINGLE, "Thủ đô của Việt Nam?",
+        return QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Thủ đô của Việt Nam?",
                 List.of(new QuestionOption("1", "Hà Nội"), new QuestionOption("2", "Huế")), List.of("1"),
                 "Hà Nội là thủ đô.", BigDecimal.ONE, Difficulty.EASY, List.of("địa lý"));
     }
 
     private Question stored(Question q) {
-        when(repo.find(q.id())).thenReturn(Optional.of(q));
+        when(repo.findQuestion(q.id())).thenReturn(Optional.of(q));
         return q;
     }
 
     private Question draft() {
-        return stored(Question.newBankDraft(subject, content(), manager.accountId(), NOW));
+        return stored(Question.createBankDraft(subject, content(), manager.accountId(), NOW));
     }
 
     private Question active() {
-        return stored(Question.newBankDraft(subject, content(), manager.accountId(), NOW).activate(NOW));
+        return stored(Question.createBankDraft(subject, content(), manager.accountId(), NOW).activate(NOW));
     }
 
     private static ApiException api(Runnable call) {
@@ -99,7 +99,7 @@ class QuestionBankServiceTest {
 
     @Test
     void createStoresDraftAndAuditsWithoutContent() {
-        var detail = service.create(manager, subject, content());
+        var detail = service.createQuestion(manager, subject, content());
 
         assertThat(detail.question().status()).isEqualTo(QuestionStatus.DRAFT);
         assertThat(detail.question().versionNo()).isEqualTo(1);
@@ -113,11 +113,11 @@ class QuestionBankServiceTest {
 
     @Test
     void invalidContentIsRejectedWithViolations() {
-        QuestionContent bad = QuestionContent.of(QuestionType.MCQ_SINGLE, "Câu", List.of(new QuestionOption("1", "A")),
+        QuestionContent bad = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Câu", List.of(new QuestionOption("1", "A")),
                 List.of("1"), null, BigDecimal.ONE, null, null);
-        assertThatThrownBy(() -> service.create(manager, subject, bad))
+        assertThatThrownBy(() -> service.createQuestion(manager, subject, bad))
                 .isInstanceOfSatisfying(QuestionInvalidException.class,
-                        e -> assertThat(e.violations()).extracting(v -> v.code()).contains("OPTION_COUNT"));
+                        e -> assertThat(e.listViolations()).extracting(v -> v.code()).contains("OPTION_COUNT"));
         verify(repo, never()).insert(any());
     }
 
@@ -127,9 +127,9 @@ class QuestionBankServiceTest {
         Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
         Question q = draft();
 
-        ApiException failure = api(() -> service.detail(teacher, q.id()));
+        ApiException failure = api(() -> service.loadQuestion(teacher, q.id()));
 
-        assertThat(failure.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(failure.readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(audits).singleElement().satisfies(e -> {
             assertThat(e.action()).isEqualTo("ACCESS_DENIED");
             assertThat(e.result()).isEqualTo(AuditResult.DENIED);
@@ -141,46 +141,46 @@ class QuestionBankServiceTest {
     void authorizationOutageFailsClosedWithoutDeniedAudit() {
         when(authorization.authorize(any(), anyString(), any()))
                 .thenReturn(AuthorizationDecision.deny("DEPENDENCY_UNAVAILABLE"));
-        ApiException failure = api(() -> service.list(manager, subject,
+        ApiException failure = api(() -> service.listQuestions(manager, subject,
                 new QuestionBankService.Filter(null, null, null, null, null, null)));
-        assertThat(failure.status()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(failure.readStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(audits).isEmpty();
     }
 
     @Test
     void archivedSubjectIsReadOnlyAndSubjectOutageIsBusy() {
         when(subjects.isActive(subject)).thenReturn(false);
-        assertThat(api(() -> service.create(manager, subject, content())).code()).isEqualTo("SUBJECT_NOT_ACTIVE");
+        assertThat(api(() -> service.createQuestion(manager, subject, content())).readCode()).isEqualTo("SUBJECT_NOT_ACTIVE");
         when(subjects.isActive(subject)).thenThrow(new IllegalStateException("U04 down"));
-        assertThat(api(() -> service.create(manager, subject, content())).status())
+        assertThat(api(() -> service.createQuestion(manager, subject, content())).readStatus())
                 .isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @Test
     void listRejectsPageSizeOverHundred() {
-        ApiException failure = api(() -> service.list(manager, subject,
+        ApiException failure = api(() -> service.listQuestions(manager, subject,
                 new QuestionBankService.Filter(null, null, null, null, 0, 101)));
-        assertThat(failure.code()).isEqualTo("QUESTION_QUERY_INVALID");
+        assertThat(failure.readCode()).isEqualTo("QUESTION_QUERY_INVALID");
     }
 
     @Test
     void updateNeedsDraftAndMatchingVersion() {
         Question active = active();
-        assertThat(api(() -> service.update(manager, active.id(), content(), 0)).code())
+        assertThat(api(() -> service.updateQuestion(manager, active.id(), content(), 0)).readCode())
                 .isEqualTo("QUESTION_NOT_EDITABLE");
 
         Question draft = draft();
-        assertThat(api(() -> service.update(manager, draft.id(), content(), 7)).code())
+        assertThat(api(() -> service.updateQuestion(manager, draft.id(), content(), 7)).readCode())
                 .isEqualTo("QUESTION_VERSION_CONFLICT");
-        when(repo.update(any())).thenReturn(false);
-        assertThat(api(() -> service.update(manager, draft.id(), content(), 0)).status())
+        when(repo.updateQuestion(any())).thenReturn(false);
+        assertThat(api(() -> service.updateQuestion(manager, draft.id(), content(), 0)).readStatus())
                 .isEqualTo(HttpStatus.CONFLICT);
     }
 
     @Test
     void editingActiveQuestionOpensNextDraftOrReturnsExistingOne() {
         Question active = active();
-        when(repo.maxVersionNo(active.lineageId())).thenReturn(1);
+        when(repo.findMaxVersionNo(active.lineageId())).thenReturn(1);
 
         var opened = service.openDraft(manager, active.id());
         assertThat(opened.question().versionNo()).isEqualTo(2);
@@ -188,7 +188,7 @@ class QuestionBankServiceTest {
         assertThat(opened.question().status()).isEqualTo(QuestionStatus.DRAFT);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("QUESTION_CREATED");
 
-        Question existing = active.nextDraft(2, manager.accountId(), NOW);
+        Question existing = active.createNextDraft(2, manager.accountId(), NOW);
         when(repo.findBankDraft(active.lineageId())).thenReturn(Optional.of(existing));
         assertThat(service.openDraft(manager, active.id()).question().id()).isEqualTo(existing.id());
     }
@@ -196,7 +196,7 @@ class QuestionBankServiceTest {
     @Test
     void concurrentDraftOpeningReturnsTheDraftThatWon() {
         Question active = active();
-        Question winner = active.nextDraft(2, UUID.randomUUID(), NOW);
+        Question winner = active.createNextDraft(2, UUID.randomUUID(), NOW);
         when(repo.findBankDraft(active.lineageId())).thenReturn(Optional.empty(), Optional.of(winner));
         doThrow(new DuplicateKeyException("ux_questions_bank_draft")).when(repo).insert(any());
 
@@ -207,21 +207,21 @@ class QuestionBankServiceTest {
     void activateValidatesAndAudits() {
         Question draft = draft();
         Question activated = draft.activate(NOW);
-        when(repo.find(draft.id())).thenReturn(Optional.of(draft), Optional.of(activated));
+        when(repo.findQuestion(draft.id())).thenReturn(Optional.of(draft), Optional.of(activated));
 
         assertThat(service.activate(manager, draft.id(), 0).question().status()).isEqualTo(QuestionStatus.ACTIVE);
-        verify(repo).update(any());
+        verify(repo).updateQuestion(any());
         assertThat(audits).extracting(AuditEvent::action).containsExactly("QUESTION_ACTIVATED");
         Question again = active();
-        assertThat(api(() -> service.activate(manager, again.id(), 0)).code()).isEqualTo("QUESTION_NOT_DRAFT");
+        assertThat(api(() -> service.activate(manager, again.id(), 0)).readCode()).isEqualTo("QUESTION_NOT_DRAFT");
     }
 
     @Test
     void retireOnlyActiveQuestions() {
         Question draft = draft();
-        assertThat(api(() -> service.retire(manager, draft.id(), 0)).code()).isEqualTo("QUESTION_NOT_ACTIVE");
+        assertThat(api(() -> service.retire(manager, draft.id(), 0)).readCode()).isEqualTo("QUESTION_NOT_ACTIVE");
         Question active = active();
-        when(repo.find(active.id())).thenReturn(Optional.of(active), Optional.of(active.retire(NOW)));
+        when(repo.findQuestion(active.id())).thenReturn(Optional.of(active), Optional.of(active.retire(NOW)));
         assertThat(service.retire(manager, active.id(), 0).question().status()).isEqualTo(QuestionStatus.RETIRED);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("QUESTION_RETIRED");
     }
@@ -229,21 +229,21 @@ class QuestionBankServiceTest {
     @Test
     void deleteOnlyNeverActivatedDraftsOthersMustBeRetired() {
         Question active = active();
-        assertThat(api(() -> service.delete(manager, active.id(), 0)).code()).isEqualTo("QUESTION_DELETE_BLOCKED");
-        verify(repo, never()).delete(any(), eq(0L));
+        assertThat(api(() -> service.deleteQuestion(manager, active.id(), 0)).readCode()).isEqualTo("QUESTION_DELETE_BLOCKED");
+        verify(repo, never()).deleteQuestion(any(), eq(0L));
 
         Question draft = draft();
-        when(repo.delete(draft.id(), 0)).thenReturn(true);
-        service.delete(manager, draft.id(), 0);
+        when(repo.deleteQuestion(draft.id(), 0)).thenReturn(true);
+        service.deleteQuestion(manager, draft.id(), 0);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("QUESTION_DELETED");
     }
 
     @Test
     void quizInlineQuestionsAreNotReachableThroughTheBank() {
-        Question bank = Question.newBankDraft(subject, content(), manager.accountId(), NOW);
+        Question bank = Question.createBankDraft(subject, content(), manager.accountId(), NOW);
         Question inline = new Question(bank.id(), bank.lineageId(), 1, QuestionScope.QUIZ,
                 subject, UUID.randomUUID(), content(), QuestionStatus.DRAFT, null, manager.accountId(), NOW, NOW, 0);
         stored(inline);
-        assertThat(api(() -> service.detail(manager, inline.id())).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> service.loadQuestion(manager, inline.id())).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 }

@@ -32,12 +32,12 @@ public class ActivityEventRepository {
                 .param("id", e.id()).param("accountId", e.accountId()).param("classId", e.classId())
                 .param("workKind", e.workKind().name()).param("workId", e.workId()).param("sessionId", e.sessionId())
                 .param("clientEventId", e.clientEventId()).param("sequence", e.sequence())
-                .param("kind", e.kind().name()).param("clientTime", AttemptRepository.ts(e.clientTime()))
-                .param("serverTime", AttemptRepository.ts(e.serverTime())).param("policyVersion", e.policyVersion())
+                .param("kind", e.kind().name()).param("clientTime", AttemptRepository.convertTimestamp(e.clientTime()))
+                .param("serverTime", AttemptRepository.convertTimestamp(e.serverTime())).param("policyVersion", e.policyVersion())
                 .update();
     }
 
-    public List<ActivityEvent> list(WorkKind kind, UUID workId, UUID accountId) {
+    public List<ActivityEvent> listEvents(WorkKind kind, UUID workId, UUID accountId) {
         return jdbc.sql("select * from activity_events where work_kind = :kind and work_id = :workId "
                         + "and account_id = :accountId order by server_time, sequence")
                 .param("kind", kind.name()).param("workId", workId).param("accountId", accountId)
@@ -48,7 +48,7 @@ public class ActivityEventRepository {
     public int deleteOlderThan(Instant cutoff, int limit) {
         return jdbc.sql("delete from activity_events where id in (select id from activity_events "
                         + "where server_time < :cutoff order by server_time limit :limit)")
-                .param("cutoff", AttemptRepository.ts(cutoff)).param("limit", limit).update();
+                .param("cutoff", AttemptRepository.convertTimestamp(cutoff)).param("limit", limit).update();
     }
 
     private static ActivityEvent map(ResultSet rs, int row) throws SQLException {
@@ -56,7 +56,7 @@ public class ActivityEventRepository {
                 rs.getObject("class_id", UUID.class), WorkKind.valueOf(rs.getString("work_kind")),
                 rs.getObject("work_id", UUID.class), rs.getObject("session_id", UUID.class),
                 rs.getString("client_event_id"), rs.getLong("sequence"), ActivityKind.valueOf(rs.getString("kind")),
-                AttemptRepository.instant(rs, "client_time"), AttemptRepository.instant(rs, "server_time"),
+                AttemptRepository.readInstant(rs, "client_time"), AttemptRepository.readInstant(rs, "server_time"),
                 rs.getInt("policy_version"));
     }
 }

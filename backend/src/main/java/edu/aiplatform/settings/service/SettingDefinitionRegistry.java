@@ -35,11 +35,11 @@ public class SettingDefinitionRegistry {
         this.clock = clock;
     }
 
-    public Optional<SettingDefinition> find(String key) {
+    public Optional<SettingDefinition> findDefinition(String key) {
         return Optional.ofNullable(definitions.get(key));
     }
 
-    public Collection<SettingDefinition> all() {
+    public Collection<SettingDefinition> listAll() {
         return definitions.values();
     }
 
@@ -47,12 +47,12 @@ public class SettingDefinitionRegistry {
     @EventListener(ApplicationReadyEvent.class)
     public void initialize() {
         for (SettingDefinition definition : definitions.values()) {
-            repository.insertIfAbsent(definition.key(), definition.group().name(), json(definition.defaultValue()),
+            repository.insertIfAbsent(definition.key(), definition.group().name(), writeJson(definition.defaultValue()),
                     clock.instant());
         }
     }
 
-    private String json(Object value) {
+    private String writeJson(Object value) {
         if (value == null) {
             return null;
         }

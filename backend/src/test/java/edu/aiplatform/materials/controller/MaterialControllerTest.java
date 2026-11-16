@@ -104,7 +104,7 @@ class MaterialControllerTest {
     @Test
     void deniedDownloadIs404AndSafe() throws Exception {
         when(materialQueryService.issueDownloadToken(actor, id, null, null))
-                .thenThrow(edu.aiplatform.shared.error.ApiException.notFound("MATERIAL_NOT_FOUND"));
+                .thenThrow(edu.aiplatform.shared.error.ApiException.createNotFound("MATERIAL_NOT_FOUND"));
         mvc.perform(post("/api/v1/materials/" + id + "/download-token"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("MATERIAL_NOT_FOUND"));

@@ -29,14 +29,14 @@ class UnattachedFileScannerTest {
 
     @Test
     void deletesDueFilesAndForgetsThem() {
-        when(unattached.due(now, UnattachedFileScanner.BATCH)).thenReturn(List.of("f1", "f2"));
-        doThrow(new StorageUnavailableException("drive down", null)).when(storage).delete("f2");
+        when(unattached.listDue(now, UnattachedFileScanner.BATCH)).thenReturn(List.of("f1", "f2"));
+        doThrow(new StorageUnavailableException("drive down", null)).when(storage).deleteFile("f2");
 
         new UnattachedFileScanner(unattached, storage).scan(now);
 
-        verify(storage).delete("f1");
-        verify(unattached).forget("f1");
-        verify(unattached, never()).forget("f2");
+        verify(storage).deleteFile("f1");
+        verify(unattached).forgetFile("f1");
+        verify(unattached, never()).forgetFile("f2");
     }
 
     @Test

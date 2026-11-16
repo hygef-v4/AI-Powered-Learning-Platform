@@ -32,35 +32,35 @@ public class ActivationService {
     private final VerificationTicketStore tickets;
     private final AccountRepository accounts;
     private final PasswordEncoder passwordEncoder;
-    private final AuthService auth;
+    private final AuthService authService;
     private final IAudit audit;
     private final TransactionOperations transactions;
     private final Clock clock;
 
     public ActivationService(VerificationTicketStore tickets, AccountRepository accounts,
-                             PasswordEncoder passwordEncoder, AuthService auth, IAudit audit,
+                             PasswordEncoder passwordEncoder, AuthService authService, IAudit audit,
                              TransactionOperations transactions, Clock clock) {
         this.tickets = tickets;
         this.accounts = accounts;
         this.passwordEncoder = passwordEncoder;
-        this.auth = auth;
+        this.authService = authService;
         this.audit = audit;
         this.transactions = transactions;
         this.clock = clock;
     }
 
     public AuthService.LoginResult complete(String ticket, String newPassword) {
-        UUID accountId = tickets.peek(ticket, OtpPurpose.ACTIVATION).orElseThrow(ActivationService::ticketExpired);
+        UUID accountId = tickets.peek(ticket, OtpPurpose.ACTIVATION).orElseThrow(ActivationService::createTicketExpiredError);
         Account account = accounts.findById(accountId)
                 .filter(OtpPurpose.ACTIVATION::appliesTo)
-                .orElseThrow(ActivationService::ticketExpired);
-        Set<PasswordPolicy.Violation> violations = PasswordPolicy.check(newPassword, account.schoolEmail());
+                .orElseThrow(ActivationService::createTicketExpiredError);
+        Set<PasswordPolicy.Violation> violations = PasswordPolicy.checkPassword(newPassword, account.schoolEmail());
         if (!violations.isEmpty()) {
             // Ticket giữ nguyên để nhập lại (BR-U01-28).
             throw new PasswordPolicyException(violations);
         }
         if (!tickets.take(ticket, OtpPurpose.ACTIVATION, accountId)) {
-            throw ticketExpired();
+            throw createTicketExpiredError();
         }
         String hash = passwordEncoder.encode(newPassword);
         Instant now = clock.instant();
@@ -73,13 +73,13 @@ public class ActivationService {
             return true;
         }));
         if (!activated) {
-            throw ticketExpired();
+            throw createTicketExpiredError();
         }
-        Account active = accounts.findById(accountId).orElseThrow(ActivationService::ticketExpired);
-        return auth.startSession(active);
+        Account active = accounts.findById(accountId).orElseThrow(ActivationService::createTicketExpiredError);
+        return authService.startSession(active);
     }
 
-    static ApiException ticketExpired() {
-        return ApiException.badRequest(TICKET_EXPIRED, TICKET_EXPIRED_MESSAGE);
+    static ApiException createTicketExpiredError() {
+        return ApiException.createBadRequest(TICKET_EXPIRED, TICKET_EXPIRED_MESSAGE);
     }
 }

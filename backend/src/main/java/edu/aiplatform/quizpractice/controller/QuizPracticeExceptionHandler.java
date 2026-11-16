@@ -19,27 +19,27 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class QuizPracticeExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public ProblemDetail api(ApiException failure) {
-        return problem(failure.status(), failure.code(), failure.getMessage());
+    public ProblemDetail describeApiError(ApiException failure) {
+        return buildProblem(failure.readStatus(), failure.readCode(), failure.getMessage());
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
             MissingServletRequestParameterException.class})
-    public ProblemDetail invalid(Exception failure) {
-        return problem(HttpStatus.BAD_REQUEST, "QUIZ_PRACTICE_REQUEST_INVALID", "JSON hoặc tham số không hợp lệ");
+    public ProblemDetail describeInvalidRequest(Exception failure) {
+        return buildProblem(HttpStatus.BAD_REQUEST, "QUIZ_PRACTICE_REQUEST_INVALID", "JSON hoặc tham số không hợp lệ");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ProblemDetail integrity(DataIntegrityViolationException failure) {
-        return problem(HttpStatus.CONFLICT, "QUIZ_ATTEMPT_CONFLICT", "Lượt làm đã thay đổi, vui lòng tải lại");
+    public ProblemDetail describeIntegrityViolation(DataIntegrityViolationException failure) {
+        return buildProblem(HttpStatus.CONFLICT, "QUIZ_ATTEMPT_CONFLICT", "Lượt làm đã thay đổi, vui lòng tải lại");
     }
 
     @ExceptionHandler(DataAccessException.class)
-    public ProblemDetail storage(DataAccessException failure) {
-        return problem(HttpStatus.SERVICE_UNAVAILABLE, "SYSTEM_BUSY", "Chưa truy cập được dữ liệu, vui lòng thử lại");
+    public ProblemDetail describeStorageError(DataAccessException failure) {
+        return buildProblem(HttpStatus.SERVICE_UNAVAILABLE, "SYSTEM_BUSY", "Chưa truy cập được dữ liệu, vui lòng thử lại");
     }
 
-    private static ProblemDetail problem(HttpStatus status, String code, String detail) {
+    private static ProblemDetail buildProblem(HttpStatus status, String code, String detail) {
         ProblemDetail result = ProblemDetail.forStatusAndDetail(status, detail);
         result.setProperty("code", code);
         return result;

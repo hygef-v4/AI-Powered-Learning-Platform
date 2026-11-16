@@ -22,26 +22,26 @@ public record FilesProperties(String filerefSecret, boolean requireDrive, String
     public static final String DEFAULT_FOLDER_NAME = "AI Learning Platform";
 
     /** Tên thư mục gốc trên My Drive; cấu hình rỗng thì dùng tên mặc định. */
-    public String rootFolderName() {
-        return present(driveFolderName) ? driveFolderName.strip() : DEFAULT_FOLDER_NAME;
+    public String resolveRootFolderName() {
+        return isPresent(driveFolderName) ? driveFolderName.strip() : DEFAULT_FOLDER_NAME;
     }
 
     /** Shared Drive với service account; có cả hai cách thì dùng cách này. */
-    public boolean sharedDriveConfigured() {
-        return present(driveServiceAccountKey) && present(sharedDriveId);
+    public boolean hasSharedDrive() {
+        return isPresent(driveServiceAccountKey) && isPresent(sharedDriveId);
     }
 
     /** Drive cá nhân: tệp nằm trong thư mục app tự tạo ở My Drive của tài khoản đã cấp refresh token. */
-    public boolean personalDriveConfigured() {
-        return !sharedDriveConfigured() && present(driveOauthClientId) && present(driveOauthClientSecret)
-                && present(driveOauthRefreshToken);
+    public boolean hasPersonalDrive() {
+        return !hasSharedDrive() && isPresent(driveOauthClientId) && isPresent(driveOauthClientSecret)
+                && isPresent(driveOauthRefreshToken);
     }
 
-    public boolean driveConfigured() {
-        return sharedDriveConfigured() || personalDriveConfigured();
+    public boolean hasDrive() {
+        return hasSharedDrive() || hasPersonalDrive();
     }
 
-    private static boolean present(String value) {
+    private static boolean isPresent(String value) {
         return value != null && !value.isBlank();
     }
 }

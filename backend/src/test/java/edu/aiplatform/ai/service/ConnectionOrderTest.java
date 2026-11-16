@@ -20,21 +20,21 @@ class ConnectionOrderTest {
     private final ProviderCatalog catalog = mock(ProviderCatalog.class);
 
     private static AiConnection key(AiProvider provider, String model) {
-        return AiConnection.create(UUID.randomUUID(), Scope.INSTITUTIONAL, null, provider, model,
+        return AiConnection.createConnection(UUID.randomUUID(), Scope.INSTITUTIONAL, null, provider, model,
                 new EncryptedKey(new byte[] {1}, new byte[] {1}, 1), "abcd", NOW);
     }
 
     @Test
     void claudeThenGptThenGeminiAndBetterModelsFirst() {
         List<String> models = List.of("claude-best", "claude-worse");
-        when(catalog.models(AiProvider.CLAUDE)).thenReturn(models);
+        when(catalog.listModels(AiProvider.CLAUDE)).thenReturn(models);
         AiConnection gemini = key(AiProvider.GEMINI, "gemini-x");
         AiConnection gpt = key(AiProvider.OPENAI, "gpt-x");
         AiConnection claudeWorse = key(AiProvider.CLAUDE, models.get(models.size() - 1));
         AiConnection claudeBetter = key(AiProvider.CLAUDE, models.get(0));
-        AiConnection off = key(AiProvider.CLAUDE, models.get(0)).withStatus(AiConnection.Status.DISABLED, NOW);
+        AiConnection off = key(AiProvider.CLAUDE, models.get(0)).changeStatus(AiConnection.Status.DISABLED, NOW);
 
-        assertThat(ConnectionOrder.active(List.of(gemini, off, claudeWorse, gpt, claudeBetter), catalog))
+        assertThat(ConnectionOrder.filterActive(List.of(gemini, off, claudeWorse, gpt, claudeBetter), catalog))
                 .containsExactly(claudeBetter, claudeWorse, gpt, gemini);
     }
 }

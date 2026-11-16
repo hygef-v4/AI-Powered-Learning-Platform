@@ -12,10 +12,10 @@ public class McpCapabilitiesTools implements IMcpToolProvider {
             "Role hiện tại, quyền token và các tool được phép. Quyền đối tượng được kiểm tra khi gọi từng tool.",
             McpSchemas.schema(""),McpToolKind.READ,Set.of(Role.STUDENT,Role.TEACHER,Role.SUBJECT_MANAGER)));}
     @Override public McpToolResult call(Actor actor,String name,Map<String,Object> args){
-        if(actor==null||actor.role()==null||actor.role()==Role.ADMIN||!"get_my_capabilities".equals(name))throw ApiException.notFound("MCP_TOOL_NOT_FOUND");
-        return new McpToolResult(false,Map.of("role",actor.role(),"workflow",workflow(actor.role())));
+        if(actor==null||actor.role()==null||actor.role()==Role.ADMIN||!"get_my_capabilities".equals(name))throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
+        return new McpToolResult(false,Map.of("role",actor.role(),"workflow",describeWorkflow(actor.role())));
     }
-    static String workflow(Role role) {
+    static String describeWorkflow(Role role) {
         if(role==Role.STUDENT)return "Start in agent chat. Only submitted own Practice work is eligible for private feedback; no official grading or publication.";
         return "Start and clarify the task in this external agent chat; no platform form or local skill installation is required. "
                 +"Before authoring assignments call read_agent_workflow with workflow=AUTHOR_ASSIGNMENT; "

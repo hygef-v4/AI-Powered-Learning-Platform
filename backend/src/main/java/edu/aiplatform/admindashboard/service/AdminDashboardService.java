@@ -106,12 +106,12 @@ public class AdminDashboardService {
         var summary = dashboardSourceReader.readSection(summarySource,
                 value -> validateBackupSummary(value, fromInclusive, calculatedAt));
         Section<Instant> lastSuccess = summary.availability() == Availability.AVAILABLE
-                ? Section.available(summary.data().latestSuccessfulAt())
-                : Section.unavailable();
+                ? Section.wrapAvailable(summary.data().latestSuccessfulAt())
+                : Section.markUnavailable();
         Section<BackupFailureSummary> failures = summary.availability() == Availability.AVAILABLE
-                ? Section.available(new BackupFailureSummary(summary.data().failedRuns(),
+                ? Section.wrapAvailable(new BackupFailureSummary(summary.data().failedRuns(),
                         summary.data().latestSafeError()))
-                : Section.unavailable();
+                : Section.markUnavailable();
         var backup = new BackupSection(latest,
                 dashboardSourceReader.readSection(scheduleSource, Function.identity()), recent,
                 lastSuccess, failures);
@@ -123,7 +123,7 @@ public class AdminDashboardService {
     public BackupHistoryPage listBackups(Actor actor, int page, int size) {
         requireAdmin(actor);
         if (page < 0 || size < 1 || size > 100) {
-            throw ApiException.badRequest("DASHBOARD_PAGE_INVALID",
+            throw ApiException.createBadRequest("DASHBOARD_PAGE_INVALID",
                     "Trang hoặc kích thước trang không hợp lệ");
         }
         Section<BackupHistoryPage> result = dashboardSourceReader.readSection(
@@ -131,7 +131,7 @@ public class AdminDashboardService {
                         .submitSource(() -> backups.history(PageRequest.of(page, size))),
                 found -> mapBackupHistory(found, page, size));
         if (result.availability() == Availability.UNAVAILABLE) {
-            throw ApiException.unavailable("DASHBOARD_BACKUP_UNAVAILABLE",
+            throw ApiException.createUnavailable("DASHBOARD_BACKUP_UNAVAILABLE",
                     "Không đọc được lịch sử backup");
         }
         return result.data();
@@ -151,7 +151,7 @@ public class AdminDashboardService {
             failure = new ApiException(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED",
                     "Cần đăng nhập");
         } else if (actor.role() != Role.ADMIN) {
-            failure = ApiException.forbidden("DASHBOARD_FORBIDDEN");
+            failure = ApiException.createForbidden("DASHBOARD_FORBIDDEN");
         } else {
             try {
                 AuthorizationDecision decision = authorization.authorize(actor,
@@ -160,7 +160,7 @@ public class AdminDashboardService {
                         && "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))) {
                     failure = createAuthorizationUnavailable();
                 } else if (!decision.allowed()) {
-                    failure = ApiException.forbidden("DASHBOARD_FORBIDDEN");
+                    failure = ApiException.createForbidden("DASHBOARD_FORBIDDEN");
                 }
             } catch (RuntimeException unavailable) {
                 failure = createAuthorizationUnavailable();
@@ -170,10 +170,10 @@ public class AdminDashboardService {
             return;
         try {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
-                    "ACCESS_DENIED", "ADMIN_DASHBOARD", null, AuditResult.DENIED, failure.code(),
+                    "ACCESS_DENIED", "ADMIN_DASHBOARD", null, AuditResult.DENIED, failure.readCode(),
                     Map.of(), clock.instant()));
         } catch (RuntimeException auditUnavailable) {
-            throw ApiException.unavailable("DASHBOARD_AUDIT_UNAVAILABLE",
+            throw ApiException.createUnavailable("DASHBOARD_AUDIT_UNAVAILABLE",
                     "Không ghi được nhật ký truy cập");
         }
         throw failure;
@@ -181,7 +181,7 @@ public class AdminDashboardService {
 
     /** Builds the service error for an unavailable authorization check. */
     private ApiException createAuthorizationUnavailable() {
-        return ApiException.unavailable("DASHBOARD_AUTHORIZATION_UNAVAILABLE",
+        return ApiException.createUnavailable("DASHBOARD_AUTHORIZATION_UNAVAILABLE",
                 "Không kiểm tra được quyền truy cập");
     }
 

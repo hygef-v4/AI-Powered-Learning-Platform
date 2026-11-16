@@ -123,15 +123,15 @@ public class QuizAiDraftService {
         Prepared prepared = transactions.execute(status -> {
             Quiz quiz = support.loadEditable(actor, quizId, version);
             validate(request);
-            promptGuardrail.requireValid(QuizDraftPrompt.userInput(actor, request));
-            Optional<QuizAiDraft> existing = existing(actor, request, DraftTarget.QUIZ, quizId);
+            promptGuardrail.requireValid(QuizDraftPrompt.buildUserInput(actor, request));
+            Optional<QuizAiDraft> existing = findExisting(actor, request, DraftTarget.QUIZ, quizId);
             if (existing.isPresent()) {
                 return new Prepared(existing.get(), null, false);
             }
-            List<SelectableMaterial> chosen = materials.requireSelectable(actor, QuizReferenceMaterials.scopeOf(quiz),
+            List<SelectableMaterial> chosen = materials.requireSelectable(actor, QuizReferenceMaterials.resolveScope(quiz),
                     request.materialIds(), true);
-            QuizAiDraft draft = QuizAiDraft.pending(DraftTarget.QUIZ, quizId, quiz.subjectId(), quiz.version(),
-                    provenance(request, chosen), actor.accountId(), clock.instant());
+            QuizAiDraft draft = QuizAiDraft.createPending(DraftTarget.QUIZ, quizId, quiz.subjectId(), quiz.version(),
+                    buildProvenance(request, chosen), actor.accountId(), clock.instant());
             drafts.insert(draft);
             return new Prepared(draft, "quiz \"" + quiz.title() + "\"", true);
         });
@@ -145,15 +145,15 @@ public class QuizAiDraftService {
                     "SUBJECT_NOT_FOUND");
             activeSubjects.require(subjectId);
             validate(request);
-            promptGuardrail.requireValid(QuizDraftPrompt.userInput(actor, request));
-            Optional<QuizAiDraft> existing = existing(actor, request, DraftTarget.BANK, subjectId);
+            promptGuardrail.requireValid(QuizDraftPrompt.buildUserInput(actor, request));
+            Optional<QuizAiDraft> existing = findExisting(actor, request, DraftTarget.BANK, subjectId);
             if (existing.isPresent()) {
                 return new Prepared(existing.get(), null, false);
             }
             List<SelectableMaterial> chosen = materials.requireSelectable(actor, ResourceRef.subject(subjectId),
                     request.materialIds(), true);
-            QuizAiDraft draft = QuizAiDraft.pending(DraftTarget.BANK, null, subjectId, null,
-                    provenance(request, chosen), actor.accountId(), clock.instant());
+            QuizAiDraft draft = QuizAiDraft.createPending(DraftTarget.BANK, null, subjectId, null,
+                    buildProvenance(request, chosen), actor.accountId(), clock.instant());
             drafts.insert(draft);
             return new Prepared(draft, "ngân hàng câu hỏi của môn", true);
         });
@@ -163,13 +163,13 @@ public class QuizAiDraftService {
     private AiDraftView dispatch(Actor actor, Prepared prepared, DraftRequest request) {
         QuizAiDraft draft = prepared.draft();
         if (!prepared.dispatch()) {
-            return AiDraftView.of(draft);
+            return AiDraftView.createDraftView(draft);
         }
         List<MaterialText> texts;
         try {
-            texts = materials.texts(actor, request.materialIds());
+            texts = materials.loadTexts(actor, request.materialIds());
         } catch (ApiException failure) {
-            return fail(draft, failure.code(), failure.getMessage());
+            return fail(draft, failure.readCode(), failure.getMessage());
         }
         if (!request.materialIds().isEmpty() && texts.stream().noneMatch(text -> !text.text().isBlank())) {
             return fail(draft, "MATERIAL_TEXT_UNAVAILABLE", "Tài liệu đã chọn chưa có nội dung văn bản dùng được. Chọn tài liệu khác hoặc thử lại sau khi trích chữ.");
@@ -180,10 +180,10 @@ public class QuizAiDraftService {
                         : ": nội dung bị cắt ngắn do giới hạn tổng tài liệu nguồn."))
                 .toList();
         if (!warnings.isEmpty()) {
-            boolean saved = transactions.execute(status -> drafts.transition(draft.withSourceWarnings(warnings), DraftStatus.PENDING));
+            boolean saved = transactions.execute(status -> drafts.transitionDraft(draft.attachSourceWarnings(warnings), DraftStatus.PENDING));
             if (!saved) {
-                return transactions.execute(status -> AiDraftView.of(drafts.find(draft.id())
-                        .orElseThrow(() -> ApiException.notFound(NOT_FOUND))));
+                return transactions.execute(status -> AiDraftView.createDraftView(drafts.findDraft(draft.id())
+                        .orElseThrow(() -> ApiException.createNotFound(NOT_FOUND))));
             }
         }
         AiTaskView task;
@@ -191,10 +191,10 @@ public class QuizAiDraftService {
             task = ai.submit(new AiTaskRequest(actor, request.source(), request.provider(), QuizDraftPrompt.TASK_TYPE,
                     TARGET_PREFIX + draft.id(), draft.baseVersion() == null ? 0 : draft.baseVersion(),
                     request.requestRef(), QuizDraftPrompt.prompt(prepared.target(), request, texts),
-                    QuizDraftPrompt.schema(request.count()), QuizDraftPrompt.maxOutputTokens(request.count()),
-                    QuizDraftPrompt.userInput(actor, request)));
+                    QuizDraftPrompt.buildSchema(request.count()), QuizDraftPrompt.calculateMaxOutputTokens(request.count()),
+                    QuizDraftPrompt.buildUserInput(actor, request)));
         } catch (ApiException failure) {
-            return fail(draft, failure.code(), failure.getMessage());
+            return fail(draft, failure.readCode(), failure.getMessage());
         } catch (RuntimeException failure) {
             return fail(draft, "AI_SERVICE_UNAVAILABLE", "Chưa gửi được yêu cầu AI, vui lòng thử lại");
         }
@@ -202,17 +202,17 @@ public class QuizAiDraftService {
             if (task.taskId() != null) {
                 drafts.attachTask(draft.id(), task.taskId());
             }
-            QuizAiDraft current = drafts.find(draft.id()).orElseThrow(() -> ApiException.notFound(NOT_FOUND));
+            QuizAiDraft current = drafts.findDraft(draft.id()).orElseThrow(() -> ApiException.createNotFound(NOT_FOUND));
             if (task.state() != null && TERMINAL_FAILURES.contains(task.state())) {
-                current = failIfPending(current, failureCode(task.state()), task.safeError());
+                current = failIfPending(current, resolveFailureCode(task.state()), task.safeError());
             }
-            return AiDraftView.of(current);
+            return AiDraftView.createDraftView(current);
         });
     }
 
     private AiDraftView fail(QuizAiDraft draft, String code, String message) {
-        return transactions.execute(status -> AiDraftView.of(failIfPending(
-                drafts.find(draft.id()).orElseThrow(() -> ApiException.notFound(NOT_FOUND)), code, message)));
+        return transactions.execute(status -> AiDraftView.createDraftView(failIfPending(
+                drafts.findDraft(draft.id()).orElseThrow(() -> ApiException.createNotFound(NOT_FOUND)), code, message)));
     }
 
     // ---- Xem ----
@@ -223,7 +223,7 @@ public class QuizAiDraftService {
             support.loadManaged(actor, quizId);
             return drafts.listOpenForQuiz(quizId);
         });
-        return found.stream().map(draft -> reconcile(actor, draft)).map(AiDraftView::of).toList();
+        return found.stream().map(draft -> reconcile(actor, draft)).map(AiDraftView::createDraftView).toList();
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -232,25 +232,25 @@ public class QuizAiDraftService {
             requireBankManager(actor, subjectId);
             return drafts.listOpenForBank(subjectId);
         });
-        return found.stream().map(draft -> reconcile(actor, draft)).map(AiDraftView::of).toList();
+        return found.stream().map(draft -> reconcile(actor, draft)).map(AiDraftView::createDraftView).toList();
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public AiDraftView getForQuiz(Actor actor, UUID quizId, UUID draftId) {
         QuizAiDraft found = transactions.execute(status -> {
             support.loadManaged(actor, quizId);
-            return quizDraft(quizId, draftId);
+            return loadQuizDraft(quizId, draftId);
         });
-        return AiDraftView.of(reconcile(actor, found));
+        return AiDraftView.createDraftView(reconcile(actor, found));
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public AiDraftView getForBank(Actor actor, UUID subjectId, UUID draftId) {
         QuizAiDraft found = transactions.execute(status -> {
             requireBankManager(actor, subjectId);
-            return bankDraft(subjectId, draftId);
+            return loadBankDraft(subjectId, draftId);
         });
-        return AiDraftView.of(reconcile(actor, found));
+        return AiDraftView.createDraftView(reconcile(actor, found));
     }
 
     /** Kết quả lỗi có thể về trước khi ghi {@code taskId}; hỏi lại U06 khi xem (như U09). */
@@ -270,7 +270,7 @@ public class QuizAiDraftService {
             return draft;
         }
         if (task.isPresent() && task.get().state() != null && TERMINAL_FAILURES.contains(task.get().state())) {
-            return failIfPending(draft, failureCode(task.get().state()), task.get().safeError());
+            return failIfPending(draft, resolveFailureCode(task.get().state()), task.get().safeError());
         }
         return draft;
     }
@@ -283,22 +283,22 @@ public class QuizAiDraftService {
                                     long version) {
         Quiz quiz = support.loadEditable(actor, quizId, version);
         support.requireNoAttemptsWhenOpen(quiz);
-        QuizAiDraft draft = requireReady(quizDraft(quizId, draftId));
+        QuizAiDraft draft = requireReady(loadQuizDraft(quizId, draftId));
         validatePicked(picked, draft);
-        List<QuizItem> items = new ArrayList<>(quizzes.items(quizId));
+        List<QuizItem> items = new ArrayList<>(quizzes.listItems(quizId));
         if (items.size() + picked.size() > QuizRules.MAX_ITEMS) {
-            throw ApiException.conflict("QUIZ_FULL", "Quiz tối đa 200 câu; còn " + (QuizRules.MAX_ITEMS - items.size())
+            throw ApiException.createConflict("QUIZ_FULL", "Quiz tối đa 200 câu; còn " + (QuizRules.MAX_ITEMS - items.size())
                     + " chỗ trống");
         }
         for (QuestionContent content : picked) {
-            Question inline = Question.newInline(quizId, quiz.subjectId(), content, actor.accountId(), clock.instant());
+            Question inline = Question.createInline(quizId, quiz.subjectId(), content, actor.accountId(), clock.instant());
             questions.insert(inline);
             items.add(new QuizItem(quizId, inline.id(), items.size() + 1, content.defaultPoints()));
         }
         quizzes.replaceItems(quizId, items);
-        QuizDetail detail = support.detail(support.save(quiz.edited(clock.instant())), true);
+        QuizDetail detail = support.buildDetail(support.saveQuiz(quiz.markEdited(clock.instant())), true);
         close(draft, DraftStatus.ACCEPTED);
-        audit.success(actor, "QUIZ_AI_DRAFT_ACCEPTED", QuizSupport.OBJECT, quizId, Map.of("draftId",
+        audit.recordSuccess(actor, "QUIZ_AI_DRAFT_ACCEPTED", QuizSupport.OBJECT, quizId, Map.of("draftId",
                 draft.id().toString(), "origin", draft.origin().name(), "count", picked.size()));
         return detail;
     }
@@ -308,36 +308,36 @@ public class QuizAiDraftService {
     public BankAcceptResult acceptForBank(Actor actor, UUID subjectId, UUID draftId, List<QuestionContent> picked) {
         requireBankManager(actor, subjectId);
         activeSubjects.require(subjectId);
-        QuizAiDraft draft = requireReady(bankDraft(subjectId, draftId));
+        QuizAiDraft draft = requireReady(loadBankDraft(subjectId, draftId));
         validatePicked(picked, draft);
         List<UUID> created = new ArrayList<>();
         for (QuestionContent content : picked) {
             duplicates.requireUnique(subjectId, content, null);
-            Question q = Question.newBankDraft(subjectId, content, actor.accountId(), clock.instant());
+            Question q = Question.createBankDraft(subjectId, content, actor.accountId(), clock.instant());
             questions.insert(q);
             created.add(q.id());
         }
         QuizAiDraft closed = close(draft, DraftStatus.ACCEPTED);
-        audit.success(actor, "QUIZ_AI_DRAFT_ACCEPTED", OBJECT, draft.id(), Map.of("subjectId", subjectId.toString(),
+        audit.recordSuccess(actor, "QUIZ_AI_DRAFT_ACCEPTED", OBJECT, draft.id(), Map.of("subjectId", subjectId.toString(),
                 "origin", draft.origin().name(), "count", picked.size()));
-        return new BankAcceptResult(AiDraftView.of(closed), created);
+        return new BankAcceptResult(AiDraftView.createDraftView(closed), created);
     }
 
     @Transactional
     public AiDraftView discardForQuiz(Actor actor, UUID quizId, UUID draftId) {
         support.loadManaged(actor, quizId);
-        return AiDraftView.of(discard(actor, quizDraft(quizId, draftId)));
+        return AiDraftView.createDraftView(discard(actor, loadQuizDraft(quizId, draftId)));
     }
 
     @Transactional
     public AiDraftView discardForBank(Actor actor, UUID subjectId, UUID draftId) {
         requireBankManager(actor, subjectId);
-        return AiDraftView.of(discard(actor, bankDraft(subjectId, draftId)));
+        return AiDraftView.createDraftView(discard(actor, loadBankDraft(subjectId, draftId)));
     }
 
     private QuizAiDraft discard(Actor actor, QuizAiDraft draft) {
         if (!draft.status().isOpen()) {
-            throw closedConflict();
+            throw createClosedConflictError();
         }
         if (draft.status() == DraftStatus.PENDING && draft.taskId() != null) {
             try {
@@ -353,8 +353,8 @@ public class QuizAiDraftService {
 
     /** {@code read_quiz_context}: Quiz kèm câu, đáp án, giải thích, {@code version}. */
     @Transactional(readOnly = true)
-    public QuizDetail mcpContext(Actor actor, UUID quizId) {
-        return support.detail(support.loadManaged(actor, quizId), true);
+    public QuizDetail loadMcpContext(Actor actor, UUID quizId) {
+        return support.buildDetail(support.loadManaged(actor, quizId), true);
     }
 
     /** {@code save_quiz_draft}: Quiz {@code DRAFT}, {@code expectedVersion} khớp; lưu đề xuất {@code READY}. */
@@ -363,7 +363,7 @@ public class QuizAiDraftService {
                                   String agentLabel) {
         Quiz quiz = support.loadManaged(actor, quizId);
         if (quiz.status() != QuizStatus.DRAFT) {
-            throw ApiException.conflict("QUIZ_NOT_EDITABLE", "Agent chỉ ghi đề xuất cho quiz đang nháp");
+            throw ApiException.createConflict("QUIZ_NOT_EDITABLE", "Agent chỉ ghi đề xuất cho quiz đang nháp");
         }
         QuizSupport.requireVersion(quiz, expectedVersion);
         support.requireContainerActive(quiz);
@@ -371,15 +371,15 @@ public class QuizAiDraftService {
         try {
             proposal = QuizDraftPrompt.parseQuestions(questionNodes);
         } catch (IllegalArgumentException invalid) {
-            throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", invalid.getMessage());
+            throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", invalid.getMessage());
         }
         Map<String, Object> provenance = new LinkedHashMap<>();
         provenance.put(AiDraftViews.AGENT_LABEL, agentLabel == null || agentLabel.isBlank() ? "Agent" : agentLabel);
         provenance.put(AiDraftViews.REQUESTED_COUNT, proposal.size());
-        QuizAiDraft draft = QuizAiDraft.fromMcp(quizId, quiz.subjectId(), expectedVersion, proposal, provenance,
+        QuizAiDraft draft = QuizAiDraft.createFromMcp(quizId, quiz.subjectId(), expectedVersion, proposal, provenance,
                 actor.accountId(), clock.instant());
         drafts.insert(draft);
-        return AiDraftView.of(draft);
+        return AiDraftView.createDraftView(draft);
     }
 
     /** Bank proposals share the same READY review/acceptance flow as provider-generated proposals. */
@@ -389,14 +389,14 @@ public class QuizAiDraftService {
         activeSubjects.require(subjectId);
         List<DraftQuestion> proposal;
         try { proposal = QuizDraftPrompt.parseQuestions(questionNodes); }
-        catch (IllegalArgumentException invalid) { throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid questions"); }
-        if(agentLabel != null && agentLabel.length()>200)throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid agent label");
+        catch (IllegalArgumentException invalid) { throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", "Invalid questions"); }
+        if(agentLabel != null && agentLabel.length()>200)throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", "Invalid agent label");
         var draft = new QuizAiDraft(UUID.randomUUID(), DraftTarget.BANK, null, subjectId,
                 edu.aiplatform.quizzes.model.DraftOrigin.MCP, null, DraftStatus.READY, proposal,
                 Map.of(AiDraftViews.AGENT_LABEL, agentLabel==null||agentLabel.isBlank()?"Agent":agentLabel,
                         AiDraftViews.REQUESTED_COUNT, proposal.size()), null, actor.accountId(), clock.instant(), null);
         drafts.insert(draft);
-        return AiDraftView.of(draft);
+        return AiDraftView.createDraftView(draft);
     }
 
     // ---- Phụ ----
@@ -406,31 +406,31 @@ public class QuizAiDraftService {
                 "SUBJECT_NOT_FOUND");
     }
 
-    private QuizAiDraft quizDraft(UUID quizId, UUID draftId) {
-        return drafts.find(draftId)
+    private QuizAiDraft loadQuizDraft(UUID quizId, UUID draftId) {
+        return drafts.findDraft(draftId)
                 .filter(d -> d.target() == DraftTarget.QUIZ && quizId.equals(d.quizId()))
-                .orElseThrow(() -> ApiException.notFound(NOT_FOUND));
+                .orElseThrow(() -> ApiException.createNotFound(NOT_FOUND));
     }
 
-    private QuizAiDraft bankDraft(UUID subjectId, UUID draftId) {
-        return drafts.find(draftId)
+    private QuizAiDraft loadBankDraft(UUID subjectId, UUID draftId) {
+        return drafts.findDraft(draftId)
                 .filter(d -> d.target() == DraftTarget.BANK && subjectId.equals(d.subjectId()))
-                .orElseThrow(() -> ApiException.notFound(NOT_FOUND));
+                .orElseThrow(() -> ApiException.createNotFound(NOT_FOUND));
     }
 
     private static QuizAiDraft requireReady(QuizAiDraft draft) {
         if (draft.status() != DraftStatus.READY) {
             throw draft.status() == DraftStatus.PENDING
-                    ? ApiException.conflict("AI_DRAFT_NOT_READY", "Đề xuất AI chưa xong")
-                    : closedConflict();
+                    ? ApiException.createConflict("AI_DRAFT_NOT_READY", "Đề xuất AI chưa xong")
+                    : createClosedConflictError();
         }
         return draft;
     }
 
     private QuizAiDraft close(QuizAiDraft draft, DraftStatus decision) {
-        QuizAiDraft closed = draft.decided(decision, clock.instant());
-        if (!drafts.transition(closed, draft.status())) {
-            throw closedConflict();
+        QuizAiDraft closed = draft.recordDecision(decision, clock.instant());
+        if (!drafts.transitionDraft(closed, draft.status())) {
+            throw createClosedConflictError();
         }
         return closed;
     }
@@ -439,23 +439,23 @@ public class QuizAiDraftService {
         if (draft.status() != DraftStatus.PENDING) {
             return draft;
         }
-        QuizAiDraft failed = draft.failed(code, message, clock.instant());
-        return drafts.transition(failed, DraftStatus.PENDING) ? failed
-                : drafts.find(draft.id()).orElse(draft);
+        QuizAiDraft failed = draft.markFailed(code, message, clock.instant());
+        return drafts.transitionDraft(failed, DraftStatus.PENDING) ? failed
+                : drafts.findDraft(draft.id()).orElse(draft);
     }
 
-    private static ApiException closedConflict() {
-        return ApiException.conflict("AI_DRAFT_CLOSED", "Đề xuất đã được chấp nhận hoặc bỏ; hãy tải lại");
+    private static ApiException createClosedConflictError() {
+        return ApiException.createConflict("AI_DRAFT_CLOSED", "Đề xuất đã được chấp nhận hoặc bỏ; hãy tải lại");
     }
 
-    static String failureCode(AiTaskState state) {
+    static String resolveFailureCode(AiTaskState state) {
         return state == AiTaskState.CANCELLED ? "AI_TASK_CANCELLED" : "AI_TASK_FAILED";
     }
 
     /** Câu chọn: 1 tới số câu đề xuất; mỗi câu theo BR-U10-02, 03; lỗi trả theo {@code questions[i]}. */
     private static void validatePicked(List<QuestionContent> picked, QuizAiDraft draft) {
         if (picked == null || picked.isEmpty() || picked.size() > draft.proposal().size()) {
-            throw ApiException.badRequest("AI_DRAFT_SELECTION_INVALID",
+            throw ApiException.createBadRequest("AI_DRAFT_SELECTION_INVALID",
                     "Chọn từ 1 đến " + draft.proposal().size() + " câu để chấp nhận");
         }
         List<Violation> violations = new ArrayList<>();
@@ -473,41 +473,41 @@ public class QuizAiDraftService {
     private static void validate(DraftRequest r) {
         if (r.instructions() == null || r.instructions().isEmpty()
                 || r.instructions().codePointCount(0, r.instructions().length()) > QuizDraftPrompt.MAX_INSTRUCTIONS) {
-            throw invalidRequest("Nhập yêu cầu, tối đa 2.000 ký tự");
+            throw createInvalidRequestError("Nhập yêu cầu, tối đa 2.000 ký tự");
         }
         if (r.count() < 1 || r.count() > QuizDraftPrompt.MAX_COUNT) {
-            throw invalidRequest("Số câu từ 1 đến 50");
+            throw createInvalidRequestError("Số câu từ 1 đến 50");
         }
         if (r.materialIds().size() > QuizDraftPrompt.MAX_MATERIALS
                 || new HashSet<>(r.materialIds()).size() != r.materialIds().size()) {
-            throw invalidRequest("Chọn tối đa 10 tài liệu, không trùng");
+            throw createInvalidRequestError("Chọn tối đa 10 tài liệu, không trùng");
         }
         // Nguồn bỏ trống: hệ thống tự chọn (yêu cầu 2026-11-05); nhà cung cấp chỉ đi với API cá nhân.
         if (r.provider() != null && r.source() != AiSource.PERSONAL) {
-            throw invalidRequest("Nguồn AI không hợp lệ");
+            throw createInvalidRequestError("Nguồn AI không hợp lệ");
         }
         if (r.requestRef() == null || r.requestRef().isBlank() || r.requestRef().length() > MAX_REQUEST_REF) {
-            throw invalidRequest("Mã yêu cầu không hợp lệ");
+            throw createInvalidRequestError("Mã yêu cầu không hợp lệ");
         }
     }
 
-    private static ApiException invalidRequest(String message) {
-        return ApiException.badRequest("AI_DRAFT_REQUEST_INVALID", message);
+    private static ApiException createInvalidRequestError(String message) {
+        return ApiException.createBadRequest("AI_DRAFT_REQUEST_INVALID", message);
     }
 
     /** Cùng {@code requestRef} cho đích khác thì từ chối, cho cùng đích thì trả đề xuất cũ. */
-    private Optional<QuizAiDraft> existing(Actor actor, DraftRequest request, DraftTarget target, UUID targetId) {
+    private Optional<QuizAiDraft> findExisting(Actor actor, DraftRequest request, DraftTarget target, UUID targetId) {
         Optional<QuizAiDraft> found = drafts.findByRequest(actor.accountId(), request.requestRef());
         found.ifPresent(d -> {
             UUID id = target == DraftTarget.QUIZ ? d.quizId() : d.subjectId();
             if (d.target() != target || !targetId.equals(id)) {
-                throw ApiException.conflict("AI_REQUEST_REF_REUSED", "Mã yêu cầu đã dùng cho đích khác");
+                throw ApiException.createConflict("AI_REQUEST_REF_REUSED", "Mã yêu cầu đã dùng cho đích khác");
             }
         });
         return found;
     }
 
-    private static Map<String, Object> provenance(DraftRequest request, List<SelectableMaterial> chosen) {
+    private static Map<String, Object> buildProvenance(DraftRequest request, List<SelectableMaterial> chosen) {
         Map<String, Object> p = new LinkedHashMap<>();
         p.put(QuizAiDraft.REQUEST_REF, request.requestRef());
         p.put(AiDraftViews.SOURCE, request.source() == null ? "AUTO" : request.source().name());

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 class AnnouncementSanitizationTest {
     Announcement create(String body) {
-        return Announcement.create(
+        return Announcement.createAnnouncement(
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 "Thông báo",
@@ -64,7 +64,7 @@ class AnnouncementSanitizationTest {
         var actor = UUID.randomUUID();
         var now = Instant.now();
         assertThat(
-                        Announcement.create(
+                        Announcement.createAnnouncement(
                                         UUID.randomUUID(),
                                         actor,
                                         "T".repeat(200),
@@ -77,7 +77,7 @@ class AnnouncementSanitizationTest {
         for (var title : new String[] {"T".repeat(201), "<b>Tên</b>", "<script>alert(1)</script>"})
             assertThatThrownBy(
                             () ->
-                                    Announcement.create(
+                                    Announcement.createAnnouncement(
                                             UUID.randomUUID(),
                                             actor,
                                             title,

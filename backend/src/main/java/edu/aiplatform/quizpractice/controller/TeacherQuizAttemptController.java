@@ -19,29 +19,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/classes/{classId}")
 public class TeacherQuizAttemptController {
 
-    private final TeacherQuizAttemptService teacher;
+    private final TeacherQuizAttemptService teacherQuizAttemptService;
 
-    public TeacherQuizAttemptController(TeacherQuizAttemptService teacher) {
-        this.teacher = teacher;
+    public TeacherQuizAttemptController(TeacherQuizAttemptService teacherQuizAttemptService) {
+        this.teacherQuizAttemptService = teacherQuizAttemptService;
     }
 
     @GetMapping("/quizzes/{quizId}/attempts")
-    public ClassAttempts list(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+    public ClassAttempts listAttempts(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                               @PathVariable UUID quizId) {
-        return teacher.list(actor, classId, quizId);
+        return teacherQuizAttemptService.listAttempts(actor, classId, quizId);
     }
 
     /** Quyết định trừ hay không trừ điểm do rời trang, kèm lý do (BR-U11-33). */
     @PostMapping(value = "/quiz-attempts/{attemptId}/penalty:decide", consumes = "application/json")
     public TeacherAttemptDetail decidePenalty(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                               @PathVariable UUID attemptId, @RequestBody JsonNode body) {
-        PracticeRequests.PenaltyInput input = PracticeRequests.penaltyInput(body);
-        return teacher.decidePenalty(actor, classId, attemptId, input.decision(), input.points(), input.reason());
+        PracticeRequests.PenaltyInput input = PracticeRequests.parsePenaltyInput(body);
+        return teacherQuizAttemptService.decidePenalty(actor, classId, attemptId, input.decision(), input.points(), input.reason());
     }
 
     @GetMapping("/quiz-attempts/{attemptId}")
-    public TeacherAttemptDetail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+    public TeacherAttemptDetail loadAttempt(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                        @PathVariable UUID attemptId) {
-        return teacher.detail(actor, classId, attemptId);
+        return teacherQuizAttemptService.loadAttempt(actor, classId, attemptId);
     }
 }

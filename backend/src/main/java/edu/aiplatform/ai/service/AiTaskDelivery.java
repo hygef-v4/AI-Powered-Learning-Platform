@@ -47,11 +47,11 @@ public class AiTaskDelivery {
         long startNanos = System.nanoTime();
         Boolean done = transactions.execute(status -> {
             AiTask task = tasks.lock(taskId).orElse(null);
-            if (task == null || !task.finished() || task.handlerDone()) {
+            if (task == null || !task.hasFinished() || task.handlerDone()) {
                 return true;
             }
-            Optional<IAiTaskResultHandler> handler = handlers.find(task.taskType());
-            Actor actor = actorOf(task.actorId());
+            Optional<IAiTaskResultHandler> handler = handlers.findHandler(task.taskType());
+            Actor actor = resolveActor(task.actorId());
             ApplyOutcome outcome;
             if (handler.isEmpty()) {
                 outcome = ApplyOutcome.REJECTED;
@@ -70,7 +70,7 @@ public class AiTaskDelivery {
                         task.inputVersion(), task.state(), task.safeError()));
                 outcome = null;
             }
-            if (!tasks.update(task.handled(outcome))) {
+            if (!tasks.updateTask(task.markHandled(outcome))) {
                 throw new IllegalStateException("Task " + taskId + " vừa bị thay đổi");
             }
             long durationMs = Duration.ofNanos(System.nanoTime() - startNanos).toMillis();
@@ -82,7 +82,7 @@ public class AiTaskDelivery {
     }
 
     /** Role hiện hành của người yêu cầu; handler tự kiểm lại quyền trên đích (BR-U06-23). */
-    private Actor actorOf(UUID accountId) {
+    private Actor resolveActor(UUID accountId) {
         return accounts.getContact(accountId)
                 .filter(c -> c.status() == null || c.status() == AccountStatus.ACTIVE)
                 .map(AccountContact::role)

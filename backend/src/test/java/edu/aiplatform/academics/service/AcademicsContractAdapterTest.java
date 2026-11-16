@@ -53,28 +53,28 @@ class AcademicsContractAdapterTest {
     }
 
     @Test void teacherScopeReadsCurrentAssignmentWithoutCachingAcrossCalls() {
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(teacher,ClassStatus.DRAFT)), Optional.of(course(UUID.randomUUID(),ClassStatus.DRAFT)));
+        when(courseClassRepository.findClass(classId)).thenReturn(Optional.of(course(teacher,ClassStatus.DRAFT)), Optional.of(course(UUID.randomUUID(),ClassStatus.DRAFT)));
         assertThat(adapter.isTeacherOf(teacher,classId)).isTrue();
         assertThat(adapter.isTeacherOf(teacher,classId)).isFalse();
-        verify(courseClassRepository,times(2)).find(classId);
+        verify(courseClassRepository,times(2)).findClass(classId);
     }
 
     @Test void removedStudentLosesScopeImmediatelyEvenWhenClassIsArchived() {
         var enrollment=Enrollment.createEnrollment(classId,student,EnrollmentSource.MANUAL,now);
-        when(enrollmentRepository.find(classId,student)).thenReturn(Optional.of(enrollment),Optional.of(enrollment.removeEnrollment(now)));
+        when(enrollmentRepository.findEnrollment(classId,student)).thenReturn(Optional.of(enrollment),Optional.of(enrollment.removeEnrollment(now)));
         assertThat(adapter.isEnrolledStudent(student,classId)).isTrue();
         assertThat(adapter.isEnrolledStudent(student,classId)).isFalse();
     }
 
     @Test void unknownClassDoesNotGrantTeacherOrManagerScope() {
-        when(courseClassRepository.find(classId)).thenReturn(Optional.empty());
+        when(courseClassRepository.findClass(classId)).thenReturn(Optional.empty());
         assertThat(adapter.isTeacherOf(teacher,classId)).isFalse();
         assertThat(adapter.isClassManager(teacher,classId)).isFalse();
         assertThat(adapter.subjectOfClass(classId)).isEmpty();
     }
 
     @Test void managerComesFromCurrentSubjectOwnerNotTeacherAssignment() {
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(course(teacher,ClassStatus.OPEN)));
+        when(courseClassRepository.findClass(classId)).thenReturn(Optional.of(course(teacher,ClassStatus.OPEN)));
         UUID manager=UUID.randomUUID();
         when(subjectQuery.getSubject(subjectId)).thenReturn(Optional.of(new SubjectRef(subjectId,"SWP","Project",SubjectStatus.ACTIVE,manager)));
         assertThat(adapter.isClassManager(manager,classId)).isTrue();
@@ -100,7 +100,7 @@ class AcademicsContractAdapterTest {
     @Test void subjectContractCombinesCountsAndMinimalTeacherContact() {
         var course=course(teacher,ClassStatus.OPEN);
         when(academicsReadRepository.listOfSubject(subjectId)).thenReturn(List.of(course));
-        when(academicsReadRepository.enrollmentCounts(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(3,1)));
+        when(academicsReadRepository.countEnrollments(List.of(classId))).thenReturn(Map.of(classId,new IAcademicsReadRepository.EnrollmentCounts(3,1)));
         when(accountLookup.getContact(teacher)).thenReturn(Optional.of(new AccountContact(teacher,"hidden@example.test","Teacher",Role.TEACHER,AccountStatus.ACTIVE)));
         assertThat(adapter.listClassesOfSubject(subjectId)).containsExactly(new SubjectClassSummary(classId,"SE01","SP27","Lop","OPEN","Teacher",3));
     }
@@ -112,9 +112,9 @@ class AcademicsContractAdapterTest {
         when(academicsReadRepository.listOfSubject(subjectId)).thenReturn(List.of(draft, open, archived));
         var admin=new edu.aiplatform.identity.contract.Actor(UUID.randomUUID(), edu.aiplatform.identity.contract.Role.ADMIN);
         assertThat(adapter.archiveClassesOfSubject(subjectId, admin)).containsExactly(draft.id(), open.id());
-        verify(courseClassRepository).update(argThat(c -> c.id().equals(draft.id()) && c.status()==ClassStatus.ARCHIVED), eq(0L));
-        verify(courseClassRepository).update(argThat(c -> c.id().equals(open.id()) && c.status()==ClassStatus.ARCHIVED), eq(3L));
-        verify(courseClassRepository, never()).update(argThat(c -> c.id().equals(archived.id())), anyLong());
+        verify(courseClassRepository).updateClass(argThat(c -> c.id().equals(draft.id()) && c.status()==ClassStatus.ARCHIVED), eq(0L));
+        verify(courseClassRepository).updateClass(argThat(c -> c.id().equals(open.id()) && c.status()==ClassStatus.ARCHIVED), eq(3L));
+        verify(courseClassRepository, never()).updateClass(argThat(c -> c.id().equals(archived.id())), anyLong());
         verify(audit, times(2)).record(argThat(e -> e.action().equals("CLASS_STATUS_CHANGED") && e.actorId().equals(admin.accountId())));
     }
 }

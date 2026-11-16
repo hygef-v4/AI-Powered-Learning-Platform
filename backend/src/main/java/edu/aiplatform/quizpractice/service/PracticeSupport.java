@@ -66,50 +66,50 @@ class PracticeSupport {
         this.clock = clock;
     }
 
-    ClassRef classRef(UUID classId) {
+    ClassRef loadClassRef(UUID classId) {
         try {
-            return classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+            return classes.getClassRef(classId).orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         } catch (ApiException rejected) {
             throw rejected;
         } catch (RuntimeException unavailable) {
-            throw ApiException.unavailable("CLASS_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
+            throw ApiException.createUnavailable("CLASS_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
         }
     }
 
     /** Quiz thuộc lớp: Quiz của lớp đó, hoặc Quiz của môn chứa lớp (BR-U11-01, BR-U10-25). Không có thì 404. */
-    QuizView quizInClass(UUID quizId, ClassRef ref) {
-        QuizView quiz = call(() -> quizzes.get(quizId)).orElseThrow(() -> ApiException.notFound(QUIZ_NOT_FOUND));
+    QuizView loadQuizInClass(UUID quizId, ClassRef ref) {
+        QuizView quiz = call(() -> quizzes.get(quizId)).orElseThrow(() -> ApiException.createNotFound(QUIZ_NOT_FOUND));
         boolean belongs = quiz.scope() == QuizScope.CLASS
                 ? ref.classId().equals(quiz.classId())
                 : ref.subjectId().equals(quiz.subjectId());
         if (!belongs) {
-            throw ApiException.notFound(QUIZ_NOT_FOUND);
+            throw ApiException.createNotFound(QUIZ_NOT_FOUND);
         }
         return quiz;
     }
 
-    QuizStudentView studentView(UUID quizId) {
-        return call(() -> quizzes.getStudentView(quizId)).orElseThrow(() -> ApiException.notFound(QUIZ_NOT_FOUND));
+    QuizStudentView loadStudentView(UUID quizId) {
+        return call(() -> quizzes.getStudentView(quizId)).orElseThrow(() -> ApiException.createNotFound(QUIZ_NOT_FOUND));
     }
 
     /** Đề cho lượt mới: Quiz sinh đề bốc câu riêng, ưu tiên câu người học chưa gặp (BR-U10-17). */
-    QuizStudentView newPaper(UUID quizId, Set<UUID> seenQuestionIds, long seed) {
-        QuizStudentView view = studentView(quizId);
+    QuizStudentView createPaper(UUID quizId, Set<UUID> seenQuestionIds, long seed) {
+        QuizStudentView view = loadStudentView(quizId);
         return view.generated()
-                ? call(() -> quizzes.drawPaper(quizId, seenQuestionIds, seed)).orElseThrow(() -> ApiException.notFound(QUIZ_NOT_FOUND))
+                ? call(() -> quizzes.drawPaper(quizId, seenQuestionIds, seed)).orElseThrow(() -> ApiException.createNotFound(QUIZ_NOT_FOUND))
                 : view;
     }
 
     /** Đề của một lượt đã có: lượt sinh đề theo câu đã lưu, lượt khác theo Quiz. */
-    QuizStudentView paperOf(QuizAttempt attempt) {
+    QuizStudentView loadPaper(QuizAttempt attempt) {
         Map<UUID, BigDecimal> points = attempt.snapshot().questionPoints();
-        return points == null ? studentView(attempt.quizId())
-                : call(() -> quizzes.getPaper(attempt.quizId(), points)).orElseThrow(() -> ApiException.notFound(QUIZ_NOT_FOUND));
+        return points == null ? loadStudentView(attempt.quizId())
+                : call(() -> quizzes.getPaper(attempt.quizId(), points)).orElseThrow(() -> ApiException.createNotFound(QUIZ_NOT_FOUND));
     }
 
     /** Lượt của chính người gọi; của người khác thì 404 và audit (BR-U11-22). Kết quả cũ vẫn xem được sau khi rời lớp. */
-    QuizAttempt ownAttempt(Actor actor, UUID attemptId, String action) {
-        QuizAttempt attempt = attempts.find(attemptId).orElseThrow(() -> ApiException.notFound(ATTEMPT_NOT_FOUND));
+    QuizAttempt loadOwnAttempt(Actor actor, UUID attemptId, String action) {
+        QuizAttempt attempt = attempts.findAttempt(attemptId).orElseThrow(() -> ApiException.createNotFound(ATTEMPT_NOT_FOUND));
         if (actor == null || !attempt.accountId().equals(actor.accountId())) {
             throw access.deny(actor, action, PracticeAccess.OBJECT, attemptId, ATTEMPT_NOT_FOUND);
         }
@@ -117,11 +117,11 @@ class PracticeSupport {
     }
 
     /** Như {@link #ownAttempt} và người gọi còn học lớp đang mở của lượt (R5, như U08): làm bài, lưu, nộp, ghi hoạt động. */
-    QuizAttempt ownActiveAttempt(Actor actor, UUID attemptId, String action) {
-        QuizAttempt attempt = ownAttempt(actor, attemptId, action);
+    QuizAttempt loadOwnActiveAttempt(Actor actor, UUID attemptId, String action) {
+        QuizAttempt attempt = loadOwnAttempt(actor, attemptId, action);
         access.requireClass(actor, action, attempt.classId(), PracticeAccess.OBJECT, attemptId, ATTEMPT_NOT_FOUND);
-        if (classRef(attempt.classId()).status() != ClassStatus.OPEN) {
-            throw ApiException.forbidden("CLASS_NOT_OPEN");
+        if (loadClassRef(attempt.classId()).status() != ClassStatus.OPEN) {
+            throw ApiException.createForbidden("CLASS_NOT_OPEN");
         }
         return attempt;
     }
@@ -134,21 +134,21 @@ class PracticeSupport {
     QuizAttempt submit(Actor actor, QuizAttempt attempt, SubmitMode mode) {
         QuizAttempt current = attempt;
         for (int tries = 0; tries < SUBMIT_TRIES; tries++) {
-            QuizAttempt submitted = scored(current, mode);
+            QuizAttempt submitted = scoreAttempt(current, mode);
             if (attempts.submit(submitted)) {
-                access.success(actor, "QUIZ_ATTEMPT_SUBMITTED", current.id(), Map.of("mode", mode.name(),
+                access.recordSuccess(actor, "QUIZ_ATTEMPT_SUBMITTED", current.id(), Map.of("mode", mode.name(),
                         "quizId", current.quizId().toString()));
                 return submitted;
             }
-            current = attempts.find(attempt.id()).orElseThrow(() -> ApiException.notFound(ATTEMPT_NOT_FOUND));
-            if (!current.inProgress()) {
+            current = attempts.findAttempt(attempt.id()).orElseThrow(() -> ApiException.createNotFound(ATTEMPT_NOT_FOUND));
+            if (!current.hasInProgressStatus()) {
                 return current;
             }
         }
-        throw ApiException.conflict("ANSWER_VERSION_CONFLICT", "Câu trả lời đang được lưu từ nơi khác; hãy thử nộp lại");
+        throw ApiException.createConflict("ANSWER_VERSION_CONFLICT", "Câu trả lời đang được lưu từ nơi khác; hãy thử nộp lại");
     }
 
-    private QuizAttempt scored(QuizAttempt attempt, SubmitMode mode) {
+    private QuizAttempt scoreAttempt(QuizAttempt attempt, SubmitMode mode) {
         List<QuizAnswer> answers = attempt.answers().entrySet().stream()
                 .map(e -> new QuizAnswer(e.getKey(), new HashSet<>(e.getValue()))).toList();
         Map<UUID, BigDecimal> points = attempt.snapshot().questionPoints();
@@ -156,7 +156,7 @@ class PracticeSupport {
                 : scoring.score(attempt.quizId(), answers, points));
         List<QuestionResult> results = score.questions().stream()
                 .map(q -> new QuestionResult(q.questionId(), q.correct(), q.points(), q.maxPoints())).toList();
-        return assessor.assess(attempt.submitted(mode, score.total(), score.maxTotal(), results, clock.instant()));
+        return assessor.assess(attempt.markSubmitted(mode, score.total(), score.maxTotal(), results, clock.instant()));
     }
 
     /**
@@ -165,15 +165,15 @@ class PracticeSupport {
      * kèm lựa chọn của mình là lộ đáp án, và làm nhiều lượt là dò được cả đề. Khi hiện điểm, điểm từng câu đã cho biết
      * đúng sai nên vẫn trả. Chờ BR-U11-20 chốt cách hiện cho trường hợp này.
      */
-    ResultView result(QuizAttempt attempt, boolean full, boolean canRetry) {
+    ResultView buildResult(QuizAttempt attempt, boolean full, boolean canRetry) {
         boolean showScore = full || attempt.snapshot().settings().showScoreAfterSubmit();
         boolean showAnswers = full || attempt.snapshot().settings().showCorrectAnswers();
         boolean revealCorrectness = showScore || showAnswers;
-        Map<UUID, QuizQuestionView> byId = paperOf(attempt).questions().stream()
+        Map<UUID, QuizQuestionView> byId = loadPaper(attempt).questions().stream()
                 .collect(Collectors.toMap(QuizQuestionView::questionId, Function.identity()));
         Map<UUID, QuestionResult> results = attempt.result().stream()
                 .collect(Collectors.toMap(QuestionResult::questionId, Function.identity()));
-        Map<UUID, AnswerKey> keys = showAnswers ? answerKeys(attempt) : Map.of();
+        Map<UUID, AnswerKey> keys = showAnswers ? mapAnswerKeys(attempt) : Map.of();
         int correct = 0;
         int blank = 0;
         List<ResultQuestion> questions = new ArrayList<>();
@@ -190,7 +190,7 @@ class PracticeSupport {
                 correct++;
             }
             AnswerKey key = keys.get(questionId);
-            questions.add(new ResultQuestion(questionId, q.type(), q.stem(), ordered(q, attempt), selected,
+            questions.add(new ResultQuestion(questionId, q.type(), q.stem(), orderOptions(q, attempt), selected,
                     revealCorrectness ? r.correct() : null, showScore ? r.points() : null, showScore ? r.maxPoints() : null,
                     key == null ? null : List.copyOf(key.correctOptionIds()), key == null ? null : key.explanation()));
         }
@@ -199,10 +199,10 @@ class PracticeSupport {
                 attempt.attemptNo(), attempt.startedAt(), attempt.submittedAt(), attempt.submitMode(), showScore,
                 showAnswers, showScore ? attempt.score() : null, showScore ? attempt.maxScore() : null,
                 revealCorrectness ? correct : null, revealCorrectness ? wrong : null, blank, questions, canRetry,
-                showScore ? PenaltyView.of(attempt.outcome(), full) : null);
+                showScore ? PenaltyView.createPenaltyView(attempt.outcome(), full) : null);
     }
 
-    private Map<UUID, AnswerKey> answerKeys(QuizAttempt attempt) {
+    private Map<UUID, AnswerKey> mapAnswerKeys(QuizAttempt attempt) {
         Map<UUID, BigDecimal> paper = attempt.snapshot().questionPoints();
         return call(() -> paper == null ? scoring.answerReview(attempt.quizId())
                 : scoring.answerReview(attempt.quizId(), paper.keySet())).answers().stream()
@@ -210,20 +210,20 @@ class PracticeSupport {
     }
 
     /** Lựa chọn theo thứ tự đã trộn của lượt. */
-    static List<QuizOptionView> ordered(QuizQuestionView q, QuizAttempt attempt) {
+    static List<QuizOptionView> orderOptions(QuizQuestionView q, QuizAttempt attempt) {
         Map<String, QuizOptionView> byId = q.options().stream()
                 .collect(Collectors.toMap(QuizOptionView::optionId, Function.identity()));
         return attempt.snapshot().optionOrder().getOrDefault(q.questionId(), List.of()).stream()
                 .map(byId::get).filter(o -> o != null).toList();
     }
 
-    static AttemptRow row(QuizAttempt a, boolean showScore) {
+    static AttemptRow buildRow(QuizAttempt a, boolean showScore) {
         return new AttemptRow(a.id(), a.attemptNo(), a.status(), a.startedAt(), a.submittedAt(),
                 showScore ? a.score() : null, showScore ? a.maxScore() : null, null, null, null, null);
     }
 
     /** Dòng cho giảng viên: thêm số lần rời trang, tín hiệu đã chụp và mức trừ gợi ý (BR-U11-32, 33). */
-    static AttemptRow teacherRow(QuizAttempt a) {
+    static AttemptRow buildTeacherRow(QuizAttempt a) {
         ActivityOutcome outcome = a.outcome();
         return new AttemptRow(a.id(), a.attemptNo(), a.status(), a.startedAt(), a.submittedAt(), a.score(), a.maxScore(),
                 outcome == null ? null : outcome.leaveCount(), outcome == null ? null : outcome.signal(),
@@ -237,7 +237,7 @@ class PracticeSupport {
         } catch (ApiException rejected) {
             throw rejected;
         } catch (RuntimeException unavailable) {
-            throw ApiException.unavailable("QUIZ_UNAVAILABLE", "Chưa tải được quiz, vui lòng thử lại");
+            throw ApiException.createUnavailable("QUIZ_UNAVAILABLE", "Chưa tải được quiz, vui lòng thử lại");
         }
     }
 }

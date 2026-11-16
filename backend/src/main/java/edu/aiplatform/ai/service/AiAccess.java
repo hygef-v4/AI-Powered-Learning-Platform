@@ -32,15 +32,15 @@ public class AiAccess {
     }
 
     public void require(Actor actor, String action) {
-        if (!allowed(actor, action)) {
+        if (!canPerform(actor, action)) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                     "AI", null, AuditResult.DENIED, action, Map.of(), clock.instant()));
-            throw notFound();
+            throw createNotFoundError();
         }
     }
 
     /** Kiểm mà không audit, dùng khi chỉ cần biết có được dùng một nguồn hay không. */
-    public boolean allowed(Actor actor, String action) {
+    public boolean canPerform(Actor actor, String action) {
         try {
             return actor != null && authorization.authorize(actor, action, ResourceRef.none()).allowed();
         } catch (RuntimeException e) {
@@ -48,7 +48,7 @@ public class AiAccess {
         }
     }
 
-    public static ApiException notFound() {
-        return ApiException.notFound(NOT_FOUND);
+    public static ApiException createNotFoundError() {
+        return ApiException.createNotFound(NOT_FOUND);
     }
 }

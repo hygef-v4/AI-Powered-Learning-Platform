@@ -16,7 +16,7 @@ public final class HomePaths {
     private HomePaths() {
     }
 
-    public static String of(Role role) {
+    public static String resolveHomePath(Role role) {
         return switch (role) {
             case STUDENT, TEACHER -> CLASS_DASHBOARD;
             case SUBJECT_MANAGER -> TEACHING_CLASSES;

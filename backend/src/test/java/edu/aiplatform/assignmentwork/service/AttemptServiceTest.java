@@ -51,7 +51,7 @@ class AttemptServiceTest {
         AssignmentAttempt attempt = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.minusSeconds(60), false);
         f.view = f.view(AssignmentStatus.CLOSED, SubmissionMode.INDIVIDUAL, GradingMode.GRADED,
                 NOW.plus(Duration.ofDays(2)), null, null);
-        assertThat(code(() -> f.attemptService.save(f.student, attempt.id(), 0, attempt.content())))
+        assertThat(code(() -> f.attemptService.saveAttempt(f.student, attempt.id(), 0, attempt.content())))
                 .isEqualTo("SUBMISSION_CLOSED");
         new AssignmentRetiredListener(f.attempts, f.submitter, f.clock).onClosed(f.assignmentId);
         assertThat(f.store.get(attempt.id()).status()).isEqualTo(AttemptStatus.SUBMITTED);
@@ -63,7 +63,7 @@ class AttemptServiceTest {
         try {
             action.run();
         } catch (ApiException e) {
-            return e.code();
+            return e.readCode();
         }
         throw new AssertionError("Cần lỗi nghiệp vụ");
     }
@@ -124,18 +124,18 @@ class AttemptServiceTest {
     void saveNeedsMatchingContentVersionAndDeadlinePlusGrace() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.minusSeconds(10), false);
         f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.GRADED, NOW.minusSeconds(10), null, 2);
-        assertThat(code(() -> f.attemptService.save(f.student, a.id(), 5, withStudentWork()))).isEqualTo("CONTENT_VERSION_CONFLICT");
-        WorkViews.Saved saved = f.attemptService.save(f.student, a.id(), 0, withStudentWork());
+        assertThat(code(() -> f.attemptService.saveAttempt(f.student, a.id(), 5, withStudentWork()))).isEqualTo("CONTENT_VERSION_CONFLICT");
+        WorkViews.Saved saved = f.attemptService.saveAttempt(f.student, a.id(), 0, withStudentWork());
         assertThat(saved.contentVersion()).isEqualTo(1);
         AssignmentAttempt late = f.attempt(2, AttemptStatus.IN_PROGRESS, NOW.minusSeconds(31), false);
         f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.GRADED, NOW.minusSeconds(31), null, 2);
-        assertThat(code(() -> f.attemptService.save(f.student, late.id(), 0, withStudentWork()))).isEqualTo("DEADLINE_PASSED");
+        assertThat(code(() -> f.attemptService.saveAttempt(f.student, late.id(), 0, withStudentWork()))).isEqualTo("DEADLINE_PASSED");
     }
 
     @Test
     void teacherBlocksAreStoredFromSkeleton() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
-        f.attemptService.save(f.student, a.id(), 0, withStudentWork());
+        f.attemptService.saveAttempt(f.student, a.id(), 0, withStudentWork());
         assertThat(f.store.get(a.id()).content().blocks()).contains(f.teacherBlock);
     }
 
@@ -151,7 +151,7 @@ class AttemptServiceTest {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
         ObjectNode drawn = slotContent.deepCopy().put("xml", "<mxfile><diagram id=\"p\"/></mxfile>")
                 .put("svgPreview", "<svg/>").put("alt", "mô tả bị sửa").put("diagramType", "USE_CASE");
-        f.attemptService.save(f.student, a.id(), 0, new DocumentModel(List.of(f.teacherBlock,
+        f.attemptService.saveAttempt(f.student, a.id(), 0, new DocumentModel(List.of(f.teacherBlock,
                 new DocumentBlock(slot.id(), BlockOrigin.TEACHER, BlockType.DIAGRAM, drawn))));
         DocumentBlock stored = f.store.get(a.id()).content().blocks().get(1);
         assertThat(stored.content().path("xml").asText()).isEqualTo("<mxfile><diagram id=\"p\"/></mxfile>");
@@ -172,7 +172,7 @@ class AttemptServiceTest {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
         ObjectNode filled = tableContent.deepCopy().put("headerRow", false);
         filled.withArray("rows").addArray().addObject().putArray("runs").addObject().put("text", "Đăng nhập");
-        f.attemptService.save(f.student, a.id(), 0, new DocumentModel(List.of(f.teacherBlock,
+        f.attemptService.saveAttempt(f.student, a.id(), 0, new DocumentModel(List.of(f.teacherBlock,
                 new DocumentBlock(slot.id(), BlockOrigin.TEACHER, BlockType.TABLE, filled))));
         DocumentBlock stored = f.store.get(a.id()).content().blocks().get(1);
         assertThat(stored.content().path("rows")).hasSize(2);
@@ -198,17 +198,17 @@ class AttemptServiceTest {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
         ValidationIssue empty = new ValidationIssue("SUBMISSION_EMPTY", null, "Bài làm chưa có nội dung của bạn");
         f.submitResult = new ValidationResult(List.of(empty), List.of());
-        assertThat(f.attemptService.get(f.student, a.id()).submitIssues()).containsExactly(empty);
-        assertThat(f.attemptService.save(f.student, a.id(), 0, withStudentWork()).submitIssues()).containsExactly(empty);
+        assertThat(f.attemptService.loadAttempt(f.student, a.id()).submitIssues()).containsExactly(empty);
+        assertThat(f.attemptService.saveAttempt(f.student, a.id(), 0, withStudentWork()).submitIssues()).containsExactly(empty);
         f.submitResult = new ValidationResult(List.of(), List.of());
-        assertThat(f.attemptService.save(f.student, a.id(), 1, withStudentWork()).submitIssues()).isEmpty();
+        assertThat(f.attemptService.saveAttempt(f.student, a.id(), 1, withStudentWork()).submitIssues()).isEmpty();
     }
 
     @Test
     void submittedAttemptHasNoSubmitIssues() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         f.submitResult = new ValidationResult(List.of(new ValidationIssue("SUBMISSION_EMPTY", null, "Trống")), List.of());
-        assertThat(f.attemptService.get(f.student, a.id()).submitIssues()).isEmpty();
+        assertThat(f.attemptService.loadAttempt(f.student, a.id()).submitIssues()).isEmpty();
     }
 
     @Test
@@ -246,7 +246,7 @@ class AttemptServiceTest {
     void extendedDeadlineMovesAttemptDeadlineInsteadOfSubmitting() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.minus(Duration.ofMinutes(5)), false);
         f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.GRADED, NOW.plus(Duration.ofDays(2)), null, 2);
-        assertThat(f.submitter.autoSubmit(a.id(), SubmitMode.AUTO_DEADLINE, NOW)).isFalse();
+        assertThat(f.submitter.submitAutomatically(a.id(), SubmitMode.AUTO_DEADLINE, NOW)).isFalse();
         assertThat(f.store.get(a.id()).deadlineAt()).isEqualTo(NOW.plus(Duration.ofDays(2)));
         verify(f.listener, never()).onSubmitted(any());
     }
@@ -262,7 +262,7 @@ class AttemptServiceTest {
     @Test
     void otherStudentsAttemptIsNotFound() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
-        assertThat(code(() -> f.attemptService.get(new edu.aiplatform.identity.contract.Actor(java.util.UUID.randomUUID(),
+        assertThat(code(() -> f.attemptService.loadAttempt(new edu.aiplatform.identity.contract.Actor(java.util.UUID.randomUUID(),
                 edu.aiplatform.identity.contract.Role.STUDENT), a.id()))).isEqualTo("NOT_FOUND");
     }
 }

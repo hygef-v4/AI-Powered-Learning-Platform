@@ -23,19 +23,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class AssignmentQueryService implements IAssignmentQuery {
 
     private final AssignmentRepository assignments;
-    private final RubricService rubrics;
+    private final RubricService rubricService;
     private final IClassAccess classes;
 
-    public AssignmentQueryService(AssignmentRepository assignments, RubricService rubrics, IClassAccess classes) {
+    public AssignmentQueryService(AssignmentRepository assignments, RubricService rubricService, IClassAccess classes) {
         this.assignments = assignments;
-        this.rubrics = rubrics;
+        this.rubricService = rubricService;
         this.classes = classes;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<AssignmentView> get(UUID assignmentId) {
-        return assignments.find(assignmentId).map(Assignment::view);
+        return assignments.findAssignment(assignmentId).map(Assignment::view);
     }
 
     @Override
@@ -47,8 +47,8 @@ public class AssignmentQueryService implements IAssignmentQuery {
     @Override
     @Transactional(readOnly = true)
     public Optional<AssignmentContent> getContent(UUID assignmentId) {
-        return assignments.find(assignmentId).map(a -> new AssignmentContent(a.id(), a.versionNo(), a.instructions(),
-                a.skeleton(), a.parts(), a.requiredDiagrams(), rubrics.listRubrics(a.id())));
+        return assignments.findAssignment(assignmentId).map(a -> new AssignmentContent(a.id(), a.versionNo(), a.instructions(),
+                a.skeleton(), a.parts(), a.requiredDiagrams(), rubricService.listRubrics(a.id())));
     }
 
     @Override
@@ -72,7 +72,7 @@ public class AssignmentQueryService implements IAssignmentQuery {
     @Override
     @Transactional(readOnly = true)
     public SubmissionWindow submissionWindow(UUID assignmentId, Instant now) {
-        return assignments.find(assignmentId).map(a -> window(a, now)).orElse(SubmissionWindow.CLOSED);
+        return assignments.findAssignment(assignmentId).map(a -> resolveWindow(a, now)).orElse(SubmissionWindow.CLOSED);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class AssignmentQueryService implements IAssignmentQuery {
         return assignments.listClosingBetween(from, to).stream().map(Assignment::view).toList();
     }
 
-    static SubmissionWindow window(Assignment a, Instant now) {
+    static SubmissionWindow resolveWindow(Assignment a, Instant now) {
         if (a.status() != AssignmentStatus.OPEN || a.opensAt() == null || now.isBefore(a.opensAt())) {
             return SubmissionWindow.CLOSED;
         }

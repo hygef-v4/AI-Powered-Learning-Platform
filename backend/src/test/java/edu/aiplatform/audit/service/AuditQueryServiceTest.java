@@ -78,8 +78,8 @@ class AuditQueryServiceTest {
     void assertForbiddenAndAudited(Actor actor) {
         assertThatThrownBy(() -> service.query(actor, NO_FILTER, PageRequest.of(0, 50)))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.status()).isEqualTo(HttpStatus.FORBIDDEN);
-                    assertThat(e.code()).isEqualTo("AUDIT_FORBIDDEN");
+                    assertThat(e.readStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                    assertThat(e.readCode()).isEqualTo("AUDIT_FORBIDDEN");
                 });
         ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(event.capture());
@@ -115,7 +115,7 @@ class AuditQueryServiceTest {
     void adminGetsPageWithEmailsAndSystemRowsHaveNoEmail() {
         UUID a = UUID.randomUUID();
         when(repository.count(any())).thenReturn(3L);
-        when(repository.find(any(), anyLong(), anyInt()))
+        when(repository.findRows(any(), anyLong(), anyInt()))
                 .thenReturn(List.of(row(a, "{\"before\":\"STUDENT\"}"), row(a, "{}"), row(null, "{}")));
         when(accounts.getContact(a)).thenReturn(Optional.of(contact(a, "phongdt@fpt.edu.vn")));
 
@@ -133,7 +133,7 @@ class AuditQueryServiceTest {
     void accountLookupErrorLeavesEmailEmpty() {
         UUID a = UUID.randomUUID();
         when(repository.count(any())).thenReturn(1L);
-        when(repository.find(any(), anyLong(), anyInt())).thenReturn(List.of(row(a, "{}")));
+        when(repository.findRows(any(), anyLong(), anyInt())).thenReturn(List.of(row(a, "{}")));
         when(accounts.getContact(a)).thenThrow(new IllegalStateException("U01 down"));
 
         Page<AuditLogView> page = service.query(admin, NO_FILTER, PageRequest.of(0, 50));
@@ -144,14 +144,14 @@ class AuditQueryServiceTest {
     @Test
     void pageOffsetAndSizeArePassedAndEmptyResultSkipsFind() {
         when(repository.count(any())).thenReturn(120L);
-        when(repository.find(any(), anyLong(), anyInt())).thenReturn(List.of());
+        when(repository.findRows(any(), anyLong(), anyInt())).thenReturn(List.of());
 
         service.query(admin, NO_FILTER, PageRequest.of(2, 50));
-        verify(repository).find(any(), eq(100L), eq(50));
+        verify(repository).findRows(any(), eq(100L), eq(50));
 
         when(repository.count(any())).thenReturn(0L);
         service.query(admin, NO_FILTER, PageRequest.of(0, 50));
-        verify(repository, times(1)).find(any(), anyLong(), anyInt());
+        verify(repository, times(1)).findRows(any(), anyLong(), anyInt());
     }
 
     @Test
@@ -200,7 +200,7 @@ class AuditQueryServiceTest {
         AuditRow onBackup = new AuditRow(UUID.randomUUID(), null, "BACKUP_FAILED", "BACKUP", "bk-1", "FAILURE",
                 null, "{}", NOW);
         when(repository.count(any())).thenReturn(3L);
-        when(repository.find(any(), anyLong(), anyInt())).thenReturn(List.of(onAccount, onSubject, onBackup));
+        when(repository.findRows(any(), anyLong(), anyInt())).thenReturn(List.of(onAccount, onSubject, onBackup));
         AuditQueryService withNames = new AuditQueryService(repository, authorization, accounts, audit,
                 JsonMapper.builder().findAndAddModules().build(), Clock.fixed(NOW, ZoneOffset.UTC), subjects, null);
 
@@ -243,8 +243,8 @@ class AuditQueryServiceTest {
     void assertInvalid(AuditFilter filter, Pageable page) {
         assertThatThrownBy(() -> service.query(admin, filter, page))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.status()).isEqualTo(HttpStatus.BAD_REQUEST);
-                    assertThat(e.code()).isEqualTo("AUDIT_FILTER_INVALID");
+                    assertThat(e.readStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(e.readCode()).isEqualTo("AUDIT_FILTER_INVALID");
                 });
     }
 

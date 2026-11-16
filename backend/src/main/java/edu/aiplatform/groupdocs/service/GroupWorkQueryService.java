@@ -64,8 +64,8 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
     public Map<UUID, GroupWorkStatus> statusFor(UUID accountId, Collection<UUID> assignmentIds) {
         Map<UUID, GroupWorkStatus> result = new LinkedHashMap<>();
         for (GroupDocument d : documents.listByGroups(groups.listGroupIdsOf(accountId), assignmentIds)) {
-            result.put(d.assignmentId(), new GroupWorkStatus(d.assignmentId(), d.id(), d.submitted(), d.submittedAt(),
-                    d.submitted() && d.changedSinceSubmit()));
+            result.put(d.assignmentId(), new GroupWorkStatus(d.assignmentId(), d.id(), d.hasSubmitted(), d.submittedAt(),
+                    d.hasSubmitted() && d.hasChangedSinceSubmit()));
         }
         return result;
     }
@@ -73,7 +73,7 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
     @Override
     @Transactional(readOnly = true)
     public Optional<GroupSubmissionView> getGroupSubmission(UUID groupDocumentId) {
-        return documents.findById(groupDocumentId).filter(GroupDocument::submitted).flatMap(d -> groups.findGroup(d.groupId())
+        return documents.findById(groupDocumentId).filter(GroupDocument::hasSubmitted).flatMap(d -> groups.findGroup(d.groupId())
                 .map(g -> new GroupSubmissionView(d.id(), g.id(), d.assignmentId(), d.classId(), d.submittedDocument(),
                         g.memberIds(), d.sectionAuthors().stream().filter(GroupDocument.SectionAuthor::done)
                                 .map(a -> new GroupSectionAuthor(a.partId(), a.accountId())).toList(),
@@ -87,7 +87,7 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
                 .collect(Collectors.toMap(GroupDocument::groupId, Function.identity(), (a, b) -> a));
         return groups.listGroups(classId).stream().map(g -> {
             GroupDocument d = byGroup.get(g.id());
-            return new GroupSubmissionStatus(d == null ? null : d.id(), g.id(), g.name(), d != null && d.submitted(),
+            return new GroupSubmissionStatus(d == null ? null : d.id(), g.id(), g.name(), d != null && d.hasSubmitted(),
                     d == null ? null : d.submittedAt(), d != null && d.late());
         }).toList();
     }
@@ -103,7 +103,7 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
 
     /** Tiến độ từng nhóm của một bài nhóm cho giảng viên chính của lớp (BR-U12-52). */
     @Transactional(readOnly = true)
-    public List<GroupProgress> progress(Actor actor, UUID classId, UUID assignmentId) {
+    public List<GroupProgress> listProgress(Actor actor, UUID classId, UUID assignmentId) {
         access.requireTeacher(actor, classId);
         Map<UUID, GroupDocument> byGroup = documents.listByAssignmentAndClass(assignmentId, classId).stream()
                 .collect(Collectors.toMap(GroupDocument::groupId, Function.identity(), (a, b) -> a));
@@ -116,7 +116,7 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
             long claimed = sections.stream().filter(s -> s.status() == GroupSection.Status.CLAIMED).count();
             result.add(new GroupProgress(g.id(), g.name(), g.leaderId(), d == null ? null : d.id(),
                     d == null ? null : d.status().name(), (int) done, (int) claimed, (int) (sections.size() - done - claimed),
-                    sections, d != null && d.submitted(), d == null ? null : d.submittedAt(), d != null && d.late(),
+                    sections, d != null && d.hasSubmitted(), d == null ? null : d.submittedAt(), d != null && d.late(),
                     d == null || d.submitMode() == null ? null : d.submitMode().name()));
         }
         return result;
@@ -125,16 +125,16 @@ public class GroupWorkQueryService implements IGroupWorkStatus, IGroupSubmission
     /** Sự kiện rời trang của thành viên khi bài bật theo dõi (BR-U12-38). */
     @Transactional
     public void recordActivity(Actor actor, UUID documentId, List<ActivityEventInput> events) {
-        GroupDocContext ctx = docAccess.read(actor, documentId);
+        GroupDocContext ctx = docAccess.loadContext(actor, documentId);
         GroupDocAccess.requireMember(ctx);
         if (ctx.document().status() != GroupDocument.Status.IN_PROGRESS || !ctx.document().activityMonitoring()) {
-            throw ApiException.conflict("GROUP_DOC_ACTIVITY_OFF", "Tài liệu không ghi nhận hoạt động");
+            throw ApiException.createConflict("GROUP_DOC_ACTIVITY_OFF", "Tài liệu không ghi nhận hoạt động");
         }
         if (events == null || events.isEmpty()) {
             return;
         }
         if (events.size() > MAX_ACTIVITY_EVENTS) {
-            throw ApiException.payloadTooLarge("GROUP_DOC_ACTIVITY_TOO_MANY", "Quá nhiều sự kiện trong một lần gửi");
+            throw ApiException.createPayloadTooLarge("GROUP_DOC_ACTIVITY_TOO_MANY", "Quá nhiều sự kiện trong một lần gửi");
         }
         activity.record(actor, new WorkRef(WorkKind.GROUP_DOCUMENT, documentId, ctx.document().classId()), events);
     }

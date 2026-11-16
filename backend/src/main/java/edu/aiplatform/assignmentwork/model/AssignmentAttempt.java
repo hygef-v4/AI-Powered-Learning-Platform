@@ -26,11 +26,11 @@ public record AssignmentAttempt(UUID id, UUID assignmentId, UUID classId, UUID a
         submitWarnings = submitWarnings == null ? List.of() : List.copyOf(submitWarnings);
     }
 
-    public boolean inProgress() {
+    public boolean hasInProgressStatus() {
         return status == AttemptStatus.IN_PROGRESS;
     }
 
     public boolean acceptsWrites(Instant now) {
-        return inProgress() && !now.isAfter(deadlineAt.plus(GRACE));
+        return hasInProgressStatus() && !now.isAfter(deadlineAt.plus(GRACE));
     }
 }

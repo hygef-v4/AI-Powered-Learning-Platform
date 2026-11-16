@@ -25,48 +25,48 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/subjects/{subjectId}/assignments")
 public class SubjectAssignmentController {
 
-    private final AssignmentAuthoringService authoring;
-    private final AssignmentCopyService copies;
+    private final AssignmentAuthoringService assignmentAuthoringService;
+    private final AssignmentCopyService assignmentCopyService;
 
-    public SubjectAssignmentController(AssignmentAuthoringService authoring, AssignmentCopyService copies) {
-        this.authoring = authoring;
-        this.copies = copies;
+    public SubjectAssignmentController(AssignmentAuthoringService assignmentAuthoringService, AssignmentCopyService assignmentCopyService) {
+        this.assignmentAuthoringService = assignmentAuthoringService;
+        this.assignmentCopyService = assignmentCopyService;
     }
 
     /** Bài để copy vào bài của môn: bài khác của cùng môn và bài của các lớp mình dạy. */
     @GetMapping("/copy-sources")
     public List<AssignmentViews.CopySource> copySources(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
-        return copies.subjectCopySources(actor, subjectId);
+        return assignmentCopyService.listSubjectCopySources(actor, subjectId);
     }
 
     /** Tài liệu tham khảo cho Tạo từ AI trong popup tạo đề mẫu, lúc bài chưa có. */
     @GetMapping("/materials")
-    public List<AssignmentViews.Material> materials(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
-        return authoring.selectableMaterialsForSubject(actor, subjectId);
+    public List<AssignmentViews.Material> listMaterials(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
+        return assignmentAuthoringService.listSelectableMaterialsForSubject(actor, subjectId);
     }
 
     @PostMapping(value = "/copies", consumes = "application/json")
     public ResponseEntity<AssignmentViews.Detail> copy(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                                        @RequestBody AssignmentRequests.Copy body) {
-        AssignmentViews.Detail created = copies.copyToSubject(actor, subjectId, body.sourceAssignmentId(),
+        AssignmentViews.Detail created = assignmentCopyService.copyToSubject(actor, subjectId, body.sourceAssignmentId(),
                 body.title(), body.submissionMode(), body.gradingMode());
         return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 
     @GetMapping
-    public AssignmentViews.Page list(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+    public AssignmentViews.Page listAssignments(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                      @RequestParam(required = false) Set<AssignmentStatus> status,
                                      @RequestParam(defaultValue = "false") boolean includeClosed,
                                      @RequestParam(required = false) String q,
                                      @RequestParam(required = false) GradingMode gradingMode) {
-        return authoring.listForSubject(actor, subjectId, status, includeClosed, q, gradingMode);
+        return assignmentAuthoringService.listForSubject(actor, subjectId, status, includeClosed, q, gradingMode);
     }
 
     @PostMapping(consumes = "application/json")
-    public ResponseEntity<AssignmentViews.Detail> create(@AuthenticationPrincipal Actor actor,
+    public ResponseEntity<AssignmentViews.Detail> createAssignment(@AuthenticationPrincipal Actor actor,
                                                          @PathVariable UUID subjectId,
                                                          @RequestBody AssignmentRequests.Create body) {
-        AssignmentViews.Detail created = authoring.createForSubject(actor, subjectId, body.command());
+        AssignmentViews.Detail created = assignmentAuthoringService.createForSubject(actor, subjectId, body.buildCommand());
         return ResponseEntity.created(URI.create("/api/v1/assignments/" + created.id())).body(created);
     }
 }

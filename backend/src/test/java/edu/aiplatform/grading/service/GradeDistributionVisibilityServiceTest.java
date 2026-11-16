@@ -55,7 +55,7 @@ class GradeDistributionVisibilityServiceTest {
 
     @Test void staleVersionCannotOverwriteAndDoesNotAuditSuccess() {
         assertThatThrownBy(() -> gradeDistributionVisibilityService.updateVisibility(teacher, classId, assignmentId, true, 3))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(409));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(409));
         verifyNoInteractions(audit);
     }
 

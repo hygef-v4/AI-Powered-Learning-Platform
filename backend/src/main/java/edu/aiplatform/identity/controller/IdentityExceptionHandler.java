@@ -28,7 +28,7 @@ public class IdentityExceptionHandler {
     ProblemDetail handlePasswordPolicy(PasswordPolicyException e) {
         ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
         detail.setProperty("code", "PASSWORD_POLICY");
-        detail.setProperty("violations", e.violations().stream().map(Enum::name).sorted().toList());
+        detail.setProperty("violations", e.listViolations().stream().map(Enum::name).sorted().toList());
         return detail;
     }
 
@@ -37,10 +37,10 @@ public class IdentityExceptionHandler {
     ProblemDetail handleRoleChangeBlocked(RoleChangeBlockedException e) {
         ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
         detail.setProperty("code", "ROLE_CHANGE_BLOCKED");
-        detail.setProperty("managedSubjects", e.managedSubjects());
-        detail.setProperty("taughtClasses", e.taughtClasses());
-        detail.setProperty("subjects", e.subjects());
-        detail.setProperty("classes", e.classes());
+        detail.setProperty("managedSubjects", e.listManagedSubjects());
+        detail.setProperty("taughtClasses", e.listTaughtClasses());
+        detail.setProperty("subjects", e.listSubjects());
+        detail.setProperty("classes", e.listClasses());
         return detail;
     }
 

@@ -28,11 +28,11 @@ public class QuizMcpTools implements IMcpToolProvider {
     private static final Set<Role> ROLES = Set.of(Role.TEACHER, Role.SUBJECT_MANAGER);
     private static final int MAX_AGENT_LABEL = 200;
 
-    private final QuizAiDraftService drafts;
+    private final QuizAiDraftService quizAiDraftService;
     private final ObjectMapper json;
 
-    public QuizMcpTools(QuizAiDraftService drafts, ObjectMapper json) {
-        this.drafts = drafts;
+    public QuizMcpTools(QuizAiDraftService quizAiDraftService, ObjectMapper json) {
+        this.quizAiDraftService = quizAiDraftService;
         this.json = json;
     }
 
@@ -67,56 +67,56 @@ public class QuizMcpTools implements IMcpToolProvider {
     @Override
     public McpToolResult call(Actor actor, String toolName, Map<String, Object> args) {
         if (!READ_CONTEXT.equals(toolName) && !SAVE_DRAFT.equals(toolName)) {
-            throw ApiException.notFound("MCP_TOOL_NOT_FOUND");
+            throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
         }
         if (actor == null || !ROLES.contains(actor.role())) {
-            throw ApiException.forbidden("MCP_TOOL_FORBIDDEN");
+            throw ApiException.createForbidden("MCP_TOOL_FORBIDDEN");
         }
         JsonNode root = json.valueToTree(args == null ? Map.of() : args);
         if (READ_CONTEXT.equals(toolName)) {
-            fields(root, Set.of("quizId"));
-            return new McpToolResult(false, drafts.mcpContext(actor, quizId(root)));
+            rejectUnknownFields(root, Set.of("quizId"));
+            return new McpToolResult(false, quizAiDraftService.loadMcpContext(actor, parseQuizId(root)));
         }
-        fields(root, Set.of("quizId", "expectedVersion", "questions", "agentLabel"));
+        rejectUnknownFields(root, Set.of("quizId", "expectedVersion", "questions", "agentLabel"));
         JsonNode version = root.get("expectedVersion");
         if (version == null || !version.canConvertToLong() || version.asLong() < 0) {
-            throw invalid("expectedVersion cần là số nguyên ≥ 0");
+            throw createInvalidError("expectedVersion cần là số nguyên ≥ 0");
         }
         JsonNode label = root.get("agentLabel");
         if (label != null && !label.isNull() && (!label.isTextual() || label.asText().length() > MAX_AGENT_LABEL)) {
-            throw invalid("agentLabel tối đa 200 ký tự");
+            throw createInvalidError("agentLabel tối đa 200 ký tự");
         }
-        AiDraftView draft = drafts.saveFromMcp(actor, quizId(root), version.asLong(), root.get("questions"),
+        AiDraftView draft = quizAiDraftService.saveFromMcp(actor, parseQuizId(root), version.asLong(), root.get("questions"),
                 label == null || label.isNull() ? null : label.asText());
         long invalidCount = draft.questions().stream().filter(q -> !q.violations().isEmpty()).count();
         return new McpToolResult(false, Map.of("draftId", draft.id(), "status", draft.status().name(),
                 "questions", draft.questions().size(), "invalidQuestions", invalidCount));
     }
 
-    private static void fields(JsonNode root, Set<String> allowed) {
+    private static void rejectUnknownFields(JsonNode root, Set<String> allowed) {
         if (!root.isObject()) {
-            throw invalid("Tham số cần là object");
+            throw createInvalidError("Tham số cần là object");
         }
         root.fieldNames().forEachRemaining(name -> {
             if (!allowed.contains(name)) {
-                throw invalid("Tham số không được phép: " + name);
+                throw createInvalidError("Tham số không được phép: " + name);
             }
         });
     }
 
-    private static UUID quizId(JsonNode root) {
+    private static UUID parseQuizId(JsonNode root) {
         JsonNode value = root.get("quizId");
         if (value == null || !value.isTextual()) {
-            throw invalid("Thiếu quizId");
+            throw createInvalidError("Thiếu quizId");
         }
         try {
             return UUID.fromString(value.asText());
         } catch (IllegalArgumentException malformed) {
-            throw invalid("quizId không hợp lệ");
+            throw createInvalidError("quizId không hợp lệ");
         }
     }
 
-    private static ApiException invalid(String message) {
-        return ApiException.badRequest("INVALID_MCP_ARGUMENTS", message);
+    private static ApiException createInvalidError(String message) {
+        return ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", message);
     }
 }

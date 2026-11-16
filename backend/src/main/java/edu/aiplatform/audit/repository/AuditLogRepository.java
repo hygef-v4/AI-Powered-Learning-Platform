@@ -43,7 +43,7 @@ public class AuditLogRepository {
     }
 
     public long count(AuditFilter filter) {
-        Where where = Where.of(filter);
+        Where where = Where.buildWhere(filter);
         return jdbc.sql("select count(*) from audit_logs" + where.sql()).params(where.params())
                 .query(Long.class).single();
     }
@@ -70,8 +70,8 @@ public class AuditLogRepository {
     }
 
     /** Mới nhất trước; cùng thời điểm thì theo {@code id} để thứ tự trang ổn định. */
-    public List<AuditRow> find(AuditFilter filter, long offset, int limit) {
-        Where where = Where.of(filter);
+    public List<AuditRow> findRows(AuditFilter filter, long offset, int limit) {
+        Where where = Where.buildWhere(filter);
         Map<String, Object> params = new LinkedHashMap<>(where.params());
         params.put("offset", offset);
         params.put("limit", limit);
@@ -90,34 +90,34 @@ public class AuditLogRepository {
     /** Điều kiện WHERE dựng từ bộ lọc; trường rỗng thì không lọc. Tách riêng để kiểm thử không cần database. */
     record Where(String sql, Map<String, Object> params) {
 
-        static Where of(AuditFilter filter) {
+        static Where buildWhere(AuditFilter filter) {
             List<String> conditions = new ArrayList<>();
             Map<String, Object> params = new LinkedHashMap<>();
             if (filter != null) {
-                add(conditions, params, "actor_id = :actorId", "actorId", filter.actorId());
+                addCondition(conditions, params, "actor_id = :actorId", "actorId", filter.actorId());
                 if (filter.actorIds() != null) {
                     // Không ai khớp phần email đã gõ thì không dòng nào khớp.
                     if (filter.actorIds().isEmpty()) {
                         conditions.add("1 = 0");
                     } else {
-                        add(conditions, params, "actor_id in (:actorIds)", "actorIds", filter.actorIds());
+                        addCondition(conditions, params, "actor_id in (:actorIds)", "actorIds", filter.actorIds());
                     }
                 }
-                add(conditions, params, "action = :action", "action", filter.action());
-                add(conditions, params, "object_type = :objectType", "objectType", filter.objectType());
-                add(conditions, params, "object_id = :objectId", "objectId", filter.objectId());
-                add(conditions, params, "result = :result", "result",
+                addCondition(conditions, params, "action = :action", "action", filter.action());
+                addCondition(conditions, params, "object_type = :objectType", "objectType", filter.objectType());
+                addCondition(conditions, params, "object_id = :objectId", "objectId", filter.objectId());
+                addCondition(conditions, params, "result = :result", "result",
                         filter.result() == null ? null : filter.result().name());
-                add(conditions, params, "occurred_at >= :from", "from",
+                addCondition(conditions, params, "occurred_at >= :from", "from",
                         filter.from() == null ? null : Timestamp.from(filter.from()));
-                add(conditions, params, "occurred_at <= :to", "to",
+                addCondition(conditions, params, "occurred_at <= :to", "to",
                         filter.to() == null ? null : Timestamp.from(filter.to()));
             }
             String sql = conditions.isEmpty() ? "" : " where " + String.join(" and ", conditions);
             return new Where(sql, params);
         }
 
-        private static void add(List<String> conditions, Map<String, Object> params, String condition, String name,
+        private static void addCondition(List<String> conditions, Map<String, Object> params, String condition, String name,
                                 Object value) {
             if (value != null) {
                 conditions.add(condition);

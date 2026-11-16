@@ -40,7 +40,7 @@ public class AuditController {
                                String objectType, String objectId, String objectLabel, AuditResult result,
                                String reason, Map<String, Object> details) {
 
-        static AuditLogItem of(AuditLogView view) {
+        static AuditLogItem mapAuditLogItem(AuditLogView view) {
             var e = view.event();
             return new AuditLogItem(e.id(), e.occurredAt(), e.actorId(), view.actorEmail(), e.action(),
                     e.objectType(), e.objectId(), view.objectLabel(), e.result(), e.reason(), e.details());
@@ -55,7 +55,7 @@ public class AuditController {
      * Màn Audit Log gửi {@code recordView=false} khi lọc, xóa lọc hay chuyển trang để chỉ lần mở màn được ghi.
      */
     @GetMapping
-    public AuditLogPage list(@AuthenticationPrincipal Actor actor,
+    public AuditLogPage listAuditLogs(@AuthenticationPrincipal Actor actor,
                              @RequestParam(required = false) UUID actorId,
                              @RequestParam(name = "actor", required = false) String actorText,
                              @RequestParam(required = false) String action,
@@ -68,12 +68,12 @@ public class AuditController {
                              @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) int size,
                              @RequestParam(defaultValue = "true") boolean recordView) {
         if (page < 0 || size < 1) {
-            throw ApiException.badRequest("AUDIT_FILTER_INVALID", "Số trang hoặc kích thước trang không hợp lệ");
+            throw ApiException.createBadRequest("AUDIT_FILTER_INVALID", "Số trang hoặc kích thước trang không hợp lệ");
         }
         Page<AuditLogView> found = auditQuery.query(actor,
                 new AuditFilter(actorId, action, objectType, objectId, result, from, to, actorText, null), PageRequest.of(page, size),
                 recordView);
-        return new AuditLogPage(found.getContent().stream().map(AuditLogItem::of).toList(), found.getNumber(),
+        return new AuditLogPage(found.getContent().stream().map(AuditLogItem::mapAuditLogItem).toList(), found.getNumber(),
                 found.getSize(), found.getTotalElements(), found.getTotalPages());
     }
 

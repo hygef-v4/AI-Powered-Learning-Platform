@@ -29,7 +29,7 @@ public final class QuizViews {
                            QuizStatus status, Instant publishedAt, Instant retiredAt, String retiredReason,
                            Instant createdAt, Instant updatedAt, long version, FormattedText instructionsDocument) {
 
-        static QuizInfo of(Quiz q) {
+        static QuizInfo createQuizInfo(Quiz q) {
             return new QuizInfo(q.id(), q.scope(), q.classId(), q.subjectId(), q.sourceQuizId(), q.origin(),
                     q.versionNo(), q.title(), q.instructions(), q.settings(), q.activityMonitoringEnabled(),
                     q.activityNotice(), q.paperMode(), q.status(), q.publishedAt(), q.retiredAt(),
@@ -44,7 +44,7 @@ public final class QuizViews {
     /** Một quy tắc sinh đề (BR-U10-17). */
     public record DrawRuleView(int position, String tag, Difficulty difficulty, int questionCount, BigDecimal pointsEach) {
 
-        static DrawRuleView of(DrawRule r) {
+        static DrawRuleView createDrawRuleView(DrawRule r) {
             return new DrawRuleView(r.position(), r.tag(), r.difficulty(), r.questionCount(), r.pointsEach());
         }
     }
@@ -78,7 +78,7 @@ public final class QuizViews {
                           QuizStatus status, int itemCount, BigDecimal maxScore, Integer timeLimitMinutes,
                           Instant updatedAt, boolean readOnly) {
 
-        static QuizRow of(QuizSummary s, boolean readOnly) {
+        static QuizRow createQuizRow(QuizSummary s, boolean readOnly) {
             Quiz q = s.quiz();
             return new QuizRow(q.id(), q.scope(), q.classId(), q.subjectId(), q.versionNo(), q.title(), q.status(),
                     s.itemCount(), s.maxScore(), q.settings().timeLimitMinutes(), q.updatedAt(), readOnly);

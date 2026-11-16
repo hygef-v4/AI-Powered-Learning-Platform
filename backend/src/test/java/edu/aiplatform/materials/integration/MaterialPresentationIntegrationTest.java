@@ -57,7 +57,7 @@ class MaterialPresentationIntegrationTest {
                 FormattedText.Align.RIGHT, 1, List.of(new FormattedText.Run("Nội dung", true, null, null)))));
         var changed =
                 legacy
-                        .revise("New", "", 0, 1, Material.Status.ACTIVE, now)
+                        .reviseMaterial("New", "", 0, 1, Material.Status.ACTIVE, now)
                         .changePresentation(false, document);
         assertThat(materialRepository.updateMaterial(changed, 0)).isTrue();
         assertThat(materialRepository.updateMaterial(changed, 0)).isFalse();

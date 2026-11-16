@@ -77,7 +77,7 @@ public class JwtService {
         }
     }
 
-    public Duration accessTtl() {
+    public Duration readAccessTtl() {
         return accessTtl;
     }
 }

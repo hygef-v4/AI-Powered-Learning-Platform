@@ -21,7 +21,7 @@ public final class MaterialViews {
             MaterialVersion.TextStatus textStatus,
             UUID createdBy,
             Instant createdAt) {
-        static Version of(MaterialVersion version) {
+        static Version createVersion(MaterialVersion version) {
             return new Version(
                     version.versionNo(),
                     version.fileName(),

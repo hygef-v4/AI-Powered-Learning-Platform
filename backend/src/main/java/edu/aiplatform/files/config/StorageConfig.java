@@ -23,9 +23,9 @@ public class StorageConfig {
 
     @Bean
     IStorage storage(FilesProperties properties, DriveClientFactory driveClients, DriveFolders folders) {
-        if (properties.driveConfigured()) {
+        if (properties.hasDrive()) {
             log.info("Lưu tệp trên Google Drive ({})",
-                    properties.sharedDriveConfigured() ? "Shared Drive" : "Drive cá nhân");
+                    properties.hasSharedDrive() ? "Shared Drive" : "Drive cá nhân");
             return new GoogleDriveStorageAdapter(driveClients, folders);
         }
         if (properties.requireDrive()) {

@@ -31,18 +31,18 @@ public class DriveHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        if (!properties.driveConfigured()) {
+        if (!properties.hasDrive()) {
             return Health.up().withDetail("drive", properties.requireDrive() ? "NOT_CONFIGURED" : "LOCAL").build();
         }
         Instant now = clock.instant();
         if (now.isAfter(checkedAt.plus(CACHE))) {
             try {
-                if (properties.sharedDriveConfigured()) {
-                    DriveClientFactory.withRetry(() -> clients.drive().drives().get(properties.sharedDriveId())
+                if (properties.hasSharedDrive()) {
+                    DriveClientFactory.runWithRetry(() -> clients.createDrive().drives().get(properties.sharedDriveId())
                             .setFields("id").execute());
                 } else {
-                    String root = folders.root();
-                    DriveClientFactory.withRetry(() -> clients.drive().files().get(root).setFields("id").execute());
+                    String root = folders.resolveRoot();
+                    DriveClientFactory.runWithRetry(() -> clients.createDrive().files().get(root).setFields("id").execute());
                 }
                 state = "UP";
             } catch (RuntimeException e) {

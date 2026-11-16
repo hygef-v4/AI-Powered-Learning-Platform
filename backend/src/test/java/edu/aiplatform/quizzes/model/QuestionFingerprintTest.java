@@ -14,7 +14,7 @@ class QuestionFingerprintTest {
         for (int i = 0; i < options.length; i++) {
             list.add(new QuestionOption(String.valueOf(i + 1), options[i]));
         }
-        return QuestionContent.of(QuestionType.MCQ_SINGLE, stem, list, List.of("1"), null, BigDecimal.ONE, Difficulty.EASY, List.of());
+        return QuestionContent.createContent(QuestionType.MCQ_SINGLE, stem, list, List.of("1"), null, BigDecimal.ONE, Difficulty.EASY, List.of());
     }
 
     @Test
@@ -29,7 +29,7 @@ class QuestionFingerprintTest {
     void hashChangesWithOptionsAndIgnoresPointsAndExplanation() {
         QuestionContent base = content("Câu hỏi", "A", "B");
         assertThat(QuestionFingerprint.hash(base)).isNotEqualTo(QuestionFingerprint.hash(content("Câu hỏi", "A", "C")));
-        QuestionContent other = QuestionContent.of(QuestionType.MCQ_MULTI, "Câu hỏi", base.options(), List.of("2"), "Giải thích",
+        QuestionContent other = QuestionContent.createContent(QuestionType.MCQ_MULTI, "Câu hỏi", base.options(), List.of("2"), "Giải thích",
                 new BigDecimal("9"), Difficulty.HARD, List.of("thẻ"));
         assertThat(QuestionFingerprint.hash(other)).isEqualTo(QuestionFingerprint.hash(base));
     }
@@ -39,8 +39,8 @@ class QuestionFingerprintTest {
         String a = QuestionFingerprint.normalize("Độ phức tạp thời gian của thuật toán sắp xếp nổi bọt là gì?");
         String b = QuestionFingerprint.normalize("Độ phức tạp thời gian của thuật toán sắp xếp nổi bọt là bao nhiêu?");
         String c = QuestionFingerprint.normalize("Giao thức nào hoạt động ở tầng giao vận?");
-        assertThat(QuestionFingerprint.similarity(a, a)).isEqualTo(1.0);
-        assertThat(QuestionFingerprint.similarity(a, b)).isGreaterThanOrEqualTo(0.7);
-        assertThat(QuestionFingerprint.similarity(a, c)).isLessThan(0.3);
+        assertThat(QuestionFingerprint.calculateSimilarity(a, a)).isEqualTo(1.0);
+        assertThat(QuestionFingerprint.calculateSimilarity(a, b)).isGreaterThanOrEqualTo(0.7);
+        assertThat(QuestionFingerprint.calculateSimilarity(a, c)).isLessThan(0.3);
     }
 }

@@ -24,7 +24,7 @@ public class UnattachedFiles {
         this.redis = redis;
     }
 
-    public void add(String fileId, Instant refExpiresAt) {
+    public void addFile(String fileId, Instant refExpiresAt) {
         redis.opsForZSet().add(KEY, fileId, refExpiresAt.plus(GRACE).getEpochSecond());
     }
 
@@ -33,12 +33,12 @@ public class UnattachedFiles {
     }
 
     /** Tệp tới hạn dọn, sớm trước. */
-    public List<String> due(Instant now, int limit) {
+    public List<String> listDue(Instant now, int limit) {
         Set<String> ids = redis.opsForZSet().rangeByScore(KEY, Double.NEGATIVE_INFINITY, now.getEpochSecond(), 0, limit);
         return ids == null ? List.of() : List.copyOf(ids);
     }
 
-    public void forget(String fileId) {
+    public void forgetFile(String fileId) {
         redis.opsForZSet().remove(KEY, fileId);
     }
 }
