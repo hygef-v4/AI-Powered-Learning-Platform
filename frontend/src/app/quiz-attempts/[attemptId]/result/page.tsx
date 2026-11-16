@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { QuizResultPage } from "@/features/quizpractice/pages/QuizResultPage";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Kết quả quiz" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.quizattempts.attemptId.result.page.quizResult") };
+}
 
 // U11 #45 Quiz Result.
 export default async function Page({ params }: { params: Promise<{ attemptId: string }> }) {

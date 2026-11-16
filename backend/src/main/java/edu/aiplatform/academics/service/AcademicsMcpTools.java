@@ -51,10 +51,10 @@ public class AcademicsMcpTools implements IMcpToolProvider {
                     null);
             String term = parseTermFilter(in.text("term", ""));
             var rows = taught.stream().filter(c -> status == null || c.status() == status)
-                    .filter(c -> term == null || term.equals(c.term())).filter(
+                    .filter(c -> term == null || term.equals(c.deriveTerm())).filter(
                     c -> (c.code() + " " + c.name()).toLowerCase(Locale.ROOT).contains(query))
                     .map(c -> Map.of("classId", c.id(), "subjectId", c.subjectId(), "code",
-                            c.code(), "term", c.term(), "title", c.name(), "status", c.status(),
+                            c.code(), "term", c.deriveTerm(), "title", c.name(), "status", c.status(),
                             "version", c.version()))
                     .toList();
             return new McpToolResult(false, McpInput.page(rows, page, size));

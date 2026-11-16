@@ -22,21 +22,21 @@ class LocalFolderStorageAdapterTest {
         StoredMetadata metadata = new StoredMetadata(UUID.randomUUID(), ArtifactPurpose.MATERIAL, "a.pdf",
                 "application/pdf", 8, "sha");
 
-        String fileId = storage.put(ArtifactPurpose.MATERIAL, content, metadata);
+        String fileId = storage.putFile(ArtifactPurpose.MATERIAL, content, metadata);
 
-        assertThat(storage.metadata(fileId)).contains(metadata);
+        assertThat(storage.loadMetadata(fileId)).contains(metadata);
         try (var in = storage.open(fileId)) {
             assertThat(new String(in.readAllBytes())).isEqualTo("noi dung");
         }
-        storage.delete(fileId);
-        storage.delete(fileId);
-        assertThat(storage.metadata(fileId)).isEmpty();
+        storage.deleteFile(fileId);
+        storage.deleteFile(fileId);
+        assertThat(storage.loadMetadata(fileId)).isEmpty();
     }
 
     @Test
     void ignoresIdsThatCouldEscapeTheFolder() {
         LocalFolderStorageAdapter storage = new LocalFolderStorageAdapter(dir);
 
-        assertThat(storage.metadata("../../etc/passwd")).isEmpty();
+        assertThat(storage.loadMetadata("../../etc/passwd")).isEmpty();
     }
 }

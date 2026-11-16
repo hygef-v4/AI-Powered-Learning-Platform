@@ -31,11 +31,11 @@ class AdminDashboardControllerTest {
     @AfterEach void clear() { SecurityContextHolder.clearContext(); }
 
     @Test void returnsPublicProjectionAndNoStoreIncludingNullableEmptyBackup() throws Exception {
-        var backup = new BackupSection(Section.available(null), Section.unavailable(), Section.available(List.of()),
-                Section.unavailable(), Section.unavailable());
+        var backup = new BackupSection(Section.wrapAvailable(null), Section.markUnavailable(), Section.wrapAvailable(List.of()),
+                Section.markUnavailable(), Section.markUnavailable());
         when(adminDashboardService.loadDashboard(admin)).thenReturn(new AdminDashboardView(Instant.parse("2026-10-20T00:00:00Z"),
-                Section.available(new AccountCounts(Map.of(), 5, 3)), Section.unavailable(), Section.unavailable(),
-                Section.available(7L), backup));
+                Section.wrapAvailable(new AccountCounts(Map.of(), 5, 3)), Section.markUnavailable(), Section.markUnavailable(),
+                Section.wrapAvailable(7L), backup));
         mvc.perform(get("/api/v1/admin/dashboard")).andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.accounts.data.total").value(5))
@@ -64,7 +64,7 @@ class AdminDashboardControllerTest {
         verifyNoMoreInteractions(adminDashboardService);
     }
     @Test void deniedAndUnexpectedErrorsNeverExposeProviderExceptions() throws Exception {
-        when(adminDashboardService.loadDashboard(admin)).thenThrow(ApiException.forbidden("DASHBOARD_FORBIDDEN"));
+        when(adminDashboardService.loadDashboard(admin)).thenThrow(ApiException.createForbidden("DASHBOARD_FORBIDDEN"));
         mvc.perform(get("/api/v1/admin/dashboard")).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DASHBOARD_FORBIDDEN"));
         doThrow(new IllegalStateException("secret")).when(adminDashboardService).loadDashboard(admin);
         mvc.perform(get("/api/v1/admin/dashboard")).andExpect(status().isServiceUnavailable())

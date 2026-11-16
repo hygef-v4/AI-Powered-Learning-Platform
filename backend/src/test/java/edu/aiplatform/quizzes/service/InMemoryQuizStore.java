@@ -55,7 +55,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public Optional<Quiz> find(UUID id) {
+        public Optional<Quiz> findQuiz(UUID id) {
             return Optional.ofNullable(quizzes.get(id));
         }
 
@@ -70,7 +70,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public boolean update(Quiz quiz) {
+        public boolean updateQuiz(Quiz quiz) {
             Quiz current = quizzes.get(quiz.id());
             if (current == null || current.version() != quiz.version()) {
                 return false;
@@ -80,7 +80,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public boolean delete(UUID id, long version) {
+        public boolean deleteQuiz(UUID id, long version) {
             Quiz q = quizzes.get(id);
             if (q == null || q.version() != version || q.publishedAt() != null) {
                 return false;
@@ -92,7 +92,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public List<QuizItem> items(UUID quizId) {
+        public List<QuizItem> listItems(UUID quizId) {
             return items.getOrDefault(quizId, List.of()).stream().sorted(Comparator.comparingInt(QuizItem::position)).toList();
         }
 
@@ -141,7 +141,7 @@ class InMemoryQuizStore {
         @Override
         public List<Quiz> listOpenGenerated(UUID subjectId) {
             return quizzes.values().stream()
-                    .filter(q -> q.subjectId().equals(subjectId) && q.status() == QuizStatus.OPEN && q.generated()).toList();
+                    .filter(q -> q.subjectId().equals(subjectId) && q.status() == QuizStatus.OPEN && q.wasGenerated()).toList();
         }
 
         @Override
@@ -152,7 +152,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public int maxVersionNo(UUID quizId) {
+        public int findMaxVersionNo(UUID quizId) {
             return chain(quizId).stream().mapToInt(id -> quizzes.get(id).versionNo()).max().orElse(0);
         }
 
@@ -171,11 +171,11 @@ class InMemoryQuizStore {
         }
 
         private QuizSummary summary(Quiz q) {
-            if (q.generated()) {
+            if (q.wasGenerated()) {
                 List<DrawRule> rules = drawRules(q.id());
-                return new QuizSummary(q, rules.stream().mapToInt(DrawRule::questionCount).sum(), QuizSupport.maxScoreOf(rules));
+                return new QuizSummary(q, rules.stream().mapToInt(DrawRule::questionCount).sum(), QuizSupport.sumMaxScore(rules));
             }
-            List<QuizItem> list = items(q.id());
+            List<QuizItem> list = listItems(q.id());
             return new QuizSummary(q, list.size(), list.stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add));
         }
 
@@ -199,7 +199,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public List<PoolEntry> activePool(UUID subjectId) {
+        public List<PoolEntry> listActivePool(UUID subjectId) {
             Map<UUID, Question> latest = new LinkedHashMap<>();
             questions.values().stream()
                     .filter(q -> q.scope() == QuestionScope.BANK && q.subjectId().equals(subjectId)
@@ -222,7 +222,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public List<StemEntry> bankStems(UUID subjectId, UUID excludeLineage) {
+        public List<StemEntry> listBankStems(UUID subjectId, UUID excludeLineage) {
             return open(subjectId, excludeLineage).stream().map(q -> new StemEntry(q.id(),
                     QuestionFingerprint.normalize(q.content().stem()), q.content().stem(), q.status())).toList();
         }
@@ -233,7 +233,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public List<Question> withoutFingerprint(int limit) {
+        public List<Question> listWithoutFingerprint(int limit) {
             return List.of();
         }
 
@@ -247,7 +247,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public Optional<QuestionReview> latestReview(UUID questionId) {
+        public Optional<QuestionReview> findLatestReview(UUID questionId) {
             return reviews.stream().filter(r -> r.questionId().equals(questionId)).reduce((a, b) -> b);
         }
 
@@ -257,7 +257,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public Optional<UUID> proposalClass(UUID questionId) {
+        public Optional<UUID> findProposalClass(UUID questionId) {
             return Optional.ofNullable(proposals.get(questionId));
         }
 
@@ -273,12 +273,12 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public Optional<Question> find(UUID id) {
+        public Optional<Question> findQuestion(UUID id) {
             return Optional.ofNullable(questions.get(id));
         }
 
         @Override
-        public boolean delete(UUID id, long version) {
+        public boolean deleteQuestion(UUID id, long version) {
             return questions.remove(id) != null;
         }
 
@@ -288,13 +288,13 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public List<Question> lineage(UUID lineageId) {
+        public List<Question> listLineage(UUID lineageId) {
             return questions.values().stream().filter(q -> q.lineageId().equals(lineageId)).toList();
         }
 
         @Override
-        public int maxVersionNo(UUID lineageId) {
-            return lineage(lineageId).stream().mapToInt(Question::versionNo).max().orElse(0);
+        public int findMaxVersionNo(UUID lineageId) {
+            return listLineage(lineageId).stream().mapToInt(Question::versionNo).max().orElse(0);
         }
 
         @Override
@@ -303,7 +303,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public boolean update(Question question) {
+        public boolean updateQuestion(Question question) {
             Question current = questions.get(question.id());
             if (current == null || current.version() != question.version()) {
                 return false;
@@ -331,7 +331,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public List<Question> inlineOf(UUID quizId) {
+        public List<Question> listInline(UUID quizId) {
             return questions.values().stream().filter(q -> q.scope() == QuestionScope.QUIZ && quizId.equals(q.quizId())).toList();
         }
 
@@ -356,7 +356,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public List<Question> randomActive(UUID subjectId, PickQuery query, int count) {
+        public List<Question> pickRandomActive(UUID subjectId, PickQuery query, int count) {
             return active(subjectId, query).stream().limit(count).toList();
         }
 
@@ -374,13 +374,13 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public Optional<QuizAiDraft> find(UUID id) {
+        public Optional<QuizAiDraft> findDraft(UUID id) {
             return Optional.ofNullable(drafts.get(id));
         }
 
         @Override
         public Optional<QuizAiDraft> findForUpdate(UUID id) {
-            return find(id);
+            return findDraft(id);
         }
 
         @Override
@@ -401,7 +401,7 @@ class InMemoryQuizStore {
         }
 
         @Override
-        public boolean transition(QuizAiDraft next, DraftStatus expected) {
+        public boolean transitionDraft(QuizAiDraft next, DraftStatus expected) {
             QuizAiDraft current = drafts.get(next.id());
             if (current == null || current.status() != expected) {
                 return false;

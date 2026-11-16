@@ -35,11 +35,11 @@ public record AiTask(UUID id, String requestRef, String fingerprint, UUID actorI
         return NEXT.get(from).contains(to);
     }
 
-    public boolean finished() {
+    public boolean hasFinished() {
         return NEXT.get(state).isEmpty();
     }
 
-    public boolean active() {
+    public boolean hasActiveStatus() {
         return state == AiTaskState.QUEUED || state == AiTaskState.RUNNING;
     }
 
@@ -54,13 +54,13 @@ public record AiTask(UUID id, String requestRef, String fingerprint, UUID actorI
                 createdAt, done ? now : finishedAt, version);
     }
 
-    public AiTask withResult(String result, String requestId) {
+    public AiTask completeWithResult(String result, String requestId) {
         return new AiTask(id, requestRef, fingerprint, actorId, source, connectionId, provider, model, taskType, targetRef,
                 inputVersion, state, inputPayload, outputSchema, result, maxOutputTokens, reservedTokens, quotaDay,
                 dispatchedAt, requestId, applyResult, handlerDone, safeError, createdAt, finishedAt, version);
     }
 
-    public AiTask withError(String error) {
+    public AiTask failWithError(String error) {
         String safe = error == null ? null : error.length() > 500 ? error.substring(0, 500) : error;
         return new AiTask(id, requestRef, fingerprint, actorId, source, connectionId, provider, model, taskType, targetRef,
                 inputVersion, state, inputPayload, outputSchema, resultPayload, maxOutputTokens, reservedTokens, quotaDay,
@@ -79,7 +79,7 @@ public record AiTask(UUID id, String requestRef, String fingerprint, UUID actorI
     }
 
     /** Đã chuyển cho handler: xóa prompt và kết quả, chỉ giữ thông tin task (P6). */
-    public AiTask handled(ApplyOutcome outcome) {
+    public AiTask markHandled(ApplyOutcome outcome) {
         return new AiTask(id, requestRef, fingerprint, actorId, source, connectionId, provider, model, taskType, targetRef,
                 inputVersion, state, null, null, null, maxOutputTokens, reservedTokens, quotaDay, dispatchedAt,
                 providerRequestId, outcome, true, safeError, createdAt, finishedAt, version);

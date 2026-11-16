@@ -11,11 +11,12 @@ import {ManagedClassPage, type ManagedClassActions} from "./ManagedClassPage";
 import {ManagerDashboardPage, MySubjectPage} from "./ManagerDashboardPage";
 import {ClassFormDialog} from "../components/ClassFormDialog";
 import {ReopenConflictError} from "../components/ClassDialogs";
-import { EmptyState } from "../components/AcademicsUi";
+import { EmptyState } from "@/shared/ui";
 import { formatOperationError } from "../model/format";
 import type {SubjectView, CourseClassView, EnrollmentView} from "../model/types";
 import styles from "../styles/academics.module.css";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { msg } from "@/i18n/msg";
 
 type ResourceLoader<T> = (signal: AbortSignal) => Promise<T>;
 type ResourceState<T> = {
@@ -58,7 +59,7 @@ function useResource<T>(load: ResourceLoader<T>) {
   return {...(state.key === load ? state : {loading: true}), refresh};
 }
 
-async function allClasses(scope: Scope, signal: AbortSignal) {
+async function listAllClasses(scope: Scope, signal: AbortSignal) {
   const rows: CourseClassView[] = [];
   for (let page = 1; ; page++) {
     const next = await academicsApi.listClasses(scope, {page, size: 100}, signal);
@@ -67,7 +68,7 @@ async function allClasses(scope: Scope, signal: AbortSignal) {
   }
 }
 
-async function allStudents(scope: "manager" | "teaching", id: string, signal: AbortSignal) {
+async function listAllStudents(scope: "manager" | "teaching", id: string, signal: AbortSignal) {
   const rows: EnrollmentView[] = [];
   for (let page = 1; ; page++) {
     const next = await academicsApi.listStudents(scope, id, {page, size: 100}, signal);
@@ -91,7 +92,7 @@ export function ClassesRoute({teaching = false}: {teaching?: boolean}) {
     return {
       ...mode,
       classes: mode.classes.length === 100
-        ? await allClasses(mode.audience === "student" ? "me" : "teaching", signal)
+        ? await listAllClasses(mode.audience === "student" ? "me" : "teaching", signal)
         : mode.classes,
     };
   }, [teaching]);
@@ -107,7 +108,7 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
   const router = useRouter();
   const load = useCallback(async (signal: AbortSignal) => ({
     value: await academicsApi.loadClass(scope, id, signal),
-    students: scope === "me" ? [] : await allStudents(scope, id, signal),
+    students: scope === "me" ? [] : await listAllStudents(scope, id, signal),
   }), [id, scope]);
   const state = useResource(load);
   const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.listCandidates("teacher", q, signal), []);
@@ -123,7 +124,7 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
       return result;
     } catch (error) {
       if (error instanceof ApiError && error.problem.status === 409) {
-        setMutationConflict({classId: id, message: "Dữ liệu đã thay đổi. Đã tải lại thông tin mới nhất; vui lòng kiểm tra trước khi tiếp tục."});
+        setMutationConflict({classId: id, message: msg("academics.pages.ClassRoutes.theDataHasChangedThe")});
         await state.refresh().catch(() => {});
         const details = error.problem as typeof error.problem & {conflictingStudents?: unknown[]};
         if (details.conflictingStudents?.length) {
@@ -152,8 +153,7 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
       loadTeachers={loadTeachers} loadCandidates={loadCandidates}
       onBack={() => router.push("/manager/classes")} actions={actions}/>;
   } else {
-    content = <ReadOnlyClassPage audience={scope === "me" ? "student" : "teacher"} value={value} students={students}
-      onBack={() => { if (window.history.length > 1) window.history.back(); else router.push(scope === "me" ? "/classes" : "/teaching/classes"); }}/>;
+    content = <ReadOnlyClassPage audience={scope === "me" ? "student" : "teacher"} value={value} students={students}/>;
   }
   return <>
     {mutationConflict?.classId === id && <p role="alert" className={styles.error} data-testid="class-mutation-conflict">{mutationConflict.message}</p>}
@@ -167,7 +167,7 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
   const load = useCallback(async (signal: AbortSignal) => {
     const subjects = await academicsApi.listSubjects(signal);
     // Chỉ mục Lớp học cần danh sách lớp; Thông tin môn tự tải lớp đang mở của môn.
-    const classes = view === "classes" ? await allClasses("manager", signal) : [];
+    const classes = view === "classes" ? await listAllClasses("manager", signal) : [];
     return {subjects, classes, subject: id ? await academicsApi.loadSubject(id, signal) : subjects[0]};
   }, [id, view]);
   const state = useResource(load);
@@ -181,7 +181,7 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
       onSubject={id => router.push(`/manager/subjects/${encodeURIComponent(id)}`)}/>;
   } else if (view === "subjects") {
     content = subject ? <MySubjectPage subject={subject}/>
-      : <EmptyState title="Bạn chưa được giao quản lý môn"/>;
+      : <EmptyState title={msg("academics.pages.ClassRoutes.youHaveNotBeenAssigned")}/>;
   } else {
     content = <ClassListPage key={initialSubjectId ?? ""} initialSubjectId={initialSubjectId} subjects={subjects} classes={classes}
       onOpen={id => router.push(`/manager/classes/${encodeURIComponent(id)}`)} onCreate={setCreating}/>;

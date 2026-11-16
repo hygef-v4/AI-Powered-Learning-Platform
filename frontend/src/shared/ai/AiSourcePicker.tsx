@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { Alert, Button, Dialog, Pill, cx } from "@/shared/ui";
-import { PROVIDER_LABEL, formatTokens, masked } from "./format";
+import { PROVIDER_LABEL, formatTokens, maskHint } from "./format";
 import type { SourceChoice, SourceOption } from "./types";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   open: boolean;
@@ -18,7 +19,7 @@ type Props = {
   onSubmit: (choice: SourceChoice) => void;
 };
 
-function keyOf(option: SourceOption) {
+function buildKey(option: SourceOption) {
   return `${option.source}:${option.provider ?? ""}`;
 }
 
@@ -41,18 +42,18 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
   useEffect(() => {
     if (!open) return;
     let active = true;
-    apiFetch<SourceOption[]>("/api/v1/ai/sources").then(
+    fetchApi<SourceOption[]>("/api/v1/ai/sources").then(
       (loaded) => {
         if (!active) return;
         setOptions(loaded);
         setError(null);
         const preferred = loaded.find((option) => option.preferred && option.available);
-        setSelected(preferred ? keyOf(preferred) : null);
+        setSelected(preferred ? buildKey(preferred) : null);
         setAutoSent(!!preferred);
         if (preferred) submitRef.current({ source: preferred.source, provider: preferred.provider });
       },
       () => {
-        if (active) setError("Không tải được danh sách nguồn AI, thử lại sau.");
+        if (active) setError(msg("shared.ai.AiSourcePicker.couldNotLoadTheAi"));
       },
     );
     return () => {
@@ -60,13 +61,13 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
     };
   }, [open]);
 
-  const choice = options?.find((option) => keyOf(option) === selected && option.available);
+  const choice = options?.find((option) => buildKey(option) === selected && option.available);
   const preferred = options?.find((option) => option.preferred);
 
   return (
     <Dialog
       open={open}
-      title="Chọn nguồn AI"
+      title={msg("shared.ai.AiSourcePicker.chooseAiSource")}
       icon="smart_toy"
       size="lg"
       onClose={onCancel}
@@ -74,62 +75,56 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
       footer={
         <>
           <Button onClick={onCancel} disabled={busy}>
-            Hủy
-          </Button>
+            {msg("shared.ai.AiSourcePicker.cancel")}</Button>
           <Button
             variant="primary"
             disabled={!choice || busy}
             onClick={() => choice && onSubmit({ source: choice.source, provider: choice.provider })}
           >
-            Gửi yêu cầu
-          </Button>
+            {msg("shared.ai.AiSourcePicker.sendRequest")}</Button>
         </>
       }
     >
       <p className="text-muted">{task}</p>
       {autoSent && choice && (
         <Alert tone="info" role="status">
-          Đang gửi bằng nguồn mặc định: {label(choice)}.
+          {msg("shared.ai.AiSourcePicker.sendingWithTheDefaultSource")}{label(choice)}.
         </Alert>
       )}
       {preferred && !preferred.available && (
         <Alert tone="warning" role="status">
-          Nguồn mặc định {label(preferred)} chưa dùng được{preferred.reason ? `: ${preferred.reason}` : ""}. Chọn nguồn khác cho lần
-          này.
-        </Alert>
+          {msg("shared.ai.AiSourcePicker.defaultSource")}{label(preferred)} {msg("shared.ai.AiSourcePicker.isNotUsable")}{preferred.reason ? `: ${preferred.reason}` : ""}{msg("shared.ai.AiSourcePicker.chooseAnotherSourceForThis")}</Alert>
       )}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
         </Alert>
       )}
-      {!options && !error && <p className="text-muted">Đang tải…</p>}
+      {!options && !error && <p className="text-muted">{msg("shared.ai.AiSourcePicker.loading")}</p>}
       {options && (
-        <div role="radiogroup" aria-label="Nguồn AI" className="flex flex-col gap-2">
+        <div role="radiogroup" aria-label={msg("shared.ai.AiSourcePicker.aiSource")} className="flex flex-col gap-2">
           {options.map((option) => (
             <SourceRow
-              key={keyOf(option)}
+              key={buildKey(option)}
               option={option}
-              checked={selected === keyOf(option)}
+              checked={selected === buildKey(option)}
               estimatedTokens={estimatedTokens}
-              onSelect={() => setSelected(keyOf(option))}
+              onSelect={() => setSelected(buildKey(option))}
             />
           ))}
         </div>
       )}
       <p className="text-xs text-muted">
-        {preferred ? "Đổi nguồn mặc định" : "Không muốn chọn mỗi lần? Đặt nguồn mặc định"} ở{" "}
+        {preferred ? msg("shared.ai.AiSourcePicker.changeDefaultSource") : msg("shared.ai.AiSourcePicker.dontWantToChooseEvery")} {msg("shared.ai.AiSourcePicker.in")}{" "}
         <Link href="/ai/connection?tab=settings" className="font-semibold text-primary-ink underline">
-          Kết nối AI
-        </Link>
-        . Agent MCP không phải nguồn ở đây; agent tự gọi công cụ của nền tảng từ ứng dụng của bạn.
-      </p>
+          {msg("shared.ai.AiSourcePicker.aiConnection")}</Link>
+        {msg("shared.ai.AiSourcePicker.mcpAgentsAreNotA")}</p>
     </Dialog>
   );
 }
 
 function label(option: SourceOption) {
-  return option.source === "SHARED" ? "API của trường" : `API cá nhân · ${option.provider ? PROVIDER_LABEL[option.provider] : ""}`;
+  return option.source === "SHARED" ? msg("shared.ai.AiSourcePicker.schoolApi") : msg("shared.ai.AiSourcePicker.personalApi", { value: String(option.provider ? PROVIDER_LABEL[option.provider] : "") });
 }
 
 function SourceRow({
@@ -162,17 +157,17 @@ function SourceRow({
     >
       <span className="flex items-center gap-2 text-[13px] font-semibold text-ink">
         {title}
-        {option.keyHint && <span className="font-normal text-muted">{masked(option.keyHint)}</span>}
-        {option.preferred && <Pill tone="neutral">Mặc định</Pill>}
+        {option.keyHint && <span className="font-normal text-muted">{maskHint(option.keyHint)}</span>}
+        {option.preferred && <Pill tone="neutral">{msg("shared.ai.AiSourcePicker.default")}</Pill>}
         <Pill tone={shared ? "primary" : "accent"} className="ml-auto">
-          {shared ? "Trường chịu chi phí" : "Bạn chịu chi phí"}
+          {shared ? msg("shared.ai.AiSourcePicker.paidByTheSchool") : msg("shared.ai.AiSourcePicker.paidByYou")}
         </Pill>
       </span>
       <span className="text-xs text-muted">
-        {option.model ? `Mô hình ${option.model}` : shared ? "Mô hình do Quản trị viên cấu hình" : ""}
-        {shared && option.quota && ` · còn ${formatTokens(option.quota.left)} / ${formatTokens(option.quota.limit)} token hôm nay`}
-        {!shared && option.available && " · không giới hạn bởi trường"}
-        {option.available && estimatedTokens !== undefined && ` · ước tính ${formatTokens(estimatedTokens)} token`}
+        {option.model ? msg("shared.ai.AiSourcePicker.model", { model: String(option.model) }) : shared ? msg("shared.ai.AiSourcePicker.modelConfiguredByAnAdministrator") : ""}
+        {shared && option.quota && msg("shared.ai.AiSourcePicker.tokensLeftToday", { value: String(formatTokens(option.quota.left)), value2: String(formatTokens(option.quota.limit)) })}
+        {!shared && option.available && msg("shared.ai.AiSourcePicker.notLimitedByTheSchool")}
+        {option.available && estimatedTokens !== undefined && msg("shared.ai.AiSourcePicker.aboutTokens", { value: String(formatTokens(estimatedTokens)) })}
       </span>
       {!option.available && option.reason && <span className="text-xs text-warning">{option.reason}</span>}
     </button>

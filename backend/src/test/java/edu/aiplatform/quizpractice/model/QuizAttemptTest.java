@@ -37,15 +37,15 @@ class QuizAttemptTest {
     @Test
     void sameSeedGivesSameShuffledOrderAndNoShuffleKeepsOrder() {
         QuizStudentView view = view(true, null, 12);
-        AttemptSnapshot a = AttemptSnapshot.of(view, 42);
-        AttemptSnapshot b = AttemptSnapshot.of(view, 42);
+        AttemptSnapshot a = AttemptSnapshot.createSnapshot(view, 42);
+        AttemptSnapshot b = AttemptSnapshot.createSnapshot(view, 42);
         assertThat(a.questionOrder()).isEqualTo(b.questionOrder()).containsExactlyInAnyOrderElementsOf(
                 view.questions().stream().map(QuizQuestionView::questionId).toList());
         assertThat(a.optionOrder()).isEqualTo(b.optionOrder());
-        assertThat(AttemptSnapshot.of(view, 7).questionOrder()).isNotEqualTo(a.questionOrder());
+        assertThat(AttemptSnapshot.createSnapshot(view, 7).questionOrder()).isNotEqualTo(a.questionOrder());
 
         QuizStudentView plain = view(false, null, 5);
-        AttemptSnapshot kept = AttemptSnapshot.of(plain, 42);
+        AttemptSnapshot kept = AttemptSnapshot.createSnapshot(plain, 42);
         assertThat(kept.questionOrder()).isEqualTo(plain.questions().stream().map(QuizQuestionView::questionId).toList());
         assertThat(kept.optionOrder().values()).allSatisfy(o -> assertThat(o).containsExactly("1", "2", "3", "4"));
         assertThat(kept.versionNo()).isEqualTo(3);
@@ -58,35 +58,35 @@ class QuizAttemptTest {
     @Test
     void deadlineFollowsTimeLimitWithThirtySecondsGrace() {
         QuizAttempt timed = QuizAttempt.start(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1,
-                AttemptSnapshot.of(view(false, 10, 1), 1), NOW);
+                AttemptSnapshot.createSnapshot(view(false, 10, 1), 1), NOW);
         assertThat(timed.deadlineAt()).isEqualTo(NOW.plusSeconds(600));
         assertThat(timed.acceptsAnswersAt(NOW.plusSeconds(629))).isTrue();
         assertThat(timed.acceptsAnswersAt(NOW.plusSeconds(631))).isFalse();
-        assertThat(timed.overdueAt(NOW.plusSeconds(631))).isTrue();
+        assertThat(timed.isOverdueAt(NOW.plusSeconds(631))).isTrue();
 
         QuizAttempt untimed = QuizAttempt.start(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1,
-                AttemptSnapshot.of(view(false, null, 1), 1), NOW);
+                AttemptSnapshot.createSnapshot(view(false, null, 1), 1), NOW);
         assertThat(untimed.deadlineAt()).isNull();
         assertThat(untimed.acceptsAnswersAt(NOW.plusSeconds(86_400))).isTrue();
-        assertThat(untimed.overdueAt(NOW.plusSeconds(86_400))).isFalse();
+        assertThat(untimed.isOverdueAt(NOW.plusSeconds(86_400))).isFalse();
     }
 
     @Test
     void savingBumpsVersionAndSubmittedAttemptIsFinal() {
         QuizAttempt attempt = QuizAttempt.start(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1,
-                AttemptSnapshot.of(view(false, null, 1), 1), NOW);
+                AttemptSnapshot.createSnapshot(view(false, null, 1), 1), NOW);
         UUID q = attempt.snapshot().questionOrder().get(0);
-        QuizAttempt saved = attempt.withAnswers(Map.of(q, List.of("2")), NOW.plusSeconds(5));
+        QuizAttempt saved = attempt.replaceAnswers(Map.of(q, List.of("2")), NOW.plusSeconds(5));
         assertThat(saved.answerVersion()).isEqualTo(1);
         assertThat(saved.lastSavedAt()).isEqualTo(NOW.plusSeconds(5));
 
-        QuizAttempt submitted = saved.submitted(SubmitMode.MANUAL, BigDecimal.ONE, BigDecimal.ONE,
+        QuizAttempt submitted = saved.markSubmitted(SubmitMode.MANUAL, BigDecimal.ONE, BigDecimal.ONE,
                 List.of(new QuestionResult(q, true, BigDecimal.ONE, BigDecimal.ONE)), NOW.plusSeconds(10));
         assertThat(submitted.status()).isEqualTo(AttemptStatus.SUBMITTED);
         assertThat(submitted.correctCount()).isEqualTo(1);
         assertThat(submitted.acceptsAnswersAt(NOW)).isFalse();
-        assertThatThrownBy(() -> submitted.withAnswers(Map.of(), NOW)).isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> submitted.submitted(SubmitMode.MANUAL, BigDecimal.ZERO, BigDecimal.ONE, List.of(), NOW))
+        assertThatThrownBy(() -> submitted.replaceAnswers(Map.of(), NOW)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> submitted.markSubmitted(SubmitMode.MANUAL, BigDecimal.ZERO, BigDecimal.ONE, List.of(), NOW))
                 .isInstanceOf(IllegalStateException.class);
     }
 }

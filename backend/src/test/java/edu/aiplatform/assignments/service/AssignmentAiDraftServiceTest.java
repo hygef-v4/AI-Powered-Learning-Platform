@@ -82,7 +82,7 @@ class AssignmentAiDraftServiceTest {
         AssignmentAiDraft draft = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.AI_TASK, null,
                 "r1", AssignmentAiDraft.Status.PENDING, null, JsonNodeFactory.instance.objectNode().put("origin", "AI_TASK"),
                 a.version(), null, f.teacher.accountId(), AssignmentFixtures.NOW, null);
-        when(f.drafts.find(draft.id())).thenReturn(Optional.of(draft));
+        when(f.drafts.findDraft(draft.id())).thenReturn(Optional.of(draft));
         return draft;
     }
 
@@ -95,7 +95,7 @@ class AssignmentAiDraftServiceTest {
     void resultForPublishedAssignmentIsRejected() {
         Assignment open = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
         AssignmentAiDraft draft = pending(open);
-        assertThat(f.aiDrafts.onReady(result(draft, OUTPUT))).isEqualTo(ApplyOutcome.REJECTED);
+        assertThat(f.aiDrafts.handleReadyResult(result(draft, OUTPUT))).isEqualTo(ApplyOutcome.REJECTED);
         verify(f.drafts).markFailed(eq(draft.id()), anyString(), any());
     }
 
@@ -122,12 +122,12 @@ class AssignmentAiDraftServiceTest {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
         AssignmentAiDraft draft = pending(a);
         when(f.drafts.markReady(eq(draft.id()), any(), any())).thenReturn(1);
-        assertThat(f.aiDrafts.onReady(result(draft, OUTPUT))).isEqualTo(ApplyOutcome.APPLIED);
+        assertThat(f.aiDrafts.handleReadyResult(result(draft, OUTPUT))).isEqualTo(ApplyOutcome.APPLIED);
         verify(f.drafts).markReady(eq(draft.id()), argThat((JsonNode p) -> p.path("sections").size() == 3
                 && p.path("sections").get(1).path("rubric").get(0).path("kind").asText().equals("DIAGRAM")
                 && p.path("validation").path("status").asText().equals("VALID")), any());
         assertThat(f.store.get(a.id()).version()).isEqualTo(a.version());
-        assertThat(f.aiDrafts.onReady(result(draft, "không phải json"))).isEqualTo(ApplyOutcome.REJECTED);
+        assertThat(f.aiDrafts.handleReadyResult(result(draft, "không phải json"))).isEqualTo(ApplyOutcome.REJECTED);
     }
 
     @Test
@@ -137,15 +137,15 @@ class AssignmentAiDraftServiceTest {
         AssignmentAiDraft ready = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.MCP, null, null,
                 AssignmentAiDraft.Status.READY, proposal, JsonNodeFactory.instance.objectNode().put("origin", "MCP"),
                 a.version(), null, f.teacher.accountId(), AssignmentFixtures.NOW, null);
-        when(f.drafts.find(ready.id())).thenReturn(Optional.of(ready));
+        when(f.drafts.findDraft(ready.id())).thenReturn(Optional.of(ready));
         when(f.drafts.markApplied(eq(ready.id()), any())).thenReturn(1);
         try {
-            f.aiDrafts.apply(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version() - 1, true));
+            f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version() - 1, true));
             throw new AssertionError("Cần 409");
         } catch (ApiException e) {
-            assertThat(e.code()).isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
+            assertThat(e.readCode()).isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
         }
-        AssignmentViews.Detail applied = f.aiDrafts.apply(f.teacher, a.id(), ready.id(),
+        AssignmentViews.Detail applied = f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(),
                 new AssignmentCommands.ApplyDraft(a.version(), true, true));
         assertThat(applied.instructions()).isEqualTo("Làm đủ các mục");
         assertThat(applied.title()).isEqualTo("Đề thiết kế hệ thống");
@@ -169,13 +169,13 @@ class AssignmentAiDraftServiceTest {
         AssignmentAiDraft ready = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.MCP, null, null,
                 AssignmentAiDraft.Status.READY, proposal, JsonNodeFactory.instance.objectNode().put("origin", "MCP"),
                 a.version(), null, f.teacher.accountId(), AssignmentFixtures.NOW, null);
-        when(f.drafts.find(ready.id())).thenReturn(Optional.of(ready));
+        when(f.drafts.findDraft(ready.id())).thenReturn(Optional.of(ready));
 
         try {
-            f.aiDrafts.apply(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version(), false));
+            f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version(), false));
             throw new AssertionError("Đề Graded thiếu rubric phải bị chặn");
         } catch (ApiException e) {
-            assertThat(e.code()).isEqualTo("AI_DRAFT_INVALID");
+            assertThat(e.readCode()).isEqualTo("AI_DRAFT_INVALID");
         }
         assertThat(f.store.get(a.id()).skeleton().blocks()).isEmpty();
         assertThat(f.rubricsOf(a.id())).allSatisfy(r -> assertThat(r.criteria()).isEmpty());
@@ -190,13 +190,13 @@ class AssignmentAiDraftServiceTest {
         AssignmentAiDraft ready = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.MCP, null, null,
                 AssignmentAiDraft.Status.READY, proposal, JsonNodeFactory.instance.objectNode().put("origin", "MCP"),
                 a.version(), null, f.teacher.accountId(), AssignmentFixtures.NOW, null);
-        when(f.drafts.find(ready.id())).thenReturn(Optional.of(ready));
+        when(f.drafts.findDraft(ready.id())).thenReturn(Optional.of(ready));
 
         try {
-            f.aiDrafts.apply(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version(), false));
+            f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version(), false));
             throw new AssertionError("Không được áp dụng đề đã bị đánh dấu INVALID");
         } catch (ApiException e) {
-            assertThat(e.code()).isEqualTo("AI_DRAFT_INVALID");
+            assertThat(e.readCode()).isEqualTo("AI_DRAFT_INVALID");
         }
         assertThat(f.store.get(a.id()).skeleton().blocks()).isEmpty();
         assertThat(f.rubricsOf(a.id())).allSatisfy(r -> assertThat(r.criteria()).isEmpty());
@@ -209,7 +209,7 @@ class AssignmentAiDraftServiceTest {
             f.aiDrafts.saveFromAgent(f.teacher, a.id(), a.version() + 5, read(OUTPUT), "agent");
             throw new AssertionError("Cần 409");
         } catch (ApiException e) {
-            assertThat(e.code()).isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
+            assertThat(e.readCode()).isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
         }
         AssignmentAiDraft saved = f.aiDrafts.saveFromAgent(f.teacher, a.id(), a.version(), read(OUTPUT), "agent");
         assertThat(saved.status()).isEqualTo(AssignmentAiDraft.Status.READY);

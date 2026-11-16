@@ -1,13 +1,14 @@
 "use client";
 
 import { useUrlState } from "@/shared/navigation/useUrlState";
-import { Button, ClickableRow, Icon, PageHeader, PageNav, Pill, Segmented, TableFrame, Td, TermFilter, TextInput, Th } from "@/shared/ui";
-import { termOptions } from "../model/term";
+import { Button, Card, ClickableRow, Icon, PageHeader, Pagination, Pill, Segmented, TableFrame, Td, TermFilter, TextInput, Th } from "@/shared/ui";
+import { listTermOptions } from "../model/term";
 import { CLASS_STATUS_LABELS, type ClassStatus, type CourseClassView, type SubjectView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 const PAGE_SIZE = 20;
 const TABS: { value: ClassStatus | "ALL"; label: string }[] = [
-  { value: "ALL", label: "Tất cả" },
+  { value: "ALL", label: msg("academics.pages.ClassListPage.all") },
   { value: "OPEN", label: CLASS_STATUS_LABELS.OPEN },
   { value: "ARCHIVED", label: CLASS_STATUS_LABELS.ARCHIVED },
 ];
@@ -27,7 +28,7 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
   const page = /^\d+$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 0;
   const setPage = (page: number) => setPageValue(String(page));
   const subjectClasses = classes.filter((course) => course.subject.id === subjectId);
-  const terms = termOptions(subjectClasses);
+  const terms = listTermOptions(subjectClasses);
   const [termValue, setTerm] = useUrlState<string>("classTerm", "", undefined, "replace");
   const term = terms.includes(termValue) ? termValue : "";
   const selected = subjects.find((subject) => subject.id === subjectId);
@@ -40,39 +41,39 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
   const rows = filtered.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
 
   return <>
-    <PageHeader title="Lớp học" actions={
-      <Button variant="primary" icon="add" disabled={!selected} onClick={() => selected && onCreate(selected)} data-testid="class-create">Tạo lớp</Button>
+    <PageHeader title={msg("academics.pages.ClassListPage.classes")} actions={
+      <Button variant="primary" icon="add" disabled={!selected} onClick={() => selected && onCreate(selected)} data-testid="class-create">{msg("academics.pages.ClassListPage.createClass")}</Button>
     } />
-    <section aria-label="Danh sách lớp" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+    <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label={msg("academics.pages.ClassListPage.classList")}>
       <div className="flex flex-wrap items-center gap-3">
         <Segmented
           as="tab"
-          ariaLabel="Trạng thái lớp"
+          ariaLabel={msg("academics.pages.ClassListPage.classStatus")}
           value={status}
           onChange={(value) => { setStatus(value); setPage(0); }}
           options={TABS.map((tab) => ({ ...tab, testId: `class-filter-${tab.value}` }))}
         />
         <div className="w-full sm:w-44"><TermFilter options={terms} value={term} onChange={(value) => { setTerm(value); setPage(0); }} testId="class-term-filter" /></div>
         <div role="search" className="ml-auto w-full sm:w-72">
-          <TextInput type="search" icon="search" aria-label="Lọc theo mã lớp" placeholder="Lọc theo mã lớp"
+          <TextInput type="search" icon="search" aria-label={msg("academics.pages.ClassListPage.filterByClassCode")} placeholder={msg("academics.pages.ClassListPage.filterByClassCode")}
             value={query} maxLength={200} data-testid="class-search" onChange={(event) => { setQuery(event.target.value); setPage(0); }} />
         </div>
       </div>
       <TableFrame filledHead className="[&_table]:min-w-[640px] [&_table]:table-fixed">
-        <colgroup><col className="w-[28%]" /><col className="w-[110px]" /><col /><col className="w-[130px]" /><col className="w-[48px]" /></colgroup><thead><tr><Th>Mã lớp</Th><Th>Học kỳ</Th><Th>Giảng viên</Th><Th>Trạng thái</Th><Th className="w-10"><span className="sr-only">Chi tiết</span></Th></tr></thead>
+        <colgroup><col className="w-[28%]" /><col className="w-[110px]" /><col /><col className="w-[130px]" /><col className="w-[48px]" /></colgroup><thead><tr><Th>{msg("academics.pages.ClassListPage.classCode")}</Th><Th>{msg("academics.pages.ClassListPage.term")}</Th><Th>{msg("academics.pages.ClassListPage.lecturer")}</Th><Th>{msg("academics.pages.ClassListPage.status")}</Th><Th className="w-10"><span className="sr-only">{msg("academics.pages.ClassListPage.details")}</span></Th></tr></thead>
         <tbody>
           {rows.map((course) => <ClickableRow key={course.id} onClick={() => onOpen(course.id)}>
-            <Td><button type="button" aria-label={`Xem lớp ${course.code}`} data-testid={`class-open-${course.id}`}
+            <Td><button type="button" aria-label={msg("academics.pages.ClassListPage.viewClass", { code: String(course.code) })} data-testid={`class-open-${course.id}`}
               onClick={(event) => { event.stopPropagation(); onOpen(course.id); }} className="text-left font-mono font-semibold text-ink hover:text-primary-ink">{course.code}</button></Td>
             <Td className="font-mono text-body">{course.term}</Td>
-            <Td>{course.teacher?.name ?? <Pill>Chưa phân công</Pill>}</Td>
+            <Td>{course.teacher?.name ?? <Pill>{msg("academics.pages.ClassListPage.notAssigned")}</Pill>}</Td>
             <Td><Pill tone={TONES[course.status]}>{CLASS_STATUS_LABELS[course.status]}</Pill></Td>
             <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
           </ClickableRow>)}
-          {rows.length === 0 && <tr><Td colSpan={5} className="py-10 text-center! text-muted">Không có lớp phù hợp.</Td></tr>}
+          {rows.length === 0 && <tr><Td colSpan={5} className="py-10 text-center! text-muted">{msg("academics.pages.ClassListPage.noMatchingClasses")}</Td></tr>}
         </tbody>
       </TableFrame>
-      <PageNav page={current} size={PAGE_SIZE} total={filtered.length} onPage={setPage} />
-    </section>
+      <Pagination page={current} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} summary={false} />
+    </Card>
   </>;
 }

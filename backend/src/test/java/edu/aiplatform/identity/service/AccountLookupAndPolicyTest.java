@@ -78,7 +78,7 @@ class AccountLookupAndPolicyTest {
         for (Field field : Actions.class.getDeclaredFields()) {
             if (Modifier.isStatic(field.getModifiers()) && field.getType() == String.class) {
                 String action = (String) field.get(null);
-                assertThat(AccessPolicy.ruleFor(action)).as(action).isPresent();
+                assertThat(AccessPolicy.findRule(action)).as(action).isPresent();
             }
         }
     }
@@ -89,9 +89,9 @@ class AccountLookupAndPolicyTest {
                 .filter(f -> f.getName().startsWith("ACCOUNT_") || f.getName().startsWith("SETTINGS_")
                         || f.getName().startsWith("SUBJECT_")
                         || f.getName().equals("AUDIT_READ"))
-                .forEach(f -> assertThat(AccessPolicy.ruleFor(readName(f)).orElseThrow().roles())
+                .forEach(f -> assertThat(AccessPolicy.findRule(readName(f)).orElseThrow().roles())
                         .containsExactly(Role.ADMIN));
-        assertThat(AccessPolicy.ruleFor(Actions.FILE_UPLOAD).orElseThrow().roles()).doesNotContain(Role.ADMIN);
+        assertThat(AccessPolicy.findRule(Actions.FILE_UPLOAD).orElseThrow().roles()).doesNotContain(Role.ADMIN);
     }
 
     /** U05: Admin không có màn lớp; xem lớp theo phạm vi lớp (R3/R5), quản lý lớp theo phạm vi môn (R2). */
@@ -99,9 +99,9 @@ class AccountLookupAndPolicyTest {
     void classActionsExcludeAdminAndUseClassOrSubjectScope() {
         Arrays.stream(Actions.class.getDeclaredFields())
                 .filter(f -> f.getName().startsWith("CLASS_"))
-                .forEach(f -> assertThat(AccessPolicy.ruleFor(readName(f)).orElseThrow().roles()).doesNotContain(Role.ADMIN));
-        assertThat(AccessPolicy.ruleFor(Actions.CLASS_VIEW).orElseThrow().scope()).isEqualTo(ScopeKind.CLASS);
-        var manage = AccessPolicy.ruleFor(Actions.CLASS_MANAGE).orElseThrow();
+                .forEach(f -> assertThat(AccessPolicy.findRule(readName(f)).orElseThrow().roles()).doesNotContain(Role.ADMIN));
+        assertThat(AccessPolicy.findRule(Actions.CLASS_VIEW).orElseThrow().scope()).isEqualTo(ScopeKind.CLASS);
+        var manage = AccessPolicy.findRule(Actions.CLASS_MANAGE).orElseThrow();
         assertThat(manage.scope()).isEqualTo(ScopeKind.SUBJECT);
         assertThat(manage.roles()).containsExactly(Role.SUBJECT_MANAGER);
     }
@@ -110,7 +110,7 @@ class AccountLookupAndPolicyTest {
     @Test
     void questionBankActionsAreSubjectManagerOnlyWithSubjectScope() {
         for (String action : new String[] {Actions.QUESTION_BANK_VIEW, Actions.QUESTION_BANK_MANAGE}) {
-            var rule = AccessPolicy.ruleFor(action).orElseThrow();
+            var rule = AccessPolicy.findRule(action).orElseThrow();
             assertThat(rule.roles()).containsExactly(Role.SUBJECT_MANAGER);
             assertThat(rule.scope()).isEqualTo(ScopeKind.SUBJECT);
         }
@@ -119,10 +119,10 @@ class AccountLookupAndPolicyTest {
     /** U10: Quiz của môn theo phạm vi môn (R2), Quiz của lớp theo giảng viên lớp (R3/R4); Admin, Student không soạn. */
     @Test
     void quizActionsUseSubjectOrClassScope() {
-        var subjectQuiz = AccessPolicy.ruleFor(Actions.QUIZ_SUBJECT_MANAGE).orElseThrow();
+        var subjectQuiz = AccessPolicy.findRule(Actions.QUIZ_SUBJECT_MANAGE).orElseThrow();
         assertThat(subjectQuiz.roles()).containsExactly(Role.SUBJECT_MANAGER);
         assertThat(subjectQuiz.scope()).isEqualTo(ScopeKind.SUBJECT);
-        var classQuiz = AccessPolicy.ruleFor(Actions.QUIZ_CLASS_MANAGE).orElseThrow();
+        var classQuiz = AccessPolicy.findRule(Actions.QUIZ_CLASS_MANAGE).orElseThrow();
         assertThat(classQuiz.roles()).containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
         assertThat(classQuiz.scope()).isEqualTo(ScopeKind.CLASS);
     }
@@ -130,7 +130,7 @@ class AccountLookupAndPolicyTest {
     /** U11: chỉ sinh viên đang học lớp làm Quiz Practice (R5, BR-U11-01). */
     @Test
     void quizPracticeIsStudentOnlyWithClassScope() {
-        var practice = AccessPolicy.ruleFor(Actions.QUIZ_PRACTICE).orElseThrow();
+        var practice = AccessPolicy.findRule(Actions.QUIZ_PRACTICE).orElseThrow();
         assertThat(practice.roles()).containsExactly(Role.STUDENT);
         assertThat(practice.scope()).isEqualTo(ScopeKind.CLASS);
     }
@@ -138,20 +138,20 @@ class AccountLookupAndPolicyTest {
     /** U06: Admin không có AI cá nhân và không dùng API chung; chỉ Admin cấu hình API chung và quota. */
     @Test
     void aiActionsSeparateAdminFromAcademicRoles() {
-        assertThat(AccessPolicy.ruleFor(Actions.AI_PERSONAL).orElseThrow().roles())
+        assertThat(AccessPolicy.findRule(Actions.AI_PERSONAL).orElseThrow().roles())
                 .containsExactlyInAnyOrder(Role.STUDENT, Role.TEACHER, Role.SUBJECT_MANAGER);
-        assertThat(AccessPolicy.ruleFor(Actions.AI_SHARED_USE).orElseThrow().roles())
+        assertThat(AccessPolicy.findRule(Actions.AI_SHARED_USE).orElseThrow().roles())
                 .containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
-        assertThat(AccessPolicy.ruleFor(Actions.AI_ADMIN).orElseThrow().roles()).containsExactly(Role.ADMIN);
+        assertThat(AccessPolicy.findRule(Actions.AI_ADMIN).orElseThrow().roles()).containsExactly(Role.ADMIN);
     }
 
     /** U12: nhóm do giảng viên được giao dạy quản lý; sinh viên đang học làm bài nhóm. */
     @Test
     void groupActionsUseClassScope() {
-        var manage = AccessPolicy.ruleFor(Actions.GROUP_MANAGE).orElseThrow();
+        var manage = AccessPolicy.findRule(Actions.GROUP_MANAGE).orElseThrow();
         assertThat(manage.scope()).isEqualTo(ScopeKind.CLASS);
         assertThat(manage.roles()).containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
-        var work = AccessPolicy.ruleFor(Actions.GROUP_WORK).orElseThrow();
+        var work = AccessPolicy.findRule(Actions.GROUP_WORK).orElseThrow();
         assertThat(work.scope()).isEqualTo(ScopeKind.CLASS);
         assertThat(work.roles()).containsExactly(Role.STUDENT);
     }

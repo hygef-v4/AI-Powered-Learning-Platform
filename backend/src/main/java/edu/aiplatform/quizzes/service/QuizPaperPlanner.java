@@ -27,14 +27,14 @@ final class QuizPaperPlanner {
     /** {@code picks}: câu của từng quy tắc theo {@code position}; thiếu thì danh sách ngắn hơn số câu cần. */
     record Plan(Map<Integer, List<PoolEntry>> picks) {
 
-        int picked(int position) {
+        int readPicked(int position) {
             return picks.getOrDefault(position, List.of()).size();
         }
     }
 
     static Plan plan(List<DrawRule> rules, List<PoolEntry> pool, Set<java.util.UUID> seenLineages, long seed) {
         Random random = new Random(seed);
-        List<PoolEntry> distinct = distinctContent(pool, random);
+        List<PoolEntry> distinct = pickDistinctContent(pool, random);
         List<DrawRule> slots = new ArrayList<>();
         Map<Integer, List<PoolEntry>> candidates = new HashMap<>();
         for (DrawRule rule : rules) {
@@ -76,7 +76,7 @@ final class QuizPaperPlanner {
         return false;
     }
 
-    private static List<PoolEntry> distinctContent(List<PoolEntry> pool, Random random) {
+    private static List<PoolEntry> pickDistinctContent(List<PoolEntry> pool, Random random) {
         List<PoolEntry> shuffled = new ArrayList<>(pool);
         shuffled.sort(Comparator.comparing(e -> e.id().toString()));
         Collections.shuffle(shuffled, random);

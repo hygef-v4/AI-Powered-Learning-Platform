@@ -321,7 +321,7 @@ class DocumentModelServiceTest {
         ((ObjectNode) note.content()).put("under", 1);
         DocumentModel skeleton = new DocumentModel(List.of(problem, question, note));
         assertThat(service.sanitize(skeleton).blocks().get(2).content().path("under").asInt()).isEqualTo(1);
-        assertThat(DocumentModelService.blocksInParts(skeleton)).contains(question.id()).doesNotContain(note.id());
+        assertThat(DocumentModelService.collectBlocksInParts(skeleton)).contains(question.id()).doesNotContain(note.id());
         ((ObjectNode) note.content()).put("under", 9);
         assertThat(codes(service.validateSkeleton(skeleton).errors())).contains("BLOCK_INVALID");
     }
@@ -350,7 +350,7 @@ class DocumentModelServiceTest {
         String packed = "<mxfile><diagram id=\"p\" name=\"Lớp\">" + deflate(model) + "</diagram></mxfile>";
         String compact = service.compactDiagramXml(packed);
         assertThat(compact).contains("Trang 1 \"Lớp\"", "hình a: Order", "nối a -> b: has");
-        assertThat(DiagramXml.cellCount(packed)).isEqualTo(3);
+        assertThat(DiagramXml.countCells(packed)).isEqualTo(3);
     }
 
     @Test
@@ -359,19 +359,19 @@ class DocumentModelServiceTest {
         String page = "<diagram>" + deflate(model) + "</diagram>";
         String single = "<mxfile>" + page + "</mxfile>";
         String multiple = "<mxfile>" + page.repeat(2) + "</mxfile>";
-        assertThat(DiagramXml.graphModels(single, 1000)).hasSize(1);
-        assertThatThrownBy(() -> DiagramXml.graphModels(multiple, 1000))
+        assertThat(DiagramXml.listGraphModels(single, 1000)).hasSize(1);
+        assertThatThrownBy(() -> DiagramXml.listGraphModels(multiple, 1000))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void diagramPageLimitAppliesToEveryReadPath() {
-        assertThat(DiagramXml.cellCount(null)).isZero();
+        assertThat(DiagramXml.countCells(null)).isZero();
         String xml = "<mxfile>" + "<diagram><mxGraphModel/></diagram>".repeat(101) + "</mxfile>";
         assertThat(DiagramXml.validate(xml)).contains("DIAGRAM_XML_INVALID");
         assertThat(DiagramXml.detectType(xml)).isEqualTo(DiagramType.OTHER);
-        assertThat(DiagramXml.cellCount(xml)).isZero();
-        assertThat(DiagramXml.compact(xml, 100)).isEqualTo("(sơ đồ không đọc được)");
+        assertThat(DiagramXml.countCells(xml)).isZero();
+        assertThat(DiagramXml.compactXml(xml, 100)).isEqualTo("(sơ đồ không đọc được)");
     }
 
     @Test

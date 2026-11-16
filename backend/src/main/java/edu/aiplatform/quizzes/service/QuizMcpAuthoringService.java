@@ -10,16 +10,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class QuizMcpAuthoringService implements IMcpToolProvider {
-    private final QuizAuthoringService authoring;
-    private final QuizAiDraftService drafts;
+    private final QuizAuthoringService quizAuthoringService;
+    private final QuizAiDraftService quizAiDraftService;
     private final QuizAccess access;
     private final IMcpWriteRequest writes;
     private final ObjectMapper json;
-    public QuizMcpAuthoringService(QuizAuthoringService authoring,QuizAiDraftService drafts,QuizAccess access,
+    public QuizMcpAuthoringService(QuizAuthoringService quizAuthoringService,QuizAiDraftService quizAiDraftService,QuizAccess access,
             IMcpWriteRequest writes,ObjectMapper json) {
-        this.authoring=authoring;this.drafts=drafts;this.access=access;this.writes=writes;this.json=json;
+        this.quizAuthoringService=quizAuthoringService;this.quizAiDraftService=quizAiDraftService;this.access=access;this.writes=writes;this.json=json;
     }
-    static String questionsSchema(ObjectMapper json) {
+    static String buildQuestionsSchema(ObjectMapper json) {
         try { return json.readTree(new QuizMcpTools(null,json).tools().get(1).parameterSchema()).at("/properties/questions").toString(); }
         catch(Exception e){throw new IllegalStateException("Invalid question schema",e);}
     }
@@ -30,7 +30,7 @@ public class QuizMcpAuthoringService implements IMcpToolProvider {
                         +"\"shuffleQuestions\":{\"type\":\"boolean\"},\"shuffleOptions\":{\"type\":\"boolean\"},"
                         +"\"timeLimitMinutes\":{\"type\":[\"integer\",\"null\"]},\"maxAttempts\":{\"type\":[\"integer\",\"null\"]},"
                         +"\"showScoreAfterSubmit\":{\"type\":\"boolean\"},\"showCorrectAnswers\":{\"type\":\"boolean\"}}}"
-                        +",\"agentLabel\":"+McpSchemas.TEXT+",\"questions\":"+questionsSchema(json),"title","requestRef","questions"),McpToolKind.WRITE,McpSchemas.STAFF));
+                        +",\"agentLabel\":"+McpSchemas.TEXT+",\"questions\":"+buildQuestionsSchema(json),"title","requestRef","questions"),McpToolKind.WRITE,McpSchemas.STAFF));
     }
     @Override public McpToolResult call(Actor actor,String name,Map<String,Object> args) {
         McpInput.teaching(actor);if(!"create_quiz_draft".equals(name))throw McpInput.invalid();var in=new McpInput(args);
@@ -51,10 +51,10 @@ public class QuizMcpAuthoringService implements IMcpToolProvider {
         final var selected=settings;
         Map<String,Object> semantic=new LinkedHashMap<>(args);semantic.remove("requestRef");semantic.put("settings",selected);
         return new McpToolResult(false,writes.execute(actor,name,in.text("requestRef",null),McpFingerprint.of(json,semantic),() -> {
-            var created=in.has("classId")?authoring.createForClass(actor,target,in.text("title",null)):authoring.createForSubject(actor,target,in.text("title",null));
-            var changed=authoring.updateDetails(actor,created.quiz().id(),new QuizAuthoringService.Details(in.text("title",null),
+            var created=in.has("classId")?quizAuthoringService.createForClass(actor,target,in.text("title",null)):quizAuthoringService.createForSubject(actor,target,in.text("title",null));
+            var changed=quizAuthoringService.updateDetails(actor,created.quiz().id(),new QuizAuthoringService.Details(in.text("title",null),
                     in.text("instructions",null),selected,false,null),created.quiz().version());
-            var proposal=drafts.saveFromMcp(actor,changed.quiz().id(),changed.quiz().version(),questions,in.text("agentLabel",null));
+            var proposal=quizAiDraftService.saveFromMcp(actor,changed.quiz().id(),changed.quiz().version(),questions,in.text("agentLabel",null));
             return Map.of("quizId",changed.quiz().id().toString(),"proposalId",proposal.id().toString(),"version",changed.quiz().version(),"status","DRAFT","proposalStatus","READY");
         }));
     }

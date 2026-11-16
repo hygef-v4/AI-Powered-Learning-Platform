@@ -212,7 +212,7 @@ class PracticeFeedbackConcurrencyIntegrationTest {
         feedback.pauseFirstCount.set(false);
         assertThat(invoke(student, first, true)).isEqualTo("ACCEPTED");
         assertThatThrownBy(() -> service.request(student, second.id(), AiProvider.GEMINI, UUID.randomUUID().toString()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("FEEDBACK_LIMIT"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("FEEDBACK_LIMIT"));
         assertThat(feedback.countSince(student.accountId(), NOW.minusSeconds(1))).isEqualTo(1);
     }
 
@@ -226,7 +226,7 @@ class PracticeFeedbackConcurrencyIntegrationTest {
             }
             return "ACCEPTED";
         } catch (ApiException rejected) {
-            return rejected.code();
+            return rejected.readCode();
         }
     }
 

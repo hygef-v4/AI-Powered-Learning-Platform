@@ -62,7 +62,7 @@ public class EvaluationRepository implements IEvaluationRepository {
 
     /** Inserts or updates an evaluation using its current version for concurrency control. */
     @Transactional
-    public Evaluation save(Evaluation evaluation) {
+    public Evaluation saveEvaluation(Evaluation evaluation) {
         var versions = namedParameterJdbcTemplate.queryForList(
                 "select version from evaluations where id=:id", Map.of("id", evaluation.id),
                 Long.class);
@@ -115,7 +115,7 @@ public class EvaluationRepository implements IEvaluationRepository {
 
     /** Creates the error raised when a concurrent update changes the evaluation version. */
     private static ApiException createVersionConflict() {
-        return ApiException.conflict("GRADE_VERSION_CONFLICT", "Reload evaluation");
+        return ApiException.createConflict("GRADE_VERSION_CONFLICT", "Reload evaluation");
     }
 
     /** Maps indexed evaluation fields to SQL parameters. */

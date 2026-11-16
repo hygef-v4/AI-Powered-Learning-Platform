@@ -3,10 +3,10 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it } from "vitest";
 import { FormattedTextEditor } from "@/shared/document/FormattedTextEditor";
 import { FormattedTextView } from "@/shared/document/FormattedTextView";
-import { type FormattedText, formattedTextOf } from "@/shared/document/formattedText";
+import { type FormattedText, createFormattedText } from "@/shared/document/formattedText";
 
 function Editor({ maxLength = 2000 }: { maxLength?: number }) {
-  const [value, setValue] = useState<FormattedText>(formattedTextOf("Nội dung cũ"));
+  const [value, setValue] = useState<FormattedText>(createFormattedText("Nội dung cũ"));
   return <><FormattedTextEditor value={value} plainText="Nội dung cũ" maxLength={maxLength}
     aria-label="Mô tả" onChange={(_text, next) => setValue(next)} />
     <output data-testid="document">{JSON.stringify(value)}</output></>;
@@ -18,7 +18,7 @@ it("keeps old plain descriptions readable and renders runs as text instead of HT
   rerender(<FormattedTextView text="" document={{ blocks: [{ type: "UL", align: "RIGHT", indent: 1,
     runs: [{ text: "<img src=x onerror=alert(1)>", bold: true }] }] }} />);
   expect(container.querySelector("img")).toBeNull();
-  expect(container.querySelector("ul li strong")).toHaveTextContent("<img src=x onerror=alert(1)>");
+  expect(container.querySelector("ul li .font-bold")).toHaveTextContent("<img src=x onerror=alert(1)>");
   expect(container.querySelector("ul")).toHaveStyle({ textAlign: "right" });
 });
 

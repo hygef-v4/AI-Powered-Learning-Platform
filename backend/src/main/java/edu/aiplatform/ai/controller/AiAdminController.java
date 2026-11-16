@@ -29,12 +29,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/admin/ai")
 public class AiAdminController {
 
-    private final AiConnectionService connections;
-    private final QuotaPolicyService quota;
+    private final AiConnectionService aiConnectionService;
+    private final QuotaPolicyService quotaPolicyService;
 
-    public AiAdminController(AiConnectionService connections, QuotaPolicyService quota) {
-        this.connections = connections;
-        this.quota = quota;
+    public AiAdminController(AiConnectionService aiConnectionService, QuotaPolicyService quotaPolicyService) {
+        this.aiConnectionService = aiConnectionService;
+        this.quotaPolicyService = quotaPolicyService;
     }
 
     public record StatusRequest(Boolean enabled, Long version) {
@@ -64,8 +64,8 @@ public class AiAdminController {
     public record PolicyView(Long defaultDayTokens, Long globalDayTokens, long version, Instant updatedAt,
                              boolean configured) {
 
-        static PolicyView of(QuotaPolicy p) {
-            return new PolicyView(p.defaultDayTokens(), p.globalDayTokens(), p.version(), p.updatedAt(), p.configured());
+        static PolicyView mapPolicyView(QuotaPolicy p) {
+            return new PolicyView(p.defaultDayTokens(), p.globalDayTokens(), p.version(), p.updatedAt(), p.hasLimits());
         }
     }
 
@@ -76,86 +76,86 @@ public class AiAdminController {
     }
 
     @GetMapping("/connections")
-    public List<ConnectionView> connections(@AuthenticationPrincipal Actor actor) {
-        return connections.listInstitutional(actor);
+    public List<ConnectionView> listConnections(@AuthenticationPrincipal Actor actor) {
+        return aiConnectionService.listInstitutional(actor);
     }
 
     /** Thêm một khóa chung; một provider có thể có nhiều khóa. */
     @PostMapping("/connections")
-    public ConnectionView add(@AuthenticationPrincipal Actor actor, @RequestBody AddRequest request) {
-        return connections.addInstitutional(actor, AiWebSupport.provider(request.provider()),
+    public ConnectionView addConnection(@AuthenticationPrincipal Actor actor, @RequestBody AddRequest request) {
+        return aiConnectionService.addInstitutional(actor, AiWebSupport.parseProvider(request.provider()),
                 new SaveCommand(request.apiKey(), request.model(), null));
     }
 
     /** Kiểm tra trong popup trước khi lưu; {@code id} có khi đang sửa khóa đã lưu và để trống ô khóa. */
     @PostMapping("/connections:test")
     public AiConnectionService.TestResult testDraft(@AuthenticationPrincipal Actor actor, @RequestBody TestRequest request) {
-        return connections.testInstitutionalDraft(actor, AiWebSupport.provider(request.provider()), request.id(),
+        return aiConnectionService.testInstitutionalDraft(actor, AiWebSupport.parseProvider(request.provider()), request.id(),
                 new SaveCommand(request.apiKey(), request.model(), null));
     }
 
     @PutMapping("/connections/{id}")
-    public ConnectionView save(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public ConnectionView saveConnection(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                @RequestBody SaveCommand command) {
-        return connections.replaceInstitutional(actor, id, command);
+        return aiConnectionService.replaceInstitutional(actor, id, command);
     }
 
     @PostMapping("/connections/{id}:test")
     public ConnectionView test(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return connections.testInstitutional(actor, id);
+        return aiConnectionService.testInstitutional(actor, id);
     }
 
     @PutMapping("/connections/{id}/status")
-    public ConnectionView status(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public ConnectionView updateConnectionStatus(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                  @RequestBody StatusRequest request) {
-        return connections.setInstitutionalEnabled(actor, id, Boolean.TRUE.equals(request.enabled()), request.version());
+        return aiConnectionService.setInstitutionalEnabled(actor, id, Boolean.TRUE.equals(request.enabled()), request.version());
     }
 
     @DeleteMapping("/connections/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void revoke(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        connections.revokeInstitutional(actor, id);
+        aiConnectionService.revokeInstitutional(actor, id);
     }
 
     @GetMapping("/quota-policy")
-    public PolicyView policy(@AuthenticationPrincipal Actor actor) {
-        return PolicyView.of(quota.policy(actor));
+    public PolicyView loadPolicy(@AuthenticationPrincipal Actor actor) {
+        return PolicyView.mapPolicyView(quotaPolicyService.loadPolicy(actor));
     }
 
     @PutMapping("/quota-policy")
     public PolicyView savePolicy(@AuthenticationPrincipal Actor actor, @RequestBody PolicyRequest request) {
-        return PolicyView.of(quota.savePolicy(actor, request.defaultDayTokens(), request.globalDayTokens(),
+        return PolicyView.mapPolicyView(quotaPolicyService.savePolicy(actor, request.defaultDayTokens(), request.globalDayTokens(),
                 request.version()));
     }
 
     @GetMapping("/teacher-quotas")
-    public List<TeacherQuotaView> teacherQuotas(@AuthenticationPrincipal Actor actor) {
-        return quota.teacherQuotas(actor);
+    public List<TeacherQuotaView> listTeacherQuotas(@AuthenticationPrincipal Actor actor) {
+        return quotaPolicyService.listTeacherQuotas(actor);
     }
 
     @PutMapping("/teacher-quotas/{accountId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void setTeacherQuota(@AuthenticationPrincipal Actor actor, @PathVariable UUID accountId,
                                 @RequestBody TeacherQuotaRequest request) {
-        quota.setTeacherQuota(actor, accountId, request.dayTokens());
+        quotaPolicyService.setTeacherQuota(actor, accountId, request.dayTokens());
     }
 
     @DeleteMapping("/teacher-quotas/{accountId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTeacherQuota(@AuthenticationPrincipal Actor actor, @PathVariable UUID accountId) {
-        quota.deleteTeacherQuota(actor, accountId);
+        quotaPolicyService.deleteTeacherQuota(actor, accountId);
     }
 
     /** Tìm giảng viên để đặt mức riêng (tối đa 20 kết quả, IAccountLookup). */
     @GetMapping("/teacher-candidates")
-    public List<TeacherCandidate> teacherCandidates(@AuthenticationPrincipal Actor actor,
+    public List<TeacherCandidate> listTeacherCandidates(@AuthenticationPrincipal Actor actor,
                                                     @RequestParam(defaultValue = "") String q) {
-        return quota.teacherCandidates(actor, q).stream()
+        return quotaPolicyService.listTeacherCandidates(actor, q).stream()
                 .map(c -> new TeacherCandidate(c.accountId(), c.displayName(), c.email())).toList();
     }
 
     @GetMapping("/usage-summary")
-    public UsageSummary usageSummary(@AuthenticationPrincipal Actor actor, @RequestParam(defaultValue = "7") int days) {
-        return quota.summary(actor, days);
+    public UsageSummary loadUsageSummary(@AuthenticationPrincipal Actor actor, @RequestParam(defaultValue = "7") int days) {
+        return quotaPolicyService.summarizeUsage(actor, days);
     }
 }

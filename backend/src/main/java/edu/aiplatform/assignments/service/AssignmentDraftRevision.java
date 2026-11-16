@@ -118,13 +118,13 @@ final class AssignmentDraftRevision {
                     String partId = partByHeading.get(block.id());
                     List<RubricCriterion> criteria = partId == null ? List.of() : byPart.getOrDefault(partId, List.of());
                     if (!criteria.isEmpty()) {
-                        out.set("rubric", rubricJson(criteria));
+                        out.set("rubric", writeRubricJson(criteria));
                     }
                 }
-                case PARAGRAPH -> out.put("text", text(content.path("runs")));
+                case PARAGRAPH -> out.put("text", joinRunText(content.path("runs")));
                 case LIST -> {
                     List<String> items = new ArrayList<>();
-                    content.path("items").forEach(item -> items.add(text(item.path("runs")).replace('\n', ' ')));
+                    content.path("items").forEach(item -> items.add(joinRunText(item.path("runs")).replace('\n', ' ')));
                     out.put("text", String.join("\n", items));
                     out.put("ordered", content.path("ordered").asBoolean(false));
                 }
@@ -133,7 +133,7 @@ final class AssignmentDraftRevision {
                     ArrayNode rows = out.putArray("rows");
                     content.path("rows").forEach(row -> {
                         ArrayNode cells = rows.addArray();
-                        row.forEach(cell -> cells.add(text(cell.path("runs"))));
+                        row.forEach(cell -> cells.add(joinRunText(cell.path("runs"))));
                     });
                 }
                 case IMAGE, DIAGRAM -> out.put("text", content.path("alt").asText(""));
@@ -141,7 +141,7 @@ final class AssignmentDraftRevision {
         }
         List<RubricCriterion> whole = byPart.getOrDefault(wholePart, List.of());
         if (!whole.isEmpty()) {
-            document.set("wholeRubric", rubricJson(whole));
+            document.set("wholeRubric", writeRubricJson(whole));
         }
         return new Snapshot(document, refs);
     }
@@ -199,7 +199,7 @@ final class AssignmentDraftRevision {
                     .append(UntrustedPrompt.wrap(UntrustedPrompt.SOURCE_MATERIAL_TAG, reference.text()));
         }
         user.append("\n\nCurrent assessment JSON:\n")
-                .append(UntrustedPrompt.wrap(UntrustedPrompt.CURRENT_DOCUMENT_TAG, write(document)));
+                .append(UntrustedPrompt.wrap(UntrustedPrompt.CURRENT_DOCUMENT_TAG, writeDocument(document)));
         return new AiPrompt(UntrustedPrompt.secureSystem(system), user.toString());
     }
 
@@ -290,7 +290,7 @@ final class AssignmentDraftRevision {
             if (blocks.size() >= DocumentModelService.MAX_BLOCKS) {
                 break;
             }
-            BlockType type = type(block.path("type").asText(""));
+            BlockType type = parseBlockType(block.path("type").asText(""));
             if (type == null) {
                 continue;
             }
@@ -372,15 +372,15 @@ final class AssignmentDraftRevision {
         } else {
             List<JsonNode> headings = new ArrayList<>();
             blocks.forEach(block -> {
-                if (level(block) > 0) {
+                if (readBlockLevel(block) > 0) {
                     headings.add(block);
                 }
             });
             for (int index = 0; index < headings.size(); index++) {
                 JsonNode heading = headings.get(index);
-                int level = level(heading);
+                int level = readBlockLevel(heading);
                 questionCount += level == 1 ? 1 : 0;
-                boolean leaf = index + 1 == headings.size() || level(headings.get(index + 1)) <= level;
+                boolean leaf = index + 1 == headings.size() || readBlockLevel(headings.get(index + 1)) <= level;
                 JsonNode rubric = heading.path("rubric");
                 if (!leaf) {
                     if (!rubric.isMissingNode() && !rubric.isEmpty()) {
@@ -397,11 +397,11 @@ final class AssignmentDraftRevision {
                     }
                     continue;
                 }
-                total = total.add(points(rubric));
+                total = total.add(sumRubricPoints(rubric));
             }
         }
         if (proposal != null) {
-            total = total.add(points(proposal.path("wholeRubric")));
+            total = total.add(sumRubricPoints(proposal.path("wholeRubric")));
         }
         boolean hasError = false;
         boolean hasWarning = false;
@@ -419,7 +419,7 @@ final class AssignmentDraftRevision {
     }
 
     /** Khung mới: khối giữ {@code ref} dùng lại id và định dạng của khối cũ (theo khung hiện tại khi áp dụng). */
-    static Built build(JsonNode proposal, JsonNode blockRefs, DocumentModel current, String currentTitle) {
+    static Built buildRevision(JsonNode proposal, JsonNode blockRefs, DocumentModel current, String currentTitle) {
         Map<UUID, DocumentBlock> byId = new HashMap<>();
         if (current != null && current.blocks() != null) {
             current.blocks().forEach(block -> byId.put(block.id(), block));
@@ -429,7 +429,7 @@ final class AssignmentDraftRevision {
         Map<UUID, List<RubricCriterion>> rubricByHeading = new HashMap<>();
         for (JsonNode block : proposal.path("blocks")) {
             BlockType type = BlockType.valueOf(block.path("type").asText());
-            DocumentBlock original = original(block, blockRefs, byId, used, type);
+            DocumentBlock original = resolveOriginalBlock(block, blockRefs, byId, used, type);
             if (original == null && (type == BlockType.IMAGE || type == BlockType.DIAGRAM)) {
                 continue;
             }
@@ -440,11 +440,11 @@ final class AssignmentDraftRevision {
                     String text = block.path("text").asText("");
                     content.put("style", block.path("style").asText("H1"));
                     if (content.has("runs") || original == null || !block.path("format").isEmpty()) {
-                        content.set("runs", runs(text, original == null ? null : content.path("runs")));
+                        content.set("runs", buildRuns(text, original == null ? null : content.path("runs")));
                     }
                     content.put("text", text);
                 }
-                case PARAGRAPH -> content.set("runs", runs(block.path("text").asText(""), content.path("runs")));
+                case PARAGRAPH -> content.set("runs", buildRuns(block.path("text").asText(""), content.path("runs")));
                 case LIST -> {
                     JsonNode previous = content.path("items");
                     ArrayNode items = JsonNodeFactory.instance.arrayNode();
@@ -453,7 +453,7 @@ final class AssignmentDraftRevision {
                         JsonNode old = previous.path(index++);
                         ObjectNode item = old.isObject() ? ((ObjectNode) old).deepCopy()
                                 : JsonNodeFactory.instance.objectNode();
-                        item.set("runs", runs(text.asText(""), old.path("runs")));
+                        item.set("runs", buildRuns(text.asText(""), old.path("runs")));
                         items.add(item);
                     }
                     content.put("ordered", block.path("ordered").asBoolean(false));
@@ -471,7 +471,7 @@ final class AssignmentDraftRevision {
                             JsonNode old = oldRow.path(cellIndex++);
                             ObjectNode cell = old.isObject() ? ((ObjectNode) old).deepCopy()
                                     : JsonNodeFactory.instance.objectNode();
-                            cell.set("runs", runs(text.asText(""), old.path("runs")));
+                            cell.set("runs", buildRuns(text.asText(""), old.path("runs")));
                             cells.add(cell);
                         }
                     }
@@ -488,27 +488,27 @@ final class AssignmentDraftRevision {
                     }
                 }
             }
-            if (type != BlockType.IMAGE && type != BlockType.DIAGRAM) AiDraftFormatting.apply(content, block.path("format"));
+            if (type != BlockType.IMAGE && type != BlockType.DIAGRAM) AiDraftFormatting.applyFormat(content, block.path("format"));
             UUID id = original == null ? UUID.randomUUID() : original.id();
             BlockOrigin origin = original == null ? BlockOrigin.TEACHER : original.origin();
             blocks.add(new DocumentBlock(id, origin, type, content));
             if (type == BlockType.HEADING && block.path("rubric").isArray()) {
-                rubricByHeading.put(id, AiDraftProposal.criteria(block.path("rubric")));
+                rubricByHeading.put(id, AiDraftProposal.parseCriteria(block.path("rubric")));
             }
         }
         String title = proposal.path("title").asText("").strip();
         JsonNode formattedTitle = current == null ? null : current.title();
         if (formattedTitle != null && formattedTitle.isObject() && !title.isEmpty() && !title.equals(currentTitle)) {
             ObjectNode next = ((ObjectNode) formattedTitle).deepCopy();
-            next.set("runs", runs(title, formattedTitle.path("runs")));
+            next.set("runs", buildRuns(title, formattedTitle.path("runs")));
             formattedTitle = next;
         }
         List<RubricCriterion> whole = proposal.path("wholeRubric").isArray()
-                ? AiDraftProposal.criteria(proposal.path("wholeRubric")) : List.of();
+                ? AiDraftProposal.parseCriteria(proposal.path("wholeRubric")) : List.of();
         return new Built(new DocumentModel(List.copyOf(blocks), formattedTitle), rubricByHeading, whole);
     }
 
-    private static DocumentBlock original(JsonNode block, JsonNode blockRefs, Map<UUID, DocumentBlock> byId,
+    private static DocumentBlock resolveOriginalBlock(JsonNode block, JsonNode blockRefs, Map<UUID, DocumentBlock> byId,
                                           Set<UUID> used, BlockType type) {
         String ref = block.path("ref").asText("");
         if (ref.isEmpty() || blockRefs == null || !blockRefs.path(ref).isTextual()) {
@@ -528,8 +528,8 @@ final class AssignmentDraftRevision {
     }
 
     /** Chữ không đổi thì giữ nguyên các đoạn định dạng; chữ đổi thì một đoạn mang định dạng của đoạn đầu. */
-    private static ArrayNode runs(String text, JsonNode previous) {
-        if (previous != null && previous.isArray() && text(previous).equals(text)) {
+    private static ArrayNode buildRuns(String text, JsonNode previous) {
+        if (previous != null && previous.isArray() && joinRunText(previous).equals(text)) {
             return previous.deepCopy();
         }
         JsonNode first = previous == null ? null : previous.path(0);
@@ -541,13 +541,13 @@ final class AssignmentDraftRevision {
         return runs;
     }
 
-    private static String text(JsonNode runs) {
+    private static String joinRunText(JsonNode runs) {
         StringBuilder text = new StringBuilder();
         runs.forEach(run -> text.append(run.path("text").asText("")));
         return text.toString();
     }
 
-    private static ArrayNode rubricJson(List<RubricCriterion> criteria) {
+    private static ArrayNode writeRubricJson(List<RubricCriterion> criteria) {
         ArrayNode out = JsonNodeFactory.instance.arrayNode();
         for (RubricCriterion criterion : criteria) {
             ObjectNode c = out.addObject();
@@ -567,11 +567,11 @@ final class AssignmentDraftRevision {
         return out;
     }
 
-    private static BigDecimal points(JsonNode rubric) {
+    private static BigDecimal sumRubricPoints(JsonNode rubric) {
         BigDecimal total = BigDecimal.ZERO.setScale(2);
         for (JsonNode criterion : rubric) {
             for (JsonNode item : criterion.path("items")) {
-                BigDecimal value = AiDraftProposal.points(item.path("points"));
+                BigDecimal value = AiDraftProposal.parsePoints(item.path("points"));
                 if (value != null) {
                     total = total.add(value);
                 }
@@ -580,7 +580,7 @@ final class AssignmentDraftRevision {
         return total;
     }
 
-    private static int level(JsonNode block) {
+    private static int readBlockLevel(JsonNode block) {
         String style = block.path("style").asText("");
         if (!"HEADING".equals(block.path("type").asText()) || style.length() != 2 || style.charAt(0) != 'H') {
             return 0;
@@ -589,7 +589,7 @@ final class AssignmentDraftRevision {
         return level >= 1 && level <= 6 ? level : 0;
     }
 
-    private static BlockType type(String name) {
+    private static BlockType parseBlockType(String name) {
         try {
             return BlockType.valueOf(name);
         } catch (IllegalArgumentException e) {
@@ -605,7 +605,7 @@ final class AssignmentDraftRevision {
         issue.put("message", message);
     }
 
-    private static String write(JsonNode document) {
+    private static String writeDocument(JsonNode document) {
         try {
             return JSON.writeValueAsString(document);
         } catch (JsonProcessingException e) {

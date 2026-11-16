@@ -35,51 +35,51 @@ public class KeyCipher {
     private final TreeMap<Integer, String> encodedKeys = new TreeMap<>();
 
     public KeyCipher(AiProperties properties) {
-        put(1, properties.keyEncryptionKey());
-        put(2, properties.keyEncryptionKeyV2());
+        putKey(1, properties.keyEncryptionKey());
+        putKey(2, properties.keyEncryptionKeyV2());
     }
 
-    private void put(int version, String encoded) {
+    private void putKey(int version, String encoded) {
         if (encoded != null && !encoded.isBlank()) {
             encodedKeys.put(version, encoded.trim());
         }
     }
 
-    public boolean configured() {
+    public boolean hasKeys() {
         return !encodedKeys.isEmpty();
     }
 
     /** Mã hóa khóa API của một kết nối, gắn với danh tính của kết nối đó. */
     public EncryptedKey encryptConnectionKey(UUID id, Scope scope, UUID ownerId, AiProvider provider, String plain) {
-        return encrypt(plain, connectionContext(id, scope, ownerId, provider));
+        return encryptKey(plain, buildConnectionContext(id, scope, ownerId, provider));
     }
 
     /** Giải mã khóa API của kết nối ngay trước khi gọi provider; bản mã của dòng khác hoặc bản mã cũ chưa gắn bị từ chối. */
     public String decryptConnectionKey(AiConnection connection) {
-        return decrypt(connection.encryptedKey(), connectionContext(connection.id(), connection.scope(),
+        return decryptKey(connection.readEncryptedKey(), buildConnectionContext(connection.id(), connection.scope(),
                 connection.ownerId(), connection.provider()));
     }
 
     /** Mã hóa bằng khóa mới nhất, không AAD (token MCP). */
-    public EncryptedKey encrypt(String plain) {
-        return encrypt(plain, null);
+    public EncryptedKey encryptKey(String plain) {
+        return encryptKey(plain, null);
     }
 
     /** Giải mã bản mã không AAD (token MCP, khóa kết nối cũ trước khi gắn). */
-    public String decrypt(EncryptedKey key) {
-        return decrypt(key, null);
+    public String decryptKey(EncryptedKey key) {
+        return decryptKey(key, null);
     }
 
-    private EncryptedKey encrypt(String plain, byte[] aad) {
+    private EncryptedKey encryptKey(String plain, byte[] aad) {
         Map.Entry<Integer, String> current = encodedKeys.lastEntry();
         if (current == null) {
-            throw notConfigured();
+            throw createNotConfiguredError();
         }
         byte[] iv = new byte[IV_BYTES];
         random.nextBytes(iv);
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, key(current.getValue()), new GCMParameterSpec(TAG_BITS, iv));
+            cipher.init(Cipher.ENCRYPT_MODE, decodeKey(current.getValue()), new GCMParameterSpec(TAG_BITS, iv));
             if (aad != null) {
                 cipher.updateAAD(aad);
             }
@@ -90,14 +90,14 @@ public class KeyCipher {
     }
 
     /** Không giữ bản rõ trong cache hay log. */
-    private String decrypt(EncryptedKey key, byte[] aad) {
+    private String decryptKey(EncryptedKey key, byte[] aad) {
         String encoded = encodedKeys.get(key.version());
         if (encoded == null || key.ciphertext() == null) {
-            throw notConfigured();
+            throw createNotConfiguredError();
         }
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.DECRYPT_MODE, key(encoded), new GCMParameterSpec(TAG_BITS, key.iv()));
+            cipher.init(Cipher.DECRYPT_MODE, decodeKey(encoded), new GCMParameterSpec(TAG_BITS, key.iv()));
             if (aad != null) {
                 cipher.updateAAD(aad);
             }
@@ -107,19 +107,19 @@ public class KeyCipher {
         }
     }
 
-    static byte[] connectionContext(UUID id, Scope scope, UUID ownerId, AiProvider provider) {
+    static byte[] buildConnectionContext(UUID id, Scope scope, UUID ownerId, AiProvider provider) {
         String context = "ai_connection|v1|" + id + "|" + scope.name() + "|" + (ownerId == null ? "-" : ownerId)
                 + "|" + provider.name();
         return context.getBytes(StandardCharsets.UTF_8);
     }
 
     /** 4 ký tự cuối để hiện thay cho key (BR-U06-03). */
-    public static String hint(String plain) {
+    public static String buildHint(String plain) {
         String trimmed = plain.trim();
         return trimmed.length() <= 4 ? trimmed : trimmed.substring(trimmed.length() - 4);
     }
 
-    private static SecretKey key(String encoded) {
+    private static SecretKey decodeKey(String encoded) {
         byte[] bytes = Base64.getDecoder().decode(encoded);
         if (bytes.length != 32) {
             throw new IllegalStateException("Khóa mã hóa key AI phải là 32 byte base64");
@@ -127,8 +127,8 @@ public class KeyCipher {
         return new SecretKeySpec(bytes, "AES");
     }
 
-    private static ApiException notConfigured() {
-        return ApiException.unavailable("AI_KEY_ENCRYPTION_NOT_CONFIGURED",
+    private static ApiException createNotConfiguredError() {
+        return ApiException.createUnavailable("AI_KEY_ENCRYPTION_NOT_CONFIGURED",
                 "Hệ thống chưa cấu hình khóa mã hóa cho key AI, liên hệ quản trị viên");
     }
 }

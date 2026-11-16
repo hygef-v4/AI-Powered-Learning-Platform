@@ -23,7 +23,7 @@ public class JsonSchemaChecker {
     }
 
     /** Schema có đọc được không (unit gọi gửi schema sai thì từ chối ngay khi gửi task). */
-    public boolean validSchema(String schema) {
+    public boolean isValidSchema(String schema) {
         try {
             factory.getSchema(json.readTree(schema));
             return true;
@@ -33,17 +33,17 @@ public class JsonSchemaChecker {
     }
 
     /** Trả lỗi đầu tiên nếu {@code value} không khớp, rỗng nếu khớp. */
-    public Optional<String> check(String schema, String value) {
+    public Optional<String> validateValue(String schema, String value) {
         JsonNode node;
         try {
             node = json.readTree(value);
         } catch (JsonProcessingException e) {
             return Optional.of("không phải JSON");
         }
-        return check(schema, node);
+        return validateValue(schema, node);
     }
 
-    public Optional<String> check(String schema, JsonNode node) {
+    public Optional<String> validateValue(String schema, JsonNode node) {
         try {
             JsonSchema compiled = factory.getSchema(json.readTree(schema));
             Set<ValidationMessage> errors = compiled.validate(node);

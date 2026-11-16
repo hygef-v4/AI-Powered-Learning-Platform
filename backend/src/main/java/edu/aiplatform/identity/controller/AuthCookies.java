@@ -38,27 +38,27 @@ public class AuthCookies {
         this.refreshMaxTtl = properties.refreshMaxTtl();
     }
 
-    public ResponseCookie access(String token) {
-        return cookie(ACCESS, token, ACCESS_PATH, "Lax", accessTtl);
+    public ResponseCookie buildAccessCookie(String token) {
+        return buildCookie(ACCESS, token, ACCESS_PATH, "Lax", accessTtl);
     }
 
     public ResponseCookie refresh(String token) {
-        return cookie(REFRESH, token, REFRESH_PATH, "Strict", refreshMaxTtl);
+        return buildCookie(REFRESH, token, REFRESH_PATH, "Strict", refreshMaxTtl);
     }
 
     public ResponseCookie clearAccess() {
-        return cookie(ACCESS, "", ACCESS_PATH, "Lax", Duration.ZERO);
+        return buildCookie(ACCESS, "", ACCESS_PATH, "Lax", Duration.ZERO);
     }
 
     public ResponseCookie clearRefresh() {
-        return cookie(REFRESH, "", REFRESH_PATH, "Strict", Duration.ZERO);
+        return buildCookie(REFRESH, "", REFRESH_PATH, "Strict", Duration.ZERO);
     }
 
     public ResponseCookie clearLegacyRefresh() {
-        return cookie(REFRESH, "", LEGACY_REFRESH_PATH, "Strict", Duration.ZERO);
+        return buildCookie(REFRESH, "", LEGACY_REFRESH_PATH, "Strict", Duration.ZERO);
     }
 
-    public static Optional<String> read(HttpServletRequest request, String name) {
+    public static Optional<String> readCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
             return Optional.empty();
@@ -67,7 +67,7 @@ public class AuthCookies {
                 .filter(v -> !v.isBlank()).findFirst();
     }
 
-    private ResponseCookie cookie(String name, String value, String path, String sameSite, Duration maxAge) {
+    private ResponseCookie buildCookie(String name, String value, String path, String sameSite, Duration maxAge) {
         return ResponseCookie.from(name, value).httpOnly(true).secure(secure).sameSite(sameSite).path(path)
                 .maxAge(maxAge).build();
     }

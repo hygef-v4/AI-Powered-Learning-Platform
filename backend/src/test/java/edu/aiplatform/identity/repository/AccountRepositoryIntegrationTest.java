@@ -369,15 +369,15 @@ class AccountRepositoryIntegrationTest {
 
     @Test
     void existingEmailsAndCountsAndAdminPresence() {
-        assertThat(repository.anyAdminExists()).isFalse();
+        assertThat(repository.hasAnyAdmin()).isFalse();
         insertAll(active("ad@fpt.edu.vn", Role.ADMIN), active("gv@fpt.edu.vn", Role.TEACHER),
                 pending("sv1@fpt.edu.vn", Role.STUDENT, "SV 1"), pending("sv2@fpt.edu.vn", Role.STUDENT, "SV 2"),
                 withStatus(pending("sv3@fpt.edu.vn", Role.STUDENT, "SV 3"), AccountStatus.DISABLED));
 
-        assertThat(repository.anyAdminExists()).isTrue();
-        assertThat(repository.existingEmails(List.of("sv1@fpt.edu.vn", "moi@fpt.edu.vn", "ad@fpt.edu.vn")))
+        assertThat(repository.hasAnyAdmin()).isTrue();
+        assertThat(repository.findExistingEmails(List.of("sv1@fpt.edu.vn", "moi@fpt.edu.vn", "ad@fpt.edu.vn")))
                 .containsExactlyInAnyOrder("sv1@fpt.edu.vn", "ad@fpt.edu.vn");
-        assertThat(repository.existingEmails(List.of())).isEmpty();
+        assertThat(repository.findExistingEmails(List.of())).isEmpty();
         assertThat(repository.countByRoleAndStatus()).isEqualTo(Map.of(
                 Role.ADMIN, Map.of(AccountStatus.ACTIVE, 1L),
                 Role.TEACHER, Map.of(AccountStatus.ACTIVE, 1L),
@@ -471,7 +471,7 @@ class AccountRepositoryIntegrationTest {
         assertThatThrownBy(() -> repository.insert(student("sv3@fpt.edu.vn", "se000003")))
                 .isInstanceOf(DataIntegrityViolationException.class)
                 .hasMessageContaining("accounts_student_code_format");
-        Account teacher = Account.newPending(UUID.randomUUID(), "gv@fpt.edu.vn", Role.TEACHER, "GV", null,
+        Account teacher = Account.createPending(UUID.randomUUID(), "gv@fpt.edu.vn", Role.TEACHER, "GV", null,
                 "SE000004", NOW);
         assertThatThrownBy(() -> repository.insert(teacher))
                 .isInstanceOf(DataIntegrityViolationException.class)
@@ -489,7 +489,7 @@ class AccountRepositoryIntegrationTest {
         insertAll(coded, legacy, teacher);
 
         assertThat(repository.findById(coded.id()).orElseThrow().studentCode()).isEqualTo("SE000001");
-        assertThat(repository.existingStudentCodes(List.of("SE000001", "SE000002"))).containsExactly("SE000001");
+        assertThat(repository.findExistingStudentCodes(List.of("SE000001", "SE000002"))).containsExactly("SE000001");
         assertThat(repository.findStudentsByCodes(List.of("SE000001", "SE000009")))
                 .extracting(Account::id).containsExactly(coded.id());
         assertThat(names(search(null, null, "se0000"))).containsExactly(coded.displayName());
@@ -565,7 +565,7 @@ class AccountRepositoryIntegrationTest {
     }
 
     private static Account pending(String email, Role role, String name) {
-        return Account.newPending(UUID.randomUUID(), email, role, name, null, NOW);
+        return Account.createPending(UUID.randomUUID(), email, role, name, null, NOW);
     }
 
     private static Account active(String email, Role role) {
@@ -586,7 +586,7 @@ class AccountRepositoryIntegrationTest {
                 a.version());
     }
     private static Account student(String email, String studentCode) {
-        return Account.newPending(UUID.randomUUID(), email, Role.STUDENT, email.substring(0, email.indexOf('@')),
+        return Account.createPending(UUID.randomUUID(), email, Role.STUDENT, email.substring(0, email.indexOf('@')),
                 null, studentCode, NOW);
     }
 }

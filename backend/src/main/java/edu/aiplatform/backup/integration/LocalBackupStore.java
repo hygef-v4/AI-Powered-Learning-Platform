@@ -27,25 +27,25 @@ public class LocalBackupStore implements IBackupStore {
     }
 
     @Override
-    public boolean available() {
+    public boolean isAvailable() {
         return true;
     }
 
     @Override
-    public StoredArchive put(UUID runId, Path archive) {
+    public StoredArchive putArchive(UUID runId, Path archive) {
         Path dir = root.resolve(runId.toString());
         try {
             Files.createDirectories(dir);
             Path target = dir.resolve(ARCHIVE);
             Files.copy(archive, target, StandardCopyOption.REPLACE_EXISTING);
-            return new StoredArchive(runId.toString(), Files.size(target), md5(target));
+            return new StoredArchive(runId.toString(), Files.size(target), hashMd5(target));
         } catch (IOException e) {
             throw new StorageUnavailableException("Không ghi được backup local", e);
         }
     }
 
     @Override
-    public void delete(String runId) {
+    public void deleteArchive(String runId) {
         Path dir = root.resolve(UUID.fromString(runId).toString());
         if (!Files.exists(dir)) {
             return;
@@ -59,7 +59,7 @@ public class LocalBackupStore implements IBackupStore {
         }
     }
 
-    static String md5(Path file) throws IOException {
+    static String hashMd5(Path file) throws IOException {
         try (DigestInputStream in = new DigestInputStream(Files.newInputStream(file), MessageDigest.getInstance("MD5"))) {
             in.transferTo(java.io.OutputStream.nullOutputStream());
             return HexFormat.of().formatHex(in.getMessageDigest().digest());

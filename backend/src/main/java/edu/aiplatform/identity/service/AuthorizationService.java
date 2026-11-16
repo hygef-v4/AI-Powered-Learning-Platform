@@ -66,7 +66,7 @@ public class AuthorizationService implements IAuthorization {
         if (actor == null || actor.accountId() == null) {
             return AuthorizationDecision.deny("NO_ACTOR");
         }
-        Optional<AccessPolicy.Rule> rule = AccessPolicy.ruleFor(action);
+        Optional<AccessPolicy.Rule> rule = AccessPolicy.findRule(action);
         if (rule.isEmpty()) {
             return AuthorizationDecision.deny("UNKNOWN_ACTION");
         }
@@ -90,13 +90,13 @@ public class AuthorizationService implements IAuthorization {
                     && subjectScope.isSubjectManager(actor.accountId(), ref.id())
                     ? AuthorizationDecision.allow() : AuthorizationDecision.deny("OUT_OF_SUBJECT_SCOPE");
             case CLASS -> role != Role.ADMIN && ref.scope() == ScopeKind.CLASS && ref.id() != null
-                    && inClass(actor, role, ref)
+                    && isInClass(actor, role, ref)
                     ? AuthorizationDecision.allow() : AuthorizationDecision.deny("OUT_OF_CLASS_SCOPE");
         };
     }
 
     /** Student cần đang ghi danh (R5); Teacher, Subject Manager cần được giao dạy lớp (R3/R4). */
-    private boolean inClass(Actor actor, Role role, ResourceRef ref) {
+    private boolean isInClass(Actor actor, Role role, ResourceRef ref) {
         return role == Role.STUDENT
                 ? classScope.isEnrolledStudent(actor.accountId(), ref.id())
                 : classScope.isTeacherOf(actor.accountId(), ref.id());

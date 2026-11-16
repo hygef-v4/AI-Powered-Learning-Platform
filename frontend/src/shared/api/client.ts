@@ -3,7 +3,8 @@
 // Gặp 401 thì thử refresh phiên rồi gửi lại; phiên hết hẳn thì gọi handler do U01 đặt (chuyển về đăng nhập).
 // Backend bận (503, mất mạng) khi refresh thì báo "hệ thống tạm bận", không coi là hết phiên.
 
-import { CSRF_HEADER, csrfToken } from "./csrf";
+import { CSRF_HEADER, readCsrfToken } from "./csrf";
+import { msg } from "@/i18n/msg";
 
 export type ApiProblem = {
   status: number;
@@ -26,7 +27,7 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 const AUTH_PREFIX = "/api/v1/auth/";
 /** Chờ response refresh của tab kia đặt cookie mới trước khi gửi lại (refresh trả 409). */
 export const CONCURRENT_REFRESH_WAIT_MS = 500;
-const SYSTEM_BUSY: ApiProblem = { status: 503, code: "SYSTEM_BUSY", detail: "Hệ thống tạm bận, vui lòng thử lại sau" };
+const SYSTEM_BUSY: ApiProblem = { status: 503, code: "SYSTEM_BUSY", detail: msg("shared.api.client.theSystemIsBusyPlease") };
 
 /** `concurrent`: tab khác vừa xoay cùng refresh token (409), phiên vẫn còn; cookie mới do response của tab kia đặt. */
 export type RefreshOutcome = "refreshed" | "concurrent" | "expired" | "unavailable";
@@ -39,11 +40,11 @@ export function setUnauthenticatedHandler(handler: (() => void) | null) {
   onUnauthenticated = handler;
 }
 
-function delay(ms: number) {
+function waitDelay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function outcomeOf(response: Response): RefreshOutcome {
+function resolveOutcome(response: Response): RefreshOutcome {
   if (response.ok) return "refreshed";
   if (response.status === 409) return "concurrent";
   return response.status >= 500 ? "unavailable" : "expired";
@@ -56,8 +57,8 @@ function outcomeOf(response: Response): RefreshOutcome {
 export function refreshSession(): Promise<RefreshOutcome> {
   refreshing ??= fetch(`${AUTH_PREFIX}refresh`, { method: "POST", credentials: "include" })
     .then(async (response) => {
-      const outcome = outcomeOf(response);
-      if (outcome === "concurrent") await delay(CONCURRENT_REFRESH_WAIT_MS);
+      const outcome = resolveOutcome(response);
+      if (outcome === "concurrent") await waitDelay(CONCURRENT_REFRESH_WAIT_MS);
       return outcome;
     })
     .catch((): RefreshOutcome => "unavailable")
@@ -72,33 +73,33 @@ async function resendAfterRefresh(path: string, init: RequestInit, unauthorized:
   let response = unauthorized;
   let outcome = await refreshSession();
   if (outcome !== "expired" && outcome !== "unavailable") {
-    response = await send(path, init);
+    response = await sendRequest(path, init);
     if (response.status === 401 && outcome === "concurrent") {
       // Cookie mới của tab kia về muộn hơn thời gian chờ: refresh lại bằng cookie hiện có.
       outcome = await refreshSession();
-      if (outcome === "refreshed") response = await send(path, init);
+      if (outcome === "refreshed") response = await sendRequest(path, init);
     }
   }
   if (outcome === "unavailable") throw new ApiError(SYSTEM_BUSY);
   return response;
 }
 
-async function send(path: string, init: RequestInit): Promise<Response> {
+async function sendRequest(path: string, init: RequestInit): Promise<Response> {
   const headers = new Headers(init.headers);
   if (init.body !== undefined && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   if (!headers.has("Accept")) headers.set("Accept", "application/json");
   const method = (init.method ?? "GET").toUpperCase();
-  const csrf = csrfToken();
+  const csrf = readCsrfToken();
   if (!SAFE_METHODS.has(method) && csrf && !headers.has(CSRF_HEADER)) {
     headers.set(CSRF_HEADER, csrf);
   }
   return fetch(path, { ...init, headers, credentials: "include" });
 }
 
-async function apiResponse(path: string, init: RequestInit = {}): Promise<Response> {
-  let response = await send(path, init);
+async function fetchResponse(path: string, init: RequestInit = {}): Promise<Response> {
+  let response = await sendRequest(path, init);
   if (response.status === 401 && !path.startsWith(AUTH_PREFIX)) {
     response = await resendAfterRefresh(path, init, response);
     if (response.status === 401) onUnauthenticated?.();
@@ -115,22 +116,22 @@ async function apiResponse(path: string, init: RequestInit = {}): Promise<Respon
   return response;
 }
 
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await apiResponse(path, init);
+export async function fetchApi<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetchResponse(path, init);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
 
 /** Binary downloads share the same authentication, refresh, CSRF and error handling as JSON requests. */
-export async function apiDownload(path: string, init: RequestInit = {}): Promise<Blob> {
+export async function downloadApi(path: string, init: RequestInit = {}): Promise<Blob> {
   const headers = new Headers(init.headers);
   if (!headers.has("Accept")) headers.set("Accept", "application/octet-stream");
-  return (await apiResponse(path, { ...init, headers })).blob();
+  return (await fetchResponse(path, { ...init, headers })).blob();
 }
 
 /** Keeps the server's Unicode filename together with the authenticated download. */
-export async function apiDownloadFile(path: string): Promise<{ blob: Blob; filename: string | null }> {
-  const response = await apiResponse(path, { headers: { Accept: "application/octet-stream" } });
+export async function downloadApiFile(path: string): Promise<{ blob: Blob; filename: string | null }> {
+  const response = await fetchResponse(path, { headers: { Accept: "application/octet-stream" } });
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const encodedName = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1];
   const plainName = /filename="([^"]*)"/i.exec(disposition)?.[1];

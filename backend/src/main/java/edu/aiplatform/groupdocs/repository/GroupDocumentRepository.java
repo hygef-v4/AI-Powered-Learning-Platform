@@ -63,42 +63,42 @@ public class GroupDocumentRepository {
                         + ":classId, :status, cast(:shared as jsonb), :activity, :lastChangedAt, 0, :createdAt) "
                         + "on conflict (group_id, assignment_id) do nothing")
                 .param("id", d.id()).param("groupId", d.groupId()).param("assignmentId", d.assignmentId())
-                .param("classId", d.classId()).param("status", d.status().name()).param("shared", write(d.sharedBlocks()))
+                .param("classId", d.classId()).param("status", d.status().name()).param("shared", writeJson(d.sharedBlocks()))
                 .param("activity", d.activityMonitoring())
-                .param("lastChangedAt", ts(d.lastChangedAt() == null ? Instant.EPOCH : d.lastChangedAt()))
-                .param("createdAt", ts(d.createdAt())).update() == 1;
+                .param("lastChangedAt", convertTimestamp(d.lastChangedAt() == null ? Instant.EPOCH : d.lastChangedAt()))
+                .param("createdAt", convertTimestamp(d.createdAt())).update() == 1;
     }
 
     public Optional<GroupDocument> findById(UUID id) {
         return jdbc.sql("select " + DOC_COLUMNS + " from group_documents where id = :id").param("id", id)
-                .query(this::document).optional();
+                .query(this::mapDocument).optional();
     }
 
     public Optional<GroupDocument> lockDocument(UUID id) {
         return jdbc.sql("select " + DOC_COLUMNS + " from group_documents where id = :id for update").param("id", id)
-                .query(this::document).optional();
+                .query(this::mapDocument).optional();
     }
 
     public Optional<GroupDocument> findByGroupAndAssignment(UUID groupId, UUID assignmentId) {
         return jdbc.sql("select " + DOC_COLUMNS + " from group_documents where group_id = :groupId "
                         + "and assignment_id = :assignmentId")
-                .param("groupId", groupId).param("assignmentId", assignmentId).query(this::document).optional();
+                .param("groupId", groupId).param("assignmentId", assignmentId).query(this::mapDocument).optional();
     }
 
     public List<GroupDocument> listByAssignmentAndClass(UUID assignmentId, UUID classId) {
         return jdbc.sql("select " + DOC_COLUMNS + " from group_documents where assignment_id = :assignmentId "
                         + "and class_id = :classId order by created_at")
-                .param("assignmentId", assignmentId).param("classId", classId).query(this::document).list();
+                .param("assignmentId", assignmentId).param("classId", classId).query(this::mapDocument).list();
     }
 
     public List<GroupDocument> listByAssignment(UUID assignmentId) {
         return jdbc.sql("select " + DOC_COLUMNS + " from group_documents where assignment_id = :assignmentId")
-                .param("assignmentId", assignmentId).query(this::document).list();
+                .param("assignmentId", assignmentId).query(this::mapDocument).list();
     }
 
     public List<GroupDocument> listByGroup(UUID groupId) {
         return jdbc.sql("select " + DOC_COLUMNS + " from group_documents where group_id = :groupId order by created_at")
-                .param("groupId", groupId).query(this::document).list();
+                .param("groupId", groupId).query(this::mapDocument).list();
     }
 
     public List<GroupDocument> listByGroups(Collection<UUID> groupIds, Collection<UUID> assignmentIds) {
@@ -107,7 +107,7 @@ public class GroupDocumentRepository {
         }
         return jdbc.sql("select " + DOC_COLUMNS + " from group_documents where group_id in (:groups) "
                         + "and assignment_id in (:assignments)")
-                .param("groups", groupIds).param("assignments", assignmentIds).query(this::document).list();
+                .param("groups", groupIds).param("assignments", assignmentIds).query(this::mapDocument).list();
     }
 
     /** Tài liệu đang làm cần tự nộp: bài ngưng giao đã đánh dấu, hoặc các bài truyền vào (đã quá hạn). */
@@ -133,21 +133,21 @@ public class GroupDocumentRepository {
                 .param("assignmentId", assignmentId).update();
     }
 
-    public boolean update(GroupDocument d) {
+    public boolean updateDocument(GroupDocument d) {
         Map<String, Object> p = new HashMap<>();
         p.put("id", d.id());
         p.put("version", d.version());
         p.put("status", d.status().name());
         p.put("autoReason", d.autoSubmitReason() == null ? null : d.autoSubmitReason().name());
-        p.put("submitted", d.submittedDocument() == null ? null : write(d.submittedDocument()));
-        p.put("authors", write(d.sectionAuthors()));
+        p.put("submitted", d.submittedDocument() == null ? null : writeJson(d.submittedDocument()));
+        p.put("authors", writeJson(d.sectionAuthors()));
         p.put("submittedBy", d.submittedBy());
         p.put("mode", d.submitMode() == null ? null : d.submitMode().name());
-        p.put("submittedAt", ts(d.submittedAt()));
+        p.put("submittedAt", convertTimestamp(d.submittedAt()));
         p.put("late", d.late());
         p.put("hash", d.receiptHash());
-        p.put("warnings", write(d.warnings()));
-        p.put("lastChangedAt", ts(d.lastChangedAt() == null ? Instant.EPOCH : d.lastChangedAt()));
+        p.put("warnings", writeJson(d.warnings()));
+        p.put("lastChangedAt", convertTimestamp(d.lastChangedAt() == null ? Instant.EPOCH : d.lastChangedAt()));
         return jdbc.sql("update group_documents set status = :status, auto_submit_reason = :autoReason, "
                         + "submitted_document = cast(:submitted as jsonb), section_authors = cast(:authors as jsonb), "
                         + "submitted_by = :submittedBy, submit_mode = :mode, submitted_at = :submittedAt, late = :late, "
@@ -158,7 +158,7 @@ public class GroupDocumentRepository {
 
     public void touch(UUID documentId, Instant now) {
         jdbc.sql("update group_documents set last_changed_at = :now where id = :id").param("id", documentId)
-                .param("now", ts(now)).update();
+                .param("now", convertTimestamp(now)).update();
     }
 
     /** Nhóm có tài liệu có nội dung hoặc bản nộp thì không xóa được (BR-U12-05). */
@@ -177,26 +177,26 @@ public class GroupDocumentRepository {
                         + ":heading, cast(:ancestors as jsonb), :orderNo, :title, :status, 0) "
                         + "on conflict (group_document_id, part_id) do nothing")
                 .param("id", s.id()).param("documentId", s.documentId()).param("partId", s.partId())
-                .param("heading", s.headingBlockId()).param("ancestors", write(s.ancestorHeadingIds()))
+                .param("heading", s.headingBlockId()).param("ancestors", writeJson(s.ancestorHeadingIds()))
                 .param("orderNo", s.orderNo()).param("title", s.title()).param("status", s.status().name()).update();
     }
 
     public List<GroupSection> listSections(UUID documentId) {
         return jdbc.sql("select " + SECTION_COLUMNS + " from group_document_sections where group_document_id = :id "
                         + "order by order_no")
-                .param("id", documentId).query(this::section).list();
+                .param("id", documentId).query(this::mapSection).list();
     }
 
     public List<GroupSection> lockSections(UUID documentId) {
         return jdbc.sql("select " + SECTION_COLUMNS + " from group_document_sections where group_document_id = :id "
                         + "order by order_no for update")
-                .param("id", documentId).query(this::section).list();
+                .param("id", documentId).query(this::mapSection).list();
     }
 
     public Optional<GroupSection> lockSection(UUID documentId, UUID sectionId) {
         return jdbc.sql("select " + SECTION_COLUMNS + " from group_document_sections where id = :id "
                         + "and group_document_id = :documentId for update")
-                .param("id", sectionId).param("documentId", documentId).query(this::section).optional();
+                .param("id", sectionId).param("documentId", documentId).query(this::mapSection).optional();
     }
 
     /** Mục đang do một người giữ trong các tài liệu của nhóm (để nhả khi người đó rời nhóm). */
@@ -206,7 +206,7 @@ public class GroupDocumentRepository {
                         + "s.published_blocks::text as published, s.draft_blocks::text as draft, s.draft_saved_at, "
                         + "s.last_author_id, s.version from group_document_sections s join group_documents d "
                         + "on d.id = s.group_document_id where d.group_id = :groupId and s.claimed_by = :accountId for update of s")
-                .param("groupId", groupId).param("accountId", accountId).query(this::section).list();
+                .param("groupId", groupId).param("accountId", accountId).query(this::mapSection).list();
     }
 
     /** Ghi khi {@code version} khớp, tăng {@code version}; lệch trả {@code false}. */
@@ -216,11 +216,11 @@ public class GroupDocumentRepository {
         p.put("version", s.version());
         p.put("status", s.status().name());
         p.put("claimedBy", s.claimedBy());
-        p.put("claimedAt", ts(s.claimedAt()));
+        p.put("claimedAt", convertTimestamp(s.claimedAt()));
         p.put("assignedBy", s.assignedBy());
-        p.put("published", s.publishedBlocks() == null ? null : write(s.publishedBlocks()));
-        p.put("draft", s.draftBlocks() == null ? null : write(s.draftBlocks()));
-        p.put("draftSavedAt", ts(s.draftSavedAt()));
+        p.put("published", s.publishedBlocks() == null ? null : writeJson(s.publishedBlocks()));
+        p.put("draft", s.draftBlocks() == null ? null : writeJson(s.draftBlocks()));
+        p.put("draftSavedAt", convertTimestamp(s.draftSavedAt()));
         p.put("lastAuthor", s.lastAuthorId());
         return jdbc.sql("update group_document_sections set status = :status, claimed_by = :claimedBy, "
                         + "claimed_at = :claimedAt, assigned_by = :assignedBy, published_blocks = cast(:published as jsonb), "
@@ -234,7 +234,7 @@ public class GroupDocumentRepository {
         jdbc.sql("insert into group_document_revisions (id, section_id, author_id, blocks, created_at, kind) values "
                         + "(:id, :sectionId, :authorId, cast(:blocks as jsonb), :createdAt, :kind)")
                 .param("id", r.id()).param("sectionId", r.sectionId()).param("authorId", r.authorId())
-                .param("blocks", write(r.blocks())).param("createdAt", ts(r.createdAt())).param("kind", r.kind().name())
+                .param("blocks", writeJson(r.blocks())).param("createdAt", convertTimestamp(r.createdAt())).param("kind", r.kind().name())
                 .update();
     }
 
@@ -242,47 +242,47 @@ public class GroupDocumentRepository {
     public List<SectionRevision> listRevisions(UUID sectionId, int limit) {
         return jdbc.sql("select id, section_id, author_id, blocks::text as blocks, created_at, kind "
                         + "from group_document_revisions where section_id = :id order by created_at desc, id limit :limit")
-                .param("id", sectionId).param("limit", limit).query(this::revision).list();
+                .param("id", sectionId).param("limit", limit).query(this::mapRevision).list();
     }
 
     // ---- ánh xạ ----------------------------------------------------------------------------------------------
 
-    private GroupDocument document(ResultSet rs, int n) throws SQLException {
+    private GroupDocument mapDocument(ResultSet rs, int n) throws SQLException {
         String auto = rs.getString("auto_submit_reason");
         String mode = rs.getString("submit_mode");
         String submitted = rs.getString("submitted");
-        Instant lastChangedAt = instant(rs.getTimestamp("last_changed_at"));
+        Instant lastChangedAt = convertInstant(rs.getTimestamp("last_changed_at"));
         return new GroupDocument(rs.getObject("id", UUID.class), rs.getObject("group_id", UUID.class),
                 rs.getObject("assignment_id", UUID.class), rs.getObject("class_id", UUID.class),
-                GroupDocument.Status.valueOf(rs.getString("status")), read(rs.getString("shared"), DocumentModel.class),
+                GroupDocument.Status.valueOf(rs.getString("status")), readJson(rs.getString("shared"), DocumentModel.class),
                 rs.getBoolean("activity_monitoring"), auto == null ? null : GroupDocument.SubmitMode.valueOf(auto),
-                submitted == null ? null : read(submitted, DocumentModel.class), readList(rs.getString("authors"), AUTHORS),
+                submitted == null ? null : readJson(submitted, DocumentModel.class), readList(rs.getString("authors"), AUTHORS),
                 rs.getObject("submitted_by", UUID.class), mode == null ? null : GroupDocument.SubmitMode.valueOf(mode),
-                instant(rs.getTimestamp("submitted_at")), rs.getBoolean("late"), rs.getString("receipt_hash"),
+                convertInstant(rs.getTimestamp("submitted_at")), rs.getBoolean("late"), rs.getString("receipt_hash"),
                 readList(rs.getString("warnings"), STRINGS), Instant.EPOCH.equals(lastChangedAt) ? null : lastChangedAt,
-                rs.getLong("version"), instant(rs.getTimestamp("created_at")));
+                rs.getLong("version"), convertInstant(rs.getTimestamp("created_at")));
     }
 
-    private GroupSection section(ResultSet rs, int n) throws SQLException {
+    private GroupSection mapSection(ResultSet rs, int n) throws SQLException {
         String published = rs.getString("published");
         String draft = rs.getString("draft");
         return new GroupSection(rs.getObject("id", UUID.class), rs.getObject("group_document_id", UUID.class),
                 rs.getString("part_id"), rs.getObject("heading_block_id", UUID.class),
                 readList(rs.getString("ancestors"), IDS), rs.getInt("order_no"), rs.getString("title"),
                 GroupSection.Status.valueOf(rs.getString("status")), rs.getObject("claimed_by", UUID.class),
-                instant(rs.getTimestamp("claimed_at")), rs.getObject("assigned_by", UUID.class),
+                convertInstant(rs.getTimestamp("claimed_at")), rs.getObject("assigned_by", UUID.class),
                 published == null ? null : readList(published, BLOCKS), draft == null ? null : readList(draft, BLOCKS),
-                instant(rs.getTimestamp("draft_saved_at")), rs.getObject("last_author_id", UUID.class),
+                convertInstant(rs.getTimestamp("draft_saved_at")), rs.getObject("last_author_id", UUID.class),
                 rs.getLong("version"));
     }
 
-    private SectionRevision revision(ResultSet rs, int n) throws SQLException {
+    private SectionRevision mapRevision(ResultSet rs, int n) throws SQLException {
         return new SectionRevision(rs.getObject("id", UUID.class), rs.getObject("section_id", UUID.class),
                 rs.getObject("author_id", UUID.class), readList(rs.getString("blocks"), BLOCKS),
-                instant(rs.getTimestamp("created_at")), SectionRevision.Kind.valueOf(rs.getString("kind")));
+                convertInstant(rs.getTimestamp("created_at")), SectionRevision.Kind.valueOf(rs.getString("kind")));
     }
 
-    private String write(Object value) {
+    private String writeJson(Object value) {
         try {
             return json.writeValueAsString(value);
         } catch (JsonProcessingException e) {
@@ -290,7 +290,7 @@ public class GroupDocumentRepository {
         }
     }
 
-    private <T> T read(String value, Class<T> type) {
+    private <T> T readJson(String value, Class<T> type) {
         try {
             return json.readValue(value, type);
         } catch (JsonProcessingException e) {
@@ -306,11 +306,11 @@ public class GroupDocumentRepository {
         }
     }
 
-    private static Timestamp ts(Instant value) {
+    private static Timestamp convertTimestamp(Instant value) {
         return value == null ? null : Timestamp.from(value);
     }
 
-    private static Instant instant(Timestamp value) {
+    private static Instant convertInstant(Timestamp value) {
         return value == null ? null : value.toInstant();
     }
 }

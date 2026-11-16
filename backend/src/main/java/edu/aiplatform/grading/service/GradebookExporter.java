@@ -42,7 +42,7 @@ public class GradebookExporter {
         } else if ("xlsx".equals(format))
             writeXlsx(rows, output);
         else
-            throw ApiException.badRequest("INVALID_EXPORT_FORMAT", "Choose csv or xlsx");
+            throw ApiException.createBadRequest("INVALID_EXPORT_FORMAT", "Choose csv or xlsx");
     }
 
     /** Escapes CSV cell content and prefixes formula-like values to prevent spreadsheet execution. */

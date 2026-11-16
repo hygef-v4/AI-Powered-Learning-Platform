@@ -22,12 +22,12 @@ class AssignmentDraftValidatorTest {
                     .putArray("items").addObject().put("text", "Required answer").put("points", 1);
         }
         var result = AssignmentDraftValidator.validate(proposal, GradingMode.GRADED,
-                AssignmentDraftValidator.Options.legacy());
+                AssignmentDraftValidator.Options.createLegacyOptions());
         assertThat(result.path("status").asText()).isEqualTo("NEEDS_REVIEW");
         assertThat(issueCodes(result)).contains("AI_GRADING_RUBRIC_LIMIT");
         sections.remove(30);
         assertThat(AssignmentDraftValidator.validate(proposal, GradingMode.GRADED,
-                AssignmentDraftValidator.Options.legacy()).path("status").asText()).isEqualTo("VALID");
+                AssignmentDraftValidator.Options.createLegacyOptions()).path("status").asText()).isEqualTo("VALID");
     }
 
     @Test

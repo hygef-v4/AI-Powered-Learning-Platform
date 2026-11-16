@@ -122,7 +122,7 @@ class EvaluationVersionIntegrationTest {
                 attempt, assignment, course, account);
         var e = Evaluation.createPendingEvaluation(attempt, assignment, course, account, "hash",
                 BigDecimal.TEN, "[]", NOW);
-        return transactionTemplate.execute(status -> evaluationRepository.save(e));
+        return transactionTemplate.execute(status -> evaluationRepository.saveEvaluation(e));
     }
 
     Evaluation read(UUID id) {
@@ -164,7 +164,7 @@ class EvaluationVersionIntegrationTest {
         transactionTemplate.executeWithoutResult(status -> {
             var value = evaluationRepository.lockById(created.id).orElseThrow();
             value.feedback = "rolled back";
-            evaluationRepository.save(value);
+            evaluationRepository.saveEvaluation(value);
             status.setRollbackOnly();
         });
         assertThat(read(created.id).feedback).isNull();
@@ -185,7 +185,7 @@ class EvaluationVersionIntegrationTest {
                         ready.countDown();
                         await(start);
                         value.feedback = UUID.randomUUID().toString();
-                        evaluationRepository.save(value);
+                        evaluationRepository.saveEvaluation(value);
                         return true;
                     });
                 } catch (ApiException
@@ -297,7 +297,7 @@ class EvaluationVersionIntegrationTest {
         p.rubricFingerprint = created.rubricSnapshot;
         p.status = "PENDING";
         p.createdAt = NOW;
-        transactionTemplate.execute(status -> gradingProposalRepository.save(p));
+        transactionTemplate.execute(status -> gradingProposalRepository.saveProposal(p));
 
         assertThat(jdbc.queryForObject(
                 "select jsonb_typeof(proposal_document) from grading_proposals where id=?",
@@ -331,7 +331,7 @@ class EvaluationVersionIntegrationTest {
             match.status = "READY";
             match.proposal = payload;
             match.completedAt = NOW.plusSeconds(3);
-            return gradingProposalRepository.save(match);
+            return gradingProposalRepository.saveProposal(match);
         });
         assertThat(delivered.status).isEqualTo("READY");
         assertThat(delivered.taskId).isEqualTo(taskId);
@@ -346,8 +346,8 @@ class EvaluationVersionIntegrationTest {
         var first = proposal(created, 1);
         var second = proposal(created, 2);
         transactionTemplate.executeWithoutResult(status -> {
-            gradingProposalRepository.save(first);
-            gradingProposalRepository.save(second);
+            gradingProposalRepository.saveProposal(first);
+            gradingProposalRepository.saveProposal(second);
         });
         assertThat(gradingProposalRepository.findEvaluationId(first.id)).contains(created.id);
         assertThat(gradingProposalRepository.findByRequestRef(first.requestRef)).get()
@@ -359,7 +359,7 @@ class EvaluationVersionIntegrationTest {
         assertThat(gradingProposalRepository.findById(first.id).orElseThrow().status)
                 .isEqualTo("PENDING");
         transactionTemplate.executeWithoutResult(status -> {
-            gradingProposalRepository.save(snapshot);
+            gradingProposalRepository.saveProposal(snapshot);
             status.setRollbackOnly();
         });
         assertThat(gradingProposalRepository.findById(first.id).orElseThrow().status)
@@ -367,7 +367,7 @@ class EvaluationVersionIntegrationTest {
         var duplicate = proposal(created, 3);
         duplicate.requestRef = first.requestRef;
         assertThatThrownBy(() -> transactionTemplate
-                .executeWithoutResult(status -> gradingProposalRepository.save(duplicate)))
+                .executeWithoutResult(status -> gradingProposalRepository.saveProposal(duplicate)))
                 .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class);
     }
 
@@ -382,7 +382,7 @@ class EvaluationVersionIntegrationTest {
             assertThatThrownBy(() -> transactions.executeWithoutResult(status -> {
                 var value = repository.lockById(created.id).orElseThrow();
                 value.feedback = "must rollback with caller";
-                repository.save(value);
+                repository.saveEvaluation(value);
                 visibility.updateVisibility(value.classId, value.assignmentId, true, 0);
                 throw new IllegalStateException("caller/audit failure");
             })).hasMessageContaining("caller/audit failure");
@@ -435,13 +435,13 @@ class EvaluationVersionIntegrationTest {
     @Test
     void explicitNoOpSavesAdvanceVersionsButReadsDoNot() {
         var created = seed();
-        var saved = transactionTemplate.execute(status -> evaluationRepository.save(read(created.id)));
+        var saved = transactionTemplate.execute(status -> evaluationRepository.saveEvaluation(read(created.id)));
         assertThat(saved.version).isEqualTo(created.version + 1);
         assertThat(read(created.id).version).isEqualTo(saved.version);
         var pending = proposal(created, 1);
-        transactionTemplate.executeWithoutResult(status -> gradingProposalRepository.save(pending));
+        transactionTemplate.executeWithoutResult(status -> gradingProposalRepository.saveProposal(pending));
         transactionTemplate.executeWithoutResult(status ->
-                gradingProposalRepository.save(gradingProposalRepository.findById(pending.id).orElseThrow()));
+                gradingProposalRepository.saveProposal(gradingProposalRepository.findById(pending.id).orElseThrow()));
         assertThat(new JdbcTemplate(context.getBean(DataSource.class)).queryForObject(
                 "select version from grading_proposals where id=?", Long.class, pending.id)).isEqualTo(1);
         gradingProposalRepository.findById(pending.id);
@@ -478,7 +478,7 @@ class EvaluationVersionIntegrationTest {
             e.structuredFeedback = structured;
             e.reviewedItemScores = Map.of(rubricId, Map.of(itemId, BigDecimal.TEN));
             e.acknowledgedReviewItems = Map.of(rubricId, Set.of(itemId));
-            return evaluationRepository.save(e);
+            return evaluationRepository.saveEvaluation(e);
         });
         assertThat(saved.version).isEqualTo(created.version + 1);
         var reloaded = read(saved.id);
@@ -491,7 +491,7 @@ class EvaluationVersionIntegrationTest {
             var e = evaluationRepository.lockById(saved.id).orElseThrow();
             e.checkVersion(saved.version);
             e.finalizeGrade(UUID.randomUUID(), NOW);
-            return evaluationRepository.save(e);
+            return evaluationRepository.saveEvaluation(e);
         });
         assertThat(finalized.version).isEqualTo(saved.version + 1);
         assertThat(read(finalized.id).version).isEqualTo(finalized.version);
@@ -499,12 +499,12 @@ class EvaluationVersionIntegrationTest {
             var e = evaluationRepository.lockById(finalized.id).orElseThrow();
             e.checkVersion(finalized.version);
             e.publishGrade(UUID.randomUUID(), NOW);
-            return evaluationRepository.save(e);
+            return evaluationRepository.saveEvaluation(e);
         });
         assertThat(published.version).isEqualTo(finalized.version + 1);
         assertThat(read(published.id).version).isEqualTo(published.version);
         assertThatThrownBy(
-                () -> transactionTemplate.execute(status -> evaluationRepository.save(saved)))
+                () -> transactionTemplate.execute(status -> evaluationRepository.saveEvaluation(saved)))
                 .isInstanceOf(ApiException.class).extracting("code")
                 .isEqualTo("GRADE_VERSION_CONFLICT");
         assertThat(read(published.id).state.name()).isEqualTo("PUBLISHED");
@@ -515,7 +515,7 @@ class EvaluationVersionIntegrationTest {
                     UUID.randomUUID(), NOW.plusSeconds(30));
             e.rubricItemScores = Map.of(rubricId, Map.of(itemId, new BigDecimal("5")));
             e.reviewedItemScores = e.rubricItemScores;
-            return evaluationRepository.save(e);
+            return evaluationRepository.saveEvaluation(e);
         });
         var visible = read(corrected.id);
         assertThat(visible.state.name()).isEqualTo("PUBLISHED");

@@ -76,15 +76,15 @@ public class QuizPaperService {
             throw new RuleViolationException(HttpStatus.BAD_REQUEST, "QUIZ_INVALID", "Quy tắc sinh đề chưa hợp lệ", violations);
         }
         quizzes.replaceDrawRules(id, rules);
-        return support.detail(support.save(quiz.withPaperMode(mode, clock.instant())), true);
+        return support.buildDetail(support.saveQuiz(quiz.changePaperMode(mode, clock.instant())), true);
     }
 
     @Transactional(readOnly = true)
-    public List<BankTag> bankTags(Actor actor, UUID id) {
+    public List<BankTag> listBankTags(Actor actor, UUID id) {
         Quiz quiz = support.loadManaged(actor, id);
         Map<String, String> display = new LinkedHashMap<>();
         Map<String, Map<Difficulty, Integer>> counts = new LinkedHashMap<>();
-        for (PoolEntry entry : questions.activePool(quiz.subjectId())) {
+        for (PoolEntry entry : questions.listActivePool(quiz.subjectId())) {
             for (String tag : entry.tags()) {
                 String key = tag.strip().toLowerCase(Locale.ROOT);
                 display.putIfAbsent(key, tag.strip());
@@ -102,7 +102,7 @@ public class QuizPaperService {
     public PaperPreview preview(Actor actor, UUID id) {
         Quiz quiz = support.loadManaged(actor, id);
         List<DrawRule> rules = quizzes.drawRules(id);
-        QuizPaperPlanner.Plan plan = QuizPaperPlanner.plan(rules, questions.activePool(quiz.subjectId()), Set.of(),
+        QuizPaperPlanner.Plan plan = QuizPaperPlanner.plan(rules, questions.listActivePool(quiz.subjectId()), Set.of(),
                 SEEDS.nextLong());
         Map<UUID, Question> byId = questions.findAll(plan.picks().values().stream().flatMap(List::stream)
                         .map(PoolEntry::id).toList()).stream()
@@ -110,22 +110,22 @@ public class QuizPaperService {
         List<PaperPreviewItem> items = new ArrayList<>();
         for (DrawRule rule : rules) {
             for (PoolEntry entry : plan.picks().get(rule.position())) {
-                items.add(new PaperPreviewItem(rule.position(), rule.pointsEach(), QuestionView.of(byId.get(entry.id()))));
+                items.add(new PaperPreviewItem(rule.position(), rule.pointsEach(), QuestionView.createQuestionView(byId.get(entry.id()))));
             }
         }
-        return new PaperPreview(items, QuizSupport.maxScoreOf(rules), shortages(rules, plan));
+        return new PaperPreview(items, QuizSupport.sumMaxScore(rules), listShortages(rules, plan));
     }
 
     /** Điều kiện phát hành Quiz sinh đề: có quy tắc hợp lệ và kho đủ câu cho mọi quy tắc. */
-    List<Violation> violationsOf(Quiz quiz) {
+    List<Violation> listViolations(Quiz quiz) {
         List<DrawRule> rules = quizzes.drawRules(quiz.id());
         if (rules.isEmpty()) {
             return List.of(new Violation("drawRules", "RULE_COUNT", "Quiz sinh đề cần ít nhất 1 quy tắc"));
         }
         List<Violation> violations = new ArrayList<>(QuizRules.validateDrawRules(rules));
-        QuizPaperPlanner.Plan plan = QuizPaperPlanner.plan(rules, questions.activePool(quiz.subjectId()), Set.of(), 0L);
-        for (RuleShortage s : shortages(rules, plan)) {
-            violations.add(new Violation("drawRules[" + s.position() + "]", "POOL_INSUFFICIENT", shortageText(s)));
+        QuizPaperPlanner.Plan plan = QuizPaperPlanner.plan(rules, questions.listActivePool(quiz.subjectId()), Set.of(), 0L);
+        for (RuleShortage s : listShortages(rules, plan)) {
+            violations.add(new Violation("drawRules[" + s.position() + "]", "POOL_INSUFFICIENT", describeShortage(s)));
         }
         return List.copyOf(violations);
     }
@@ -135,10 +135,10 @@ public class QuizPaperService {
         List<DrawRule> rules = quizzes.drawRules(quiz.id());
         Set<UUID> seenLineages = questions.findAll(seenQuestionIds).stream().map(Question::lineageId)
                 .collect(Collectors.toCollection(HashSet::new));
-        QuizPaperPlanner.Plan plan = QuizPaperPlanner.plan(rules, questions.activePool(quiz.subjectId()), seenLineages, seed);
-        List<RuleShortage> shortages = shortages(rules, plan);
+        QuizPaperPlanner.Plan plan = QuizPaperPlanner.plan(rules, questions.listActivePool(quiz.subjectId()), seenLineages, seed);
+        List<RuleShortage> shortages = listShortages(rules, plan);
         if (rules.isEmpty() || !shortages.isEmpty()) {
-            throw ApiException.conflict("QUIZ_POOL_INSUFFICIENT",
+            throw ApiException.createConflict("QUIZ_POOL_INSUFFICIENT",
                     "Ngân hàng câu hỏi hiện không đủ câu để tạo đề; hãy báo giảng viên");
         }
         Map<UUID, BigDecimal> paper = new LinkedHashMap<>();
@@ -150,22 +150,22 @@ public class QuizPaperService {
 
     /** Tên các Quiz sinh đề đang mở của môn không còn đủ câu (cảnh báo khi ngưng câu, BR-U10-17). */
     List<String> openQuizzesShortOfQuestions(UUID subjectId) {
-        List<PoolEntry> pool = questions.activePool(subjectId);
+        List<PoolEntry> pool = questions.listActivePool(subjectId);
         return quizzes.listOpenGenerated(subjectId).stream()
                 .filter(quiz -> {
                     List<DrawRule> rules = quizzes.drawRules(quiz.id());
-                    return !shortages(rules, QuizPaperPlanner.plan(rules, pool, Set.of(), 0L)).isEmpty();
+                    return !listShortages(rules, QuizPaperPlanner.plan(rules, pool, Set.of(), 0L)).isEmpty();
                 })
                 .map(Quiz::title).toList();
     }
 
-    private static List<RuleShortage> shortages(List<DrawRule> rules, QuizPaperPlanner.Plan plan) {
-        return rules.stream().filter(r -> plan.picked(r.position()) < r.questionCount())
-                .map(r -> new RuleShortage(r.position(), r.tag(), r.difficulty(), r.questionCount(), plan.picked(r.position())))
+    private static List<RuleShortage> listShortages(List<DrawRule> rules, QuizPaperPlanner.Plan plan) {
+        return rules.stream().filter(r -> plan.readPicked(r.position()) < r.questionCount())
+                .map(r -> new RuleShortage(r.position(), r.tag(), r.difficulty(), r.questionCount(), plan.readPicked(r.position())))
                 .toList();
     }
 
-    private static String shortageText(RuleShortage s) {
+    private static String describeShortage(RuleShortage s) {
         return "Quy tắc " + s.position() + " (thẻ \"" + s.tag() + "\"): cần " + s.required() + " câu, kho chỉ cấp được "
                 + s.available() + " câu";
     }

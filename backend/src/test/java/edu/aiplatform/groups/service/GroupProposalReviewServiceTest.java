@@ -193,7 +193,7 @@ class GroupProposalReviewServiceTest {
 
     private GroupProposal submitted(String name, int... memberIndexes) {
         GroupProposal proposal = GroupProposal.draft(UUID.randomUUID(), classId, name,
-                students.get(memberIndexes[0]), NOW).submitted(NOW);
+                students.get(memberIndexes[0]), NOW).markSubmitted(NOW);
         when(proposals.lockProposal(proposal.id())).thenReturn(Optional.of(proposal));
         List<ProposalMember> rows = IntStream.of(memberIndexes).mapToObj(i -> new ProposalMember(proposal.id(), classId,
                 students.get(i), ProposalMember.Status.ACCEPTED, true, null, NOW, null)).toList();
@@ -208,6 +208,6 @@ class GroupProposalReviewServiceTest {
 
     private static void assertCode(Runnable call, String code) {
         assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class,
-                e -> assertThat(e.code()).isEqualTo(code));
+                e -> assertThat(e.readCode()).isEqualTo(code));
     }
 }

@@ -23,9 +23,9 @@ public class SubjectExceptionHandler {
     @ExceptionHandler(ApiException.class)
     public ProblemDetail handleApiException(ApiException failure) {
         ProblemDetail result =
-                createProblem(failure.status(), failure.code(), failure.getMessage());
+                createProblem(failure.readStatus(), failure.readCode(), failure.getMessage());
         if (failure instanceof SubjectRequests.InvalidRequest invalid)
-            result.setProperty("fieldErrors", invalid.fieldErrors());
+            result.setProperty("fieldErrors", invalid.listFieldErrors());
         return result;
     }
 

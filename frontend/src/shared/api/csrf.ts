@@ -1,7 +1,7 @@
 /** Same-origin mutation transports share the cookie/header contract issued by U01. */
 export const CSRF_HEADER = "X-XSRF-TOKEN";
 
-export function csrfToken(): string | undefined {
+export function readCsrfToken(): string | undefined {
   if (typeof document === "undefined") return undefined;
   const cookie = document.cookie.split(";").map((part) => part.trim()).find((part) => part.startsWith("XSRF-TOKEN="));
   if (!cookie) return undefined;

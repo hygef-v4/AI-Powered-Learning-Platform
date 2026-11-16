@@ -3,7 +3,7 @@ import { ApiError } from "@/shared/api/client";
 import { formatDate, formatOperationError } from "@/features/academics/model/format";
 
 it("uses the Vietnam calendar date and keeps the invalid-date fallback", () => {
-  expect(formatDate("2026-11-04T18:00:00Z")).toBe("5/11/2026");
+  expect(formatDate("2026-11-04T18:00:00Z")).toBe("05/11/2026");
   expect(formatDate("bad-date")).toBe("—");
 });
 

@@ -37,7 +37,7 @@ class GroupAutoSubmitScannerTest {
         scanner.scan(NOW);
 
         verify(documents).listDueForAutoSubmit(List.of());
-        verify(submissions, never()).autoSubmit(any());
+        verify(submissions, never()).submitAutomatically(any());
     }
 
     @Test
@@ -48,7 +48,7 @@ class GroupAutoSubmitScannerTest {
 
         scanner.scan(NOW);
 
-        verify(submissions).autoSubmit(documentId);
+        verify(submissions).submitAutomatically(documentId);
     }
 
     @Test
@@ -60,6 +60,6 @@ class GroupAutoSubmitScannerTest {
 
         scanner.scan(NOW);
 
-        verify(submissions, never()).autoSubmit(any());
+        verify(submissions, never()).submitAutomatically(any());
     }
 }

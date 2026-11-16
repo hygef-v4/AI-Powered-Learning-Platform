@@ -51,7 +51,7 @@ public class GradingBatchService {
                         new ItemResult(item.evaluationId(), "SUCCESS", null, evaluation.version));
             } catch (ApiException ex) {
                 // Individual item failure does not roll back other items in the batch
-                outcomes.add(new ItemResult(item.evaluationId(), "FAILED", ex.code(), null));
+                outcomes.add(new ItemResult(item.evaluationId(), "FAILED", ex.readCode(), null));
             } catch (RuntimeException ex) {
                 outcomes.add(new ItemResult(item.evaluationId(), "FAILED", "GRADING_WRITE_FAILED",
                         null));

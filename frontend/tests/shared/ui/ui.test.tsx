@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { Dialog } from "@/shared/ui/Dialog";
-import { ChipToggleGroup, Segmented, Switch } from "@/shared/ui/inputs";
+import { ChipToggleGroup, Segmented, Switch } from "@/shared/ui/Inputs";
 import { Menu, MenuItem } from "@/shared/ui/Menu";
 import { TableSkeletonRows } from "@/shared/ui/Skeleton";
 import { TableFrame, Td } from "@/shared/ui/Table";

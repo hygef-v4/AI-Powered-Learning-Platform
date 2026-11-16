@@ -58,7 +58,7 @@ class PracticeFeedbackServiceTest {
         try {
             action.run();
         } catch (ApiException e) {
-            return e.code();
+            return e.readCode();
         }
         throw new AssertionError("Cần lỗi nghiệp vụ");
     }
@@ -66,7 +66,7 @@ class PracticeFeedbackServiceTest {
     private PracticeFeedback pending(AssignmentAttempt a, String hash) {
         PracticeFeedback p = new PracticeFeedback(UUID.randomUUID(), a.id(), a.accountId(), PracticeFeedback.Origin.AI_TASK,
                 null, "r", PracticeFeedback.Status.PENDING, hash, null, JsonNodeFactory.instance.objectNode(), null, NOW, null);
-        when(f.feedback.find(p.id())).thenReturn(Optional.of(p));
+        when(f.feedback.findFeedback(p.id())).thenReturn(Optional.of(p));
         return p;
     }
 
@@ -101,7 +101,7 @@ class PracticeFeedbackServiceTest {
     void missingPersonalKeyIsNotSentAndLeavesNoFailedFeedback() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         when(f.feedback.findByRequest(anyString())).thenReturn(Optional.empty());
-        doThrow(ApiException.badRequest("AI_PERSONAL_NOT_CONFIGURED", "Bạn chưa lưu khóa API cho nhà cung cấp này"))
+        doThrow(ApiException.createBadRequest("AI_PERSONAL_NOT_CONFIGURED", "Bạn chưa lưu khóa API cho nhà cung cấp này"))
                 .when(f.aiTasks).requireSource(f.student, AiSource.PERSONAL, AiProvider.GEMINI);
         assertThat(code(() -> f.feedbackService.request(f.student, a.id(), AiProvider.GEMINI, "r1")))
                 .isEqualTo("AI_PERSONAL_NOT_CONFIGURED");
@@ -114,10 +114,10 @@ class PracticeFeedbackServiceTest {
     void otherAiErrorKeepsFailedFeedback() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         when(f.feedback.findByRequest(anyString())).thenReturn(Optional.empty());
-        when(f.feedback.find(any())).thenAnswer(i -> Optional.of(new PracticeFeedback(i.getArgument(0), a.id(),
+        when(f.feedback.findFeedback(any())).thenAnswer(i -> Optional.of(new PracticeFeedback(i.getArgument(0), a.id(),
                 a.accountId(), PracticeFeedback.Origin.AI_TASK, null, "r1", PracticeFeedback.Status.FAILED, null, null,
                 JsonNodeFactory.instance.objectNode(), "Hết hạn mức", NOW, NOW)));
-        when(f.aiTasks.submit(any())).thenThrow(ApiException.badRequest("AI_QUOTA_EXCEEDED", "Hết hạn mức"));
+        when(f.aiTasks.submit(any())).thenThrow(ApiException.createBadRequest("AI_QUOTA_EXCEEDED", "Hết hạn mức"));
         f.feedbackService.request(f.student, a.id(), AiProvider.GEMINI, "r1");
         verify(f.feedback).insert(any());
         verify(f.feedback).markFailed(any(), eq("Hết hạn mức"), any());
@@ -127,10 +127,10 @@ class PracticeFeedbackServiceTest {
     void resultWithOtherHashIsStaleAndBadFormatIsRejected() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         PracticeFeedback old = pending(a, "hash-cũ");
-        assertThat(f.feedbackService.onReady(result(old, OUTPUT))).isEqualTo(ApplyOutcome.STALE);
+        assertThat(f.feedbackService.handleReadyResult(result(old, OUTPUT))).isEqualTo(ApplyOutcome.STALE);
         verify(f.feedback).markFailed(eq(old.id()), anyString(), any());
         PracticeFeedback current = pending(a, a.receiptHash());
-        assertThat(f.feedbackService.onReady(result(current, "{\"summary\":1}"))).isEqualTo(ApplyOutcome.REJECTED);
+        assertThat(f.feedbackService.handleReadyResult(result(current, "{\"summary\":1}"))).isEqualTo(ApplyOutcome.REJECTED);
     }
 
     @Test
@@ -138,7 +138,7 @@ class PracticeFeedbackServiceTest {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         PracticeFeedback p = pending(a, a.receiptHash());
         when(f.feedback.markReady(eq(p.id()), any(), any(), any())).thenReturn(1);
-        assertThat(f.feedbackService.onReady(result(p, OUTPUT))).isEqualTo(ApplyOutcome.APPLIED);
+        assertThat(f.feedbackService.handleReadyResult(result(p, OUTPUT))).isEqualTo(ApplyOutcome.APPLIED);
         verify(f.feedback).markReady(eq(p.id()), argThat((JsonNode body) -> FeedbackFormat.LABEL.equals(body.path("label").asText())
                 && body.path("parts").get(0).path("comment").asText().equals("Ổn")
                 && !body.has("rubric") && !body.has("estimatedTotal")), any(), any());

@@ -4,15 +4,16 @@ import { useEffect, useId, useState } from "react";
 import { Alert, Button, DateInput, Dialog, Field, Switch, TextInput } from "@/shared/ui";
 import { getFormation, updateFormation } from "../api";
 import {
-  fromLocalInput,
+  convertFromLocalInput,
   MAX_GROUP_SIZE,
   MIN_GROUP_SIZE,
-  proposalErrorText,
-  toLocalInput,
+  describeProposalError,
+  convertToLocalInput,
   validateFormation,
   type FormationErrors,
 } from "../model/proposals";
 import type { FormationView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /**
  * Popup cài đặt đợt sinh viên tự chia nhóm (US-GRP-007, BR-U12-70): bật/tắt, sĩ số tối thiểu và tối đa (2–20), hạn chót tùy
@@ -43,15 +44,15 @@ export function SelfGroupingSettingsDialog({ classId, onClose, onSaved }: {
       setEnabled(view.enabled);
       setMinSize(String(view.minSize));
       setMaxSize(String(view.maxSize));
-      const local = toLocalInput(view.deadline);
+      const local = convertToLocalInput(view.deadline);
       setDeadlineDate(local.slice(0, 10));
       setDeadlineTime(local.slice(11, 16) || "00:00");
       setDateValid(true);
-    }, (e) => { if (active) setError(proposalErrorText(e, "Không tải được cài đặt.")); });
+    }, (e) => { if (active) setError(describeProposalError(e, msg("groups.components.SelfGroupingSettingsDialog.couldNotLoadTheSettings"))); });
     return () => { active = false; };
   }, [classId]);
 
-  const save = async () => {
+  const saveSettings = async () => {
     if (!loaded || !dateValid) return;
     const deadline = deadlineDate ? `${deadlineDate}T${deadlineTime || "00:00"}` : "";
     const checked = validateFormation({ enabled, minSize, maxSize, deadline });
@@ -61,50 +62,49 @@ export function SelfGroupingSettingsDialog({ classId, onClose, onSaved }: {
     setError(null);
     try {
       const saved = await updateFormation(classId, {
-        enabled, minSize: Number(minSize), maxSize: Number(maxSize), deadline: fromLocalInput(deadline), version: loaded.version,
+        enabled, minSize: Number(minSize), maxSize: Number(maxSize), deadline: convertFromLocalInput(deadline), version: loaded.version,
       });
       onSaved(saved);
     } catch (e) {
-      setError(proposalErrorText(e, "Không lưu được cài đặt."));
+      setError(describeProposalError(e, msg("groups.components.SelfGroupingSettingsDialog.couldNotSaveTheSettings")));
       setBusy(false);
     }
   };
 
   return (
-    <Dialog open title="Sinh viên tự chia nhóm" onClose={onClose} dismissible={!busy}
-      footer={<Button variant="primary" disabled={busy || !loaded || !dateValid} onClick={() => void save()} data-testid="formation-save">Lưu</Button>}>
+    <Dialog open title={msg("groups.components.SelfGroupingSettingsDialog.studentSelfGrouping")} onClose={onClose} dismissible={!busy}
+      footer={<Button variant="primary" disabled={busy || !loaded || !dateValid} onClick={() => void saveSettings()} data-testid="formation-save">{msg("groups.components.SelfGroupingSettingsDialog.save")}</Button>}>
       {!loaded && !error ? (
-        <p role="status" className="text-[13px] text-muted">Đang tải cài đặt…</p>
+        <p role="status" className="text-[13px] text-muted">{msg("groups.components.SelfGroupingSettingsDialog.loadingSettings")}</p>
       ) : (
-        <form className="flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); void save(); }}>
-          <Switch checked={enabled} onChange={setEnabled} label="Cho sinh viên tự chia nhóm" disabled={busy || !loaded} />
+        <form className="flex flex-col gap-4" onSubmit={(event) => { event.preventDefault(); void saveSettings(); }}>
+          <Switch checked={enabled} onChange={setEnabled} label={msg("groups.components.SelfGroupingSettingsDialog.letStudentsFormTheirOwn")} disabled={busy || !loaded} />
           <p className="text-[13px] text-muted">
-            Sinh viên chưa có nhóm tự lập đề xuất và mời bạn; bạn duyệt thì đề xuất thành nhóm chính thức.
-          </p>
+            {msg("groups.components.SelfGroupingSettingsDialog.studentsWithoutAGroupCreate")}</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Sĩ số tối thiểu" htmlFor={`${fieldId}-min`} required error={errors.minSize}>
+            <Field label={msg("groups.components.SelfGroupingSettingsDialog.minimumSize")} htmlFor={`${fieldId}-min`} required error={errors.minSize}>
               <TextInput id={`${fieldId}-min`} type="number" inputMode="numeric" min={MIN_GROUP_SIZE} max={MAX_GROUP_SIZE}
                 value={minSize} invalid={!!errors.minSize} disabled={busy}
                 onChange={(event) => { setMinSize(event.target.value); setErrors({}); }} data-testid="formation-min" />
             </Field>
-            <Field label="Sĩ số tối đa" htmlFor={`${fieldId}-max`} required error={errors.maxSize}>
+            <Field label={msg("groups.components.SelfGroupingSettingsDialog.maximumSize")} htmlFor={`${fieldId}-max`} required error={errors.maxSize}>
               <TextInput id={`${fieldId}-max`} type="number" inputMode="numeric" min={MIN_GROUP_SIZE} max={MAX_GROUP_SIZE}
                 value={maxSize} invalid={!!errors.maxSize} disabled={busy}
                 onChange={(event) => { setMaxSize(event.target.value); setErrors({}); }} data-testid="formation-max" />
             </Field>
           </div>
-          <Field label="Hạn chót (tùy chọn, giờ Việt Nam)" htmlFor={`${fieldId}-deadline`} error={errors.deadline}>
+          <Field label={msg("groups.components.SelfGroupingSettingsDialog.deadlineOptionalVietnamTime")} htmlFor={`${fieldId}-deadline`} error={errors.deadline}>
             <div className="flex gap-2">
               <DateInput id={`${fieldId}-deadline`} value={deadlineDate} invalid={!!errors.deadline}
                 disabled={busy} wrapperClassName="flex-1" onValidityChange={setDateValid}
                 onChange={(date) => { setDeadlineDate(date); setErrors({}); }} data-testid="formation-deadline" />
-              <TextInput type="time" aria-label="Hạn chót (giờ)" value={deadlineTime}
+              <TextInput type="time" aria-label={msg("groups.components.SelfGroupingSettingsDialog.deadlineTime")} value={deadlineTime}
                 disabled={busy} wrapperClassName="w-28"
                 onChange={(event) => { setDeadlineTime(event.target.value); setErrors({}); }}
                 data-testid="formation-deadline-time" />
             </div>
           </Field>
-          <p className="text-xs text-muted">Đề xuất đang chờ duyệt vẫn duyệt được sau khi đóng đợt.</p>
+          <p className="text-xs text-muted">{msg("groups.components.SelfGroupingSettingsDialog.proposalsAwaitingApprovalCanStill")}</p>
         </form>
       )}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}

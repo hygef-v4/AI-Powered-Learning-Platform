@@ -214,8 +214,8 @@ class JobDispatcherTest {
 
     @Test
     void safeErrorHasNoStackTraceAndIsShort() {
-        assertThat(JobDispatcher.safe(new RuntimeException("x".repeat(500)))).hasSizeLessThan(230);
-        assertThat(JobDispatcher.safe(new java.util.concurrent.TimeoutException())).isEqualTo("Quá thời gian xử lý");
+        assertThat(JobDispatcher.describeSafely(new RuntimeException("x".repeat(500)))).hasSizeLessThan(230);
+        assertThat(JobDispatcher.describeSafely(new java.util.concurrent.TimeoutException())).isEqualTo("Quá thời gian xử lý");
         verify(sender, never()).sendJob(any());
         verify(sender, never()).sendEvent(any());
     }

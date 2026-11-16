@@ -69,7 +69,7 @@ class GroupDocImportServiceTest {
     private final GroupDocImportService imports = new GroupDocImportService(documents, access, assignments, docx);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", leader.accountId(), null, NOW,
             NOW, List.of(leader.accountId(), member.accountId()));
-    private final GroupDocument document = GroupDocument.create(UUID.randomUUID(), group.id(), assignmentId, classId,
+    private final GroupDocument document = GroupDocument.createDocument(UUID.randomUUID(), group.id(), assignmentId, classId,
             new DocumentModel(List.of()), false, NOW);
     private final GroupSection design = new GroupSection(UUID.randomUUID(), document.id(), "p2", null, List.of(), 2,
             "2. Sơ đồ lớp", Status.CLAIMED, member.accountId(), NOW, null, null, null, null, null, 3);
@@ -105,7 +105,7 @@ class GroupDocImportServiceTest {
     @Test
     void onlyTheHolderMayImportIntoTheSection() {
         assertThatThrownBy(() -> imports.previewSection(leader, document.id(), design.id(), new byte[] {1}))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("SECTION_NOT_HELD"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("SECTION_NOT_HELD"));
     }
 
     private static DocumentBlock heading(String text) {

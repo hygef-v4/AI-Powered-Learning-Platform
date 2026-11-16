@@ -1,9 +1,10 @@
 "use client";
 import { useState } from "react";
-import { IconButton, Pill } from "@/shared/ui";
+import { Card, IconButton, Pill } from "@/shared/ui";
 import { AnnouncementMarkdown } from "./AnnouncementMarkdown";
 import { AnnouncementEditorDialog, DeleteAnnouncementDialog } from "./AnnouncementDialogs";
 import type { Announcement } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /**
  * Danh sách thông báo trong một thẻ, ngăn nhau bằng đường kẻ. Mỗi thông báo: (mã lớp khi xem nhiều lớp), tiêu đề và nhãn Quan
@@ -21,12 +22,9 @@ export function AnnouncementFeed({
   const [editing, setEditing] = useState<Announcement | null>(null);
   const [deleting, setDeleting] = useState<Announcement | null>(null);
   return (
-    <section
-      aria-label="Danh sách thông báo"
-      className="overflow-hidden rounded-xl border border-line bg-surface"
-    >
+    <Card as="section" padding="none" className="overflow-hidden" aria-label={msg("announcements.components.AnnouncementFeed.announcementList")}>
       {!items.length && (
-        <p className="px-6 py-12 text-center text-[13.5px] text-muted">Chưa có thông báo.</p>
+        <p className="px-6 py-12 text-center text-[13.5px] text-muted">{msg("announcements.components.AnnouncementFeed.noAnnouncementsYet")}</p>
       )}
       {items.map((item) => (
         <article
@@ -47,19 +45,19 @@ export function AnnouncementFeed({
               <h2 className="min-w-0 text-[15.5px] font-bold text-ink [overflow-wrap:anywhere]">
                 {item.title}
               </h2>
-              {item.important && <Pill tone="warning">Quan trọng</Pill>}
+              {item.important && <Pill tone="warning">{msg("announcements.components.AnnouncementFeed.important")}</Pill>}
             </div>
             {item.canManage && (
               <div className="-mt-1 -mr-2 flex shrink-0 items-center">
                 <IconButton
                   icon="edit"
-                  label={`Sửa ${item.title}`}
+                  label={msg("announcements.components.AnnouncementFeed.edit", { title: String(item.title) })}
                   onClick={() => setEditing(item)}
                   data-testid={`announcement-edit-${item.id}`}
                 />
                 <IconButton
                   icon="trash"
-                  label={`Xóa ${item.title}`}
+                  label={msg("announcements.components.AnnouncementFeed.delete", { title: String(item.title) })}
                   className="text-danger! hover:bg-danger-soft"
                   onClick={() => setDeleting(item)}
                   data-testid={`announcement-delete-${item.id}`}
@@ -93,6 +91,6 @@ export function AnnouncementFeed({
           onSaved={onChanged}
         />
       )}
-    </section>
+    </Card>
   );
 }

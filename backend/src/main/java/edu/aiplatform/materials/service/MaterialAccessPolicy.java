@@ -41,7 +41,7 @@ public class MaterialAccessPolicy {
         } catch (ApiException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw ApiException.unavailable(
+            throw ApiException.createUnavailable(
                     "MATERIAL_DEPENDENCY_UNAVAILABLE",
                     "Không kiểm được quyền học liệu, vui lòng thử lại");
         }
@@ -51,7 +51,7 @@ public class MaterialAccessPolicy {
         if (actor == null || actor.accountId() == null || actor.role() == null) return false;
         var decision = callDependency(() -> authorization.authorize(actor, action, ref));
         if (decision == null || "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))
-            throw ApiException.unavailable(
+            throw ApiException.createUnavailable(
                     "MATERIAL_AUTH_UNAVAILABLE",
                     "Không kiểm được quyền học liệu, vui lòng thử lại");
         return decision.allowed();
@@ -59,12 +59,12 @@ public class MaterialAccessPolicy {
 
     public SubjectRef requireSubject(UUID id) {
         return callDependency(() -> subjectQuery.getSubject(id))
-                .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
     }
 
     public ClassRef requireClass(UUID id) {
         return callDependency(() -> classAccess.getClassRef(id))
-                .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
     }
 
     private boolean isSubjectManager(Actor actor, UUID id) {
@@ -77,7 +77,7 @@ public class MaterialAccessPolicy {
     public void requireModuleManagement(Actor actor, UUID subjectId) {
         if (!isSubjectManager(actor, subjectId)) denyAccess(actor, subjectId);
         if (requireSubject(subjectId).status() != SubjectStatus.ACTIVE)
-            throw ApiException.conflict(
+            throw ApiException.createConflict(
                     "MATERIAL_SCOPE_READ_ONLY", "Môn đã lưu trữ, học liệu chỉ đọc");
     }
 
@@ -145,10 +145,10 @@ public class MaterialAccessPolicy {
         if (requireSubject(material.subjectId()).status() != SubjectStatus.ACTIVE
                 || (material.classId() != null
                         && requireClass(material.classId()).status() == ClassStatus.ARCHIVED))
-            throw ApiException.conflict(
+            throw ApiException.createConflict(
                     "MATERIAL_SCOPE_READ_ONLY", "Môn hoặc lớp đã lưu trữ, học liệu chỉ đọc");
         if (material.status() != Material.Status.ACTIVE)
-            throw ApiException.conflict("MATERIAL_ARCHIVED", "Học liệu đã được lưu trữ");
+            throw ApiException.createConflict("MATERIAL_ARCHIVED", "Học liệu đã được lưu trữ");
     }
 
     public void requireReadAccess(Actor actor, Material material, UUID classId) {
@@ -208,6 +208,6 @@ public class MaterialAccessPolicy {
                         "OUT_OF_SCOPE",
                         Map.of(),
                         clock.instant()));
-        throw ApiException.notFound("MATERIAL_NOT_FOUND");
+        throw ApiException.createNotFound("MATERIAL_NOT_FOUND");
     }
 }

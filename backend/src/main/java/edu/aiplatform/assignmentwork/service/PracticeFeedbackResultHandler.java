@@ -10,10 +10,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class PracticeFeedbackResultHandler implements IAiTaskResultHandler {
 
-    private final PracticeFeedbackService feedback;
+    private final PracticeFeedbackService practiceFeedbackService;
 
-    public PracticeFeedbackResultHandler(PracticeFeedbackService feedback) {
-        this.feedback = feedback;
+    public PracticeFeedbackResultHandler(PracticeFeedbackService practiceFeedbackService) {
+        this.practiceFeedbackService = practiceFeedbackService;
     }
 
     @Override
@@ -23,11 +23,11 @@ public class PracticeFeedbackResultHandler implements IAiTaskResultHandler {
 
     @Override
     public ApplyOutcome onReady(AiTaskResult result) {
-        return feedback.onReady(result);
+        return practiceFeedbackService.handleReadyResult(result);
     }
 
     @Override
     public void onFailed(AiTaskFailure failure) {
-        feedback.onFailed(failure);
+        practiceFeedbackService.handleFailedResult(failure);
     }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { blockText, documentTree, sectionNumber, type DocSection, type DocumentBlock } from "./types";
+import { blockText, buildDocumentTree, formatSectionNumber, type DocSection, type DocumentBlock } from "./types";
 
 /**
  * Mục lục của một bài trên sidebar (dùng chung cho trang soạn, xem trước của giảng viên và trang làm bài, lịch sử nộp
@@ -36,9 +36,9 @@ export const DOCUMENT_ENTRY = "DOCUMENT";
  * Dàn ý từ khung đề theo cây mục, đánh số như trong trang: I., I.1., I.1.a., I.1.a.aa.; đoạn văn trong mục không ghi. Văn bản ở ngoài
  * mọi mục (yêu cầu 2026-11-04) là một dòng tầng 0, ghi mấy chữ đầu, không số.
  */
-export function outlineOf(blocks: DocumentBlock[]): OutlineEntry[] {
+export function buildOutline(blocks: DocumentBlock[]): OutlineEntry[] {
   const entries: OutlineEntry[] = [];
-  const tree = documentTree({ blocks });
+  const tree = buildDocumentTree({ blocks });
   const rootText = [...tree.blocks, ...tree.after].map((block) => blockText(block).trim()).find(Boolean);
   const rootEntry: OutlineEntry | null = tree.blocks.length > 0 || tree.after.length > 0
     ? { id: DOCUMENT_ENTRY, depth: 0, title: rootText ?? "", number: "" } : null;
@@ -46,7 +46,7 @@ export function outlineOf(blocks: DocumentBlock[]): OutlineEntry[] {
     const counters = [...path, i + 1];
     const heading = child.heading;
     if (heading?.type === "HEADING") {
-      entries.push({ id: heading.id, depth: counters.length, title: heading.content.text.trim(), number: sectionNumber(counters) });
+      entries.push({ id: heading.id, depth: counters.length, title: heading.content.text.trim(), number: formatSectionNumber(counters) });
     }
     walk(child, counters);
   });

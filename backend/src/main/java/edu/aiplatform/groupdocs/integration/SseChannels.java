@@ -20,24 +20,24 @@ final class SseChannels {
 
     private final Map<String, List<Subscriber>> channels = new ConcurrentHashMap<>();
 
-    void add(String channel, String owner, SseEmitter emitter) {
+    void addEmitter(String channel, String owner, SseEmitter emitter) {
         Subscriber subscriber = new Subscriber(owner, emitter);
         channels.computeIfAbsent(channel, k -> new CopyOnWriteArrayList<>()).add(subscriber);
-        Runnable remove = () -> remove(channel, subscriber);
+        Runnable remove = () -> removeSubscriber(channel, subscriber);
         emitter.onCompletion(remove);
         emitter.onTimeout(remove);
         emitter.onError(e -> remove.run());
     }
 
     /** Gửi sự kiện JSON tới mọi người đang mở kênh; trả số emitter đã gửi được. */
-    int send(String channel, Object event) {
+    int sendEvent(String channel, Object event) {
         int delivered = 0;
         for (Subscriber s : channels.getOrDefault(channel, List.of())) {
             try {
                 s.emitter().send(SseEmitter.event().name("message").data(event, MediaType.APPLICATION_JSON));
                 delivered++;
             } catch (IOException | IllegalStateException e) {
-                remove(channel, s);
+                removeSubscriber(channel, s);
             }
         }
         return delivered;
@@ -47,7 +47,7 @@ final class SseChannels {
     void close(String channel, String owner) {
         for (Subscriber s : channels.getOrDefault(channel, List.of())) {
             if (Objects.equals(owner, s.owner())) {
-                remove(channel, s);
+                removeSubscriber(channel, s);
                 try {
                     s.emitter().complete();
                 } catch (IllegalStateException ignored) {
@@ -58,21 +58,21 @@ final class SseChannels {
     }
 
     /** Giữ kết nối qua proxy (Nginx {@code proxy_read_timeout} 120 giây): gửi dòng chú thích. */
-    void heartbeat() {
+    void sendHeartbeat() {
         channels.forEach((channel, subscribers) -> subscribers.forEach(s -> {
             try {
                 s.emitter().send(SseEmitter.event().comment("hb"));
             } catch (IOException | IllegalStateException e) {
-                remove(channel, s);
+                removeSubscriber(channel, s);
             }
         }));
     }
 
-    int size(String channel) {
+    int countSubscribers(String channel) {
         return channels.getOrDefault(channel, List.of()).size();
     }
 
-    private void remove(String channel, Subscriber subscriber) {
+    private void removeSubscriber(String channel, Subscriber subscriber) {
         channels.computeIfPresent(channel, (k, list) -> {
             list.remove(subscriber);
             return list.isEmpty() ? null : list;

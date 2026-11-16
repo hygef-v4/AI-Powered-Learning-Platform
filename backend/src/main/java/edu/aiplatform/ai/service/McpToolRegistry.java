@@ -33,22 +33,22 @@ public class McpToolRegistry {
     /**
      * Lists tool definitions visible to a specific caller role and access permission level.
      */
-    public List<McpToolDefinition> visible(Role role, Access access) {
-        return entries().values().stream().map(Entry::definition).filter(d -> visible(d, role, access)).toList();
+    public List<McpToolDefinition> listVisibleTools(Role role, Access access) {
+        return listEntries().values().stream().map(Entry::definition).filter(d -> isVisible(d, role, access)).toList();
     }
 
     /**
      * Finds a tool entry by name if it is visible to the given caller role and access level.
      */
-    public Optional<Entry> find(String name, Role role, Access access) {
-        return Optional.ofNullable(name == null ? null : entries().get(name))
-                .filter(e -> visible(e.definition(), role, access));
+    public Optional<Entry> findTool(String name, Role role, Access access) {
+        return Optional.ofNullable(name == null ? null : listEntries().get(name))
+                .filter(e -> isVisible(e.definition(), role, access));
     }
 
     /**
      * Determines whether a tool definition is visible based on role restrictions and access level.
      */
-    static boolean visible(McpToolDefinition d, Role role, Access access) {
+    static boolean isVisible(McpToolDefinition d, Role role, Access access) {
         return role != null && role != Role.ADMIN && d.allowedRoles() != null && d.allowedRoles().contains(role)
                 && (d.kind() == McpToolKind.READ || access == Access.READ_WRITE);
     }
@@ -56,7 +56,7 @@ public class McpToolRegistry {
     /**
      * Builds and lazily caches the tool map by scanning all registered IMcpToolProvider beans.
      */
-    private Map<String, Entry> entries() {
+    private Map<String, Entry> listEntries() {
         Map<String, Entry> current = entries;
         if (current == null) {
             synchronized (this) {

@@ -137,23 +137,23 @@ class QuestionImporterTest {
 
     @Test
     void rejectsMissingColumnsTooManyRowsAndNonUtf8Files() {
-        assertThat(api(() -> importer.importFile(manager, subject, csv("noi_dung,loai", "Câu,MCQ_SINGLE"), true)).code())
+        assertThat(api(() -> importer.importFile(manager, subject, csv("noi_dung,loai", "Câu,MCQ_SINGLE"), true)).readCode())
                 .isEqualTo("IMPORT_HEADER_INVALID");
 
         List<String> lines = new ArrayList<>(List.of(HEADER));
         for (int i = 0; i < 501; i++) {
             lines.add("Câu " + i + ",MCQ_SINGLE,A,B,,,,,1,,,,");
         }
-        assertThat(api(() -> importer.importFile(manager, subject, csv(lines.toArray(String[]::new)), true)).code())
+        assertThat(api(() -> importer.importFile(manager, subject, csv(lines.toArray(String[]::new)), true)).readCode())
                 .isEqualTo("IMPORT_TOO_MANY_ROWS");
 
         ApiException binary = api(() -> importer.importFile(manager, subject, new byte[] {(byte) 0xC3, 0x28, 0x00}, true));
-        assertThat(binary.status()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+        assertThat(binary.readStatus()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
 
-        assertThat(api(() -> importer.importFile(manager, subject, new byte[0], true)).code()).isEqualTo("IMPORT_FILE_EMPTY");
-        assertThat(api(() -> importer.importFile(manager, subject, csv(HEADER), true)).code()).isEqualTo("IMPORT_FILE_EMPTY");
+        assertThat(api(() -> importer.importFile(manager, subject, new byte[0], true)).readCode()).isEqualTo("IMPORT_FILE_EMPTY");
+        assertThat(api(() -> importer.importFile(manager, subject, csv(HEADER), true)).readCode()).isEqualTo("IMPORT_FILE_EMPTY");
         assertThat(api(() -> importer.importFile(manager, subject,
-                new byte[(int) QuestionImporter.MAX_BYTES + 1], true)).status()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+                new byte[(int) QuestionImporter.MAX_BYTES + 1], true)).readStatus()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
     }
 
     @Test
@@ -189,6 +189,6 @@ class QuestionImporterTest {
     void archivedSubjectCannotImport() {
         when(subjects.isActive(subject)).thenReturn(false);
         assertThat(api(() -> importer.importFile(manager, subject, csv(HEADER, "Câu?,MCQ_SINGLE,A,B,,,,,1,,,,"), true))
-                .code()).isEqualTo("SUBJECT_NOT_ACTIVE");
+                .readCode()).isEqualTo("SUBJECT_NOT_ACTIVE");
     }
 }

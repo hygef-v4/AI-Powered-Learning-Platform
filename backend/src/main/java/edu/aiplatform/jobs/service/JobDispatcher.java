@@ -34,7 +34,7 @@ public class JobDispatcher {
     private final Duration defaultTimeout;
     /** Việc đang chạy theo {@code jobType:idempotencyKey}, gồm cả lần đã quá giờ mà handler chưa dừng. */
     private final Map<String, Object> running = new ConcurrentHashMap<>();
-    private final ExecutorService runner = Executors.newCachedThreadPool(runnable -> {
+    private final ExecutorService executorService = Executors.newCachedThreadPool(runnable -> {
         Thread thread = new Thread(runnable, "job-handler");
         thread.setDaemon(true);
         return thread;
@@ -52,7 +52,7 @@ public class JobDispatcher {
             log.warn("Bỏ việc {} có schemaVersion {} không hỗ trợ", message.jobType(), message.schemaVersion());
             return Outcome.DISCARDED;
         }
-        IJobHandler handler = registry.find(message.jobType()).orElse(null);
+        IJobHandler handler = registry.findHandler(message.jobType()).orElse(null);
         if (handler == null) {
             log.error("Không có handler cho việc {}", message.jobType());
             return Outcome.DISCARDED;
@@ -65,12 +65,12 @@ public class JobDispatcher {
                 JobRouting.RetryDelay delay = JobRouting.RETRY_DELAYS.get(message.attempt());
                 log.warn("Việc {} key={} lỗi tạm, thử lại sau {}", message.jobType(), message.idempotencyKey(),
                         delay.label());
-                sender.sendRetry(next(message), delay);
+                sender.sendRetry(buildNextAttempt(message), delay);
                 return Outcome.RETRIED;
             }
-            return fail(handler, message, "Hết lượt thử lại: " + safe(e));
+            return fail(handler, message, "Hết lượt thử lại: " + describeSafely(e));
         } catch (Exception e) {
-            return fail(handler, message, safe(e));
+            return fail(handler, message, describeSafely(e));
         }
     }
 
@@ -86,7 +86,7 @@ public class JobDispatcher {
         }
         Future<?> future;
         try {
-            future = runner.submit(() -> {
+            future = executorService.submit(() -> {
                 try {
                     handler.handle(message);
                 } finally {
@@ -118,13 +118,13 @@ public class JobDispatcher {
         return Outcome.FAILED;
     }
 
-    static JobMessage next(JobMessage message) {
+    static JobMessage buildNextAttempt(JobMessage message) {
         return new JobMessage(message.schemaVersion(), message.jobType(), message.idempotencyKey(), message.payload(),
                 message.attempt() + 1, message.correlationId());
     }
 
     /** Provider/DB exception messages are untrusted, including when they look short or harmless. */
-    static String safe(Throwable e) {
+    static String describeSafely(Throwable e) {
         return SafeJobErrors.from(e);
     }
 }

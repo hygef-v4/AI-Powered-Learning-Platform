@@ -16,7 +16,7 @@ class QuestionTest {
 
     @Test
     void newBankQuestionStartsAsDraftVersionOneOfItsOwnLineage() {
-        Question q = Question.newBankDraft(subject, QuestionRulesTest.single("3", "4"), author, NOW);
+        Question q = Question.createBankDraft(subject, QuestionRulesTest.single("3", "4"), author, NOW);
         assertThat(q.lineageId()).isEqualTo(q.id());
         assertThat(q.versionNo()).isEqualTo(1);
         assertThat(q.scope()).isEqualTo(QuestionScope.BANK);
@@ -26,15 +26,15 @@ class QuestionTest {
 
     @Test
     void activeQuestionIsNotEditableAndOpensNextDraftInSameLineage() {
-        Question active = Question.newBankDraft(subject, QuestionRulesTest.single("3", "4"), author, NOW)
+        Question active = Question.createBankDraft(subject, QuestionRulesTest.single("3", "4"), author, NOW)
                 .activate(NOW.plusSeconds(60));
         assertThat(active.status()).isEqualTo(QuestionStatus.ACTIVE);
         assertThat(active.activatedAt()).isEqualTo(NOW.plusSeconds(60));
         assertThat(active.isDeletable()).isFalse();
-        assertThatThrownBy(() -> active.withContent(QuestionRulesTest.single("5", "6"), NOW))
+        assertThatThrownBy(() -> active.replaceContent(QuestionRulesTest.single("5", "6"), NOW))
                 .isInstanceOf(IllegalStateException.class);
 
-        Question draft = active.nextDraft(2, author, NOW.plusSeconds(120));
+        Question draft = active.createNextDraft(2, author, NOW.plusSeconds(120));
         assertThat(draft.id()).isNotEqualTo(active.id());
         assertThat(draft.lineageId()).isEqualTo(active.lineageId());
         assertThat(draft.versionNo()).isEqualTo(2);
@@ -45,9 +45,9 @@ class QuestionTest {
 
     @Test
     void onlyActiveQuestionsRetireAndDraftsDoNotOpenDrafts() {
-        Question draft = Question.newBankDraft(subject, QuestionRulesTest.single("3", "4"), author, NOW);
+        Question draft = Question.createBankDraft(subject, QuestionRulesTest.single("3", "4"), author, NOW);
         assertThatThrownBy(() -> draft.retire(NOW)).isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> draft.nextDraft(2, author, NOW)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> draft.createNextDraft(2, author, NOW)).isInstanceOf(IllegalStateException.class);
         Question retired = draft.activate(NOW).retire(NOW);
         assertThat(retired.status()).isEqualTo(QuestionStatus.RETIRED);
         assertThat(retired.isDeletable()).isFalse();

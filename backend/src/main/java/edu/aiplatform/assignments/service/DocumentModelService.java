@@ -64,16 +64,16 @@ public class DocumentModelService implements IDocumentModel {
 
     @Override
     public ValidationResult validateSkeleton(DocumentModel skeleton) {
-        List<ValidationIssue> errors = structure(skeleton);
+        List<ValidationIssue> errors = validateStructure(skeleton);
         List<ValidationIssue> warnings = new ArrayList<>();
         if (skeleton != null && skeleton.blocks() != null) {
             for (DocumentBlock block : skeleton.blocks()) {
                 if (block != null && block.origin() == BlockOrigin.STUDENT) {
-                    add(errors, "STUDENT_BLOCK_IN_SKELETON", block.id(), "Khung chỉ chứa block của người soạn");
+                    addIssue(errors, "STUDENT_BLOCK_IN_SKELETON", block.id(), "Khung chỉ chứa block của người soạn");
                 }
-                if (block != null && PartCalculator.level(block) > 0
+                if (block != null && PartCalculator.resolveHeadingLevel(block) > 0
                         && block.content().path("text").asText("").isBlank()) {
-                    add(warnings, "HEADING_EMPTY", block.id(), "Tiêu đề mục đang trống");
+                    addIssue(warnings, "HEADING_EMPTY", block.id(), "Tiêu đề mục đang trống");
                 }
             }
         }
@@ -87,18 +87,18 @@ public class DocumentModelService implements IDocumentModel {
      */
     @Override
     public ValidationResult validateForSave(DocumentModel skeleton, DocumentModel document) {
-        List<ValidationIssue> errors = structure(document);
+        List<ValidationIssue> errors = validateStructure(document);
         if (errors.isEmpty()) {
-            Set<UUID> inParts = blocksInParts(document);
-            teacherBlocks(skeleton, document, inParts, errors);
+            Set<UUID> inParts = collectBlocksInParts(document);
+            validateTeacherBlocks(skeleton, document, inParts, errors);
             for (DocumentBlock block : document.blocks()) {
                 if (block.origin() != BlockOrigin.STUDENT) {
                     continue;
                 }
                 if (block.type() == BlockType.HEADING) {
-                    add(errors, "STUDENT_HEADING_NOT_ALLOWED", block.id(), "Người làm bài không thêm tiêu đề mục");
+                    addIssue(errors, "STUDENT_HEADING_NOT_ALLOWED", block.id(), "Người làm bài không thêm tiêu đề mục");
                 } else if (!inParts.contains(block.id())) {
-                    add(errors, "STUDENT_BLOCK_OUTSIDE_PART", block.id(), "Chỉ viết trong các phần của đề");
+                    addIssue(errors, "STUDENT_BLOCK_OUTSIDE_PART", block.id(), "Chỉ viết trong các phần của đề");
                 }
             }
         }
@@ -109,7 +109,7 @@ public class DocumentModelService implements IDocumentModel {
      * Id các block nằm trong một phần: từ tiêu đề lá tới trước tiêu đề Tiêu đề 1–6 kế tiếp; phần chung (trước tiêu đề
      * đầu tiên) và đoạn dưới tiêu đề cha không thuộc phần nào. Khung không có Tiêu đề 1–6 thì cả bài là một phần.
      */
-    static Set<UUID> blocksInParts(DocumentModel document) {
+    static Set<UUID> collectBlocksInParts(DocumentModel document) {
         Set<UUID> result = new HashSet<>();
         if (document == null || document.blocks() == null) {
             return result;
@@ -120,9 +120,9 @@ public class DocumentModelService implements IDocumentModel {
         parts.forEach(part -> leaves.add(part.headingBlockId()));
         boolean inside = whole;
         for (DocumentBlock block : document.blocks()) {
-            if (!whole && PartCalculator.level(block) > 0) {
+            if (!whole && PartCalculator.resolveHeadingLevel(block) > 0) {
                 inside = leaves.contains(block.id());
-            } else if (!whole && under(block) >= 0) {
+            } else if (!whole && countChildDepth(block) >= 0) {
                 // Đoạn viết ở dòng cuối của mục cha (sau các mục con): thuộc mục cha, không thuộc phần lá nào.
                 inside = false;
             }
@@ -137,7 +137,7 @@ public class DocumentModelService implements IDocumentModel {
      * Đoạn viết ở dòng cuối của một mục cha, sau các mục con (yêu cầu 2026-11-02): {@code under} là cấp tiêu đề của mục
      * đó (0: cả tài liệu). Không có thì -1.
      */
-    static int under(DocumentBlock block) {
+    static int countChildDepth(DocumentBlock block) {
         if (block.type() == BlockType.HEADING || block.content() == null) {
             return -1;
         }
@@ -162,7 +162,7 @@ public class DocumentModelService implements IDocumentModel {
             skeleton.blocks().stream().filter(b -> b.type() == BlockType.TABLE)
                     .forEach(b -> skeletonRows.put(b.id(), b.content().path("rows")));
         }
-        Set<UUID> inParts = blocksInParts(document);
+        Set<UUID> inParts = collectBlocksInParts(document);
         boolean hasContent = false;
         for (DocumentBlock block : document.blocks()) {
             if (block.origin() == BlockOrigin.TEACHER && block.type() == BlockType.DIAGRAM
@@ -170,9 +170,9 @@ public class DocumentModelService implements IDocumentModel {
                 // Sơ đồ của người soạn trong phần: ô trống thì phải vẽ; vẽ khác bản của đề thì tính là bài làm.
                 String xml = block.content().path("xml").asText("");
                 String original = skeletonXml.getOrDefault(block.id(), "");
-                boolean empty = DiagramXml.cellCount(xml) == 0;
-                if (empty && DiagramXml.cellCount(original) == 0) {
-                    add(errors, "DIAGRAM_EMPTY", block.id(), "Sơ đồ này cần được vẽ");
+                boolean empty = DiagramXml.countCells(xml) == 0;
+                if (empty && DiagramXml.countCells(original) == 0) {
+                    addIssue(errors, "DIAGRAM_EMPTY", block.id(), "Sơ đồ này cần được vẽ");
                 } else if (!empty && !xml.equals(original)) {
                     hasContent = true;
                     counts.merge(DiagramType.valueOf(block.content().path("diagramType").asText()), 1, Integer::sum);
@@ -188,8 +188,8 @@ public class DocumentModelService implements IDocumentModel {
                 continue;
             }
             if (block.type() == BlockType.DIAGRAM) {
-                if (DiagramXml.cellCount(block.content().path("xml").asText("")) == 0) {
-                    add(errors, "DIAGRAM_EMPTY", block.id(), "Sơ đồ đang trống");
+                if (DiagramXml.countCells(block.content().path("xml").asText("")) == 0) {
+                    addIssue(errors, "DIAGRAM_EMPTY", block.id(), "Sơ đồ đang trống");
                 } else {
                     hasContent = true;
                     counts.merge(DiagramType.valueOf(block.content().path("diagramType").asText()), 1, Integer::sum);
@@ -215,13 +215,13 @@ public class DocumentModelService implements IDocumentModel {
                     actual += fill;
                 }
                 if (actual < minimum) {
-                    add(errors, "REQUIRED_DIAGRAMS_MISSING", null,
+                    addIssue(errors, "REQUIRED_DIAGRAMS_MISSING", null,
                             "Cần ít nhất " + minimum + " sơ đồ " + type.name() + ", bài mới có " + actual);
                 }
             }
         }
         if (!hasContent) {
-            add(errors, "SUBMISSION_EMPTY", null, "Bài làm chưa có nội dung của bạn");
+            addIssue(errors, "SUBMISSION_EMPTY", null, "Bài làm chưa có nội dung của bạn");
         }
         return new ValidationResult(List.copyOf(errors), List.of());
     }
@@ -253,12 +253,12 @@ public class DocumentModelService implements IDocumentModel {
 
     @Override
     public String compactDiagramXml(String xml) {
-        return DiagramXml.compact(xml, COMPACT_MAX_CHARS);
+        return DiagramXml.compactXml(xml, COMPACT_MAX_CHARS);
     }
 
     @Override
     public boolean hasDiagramContent(String xml) {
-        return DiagramXml.cellCount(xml) > 0;
+        return DiagramXml.countCells(xml) > 0;
     }
 
     @Override
@@ -290,17 +290,17 @@ public class DocumentModelService implements IDocumentModel {
                 yield switch (style) {
                     case "TITLE" -> "Tiêu đề: " + text;
                     case "SUBTITLE" -> "Phụ đề: " + text;
-                    default -> "#".repeat(Math.max(1, PartCalculator.level(block))) + " " + text;
+                    default -> "#".repeat(Math.max(1, PartCalculator.resolveHeadingLevel(block))) + " " + text;
                 };
             }
-            case PARAGRAPH -> runs(c.path("runs"));
+            case PARAGRAPH -> joinRunText(c.path("runs"));
             case LIST -> {
                 StringBuilder list = new StringBuilder();
                 int number = 1;
                 for (JsonNode item : c.path("items")) {
                     list.append("  ".repeat(Math.max(0, item.path("level").asInt(0))))
                             .append(c.path("ordered").asBoolean(false) ? (number++) + ". " : "- ")
-                            .append(runs(item.path("runs"))).append('\n');
+                            .append(joinRunText(item.path("runs"))).append('\n');
                 }
                 yield list.toString().stripTrailing();
             }
@@ -308,13 +308,13 @@ public class DocumentModelService implements IDocumentModel {
                 StringBuilder table = new StringBuilder();
                 for (JsonNode row : c.path("rows")) {
                     List<String> cells = new ArrayList<>();
-                    row.forEach(cell -> cells.add(runs(cell.path("runs"))));
+                    row.forEach(cell -> cells.add(joinRunText(cell.path("runs"))));
                     table.append("| ").append(String.join(" | ", cells)).append(" |\n");
                 }
                 yield table.toString().stripTrailing();
             }
-            case IMAGE -> "[Ảnh" + suffix(c.path("alt").asText("")) + "]";
-            case DIAGRAM -> "[Sơ đồ " + c.path("diagramType").asText("OTHER") + suffix(c.path("alt").asText(""))
+            case IMAGE -> "[Ảnh" + formatAltSuffix(c.path("alt").asText("")) + "]";
+            case DIAGRAM -> "[Sơ đồ " + c.path("diagramType").asText("OTHER") + formatAltSuffix(c.path("alt").asText(""))
                     + "]\n" + compactDiagramXml(c.path("xml").asText(""));
         };
     }
@@ -324,10 +324,10 @@ public class DocumentModelService implements IDocumentModel {
         JsonNode c = block.content();
         return switch (block.type()) {
             case HEADING -> !c.path("text").asText("").isBlank();
-            case PARAGRAPH -> !runs(c.path("runs")).isBlank();
+            case PARAGRAPH -> !joinRunText(c.path("runs")).isBlank();
             case LIST -> {
                 for (JsonNode item : c.path("items")) {
-                    if (!runs(item.path("runs")).isBlank()) {
+                    if (!joinRunText(item.path("runs")).isBlank()) {
                         yield true;
                     }
                 }
@@ -336,7 +336,7 @@ public class DocumentModelService implements IDocumentModel {
             case TABLE -> {
                 for (JsonNode row : c.path("rows")) {
                     for (JsonNode cell : row) {
-                        if (!runs(cell.path("runs")).isBlank()) {
+                        if (!joinRunText(cell.path("runs")).isBlank()) {
                             yield true;
                         }
                     }
@@ -347,23 +347,23 @@ public class DocumentModelService implements IDocumentModel {
         };
     }
 
-    private List<ValidationIssue> structure(DocumentModel document) {
+    private List<ValidationIssue> validateStructure(DocumentModel document) {
         List<ValidationIssue> errors = new ArrayList<>();
         if (document == null || document.blocks() == null) {
-            add(errors, "DOCUMENT_INVALID", null, "Tài liệu không hợp lệ");
+            addIssue(errors, "DOCUMENT_INVALID", null, "Tài liệu không hợp lệ");
             return errors;
         }
         if (document.blocks().size() > MAX_BLOCKS) {
-            add(errors, "TOO_MANY_BLOCKS", null, "Tài liệu tối đa " + MAX_BLOCKS + " block");
+            addIssue(errors, "TOO_MANY_BLOCKS", null, "Tài liệu tối đa " + MAX_BLOCKS + " block");
             return errors;
         }
         JsonNode title = document.title();
         if (title != null && !title.isNull()) {
             JsonNode align = title.get("align");
             if (!title.isObject() || (align != null && !align.isNull() && !ALIGNS.contains(align.asText("")))) {
-                add(errors, "DOCUMENT_INVALID", null, "Tên bài không hợp lệ");
+                addIssue(errors, "DOCUMENT_INVALID", null, "Tên bài không hợp lệ");
             } else {
-                runs(title.get("runs"), null, errors);
+                validateRuns(title.get("runs"), null, errors);
             }
         }
         Set<UUID> ids = new HashSet<>();
@@ -371,66 +371,66 @@ public class DocumentModelService implements IDocumentModel {
         for (DocumentBlock block : document.blocks()) {
             if (block == null || block.id() == null || block.origin() == null || block.type() == null
                     || !(block.content() instanceof ObjectNode)) {
-                add(errors, "BLOCK_INVALID", block == null ? null : block.id(), "Block không hợp lệ");
+                addIssue(errors, "BLOCK_INVALID", block == null ? null : block.id(), "Block không hợp lệ");
                 continue;
             }
             if (!ids.add(block.id())) {
-                add(errors, "BLOCK_ID_DUPLICATE", block.id(), "Hai block trùng id");
+                addIssue(errors, "BLOCK_ID_DUPLICATE", block.id(), "Hai block trùng id");
             }
             if (block.type() == BlockType.DIAGRAM) {
                 diagrams++;
             }
-            content(block, errors);
+            validateContent(block, errors);
         }
         if (diagrams > MAX_DIAGRAMS) {
-            add(errors, "TOO_MANY_DIAGRAMS", null, "Tài liệu tối đa " + MAX_DIAGRAMS + " sơ đồ");
+            addIssue(errors, "TOO_MANY_DIAGRAMS", null, "Tài liệu tối đa " + MAX_DIAGRAMS + " sơ đồ");
         }
-        if (errors.isEmpty() && size(document) > MAX_DOCUMENT_BYTES) {
-            add(errors, "DOCUMENT_TOO_LARGE", null, "Tài liệu vượt 20 MB");
+        if (errors.isEmpty() && measureSize(document) > MAX_DOCUMENT_BYTES) {
+            addIssue(errors, "DOCUMENT_TOO_LARGE", null, "Tài liệu vượt 20 MB");
         }
         return errors;
     }
 
-    private void content(DocumentBlock block, List<ValidationIssue> errors) {
+    private void validateContent(DocumentBlock block, List<ValidationIssue> errors) {
         JsonNode c = block.content();
         UUID id = block.id();
         JsonNode align = c.get("align");
         if (align != null && !align.isNull() && !ALIGNS.contains(align.asText(""))) {
-            add(errors, "BLOCK_INVALID", id, "Căn lề không hợp lệ");
+            addIssue(errors, "BLOCK_INVALID", id, "Căn lề không hợp lệ");
         }
         // Khối viết sau các mục con của một mục cha (yêu cầu 2026-11-02, 2026-11-04: mọi khối không phải tiêu đề).
         JsonNode under = c.get("under");
         if (block.type() != BlockType.HEADING && under != null && !under.isNull()
                 && (!under.canConvertToInt() || under.asInt() < 0 || under.asInt() > 6)) {
-            add(errors, "BLOCK_INVALID", id, "Mục chứa khối không hợp lệ");
+            addIssue(errors, "BLOCK_INVALID", id, "Mục chứa khối không hợp lệ");
         }
         switch (block.type()) {
             case HEADING -> {
                 if (!HEADING_STYLES.contains(c.path("style").asText(""))) {
-                    add(errors, "HEADING_STYLE_INVALID", id, "Kiểu tiêu đề không hợp lệ");
+                    addIssue(errors, "HEADING_STYLE_INVALID", id, "Kiểu tiêu đề không hợp lệ");
                 }
-                text(c.get("text"), MAX_HEADING, id, errors);
+                validateText(c.get("text"), MAX_HEADING, id, errors);
                 // Chữ có định dạng của tiêu đề (yêu cầu 2026-11-04), không bắt buộc.
                 if (c.get("runs") != null && !c.get("runs").isNull()) {
-                    runs(c.get("runs"), id, errors);
+                    validateRuns(c.get("runs"), id, errors);
                 }
             }
-            case PARAGRAPH -> runs(c.get("runs"), id, errors);
+            case PARAGRAPH -> validateRuns(c.get("runs"), id, errors);
             case LIST -> {
                 flag(c.get("ordered"), id, errors);
                 JsonNode items = c.get("items");
                 if (items == null || !items.isArray() || items.size() > MAX_ITEMS) {
-                    add(errors, "LIST_INVALID", id, "Danh sách không hợp lệ");
+                    addIssue(errors, "LIST_INVALID", id, "Danh sách không hợp lệ");
                     return;
                 }
                 for (JsonNode item : items) {
                     JsonNode level = item.get("level");
                     if (!item.isObject() || (level != null && (!level.canConvertToInt() || level.asInt() < 0
                             || level.asInt() > MAX_LIST_LEVEL))) {
-                        add(errors, "LIST_INVALID", id, "Mục danh sách không hợp lệ");
+                        addIssue(errors, "LIST_INVALID", id, "Mục danh sách không hợp lệ");
                         return;
                     }
-                    runs(item.get("runs"), id, errors);
+                    validateRuns(item.get("runs"), id, errors);
                 }
             }
             case TABLE -> {
@@ -443,29 +443,29 @@ public class DocumentModelService implements IDocumentModel {
                         valid &= width.isNumber() && width.asDouble() >= 1 && width.asDouble() <= 100;
                     }
                     if (!valid) {
-                        add(errors, "TABLE_INVALID", id, "Độ rộng cột không hợp lệ");
+                        addIssue(errors, "TABLE_INVALID", id, "Độ rộng cột không hợp lệ");
                     }
                 }
                 JsonNode rows = c.get("rows");
                 if (rows == null || !rows.isArray() || rows.isEmpty() || rows.size() > MAX_ROWS) {
-                    add(errors, "TABLE_INVALID", id, "Bảng không hợp lệ");
+                    addIssue(errors, "TABLE_INVALID", id, "Bảng không hợp lệ");
                     return;
                 }
                 for (JsonNode row : rows) {
                     if (!row.isArray() || row.isEmpty() || row.size() > MAX_CELLS) {
-                        add(errors, "TABLE_INVALID", id, "Hàng của bảng không hợp lệ");
+                        addIssue(errors, "TABLE_INVALID", id, "Hàng của bảng không hợp lệ");
                         return;
                     }
                     for (JsonNode cell : row) {
                         if (!cell.isObject()) {
-                            add(errors, "TABLE_INVALID", id, "Ô của bảng không hợp lệ");
+                            addIssue(errors, "TABLE_INVALID", id, "Ô của bảng không hợp lệ");
                             return;
                         }
-                        runs(cell.get("runs"), id, errors);
+                        validateRuns(cell.get("runs"), id, errors);
                         flag(cell.get("added"), id, errors);
                         JsonNode cellAlign = cell.get("align");
                         if (cellAlign != null && !cellAlign.isNull() && !ALIGNS.contains(cellAlign.asText(""))) {
-                            add(errors, "TABLE_INVALID", id, "Căn lề của ô không hợp lệ");
+                            addIssue(errors, "TABLE_INVALID", id, "Căn lề của ô không hợp lệ");
                         }
                     }
                 }
@@ -474,35 +474,35 @@ public class DocumentModelService implements IDocumentModel {
                 boolean file = c.path(DocumentFiles.FILE_ID).isTextual() && !c.path(DocumentFiles.FILE_ID).asText().isBlank();
                 boolean ref = c.path(DocumentFiles.FILE_REF).isTextual() && !c.path(DocumentFiles.FILE_REF).asText().isBlank();
                 if (!file && !ref) {
-                    add(errors, "IMAGE_FILE_MISSING", id, "Ảnh chưa được tải lên");
+                    addIssue(errors, "IMAGE_FILE_MISSING", id, "Ảnh chưa được tải lên");
                 }
-                text(c.get("alt"), MAX_ALT, id, errors);
+                validateText(c.get("alt"), MAX_ALT, id, errors);
                 JsonNode width = c.get("width");
                 if (width != null && !width.isNull() && (!width.canConvertToInt() || width.asInt() < 16
                         || width.asInt() > 2000)) {
-                    add(errors, "IMAGE_INVALID", id, "Độ rộng ảnh không hợp lệ");
+                    addIssue(errors, "IMAGE_INVALID", id, "Độ rộng ảnh không hợp lệ");
                 }
             }
             case DIAGRAM -> {
                 try {
                     DiagramType.valueOf(c.path("diagramType").asText(""));
                 } catch (IllegalArgumentException e) {
-                    add(errors, "DIAGRAM_TYPE_INVALID", id, "Loại sơ đồ không hợp lệ");
+                    addIssue(errors, "DIAGRAM_TYPE_INVALID", id, "Loại sơ đồ không hợp lệ");
                 }
                 DiagramXml.validate(c.path("xml").isTextual() ? c.path("xml").asText() : null)
-                        .ifPresent(code -> add(errors, code, id, code.equals("DIAGRAM_TOO_LARGE")
+                        .ifPresent(code -> addIssue(errors, code, id, code.equals("DIAGRAM_TOO_LARGE")
                                 ? "XML sơ đồ vượt 2 MB" : "XML sơ đồ không hợp lệ"));
                 JsonNode svg = c.get("svgPreview");
                 if (svg != null && !svg.isNull() && !svg.isTextual()) {
-                    add(errors, "DIAGRAM_PREVIEW_INVALID", id, "Ảnh xem trước của sơ đồ không hợp lệ");
+                    addIssue(errors, "DIAGRAM_PREVIEW_INVALID", id, "Ảnh xem trước của sơ đồ không hợp lệ");
                 }
-                text(c.get("alt"), MAX_ALT, id, errors);
+                validateText(c.get("alt"), MAX_ALT, id, errors);
             }
         }
     }
 
     /** Block của người soạn có đủ, không đổi, đúng thứ tự; không có block người soạn lạ (BR-U07-15). */
-    private void teacherBlocks(DocumentModel skeleton, DocumentModel document, Set<UUID> inParts,
+    private void validateTeacherBlocks(DocumentModel skeleton, DocumentModel document, Set<UUID> inParts,
                                List<ValidationIssue> errors) {
         List<DocumentBlock> expected = skeleton == null || skeleton.blocks() == null ? List.of()
                 : skeleton.blocks().stream().filter(b -> b.origin() == BlockOrigin.TEACHER).toList();
@@ -515,9 +515,9 @@ public class DocumentModelService implements IDocumentModel {
             }
             DocumentBlock original = byId.get(block.id());
             if (original == null) {
-                add(errors, "TEACHER_BLOCK_ADDED", block.id(), "Không thêm block của người soạn");
-            } else if (original.type() != block.type() || !sameContent(original, block, inParts.contains(block.id()))) {
-                add(errors, "TEACHER_BLOCK_CHANGED", block.id(), "Không sửa block của người soạn");
+                addIssue(errors, "TEACHER_BLOCK_ADDED", block.id(), "Không thêm block của người soạn");
+            } else if (original.type() != block.type() || !hasSameContent(original, block, inParts.contains(block.id()))) {
+                addIssue(errors, "TEACHER_BLOCK_CHANGED", block.id(), "Không sửa block của người soạn");
             } else {
                 seen.add(block.id());
             }
@@ -525,11 +525,11 @@ public class DocumentModelService implements IDocumentModel {
         List<UUID> order = expected.stream().map(DocumentBlock::id).filter(seen::contains).toList();
         for (DocumentBlock block : expected) {
             if (!seen.contains(block.id())) {
-                add(errors, "TEACHER_BLOCK_MISSING", block.id(), "Không xóa block của người soạn");
+                addIssue(errors, "TEACHER_BLOCK_MISSING", block.id(), "Không xóa block của người soạn");
             }
         }
         if (!order.equals(seen)) {
-            add(errors, "TEACHER_BLOCK_MOVED", null, "Không đổi thứ tự block của người soạn");
+            addIssue(errors, "TEACHER_BLOCK_MOVED", null, "Không đổi thứ tự block của người soạn");
         }
     }
 
@@ -538,7 +538,7 @@ public class DocumentModelService implements IDocumentModel {
      * phần ({@code inPart}) thì người làm được vẽ lại sơ đồ (XML, loại suy từ hình vẽ; mô tả giữ nguyên) và điền bảng
      * ({@link #filledTable}) — yêu cầu 2026-10-21, 2026-10-22.
      */
-    private static boolean sameContent(DocumentBlock original, DocumentBlock block, boolean inPart) {
+    private static boolean hasSameContent(DocumentBlock original, DocumentBlock block, boolean inPart) {
         if (original.type() == BlockType.DIAGRAM && original.content() instanceof ObjectNode a
                 && block.content() instanceof ObjectNode b) {
             ObjectNode left = a.deepCopy();
@@ -552,7 +552,7 @@ public class DocumentModelService implements IDocumentModel {
             return left.equals(right);
         }
         if (original.type() == BlockType.TABLE && inPart) {
-            return filledTable(original.content(), block.content());
+            return isFilledTable(original.content(), block.content());
         }
         return original.content().equals(block.content());
     }
@@ -562,7 +562,7 @@ public class DocumentModelService implements IDocumentModel {
      * 2026-10-22) và chỉ ô đó được xóa. Giữ hàng tiêu đề; các hàng còn ô của đề (ô không cờ) không ít hơn đề, mỗi hàng
      * đó còn đủ số ô của đề.
      */
-    private static boolean filledTable(JsonNode original, JsonNode table) {
+    private static boolean isFilledTable(JsonNode original, JsonNode table) {
         if (original.path("headerRow").asBoolean(false) != table.path("headerRow").asBoolean(false)) {
             return false;
         }
@@ -719,57 +719,57 @@ public class DocumentModelService implements IDocumentModel {
         }
     }
 
-    private void runs(JsonNode runs, UUID id, List<ValidationIssue> errors) {
+    private void validateRuns(JsonNode runs, UUID id, List<ValidationIssue> errors) {
         if (runs == null || !runs.isArray() || runs.size() > MAX_RUNS) {
-            add(errors, "TEXT_INVALID", id, "Đoạn chữ không hợp lệ");
+            addIssue(errors, "TEXT_INVALID", id, "Đoạn chữ không hợp lệ");
             return;
         }
         for (JsonNode run : runs) {
             if (!run.isObject()) {
-                add(errors, "TEXT_INVALID", id, "Đoạn chữ không hợp lệ");
+                addIssue(errors, "TEXT_INVALID", id, "Đoạn chữ không hợp lệ");
                 return;
             }
-            text(run.get("text"), MAX_TEXT, id, errors);
+            validateText(run.get("text"), MAX_TEXT, id, errors);
             for (String flag : RUN_FLAGS) {
                 flag(run.get(flag), id, errors);
             }
             for (String color : RUN_COLORS) {
                 JsonNode value = run.get(color);
                 if (value != null && !value.isNull() && !HEX.matcher(value.asText("")).matches()) {
-                    add(errors, "TEXT_INVALID", id, "Màu chữ không hợp lệ");
+                    addIssue(errors, "TEXT_INVALID", id, "Màu chữ không hợp lệ");
                 }
             }
         }
     }
 
-    private static void text(JsonNode value, int max, UUID id, List<ValidationIssue> errors) {
+    private static void validateText(JsonNode value, int max, UUID id, List<ValidationIssue> errors) {
         if (value == null || value.isNull()) {
             return;
         }
         if (!value.isTextual()) {
-            add(errors, "TEXT_INVALID", id, "Nội dung chữ không hợp lệ");
+            addIssue(errors, "TEXT_INVALID", id, "Nội dung chữ không hợp lệ");
         } else if (value.asText().length() > max) {
-            add(errors, "TEXT_TOO_LONG", id, "Nội dung vượt " + max + " ký tự");
+            addIssue(errors, "TEXT_TOO_LONG", id, "Nội dung vượt " + max + " ký tự");
         }
     }
 
     private static void flag(JsonNode value, UUID id, List<ValidationIssue> errors) {
         if (value != null && !value.isNull() && !value.isBoolean()) {
-            add(errors, "BLOCK_INVALID", id, "Giá trị bật tắt không hợp lệ");
+            addIssue(errors, "BLOCK_INVALID", id, "Giá trị bật tắt không hợp lệ");
         }
     }
 
-    private static String runs(JsonNode runs) {
+    private static String joinRunText(JsonNode runs) {
         StringBuilder text = new StringBuilder();
         runs.forEach(run -> text.append(run.path("text").asText("")));
         return text.toString();
     }
 
-    private static String suffix(String alt) {
+    private static String formatAltSuffix(String alt) {
         return alt == null || alt.isBlank() ? "" : ": " + alt.strip();
     }
 
-    private long size(DocumentModel document) {
+    private long measureSize(DocumentModel document) {
         try {
             return json.writeValueAsBytes(document).length;
         } catch (JsonProcessingException e) {
@@ -777,7 +777,7 @@ public class DocumentModelService implements IDocumentModel {
         }
     }
 
-    private static void add(List<ValidationIssue> issues, String code, UUID blockId, String message) {
+    private static void addIssue(List<ValidationIssue> issues, String code, UUID blockId, String message) {
         if (issues.size() < MAX_ISSUES) {
             issues.add(new ValidationIssue(code, blockId, message));
         }

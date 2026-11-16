@@ -33,7 +33,7 @@ final class SubjectAdminAccess {
         }
         if (actor.role() != Role.ADMIN) {
             throw rejectAccess(
-                    actor, action, resource, ApiException.forbidden("SUBJECT_FORBIDDEN"));
+                    actor, action, resource, ApiException.createForbidden("SUBJECT_FORBIDDEN"));
         }
         AuthorizationDecision decision;
         try {
@@ -46,12 +46,12 @@ final class SubjectAdminAccess {
         }
         if (!decision.allowed()) {
             throw rejectAccess(
-                    actor, action, resource, ApiException.forbidden("SUBJECT_FORBIDDEN"));
+                    actor, action, resource, ApiException.createForbidden("SUBJECT_FORBIDDEN"));
         }
     }
 
     private ApiException createAuthorizationUnavailable() {
-        return ApiException.unavailable(
+        return ApiException.createUnavailable(
                 "SUBJECT_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, vui lòng thử lại");
     }
 
@@ -59,9 +59,9 @@ final class SubjectAdminAccess {
             Actor actor, String action, ResourceRef resource, ApiException rejection) {
         try {
             subjectAuditRecorder.recordAccessDenied(
-                    actor, action, resource, rejection.code(), clock.instant());
+                    actor, action, resource, rejection.readCode(), clock.instant());
         } catch (RuntimeException unavailable) {
-            throw ApiException.unavailable(
+            throw ApiException.createUnavailable(
                     "SUBJECT_AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
         }
         return rejection;

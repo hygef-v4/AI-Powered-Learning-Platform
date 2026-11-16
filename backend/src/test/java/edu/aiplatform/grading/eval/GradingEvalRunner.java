@@ -57,7 +57,7 @@ final class GradingEvalRunner {
                 return response;
             } catch (IProviderGateway.ProviderException ex) {
                 recordings.saveRecording(new GradingEvalRecordings.Recording(caseKey, runIndex, provider.name(),
-                        model, null, ex.kind().name(), ex.status(), ex.getMessage(), ex.usage()));
+                        model, null, ex.readKind().name(), ex.readStatus(), ex.getMessage(), ex.readUsage()));
                 throw ex;
             }
         };

@@ -52,54 +52,54 @@ public record Assignment(UUID id, AssignmentScope scope, UUID classId, UUID subj
     }
 
     /** Nội dung chỉ sửa khi còn nháp hoặc đã duyệt (BR-U07-30). */
-    public boolean editable() {
+    public boolean canEdit() {
         return status == AssignmentStatus.DRAFT || status == AssignmentStatus.REVIEWED;
     }
 
-    public boolean published() {
-        return !editable();
+    public boolean hasPublished() {
+        return !canEdit();
     }
 
     /** Hạn cuối nhận bài: {@code lateUntil} nếu có, không thì {@code closesAt}. */
-    public Instant finalDeadline() {
+    public Instant calculateFinalDeadline() {
         return lateUntil != null ? lateUntil : closesAt;
     }
 
-    public Assignment withDetails(String title, String instructions, boolean diagramEnabled, GradingMode gradingMode,
+    public Assignment updateDetails(String title, String instructions, boolean diagramEnabled, GradingMode gradingMode,
                                   Map<DiagramType, Integer> requiredDiagrams, List<UUID> materials,
                                   boolean activityMonitoringEnabled, String activityNotice, Instant now) {
         return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo, submissionMode,
                 diagramEnabled, gradingMode, title, instructions, skeleton, parts, requiredDiagrams, materials,
-                activityMonitoringEnabled, activityNotice, backToDraft(), opensAt, closesAt, lateUntil, maxAttempts,
+                activityMonitoringEnabled, activityNotice, resolveDraftStatus(), opensAt, closesAt, lateUntil, maxAttempts,
                 retiredReason, createdBy, createdAt, now, version);
     }
 
-    public Assignment withSkeleton(String instructions, DocumentModel skeleton, List<DocumentPart> parts, Instant now) {
-        return withAuthoring(title, instructions, skeleton, parts, now);
+    public Assignment updateSkeleton(String instructions, DocumentModel skeleton, List<DocumentPart> parts, Instant now) {
+        return updateAuthoring(title, instructions, skeleton, parts, now);
     }
 
     /** Thay tiêu đề có chọn, hướng dẫn và khung trong một lần lưu/version duy nhất. */
-    public Assignment withAuthoring(String title, String instructions, DocumentModel skeleton,
+    public Assignment updateAuthoring(String title, String instructions, DocumentModel skeleton,
                                     List<DocumentPart> parts, Instant now) {
         return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo, submissionMode,
                 diagramEnabled, gradingMode, title, instructions, skeleton, parts, requiredDiagrams,
-                referenceMaterialIds, activityMonitoringEnabled, activityNotice, backToDraft(), opensAt, closesAt,
+                referenceMaterialIds, activityMonitoringEnabled, activityNotice, resolveDraftStatus(), opensAt, closesAt,
                 lateUntil, maxAttempts, retiredReason, createdBy, createdAt, now, version);
     }
 
     /** Sửa rubric của bài đã duyệt cũng đưa bài về nháp (F5 bước 4). */
-    public Assignment touched(Instant now) {
-        return withStatus(backToDraft(), now);
+    public Assignment markTouched(Instant now) {
+        return changeStatus(resolveDraftStatus(), now);
     }
 
-    public Assignment withStatus(AssignmentStatus next, Instant now) {
+    public Assignment changeStatus(AssignmentStatus next, Instant now) {
         return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo, submissionMode,
                 diagramEnabled, gradingMode, title, instructions, skeleton, parts, requiredDiagrams,
                 referenceMaterialIds, activityMonitoringEnabled, activityNotice, next, opensAt, closesAt, lateUntil,
                 maxAttempts, retiredReason, createdBy, createdAt, now, version);
     }
 
-    public Assignment withSchedule(AssignmentStatus next, Instant opensAt, Instant closesAt, Instant lateUntil,
+    public Assignment applySchedule(AssignmentStatus next, Instant opensAt, Instant closesAt, Instant lateUntil,
                                    Integer maxAttempts, Instant now) {
         return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo, submissionMode,
                 diagramEnabled, gradingMode, title, instructions, skeleton, parts, requiredDiagrams,
@@ -107,7 +107,7 @@ public record Assignment(UUID id, AssignmentScope scope, UUID classId, UUID subj
                 maxAttempts, retiredReason, createdBy, createdAt, now, version);
     }
 
-    public Assignment retired(String reason, Instant now) {
+    public Assignment markRetired(String reason, Instant now) {
         return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo, submissionMode,
                 diagramEnabled, gradingMode, title, instructions, skeleton, parts, requiredDiagrams,
                 referenceMaterialIds, activityMonitoringEnabled, activityNotice, AssignmentStatus.RETIRED, opensAt,
@@ -126,7 +126,7 @@ public record Assignment(UUID id, AssignmentScope scope, UUID classId, UUID subj
     }
 
     /** Bài copy đổi loại (cá nhân / nhóm, tính điểm / luyện tập) theo lựa chọn lúc tạo (yêu cầu 2026-11-12). */
-    public Assignment withModes(SubmissionMode nextSubmissionMode, GradingMode nextGradingMode) {
+    public Assignment changeModes(SubmissionMode nextSubmissionMode, GradingMode nextGradingMode) {
         return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo,
                 nextSubmissionMode == null ? submissionMode : nextSubmissionMode, diagramEnabled,
                 nextGradingMode == null ? gradingMode : nextGradingMode, title, instructions, skeleton, parts,
@@ -134,7 +134,7 @@ public record Assignment(UUID id, AssignmentScope scope, UUID classId, UUID subj
                 closesAt, lateUntil, maxAttempts, retiredReason, createdBy, createdAt, updatedAt, version);
     }
 
-    public Assignment withVersion(long nextVersion) {
+    public Assignment changeVersion(long nextVersion) {
         return new Assignment(id, scope, classId, subjectId, sourceAssignmentId, origin, versionNo, submissionMode,
                 diagramEnabled, gradingMode, title, instructions, skeleton, parts, requiredDiagrams,
                 referenceMaterialIds, activityMonitoringEnabled, activityNotice, status, opensAt, closesAt, lateUntil,
@@ -147,7 +147,7 @@ public record Assignment(UUID id, AssignmentScope scope, UUID classId, UUID subj
                 activityNotice, referenceMaterialIds);
     }
 
-    private AssignmentStatus backToDraft() {
+    private AssignmentStatus resolveDraftStatus() {
         return status == AssignmentStatus.REVIEWED ? AssignmentStatus.DRAFT : status;
     }
 }

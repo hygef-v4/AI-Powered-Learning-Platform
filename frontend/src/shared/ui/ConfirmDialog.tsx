@@ -3,6 +3,7 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { Button } from "./Button";
 import { Dialog } from "./Dialog";
+import { msg } from "@/i18n/msg";
 
 type PendingConfirm = { title: string; confirmLabel: string; onConfirm: () => void };
 
@@ -14,7 +15,7 @@ type PendingConfirm = { title: string; confirmLabel: string; onConfirm: () => vo
 export function useConfirmDialog(): [ReactNode, (title: string, onConfirm: () => void, confirmLabel?: string) => void] {
   const [pending, setPending] = useState<PendingConfirm | null>(null);
 
-  const requestConfirm = useCallback((title: string, onConfirm: () => void, confirmLabel = "Bỏ chỉnh sửa") => {
+  const requestConfirm = useCallback((title: string, onConfirm: () => void, confirmLabel = msg("shared.ui.ConfirmDialog.discardEdits")) => {
     setPending({ title, confirmLabel, onConfirm });
   }, []);
 

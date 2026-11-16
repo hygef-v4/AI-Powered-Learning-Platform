@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { Button, Field, LockedInput, TextInput } from "@/shared/ui";
+import { Button, Field, LockedInput, Textarea, TextInput } from "@/shared/ui";
 import { updateSubject } from "../api";
 import {
   shouldReloadSubject,
@@ -10,6 +10,7 @@ import {
   type SubjectMutationProps,
 } from "../hooks/useSubjectMutation";
 import { validateSubjectInformation, type SubjectFieldErrors } from "../model/validation";
+import { msg } from "@/i18n/msg";
 
 /** Sửa tên, mô tả ngay trên thẻ; mã môn khóa. Hủy đưa về giá trị đang lưu, hai nút chỉ bấm được khi đã sửa. */
 export function SubjectEditForm({
@@ -55,10 +56,10 @@ export function SubjectEditForm({
       className="flex flex-col gap-4"
     >
       <fieldset disabled={mutation.busy} className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <Field label="Mã môn" htmlFor={`${id}-code`}>
+        <Field label={msg("subjects.components.SubjectEditForm.subjectCode")} htmlFor={`${id}-code`}>
           <LockedInput id={`${id}-code`} value={subject.code} />
         </Field>
-        <Field label="Tên môn học" htmlFor={`${id}-name`} required error={errors.name}>
+        <Field label={msg("subjects.components.SubjectEditForm.subjectName")} htmlFor={`${id}-name`} required error={errors.name}>
           <TextInput
             id={`${id}-name`}
             value={name}
@@ -72,8 +73,8 @@ export function SubjectEditForm({
           />
         </Field>
         <div className="sm:col-span-2">
-          <Field label="Mô tả" htmlFor={`${id}-description`} error={errors.description}>
-            <textarea
+          <Field label={msg("subjects.components.SubjectEditForm.description")} htmlFor={`${id}-description`} error={errors.description}>
+            <Textarea
               id={`${id}-description`}
               value={description}
               maxLength={2000}
@@ -83,7 +84,7 @@ export function SubjectEditForm({
                 setErrors((current) => ({ ...current, description: undefined }));
               }}
               data-testid="subject-edit-description"
-              className="min-h-28 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] text-ink outline-none focus:border-focus"
+              className="min-h-28"
             />
           </Field>
         </div>
@@ -95,8 +96,7 @@ export function SubjectEditForm({
           disabled={!dirty || mutation.busy}
           data-testid="subject-edit-cancel"
         >
-          Hủy
-        </Button>
+          {msg("subjects.components.SubjectEditForm.cancel")}</Button>
         <Button
           type="submit"
           variant="primary"
@@ -104,8 +104,7 @@ export function SubjectEditForm({
           disabled={!dirty || mutation.busy || conflict}
           data-testid="subject-edit-save"
         >
-          Lưu thay đổi
-        </Button>
+          {msg("subjects.components.SubjectEditForm.saveChanges")}</Button>
       </div>
     </form>
   );

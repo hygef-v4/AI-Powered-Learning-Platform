@@ -74,7 +74,7 @@ final class PromptTextNormalizer {
     }
 
     /** Thay chữ số/ký hiệu leetspeak thông dụng bằng chữ cái. */
-    static String deleet(String folded) {
+    static String undoLeet(String folded) {
         StringBuilder out = new StringBuilder(folded.length());
         for (int i = 0; i < folded.length(); i++) {
             char c = folded.charAt(i);
@@ -165,7 +165,7 @@ final class PromptTextNormalizer {
             int end = c == '&' ? text.indexOf(';', i) : -1;
             if (end > i && end - i <= 10) {
                 String entity = text.substring(i + 1, end).toLowerCase(Locale.ROOT);
-                Integer cp = entityCodePoint(entity);
+                Integer cp = decodeEntityCodePoint(entity);
                 if (cp != null) {
                     out.appendCodePoint(cp);
                     i = end + 1;
@@ -178,7 +178,7 @@ final class PromptTextNormalizer {
         return out.toString();
     }
 
-    private static Integer entityCodePoint(String entity) {
+    private static Integer decodeEntityCodePoint(String entity) {
         switch (entity) {
             case "lt":
                 return (int) '<';
@@ -212,7 +212,7 @@ final class PromptTextNormalizer {
         String folded = fold(cleaned);
         variants.add(folded);
         variants.add(joinSpacedLetters(fold(cleaned, false)));
-        variants.add(deleet(folded));
+        variants.add(undoLeet(folded));
         String decoded = decodeMarkup(cleaned);
         if (!decoded.equals(cleaned)) {
             variants.add(fold(decoded));

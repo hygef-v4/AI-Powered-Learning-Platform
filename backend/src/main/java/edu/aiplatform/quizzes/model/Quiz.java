@@ -35,11 +35,11 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
         if (instructionsDocument != null) instructions = instructionsDocument.validateLength(5000);
     }
 
-    public boolean generated() {
+    public boolean wasGenerated() {
         return paperMode == QuizPaperMode.GENERATED;
     }
 
-    public static Quiz create(QuizScope scope, UUID classId, UUID subjectId, String title, UUID createdBy,
+    public static Quiz createQuiz(QuizScope scope, UUID classId, UUID subjectId, String title, UUID createdBy,
                               Instant now) {
         return new Quiz(UUID.randomUUID(), scope, classId, subjectId, null, QuizOrigin.MANUAL, 1, title, null,
                 DEFAULT_SETTINGS, false, null, QuizPaperMode.FIXED, QuizStatus.DRAFT, null, null, null, createdBy, now, now, 0);
@@ -56,19 +56,19 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
     }
 
     /** Mọi thay đổi nội dung giữ nguyên trạng thái: nháp vẫn nháp, Quiz đang mở vẫn mở (BR-U10-20). */
-    public Quiz edited(Instant now) {
+    public Quiz markEdited(Instant now) {
         requireEditable();
-        return with(status, publishedAt, retiredAt, retiredReason, now);
+        return transitionStatus(status, publishedAt, retiredAt, retiredReason, now);
     }
 
-    public Quiz withPaperMode(QuizPaperMode newMode, Instant now) {
+    public Quiz changePaperMode(QuizPaperMode newMode, Instant now) {
         requireEditable();
         return new Quiz(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, title, instructions, settings,
                 activityMonitoringEnabled, activityNotice, newMode, status, publishedAt, retiredAt, retiredReason,
                 createdBy, createdAt, now, version, instructionsDocument);
     }
 
-    public Quiz withDetails(String newTitle, String newInstructions, QuizSettings newSettings, boolean monitoring,
+    public Quiz updateDetails(String newTitle, String newInstructions, QuizSettings newSettings, boolean monitoring,
                             String notice, Instant now) {
         requireEditable();
         return new Quiz(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, newTitle, newInstructions,
@@ -78,27 +78,27 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
                         .equals(java.util.Objects.toString(newInstructions, "").strip()) ? instructionsDocument : null);
     }
 
-    public Quiz published(Instant now) {
+    public Quiz markPublished(Instant now) {
         require(QuizStatus.DRAFT);
-        return with(QuizStatus.OPEN, now, retiredAt, retiredReason, now);
+        return transitionStatus(QuizStatus.OPEN, now, retiredAt, retiredReason, now);
     }
 
     /** Lưu trữ Quiz chưa lưu trữ, giữ nguyên lịch sử phát hành (null nếu chưa từng phát hành). */
-    public Quiz retired(String reason, Instant now) {
+    public Quiz markRetired(String reason, Instant now) {
         if (status == QuizStatus.RETIRED) {
             throw new IllegalStateException("Quiz đã lưu trữ");
         }
-        return with(QuizStatus.RETIRED, publishedAt, now, reason, now);
+        return transitionStatus(QuizStatus.RETIRED, publishedAt, now, reason, now);
     }
 
     /**
      * Mở lại Quiz đã lưu trữ: Quiz có lịch sử phát hành mở lại cho sinh viên làm; Quiz chưa từng phát hành về nháp để
      * soạn tiếp. Hai sự kiện phát hành/lưu trữ có thể xảy ra cùng thời điểm.
      */
-    public Quiz reopened(Instant now) {
+    public Quiz markReopened(Instant now) {
         require(QuizStatus.RETIRED);
         boolean neverPublished = publishedAt == null;
-        return with(neverPublished ? QuizStatus.DRAFT : QuizStatus.OPEN, publishedAt, null, null, now);
+        return transitionStatus(neverPublished ? QuizStatus.DRAFT : QuizStatus.OPEN, publishedAt, null, null, now);
     }
 
     /**
@@ -111,13 +111,13 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
                 QuizStatus.DRAFT, null, null, null, actorId, now, now, 0, instructionsDocument);
     }
 
-    private Quiz with(QuizStatus newStatus, Instant newPublishedAt, Instant newRetiredAt, String reason, Instant now) {
+    private Quiz transitionStatus(QuizStatus newStatus, Instant newPublishedAt, Instant newRetiredAt, String reason, Instant now) {
         return new Quiz(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, title, instructions, settings,
                 activityMonitoringEnabled, activityNotice, paperMode, newStatus, newPublishedAt,
                 newRetiredAt, reason, createdBy, createdAt, now, version, instructionsDocument);
     }
 
-    public Quiz withInstructionsDocument(FormattedText document) {
+    public Quiz replaceInstructionsDocument(FormattedText document) {
         return new Quiz(id, scope, classId, subjectId, sourceQuizId, origin, versionNo, title, instructions,
                 settings, activityMonitoringEnabled, activityNotice, paperMode, status, publishedAt, retiredAt,
                 retiredReason, createdBy, createdAt, updatedAt, version, document);

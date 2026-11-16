@@ -26,8 +26,8 @@ class GradingBatchTest {
 
         assertThatThrownBy(() -> service.executeBatch(actor, new Batch(items), publish))
                 .isInstanceOfSatisfying(ApiException.class, error -> {
-                    assertThat(error.status().value()).isEqualTo(400);
-                    assertThat(error.code()).isEqualTo("INVALID_BATCH");
+                    assertThat(error.readStatus().value()).isEqualTo(400);
+                    assertThat(error.readCode()).isEqualTo("INVALID_BATCH");
                     assertThat(error.getMessage()).isEqualTo("Batch must contain 1–200 items");
                 });
         verifyNoInteractions(gradingService, manager);
@@ -73,7 +73,7 @@ class GradingBatchTest {
         var e = new Evaluation();
         e.version = 3;
         when(grading.finalizeEvaluation(actor, first)).thenReturn(e);
-        when(grading.finalizeEvaluation(actor, second)).thenThrow(ApiException.conflict("GRADE_VERSION_CONFLICT", "Reload"));
+        when(grading.finalizeEvaluation(actor, second)).thenThrow(ApiException.createConflict("GRADE_VERSION_CONFLICT", "Reload"));
         var result = new GradingBatchService(grading, manager).executeBatch(actor, new Batch(List.of(first, second, first)),
                 false);
         assertThat(result.items()).extracting(v -> v.outcome()).containsExactly("SUCCESS", "FAILED", "SKIPPED");

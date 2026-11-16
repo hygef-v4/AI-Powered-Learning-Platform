@@ -28,24 +28,24 @@ public class BackupStatusService implements IBackupStatus, IBackupDashboardStatu
 
     @Override
     public Optional<BackupRunView> latest() {
-        return runs.latest().map(BackupRun::view);
+        return runs.findLatestRun().map(BackupRun::view);
     }
 
     @Override
     public Page<BackupRunView> list(Pageable page) {
-        return runs.page(page).map(BackupRun::view);
+        return runs.listRunPage(page).map(BackupRun::view);
     }
 
     @Override
     @Transactional(readOnly = true, timeout = 1)
     public Optional<BackupDashboardRunView> latestRun() {
-        return runs.latest().map(this::dashboardView);
+        return runs.findLatestRun().map(this::buildDashboardView);
     }
 
     @Override
     @Transactional(readOnly = true, timeout = 1)
     public Page<BackupDashboardRunView> history(Pageable page) {
-        return runs.page(page).map(this::dashboardView);
+        return runs.listRunPage(page).map(this::buildDashboardView);
     }
 
     @Override
@@ -56,19 +56,19 @@ public class BackupStatusService implements IBackupStatus, IBackupDashboardStatu
         }
         var summary = runs.summarize(fromInclusive, toExclusive);
         if (summary.invalidTerminal()) {
-            throw ApiException.unavailable("BACKUP_STATUS_UNAVAILABLE", "Không đọc được trạng thái backup");
+            throw ApiException.createUnavailable("BACKUP_STATUS_UNAVAILABLE", "Không đọc được trạng thái backup");
         }
         return new BackupDashboardSummary(fromInclusive, toExclusive, summary.latestSuccessfulAt(),
-                summary.failedRuns(), summary.failedRuns() == 0 ? null : publicFailure(summary.latestFailureMessage()));
+                summary.failedRuns(), summary.failedRuns() == 0 ? null : describePublicFailure(summary.latestFailureMessage()));
     }
 
-    private BackupDashboardRunView dashboardView(BackupRun run) {
+    private BackupDashboardRunView buildDashboardView(BackupRun run) {
         return new BackupDashboardRunView(run.scheduledFor(), run.state(), run.snapshotAt(), run.startedAt(),
-                run.completedAt(), run.byteSize(), run.state() == BackupState.FAILED ? publicFailure(run.safeError()) : null,
+                run.completedAt(), run.byteSize(), run.state() == BackupState.FAILED ? describePublicFailure(run.safeError()) : null,
                 run.purgedAt());
     }
 
-    private String publicFailure(String storedError) {
+    private String describePublicFailure(String storedError) {
         if ("Quá thời gian xử lý".equals(storedError)
                 || "Hết lượt thử lại: Quá thời gian xử lý".equals(storedError)) {
             return "Backup quá thời gian xử lý.";

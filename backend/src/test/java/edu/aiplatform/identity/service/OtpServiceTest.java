@@ -92,7 +92,7 @@ class OtpServiceTest {
 
         assertThatThrownBy(() -> service.verify("taivm@fpt.edu.vn", OtpPurpose.ACTIVATION, "048213", IP))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo(OtpService.OTP_TOO_MANY_ATTEMPTS));
+                        e -> assertThat(e.readCode()).isEqualTo(OtpService.OTP_TOO_MANY_ATTEMPTS));
         verify(challenges, never()).verify(any(), any(), anyString());
     }
 
@@ -105,7 +105,7 @@ class OtpServiceTest {
                 {"taivm@fpt.edu.vn", "111111"}, {"none@fpt.edu.vn", "048213"}, {"taivm@fpt.edu.vn", "12ab56"}}) {
             assertThatThrownBy(() -> service.verify(attempt[0], OtpPurpose.ACTIVATION, attempt[1], IP))
                     .isInstanceOfSatisfying(ApiException.class,
-                            e -> assertThat(e.code()).isEqualTo(OtpService.OTP_INVALID));
+                            e -> assertThat(e.readCode()).isEqualTo(OtpService.OTP_INVALID));
         }
         verify(tickets, never()).issue(any(), any());
     }

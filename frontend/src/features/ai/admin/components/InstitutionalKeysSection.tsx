@@ -10,6 +10,7 @@ import {
   testInstitutional,
   testInstitutionalDraft,
 } from "../api";
+import { msg } from "@/i18n/msg";
 
 const API: KeysApi = {
   list: async () => (await getInstitutional()).filter((c) => c.configured && c.id),
@@ -23,6 +24,6 @@ const API: KeysApi = {
 
 /** Khóa API của trường (UC 14, 15): nhiều khóa cho mỗi nhà cung cấp, cùng bảng với khóa cá nhân. */
 export function InstitutionalKeysSection() {
-  return <KeysSection title="Khóa API của trường" api={API} revokeTitle="Thu hồi khóa của trường?"
-    loadError="Không tải được khóa API của trường, thử lại sau." />;
+  return <KeysSection title={msg("ai.admin.components.InstitutionalKeysSection.schoolApiKeys")} api={API} revokeTitle={msg("ai.admin.components.InstitutionalKeysSection.revokeTheSchoolKey")}
+    loadError={msg("ai.admin.components.InstitutionalKeysSection.couldNotLoadTheSchool")} />;
 }

@@ -29,7 +29,7 @@ class YoutubeVideoTest {
                 "https://youtube.com/watch?v=abcdefghijk&list=x&%6cist=y"
             })
     void acceptsSingleVideo(String url) {
-        assertThat(YoutubeVideo.parse(url).url())
+        assertThat(YoutubeVideo.parse(url).buildUrl())
                 .isEqualTo("https://www.youtube.com/watch?v=abcdefghijk");
     }
 
@@ -75,7 +75,7 @@ class YoutubeVideoTest {
                         now,
                         0);
         var next =
-                m.revise(
+                m.reviseMaterial(
                         "updated",
                         "description",
                         1,

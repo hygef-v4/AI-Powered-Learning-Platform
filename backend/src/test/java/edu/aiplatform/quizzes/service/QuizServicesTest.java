@@ -160,12 +160,12 @@ class QuizServicesTest {
         for (int i = 0; i < options.length; i++) {
             list.add(new QuestionOption(String.valueOf(i + 1), options[i]));
         }
-        return QuestionContent.of(type, "Câu " + UUID.randomUUID(), list, correct, "Vì vậy", new BigDecimal("2"),
+        return QuestionContent.createContent(type, "Câu " + UUID.randomUUID(), list, correct, "Vì vậy", new BigDecimal("2"),
                 Difficulty.EASY, List.of("chương 1"));
     }
 
     private Question bank(boolean active) {
-        Question q = Question.newBankDraft(subject, content(QuestionType.MCQ_SINGLE, List.of("1"), "Đúng", "Sai"),
+        Question q = Question.createBankDraft(subject, content(QuestionType.MCQ_SINGLE, List.of("1"), "Đúng", "Sai"),
                 manager.accountId(), NOW);
         if (active) {
             q = q.activate(NOW);
@@ -205,7 +205,7 @@ class QuizServicesTest {
         assertThat(audits).extracting(AuditEvent::action).containsExactly("QUIZ_CREATED");
 
         classStatus.put(classA, ClassStatus.ARCHIVED);
-        assertThat(api(() -> authoring.createForClass(teacher, classA, "Khác")).code()).isEqualTo("CLASS_ARCHIVED");
+        assertThat(api(() -> authoring.createForClass(teacher, classA, "Khác")).readCode()).isEqualTo("CLASS_ARCHIVED");
     }
 
     @Test
@@ -215,7 +215,7 @@ class QuizServicesTest {
         UUID id = quiz.quiz().id();
         ApiException noNotice = api(() -> authoring.updateDetails(teacher, id, new Details("Luyện tập", null,
                 Quiz.DEFAULT_SETTINGS, true, "  "), quiz.quiz().version()));
-        assertThat(((RuleViolationException) noNotice).violations()).extracting(Violation::code)
+        assertThat(((RuleViolationException) noNotice).listViolations()).extracting(Violation::code)
                 .containsExactly("ACTIVITY_NOTICE_REQUIRED");
         QuizDetail enabled = authoring.updateDetails(teacher, id, new Details("Luyện tập", null, Quiz.DEFAULT_SETTINGS,
                 true, "Hệ thống ghi lại khi bạn rời trang"), quiz.quiz().version());
@@ -230,9 +230,9 @@ class QuizServicesTest {
         QuizDetail quiz = authoring.createForClass(teacher, classA, "Luyện tập");
         audits.clear();
 
-        ApiException failure = api(() -> authoring.get(otherTeacher, quiz.quiz().id(), null));
+        ApiException failure = api(() -> authoring.loadQuiz(otherTeacher, quiz.quiz().id(), null));
 
-        assertThat(failure.status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(failure.readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCESS_DENIED");
     }
 
@@ -242,13 +242,13 @@ class QuizServicesTest {
         QuizDetail draft = authoring.createForSubject(manager, subject, "Quiz của môn");
         draft = authoring.saveItems(manager, draft.quiz().id(), List.of(new ItemInput(q.id(), null)), draft.quiz().version());
         UUID id = draft.quiz().id();
-        assertThat(api(() -> authoring.get(teacher, id, classA)).status()).as("chưa phát hành").isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> authoring.loadQuiz(teacher, id, classA)).readStatus()).as("chưa phát hành").isEqualTo(HttpStatus.NOT_FOUND);
 
         publication.publish(manager, id, draft.quiz().version());
 
-        QuizDetail seen = authoring.get(teacher, id, classA);
+        QuizDetail seen = authoring.loadQuiz(teacher, id, classA);
         assertThat(seen.canManage()).isFalse();
-        assertThat(api(() -> authoring.updateDetails(teacher, id, new Details("x", null, seen.quiz().settings(), false, null), seen.quiz().version())).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> authoring.updateDetails(teacher, id, new Details("x", null, seen.quiz().settings(), false, null), seen.quiz().version())).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(authoring.listClass(teacher, classA)).singleElement()
                 .satisfies(row -> assertThat(row.readOnly()).isTrue());
     }
@@ -258,7 +258,7 @@ class QuizServicesTest {
         QuizDetail draft = classQuizWith(bank(true));
         QuizDetail retired = publication.retire(teacher, draft.quiz().id(), null, draft.quiz().version());
         audits.clear();
-        assertThat(api(() -> copies.newVersion(teacher, retired.quiz().id())).code()).isEqualTo("QUIZ_NOT_PUBLISHED");
+        assertThat(api(() -> copies.createNewVersion(teacher, retired.quiz().id())).readCode()).isEqualTo("QUIZ_NOT_PUBLISHED");
         assertThat(store.quizzes).hasSize(1);
         assertThat(audits).isEmpty();
     }
@@ -267,7 +267,7 @@ class QuizServicesTest {
     void neverPublishedRetiredSubjectQuizCannotBeReadByClassTeacher() {
         QuizDetail draft = authoring.createForSubject(manager, subject, "Chưa phát hành");
         QuizDetail retired = publication.retire(manager, draft.quiz().id(), null, draft.quiz().version());
-        assertThat(api(() -> authoring.get(teacher, retired.quiz().id(), classA)).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> authoring.loadQuiz(teacher, retired.quiz().id(), classA)).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
@@ -287,10 +287,10 @@ class QuizServicesTest {
                 draft.quiz().version());
         QuizDetail open = publication.publish(manager, draft.quiz().id(), saved.quiz().version());
         QuizDetail retired = publication.retire(manager, draft.quiz().id(), null, open.quiz().version());
-        assertThat(authoring.get(teacher, retired.quiz().id(), classA).canManage()).isFalse();
+        assertThat(authoring.loadQuiz(teacher, retired.quiz().id(), classA).canManage()).isFalse();
         assertThat(authoring.listClass(teacher, classA)).singleElement()
                 .satisfies(row -> assertThat(row.id()).isEqualTo(retired.quiz().id()));
-        assertThat(copies.newVersion(manager, retired.quiz().id()).quiz().versionNo()).isEqualTo(2);
+        assertThat(copies.createNewVersion(manager, retired.quiz().id()).quiz().versionNo()).isEqualTo(2);
     }
 
     @Test
@@ -311,7 +311,7 @@ class QuizServicesTest {
 
         RuleViolationException rejected = (RuleViolationException) api(() -> authoring.saveItems(teacher, quiz.quiz().id(),
                 List.of(new ItemInput(active.id(), null), new ItemInput(draftOnly.id(), null)), quiz.quiz().version()));
-        assertThat(rejected.violations()).extracting(Violation::code).containsExactly("QUESTION_NOT_ACTIVE");
+        assertThat(rejected.listViolations()).extracting(Violation::code).containsExactly("QUESTION_NOT_ACTIVE");
 
         QuizDetail saved = authoring.saveItems(teacher, quiz.quiz().id(), List.of(new ItemInput(active.id(), null)),
                 quiz.quiz().version());
@@ -319,7 +319,7 @@ class QuizServicesTest {
             assertThat(item.question().id()).isEqualTo(active.id());
             assertThat(item.points()).isEqualByComparingTo("2");
         });
-        assertThat(api(() -> authoring.saveItems(teacher, quiz.quiz().id(), List.of(), quiz.quiz().version())).code())
+        assertThat(api(() -> authoring.saveItems(teacher, quiz.quiz().id(), List.of(), quiz.quiz().version())).readCode())
                 .isEqualTo("QUIZ_VERSION_CONFLICT");
 
         QuizDetail edited = authoring.saveItems(teacher, quiz.quiz().id(),
@@ -334,7 +334,7 @@ class QuizServicesTest {
         QuizDetail quiz = authoring.createForClass(teacher, classA, "Luyện tập");
         RuleViolationException failure = (RuleViolationException) api(() -> authoring.saveItems(teacher, quiz.quiz().id(),
                 List.of(new ItemInput(q.id(), new BigDecimal("1.234")), new ItemInput(q.id(), null)), quiz.quiz().version()));
-        assertThat(failure.violations()).extracting(Violation::code).contains("ITEM_DUPLICATE", "POINTS_INVALID");
+        assertThat(failure.listViolations()).extracting(Violation::code).contains("ITEM_DUPLICATE", "POINTS_INVALID");
     }
 
     @Test
@@ -361,7 +361,7 @@ class QuizServicesTest {
         long version = quiz.quiz().version();
         RuleViolationException invalid = (RuleViolationException) api(() -> authoring.updateDetails(teacher, id,
                 new Details(" ", null, new QuizSettings(true, true, 301, 11, true, true), false, null), version));
-        assertThat(invalid.violations()).extracting(Violation::code)
+        assertThat(invalid.listViolations()).extracting(Violation::code)
                 .contains("REQUIRED", "TIME_LIMIT_INVALID", "ATTEMPTS_INVALID");
 
         QuizDetail ok = authoring.updateDetails(teacher, id, new Details("Luyện tập 2", " Đọc kỹ ",
@@ -377,13 +377,13 @@ class QuizServicesTest {
         Question other = bank(true);
         QuizDetail quiz = classQuizWith(inQuiz);
 
-        var preview = authoring.randomPreview(teacher, quiz.quiz().id(), 5, null, null);
+        var preview = authoring.previewRandomQuestions(teacher, quiz.quiz().id(), 5, null, null);
         assertThat(preview.questions()).extracting(v -> v.id()).containsExactly(other.id());
         assertThat(preview.matching()).isEqualTo(1);
         assertThat(preview.freeSlots()).isEqualTo(199);
-        assertThat(api(() -> authoring.randomPreview(teacher, quiz.quiz().id(), 200, null, null)).code())
+        assertThat(api(() -> authoring.previewRandomQuestions(teacher, quiz.quiz().id(), 200, null, null)).readCode())
                 .isEqualTo("QUIZ_RANDOM_COUNT_INVALID");
-        assertThat(authoring.bankQuestions(teacher, quiz.quiz().id(), null, null, null, null, null).items())
+        assertThat(authoring.listBankQuestions(teacher, quiz.quiz().id(), null, null, null, null, null).items())
                 .extracting(r -> r.id()).containsExactly(other.id());
     }
 
@@ -392,14 +392,14 @@ class QuizServicesTest {
         QuizDetail empty = authoring.createForClass(teacher, classA, "Rỗng");
         RuleViolationException none = (RuleViolationException) api(() -> publication.publish(teacher, empty.quiz().id(),
                 empty.quiz().version()));
-        assertThat(none.code()).isEqualTo("QUIZ_PUBLISH_FAILED");
+        assertThat(none.readCode()).isEqualTo("QUIZ_PUBLISH_FAILED");
 
         Question q = bank(true);
         QuizDetail quiz = classQuizWith(q);
         store.put(q.retire(NOW));
         RuleViolationException retired = (RuleViolationException) api(() -> publication.publish(teacher, quiz.quiz().id(),
                 quiz.quiz().version()));
-        assertThat(retired.violations()).singleElement().satisfies(v -> {
+        assertThat(retired.listViolations()).singleElement().satisfies(v -> {
             assertThat(v.field()).isEqualTo("items[1]");
             assertThat(v.code()).isEqualTo("QUESTION_NOT_ACTIVE");
         });
@@ -409,7 +409,7 @@ class QuizServicesTest {
     void publishNeedsOpenClassThenOpensAndAnnounces() {
         QuizDetail quiz = classQuizWith(bank(true));
         classStatus.put(classA, ClassStatus.DRAFT);
-        assertThat(api(() -> publication.publish(teacher, quiz.quiz().id(), quiz.quiz().version())).code())
+        assertThat(api(() -> publication.publish(teacher, quiz.quiz().id(), quiz.quiz().version())).readCode())
                 .isEqualTo("CLASS_NOT_OPEN");
         classStatus.put(classA, ClassStatus.OPEN);
 
@@ -424,7 +424,7 @@ class QuizServicesTest {
         var kept = open.items().stream().map(i -> new QuizAuthoringService.ItemInput(i.question().id(), null)).toList();
         assertThat(authoring.saveItems(teacher, quiz.quiz().id(), kept, open.quiz().version()).quiz().status())
                 .as("sửa quiz đang mở tại chỗ, không tạo version").isEqualTo(QuizStatus.OPEN);
-        assertThat(api(() -> authoring.delete(teacher, quiz.quiz().id(), open.quiz().version() + 1)).code())
+        assertThat(api(() -> authoring.deleteQuiz(teacher, quiz.quiz().id(), open.quiz().version() + 1)).readCode())
                 .isEqualTo("QUIZ_DELETE_BLOCKED");
         assertThat(deletingNotices).isEmpty();
     }
@@ -438,10 +438,10 @@ class QuizServicesTest {
         long version = open.quiz().version();
 
         assertThat(api(() -> authoring.addInline(teacher, id, content(QuestionType.MCQ_SINGLE, List.of("1"), "A", "B"),
-                version)).code()).isEqualTo("QUIZ_HAS_ATTEMPTS");
-        assertThat(api(() -> authoring.saveItems(teacher, id, List.of(), version)).code()).isEqualTo("QUIZ_HAS_ATTEMPTS");
+                version)).readCode()).isEqualTo("QUIZ_HAS_ATTEMPTS");
+        assertThat(api(() -> authoring.saveItems(teacher, id, List.of(), version)).readCode()).isEqualTo("QUIZ_HAS_ATTEMPTS");
         assertThat(query.getStudentView(id).orElseThrow().questions()).as("đề không đổi").hasSize(1);
-        assertThat(store.quizRepository.find(id).orElseThrow().version()).isEqualTo(version);
+        assertThat(store.quizRepository.findQuiz(id).orElseThrow().version()).isEqualTo(version);
     }
 
     @Test
@@ -490,12 +490,12 @@ class QuizServicesTest {
         QuizDetail retired = publication.retire(teacher, id, "Hết đợt", open.quiz().version());
         Quiz storedRetired = store.quizzes.get(id);
         long v = retired.quiz().version();
-        assertThat(api(() -> authoring.saveItems(teacher, id, List.of(), v)).code()).isEqualTo("QUIZ_NOT_EDITABLE");
+        assertThat(api(() -> authoring.saveItems(teacher, id, List.of(), v)).readCode()).isEqualTo("QUIZ_NOT_EDITABLE");
         assertThat(api(() -> authoring.addInline(teacher, id,
-                content(QuestionType.MCQ_SINGLE, List.of("1"), "C", "D"), v)).code()).isEqualTo("QUIZ_NOT_EDITABLE");
+                content(QuestionType.MCQ_SINGLE, List.of("1"), "C", "D"), v)).readCode()).isEqualTo("QUIZ_NOT_EDITABLE");
         assertThat(api(() -> authoring.updateInline(teacher, id, inline,
-                content(QuestionType.MCQ_SINGLE, List.of("2"), "C", "D"), v)).code()).isEqualTo("QUIZ_NOT_EDITABLE");
-        assertThat(api(() -> authoring.deleteInline(teacher, id, inline, v)).code()).isEqualTo("QUIZ_NOT_EDITABLE");
+                content(QuestionType.MCQ_SINGLE, List.of("2"), "C", "D"), v)).readCode()).isEqualTo("QUIZ_NOT_EDITABLE");
+        assertThat(api(() -> authoring.deleteInline(teacher, id, inline, v)).readCode()).isEqualTo("QUIZ_NOT_EDITABLE");
         assertThat(query.getStudentView(id).orElseThrow().questions()).isEqualTo(studentView.questions());
         assertThat(scorer.answerReview(id)).isEqualTo(answers);
         assertThat(store.quizzes.get(id)).isEqualTo(storedRetired);
@@ -504,27 +504,27 @@ class QuizServicesTest {
     @Test
     void publishingNewVersionRetiresTheOldOneAndNotifiesListeners() {
         QuizDetail v1 = published(classQuizWith(bank(true)));
-        QuizDetail v2 = copies.newVersion(teacher, v1.quiz().id());
+        QuizDetail v2 = copies.createNewVersion(teacher, v1.quiz().id());
         assertThat(v2.quiz().versionNo()).isEqualTo(2);
-        assertThat(api(() -> copies.newVersion(teacher, v1.quiz().id())).code()).isEqualTo("QUIZ_VERSION_EXISTS");
+        assertThat(api(() -> copies.createNewVersion(teacher, v1.quiz().id())).readCode()).isEqualTo("QUIZ_VERSION_EXISTS");
 
         published(v2);
 
         assertThat(store.quizzes.get(v1.quiz().id()).status()).isEqualTo(QuizStatus.RETIRED);
         assertThat(retiredNotices).containsExactly(v1.quiz().id());
         assertThat(audits).extracting(AuditEvent::action).contains("QUIZ_VERSION_CREATED", "QUIZ_RETIRED");
-        assertThat(copies.newVersion(teacher, v2.quiz().id()).quiz().versionNo()).as("v2 đã mở, được tạo v3")
+        assertThat(copies.createNewVersion(teacher, v2.quiz().id()).quiz().versionNo()).as("v2 đã mở, được tạo v3")
                 .isEqualTo(3);
     }
 
     @Test
     void retiredOldVersionCannotReopenWhileANewerVersionIsOpen() {
         QuizDetail v1 = published(classQuizWith(bank(true)));
-        QuizDetail v2 = copies.newVersion(teacher, v1.quiz().id());
+        QuizDetail v2 = copies.createNewVersion(teacher, v1.quiz().id());
         published(v2);
         Quiz old = store.quizzes.get(v1.quiz().id());
 
-        assertThat(api(() -> publication.reopen(teacher, old.id(), old.version())).code())
+        assertThat(api(() -> publication.reopen(teacher, old.id(), old.version())).readCode())
                 .isEqualTo("QUIZ_OTHER_VERSION_OPEN");
         assertThat(store.quizzes.get(old.id()).status()).isEqualTo(QuizStatus.RETIRED);
     }
@@ -592,7 +592,7 @@ class QuizServicesTest {
     void retireAndReopenRejectStaleVersionsWithoutMutationOrSideEffects() {
         QuizDetail draft = classQuizWith(bank(true));
         audits.clear();
-        assertThat(api(() -> publication.retire(teacher, draft.quiz().id(), null, draft.quiz().version() + 1)).code())
+        assertThat(api(() -> publication.retire(teacher, draft.quiz().id(), null, draft.quiz().version() + 1)).readCode())
                 .isEqualTo("QUIZ_VERSION_CONFLICT");
         assertThat(store.quizzes.get(draft.quiz().id()).status()).isEqualTo(QuizStatus.DRAFT);
         assertThat(audits).isEmpty();
@@ -600,7 +600,7 @@ class QuizServicesTest {
         QuizDetail retired = publication.retire(teacher, draft.quiz().id(), null, draft.quiz().version());
         audits.clear();
         retiredNotices.clear();
-        assertThat(api(() -> publication.reopen(teacher, draft.quiz().id(), retired.quiz().version() - 1)).code())
+        assertThat(api(() -> publication.reopen(teacher, draft.quiz().id(), retired.quiz().version() - 1)).readCode())
                 .isEqualTo("QUIZ_VERSION_CONFLICT");
         assertThat(store.quizzes.get(draft.quiz().id()).status()).isEqualTo(QuizStatus.RETIRED);
         assertThat(audits).isEmpty();
@@ -612,18 +612,18 @@ class QuizServicesTest {
     void retireAndReopenRejectWrongStatesAndOversizedReason() {
         QuizDetail draft = classQuizWith(bank(true));
         audits.clear();
-        assertThat(api(() -> publication.reopen(teacher, draft.quiz().id(), draft.quiz().version())).code())
+        assertThat(api(() -> publication.reopen(teacher, draft.quiz().id(), draft.quiz().version())).readCode())
                 .isEqualTo("QUIZ_NOT_RETIRED");
         RuleViolationException invalid = (RuleViolationException) api(() ->
                 publication.retire(teacher, draft.quiz().id(), "x".repeat(1001), draft.quiz().version()));
-        assertThat(invalid.code()).isEqualTo("QUIZ_INVALID");
-        assertThat(invalid.violations()).singleElement().satisfies(v -> assertThat(v.field()).isEqualTo("reason"));
+        assertThat(invalid.readCode()).isEqualTo("QUIZ_INVALID");
+        assertThat(invalid.listViolations()).singleElement().satisfies(v -> assertThat(v.field()).isEqualTo("reason"));
         assertThat(audits).isEmpty();
         assertThat(retiredNotices).isEmpty();
         QuizDetail retired = publication.retire(teacher, draft.quiz().id(), null, draft.quiz().version());
         audits.clear();
         retiredNotices.clear();
-        assertThat(api(() -> publication.retire(teacher, draft.quiz().id(), null, retired.quiz().version())).code())
+        assertThat(api(() -> publication.retire(teacher, draft.quiz().id(), null, retired.quiz().version())).readCode())
                 .isEqualTo("QUIZ_NOT_OPEN");
         assertThat(audits).isEmpty();
         assertThat(retiredNotices).isEmpty();
@@ -634,22 +634,22 @@ class QuizServicesTest {
         QuizDetail draft = classQuizWith(bank(true));
         UUID id = draft.quiz().id();
         audits.clear();
-        assertThat(api(() -> publication.retire(otherTeacher, id, null, draft.quiz().version())).status())
+        assertThat(api(() -> publication.retire(otherTeacher, id, null, draft.quiz().version())).readStatus())
                 .isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCESS_DENIED");
         assertThat(retiredNotices).isEmpty();
         QuizDetail retired = publication.retire(teacher, id, null, draft.quiz().version());
         audits.clear();
         retiredNotices.clear();
-        assertThat(api(() -> publication.reopen(otherTeacher, id, retired.quiz().version())).status())
+        assertThat(api(() -> publication.reopen(otherTeacher, id, retired.quiz().version())).readStatus())
                 .isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCESS_DENIED");
         audits.clear();
         classStatus.put(classA, ClassStatus.ARCHIVED);
-        assertThat(api(() -> publication.reopen(teacher, id, retired.quiz().version())).code()).isEqualTo("CLASS_ARCHIVED");
+        assertThat(api(() -> publication.reopen(teacher, id, retired.quiz().version())).readCode()).isEqualTo("CLASS_ARCHIVED");
         classStatus.put(classA, ClassStatus.OPEN);
         subjectActive = false;
-        assertThat(api(() -> publication.reopen(teacher, id, retired.quiz().version())).code()).isEqualTo("SUBJECT_NOT_ACTIVE");
+        assertThat(api(() -> publication.reopen(teacher, id, retired.quiz().version())).readCode()).isEqualTo("SUBJECT_NOT_ACTIVE");
         assertThat(store.quizzes.get(id).status()).isEqualTo(QuizStatus.RETIRED);
         assertThat(audits).isEmpty();
         assertThat(retiredNotices).isEmpty();
@@ -661,12 +661,12 @@ class QuizServicesTest {
         QuizDetail draft = authoring.createForSubject(manager, subject, "Môn");
         QuizDetail retired = publication.retire(manager, draft.quiz().id(), null, draft.quiz().version());
         audits.clear();
-        assertThat(api(() -> publication.reopen(teacher, draft.quiz().id(), retired.quiz().version())).status())
+        assertThat(api(() -> publication.reopen(teacher, draft.quiz().id(), retired.quiz().version())).readStatus())
                 .isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCESS_DENIED");
         audits.clear();
         subjectActive = false;
-        assertThat(api(() -> publication.reopen(manager, draft.quiz().id(), retired.quiz().version())).code())
+        assertThat(api(() -> publication.reopen(manager, draft.quiz().id(), retired.quiz().version())).readCode())
                 .isEqualTo("SUBJECT_NOT_ACTIVE");
         assertThat(audits).isEmpty();
         assertThat(store.quizzes.get(draft.quiz().id()).status()).isEqualTo(QuizStatus.RETIRED);
@@ -691,7 +691,7 @@ class QuizServicesTest {
         assertThat(copy.items().get(0).question().id()).isEqualTo(q.id());
         assertThat(copy.items().get(1).question().id()).isNotEqualTo(inline);
         assertThat(store.questions.get(copy.items().get(1).question().id()).quizId()).isEqualTo(copy.quiz().id());
-        assertThat(api(() -> copies.newVersion(teacher, quiz.quiz().id())).code()).isEqualTo("QUIZ_NOT_PUBLISHED");
+        assertThat(api(() -> copies.createNewVersion(teacher, quiz.quiz().id())).readCode()).isEqualTo("QUIZ_NOT_PUBLISHED");
     }
 
     @Test
@@ -703,7 +703,7 @@ class QuizServicesTest {
 
         assertThat(copy.quiz().classId()).isEqualTo(classB);
         assertThat(audits).extracting(AuditEvent::action).contains("QUIZ_COPIED");
-        assertThat(api(() -> copies.copyToClass(otherTeacher, classB, source.quiz().id())).status())
+        assertThat(api(() -> copies.copyToClass(otherTeacher, classB, source.quiz().id())).readStatus())
                 .isEqualTo(HttpStatus.NOT_FOUND);
     }
 
@@ -713,7 +713,7 @@ class QuizServicesTest {
         QuizDetail withInline = authoring.addInline(teacher, quiz.quiz().id(),
                 content(QuestionType.MCQ_SINGLE, List.of("1"), "A", "B"), quiz.quiz().version());
 
-        authoring.delete(teacher, quiz.quiz().id(), withInline.quiz().version());
+        authoring.deleteQuiz(teacher, quiz.quiz().id(), withInline.quiz().version());
 
         assertThat(store.quizzes).doesNotContainKey(quiz.quiz().id());
         assertThat(store.questions).isEmpty();

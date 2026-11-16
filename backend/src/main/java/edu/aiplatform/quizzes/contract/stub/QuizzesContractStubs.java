@@ -27,7 +27,7 @@ import org.springframework.context.annotation.Bean;
 public class QuizzesContractStubs {
 
     static QuizView sampleQuiz(UUID quizId) {
-        return new QuizView(quizId, QuizScope.CLASS, Stubs.derivedId("class", quizId), Stubs.derivedId("subject", quizId),
+        return new QuizView(quizId, QuizScope.CLASS, Stubs.deriveId("class", quizId), Stubs.deriveId("subject", quizId),
                 1, "Quiz mẫu", QuizStatus.OPEN, new QuizSettings(false, false, null, null, true, true), false, null,
                 BigDecimal.ZERO);
     }

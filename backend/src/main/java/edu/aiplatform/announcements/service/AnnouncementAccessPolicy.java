@@ -81,6 +81,6 @@ public class AnnouncementAccessPolicy {
                         "OUT_OF_SCOPE",
                         Map.of(),
                         clock.instant()));
-        return ApiException.notFound("ANNOUNCEMENT_NOT_FOUND");
+        return ApiException.createNotFound("ANNOUNCEMENT_NOT_FOUND");
     }
 }

@@ -60,72 +60,72 @@ public class QuizCopyService {
         Quiz source = support.loadManaged(actor, id);
         support.requireContainerActive(source);
         Quiz copy = copy(actor, source, QuizOrigin.CLONE, 1, source.classId());
-        audit.success(actor, "QUIZ_CLONED", QuizSupport.OBJECT, copy.id(), Map.of("sourceQuizId", id.toString()));
-        return support.detail(copy, true);
+        audit.recordSuccess(actor, "QUIZ_CLONED", QuizSupport.OBJECT, copy.id(), Map.of("sourceQuizId", id.toString()));
+        return support.buildDetail(copy, true);
     }
 
     /** Version mới từ Quiz đã phát hành (BR-U10-30); mỗi chuỗi tối đa một version đang soạn. */
     @Transactional
-    public QuizDetail newVersion(Actor actor, UUID id) {
+    public QuizDetail createNewVersion(Actor actor, UUID id) {
         Quiz source = support.loadManaged(actor, id);
         if (source.status() != QuizStatus.OPEN
                 && (source.status() != QuizStatus.RETIRED || source.publishedAt() == null)) {
-            throw ApiException.conflict("QUIZ_NOT_PUBLISHED", "Chỉ tạo version mới từ quiz đã phát hành");
+            throw ApiException.createConflict("QUIZ_NOT_PUBLISHED", "Chỉ tạo version mới từ quiz đã phát hành");
         }
         support.requireContainerActive(source);
         Quiz copy;
         try {
-            copy = copy(actor, source, QuizOrigin.NEW_VERSION, quizzes.maxVersionNo(id) + 1, source.classId());
+            copy = copy(actor, source, QuizOrigin.NEW_VERSION, quizzes.findMaxVersionNo(id) + 1, source.classId());
         } catch (DuplicateKeyException exists) {
-            throw ApiException.conflict("QUIZ_VERSION_EXISTS", "Quiz này đã có một version mới đang soạn");
+            throw ApiException.createConflict("QUIZ_VERSION_EXISTS", "Quiz này đã có một version mới đang soạn");
         }
-        audit.success(actor, "QUIZ_VERSION_CREATED", QuizSupport.OBJECT, copy.id(),
+        audit.recordSuccess(actor, "QUIZ_VERSION_CREATED", QuizSupport.OBJECT, copy.id(),
                 Map.of("sourceQuizId", id.toString(), "versionNo", copy.versionNo()));
-        return support.detail(copy, true);
+        return support.buildDetail(copy, true);
     }
 
     /** Quiz của các lớp khác cùng môn mà giảng viên đang dạy (nguồn copy). */
     @Transactional(readOnly = true)
     public List<QuizRow> copySources(Actor actor, UUID classId) {
         access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS", classId, "CLASS_NOT_FOUND");
-        ClassRef target = support.classRef(classId);
+        ClassRef target = support.loadClassRef(classId);
         List<UUID> sameSubject = new ArrayList<>();
-        for (UUID taught : taughtClasses(actor)) {
-            if (!taught.equals(classId) && support.classRef(taught).subjectId().equals(target.subjectId())) {
+        for (UUID taught : listTaughtClasses(actor)) {
+            if (!taught.equals(classId) && support.loadClassRef(taught).subjectId().equals(target.subjectId())) {
                 sameSubject.add(taught);
             }
         }
-        return quizzes.listClassQuizzesOf(sameSubject, classId).stream().map(s -> QuizRow.of(s, true)).toList();
+        return quizzes.listClassQuizzesOf(sameSubject, classId).stream().map(s -> QuizRow.createQuizRow(s, true)).toList();
     }
 
     /** Copy Quiz của lớp khác sang lớp này: giảng viên phải dạy cả hai lớp, hai lớp cùng môn. */
     @Transactional
     public QuizDetail copyToClass(Actor actor, UUID classId, UUID sourceQuizId) {
         access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS", classId, "CLASS_NOT_FOUND");
-        Quiz source = support.load(sourceQuizId);
+        Quiz source = support.loadQuiz(sourceQuizId);
         if (source.scope() != QuizScope.CLASS || source.classId().equals(classId)) {
-            throw ApiException.notFound(QuizSupport.NOT_FOUND);
+            throw ApiException.createNotFound(QuizSupport.NOT_FOUND);
         }
         access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, source.classId(), QuizSupport.OBJECT, sourceQuizId,
                 QuizSupport.NOT_FOUND);
-        ClassRef target = support.classRef(classId);
+        ClassRef target = support.loadClassRef(classId);
         if (!target.subjectId().equals(source.subjectId())) {
-            throw ApiException.conflict("QUIZ_COPY_SUBJECT_MISMATCH", "Chỉ copy quiz giữa các lớp cùng môn");
+            throw ApiException.createConflict("QUIZ_COPY_SUBJECT_MISMATCH", "Chỉ copy quiz giữa các lớp cùng môn");
         }
         Quiz copy = copy(actor, source, QuizOrigin.CLASS_COPY, 1, classId);
         support.requireContainerActive(copy);
-        audit.success(actor, "QUIZ_COPIED", QuizSupport.OBJECT, copy.id(),
+        audit.recordSuccess(actor, "QUIZ_COPIED", QuizSupport.OBJECT, copy.id(),
                 Map.of("sourceQuizId", sourceQuizId.toString(), "classId", classId.toString()));
-        return support.detail(copy, true);
+        return support.buildDetail(copy, true);
     }
 
     private Quiz copy(Actor actor, Quiz source, QuizOrigin origin, int versionNo, UUID classId) {
         Instant now = clock.instant();
         Quiz copy = source.copyAs(origin, versionNo, classId, actor.accountId(), now);
         quizzes.insert(copy);
-        Map<UUID, Question> byId = support.questionsOf(quizzes.items(source.id()));
+        Map<UUID, Question> byId = support.loadQuestions(quizzes.listItems(source.id()));
         List<QuizItem> items = new ArrayList<>();
-        for (QuizItem item : quizzes.items(source.id())) {
+        for (QuizItem item : quizzes.listItems(source.id())) {
             Question q = byId.get(item.questionId());
             UUID questionId = item.questionId();
             if (q != null && q.scope() == QuestionScope.QUIZ) {
@@ -142,11 +142,11 @@ public class QuizCopyService {
         return copy;
     }
 
-    private List<UUID> taughtClasses(Actor actor) {
+    private List<UUID> listTaughtClasses(Actor actor) {
         try {
             return classScope.listTaughtClasses(actor.accountId());
         } catch (RuntimeException unavailable) {
-            throw ApiException.unavailable("CLASS_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
+            throw ApiException.createUnavailable("CLASS_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
         }
     }
 }

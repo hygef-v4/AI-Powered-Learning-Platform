@@ -72,12 +72,12 @@ class MaterialModuleServiceTest {
 
     @Test
     void moduleNamesAndOrdersRespectDocumentedBounds() {
-        assertThat(module.revise("m".repeat(200), 0, now).title()).hasSize(200);
+        assertThat(module.reviseModule("m".repeat(200), 0, now).title()).hasSize(200);
         for (String title : List.of("", "   ", "m".repeat(201))) {
-            assertThatThrownBy(() -> module.revise(title, 0, now))
+            assertThatThrownBy(() -> module.reviseModule(title, 0, now))
                     .isInstanceOf(IllegalArgumentException.class);
         }
-        assertThatThrownBy(() -> module.revise("Valid", -1, now))
+        assertThatThrownBy(() -> module.reviseModule("Valid", -1, now))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -176,7 +176,7 @@ class MaterialModuleServiceTest {
         when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(false);
         assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_QUIZ_NOT_FOUND"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_QUIZ_NOT_FOUND"));
         verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
         verify(audit).record(argThat(event -> event.action().equals("ACCESS_DENIED")
                 && event.result() == edu.aiplatform.audit.contract.AuditResult.DENIED));
@@ -185,7 +185,7 @@ class MaterialModuleServiceTest {
         when(materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)).thenReturn(false);
         assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_NOT_FOUND"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
         verifyNoInteractions(audit);
         when(materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)).thenReturn(true);
         materialModuleService.detachQuiz(manager, moduleId, quizId);
@@ -209,7 +209,7 @@ class MaterialModuleServiceTest {
                 quiz(quizId, QuizScope.SUBJECT, UUID.randomUUID(), null, QuizStatus.DRAFT)));
         assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_QUIZ_INVALID"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_QUIZ_INVALID"));
         verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
         verifyNoInteractions(audit);
     }
@@ -220,7 +220,7 @@ class MaterialModuleServiceTest {
         assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 0))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_MODULE_NOT_EMPTY"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_MODULE_NOT_EMPTY"));
         verify(materialModuleRepository, never()).deleteModule(any(), anyLong());
     }
 
@@ -236,7 +236,7 @@ class MaterialModuleServiceTest {
     void deleteOfStaleVersionConflicts() {
         assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 5))
                 .isInstanceOfSatisfying(
-                        ApiException.class, e -> assertThat(e.status().value()).isEqualTo(409));
+                        ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(409));
     }
 
     @Test
@@ -256,8 +256,8 @@ class MaterialModuleServiceTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> {
-                            assertThat(e.status().value()).isEqualTo(400);
-                            assertThat(e.code()).isEqualTo("MATERIAL_QUIZ_INVALID");
+                            assertThat(e.readStatus().value()).isEqualTo(400);
+                            assertThat(e.readCode()).isEqualTo("MATERIAL_QUIZ_INVALID");
                         });
         verify(materialModuleRepository, never()).linkQuiz(any());
         verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
@@ -352,7 +352,7 @@ class MaterialModuleServiceTest {
         assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 0))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_MODULE_LAST"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_MODULE_LAST"));
 
         verify(materialModuleRepository, never()).moveArchivedMaterials(any(), any());
         verify(materialModuleRepository, never()).deleteModule(any(), anyLong());
@@ -365,7 +365,7 @@ class MaterialModuleServiceTest {
         assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 0))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
         verifyNoInteractions(audit);
     }
 
@@ -380,7 +380,7 @@ class MaterialModuleServiceTest {
                                         new MaterialCommands.ModuleUpdate("New", 0L)))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
         verifyNoInteractions(audit);
     }
 
@@ -395,7 +395,7 @@ class MaterialModuleServiceTest {
                                         new MaterialCommands.Reorder(List.of(first, first))))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_REORDER_INVALID"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_REORDER_INVALID"));
         when(materialModuleRepository.findModule(otherId)).thenReturn(Optional.of(other));
         assertThatThrownBy(
                         () ->
@@ -409,7 +409,7 @@ class MaterialModuleServiceTest {
                                                                 otherId, 1L)))))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
         when(materialModuleRepository.findModule(otherId))
                 .thenReturn(
                         Optional.of(
@@ -434,7 +434,7 @@ class MaterialModuleServiceTest {
                                                                 otherId, 0L)))))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_NOT_FOUND"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
         verify(materialModuleRepository, never()).updateModule(any(), anyLong());
         verifyNoInteractions(audit);
     }
@@ -470,7 +470,7 @@ class MaterialModuleServiceTest {
         assertThatThrownBy(() -> materialModuleService.reorderModules(manager, subject, command))
                 .isInstanceOfSatisfying(
                         ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
     }
 
     @Test

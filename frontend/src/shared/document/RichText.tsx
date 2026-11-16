@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef, type ClipboardEvent, type KeyboardEvent } from "react";
 import { cx } from "@/shared/ui";
-import { formatOf, hasFormat, insertText, normalizeRuns, runsLength, sameRuns, type RunFormat } from "./runs";
+import { formatOf, hasFormat, insertText, normalizeRuns, measureRunsLength, hasSameRuns, type RunFormat } from "./runs";
 import type { Run } from "./types";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
@@ -17,13 +17,13 @@ export function getCaret(root: HTMLElement): Caret {
   if (!selection || selection.rangeCount === 0) return { start: length, end: length, length };
   const range = selection.getRangeAt(0);
   if (!root.contains(range.startContainer) || !root.contains(range.endContainer)) return { start: length, end: length, length };
-  const offset = (node: Node, at: number) => {
+  const measureOffset = (node: Node, at: number) => {
     const before = root.ownerDocument.createRange();
     before.selectNodeContents(root);
     before.setEnd(node, at);
     return before.toString().length;
   };
-  return { start: offset(range.startContainer, range.startOffset), end: offset(range.endContainer, range.endOffset), length };
+  return { start: measureOffset(range.startContainer, range.startOffset), end: measureOffset(range.endContainer, range.endOffset), length };
 }
 
 /** Đặt vùng chọn [start, end) trong ô (con trỏ khi không có end). */
@@ -55,7 +55,7 @@ function escape(text: string): string {
 }
 
 /** HTML của các run: mỗi run một span, định dạng ghi ở data-* (để đọc lại) và style (để hiện). */
-export function runsHtml(runs: Run[]): string {
+export function renderRunsHtml(runs: Run[]): string {
   return runs.filter((run) => run.text).map((run) => {
     const data: string[] = [];
     const style: string[] = [];
@@ -79,7 +79,7 @@ export function runsHtml(runs: Run[]): string {
   }).join("");
 }
 
-function hexOf(value: string): string | undefined {
+function parseHex(value: string): string | undefined {
   if (HEX.test(value)) return value.toUpperCase();
   const match = /^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)$/.exec(value.trim());
   if (!match || (match[4] !== undefined && Number(match[4]) === 0)) return undefined;
@@ -114,9 +114,9 @@ function formatFrom(element: HTMLElement, inherited: RunFormat): RunFormat {
   const decoration = `${style.textDecorationLine ?? ""} ${style.textDecoration ?? ""}`;
   if (decoration.includes("underline")) format.underline = true;
   if (decoration.includes("line-through")) format.strike = true;
-  const color = style.color ? hexOf(style.color) : undefined;
+  const color = style.color ? parseHex(style.color) : undefined;
   if (color) format.color = color;
-  const highlight = style.backgroundColor ? hexOf(style.backgroundColor) : undefined;
+  const highlight = style.backgroundColor ? parseHex(style.backgroundColor) : undefined;
   if (highlight) format.highlight = highlight;
   return format;
 }
@@ -170,24 +170,24 @@ export function RichText({ runs, onChange, onKey, onFocus, className, placeholde
 
   useLayoutEffect(() => {
     const root = ref.current;
-    if (!root || (shown.current && sameRuns(shown.current, runs))) return;
+    if (!root || (shown.current && hasSameRuns(shown.current, runs))) return;
     const caret = root.ownerDocument.activeElement === root ? getCaret(root) : null;
-    root.innerHTML = runsHtml(runs);
+    root.innerHTML = renderRunsHtml(runs);
     shown.current = runs;
-    const length = runsLength(runs);
+    const length = measureRunsLength(runs);
     const after = caretAfter.current;
     caretAfter.current = null;
     if (after !== null) setCaret(root, Math.min(after, length));
     else if (caret) setCaret(root, Math.min(caret.start, length), Math.min(caret.end, length));
   }, [runs]);
 
-  function input(composing = false) {
+  function handleInput(composing = false) {
     const root = ref.current;
     // Bộ gõ đang ghép chữ (gõ dấu tiếng Việt): đợi ghép xong mới báo, để ô không bị vẽ lại hay đổi chỗ giữa chừng.
     if (!root || composing) return;
     const before = shown.current ?? runs;
     let next = readRuns(root);
-    if (runsLength(before) === 0 && hasFormat(before[0]) && next.length === 1 && !hasFormat(next[0])) {
+    if (measureRunsLength(before) === 0 && hasFormat(before[0]) && next.length === 1 && !hasFormat(next[0])) {
       // Đoạn trống đã bật định dạng (ví dụ Đậm) rồi mới gõ: chữ theo định dạng đó, vẽ lại ô cho đúng.
       next = [{ ...formatOf(before[0]), text: next[0]!.text }];
       shown.current = null;
@@ -213,7 +213,7 @@ export function RichText({ runs, onChange, onKey, onFocus, className, placeholde
       data-editable data-rich spellCheck aria-placeholder={placeholder}
       data-placeholder={placeholder} data-empty={runs.every((run) => !run.text) || undefined}
       className={cx("min-h-[1.65em] w-full cursor-text break-words whitespace-pre-wrap outline-none", placeholder && "relative", className)}
-      onInput={(event) => input((event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={() => input()} onPaste={paste} onDrop={(event) => event.preventDefault()} onFocus={onFocus}
+      onInput={(event) => handleInput((event.nativeEvent as InputEvent).isComposing)} onCompositionEnd={() => handleInput()} onPaste={paste} onDrop={(event) => event.preventDefault()} onFocus={onFocus}
       onKeyDown={(event) => {
         if (!event.nativeEvent.isComposing && onKey && ref.current) onKey(event, getCaret(ref.current));
       }} />

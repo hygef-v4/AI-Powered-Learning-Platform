@@ -57,7 +57,7 @@ public class GradingPromptBuilder {
     private int requireValidRubricSize(List<RubricView> rubrics) {
         int totalItems = countRubricItems(rubrics);
         if (totalItems > MAX_AI_RUBRIC_ITEMS) {
-            throw ApiException.badRequest("RUBRIC_TOO_LARGE_FOR_AI",
+            throw ApiException.createBadRequest("RUBRIC_TOO_LARGE_FOR_AI",
                     "Rubric exceeds maximum item count (" + MAX_AI_RUBRIC_ITEMS
                             + ") for a single AI grading request");
         }

@@ -42,29 +42,29 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1")
 public class QuestionController {
 
-    private final QuestionBankService bank;
+    private final QuestionBankService questionBankService;
     private final QuestionImporter importer;
-    private final QuizAiDraftService drafts;
+    private final QuizAiDraftService quizAiDraftService;
     private final QuizReferenceMaterials materials;
 
-    public QuestionController(QuestionBankService bank, QuestionImporter importer, QuizAiDraftService drafts,
+    public QuestionController(QuestionBankService questionBankService, QuestionImporter importer, QuizAiDraftService quizAiDraftService,
                               QuizReferenceMaterials materials) {
-        this.bank = bank;
+        this.questionBankService = questionBankService;
         this.importer = importer;
-        this.drafts = drafts;
+        this.quizAiDraftService = quizAiDraftService;
         this.materials = materials;
     }
 
     /** Tài liệu của môn cho popup AI của ngân hàng (H8). */
     @GetMapping("/subjects/{subjectId}/reference-materials")
-    public List<SelectableMaterial> referenceMaterials(@AuthenticationPrincipal Actor actor,
+    public List<SelectableMaterial> listReferenceMaterials(@AuthenticationPrincipal Actor actor,
                                                        @PathVariable UUID subjectId) {
-        return materials.forSubject(actor, subjectId);
+        return materials.listForSubject(actor, subjectId);
     }
 
     @GetMapping("/subjects/{subjectId}/question-ai-drafts")
-    public List<AiDraftView> aiDrafts(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
-        return drafts.listForBank(actor, subjectId);
+    public List<AiDraftView> listAiDrafts(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
+        return quizAiDraftService.listForBank(actor, subjectId);
     }
 
     /** AI soạn câu cho ngân hàng (F4). */
@@ -72,29 +72,29 @@ public class QuestionController {
     public ResponseEntity<AiDraftView> requestAiDraft(@AuthenticationPrincipal Actor actor,
                                                       @PathVariable UUID subjectId, @RequestBody JsonNode body) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(drafts.requestForBank(actor, subjectId, AiDraftRequests.bank(body)));
+                .body(quizAiDraftService.requestForBank(actor, subjectId, AiDraftRequests.parseBankRequest(body)));
     }
 
     @GetMapping("/subjects/{subjectId}/question-ai-drafts/{draftId}")
-    public AiDraftView aiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+    public AiDraftView loadAiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                @PathVariable UUID draftId) {
-        return drafts.getForBank(actor, subjectId, draftId);
+        return quizAiDraftService.getForBank(actor, subjectId, draftId);
     }
 
     @PostMapping(value = "/subjects/{subjectId}/question-ai-drafts/{draftId}:accept", consumes = "application/json")
     public BankAcceptResult acceptAiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                           @PathVariable UUID draftId, @RequestBody JsonNode body) {
-        return drafts.acceptForBank(actor, subjectId, draftId, AiDraftRequests.accept(body, false).questions());
+        return quizAiDraftService.acceptForBank(actor, subjectId, draftId, AiDraftRequests.accept(body, false).questions());
     }
 
     @PostMapping("/subjects/{subjectId}/question-ai-drafts/{draftId}:discard")
     public AiDraftView discardAiDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                       @PathVariable UUID draftId) {
-        return drafts.discardForBank(actor, subjectId, draftId);
+        return quizAiDraftService.discardForBank(actor, subjectId, draftId);
     }
 
     @GetMapping("/subjects/{subjectId}/questions")
-    public QuestionPage list(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+    public QuestionPage listQuestions(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                              @RequestParam(required = false) QuestionType type,
                              @RequestParam(required = false) Difficulty difficulty,
                              @RequestParam(required = false) QuestionStatus status,
@@ -103,13 +103,13 @@ public class QuestionController {
                              @RequestParam(required = false) Integer size,
                              @RequestParam MultiValueMap<String, String> params) {
         QuestionRequests.query(params);
-        return bank.list(actor, subjectId, new QuestionBankService.Filter(type, difficulty, status, q, page, size));
+        return questionBankService.listQuestions(actor, subjectId, new QuestionBankService.Filter(type, difficulty, status, q, page, size));
     }
 
     @PostMapping(value = "/subjects/{subjectId}/questions", consumes = "application/json")
-    public ResponseEntity<QuestionDetail> create(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
+    public ResponseEntity<QuestionDetail> createQuestion(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                                  @RequestBody JsonNode body) {
-        QuestionDetail created = bank.create(actor, subjectId, QuestionRequests.create(body));
+        QuestionDetail created = questionBankService.createQuestion(actor, subjectId, QuestionRequests.parseCreate(body));
         return ResponseEntity.created(URI.create("/api/v1/questions/" + created.question().id())).body(created);
     }
 
@@ -119,89 +119,89 @@ public class QuestionController {
                                                          @RequestPart("file") MultipartFile file,
                                                          @RequestParam(defaultValue = "false") boolean dryRun) {
         if (file.getSize() > QuestionImporter.MAX_BYTES) {
-            throw ApiException.payloadTooLarge("IMPORT_FILE_TOO_LARGE", "Tệp tối đa 5 MB");
+            throw ApiException.createPayloadTooLarge("IMPORT_FILE_TOO_LARGE", "Tệp tối đa 5 MB");
         }
         byte[] bytes;
         try {
             bytes = file.getBytes();
         } catch (IOException unreadable) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Không đọc được tệp");
+            throw ApiException.createBadRequest("IMPORT_FILE_INVALID", "Không đọc được tệp");
         }
         return importer.importFile(actor, subjectId, bytes, dryRun);
     }
 
     @GetMapping("/questions/{id}")
-    public QuestionDetail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return bank.detail(actor, id);
+    public QuestionDetail loadQuestion(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return questionBankService.loadQuestion(actor, id);
     }
 
     @PatchMapping(value = "/questions/{id}", consumes = "application/json")
-    public QuestionDetail update(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public QuestionDetail updateQuestion(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                  @RequestBody JsonNode body) {
-        QuestionRequests.Update update = QuestionRequests.update(body);
-        return bank.update(actor, id, update.content(), update.version());
+        QuestionRequests.Update update = QuestionRequests.parseUpdate(body);
+        return questionBankService.updateQuestion(actor, id, update.content(), update.version());
     }
 
     @DeleteMapping("/questions/{id}")
-    public ResponseEntity<Void> delete(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public ResponseEntity<Void> deleteQuestion(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                        @RequestParam long version) {
-        bank.delete(actor, id, version);
+        questionBankService.deleteQuestion(actor, id, version);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/questions/{id}/versions")
     public QuestionDetail openDraft(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return bank.openDraft(actor, id);
+        return questionBankService.openDraft(actor, id);
     }
 
     @PostMapping(value = "/questions/{id}/activate", consumes = "application/json")
     public QuestionDetail activate(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                    @RequestBody JsonNode body) {
-        return bank.activate(actor, id, QuestionRequests.versionOnly(body));
+        return questionBankService.activate(actor, id, QuestionRequests.readVersionOnly(body));
     }
 
     /** Duyệt câu giảng viên đề xuất (BR-U10-09). */
     @PostMapping(value = "/questions/{id}/approve", consumes = "application/json")
     public QuestionDetail approve(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                   @RequestBody JsonNode body) {
-        return bank.approve(actor, id, QuestionRequests.versionOnly(body));
+        return questionBankService.approve(actor, id, QuestionRequests.readVersionOnly(body));
     }
 
     @PostMapping(value = "/questions/{id}/reject", consumes = "application/json")
     public QuestionDetail reject(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                  @RequestBody JsonNode body) {
         QuestionRequests.Reject request = QuestionRequests.reject(body);
-        return bank.reject(actor, id, request.reason(), request.version());
+        return questionBankService.reject(actor, id, request.reason(), request.version());
     }
 
     @PostMapping(value = "/subjects/{subjectId}/questions:activate", consumes = "application/json")
     public BulkResult activateMany(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                    @RequestBody JsonNode body) {
-        return bank.activateMany(actor, subjectId, QuestionRequests.bulk(body).items());
+        return questionBankService.activateMany(actor, subjectId, QuestionRequests.parseBulk(body).items());
     }
 
     @PostMapping(value = "/subjects/{subjectId}/questions:approve", consumes = "application/json")
     public BulkResult approveMany(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                   @RequestBody JsonNode body) {
-        return bank.approveMany(actor, subjectId, QuestionRequests.bulk(body).items());
+        return questionBankService.approveMany(actor, subjectId, QuestionRequests.parseBulk(body).items());
     }
 
     @PostMapping(value = "/subjects/{subjectId}/questions:reject", consumes = "application/json")
     public BulkResult rejectMany(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId,
                                  @RequestBody JsonNode body) {
-        QuestionRequests.Bulk request = QuestionRequests.bulk(body);
-        return bank.rejectMany(actor, subjectId, request.items(), request.reason());
+        QuestionRequests.Bulk request = QuestionRequests.parseBulk(body);
+        return questionBankService.rejectMany(actor, subjectId, request.items(), request.reason());
     }
 
     /** Các nhóm câu giống hệt nhau trong ngân hàng (BR-U10-08). */
     @GetMapping("/subjects/{subjectId}/questions:duplicates")
-    public List<DuplicateGroup> duplicates(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
-        return bank.duplicateGroups(actor, subjectId);
+    public List<DuplicateGroup> listDuplicates(@AuthenticationPrincipal Actor actor, @PathVariable UUID subjectId) {
+        return questionBankService.duplicateGroups(actor, subjectId);
     }
 
     @PostMapping(value = "/questions/{id}/retire", consumes = "application/json")
     public QuestionDetail retire(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                  @RequestBody JsonNode body) {
-        return bank.retire(actor, id, QuestionRequests.versionOnly(body));
+        return questionBankService.retire(actor, id, QuestionRequests.readVersionOnly(body));
     }
 }

@@ -70,13 +70,13 @@ class GroupRenameServiceTest {
     @Test
     void onlyTheLeaderRenamesAndTheNameFollowsTheGroupRules() {
         assertThatThrownBy(() -> service.rename(member, group.id(), "Nhóm mới"))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_RENAME_LEADER_ONLY"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_RENAME_LEADER_ONLY"));
         assertThatThrownBy(() -> service.rename(leader, group.id(), "   "))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_NAME_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_NAME_INVALID"));
         assertThatThrownBy(() -> service.rename(leader, group.id(), "x".repeat(101)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_NAME_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_NAME_INVALID"));
         assertThatThrownBy(() -> service.rename(leader, group.id(), "nhóm 2"))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_NAME_DUPLICATE"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_NAME_DUPLICATE"));
         status(ClassStatus.ARCHIVED);
         assertThatThrownBy(() -> service.rename(leader, group.id(), "Nhóm mới"))
                 .isInstanceOf(ApiException.class);

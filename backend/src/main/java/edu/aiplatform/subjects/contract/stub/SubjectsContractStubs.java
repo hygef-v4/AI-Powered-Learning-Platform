@@ -85,7 +85,7 @@ public class SubjectsContractStubs {
     }
 
     private static ApiException createClassesUnavailableError() {
-        return ApiException.unavailable(
+        return ApiException.createUnavailable(
                 "SUBJECT_CLASSES_UNAVAILABLE", "Chưa kiểm tra được lớp của môn. Hãy thử lại sau");
     }
 }

@@ -20,13 +20,13 @@ class PurposePolicyTest {
     void usesHardCapsAndAllSupportedTypesWhenNotConfigured() {
         when(settings.get(any())).thenReturn(Optional.empty());
 
-        PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
+        PurposeLimits material = policy.resolveLimits(ArtifactPurpose.MATERIAL);
         assertThat(material.maxSizeMb()).isEqualTo(50);
         assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX);
         assertThat(material.allowedTypes()).doesNotContain(FileType.TXT);
-        assertThat(policy.limits(ArtifactPurpose.DOCUMENT_IMAGE).maxSizeMb()).isEqualTo(5);
-        assertThat(policy.limits(ArtifactPurpose.ASSIGNMENT_SOURCE).maxSizeMb()).isEqualTo(2);
-        assertThat(policy.limits(ArtifactPurpose.ASSIGNMENT_SOURCE).allowedTypes())
+        assertThat(policy.resolveLimits(ArtifactPurpose.DOCUMENT_IMAGE).maxSizeMb()).isEqualTo(5);
+        assertThat(policy.resolveLimits(ArtifactPurpose.ASSIGNMENT_SOURCE).maxSizeMb()).isEqualTo(2);
+        assertThat(policy.resolveLimits(ArtifactPurpose.ASSIGNMENT_SOURCE).allowedTypes())
                 .containsExactlyInAnyOrder(FileType.TXT, FileType.DOCX, FileType.PDF, FileType.PNG, FileType.JPEG);
     }
 
@@ -35,10 +35,10 @@ class PurposePolicyTest {
         when(settings.get(PurposePolicy.MATERIAL_MAX_MB)).thenReturn(Optional.of(10));
         when(settings.get(PurposePolicy.IMAGE_MAX_MB)).thenReturn(Optional.of(99));
 
-        PurposeLimits material = policy.limits(ArtifactPurpose.MATERIAL);
-        assertThat(material.maxBytes()).isEqualTo(10L * 1024 * 1024);
+        PurposeLimits material = policy.resolveLimits(ArtifactPurpose.MATERIAL);
+        assertThat(material.calculateMaxBytes()).isEqualTo(10L * 1024 * 1024);
         assertThat(material.allowedTypes()).containsExactlyInAnyOrder(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX);
-        PurposeLimits image = policy.limits(ArtifactPurpose.DOCUMENT_IMAGE);
+        PurposeLimits image = policy.resolveLimits(ArtifactPurpose.DOCUMENT_IMAGE);
         assertThat(image.maxSizeMb()).isEqualTo(5);
         assertThat(image.allowedTypes()).containsExactlyInAnyOrder(FileType.PNG, FileType.JPEG);
     }
@@ -60,12 +60,12 @@ class PurposePolicyTest {
         when(settings.get(any())).thenReturn(Optional.empty());
         when(settings.get(PurposePolicy.ASSIGNMENT_IMPORT_MAX_MB)).thenReturn(Optional.of(25));
 
-        PurposeLimits limits = policy.limits(ArtifactPurpose.ASSIGNMENT_IMPORT);
+        PurposeLimits limits = policy.resolveLimits(ArtifactPurpose.ASSIGNMENT_IMPORT);
 
         assertThat(limits.maxSizeMb()).isEqualTo(10);
         assertThat(limits.allowedTypes())
                 .containsExactlyInAnyOrder(FileType.PNG, FileType.JPEG, FileType.WEBP, FileType.PDF);
-        assertThat(policy.limits(ArtifactPurpose.DOCUMENT_IMAGE).allowedTypes()).doesNotContain(FileType.WEBP);
+        assertThat(policy.resolveLimits(ArtifactPurpose.DOCUMENT_IMAGE).allowedTypes()).doesNotContain(FileType.WEBP);
         assertThat(policy.canUpload(Role.TEACHER, ArtifactPurpose.ASSIGNMENT_IMPORT)).isTrue();
         assertThat(policy.canUpload(Role.SUBJECT_MANAGER, ArtifactPurpose.ASSIGNMENT_IMPORT)).isTrue();
         assertThat(policy.canUpload(Role.STUDENT, ArtifactPurpose.ASSIGNMENT_IMPORT)).isFalse();

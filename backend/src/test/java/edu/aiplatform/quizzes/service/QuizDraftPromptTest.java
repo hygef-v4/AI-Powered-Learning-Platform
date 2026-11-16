@@ -35,17 +35,17 @@ class QuizDraftPromptTest {
         var prompt = QuizDraftPrompt.prompt("quiz", request,
                 List.of(new edu.aiplatform.ai.contract.MaterialText(java.util.UUID.randomUUID(), "Toán", "Đạo hàm", false, 1)));
         assertThat(prompt.system()).contains("requestMatchesSources", "ưu tiên tài liệu", "không liên quan");
-        assertThat(json.readTree(QuizDraftPrompt.schema(5)).at("/properties/requestMatchesSources/type").asText())
+        assertThat(json.readTree(QuizDraftPrompt.buildSchema(5)).at("/properties/requestMatchesSources/type").asText())
                 .isEqualTo("boolean");
     }
 
     @Test
     void schemaIsJsonAndCapsQuestionCount() throws Exception {
-        JsonNode schema = json.readTree(QuizDraftPrompt.schema(7));
+        JsonNode schema = json.readTree(QuizDraftPrompt.buildSchema(7));
 
         assertThat(schema.at("/properties/questions/maxItems").asInt()).isEqualTo(7);
         assertThat(schema.at("/properties/questions/items/properties/options/maxItems").asInt()).isEqualTo(6);
-        assertThat(QuizDraftPrompt.maxOutputTokens(50)).isEqualTo(16_000);
+        assertThat(QuizDraftPrompt.calculateMaxOutputTokens(50)).isEqualTo(16_000);
     }
 
     @Test

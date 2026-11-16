@@ -36,7 +36,7 @@ public class PromptGuardrailService implements IPromptGuardrail {
         }
         if (!verdict.isAllowed()) {
             LOG.info("AI prompt rejected: tier={} category={} rule={} context={} action={} actor={}", verdict.tier(),
-                    verdict.category(), verdict.ruleId(), input.context(), input.action(), actorId(input));
+                    verdict.category(), verdict.ruleId(), input.context(), input.action(), resolveActorId(input));
         }
         return verdict;
     }
@@ -44,13 +44,13 @@ public class PromptGuardrailService implements IPromptGuardrail {
     /** Lỗi trong lúc kiểm không bao giờ cho qua; coi như yêu cầu nguy hại để bên gọi không thử gửi tiếp. */
     private static GuardrailVerdict failClosed(UserPromptInput input, String ruleId, RuntimeException failure) {
         LOG.warn("AI prompt guardrail failed closed: rule={} context={} actor={} error={}", ruleId,
-                input == null ? null : input.context(), actorId(input),
+                input == null ? null : input.context(), resolveActorId(input),
                 failure == null ? "none" : failure.getClass().getSimpleName());
         return GuardrailVerdict.reject(GuardrailCategory.HARMFUL_MALICIOUS, PromptPolicyEngine.TIER, ruleId,
                 PromptContextPolicy.UNAVAILABLE_MESSAGE);
     }
 
-    private static Object actorId(UserPromptInput input) {
+    private static Object resolveActorId(UserPromptInput input) {
         return input == null || input.actor() == null ? null : input.actor().accountId();
     }
 }

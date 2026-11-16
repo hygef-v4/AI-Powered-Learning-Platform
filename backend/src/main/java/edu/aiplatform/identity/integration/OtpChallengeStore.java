@@ -46,7 +46,7 @@ public class OtpChallengeStore {
 
     /** Ghi mã mới, xóa mã cũ cùng mục đích; mã rõ không được lưu. */
     public void replace(UUID accountId, OtpPurpose purpose, String code) {
-        write(accountId, purpose, code, null);
+        writeChallenge(accountId, purpose, code, null);
     }
 
     /**
@@ -57,18 +57,18 @@ public class OtpChallengeStore {
         String marker = JOB_PREFIX + jobKey;
         if (Boolean.TRUE.equals(redis.opsForValue().setIfAbsent(marker, "1", properties.otpTtl()))) {
             try {
-                write(accountId, purpose, code, jobKey);
+                writeChallenge(accountId, purpose, code, jobKey);
             } catch (RuntimeException e) {
                 redis.delete(marker);
                 throw e;
             }
             return Issue.NEW;
         }
-        return jobKey.equals(redis.opsForHash().get(key(accountId, purpose), JOB)) ? Issue.RESEND : Issue.STALE;
+        return jobKey.equals(redis.opsForHash().get(buildKey(accountId, purpose), JOB)) ? Issue.RESEND : Issue.STALE;
     }
 
-    private void write(UUID accountId, OtpPurpose purpose, String code, String jobKey) {
-        String key = key(accountId, purpose);
+    private void writeChallenge(UUID accountId, OtpPurpose purpose, String code, String jobKey) {
+        String key = buildKey(accountId, purpose);
         redis.delete(key);
         Map<String, String> fields = new HashMap<>(Map.of(CODE_HASH, hash(accountId, purpose, code),
                 ATTEMPTS_LEFT, String.valueOf(properties.otpMaxAttempts())));
@@ -103,27 +103,27 @@ public class OtpChallengeStore {
         if (code == null) {
             return Verification.INVALID;
         }
-        Long result = redis.execute(VERIFY, List.of(key(accountId, purpose)), hash(accountId, purpose, code));
+        Long result = redis.execute(VERIFY, List.of(buildKey(accountId, purpose)), hash(accountId, purpose, code));
         return result != null && result == 1L ? Verification.VALID : Verification.INVALID;
     }
 
     /** Đổi hoặc đặt lại mật khẩu xong thì hủy OTP đặt lại mật khẩu còn chờ. */
-    public void delete(UUID accountId, OtpPurpose purpose) {
-        redis.delete(key(accountId, purpose));
+    public void deleteChallenge(UUID accountId, OtpPurpose purpose) {
+        redis.delete(buildKey(accountId, purpose));
     }
 
     /** Vô hiệu hóa tài khoản thì hủy mọi OTP còn hiệu lực (BR-U01-71). */
     public void deleteAll(UUID accountId) {
         for (OtpPurpose purpose : OtpPurpose.values()) {
-            delete(accountId, purpose);
+            deleteChallenge(accountId, purpose);
         }
     }
 
-    static String key(UUID accountId, OtpPurpose purpose) {
+    static String buildKey(UUID accountId, OtpPurpose purpose) {
         return PREFIX + accountId + ":" + purpose.name();
     }
 
     static String hash(UUID accountId, OtpPurpose purpose, String code) {
-        return Hashing.sha256Hex(accountId + ":" + purpose.name() + ":" + code.strip());
+        return Hashing.hashSha256Hex(accountId + ":" + purpose.name() + ":" + code.strip());
     }
 }

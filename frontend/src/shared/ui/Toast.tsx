@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cx } from "./cx";
 import { Icon } from "./Icon";
+import { msg } from "@/i18n/msg";
 
 export type ToastTone = "success" | "warning" | "danger";
 export type ToastItem = { id: number; text: string; tone: ToastTone; persistent?: boolean };
@@ -54,13 +55,13 @@ export function Toaster() {
 
   useEffect(() => {
     const pending = timers.current;
-    const listener = (item: ToastItem) => {
+    const handleToast = (item: ToastItem) => {
       setItems((current) => [...current, item]);
       scheduleDismiss(item);
     };
-    listeners.add(listener);
+    listeners.add(handleToast);
     return () => {
-      listeners.delete(listener);
+      listeners.delete(handleToast);
       pending.forEach(clearTimeout);
       pending.clear();
     };
@@ -113,7 +114,7 @@ export function ToastStack({ items, className, onDismiss, onPause, onResume }: T
           {onDismiss && (
             <button
               type="button"
-              aria-label="Đóng thông báo"
+              aria-label={msg("shared.ui.Toast.closeNotification")}
               onClick={() => onDismiss(item.id)}
               className="inline-flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink"
             >

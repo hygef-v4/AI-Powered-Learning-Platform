@@ -38,7 +38,7 @@ final class ImportTableReader {
     /** Một dòng dữ liệu; {@code rowNumber} tính dòng tiêu đề là dòng 1. Cột thiếu hay ô trống là chuỗi rỗng. */
     record TableRow(long rowNumber, Map<String, String> values) {
 
-        String value(String column) {
+        String readValue(String column) {
             return values.getOrDefault(column, "");
         }
     }
@@ -50,22 +50,22 @@ final class ImportTableReader {
     static List<TableRow> readRows(byte[] file, List<String> required, List<String> optional, int maxBytes,
                                    int maxRows) {
         if (file == null || file.length == 0) {
-            throw invalidFile("Tệp nhập trống");
+            throw createInvalidFileError("Tệp nhập trống");
         }
         if (file.length > maxBytes) {
-            throw invalidFile("Tệp nhập vượt 1 MB");
+            throw createInvalidFileError("Tệp nhập vượt 1 MB");
         }
         Set<String> known = new LinkedHashSet<>(required);
         known.addAll(optional);
         List<TableRow> rows = file.length >= 4 && file[0] == 'P' && file[1] == 'K'
                 ? readWorkbook(file, required, known, maxRows) : readCsv(decode(file), required, known, maxRows);
         if (rows.size() > maxRows) {
-            throw invalidFile("Tệp nhập có quá " + maxRows + " dòng dữ liệu");
+            throw createInvalidFileError("Tệp nhập có quá " + maxRows + " dòng dữ liệu");
         }
         return rows;
     }
 
-    static String checksum(byte[] file) {
+    static String computeChecksum(byte[] file) {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(file));
         } catch (NoSuchAlgorithmException e) {
@@ -73,31 +73,31 @@ final class ImportTableReader {
         }
     }
 
-    static ApiException invalidFile(String message) {
-        return ApiException.badRequest("IMPORT_FILE_INVALID", message);
+    static ApiException createInvalidFileError(String message) {
+        return ApiException.createBadRequest("IMPORT_FILE_INVALID", message);
     }
 
     private static List<TableRow> readWorkbook(byte[] file, List<String> required, Set<String> known, int maxRows) {
         String columnList = String.join(", ", required);
         try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(file))) {
             if (workbook.isMacroEnabled() || workbook.getNumberOfSheets() == 0) {
-                throw invalidFile("Chỉ nhận workbook .xlsx không có macro");
+                throw createInvalidFileError("Chỉ nhận workbook .xlsx không có macro");
             }
             var sheet = workbook.getSheetAt(0);
             var header = sheet.getRow(0);
             if (header == null) {
-                throw invalidFile("Tệp Excel cần đủ cột " + columnList + " ở dòng đầu");
+                throw createInvalidFileError("Tệp Excel cần đủ cột " + columnList + " ở dòng đầu");
             }
             var formatter = new DataFormatter(Locale.ROOT);
             Map<String, Integer> columns = new HashMap<>();
             for (Cell cell : header) {
                 String name = readCell(cell, formatter).strip().toLowerCase(Locale.ROOT);
                 if (known.contains(name) && columns.putIfAbsent(name, cell.getColumnIndex()) != null) {
-                    throw invalidFile("Tệp Excel có cột trùng: " + name);
+                    throw createInvalidFileError("Tệp Excel có cột trùng: " + name);
                 }
             }
             if (!columns.keySet().containsAll(required)) {
-                throw invalidFile("Tệp Excel cần đủ cột " + columnList);
+                throw createInvalidFileError("Tệp Excel cần đủ cột " + columnList);
             }
             List<TableRow> rows = new ArrayList<>();
             for (var row : sheet) {
@@ -116,20 +116,20 @@ final class ImportTableReader {
                 }
                 rows.add(new TableRow(row.getRowNum() + 1L, values));
                 if (rows.size() > maxRows) {
-                    throw invalidFile("Tệp nhập có quá " + maxRows + " dòng dữ liệu");
+                    throw createInvalidFileError("Tệp nhập có quá " + maxRows + " dòng dữ liệu");
                 }
             }
             return rows;
         } catch (ApiException rejected) {
             throw rejected;
         } catch (IOException | RuntimeException unreadable) {
-            throw invalidFile("Không đọc được tệp Excel .xlsx");
+            throw createInvalidFileError("Không đọc được tệp Excel .xlsx");
         }
     }
 
     private static String readCell(Cell cell, DataFormatter formatter) {
         if (cell != null && (cell.getCellType() == CellType.FORMULA || cell.getCellType() == CellType.ERROR)) {
-            throw invalidFile("Tệp Excel không được chứa ô công thức hoặc ô lỗi trong các cột nhập");
+            throw createInvalidFileError("Tệp Excel không được chứa ô công thức hoặc ô lỗi trong các cột nhập");
         }
         return formatter.formatCellValue(cell);
     }
@@ -146,7 +146,7 @@ final class ImportTableReader {
             List<String> header = parser.getHeaderNames().stream()
                     .map(name -> name.strip().toLowerCase(Locale.ROOT)).toList();
             if (!header.containsAll(required)) {
-                throw invalidFile("Tệp CSV cần đủ cột " + String.join(", ", required));
+                throw createInvalidFileError("Tệp CSV cần đủ cột " + String.join(", ", required));
             }
             List<TableRow> rows = new ArrayList<>();
             for (CSVRecord record : parser) {
@@ -155,7 +155,7 @@ final class ImportTableReader {
                 }
                 Map<String, String> values = new HashMap<>();
                 for (String column : known) {
-                    values.put(column, value(record, column));
+                    values.put(column, readValue(record, column));
                 }
                 rows.add(new TableRow(record.getRecordNumber() + 1, values));
             }
@@ -164,12 +164,12 @@ final class ImportTableReader {
             if (e instanceof ApiException apiException) {
                 throw apiException;
             }
-            throw invalidFile("Không đọc được tệp CSV");
+            throw createInvalidFileError("Không đọc được tệp CSV");
         }
     }
 
     /** Dòng thiếu cột (ít dấu phẩy hơn tiêu đề) coi như ô trống thay vì lỗi cả tệp. */
-    private static String value(CSVRecord record, String column) {
+    private static String readValue(CSVRecord record, String column) {
         return record.isMapped(column) && record.isSet(column) ? record.get(column) : "";
     }
 
@@ -182,7 +182,7 @@ final class ImportTableReader {
             // Excel thường lưu UTF-8 kèm BOM.
             return text.startsWith("﻿") ? text.substring(1) : text;
         } catch (CharacterCodingException e) {
-            throw invalidFile("Tệp CSV phải mã hóa UTF-8");
+            throw createInvalidFileError("Tệp CSV phải mã hóa UTF-8");
         }
     }
 }

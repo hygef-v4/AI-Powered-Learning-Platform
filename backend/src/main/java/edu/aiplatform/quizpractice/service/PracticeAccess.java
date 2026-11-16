@@ -40,13 +40,13 @@ class PracticeAccess {
         if (actor == null || actor.accountId() == null) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "AUTHENTICATION_REQUIRED", "Cần đăng nhập");
         }
-        if (!allowedClass(actor, action, classId)) {
+        if (!isClassAllowed(actor, action, classId)) {
             deny(actor, action, objectType, objectId, notFoundCode);
         }
     }
 
     /** Current permission for an available action; hiding an action does not deny access to an owned result. */
-    boolean allowedClass(Actor actor, String action, UUID classId) {
+    boolean isClassAllowed(Actor actor, String action, UUID classId) {
         if (actor == null || actor.accountId() == null) {
             return false;
         }
@@ -54,10 +54,10 @@ class PracticeAccess {
         try {
             decision = authorization.authorize(actor, action, ResourceRef.courseClass(classId));
         } catch (RuntimeException unavailable) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         if (decision == null || (!decision.allowed() && DEPENDENCY_UNAVAILABLE.equals(decision.reason()))) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         return decision.allowed();
     }
@@ -67,16 +67,16 @@ class PracticeAccess {
         try {
             record(actor, "ACCESS_DENIED", objectType, objectId, AuditResult.DENIED, notFoundCode, Map.of("action", action));
         } catch (RuntimeException auditDown) {
-            throw ApiException.unavailable("QUIZ_PRACTICE_AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
+            throw ApiException.createUnavailable("QUIZ_PRACTICE_AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
         }
-        throw ApiException.notFound(notFoundCode);
+        throw ApiException.createNotFound(notFoundCode);
     }
 
-    void success(Actor actor, String action, UUID attemptId, Map<String, Object> details) {
+    void recordSuccess(Actor actor, String action, UUID attemptId, Map<String, Object> details) {
         record(actor, action, OBJECT, attemptId, AuditResult.SUCCESS, null, details);
     }
 
-    void rejected(Actor actor, String action, UUID attemptId, String reason) {
+    void recordRejected(Actor actor, String action, UUID attemptId, String reason) {
         record(actor, action, OBJECT, attemptId, AuditResult.FAILURE, reason, Map.of());
     }
 
@@ -86,7 +86,7 @@ class PracticeAccess {
                 objectId == null ? null : objectId.toString(), result, reason, details, clock.instant()));
     }
 
-    private static ApiException unavailable() {
-        return ApiException.unavailable("QUIZ_PRACTICE_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, vui lòng thử lại");
+    private static ApiException createUnavailableError() {
+        return ApiException.createUnavailable("QUIZ_PRACTICE_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, vui lòng thử lại");
     }
 }

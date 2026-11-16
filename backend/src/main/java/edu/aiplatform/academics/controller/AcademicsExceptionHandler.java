@@ -18,11 +18,11 @@ public class AcademicsExceptionHandler {
      */
     @ExceptionHandler(ApiException.class)
     public ProblemDetail handleAcademicProblem(ApiException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.status(),
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.readStatus(),
                 exception.getMessage());
-        problem.setProperty("code", exception.code());
+        problem.setProperty("code", exception.readCode());
         if (exception instanceof AcademicsProblem academics)
-            academics.properties().forEach(problem::setProperty);
+            academics.describeProperties().forEach(problem::setProperty);
         return problem;
     }
 

@@ -97,7 +97,7 @@ class BackupJobHandlerTest {
     @Test
     void successfulRunStoresAnEncryptedArchiveThatDecryptsToTheDump() throws Exception {
         when(runs.markRunning(runId, now)).thenReturn(1);
-        when(runs.schemaVersion()).thenReturn("20260925.0920");
+        when(runs.readSchemaVersion()).thenReturn("20260925.0920");
         when(runs.markSuccess(any(), any(), any(), any(), any(), any(), anyLong(), any())).thenReturn(1);
         LocalBackupStore store = new LocalBackupStore(dir.resolve("backups"));
 
@@ -112,10 +112,26 @@ class BackupJobHandlerTest {
         Path archive = dir.resolve("backups").resolve(runId.toString()).resolve("archive.alapbk");
         ByteArrayOutputStream plain = new ByteArrayOutputStream();
         try (var in = Files.newInputStream(archive)) {
-            BackupEncryptor.decrypt(in, plain, keys.getPrivate());
+            BackupEncryptor.decryptArchive(in, plain, keys.getPrivate());
         }
         assertThat(plain.toString()).isEqualTo("-- dump của database");
         assertThat(dir.resolve("tmp").resolve(runId.toString())).doesNotExist();
+    }
+
+    @Test
+    void runsWithoutPublicKeyAndStoresThePlainDump() throws Exception {
+        when(runs.markRunning(runId, now)).thenReturn(1);
+        when(runs.readSchemaVersion()).thenReturn("20260925.0920");
+        when(runs.markSuccess(any(), any(), any(), any(), any(), any(), anyLong(), any())).thenReturn(1);
+        LocalBackupStore store = new LocalBackupStore(dir.resolve("backups"));
+
+        handler("", store).handle(message);
+
+        verify(runs).markSuccess(eq(runId), eq(now), eq("20260925.0920"), anyString(), eq(runId.toString()),
+                anyString(), anyLong(), eq(now));
+        Path archive = dir.resolve("backups").resolve(runId.toString()).resolve("archive.alapbk");
+        assertThat(BackupEncryptor.isEncrypted(archive)).isFalse();
+        assertThat(Files.readString(archive)).isEqualTo("-- dump của database");
     }
 
     @Test
@@ -169,24 +185,16 @@ class BackupJobHandlerTest {
     void sizeMismatchAfterUploadIsRetried() {
         when(runs.markRunning(runId, now)).thenReturn(1);
         IBackupStore store = mock(IBackupStore.class);
-        when(store.put(any(), any())).thenReturn(new IBackupStore.StoredArchive("ref", 1, null));
+        when(store.putArchive(any(), any())).thenReturn(new IBackupStore.StoredArchive("ref", 1, null));
 
         assertThatThrownBy(() -> handler(publicKey(), store).handle(message)).isInstanceOf(RetryableJobException.class);
-        verify(store).delete(runId.toString());
-    }
-
-    @Test
-    void missingPublicKeyFailsWithoutRetry() {
-        when(runs.markRunning(runId, now)).thenReturn(1);
-
-        assertThatThrownBy(() -> handler("", mock(IBackupStore.class)).handle(message))
-                .isInstanceOf(BackupFailure.class);
+        verify(store).deleteArchive(runId.toString());
     }
 
     @Test
     void failureMarksTheRunCleansUpAuditsAndNotifies() {
         when(runs.markFailed(eq(runId), anyString(), eq(now))).thenReturn(1);
-        when(runs.find(runId)).thenReturn(Optional.empty());
+        when(runs.findRun(runId)).thenReturn(Optional.empty());
 
         handler(publicKey(), mock(IBackupStore.class)).onFailed(message, "Drive trả lỗi 403");
 
@@ -214,7 +222,7 @@ class BackupJobHandlerTest {
     void untrustedFailureTextCannotReachStoredErrorAuditOrEvent() {
         String secret = "opaque-backup-secret-SENTINEL";
         when(runs.markFailed(eq(runId), anyString(), eq(now))).thenReturn(1);
-        when(runs.find(runId)).thenReturn(Optional.empty());
+        when(runs.findRun(runId)).thenReturn(Optional.empty());
 
         handler(publicKey(), mock(IBackupStore.class)).onFailed(message, "Provider rejected " + secret);
 

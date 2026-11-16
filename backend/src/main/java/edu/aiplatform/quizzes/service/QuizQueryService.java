@@ -37,14 +37,14 @@ public class QuizQueryService implements IQuizQuery {
     private final IQuizRepository quizzes;
     private final IQuestionRepository questions;
     private final IClassAccess classes;
-    private final QuizPaperService papers;
+    private final QuizPaperService quizPaperService;
 
     public QuizQueryService(IQuizRepository quizzes, IQuestionRepository questions, IClassAccess classes,
-                            QuizPaperService papers) {
+                            QuizPaperService quizPaperService) {
         this.quizzes = quizzes;
         this.questions = questions;
         this.classes = classes;
-        this.papers = papers;
+        this.quizPaperService = quizPaperService;
     }
 
     @Override
@@ -64,17 +64,17 @@ public class QuizQueryService implements IQuizQuery {
     @Override
     @Transactional(readOnly = true)
     public Optional<QuizStudentView> getStudentView(UUID quizId) {
-        return quizzes.find(quizId).map(quiz -> {
-            if (quiz.generated()) {
+        return quizzes.findQuiz(quizId).map(quiz -> {
+            if (quiz.wasGenerated()) {
                 List<DrawRule> rules = quizzes.drawRules(quizId);
-                return new QuizStudentView(view(quiz, QuizSupport.maxScoreOf(rules)), quiz.instructions(), List.of(),
+                return new QuizStudentView(view(quiz, QuizSupport.sumMaxScore(rules)), quiz.instructions(), List.of(),
                         rules.stream().mapToInt(DrawRule::questionCount).sum(), true, quiz.instructionsDocument());
             }
-            List<QuizItem> items = quizzes.items(quizId);
+            List<QuizItem> items = quizzes.listItems(quizId);
             Map<UUID, Question> byId = questions.findAll(items.stream().map(QuizItem::questionId).toList()).stream()
                     .collect(Collectors.toMap(Question::id, Function.identity()));
             List<QuizQuestionView> views = items.stream().filter(item -> byId.containsKey(item.questionId()))
-                    .map(item -> questionView(byId.get(item.questionId()), item.points()))
+                    .map(item -> buildQuestionView(byId.get(item.questionId()), item.points()))
                     .toList();
             BigDecimal max = items.stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add);
             return new QuizStudentView(view(quiz, max), quiz.instructions(), views, views.size(), false,
@@ -86,33 +86,33 @@ public class QuizQueryService implements IQuizQuery {
     @Override
     @Transactional(readOnly = true)
     public Optional<QuizStudentView> drawPaper(UUID quizId, Set<UUID> seenQuestionIds, long seed) {
-        return quizzes.find(quizId).flatMap(quiz -> {
-            if (!quiz.generated()) {
+        return quizzes.findQuiz(quizId).flatMap(quiz -> {
+            if (!quiz.wasGenerated()) {
                 return getStudentView(quizId);
             }
-            return Optional.of(paperView(quiz, papers.draw(quiz, seenQuestionIds, seed)));
+            return Optional.of(buildPaperView(quiz, quizPaperService.draw(quiz, seenQuestionIds, seed)));
         });
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<QuizStudentView> getPaper(UUID quizId, Map<UUID, BigDecimal> questionPoints) {
-        return quizzes.find(quizId).map(quiz -> paperView(quiz, questionPoints));
+        return quizzes.findQuiz(quizId).map(quiz -> buildPaperView(quiz, questionPoints));
     }
 
-    private QuizStudentView paperView(Quiz quiz, Map<UUID, BigDecimal> questionPoints) {
+    private QuizStudentView buildPaperView(Quiz quiz, Map<UUID, BigDecimal> questionPoints) {
         Map<UUID, Question> byId = questions.findAll(questionPoints.keySet()).stream()
                 .collect(Collectors.toMap(Question::id, Function.identity()));
         List<QuizQuestionView> views = questionPoints.entrySet().stream()
                 .filter(entry -> byId.containsKey(entry.getKey()))
-                .map(entry -> questionView(byId.get(entry.getKey()), entry.getValue()))
+                .map(entry -> buildQuestionView(byId.get(entry.getKey()), entry.getValue()))
                 .toList();
         BigDecimal max = questionPoints.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
         return new QuizStudentView(view(quiz, max), quiz.instructions(), views, views.size(), true,
                 quiz.instructionsDocument());
     }
 
-    private static QuizQuestionView questionView(Question q, BigDecimal points) {
+    private static QuizQuestionView buildQuestionView(Question q, BigDecimal points) {
         return new QuizQuestionView(q.id(), q.content().type(), q.content().stem(),
                 q.content().options().stream().map(o -> new QuizOptionView(o.id(), o.text())).toList(), points);
     }
@@ -120,9 +120,9 @@ public class QuizQueryService implements IQuizQuery {
     @Override
     @Transactional(readOnly = true)
     public Optional<QuizView> get(UUID quizId) {
-        return quizzes.find(quizId).map(quiz -> view(quiz, quiz.generated()
-                ? QuizSupport.maxScoreOf(quizzes.drawRules(quizId))
-                : quizzes.items(quizId).stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add)));
+        return quizzes.findQuiz(quizId).map(quiz -> view(quiz, quiz.wasGenerated()
+                ? QuizSupport.sumMaxScore(quizzes.drawRules(quizId))
+                : quizzes.listItems(quizId).stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add)));
     }
 
     private QuizView view(QuizSummary summary) {

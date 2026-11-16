@@ -6,6 +6,7 @@ import { createMcpCredential, getMcpCredentials, revokeMcpCredential, updateMcpC
 import { McpAgentSection } from "./McpAgentSection";
 import { McpSetupGuide } from "./SetupGuides";
 import type { McpCredential } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Own MCP credentials for Student/Teacher/Subject Manager; mounted only by the authorized connection page. */
 export function McpAgentsTab() {
@@ -29,10 +30,9 @@ export function McpAgentsTab() {
   }, []);
   return (
     <>
-      {error && <Alert tone="danger" role="alert" action={<Button onClick={() => void reload()}>Tải lại</Button>}>
-        Không tải được agent MCP, thử lại sau.
-      </Alert>}
-      {!credentials && !error && <p className="text-[13px] text-muted">Đang tải…</p>}
+      {error && <Alert tone="danger" role="alert" action={<Button onClick={() => void reload()}>{msg("ai.components.McpAgentsTab.reload")}</Button>}>
+        {msg("ai.components.McpAgentsTab.couldNotLoadMcpAgents")}</Alert>}
+      {!credentials && !error && <p className="text-[13px] text-muted">{msg("ai.components.McpAgentsTab.loading")}</p>}
       {credentials && <SettingsCard>
         <McpAgentSection credentials={credentials}
           onCreate={async (label, access, days) => {

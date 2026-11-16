@@ -23,13 +23,13 @@ public record Account(UUID id, String schoolEmail, Role role, AccountStatus stat
     }
 
     /** Tài khoản do Admin tạo hoặc nhập: {@code PENDING}, không mật khẩu (BR-U01-10). */
-    public static Account newPending(UUID id, String schoolEmail, Role role, String displayName, String phoneNumber,
+    public static Account createPending(UUID id, String schoolEmail, Role role, String displayName, String phoneNumber,
                                      Instant now) {
-        return newPending(id, schoolEmail, role, displayName, phoneNumber, null, now);
+        return createPending(id, schoolEmail, role, displayName, phoneNumber, null, now);
     }
 
     /** Như {@link #newPending(UUID, String, Role, String, String, Instant)} kèm MSSV đã chuẩn hóa (BR-U01-103). */
-    public static Account newPending(UUID id, String schoolEmail, Role role, String displayName, String phoneNumber,
+    public static Account createPending(UUID id, String schoolEmail, Role role, String displayName, String phoneNumber,
                                      String studentCode, Instant now) {
         return new Account(id, schoolEmail, role, AccountStatus.PENDING, null, null, displayName, phoneNumber, 0,
                 null, now, now, 1, studentCode);
@@ -49,7 +49,7 @@ public record Account(UUID id, String schoolEmail, Role role, AccountStatus stat
     }
 
     /** Mở lại: về {@code ACTIVE} nếu đã có mật khẩu, về {@code PENDING} nếu chưa (BR-U01-72). */
-    public AccountStatus statusAfterReopen() {
+    public AccountStatus resolveStatusAfterReopen() {
         return hasPassword() ? AccountStatus.ACTIVE : AccountStatus.PENDING;
     }
 }

@@ -95,7 +95,7 @@ class ClassTermMigrationIntegrationTest {
         // D-U04-05 adds a derived term again; the free-text value removed above stays gone.
         configureMigrations(null).migrate();
         var repository = new CourseClassRepository(new NamedParameterJdbcTemplate(dataSource));
-        var restored = repository.find(classId).orElseThrow();
+        var restored = repository.findClass(classId).orElseThrow();
         assertThat(restored.subjectId()).isEqualTo(subjectId);
         assertThat(restored.code()).isEqualTo("C01");
         assertThat(restored.name()).isEqualTo("Original class");
@@ -107,16 +107,16 @@ class ClassTermMigrationIntegrationTest {
         assertThat(restored.showGradeDistribution()).isFalse();
         assertThat(restored.version()).isEqualTo(7);
         assertThat(restored.startsOn()).isEqualTo(LocalDate.of(2026, 11, 7));
-        assertThat(restored.term()).isEqualTo("FA26");
+        assertThat(restored.deriveTerm()).isEqualTo("FA26");
         assertThat(jdbcTemplate.queryForObject("""
                 select count(*) from enrollments where class_id = ? and account_id = ?
                 and status = 'ACTIVE' and source = 'MANUAL' and enrolled_at = ?
                 """, Integer.class, classId, accountId, Timestamp.from(createdAt))).isEqualTo(1);
 
         new TransactionTemplate(new DataSourceTransactionManager(dataSource))
-                .executeWithoutResult(status -> repository.update(
+                .executeWithoutResult(status -> repository.updateClass(
                         restored.assignTeacher(null, createdAt.plusSeconds(1)), 7));
-        assertThat(repository.find(classId).orElseThrow().version()).isEqualTo(8);
+        assertThat(repository.findClass(classId).orElseThrow().version()).isEqualTo(8);
         assertThat(configureMigrations(null).migrate().migrationsExecuted).isZero();
     }
 
@@ -133,7 +133,7 @@ class ClassTermMigrationIntegrationTest {
                 LocalDate.of(2027, 4, 3), null, createdAt);
         new TransactionTemplate(new DataSourceTransactionManager(dataSource))
                 .executeWithoutResult(status -> repository.insert(fresh));
-        assertThat(repository.find(classId)).contains(fresh);
+        assertThat(repository.findClass(classId)).contains(fresh);
         assertThat(jdbcTemplate.queryForObject("select term from course_classes where id = ?",
                 String.class, classId)).isEqualTo("SP27-BL5");
     }

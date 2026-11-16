@@ -1,7 +1,7 @@
 import type { DocumentBlock } from "@/shared/document";
 import type { SectionView } from "./types";
 
-function headingLevel(block: DocumentBlock): number {
+function readHeadingLevel(block: DocumentBlock): number {
   if (block.type !== "HEADING") return Number.POSITIVE_INFINITY;
   const match = /^H([1-6])$/.exec(block.content.style);
   return match ? Number(match[1]) : 0;
@@ -17,13 +17,13 @@ export function findSectionForHeading(blocks: DocumentBlock[], sections: Section
   if (exact) return exact;
   const at = blocks.findIndex((b) => b.id === headingId);
   if (at < 0) return null;
-  let level = headingLevel(blocks[at]!);
+  let level = readHeadingLevel(blocks[at]!);
   for (let i = at - 1; i >= 0; i--) {
     const block = blocks[i]!;
-    if (block.type !== "HEADING" || headingLevel(block) >= level) continue;
+    if (block.type !== "HEADING" || readHeadingLevel(block) >= level) continue;
     const parent = byPart.get(block.id);
     if (parent) return parent;
-    level = headingLevel(block);
+    level = readHeadingLevel(block);
   }
   for (let i = at + 1; i < blocks.length; i++) {
     const after = byPart.get(blocks[i]!.id);

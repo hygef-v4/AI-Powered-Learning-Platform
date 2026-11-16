@@ -1,0 +1,4751 @@
+{
+  "app": {
+    "auth": {
+      "activate": {
+        "page": {
+          "activateAccount": "アカウントの有効化"
+        }
+      },
+      "login": {
+        "page": {
+          "signIn": "ログイン"
+        }
+      },
+      "resetpassword": {
+        "page": {
+          "resetPassword": "パスワードの再設定"
+        }
+      }
+    },
+    "admin": {
+      "accounts": {
+        "page": {
+          "accounts": "アカウント"
+        },
+        "id": {
+          "page": {
+            "accounts": "アカウント"
+          }
+        }
+      },
+      "audit": {
+        "page": {
+          "auditLog": "監査ログ"
+        }
+      },
+      "page": {
+        "overview": "概要"
+      },
+      "settings": {
+        "page": {
+          "settings": "設定"
+        },
+        "sections": {
+          "sectionKey": {
+            "page": {
+              "settings": "設定"
+            }
+          }
+        },
+        "key": {
+          "page": {
+            "settings": "設定"
+          }
+        }
+      },
+      "subjects": {
+        "page": {
+          "subjects": "科目"
+        },
+        "id": {
+          "page": {
+            "subjects": "科目"
+          }
+        }
+      }
+    },
+    "ai": {
+      "connection": {
+        "page": {
+          "aiConnection": "AI接続"
+        }
+      },
+      "mcpguide": {
+        "page": {
+          "mcpConnectionGuide": "MCP接続ガイド"
+        }
+      }
+    },
+    "announcements": {
+      "page": {
+        "allAnnouncements": "すべてのお知らせ"
+      }
+    },
+    "assignments": {
+      "id": {
+        "diagrams": {
+          "blockId": {
+            "page": {
+              "assignmentDiagram": "課題の図"
+            }
+          }
+        },
+        "page": {
+          "assignment": "課題"
+        }
+      }
+    },
+    "attempts": {
+      "attemptId": {
+        "diagrams": {
+          "blockId": {
+            "page": {
+              "submissionDiagram": "提出物の図"
+            }
+          }
+        },
+        "page": {
+          "doAssignment": "課題に取り組む"
+        }
+      }
+    },
+    "classes": {
+      "page": {
+        "classes": "クラス"
+      },
+      "id": {
+        "announcements": {
+          "page": {
+            "classAnnouncements": "クラスのお知らせ"
+          }
+        },
+        "group": {
+          "page": {
+            "group": "グループ"
+          }
+        },
+        "page": {
+          "classes": "クラス"
+        }
+      }
+    },
+    "groupdocs": {
+      "id": {
+        "edit": {
+          "page": {
+            "editGroupWork": "グループ課題の作成"
+          }
+        },
+        "page": {
+          "groupDocument": "グループ文書"
+        }
+      }
+    },
+    "manager": {
+      "assignments": {
+        "page": {
+          "assignments": "課題"
+        }
+      },
+      "classes": {
+        "page": {
+          "subjectClasses": "科目のクラス"
+        },
+        "id": {
+          "page": {
+            "subjectClasses": "科目のクラス"
+          }
+        }
+      },
+      "materials": {
+        "page": {
+          "learningMaterials": "教材"
+        }
+      },
+      "page": {
+        "overview": "概要"
+      },
+      "questions": {
+        "page": {
+          "questions": "問題"
+        },
+        "id": {
+          "page": {
+            "questions": "問題"
+          }
+        }
+      },
+      "subjects": {
+        "page": {
+          "subjectInformation": "科目情報"
+        },
+        "id": {
+          "page": {
+            "subjectInformation": "科目情報"
+          }
+        }
+      }
+    },
+    "materials": {
+      "id": {
+        "page": {
+          "learningMaterials": "教材"
+        },
+        "view": {
+          "page": {
+            "learningMaterials": "教材"
+          }
+        }
+      }
+    },
+    "myassignments": {
+      "page": {
+        "assignments": "課題"
+      },
+      "assignmentId": {
+        "history": {
+          "page": {
+            "submissionHistory": "提出履歴"
+          }
+        },
+        "page": {
+          "assignment": "課題"
+        }
+      }
+    },
+    "notfound": {
+      "pageNotFound": "ページが見つかりません"
+    },
+    "opengraphimage": {
+      "classesMaterials": "クラスと教材",
+      "assignmentsExams": "課題と試験",
+      "aiAssistant": "AIアシスタント",
+      "learning": "学習",
+      "platform": "プラットフォーム",
+      "teachAndLearnBetterWith": "AIアシスタントで、もっと効果的な授業と学習を"
+    },
+    "privacy": {
+      "page": {
+        "privacyPolicy": "プライバシーポリシー",
+        "lastUpdated15112026": "最終更新日：2026年11月15日",
+        "isATeachingAndLearning": "は、科目単位の授業と学習のためのシステムで、各クラスの教員、科目責任者、学生が<b>内部で利用</b>します。",
+        "googleDriveAccess": "Google ドライブへのアクセス",
+        "theSystemsGoogleIntegrationOnly": "本システムの Google 連携が要求するスコープは ",
+        "theSystemCanOnlySee": " のみです。本システムが参照・作成・管理できるのは ",
+        "theFilesAndFoldersIt": "本システム自身が作成したファイルとフォルダーだけ",
+        "dataTheSystemStores": "本システムが保存するデータ",
+        "filesUploadedByUsersStored": "<b>ユーザーがアップロードしたファイル</b>。接続された Google ドライブまたはサーバーに保存されます。",
+        "accountInformationNeededToOperate": "運用に必要な<b>アカウント情報</b>と<b>学習データ</b>。本システムのデータベースに保存されます。",
+        "whatTheSystemDoesNot": "本システムが行わないこと",
+        "itDoesNotSellOr": "ユーザーデータを第三者に<b>販売・共有することはありません</b>。",
+        "itDoesNotUseUsers": "ユーザーの Google データを広告やプロファイリングに<b>使用することはありません</b>。",
+        "googleCredentialsLiveOnlyIn": "Google の認証情報は<b>サーバー設定内にのみ保管</b>され、ユーザー側に公開されることはありません。",
+        "contact": "お問い合わせ",
+        "questionsAboutThisPolicyContact": "本ポリシーに関するご質問は、クラスの<b>システム管理者</b>にお問い合わせいただくか、次の場所で issue を作成してください：",
+        "sourceRepository": "ソースコードリポジトリ",
+        "inTheMyDriveOf": "で、接続アカウントのマイドライブ内にあります。それ以外のファイルを本システムが<b>読み取ることはできません</b>。"
+      }
+    },
+    "profile": {
+      "page": {
+        "profile": "プロフィール"
+      }
+    },
+    "quizattempts": {
+      "attemptId": {
+        "page": {
+          "takeQuiz": "クイズに解答"
+        },
+        "result": {
+          "page": {
+            "quizResult": "クイズの結果"
+          }
+        }
+      }
+    },
+    "quizpractice": {
+      "page": {
+        "quizPractice": "クイズ練習"
+      },
+      "quizId": {
+        "page": {
+          "quizPractice": "クイズ練習"
+        }
+      }
+    },
+    "teaching": {
+      "classes": {
+        "page": {
+          "assignedClasses": "担当クラス"
+        },
+        "id": {
+          "announcements": {
+            "page": {
+              "classAnnouncements": "クラスのお知らせ"
+            }
+          },
+          "page": {
+            "assignedClasses": "担当クラス"
+          }
+        }
+      },
+      "evaluations": {
+        "evaluationId": {
+          "page": {
+            "gradeSubmission": "採点"
+          }
+        }
+      }
+    }
+  },
+  "academics": {
+    "api": {
+      "index": {
+        "couldNotEnrollTheStudent": "学生を登録できませんでした。"
+      }
+    },
+    "components": {
+      "ClassDialogs": {
+        "cannotReopenTheClassBecause": "同じ科目の別クラスに在籍している学生がいるため、クラスを再開できません。",
+        "reopenClass": "クラスを再開",
+        "openClass": "クラスを開講",
+        "archiveClass": "クラスをアーカイブ",
+        "classArchived": "クラスをアーカイブしました",
+        "classOpened": "クラスを開講しました",
+        "reopen": "再開",
+        "archive": "アーカイブ",
+        "areYouSureYouWant": "",
+        "class": "：クラス ",
+        "text": " を実行してもよろしいですか？",
+        "lecturerChanged": "教員を変更しました",
+        "lecturerUnassigned": "教員の割り当てを解除しました",
+        "changeLecturer": "教員を変更",
+        "save": "保存",
+        "lecturer": "教員",
+        "notAssigned": "未割り当て",
+        "studentInformation": "学生情報",
+        "enrollmentDate": "登録日",
+        "status": "ステータス",
+        "studying": "在籍中"
+      },
+      "ClassFormDialog": {
+        "enterTheClassCode": "クラスコードを入力してください。",
+        "classCreated": "クラスを作成しました",
+        "createClass": "クラスを作成",
+        "classCode": "クラスコード",
+        "startDate": "開始日",
+        "term": "学期：",
+        "lecturer": "教員",
+        "description": "説明"
+      },
+      "ClassInfoForm": {
+        "changesSaved": "変更を保存しました",
+        "classInformation": "クラス情報",
+        "subjectCode": "科目コード",
+        "classCode": "クラスコード",
+        "startDate": "開始日",
+        "term": "学期",
+        "term2": "学期：",
+        "description": "説明",
+        "cancel": "キャンセル",
+        "saveChanges": "変更を保存"
+      },
+      "ClassNavContexts": {
+        "assignedSubjects": "担当科目",
+        "classInformation": "クラス情報",
+        "students": "学生",
+        "learningMaterials": "教材",
+        "assignments": "課題",
+        "grading": "採点",
+        "classAnnouncements": "クラスのお知らせ",
+        "myGroup": "マイグループ",
+        "assignedClasses": "担当クラス",
+        "myClasses": "マイクラス",
+        "assignedSubjects2": "担当科目",
+        "chooseASubject": "科目を選択",
+        "all": "{value}一覧",
+        "chooseAClass": "クラスを選択"
+      },
+      "EnrollmentPanel": {
+        "studying": "在籍中",
+        "removed": "削除済み",
+        "perRowResults": "行ごとの結果",
+        "row": "行",
+        "emailOrStudentId": "メールアドレスまたは学籍番号",
+        "result": "結果",
+        "studentRemoved": "学生を削除しました",
+        "studentReAdded": "学生を再追加しました",
+        "addFromAList": "リストから追加",
+        "addStudents": "学生を追加",
+        "studentsInClass": "クラスの学生",
+        "studentStatus": "学生のステータス",
+        "filterByGroup": "グループで絞り込み",
+        "all": "すべて",
+        "noGroup": "グループ未所属",
+        "filterByNameEmailOr": "氏名、メールアドレス、学籍番号で絞り込み",
+        "fullName": "氏名",
+        "group": "グループ",
+        "joined": "参加日",
+        "actions": "操作",
+        "groupLeader": "リーダー",
+        "remove": "{name} を削除",
+        "reAdd": "{name} を再追加",
+        "noMatchingStudents": "該当する学生はいません。",
+        "removeStudentFromClass": "学生をクラスから削除しますか？",
+        "removeStudent": "学生を削除",
+        "areYouSureYouWant": "",
+        "fromTheClass": " をクラスから削除してもよろしいですか？",
+        "addedStudents": "{added} 人の学生を追加しました",
+        "studentsAdded": "学生を追加しました",
+        "add": "",
+        "students": " 人の学生を追加",
+        "findStudents": "学生を検索",
+        "searchByNameEmailOr": "氏名、メールアドレス、学籍番号で検索",
+        "selectAllFilteredResults": "絞り込み結果をすべて選択（",
+        "selected": "選択中：",
+        "loadingStudents": "学生を読み込み中…",
+        "selectStudents": "学生を選択",
+        "showingUpTo200Results": "最大200件まで表示します。氏名、メールアドレス、学籍番号で検索して絞り込んでください。",
+        "selectUpTo200Students": "一度に選択できる学生は最大200人です。",
+        "addStudentsFromAList": "リストから学生を追加",
+        "close": "閉じる",
+        "chooseAnExcelFile": "Excelファイルを選択",
+        "emailsOrStudentIds": "メールアドレスまたは学籍番号の一覧",
+        "oneEmailOrStudentId": "1行に1つのメールアドレスまたは学籍番号を入力します。",
+        "chooseAnotherFile": "別のファイルを選択",
+        "chooseFile": "ファイルを選択",
+        "downloadExcelTemplate": "Excelテンプレートをダウンロード",
+        "preview": "プレビュー",
+        "rows": " 行",
+        "valid": " 件有効",
+        "errors": " 件エラー",
+        "checkResults": "チェック結果",
+        "valid2": "有効",
+        "addStudents2": "{valid} 人の学生を追加"
+      },
+      "PersonPicker": {
+        "typeANameOrEmail": "氏名またはメールアドレスを入力",
+        "deselect": "{value} の選択を解除",
+        "searching": "検索中…",
+        "noMatchingPeople": "該当する人はいません。"
+      },
+      "SubjectClassesOverview": {
+        "openClasses": "開講中のクラス",
+        "students": "学生",
+        "classesWithoutALecturer": "教員未割り当てのクラス",
+        "classOverview": "クラスの概要",
+        "tryAgain": "再読み込み",
+        "loadingOverview": "概要を読み込み中…",
+        "allClasses": "すべてのクラス",
+        "noOpenClassesYet": "開講中のクラスはまだありません。",
+        "noLecturerAssigned": "教員未割り当て",
+        "students2": " 人の学生"
+      }
+    },
+    "hooks": {
+      "useCandidates": {
+        "couldNotLoadTheList": "一覧を読み込めませんでした。もう一度お試しください。"
+      }
+    },
+    "model": {
+      "enrollmentList": {
+        "theListCanBeAt": "リストは最大100KBまでです。",
+        "theListCanHaveAt": "リストは最大200行までです。",
+        "enterAtLeastOneEmail": "メールアドレスまたは学籍番号を1つ以上入力してください。"
+      },
+      "enrollmentWorkbook": {
+        "theListCanBeAt": "リストは最大100KBまでです。",
+        "onlyExcelXlsxFilesAre": "Excel（.xlsx）ファイルのみ受け付けます。",
+        "notAnExcelXlsxFile": "Excel（.xlsx）ファイルではありません。",
+        "couldNotReadTheExcel": "Excel（.xlsx）ファイルを読み込めませんでした。",
+        "theExcelFileIsEmpty": "Excelファイルが空です。",
+        "theListCanHaveAt": "リストは最大200行までです。",
+        "theExcelFileMayOnly": "Excelファイルには、テンプレートどおりメールアドレスまたは学籍番号の列を1列だけ含めてください。",
+        "theExcelFileNeedsAn": "テンプレートどおり、セルA1にメールアドレス（または student_code、mssv）の列が必要です。",
+        "rowContainsAFormulaAn": "{value} 行目に数式、エラーのセル、または1つのセル内の複数行が含まれています。"
+      },
+      "format": {
+        "theDataHasChangedPlease": "データが変更されました。続行する前に再読み込みしてください。",
+        "couldNotCompleteTheAction": "操作を完了できませんでした。もう一度お試しください。",
+        "chooseAStartDate": "開始日を選択",
+        "theStartDateMustBe": "開始日は2000年から2099年の範囲で指定してください",
+        "thisClassCodeAlreadyExists": "この学期の科目内に同じクラスコードがすでに存在します"
+      },
+      "types": {
+        "draft": "下書き",
+        "open": "開講中",
+        "archived": "アーカイブ済み",
+        "added": "追加済み",
+        "reAdded": "再追加済み",
+        "alreadyInClass": "すでにクラスに在籍",
+        "accountNotFound": "アカウントが見つかりません",
+        "notAStudent": "学生ではありません",
+        "accountDisabled": "アカウントは無効です",
+        "inAnotherClassOfThe": "同じ科目の別クラスに在籍中",
+        "notAValidEmailOr": "有効なメールアドレスまたは学籍番号ではありません",
+        "duplicateInTheList": "リスト内で重複しています"
+      }
+    },
+    "pages": {
+      "ClassDashboardPage": {
+        "studying": "在籍中",
+        "finished": "終了",
+        "openingSoon": "開講予定",
+        "teaching": "担当中",
+        "finished2": "終了",
+        "noFinishedClassesYet": "終了したクラスはまだありません。",
+        "youHaveNotTakenAny": "まだ受講しているクラスはありません。",
+        "noClassesInThisSection": "この区分のクラスはまだありません。",
+        "myClasses": "マイクラス",
+        "assignedClasses": "担当クラス",
+        "filterClasses": "クラスを絞り込み",
+        "viewClass": "クラス {code} を表示"
+      },
+      "ClassListPage": {
+        "all": "すべて",
+        "classes": "クラス",
+        "createClass": "クラスを作成",
+        "classList": "クラス一覧",
+        "classStatus": "クラスのステータス",
+        "filterByClassCode": "クラスコードで絞り込み",
+        "classCode": "クラスコード",
+        "term": "学期",
+        "lecturer": "教員",
+        "status": "ステータス",
+        "details": "詳細",
+        "viewClass": "クラス {code} を表示",
+        "notAssigned": "未割り当て",
+        "noMatchingClasses": "該当するクラスはありません。"
+      },
+      "ClassRoutes": {
+        "theDataHasChangedThe": "データが変更されたため、最新の情報を再読み込みしました。続行する前に確認してください。",
+        "youHaveNotBeenAssigned": "管理を担当している科目はありません"
+      },
+      "ManagedClassPage": {
+        "information": "情報",
+        "students": "学生",
+        "classes": "クラス",
+        "classDetails": "クラスの詳細",
+        "status": "ステータス",
+        "created": "作成日",
+        "lecturer": "教員",
+        "changeLecturer": "教員を変更",
+        "assign": "割り当て",
+        "notAssigned": "未割り当て"
+      },
+      "ManagerDashboardPage": {
+        "assignedSubjects": "担当科目",
+        "filterSubjects": "科目を絞り込み",
+        "active": "有効",
+        "archived": "アーカイブ済み",
+        "noArchivedSubjectsYet": "アーカイブ済みの科目はまだありません。",
+        "youHaveNotBeenAssigned": "管理を担当している科目はありません。",
+        "openSubject": "科目 {code} を開く",
+        "openArchived": "開講中 {open} · アーカイブ {archived}",
+        "open": "開講中 {open}",
+        "subjectInformation": "科目情報",
+        "subjectCode": "科目コード",
+        "subjectName": "科目名",
+        "classes": "クラス数",
+        "status": "ステータス"
+      },
+      "ReadOnlyClassPage": {
+        "classDetails": "クラスの詳細",
+        "thisClassIsCurrentlyUnavailable": "このクラスは現在利用できません",
+        "classInformation": "クラス情報",
+        "students": "学生",
+        "learningMaterials": "教材",
+        "assignments": "課題",
+        "grading": "採点",
+        "gradebook": "成績表",
+        "classContent": "クラスの内容",
+        "subject": "科目",
+        "classCode": "クラスコード",
+        "term": "学期",
+        "status": "ステータス"
+      },
+      "StudentClassPage": {
+        "learningMaterials": "教材",
+        "classInformation": "クラス情報",
+        "subjectCode": "科目コード",
+        "classCode": "クラスコード",
+        "startDate": "開始日",
+        "term": "学期",
+        "description": "説明",
+        "noDescriptionYet": "説明はまだありません。",
+        "lecturer": "教員",
+        "notAssigned": "未割り当て"
+      }
+    },
+    "register": {
+      "assignedSubjects": "担当科目",
+      "assignedClasses": "担当クラス",
+      "myClasses": "マイクラス",
+      "subjectInformation": "科目情報",
+      "classes": "クラス"
+    }
+  },
+  "admindashboard": {
+    "components": {
+      "BackupStatus": {
+        "pending": "待機中",
+        "running": "実行中",
+        "succeeded": "成功",
+        "failed": "失敗",
+        "backupStatus": "バックアップの状態",
+        "unavailable": "利用不可",
+        "backupEnabled": "バックアップ有効",
+        "backupNotEnabled": "バックアップ無効",
+        "backupSettings": "バックアップ設定",
+        "dailyAt": "毎日 ",
+        "nextRun": "）· 次回：",
+        "lastRun": "前回",
+        "noBackupsYet": "バックアップはまだありません",
+        "start": "開始",
+        "end": "終了",
+        "size": "サイズ",
+        "lastSuccess": "前回の成功",
+        "noSuccessfulBackupYet": "成功したバックアップはまだありません",
+        "failuresIn7Days": "7日間の失敗：",
+        "hideBackupHistory": "バックアップ履歴を隠す",
+        "viewBackupHistory": "バックアップ履歴を表示",
+        "backupHistory": "バックアップ履歴",
+        "retry": "再試行",
+        "couldNotLoadBackupHistory": "バックアップ履歴を読み込めませんでした。",
+        "loadingBackupHistory": "バックアップ履歴を読み込み中…",
+        "noBackupHistoryYet": "バックアップ履歴はまだありません。",
+        "backupRuns": "バックアップの実行",
+        "date": "日付",
+        "status": "ステータス",
+        "startEnd": "開始 / 終了",
+        "error": "エラー",
+        "backupRuns2": "件のバックアップ"
+      },
+      "DashboardCharts": {
+        "pin": "固定",
+        "show": "表示",
+        "clickToTheNumbers": "{label}：クリックして数値を{value}"
+      }
+    },
+    "pages": {
+      "AdminDashboardPage": {
+        "individual": "個人",
+        "group": "グループ",
+        "practice": "練習",
+        "students": "学生",
+        "lecturers": "教員",
+        "subjectManagers": "科目責任者",
+        "administrators": "管理者",
+        "open": "開講中",
+        "draft": "下書き",
+        "archived": "アーカイブ済み",
+        "succeeded": "成功",
+        "failed": "失敗",
+        "running": "実行中",
+        "notRun": "未実行",
+        "accessBlocked": "アクセスがブロックされました",
+        "failedSignIn": "ログイン失敗",
+        "signInWhileLocked": "ロック中のログイン",
+        "accountTemporarilyLocked": "アカウントの一時ロック",
+        "authenticationFailed": "認証失敗",
+        "accountDisabled": "アカウントの無効化",
+        "passwordReset": "パスワードの再設定",
+        "overview": "概要",
+        "youDoNotHavePermission": "システム概要を表示する権限がありません。",
+        "couldNotLoadTheSystem": "システム概要を読み込めませんでした。",
+        "live": "ライブ",
+        "disconnected": "接続が切れました",
+        "activeAccounts": "有効なアカウント",
+        "noChangeToday": "本日の変化なし",
+        "today": "本日 {value}{value2}",
+        "openSubjects": "開講中の科目",
+        "archived2": " 件アーカイブ",
+        "openClasses": "開講中のクラス",
+        "draft2": " 件下書き",
+        "systemAiTokens": "システムのAIトークン",
+        "unlimited": "無制限",
+        "assignments": "課題",
+        "inTheLast7Days": "過去7日間",
+        "assignmentsGivenPerDayBy": "種類別の1日あたりの出題数",
+        "backups": "バックアップ",
+        "inTheLast30Days": "過去30日間",
+        "accounts": "アカウント",
+        "byRole": "役割別",
+        "accountsByRole": "役割別のアカウント",
+        "classesAndSubjects": "クラスと科目",
+        "byStatus": "ステータス別",
+        "classesAndSubjectsByStatus": "ステータス別のクラスと科目",
+        "classes": "クラス",
+        "subjects": "科目",
+        "systemAiTokens2": "システムのAIトークン",
+        "byDay": "日別",
+        "systemAiTokensByDay": "日別のシステムAIトークン",
+        "suspiciousActivity": "不審なアクティビティ",
+        "recentNotableEvents": "最近の注目すべき出来事",
+        "openAuditLog": "監査ログを開く",
+        "loading": "読み込み中…",
+        "unavailable": "利用不可",
+        "backupResultsByDay": "日別のバックアップ結果",
+        "noSuspiciousActivityInThe": "過去30日間に不審なアクティビティはありません。",
+        "time": "日時",
+        "event": "イベント",
+        "reason": "理由",
+        "rejected": "拒否：{value}",
+        "unknown": "不明"
+      }
+    },
+    "register": {
+      "overview": "概要"
+    }
+  },
+  "ai": {
+    "admin": {
+      "components": {
+        "AiSettingsPanels": {
+          "usageHistory": "利用履歴",
+          "settings": "設定",
+          "aiSettings": "AI設定"
+        },
+        "InstitutionalKeysSection": {
+          "schoolApiKeys": "学校のAPIキー",
+          "revokeTheSchoolKey": "学校のキーを取り消しますか？",
+          "couldNotLoadTheSchool": "学校のAPIキーを読み込めませんでした。しばらくしてからもう一度お試しください。"
+        },
+        "QuotaSections": {
+          "enterAWholeNumberOf": "0〜1,000,000,000 の整数でトークン数を入力してください",
+          "couldNotLoadTheQuota": "利用上限を読み込めませんでした。しばらくしてからもう一度お試しください。",
+          "theQuotaWasJustChanged": "利用上限が別の場所で変更されました。ページを再読み込みしてください。",
+          "couldNotSaveTheQuota": "利用上限を保存できませんでした。しばらくしてからもう一度お試しください。",
+          "sharedQuota": "共通の利用上限",
+          "noQuotaConfiguredLecturersCannot": "利用上限が未設定のため、教員はまだ学校のAPIを利用できません。",
+          "quotaSaved": "利用上限を保存しました。",
+          "perLecturerDay": "教員ごと / 日",
+          "wholeSystemDay": "システム全体 / 日",
+          "save": "保存",
+          "couldNotLoadIndividualLimits": "個別の上限を読み込めませんでした。しばらくしてからもう一度お試しください。",
+          "couldNotDeleteTheIndividual": "個別の上限を削除できませんでした。しばらくしてからもう一度お試しください。",
+          "individualLimitPerLecturer": "教員ごとの個別上限",
+          "add": "追加",
+          "loading": "読み込み中…",
+          "lecturer": "教員",
+          "tokensDay": "トークン / 日",
+          "actions": "操作",
+          "noIndividualLimitsYet": "個別の上限はまだありません",
+          "n0Blocked": "0 · ブロック",
+          "editTheIndividualLimitOf": "{name} の個別上限を編集",
+          "deleteTheIndividualLimitOf": "{name} の個別上限を削除",
+          "deleteIndividualLimit": "個別の上限を削除しますか？",
+          "delete": "削除",
+          "areYouSureYouWant": "",
+          "text": " の個別上限を削除してもよろしいですか？",
+          "thisAccountIsNotA": "このアカウントは教員ではありません。",
+          "couldNotSaveTheIndividual": "個別の上限を保存できませんでした。",
+          "editIndividualLimit": "個別の上限を編集",
+          "addIndividualLimit": "個別の上限を追加",
+          "lecturerEmail": "教員のメールアドレス",
+          "suggestedLecturers": "候補の教員"
+        },
+        "SharedUsageTab": {
+          "couldNotLoadTheSchool": "学校のAPI利用状況を読み込めませんでした。しばらくしてからもう一度お試しください。",
+          "loading": "読み込み中…",
+          "today": "本日",
+          "lecturersWhoUsedItToday": "本日利用した教員",
+          "days": "{days}日間",
+          "period": "期間",
+          "days2": "日間",
+          "tokensPerDayOverDays": "{days}日間の日別トークン数",
+          "lecturersWhoUsedItIn": "{days}日間に利用した教員",
+          "byLecturer": "教員別",
+          "lecturer": "教員",
+          "requests": "リクエスト",
+          "todayDailyQuota": "本日 / 1日の上限",
+          "tokensInDays": "{days}日間のトークン",
+          "noLecturerUsedItIn": "この期間に利用した教員はいません",
+          "blocked": "ブロック",
+          "byProvider": "プロバイダー別",
+          "provider": "プロバイダー",
+          "model": "モデル",
+          "noRequestsInThisPeriod": "この期間のリクエストはありません"
+        }
+      }
+    },
+    "components": {
+      "ApiKeyDialog": {
+        "enterAnApiKey": "APIキーを入力してください。",
+        "couldNotSaveTheKey": "キーを保存できませんでした。しばらくしてからもう一度お試しください。",
+        "couldNotCheck": "確認できませんでした",
+        "editApiKey": "APIキーを編集",
+        "addApiKey": "APIキーを追加",
+        "saveKey": "キーを保存",
+        "provider": "プロバイダー",
+        "apiKey": "APIキー",
+        "pasteTheApiKey": "APIキーを貼り付け",
+        "hideKey": "キーを隠す",
+        "showKey": "キーを表示",
+        "copied": "コピーしました",
+        "copyKey": "キーをコピー",
+        "model": "モデル",
+        "check": "確認",
+        "checkingMayIncurASmall": "確認には少額の料金がかかる場合があります。"
+      },
+      "KeysSection": {
+        "theKeyWasJustChanged": "キーが別の場所で変更されました。再読み込みしてください。",
+        "passed": "成功",
+        "couldNotChangeTheKey": "キーの状態を変更できませんでした。",
+        "addKey": "キーを追加",
+        "reload": "再読み込み",
+        "loading": "読み込み中…",
+        "provider": "プロバイダー",
+        "key": "キー",
+        "model": "モデル",
+        "check": "確認",
+        "enableAndActions": "有効化と操作",
+        "noKeysYet": "キーはまだありません",
+        "couldNotCheckTheConnection": "接続を確認できませんでした。",
+        "checking": "確認中…",
+        "enableKey": "キー {label} ••••{value} を有効化",
+        "replaceKey": "キー {label} を差し替え",
+        "revokeKey": "キー {label} を取り消し",
+        "checkingMayIncurASmall": "確認には少額の料金がかかる場合があります。",
+        "couldNotRevokeTheKey": "キーを取り消せませんでした。",
+        "revoke": "取り消し",
+        "areYouSureYouWant": "キー ",
+        "text": " を取り消してもよろしいですか？"
+      },
+      "McpAgentSection": {
+        "couldNotRevokeTheAgent": "エージェントを取り消せませんでした。しばらくしてからもう一度お試しください。",
+        "connectNewAgent": "新しいエージェントを接続",
+        "labelAndToken": "ラベルとトークン",
+        "permissions": "権限",
+        "expires": "有効期限",
+        "status": "ステータス",
+        "actions": "操作",
+        "noAgentsYet": "エージェントはまだありません",
+        "editAgent": "エージェント {label} を編集",
+        "revokeAgent": "エージェント {label} を取り消し",
+        "revokeAgent2": "エージェントを取り消しますか？",
+        "revoke": "取り消し",
+        "areYouSureYouWant": "エージェント「",
+        "text": "」を取り消してもよろしいですか？",
+        "theLabelMustBe1": "ラベルは1〜60文字で入力してください。",
+        "couldNotSaveTheAgent": "エージェントを保存できませんでした。しばらくしてからもう一度お試しください。",
+        "couldNotCreateTheToken": "トークンを作成できませんでした。しばらくしてからもう一度お試しください。",
+        "editAgent2": "エージェントを編集",
+        "save": "保存",
+        "createToken": "トークンを作成",
+        "label": "ラベル",
+        "days": "日間",
+        "youHave": "有効なエージェントは ",
+        "activeAgents": " 件です。",
+        "couldNotViewTheToken": "トークンを表示できませんでした。しばらくしてからもう一度お試しください。",
+        "oldTokenCannotBeViewed": "古いトークンのため再表示できません",
+        "hideToken": "トークンを隠す",
+        "oldTokenCannotBeCopied": "古いトークンのためコピーできません",
+        "copied": "コピーしました",
+        "copyToken": "トークンをコピー",
+        "close": "閉じる",
+        "expired": "期限切れ"
+      },
+      "McpAgentsTab": {
+        "reload": "再読み込み",
+        "couldNotLoadMcpAgents": "MCPエージェントを読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "loading": "読み込み中…"
+      },
+      "SetupGuides": {
+        "openGoogleAiStudioAistudio": "Google AI Studio（aistudio.google.com）を開き、Google アカウントでログインします。",
+        "chooseGetApiKeyCreate": "Get API key → Create API key を選択します。",
+        "copyTheKeyAndPaste": "キーをコピーし、「キーを追加」ポップアップに貼り付けます。",
+        "openPlatformOpenaiComApi": "platform.openai.com → API keys を開きます。",
+        "clickCreateNewSecretKey": "Create new secret key をクリックし、わかりやすい名前を付けます。",
+        "addCreditToTheAccount": "アカウントにクレジットがない場合はチャージしてから、キーをポップアップに貼り付けます。",
+        "openConsoleAnthropicComApi": "console.anthropic.com → API keys を開きます。",
+        "clickCreateKeyAndChoose": "Create Key をクリックし、ワークスペースを選択します。",
+        "copyTheKeyShownOnly": "キーをコピー（一度だけ表示されます）して、ポップアップに貼り付けます。",
+        "howToGetAnApi": "APIキーの取得方法",
+        "doNotShareYourKey": "キーを他人と共有しないでください。",
+        "yourToken": "'<'あなたのトークン>",
+        "noRealTokenIsProvided": "No real token is provided. Guide me to create one under AI接続 (AI connection) → MCP エージェント (MCP agents) and enter it directly in my personal configuration file; do not ask me to paste the token into chat. Never authenticate with a placeholder token.",
+        "agentApp": "エージェントアプリ",
+        "sampleBasedOnTheOfficial": "公式ドキュメントに基づくサンプルです。現在の環境では、このアプリとの実際の接続は検証していません。",
+        "promptCopiedPasteItInto": "プロンプトをコピーしました。エージェントに貼り付けて設定してください。",
+        "couldNotCopyOpenView": "コピーできませんでした。「プロンプトを表示」を開いて手動でコピーしてください。",
+        "copyPrompt": "プロンプトをコピー",
+        "pasteItIntoTheAgent": "エージェントに貼り付けると、MCPの設定を任せられます。",
+        "thePromptContainsYourToken": "プロンプトにはあなたのトークンが含まれています。信頼できるエージェントにのみ貼り付けてください。",
+        "createAToken": "トークンを作成します。",
+        "clickConnectNewAgentChoose": "「新しいエージェントを接続」をクリックします。データを閲覧するだけなら「読み取り専用」、課題の作成や採点案の保存も行うなら「読み取りと書き込み」を選びます。",
+        "openTheConfiguration": "設定を開きます。",
+        "openSettingsCustomizationsInstalledMcp": "Settings → Customizations → Installed MCP Servers → Open MCP Config を開きます。旧バージョン：MCP Servers → Manage MCP Servers → View raw config。",
+        "openTheFileBelowIn": "以下のファイルをテキストエディターで開きます。存在しない場合は作成してください。",
+        "isYourHomeFolderUsually": "。~ はユーザーのホームフォルダーで、Windows では通常 C:\\Users\\ユーザー名 です。",
+        "pasteTheConfigurationBelow": "以下の設定を貼り付けます。",
+        "mergeItIntoYourExisting": "既存の設定に統合し、他のサーバーはそのまま残してください。",
+        "theConfigurationAlreadyContainsThe": "設定には作成したばかりのトークンが含まれています。",
+        "replaceYourTokenWithThe": "'<'あなたのトークン> を作成したトークンに置き換えてください。",
+        "keepItInYourPersonal": "個人用の設定に保存し、トークンを含むファイルを Git にコミットしないでください。",
+        "copyConfiguration": "設定をコピー",
+        "copied": "コピーしました",
+        "couldNotCopySelectAnd": "コピーできませんでした。設定部分を選択して手動でコピーしてください。",
+        "n4CheckTheConnection": "4. 接続を確認します。",
+        "reloadMcpInTheApp": "アプリでMCPを再読み込みします。再起動が必要なバージョンの場合は、先に作業を保存してください。エージェントに「get_my_capabilities を呼び出し、その後アカウントで許可されている読み取り専用ツールを1つ使って」と依頼します。実際のデータを読み取れた場合のみ接続成功とみなしてください。",
+        "mcpHelp": "MCPヘルプ",
+        "mcpDocumentation": "MCPドキュメント",
+        "howToConnectAppsCreate": "アプリの接続、課題の作成、採点、各ツールの使い方。",
+        "viewMcpDocumentation": "MCPドキュメントを表示"
+      }
+    },
+    "model": {
+      "labels": {
+        "readOnly": "読み取り専用",
+        "readWrite": "読み取りと書き込み",
+        "active": "有効",
+        "expired": "期限切れ",
+        "revoked": "取り消し済み",
+        "systemApi": "システムAPI",
+        "personalApi": "個人API",
+        "measuredByProvider": "プロバイダー計測",
+        "estimated": "推定",
+        "reportedByAgent": "エージェント報告",
+        "noData": "データなし",
+        "rejected": "拒否",
+        "error": "エラー",
+        "noPermission": "権限なし",
+        "unknownResult": "結果不明",
+        "cancelled": "キャンセル済み",
+        "draftAssignment": "課題の下書き作成",
+        "draftQuestion": "問題の下書き作成",
+        "gradingProposal": "採点案",
+        "practiceFeedback": "練習へのフィードバック",
+        "connectionCheck": "接続確認",
+        "apiKeyEncryptionIsNot": "システムでAPIキーの暗号化が有効になっていません。管理者に連絡してください。",
+        "theDataWasJustChanged": "データが別の場所で変更されました。再読み込みしてください。",
+        "youAlreadyHave5Active": "有効なエージェントがすでに5件あります。いくつか取り消してください。",
+        "passed": "成功",
+        "wrongKey": "キーが不正",
+        "tokenLimit": "トークン上限",
+        "rateQuota": "頻度 / 利用上限",
+        "rateLimited": "頻度制限",
+        "quotaExhausted": "利用上限超過",
+        "overloaded": "過負荷",
+        "timedOut": "タイムアウト",
+        "connectionLost": "接続切れ",
+        "failed": "失敗"
+      },
+      "mcpGuide": {
+        "discoveryAndGuidance": "探索とガイド",
+        "lecturersAndSubjectManagersGet": "教員と科目責任者。get_my_capabilities は学生も利用できます。",
+        "showsTheRoleTokenPermissions": "役割、トークンの権限、アカウントが呼び出せるツールを返します。まずここから始めてください。実際の利用時にもクラス・課題・科目ごとに権限が確認されます。",
+        "readsTheFullGuideFrom": "サーバーから完全なガイドを読み込みます。課題の作成は AUTHOR_ASSIGNMENT、採点は GRADE_WITH_RUBRIC。スキルをダウンロードする必要はありません。",
+        "readsTheCurrentSchemaAnd": "ASSIGNMENT、QUIZ、BANK を作成する前に現在のスキーマと制限を読み込み、形式の誤った内容を送らないようにします。",
+        "findsTheClassesYouAre": "名前・コード・ステータスで担当クラスを検索し、正確な classId を取得します。IDを推測したり、同名のクラスを勝手に選んだりしません。",
+        "findsSubjectsFromTheClasses": "担当クラスの科目と管理担当の科目を検索します。科目単位の内容を作成するときは subjectId を使います。",
+        "learningMaterialsAsSources": "情報源としての教材",
+        "lecturersAndSubjectManagersWithin": "教員と科目責任者（許可された範囲内）。",
+        "findsMaterialsOfAClass": "クラス・科目の教材を検索します。textStatus で、情報源として使える抽出テキストがあるかを確認します。",
+        "readsTheContentOfAllowed": "許可された教材の内容を読み込みます。長い文書は offset と expectedVersion で続きを読む必要があります。文書の内容が権限やツールを変更する指示として扱われることはありません。",
+        "createAssignments": "課題の作成",
+        "lecturersAndSubjectManagersStudents": "教員と科目責任者。学生は read_assignment_context で課題情報を見るだけで、このツールから課題文やルーブリックは受け取りません。",
+        "findsAssignmentsInExactlyOne": "1つのクラスまたは科目内で、名前とステータスから課題を検索します。編集する課題の選択や、作成した下書きの確認に使います。",
+        "lecturersReadTheInstructionsOutline": "教員は説明、構成、パート、ルーブリック、バージョンを読み込みます。学生は閲覧が許可された形式・モード・スケジュールのみ受け取ります。",
+        "createsADraftAssignmentWith": "内容・ルーブリックの提案（適用待ち）付きで DRAFT の課題を作成します。クラスまたは科目、課題の要望、重複防止の requestRef が必要です。学生への配布は行いません。",
+        "savesAnEditProposalTo": "既存の課題に編集提案を expectedVersion 付きで保存します。適用済みの内容を自ら置き換えることはなく、教員が画面上で確認して適用します。",
+        "quizzesAndQuestionBank": "クイズと問題バンク",
+        "lecturersSubjectManagersUseThe": "教員・科目責任者はクイズのツールを使います。問題バンクの3つのツールは担当科目の科目責任者専用です。",
+        "findsAllowedQuizzesByClass": "閲覧、下書きの編集、作成結果の確認のため、許可されたクイズをクラスまたは科目で検索します。",
+        "readsAQuizYouMay": "編集権限のあるクイズを読み込みます：設定、問題、選択肢、正解、解説、バージョン。",
+        "createsADraftQuizWith": "問題の提案付きで DRAFT のクイズを requestRef とともに作成します。作成者の確認と適用が必要で、クイズを自動で公開することはありません。",
+        "savesQuestionProposalsForA": "下書きのクイズに問題の提案を expectedVersion 付きで保存します。クイズを自ら編集・承認・公開することはありません。",
+        "theSubjectManagerSearchesThe": "科目責任者が担当科目の問題バンクを、種類・難易度・ステータスで絞り込んで検索します。",
+        "theSubjectManagerReadsThe": "科目責任者が提案を作成する前に、科目・問題バンクの文脈と選択した問題の詳細を読み込みます。",
+        "theSubjectManagerSavesQuestion": "科目責任者が科目の問題バンクに問題の提案を requestRef 付きで保存します。有効な問題として使うには承認が必要です。",
+        "readSubmissionsAndGradingProposals": "提出物の閲覧と採点案",
+        "lecturersAssignedToTheClass": "クラスを担当する教員。科目責任者にも該当クラスの担当権限が必要です。",
+        "listsStudentsGroupsWithSubmission": "学生・グループと提出状況、採点状況、点数、evaluationId を一覧表示します。ページングとフィルターに対応。evaluationId が空の場合は、採点できるスナップショットがまだありません。",
+        "readsTheSnapshotOfA": "担当クラス内の提出済み解答のスナップショットを attemptId で読み込みます。ルーブリック採点には、完全な文脈とフィンガープリントを得るため read_grading_context を使ってください。",
+        "readsExactlyTheSubmissionBrief": "対象の提出物、課題文、現在のルーブリックを正確に読み込みます。complete=true になるまで全ページを読み、提案を書き込む前に同じ version / submissionHash / snapshotFingerprint を保持してください。",
+        "readsTheContextOfSeveral": "複数の提出物の文脈を読み込みます。各提出物に個別の結果・エラーと continuation があります。読み込みが完了していない提出物には採点案を書き込めません。",
+        "savesProposedPointsAndExplanations": "文脈をすべて読んだ後、ルーブリック項目ごとの提案点と説明を保存します。現在の version、submissionHash、snapshotFingerprint が必要です。正式な成績は保存しません。",
+        "savesSeveralGradingProposalsChecking": "複数の採点案を保存し、提出物ごとに個別に検証します。どれが成功したかは各項目の結果で確認してください。成績の確定・公開は行いません。",
+        "showsTheListStatusOf": "評価の提案一覧と状態を表示し、システム上で該当の提案を開くレビュー用リンクを返します。",
+        "readsTheCurrentSubmissionGrading": "クラスまたは課題の現在の提出・採点統計を、出典と時刻付きで読み込みます。品質や不正について結論は出しません。",
+        "readsTheAggregatedDistributionOf": "公開済み成績の分布を、システムの権限とプライバシー規則に従って集計形式で読み込みます。",
+        "studentsPracticeFeedback": "学生：練習へのフィードバック",
+        "onlyTheStudentsOwnSubmitted": "学生本人が提出した練習課題のみ対象です。グループ課題や正式な採点には適用されません。",
+        "readsYourOwnSubmittedPractice": "自分が提出した練習課題とスナップショットのハッシュを読み込みます。ルーブリックや正式な成績は返しません。",
+        "savesPrivateFeedbackForThe": "読み込んだ練習課題への個別フィードバックを submissionHash 付きで保存します。提出物の変更や成績表への記録は行いません。"
+      }
+    },
+    "pages": {
+      "AiConnectionPage": {
+        "usageHistory": "利用履歴",
+        "personalApi": "個人API",
+        "aiConnection": "AI接続",
+        "personalApiKeys": "個人のAPIキー",
+        "revokeApiKey": "APIキーを取り消しますか？",
+        "couldNotLoadAiConnections": "AI接続を読み込めませんでした。しばらくしてからもう一度お試しください。"
+      },
+      "AiUsageHistoryPage": {
+        "all": "すべて",
+        "personalApi": "個人API",
+        "couldNotLoadAiUsage": "AIの利用履歴を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "systemApi": "システムAPI",
+        "usageHistory": "利用履歴",
+        "source": "ソース",
+        "from": "開始日",
+        "to": "終了日",
+        "toMustBeAfterFrom": "終了日は開始日より後にしてください",
+        "loading": "読み込み中…",
+        "time": "日時",
+        "task": "タスク",
+        "model": "モデル",
+        "tokensInOut": "トークン 入力 / 出力",
+        "status": "ステータス",
+        "noUsageInThisPeriod": "この期間の利用はありません。",
+        "noData": "データなし"
+      },
+      "McpGuidePage": {
+        "whatIsMcpFor": "MCPでできること",
+        "connectAnApp": "アプリを接続",
+        "howToUseIt": "使い方",
+        "toolList": "ツール一覧",
+        "troubleshooting": "エラーが起きたとき",
+        "officialDocumentation": "公式ドキュメント",
+        "mcpDocumentation": "MCPドキュメント",
+        "connectYourAgentToThe": "エージェントを学習プラットフォームに接続します。",
+        "manageMcpConnections": "MCP接続を管理",
+        "mcpGuide": "MCPガイド",
+        "mcpLetsYouChatIn": "MCP を使うと、Codex、Claude Code、OpenCode、Antigravity での会話から、システム上で許可されたデータを操作できます。エージェントはそのアプリ自身のモデルを使います。MCP トークンは AI の API キーではなく、ここに保存した API キーも使用しません。",
+        "youStateYourRequestAnd": "外部アプリでエージェントに要望を伝えてやり取りします。課題の作成や採点では、エージェントがプラットフォーム上の該当の下書き・提案を開くリンクを返すので、内容を確認して判断してください。",
+        "readOnly": "読み取り専用",
+        "viewTheDataYourRole": "役割で許可されたデータを閲覧します。下書きの作成や提案の保存は行いません。",
+        "readWrite": "読み取りと書き込み",
+        "addsTheWriteToolsYour": "下書きの作成やフィードバックの保存など、役割で許可された書き込みツールが追加されます。成績を自動で確定・公開することはありません。",
+        "lecturersWorkInAssignedClasses": "教員：担当クラス内で作業します。科目責任者：担当科目の内容に対する権限が加わりますが、採点にはそのクラスの担当権限が必要です。",
+        "studentsAskForFeedbackOn": "学生：自分が提出した練習課題へのフィードバックを依頼できます。正式な採点やグループ課題でのAI利用はできません。",
+        "adminsCannotConnectMcpThe": "管理者は MCP に接続できません。実際のツール一覧は役割とトークンの権限の両方によって決まり、get_my_capabilities で返されます。",
+        "inManageMcpConnectionsClick": "「MCP接続を管理」で ",
+        "connectNewAgent": "新しいエージェントを接続",
+        "giveItAMemorableLabel": " をクリックし、わかりやすいラベルを付けて適切な権限を選びます。次に下からアプリを選びます。最も簡単なのは英語のプロンプトをコピーしてエージェントに設定を任せる方法です。設定ファイルを開いて手動で統合することもできます。",
+        "theGuideDoesNotRequire": "このガイドではターミナルは必須ではありません。Codex の個人設定は、同じ設定に対応するインターフェース間で共有されます。Claude Code の場合は Claude Code の設定であり、Claude Desktop の設定ファイルではありません。",
+        "keepTheTokenInYour": "トークンは個人用の設定に保管してください。ドキュメントページにはプレースホルダーのみ表示されます。トークンを会話、スクリーンショット、URL、Git に貼り付けないでください。漏えいした場合は、その接続を取り消して新しいトークンを作成してください。",
+        "toDisconnectDisableOrRemove": "接続を解除するには、エージェントアプリで nen-tang-hoc-tap サーバーを無効化または削除します。今後使わない場合は「MCP接続を管理」に戻ってトークンを取り消してください。そのトークンを使う接続は認証できなくなります。",
+        "n1CreateOrEditAn": "1. 課題を作成・編集する",
+        "stateTheClassSubjectTopic": "クラス・科目、テーマ、問題数、難易度、合計点、個人・グループ、練習・評価対象を明確に伝えます。必要に応じて画像や資料を送り、不足している点はエージェントから質問させてください。",
+        "theAgentReadsItsPermissions": "エージェントは権限、サーバーの課題作成ガイド、現在のスキーマを読み込み、作成前に正しいクラス・科目を特定します。既存の課題を編集するには最新のバージョンを読む必要があります。",
+        "theAgentCreatesADraft": "エージェントは内容・ルーブリックの提案付きで DRAFT を作成し、レビュー用リンクを返します。作成直後の下書きには、まだ内容が適用されていない場合があります。",
+        "openTheLinkReviewThe": "リンクを開き、課題文とルーブリックを確認してから ",
+        "applyProposal": "提案を適用",
+        "editAndSaveInThe": " をクリックします。画面上で編集・保存してください。課題の配布やスケジュール設定はあなたが判断します。",
+        "n2RubricBasedGradingProposals": "2. ルーブリックに基づく採点案",
+        "tellTheAgentTheClass": "採点するクラスと課題をエージェントに伝えます。エージェントが提出物を一覧表示するので、1件または複数を選びます。",
+        "theAgentReadsTheGrading": "エージェントは採点ガイド、課題文、ルーブリック、提出物のスナップショット全体を読み込みます。長い内容は、提案を書き込む前に同じフィンガープリントで全ページを読む必要があります。",
+        "askForPointsPerItem": "項目ごとの点数、根拠、理由を求め、情報が不足する場合は教員の確認が必要というフラグを付けさせます。読み取れない図や画像の部分を推測させないでください。",
+        "openTheReviewLinkOn": "採点ページでレビュー用リンクを開き、各項目と説明を確認します。下書きに適用したら、権限に応じてシステム上で保存・確定・公開してください。MCP が正式な判断を行うことはありません。",
+        "mcpDoesNotGuaranteeThe": "MCP は AI がルーブリックどおり正しく採点することを保証しません。システムは権限、スナップショット、構造、文脈を十分に読んだかを確認しますが、モデルが課題を正しく理解したことを証明するものではありません。確定前に、不自然な点数、根拠、レビューが必要とされた項目を教員が確認してください。",
+        "n3QuizzesQuestionBankAnd": "3. クイズ、問題バンク、練習",
+        "quizzesUseTheirOwnQuestion": "クイズには専用の問題提案を使います。問題バンクは科目責任者向けで、承認が必要です。学生は練習課題の提出後に個別のフィードバックを依頼できます。フィードバックが提出物を変更したり成績表に記録されたりすることはありません。",
+        "samplePromptsToGetStarted": "始めるためのサンプルプロンプト（英語）",
+        "createAssignment": "課題作成",
+        "grading": "採点",
+        "noNeedToDownloadA": "スキルやフックをダウンロードする必要はありません。教員は read_agent_workflow でサーバーのガイドを利用します。ローカルのスキル・フックは任意で、追加の権限は付与されません。",
+        "toolsAreActionsTheAgent": "ツールは、エージェントがシステム上で呼び出す操作です。",
+        "doNotCreateBusinessRecords": " は業務データを作成しません。",
+        "writeDraftsFeedback": "下書き・フィードバックの書き込み",
+        "requireAReadWriteToken": " には「読み取りと書き込み」のトークンが必要です。これは機能別の一覧であり、実際に使えるツールは get_my_capabilities の現在の権限と対象ごとの確認によって決まります。",
+        "n401OrCannotAuthenticate": "401 または認証できない",
+        "checkThatTheTokenHas": "トークンが期限切れ・取り消し済みでないこと、Authorization ヘッダーが正しいことを確認してください。プレースホルダーのトークンは使わず、紛失した場合は新しいトークンを作成してください。",
+        "toolsMissingOrPermissionDenied": "ツールが見つからない、または権限が拒否される",
+        "readTheCapabilitiesAgainA": "capabilities を読み直してください。「読み取り専用」トークンには書き込みツールがありません。科目責任者の役割だけで全クラスの採点権限が得られるわけではありません。権限の変更やサーバーの更新後は、アプリで MCP・ツール一覧を再読み込みしてください。",
+        "cannotReachTheServerAddress": "サーバーのアドレスにアクセスできない",
+        "localhostIsTheMachineRunning": "localhost はエージェントを実行しているマシンを指します。コンテナ内、別のマシン、リモートサービス上のエージェントには、アクセス可能なプラットフォームのアドレスが必要です。ブラウザーの localhost を前提にしないでください。ネットワーク経由の接続ではプラットフォームの HTTPS アドレスを使います。",
+        "contextNotFullyReadOr": "文脈の読み込みが不足している、または最新ではない",
+        "forMcpContextReadRequired": "MCP_CONTEXT_READ_REQUIRED の場合は最初のページから読み直してください。VERSION_CONFLICT、SUBMISSION_CHANGED、古い提案の場合は、新しいデータを読み込んで採点し直してください。チェックを回避するためにフィンガープリントやバージョンを変更しないでください。確定・公開済みの成績は MCP で変更できません。",
+        "timeoutWhileCreatingADraft": "下書きの作成や提案の保存中にタイムアウトした",
+        "checkWhetherTheActionAlready": "操作がすでに成功していないか確認してください。requestRef に対応するツールは、同じ requestRef と同じ内容で再試行する必要があります。新しいリクエストを作成しないでください。requestRef のないツールは、再度書き込む前に画面上で提案を確認してください。",
+        "createdButTheAssignmentIs": "作成したのに課題が空のまま",
+        "openTheExactReviewurlThe": "エージェントが返した reviewUrl を開き、提案を適用してください。DRAFT や提案があっても、内容が適用済み、または課題が配布済みという意味ではありません。",
+        "menusAndConfigurationLocationsMay": "メニューや設定ファイルの場所はバージョンによって変わる場合があります。Antigravity では、正しいファイルを確認するためアプリ自体から設定を開くことをおすすめします。",
+        "codexMcpConnection": "Codex：MCP接続",
+        "claudeCodeMcpAndConfiguration": "Claude Code：MCPと設定スコープ",
+        "opencodeMcpServersAndAuthentication": "OpenCode：MCPサーバーと認証",
+        "antigravitySettingUpMcpIn": "Antigravity：アプリでのMCP設定",
+        "mcpDocumentationContents": "MCPドキュメントの目次",
+        "inThisDocument": "このドキュメントの内容"
+      }
+    },
+    "register": {
+      "aiConnection": "AI接続"
+    }
+  },
+  "announcements": {
+    "components": {
+      "AnnouncementDialogs": {
+        "announcementPosted": "お知らせを投稿しました",
+        "couldNotPostTo": "{names} には投稿できませんでした。{message}",
+        "createAnnouncement": "お知らせを作成",
+        "post": "投稿",
+        "title": "タイトル",
+        "content": "内容",
+        "important": "重要",
+        "sendEmail": "メールを送信",
+        "allClasses": "すべてのクラス（{length}）",
+        "class": "クラス ",
+        "typeAClassOrSubject": "クラスコードまたは科目コードを入力",
+        "chooseClasses": "クラスを選択",
+        "classes": "クラス",
+        "selectTheMatchingClasses": "検索中のクラスを選択",
+        "selectAll": "すべて選択",
+        "noMatchingClasses": "該当するクラスはありません。",
+        "changesSaved": "変更を保存しました",
+        "editAnnouncement": "お知らせを編集",
+        "save": "保存",
+        "announcementDeleted": "お知らせを削除しました",
+        "deleteAnnouncement": "お知らせを削除しますか？",
+        "delete": "削除",
+        "areYouSureYouWant": "お知らせ「",
+        "text": "」を削除してもよろしいですか？"
+      },
+      "AnnouncementFeed": {
+        "announcementList": "お知らせ一覧",
+        "noAnnouncementsYet": "お知らせはまだありません。",
+        "important": "重要",
+        "edit": "{title} を編集",
+        "delete": "{title} を削除"
+      }
+    },
+    "pages": {
+      "ClassAnnouncementsPage": {
+        "loadingAnnouncements": "お知らせを読み込み中…",
+        "classAnnouncements": "クラスのお知らせ",
+        "allAnnouncements": "すべてのお知らせ",
+        "createAnnouncement": "お知らせを作成",
+        "tryAgain": "再試行",
+        "announcementPages": "お知らせのページ",
+        "previous": "前へ"
+      }
+    },
+    "register": {
+      "allAnnouncements": "すべてのお知らせ"
+    }
+  },
+  "assignments": {
+    "components": {
+      "AiChatAttachments": {
+        "filesAttachedToTheRequest": "リクエストの添付ファイル",
+        "template": "テンプレート",
+        "useAsReference": "参考資料として使う",
+        "remove": "{templateName} を削除",
+        "referenceMaterial": "参考資料 · 教材",
+        "remove2": "{title} を削除",
+        "referenceFile": "参考資料 · ファイル",
+        "uploading": "アップロード中 {percent}%",
+        "reading": "読み込み中…",
+        "ready": "準備完了",
+        "retry": "再試行",
+        "useAsTheTemplate": "{name} をテンプレートとして使う",
+        "useAsTemplate": "テンプレートとして使う",
+        "remove3": "{name} を削除",
+        "changingTheFilesRole": "ファイルの役割を変更中…",
+        "references3Files2Mb": "参考資料：3ファイル、各2MBまで。テンプレート：DOCX 1件、20MBまで。"
+      },
+      "AiDraftDialog": {
+        "theAiReturnedNoResult": "AIから結果が返りませんでした。",
+        "youCanStillWriteIt": "{value} 手動で作成することもできます。",
+        "waitForUploadsToFinish": "課題を作成する前に、アップロードの完了を待つか、エラーのファイルを削除してください。",
+        "untitledAssignment": "無題の課題",
+        "theNumberOfQuestionsMust": "問題数は1〜10で指定してください。",
+        "totalPointsMustBeGreater": "合計点は0より大きく、1,000以下、小数点以下2桁までで指定してください。",
+        "draftWithAi": "AIで下書きを作成",
+        "discardProposal": "提案を破棄",
+        "editRequestAndRegenerate": "要望を修正して再生成",
+        "createAssignment": "課題を作成",
+        "describeTheAssignmentYouNeed": "必要な課題を説明すると、AI が採点用ルーブリック付きの問題を作成してページに直接書き込みます。元に戻すには Ctrl+Z を押します。以下の項目はすべて任意です。",
+        "template": "テンプレート",
+        "noTemplate": "テンプレートを使わない",
+        "subjectTemplates": "科目のテンプレート",
+        "uploadATemplate": "テンプレートをアップロード…",
+        "uploadATemplate2": "テンプレートをアップロード",
+        "language": "言語",
+        "vietnamese": "ベトナム語",
+        "numberOfQuestions": "問題数",
+        "aiDecides": "AIが決定",
+        "totalPoints": "合計点",
+        "aiDistributes": "AIが配分",
+        "references": "参考資料",
+        "request": "要望",
+        "exampleAnAnalysisAndDesign": "例：図書館管理システムの分析・設計課題。ユースケース図とクラス図を含み、難易度は中程度。",
+        "theAssignmentHasNotBeen": "課題は変更されていません。",
+        "creatingDraft": "下書きを作成中",
+        "reading": "読み込み中…",
+        "questions": "{questionCount} 問",
+        "read": "読み込み済み",
+        "retry": "再試行",
+        "chooseSubjectMaterialsOrUpload": "AIが参照する科目の教材を選ぶか、ファイルをアップロード",
+        "noUsableMaterialsYet": "利用できる教材はまだありません。",
+        "noMaterialsFound": "教材が見つかりません。",
+        "uploadDocuments": "資料をアップロード{value}",
+        "selectedDocuments": "選択した資料",
+        "remove": "{title} を外す",
+        "retry2": "{name} を再試行",
+        "remove2": "{name} を削除",
+        "uploadDocuments2": "資料をアップロード"
+      },
+      "AiDraftPreview": {
+        "assignmentCheckResults": "課題のチェック結果",
+        "needsFixingBeforeApplying": "適用前に修正が必要",
+        "checkPassed": "チェックに合格",
+        "needsReview": "要確認",
+        "questions": " 問",
+        "partsWithRubric": " パートにルーブリックあり",
+        "points": " 点",
+        "thisProposalHasNoCheck": "この提案にはチェック結果がありません。現在のバージョンで再生成してください。",
+        "theAiHasNotCreated": "AIはまだ問題とルーブリックを作成していません。「要望を修正して再生成」を選んで新しく作成してください。現在の内容は課題に追加されていません。",
+        "businessContext": "業務の背景 ",
+        "notGradedClickToExpand": "· 採点対象外 · クリックで展開/折りたたみ",
+        "instructionsForDoingAndSubmitting": "取り組み方と提出方法",
+        "questionsAndRubric": "問題とルーブリック",
+        "questionsAndGradingCriteria": "問題と採点基準",
+        "noQuestionsToDisplayThe": "表示する問題はありません。背景や説明は問題やルーブリックの代わりにはなりません。",
+        "question": "問 {value}",
+        "requirementsDeliverables": "要件 / 提出物",
+        "noRequirementDescriptionYet": "要件の説明はまだありません。",
+        "rubricCriteriaAndPoints": "ルーブリック · 基準と配点",
+        "theRubricIsSetOn": "ルーブリックは小問に設定されています。",
+        "thisQuestionHasNoRubric": "この問題にはまだルーブリックがありません。課題を再生成して基準と配点を追加してください。"
+      },
+      "AiReviseChat": {
+        "waitForUploadsToFinish": "送信する前に、アップロードの完了を待つか、エラーのファイルを削除してください。",
+        "theAiReturnedNoResult": "AIから結果が返りませんでした。",
+        "theAssignmentWasNotChanged": "{value} 課題は変更されていません。",
+        "theAiDidNotChange": "AIは何も変更しませんでした。修正内容をもっと具体的に伝えてください。",
+        "couldNotApply": "適用できませんでした：{value}",
+        "note": "注意：{message}",
+        "andMoreNotes": "…ほか {value} 件の注意。",
+        "theAssignmentWasEditedAs": "要望どおりに課題を修正しました。Ctrl+Z で前のバージョンに戻せます。",
+        "theAssignmentWasUpdatedBut": "課題は更新されましたが、再読み込みできませんでした。ページを再読み込みしてください。",
+        "couldNotConfirmTheResult": "{value} 適用結果を確認できませんでした。再試行する前に課題を再読み込みして確認してください。",
+        "theAssignmentWasNotChanged2": "課題は変更されていません。",
+        "theRequestWasNotConfirmed": "要望は確認されませんでした。内容とファイルは保持されているので再試行できます。",
+        "waitUntilTheFileRole": "ファイルの役割の変更が終わってから画像を貼り付けてください。",
+        "chooseSpecificFilesDoNot": "フォルダーではなく個別のファイルを選択してください。",
+        "editAssignmentWithAi": "AIで課題を修正",
+        "dropFilesToAttach": "ドロップして添付",
+        "closeAiAssistant": "AIアシスタントを閉じる",
+        "restoreRequest": "要望を復元",
+        "attachedFiles": "添付ファイル",
+        "template": "テンプレート：",
+        "references": "参考資料：",
+        "theAiIsEditingThe": "AIが課題を修正中…",
+        "addATemplateOrReferences": "テンプレートまたは参考資料を追加",
+        "chooseAnExistingTemplate": "既存のテンプレートを選択",
+        "chooseSubjectMaterials": "科目の教材を選択",
+        "uploadFromComputer": "コンピューターからアップロード",
+        "back": "戻る",
+        "findTemplates": "テンプレートを検索",
+        "findReferences": "参考資料を検索",
+        "searchByName": "名前で検索",
+        "editRequest": "修正の要望",
+        "exampleTranslateTheWholeAssignment": "例：課題全体を英語に翻訳する",
+        "sendRequest": "要望を送信",
+        "uploadAFileFromComputer": "コンピューターからファイルをアップロード",
+        "replaceTemplate": "テンプレートを置き換えますか？",
+        "replaceTemplate2": "テンプレートを置き換え",
+        "theNewTemplateReplacesThe": "新しいテンプレートは読み込みに成功すると現在のテンプレートと置き換わります。その他の参考資料はそのまま残ります。",
+        "theAiTookTooLong": "AIの応答に時間がかかりすぎました。"
+      },
+      "AssignmentListCard": {
+        "open": "受付中",
+        "noOpenAssignments": "受付中の課題はありません。",
+        "draft": "下書き",
+        "noDraftAssignments": "下書きの課題はありません。",
+        "finalized": "確定済み",
+        "noFinalizedAssignments": "確定済みの課題はありません。",
+        "closed": "締切済み",
+        "noClosedAssignmentsYet": "締切済みの課題はまだありません。",
+        "individual": "個人",
+        "group": "グループ",
+        "practice": "練習",
+        "assignmentList": "課題一覧",
+        "assignmentStatus": "課題のステータス",
+        "assignmentType": "課題の種類",
+        "allTypes": "すべての種類",
+        "findAssignments": "課題を検索",
+        "searchByName": "名前で検索",
+        "retry": "再試行",
+        "assignment": "課題",
+        "type": "種類",
+        "scope": "範囲",
+        "deadline": "締切",
+        "status": "ステータス",
+        "submissions": "提出物",
+        "openAssignment": "課題を開く",
+        "subject": "科目",
+        "class": "クラス",
+        "loadingAssignments": "課題を読み込み中…",
+        "noMatchingAssignments": "該当する課題はありません。"
+      },
+      "assignmentNav": {
+        "assignmentParts": "課題のパート",
+        "assignment": "課題",
+        "loading": "読み込み中…",
+        "questions": "問題",
+        "addQuestion": "問題を追加",
+        "theAssignmentHasNoQuestions": "課題にはまだ問題がありません",
+        "addAPointTo": "{number} に項目を追加"
+      },
+      "AssignmentSettingsPanel": {
+        "eachStudentSubmitsTheirOwn": "学生ごとに1件提出します。",
+        "eachGroupSubmitsOneShared": "グループごとに共同で1件提出します。",
+        "countsTowardTheGradebook": "成績表に反映されます。",
+        "selfPracticeNotGraded": "自主練習のため採点されません。",
+        "format": "形式",
+        "individual": "個人",
+        "group": "グループ",
+        "mode": "モード",
+        "activityMonitoring": "アクティビティの記録",
+        "recordsWhenStudentsLeaveThe": "学生が解答中にページを離れたことを記録します。",
+        "noticeToStudents": "学生へのお知らせ"
+      },
+      "ClassAssignmentsSection": {
+        "createAssignment": "課題を作成"
+      },
+      "CreateAssignmentDialog": {
+        "writeFromScratchYouCan": "一から作成します。過去の課題の DOCX、画像、PDF をアップロードして枠組みにできます。",
+        "copyAnExistingAssignmentAnd": "既存の課題をコピーして編集を続けます。",
+        "theAiWritesTheAssignment": "AIがルーブリック付きで課題を作成します（合計10点）。",
+        "eachStudentSubmitsTheirOwn": "学生ごとに1件提出します。",
+        "eachGroupSubmitsOneShared": "グループごとに共同で1件提出します。",
+        "selfPracticeNotGraded": "自主練習のため採点されません。",
+        "uploadFailed": "アップロードに失敗しました",
+        "chooseAtMost3Source": "参考ファイルは最大3件まで選択できます。",
+        "theTemplateHasNoReadable": "テンプレートに読み取れる内容がありません。",
+        "thePopupWasClosed": "ポップアップを閉じました。",
+        "theAiReturnedNoResult": "AIから結果が返りませんでした。",
+        "theAiCouldNotProduce": "AIは有効な課題を作成できませんでした：{reason}",
+        "theAiCouldNotProduce2": "AIは有効な課題を作成できませんでした。",
+        "enterAnAssignmentTitle": "課題のタイトルを入力してください。",
+        "chooseAnExistingAssignmentTo": "コピーする既存の課題を選択してください。",
+        "waitForUploadsToFinish": "アップロードの完了を待つか、エラーのファイルを削除してください。",
+        "assignmentCreatedFileNotImported": "課題を作成しましたが、ファイルはまだ取り込まれていません：{value}",
+        "newAssignment": "新しい課題",
+        "newTemplate": "新しいテンプレート",
+        "openAssignment": "課題を開く",
+        "retry": "再試行",
+        "create": "作成",
+        "title": "タイトル",
+        "type": "種類",
+        "individual": "個人",
+        "group": "グループ",
+        "thisClassCannotUseGroup": "このクラスではまだグループ課題を利用できません",
+        "practice": "練習",
+        "howToCreate": "作成方法",
+        "existingAssignment": "既存の課題",
+        "newAssignment2": "新しい課題",
+        "createWithAi": "AIで作成",
+        "searchByAssignmentName": "課題名で検索",
+        "noAssignmentsToCopyYet": "コピーできる課題はまだありません。",
+        "clearSelectedAssignment": "選択した課題を外す",
+        "template": "テンプレート",
+        "uploadAnOldAssignmentAs": "過去の課題の DOCX、画像、PDF をアップロード",
+        "language": "言語",
+        "vietnamese": "ベトナム語",
+        "chooseATemplateOrUpload": "テンプレートを選択するか DOCX をアップロード",
+        "theSubjectHasNoTemplates": "この科目にはまだテンプレートがありません。",
+        "removeTemplate": "テンプレートを外す",
+        "uploadATemplate": "テンプレートをアップロード",
+        "references": "参考資料",
+        "request": "要望",
+        "describeTheAssignmentYouNeed": "必要な課題を説明してください：テーマ、内容、難易度…"
+      },
+      "ExamImportDialog": {
+        "assignmentImportedPressCtrlZ": "課題を取り込みました。Ctrl+Z で前のバージョンに戻せます。",
+        "theAiCouldNotRead": "AIは課題を読み取れませんでした。もう一度お試しください。",
+        "discard": "破棄",
+        "insertAtTheEnd": "末尾に挿入",
+        "replaceEverything": "すべて置き換え",
+        "writeIntoTheAssignment": "課題に書き込む",
+        "convertToAssignment": "課題に変換",
+        "importAssignmentFromFile": "ファイルから課題を取り込む",
+        "chooseUpTo5Images": "画像（PNG、JPEG、WEBP）最大5枚、または10ページ以内の PDF 1件、または DOCX ファイル1件を選択してください。AI が過去の課題を原文どおり枠組みに書き写すので、それを編集できます。画像と PDF は AI の利用上限に含まれます。",
+        "dragAndDropOrClick": "ドラッグ＆ドロップまたはクリックして画像、PDF、DOCX を選択",
+        "chooseAnOldAssignmentFile": "過去の課題ファイルを選択",
+        "selectedFiles": "選択したファイル",
+        "moveUp": "{name} を前へ移動",
+        "moveDown": "{name} を後ろへ移動",
+        "remove": "{name} を外す",
+        "readingTheAssignmentThisMay": "課題を読み取り中…最大1分ほどかかる場合があります",
+        "cancel": "キャンセル",
+        "headings": " 見出し · ",
+        "tables": " 表 · ",
+        "images": " 画像",
+        "unclearSpots": " 箇所が判読困難",
+        "needsReview": "要確認",
+        "use": "「",
+        "asTheTitle": "」をタイトルにする"
+      },
+      "RubricEditor": {
+        "criterion": "評価項目 {value}",
+        "criterion2": "評価項目",
+        "pointsForItem": "項目 {value} の点数",
+        "points": "点数",
+        "pointsCanHaveAtMost": "点数は小数点以下2桁まで",
+        "deleteCriterion": "評価項目 {value} を削除",
+        "delete": "削除",
+        "addCriterion": "評価項目を追加"
+      },
+      "ScheduleForm": {
+        "date": "{label}（日付）",
+        "time": "{label}（時刻）",
+        "missingDeadline": "締切が未設定",
+        "missingOpeningDate": "公開日が未設定",
+        "theDeadlineMustBeAfter": "締切は公開日時より後にしてください",
+        "missingLateDeadline": "遅延提出の期限が未設定",
+        "theLateDeadlineMustBe": "遅延提出の期限は締切より後にしてください",
+        "theLateDeadlineIsMore": "遅延提出の期限が締切から30日を超えています",
+        "attemptsMustBe110": "回数は1〜10で指定してください",
+        "scheduleOpening": "公開日時を予約",
+        "opensAt": "公開日時",
+        "deadline": "締切",
+        "allowLateSubmission": "遅延提出を許可",
+        "lateSubmissionUntil": "遅延提出の期限",
+        "attempts": "回数",
+        "someStudentsHaveNoGroup": "グループ未所属の学生がいます",
+        "publishAnyway": "このまま公開",
+        "schedule": "スケジュール",
+        "publishNow": "今すぐ公開",
+        "saveSchedule": "スケジュールを保存"
+      },
+      "SearchPicker": {
+        "noResults": "結果はありません。",
+        "suggestion": "候補 {value}",
+        "loading": "読み込み中…"
+      },
+      "SourceImagePreview": {
+        "sourceImage": "元画像：{name}"
+      },
+      "sourceUploads": {
+        "theTemplateMustBeA": "テンプレートは DOCX にしてください。",
+        "theDocxFileMustHave": "DOCX ファイルは内容があり、20MB以下である必要があります。",
+        "theTemplateHasNoReadable": "テンプレートに読み取れる内容がありません。",
+        "couldNotLoadTheSource": "参考ファイルの制限を読み込めませんでした。",
+        "theSourceFilePolicyHas": "参考ファイルのポリシーをまだ読み込めていません。",
+        "chooseAtMost3Source": "参考ファイルは最大3件まで選択できます。",
+        "theFileHasNoContent": "ファイルに内容がありません。",
+        "couldNotReadTheFile": "ファイルの内容を読み取れませんでした。",
+        "uploadFailed": "アップロードに失敗しました",
+        "chooseAtMost3Source2": "参考ファイルは最大3件までです。{value} 件は追加されませんでした。"
+      },
+      "TemplateFileField": {
+        "uploadTemplate": "テンプレートをアップロード",
+        "files": " ファイル",
+        "removeFile": "ファイルを外す"
+      }
+    },
+    "hooks": {
+      "useAiChatAttachments": {
+        "couldNotReadTheTemplate": "テンプレートを読み取れませんでした。",
+        "thisFileCannotBeUsed": "このファイルは参考資料として使えません。"
+      }
+    },
+    "model": {
+      "format": {
+        "couldNotCompleteItPlease": "実行できませんでした。もう一度お試しください。",
+        "notFoundOrYouDo": "見つからないか、権限がありません。"
+      },
+      "importFiles": {
+        "chooseImagesAPdfOr": "過去の課題の画像、PDF、DOCX を選択してください。",
+        "onlyPngJpegWebpImages": "PNG、JPEG、WEBP の画像、PDF、DOCX ファイルのみ受け付けます。",
+        "doNotMixImagesWith": "1回の取り込みで画像と PDF・DOCX を混在させないでください。",
+        "importOnly1FileAt": "{kind} ファイルは一度に1件のみ取り込めます。",
+        "importAtMostImagesAt": "画像は一度に最大 {MAX_IMPORT_IMAGES} 枚まで取り込めます。",
+        "docxFilesCanBeAt": "DOCX ファイルは最大 {DOCX_MAX_MB}MB までです。"
+      },
+      "types": {
+        "draft": "下書き",
+        "finalized": "確定済み",
+        "scheduled": "予約済み",
+        "open": "受付中",
+        "closed": "締切済み",
+        "withdrawn": "配布停止",
+        "individual": "個人",
+        "group": "グループ",
+        "new": "新規",
+        "duplicate": "複製",
+        "newVersion": "新バージョン",
+        "copiedFromAnotherAssignment": "他の課題からコピー"
+      }
+    },
+    "pages": {
+      "AssignmentFormPage": {
+        "pointsPerItemCanHave": "各項目の点数は小数点以下2桁まで",
+        "wholeAssignment": "課題全体",
+        "theRubricsTotalPointsMust": "ルーブリックの合計点は0より大きくしてください",
+        "someCriteriaAreMissingContent": "内容または点数が未入力の評価項目があります",
+        "theAssignmentNeedsATitle": "課題にはタイトルが必要です",
+        "theAssignmentHasNoGrading": "課題にまだ採点用ルーブリックがありません",
+        "rubricsHavePointErrors": "{length} 件のルーブリックで点数にエラーがあります",
+        "theAssignmentStillHasErrors": "課題にまだエラーがあります",
+        "notSaved": "未保存：{POINTS_INVALID}",
+        "notSaved2": "未保存：{value}",
+        "cannotApplyBecauseThereIs": "未保存の内容があるため適用できません。保存状態を確認してからもう一度お試しください。",
+        "assignment": "課題",
+        "couldNotDownloadTheFile": "{value} のファイルをダウンロードできませんでした。{value2}",
+        "assignment2": "課題",
+        "loadingAssignment": "課題を読み込み中…",
+        "viewOnly": "閲覧のみ",
+        "saving": "保存中…",
+        "notSaved3": "未保存",
+        "savedAt": "{value} に保存しました",
+        "saved": "保存済み",
+        "couldNotLoadTheGrading": "採点基準を読み込めませんでした。",
+        "loadingGradingCriteria": "採点基準を読み込み中…",
+        "practice": "練習",
+        "untitledAssignment": "無題の課題",
+        "moreActions": "その他の操作",
+        "importAssignmentFromFile": "ファイルから課題を取り込む",
+        "downloadAssignmentDocx": "課題をダウンロード（DOCX）",
+        "downloadRubricDocx": "ルーブリックをダウンロード（DOCX）",
+        "createNewVersion": "新しいバージョンを作成",
+        "withdraw": "配布を停止",
+        "deleteDraft": "下書きを削除",
+        "edit": "編集",
+        "preview": "プレビュー",
+        "closeSubmissions": "提出の受付を締め切る",
+        "finalize": "確定",
+        "schedule": "スケジュール設定",
+        "changeSchedule": "スケジュールを変更",
+        "reload": "再読み込み",
+        "theAssignmentChangedElsewhereYour": "課題が別の場所で変更されたため、編集中の内容は保存されていません",
+        "theRubricHas": "ルーブリックには ",
+        "itemsOverTheLimitOf": " 項目あり、AI採点1回あたりの上限 ",
+        "itemsForOneAiGrading": " 項目を超えています。手動での作成と採点は引き続き可能です。",
+        "reloadCriteria": "基準を再読み込み",
+        "couldNotLoadGradingCriteria": "採点基準を読み込めませんでした：",
+        "class": "クラス",
+        "subject": "科目",
+        "archivedViewOnly": " はアーカイブ済み · 閲覧のみ",
+        "subjectAssignmentViewOnly": "科目の課題 · 閲覧のみ",
+        "withdrawn": "配布停止済み",
+        "assignmentName": "課題名",
+        "assignmentSettings": "課題の設定",
+        "published": "公開しました",
+        "scheduled": "予約しました",
+        "scheduleSaved": "スケジュールを保存しました",
+        "theAiAssignmentWasWritten": "AIが作成した課題をページに書き込みました。Ctrl+Z で前のバージョンに戻せます。",
+        "theAssignmentWasEditedWith": "AIで課題を修正しました。Ctrl+Z で前のバージョンに戻せます。",
+        "closeSubmissions2": "提出の受付を締め切りますか？",
+        "submissionsClosed": "提出の受付を締め切りました",
+        "studentsCannotEditOrSubmit": "締切後、学生は編集・提出できなくなります。採点を可能にする前に、解答中のものはサーバーに保存された内容で自動的に提出されます。元の締切日時は変更されません。",
+        "deleteDraft2": "下書きを削除しますか？",
+        "delete": "削除",
+        "areYouSureYouWant": "この下書きを削除してもよろしいですか？",
+        "withdrawAssignment": "課題の配布を停止",
+        "areYouSureYouWant2": "この課題の配布を停止してもよろしいですか？",
+        "reason": "理由"
+      },
+      "SubjectAssignmentListPage": {
+        "assignmentTemplates": "課題テンプレート",
+        "createTemplate": "テンプレートを作成",
+        "youHaveNotBeenAssigned": "管理を担当している科目はありません。"
+      }
+    },
+    "register": {
+      "templates": "テンプレート"
+    }
+  },
+  "assignmentwork": {
+    "components": {
+      "ClassTodoCard": {
+        "individualAssignments": "個人課題",
+        "noIndividualAssignmentsLeftTo": "取り組むべき個人課題はありません。",
+        "groupAssignments": "グループ課題",
+        "noGroupAssignmentsLeftTo": "取り組むべきグループ課題はありません。",
+        "practice": "練習",
+        "noPracticeLeftToDo": "取り組むべき練習はありません。",
+        "assignmentOverview": "課題の概要",
+        "notStarted": "未着手",
+        "inProgress": "取り組み中",
+        "submitted": "提出済み",
+        "assignmentsToDo": "取り組むべき課題",
+        "allAssignments": "すべての課題",
+        "assignmentType": "課題の種類",
+        "couldNotLoadAssignments": "課題を読み込めませんでした。",
+        "loadingAssignments": "課題を読み込み中…"
+      },
+      "DeadlineChip": {
+        "noDeadline": "締切なし",
+        "overdue": "期限切れ",
+        "lessThan1HourLeft": "残り1時間未満",
+        "hoursLeft": "残り {hours} 時間",
+        "daysLeft": "残り {days} 日"
+      },
+      "PracticeFeedbackPanel": {
+        "aiFeedback": " AIフィードバック",
+        "reloadFeedback": "フィードバックを再読み込み",
+        "theAiIsWritingFeedback": "AIがフィードバックを作成中…",
+        "loadingFeedback": "フィードバックを読み込み中…",
+        "noFeedbackYet": "フィードバックはまだありません。",
+        "referenceFeedback": "参考フィードバック",
+        "pending": "待機中",
+        "noFeedbackReceived": "フィードバックを受け取れませんでした",
+        "personalApi": "個人API",
+        "overallComments": "総評",
+        "strengths": "良い点",
+        "toImprove": "改善点",
+        "byPart": "パート別",
+        "theAiIsStillProcessing": "AIはまだ処理中です。",
+        "checkFeedbackAgain": "フィードバックを再確認",
+        "youCanManageYourPersonal": "個人のAPIキーは次の場所で管理できます：",
+        "aiConnection": "AI接続",
+        "getFeedbackAgain": "もう一度フィードバックを受ける",
+        "getAiFeedback": "AIフィードバックを受ける"
+      },
+      "PublishedFeedback": {
+        "strengths": "良い点",
+        "toImprove": "改善点",
+        "nextSteps": "次のステップ"
+      },
+      "ResultSummaryCard": {
+        "result": "結果",
+        "couldNotLoadTheResult": "結果を読み込めませんでした。",
+        "loadingResult": "結果を読み込み中…",
+        "noPublishedGradeYet": "公開された成績はまだありません。",
+        "totalPoints": "合計点",
+        "viewGradingDetails": "採点の詳細を表示"
+      }
+    },
+    "model": {
+      "attemptResult": {
+        "assignment": "課題"
+      },
+      "format": {
+        "overdue": "期限切れ",
+        "couldNotCompleteItPlease": "実行できませんでした。もう一度お試しください。",
+        "notFoundOrYouDo": "見つからないか、権限がありません。"
+      },
+      "types": {
+        "notStarted": "未着手",
+        "inProgress": "取り組み中",
+        "submitted": "提出済み",
+        "submittedLate": "遅延提出",
+        "expired": "期限切れ",
+        "groupAssignment": "グループ課題",
+        "submittedManually": "手動提出",
+        "autoSubmittedWhenSubmissionsClosed": "受付締切時に自動提出",
+        "autoSubmittedWhenWithdrawn": "配布停止時に自動提出",
+        "groupAssignmentsAreDoneIn": "グループ課題はグループ文書で取り組みます",
+        "submissionsForThisAssignmentHave": "この課題の受付は終了しました",
+        "noAttemptsLeft": "残り回数がありません"
+      }
+    },
+    "pages": {
+      "AssignmentWorkspacePage": {
+        "theWorkIsOpenElsewhere": "別の場所で開かれているため、編集中の内容は保存されていません",
+        "connectionLostNotSaved": "接続が切れたため保存されていません",
+        "notSaved": "未保存：{value}",
+        "assignment": "課題",
+        "openingYourWork": "解答を開いています…",
+        "saving": "保存中…",
+        "unsavedChanges": "未保存の変更があります",
+        "savedAt": "{value} に保存しました",
+        "saved": "保存済み",
+        "practice": "練習",
+        "group": "グループ",
+        "individual": "個人",
+        "deadline": "締切：{value}",
+        "text": "残り ",
+        "moreActions": "その他の操作",
+        "downloadDocx": "DOCXをダウンロード",
+        "importDocx": "DOCXを取り込む",
+        "submit": "提出",
+        "reload": "再読み込み",
+        "submittedAt": "提出日時 ",
+        "viewOnly": " · 閲覧のみ",
+        "pastDeadline": "締切を過ぎています",
+        "activityIsMonitored": "アクティビティが記録されます",
+        "workNotSaved": "解答が保存されていません",
+        "importDocxIntoPart": "パート「{value}」に DOCX を取り込む",
+        "importDocxIntoTheLast": "最後のパートに DOCX を取り込む",
+        "restoredTheUnsavedVersionOn": "この端末に残っていた未保存の内容を復元しました"
+      },
+      "StudentAssignmentDetailPage": {
+        "practice": "練習",
+        "group": "グループ",
+        "individual": "個人",
+        "theAssignmentsClassIsMissing": "課題のクラスが指定されていません。",
+        "loadingAssignment": "課題を読み込み中…",
+        "assignment": "課題",
+        "assignmentInformation": "課題の情報",
+        "type": "種類",
+        "status": "ステータス",
+        "lateDeadline": "遅延提出の期限",
+        "deadline": "締切",
+        "work": "解答",
+        "activityIsMonitored": "アクティビティが記録されます",
+        "doAssignment": "課題に取り組む",
+        "attemptsUsedMax": "使用回数 / 上限",
+        "attempts": " 回",
+        "attempts2": "解答の履歴",
+        "submission": "提出物",
+        "attempt": "回目 ",
+        "continueWorking": "続きから取り組む",
+        "editAndResubmit": "修正して再提出",
+        "startWorking": "取り組みを開始",
+        "viewSubmissionHistory": "提出履歴を表示"
+      },
+      "StudentAssignmentsPage": {
+        "notStarted": "未着手",
+        "inProgress": "取り組み中",
+        "submitted": "提出済み",
+        "closed": "締切済み",
+        "individual": "個人",
+        "group": "グループ",
+        "practice": "練習",
+        "assignments": "課題",
+        "assignmentList": "課題一覧",
+        "assignmentGroups": "課題のグループ",
+        "assignmentType": "課題の種類",
+        "allTypes": "すべての種類",
+        "findAssignments": "課題を検索",
+        "class": "クラス",
+        "subject": "科目",
+        "type": "種類",
+        "deadline": "締切",
+        "status": "ステータス",
+        "score": "点数",
+        "openAssignment": "課題を開く",
+        "loadingAssignments": "課題を読み込み中…",
+        "noAssignmentsLeftToStart": "未着手の課題はありません。",
+        "noAssignmentsInProgress": "取り組み中の課題はありません。",
+        "noClosedUnsubmittedAssignments": "締切済みで未提出の課題はありません。",
+        "noSubmissionsYet": "まだ提出した課題はありません。"
+      },
+      "SubmissionHistoryPage": {
+        "assignment": "課題",
+        "theAssignmentsClassIsMissing": "課題のクラスが指定されていません。",
+        "loadingSubmissionHistory": "提出履歴を読み込み中…",
+        "youHaveNotSubmittedAnything": "まだ何も提出していません。",
+        "submissionHistoryAppearsAfterYou": "提出履歴は、提出して締切を過ぎた後に表示されます。",
+        "wholeAssignment": "課題全体",
+        "moreActions": "その他の操作",
+        "downloadDocx": "DOCXをダウンロード",
+        "practice": "練習",
+        "group": "グループ",
+        "individual": "個人",
+        "loadingSubmission": "提出物を読み込み中…",
+        "thisPartWasNotDone": "このパートは未回答です。",
+        "previousSubmission": "前の提出物",
+        "chooseSubmission": "提出物を選択",
+        "lateVersion": "遅延提出版",
+        "onTimeVersion": "期限内提出版",
+        "nextSubmission": "次の提出物",
+        "yourIndividualScoreWasAdjusted": "個人の点数は教員によって個別に調整されました。"
+      }
+    },
+    "register": {
+      "assignment": "課題"
+    }
+  },
+  "audit": {
+    "components": {
+      "AuditFilters": {
+        "theStartDateMustBe": "開始日は終了日より前にしてください。",
+        "actor": "実行者",
+        "action": "操作",
+        "all": "すべて",
+        "object": "対象",
+        "result": "結果",
+        "time": "日時",
+        "from": "開始日",
+        "to": "終了日",
+        "clearFilters": "絞り込みを解除"
+      },
+      "AuditTable": {
+        "system": "システム",
+        "time": "日時",
+        "actor": "実行者",
+        "action": "操作",
+        "object": "対象",
+        "result": "結果",
+        "reason": "理由",
+        "noMatchingRecords": "該当する記録はありません。"
+      }
+    },
+    "model": {
+      "labels": {
+        "succeeded": "成功",
+        "denied": "拒否",
+        "failed": "失敗",
+        "signIn": "ログイン",
+        "accessDenied": "アクセス拒否",
+        "changeRole": "役割の変更",
+        "createAccount": "アカウント作成",
+        "editAccount": "アカウント編集",
+        "changeAccountStatus": "アカウントのステータス変更",
+        "editSettings": "設定の編集",
+        "backUpData": "データのバックアップ",
+        "backupFailed": "バックアップ失敗",
+        "publishGrades": "成績の公開",
+        "searchAuditLog": "監査ログの検索",
+        "changeAiApiKey": "AI APIキーの変更",
+        "checkAiApiKey": "AI APIキーの確認",
+        "changeAiQuota": "AI利用上限の変更",
+        "createMcpAgentToken": "MCPエージェントのトークン作成",
+        "revokeMcpAgentToken": "MCPエージェントのトークン取り消し",
+        "mcpAgentToolCall": "MCPエージェントのツール呼び出し",
+        "createGroup": "グループ作成",
+        "renameGroup": "グループ名の変更",
+        "editGroup": "グループ編集",
+        "deleteGroup": "グループ削除",
+        "changeGroupLeader": "リーダーの変更",
+        "requestLeaderChange": "リーダー変更の申請",
+        "cancelLeaderChangeRequest": "リーダー変更申請の取り消し",
+        "approveLeaderChangeRequest": "リーダー変更申請の承認",
+        "rejectLeaderChangeRequest": "リーダー変更申請の却下",
+        "assignGroupDocumentSection": "グループ文書のセクション割り当て",
+        "releaseGroupDocumentSection": "グループ文書のセクション解放",
+        "submitGroupWork": "グループ課題の提出",
+        "selfGroupingSettings": "自主グループ編成の設定",
+        "submitGroupProposal": "グループ案の提出",
+        "approveGroupProposal": "グループ案の承認",
+        "rejectGroupProposal": "グループ案の却下",
+        "createAnnouncement": "お知らせの作成",
+        "reopenQuiz": "クイズの再開",
+        "deductQuizAttemptPoints": "クイズ解答の減点",
+        "decideNotToDeductQuiz": "クイズ解答を減点しない決定",
+        "proposeQuestionToBank": "問題バンクへの問題提案",
+        "approveProposedQuestion": "提案問題の承認",
+        "rejectProposedQuestion": "提案問題の却下",
+        "archiveQuiz": "クイズのアーカイブ",
+        "submitQuiz": "クイズの提出",
+        "createQuestion": "問題の作成",
+        "activateQuestion": "問題の有効化",
+        "retireQuestion": "問題の使用停止",
+        "deleteQuestion": "問題の削除",
+        "importQuestions": "問題の取り込み",
+        "createQuiz": "クイズの作成",
+        "publishQuiz": "クイズの公開",
+        "deleteQuiz": "クイズの削除",
+        "duplicateQuiz": "クイズの複製",
+        "copyQuiz": "クイズのコピー",
+        "createQuizVersion": "クイズのバージョン作成",
+        "acceptAiProposalForQuiz": "クイズへのAI提案の採用",
+        "activateAccount": "アカウントの有効化",
+        "disableAccount": "アカウントの無効化",
+        "reEnableAccount": "アカウントの再有効化",
+        "temporarilyLockAccount": "アカウントの一時ロック",
+        "importAccountList": "アカウント一覧の取り込み",
+        "failedSignIn": "ログイン失敗",
+        "signInBlockedByTemporary": "一時ロックによるログインのブロック",
+        "authenticationFailed": "認証失敗",
+        "changePassword": "パスワードの変更",
+        "resetPassword": "パスワードの再設定",
+        "editProfile": "プロフィールの編集",
+        "createSubject": "科目の作成",
+        "editSubject": "科目の編集",
+        "archiveSubject": "科目のアーカイブ",
+        "reopenSubject": "科目の再開",
+        "changeSubjectManager": "科目責任者の変更",
+        "createClass": "クラスの作成",
+        "editClass": "クラスの編集",
+        "changeClassStatus": "クラスのステータス変更",
+        "changeClassLecturer": "クラス担当教員の変更",
+        "enrollStudents": "学生の登録",
+        "removeStudentFromClass": "クラスからの学生の削除",
+        "viewAiApiKey": "AI APIキーの閲覧",
+        "editMcpAgentToken": "MCPエージェントのトークン編集",
+        "createAssignment": "課題の作成",
+        "editAssignment": "課題の編集",
+        "deleteAssignment": "課題の削除",
+        "finalizeAssignment": "課題の確定",
+        "publishAssignment": "課題の公開",
+        "archiveAssignment": "課題のアーカイブ",
+        "duplicateAssignment": "課題の複製",
+        "copyAssignment": "課題のコピー",
+        "createAssignmentVersion": "課題のバージョン作成",
+        "changeAssignmentSchedule": "課題のスケジュール変更",
+        "closeSubmissions": "提出受付の締切",
+        "importAssignmentFromDocx": "DOCXからの課題の取り込み",
+        "saveWorkOutline": "解答の枠組みの保存",
+        "requestAiAssignmentDraft": "AIによる課題作成の依頼",
+        "saveAiProposalForAssignment": "課題へのAI提案の保存",
+        "applyAiProposalToAssignment": "課題へのAI提案の適用",
+        "discardAiProposalForAssignment": "課題へのAI提案の破棄",
+        "editRubric": "ルーブリックの編集",
+        "startWork": "解答の開始",
+        "saveWork": "解答の保存",
+        "submitWork": "解答の提出",
+        "submissionRejected": "提出の拒否",
+        "importWorkFromDocx": "DOCXからの解答の取り込み",
+        "exportWorkToDocx": "解答のDOCX書き出し",
+        "requestPracticeFeedback": "練習へのフィードバック依頼",
+        "saveGrade": "点数の保存",
+        "changeOfficialGrade": "正式な成績の変更",
+        "finalizeGrades": "成績の確定",
+        "changeGradeDistributionVisibility": "成績分布の表示設定の変更",
+        "exportGradebook": "成績表の書き出し",
+        "importGroupDocument": "グループ文書の取り込み",
+        "savePeerReview": "相互評価の保存",
+        "lockGroupDocumentAssignments": "グループ文書の担当の確定",
+        "unlockGroupDocumentAssignments": "グループ文書の担当の確定解除",
+        "lockGroupDocumentSection": "グループ文書のセクションのロック",
+        "unlockGroupDocumentSection": "グループ文書のセクションのロック解除",
+        "restoreGroupDocumentSection": "グループ文書のセクションの復元",
+        "reclaimGroupDocumentSection": "グループ文書のセクションの再取得",
+        "createLearningMaterial": "教材の作成",
+        "editLearningMaterial": "教材の編集",
+        "archiveLearningMaterial": "教材のアーカイブ",
+        "createLearningMaterialVersion": "教材のバージョン作成",
+        "createModule": "モジュールの作成",
+        "editModule": "モジュールの編集",
+        "deleteModule": "モジュールの削除",
+        "attachQuizToModule": "モジュールへのクイズの追加",
+        "removeQuizFromModule": "モジュールからのクイズの削除",
+        "editAnnouncement": "お知らせの編集",
+        "deleteAnnouncement": "お知らせの削除",
+        "account": "アカウント",
+        "setting": "設定",
+        "settingsPage": "設定ページ",
+        "backup": "バックアップ",
+        "subject": "科目",
+        "class": "クラス",
+        "backupRun": "バックアップの実行",
+        "learningMaterial": "教材",
+        "materialModule": "教材モジュール",
+        "personalNotification": "個人通知",
+        "question": "問題",
+        "aiProposalForQuiz": "クイズへのAI提案",
+        "quizAttempt": "クイズの解答",
+        "assignmentAttempt": "課題の解答",
+        "assignment": "課題",
+        "submission": "提出物",
+        "auditLog": "監査ログ",
+        "aiApiKey": "AI APIキー",
+        "aiQuota": "AI利用上限",
+        "sharedAiQuota": "共通のAI利用上限",
+        "mcpTool": "MCPツール",
+        "classGroup": "クラスのグループ",
+        "leaderChangeRequest": "リーダー変更の申請",
+        "groupDocument": "グループ文書",
+        "groupDocumentSection": "グループ文書のセクション",
+        "announcement": "お知らせ",
+        "attempt": "解答",
+        "wrongRole": "役割が不正",
+        "wrongPassword": "パスワードが不正",
+        "accountLocked": "アカウントのロック",
+        "tooManyAttempts": "試行回数の超過",
+        "overLimit": "上限超過",
+        "outOfScope": "範囲外",
+        "notOwner": "所有者ではない",
+        "notEnrolled": "未登録",
+        "wrongAccount": "アカウントが不正",
+        "toolError": "ツールのエラー",
+        "dataTooLarge": "データが大きすぎる",
+        "blocked": "ブロック",
+        "wrongApiKey": "APIキーが不正",
+        "aiOverloaded": "AIの過負荷",
+        "noPermission": "権限なし",
+        "notFound": "見つからない",
+        "invalid": "無効",
+        "tooLarge": "大きすぎる",
+        "suspended": "一時停止",
+        "conflict": "競合",
+        "denied2": "拒否",
+        "wrongKey": "キーが不正",
+        "quotaExhausted": "利用上限超過",
+        "timedOut": "タイムアウト"
+      }
+    },
+    "pages": {
+      "AuditLogPage": {
+        "youDoNotHavePermission": "ログを閲覧する権限がありません。",
+        "couldNotLoadTheAudit": "監査ログを読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "log": "ログ",
+        "loading": "読み込み中…"
+      }
+    },
+    "register": {
+      "log": "ログ"
+    }
+  },
+  "files": {
+    "api": {
+      "index": {
+        "connectionLostWhileUploadingThe": "ファイルのアップロード中に接続が切れました",
+        "cancelled": "キャンセルしました",
+        "theSystemIsBusyPlease": "システムが混み合っています。しばらくしてからもう一度お試しください",
+        "uploadFailed": "アップロードに失敗しました"
+      }
+    },
+    "components": {
+      "FileLink": {
+        "couldNotOpenTheFile": "ファイルを開けませんでした"
+      },
+      "FileUploader": {
+        "chooseFile": "ファイルを選択",
+        "noFileChosen": "ファイルが選択されていません",
+        "cancel": "キャンセル"
+      }
+    },
+    "hooks": {
+      "useFileUpload": {
+        "couldNotLoadTheFile": "ファイルの制限を読み込めませんでした",
+        "uploadFailed": "アップロードに失敗しました"
+      }
+    },
+    "model": {
+      "purposes": {
+        "onlyFilesAreAccepted": "{value} ファイルのみ受け付けます",
+        "theFileExceedsMb": "ファイルが {maxSizeMb}MB を超えています"
+      }
+    }
+  },
+  "grading": {
+    "components": {
+      "AiProposalPanel": {
+        "waitingToBeProcessed": "処理待ち",
+        "readyToReview": "確認できます",
+        "couldNotCreateAProposal": "提案を作成できませんでした",
+        "theProposalIsOutdated": "提案が古くなっています",
+        "theProposalIsInvalid": "提案が無効です",
+        "aiResultReceivedProcessingThe": "AIの結果を受信し、応答を処理中です",
+        "theAiIsGrading": "AIが採点中です",
+        "theResultFromTheAi": "AIプロバイダーからの結果を受信し、ルーブリックと照合しています。待っている間も手動で採点できます。",
+        "theAiIsReadingThe": "AIが解答とルーブリックを読み込んで提案を作成しています。待っている間も手動で採点できます。",
+        "theAiGradingRequestIs": "AI採点の依頼は処理待ちの列に入っています。待っている間も手動で採点できます。",
+        "theAiResponseIsTaking": "AIの応答に予想より時間がかかっています。",
+        "theCurrentRequestIsStill": "現在の依頼はまだ処理中です。新しいAI依頼を送らずにこの依頼の状態を再確認するか、手動での採点を続けてください。",
+        "checkAgain": "再確認",
+        "theSubmissionOrRubricHas": "提出物またはルーブリックが変更されました。新しい提案を依頼してください。",
+        "aiProposedScore": "AIの提案点：",
+        "theEnteredScoreIsInvalid": "入力中の点数が無効です（エラー表示の項目を確認してください）",
+        "currentScore": "採点中の点数：",
+        "aiProposal": "AIの提案：",
+        "difference": "差 ",
+        "matchesRubricPoints": "ルーブリックの点数と一致",
+        "text": "⚠ ",
+        "itemsFlaggedByTheAi": " 項目がAIにより教員の手動確認が必要とされています",
+        "forExampleEvidenceThatCould": "（例：判読しにくい根拠、または有効な別解の設計）。",
+        "summaryOfStructuredAiFeedback": "AIによる構造化フィードバックの要約",
+        "comparisonByPartRubricItem": "パート・ルーブリック項目ごとの比較",
+        "part": "パート {value}",
+        "noDataYet": "データはまだありません",
+        "invalid": "無効",
+        "current": "採点中：",
+        "overallAiFeedback": "AIによる総合フィードバック",
+        "feedbackByPart": "パートごとのフィードバック（",
+        "applyToDraft": "下書きに適用",
+        "onlyPreTicksTheChecklist": "チェックリストへの事前チェックとフィードバックの入力のみ行います。保存前に修正できます。",
+        "aiProposal2": "AIの提案",
+        "reviewTheProposalAndSave": "提案を確認し、保存して点数を更新してください。",
+        "requestANewProposal": "新しい提案を依頼",
+        "theAiTaskFailedCheck": "AIのタスクが失敗しました。接続を確認するか、設定済みのAIソースで再試行してください。",
+        "youCanStillGradeManually": "ルーブリックに沿って手動で採点することもできます。点数は変更されていません。",
+        "checkAiConnection": "AI接続を確認",
+        "noProposalYetYouCan": "提案はまだありません。ルーブリックに沿って自分で採点するか、AIに支援を依頼できます。",
+        "theProposalFromTheLink": "リンクの提案が見つかりません。下の提案履歴を確認してください。点数は変更されていません。",
+        "notAvailableYet": "まだ利用できません",
+        "personalApi": "個人API",
+        "schoolApi": "学校API",
+        "run": "{versionNo} 回目 · {value}",
+        "createdAt": "作成日時 ",
+        "previousProposals": "以前の提案",
+        "points": " · {value} 点",
+        "proposalFromLink": "リンクからの提案"
+      },
+      "BatchActionDialog": {
+        "thisSubmissionsGradeWasAlready": "この提出物の成績はすでに確定済みです。点数はそのまま維持されます。",
+        "thisSubmissionsGradeWasAlready2": "この提出物の成績はすでに公開済みです。点数はそのまま維持されます。",
+        "theSubmissionStatusHasChanged": "提出物の状態が変わったか、この操作に適していません。一覧を再読み込みして確認してください。",
+        "theGradingWasUpdatedReload": "採点が更新されました。一覧を再読み込みして最新のバージョンを使ってください。",
+        "theGradeIsLockedReload": "成績はロックされています。一覧を再読み込みして現在の状態を確認してください。",
+        "theClassIsArchivedOr": "クラスがアーカイブ済みか未開講のため、成績の編集や公開はできません。",
+        "theAssignmentIsStillAccepting": "課題はまだ提出を受け付けています。採点や成績の公開の前に受付を締め切ってください。",
+        "aSubmissionWasSelectedTwice": "同じ提出物が重複して選択されたため、1回だけ処理します。",
+        "notAllResultsWereReceived": "処理結果をすべて受信できませんでした。一覧を再読み込みして確認してください。",
+        "someFeedbackItemsStillNeed": "公開前、または公開済みの成績を保存する前に、教員の確認・承認が必要なフィードバック項目が残っています。",
+        "someItemsHadTheirPoints": "点数が変更されたのに、フィードバックの説明が更新・再確認されていない項目があります。",
+        "gradesPublishedForSubmissions": "{changed} 件の成績を公開しました。",
+        "gradesFinalizedForSubmissions": "{changed} 件の成績を確定しました。",
+        "theSubmissionsWereAlreadyFinalized": "選択した提出物はすでに確定または公開済みです。点数はそのまま維持されます。",
+        "submissionsWereAlreadyCompletedTheir": " {skipped} 件はすでに完了していたため、点数はそのまま維持されます。",
+        "publishGrades": "成績を公開",
+        "finalizeGrades": "成績を確定",
+        "batchAiProposals": "AIによる一括提案",
+        "close": "閉じる",
+        "processing": "処理中…",
+        "confirm": "確認",
+        "selectedSubmissions": "件の提出物を選択中",
+        "estimatingTokens": "トークンを見積もり中…",
+        "estimatedAboutTokens": "約 {value} トークンと見積もられます。",
+        "couldNotEstimateTokens": "トークンを見積もれませんでした。",
+        "couldNotPerformTheAction": "操作を実行できませんでした。一覧を再読み込みしてもう一度お試しください。",
+        "submission": "提出物 ",
+        "succeeded": "成功",
+        "aiRequestSent": "AIへの依頼を送信しました",
+        "aiProposalAvailable": "AIの提案あり",
+        "skipped": "スキップ",
+        "notDoneYet": "未完了"
+      },
+      "ClassGradebookTab": {
+        "notSubmitted": "未提出",
+        "grade": "採点",
+        "continueGrading": "採点を続ける",
+        "viewGrade": "成績を見る",
+        "group": "グループ",
+        "individual": "個人",
+        "gradebook": "成績表",
+        "findStudents": "学生を検索",
+        "searchByNameEmailOr": "氏名、メールアドレス、学籍番号で検索",
+        "findGroups": "グループを検索",
+        "findAssignments": "課題を検索",
+        "filterByStatus": "ステータスで絞り込み",
+        "allStatuses": "すべてのステータス",
+        "grading": "採点",
+        "gradingView": "採点の表示方法",
+        "byAssignment": "課題別",
+        "byStudent": "学生別",
+        "tryAgain": "再読み込み",
+        "loadingGradingTable": "採点表を読み込み中…",
+        "noGradedAssignmentsInThis": "このクラスにはまだ採点対象の課題がありません。",
+        "assignments": "課題",
+        "students": "学生",
+        "noMatchingAssignments": "該当する課題はありません。",
+        "noMatchingStudents": "該当する学生はいません。",
+        "memberScores": "メンバーの点数",
+        "score": "点数",
+        "status": "ステータス",
+        "actions": "操作",
+        "late": "遅延"
+      },
+      "ClassProgressSection": {
+        "assignmentOverview": "課題の概要",
+        "tryAgain": "再読み込み",
+        "loadingOverview": "概要を読み込み中…",
+        "openAssignments": "受付中の課題",
+        "submissionsAwaitingGrading": "採点待ちの提出物",
+        "gradedButNotPublished": "採点済み・未公開",
+        "upcomingDeadlines": "近日の締切",
+        "allAssignments": "すべての課題",
+        "noUpcomingDeadlines": "近日の締切はありません。",
+        "practice": "練習",
+        "group": "グループ",
+        "individual": "個人"
+      },
+      "GradebookBatchControls": {
+        "retry": "再試行",
+        "loadingSubmissions": "提出物を読み込み中…",
+        "thisAssignmentOnlyAllowsViewing": "この課題では提出物の閲覧のみ可能です。",
+        "actionsOnSelectedSubmissions": "選択した提出物の操作",
+        "selected": "選択中：",
+        "submissions": " 件",
+        "gradeWithAi": "AIで採点（",
+        "publishGrades": "成績を公開（",
+        "deselect": "選択を解除",
+        "selectAll": "該当する ",
+        "matchingSubmissions": " 件をすべて選択",
+        "upTo100SubmissionsAt": "一度に最大100件までです。",
+        "groupSubmissions": "グループの提出物",
+        "studentSubmissions": "学生の提出物",
+        "selectAllOnPage": "ページ内をすべて選択",
+        "group": "グループ",
+        "student": "学生",
+        "score": "点数",
+        "status": "ステータス",
+        "actions": "操作",
+        "viewTheSharedSubmissionOf": "{name} の共同提出物を表示",
+        "viewWork": "解答を表示",
+        "grade": "採点",
+        "continueGrading": "採点を続ける",
+        "viewGrade": "成績を見る",
+        "select": "{name} を選択",
+        "late": "遅延",
+        "noMatchingSubmissions": "該当する提出物はありません。"
+      },
+      "GradebookExportDialog": {
+        "summaryGradebook": "成績一覧表",
+        "exportGradebook": "成績表を書き出す",
+        "creatingFile": "ファイルを作成中…",
+        "exportFile": "ファイルを書き出す",
+        "format": "形式",
+        "scope": "範囲",
+        "allGradedAssignments": "すべての採点対象の課題",
+        "exportsAllStudentsInThe": "選択した課題の範囲にいる全学生を書き出します（表示中のページ外も含む）。"
+      },
+      "GradebookMatrix": {
+        "exportGradebook": "成績表を書き出す",
+        "backToGrading": "採点に戻る",
+        "assignments": "課題",
+        "allGradedAssignments": "すべての採点対象の課題",
+        "findStudents": "学生を検索",
+        "searchByNameEmailOr": "氏名、メールアドレス、学籍番号で検索",
+        "tryAgain": "再読み込み",
+        "loadingGradebook": "成績表を読み込み中…",
+        "noGradedAssignmentsInThis": "このクラスにはまだ採点対象の課題がありません。",
+        "scoresByStudentAndAssignment": "学生・課題別の点数",
+        "student": "学生",
+        "points": " 点",
+        "notSubmitted": "未提出",
+        "noMatchingStudents": "該当する学生はいません。",
+        "students": "人の学生"
+      },
+      "GradeDistributionSettings": {
+        "couldNotLoadTheGrade": "成績分布の設定を読み込めませんでした。再読み込みしてもう一度お試しください。",
+        "theGradeDistributionSettingsChanged": "成績分布の設定が別の場所で変更されました。変更する前に再読み込みしてください。",
+        "couldNotSaveTheGrade": "成績分布の設定を保存できませんでした。再読み込みして状態を確認してから、もう一度お試しください。",
+        "showGradeDistributionToStudents": "学生に成績分布を表示",
+        "gradeDistribution": "成績分布",
+        "studentsCanSeeTheGrade": "学生はクラス全体の成績分布を見ることができます。",
+        "savingGradeDistributionSettings": "成績分布の設定を保存中…",
+        "reloadGradeDistributionSettings": "成績分布の設定を再読み込み"
+      },
+      "GradingReviewPanels": {
+        "activityWhileWorking": "解答中のアクティビティ",
+        "timesLeftThePage": " 回ページを離脱 · ",
+        "gapsInTheData": " 件のデータ欠落。",
+        "leftThePageTimesGaps": " — ページ離脱 {awayCount} 回、データ欠落 {unknownGaps} 件",
+        "forReferenceOnlyThePlatform": "参考情報です。プラットフォームが不正と判断したり、点数を自動で変更したりすることはありません。"
+      },
+      "GradingWorkspaceHeader": {
+        "provisionalScore": "暫定点",
+        "chooseAStudent": "学生を選択",
+        "findStudents": "学生を検索",
+        "nameEmailOrStudentId": "氏名、メールアドレス、学籍番号",
+        "couldNotLoadTheList": "一覧を読み込めませんでした。",
+        "retry": "再試行",
+        "loadingStudents": "学生を読み込み中…",
+        "studentSubmissions": "学生の提出物",
+        "noMatchingSubmissions": "該当する提出物はありません。",
+        "doneBy": "実施者：",
+        "overallComments": "総評",
+        "enterOverallCommentsForThe": "解答への総評を入力…",
+        "bonusPenaltyPoints": "加点・減点",
+        "changeNoteOptional": "変更メモ（任意）",
+        "changeNote": "変更メモ",
+        "strengthsAndAreasToImprove": "良い点と改善点"
+      },
+      "GroupGradingPanel": {
+        "gradeGroupWork": "グループ課題の採点",
+        "groupRubric": "グループのルーブリック",
+        "members": "メンバー",
+        "groupGrading": "グループ採点",
+        "closeGradingPanel": "採点パネルを閉じる",
+        "close": "閉じる"
+      },
+      "MemberContributionPanel": {
+        "memberScores": "メンバーの点数",
+        "groupScore": "グループの点数：",
+        "notGraded": "未採点",
+        "membersReceiveTheGroupScore": "メンバーには既定でグループの点数が付きます。教員は個別に調整できます。",
+        "howToAssess": "評価の仕方",
+        "level1IsTheHighest": "レベル1が最高、レベル5が最低です。レベルが自動で点数に換算されることはありません。",
+        "gradeTheGroupWorkAgainst": "まずルーブリックに沿ってグループ課題を採点します。担当作業、成果物、貢献の記録、発表・口頭試問を照らし合わせてレベルを選び、0から課題の満点までで個人の点数を入力し、調整する場合は具体的な根拠を記入してください。",
+        "exampleGroup810A": "例：グループが 8/10 で、エラーフローが欠けているメンバーは「一部達成」と評価して 7/10 とすることができます。これは例示であり、このレベルの固定点ではありません。",
+        "saveMemberScoresThenPublish": "メンバーの点数を保存し、確認が済んだら公開してください。個別に保存した点数は、グループの点数が変わっても維持されます。グループが新しいバージョンを提出した場合は再評価が必要です。",
+        "member": "メンバー",
+        "notSaved": " · 未保存",
+        "previousMember": "前のメンバー",
+        "previous": "前へ",
+        "nextMember": "次のメンバー",
+        "notSaved2": "未保存",
+        "assignedPart": "担当パート",
+        "viewPart": "パート {title} を表示",
+        "noInformationAboutTheAssigned": "担当パートの情報はまだありません。",
+        "contributionLevelOptional": "貢献度（任意）",
+        "notAssessed": "未評価",
+        "individualScore": "個人の点数",
+        "groundsForAssessment": "評価の根拠",
+        "assignedPartQualityOfCompletion": "担当パート、完成度、口頭試問の結果…",
+        "saveMemberScore": "メンバーの点数を保存"
+      },
+      "RubricChecklistPanel": {
+        "thisPartHasNoCriteria": "このパートにはまだ評価項目がありません。",
+        "pointsForItem": "項目 {text} の点数",
+        "gradeWithTheRubric": "ルーブリックで採点",
+        "tickTheItemsMetEach": "達成した項目にチェックします。達成した項目には満点が付きます。",
+        "theAssignmentHasNoUsable": "課題に使用できるルーブリックがありません。課題の設定を確認してください。",
+        "part": "パート {value}",
+        "points": " 点"
+      },
+      "StructuredFeedbackSection": {
+        "point": "{label}、項目 {value}",
+        "deletePoint": "項目 {value} を削除：{label}",
+        "addPoint": "項目を追加：{label}",
+        "addPoint2": "項目を追加",
+        "n5Points": "/5 項目",
+        "summaryOfStructuredFeedback": "構造化フィードバックの要約",
+        "strengths": "良い点",
+        "areasToImprove": "改善点",
+        "doneWell": "✓ よくできています",
+        "needsFixing": "! 要修正",
+        "additionalSuggestionNoDeduction": "追加の提案（減点なし）",
+        "howToImprove": "改善方法",
+        "feedbackEvidence": "フィードバックと根拠",
+        "needsLecturerReview": "教員の確認が必要",
+        "confirmed": "確認済み",
+        "needsManualReviewByThe": "⚠ 教員による手動確認が必要：",
+        "theEvidenceCouldNotBe": "根拠が判読しにくいか、有効な別解の設計があります。",
+        "evidenceFromTheWork": "解答からの根拠",
+        "evidence": "根拠：{itemText}",
+        "scoreExplanation": "点数の説明",
+        "scoreExplanation2": "点数の説明：{itemText}",
+        "suggestion": "提案：{itemText}",
+        "evidence2": "根拠：",
+        "scoreExplanation3": "点数の説明：",
+        "goToThePassageIn": "解答の該当箇所へ移動",
+        "theReferencedPassageIsNo": "参照箇所は提出物に含まれていません。",
+        "checkedAndConfirmedTheExplanation": "説明を確認・承認しました：{itemText}",
+        "feedbackAndScoreChecked": "フィードバックと点数を確認済み"
+      },
+      "StudentGradesSection": {
+        "submissionsAndScores": "提出物と点数",
+        "loadingSubmissionsAndScores": "提出物と点数を読み込み中…",
+        "submitted": "提出済み ",
+        "gradedAssignmentsLate": " 件の採点対象課題 · 遅延 ",
+        "assignment": "課題",
+        "format": "形式",
+        "submitted2": "提出",
+        "score": "点数",
+        "group": "グループ",
+        "individual": "個人",
+        "late": "遅延",
+        "onTime": "期限内",
+        "notSubmitted": "未提出",
+        "noGradedAssignmentsInThis": "このクラスにはまだ採点対象の課題がありません。"
+      },
+      "StudentPublishedFeedback": {
+        "retry": "再試行",
+        "result": "結果",
+        "totalPoints": "合計点",
+        "yourIndividualScoreWasAdjusted": "個人の点数は教員によって個別に調整されました。",
+        "contributionLevel": "貢献度：",
+        "couldNotLoadTheGrade": "成績分布を読み込めませんでした。",
+        "gradeDistribution": "成績分布",
+        "classGradeDistribution": "クラスの成績分布"
+      },
+      "SubmissionsLink": {
+        "grading": "採点"
+      },
+      "SubmissionViewer": {
+        "invalidImageLink": "画像のリンクが無効です。",
+        "loadingImage": "画像を読み込み中…",
+        "reloadImage": "画像を再読み込み",
+        "viewSubmittedImage": "提出された画像を表示",
+        "submittedDiagram": "提出された図",
+        "viewDiagram": "図を表示",
+        "scrollHorizontallyAndVerticallyTo": "横・縦にスクロールして詳細を確認できます。これは提出済みの版で、閲覧のみです。",
+        "noDiagramPreviewIsAvailable": "図のプレビューはまだありません。",
+        "drawIoDiagramData": "Draw.io の図のデータ",
+        "noXml": "XMLなし",
+        "submittedWork": "提出済みの解答",
+        "submittedWorkReadOnly": "提出済みの解答 — 閲覧のみ",
+        "submittedImage": "提出された画像",
+        "noWorkContentAvailableYet": "表示できる解答の内容はまだありません。"
+      }
+    },
+    "hooks": {
+      "useGradingWorkspace": {
+        "youHaveUnsavedChangesLeave": "未保存の変更があります。この提出物を離れますか？",
+        "discardChanges": "変更を破棄",
+        "checkEachItemsPointsFrom": "各項目の点数を確認してください：0から項目の満点まで、小数点以下2桁まで。",
+        "theServerDoesNotSupport": "サーバーはまだ小数の点数の保存に対応していません。サーバーを更新してバージョンを再読み込みしてください。入力中の点数は保持されます。",
+        "groupScoreSavedReloadThe": "グループの点数を保存しました。提出物を再読み込みして、メンバーの点数とバージョンを更新してください。"
+      },
+      "useSubmissionContext": {
+        "couldNotLoadTheAssignment": "課題・クラスの情報を読み込めませんでした。"
+      }
+    },
+    "model": {
+      "contributionLevels": {
+        "exceedsExpectations": "期待以上",
+        "completedTheAssignedPartWell": "担当部分を十分に仕上げ、課題をよく理解しており、追加の貢献やグループへの支援があった。",
+        "meetsRequirements": "要件を満たす",
+        "fullyCompletedTheAssignedPart": "担当部分をすべて仕上げ、品質は要件を満たし、取り組み方を説明できる。",
+        "partlyMet": "一部達成",
+        "contributedButSomeContentIs": "貢献はあるが、内容の不足、品質不足、または説明が不明確な点がある。",
+        "needsALotOfSupport": "多くの支援が必要",
+        "neededALotOfGuidance": "完了までに多くの指導や声かけが必要で、自分の担当部分をまだ説明できない。",
+        "notCompleted": "未完了",
+        "didNotCompleteTheAssigned": "担当部分を完了していない、または確認できる貢献がない。"
+      },
+      "format": {
+        "enterAReasonWhenAdding": "加点・減点する場合は理由を入力してください。",
+        "theClassIsArchivedOr": "クラスがアーカイブ済みか未開講のため、成績の閲覧のみ可能です。編集中の内容は保持されます。",
+        "finalizedGradesCannotBeEdited": "確定済みの成績は編集できません。再読み込みしてロックされた採点を確認してください。編集中の内容は保持されます。",
+        "theSubmissionHasChangedOpen": "提出物が変更されました。採点を続ける前に現在の提出物を開いて確認してください。編集中の内容は保持されます。",
+        "theRubricHasChangedReload": "ルーブリックが変更されました。採点を続ける前に再読み込みしてルーブリックを確認してください。編集中の内容は保持されます。",
+        "theDataHasChangedReload": "データが変更されました。再読み込みして新しいバージョンを確認してください。編集中の内容は保持されます。"
+      },
+      "gradingAiTasks": {
+        "grading": "採点",
+        "theAiProposalForIs": "{label} のAI提案の準備ができました。「AIの提案を見る」を開いて確認してください。",
+        "couldNotCreateAnAi": "{label} のAI提案を作成できませんでした。"
+      },
+      "types": {
+        "awaitingGrading": "採点待ち",
+        "graded": "採点済み",
+        "published": "公開済み",
+        "oldSubmission": "古い提出物",
+        "notSubmitted": "未提出",
+        "activityMonitoringOff": "アクティビティの記録なし",
+        "noActivityDataYet": "アクティビティのデータはまだありません",
+        "activityDataAvailable": "アクティビティのデータあり",
+        "activityDataRetentionPeriodHas": "アクティビティのデータの保存期間が終了しました",
+        "activityDataTemporarilyUnavailable": "アクティビティのデータを一時的に読み込めません",
+        "activityByMember": "メンバー別のアクティビティ"
+      }
+    },
+    "pages": {
+      "GradingWorkspacePage": {
+        "loadingWork": "解答を読み込み中…",
+        "aNewAiProposalIs": "新しいAI提案があります。「AIの提案を見る」を開いて確認してください。",
+        "aiGradingSentYouCan": "AI採点を依頼しました。作業を続けられます。",
+        "youHaveUnsavedMemberAssessments": "未保存のメンバー評価があります。公開する前にメンバーの点数を保存してください。",
+        "groupWork": "グループの解答",
+        "studentWork": "学生の解答",
+        "wholeAssignment": "課題全体",
+        "grading": "採点",
+        "part": "パート {value}",
+        "score": "得点 ",
+        "saving": "保存中…",
+        "processing": "処理中…",
+        "notSaved": "未保存",
+        "saved": "{value} に保存",
+        "group": "グループ",
+        "individual": "個人",
+        "assignment": "課題",
+        "member": "メンバー",
+        "partOfTheWork": "解答のパート",
+        "doneBy": "実施者：{value}",
+        "assess": "評価 ",
+        "members": "メンバー",
+        "saveChanges": "変更を保存",
+        "publishGrade": "成績を公開",
+        "thisIsAnOldSubmission": "これは古い提出物のため、閲覧のみ可能です。",
+        "reloadVersion": "バージョンを再読み込み",
+        "theAssignmentHasNoUsable": "課題に使用できるルーブリックがありません。",
+        "changesWillBeVisibleTo": "変更は保存後に学生に表示されます。",
+        "theStudentDidNotDo": "学生はこのパートに解答していません。",
+        "submittedWork": "提出済みの解答",
+        "previousSubmission": "前の提出物",
+        "nextSubmission": "次の提出物",
+        "groupRubric": "グループのルーブリック",
+        "memberScores": "メンバーの点数",
+        "viewAiProposal": "AIの提案を見る",
+        "openTheGroupSubmissionTo": "AIで採点するにはグループの提出物を開いてください",
+        "gradeWithAi": "AIで採点",
+        "theAiIsGrading": "AIが採点中…",
+        "close": "閉じる"
+      },
+      "SubmissionDetailPage": {
+        "grade": "採点",
+        "continueGrading": "採点を続ける",
+        "viewGrade": "成績を見る",
+        "gradeView": "採点 / 閲覧",
+        "backToClass": "クラスに戻る",
+        "untitledAssignment": "無題の課題",
+        "submissions": "提出物 — {value}",
+        "submissions2": "提出物",
+        "class": "クラス：{ownerName}",
+        "noClassInformationYet": "クラスの情報はまだありません",
+        "tryReloadingTheAssignmentClass": "課題・クラスの情報を再読み込み",
+        "retry": "再試行",
+        "loadingAssignmentClassInformation": "課題・クラスの情報を読み込み中です。",
+        "loadingSubmissions": "提出物を読み込み中…",
+        "thisAssignmentOnlyAllowsViewing": "この課題では提出物の閲覧のみ可能です。",
+        "submitted": "提出済み",
+        "inProgress": "取り組み中",
+        "notSubmitted": "未提出",
+        "submittedLate": "遅延提出",
+        "status": "ステータス",
+        "allStatuses": "すべてのステータス",
+        "submission": "提出",
+        "onTimeAndLate": "期限内と遅延",
+        "onTime": "期限内",
+        "selected": "選択中：",
+        "submissions3": " 件",
+        "aiProposal": "AIの提案",
+        "publishGrades": "成績を公開",
+        "deselect": "選択を解除",
+        "selectAllSubmissionsOnThe": "ページ内の提出物をすべて選択",
+        "studentGroup": "学生 / グループ",
+        "submittedAt": "提出日時",
+        "score": "点数",
+        "select": "{name} を選択",
+        "late": "遅延",
+        "viewWork": "解答を表示",
+        "assessmentNotReady": "評価の準備ができていません",
+        "noMatchingSubmissions": "該当する提出物はありません。"
+      }
+    }
+  },
+  "groupdocs": {
+    "components": {
+      "groupDocNav": {
+        "assignmentParts": "課題のパート"
+      },
+      "GroupProgressCard": {
+        "progress": "進捗",
+        "sectionsDone": "完了したセクション",
+        "sections": "セクション"
+      },
+      "OpenGroupWorkButton": {
+        "submission": "提出物",
+        "submittedLate": "遅延提出",
+        "submitted": "提出済み",
+        "openGroupDocument": "グループ文書を開く"
+      },
+      "SectionDialogs": {
+        "theDataJustChangedPlease": "データが変更されました。再読み込みしてください。",
+        "couldNotAssignTheSection": "セクションを割り当てられませんでした。",
+        "assignSection": "セクションを割り当て",
+        "memberTakingTheSection": "セクションの担当メンバー",
+        "findMembers": "メンバーを検索",
+        "noMatchingMembers": "該当するメンバーはいません。",
+        "deselectMember": "メンバーの選択を解除",
+        "assigningItToSomeoneElse": "別の人に割り当てると、前の担当者からは解放されます。",
+        "unclaimed": "未担当",
+        "cannotSubmitYetBecauseSome": "未完了のセクションがあるため、まだ提出できません。",
+        "couldNotSubmitPleaseTry": "提出できませんでした。しばらくしてからもう一度お試しください。",
+        "submitGroupDocument": "グループ文書を提出しますか？",
+        "back": "戻る",
+        "submitAnyway": "このまま提出",
+        "submit": "提出",
+        "section": "セクション",
+        "holder": "担当者",
+        "status": "ステータス"
+      },
+      "SectionHistoryDialog": {
+        "you": "あなた",
+        "memberHasLeftTheGroup": "グループを離れたメンバー",
+        "couldNotLoadTheSection": "セクションの履歴を読み込めませんでした。",
+        "history": "履歴",
+        "loading": "読み込み中…",
+        "thisSectionHasNoHistory": "このセクションにはまだ履歴がありません。",
+        "historyVersions": "履歴の版",
+        "thisVersionIsEmpty": "この版は空です。"
+      }
+    },
+    "hooks": {
+      "useMyGroupDoc": {
+        "youDoNotHaveA": "この課題のグループにまだ所属していません。",
+        "theGroupDocumentCouldNot": "グループ文書をまだ開けません。"
+      }
+    },
+    "model": {
+      "deadline": {
+        "theDeadlineHasPassedSubmitting": "締切 {value} を過ぎているため、今提出すると遅延扱いになります。受付終了（{value3}）まであと {value2} 分です。",
+        "minutesLeftUntilTheDeadline": "締切（{value2}）まであと {value} 分です。",
+        "sectionsNobodyHasWorkedOn": "{open} 件のセクションは誰も取り組んでおらず、提出物には含まれません。",
+        "sectionsAreBeingWrittenClick": "{claimed} 件のセクションが作成中です。「完了」をクリックしてください。受付終了時には、保存済みの下書きで自動的に確定されます。",
+        "allSectionsAreDone": "すべてのセクションが完了しています。",
+        "theGroupHasNotSubmitted": "グループはまだ提出していません。リーダーは締切前に提出してください。"
+      },
+      "status": {
+        "notStarted": "未着手",
+        "inProgress": "取り組み中",
+        "unclaimed": "未担当",
+        "you": "あなた",
+        "member": "メンバー"
+      }
+    },
+    "pages": {
+      "GroupSectionEditorPage": {
+        "theDataJustChangedPlease": "データが変更されました。再読み込みしてください。",
+        "youNoLongerHoldSection": "セクション {value} の担当ではなくなりました（解放されたか、別の人に割り当てられました）。未保存の内容は保持されませんでした。",
+        "groupDocumentNotFound": "グループ文書が見つかりません。",
+        "couldNotLoadTheGroup": "グループ文書を読み込めませんでした。",
+        "couldNotSaveTheDraft": "下書きを保存できませんでした。",
+        "groupDocument": "グループ文書",
+        "sectionMarkedDone": "セクション「{title}」を完了にしました",
+        "couldNotMarkAsDone": "完了にできませんでした。",
+        "allSectionsCompleted": "すべてのセクションが完了しました",
+        "openingTheEditor": "編集画面を開いています…",
+        "groupAssignment": "グループ課題",
+        "importDocx": "DOCXを取り込む",
+        "group": "グループ",
+        "deadline": "締切：{value}",
+        "text": "残り ",
+        "completeAll": "すべて完了",
+        "theDeadlineHasPassedThe": "締切を過ぎたため、文書は閲覧のみです。",
+        "clickDoneBeforeTheDeadline": " 締切前に「完了」をクリックしてください。",
+        "youAreNotHoldingAny": "作成中のセクションはありません。",
+        "backToGroupDocument": "グループ文書に戻る",
+        "importDocxIntoSection": "セクション「{title}」に DOCX を取り込む"
+      },
+      "GroupWorkspacePage": {
+        "groupDocumentNotFound": "グループ文書が見つかりません。",
+        "couldNotLoadTheGroup": "グループ文書を読み込めませんでした。",
+        "assignment": "課題",
+        "couldNotDownloadTheDocx": "DOCXをダウンロードできませんでした。",
+        "couldNotTakeTheSection": "セクションを担当できませんでした。",
+        "loadingGroupDocument": "グループ文書を読み込み中…",
+        "history": "履歴",
+        "author": "担当者",
+        "editSection": "セクションを編集",
+        "takeSection": "セクションを担当",
+        "continueWriting": "作成を続ける",
+        "assignSection": "セクションを割り当て",
+        "releaseSection": "セクションを解放",
+        "thisSectionIsNotDone": "このセクションはまだ完了していません。",
+        "groupAssignment": "グループ課題",
+        "group": "グループ",
+        "deadline": "締切：{value}",
+        "text": "残り ",
+        "moreActions": "その他の操作",
+        "downloadDocx": "DOCXをダウンロード",
+        "submitDocument": "文書を提出",
+        "theDeadlineHasPassedThe": "締切を過ぎたため、文書は閲覧のみです。",
+        "noContentYet": "内容はまだありません。",
+        "groupDocumentSubmitted": "グループ文書を提出しました",
+        "couldNotReleaseTheSection": "セクションを解放できませんでした。",
+        "releaseSection2": "セクション ",
+        "of": " （",
+        "theDraftInProgressFor": "）を解放しますか？このセクションの作成中の下書きは破棄されます。以前に完了した内容は保持され、メンバーは再びセクションを担当できます。",
+        "back": "戻る",
+        "someoneIsAlreadyWorkingOn": "現在のセクションはすでに他の人が担当しています。",
+        "submitting": "提出中",
+        "submitting2": "提出中…",
+        "theDeadlineHasPassed": "締切を過ぎました",
+        "at": "（{value}）",
+        "theSystemIsAutomaticallySubmitting": "。システムが各セクションの最新版を自動提出しています。提出中はページがロックされます。"
+      }
+    }
+  },
+  "groups": {
+    "components": {
+      "ClassGroupsPanel": {
+        "couldNotLoadTheClass": "クラスのグループを読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "reload": "再読み込み",
+        "loadingStudentsAndGroups": "学生とグループを読み込み中…",
+        "deleted": "{name} を削除しました",
+        "noGroup": "グループ未所属",
+        "allStudents": "すべての学生",
+        "groups": "グループ",
+        "createGroup": "グループを作成",
+        "randomSplit": "ランダムに分ける",
+        "findGroups": "グループを検索",
+        "groupList": "グループ一覧",
+        "all": "すべて",
+        "students": "学生 {length} 人",
+        "changeLeaderOf": "{name} のリーダーを変更",
+        "changeLeader": "リーダーを変更",
+        "edit": "{name} を編集",
+        "cannotDeleteTheGroupAlready": "{name} を削除できません：グループにはすでに文書または提出物があります",
+        "delete": "{name} を削除",
+        "noMatchingGroups": "該当するグループはありません。",
+        "students2": "学生 {ungroupedCount} 人",
+        "studentsInClass": "クラスの学生",
+        "filterByNameEmailOr": "氏名、メールアドレス、学籍番号で絞り込み",
+        "fullName": "氏名",
+        "joined": "参加日",
+        "gradebook": "成績表",
+        "groupLeader": "リーダー",
+        "noMatchingStudents": "該当する学生はいません。",
+        "delete2": "{name} を削除しますか？",
+        "deleteGroup": "グループを削除",
+        "areYouSureYouWant": "",
+        "text": " を削除してもよろしいですか？"
+      },
+      "GroupFormDialog": {
+        "enterAGroupName": "グループ名を入力してください",
+        "theGroupNameIsAlready": "グループ名が重複しています",
+        "groupSaved": "グループを保存しました",
+        "created": "{trimmed} を作成しました",
+        "changeLeader": "リーダーを変更 — {name}",
+        "edit": "{name} を編集",
+        "createGroup": "グループを作成",
+        "saveGroup": "グループを保存",
+        "groupName": "グループ名",
+        "groupLeader": "リーダー",
+        "chooseMembersFirst": "先にメンバーを選択してください",
+        "members": "メンバー（",
+        "findStudents": "学生を検索",
+        "selectAllFilteredResults": "絞り込み結果をすべて選択（",
+        "chooseMembers": "メンバーを選択",
+        "select": "{value} を選択",
+        "noMatchingStudents": "該当する学生はいません。",
+        "allStudentsAlreadyHaveA": "すべての学生がグループに所属しています。",
+        "movesPeopleFromOtherGroups": "{moved} 人を他のグループから移動します。",
+        "alreadyHasASubmissionSo": "{value} にはすでに提出物があるため、空にすることはできません。",
+        "willHaveNoOneLeft": "{value} はメンバーがいなくなるため削除されます。"
+      },
+      "GroupProgressTable": {
+        "couldNotLoadTheList": "グループ課題の一覧を読み込めませんでした。",
+        "couldNotLoadGroupAssignment": "グループ課題の進捗を読み込めませんでした。",
+        "groupAssignmentProgress": "グループ課題の進捗",
+        "groupAssignment": "グループ課題",
+        "due": " · 締切 {value}",
+        "group": "グループ",
+        "groupLeader": "リーダー",
+        "sectionsDone": "完了したセクション",
+        "status": "ステータス",
+        "writing": "作成中",
+        "actions": "操作",
+        "submittedLate": "提出済み · 遅延",
+        "submitted": "提出済み",
+        "inProgress": "取り組み中",
+        "notStarted": "未着手",
+        "viewDocument": "文書を表示"
+      },
+      "GroupProposalSection": {
+        "couldNotLoadGroupProposals": "グループ案を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "reload": "再読み込み",
+        "loadingGroupProposals": "グループ案を読み込み中…",
+        "theProposalWasRejected": "グループ案「{name}」は却下されました",
+        "reason": "理由：{reason}",
+        "theLecturerGaveNoReason": "教員は理由を記入していません。",
+        "youCanStartOrJoin": " 別のグループ案を作成するか、参加することができます。",
+        "proposalSentToTheLecturer": "グループ案を教員に送信しました",
+        "proposalWithdrawnToDraft": "グループ案を下書きに戻しました",
+        "cancelProposal": "グループ案 {name} を取り消しますか？",
+        "proposalCancelled": "グループ案を取り消しました",
+        "cancelProposal2": "グループ案を取り消す",
+        "leaveProposal": "グループ案 {name} から抜けますか？",
+        "leftTheProposal": "グループ案から抜けました",
+        "leaveProposal2": "グループ案から抜ける",
+        "formAGroupAndInvite": "グループを作ってクラスメートを招待しましょう。人数がそろったら教員に承認を依頼します。",
+        "createGroupProposal": "グループ案を作成",
+        "joinedTheGroup": "グループに参加しました",
+        "invitationDeclined": "招待を辞退しました",
+        "youDoNotHaveA": "このクラスではまだグループに所属していません。教員がグループを割り当てます。",
+        "create": "作成",
+        "groupProposalCreated": "グループ案を作成しました",
+        "renameGroup": "グループ名を変更",
+        "save": "保存",
+        "groupRenamed": "グループ名を変更しました",
+        "invitationSent": "招待を送信しました",
+        "selfGrouping": "自主グループ編成",
+        "theLecturerWillAssignYou": " 教員があなたのグループを割り当てます。",
+        "groupInvitations": "グループへの招待",
+        "groupInvitations2": "グループへの招待（",
+        "leader": "リーダー ",
+        "unknownName": "名前不明",
+        "members": " 人のメンバー",
+        "invitationExpired": " · 招待の期限切れ",
+        "leaveYourCurrentProposalTo": " · 承諾するには現在のグループ案から抜けてください",
+        "decline": "辞退",
+        "accept": "承諾",
+        "yourGroupProposal": "あなたのグループ案",
+        "morePeopleNeededToSubmit": " · 承認を依頼するにはあと {missing} 人必要です",
+        "awaitingLecturerApprovalWithdrawIt": " · 教員の承認待ち。修正が必要なら取り下げてください",
+        "rename": "名前を変更",
+        "invite": "招待",
+        "submitForApproval": "承認を依頼",
+        "withdrawToEdit": "取り下げて修正",
+        "proposedMembers": "提案メンバー",
+        "groupLeader": "リーダー",
+        "invitationExpired2": "招待の期限切れ",
+        "awaitingResponse": "返答待ち",
+        "revoke": "取り消し",
+        "unknownName2": "名前不明"
+      },
+      "LeaderRequestList": {
+        "leaderChangeRequests": "リーダー変更の申請",
+        "couldNotProcessTheRequest": "申請を処理できませんでした",
+        "newLeaderOf": "{groupName} の新しいリーダー",
+        "chooseANewLeader": "新しいリーダーを選択",
+        "proposed": "（提案）",
+        "reject": "却下",
+        "approve": "承認",
+        "rejectRequest": "申請を却下しますか？",
+        "areYouSureYouWant": "",
+        "text": " のリーダー変更の申請を却下してもよろしいですか？"
+      },
+      "MyGroup": {
+        "couldNotLoadYourGroup": "あなたのグループを読み込めませんでした。",
+        "myGroup": "マイグループ",
+        "openGroup": "グループを開く",
+        "loadingGroup": "グループを読み込み中…",
+        "group": "グループ",
+        "members": "メンバー",
+        "groupLeader": "リーダー",
+        "unknownName": "名前不明",
+        "noneYet": "未設定",
+        "youDoNotHaveA": "このクラスではまだグループに所属していません。",
+        "selfGrouping": "自主グループ編成：",
+        "proposal": "グループ案 ",
+        "members2": " 人のメンバー",
+        "youHave": "",
+        "groupInvitations": " 件のグループ招待があります。",
+        "openMyGroup": "マイグループを開く",
+        "awaitingApproval": "承認待ち",
+        "leaderChangeRequest": "リーダー変更の申請",
+        "groupMembers": "グループのメンバー",
+        "groupAssignments": "グループ課題",
+        "theGroupNameMustBe": "グループ名は1〜100文字で入力してください。",
+        "groupRenamed": "グループ名を変更しました",
+        "couldNotRenameTheGroup": "グループ名を変更できませんでした。",
+        "editGroupName": "グループ名を編集",
+        "groupName": "グループ名",
+        "save": "保存",
+        "cancel": "キャンセル",
+        "couldNotSendTheRequest": "申請を送信できませんでした",
+        "sendRequest": "申請を送信",
+        "currentLeader": "現在のリーダー",
+        "newLeader": "新しいリーダー",
+        "noProposal": "提案なし"
+      },
+      "ProposalDialogs": {
+        "groupName": "グループ名",
+        "inviteToTheGroup": "グループに招待",
+        "invitePeople": "{length} 人を招待",
+        "invite": "招待",
+        "text": "残り ",
+        "spotsLeftInviteesMustAccept": " 人分の空きがあります。招待された人が承諾するとグループに参加します。",
+        "searchByNameEmailOr": "氏名、メールアドレス、学籍番号で検索",
+        "noMatchingStudents": "該当する学生はいません。",
+        "studentsWithoutAGroup": "グループ未所属の学生",
+        "unknownName": "名前不明",
+        "inAnotherProposal": "別のグループ案に参加中"
+      },
+      "ProposalReviewList": {
+        "couldNotLoadGroupProposals": "グループ案を読み込めませんでした。",
+        "reload": "再読み込み",
+        "approvedProposalsAsGroups": "{length} 件のグループ案を承認してグループにしました",
+        "proposalsCouldNotBeApproved": "{length} 件のグループ案を承認できませんでした。各カードで理由を確認してください。",
+        "couldNotApproveTheProposal": "グループ案を承認できませんでした。",
+        "studentSelfGrouping": "学生による自主グループ編成",
+        "selfGrouping": "自主グループ編成：{value}",
+        "settings": "設定",
+        "turnOnToLetStudents": "有効にすると、学生が自分でグループを作り、あなたに承認を依頼できます。",
+        "awaitingApproval": "承認待ち（",
+        "approveSelected": "選択を承認（",
+        "noProposalsAwaitingApproval": "承認待ちのグループ案はありません。",
+        "forming": "編成中（",
+        "selfGroupingSettingsSaved": "自主グループ編成の設定を保存しました",
+        "rejected": "{name} を却下しました",
+        "select": "{name} を選択",
+        "leader": "リーダー ",
+        "unknownName": "名前不明",
+        "members": " 人のメンバー",
+        "pendingInvitations": " · 返答待ちの招待 {pendingInvitations} 件",
+        "reject": "却下",
+        "approve": "承認",
+        "allStudentsAlreadyHaveA": "すべての学生がグループに所属しています。",
+        "noGroup": "グループ未所属（",
+        "unknownName2": "名前不明",
+        "noProposalYet": "グループ案なし",
+        "couldNotRejectTheProposal": "グループ案を却下できませんでした。",
+        "rejectProposal": "グループ案 {name} を却下しますか？",
+        "reasonOptional": "理由（任意）",
+        "theReasonCanBeAt": "理由は最大1,000文字までです。",
+        "membersAreNotifiedAndCan": "メンバーに通知され、別のグループ案を作成または参加できます。"
+      },
+      "RandomSplitDialog": {
+        "groupsCreated": "グループを編成しました",
+        "randomSplit": "ランダムに分ける",
+        "splitAgain": "もう一度分ける",
+        "save": "",
+        "groups": " 個のグループを保存",
+        "preview": "プレビュー",
+        "maximumMembersPerGroup": "グループあたりの最大人数",
+        "from2To20": "2〜20",
+        "group": "グループ",
+        "members": "メンバー",
+        "groupLeader": "リーダー"
+      },
+      "SelfGroupingSettingsDialog": {
+        "couldNotLoadTheSettings": "設定を読み込めませんでした。",
+        "couldNotSaveTheSettings": "設定を保存できませんでした。",
+        "studentSelfGrouping": "学生による自主グループ編成",
+        "save": "保存",
+        "loadingSettings": "設定を読み込み中…",
+        "letStudentsFormTheirOwn": "学生に自主的なグループ編成を許可",
+        "studentsWithoutAGroupCreate": "グループ未所属の学生がグループ案を作成してクラスメートを招待します。あなたが承認すると正式なグループになります。",
+        "minimumSize": "最少人数",
+        "maximumSize": "最大人数",
+        "deadlineOptionalVietnamTime": "締切（任意、ベトナム時間）",
+        "deadlineTime": "締切（時刻）",
+        "proposalsAwaitingApprovalCanStill": "承認待ちのグループ案は、受付期間の終了後も承認できます。"
+      },
+      "TeacherGroupWidgets": {
+        "groups": "グループ：",
+        "members": " 人のメンバー",
+        "groupLeader": "リーダー",
+        "noGroup": "グループ未所属",
+        "theClassHasNoGroups": "クラスにはまだグループがありません。",
+        "someGroupsHaveNoLeader": "リーダーのいないグループがあります。",
+        "someGroupsHaveNoActive": "在籍中のメンバーがいないグループがあります。",
+        "readinessCheck": "準備状況の確認 · ",
+        "groups2": " グループ",
+        "cannotBePublishedYet": "まだ公開できません",
+        "studentsHaveNoGroupConfirm": " 人の学生がグループ未所属です。それでも課題を配布する場合は、公開時に確認してください。",
+        "theClassIsReadyFor": "クラスはグループ課題の準備ができています。",
+        "openTheStudentsTab": "「学生」タブを開く",
+        "editGroupsInTheNew": "新しいタブでグループを編集してください。戻るとこの欄が自動で更新されます。"
+      }
+    },
+    "model": {
+      "groupDrafts": {
+        "unknownName": "名前不明",
+        "group": "グループ {n}",
+        "group2": "グループ {n}",
+        "notSaved": "未保存：{value}",
+        "theClassIsArchivedGroups": "クラスはアーカイブ済みのため、グループは閲覧のみです。",
+        "theGroupsWereJustChanged": "グループが別の場所で変更されました。ページを再読み込みしてください。",
+        "couldNotSaveTheGroups": "グループを保存できませんでした。しばらくしてからもう一度お試しください。"
+      },
+      "proposals": {
+        "draft": "下書き",
+        "awaitingApproval": "承認待ち",
+        "approved": "承認済み",
+        "rejected": "却下",
+        "cancelled": "取り消し済み",
+        "theLeaderHasLeftThe": "リーダーがクラスを離れたか、すでにグループに所属しています",
+        "belowTheMinimumSize": "最少人数に達していません",
+        "overTheMaximumSize": "最大人数を超えています",
+        "toPeople": "{minSize}〜{maxSize} 人",
+        "openUntilGroupsOf": "{value} まで受付中、グループは {size}。",
+        "openGroupsOf": "受付中、グループは {size}。",
+        "theClassIsNotOpen": "クラスがまだ開講していないため、自主グループ編成は利用できません。",
+        "expiredAt": "{value} に終了しました。",
+        "off": "無効です。",
+        "theGroupNameMustBe": "グループ名は1〜100文字で入力してください。",
+        "enterAWholeNumberFrom": "2〜20の整数を入力してください。",
+        "theMaximumMustBeGreater": "最大人数は最少人数以上にしてください。",
+        "theDeadlineMustBeIn": "締切は未来の日時にしてください。",
+        "couldNotCompleteItPlease": "実行できませんでした。しばらくしてからもう一度お試しください。",
+        "proposalNotFoundOrYou": "グループ案が見つからないか、権限がありません。",
+        "theProposalJustChangedIt": "グループ案が変更されました。再読み込みしたので、もう一度お試しください。"
+      }
+    }
+  },
+  "identity": {
+    "admin": {
+      "components": {
+        "AccountDialogs": {
+          "couldNotCompleteItPlease": "実行できませんでした。もう一度お試しください。",
+          "changeRole": "役割を変更",
+          "role": "役割",
+          "subjects": "科目",
+          "classes": "クラス",
+          "couldNotChangeTheRole": "役割を変更できませんでした",
+          "stillHoldsSubjectsOrClasses": " はまだ科目またはクラスを担当しています。",
+          "type": "種類",
+          "code": "コード",
+          "name": "名前",
+          "couldNotLoadTheCode": "コードを読み込めませんでした",
+          "reopenAccount": "アカウントを再開しますか？",
+          "disableAccount": "アカウントを無効化しますか？",
+          "reopen": "再開",
+          "disable": "無効化",
+          "areYouSureYouWant": "",
+          "reopen2": "再開",
+          "disable2": "無効化",
+          "theAccount": " するアカウント：",
+          "text": "。よろしいですか？"
+        },
+        "ImportAccountsPanel": {
+          "invalidFile": "無効なファイルです。",
+          "couldNotProcessTheFile": "ファイルを処理できませんでした。もう一度お試しください。",
+          "importAccountsFromExcel": "Excelからアカウントを取り込む",
+          "close": "閉じる",
+          "columnsEmailDisplayNameRole": "列：email、display_name、role、student_code（学生は学籍番号が必須）。",
+          "chooseAnExcelFile": "Excelファイルを選択",
+          "chooseAnotherFile": "別のファイルを選択",
+          "chooseFile": "ファイルを選択",
+          "downloadTemplate": "テンプレートをダウンロード",
+          "checkingFile": "ファイルを確認中...",
+          "rows": " 行",
+          "created": "作成済み",
+          "valid": "有効",
+          "errors": " 件エラー",
+          "row": "行",
+          "fullName": "氏名",
+          "role": "役割",
+          "checkResults": "チェック結果",
+          "created2": "作成済み",
+          "valid2": "有効",
+          "rows2": "行",
+          "cancel": "キャンセル",
+          "importAccounts": "{validCount} 件のアカウントを取り込む"
+        },
+        "NewAccountDialog": {
+          "invalidEmail": "無効なメールアドレスです。",
+          "enterTheFullName": "氏名を入力してください。",
+          "enterTheStudentId": "学籍番号を入力してください。",
+          "couldNotCreateTheAccount": "アカウントを作成できませんでした。もう一度お試しください。",
+          "addAccount": "アカウントを追加",
+          "schoolEmail": "学校のメールアドレス",
+          "fullName": "氏名",
+          "role": "役割",
+          "studentId": "学籍番号"
+        }
+      },
+      "model": {
+        "labels": {
+          "awaitingActivation": "有効化待ち",
+          "active": "有効",
+          "disabled": "無効",
+          "missingEmailFullNameOr": "メールアドレス、氏名、役割のいずれかが未入力",
+          "invalidEmail": "無効なメールアドレス",
+          "emailDuplicatesAnotherRowIn": "メールアドレスがファイル内の他の行と重複",
+          "emailAlreadyExists": "メールアドレスはすでに存在します",
+          "fullNameTooLong": "氏名が長すぎます",
+          "invalidRole": "無効な役割",
+          "missingStudentId": "学生の学籍番号が未入力",
+          "invalidStudentIdFormat": "学籍番号の形式が不正",
+          "onlyStudentsCanHaveA": "学籍番号を持てるのは学生のみです",
+          "studentIdDuplicatesAnotherRow": "学籍番号がファイル内の他の行と重複",
+          "studentIdAlreadyBelongsTo": "学籍番号はすでに別のアカウントで使用されています",
+          "thisEmailAlreadyHasAn": "このメールアドレスにはすでにアカウントがあります。",
+          "invalidEmail2": "無効なメールアドレスです。",
+          "theDataWasChangedIn": "データが別のセッションで変更されました。再読み込みしたので、もう一度編集してください。",
+          "thereMustBeAtLeast": "有効な管理者が少なくとも1人必要です。",
+          "youCannotChangeYourOwn": "自分自身の役割を変更したり、自分を無効化したりすることはできません。",
+          "theAccountStillManagesSubjects": "このアカウントはまだ科目またはクラスを担当しています。役割を変更する前に担当を変更してください。",
+          "cannotChangeTheRoleTo": "学生との間で役割を変更することはできません。",
+          "theDataJustChangedPlease": "データが変更されました。ファイルを再確認してください。"
+        }
+      },
+      "pages": {
+        "AccountDetailPage": {
+          "accountNotFound": "アカウントが見つかりません。",
+          "couldNotLoadTheAccount": "アカウントを読み込めませんでした。",
+          "couldNotReloadTheAccount": "アカウントを再読み込みできませんでした。ページを再読み込みしてください。",
+          "accounts": "アカウント",
+          "changesSaved": "変更を保存しました",
+          "status": "ステータス",
+          "created": "作成日",
+          "reopenAccount": "アカウントを再開",
+          "disableAccount": "アカウントを無効化",
+          "history": "履歴",
+          "openTheAccountsLog": "アカウントのログを開く",
+          "roleChanged": "役割を変更しました",
+          "accountDisabled": "アカウントを無効化しました",
+          "accountReopened": "アカウントを再開しました",
+          "enterTheFullName": "氏名を入力してください。",
+          "thePhoneNumberHas8": "電話番号は8〜15桁の数字で、先頭に + を付けることができます。",
+          "anExistingStudentIdCannot": "登録済みの学籍番号は空にできません。",
+          "couldNotSavePleaseTry": "保存できませんでした。もう一度お試しください。",
+          "accountInformation": "アカウント情報",
+          "fullName": "氏名",
+          "phoneNumberOptional": "電話番号（任意）",
+          "schoolEmail": "学校のメールアドレス",
+          "role": "役割",
+          "changeRole": "役割を変更",
+          "theRoleOfAStudent": "学生アカウントの役割は変更できません。",
+          "studentId": "学籍番号",
+          "noStudentIdYet": "学籍番号なし",
+          "canOnlyBeEditedBefore": "学生がアカウントを有効化する前のみ編集できます。",
+          "theStudentIdCannotBe": "学生がアカウントを有効化した後は学籍番号を変更できません。",
+          "cancel": "キャンセル",
+          "saveChanges": "変更を保存"
+        },
+        "AccountListPage": {
+          "all": "すべて",
+          "couldNotLoadTheAccount": "アカウント一覧を読み込めませんでした。",
+          "accounts": "アカウント",
+          "importExcel": "Excelを取り込む",
+          "addAccount": "アカウントを追加",
+          "createdAccounts": "{count} 件のアカウントを作成しました",
+          "searchByEmailNameOr": "メールアドレス、氏名、学籍番号で検索",
+          "role": "役割",
+          "status": "ステータス",
+          "statusAll": "ステータス：すべて",
+          "status2": "ステータス：",
+          "reload": "再読み込み",
+          "fullName": "氏名",
+          "open": "開く",
+          "loading": "読み込み中…",
+          "noMatchingAccounts": "該当するアカウントはありません。",
+          "accountAdded": "アカウントを追加しました"
+        }
+      }
+    },
+    "components": {
+      "AuthLayout": {
+        "switchToLightMode": "ライトモードに切り替え",
+        "switchToDarkMode": "ダークモードに切り替え",
+        "n2026LearningPlatform": "© 2026 学習プラットフォーム"
+      },
+      "LoginForm": {
+        "incorrectEmailOrPasswordOr": "メールアドレスまたはパスワードが正しくないか、アカウントの準備ができていません。",
+        "theSystemIsBusyPlease": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+        "enterTheEmailIssuedBy": "学校発行のメールアドレスを入力してください。",
+        "enterYourPassword": "パスワードを入力してください。",
+        "signIn": "ログイン",
+        "password": "パスワード",
+        "signingIn": "ログイン中…",
+        "forgotPassword": "パスワードをお忘れですか？",
+        "firstTimeHere": "初めてご利用ですか？",
+        "activateAccount": "アカウントを有効化"
+      },
+      "OtpInput": {
+        "otpVerificationCode": "OTP 認証コード",
+        "digit": "{value} 桁目"
+      },
+      "PasswordChecklist": {
+        "atLeast8Characters": "8文字以上",
+        "bothLettersAndNumbers": "英字と数字の両方を含む",
+        "met": "（達成）",
+        "notMet": "（未達成）"
+      },
+      "PasswordField": {
+        "hidePassword": "パスワードを隠す",
+        "showPassword": "パスワードを表示"
+      },
+      "PostLoginRedirect": {
+        "redirecting": "移動中..."
+      },
+      "SecretInput": {
+        "hidePassword": "パスワードを隠す",
+        "showPassword": "パスワードを表示"
+      },
+      "Stepper": {
+        "steps": "手順"
+      }
+    },
+    "hooks": {
+      "session": {
+        "usesessionMustBeUsedInside": "useSession は SessionProvider の内側で使用してください"
+      }
+    },
+    "model": {
+      "passwordRules": {
+        "thePasswordNeedsAtLeast": "パスワードは8文字以上にしてください。",
+        "thePasswordIsTooLong": "パスワードが長すぎます（最大72バイト）。",
+        "thePasswordNeedsLetters": "パスワードには英字を含めてください。",
+        "thePasswordNeedsDigits": "パスワードには数字を含めてください。",
+        "thePasswordMustNotContain": "パスワードにメールアドレスの名前部分を含めないでください。"
+      },
+      "types": {
+        "student": "学生",
+        "lecturer": "教員",
+        "subjectManager": "科目責任者",
+        "administrator": "管理者"
+      }
+    },
+    "otp": {
+      "components": {
+        "OtpFlow": {
+          "theCodeIsWrongOr": "コードが正しくないか、有効期限が切れています。",
+          "theSessionHasExpired": "セッションの有効期限が切れました。",
+          "aNewCodeHasBeen": "コードを再送しました。",
+          "theSystemIsBusyPlease": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+          "backToSignIn": "ログインに戻る",
+          "enterTheEmailIssuedBy": "学校発行のメールアドレスを入力してください。",
+          "schoolEmail": "学校のメールアドレス",
+          "enterAll6Digits": "6桁すべて入力してください。",
+          "codeValidFor": "コードの有効期限：{value}",
+          "resendCode": "コードを再送",
+          "confirmCode": "コードを確認",
+          "thePasswordNeedsAtLeast": "パスワードは英字と数字を含む8文字以上にしてください。",
+          "theTwoPasswordsDoNot": "2つのパスワードが一致しません。",
+          "thePasswordDoesNotMeet": "パスワードが要件を満たしていません。",
+          "newPassword": "新しいパスワード",
+          "reEnterPassword": "パスワードを再入力"
+        }
+      },
+      "pages": {
+        "ActivationPage": {
+          "activateAccount": "アカウントの有効化",
+          "otpCode": "OTP コード",
+          "setPassword": "パスワードを設定",
+          "sendActivationCode": "有効化コードを送信",
+          "activationCode": "有効化コード",
+          "activateAndSignIn": "有効化してログイン",
+          "firstTimeHere": "初めてご利用ですか？",
+          "howToActivateYourAccount": "アカウントの有効化方法",
+          "useTheSchoolEmailIssued": "発行された学校のメールアドレスを使用してください。",
+          "theOtpCodeIsValid": "OTP コードの有効期限は10分です。"
+        },
+        "PasswordResetPage": {
+          "resetPassword": "パスワードを再設定",
+          "recoverPassword": "パスワードの復旧",
+          "otpCode": "OTP コード",
+          "newPassword": "新しいパスワード",
+          "sendRecoveryCode": "復旧コードを送信",
+          "otpVerificationCode": "OTP 認証コード",
+          "accountSecurity": "アカウントのセキュリティ",
+          "notesOnResettingYourPassword": "パスワード再設定の注意事項",
+          "signInAgainWithYour": "完了後、新しいパスワードで再度ログインしてください。",
+          "fptAccountProtectionPolicy": "FPT アカウント保護ポリシー",
+          "recoverySignsOutAllActive": "復旧すると、すべての使用中のデバイスからログアウトされます。"
+        }
+      }
+    },
+    "pages": {
+      "LoginPage": {
+        "passwordReset": "パスワードを再設定しました",
+        "firstTimeHere": "初めてご利用ですか？",
+        "accountsAreIssuedByThe": "アカウントは教務課から発行されます",
+        "activateWithYourSchoolEmail": "学校のメールアドレスと OTP コードで有効化します。パスワードを忘れた場合は、メールに届くコードで復旧できます。"
+      }
+    },
+    "profile": {
+      "components": {
+        "PasswordChangeForm": {
+          "passwordChanged": "パスワードを変更しました",
+          "enterYourCurrentPassword": "現在のパスワードを入力してください。",
+          "theNewPasswordNeedsAt": "新しいパスワードは英字と数字を含む8文字以上にしてください。",
+          "theTwoNewPasswordsDo": "2つの新しいパスワードが一致しません。",
+          "theCurrentPasswordIsIncorrect": "現在のパスワードが正しくありません。",
+          "tooManyWrongAttemptsFor": "現在のパスワードの入力ミスが多すぎます。数分後にもう一度お試しください。",
+          "theSystemIsBusyPlease": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+          "changePassword": "パスワードを変更",
+          "otherDevicesWillBeSigned": "他のデバイスはログアウトされます。現在のセッションは維持されます。",
+          "currentPassword": "現在のパスワード",
+          "newPassword": "新しいパスワード",
+          "reEnterNewPassword": "新しいパスワードを再入力"
+        },
+        "ProfileForm": {
+          "theFullNameMustBe": "氏名は1〜150文字で入力してください。",
+          "thePhoneNumberHas8": "電話番号は8〜15桁の数字で、先頭に + を付けることができます。",
+          "changesSaved": "変更を保存しました",
+          "couldNotSavePleaseTry": "保存できませんでした。しばらくしてからもう一度お試しください。",
+          "personalInformation": "個人情報",
+          "schoolEmailRoleAndStatus": "学校のメールアドレス、役割、ステータスは管理者が管理します。",
+          "fullName": "氏名",
+          "phoneNumber": "電話番号",
+          "schoolEmail": "学校のメールアドレス",
+          "role": "役割",
+          "studentId": "学籍番号",
+          "noStudentIdYet": "学籍番号なし",
+          "saveChanges": "変更を保存"
+        }
+      },
+      "pages": {
+        "ProfilePage": {
+          "profile": "プロフィール"
+        }
+      }
+    },
+    "register": {
+      "account": "アカウント"
+    },
+    "shell": {
+      "components": {
+        "RoleGuard": {
+          "loading": "読み込み中…"
+        }
+      }
+    }
+  },
+  "materials": {
+    "api": {
+      "index": {
+        "theLearningMaterialHasChanged": "教材が変更されたか、閲覧のみになっています。続行する前にデータを再読み込みしてください。",
+        "learningMaterialNotFoundOr": "教材が見つからないか、アクセス権がありません。",
+        "yourSessionHasExpired": "ログインセッションの有効期限が切れました。",
+        "couldNotLoadTheLearning": "教材を読み込めませんでした。もう一度お試しください。"
+      }
+    },
+    "components": {
+      "DocumentViewer": {
+        "couldNotOpenTheFile": "ファイルを開けませんでした。ダウンロードして表示してください。",
+        "zoomOut": "縮小",
+        "zoomIn": "拡大",
+        "exitFullScreen": "全画面を終了",
+        "fullScreen": "全画面",
+        "download": "ダウンロード",
+        "emptySheet": "空のシート",
+        "openingFile": "ファイルを開いています…"
+      },
+      "MaterialDialogs": {
+        "enterTheMaterialName": "教材名を入力してください。",
+        "pasteTheLinkOfA": "YouTube 動画のリンクを貼り付けてください。",
+        "chooseAFile": "ファイルを選択してください。",
+        "changesSaved": "変更を保存しました",
+        "quizCreated": "クイズを作成しました",
+        "learningMaterialAdded": "教材を追加しました",
+        "editLearningMaterial": "教材を編集",
+        "createLearningMaterial": "教材を作成",
+        "save": "保存",
+        "create": "作成",
+        "materialName": "教材名",
+        "enableLearningMaterial": "教材を有効化",
+        "on": "オン",
+        "off": "オフ",
+        "turnOffToHideIt": "オフにすると学生に表示されなくなり、新たなAIの情報源としても使われません。",
+        "content": "内容 ",
+        "content2": "内容",
+        "file": "ファイル",
+        "emptyQuiz": "空のクイズ",
+        "createFromAnOldQuiz": "過去のクイズから作成",
+        "description": "説明",
+        "archive": "アーカイブ",
+        "delete": "削除",
+        "learningMaterialDeleted": "教材を削除しました",
+        "quizDeleted": "クイズを削除しました",
+        "quizArchived": "クイズをアーカイブしました",
+        "learningMaterial": "教材",
+        "areYouSureYouWant": "",
+        "text": " を実行してもよろしいですか？",
+        "theDraftQuizWillBe": " 下書きのクイズは完全に削除され、復元できません。"
+      },
+      "MaterialList": {
+        "learningMaterials": "教材",
+        "loadingSubjects": "科目を読み込み中…",
+        "youHaveNotBeenAssigned": "担当している科目はありません。"
+      },
+      "MaterialPreview": {
+        "download": "ダウンロード",
+        "openOnYoutube": "YouTube で開く ",
+        "couldNotPlayTheVideo": "動画を再生できませんでした",
+        "retry": "再試行",
+        "openingFile": "ファイルを開いています…"
+      },
+      "MaterialSections": {
+        "attachedLearningMaterials": "添付の教材",
+        "loadingLearningMaterials": "教材を読み込み中…",
+        "retry": "再試行",
+        "noLearningMaterialsYet": "教材はまだありません。",
+        "class": " · クラス"
+      },
+      "ModuleBoard": {
+        "addModule": "モジュールを追加",
+        "learningMaterials": "教材",
+        "reload": "再読み込み",
+        "loadingLearningMaterials": "教材を読み込み中…",
+        "noModulesYet": "モジュールはまだありません",
+        "createLearningMaterial": "教材を作成",
+        "actionsForModule": "モジュール {title} の操作",
+        "rename": "名前を変更",
+        "moveUp": "上へ移動",
+        "moveDown": "下へ移動",
+        "deleteModule": "モジュールを削除",
+        "collapse": "{title} を折りたたむ",
+        "expand": "{title} を展開",
+        "collapse2": "折りたたむ",
+        "expand2": "展開",
+        "noLearningMaterialsYet": "教材はまだありません",
+        "quizReopened": "クイズを再開しました",
+        "moduleAdded": "モジュールを追加しました",
+        "renameModule": "モジュール名を変更",
+        "changesSaved": "変更を保存しました",
+        "deleteModule2": "モジュールを削除しますか？",
+        "moduleDeleted": "モジュールを削除しました",
+        "delete": "削除",
+        "areYouSureYouWant": "モジュール ",
+        "text": " を削除してもよろしいですか？",
+        "off": "オフ",
+        "reopen": "{title} を再開",
+        "edit": "{title} を編集",
+        "save": "保存",
+        "moduleName": "モジュール名",
+        "enterTheModuleName": "モジュール名を入力してください。"
+      },
+      "ModuleNav": {
+        "moduleList": "モジュール一覧",
+        "quizPractice": "クイズ練習",
+        "learningMaterials": "教材",
+        "loading": "読み込み中…",
+        "createLearningMaterialIn": "{title} に教材を作成",
+        "createLearningMaterial": "教材を作成",
+        "collapse": "{title} を折りたたむ",
+        "expand": "{title} を展開",
+        "collapse2": "折りたたむ",
+        "expand2": "展開",
+        "noLearningMaterialsYet": "教材はまだありません",
+        "reopen": "{value} を再開",
+        "quizReopened": "クイズを再開しました",
+        "couldNotReopenTheQuiz": "クイズを再開できませんでした",
+        "edit": "{value} を編集"
+      },
+      "ModulePlace": {
+        "previousAndNextMaterialsTop": "前後の教材（ページ上部）",
+        "previousAndNextMaterials": "前後の教材",
+        "previous": "前へ"
+      }
+    },
+    "model": {
+      "types": {
+        "processing": "処理中",
+        "extracted": "抽出済み",
+        "noText": "テキストなし",
+        "error": "エラー",
+        "file": "ファイル"
+      },
+      "xlsx": {
+        "notAnExcelFile": "Excelファイルではありません"
+      }
+    },
+    "pages": {
+      "LearningMaterialPage": {
+        "loadingLearningMaterial": "教材を読み込み中…",
+        "enableLearningMaterial": "教材を有効化",
+        "on": "オン",
+        "off": "オフ",
+        "edit": "編集",
+        "delete": "削除",
+        "description": "説明",
+        "learningMaterialDeleted": "教材を削除しました"
+      }
+    },
+    "register": {
+      "learningMaterial": "教材"
+    }
+  },
+  "notifications": {
+    "components": {
+      "EmailPreferencePanel": {
+        "couldNotLoadEmailPreferences": "メール設定を読み込めませんでした。",
+        "couldNotSaveThePreference": "設定を保存できませんでした。もう一度お試しください。",
+        "emailMeWhenThereIs": "次の場合にメールで通知",
+        "retry": "再試行",
+        "loading": "読み込み中…",
+        "backupFailureEmailsAreMandatory": "バックアップ失敗のメールは必須の警告のため、オフにできません。",
+        "turningOffEmailStillDelivers": "メールをオフにしても、アプリ内の通知は届きます。"
+      },
+      "NotificationBell": {
+        "notificationsUnreadCountNotLoaded": "通知、未読件数を読み込めません",
+        "notificationsUnread": "通知、未読 {count} 件"
+      },
+      "NotificationPopup": {
+        "couldNotLoadNotifications": "通知を読み込めませんでした。",
+        "invalidLink": "無効なリンクです。",
+        "couldNotMarkAsRead": "既読にできませんでした。もう一度お試しください。",
+        "couldNotMarkAllAs": "すべてを既読にできませんでした。",
+        "notifications": "通知",
+        "backToNotifications": "通知に戻る",
+        "settings": "設定",
+        "notificationSettings": "通知設定",
+        "filterNotifications": "通知を絞り込み",
+        "all": "すべて",
+        "unread": "未読（",
+        "markAsRead": "既読にする",
+        "retry": "再試行",
+        "loading": "読み込み中…",
+        "youHaveReadAllNotifications": "すべての通知を読みました。",
+        "noNotificationsYet": "通知はまだありません。",
+        "loadMore": "さらに読み込む"
+      }
+    },
+    "model": {
+      "types": {
+        "enrolledInAClass": "クラスへの登録",
+        "newAssignmentOpened": "新しい課題の公開",
+        "deadlineReminder": "締切のリマインダー",
+        "gradesPublished": "成績の公開",
+        "importantClassAnnouncement": "クラスの重要なお知らせ",
+        "leaderChangeRequest": "リーダー変更の申請",
+        "questionProposalsAwaitingApproval": "承認待ちの問題提案",
+        "questionReviewResults": "問題の審査結果",
+        "backupFailed": "バックアップの失敗"
+      }
+    }
+  },
+  "quizpractice": {
+    "components": {
+      "QuestionPager": {
+        "question": "問 {value}",
+        "previousQuestion": "前の問題",
+        "nextQuestion": "次の問題"
+      },
+      "ResultQuestions": {
+        "question": "問 {value}",
+        "question2": "問 ",
+        "unanswered": "未回答",
+        "correct": "正解",
+        "points": " 点",
+        "correctAnswer": "正解",
+        "yourChoice": "あなたの選択",
+        "explanation": "解説：",
+        "questionList": "問題一覧"
+      },
+      "TeacherQuizSections": {
+        "originalScore": "元の点数 ",
+        "leftThePage": " · ページ離脱 ",
+        "timesSuggestedDeduction": " 回 · 減点の目安 ",
+        "points": " 点",
+        "deducted": "減点 ",
+        "points2": " 点：",
+        "decidedNotToDeduct": "減点しないと決定：",
+        "notDecidedYetNoPoints": "未決定のため、まだ減点されていません。",
+        "pointsToDeduct": "減点する点数",
+        "reasonForDecision": "決定の理由",
+        "deductPoints": "減点する",
+        "doNotDeduct": "減点しない",
+        "studentAttempts": "学生の解答",
+        "loadingAttempts": "解答を読み込み中…",
+        "student": "学生",
+        "attempts": "回数",
+        "highestScore": "最高点",
+        "leftPage": "ページ離脱",
+        "open": "開く",
+        "theClassHasNoStudents": "クラスにはまだ学生がいません。",
+        "lastTime": "前回 ",
+        "times": "{lastLeaveCount} 回",
+        "missingSignal": "信号なし",
+        "awaitingDecision": "決定待ち",
+        "attempts2": "解答 · {value}",
+        "attempt": "回目 ",
+        "inProgress": "解答中",
+        "leftThePageTimes": " · ページ離脱 {leaveCount} 回",
+        "suggestedDeduction": "減点の目安 ",
+        "pointsDeducted": " · 減点済み",
+        "notDeducted": " · 減点なし",
+        "viewAttempt": "解答を表示",
+        "attempt2": "{value} · {attemptNo} 回目",
+        "score": "点数 ",
+        "submittedAt": " · 提出日時 ",
+        "activityTimeline": "アクティビティのタイムライン",
+        "noActivityDataForThis": "この解答にはアクティビティのデータがありません。",
+        "signalsAreSelfReportedBy": "信号はブラウザーが自己申告するもので、誤りやブロックの可能性があります。あくまで目安であり、プラットフォームが不正と判断することはありません。",
+        "studentsAttempted": " 人の学生が解答"
+      }
+    },
+    "model": {
+      "labels": {
+        "theSystemIsBusyPlease": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+        "quizNotFoundOrYou": "クイズが見つからないか、このクラスに在籍していません。",
+        "attemptNotFound": "解答が見つかりません。",
+        "theQuizWasWithdrawnOr": "クイズが停止されたか、クラスが開講していません。",
+        "answersWereJustSavedFrom": "別の場所で解答が保存されました。最新のデータを再読み込みしました。",
+        "timeIsUp": "解答時間が終了しました。",
+        "thisAttemptHasBeenSubmitted": "この解答は提出済みです。",
+        "onlyStudentsTakeQuizPractice": "クイズ練習は学生のみ解答できます。",
+        "thisAttemptHasNoSuggested": "この解答には減点の目安がありません。",
+        "theDeductionMustBeGreater": "減点は0より大きく、元の点数以下、小数点以下2桁までで指定してください。",
+        "min": "{minutes} 分",
+        "attemptsUnlimited": "{used} 回 · 無制限",
+        "attempts": "{used} / {max} 回",
+        "noSignalReceived": "信号を受信できません",
+        "signalPartlyLost": "信号が一部途切れました",
+        "couldNotReadDataAt": "提出時にデータを読み取れませんでした",
+        "theFirstPageLeavesAre": "最初の {freeLeaves} 回のページ離脱は対象外で、それ以降は1回ごとに",
+        "eachPageLeave": "ページを離れるごとに",
+        "upToPoints": "（最大 {value} 点）",
+        "onlyCountedWhenAwayFor": " {minAwaySeconds} 秒以上離れた場合のみ対象です。",
+        "mayLosePointsDecidedBy": "{free}{value} 点が減点される場合があります{max}。教員が解答を確認して判断します。{min}",
+        "leftThePageTimes": "ページ離脱 {value} 回",
+        "originalScoreLecturerDeductedPoints": "元の点数 {value} · {value2} · 教員が {value3} 点減点：{decisionReason}",
+        "theLecturerDecidedNotTo": "{leaves} · 教員は減点しないと決定：{decisionReason}",
+        "noPointsDeductedYetThe": "{leaves} · まだ減点されていません。教員が確認します。",
+        "autoSubmittedWhenTimeRan": "時間切れで自動提出",
+        "autoSubmittedWhenTheQuiz": "クイズの停止により自動提出"
+      }
+    },
+    "pages": {
+      "QuizPracticeDetailPage": {
+        "loadingQuiz": "クイズを読み込み中…",
+        "quizPractice": "クイズ練習",
+        "theQuizIsNotIn": "クイズが受講中のクラスにないか、停止されています。",
+        "information": "情報",
+        "questions": "問題数",
+        "questions2": " 問",
+        "time": "時間",
+        "min": "{timeLimitMinutes} 分",
+        "unlimited": "無制限",
+        "description": "説明",
+        "takeTheQuiz": "解答する",
+        "attemptsUsedMax": "使用回数 / 上限",
+        "attempts": "{attemptsUsed} 回",
+        "continue": "続きから解答",
+        "retake": "もう一度解答",
+        "start": "解答を開始",
+        "results": "結果",
+        "attempt": "回",
+        "started": "開始",
+        "score": "点数",
+        "open": "開く",
+        "noAttemptsYet": "解答はまだありません",
+        "attempt2": "回目 ",
+        "inProgress": "解答中"
+      },
+      "QuizPracticeHistoryPage": {
+        "quizPractice": "クイズ練習",
+        "filterByClass": "クラスで絞り込み",
+        "allClasses": "すべてのクラス",
+        "class": "クラス",
+        "attempts": "回数",
+        "highestScore": "最高点",
+        "lastAttempt": "前回",
+        "loadingQuizzes": "クイズを読み込み中…",
+        "noPracticeQuizzesYet": "練習用のクイズはまだありません。",
+        "practice": "練習",
+        "notAttempted": "未解答",
+        "start": "開始"
+      },
+      "QuizResultPage": {
+        "loadingResult": "結果を読み込み中…",
+        "quizPractice": "クイズ練習",
+        "result": "結果 · {title}",
+        "attempt": "{attemptNo} 回目",
+        "submittedAt": "提出日時 {value}",
+        "took": "所要時間 {value}",
+        "backToList": "一覧に戻る",
+        "retake": "もう一度解答",
+        "score": "点数",
+        "correct": "正解 ",
+        "unanswered": " · 未回答 ",
+        "practiceNotCountedInThe": "練習 · 成績表には反映されません",
+        "submitted": "提出しました",
+        "thisQuizDoesNotShow": "このクイズは提出後に点数を表示しません。",
+        "thisQuizDoesNotShow2": "このクイズは提出後に正解を表示しません。"
+      },
+      "QuizTakingPage": {
+        "lessThan5MinutesLeft": "残り5分未満です。",
+        "lessThan1MinuteLeft": "残り1分未満です。",
+        "n10SecondsLeft": "残り10秒です。",
+        "loadingQuestions": "問題を読み込み中…",
+        "savedAutomatically": "自動保存しました",
+        "notSaved": "未保存…",
+        "saving": "保存中…",
+        "couldNotSave": "保存できませんでした",
+        "thisQuizMonitorsActivityWhile": "このクイズでは解答中のアクティビティが記録されます",
+        "submit": "提出しますか？",
+        "keepWorking": "解答を続ける",
+        "submit2": "提出",
+        "text": "未回答の問題が ",
+        "questionsUnansweredQuestion": " 問あります：問 ",
+        "unansweredQuestionsAreMarkedWrong": "。未回答の問題は不正解として扱われます。",
+        "youHaveAnsweredAllQuestions": "すべての問題に回答しました。",
+        "timeLeft": "残り時間：",
+        "afterSubmittingThisAttemptEnds": "提出すると、この解答は終了します。",
+        "leaveTheQuiz": "クイズを終了しますか？",
+        "leave": "終了",
+        "yourSelectedAnswersAreSaved": "選択した解答は保存されますが、ページを離れてもタイマーは進み続けます。時間内に戻って続きを解答してください。",
+        "timeIsUp": "解答時間が終了しました",
+        "yourSelectedAnswersWereSaved": "選択した解答は自動保存され、提出されました。結果ページに移動しています…",
+        "practice": "練習",
+        "retry": "再試行",
+        "question": "問 {value}",
+        "question2": "問 ",
+        "multipleAnswers": "複数回答",
+        "singleAnswer": "単一回答",
+        "points": " 点",
+        "questionList": "問題一覧",
+        "done": "解答済み ",
+        "answered": " 問回答済み",
+        "question3": "問 {value}{value2}"
+      }
+    }
+  },
+  "quizzes": {
+    "components": {
+      "AiDrafts": {
+        "someQuestionsAreInvalidFix": "無効な問題があります。すべてを採用する前に、マークされた問題を修正してください。",
+        "discardUnsavedProposalEditsTo": "未保存の提案の編集を破棄して、新しいリクエストを作成しますか？",
+        "retryRequest": "リクエストを再試行",
+        "newRequest": "新しいリクエスト",
+        "discardProposal": "提案を破棄",
+        "acceptAll": "すべて採用",
+        "save": "",
+        "acceptedQuestions": " 件の採用した問題を保存",
+        "loading": "読み込み中…",
+        "writeWithAi": "AIで作成",
+        "closeAiWriter": "AI作成を閉じる",
+        "enterARequestOrChoose": "要望を入力するか資料を選択してください（最大2,000文字）",
+        "from1To50Questions": "1〜50問",
+        "someSourceDocumentsAreNo": "使用できなくなった資料があります。選択を外すか、一覧を再読み込みしてください。",
+        "request": "要望",
+        "withDocumentsSelectedThisCan": "資料を選択している場合は空欄でもかまいません。既定では資料の内容に沿ってAIがクイズを作成します。学生の情報は含めないでください。",
+        "createAQuizFromThe": "選択した資料の内容に沿ってクイズを作成します。",
+        "questions": "問題数",
+        "questionType": "問題の種類",
+        "dependsOnContent": "内容に応じて",
+        "difficulty": "難易度",
+        "balancedMix": "バランスよく配分",
+        "sourceDocumentsForTheAi": "AIの資料 ",
+        "upTo10OnlyMaterials": "· 最大10件、テキスト抽出済みの教材のみ",
+        "couldNotGetTheDocument": "資料の一覧を取得できませんでした。資料なしでリクエストを送ることはできます。",
+        "reloadDocuments": "資料を再読み込み",
+        "noLearningMaterialsYet": "教材はまだありません。",
+        "theSystemPicksAnAvailable": "システムが利用可能なAIソースを自動で選択します。リクエストには、選択したテキストのある資料のみが含まれます。",
+        "sendRequest": "リクエストを送信",
+        "schoolApi": "学校API",
+        "personal": "個人の {value}",
+        "personalApi": "個人API",
+        "theSystemPicksTheAi": "システムがAIソースを自動選択",
+        "sentAt": " · 送信日時 ",
+        "documents": " · 資料：",
+        "theAiIsWritingProposals": "AIが提案を作成中です…AI作成を閉じても提案は保持されます。",
+        "proposals": "提案（",
+        "accepted": " 件採用 / ",
+        "question": "問 ",
+        "accepted2": "採用済み",
+        "discarded": "破棄済み",
+        "edit": "編集",
+        "restore": "元に戻す",
+        "discard": "破棄",
+        "accept": "採用",
+        "correctAnswer": "（正解）",
+        "explanation": "解説：",
+        "needsFixing": "要修正："
+      },
+      "AiDraftTargets": {
+        "theAiIsWriting": "AIが作成中",
+        "awaitingAcceptance": "採用待ち",
+        "accepted": "採用済み",
+        "discarded": "破棄済み",
+        "error": "エラー",
+        "draftWithAi": "AIで下書きを作成",
+        "generateQuestionsSubjectQuestionBank": "問題を生成 · 科目の問題バンク",
+        "acceptedQuestionsEnterTheBank": "採用した問題は下書きとして問題バンクに追加されます。有効化する前に確認してください。",
+        "generateQuestions": "問題を生成 · {quizTitle}",
+        "acceptedQuestionsBecomeSeparateQuestions": "採用した問題はクイズの末尾に個別の問題として追加されます。AIがクイズを自ら承認・公開することはありません。",
+        "discardUnsavedProposalEdits": "未保存の提案の編集を破棄しますか？",
+        "questions": "{value} 問 · {value2}",
+        "discardUnsavedEditsToView": "未保存の編集を破棄して別の提案を表示しますか？",
+        "collapse": "折りたたむ",
+        "aiProposal": "AIの提案"
+      },
+      "BankQuestionPicker": {
+        "numberOfQuestionsFrom1": "問題数は1〜{freeSlots}です。",
+        "clearSelection": "選択を解除",
+        "addQuestions": "{length} 問を追加",
+        "saveQuestionsToTheQuiz": "{length} 問をクイズに保存",
+        "howToPickQuestions": "問題の選び方",
+        "pickManually": "手動で選択",
+        "drawRandomly": "ランダムに抽出",
+        "difficulty": "難易度",
+        "allDifficulties": "すべての難易度",
+        "tags": "タグ",
+        "findQuestions": "問題を検索",
+        "searchContent": "内容を検索",
+        "questions": "問題数",
+        "drawAgain": "もう一度抽出",
+        "tryADraw": "試しに抽出",
+        "text": "クイズの空き枠は残り ",
+        "freeSlotsInTheQuiz": " 問です。",
+        "selectedQuestions": "{length} 問を選択しました。",
+        "matchingQuestions": "該当する問題は {matching} 問です。",
+        "theSelectionExceedsTheQuizs": "選択数がクイズの空き枠を超えています。",
+        "select": "選択",
+        "question": "問題",
+        "type": "種類",
+        "selectQuestion": "問題 {stem} を選択",
+        "remove": "外す",
+        "takeQuestionsFromTheBank": "問題バンクから問題を取得"
+      },
+      "ClassQuizzesSection": {
+        "createQuiz": "クイズを作成",
+        "retry": "再試行",
+        "loadingQuizzes": "クイズを読み込み中…",
+        "scope": "範囲",
+        "status": "ステータス",
+        "submissions": "提出数",
+        "theClassHasNoQuizzes": "クラスにはまだクイズがありません。",
+        "questionsPractice": " 問 · 練習",
+        "subject": "科目",
+        "class": "クラス"
+      },
+      "CreateQuizDialog": {
+        "theQuizNameMustBe": "クイズ名は1〜200文字で入力してください。",
+        "newQuiz": "新しいクイズ",
+        "createQuiz": "クイズを作成",
+        "quizName": "クイズ名",
+        "chapter3Review": "第3章の復習",
+        "copyAQuizFromAnother": "別のクラスからクイズをコピー",
+        "noQuizzesInOtherClasses": "別のクラスにクイズはありません",
+        "copyFromAnotherClass": "別のクラスからコピー",
+        "questions": " 問"
+      },
+      "DrawRulesPanel": {
+        "howTheQuizIsBuilt": "出題方法",
+        "saveBuildMethod": "出題方法を保存",
+        "fixedQuizEveryAttemptHas": "固定：すべての解答で同じ問題",
+        "generateANewQuizFor": "解答ごとに新しく出題",
+        "questions": " 問",
+        "atLevel": "（難易度：{value}）",
+        "tagsOfRule": "ルール {value} のタグ",
+        "tagEGChapter1": "タグ（例：第1章）",
+        "difficultyOfRule": "ルール {value} の難易度",
+        "allDifficulties": "すべての難易度",
+        "questionsOfRule": "ルール {value} の問題数",
+        "questions2": "問",
+        "pointsPerQuestionOfRule": "ルール {value} の1問あたりの点数",
+        "points": "点",
+        "needs": "",
+        "questionsTheBankOnlyHas": " 問が必要ですが、問題バンクには ",
+        "questionsCannotPublishYet": " 問しかないため、まだ公開できません。",
+        "chooseTagsToSeeThe": "タグを選ぶと問題バンク内の問題数を表示します",
+        "theBankHasNoQuestions": "このタグの問題{level}は問題バンクにまだありません",
+        "theBankHasActiveQuestions": "このタグの有効な問題{level}は問題バンクに {count} 問あります",
+        "removeRule": "ルール {value} を削除",
+        "remove": "削除",
+        "addRule": "ルールを追加",
+        "eachAttempt": "解答ごと：",
+        "questions3": " 問 · ",
+        "points2": " 点",
+        "theQuestionListBelowIs": "以下の問題一覧は出題時には使われません。問題は科目の問題バンクから取得されます。問題が足りない場合はまだ公開できません。",
+        "previewASampleQuiz": "サンプルをプレビュー",
+        "sampleQuiz": "サンプル",
+        "theBankDoesNotHave": "問題バンクの問題が足りません",
+        "rule": "ルール ",
+        "tag": "（タグ ",
+        "needs2": "）：必要数 ",
+        "questionsTheBankCanOnly": " 問、問題バンクから取得できるのは ",
+        "questions4": " 問です。",
+        "eachAttemptGetsADifferent": "解答ごとに異なる問題が出題されます。これはプレビュー用で、保存されません。合計 ",
+        "points3": " 点。",
+        "question": "問 ",
+        "points4": " 点）"
+      },
+      "MaterialSourceSelect": {
+        "documentsSelected": "{length} 件の資料を選択中",
+        "chooseSourceDocuments": "資料を選択",
+        "sourceDocumentsForTheAi": "AIの資料",
+        "findSourceDocuments": "資料を検索",
+        "searchDocuments": "資料を検索…",
+        "selectSearchResults": "検索結果を選択",
+        "deselectAll": "すべて選択解除",
+        "sourceDocumentList": "資料一覧",
+        "noTextContentYet": "テキストがまだありません",
+        "loadingDocuments": "資料を読み込み中…",
+        "noMatchingDocuments": "該当する資料はありません。",
+        "noUsableTextSourcesYet": "利用できるテキストの資料はまだありません。テキストを含む資料をアップロードするか、資料なしで作成してください。",
+        "selected": "選択中：",
+        "documents": " 件の資料",
+        "selectedDocuments": "選択した資料",
+        "documentNoLongerAvailable": "資料は利用できなくなりました",
+        "remove": "{title} を外す"
+      },
+      "McqEditor": {
+        "questionType": "問題の種類",
+        "questionContent": "問題文",
+        "options": "選択肢（",
+        "choose1CorrectAnswer": "正解を1つ選択",
+        "chooseTheCorrectAnswers": "正解をすべて選択",
+        "options2": "選択肢",
+        "optionIsACorrectAnswer": "選択肢 {value} は正解",
+        "contentOfOption": "選択肢 {value} の内容",
+        "deleteOption": "選択肢 {value} を削除",
+        "addOption": "選択肢を追加",
+        "pointsDefault": "点数（既定）",
+        "explanationOptional": "解説（任意）"
+      },
+      "QuestionImportDialog": {
+        "filesCanBeAtMost": "ファイルは最大5MBまでです。",
+        "importQuestionsFromExcel": "Excelから問題を取り込む",
+        "import": "",
+        "validQuestions": " 件の有効な問題を取り込む",
+        "excelXlsxFileFollowingThe": "テンプレートに沿った Excel（.xlsx）ファイル：問題文、種類、選択肢、正解、難易度、タグ。最大500行、5MB。",
+        "downloadTemplate": "テンプレートをダウンロード",
+        "questionFile": "問題ファイル",
+        "checkingFile": "ファイルを確認中…",
+        "rows": " 行",
+        "valid": " 件有効",
+        "errors": " 件エラー",
+        "importedQuestionsAreInDraft": "取り込んだ問題は下書きの状態になります。",
+        "row": "行",
+        "question": "問題",
+        "options": "選択肢の数",
+        "result": "結果",
+        "valid2": "有効"
+      },
+      "QuestionProposalsSection": {
+        "proposalSentToTheSubject": "提案を科目責任者に送信しました",
+        "proposalWithdrawn": "提案を取り下げました",
+        "questionsProposedToTheBank": "問題バンクへの提案問題",
+        "proposeQuestions": "問題を提案",
+        "loadingProposals": "提案を読み込み中…",
+        "noProposalsYetOnceThe": "提案はまだありません。科目責任者が承認すると、問題は科目の問題バンクに追加されます。",
+        "rejectionReason": "却下の理由：",
+        "editAndResubmit": "修正して再提出",
+        "withdrawProposal": "提案を取り下げる",
+        "proposeAQuestion": "問題を提案",
+        "editProposedQuestion": "提案問題を編集"
+      },
+      "QuestionSidePanels": {
+        "classification": "分類",
+        "difficulty": "難易度",
+        "tags": "タグ",
+        "separatedByCommasAtMost": "カンマ区切りで最大10個",
+        "umlClassDiagram": "uml, クラス図",
+        "status": "ステータス",
+        "version": "バージョン",
+        "quizzesUsingIt": "使用中のクイズ",
+        "openTheNewDraftOf": "この問題の新しい下書きを開く",
+        "versionHistory": "バージョン履歴",
+        "viewing": "（表示中）"
+      },
+      "QuizDetailParts": {
+        "theQuizHasNoQuestions": "クイズにはまだ問題がありません。",
+        "quizQuestions": "クイズの問題",
+        "question": "問 ",
+        "quizOnlyQuestion": "クイズ専用の問題",
+        "fromTheBankV": "問題バンクから · v{versionNo}",
+        "retiredInTheBank": "問題バンクで使用停止",
+        "pointsForQuestion": "問 {value} の点数",
+        "points": "点",
+        "moveQuestionUp": "問 {value} を上へ移動",
+        "up": "上へ",
+        "moveQuestionDown": "問 {value} を下へ移動",
+        "down": "下へ",
+        "editQuestion": "問題を編集",
+        "proposeToTheBank": "問題バンクに提案",
+        "removeFromQuiz": "クイズから外す",
+        "couldNotSaveTheQuestion": "問題を保存できませんでした。",
+        "cancelEditingQuestion": "問題の編集をキャンセル",
+        "cancel": "キャンセル",
+        "saveQuestion": "問題を保存",
+        "editQuestion2": "問題を編集",
+        "writeANewQuestion": "新しい問題を作成",
+        "editQuizOnlyQuestion": "クイズ専用の問題を編集",
+        "addQuizOnlyQuestion": "クイズ専用の問題を追加",
+        "activityMonitoringMustBeOn": "減点の目安を出すにはアクティビティの記録を有効にする必要があります",
+        "from0To50Times": "0〜50回",
+        "greaterThan0AtMost": "0より大きく、小数点以下2桁まで",
+        "greaterThan0OrEmpty": "0より大きい値、または空欄",
+        "from0To600Seconds": "0〜600秒",
+        "theQuizNameMustBe": "クイズ名は1〜200文字",
+        "from1To300Minutes": "1〜300分、または空欄",
+        "from1To10Or": "1〜10、または空欄",
+        "aNoticeToStudentsIs": "アクティビティの記録を有効にする場合は学生へのお知らせが必要です",
+        "theNoticeCanBeAt": "お知らせは最大1,000文字まで",
+        "configuration": "設定",
+        "timeLimit": "制限時間",
+        "leaveEmptyForNoLimit": "空欄の場合は無制限",
+        "unlimited": "無制限",
+        "minutes": "分",
+        "maximumAttempts": "最大回数",
+        "showScoreAfterSubmission": "提出後に点数を表示",
+        "showAnswersAfterSubmission": "提出後に正解を表示",
+        "shuffleQuestions": "問題の順序をシャッフル",
+        "shuffleOptions": "選択肢の順序をシャッフル",
+        "activityMonitoring": "アクティビティの記録",
+        "noticeToStudents": "学生へのお知らせ",
+        "studentsSeeThisNoticeBefore": "学生は解答前と解答中にこのお知らせを見ます。",
+        "suggestDeductionsForLeavingThe": "ページ離脱時の減点の目安",
+        "freeLeaves": "対象外の回数",
+        "pointsDeductedPerLeave": "1回あたりの減点",
+        "maximumDeduction": "減点の上限",
+        "emptyMeansNoLimit": "空欄の場合は無制限",
+        "onlyCountedWhenAwayFor": "離脱をカウントする最短時間",
+        "seconds": "秒",
+        "theSystemNeverDeductsPoints": "システムが自動で減点することはありません。目安を算出するだけで、各解答について教員が判断します。信号はブラウザーが自己申告するため、誤りやブロックの可能性があります。",
+        "preview": "プレビュー：{title}",
+        "points2": " 点）"
+      },
+      "SimilarQuestionsAlert": {
+        "thereIsASimilarQuestion": "問題バンクに類似した問題があります"
+      }
+    },
+    "hooks": {
+      "useAuthoringGuard": {
+        "youHaveUnsavedContentDiscard": "未保存の内容があります。変更を破棄しますか？"
+      }
+    },
+    "model": {
+      "labels": {
+        "singleAnswer": "単一回答",
+        "multipleAnswers": "複数回答",
+        "easy": "易",
+        "medium": "中",
+        "hard": "難",
+        "draft": "下書き",
+        "awaitingApproval": "承認待ち",
+        "rejected": "却下",
+        "active": "使用中",
+        "retired": "使用停止",
+        "theSystemIsBusyPlease": "システムが混み合っています。しばらくしてからもう一度お試しください。",
+        "questionNotFoundOrYou": "問題が見つからないか、この科目の管理者ではありません。",
+        "subjectNotFoundOrYou": "科目が見つからないか、この科目の管理者ではありません。",
+        "theSubjectIsArchivedThe": "科目はアーカイブ済みのため、問題バンクは閲覧のみです。",
+        "theQuestionWasChangedIn": "問題が別のセッションで変更されました。最新のデータを再読み込みしました。",
+        "activatedQuestionsCannotBeDeleted": "有効化済みの問題は削除できません。代わりに使用停止にしてください。",
+        "onlyXlsxOrUtf8": ".xlsx または UTF-8 の .csv ファイルのみ受け付けます。",
+        "filesCanBeAtMost": "ファイルは最大5MBまでです。",
+        "atMost500RowsPer": "1回の取り込みは最大500行までです。",
+        "quizNotFoundOrYou": "クイズが見つからないか、このクイズへの権限がありません。",
+        "classNotFoundOrYou": "クラスが見つからないか、このクラスの担当ではありません。",
+        "theQuizWasChangedIn": "クイズが別のセッションで変更されました。最新のデータを再読み込みしました。",
+        "publishedQuizzesCannotBeEdited": "公開済みのクイズは編集できません。新しいバージョンを作成してください。",
+        "publishedQuizzesCannotBeDeleted": "公開済みのクイズは削除できません。代わりにクイズを停止してください。",
+        "thisQuizAlreadyHasA": "このクイズにはすでに編集中の新しいバージョンがあります。",
+        "theClassIsNotOpen": "クラスがまだ開講していないため、クラスのクイズを公開できません。",
+        "theClassIsArchivedIts": "クラスはアーカイブ済みのため、クラスのクイズは閲覧のみです。",
+        "quizzesCanOnlyBeCopied": "クイズは同じ科目のクラス間でのみコピーできます。",
+        "aQuizCanHaveAt": "クイズの問題は最大200問までです。",
+        "aiProposalNotFound": "AIの提案が見つかりません。",
+        "theProposalWasAcceptedOr": "提案は別のセッションで採用または破棄されました。",
+        "theAiHasNotFinished": "AIはまだ提案の作成を終えていません。",
+        "someQuestionsAreInvalidFix": "無効な問題があります。採用する前に修正してください。",
+        "someDocumentsCannotBeSelected": "選択できない資料、またはテキストが抽出されていない資料があります。",
+        "couldNotGetTheSource": "資料を取得できませんでした。もう一度お試しください。",
+        "couldNotSendTheAi": "AIへのリクエストを送信できませんでした。もう一度お試しください。",
+        "theAiResultIsNot": "AIの結果が問題の形式になっていません。リクエストを再送してください。",
+        "theAiCouldNotWrite": "AIは提案を作成できませんでした。",
+        "open": "公開中",
+        "archived": "アーカイブ済み"
+      },
+      "questionForm": {
+        "theQuestionContentCannotBe": "問題文を入力してください",
+        "theQuestionContentCanBe": "問題文は最大20,000文字まで",
+        "theExplanationCanBeAt": "解説は最大20,000文字まで",
+        "n26OptionsAreRequired": "選択肢は2〜6個必要です",
+        "optionsCannotBeEmpty": "選択肢を空にすることはできません",
+        "optionsMustNotHaveThe": "選択肢の内容が重複しています",
+        "chooseExactly1CorrectAnswer": "正解をちょうど1つ選択してください",
+        "chooseAtLeast1Correct": "正解を1つ以上選択してください",
+        "pointsMustBeGreaterThan": "点数は0より大きく、小数点以下2桁までで指定してください",
+        "atMost10Tags": "タグは最大10個まで"
+      }
+    },
+    "pages": {
+      "QuestionDetailPage": {
+        "theQuestionContentIsInvalid": "問題の内容が無効です。",
+        "draftSaved": "下書きを保存しました。",
+        "questionActivated": "問題を有効化しました。",
+        "approvedTheQuestionIsNow": "承認しました。問題は問題バンクに追加されました。",
+        "questionRetiredOpenGeneratedQuizzes": "問題を使用停止にしました。公開中の自動出題クイズの問題が足りなくなったため、学生はまだ開始できません：{value}。",
+        "questionRetired": "問題を使用停止にしました。",
+        "rejectedAndNotifiedTheProposer": "却下し、提案者に通知しました。",
+        "noSubjectSelected": "科目が選択されていません",
+        "openTheQuestionBankAnd": "問題を追加する前に、問題バンクを開いて科目を選択してください。",
+        "loadingQuestion": "問題を読み込み中…",
+        "questionBank": "問題バンク",
+        "newQuestion": "新しい問題",
+        "question": "問題",
+        "version": "バージョン ",
+        "delete": "削除",
+        "retire": "使用停止",
+        "saveChangesBeforeActivating": "有効化する前に変更を保存してください",
+        "activate": "有効化",
+        "reject": "却下",
+        "approveIntoTheBank": "承認して問題バンクに追加",
+        "saveChanges": "変更を保存",
+        "usedIn": "使用中：",
+        "thisQuestionIsRetired": "この問題は使用停止です。",
+        "proposedByALecturerAwaiting": "教員が提案した問題で、承認待ちです。ここでは編集しないでください。修正が必要な場合は理由を添えて却下してください。",
+        "rejected": "却下済み",
+        "noReasonGiven": "理由はありません。",
+        "content": "内容",
+        "deleteDraftQuestion": "下書きの問題を削除しますか？",
+        "rejectProposedQuestion": "提案問題を却下しますか？",
+        "retireQuestion": "問題を使用停止にしますか？",
+        "retire2": "使用停止",
+        "rejectionReason": "却下の理由",
+        "theLecturerSeesThisReason": "教員はこの理由を見て修正し、再提出します。",
+        "areYouSureYouWant": "この下書きの問題を削除してもよろしいですか？",
+        "areYouSureYouWant2": "この問題を使用停止にしてもよろしいですか？"
+      },
+      "QuestionListPage": {
+        "all": "すべて",
+        "questionsQuestionsCouldNotBe": "{done}：{succeeded} 問。{length} 問は処理できませんでした：{value}",
+        "questions": "{done}：{succeeded} 問。",
+        "activated": "有効化",
+        "approved": "承認",
+        "rejected": "却下",
+        "loadingSubjects": "科目を読み込み中…",
+        "youHaveNotBeenAssigned": "管理を担当している科目はありません。",
+        "questionBank": "問題バンク",
+        "questionsInTheSubjectBank": "科目の問題バンクに {total} 問",
+        "chooseSubject": "科目を選択",
+        "duplicates": "重複問題",
+        "addQuestion": "問題を追加",
+        "writeANewQuestion": "新しい問題を作成",
+        "importExcel": "Excelを取り込む",
+        "writeWithAi": "AIで作成",
+        "theSubjectIsArchivedThe": "科目はアーカイブ済みのため、問題バンクは閲覧のみです。",
+        "questionType": "問題の種類",
+        "difficulty": "難易度",
+        "allDifficulties": "すべての難易度",
+        "selected": "選択中：",
+        "questions2": " 問",
+        "activate": "有効化",
+        "approve": "承認",
+        "reject": "却下",
+        "status": "ステータス",
+        "allStatuses": "すべてのステータス",
+        "filterByContentOrTag": "内容またはタグで絞り込み",
+        "retry": "再試行",
+        "loadingQuestions": "問題を読み込み中…",
+        "select": "選択",
+        "question": "問題",
+        "type": "種類",
+        "updated": "更新日",
+        "noMatchingQuestionsYet": "該当する問題はまだありません。",
+        "selectQuestion": "問題 {stem} を選択",
+        "newDraftAvailable": "新しい下書きあり",
+        "questions3": "問",
+        "rejectProposedQuestions": "{length} 件の提案問題を却下しますか？",
+        "rejectionReason": "却下の理由",
+        "theLecturerSeesThisReason": "教員はこの理由を見て修正し、再提出します。",
+        "identicalQuestionsInTheBank": "問題バンク内の同一の問題",
+        "noDuplicates": "重複はありません。",
+        "group": "グループ ",
+        "theSystemDoesNotDelete": "：システムは自動で削除しません。問題を開いて使用停止または削除してください。",
+        "savedQuestionsAsDraft": "{count} 問を下書きとして保存しました。",
+        "importedQuestionsAsDraft": "{created} 問を下書きとして取り込みました。"
+      },
+      "QuizDetailPage": {
+        "theConfigurationIsInvalid": "設定が無効です。",
+        "pointsPerQuestionMustBe": "1問あたりの点数は0より大きく、小数点以下2桁までで指定してください。",
+        "changesSaved": "変更を保存しました",
+        "questionsAddedFromTheAi": "AIの提案から問題を追加しました",
+        "addedQuestionsFromTheBank": "問題バンクから {length} 問を追加しました",
+        "quizPublished": "クイズを公開しました",
+        "proposalSentToTheSubject": "提案を科目責任者に送信しました",
+        "loadingQuiz": "クイズを読み込み中…",
+        "preview": "プレビュー",
+        "saveChanges": "変更を保存",
+        "saveChangesBeforePublishing": "公開する前に変更を保存してください",
+        "publish": "公開",
+        "quizReopened": "クイズを再開しました",
+        "reopen": "再開",
+        "edit": "編集",
+        "needsFixingBeforePublishing": "公開前に修正が必要",
+        "questions": "問題",
+        "addQuestion": "問題を追加",
+        "writeANewQuestion": "新しい問題を作成",
+        "takeFromTheBank": "問題バンクから取得",
+        "writeWithAi": "AIで作成",
+        "howToAddQuestions": "問題の追加方法",
+        "bank": "問題バンク",
+        "description": "説明",
+        "publishQuiz": "クイズを公開しますか？",
+        "eachAttemptGetsANew": "解答ごとに {questionCount} 問の新しい問題が出題されます",
+        "theQuizHasQuestions": "クイズは {questionCount} 問です",
+        "total": "、合計 ",
+        "pointsAfterPublishingStudentsOf": " 点。公開すると、クラスまたは科目の学生がすぐに解答できます。"
+      },
+      "SubjectQuizListPage": {
+        "all": "すべて",
+        "loadingSubjects": "科目を読み込み中…",
+        "youHaveNotBeenAssigned": "管理を担当している科目はありません。",
+        "subjectQuizzes": "科目のクイズ",
+        "chooseSubject": "科目を選択",
+        "createQuiz": "クイズを作成",
+        "theSubjectIsArchivedIts": "科目はアーカイブ済みのため、科目のクイズは閲覧のみです。",
+        "quizStatus": "クイズのステータス",
+        "searchByQuizName": "クイズ名で検索",
+        "retry": "再試行",
+        "loadingQuizzes": "クイズを読み込み中…",
+        "questions": "問題数",
+        "time": "時間",
+        "status": "ステータス",
+        "updated": "更新日",
+        "noMatchingQuizzesYet": "該当するクイズはまだありません。",
+        "questions2": " 問 · ",
+        "points": " 点",
+        "min": "{timeLimitMinutes} 分",
+        "unlimited": "無制限"
+      }
+    },
+    "register": {
+      "questionBank": "問題バンク"
+    }
+  },
+  "settings": {
+    "components": {
+      "SettingRow": {
+        "someoneJustEditedThisItem": "この項目が他の人によって編集されたため、新しい値を再読み込みしました。",
+        "invalidValue": "無効な値",
+        "couldNotSavePleaseTry": "保存できませんでした。しばらくしてからもう一度お試しください",
+        "notSelected": "未選択",
+        "save": "保存"
+      },
+      "SettingsSectionHost": {
+        "settings": "設定",
+        "thisSettingsSectionIsCurrently": "この設定セクションは現在利用できません。"
+      },
+      "SettingValueForm": {
+        "newValue": "新しい値",
+        "invalidValue": "無効な値",
+        "couldNotSavePleaseTry": "保存できませんでした。しばらくしてからもう一度お試しください",
+        "someoneElseJustEditedIt": "他の人が編集しました",
+        "reload": "再読み込み",
+        "theSettingWasEditedBy": "設定が他の人によって編集されました。保存する前に再読み込みして新しい値を確認してください。",
+        "leaveEmpty": "空欄にする",
+        "cancel": "キャンセル",
+        "saving": "保存中…",
+        "save": "保存",
+        "on": "オン",
+        "off": "オフ",
+        "vietnamTimeAsiaHoChi": "ベトナム時間（Asia/Ho_Chi_Minh）",
+        "notSelected": "未選択"
+      }
+    },
+    "model": {
+      "types": {
+        "files": "ファイル",
+        "limitsWhenUploadingLearningMaterials": "教材と文書内の画像をアップロードする際の制限",
+        "backup": "バックアップ",
+        "backUpTheDatabaseTo": "データベースを Google ドライブにバックアップ · 7日間保存（固定）",
+        "workActivity": "解答中のアクティビティ",
+        "pageLeaveAndTabHide": "アクティビティの記録が有効な課題でのページ離脱・タブ非表示のデータ",
+        "integer": "整数",
+        "onOff": "オン / オフ",
+        "hourMinute": "時:分",
+        "singleChoice": "単一選択",
+        "multipleChoice": "複数選択"
+      },
+      "validation": {
+        "thisFieldMustHaveA": "この項目には値が必要です",
+        "theValueMustBeAn": "値は整数にしてください",
+        "theValueMustBeFrom": "値は {min}〜{max} にしてください",
+        "theValueMustBeOn": "値はオンまたはオフにしてください",
+        "theTimeMustBeIn": "時刻は 時:分 の形式で入力してください（例：02:30）",
+        "theValueIsNotIn": "値が許可された一覧にありません",
+        "theValueMustBeA": "値は一覧にしてください",
+        "someValuesAreNotIn": "許可された一覧にない値があります",
+        "chooseAtLeastOneValue": "値を1つ以上選択してください",
+        "notConfigured": "未設定",
+        "on": "オン",
+        "off": "オフ",
+        "integerFromTo": "{min}〜{max} の整数",
+        "integer": "整数",
+        "onOrOff": "オンまたはオフ",
+        "hourMinuteInVietnamTime": "ベトナム時間の 時:分（例：02:30）",
+        "oneOf": "次のいずれか：{value}",
+        "chooseFrom": "次から選択：{value}",
+        "atLeastOne": "{base}（1つ以上）"
+      }
+    },
+    "pages": {
+      "SettingDetailPage": {
+        "couldNotLoadTheSettings": "設定を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "settings": "設定",
+        "loading": "読み込み中…",
+        "value": "値",
+        "type": "種類：{value}",
+        "currentValue": "現在の値",
+        "notConfigured": "未設定",
+        "validRange": "有効な範囲",
+        "lastEdited": "最終編集",
+        "unknown": "不明",
+        "notEditedUsingTheInitial": "未編集（初期値を使用中）"
+      },
+      "SettingListPage": {
+        "couldNotLoadTheSettings": "設定を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "settings": "設定",
+        "loading": "読み込み中…",
+        "aiSettings": "AI設定",
+        "unavailable": "利用不可"
+      }
+    },
+    "register": {
+      "settings": "設定"
+    }
+  },
+  "subjects": {
+    "components": {
+      "ManagerCard": {
+        "subjectManager": "科目責任者",
+        "assign": "割り当て",
+        "changeManager": "責任者を変更",
+        "notAssigned": "未割り当て",
+        "couldNotLookUpThe": "科目責任者の情報を取得できませんでした。"
+      },
+      "ManagerChangeDialog": {
+        "changeSubjectManager": "科目責任者を変更",
+        "save": "保存"
+      },
+      "ManagerPicker": {
+        "subjectManager": "科目責任者",
+        "notAssigned": "未割り当て",
+        "removeManager": "責任者を外す",
+        "searchingForManagers": "責任者を検索中…",
+        "noMatchingManagers": "該当する責任者はいません。",
+        "pleaseSignInAgainTo": "責任者を検索するには再度ログインしてください。",
+        "youDoNotHavePermission": "責任者を検索する権限がありません。",
+        "couldNotLoadTheList": "責任者の一覧を読み込めませんでした。未割り当てのままにして、後でもう一度お試しください。",
+        "retry": "再試行"
+      },
+      "SubjectClassesTab": {
+        "all": "すべて",
+        "draft": "下書き",
+        "open": "開講中",
+        "archived": "アーカイブ済み",
+        "classStatus": "クラスのステータス",
+        "filterByClassCode": "クラスコードで絞り込み"
+      },
+      "SubjectClassesTable": {
+        "classesOfTheSubjectView": "科目のクラス（閲覧のみ）",
+        "classCode": "クラスコード",
+        "term": "学期",
+        "lecturer": "教員",
+        "status": "ステータス",
+        "notAssigned": "未割り当て",
+        "open": "開講中",
+        "draft": "下書き",
+        "archived": "アーカイブ済み",
+        "noMatchingClasses": "該当するクラスはありません。"
+      },
+      "SubjectEditForm": {
+        "subjectCode": "科目コード",
+        "subjectName": "科目名",
+        "description": "説明",
+        "cancel": "キャンセル",
+        "saveChanges": "変更を保存"
+      },
+      "SubjectFilters": {
+        "all": "すべて",
+        "active": "有効",
+        "archived": "アーカイブ済み",
+        "subjectStatus": "科目のステータス",
+        "filterBySubjectCodeOr": "科目コードまたは科目名で絞り込み"
+      },
+      "SubjectFormDialog": {
+        "theSubjectCodeAlreadyExists": "科目コードはすでに存在します。別のコードを使用してください。",
+        "theSelectedManagerIsNo": "選択した責任者は無効になりました。選び直すか、選択を解除してください。",
+        "yourSessionIsNoLonger": "ログインセッションが無効になりました。再度ログインしてください。",
+        "youDoNotHavePermission": "科目を追加する権限がありません。",
+        "couldNotConfirmThatThe": "科目の作成を確認できませんでした。入力内容は保持されています。再試行する前に一覧を確認してください。",
+        "addSubject": "科目を追加",
+        "adding": "追加中…",
+        "subjectCode": "科目コード",
+        "subjectName": "科目名",
+        "description": "説明"
+      },
+      "SubjectInfoTab": {
+        "subjectInformation": "科目情報"
+      },
+      "SubjectMetaCard": {
+        "unavailable": "利用不可",
+        "status": "ステータス",
+        "archived": "アーカイブ済み",
+        "active": "有効",
+        "created": "作成日",
+        "reopenSubject": "科目を再開",
+        "archiveSubject": "科目をアーカイブ"
+      },
+      "SubjectReadError": {
+        "pleaseSignInToView": "科目を表示するにはログインしてください。",
+        "youDoNotHavePermission": "科目を管理する権限がありません。",
+        "subjectNotFound": "科目が見つかりません。",
+        "couldNotLoadSubjectData": "科目のデータを読み込めませんでした。もう一度お試しください。",
+        "retry": "再試行"
+      },
+      "SubjectStatusActions": {
+        "reopenSubject": "科目を再開しますか？",
+        "archiveSubject": "科目をアーカイブしますか？",
+        "reopen": "再開",
+        "archive": "アーカイブ",
+        "areYouSureYouWant": "",
+        "reopen2": "再開",
+        "archive2": "アーカイブ",
+        "theSubject": " する科目：",
+        "text": "。よろしいですか？",
+        "draftAndOpenClassesWill": "下書きと開講中のクラスもアーカイブされます。科目責任者は外されます。登録情報と学習履歴は保持されます。"
+      },
+      "SubjectTable": {
+        "subjectList": "科目一覧",
+        "subjectCode": "科目コード",
+        "subjectName": "科目名",
+        "subjectManager": "科目責任者",
+        "status": "ステータス",
+        "open": "開く",
+        "notAssigned": "未割り当て",
+        "couldNotLookUpThe": "責任者を取得できませんでした",
+        "active": "有効",
+        "archived": "アーカイブ済み",
+        "subjectDetails": "科目 {code} の詳細",
+        "noMatchingSubjects": "該当する科目はありません。"
+      }
+    },
+    "hooks": {
+      "useSubjectMutation": {
+        "theSubjectDataHasChanged": "科目のデータが変更されました。入力内容は保持されています。再読み込みすると現在の下書きは破棄されます。",
+        "yourSessionIsNoLonger": "ログインセッションが無効になりました。再度ログインしてください。",
+        "youDoNotHavePermission": "この操作を実行する権限がありません。",
+        "theSubjectNoLongerExists": "科目は存在しません。データを再読み込みしてください。",
+        "theSelectedManagerIsNo": "選択した責任者は無効になりました。選び直すか、割り当てを解除してください。",
+        "theSubjectNameIsRequired": "科目名は必須で、最大200文字です。",
+        "theSubjectDescriptionCanBe": "科目の説明は最大2,000文字です。",
+        "couldNotCheckTheSubjects": "科目のクラスを確認できなかったため、まだアーカイブできません。しばらくしてからもう一度お試しください。",
+        "couldNotConfirmTheChanges": "変更の保存を確認できませんでした。入力内容は保持されています。再試行する前にデータを再読み込みして確認してください。",
+        "reloadDataAndDiscardDraft": "データを再読み込みして下書きを破棄"
+      }
+    },
+    "model": {
+      "validation": {
+        "theSubjectNameIsRequired": "科目名は必須で、最大200文字",
+        "theSubjectDescriptionCanBe": "科目の説明は最大2,000文字",
+        "theSubjectCodeMustBe": "科目コードは英大文字、数字、- の1〜20文字"
+      }
+    },
+    "pages": {
+      "SubjectDetailPage": {
+        "subjects": "科目",
+        "loadingSubjects": "科目を読み込み中…",
+        "information": "情報",
+        "classes": "クラス",
+        "subjectContent": "科目の内容",
+        "changesSaved": "変更を保存しました",
+        "loadingClasses": "クラスを読み込み中…",
+        "classList": "クラス一覧",
+        "classDataIsCurrentlyUnavailable": "クラスのデータは現在利用できません。",
+        "retry": "再試行",
+        "subjectManagerRemoved": "科目責任者を外しました",
+        "subjectManagerChanged": "科目責任者を変更しました",
+        "subjectArchived": "科目をアーカイブしました",
+        "subjectReopened": "科目を再開しました"
+      },
+      "SubjectListPage": {
+        "subjects": "科目",
+        "addSubject": "科目を追加",
+        "subjectAdded": "科目を追加しました",
+        "loadingSubjects": "科目を読み込み中…"
+      }
+    },
+    "register": {
+      "subjects": "科目"
+    }
+  },
+  "shared": {
+    "activity": {
+      "ActivityTimeline": {
+        "h": "{hours} 時間",
+        "min": "{minutes} 分",
+        "s": "{rest} 秒",
+        "activityMonitoringIsNotOn": "この課題ではアクティビティの記録が有効になっていません。",
+        "theDataIsPastIts": "データは保存期間を過ぎています。",
+        "noActivityDataYet": "アクティビティのデータはまだありません。",
+        "leftThePage": "ページ離脱 ",
+        "timesTotalKnownTime": " 回 · 判明している合計時間 ",
+        "leftThePage2": "ページ離脱",
+        "unknown": "不明"
+      }
+    },
+    "ai": {
+      "AiSourcePicker": {
+        "couldNotLoadTheAi": "AIソースの一覧を読み込めませんでした。しばらくしてからもう一度お試しください。",
+        "chooseAiSource": "AIソースを選択",
+        "cancel": "キャンセル",
+        "sendRequest": "リクエストを送信",
+        "sendingWithTheDefaultSource": "既定のソースで送信中：",
+        "defaultSource": "既定のソース ",
+        "isNotUsable": " は利用できません",
+        "chooseAnotherSourceForThis": "。今回は別のソースを選択してください。",
+        "loading": "読み込み中…",
+        "aiSource": "AIソース",
+        "changeDefaultSource": "既定のソースを変更",
+        "dontWantToChooseEvery": "毎回選びたくない場合は、既定のソースを設定できます",
+        "in": "：",
+        "aiConnection": "AI接続",
+        "mcpAgentsAreNotA": "。MCPエージェントはここでのソースではありません。エージェントはお使いのアプリからプラットフォームのツールを直接呼び出します。",
+        "schoolApi": "学校API",
+        "personalApi": "個人API · {value}",
+        "default": "既定",
+        "paidByTheSchool": "学校負担",
+        "paidByYou": "自己負担",
+        "model": "モデル {model}",
+        "modelConfiguredByAnAdministrator": "管理者が設定したモデル",
+        "tokensLeftToday": " · 本日の残り {value} / {value2} トークン",
+        "notLimitedByTheSchool": " · 学校による上限なし",
+        "aboutTokens": " · 推定 {value} トークン"
+      },
+      "AiTaskStatus": {
+        "pending": "待機中",
+        "running": "実行中",
+        "error": "エラー",
+        "unknownResult": "結果不明",
+        "cancelled": "キャンセル済み",
+        "couldNotCancelTheTask": "キャンセルできませんでした。タスクがすでに開始している可能性があります。",
+        "couldNotViewTheAi": "AIリクエストの状態を表示できませんでした。",
+        "loadingStatus": "状態を読み込み中...",
+        "theProviderDidNotReturn": "プロバイダーから明確な結果が返りませんでした。再送する前に確認してください。",
+        "theDataChangedWhileWaiting": "待機中にデータが変更されたため、結果は適用されませんでした。",
+        "cancel": "キャンセル"
+      }
+    },
+    "api": {
+      "client": {
+        "theSystemIsBusyPlease": "システムが混み合っています。しばらくしてからもう一度お試しください"
+      },
+      "messages": {
+        "couldNotLoadDataPlease": "データを読み込めませんでした。もう一度お試しください。"
+      }
+    },
+    "dateTime": {
+      "dH": "{days} 日 {hours} 時間",
+      "hMin": "{hours} 時間 {value} 分",
+      "min": "{minutes} 分",
+      "s": "{value} 秒",
+      "justNow": "たった今",
+      "minAgo": "{value} 分前",
+      "hAgo": "{value} 時間前",
+      "yesterday": "昨日 {value}",
+      "daysAgo": "{days} 日前",
+      "minLeft": "残り {value} 分",
+      "hLeft": "残り {value} 時間",
+      "daysLeft": "残り {value} 日"
+    },
+    "document": {
+      "DiagramEditor": {
+        "dragToResize": "ドラッグして幅を変更",
+        "openingDrawIo": "Draw.io を開いています…",
+        "close": "✕ 閉じる"
+      },
+      "DiagramViewPage": {
+        "diagramNotFoundOrYou": "図が見つからないか、閲覧する権限がありません。",
+        "couldNotLoadTheDiagram": "図を読み込めませんでした",
+        "loadingDiagram": "図を読み込み中…",
+        "downloadDrawioFile": ".drawio ファイルをダウンロード",
+        "diagram": "図",
+        "theDiagramHasNoPreview": "図にはプレビュー画像がありません。.drawio ファイルをダウンロードして Draw.io で開いてください。"
+      },
+      "DocumentEditor": {
+        "writeYourAnswer": "解答を入力…",
+        "boldCtrlB": "太字（Ctrl+B）",
+        "italicCtrlI": "斜体（Ctrl+I）",
+        "underlineCtrlU": "下線（Ctrl+U）",
+        "strikethrough": "取り消し線",
+        "alignLeft": "左揃え",
+        "alignCenter": "中央揃え",
+        "alignRight": "右揃え",
+        "justify": "両端揃え",
+        "deleteDiagram": "図を削除",
+        "deleteImage": "画像を削除",
+        "assignmentDiagram": "課題の図",
+        "assignmentImage": "課題の画像",
+        "text": "{row} × {col}",
+        "text2": "{rows} × {cols}",
+        "table": "表",
+        "deleteQuestion": "問題を削除",
+        "moveQuestionUp": "問題を上へ移動",
+        "moveQuestionDown": "問題を下へ移動",
+        "imageUploadFailed": "画像のアップロードに失敗しました",
+        "theLecturersAssignmentCannotBe": "教員が作成した課題文のため編集できません",
+        "writeInThisPart": "このパートに記入",
+        "yourWork": "あなたの解答",
+        "writeTheQuestion": "問題文を入力…",
+        "enterTheBriefSystemContext": "課題文、システムの背景、全体の要件などを入力…",
+        "lastLine": "最終行",
+        "addPoint": "項目を追加",
+        "addQuestion": "問題を追加",
+        "dragToReorderQuestions": "ドラッグして問題を並べ替え",
+        "switchPartTopOfPage": "パートを切り替え（ページ上部）",
+        "switchPart": "パートを切り替え",
+        "previousPart": "前のパート",
+        "part": "パート ",
+        "nextPart": "次のパート",
+        "viewMode": "表示モード",
+        "wholePage": "ページ全体",
+        "partByPart": "パートごと",
+        "toolbar": "ツールバー",
+        "formatAndInsert": "書式と挿入",
+        "undoCtrlZ": "元に戻す（Ctrl+Z）",
+        "undo": "元に戻す",
+        "redoCtrlY": "やり直す（Ctrl+Y）",
+        "redo": "やり直す",
+        "addAQuestionAtThe": "カーソル位置に問題を追加",
+        "question": "問題",
+        "textColor": "文字の色",
+        "default": "既定",
+        "highlightColor": "背景の色",
+        "noHighlight": "背景なし",
+        "bulletedList": "箇条書き",
+        "numberedList": "番号付きリスト",
+        "insertTable": "表を挿入",
+        "insertImage": "画像を挿入",
+        "insertDrawIoDiagram": "Draw.io の図を挿入",
+        "untitledAssignment": "無題の課題",
+        "assignmentTitle": "課題名",
+        "startWriting": "書き始める",
+        "continueWritingAtTheEnd": "文書の末尾に書き足す",
+        "headingContent": "見出しの内容",
+        "questionTitle": "問題のタイトル",
+        "paragraph": "段落",
+        "chooseImage": "画像を選択",
+        "loadingImage": "画像を読み込み中…",
+        "section": "セクション {value}",
+        "assignmentRow": "課題の行",
+        "deleteTable": "表を削除",
+        "deleteRow": "行を削除",
+        "assignmentColumn": "課題の列",
+        "deleteColumn": "列を削除",
+        "cell": "セル {value}-{value2}",
+        "dragToResizeColumn": "ドラッグして列 {value} の幅を変更",
+        "insertColumnToTheRight": "右に列を挿入",
+        "insertRowBelow": "下に行を挿入",
+        "assignmentTable": "課題の表"
+      },
+      "DocumentViewer": {
+        "editDiagram": "図を編集",
+        "drawDiagram": "図を描く",
+        "noDiagramYet": "図はまだありません",
+        "emptyDocument": "空の文書です。"
+      },
+      "DocxImportDialog": {
+        "couldNotReadTheDocx": "DOCXファイルを読み込めませんでした",
+        "fromTheCodeInThe": "代替テキストのコードから",
+        "fromTheDataInThe": "PNG画像内のデータから",
+        "fromTheSvgImage": "SVG画像から",
+        "importDocx": "DOCXを取り込む",
+        "docxFilesCanBeAt": "DOCXファイルは最大20MBまで",
+        "import": "取り込む",
+        "docxFile": "DOCXファイル",
+        "atMost20MbThe": "最大20MB。ファイルはメモリ上で読み込むだけで、保存されません。",
+        "chooseAnotherFile": "別のファイルを選択",
+        "chooseFile": "ファイルを選択",
+        "readingFile": "ファイルを読み込み中…",
+        "blocks": " ブロック · ",
+        "images": " 画像 · ",
+        "diagrams": " 図",
+        "section": "セクション",
+        "length": "長さ",
+        "blocks2": " ブロック",
+        "diagramsRecovered": "復元できた図",
+        "diagrams2": "{value} {count} 件の図",
+        "importMethod": "取り込み方法",
+        "replaceTheCurrentOutline": "現在の枠組みを置き換え",
+        "addToTheEnd": "末尾に追加"
+      },
+      "FormattedTextEditor": {
+        "canBeAtMostCharacters": "{label} は最大 {value} 文字までです。",
+        "theContentHasTooMany": "内容の段落数または書式が多すぎます。",
+        "editor": "{label} のエディター",
+        "format": "{label} の書式",
+        "bold": "太字",
+        "italic": "斜体",
+        "underline": "下線",
+        "alignLeft": "左揃え",
+        "alignCenter": "中央揃え",
+        "alignRight": "右揃え",
+        "justify": "両端揃え",
+        "bulletedList": "箇条書き",
+        "numberedList": "番号付きリスト",
+        "decreaseIndent": "インデントを減らす",
+        "increaseIndent": "インデントを増やす",
+        "undo": "元に戻す",
+        "redo": "やり直す",
+        "paragraph": "{label}、段落 {value}"
+      },
+      "RubricViewer": {
+        "noRubricYet": "ルーブリックはまだありません。",
+        "criterion": "評価項目",
+        "points": "点数",
+        "noContentYet": "（内容なし）",
+        "total": "合計",
+        "totalPoints": "合計 {value} 点",
+        "points2": "{value} 点",
+        "noCriteriaYetClickThe": "評価項目はまだありません。カードをクリックして追加してください。",
+        "noCriteriaYet": "評価項目はまだありません。"
+      },
+      "types": {
+        "title": "タイトル",
+        "subtitle": "サブタイトル",
+        "heading1": "見出し 1",
+        "heading2": "見出し 2",
+        "heading3": "見出し 3",
+        "heading4": "見出し 4",
+        "heading5": "見出し 5",
+        "heading6": "見出し 6",
+        "classDiagram": "クラス図",
+        "sequenceDiagram": "シーケンス図",
+        "activityDiagram": "アクティビティ図",
+        "erDiagram": "ER図",
+        "componentDiagram": "コンポーネント図",
+        "stateDiagram": "状態遷移図",
+        "other": "その他",
+        "paragraph": "段落",
+        "list": "リスト",
+        "table": "表",
+        "image": "画像",
+        "diagram": "図",
+        "wholeAssignment": "課題全体"
+      }
+    },
+    "layout": {
+      "AppShell": {
+        "skipToContent": "コンテンツへスキップ",
+        "collapseMenu": "メニューを折りたたむ",
+        "openMenu": "メニューを開く",
+        "learningPlatformHomePage": "学習プラットフォーム、ホーム",
+        "switchToLightMode": "ライトモードに切り替え",
+        "switchToDarkMode": "ダークモードに切り替え",
+        "lightMode": "ライトモード",
+        "darkMode": "ダークモード",
+        "account": "アカウント",
+        "profile": "プロフィール",
+        "signOut": "ログアウト",
+        "collapse": "折りたたむ",
+        "expand": "展開",
+        "language": "言語"
+      },
+      "LogoutDialog": {
+        "couldNotSignOutPlease": "ログアウトできませんでした。しばらくしてからもう一度お試しください。",
+        "signOut": "ログアウトしますか？",
+        "signOut2": "ログアウト"
+      },
+      "navigation": {
+        "student": "学生",
+        "lecturer": "教員",
+        "subjectManager": "科目責任者",
+        "administrator": "管理者"
+      },
+      "NavTree": {
+        "loading": "読み込み中…",
+        "noItemsYet": "項目はまだありません。"
+      }
+    },
+    "siteMetadata": {
+      "learningPlatform": "学習プラットフォーム",
+      "teachAndLearnBetterWith": "AIアシスタントで、もっと効果的な授業と学習を",
+      "manageClassesMaterialsAssignmentsAnd": "クラス、教材、課題、試験を管理し、AIアシスタントで練習して即座にフィードバックを得られます。"
+    },
+    "studentCode": {
+      "aStudentIdHas2": "学籍番号は英字2文字と数字6桁です（例：SE123456）。",
+      "thisStudentIdIsAlready": "この学籍番号はすでに別のアカウントで使用されています。",
+      "theStudentIdIsLocked": "学生がアカウントを有効化したため、学籍番号はロックされています。",
+      "aStudentIdIsRequired": "学生アカウントには学籍番号が必要です。",
+      "onlyStudentAccountsHaveA": "学籍番号を持てるのは学生アカウントのみです。",
+      "unknownName": "名前不明"
+    },
+    "ui": {
+      "ClassFilter": {
+        "filterByClass": "クラスで絞り込み",
+        "allClasses": "すべてのクラス"
+      },
+      "ConfirmDialog": {
+        "discardEdits": "編集を破棄"
+      },
+      "DateInput": {
+        "pickADateFromThe": "カレンダーから日付を選択",
+        "enterAValidDateIn": "dd/MM/yyyy 形式で有効な日付を入力してください。"
+      },
+      "Dialog": {
+        "close": "閉じる"
+      },
+      "ErrorPage": {
+        "pageNotFound": "ページが見つかりません",
+        "theLinkDoesNotExist": "リンクが存在しないか、変更されています。",
+        "theSystemIsBusy": "システムが混み合っています",
+        "theServerHasNotResponded": "サーバーから応答がありません。",
+        "networkConnectionLost": "ネットワーク接続が切れました",
+        "yourDeviceIsOffline": "デバイスがオフラインです。",
+        "somethingWentWrong": "エラーが発生しました",
+        "theSystemCouldNotComplete": "システムはリクエストを完了できませんでした。",
+        "learningPlatformHome": "学習プラットフォーム - ホーム",
+        "switchToLightMode": "ライトモードに切り替え",
+        "switchToDarkMode": "ダークモードに切り替え",
+        "error": "エラー ",
+        "reloadPage": "ページを再読み込み",
+        "goToHomePage": "ホームへ移動",
+        "n2026LearningPlatform": "© 2026 学習プラットフォーム"
+      },
+      "InfoTip": {
+        "explanation": "説明：{label}"
+      },
+      "Logo": {
+        "learning": "学習",
+        "platform": "プラットフォーム"
+      },
+      "PageHeader": {
+        "breadcrumb": "パンくずリスト",
+        "back": "戻る"
+      },
+      "PageStatus": {
+        "loading": "読み込み中…",
+        "reloadPage": "ページを再読み込み"
+      },
+      "Pagination": {
+        "records": "件",
+        "no": "{itemLabel}はありません",
+        "showingOf": "{value3} {itemLabel}中 {value}–{value2} を表示",
+        "pagination": "ページ送り",
+        "previousPage": "前のページ"
+      },
+      "ScoreCards": {
+        "totalPoints": "合計点"
+      },
+      "Skeleton": {
+        "loading": "読み込み中…"
+      },
+      "TermFilter": {
+        "filterByTerm": "学期で絞り込み",
+        "allTerms": "すべての学期"
+      },
+      "Toast": {
+        "closeNotification": "通知を閉じる"
+      }
+    }
+  }
+}

@@ -488,7 +488,7 @@ class SubjectAdminControllerTest {
     }
 
     private Subject subject() {
-        return Subject.create(id, "ABC", "Name", "Description", null, NOW.minusSeconds(60));
+        return Subject.createSubject(id, "ABC", "Name", "Description", null, NOW.minusSeconds(60));
     }
 
     @ParameterizedTest

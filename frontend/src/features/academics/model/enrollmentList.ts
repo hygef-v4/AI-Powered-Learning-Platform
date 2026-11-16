@@ -1,4 +1,5 @@
 import { isValidStudentCode, normalizeStudentCode } from "@/shared/studentCode";
+import { msg } from "@/i18n/msg";
 
 /** `email` giữ tên cũ: là giá trị đã chuẩn hóa của dòng, email hoặc MSSV (BR-U05-56, 58). */
 export type EnrollmentPreviewRow = { line: number; email: string; error: "INVALID_IDENTIFIER" | "DUPLICATE_IN_LIST" | null };
@@ -8,7 +9,7 @@ const HEADERS = new Set(["email", "student_code", "mssv"]);
 
 /** Kiểm trước khi gửi: mỗi dòng một email hoặc MSSV. Tài khoản/role/quyền và kết quả ghi danh phải do server kiểm lại. */
 export function parseEnrollmentList(input: string): EnrollmentPreviewRow[] {
-  if (new TextEncoder().encode(input).length > MAX_BYTES) throw new Error("Danh sách tối đa 100 KB.");
+  if (new TextEncoder().encode(input).length > MAX_BYTES) throw new Error(msg("academics.model.enrollmentList.theListCanBeAt"));
   const rows: EnrollmentPreviewRow[] = [];
   const seen = new Set<string>();
   let first = true;
@@ -18,7 +19,7 @@ export function parseEnrollmentList(input: string): EnrollmentPreviewRow[] {
     if (value.startsWith('"') && value.endsWith('"') && value.length > 1) value = value.slice(1, -1).replaceAll('""', '"').trim();
     if (first && HEADERS.has(value.toLowerCase())) { first = false; return; }
     first = false;
-    if (rows.length >= 200) throw new Error("Danh sách tối đa 200 dòng.");
+    if (rows.length >= 200) throw new Error(msg("academics.model.enrollmentList.theListCanHaveAt"));
     const code = normalizeStudentCode(value);
     const identifier = !value.includes("@") && isValidStudentCode(code) ? code : value.toLowerCase();
     const valid = identifier === code || (identifier.length <= 254 && EMAIL_PATTERN.test(identifier));
@@ -26,6 +27,6 @@ export function parseEnrollmentList(input: string): EnrollmentPreviewRow[] {
     if (!error) seen.add(identifier);
     rows.push({ line: index + 1, email: identifier, error });
   });
-  if (!rows.length) throw new Error("Vui lòng nhập ít nhất một email hoặc MSSV.");
+  if (!rows.length) throw new Error(msg("academics.model.enrollmentList.enterAtLeastOneEmail"));
   return rows;
 }

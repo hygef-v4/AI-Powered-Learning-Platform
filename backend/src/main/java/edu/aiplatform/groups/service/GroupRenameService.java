@@ -40,18 +40,18 @@ public class GroupRenameService {
 
     @Transactional
     public Renamed rename(Actor actor, UUID groupId, String name) {
-        ClassGroup group = groups.findGroup(groupId).orElseThrow(GroupAccess::notFound);
+        ClassGroup group = groups.findGroup(groupId).orElseThrow(GroupAccess::createNotFoundError);
         ClassRef ref = access.requireStudent(actor, group.classId());
         if (!group.isMember(actor.accountId())) {
-            throw GroupAccess.notFound();
+            throw GroupAccess.createNotFoundError();
         }
         if (!actor.accountId().equals(group.leaderId())) {
-            throw ApiException.forbidden("GROUP_RENAME_LEADER_ONLY");
+            throw ApiException.createForbidden("GROUP_RENAME_LEADER_ONLY");
         }
         GroupAccess.requireOpen(ref);
         String next = name == null ? "" : name.trim();
         if (next.isEmpty() || next.length() > GroupSetRules.MAX_NAME) {
-            throw ApiException.badRequest("GROUP_NAME_INVALID", "Tên nhóm cần 1–100 ký tự");
+            throw ApiException.createBadRequest("GROUP_NAME_INVALID", "Tên nhóm cần 1–100 ký tự");
         }
         if (next.equals(group.name())) {
             return new Renamed(group.id(), next);
@@ -78,7 +78,7 @@ public class GroupRenameService {
     }
 
     private static ApiException duplicate(String name) {
-        return ApiException.conflict("GROUP_NAME_DUPLICATE", "Tên nhóm bị trùng: " + name);
+        return ApiException.createConflict("GROUP_NAME_DUPLICATE", "Tên nhóm bị trùng: " + name);
     }
 
     public record Renamed(UUID groupId, String name) {

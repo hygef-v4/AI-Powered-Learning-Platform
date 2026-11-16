@@ -41,7 +41,7 @@ enum PromptContextPolicy {
         this.scope = scope;
     }
 
-    static PromptContextPolicy of(PromptContext context) {
+    static PromptContextPolicy createPolicy(PromptContext context) {
         for (PromptContextPolicy policy : values()) {
             if (policy.context == context) {
                 return policy;
@@ -50,7 +50,7 @@ enum PromptContextPolicy {
         throw new IllegalArgumentException("Chưa có chính sách cho phạm vi " + context);
     }
 
-    int maxChars() {
+    int calculateMaxChars() {
         return maxChars;
     }
 
@@ -58,15 +58,15 @@ enum PromptContextPolicy {
         return role != null && allowedRoles.contains(role);
     }
 
-    String tooLongMessage() {
+    String describeTooLong() {
         return "Yêu cầu tối đa " + String.format(Locale.ROOT, "%,d", maxChars).replace(',', '.') + " ký tự.";
     }
 
-    String tooShortMessage() {
+    String describeTooShort() {
         return "Yêu cầu quá ngắn. Hãy mô tả rõ điều bạn muốn AI làm.";
     }
 
-    String offTopicMessage() {
+    String describeOffTopic() {
         return "Yêu cầu nằm ngoài phạm vi của chức năng này. Ở đây AI chỉ hỗ trợ " + scope + ".";
     }
 }

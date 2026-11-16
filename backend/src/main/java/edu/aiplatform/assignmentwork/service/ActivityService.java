@@ -60,10 +60,10 @@ public class ActivityService implements IActivityWrite, IActivityQuery {
     public int recordForAttempt(Actor actor, UUID attemptId, List<ActivityEventInput> input) {
         AssignmentAttempt attempt = access.requireOwnAttempt(actor, attemptId, "ACTIVITY_RECORDED");
         if (!attempt.snapshot().activityMonitoringEnabled()) {
-            throw ApiException.conflict("ACTIVITY_DISABLED", "Bài không ghi nhận hoạt động");
+            throw ApiException.createConflict("ACTIVITY_DISABLED", "Bài không ghi nhận hoạt động");
         }
-        if (!attempt.inProgress()) {
-            throw ApiException.conflict("ATTEMPT_SUBMITTED", "Lượt đã nộp");
+        if (!attempt.hasInProgressStatus()) {
+            throw ApiException.createConflict("ATTEMPT_SUBMITTED", "Lượt đã nộp");
         }
         return insert(actor, new WorkRef(WorkKind.ASSIGNMENT_ATTEMPT, attempt.id(), attempt.classId()), input);
     }
@@ -79,13 +79,13 @@ public class ActivityService implements IActivityWrite, IActivityQuery {
     @Transactional(readOnly = true)
     public ActivitySummary summary(WorkRef workRef, UUID accountId) {
         Optional<AssignmentAttempt> attempt = workRef.kind() == WorkKind.ASSIGNMENT_ATTEMPT
-                ? attempts.find(workRef.workId()) : Optional.empty();
+                ? attempts.findAttempt(workRef.workId()) : Optional.empty();
         if (attempt.isPresent() && !attempt.get().snapshot().activityMonitoringEnabled()) {
             return new ActivitySummary(ActivityPolicyState.DISABLED, 0, Duration.ZERO, List.of(), 0,
                     "Bài không bật ghi nhận hoạt động.");
         }
-        List<ActivityEvent> list = events.list(workRef.kind(), workRef.workId(), accountId);
-        if (list.isEmpty() && attempt.isPresent() && expired(attempt.get().startedAt())) {
+        List<ActivityEvent> list = events.listEvents(workRef.kind(), workRef.workId(), accountId);
+        if (list.isEmpty() && attempt.isPresent() && isExpired(attempt.get().startedAt())) {
             return new ActivitySummary(ActivityPolicyState.EXPIRED, 0, Duration.ZERO, List.of(), 0,
                     "Dữ liệu đã quá thời hạn lưu và bị xóa.");
         }
@@ -100,19 +100,19 @@ public class ActivityService implements IActivityWrite, IActivityQuery {
     private int insert(Actor actor, WorkRef workRef, List<ActivityEventInput> input) {
         if (actor == null || actor.accountId() == null || workRef == null || workRef.workId() == null
                 || workRef.classId() == null) {
-            throw ApiException.badRequest("ACTIVITY_INVALID", "Thiếu thông tin công việc");
+            throw ApiException.createBadRequest("ACTIVITY_INVALID", "Thiếu thông tin công việc");
         }
         if (input == null || input.isEmpty()) {
             return 0;
         }
         if (input.size() > MAX_BATCH) {
-            throw ApiException.badRequest("ACTIVITY_BATCH_TOO_LARGE", "Mỗi lô tối đa 50 sự kiện");
+            throw ApiException.createBadRequest("ACTIVITY_BATCH_TOO_LARGE", "Mỗi lô tối đa 50 sự kiện");
         }
         for (ActivityEventInput event : input) {
             if (event == null || event.sessionId() == null || event.kind() == null || event.sequence() < 0
                     || event.clientEventId() == null || event.clientEventId().isBlank()
                     || event.clientEventId().length() > 64) {
-                throw ApiException.badRequest("ACTIVITY_INVALID", "Sự kiện không hợp lệ");
+                throw ApiException.createBadRequest("ACTIVITY_INVALID", "Sự kiện không hợp lệ");
             }
         }
         if (!allow(actor.accountId(), workRef.workId(), input.size())) {
@@ -142,7 +142,7 @@ public class ActivityService implements IActivityWrite, IActivityQuery {
         }
     }
 
-    private boolean expired(Instant startedAt) {
+    private boolean isExpired(Instant startedAt) {
         return startedAt.isBefore(clock.instant().minus(RETENTION));
     }
 }

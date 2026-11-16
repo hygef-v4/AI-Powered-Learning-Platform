@@ -15,16 +15,16 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 @RestController
 public class DownloadController {
 
-    private final DownloadService downloads;
+    private final DownloadService downloadService;
 
-    public DownloadController(DownloadService downloads) {
-        this.downloads = downloads;
+    public DownloadController(DownloadService downloadService) {
+        this.downloadService = downloadService;
     }
 
     @GetMapping("/api/v1/files/download/{token}")
     public ResponseEntity<StreamingResponseBody> download(@AuthenticationPrincipal Actor actor,
                                                           @PathVariable String token) {
-        DownloadService.Download download = downloads.open(actor, token);
+        DownloadService.Download download = downloadService.open(actor, token);
         StreamingResponseBody body = (OutputStream out) -> {
             try (InputStream in = download.content()) {
                 byte[] buffer = new byte[64 * 1024];

@@ -24,12 +24,12 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/files")
 public class FileController {
 
-    private final UploadService uploads;
-    private final FilePolicyService policies;
+    private final UploadService uploadService;
+    private final FilePolicyService filePolicyService;
 
-    public FileController(UploadService uploads, FilePolicyService policies) {
-        this.uploads = uploads;
-        this.policies = policies;
+    public FileController(UploadService uploadService, FilePolicyService filePolicyService) {
+        this.uploadService = uploadService;
+        this.filePolicyService = filePolicyService;
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -37,15 +37,15 @@ public class FileController {
     public UploadResult upload(@AuthenticationPrincipal Actor actor, @RequestParam("purpose") ArtifactPurpose purpose,
                                @RequestParam("file") MultipartFile file) {
         try {
-            return uploads.upload(actor, purpose,
+            return uploadService.upload(actor, purpose,
                     new FileUpload(file.getOriginalFilename(), file.getSize(), file.getInputStream()));
         } catch (IOException e) {
-            throw ApiException.unavailable("UPLOAD_FAILED", "Không nhận được tệp, thử lại sau");
+            throw ApiException.createUnavailable("UPLOAD_FAILED", "Không nhận được tệp, thử lại sau");
         }
     }
 
     @GetMapping("/policies")
-    public List<FilePolicyService.PurposePolicyView> policies() {
-        return policies.policies();
+    public List<FilePolicyService.PurposePolicyView> listPolicies() {
+        return filePolicyService.listPolicies();
     }
 }

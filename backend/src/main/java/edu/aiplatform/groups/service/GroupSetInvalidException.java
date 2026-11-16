@@ -15,7 +15,7 @@ public class GroupSetInvalidException extends ApiException {
         this.issues = List.copyOf(issues);
     }
 
-    public List<Issue> issues() {
+    public List<Issue> listIssues() {
         return issues;
     }
 }

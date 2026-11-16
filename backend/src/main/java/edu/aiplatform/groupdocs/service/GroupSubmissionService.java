@@ -82,21 +82,21 @@ public class GroupSubmissionService {
     public Receipt submit(Actor actor, UUID documentId, Long version) {
         GroupDocContext ctx = access.lock(actor, documentId);
         if (!ctx.leader()) {
-            throw ApiException.forbidden("GROUP_DOC_LEADER_ONLY");
+            throw ApiException.createForbidden("GROUP_DOC_LEADER_ONLY");
         }
         access.requireEditable(ctx, false);
         GroupDocument document = ctx.document();
         if (version == null || version != document.version()) {
-            throw ApiException.conflict("GROUP_DOC_VERSION_CONFLICT", "Tài liệu vừa được thay đổi, hãy tải lại");
+            throw ApiException.createConflict("GROUP_DOC_VERSION_CONFLICT", "Tài liệu vừa được thay đổi, hãy tải lại");
         }
-        AssignmentView assignment = assignments.get(document.assignmentId()).orElseThrow(GroupAccess::notFound);
-        GroupSnapshot.Result snapshot = GroupSnapshot.build(document.sharedBlocks(), documents.listSections(documentId));
+        AssignmentView assignment = assignments.get(document.assignmentId()).orElseThrow(GroupAccess::createNotFoundError);
+        GroupSnapshot.Result snapshot = GroupSnapshot.buildSnapshot(document.sharedBlocks(), documents.listSections(documentId));
         ValidationResult result = validate(document, snapshot.document());
         if (!result.ok()) {
             throw new SubmitInvalidException(result.errors());
         }
         return store(document, ctx.group(), assignment, snapshot, actor.accountId(), SubmitMode.MANUAL,
-                GroupDocument.Status.IN_PROGRESS, warnings(snapshot, result));
+                GroupDocument.Status.IN_PROGRESS, collectWarnings(snapshot, result));
     }
 
     /**
@@ -104,7 +104,7 @@ public class GroupSubmissionService {
      * bản nộp tay hoặc chưa có thay đổi nào thì chỉ nhả khóa và đóng. Câu lệnh có điều kiện nên chạy lại không nộp hai lần.
      */
     @Transactional
-    public Optional<Receipt> autoSubmit(UUID documentId) {
+    public Optional<Receipt> submitAutomatically(UUID documentId) {
         GroupDocument initialDocument = documents.findById(documentId).orElse(null);
         if (initialDocument == null) {
             return Optional.empty();
@@ -116,8 +116,8 @@ public class GroupSubmissionService {
         }
         Instant now = clock.instant();
         boolean finalized = closeSections(documentId, now);
-        if (document.submitted() || (!finalized && !document.changedSinceSubmit())) {
-            if (documents.update(document.closed())) {
+        if (document.hasSubmitted() || (!finalized && !document.hasChangedSinceSubmit())) {
+            if (documents.updateDocument(document.markClosed())) {
                 push(document, "document.closed", null);
             }
             return Optional.empty();
@@ -126,27 +126,27 @@ public class GroupSubmissionService {
         ClassGroup group = groups.findGroup(document.groupId()).orElse(null);
         AssignmentView assignment = assignments.get(document.assignmentId()).orElse(null);
         if (group == null || assignment == null) {
-            documents.update(document.closed());
+            documents.updateDocument(document.markClosed());
             return Optional.empty();
         }
-        GroupSnapshot.Result snapshot = GroupSnapshot.build(document.sharedBlocks(), documents.listSections(documentId));
+        GroupSnapshot.Result snapshot = GroupSnapshot.buildSnapshot(document.sharedBlocks(), documents.listSections(documentId));
         ValidationResult result = validate(document, snapshot.document());
         return Optional.of(store(document, group, assignment, snapshot, null, mode, GroupDocument.Status.CLOSED,
-                warnings(snapshot, result)));
+                collectWarnings(snapshot, result)));
     }
 
     private boolean closeSections(UUID documentId, Instant now) {
         boolean finalized = false;
         for (GroupSection section : documents.lockSections(documentId)) {
             if (section.status() == GroupSection.Status.CLAIMED && section.draftBlocks() != null) {
-                GroupSection done = section.done(now);
+                GroupSection done = section.markDone(now);
                 if (documents.updateSection(done)) {
                     documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), section.claimedBy(),
                             done.publishedBlocks(), now));
                     finalized = true;
                 }
             } else if (section.status() == GroupSection.Status.CLAIMED) {
-                documents.updateSection(section.released());
+                documents.updateSection(section.markReleased());
             }
         }
         return finalized;
@@ -155,19 +155,19 @@ public class GroupSubmissionService {
     /** DOCX: thành viên tải bản hiện tại hoặc bản nộp; giảng viên chỉ bản nộp (BR-U12-44). */
     @Transactional(readOnly = true)
     public Export export(Actor actor, UUID documentId, boolean submitted) {
-        GroupDocContext ctx = access.read(actor, documentId);
+        GroupDocContext ctx = access.loadContext(actor, documentId);
         GroupDocument document = ctx.document();
         if (ctx.teacher() && !submitted) {
-            throw ApiException.forbidden("GROUP_DOC_EXPORT_SUBMITTED_ONLY");
+            throw ApiException.createForbidden("GROUP_DOC_EXPORT_SUBMITTED_ONLY");
         }
         DocumentModel model;
         if (submitted) {
             if (document.submittedDocument() == null) {
-                throw ApiException.notFound("GROUP_DOC_NOT_SUBMITTED");
+                throw ApiException.createNotFound("GROUP_DOC_NOT_SUBMITTED");
             }
             model = document.submittedDocument();
         } else {
-            model = GroupSnapshot.build(document.sharedBlocks(), documents.listSections(documentId)).document();
+            model = GroupSnapshot.buildSnapshot(document.sharedBlocks(), documents.listSections(documentId)).document();
         }
         String title = assignments.get(document.assignmentId()).map(AssignmentView::title).orElse("Bai nhom") + " - "
                 + ctx.group().name();
@@ -181,11 +181,11 @@ public class GroupSubmissionService {
         Instant effective = mode == SubmitMode.MANUAL ? now : document.lastChangedAt() != null
                 ? document.lastChangedAt() : (assignment.closesAt() != null ? assignment.closesAt() : now);
         boolean late = assignment.closesAt() != null && effective.isAfter(assignment.closesAt());
-        String hash = GroupSnapshot.receiptHash(json, document.id(), snapshot, now);
-        GroupDocument submitted = document.withSubmission(snapshot.document(), snapshot.authors(), by, mode, now, late, hash,
+        String hash = GroupSnapshot.hashReceipt(json, document.id(), snapshot, now);
+        GroupDocument submitted = document.recordSubmission(snapshot.document(), snapshot.authors(), by, mode, now, late, hash,
                 warnings, next);
-        if (!documents.update(submitted)) {
-            throw ApiException.conflict("GROUP_DOC_VERSION_CONFLICT", "Tài liệu vừa được thay đổi, hãy tải lại");
+        if (!documents.updateDocument(submitted)) {
+            throw ApiException.createConflict("GROUP_DOC_VERSION_CONFLICT", "Tài liệu vừa được thay đổi, hãy tải lại");
         }
         evaluation.onGroupSubmitted(document.id(), hash, document.assignmentId(), document.classId(), group.memberIds());
         Map<String, Object> details = new LinkedHashMap<>();
@@ -215,7 +215,7 @@ public class GroupSubmissionService {
         return result == null ? new ValidationResult(List.of(), List.of()) : result;
     }
 
-    private static List<String> warnings(GroupSnapshot.Result snapshot, ValidationResult result) {
+    private static List<String> collectWarnings(GroupSnapshot.Result snapshot, ValidationResult result) {
         List<String> notes = new ArrayList<>();
         snapshot.undone().forEach(title -> notes.add("Mục chưa Xong không vào bản nộp: " + title));
         result.errors().forEach(i -> notes.add(i.message()));
@@ -230,7 +230,7 @@ public class GroupSubmissionService {
         if (hash != null) {
             event.put("receiptHash", hash);
         }
-        sse.publish(GroupSectionService.channel(document.id()), event);
+        sse.publish(GroupSectionService.buildChannel(document.id()), event);
     }
 
     /** Biên nhận nộp; {@code warnings} gồm mục chưa Xong (không vào bản nộp). */
@@ -251,7 +251,7 @@ public class GroupSubmissionService {
             this.issues = List.copyOf(issues);
         }
 
-        public List<ValidationIssue> issues() {
+        public List<ValidationIssue> listIssues() {
             return issues;
         }
     }

@@ -13,7 +13,7 @@ public final class ProblemResponses {
     private ProblemResponses() {
     }
 
-    public static void write(HttpServletResponse response, ObjectMapper objectMapper, HttpStatus status, String code,
+    public static void writeProblem(HttpServletResponse response, ObjectMapper objectMapper, HttpStatus status, String code,
                              String message) throws IOException {
         ProblemDetail detail = ProblemDetail.forStatusAndDetail(status, message);
         detail.setProperty("code", code);

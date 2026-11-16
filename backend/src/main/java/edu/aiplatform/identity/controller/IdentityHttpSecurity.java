@@ -70,11 +70,11 @@ public class IdentityHttpSecurity {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class)
                 .exceptionHandling(errors -> errors
-                        .authenticationEntryPoint((request, response, e) -> ProblemResponses.write(response,
+                        .authenticationEntryPoint((request, response, e) -> ProblemResponses.writeProblem(response,
                                 objectMapper, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED", "Bạn cần đăng nhập"))
                         .accessDeniedHandler((request, response, e) -> {
                             boolean csrf = e instanceof CsrfException;
-                            ProblemResponses.write(response, objectMapper, HttpStatus.FORBIDDEN,
+                            ProblemResponses.writeProblem(response, objectMapper, HttpStatus.FORBIDDEN,
                                     csrf ? "CSRF_INVALID" : "FORBIDDEN",
                                     csrf ? "Phiên làm việc không hợp lệ, hãy tải lại trang"
                                             : "Không có quyền thực hiện thao tác này");

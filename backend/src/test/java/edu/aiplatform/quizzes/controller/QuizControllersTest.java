@@ -176,14 +176,14 @@ class QuizControllersTest {
         mvc.perform(post("/api/v1/quizzes/{id}/reopen", quizId).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"version\":4}")).andExpect(status().isOk());
         verify(publication).reopen(teacher, quizId, 4);
-        when(copies.newVersion(teacher, quizId)).thenReturn(detail());
+        when(copies.createNewVersion(teacher, quizId)).thenReturn(detail());
         mvc.perform(post("/api/v1/quizzes/{id}/versions", quizId)).andExpect(status().isCreated());
         UUID source = UUID.randomUUID();
         when(copies.copyToClass(teacher, classId, source)).thenReturn(detail());
         mvc.perform(post("/api/v1/classes/{c}/quizzes:copy", classId).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"sourceQuizId\":\"" + source + "\"}")).andExpect(status().isCreated());
         mvc.perform(delete("/api/v1/quizzes/{id}", quizId).param("version", "5")).andExpect(status().isNoContent());
-        verify(authoring).delete(teacher, quizId, 5);
+        verify(authoring).deleteQuiz(teacher, quizId, 5);
     }
 
     @Test
@@ -206,11 +206,11 @@ class QuizControllersTest {
 
     @Test
     void reopenPreservesServiceConflictAndScopeDenial() throws Exception {
-        when(publication.reopen(teacher, quizId, 4)).thenThrow(ApiException.conflict("QUIZ_VERSION_CONFLICT", "Tải lại"));
+        when(publication.reopen(teacher, quizId, 4)).thenThrow(ApiException.createConflict("QUIZ_VERSION_CONFLICT", "Tải lại"));
         mvc.perform(post("/api/v1/quizzes/{id}/reopen", quizId).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"version\":4}"))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("QUIZ_VERSION_CONFLICT"));
-        when(publication.reopen(teacher, quizId, 5)).thenThrow(ApiException.notFound("QUIZ_NOT_FOUND"));
+        when(publication.reopen(teacher, quizId, 5)).thenThrow(ApiException.createNotFound("QUIZ_NOT_FOUND"));
         mvc.perform(post("/api/v1/quizzes/{id}/reopen", quizId).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"version\":5}"))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("QUIZ_NOT_FOUND"));
@@ -218,17 +218,17 @@ class QuizControllersTest {
 
     @Test
     void readEndpointsValidateQueryParameters() throws Exception {
-        when(authoring.get(teacher, quizId, classId)).thenReturn(detail());
+        when(authoring.loadQuiz(teacher, quizId, classId)).thenReturn(detail());
         mvc.perform(get("/api/v1/quizzes/{id}", quizId).param("classId", classId.toString())).andExpect(status().isOk());
         mvc.perform(get("/api/v1/quizzes/{id}", quizId).param("other", "x")).andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/quizzes/{id}/bank-questions", quizId).param("difficulty", "VERY_HARD"))
                 .andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/quizzes/{id}/items:random-preview", quizId).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"count\":5,\"difficulty\":\"EASY\",\"tag\":null}")).andExpect(status().isOk());
-        verify(authoring).randomPreview(eq(teacher), eq(quizId), eq(5), eq(Difficulty.EASY),
+        verify(authoring).previewRandomQuestions(eq(teacher), eq(quizId), eq(5), eq(Difficulty.EASY),
                 isNull());
-        verify(authoring, never()).bankQuestions(any(), any(), any(), any(), any(), any(), any());
-        verify(authoring, never()).delete(any(), any(), anyLong());
+        verify(authoring, never()).listBankQuestions(any(), any(), any(), any(), any(), any(), any());
+        verify(authoring, never()).deleteQuiz(any(), any(), anyLong());
     }
 
     @Test
@@ -349,7 +349,7 @@ class QuizControllersTest {
     @Test
     void referenceMaterialsListedForQuiz() throws Exception {
         UUID material = UUID.randomUUID();
-        when(materials.forQuiz(teacher, quizId)).thenReturn(List.of(new SelectableMaterial(material, "Chương 1", true)));
+        when(materials.listForQuiz(teacher, quizId)).thenReturn(List.of(new SelectableMaterial(material, "Chương 1", true)));
         mvc.perform(get("/api/v1/quizzes/{id}/reference-materials", quizId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].materialId").value(material.toString()))

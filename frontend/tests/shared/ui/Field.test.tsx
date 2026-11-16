@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Field, Select, TextInput } from "@/shared/ui/inputs";
+import { Field, Select, TextInput } from "@/shared/ui/Inputs";
 
 describe("Field error descriptions", () => {
   it("nối lỗi tới ô nhập, giữ mô tả có sẵn và bỏ liên kết khi hết lỗi", () => {

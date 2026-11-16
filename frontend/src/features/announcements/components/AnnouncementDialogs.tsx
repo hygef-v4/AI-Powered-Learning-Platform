@@ -1,12 +1,11 @@
 "use client";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, ClassLabel, Dialog, Field, Icon, TextInput, cx, showToast } from "@/shared/ui";
+import { Button, ClassLabel, Dialog, Field, Icon, Textarea, TextInput, cx, showToast } from "@/shared/ui";
 import { announcementsApi, describeAnnouncementError } from "../api";
 import type { Announcement, ClassOption } from "../model/types";
+import { msg } from "@/i18n/msg";
 
-const AREA =
-  "min-h-36 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] leading-relaxed text-ink outline-none focus:border-focus disabled:opacity-60";
 const CHECK = "flex items-center gap-2 text-[13.5px] text-ink [&:has(input:disabled)]:text-muted";
 
 /**
@@ -56,7 +55,7 @@ export function CreateAnnouncementDialog({
     setBusy(false);
     if (failed.length < chosen.length) onCreated();
     if (!failed.length) {
-      showToast("Đã đăng thông báo");
+      showToast(msg("announcements.components.AnnouncementDialogs.announcementPosted"));
       onClose();
       return;
     }
@@ -64,13 +63,13 @@ export function CreateAnnouncementDialog({
     const names = failed
       .map((classId) => classes.find((c) => c.classId === classId)?.code ?? classId)
       .join(", ");
-    setError(fixedClassId ? message : `Chưa đăng được ở ${names}. ${message}`);
+    setError(fixedClassId ? message : msg("announcements.components.AnnouncementDialogs.couldNotPostTo", { names: String(names), message: String(message) }));
   }
 
   return (
     <Dialog
       open
-      title="Tạo thông báo"
+      title={msg("announcements.components.AnnouncementDialogs.createAnnouncement")}
       icon="campaign"
       onClose={onClose}
       dismissible={!busy}
@@ -82,11 +81,10 @@ export function CreateAnnouncementDialog({
           disabled={busy || !ready}
           data-testid="announcement-create-submit"
         >
-          Đăng
-        </Button>
+          {msg("announcements.components.AnnouncementDialogs.post")}</Button>
       }
     >
-      <Field label="Tiêu đề" htmlFor={`${id}-title`} required>
+      <Field label={msg("announcements.components.AnnouncementDialogs.title")} htmlFor={`${id}-title`} required>
         <TextInput
           id={`${id}-title`}
           maxLength={200}
@@ -100,14 +98,14 @@ export function CreateAnnouncementDialog({
       {!fixedClassId && (
         <ClassPicker classes={classes} chosen={chosen} disabled={busy} onChange={setChosen} />
       )}
-      <Field label="Nội dung" htmlFor={`${id}-body`} required>
-        <textarea
+      <Field label={msg("announcements.components.AnnouncementDialogs.content")} htmlFor={`${id}-body`} required>
+        <Textarea
           id={`${id}-body`}
           maxLength={5000}
           value={body}
           disabled={busy}
           onChange={(e) => setBody(e.target.value)}
-          className={AREA}
+          className="min-h-36 leading-relaxed"
           data-testid="announcement-create-body"
         />
       </Field>
@@ -124,8 +122,7 @@ export function CreateAnnouncementDialog({
               if (!e.target.checked) setEmail(false);
             }}
           />
-          Quan trọng
-        </label>
+          {msg("announcements.components.AnnouncementDialogs.important")}</label>
         <label className={CHECK}>
           <input
             type="checkbox"
@@ -135,8 +132,7 @@ export function CreateAnnouncementDialog({
             data-testid="announcement-email"
             onChange={(e) => setEmail(e.target.checked)}
           />
-          Gửi email
-        </label>
+          {msg("announcements.components.AnnouncementDialogs.sendEmail")}</label>
       </div>
       {error && (
         <p role="alert" className="text-[13px] text-danger">
@@ -171,17 +167,17 @@ function ClassPicker({
   const [place, setPlace] = useState<{ top: number; left: number; width: number } | null>(null);
   useEffect(() => {
     if (!open) return;
-    const update = () => {
+    const updateAnnouncement = () => {
       const rect = anchorRef.current?.getBoundingClientRect();
       if (rect) setPlace({ top: rect.bottom + 4, left: rect.left, width: rect.width });
     };
-    const frame = requestAnimationFrame(update);
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
+    const frame = requestAnimationFrame(updateAnnouncement);
+    window.addEventListener("resize", updateAnnouncement);
+    window.addEventListener("scroll", updateAnnouncement, true);
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", updateAnnouncement);
+      window.removeEventListener("scroll", updateAnnouncement, true);
     };
   }, [open]);
   const shown = useMemo(() => {
@@ -203,7 +199,7 @@ function ClassPicker({
   const summary = !codes.length
     ? ""
     : codes.length === classes.length && classes.length > 1
-      ? `Tất cả lớp (${codes.length})`
+      ? msg("announcements.components.AnnouncementDialogs.allClasses", { length: String(codes.length) })
       : codes.length <= 3
         ? codes.join(", ")
         : `${codes.slice(0, 3).join(", ")} +${codes.length - 3}`;
@@ -211,7 +207,7 @@ function ClassPicker({
     setOpen(false);
     setQuery("");
   };
-  const row = (
+  const renderRow = (
     key: string,
     checked: boolean,
     onToggle: () => void,
@@ -245,7 +241,7 @@ function ClassPicker({
   return (
     <div className="flex min-w-0 flex-col gap-1.5" data-testid="announcement-classes">
       <label htmlFor={`${id}-input`} className="text-[13px] font-semibold text-ink">
-        Lớp <span className="text-danger">*</span>
+        {msg("announcements.components.AnnouncementDialogs.class")}<span className="text-danger">*</span>
       </label>
       <div ref={anchorRef}>
         <TextInput
@@ -258,7 +254,7 @@ function ClassPicker({
           autoComplete="off"
           maxLength={100}
           disabled={disabled}
-          placeholder={open ? "Gõ mã lớp hoặc mã môn" : "Chọn lớp"}
+          placeholder={open ? msg("announcements.components.AnnouncementDialogs.typeAClassOrSubject") : msg("announcements.components.AnnouncementDialogs.chooseClasses")}
           data-testid="announcement-classes-input"
           value={open ? query : summary}
           title={codes.join(", ")}
@@ -292,7 +288,7 @@ function ClassPicker({
             id={`${id}-list`}
             role="listbox"
             aria-multiselectable
-            aria-label="Lớp"
+            aria-label={msg("announcements.components.AnnouncementDialogs.classes")}
             style={
               place
                 ? { top: place.top, left: place.left, width: place.width }
@@ -301,22 +297,22 @@ function ClassPicker({
             className="fixed z-[105] max-h-64 overflow-auto overscroll-contain rounded-lg border border-line bg-surface shadow-[var(--shadow-float)]"
           >
             {shown.length > 1 &&
-              row(
+              renderRow(
                 "all",
                 allShown,
                 toggleShown,
-                <span className="flex-1">{query ? "Chọn các lớp đang tìm" : "Chọn tất cả"}</span>,
+                <span className="flex-1">{query ? msg("announcements.components.AnnouncementDialogs.selectTheMatchingClasses") : msg("announcements.components.AnnouncementDialogs.selectAll")}</span>,
                 true,
               )}
             {shown.map((c) =>
-              row(
+              renderRow(
                 c.classId,
                 chosen.includes(c.classId),
                 () => handleToggleClass(c.classId),
                 <ClassLabel subjectCode={c.subjectCode} code={c.code} term={c.term} />,
               ),
             )}
-            {!shown.length && <p className="px-3 py-2 text-xs text-muted">Không có lớp phù hợp.</p>}
+            {!shown.length && <p className="px-3 py-2 text-xs text-muted">{msg("announcements.components.AnnouncementDialogs.noMatchingClasses")}</p>}
           </div>,
           document.body,
         )}
@@ -343,7 +339,7 @@ export function AnnouncementEditorDialog({
     setError("");
     try {
       await announcementsApi.editAnnouncement(item.id, title.trim(), body.trim(), item.version);
-      showToast("Đã lưu thay đổi");
+      showToast(msg("announcements.components.AnnouncementDialogs.changesSaved"));
       onSaved();
       onClose();
     } catch (e) {
@@ -355,7 +351,7 @@ export function AnnouncementEditorDialog({
   return (
     <Dialog
       open
-      title="Sửa thông báo"
+      title={msg("announcements.components.AnnouncementDialogs.editAnnouncement")}
       icon="edit"
       onClose={onClose}
       dismissible={!busy}
@@ -367,11 +363,10 @@ export function AnnouncementEditorDialog({
           onClick={() => void handleSave()}
           disabled={busy || !title.trim() || !body.trim()}
         >
-          Lưu
-        </Button>
+          {msg("announcements.components.AnnouncementDialogs.save")}</Button>
       }
     >
-      <Field label="Tiêu đề" htmlFor={`${id}-title`} required>
+      <Field label={msg("announcements.components.AnnouncementDialogs.title")} htmlFor={`${id}-title`} required>
         <TextInput
           id={`${id}-title`}
           data-testid="announcement-edit-title"
@@ -381,15 +376,15 @@ export function AnnouncementEditorDialog({
           onChange={(e) => setTitle(e.target.value)}
         />
       </Field>
-      <Field label="Nội dung" htmlFor={`${id}-body`} required>
-        <textarea
+      <Field label={msg("announcements.components.AnnouncementDialogs.content")} htmlFor={`${id}-body`} required>
+        <Textarea
           id={`${id}-body`}
           data-testid="announcement-edit-body"
           maxLength={5000}
           value={body}
           disabled={busy}
           onChange={(e) => setBody(e.target.value)}
-          className={AREA}
+          className="min-h-36 leading-relaxed"
         />
       </Field>
       {error && (
@@ -416,7 +411,7 @@ export function DeleteAnnouncementDialog({
     setBusy(true);
     try {
       await announcementsApi.deleteAnnouncement(item.id, item.version);
-      showToast("Đã xóa thông báo", "danger");
+      showToast(msg("announcements.components.AnnouncementDialogs.announcementDeleted"), "danger");
       onSaved();
       onClose();
     } catch (e) {
@@ -428,7 +423,7 @@ export function DeleteAnnouncementDialog({
   return (
     <Dialog
       open
-      title="Xóa thông báo?"
+      title={msg("announcements.components.AnnouncementDialogs.deleteAnnouncement")}
       onClose={onClose}
       dismissible={!busy}
       tone="danger"
@@ -439,11 +434,10 @@ export function DeleteAnnouncementDialog({
           onClick={() => void handleRemove()}
           disabled={busy}
         >
-          Xóa
-        </Button>
+          {msg("announcements.components.AnnouncementDialogs.delete")}</Button>
       }
     >
-      <p>Bạn có chắc muốn xóa thông báo “{item.title}” không?</p>
+      <p>{msg("announcements.components.AnnouncementDialogs.areYouSureYouWant")}{item.title}{msg("announcements.components.AnnouncementDialogs.text")}</p>
       {error && (
         <p role="alert" className="text-[13px] text-danger">
           {error}

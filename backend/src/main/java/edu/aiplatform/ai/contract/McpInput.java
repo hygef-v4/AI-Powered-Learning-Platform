@@ -43,10 +43,10 @@ public final class McpInput {
         return Map.of("items",items.subList(from,Math.min(from+size,items.size())),"total",items.size(),"page",page,"size",size);
     }
     public static void teaching(Actor actor) {
-        if(actor==null || (actor.role()!=Role.TEACHER && actor.role()!=Role.SUBJECT_MANAGER))throw ApiException.notFound("MCP_TOOL_NOT_FOUND");
+        if(actor==null || (actor.role()!=Role.TEACHER && actor.role()!=Role.SUBJECT_MANAGER))throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
     }
     public static void admin(Actor actor) {
-        if(actor==null || actor.role()!=Role.ADMIN)throw ApiException.notFound("MCP_TOOL_NOT_FOUND");
+        if(actor==null || actor.role()!=Role.ADMIN)throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
     }
-    public static ApiException invalid(){return ApiException.badRequest("INVALID_MCP_ARGUMENTS","Tham số MCP không hợp lệ");}
+    public static ApiException invalid(){return ApiException.createBadRequest("INVALID_MCP_ARGUMENTS","Tham số MCP không hợp lệ");}
 }

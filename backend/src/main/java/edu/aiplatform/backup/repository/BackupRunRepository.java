@@ -33,11 +33,11 @@ public class BackupRunRepository {
         UUID id = UUID.randomUUID();
         int inserted = jdbc.sql("insert into backup_runs (id, scheduled_for, state, created_at) "
                         + "values (:id, :date, 'CREATED', :now) on conflict (scheduled_for) do nothing")
-                .param("id", id).param("date", scheduledFor).param("now", ts(now)).update();
+                .param("id", id).param("date", scheduledFor).param("now", convertTimestamp(now)).update();
         return inserted == 1 ? Optional.of(id) : Optional.empty();
     }
 
-    public Optional<BackupRun> find(UUID id) {
+    public Optional<BackupRun> findRun(UUID id) {
         return jdbc.sql("select * from backup_runs where id = :id").param("id", id)
                 .query(BackupRunRepository::map).optional();
     }
@@ -46,7 +46,7 @@ public class BackupRunRepository {
     public int markRunning(UUID id, Instant now) {
         return jdbc.sql("update backup_runs set state = 'RUNNING', started_at = :now "
                         + "where id = :id and state in ('CREATED', 'RUNNING')")
-                .param("id", id).param("now", ts(now)).update();
+                .param("id", id).param("now", convertTimestamp(now)).update();
     }
 
     public int markSuccess(UUID id, Instant snapshotAt, String schemaVersion, String appVersion, String archiveRef,
@@ -54,21 +54,21 @@ public class BackupRunRepository {
         return jdbc.sql("update backup_runs set state = 'SUCCESS', snapshot_at = :snapshot, schema_version = :schema, "
                         + "app_version = :app, archive_ref = :ref, archive_sha256 = :sha, byte_size = :size, "
                         + "completed_at = :now, safe_error = null where id = :id and state = 'RUNNING'")
-                .param("id", id).param("snapshot", ts(snapshotAt)).param("schema", schemaVersion)
+                .param("id", id).param("snapshot", convertTimestamp(snapshotAt)).param("schema", schemaVersion)
                 .param("app", appVersion).param("ref", archiveRef).param("sha", sha256).param("size", byteSize)
-                .param("now", ts(now)).update();
+                .param("now", convertTimestamp(now)).update();
     }
 
     public int markFailed(UUID id, String safeError, Instant now) {
         return jdbc.sql("update backup_runs set state = 'FAILED', safe_error = :error, completed_at = :now "
                         + "where id = :id and state <> 'SUCCESS'")
-                .param("id", id).param("error", safeError).param("now", ts(now)).update();
+                .param("id", id).param("error", safeError).param("now", convertTimestamp(now)).update();
     }
 
     public List<BackupRun> findCreatedBefore(Instant olderThan) {
         // Lần chạy đang dump giữ khóa dòng (RUNNING chưa commit, vẫn đọc ra CREATED): bỏ qua, không gửi lại.
         return jdbc.sql("select * from backup_runs where state = 'CREATED' and created_at < :t for update skip locked")
-                .param("t", ts(olderThan)).query(BackupRunRepository::map).list();
+                .param("t", convertTimestamp(olderThan)).query(BackupRunRepository::map).list();
     }
 
     /** Bản {@code SUCCESS} chụp trước {@code cutoff}, chưa xóa, trừ bản thành công mới nhất (BR-U03-96). */
@@ -76,20 +76,20 @@ public class BackupRunRepository {
         return jdbc.sql("select * from backup_runs where state = 'SUCCESS' and purged_at is null "
                         + "and snapshot_at < :cutoff and id <> (select id from backup_runs where state = 'SUCCESS' "
                         + "order by snapshot_at desc limit 1)")
-                .param("cutoff", ts(cutoff)).query(BackupRunRepository::map).list();
+                .param("cutoff", convertTimestamp(cutoff)).query(BackupRunRepository::map).list();
     }
 
     public int markPurged(UUID id, Instant now) {
         return jdbc.sql("update backup_runs set purged_at = :now where id = :id and purged_at is null")
-                .param("id", id).param("now", ts(now)).update();
+                .param("id", id).param("now", convertTimestamp(now)).update();
     }
 
-    public Optional<BackupRun> latest() {
+    public Optional<BackupRun> findLatestRun() {
         return jdbc.sql("select * from backup_runs order by scheduled_for desc limit 1")
                 .query(BackupRunRepository::map).optional();
     }
 
-    public Page<BackupRun> page(Pageable page) {
+    public Page<BackupRun> listRunPage(Pageable page) {
         List<BackupRun> items = jdbc.sql("select * from backup_runs order by scheduled_for desc limit :limit offset :offset")
                 .param("limit", page.getPageSize()).param("offset", page.getOffset())
                 .query(BackupRunRepository::map).list();
@@ -97,7 +97,7 @@ public class BackupRunRepository {
         return new PageImpl<>(items, page, total);
     }
 
-    public long databaseSize() {
+    public long measureDatabaseSize() {
         return jdbc.sql("select pg_database_size(current_database())").query(Long.class).single();
     }
 
@@ -118,13 +118,13 @@ public class BackupRunRepository {
                   exists(select 1 from backup_runs where state in ('SUCCESS', 'FAILED')
                    and completed_at is null) as invalid_terminal
                 """)
-                .param("from", ts(fromInclusive)).param("to", ts(toExclusive))
-                .query((rs, row) -> new SummaryRow(instant(rs, "latest_success"), rs.getLong("failed_runs"),
+                .param("from", convertTimestamp(fromInclusive)).param("to", convertTimestamp(toExclusive))
+                .query((rs, row) -> new SummaryRow(readInstant(rs, "latest_success"), rs.getLong("failed_runs"),
                         rs.getString("latest_error"), rs.getBoolean("invalid_terminal"))).single();
     }
 
     /** Phiên bản schema Flyway mới nhất đã chạy thành công. */
-    public String schemaVersion() {
+    public String readSchemaVersion() {
         try {
             return jdbc.sql("select version from flyway_schema_history where success order by installed_rank desc "
                     + "limit 1").query(String.class).optional().orElse("none");
@@ -133,11 +133,11 @@ public class BackupRunRepository {
         }
     }
 
-    private static Timestamp ts(Instant instant) {
+    private static Timestamp convertTimestamp(Instant instant) {
         return instant == null ? null : Timestamp.from(instant);
     }
 
-    private static Instant instant(ResultSet rs, String column) throws SQLException {
+    private static Instant readInstant(ResultSet rs, String column) throws SQLException {
         Timestamp value = rs.getTimestamp(column);
         return value == null ? null : value.toInstant();
     }
@@ -145,9 +145,9 @@ public class BackupRunRepository {
     static BackupRun map(ResultSet rs, int row) throws SQLException {
         Long size = rs.getObject("byte_size", Long.class);
         return new BackupRun(rs.getObject("id", UUID.class), rs.getObject("scheduled_for", LocalDate.class),
-                BackupState.valueOf(rs.getString("state")), instant(rs, "created_at"), instant(rs, "snapshot_at"),
+                BackupState.valueOf(rs.getString("state")), readInstant(rs, "created_at"), readInstant(rs, "snapshot_at"),
                 rs.getString("schema_version"), rs.getString("app_version"), rs.getString("archive_ref"),
-                rs.getString("archive_sha256"), size, instant(rs, "started_at"),
-                instant(rs, "completed_at"), instant(rs, "purged_at"), rs.getString("safe_error"));
+                rs.getString("archive_sha256"), size, readInstant(rs, "started_at"),
+                readInstant(rs, "completed_at"), readInstant(rs, "purged_at"), rs.getString("safe_error"));
     }
 }

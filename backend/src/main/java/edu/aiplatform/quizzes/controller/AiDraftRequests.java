@@ -29,54 +29,54 @@ final class AiDraftRequests {
     }
 
     /** Yêu cầu AI cho ngân hàng (không có {@code version}). */
-    static DraftRequest bank(JsonNode body) {
-        QuestionRequests.fields(body, REQUEST_FIELDS);
+    static DraftRequest parseBankRequest(JsonNode body) {
+        QuestionRequests.rejectUnknownFields(body, REQUEST_FIELDS);
         return request(body);
     }
 
     /** Yêu cầu AI cho Quiz, kèm {@code version} của Quiz. */
-    static QuizDraft quiz(JsonNode body) {
+    static QuizDraft parseQuizDraft(JsonNode body) {
         Set<String> allowed = new HashSet<>(REQUEST_FIELDS);
         allowed.add("version");
-        QuestionRequests.fields(body, allowed);
-        return new QuizDraft(request(body), QuestionRequests.version(body));
+        QuestionRequests.rejectUnknownFields(body, allowed);
+        return new QuizDraft(request(body), QuestionRequests.readVersion(body));
     }
 
     /** Câu được chấp nhận (dạng nội dung câu như API ngân hàng); {@code withVersion} cho đích Quiz. */
     static Accept accept(JsonNode body, boolean withVersion) {
-        QuestionRequests.fields(body, withVersion ? Set.of("questions", "version") : Set.of("questions"));
+        QuestionRequests.rejectUnknownFields(body, withVersion ? Set.of("questions", "version") : Set.of("questions"));
         List<QuestionContent> questions = new ArrayList<>();
-        for (JsonNode node : QuestionRequests.array(body, "questions")) {
-            QuestionRequests.fields(node, Set.of("type", "stem", "options", "correctOptionIds", "explanation",
+        for (JsonNode node : QuestionRequests.readArray(body, "questions")) {
+            QuestionRequests.rejectUnknownFields(node, Set.of("type", "stem", "options", "correctOptionIds", "explanation",
                     "defaultPoints", "difficulty", "tags"));
-            questions.add(QuestionRequests.content(node));
+            questions.add(QuestionRequests.parseContent(node));
         }
-        return new Accept(questions, withVersion ? QuestionRequests.version(body) : 0);
+        return new Accept(questions, withVersion ? QuestionRequests.readVersion(body) : 0);
     }
 
     private static DraftRequest request(JsonNode body) {
         JsonNode count = body.get("count");
         if (count == null || !count.canConvertToInt()) {
-            throw QuestionRequests.invalid("count cần là số nguyên");
+            throw QuestionRequests.createInvalidError("count cần là số nguyên");
         }
         List<UUID> materials = new ArrayList<>();
         if (body.hasNonNull("materialIds")) {
-            for (JsonNode node : QuestionRequests.array(body, "materialIds")) {
+            for (JsonNode node : QuestionRequests.readArray(body, "materialIds")) {
                 if (!node.isTextual()) {
-                    throw QuestionRequests.invalid("materialIds cần danh sách id");
+                    throw QuestionRequests.createInvalidError("materialIds cần danh sách id");
                 }
                 try {
                     materials.add(UUID.fromString(node.asText()));
                 } catch (IllegalArgumentException malformed) {
-                    throw QuestionRequests.invalid("materialIds có id không hợp lệ");
+                    throw QuestionRequests.createInvalidError("materialIds có id không hợp lệ");
                 }
             }
         }
-        return new DraftRequest(QuestionRequests.text(body, "instructions", false), count.asInt(),
-                QuestionRequests.enumValue(body, "type", QuestionType.class, false),
-                QuestionRequests.enumValue(body, "difficulty", Difficulty.class, false), materials,
-                QuestionRequests.enumValue(body, "source", AiSource.class, false),
-                QuestionRequests.enumValue(body, "provider", AiProvider.class, false),
-                QuestionRequests.text(body, "requestRef", true));
+        return new DraftRequest(QuestionRequests.readText(body, "instructions", false), count.asInt(),
+                QuestionRequests.parseEnumValue(body, "type", QuestionType.class, false),
+                QuestionRequests.parseEnumValue(body, "difficulty", Difficulty.class, false), materials,
+                QuestionRequests.parseEnumValue(body, "source", AiSource.class, false),
+                QuestionRequests.parseEnumValue(body, "provider", AiProvider.class, false),
+                QuestionRequests.readText(body, "requestRef", true));
     }
 }

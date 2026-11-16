@@ -7,18 +7,19 @@ import { ApiError } from "@/shared/api/client";
 import { isValidStudentCode, normalizeStudentCode, STUDENT_CODE_FORMAT_MESSAGE } from "@/shared/studentCode";
 import { Alert } from "@/shared/ui/Alert";
 import { Button, IconButton } from "@/shared/ui/Button";
-import { Field, TextInput } from "@/shared/ui/inputs";
+import { Field, TextInput } from "@/shared/ui/Inputs";
 import { LockedInput } from "@/shared/ui/LockedInput";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { Pill } from "@/shared/ui/Pill";
 import { Section } from "@/shared/ui/Section";
 import { showToast, type ToastTone } from "@/shared/ui/Toast";
-import { useSession } from "../../hooks/session";
+import { useSession } from "../../hooks/SessionProvider";
 import { ROLE_LABELS } from "../../model/types";
 import { RoleChangeDialog, RoleChangeRejectedDialog, StatusToggleDialog, type RoleChangeBlock } from "../components/AccountDialogs";
 import { getAccount, updateAccount, type AccountDetail } from "../api";
 import { ADMIN_ERROR_LABELS, formatDate, STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { msg } from "@/i18n/msg";
 
 const PHONE_FORMAT = /^\+?[0-9]{8,15}$/;
 
@@ -42,7 +43,7 @@ export function AccountDetailPage() {
         if (active) setAccount(detail);
       })
       .catch((e: unknown) => {
-        if (active) setLoadError(e instanceof ApiError && e.problem.status === 404 ? "Không tìm thấy tài khoản." : "Không tải được tài khoản.");
+        if (active) setLoadError(e instanceof ApiError && e.problem.status === 404 ? msg("identity.admin.pages.AccountDetailPage.accountNotFound") : msg("identity.admin.pages.AccountDetailPage.couldNotLoadTheAccount"));
       });
     return () => {
       active = false;
@@ -54,14 +55,14 @@ export function AccountDetailPage() {
     try {
       setAccount(await getAccount(id));
     } catch {
-      setLoadError("Không tải lại được tài khoản. Hãy tải lại trang.");
+      setLoadError(msg("identity.admin.pages.AccountDetailPage.couldNotReloadTheAccount"));
     }
   }
 
   if (loadError) {
     return (
       <>
-        <PageHeader title="Tài khoản" backHref="/admin/accounts" />
+        <PageHeader title={msg("identity.admin.pages.AccountDetailPage.accounts")} backHref="/admin/accounts" />
         <PageLoadError onRetry={reload}>{loadError}</PageLoadError>
       </>
     );
@@ -71,7 +72,7 @@ export function AccountDetailPage() {
   const isSelf = session.status === "authenticated" && session.profile.accountId === account.id;
   const reopening = account.status === "DISABLED";
 
-  function changed(saved: AccountDetail, message: string, tone: ToastTone = "success") {
+  function applyChanged(saved: AccountDetail, message: string, tone: ToastTone = "success") {
     setAccount(saved);
     setPopup(null);
     showToast(message, tone);
@@ -82,28 +83,28 @@ export function AccountDetailPage() {
       <PageHeader
         backHref="/admin/accounts"
         title={account.displayName}
-        breadcrumb={[{ label: "Tài khoản", href: "/admin/accounts" }, { label: account.email }]}
+        breadcrumb={[{ label: msg("identity.admin.pages.AccountDetailPage.accounts"), href: "/admin/accounts" }, { label: account.email }]}
       />
       <div className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
         <AccountEditForm
           key={account.version}
           account={account}
           isSelf={isSelf}
-          onSaved={(saved) => changed(saved, "Đã lưu thay đổi")}
+          onSaved={(saved) => applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.changesSaved"))}
           onConflict={reload}
           onChangeRole={() => setPopup({ kind: "role" })}
         />
         <div className="flex flex-col gap-4">
-          <Section title="Trạng thái">
+          <Section title={msg("identity.admin.pages.AccountDetailPage.status")}>
             <dl className="flex flex-col gap-2.5 text-[13px]">
               <div className="flex items-center justify-between">
-                <dt className="text-muted">Trạng thái</dt>
+                <dt className="text-muted">{msg("identity.admin.pages.AccountDetailPage.status")}</dt>
                 <dd>
                   <Pill tone={STATUS_TONES[account.status]}>{STATUS_LABELS[account.status]}</Pill>
                 </dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="text-muted">Ngày tạo</dt>
+                <dt className="text-muted">{msg("identity.admin.pages.AccountDetailPage.created")}</dt>
                 <dd className="text-ink">{formatDate(account.createdAt)}</dd>
               </div>
             </dl>
@@ -113,16 +114,15 @@ export function AccountDetailPage() {
               disabled={isSelf && !reopening}
               onClick={() => setPopup({ kind: "status" })}
             >
-              {reopening ? "Mở lại tài khoản" : "Vô hiệu hóa tài khoản"}
+              {reopening ? msg("identity.admin.pages.AccountDetailPage.reopenAccount") : msg("identity.admin.pages.AccountDetailPage.disableAccount")}
             </Button>
           </Section>
-          <Section title="Lịch sử">
+          <Section title={msg("identity.admin.pages.AccountDetailPage.history")}>
             <Link
               href={`/admin/audit?actorEmail=${encodeURIComponent(account.email)}&actorId=${account.id}`}
               className="inline-flex items-center gap-1 text-[13px] font-semibold text-primary-ink hover:underline"
             >
-              Mở Nhật ký của tài khoản
-            </Link>
+              {msg("identity.admin.pages.AccountDetailPage.openTheAccountsLog")}</Link>
           </Section>
         </div>
       </div>
@@ -131,7 +131,7 @@ export function AccountDetailPage() {
         <RoleChangeDialog
           account={account}
           onClose={() => setPopup(null)}
-          onChanged={(saved) => changed(saved, "Đã đổi vai trò")}
+          onChanged={(saved) => applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.roleChanged"))}
           onConflict={reload}
           onBlocked={(block) => setPopup({ kind: "blocked", block })}
         />
@@ -141,7 +141,7 @@ export function AccountDetailPage() {
         <StatusToggleDialog
           account={account}
           onClose={() => setPopup(null)}
-          onChanged={(saved) => saved.status === "DISABLED" ? changed(saved, "Đã vô hiệu hóa tài khoản", "danger") : changed(saved, "Đã mở lại tài khoản")}
+          onChanged={(saved) => saved.status === "DISABLED" ? applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.accountDisabled"), "danger") : applyChanged(saved, msg("identity.admin.pages.AccountDetailPage.accountReopened"))}
           onConflict={reload}
         />
       )}
@@ -190,11 +190,11 @@ function AccountEditForm({
     event.preventDefault();
     const code = normalizeStudentCode(studentCode);
     const errors = {
-      name: displayName.trim().length === 0 ? "Nhập họ và tên." : undefined,
-      phone: phoneNumber.trim() && !PHONE_FORMAT.test(phoneNumber.trim()) ? "Số điện thoại gồm 8–15 chữ số, có thể có dấu + ở đầu." : undefined,
+      name: displayName.trim().length === 0 ? msg("identity.admin.pages.AccountDetailPage.enterTheFullName") : undefined,
+      phone: phoneNumber.trim() && !PHONE_FORMAT.test(phoneNumber.trim()) ? msg("identity.admin.pages.AccountDetailPage.thePhoneNumberHas8") : undefined,
       // Đã có mã thì không được xóa trống (BR-U01-105).
       studentCode: !codeChanged ? undefined
-        : !code ? "Không xóa trống được MSSV đã có."
+        : !code ? msg("identity.admin.pages.AccountDetailPage.anExistingStudentIdCannot")
           : isValidStudentCode(code) ? undefined : STUDENT_CODE_FORMAT_MESSAGE,
     };
     setFieldError(errors);
@@ -206,7 +206,7 @@ function AccountEditForm({
         codeChanged ? code : undefined));
     } catch (e) {
       const code = e instanceof ApiError ? e.problem.code : undefined;
-      setError((code && ADMIN_ERROR_LABELS[code]) ?? "Không lưu được, vui lòng thử lại.");
+      setError((code && ADMIN_ERROR_LABELS[code]) ?? msg("identity.admin.pages.AccountDetailPage.couldNotSavePleaseTry"));
       if (code === "VERSION_CONFLICT") await onConflict();
     } finally {
       setBusy(false);
@@ -214,13 +214,13 @@ function AccountEditForm({
   }
 
   return (
-    <Section title="Thông tin tài khoản">
+    <Section title={msg("identity.admin.pages.AccountDetailPage.accountInformation")}>
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Họ và tên" htmlFor={nameId} required error={fieldError.name}>
+          <Field label={msg("identity.admin.pages.AccountDetailPage.fullName")} htmlFor={nameId} required error={fieldError.name}>
             <TextInput id={nameId} value={displayName} invalid={!!fieldError.name} onChange={(e) => setDisplayName(e.target.value)} />
           </Field>
-          <Field label="Số điện thoại (tùy chọn)" htmlFor={phoneId} error={fieldError.phone}>
+          <Field label={msg("identity.admin.pages.AccountDetailPage.phoneNumberOptional")} htmlFor={phoneId} error={fieldError.phone}>
             <TextInput
               id={phoneId}
               inputMode="tel"
@@ -229,25 +229,25 @@ function AccountEditForm({
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </Field>
-          <Field label="Email trường" htmlFor={emailId}>
+          <Field label={msg("identity.admin.pages.AccountDetailPage.schoolEmail")} htmlFor={emailId}>
             <LockedInput id={emailId} value={account.email} className="min-w-0" />
           </Field>
           <div className="flex min-w-0 flex-col gap-1">
-            <Field label="Vai trò" htmlFor={roleId}>
+            <Field label={msg("identity.admin.pages.AccountDetailPage.role")} htmlFor={roleId}>
               <div className="flex min-w-0 gap-2">
                 <LockedInput id={roleId} value={ROLE_LABELS[account.role]} className="min-w-0 flex-1" />
                 {!student && (
-                  <IconButton icon="swap_horiz" label="Đổi vai trò" size={40} onClick={onChangeRole} disabled={isSelf}
+                  <IconButton icon="swap_horiz" label={msg("identity.admin.pages.AccountDetailPage.changeRole")} size={40} onClick={onChangeRole} disabled={isSelf}
                     className="border border-line-strong bg-surface text-ink hover:bg-sunken" />
                 )}
               </div>
             </Field>
             {/* BR-U01-107: không đổi vai trò vào hoặc ra khỏi Sinh viên. */}
-            {student && <p className="text-xs text-muted">Không đổi được vai trò của tài khoản sinh viên.</p>}
+            {student && <p className="text-xs text-muted">{msg("identity.admin.pages.AccountDetailPage.theRoleOfAStudent")}</p>}
           </div>
           {student && (
             <div className="flex min-w-0 flex-col gap-1">
-              <Field label="Mã số sinh viên" htmlFor={codeId} error={fieldError.studentCode}>
+              <Field label={msg("identity.admin.pages.AccountDetailPage.studentId")} htmlFor={codeId} error={fieldError.studentCode}>
                 {account.studentCodeEditable ? (
                   <TextInput
                     id={codeId}
@@ -260,12 +260,12 @@ function AccountEditForm({
                     onBlur={() => setStudentCode(normalizeStudentCode(studentCode))}
                   />
                 ) : (
-                  <LockedInput id={codeId} value={savedCode || "Chưa có MSSV"} className="min-w-0" />
+                  <LockedInput id={codeId} value={savedCode || msg("identity.admin.pages.AccountDetailPage.noStudentIdYet")} className="min-w-0" />
                 )}
               </Field>
               <p className="text-xs text-muted" data-testid="account-detail-student-code-hint">
-                {account.studentCodeEditable ? "Chỉ sửa được khi sinh viên chưa kích hoạt."
-                  : "MSSV không đổi được sau khi sinh viên kích hoạt tài khoản."}
+                {account.studentCodeEditable ? msg("identity.admin.pages.AccountDetailPage.canOnlyBeEditedBefore")
+                  : msg("identity.admin.pages.AccountDetailPage.theStudentIdCannotBe")}
               </p>
             </div>
           )}
@@ -277,11 +277,9 @@ function AccountEditForm({
         )}
         <div className="flex justify-end gap-2 border-t border-line pt-4">
           <Button onClick={reset} disabled={!dirty || busy}>
-            Hủy
-          </Button>
+            {msg("identity.admin.pages.AccountDetailPage.cancel")}</Button>
           <Button type="submit" variant="primary" icon="save" disabled={!dirty || busy}>
-            Lưu thay đổi
-          </Button>
+            {msg("identity.admin.pages.AccountDetailPage.saveChanges")}</Button>
         </div>
       </form>
     </Section>

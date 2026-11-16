@@ -6,13 +6,14 @@ import { useEffect, useState } from "react";
 import { Alert, Button, ClickableRow, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, Td, TextInput, Th } from "@/shared/ui";
 import { createSubjectQuiz, getManagedSubjects, getSubjectQuizzes } from "../api";
 import { CreateQuizDialog } from "../components/CreateQuizDialog";
-import { errorMessage, formatDateTime, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
+import { describeError, formatDateTime, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
 import type { ManagedSubject, QuizPage, QuizStatus } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { msg } from "@/i18n/msg";
 
 const PAGE_SIZE = 20;
 const TABS: { key: QuizStatus | null; label: string }[] = [
-  { key: null, label: "Tất cả" },
+  { key: null, label: msg("quizzes.pages.SubjectQuizListPage.all") },
   { key: "DRAFT", label: QUIZ_STATUS_LABELS.DRAFT },
   { key: "OPEN", label: QUIZ_STATUS_LABELS.OPEN },
   { key: "RETIRED", label: QUIZ_STATUS_LABELS.RETIRED },
@@ -36,7 +37,7 @@ export function SubjectQuizListPage() {
     let active = true;
     getManagedSubjects()
       .then((list) => active && setSubjects(list))
-      .catch((failure: unknown) => active && setSubjectsError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setSubjectsError(describeError(failure)));
     return () => {
       active = false;
     };
@@ -59,24 +60,24 @@ export function SubjectQuizListPage() {
         setError(null);
         setData(page);
       })
-      .catch((failure: unknown) => active && setError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setError(describeError(failure)));
     return () => {
       active = false;
     };
   }, [subject, filters, status, reloadKey]);
 
   if (subjectsError) return <PageLoadError>{subjectsError}</PageLoadError>;
-  if (subjects === null) return <PageLoading label="Đang tải môn học…" />;
-  if (!subject) return <Alert tone="info">Bạn chưa được giao quản lý môn nào.</Alert>;
+  if (subjects === null) return <PageLoading label={msg("quizzes.pages.SubjectQuizListPage.loadingSubjects")} />;
+  if (!subject) return <Alert tone="info">{msg("quizzes.pages.SubjectQuizListPage.youHaveNotBeenAssigned")}</Alert>;
   const archived = subject.status !== undefined && subject.status !== "ACTIVE";
 
   return (
     <>
       <PageHeader
         title="Quiz"
-        breadcrumb={[{ label: "Quiz của môn" }, { label: subject.code }]}
+        breadcrumb={[{ label: msg("quizzes.pages.SubjectQuizListPage.subjectQuizzes") }, { label: subject.code }]}
         actions={<div className="flex flex-wrap items-center gap-2">
-          <Select aria-label="Chọn môn" value={subject.id} data-testid="quiz-list-subject"
+          <Select aria-label={msg("quizzes.pages.SubjectQuizListPage.chooseSubject")} value={subject.id} data-testid="quiz-list-subject"
             onChange={(event) => {
               setData(null);
               setFilters({ q: "", page: 0 });
@@ -85,34 +86,34 @@ export function SubjectQuizListPage() {
             }}>
             {subjects.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
           </Select>
-          {!archived && <Button variant="primary" icon="add" onClick={() => setCreating(true)} data-testid="quiz-list-create">Tạo quiz</Button>}
+          {!archived && <Button variant="primary" icon="add" onClick={() => setCreating(true)} data-testid="quiz-list-create">{msg("quizzes.pages.SubjectQuizListPage.createQuiz")}</Button>}
         </div>}
       />
-      {archived && <Alert tone="warning" className="mb-3">Môn đã lưu trữ, quiz của môn chỉ xem.</Alert>}
+      {archived && <Alert tone="warning" className="mb-3">{msg("quizzes.pages.SubjectQuizListPage.theSubjectIsArchivedIts")}</Alert>}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Segmented<QuizStatus | "">
           as="tab"
-          ariaLabel="Trạng thái quiz"
+          ariaLabel={msg("quizzes.pages.SubjectQuizListPage.quizStatus")}
           value={status}
           onChange={(value) => { setStatus(value); setFilters((current) => ({ ...current, page: 0 })); }}
           options={TABS.map((tab) => ({ value: tab.key ?? "", label: tab.label, testId: `quiz-list-tab-${tab.key ?? "ALL"}` }))}
         />
-        <TextInput icon="search" placeholder="Tìm theo tên quiz" aria-label="Tìm theo tên quiz" value={search} maxLength={200}
+        <TextInput icon="search" placeholder={msg("quizzes.pages.SubjectQuizListPage.searchByQuizName")} aria-label={msg("quizzes.pages.SubjectQuizListPage.searchByQuizName")} value={search} maxLength={200}
           onChange={(event) => setSearch(event.target.value)} wrapperClassName="min-w-60 flex-1" data-testid="quiz-list-search" />
       </div>
-      {error && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => setReloadKey((k) => k + 1)}>Thử lại</Button>}>{error}</Alert>}
-      {!error && !data && <p role="status" className="py-8 text-center text-sm text-muted">Đang tải quiz…</p>}
+      {error && <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => setReloadKey((k) => k + 1)}>{msg("quizzes.pages.SubjectQuizListPage.retry")}</Button>}>{error}</Alert>}
+      {!error && !data && <p role="status" className="py-8 text-center text-sm text-muted">{msg("quizzes.pages.SubjectQuizListPage.loadingQuizzes")}</p>}
       {!error && data && (
         <div className="flex flex-col gap-3">
           <TableFrame className="[&_table]:min-w-[680px] [&_table]:table-fixed">
-            <colgroup><col /><col className="w-[90px]" /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[150px]" /></colgroup><thead><tr><Th>Quiz</Th><Th>Số câu</Th><Th>Thời gian</Th><Th>Trạng thái</Th><Th>Cập nhật</Th></tr></thead>
+            <colgroup><col /><col className="w-[90px]" /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[150px]" /></colgroup><thead><tr><Th>Quiz</Th><Th>{msg("quizzes.pages.SubjectQuizListPage.questions")}</Th><Th>{msg("quizzes.pages.SubjectQuizListPage.time")}</Th><Th>{msg("quizzes.pages.SubjectQuizListPage.status")}</Th><Th>{msg("quizzes.pages.SubjectQuizListPage.updated")}</Th></tr></thead>
             <tbody>
-              {data.items.length === 0 && <tr><Td colSpan={5} className="py-8 text-center text-muted">Chưa có quiz phù hợp.</Td></tr>}
+              {data.items.length === 0 && <tr><Td colSpan={5} className="py-8 text-center text-muted">{msg("quizzes.pages.SubjectQuizListPage.noMatchingQuizzesYet")}</Td></tr>}
               {data.items.map((row) => (
                 <ClickableRow key={row.id} onClick={() => router.push(`/quizzes/${row.id}`)} data-testid="quiz-list-row">
                   <Td><span className="font-semibold">{row.title}</span></Td>
-                  <Td>{row.itemCount} câu · {formatPoints(row.maxScore)} điểm</Td>
-                  <Td>{row.timeLimitMinutes ? `${row.timeLimitMinutes} phút` : "Không giới hạn"}</Td>
+                  <Td>{row.itemCount} {msg("quizzes.pages.SubjectQuizListPage.questions2")}{formatPoints(row.maxScore)} {msg("quizzes.pages.SubjectQuizListPage.points")}</Td>
+                  <Td>{row.timeLimitMinutes ? msg("quizzes.pages.SubjectQuizListPage.min", { timeLimitMinutes: String(row.timeLimitMinutes) }) : msg("quizzes.pages.SubjectQuizListPage.unlimited")}</Td>
                   <Td><Pill tone={QUIZ_STATUS_TONES[row.status]}>{QUIZ_STATUS_LABELS[row.status]}</Pill></Td>
                   <Td className="whitespace-nowrap text-muted">{formatDateTime(row.updatedAt)}</Td>
                 </ClickableRow>

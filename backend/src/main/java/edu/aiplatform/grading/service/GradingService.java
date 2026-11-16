@@ -85,7 +85,7 @@ public class GradingService {
      */
     public Evaluation requireCurrent(Actor actor, UUID id, long version) {
         var evaluation = evaluationRepository.lockById(id)
-                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_WRITE);
         requireClosedAssignment(evaluation.assignmentId);
         evaluation.checkVersion(version);
@@ -107,28 +107,28 @@ public class GradingService {
         final AssignmentView assignment;
         try {
             assignment = assignmentQuery.get(assignmentId).orElseThrow(() ->
-                    ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
+                    ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
         } catch (ApiException ex) {
             throw ex;
         } catch (RuntimeException ex) {
-            throw ApiException.unavailable("GRADING_DEPENDENCY_UNAVAILABLE", "Assignment service unavailable");
+            throw ApiException.createUnavailable("GRADING_DEPENDENCY_UNAVAILABLE", "Assignment service unavailable");
         }
         if (!isAssignmentClosed(assignment)) {
-            throw ApiException.conflict("GRADING_ASSIGNMENT_OPEN", ASSIGNMENT_OPEN_MESSAGE);
+            throw ApiException.createConflict("GRADING_ASSIGNMENT_OPEN", ASSIGNMENT_OPEN_MESSAGE);
         }
     }
 
     private GroupSubmissionView requireGroupSubmission(Evaluation evaluation) {
         var source = groupSubmissionSourceProvider.getIfAvailable();
         if (source == null)
-            throw ApiException.unavailable("GROUP_SUBMISSIONS_UNAVAILABLE", "Group submission source unavailable");
+            throw ApiException.createUnavailable("GROUP_SUBMISSIONS_UNAVAILABLE", "Group submission source unavailable");
         var submission = source.getGroupSubmission(evaluation.groupDocumentId).orElseThrow(() ->
-                ApiException.unavailable("SUBMISSION_UNAVAILABLE", "Group submission unavailable"));
+                ApiException.createUnavailable("SUBMISSION_UNAVAILABLE", "Group submission unavailable"));
         if (!Objects.equals(evaluation.groupDocumentId, submission.groupDocumentId())
                 || !Objects.equals(evaluation.submissionHash, submission.submissionHash())
                 || !evaluation.assignmentId.equals(submission.assignmentId())
                 || !evaluation.classId.equals(submission.classId()))
-            throw ApiException.conflict("SUBMISSION_CHANGED", "Group submission snapshot changed");
+            throw ApiException.createConflict("SUBMISSION_CHANGED", "Group submission snapshot changed");
         return submission;
     }
 
@@ -137,17 +137,17 @@ public class GradingService {
      */
     private SubmissionView requireLatestSubmission(Evaluation evaluation) {
         var submission = submissionQuery.getSubmission(evaluation.attemptId).orElseThrow(
-                () -> ApiException.unavailable("SUBMISSION_UNAVAILABLE", "Submission unavailable"));
+                () -> ApiException.createUnavailable("SUBMISSION_UNAVAILABLE", "Submission unavailable"));
         if (!evaluation.submissionHash.equals(submission.receiptHash())
                 || !evaluation.assignmentId.equals(submission.assignmentId())
                 || !evaluation.classId.equals(submission.classId()))
-            throw ApiException.conflict("SUBMISSION_CHANGED", "Submission snapshot changed");
+            throw ApiException.createConflict("SUBMISSION_CHANGED", "Submission snapshot changed");
         boolean latest = submissionQuery
                 .listSubmissions(evaluation.assignmentId, evaluation.classId).stream()
                 .anyMatch(row -> evaluation.accountId.equals(row.accountId())
                         && evaluation.attemptId.equals(row.gradedAttemptId()));
         if (!latest)
-            throw ApiException.conflict("NOT_LATEST_ATTEMPT",
+            throw ApiException.createConflict("NOT_LATEST_ATTEMPT",
                     "Only the latest submitted attempt can be graded");
         return submission;
     }
@@ -158,7 +158,7 @@ public class GradingService {
     @Transactional
     public Evaluation saveEvaluation(Actor actor, UUID id, Save input) {
         if (input.usedProposalId() != null)
-            throw ApiException.badRequest("PROPOSAL_REQUIRES_VALIDATION",
+            throw ApiException.createBadRequest("PROPOSAL_REQUIRES_VALIDATION",
                     "Apply proposal through proposal review endpoint");
         return saveCheckedEvaluation(actor, id, input, null);
     }
@@ -179,7 +179,7 @@ public class GradingService {
         var evaluation = requireCurrent(actor, id, input.version());
         evaluation.requireMutableGrade();
         if (evaluation.kind == EvaluationKind.MEMBER)
-            throw ApiException.badRequest("MEMBER_ENDPOINT_REQUIRED",
+            throw ApiException.createBadRequest("MEMBER_ENDPOINT_REQUIRED",
                     "Use member grading endpoint");
 
         // Step 2: Compute rubric score points and compare current vs previous effective item scores
@@ -227,7 +227,7 @@ public class GradingService {
 
         // Step 6: Propagate grade to all group members (if group submission), persist to DB, and record audit event
         propagateGroupGrade(evaluation, actor, GroupOperation.SAVE, input.changeReason());
-        evaluationRepository.save(evaluation);
+        evaluationRepository.saveEvaluation(evaluation);
         recordAudit(actor, evaluation, "GRADE_SAVED", null);
         return evaluation;
     }
@@ -240,13 +240,13 @@ public class GradingService {
         // Step 1: Lock evaluation, verify teacher permission, and ensure it is not a group member sub-record
         var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
         if (evaluation.kind == EvaluationKind.MEMBER)
-            throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Finalize the group document");
+            throw ApiException.createBadRequest("GROUP_ROOT_REQUIRED", "Finalize the group document");
 
         requireEvaluationReviewed(evaluation);
 
         // Legacy validation must not introduce a new locked state.
         evaluation.finalizeGrade(actor.accountId(), clock.instant());
-        evaluationRepository.save(evaluation);
+        evaluationRepository.saveEvaluation(evaluation);
         recordAudit(actor, evaluation, "GRADE_REVIEWED", null);
         return evaluation;
     }
@@ -259,7 +259,7 @@ public class GradingService {
         // Step 1: Lock evaluation and ensure publication is performed on root evaluation
         var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
         if (evaluation.kind == EvaluationKind.MEMBER)
-            throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Publish the group document");
+            throw ApiException.createBadRequest("GROUP_ROOT_REQUIRED", "Publish the group document");
 
         if (evaluation.state == EvaluationStatus.PUBLISHED) return evaluation;
         requireEvaluationReviewed(evaluation);
@@ -269,7 +269,7 @@ public class GradingService {
         var recipients = propagateGroupGrade(evaluation, actor, GroupOperation.PUBLISH, null);
         if (evaluation.kind == EvaluationKind.ATTEMPT)
             recipients = List.of(evaluation.accountId);
-        evaluationRepository.save(evaluation);
+        evaluationRepository.saveEvaluation(evaluation);
         recordAudit(actor, evaluation, "GRADE_PUBLISHED", null);
 
         // Step 3: Broadcast domain event to notify students
@@ -288,13 +288,13 @@ public class GradingService {
     public Evaluation saveMemberGrade(Actor actor, UUID rootId, UUID accountId, MemberSave input) {
         // Step 1: Lock group root evaluation and assert it has already been graded
         var root = evaluationRepository.findById(rootId)
-                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         gradingAccess.requireTeacher(actor, root.classId, Actions.GRADING_WRITE);
         requireClosedAssignment(root.assignmentId);
         root = evaluationRepository.lockById(rootId).orElseThrow();
         root.requireMutableGrade();
         if (root.kind != EvaluationKind.GROUP_DOCUMENT || root.score == null)
-            throw ApiException.conflict("GROUP_NOT_GRADED", "Grade group document first");
+            throw ApiException.createConflict("GROUP_NOT_GRADED", "Grade group document first");
         requireGroupSubmission(root);
         if (root.state == EvaluationStatus.PUBLISHED) requireEvaluationReviewed(root);
 
@@ -308,7 +308,7 @@ public class GradingService {
                         && hash.equals(evaluation.submissionHash)
                         && accountId.equals(evaluation.accountId)
                         && evaluation.state != EvaluationStatus.SUPERSEDED)
-                .findFirst().orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                .findFirst().orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         var member = evaluationRepository.lockById(candidate.id).orElseThrow();
         member.checkVersion(input.version());
 
@@ -320,7 +320,7 @@ public class GradingService {
         member.overrideMemberScore(input.score(), groupRubricScore, input.reason(), actor.accountId(),
                 clock.instant());
         member.contributionLevel = input.contributionLevel();
-        evaluationRepository.save(member);
+        evaluationRepository.saveEvaluation(member);
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADE_CHANGED", "EVALUATION",
                 member.id.toString(), AuditResult.SUCCESS, input.reason(),
                 Map.of("classId", member.classId.toString(),
@@ -344,7 +344,7 @@ public class GradingService {
             Map<UUID, Map<UUID, BigDecimal>> previousEffectiveScores) {
         if (Boolean.TRUE.equals(input.clearStructuredFeedback())) {
             if (input.structuredFeedback() != null) {
-                throw ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK",
+                throw ApiException.createBadRequest("INVALID_STRUCTURED_FEEDBACK",
                         "Cannot provide structuredFeedback when clearStructuredFeedback is true");
             }
             return new ResolvedFeedbackState(null, Map.of(), Map.of());
@@ -415,7 +415,7 @@ public class GradingService {
             var baseItem = baselineItems.get(i);
             if (baseItem != null && baseItem.requiresReview() && !previouslyAck
                     && !item.requiresReview() && !inputAck) {
-                throw ApiException.badRequest("UNACKNOWLEDGED_REVIEW_FLAG",
+                throw ApiException.createBadRequest("UNACKNOWLEDGED_REVIEW_FLAG",
                         "Cần xác nhận rõ ràng trước khi gỡ cờ kiểm tra của AI.");
             }
 
@@ -439,7 +439,7 @@ public class GradingService {
 
             if (inputAck && suppliedReviewedScore != null
                     && suppliedReviewedScore.compareTo(currentScore) != 0) {
-                throw ApiException.badRequest("INVALID_REVIEW_METADATA",
+                throw ApiException.createBadRequest("INVALID_REVIEW_METADATA",
                         "Điểm xác nhận giải thích không khớp với điểm mục rubric đang lưu.");
             }
 
@@ -454,7 +454,7 @@ public class GradingService {
             } else if (scoreChangedFromBaseline) {
                 if (suppliedReviewedScore != null
                         && suppliedReviewedScore.compareTo(currentScore) == 0) {
-                    throw ApiException.badRequest("INVALID_REVIEW_METADATA",
+                    throw ApiException.createBadRequest("INVALID_REVIEW_METADATA",
                             "Điểm mục rubric đã thay đổi; cần chỉnh sửa hoặc xác nhận lại giải thích.");
                 }
                 resolvedReviewedScore = prevReviewedScore != null ? prevReviewedScore : baseScore;
@@ -462,7 +462,7 @@ public class GradingService {
             } else if (suppliedReviewedScore != null) {
                 if (prevReviewedScore != null && prevReviewedScore.compareTo(currentScore) != 0
                         && suppliedReviewedScore.compareTo(currentScore) == 0) {
-                    throw ApiException.badRequest("INVALID_REVIEW_METADATA",
+                    throw ApiException.createBadRequest("INVALID_REVIEW_METADATA",
                             "Không thể xóa trạng thái cần xem lại giải thích mà không xác nhận hoặc chỉnh sửa.");
                 }
                 resolvedReviewedScore = suppliedReviewedScore;
@@ -503,7 +503,7 @@ public class GradingService {
                 Set<UUID> items = entry.getValue();
                 if (r == null || items == null || !knownFeedbackItems.containsKey(r)
                         || !knownFeedbackItems.get(r).containsAll(items)) {
-                    throw ApiException.badRequest("INVALID_REVIEW_METADATA",
+                    throw ApiException.createBadRequest("INVALID_REVIEW_METADATA",
                             "Unknown rubric or item in acknowledgedReviewItems");
                 }
             }
@@ -514,7 +514,7 @@ public class GradingService {
                 var map = entry.getValue();
                 if (r == null || map == null || !knownFeedbackItems.containsKey(r)
                         || !knownFeedbackItems.get(r).containsAll(map.keySet())) {
-                    throw ApiException.badRequest("INVALID_REVIEW_METADATA",
+                    throw ApiException.createBadRequest("INVALID_REVIEW_METADATA",
                             "Unknown rubric or item in reviewedItemScores");
                 }
                 for (var itemEntry : map.entrySet()) {
@@ -522,7 +522,7 @@ public class GradingService {
                     if (val == null || val.scale() > 2 || val.signum() < 0
                             || !currentEffectiveScores.getOrDefault(r, Map.of())
                                     .containsKey(itemEntry.getKey())) {
-                        throw ApiException.badRequest("INVALID_REVIEW_METADATA",
+                        throw ApiException.createBadRequest("INVALID_REVIEW_METADATA",
                                 "Invalid reviewedScore value");
                     }
                 }
@@ -545,7 +545,7 @@ public class GradingService {
             boolean ack = acknowledgedItems != null
             && acknowledgedItems.getOrDefault(r, Set.of()).contains(i);
             if (item.requiresReview() && !ack) {
-                throw ApiException.conflict("STRUCTURED_FEEDBACK_REVIEW_REQUIRED",
+                throw ApiException.createConflict("STRUCTURED_FEEDBACK_REVIEW_REQUIRED",
                         "Cần xác nhận hoặc chỉnh sửa các mục nhận xét cần kiểm tra trước khi công bố hoặc lưu điểm đã công bố.");
             }
             BigDecimal currentScore = currentEffectiveScores.getOrDefault(r, Map.of()).get(i);
@@ -554,7 +554,7 @@ public class GradingService {
             if (currentScore != null
                     && (reviewedScore == null || currentScore.compareTo(reviewedScore) != 0)
                     && !ack) {
-                throw ApiException.conflict("STRUCTURED_FEEDBACK_SCORE_MISMATCH",
+                throw ApiException.createConflict("STRUCTURED_FEEDBACK_SCORE_MISMATCH",
                         "Điểm mục rubric đã thay đổi sau khi tạo nhận xét; vui lòng chỉnh sửa hoặc xác nhận lại giải thích trước khi công bố hoặc lưu điểm đã công bố.");
             }
         }
@@ -611,11 +611,11 @@ public class GradingService {
             case SAVE -> member.inheritGroupGrade(root, reason, actor.accountId(), clock.instant());
             case PUBLISH -> member.publishGrade(actor.accountId(), clock.instant());
             }
-            evaluationRepository.save(member);
+            evaluationRepository.saveEvaluation(member);
             recipients.add(member.accountId);
         }
         if (recipients.isEmpty())
-            throw ApiException.conflict("GROUP_MEMBERS_UNAVAILABLE",
+            throw ApiException.createConflict("GROUP_MEMBERS_UNAVAILABLE",
                     "Group member snapshot unavailable");
         return recipients;
     }

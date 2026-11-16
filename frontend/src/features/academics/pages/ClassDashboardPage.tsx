@@ -6,7 +6,8 @@ import { PageHeader, Segmented, TermFilter } from "@/shared/ui";
 import { CourseCard, CourseGrid } from "../components/CourseCard";
 import { classCardSections } from "../slots";
 import type { ClassStatus, CourseClassView } from "../model/types";
-import { compareTermsNewestFirst, termOptions } from "../model/term";
+import { compareTermsNewestFirst, listTermOptions } from "../model/term";
+import { msg } from "@/i18n/msg";
 
 /**
  * Lớp của tôi (Sinh viên) và Lớp được phân công (Giảng viên): tab theo trạng thái lớp rồi lưới thẻ dọc, mỗi thẻ chỉ có mã lớp
@@ -16,23 +17,23 @@ import { compareTermsNewestFirst, termOptions } from "../model/term";
  */
 export function ClassDashboardPage({ audience, classes, onOpen }: { audience: "student" | "teacher"; classes: CourseClassView[]; onOpen: (id: string) => void }) {
   const [status, setStatus] = useUrlState<ClassStatus>("classStatus", "OPEN", audience === "student" ? ["OPEN", "ARCHIVED"] : ["OPEN", "DRAFT", "ARCHIVED"]);
-  const terms = termOptions(classes);
+  const terms = listTermOptions(classes);
   const [termValue, setTerm] = useUrlState<string>("classTerm", "", undefined, "replace");
   const term = terms.includes(termValue) ? termValue : "";
   const inTerm = term ? classes.filter((course) => course.term === term) : classes;
   const student = audience === "student";
   const count = (value: ClassStatus) => inTerm.filter((course) => course.status === value).length;
   const tabs: { value: ClassStatus; label: string }[] = student
-    ? [{ value: "OPEN", label: "Đang học" }, { value: "ARCHIVED", label: "Đã kết thúc" }]
-    : [...(classes.some((course) => course.status === "DRAFT") ? [{ value: "DRAFT" as const, label: "Sắp mở" }] : []), { value: "OPEN", label: "Đang dạy" }, { value: "ARCHIVED", label: "Kết thúc" }];
+    ? [{ value: "OPEN", label: msg("academics.pages.ClassDashboardPage.studying") }, { value: "ARCHIVED", label: msg("academics.pages.ClassDashboardPage.finished") }]
+    : [...(classes.some((course) => course.status === "DRAFT") ? [{ value: "DRAFT" as const, label: msg("academics.pages.ClassDashboardPage.openingSoon") }] : []), { value: "OPEN", label: msg("academics.pages.ClassDashboardPage.teaching") }, { value: "ARCHIVED", label: msg("academics.pages.ClassDashboardPage.finished2") }];
   const visible = inTerm.filter((course) => course.status === status)
     .sort((a, b) => a.code.localeCompare(b.code) || compareTermsNewestFirst(a.term, b.term));
-  const empty = status === "ARCHIVED" ? "Chưa có lớp đã kết thúc." : student ? "Bạn chưa học lớp nào." : "Chưa có lớp trong mục này.";
+  const empty = status === "ARCHIVED" ? msg("academics.pages.ClassDashboardPage.noFinishedClassesYet") : student ? msg("academics.pages.ClassDashboardPage.youHaveNotTakenAny") : msg("academics.pages.ClassDashboardPage.noClassesInThisSection");
 
   return <>
-    <PageHeader title={student ? "Lớp của tôi" : "Lớp được phân công"} />
+    <PageHeader title={student ? msg("academics.pages.ClassDashboardPage.myClasses") : msg("academics.pages.ClassDashboardPage.assignedClasses")} />
     <div className="flex flex-wrap items-center gap-3">
-    <Segmented as="tab" ariaLabel="Lọc lớp" value={status} onChange={setStatus}
+    <Segmented as="tab" ariaLabel={msg("academics.pages.ClassDashboardPage.filterClasses")} value={status} onChange={setStatus}
       options={tabs.map((tab) => ({ value: tab.value, label: <>{tab.label}<span className="ml-1 tabular-nums text-muted">{count(tab.value)}</span></> }))} />
       <div className="w-full sm:ml-auto sm:w-44"><TermFilter options={terms} value={term} onChange={setTerm} testId="class-term-filter" /></div>
     </div>
@@ -42,7 +43,7 @@ export function ClassDashboardPage({ audience, classes, onOpen }: { audience: "s
         return (
           <CourseCard key={course.id} code={`${course.subject.code} · ${course.term}`} name={course.code} band={course.subject.code} icon="class"
             extra={student && course.status === "OPEN" ? <SlotOutlet slot={classCardSections} props={{ classId: course.id }} /> : undefined}
-            onOpen={openable ? () => onOpen(course.id) : undefined} label={`Xem lớp ${course.code}`} testId={`dashboard-open-${course.id}`} />
+            onOpen={openable ? () => onOpen(course.id) : undefined} label={msg("academics.pages.ClassDashboardPage.viewClass", { code: String(course.code) })} testId={`dashboard-open-${course.id}`} />
         );
       })}
     </CourseGrid>

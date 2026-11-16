@@ -184,8 +184,8 @@ public class AcademicsController {
     public interface IStrictInput {
         /** Rejects input fields that are not declared by the request record. */
         @JsonAnySetter
-        default void unexpected(String key, Object value) {
-            throw ApiException.badRequest("INVALID_REQUEST", "Trường không được phép thay đổi");
+        default void rejectUnexpectedField(String key, Object value) {
+            throw ApiException.createBadRequest("INVALID_REQUEST", "Trường không được phép thay đổi");
         }
     }
 

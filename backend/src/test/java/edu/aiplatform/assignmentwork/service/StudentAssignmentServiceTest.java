@@ -46,7 +46,7 @@ class StudentAssignmentServiceTest {
                 other(draft, AssignmentStatus.SCHEDULED, NOW.plus(Duration.ofDays(9))),
                 other(retired, AssignmentStatus.RETIRED, NOW.plus(Duration.ofDays(9))),
                 other(closed, AssignmentStatus.CLOSED, NOW.minus(Duration.ofDays(1)))));
-        List<WorkViews.Row> rows = f.studentAssignments.list(f.student, null);
+        List<WorkViews.Row> rows = f.studentAssignments.listAssignments(f.student, null);
         assertThat(rows).extracting(WorkViews.Row::assignmentId).containsExactly(closed, f.assignmentId);
         assertThat(rows).extracting(WorkViews.Row::myStatus).containsExactly("MISSED", "NOT_STARTED");
         assertThat(rows.get(0).scope()).isEqualTo(AssignmentScope.SUBJECT);
@@ -68,10 +68,10 @@ class StudentAssignmentServiceTest {
                 new DocumentPart(appendix.toString(), appendix, List.of(), "Phụ lục"));
         // Rubric ở 1.1, 1.2 và 2.1 › a; Phụ lục không có rubric nên không tính.
         List<RubricView> rubrics = List.of(rubric(leaf1), rubric(leaf2), rubric(leaf3));
-        assertThat(StudentAssignmentService.topLevelParts(parts, rubrics)).isEqualTo(2);
-        assertThat(StudentAssignmentService.topLevelParts(parts, List.of())).isZero();
+        assertThat(StudentAssignmentService.countTopLevelParts(parts, rubrics)).isEqualTo(2);
+        assertThat(StudentAssignmentService.countTopLevelParts(parts, List.of())).isZero();
         DocumentPart whole = new DocumentPart("DOCUMENT", null, List.of(), "Toàn bài");
-        assertThat(StudentAssignmentService.topLevelParts(List.of(whole),
+        assertThat(StudentAssignmentService.countTopLevelParts(List.of(whole),
                 List.of(new RubricView(UUID.randomUUID(), f.assignmentId, "DOCUMENT", List.of(), BigDecimal.TEN)))).isEqualTo(1);
     }
 
@@ -82,9 +82,9 @@ class StudentAssignmentServiceTest {
     @Test
     void statusReflectsAttempts() {
         f.attempt(1, AttemptStatus.SUBMITTED, NOW, true);
-        assertThat(f.studentAssignments.list(f.student, f.classId).get(0).myStatus()).isEqualTo("SUBMITTED_LATE");
+        assertThat(f.studentAssignments.listAssignments(f.student, f.classId).get(0).myStatus()).isEqualTo("SUBMITTED_LATE");
         AssignmentAttempt working = f.attempt(2, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
-        WorkViews.Row row = f.studentAssignments.list(f.student, f.classId).get(0);
+        WorkViews.Row row = f.studentAssignments.listAssignments(f.student, f.classId).get(0);
         assertThat(row.myStatus()).isEqualTo("IN_PROGRESS");
         assertThat(row.inProgressAttemptId()).isEqualTo(working.id());
         assertThat(row.submittedCount()).isEqualTo(1);
@@ -94,12 +94,12 @@ class StudentAssignmentServiceTest {
     void detailExplainsWhyStartIsBlockedAndMarksGradedAttempt() {
         f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         AssignmentAttempt last = f.attempt(2, AttemptStatus.SUBMITTED, NOW, false);
-        WorkViews.Detail detail = f.studentAssignments.detail(f.student, f.assignmentId, f.classId);
+        WorkViews.Detail detail = f.studentAssignments.loadAssignment(f.student, f.assignmentId, f.classId);
         // Bài có chấm: đã nộp vẫn nộp lại được khi còn hạn (yêu cầu 2026-11-10).
         assertThat(detail.canStart()).isTrue();
         assertThat(detail.startBlockedReason()).isNull();
         assertThat(detail.latestAttempt().attemptId()).isEqualTo(last.id());
-        assertThat(f.studentAssignments.history(f.student, f.assignmentId, f.classId))
+        assertThat(f.studentAssignments.listHistory(f.student, f.assignmentId, f.classId))
                 .filteredOn(WorkViews.AttemptSummary::graded).extracting(WorkViews.AttemptSummary::attemptId)
                 .containsExactly(last.id());
     }
@@ -107,10 +107,10 @@ class StudentAssignmentServiceTest {
     @Test
     void teachersCannotUseStudentScreens() {
         try {
-            f.studentAssignments.list(new Actor(UUID.randomUUID(), Role.TEACHER), null);
+            f.studentAssignments.listAssignments(new Actor(UUID.randomUUID(), Role.TEACHER), null);
             throw new AssertionError("Cần 404");
         } catch (ApiException e) {
-            assertThat(e.code()).isEqualTo("NOT_FOUND");
+            assertThat(e.readCode()).isEqualTo("NOT_FOUND");
         }
     }
 

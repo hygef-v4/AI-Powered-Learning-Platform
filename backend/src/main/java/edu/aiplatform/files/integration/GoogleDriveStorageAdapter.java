@@ -4,7 +4,6 @@ import com.google.api.client.googleapis.json.GoogleJsonError;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.FileList;
 import edu.aiplatform.files.service.FileAbusiveException;
 import edu.aiplatform.files.service.IStorage;
 import edu.aiplatform.files.service.StorageUnavailableException;
@@ -17,47 +16,43 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-/** Lưu tệp trên Google Shared Drive, mỗi {@code purpose} một thư mục tạo khi cần (NFR-U03-11). */
+/** Lưu tệp trên Google Drive (Shared Drive hoặc Drive cá nhân), mỗi {@code purpose} một thư mục tạo khi cần (NFR-U03-11). */
 public class GoogleDriveStorageAdapter implements IStorage {
 
-    static final String FOLDER_MIME = "application/vnd.google-apps.folder";
-
     private final DriveClientFactory clients;
-    private final String sharedDriveId;
-    private final Map<ArtifactPurpose, String> folders = new ConcurrentHashMap<>();
+    private final DriveFolders folders;
 
-    public GoogleDriveStorageAdapter(DriveClientFactory clients, String sharedDriveId) {
+    public GoogleDriveStorageAdapter(DriveClientFactory clients, DriveFolders folders) {
         this.clients = clients;
-        this.sharedDriveId = sharedDriveId;
+        this.folders = folders;
     }
 
     @Override
-    public boolean available() {
+    public boolean isAvailable() {
         return true;
     }
 
     @Override
-    public String put(ArtifactPurpose purpose, Path content, StoredMetadata metadata) {
+    public String putFile(ArtifactPurpose purpose, Path content, StoredMetadata metadata) {
         File file = new File()
                 .setName(metadata.originalFileName())
-                .setParents(List.of(folder(purpose)))
+                .setParents(List.of(resolveFolder(purpose)))
                 .setAppProperties(Map.of(
                         "ownerAccountId", metadata.ownerAccountId().toString(),
                         "purpose", purpose.name(),
                         "mediaType", metadata.mediaType(),
                         "sha256", metadata.sha256()));
-        File created = DriveClientFactory.withRetry(() -> clients.drive().files()
+        File created = DriveClientFactory.runWithRetry(() -> clients.createDrive().files()
                 .create(file, new FileContent(metadata.mediaType(), content.toFile()))
                 .setSupportsAllDrives(true).setFields("id").execute());
         return created.getId();
     }
 
     @Override
-    public Optional<StoredMetadata> metadata(String fileId) {
+    public Optional<StoredMetadata> loadMetadata(String fileId) {
         try {
-            File file = DriveClientFactory.withRetry(() -> clients.drive().files().get(fileId)
+            File file = DriveClientFactory.runWithRetry(() -> clients.createDrive().files().get(fileId)
                     .setSupportsAllDrives(true).setFields("id,name,size,appProperties").execute());
             Map<String, String> props = file.getAppProperties() == null ? Map.of() : file.getAppProperties();
             return Optional.of(new StoredMetadata(UUID.fromString(props.get("ownerAccountId")),
@@ -71,7 +66,7 @@ public class GoogleDriveStorageAdapter implements IStorage {
     @Override
     public InputStream open(String fileId) {
         try {
-            return clients.drive().files().get(fileId).setSupportsAllDrives(true).executeMediaAsInputStream();
+            return clients.createDrive().files().get(fileId).setSupportsAllDrives(true).executeMediaAsInputStream();
         } catch (GoogleJsonResponseException e) {
             if (isAbuse(e)) {
                 throw new FileAbusiveException(fileId);
@@ -83,31 +78,17 @@ public class GoogleDriveStorageAdapter implements IStorage {
     }
 
     @Override
-    public void delete(String fileId) {
+    public void deleteFile(String fileId) {
         try {
-            DriveClientFactory.withRetry(() -> clients.drive().files().delete(fileId).setSupportsAllDrives(true)
+            DriveClientFactory.runWithRetry(() -> clients.createDrive().files().delete(fileId).setSupportsAllDrives(true)
                     .execute());
         } catch (DriveClientFactory.DriveNotFoundException e) {
             // Đã xóa từ trước.
         }
     }
 
-    private String folder(ArtifactPurpose purpose) {
-        return folders.computeIfAbsent(purpose, this::findOrCreateFolder);
-    }
-
-    private String findOrCreateFolder(ArtifactPurpose purpose) {
-        String query = "'" + sharedDriveId + "' in parents and name = '" + purpose.name()
-                + "' and mimeType = '" + FOLDER_MIME + "' and trashed = false";
-        FileList found = DriveClientFactory.withRetry(() -> clients.drive().files().list().setQ(query)
-                .setCorpora("drive").setDriveId(sharedDriveId).setIncludeItemsFromAllDrives(true)
-                .setSupportsAllDrives(true).setFields("files(id)").execute());
-        if (found.getFiles() != null && !found.getFiles().isEmpty()) {
-            return found.getFiles().get(0).getId();
-        }
-        File folder = new File().setName(purpose.name()).setMimeType(FOLDER_MIME).setParents(List.of(sharedDriveId));
-        return DriveClientFactory.withRetry(() -> clients.drive().files().create(folder).setSupportsAllDrives(true)
-                .setFields("id").execute()).getId();
+    private String resolveFolder(ArtifactPurpose purpose) {
+        return folders.ensureChild(folders.resolveRoot(), purpose.name());
     }
 
     static boolean isAbuse(GoogleJsonResponseException e) {

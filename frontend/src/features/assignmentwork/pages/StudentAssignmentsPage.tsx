@@ -4,45 +4,30 @@ import Link from "next/link";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import {
-  Alert,
-  ClassFilter,
-  ClickableRow,
-  cx,
-  Icon,
-  PageHeader,
-  PageNav,
-  Pill,
-  Segmented,
-  Select,
-  TableFrame,
-  TableSkeletonRows,
-  Td,
-  TextInput,
-  Th,
-} from "@/shared/ui";
+import { Alert, Card, ClassFilter, ClickableRow, cx, Icon, PageHeader, Pagination, Pill, Segmented, Select, TableFrame, TableSkeletonRows, Td, TextInput, Th } from "@/shared/ui";
 import { compareTermsNewestFirst } from "@/features/academics/model/term";
 import { formatTimeUntil } from "@/shared/dateTime";
-import { errorMessage, formatDateTime } from "../model/format";
+import { describeError, formatDateTime } from "../model/format";
 import { studentAssignmentResults } from "../slots";
 import type { StudentRow } from "../model/types";
-import { doing, isClosedUnsubmitted, rowStatus, upcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { isDoing, isClosedUnsubmitted, resolveRowStatus, isUpcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { msg } from "@/i18n/msg";
 
 type Tab = "upcoming" | "doing" | "submitted" | "closed";
 
 const PAGE_SIZE = 20;
 const TABS: { value: Tab; label: string }[] = [
-  { value: "upcoming", label: "Chưa làm" },
-  { value: "doing", label: "Đang làm" },
-  { value: "submitted", label: "Đã nộp" },
-  { value: "closed", label: "Đã đóng" },
+  { value: "upcoming", label: msg("assignmentwork.pages.StudentAssignmentsPage.notStarted") },
+  { value: "doing", label: msg("assignmentwork.pages.StudentAssignmentsPage.inProgress") },
+  { value: "submitted", label: msg("assignmentwork.pages.StudentAssignmentsPage.submitted") },
+  { value: "closed", label: msg("assignmentwork.pages.StudentAssignmentsPage.closed") },
 ];
 
 type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
-const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: "Cá nhân", GROUP: "Nhóm", PRACTICE: "Luyện tập" };
+const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: msg("assignmentwork.pages.StudentAssignmentsPage.individual"), GROUP: msg("assignmentwork.pages.StudentAssignmentsPage.group"), PRACTICE: msg("assignmentwork.pages.StudentAssignmentsPage.practice") };
 
 /** Loại bài hiển thị: bài luyện tập (không chấm điểm) là một loại riêng, còn lại theo cá nhân hay nhóm. */
-function kindOf(row: StudentRow): Kind {
+function classifyKind(row: StudentRow): Kind {
   return row.gradingMode === "PRACTICE" ? "PRACTICE" : row.submissionMode;
 }
 
@@ -58,7 +43,7 @@ function DueIn({ closesAt }: { closesAt: string | null }) {
 }
 
 /** Mở bài từ trang chung thì đánh dấu `from=all` để nút quay lại về trang chung, không về trang bài tập của lớp. */
-function detailHref(row: StudentRow, general: boolean) {
+function buildDetailHref(row: StudentRow, general: boolean) {
   return `/my-assignments/${encodeURIComponent(row.assignmentId)}?classId=${encodeURIComponent(row.classId)}${general ? "&from=all" : ""}`;
 }
 
@@ -89,17 +74,17 @@ export function StudentAssignmentsPage() {
     .sort((a, b) => a.code.localeCompare(b.code, "vi") || compareTermsNewestFirst(a.term ?? "", b.term ?? ""));
   const rows = allRows && classFilter ? allRows.filter((row) => row.classId === classFilter) : allRows;
 
-  const inTab = (row: StudentRow, key: Tab) => {
+  const isInTab = (row: StudentRow, key: Tab) => {
     // Mỗi bài một tab: đang làm (kể cả sửa để nộp lại) thì chỉ ở Đang làm, không ở Đã nộp.
     if (key === "closed") return isClosedUnsubmitted(row);
-    return key === "upcoming" ? upcoming(row) && !doing(row) : key === "doing" ? doing(row) : !doing(row) && (row.submittedCount > 0 || !!row.group?.submitted);
+    return key === "upcoming" ? isUpcoming(row) && !isDoing(row) : key === "doing" ? isDoing(row) : !isDoing(row) && (row.submittedCount > 0 || !!row.group?.submitted);
   };
   const focused = focus ? rows?.find((row) => row.assignmentId === focus) : undefined;
-  const tab: Tab = chosenTab || TABS.find((item) => focused && inTab(focused, item.value))?.value || "upcoming";
+  const tab: Tab = chosenTab || TABS.find((item) => focused && isInTab(focused, item.value))?.value || "upcoming";
   const q = query.toLocaleLowerCase("vi").trim();
-  const visible = (rows ?? []).filter((row) => inTab(row, tab) && (!mode || kindOf(row) === mode)
+  const visible = (rows ?? []).filter((row) => isInTab(row, tab) && (!mode || classifyKind(row) === mode)
     && row.title.toLocaleLowerCase("vi").includes(q));
-  const count = (key: Tab) => (rows ?? []).filter((row) => inTab(row, key)).length;
+  const count = (key: Tab) => (rows ?? []).filter((row) => isInTab(row, key)).length;
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const current = Math.min(page, totalPages - 1);
   const shown = visible.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
@@ -107,25 +92,25 @@ export function StudentAssignmentsPage() {
 
   return (
     <>
-      <PageHeader title="Bài tập" actions={!classId && (
+      <PageHeader title={msg("assignmentwork.pages.StudentAssignmentsPage.assignments")} actions={!classId && (
         <ClassFilter classes={classes} value={classFilter} onChange={(value) => { setClassFilter(value); setPage(0); }} testId="assignment-class-filter" />
       )} />
-      {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
-      <section aria-label="Danh sách bài tập" className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+      {error !== null && <Alert tone="danger" role="alert">{describeError(error)}</Alert>}
+      <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label={msg("assignmentwork.pages.StudentAssignmentsPage.assignmentList")}>
         <div className="flex flex-wrap items-center gap-3">
           <Segmented
             as="tab"
-            ariaLabel="Nhóm bài"
+            ariaLabel={msg("assignmentwork.pages.StudentAssignmentsPage.assignmentGroups")}
             value={tab}
             onChange={(value) => { setTab(value); setPage(0); }}
             options={TABS.map((item) => ({ ...item, count: rows ? count(item.value) : undefined }))}
           />
-          <Select aria-label="Loại bài" value={mode} wrapperClassName="ml-auto w-40" onChange={(e) => { setMode(e.target.value); setPage(0); }}>
-            <option value="">Mọi loại</option>
+          <Select aria-label={msg("assignmentwork.pages.StudentAssignmentsPage.assignmentType")} value={mode} wrapperClassName="ml-auto w-40" onChange={(e) => { setMode(e.target.value); setPage(0); }}>
+            <option value="">{msg("assignmentwork.pages.StudentAssignmentsPage.allTypes")}</option>
             {(Object.keys(KIND_LABELS) as Kind[]).map((kind) => <option key={kind} value={kind}>{KIND_LABELS[kind]}</option>)}
           </Select>
           <div role="search" className="w-full sm:w-64">
-            <TextInput type="search" icon="search" aria-label="Tìm bài tập" placeholder="Tìm bài tập" value={query} maxLength={200}
+            <TextInput type="search" icon="search" aria-label={msg("assignmentwork.pages.StudentAssignmentsPage.findAssignments")} placeholder={msg("assignmentwork.pages.StudentAssignmentsPage.findAssignments")} value={query} maxLength={200}
               onChange={(e) => { setQuery(e.target.value); setPage(0); }} />
           </div>
         </div>
@@ -144,40 +129,40 @@ export function StudentAssignmentsPage() {
           </colgroup>
           <thead>
             <tr>
-              <Th>Bài tập</Th><Th>Lớp</Th><Th>Môn học</Th><Th>Loại</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th>{tab === "submitted" && <Th>Điểm</Th>}
-              <Th><span className="sr-only">Mở bài</span></Th>
+              <Th>{msg("assignmentwork.pages.StudentAssignmentsPage.assignments")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.class")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.subject")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.type")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.deadline")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.status")}</Th>{tab === "submitted" && <Th>{msg("assignmentwork.pages.StudentAssignmentsPage.score")}</Th>}
+              <Th><span className="sr-only">{msg("assignmentwork.pages.StudentAssignmentsPage.openAssignment")}</span></Th>
             </tr>
           </thead>
           <tbody>
             {shown.map((row) => (
-              <ClickableRow key={`${row.classId}-${row.assignmentId}`} onClick={() => router.push(detailHref(row, !classId))} data-testid={`student-row-${row.assignmentId}`}>
+              <ClickableRow key={`${row.classId}-${row.assignmentId}`} onClick={() => router.push(buildDetailHref(row, !classId))} data-testid={`student-row-${row.assignmentId}`}>
                 <Td>
-                  <Link href={detailHref(row, !classId)} onClick={(e) => e.stopPropagation()} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link>
+                  <Link href={buildDetailHref(row, !classId)} onClick={(e) => e.stopPropagation()} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link>
                 </Td>
-                <Td label="Lớp" className="truncate" title={row.classCode || undefined}>{row.classCode || "—"}</Td>
-                <Td label="Môn học" className="truncate" title={row.subjectCode || undefined}>{row.subjectCode || "—"}</Td>
-                <Td label="Loại" className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
-                <Td label="Hạn nộp" className="whitespace-nowrap">
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.class")} className="truncate" title={row.classCode || undefined}>{row.classCode || "—"}</Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.subject")} className="truncate" title={row.subjectCode || undefined}>{row.subjectCode || "—"}</Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.type")} className="whitespace-nowrap">{KIND_LABELS[classifyKind(row)]}</Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.deadline")} className="whitespace-nowrap">
                   <span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span>
                   {(tab === "upcoming" || tab === "doing") && <DueIn closesAt={row.closesAt} />}
                 </Td>
-                <Td label="Trạng thái"><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.status")}><Pill tone={resolveRowStatus(row).tone}>{resolveRowStatus(row).label}</Pill></Td>
                 {tab === "submitted" && (
-                  <Td label="Điểm">
+                  <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.score")}>
                     {row.gradingMode === "GRADED" ? <SlotOutlet slot={studentAssignmentResults} props={{ assignmentId: row.assignmentId, classId: row.classId }} /> : <span className="text-muted">—</span>}
                   </Td>
                 )}
                 <Td hideWhenStacked className="text-faint"><Icon name="chevron_right" size={18} /></Td>
               </ClickableRow>
             ))}
-            {loading && !rows && <TableSkeletonRows columns={columnCount} label="Đang tải bài tập…" />}
+            {loading && !rows && <TableSkeletonRows columns={columnCount} label={msg("assignmentwork.pages.StudentAssignmentsPage.loadingAssignments")} />}
             {rows && shown.length === 0 && (
-              <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted">{tab === "upcoming" ? "Không còn bài chưa làm." : tab === "doing" ? "Không có bài đang làm." : tab === "closed" ? "Không có bài đã đóng chưa nộp." : "Chưa nộp bài nào."}</Td></tr>
+              <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted">{tab === "upcoming" ? msg("assignmentwork.pages.StudentAssignmentsPage.noAssignmentsLeftToStart") : tab === "doing" ? msg("assignmentwork.pages.StudentAssignmentsPage.noAssignmentsInProgress") : tab === "closed" ? msg("assignmentwork.pages.StudentAssignmentsPage.noClosedUnsubmittedAssignments") : msg("assignmentwork.pages.StudentAssignmentsPage.noSubmissionsYet")}</Td></tr>
             )}
           </tbody>
         </TableFrame>
-        <PageNav page={current} size={PAGE_SIZE} total={visible.length} onPage={setPage} />
-      </section>
+        <Pagination page={current} pageSize={PAGE_SIZE} total={visible.length} onPageChange={setPage} summary={false} />
+      </Card>
     </>
   );
 }

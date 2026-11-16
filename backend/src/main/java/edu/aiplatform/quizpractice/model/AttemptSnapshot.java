@@ -37,7 +37,7 @@ public record AttemptSnapshot(int versionNo, String title, QuizSettings settings
     }
 
     /** Trộn câu rồi trộn lựa chọn từng câu bằng cùng một dãy ngẫu nhiên từ {@code seed}: cùng seed cho cùng thứ tự. */
-    public static AttemptSnapshot of(QuizStudentView view, long seed) {
+    public static AttemptSnapshot createSnapshot(QuizStudentView view, long seed) {
         QuizSettings settings = view.quiz().settings();
         Random random = new Random(seed);
         List<QuizQuestionView> questions = new ArrayList<>(view.questions());

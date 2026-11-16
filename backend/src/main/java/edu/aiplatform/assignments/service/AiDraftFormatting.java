@@ -65,7 +65,7 @@ final class AiDraftFormatting {
         }
     }
 
-    static void apply(ObjectNode content, JsonNode format) {
+    static void applyFormat(ObjectNode content, JsonNode format) {
         if (!format.isObject() || format.isEmpty()) return;
         if (format.has("align")) content.set("align", format.get("align"));
         if (format.has("runs")) content.set("runs", format.get("runs").deepCopy());

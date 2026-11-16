@@ -10,6 +10,7 @@ import {
   type SearchSubjectManagers,
 } from "../model/managerSearch";
 import { useSubjectRead } from "../hooks/useSubjectRead";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   value: ManagerCandidate | null;
@@ -39,17 +40,17 @@ export function ManagerPicker({
   // Bám vị trí ô nhập khi mở, khi cuộn hoặc đổi cỡ cửa sổ.
   useEffect(() => {
     if (!open) return;
-    const update = () => {
+    const updatePosition = () => {
       const rect = anchorRef.current?.getBoundingClientRect();
       if (rect) setPlace({ top: rect.bottom + 4, left: rect.left, width: rect.width });
     };
-    const frame = requestAnimationFrame(update);
-    window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
+    const frame = requestAnimationFrame(updatePosition);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
     return () => {
       cancelAnimationFrame(frame);
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
     };
   }, [open]);
   const [search, setSearch] = useState("");
@@ -78,8 +79,7 @@ export function ManagerPicker({
   return (
     <div className="flex min-w-0 flex-col gap-1.5" data-testid="subject-manager-picker">
       <label htmlFor={`${id}-input`} className="text-xs font-semibold text-body">
-        Chủ nhiệm môn
-      </label>
+        {msg("subjects.components.ManagerPicker.subjectManager")}</label>
       <div ref={anchorRef}>
         <TextInput
           id={`${id}-input`}
@@ -91,7 +91,7 @@ export function ManagerPicker({
           autoComplete="off"
           maxLength={200}
           disabled={disabled}
-          placeholder="Chưa phân công"
+          placeholder={msg("subjects.components.ManagerPicker.notAssigned")}
           value={open ? search : value ? formatManagerLabel(value) : ""}
           onFocus={() => setOpen(true)}
           onChange={(event) => {
@@ -109,7 +109,7 @@ export function ManagerPicker({
             value && !disabled ? (
               <button
                 type="button"
-                aria-label="Bỏ chủ nhiệm"
+                aria-label={msg("subjects.components.ManagerPicker.removeManager")}
                 className="flex text-muted hover:text-ink"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => handleChoose(null)}
@@ -129,7 +129,7 @@ export function ManagerPicker({
             ref={listRef}
             id={`${id}-list`}
             role="listbox"
-            aria-label="Chủ nhiệm môn"
+            aria-label={msg("subjects.components.ManagerPicker.subjectManager")}
             style={
               place
                 ? { top: place.top, left: place.left, width: place.width }
@@ -139,11 +139,10 @@ export function ManagerPicker({
           >
             {(resource.loading || waiting) && (
               <p role="status" className="px-3 py-2 text-xs text-muted">
-                Đang tìm chủ nhiệm…
-              </p>
+                {msg("subjects.components.ManagerPicker.searchingForManagers")}</p>
             )}
             {ready && candidates.length === 0 && (
-              <p className="px-3 py-2 text-xs text-muted">Không có chủ nhiệm phù hợp.</p>
+              <p className="px-3 py-2 text-xs text-muted">{msg("subjects.components.ManagerPicker.noMatchingManagers")}</p>
             )}
             {ready &&
               candidates.map((manager) => (
@@ -167,14 +166,13 @@ export function ManagerPicker({
         <div role="alert" className="flex items-center gap-2 text-xs text-danger">
           <p>
             {status === 401
-              ? "Vui lòng đăng nhập lại để tìm chủ nhiệm."
+              ? msg("subjects.components.ManagerPicker.pleaseSignInAgainTo")
               : status === 403
-                ? "Bạn không có quyền tìm chủ nhiệm."
-                : "Không tải được danh sách chủ nhiệm. Có thể để chưa phân công và thử lại sau."}
+                ? msg("subjects.components.ManagerPicker.youDoNotHavePermission")
+                : msg("subjects.components.ManagerPicker.couldNotLoadTheList")}
           </p>
           <Button size="sm" onClick={resource.reload} data-testid="subject-manager-retry">
-            Thử lại
-          </Button>
+            {msg("subjects.components.ManagerPicker.retry")}</Button>
         </div>
       )}
     </div>

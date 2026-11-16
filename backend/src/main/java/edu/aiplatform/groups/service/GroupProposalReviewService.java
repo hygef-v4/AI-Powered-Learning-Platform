@@ -86,7 +86,7 @@ public class GroupProposalReviewService {
     public ClassProposalsView listClassProposals(Actor actor, UUID classId) {
         ClassRef ref = access.requireTeacher(actor, classId);
         GroupFormationSettings settings = groupFormationService.loadSettings(classId);
-        Set<UUID> active = activeStudents(classId);
+        Set<UUID> active = listActiveStudents(classId);
         Set<UUID> grouped = new HashSet<>();
         groupRepository.listGroups(classId).forEach(g -> grouped.addAll(g.memberIds()));
         List<GroupProposal> proposals = proposalRepository.listActiveProposals(classId);
@@ -109,14 +109,14 @@ public class GroupProposalReviewService {
                 }
             }
             views.add(new ReviewProposalView(p.id(), p.name(), p.status().name(), people.loadPerson(p.leaderId()),
-                    members, pending, p.submittedAt(), warnings(p, members, settings, active, grouped)));
+                    members, pending, p.submittedAt(), collectWarnings(p, members, settings, active, grouped)));
         }
         List<UngroupedView> ungrouped = active.stream().filter(id -> !grouped.contains(id)).map(id -> {
             GroupProposal p = byMember.get(id);
             return new UngroupedView(people.loadPerson(id), p == null ? null : p.id(), p == null ? null : p.name(),
                     p == null ? null : p.status().name());
         }).toList();
-        return new ClassProposalsView(classId, FormationView.of(settings, ref, clock.instant()), views, ungrouped);
+        return new ClassProposalsView(classId, FormationView.createFormationView(settings, ref, clock.instant()), views, ungrouped);
     }
 
     // ---- duyệt (F21) ----------------------------------------------------------------------------------------------
@@ -128,11 +128,11 @@ public class GroupProposalReviewService {
         List<UUID> ids = command == null || command.proposalIds() == null ? List.of() : command.proposalIds();
         if (ids.isEmpty() || ids.size() > MAX_APPROVE_BATCH || ids.stream().anyMatch(Objects::isNull)
                 || new HashSet<>(ids).size() != ids.size()) {
-            throw ApiException.badRequest("PROPOSAL_IDS_INVALID", "Chọn từ 1 đến 100 đề xuất, không trùng");
+            throw ApiException.createBadRequest("PROPOSAL_IDS_INVALID", "Chọn từ 1 đến 100 đề xuất, không trùng");
         }
         Instant now = clock.instant();
         long version = groupRepository.setVersion(classId);
-        Set<UUID> active = activeStudents(classId);
+        Set<UUID> active = listActiveStudents(classId);
         List<ClassGroup> current = groupRepository.listGroups(classId);
         int minSize = groupFormationService.loadSettings(classId).minSize();
         // Khóa theo thứ tự id để hai lần duyệt chồng nhau không deadlock.
@@ -169,7 +169,7 @@ public class GroupProposalReviewService {
                 }
             }
             if (!members.contains(proposal.leaderId()) || members.size() < minSize) {
-                proposalRepository.updateProposal(proposal.backToDraft(now));
+                proposalRepository.updateProposal(proposal.returnToDraft(now));
                 failed.add(new Failed(id, "PROPOSAL_INCOMPLETE",
                         "Đề xuất thiếu trưởng nhóm hoặc chưa đủ sĩ số, đã trả về nháp"));
                 continue;
@@ -196,7 +196,7 @@ public class GroupProposalReviewService {
             for (Accepted a : accepted) {
                 UUID groupId = created.get(a.draft().key());
                 GroupProposal proposal = a.proposal();
-                proposalRepository.updateProposal(proposal.approved(actor.accountId(), groupId, now));
+                proposalRepository.updateProposal(proposal.markApproved(actor.accountId(), groupId, now));
                 proposalRepository.deactivateMembers(proposal.id());
                 placed.addAll(a.draft().memberIds());
                 Map<String, Object> details = new LinkedHashMap<>();
@@ -222,16 +222,16 @@ public class GroupProposalReviewService {
         ClassRef ref = access.requireTeacher(actor, proposal.classId());
         GroupAccess.requireEditable(ref);
         if (proposal.status() != Status.SUBMITTED) {
-            throw ApiException.conflict("PROPOSAL_NOT_SUBMITTED", "Đề xuất không ở trạng thái chờ duyệt");
+            throw ApiException.createConflict("PROPOSAL_NOT_SUBMITTED", "Đề xuất không ở trạng thái chờ duyệt");
         }
         String reason = ProposalRules.cleanReason(command == null ? null : command.reason());
         if (reason != null && reason.length() > ProposalRules.MAX_REASON) {
-            throw ApiException.badRequest("PROPOSAL_REASON_TOO_LONG", "Lý do tối đa 1.000 ký tự");
+            throw ApiException.createBadRequest("PROPOSAL_REASON_TOO_LONG", "Lý do tối đa 1.000 ký tự");
         }
         Instant now = clock.instant();
         List<UUID> members = proposalRepository.listMembers(proposalId).stream()
                 .filter(ProposalMember::isActiveMember).map(ProposalMember::accountId).toList();
-        proposalRepository.updateProposal(proposal.rejected(actor.accountId(), reason, now));
+        proposalRepository.updateProposal(proposal.markRejected(actor.accountId(), reason, now));
         proposalRepository.deactivateMembers(proposalId);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("classId", proposal.classId().toString());
@@ -243,7 +243,7 @@ public class GroupProposalReviewService {
 
     // ---- tiện ích -----------------------------------------------------------------------------------------------
 
-    private static List<String> warnings(GroupProposal p, List<Person> members, GroupFormationSettings settings,
+    private static List<String> collectWarnings(GroupProposal p, List<Person> members, GroupFormationSettings settings,
                                          Set<UUID> active, Set<UUID> grouped) {
         List<String> warnings = new ArrayList<>();
         if (!ProposalRules.isEligible(p.leaderId(), active, grouped)) {
@@ -258,11 +258,11 @@ public class GroupProposalReviewService {
         return warnings;
     }
 
-    private Set<UUID> activeStudents(UUID classId) {
+    private Set<UUID> listActiveStudents(UUID classId) {
         try {
             return new LinkedHashSet<>(classes.listActiveStudents(classId));
         } catch (RuntimeException e) {
-            throw ApiException.unavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
+            throw ApiException.createUnavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
         }
     }
 

@@ -9,11 +9,11 @@ public interface IBackupStore {
     record StoredArchive(String ref, long byteSize, String md5) {
     }
 
-    boolean available();
+    boolean isAvailable();
 
     /** Tải archive lên thư mục của lần chạy; trả kích thước và MD5 phía lưu trữ để đối chiếu. */
-    StoredArchive put(UUID runId, Path archive);
+    StoredArchive putArchive(UUID runId, Path archive);
 
     /** Xóa thư mục của lần chạy; không còn thì coi như đã xóa. */
-    void delete(String runId);
+    void deleteArchive(String runId);
 }

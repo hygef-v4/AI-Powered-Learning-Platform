@@ -2,45 +2,24 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { DocumentEditor, ToolbarButton, outlineOf, publishOutline, type DocumentComment } from "@/shared/document";
-import { Alert, Menu, MenuItem } from "@/shared/ui";
+import { DocumentEditor, ToolbarButton, buildOutline, publishOutline, type DocumentComment } from "@/shared/document";
+import { Alert, Card, Menu, MenuItem, ScoreMeter, TotalScoreCard } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
-import { formatPoints, resultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
-import { errorMessage, formatDateTime, historyOpen, historyVersions } from "../model/format";
+import { formatPoints, groupResultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
+import { describeError, formatDateTime, canOpenHistory, listHistoryVersions } from "../model/format";
 import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
 import { studentGradeDistributions, type AttemptResult } from "../slots";
 import { PublishedFeedback, PublishedRubricItems } from "../components/PublishedFeedback";
 import type { Attempt, AttemptSummary, StudentDetail } from "../model/types";
+import { NOOP } from "@/shared/noop";
+import { WorkspaceTopBar } from "@/shared/layout/WorkspaceTopBar";
+import { msg } from "@/i18n/msg";
 
 function attemptTime(a: AttemptSummary) {
   return formatDateTime(a.submittedAt ?? a.lastSavedAt ?? a.startedAt);
 }
 
-const NOOP = () => {};
-
-/**
- * Thanh trên cùng giống trang làm bài (yêu cầu 2026-11-05): tên bài và trạng thái bên trái, chỗ đặt nút Cả trang / Từng
- * phần ở giữa, thao tác bên phải.
- */
-function TopBar({ barRef, title, status, setViewSlot, actions }: {
-  barRef: (element: HTMLElement | null) => void;
-  title: string;
-  status?: ReactNode;
-  setViewSlot: (element: HTMLElement | null) => void;
-  actions?: ReactNode;
-}) {
-  return (
-    <header ref={barRef} className="sticky top-14 z-30 main-bleed -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] py-3 backdrop-blur-md md:-mt-10">
-      <div className="flex min-w-0 flex-1 items-center gap-x-3">
-        <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={title}>{title}</h1>
-        {status}
-      </div>
-      <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
-      <div className="flex flex-wrap items-center justify-end gap-2">{actions}</div>
-    </header>
-  );
-}
 
 /**
  * #41 Submission History (F8, UC 40): bài nộp hiện như trang tài liệu chỉ đọc (kiểu Docs ở chế độ chỉ xem):
@@ -82,7 +61,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         // Điểm và nhận xét chưa công bố do API kết quả giữ kín.
         const all = list.filter((a) => a.status === "SUBMITTED").sort((a, b) => b.attemptNo - a.attemptNo);
         const submitted = value.gradingMode === "PRACTICE" ? all
-          : historyOpen(value, all.length > 0) ? historyVersions(all) : all.filter((a) => a.graded);
+          : canOpenHistory(value, all.length > 0) ? listHistoryVersions(all) : all.filter((a) => a.graded);
         setAttempts(submitted);
         setSelected(submitted.find((a) => a.attemptId === wanted)?.attemptId ?? submitted[0]?.attemptId ?? null);
       }, (e) => { if (!controller.signal.aborted) setError(e); });
@@ -103,7 +82,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
     const focus = `focus=${encodeURIComponent(assignmentId)}`;
     const backHref = general ? `/my-assignments?${focus}` : `/my-assignments?classId=${encodeURIComponent(classId)}&${focus}`;
     const blocks = attempt && attempt.attemptId === selected ? attempt.content.blocks : [];
-    publishOutline({ assignmentId, backHref, backLabel: "Bài tập", entries: outlineOf(blocks) });
+    publishOutline({ assignmentId, backHref, backLabel: msg("assignmentwork.pages.SubmissionHistoryPage.assignment"), entries: buildOutline(blocks) });
   }, [assignmentId, attempt, classId, detail, general, selected]);
   useEffect(() => () => publishOutline(null), []);
 
@@ -111,22 +90,22 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const { result } = useAttemptResult(current?.graded ? current.attemptId : null);
   const shownResult = result?.score != null && attempt?.attemptId === selected ? result : null;
 
-  if (!classId) return <Alert tone="danger" role="alert">Thiếu lớp của bài.</Alert>;
-  if (error) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
-  if (!detail || !attempts) return <PageLoading label="Đang tải lịch sử nộp bài…" />;
+  if (!classId) return <Alert tone="danger" role="alert">{msg("assignmentwork.pages.SubmissionHistoryPage.theAssignmentsClassIsMissing")}</Alert>;
+  if (error) return <PageLoadError>{describeError(error)}</PageLoadError>;
+  if (!detail || !attempts) return <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.loadingSubmissionHistory")} />;
 
   // Quay lại nằm ở sidebar mục lục của bài (về trang Bài tập, đúng tab đang chứa bài).
-  const shell = (bar: ReactNode, body: ReactNode) => (
+  const renderShell = (bar: ReactNode, body: ReactNode) => (
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
       {bar}
       {body}
     </div>
   );
   if (attempts.length === 0) {
-    return shell(<TopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
-      <p className="rounded-xl border border-line bg-surface p-8 text-center text-[13.5px] text-muted">
-        {historyOpen(detail, true) ? "Bạn chưa nộp bài nào." : "Lịch sử nộp bài hiện sau khi đã nộp và qua hạn nộp."}
-      </p>);
+    return renderShell(<WorkspaceTopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot} />,
+      <Card as="p" padding="none" className="p-8 text-center text-[13.5px] text-muted">
+        {canOpenHistory(detail, true) ? msg("assignmentwork.pages.SubmissionHistoryPage.youHaveNotSubmittedAnything") : msg("assignmentwork.pages.SubmissionHistoryPage.submissionHistoryAppearsAfterYou")}
+      </Card>);
   }
 
   // Mới nhất trước: ‹ về lượt trước (cũ hơn), › sang lượt sau (mới hơn).
@@ -142,7 +121,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
         <PracticeFeedbackPanel
           attemptId={shown.attemptId}
           partTitles={{
-            ASSIGNMENT: "Toàn bài",
+            ASSIGNMENT: msg("assignmentwork.pages.SubmissionHistoryPage.wholeAssignment"),
             ...Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])),
           }}
         />
@@ -151,43 +130,43 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   }
 
   const bar = (
-    <TopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot}
+    <WorkspaceTopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot}
       actions={current && (
-        <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
-          <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(current.attemptId); }}>Tải DOCX</MenuItem>
+        <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.SubmissionHistoryPage.moreActions")} align="right">
+          <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(current.attemptId); }}>{msg("assignmentwork.pages.SubmissionHistoryPage.downloadDocx")}</MenuItem>
         </Menu>
       )} />
   );
   const kind = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
       <p className="text-[13px] text-muted" data-testid="assignment-kind">
-        {detail.gradingMode === "PRACTICE" ? "Luyện tập" : detail.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}
+        {detail.gradingMode === "PRACTICE" ? msg("assignmentwork.pages.SubmissionHistoryPage.practice") : detail.submissionMode === "GROUP" ? msg("assignmentwork.pages.SubmissionHistoryPage.group") : msg("assignmentwork.pages.SubmissionHistoryPage.individual")}
       </p>
     </div>
   );
 
-  return shell(bar, <>
-    {!shown || !current ? <PageLoading label="Đang tải bài nộp…" /> : (
+  return renderShell(bar, <>
+    {!shown || !current ? <PageLoading label={msg("assignmentwork.pages.SubmissionHistoryPage.loadingSubmission")} /> : (
       <DocumentEditor fullWidth document={shown.content} onChange={NOOP} mode="student" readOnly diagramEnabled={false}
         imageUrl={attemptImageUrl(current.attemptId)}
-        emptyLeafLabel="Chưa làm phần này."
+        emptyLeafLabel={msg("assignmentwork.pages.SubmissionHistoryPage.thisPartWasNotDone")}
         comments={comments}
         titleField={{ text: detail.title, readOnly: true, onText: NOOP }}
         header={kind}
         viewSlot={viewSlot}
         // Chuyển qua lại giữa các bài nộp; chỉ có khi có hơn một bản (bài cá nhân: bản đúng hạn và bản nộp muộn).
         toolbarCenter={ordered.length < 2 ? undefined : <>
-          <ToolbarButton icon="chevron_left" title="Bài nộp trước" aria-label="Bài nộp trước" disabled={index < 0 || index >= ordered.length - 1}
+          <ToolbarButton icon="chevron_left" title={msg("assignmentwork.pages.SubmissionHistoryPage.previousSubmission")} aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.previousSubmission")} disabled={index < 0 || index >= ordered.length - 1}
             onClick={() => setSelected(ordered[index + 1]!.attemptId)} />
-          <select aria-label="Chọn bài nộp" value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
+          <select aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.chooseSubmission")} value={selected ?? ""} onChange={(e) => setSelected(e.target.value)}
             className="h-7 rounded-md border border-line bg-surface px-2 font-mono text-xs text-ink outline-none focus:border-focus">
             {ordered.map((a) => (
               <option key={a.attemptId} value={a.attemptId}>
-                {detail.gradingMode === "PRACTICE" ? attemptTime(a) : `${a.late ? "Bản nộp muộn" : "Bản đúng hạn"} – ${attemptTime(a)}`}
+                {detail.gradingMode === "PRACTICE" ? attemptTime(a) : `${a.late ? msg("assignmentwork.pages.SubmissionHistoryPage.lateVersion") : msg("assignmentwork.pages.SubmissionHistoryPage.onTimeVersion")} – ${attemptTime(a)}`}
               </option>
             ))}
           </select>
-          <ToolbarButton icon="chevron_right" title="Bài nộp sau" aria-label="Bài nộp sau" disabled={index <= 0}
+          <ToolbarButton icon="chevron_right" title={msg("assignmentwork.pages.SubmissionHistoryPage.nextSubmission")} aria-label={msg("assignmentwork.pages.SubmissionHistoryPage.nextSubmission")} disabled={index <= 0}
             onClick={() => setSelected(ordered[index - 1]!.attemptId)} />
         </>}
       />
@@ -206,7 +185,7 @@ function scoreCards(result: AttemptResult, attempt: Attempt): DocumentComment[] 
   const blockIds = new Set(attempt.content.blocks.map((block) => block.id));
   return [
     { key: "total", anchorBlockId: null, content: <TotalCard result={result} /> },
-    ...resultByPart(result.items, attempt.parts).map((part): DocumentComment => ({
+    ...groupResultByPart(result.items, attempt.parts).map((part): DocumentComment => ({
       key: `part-${part.key}`,
       anchorBlockId: blockIds.has(part.key) ? part.key : null,
       content: <PartScoreCard part={part} />,
@@ -214,35 +193,19 @@ function scoreCards(result: AttemptResult, attempt: Attempt): DocumentComment[] 
   ];
 }
 
-/** Thanh tỉ lệ điểm đạt / điểm tối đa. */
-function Meter({ awarded, max }: { awarded: number | null; max: number | null }) {
-  const ratio = awarded != null && max ? Math.min(1, Math.max(0, awarded / max)) : 0;
-  return (
-    <span aria-hidden className="mt-2.5 block h-1 overflow-hidden rounded-full bg-sunken">
-      <span className="block h-full rounded-full bg-primary" style={{ width: `${ratio * 100}%` }} />
-    </span>
-  );
-}
-
 function TotalCard({ result }: { result: AttemptResult }) {
   return (
-    <article className="rounded-xl border border-line bg-surface px-4 py-3.5 shadow-[var(--shadow-lift)]">
-      <p className="text-xs font-medium text-muted">Tổng điểm</p>
-      <p className="mt-1 flex items-baseline gap-1.5 tabular-nums">
-        <span className="font-display text-[30px] leading-none tracking-[-0.02em] text-ink">{formatPoints(result.score)}</span>
-        <span className="text-[13px] text-muted">/ {formatPoints(result.maxScore)}</span>
-      </p>
-      <Meter awarded={result.score} max={result.maxScore} />
+    <TotalScoreCard score={result.score} maxScore={result.maxScore} format={formatPoints}>
       <div className="mt-3"><PublishedFeedback feedback={result.feedback} summary={result.summary} /></div>
-      {result.memberOverride && <p className="mt-2 text-xs text-muted">Điểm cá nhân đã được giảng viên điều chỉnh riêng.</p>}
-    </article>
+      {result.memberOverride && <p className="mt-2 text-xs text-muted">{msg("assignmentwork.pages.SubmissionHistoryPage.yourIndividualScoreWasAdjusted")}</p>}
+    </TotalScoreCard>
   );
 }
 
 /** Thẻ điểm của một phần: tên phần, điểm đạt / tối đa và thanh tỉ lệ. */
 function PartScoreCard({ part }: { part: ResultPart }) {
   return (
-    <article className="rounded-xl border border-line bg-surface px-4 py-3 shadow-[var(--shadow-lift)]">
+    <Card as="article" padding="none" lifted className="px-4 py-3">
       <p className="flex items-baseline justify-between gap-3">
         <span className="min-w-0 truncate text-[13px] font-semibold text-ink" title={part.title}>{part.title}</span>
         <span className="shrink-0 tabular-nums">
@@ -250,8 +213,8 @@ function PartScoreCard({ part }: { part: ResultPart }) {
           <span className="text-[12.5px] text-muted"> / {formatPoints(part.max)}</span>
         </span>
       </p>
-      <Meter awarded={part.awarded} max={part.max} />
+      <ScoreMeter awarded={part.awarded} max={part.max} />
       <PublishedRubricItems items={part.items} />
-    </article>
+    </Card>
   );
 }

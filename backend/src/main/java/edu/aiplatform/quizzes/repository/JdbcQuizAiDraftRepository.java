@@ -53,17 +53,17 @@ public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
                 .param("origin", d.origin().name())
                 .param("taskId", d.taskId())
                 .param("status", d.status().name())
-                .param("proposal", write(d.proposal()))
-                .param("provenance", write(d.provenance()))
+                .param("proposal", writeJson(d.proposal()))
+                .param("provenance", writeJson(d.provenance()))
                 .param("baseVersion", d.baseVersion())
                 .param("createdBy", d.createdBy())
-                .param("createdAt", timestamp(d.createdAt()))
-                .param("decidedAt", timestamp(d.decidedAt()))
+                .param("createdAt", convertTimestamp(d.createdAt()))
+                .param("decidedAt", convertTimestamp(d.decidedAt()))
                 .update();
     }
 
     @Override
-    public Optional<QuizAiDraft> find(UUID id) {
+    public Optional<QuizAiDraft> findDraft(UUID id) {
         return jdbc.sql("select " + COLUMNS + " from quiz_ai_drafts where id = :id")
                 .param("id", id).query(this::map).optional();
     }
@@ -96,7 +96,7 @@ public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
     }
 
     @Override
-    public boolean transition(QuizAiDraft next, DraftStatus expected) {
+    public boolean transitionDraft(QuizAiDraft next, DraftStatus expected) {
         return jdbc.sql("""
                         update quiz_ai_drafts set status = :status, task_id = coalesce(:taskId, task_id),
                             proposal = cast(:proposal as jsonb), provenance = cast(:provenance as jsonb),
@@ -105,9 +105,9 @@ public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
                         """)
                 .param("status", next.status().name())
                 .param("taskId", next.taskId())
-                .param("proposal", write(next.proposal()))
-                .param("provenance", write(next.provenance()))
-                .param("decidedAt", timestamp(next.decidedAt()))
+                .param("proposal", writeJson(next.proposal()))
+                .param("provenance", writeJson(next.provenance()))
+                .param("decidedAt", convertTimestamp(next.decidedAt()))
                 .param("id", next.id())
                 .param("expected", expected.name())
                 .update() == 1;
@@ -124,13 +124,13 @@ public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
         return new QuizAiDraft(rs.getObject("id", UUID.class), DraftTarget.valueOf(rs.getString("target")),
                 rs.getObject("quiz_id", UUID.class), rs.getObject("subject_id", UUID.class),
                 DraftOrigin.valueOf(rs.getString("origin")), rs.getObject("task_id", UUID.class),
-                DraftStatus.valueOf(rs.getString("status")), read(rs.getString("proposal"), PROPOSAL),
-                read(rs.getString("provenance"), PROVENANCE), baseVersion,
-                rs.getObject("created_by", UUID.class), instant(rs.getTimestamp("created_at")),
-                instant(rs.getTimestamp("decided_at")));
+                DraftStatus.valueOf(rs.getString("status")), readJson(rs.getString("proposal"), PROPOSAL),
+                readJson(rs.getString("provenance"), PROVENANCE), baseVersion,
+                rs.getObject("created_by", UUID.class), convertInstant(rs.getTimestamp("created_at")),
+                convertInstant(rs.getTimestamp("decided_at")));
     }
 
-    private String write(Object value) {
+    private String writeJson(Object value) {
         try {
             return json.writeValueAsString(value);
         } catch (JsonProcessingException e) {
@@ -138,7 +138,7 @@ public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
         }
     }
 
-    private <T> T read(String value, TypeReference<T> type) {
+    private <T> T readJson(String value, TypeReference<T> type) {
         try {
             return json.readValue(value, type);
         } catch (JsonProcessingException e) {
@@ -146,11 +146,11 @@ public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
         }
     }
 
-    private static Timestamp timestamp(Instant value) {
+    private static Timestamp convertTimestamp(Instant value) {
         return value == null ? null : Timestamp.from(value);
     }
 
-    private static Instant instant(Timestamp value) {
+    private static Instant convertInstant(Timestamp value) {
         return value == null ? null : value.toInstant();
     }
 }

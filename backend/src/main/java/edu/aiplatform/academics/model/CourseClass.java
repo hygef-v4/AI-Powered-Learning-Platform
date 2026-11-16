@@ -36,8 +36,8 @@ public record CourseClass(UUID id, UUID subjectId, String code, String name, Str
     }
 
     /** Returns the term derived from the start date (BR-U05-62). */
-    public String term() {
-        return ClassTermPolicy.termOf(startsOn);
+    public String deriveTerm() {
+        return ClassTermPolicy.deriveTerm(startsOn);
     }
 
     /** Changes class status using locked subject and enrollment facts after authorization. */

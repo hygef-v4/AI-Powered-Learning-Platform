@@ -4,6 +4,7 @@ import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
 import { formatPoints, GRADE_STATUS_LABELS } from "../model/types";
 import { formatDateTime } from "@/shared/dateTime";
+import { msg } from "@/i18n/msg";
 export function StudentGradesSection({
   classId,
   studentId,
@@ -21,24 +22,24 @@ export function StudentGradesSection({
   const { value, error } = useResource(load);
   return (
     <section className="my-4">
-      <h3 className="font-bold">Bài nộp và điểm</h3>
+      <h3 className="font-bold">{msg("grading.components.StudentGradesSection.submissionsAndScores")}</h3>
       {error && <p role="alert">{error}</p>}
-      {!value && !error && <p role="status">Đang tải bài nộp và điểm…</p>}
+      {!value && !error && <p role="status">{msg("grading.components.StudentGradesSection.loadingSubmissionsAndScores")}</p>}
       {value && <>
-        <p className="my-3">Đã nộp {value.grades.filter(grade => grade.submittedAt !== null).length} / {value.assignments.length} bài tính điểm · Nộp trễ {value.grades.filter(grade => grade.submittedAt !== null && grade.late).length}</p>
+        <p className="my-3">{msg("grading.components.StudentGradesSection.submitted")}{value.grades.filter(grade => grade.submittedAt !== null).length} / {value.assignments.length} {msg("grading.components.StudentGradesSection.gradedAssignmentsLate")}{value.grades.filter(grade => grade.submittedAt !== null && grade.late).length}</p>
         <div className="overflow-x-auto"><table className="w-full table-fixed text-left text-sm">
-          <colgroup><col /><col className="w-[120px]" /><col className="w-[150px]" /><col className="w-[110px]" /></colgroup><thead><tr><th scope="col" className="p-2">Bài</th><th scope="col" className="p-2">Hình thức</th><th scope="col" className="p-2">Nộp</th><th scope="col" className="p-2">Điểm</th></tr></thead>
+          <colgroup><col /><col className="w-[120px]" /><col className="w-[150px]" /><col className="w-[110px]" /></colgroup><thead><tr><th scope="col" className="p-2">{msg("grading.components.StudentGradesSection.assignment")}</th><th scope="col" className="p-2">{msg("grading.components.StudentGradesSection.format")}</th><th scope="col" className="p-2">{msg("grading.components.StudentGradesSection.submitted2")}</th><th scope="col" className="p-2">{msg("grading.components.StudentGradesSection.score")}</th></tr></thead>
           <tbody>{value.assignments.map(assignment => {
             const grade = value.grades.find(item => item.assignmentId === assignment.id);
             return <tr key={assignment.id} className="border-t">
               <th scope="row" className="p-2 font-medium">{assignment.title}</th>
-              <td className="p-2">{assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}</td>
-              <td className="p-2">{grade?.submittedAt ? <>{grade.late ? "Trễ" : "Đúng hạn"}<br/>{formatDateTime(grade.submittedAt)}</> : "Chưa nộp"}</td>
+              <td className="p-2">{assignment.submissionMode === "GROUP" ? msg("grading.components.StudentGradesSection.group") : msg("grading.components.StudentGradesSection.individual")}</td>
+              <td className="p-2">{grade?.submittedAt ? <>{grade.late ? msg("grading.components.StudentGradesSection.late") : msg("grading.components.StudentGradesSection.onTime")}<br/>{formatDateTime(grade.submittedAt)}</> : msg("grading.components.StudentGradesSection.notSubmitted")}</td>
               <td className="p-2">{formatPoints(grade?.score, grade?.maxScore ?? assignment.maxScore)}<br/>{GRADE_STATUS_LABELS[grade?.status ?? "NOT_SUBMITTED"] ?? grade?.status}</td>
             </tr>;
           })}</tbody>
         </table></div>
-        {!value.assignments.length && <p>Chưa có bài tính điểm trong lớp.</p>}
+        {!value.assignments.length && <p>{msg("grading.components.StudentGradesSection.noGradedAssignmentsInThis")}</p>}
       </>}
     </section>
   );

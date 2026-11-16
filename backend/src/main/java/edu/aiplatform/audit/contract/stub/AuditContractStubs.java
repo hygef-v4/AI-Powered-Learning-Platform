@@ -20,7 +20,7 @@ public class AuditContractStubs {
     @Bean
     @ConditionalOnMissingBean
     IAudit auditStub() {
-        return Stubs.announce(IAudit.class, event -> Stubs.called(IAudit.class,
+        return Stubs.announce(IAudit.class, event -> Stubs.recordCall(IAudit.class,
                 event.action() + " " + event.result() + " actor=" + event.actorId()
                         + " object=" + event.objectType() + ":" + event.objectId()));
     }

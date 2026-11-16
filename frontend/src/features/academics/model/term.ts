@@ -7,7 +7,7 @@ const SEASON_RANK: Record<string, number> = { SP: 0, SU: 1, FA: 2 };
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** Returns the term code for an ISO `yyyy-MM-dd` start date, or null when the date is missing or outside 2000–2099. */
-export function termOf(startsOn: string | null | undefined): string | null {
+export function deriveTerm(startsOn: string | null | undefined): string | null {
   const match = DATE_PATTERN.exec(startsOn ?? "");
   if (!match) return null;
   const year = Number(match[1]);
@@ -23,7 +23,7 @@ export function isTerm(value: string | null | undefined): value is string {
   return TERM_PATTERN.test(value ?? "");
 }
 
-function termRank(term: string) {
+function rankTerm(term: string) {
   const match = TERM_PATTERN.exec(term);
   if (!match) return -1;
   return Number(match[2]) * 10 + SEASON_RANK[match[1]!]! * 2 + (match[3] ? 1 : 0);
@@ -31,11 +31,11 @@ function termRank(term: string) {
 
 /** Sorts terms newest first: year, then FA > SU > SP, then the `-BL5` block before the base term. */
 export function compareTermsNewestFirst(a: string, b: string) {
-  return termRank(b) - termRank(a) || a.localeCompare(b);
+  return rankTerm(b) - rankTerm(a) || a.localeCompare(b);
 }
 
 /** Returns the distinct terms of loaded classes, newest first. */
-export function termOptions(classes: readonly { term?: string | null }[]) {
+export function listTermOptions(classes: readonly { term?: string | null }[]) {
   const terms = new Set<string>();
   for (const item of classes) if (isTerm(item.term)) terms.add(item.term);
   return [...terms].sort(compareTermsNewestFirst);

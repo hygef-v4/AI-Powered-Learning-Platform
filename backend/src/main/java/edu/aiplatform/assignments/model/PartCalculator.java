@@ -25,7 +25,7 @@ public final class PartCalculator {
     }
 
     public static List<DocumentPart> compute(DocumentModel document) {
-        List<Heading> headings = headings(document);
+        List<Heading> headings = listHeadings(document);
         if (headings.isEmpty()) {
             return List.of(new DocumentPart(WHOLE_DOCUMENT, null, List.of(), WHOLE_DOCUMENT_TITLE));
         }
@@ -47,7 +47,7 @@ public final class PartCalculator {
             } else {
                 counters.add(1);
             }
-            String number = SectionNumbering.of(counters);
+            String number = SectionNumbering.formatNumber(counters);
             Heading heading = new Heading(raw.id(), raw.level(), raw.title().isEmpty() ? number : raw.title());
             List<UUID> ancestors = branch.stream().map(Heading::id).toList();
             List<String> path = new ArrayList<>(branch.stream().map(Heading::title).toList());
@@ -63,7 +63,7 @@ public final class PartCalculator {
     }
 
     /** Cấp 1–6 của block Tiêu đề 1–6; Tiêu đề, Phụ đề và block khác trả 0. */
-    public static int level(DocumentBlock block) {
+    public static int resolveHeadingLevel(DocumentBlock block) {
         if (block.type() != BlockType.HEADING || block.content() == null) {
             return 0;
         }
@@ -74,13 +74,13 @@ public final class PartCalculator {
         return 0;
     }
 
-    private static List<Heading> headings(DocumentModel document) {
+    private static List<Heading> listHeadings(DocumentModel document) {
         List<Heading> headings = new ArrayList<>();
         if (document == null || document.blocks() == null) {
             return headings;
         }
         for (DocumentBlock block : document.blocks()) {
-            int level = level(block);
+            int level = resolveHeadingLevel(block);
             if (level > 0 && block.id() != null) {
                 JsonNode text = block.content().path("text");
                 String title = text.isTextual() && !text.asText().isBlank() ? text.asText().strip() : "";

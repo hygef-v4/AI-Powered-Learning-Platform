@@ -19,19 +19,19 @@ public class DownloadService {
 
     static final String SVG_CSP = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
 
-    private final DownloadTokenService tokens;
+    private final DownloadTokenService downloadTokenService;
     private final IStorage storage;
     private final FileAudit fileAudit;
     private final List<IArtifactDownloadPolicy> policies;
 
-    public DownloadService(DownloadTokenService tokens, IStorage storage, FileAudit fileAudit) {
-        this(tokens, storage, fileAudit, List.of());
+    public DownloadService(DownloadTokenService downloadTokenService, IStorage storage, FileAudit fileAudit) {
+        this(downloadTokenService, storage, fileAudit, List.of());
     }
 
     @Autowired
-    public DownloadService(DownloadTokenService tokens, IStorage storage, FileAudit fileAudit,
+    public DownloadService(DownloadTokenService downloadTokenService, IStorage storage, FileAudit fileAudit,
                            List<IArtifactDownloadPolicy> policies) {
-        this.tokens = tokens;
+        this.downloadTokenService = downloadTokenService;
         this.storage = storage;
         this.fileAudit = fileAudit;
         this.policies = List.copyOf(policies);
@@ -41,46 +41,46 @@ public class DownloadService {
     }
 
     public Download open(Actor actor, String token) {
-        DownloadTokenService.Grant grant = tokens.resolve(token)
-                .orElseThrow(() -> ApiException.notFound("DOWNLOAD_TOKEN_NOT_FOUND"));
+        DownloadTokenService.Grant grant = downloadTokenService.resolve(token)
+                .orElseThrow(() -> ApiException.createNotFound("DOWNLOAD_TOKEN_NOT_FOUND"));
         if (!grant.accountId().equals(actor.accountId())) {
             fileAudit.downloadWrongAccount(actor.accountId());
-            throw ApiException.notFound("DOWNLOAD_TOKEN_NOT_FOUND");
+            throw ApiException.createNotFound("DOWNLOAD_TOKEN_NOT_FOUND");
         }
         try {
-            StoredMetadata metadata = storage.metadata(grant.fileId())
-                    .orElseThrow(() -> ApiException.notFound("FILE_NOT_FOUND"));
+            StoredMetadata metadata = storage.loadMetadata(grant.fileId())
+                    .orElseThrow(() -> ApiException.createNotFound("FILE_NOT_FOUND"));
             if (metadata.purpose() == ArtifactPurpose.MATERIAL) {
                 IArtifactDownloadPolicy policy = policies.stream()
                         .filter(candidate -> candidate.purpose() == metadata.purpose()).findFirst()
-                        .orElseThrow(() -> ApiException.unavailable("FILE_ACCESS_UNAVAILABLE",
+                        .orElseThrow(() -> ApiException.createUnavailable("FILE_ACCESS_UNAVAILABLE",
                                 "Chưa kiểm tra được quyền tải học liệu, vui lòng thử lại"));
                 try {
                     policy.requireDownload(actor, grant.fileId());
                 } catch (ApiException rejected) {
                     throw rejected;
                 } catch (RuntimeException unavailable) {
-                    throw ApiException.unavailable("FILE_ACCESS_UNAVAILABLE",
+                    throw ApiException.createUnavailable("FILE_ACCESS_UNAVAILABLE",
                             "Chưa kiểm tra được quyền tải học liệu, vui lòng thử lại");
                 }
             }
             InputStream content = storage.open(grant.fileId());
-            return new Download(metadata, content, headers(metadata));
+            return new Download(metadata, content, buildHeaders(metadata));
         } catch (FileAbusiveException e) {
             fileAudit.downloadAbusive(actor.accountId());
-            throw ApiException.gone("FILE_UNAVAILABLE", "Tệp không khả dụng");
+            throw ApiException.createGone("FILE_UNAVAILABLE", "Tệp không khả dụng");
         } catch (StorageUnavailableException e) {
-            throw ApiException.unavailable("STORAGE_UNAVAILABLE", "Lưu trữ tệp tạm thời không khả dụng");
+            throw ApiException.createUnavailable("STORAGE_UNAVAILABLE", "Lưu trữ tệp tạm thời không khả dụng");
         }
     }
 
-    static HttpHeaders headers(StoredMetadata metadata) {
-        FileType type = FileType.fromMediaType(metadata.mediaType()).orElse(null);
+    static HttpHeaders buildHeaders(StoredMetadata metadata) {
+        FileType type = FileType.findByMediaType(metadata.mediaType()).orElse(null);
         HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.CONTENT_TYPE, type == null ? "application/octet-stream" : type.mediaType());
+        headers.set(HttpHeaders.CONTENT_TYPE, type == null ? "application/octet-stream" : type.readMediaType());
         headers.set("X-Content-Type-Options", "nosniff");
         headers.setCacheControl("private, no-store");
-        ContentDisposition.Builder disposition = type != null && type.inline()
+        ContentDisposition.Builder disposition = type != null && type.isInline()
                 ? ContentDisposition.inline() : ContentDisposition.attachment();
         headers.setContentDisposition(disposition.filename(metadata.originalFileName(), StandardCharsets.UTF_8).build());
         if (type == FileType.SVG) {

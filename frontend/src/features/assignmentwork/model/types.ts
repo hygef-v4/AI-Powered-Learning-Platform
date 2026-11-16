@@ -1,5 +1,6 @@
 import type { DiagramType, DocumentModel, DocumentPart, ValidationIssue } from "@/shared/document";
 import type { Tone } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 export type AssignmentStatus = "DRAFT" | "REVIEWED" | "SCHEDULED" | "OPEN" | "CLOSED" | "RETIRED";
 export type GradingMode = "GRADED" | "PRACTICE";
@@ -161,7 +162,7 @@ export type ImportPreview = { document: DocumentModel; warnings: ValidationIssue
 export type AttemptDiagram = { attemptId: string; blockId: string; title: string; diagramType: DiagramType; alt: string; xml: string; svgPreview: string | null };
 
 export const myStatusLabels: Record<MyStatus, string> = {
-  NOT_STARTED: "Chưa làm", IN_PROGRESS: "Đang làm", SUBMITTED: "Đã nộp", SUBMITTED_LATE: "Nộp trễ", MISSED: "Hết hạn", GROUP: "Bài nhóm",
+  NOT_STARTED: msg("assignmentwork.model.types.notStarted"), IN_PROGRESS: msg("assignmentwork.model.types.inProgress"), SUBMITTED: msg("assignmentwork.model.types.submitted"), SUBMITTED_LATE: msg("assignmentwork.model.types.submittedLate"), MISSED: msg("assignmentwork.model.types.expired"), GROUP: msg("assignmentwork.model.types.groupAssignment"),
 };
 
 /** Chưa làm xám, Đang làm vàng, Đã nộp xanh lá, Nộp trễ tím, Hết hạn đỏ. */
@@ -170,11 +171,11 @@ export const myStatusTones: Record<MyStatus, Tone> = {
 };
 
 export const submitModeLabels: Record<SubmitMode, string> = {
-  MANUAL: "Nộp tay", AUTO_DEADLINE: "Tự nộp khi đóng nhận bài", AUTO_RETIRED: "Tự nộp khi ngưng giao",
+  MANUAL: msg("assignmentwork.model.types.submittedManually"), AUTO_DEADLINE: msg("assignmentwork.model.types.autoSubmittedWhenSubmissionsClosed"), AUTO_RETIRED: msg("assignmentwork.model.types.autoSubmittedWhenWithdrawn"),
 };
 
 export const blockedLabels: Record<string, string> = {
-  GROUP_ASSIGNMENT: "Bài nhóm làm trong tài liệu nhóm",
-  SUBMISSION_CLOSED: "Bài đã hết hạn nhận bài",
-  ATTEMPTS_EXHAUSTED: "Đã hết lượt",
+  GROUP_ASSIGNMENT: msg("assignmentwork.model.types.groupAssignmentsAreDoneIn"),
+  SUBMISSION_CLOSED: msg("assignmentwork.model.types.submissionsForThisAssignmentHave"),
+  ATTEMPTS_EXHAUSTED: msg("assignmentwork.model.types.noAttemptsLeft"),
 };

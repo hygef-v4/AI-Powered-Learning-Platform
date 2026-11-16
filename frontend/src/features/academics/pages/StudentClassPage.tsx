@@ -3,10 +3,11 @@
 import { useId } from "react";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Field, LockedInput, PageHeader, Pill, Section } from "@/shared/ui";
-import { initials } from "@/shared/layout/navigation";
+import { extractInitials } from "@/shared/layout/navigation";
 import { studentClassAside, studentClassBoard, studentClassSections } from "../slots";
 import type { CourseClassView } from "../model/types";
 import { formatStartDate } from "../model/format";
+import { msg } from "@/i18n/msg";
 
 /**
  * Lớp của tôi (Sinh viên), cùng bố cục Chi tiết lớp của Chủ nhiệm môn nhưng chỉ xem: thẻ Thông tin lớp (mã môn, mã lớp, ngày bắt đầu, học kỳ, mô tả) bên
@@ -18,26 +19,26 @@ export function StudentClassPage({ value, tab }: { value: CourseClassView; tab: 
   return (
     <>
       <PageHeader
-        title={tab === "materials" ? "Học liệu" : "Thông tin lớp"}
+        title={tab === "materials" ? msg("academics.pages.StudentClassPage.learningMaterials") : msg("academics.pages.StudentClassPage.classInformation")}
       />
       {tab === "materials" ? (
-        <div role="region" aria-label="Học liệu" className="flex flex-col gap-4">
+        <div role="region" aria-label={msg("academics.pages.StudentClassPage.learningMaterials")} className="flex flex-col gap-4">
           <SlotOutlet slot={studentClassSections} props={{ classId: value.id }} />
         </div>
       ) : (
         <>
         <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
-          <Section title="Thông tin lớp">
+          <Section title={msg("academics.pages.StudentClassPage.classInformation")}>
             <div className="grid min-w-0 gap-4 sm:grid-cols-2">
-              <Field label="Mã môn" htmlFor={`${id}-subject`}><LockedInput id={`${id}-subject`} value={value.subject.code} /></Field>
-              <Field label="Mã lớp" htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={value.code} /></Field>
-              <Field label="Ngày bắt đầu" htmlFor={`${id}-starts-on`}><LockedInput id={`${id}-starts-on`} value={formatStartDate(value.startsOn)} /></Field>
-              <Field label="Học kỳ" htmlFor={`${id}-term`}><LockedInput id={`${id}-term`} value={value.term} /></Field>
+              <Field label={msg("academics.pages.StudentClassPage.subjectCode")} htmlFor={`${id}-subject`}><LockedInput id={`${id}-subject`} value={value.subject.code} /></Field>
+              <Field label={msg("academics.pages.StudentClassPage.classCode")} htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={value.code} /></Field>
+              <Field label={msg("academics.pages.StudentClassPage.startDate")} htmlFor={`${id}-starts-on`}><LockedInput id={`${id}-starts-on`} value={formatStartDate(value.startsOn)} /></Field>
+              <Field label={msg("academics.pages.StudentClassPage.term")} htmlFor={`${id}-term`}><LockedInput id={`${id}-term`} value={value.term} /></Field>
               <div className="sm:col-span-2">
-                <Field label="Mô tả" htmlFor={`${id}-description`}>
+                <Field label={msg("academics.pages.StudentClassPage.description")} htmlFor={`${id}-description`}>
                   {/* Cùng khung ô Mô tả bên Chủ nhiệm môn (cao tối thiểu như textarea ở đó). */}
                   <p id={`${id}-description`} className="min-h-28 rounded-lg border border-line bg-sunken px-3 py-2 text-[13.5px] whitespace-pre-line text-body [overflow-wrap:anywhere]">
-                    {value.description?.trim() || <span className="text-muted">Chưa có mô tả.</span>}
+                    {value.description?.trim() || <span className="text-muted">{msg("academics.pages.StudentClassPage.noDescriptionYet")}</span>}
                   </p>
                 </Field>
               </div>
@@ -45,13 +46,13 @@ export function StudentClassPage({ value, tab }: { value: CourseClassView; tab: 
           </Section>
           {/* Cột phải cao bằng thẻ Thông tin lớp: Giảng viên gọn theo nội dung, Nhóm của tôi giãn phần còn lại. */}
           <div className="flex flex-col gap-4">
-            <Section title="Giảng viên">
+            <Section title={msg("academics.pages.StudentClassPage.lecturer")}>
               {value.teacher ? (
                 <div className="flex items-center gap-3">
-                  <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{initials(value.teacher.name)}</span>
+                  <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{extractInitials(value.teacher.name)}</span>
                   <div className="min-w-0"><p className="text-sm font-semibold">{value.teacher.name}</p><p className="break-all text-xs text-muted">{value.teacher.email}</p></div>
                 </div>
-              ) : <div><Pill>Chưa phân công</Pill></div>}
+              ) : <div><Pill>{msg("academics.pages.StudentClassPage.notAssigned")}</Pill></div>}
             </Section>
             <SlotOutlet slot={studentClassAside} props={{ classId: value.id }} />
           </div>

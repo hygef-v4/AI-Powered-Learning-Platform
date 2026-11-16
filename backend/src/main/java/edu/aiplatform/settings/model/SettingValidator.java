@@ -37,32 +37,32 @@ public final class SettingValidator {
     public static JsonNode validate(SettingDefinition definition, JsonNode value) {
         if (value == null || value.isNull()) {
             if (definition.defaultValue() != null) {
-                throw invalid("SETTING_REQUIRED", "Mục này phải có giá trị");
+                throw createInvalidError("SETTING_REQUIRED", "Mục này phải có giá trị");
             }
             return NullNode.getInstance();
         }
         Map<String, Object> constraints = definition.constraints() == null ? Map.of() : definition.constraints();
         return switch (definition.type()) {
-            case INTEGER -> integer(value, constraints);
+            case INTEGER -> validateInteger(value, constraints);
             case BOOLEAN -> {
                 if (!value.isBoolean()) {
-                    throw invalid("SETTING_TYPE", "Giá trị phải là bật hoặc tắt");
+                    throw createInvalidError("SETTING_TYPE", "Giá trị phải là bật hoặc tắt");
                 }
                 yield value;
             }
             case TIME_OF_DAY -> {
                 if (!value.isTextual() || !TIME_OF_DAY.matcher(value.asText()).matches()) {
-                    throw invalid("SETTING_TYPE", "Giờ phải có dạng giờ:phút, ví dụ 02:30");
+                    throw createInvalidError("SETTING_TYPE", "Giờ phải có dạng giờ:phút, ví dụ 02:30");
                 }
                 yield value;
             }
             case ENUM -> {
-                if (!value.isTextual() || !options(constraints).contains(value.asText())) {
-                    throw invalid("SETTING_OPTION", "Giá trị không nằm trong danh sách cho phép");
+                if (!value.isTextual() || !listOptions(constraints).contains(value.asText())) {
+                    throw createInvalidError("SETTING_OPTION", "Giá trị không nằm trong danh sách cho phép");
                 }
                 yield value;
             }
-            case ENUM_SET -> enumSet(value, constraints);
+            case ENUM_SET -> validateEnumSet(value, constraints);
         };
     }
 
@@ -76,7 +76,7 @@ public final class SettingValidator {
         if (required != null && value != null && value.isBoolean() && value.asBoolean()) {
             JsonNode other = current.get(required.toString());
             if (other == null || other.isNull()) {
-                throw invalid("SETTING_DEPENDENCY", "Cần đặt " + required + " trước khi bật mục này");
+                throw createInvalidError("SETTING_DEPENDENCY", "Cần đặt " + required + " trước khi bật mục này");
             }
         }
         if (value == null || value.isNull()) {
@@ -84,39 +84,39 @@ public final class SettingValidator {
                 Object dependsOn = other.constraints() == null ? null : other.constraints().get(REQUIRES_WHEN_TRUE);
                 JsonNode otherValue = current.get(other.key());
                 if (definition.key().equals(dependsOn) && otherValue != null && otherValue.asBoolean(false)) {
-                    throw invalid("SETTING_DEPENDENCY", "Đang bật " + other.key() + " nên không bỏ trống được mục này");
+                    throw createInvalidError("SETTING_DEPENDENCY", "Đang bật " + other.key() + " nên không bỏ trống được mục này");
                 }
             }
         }
     }
 
-    private static JsonNode integer(JsonNode value, Map<String, Object> constraints) {
+    private static JsonNode validateInteger(JsonNode value, Map<String, Object> constraints) {
         if (!value.isIntegralNumber() || !value.canConvertToInt()) {
-            throw invalid("SETTING_TYPE", "Giá trị phải là số nguyên");
+            throw createInvalidError("SETTING_TYPE", "Giá trị phải là số nguyên");
         }
         int number = value.asInt();
         Object min = constraints.get(MIN);
         Object max = constraints.get(MAX);
         if ((min != null && number < ((Number) min).intValue()) || (max != null && number > ((Number) max).intValue())) {
-            throw invalid("SETTING_RANGE", "Giá trị phải từ " + min + " đến " + max);
+            throw createInvalidError("SETTING_RANGE", "Giá trị phải từ " + min + " đến " + max);
         }
         return value;
     }
 
-    private static JsonNode enumSet(JsonNode value, Map<String, Object> constraints) {
+    private static JsonNode validateEnumSet(JsonNode value, Map<String, Object> constraints) {
         if (!value.isArray()) {
-            throw invalid("SETTING_TYPE", "Giá trị phải là danh sách");
+            throw createInvalidError("SETTING_TYPE", "Giá trị phải là danh sách");
         }
-        List<String> options = options(constraints);
+        List<String> options = listOptions(constraints);
         Set<String> chosen = new LinkedHashSet<>();
         for (JsonNode item : value) {
             if (!item.isTextual() || !options.contains(item.asText())) {
-                throw invalid("SETTING_OPTION", "Có giá trị không nằm trong danh sách cho phép");
+                throw createInvalidError("SETTING_OPTION", "Có giá trị không nằm trong danh sách cho phép");
             }
             chosen.add(item.asText());
         }
         if (chosen.isEmpty() && Boolean.TRUE.equals(constraints.get(NON_EMPTY))) {
-            throw invalid("SETTING_REQUIRED", "Phải chọn ít nhất một giá trị");
+            throw createInvalidError("SETTING_REQUIRED", "Phải chọn ít nhất một giá trị");
         }
         ArrayNode normalized = JsonNodeFactory.instance.arrayNode();
         options.stream().filter(chosen::contains).forEach(normalized::add);
@@ -124,12 +124,12 @@ public final class SettingValidator {
     }
 
     @SuppressWarnings("unchecked")
-    private static List<String> options(Map<String, Object> constraints) {
+    private static List<String> listOptions(Map<String, Object> constraints) {
         Object options = constraints.get(OPTIONS);
         return options instanceof List<?> list ? (List<String>) list : new ArrayList<>();
     }
 
-    private static ApiException invalid(String code, String message) {
-        return ApiException.badRequest(code, message);
+    private static ApiException createInvalidError(String code, String message) {
+        return ApiException.createBadRequest(code, message);
     }
 }

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 
 /** Lỗi tạm (mất mạng, 5xx, 429) thì poll tiếp; lỗi 4xx khác là trạng thái cuối (không tìm thấy, không có quyền). */
-function transient(error: unknown): boolean {
+function isTransient(error: unknown): boolean {
   if (!(error instanceof ApiError)) return true;
   const status = error.problem.status;
   return status >= 500 || status === 429 || status === 0;
@@ -31,7 +31,7 @@ export function usePollStatus<T>(fetcher: () => Promise<T>, isFinal: (value: T) 
       } catch (e) {
         if (stopped) return;
         setError(e);
-        if (transient(e)) timer = setTimeout(tick, intervalMs);
+        if (isTransient(e)) timer = setTimeout(tick, intervalMs);
       }
     }
     void tick();

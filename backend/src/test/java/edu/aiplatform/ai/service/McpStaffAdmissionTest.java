@@ -28,8 +28,8 @@ class McpStaffAdmissionTest {
         when(authorization.authorize(eq(admin), anyString(), any())).thenAnswer(call ->
                 "MCP_SELF".equals(call.getArgument(1)) ? AuthorizationDecision.allow()
                         : AuthorizationDecision.deny("ROLE"));
-        assertThat(service.create(admin, "Reporting", McpCredential.Access.READ_ONLY, 7).token()).startsWith("mcp_");
-        service.list(admin);
+        assertThat(service.createCredential(admin, "Reporting", McpCredential.Access.READ_ONLY, 7).token()).startsWith("mcp_");
+        service.listCredentials(admin);
         verify(authorization, times(2)).authorize(eq(admin), eq("MCP_SELF"), any());
     }
 
@@ -38,8 +38,8 @@ class McpStaffAdmissionTest {
         when(authorization.authorize(eq(student), anyString(), any())).thenAnswer(call ->
                 "AI_ADMIN".equals(call.getArgument(1)) ? AuthorizationDecision.allow()
                         : AuthorizationDecision.deny("ROLE"));
-        assertThatThrownBy(() -> service.create(student, "x", McpCredential.Access.READ_ONLY, 7)).isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> service.list(student)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> service.createCredential(student, "x", McpCredential.Access.READ_ONLY, 7)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> service.listCredentials(student)).isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> service.revoke(student, UUID.randomUUID())).isInstanceOf(ApiException.class);
         verify(repository, never()).insert(any());
     }

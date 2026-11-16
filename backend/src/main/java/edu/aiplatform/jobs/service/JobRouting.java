@@ -45,7 +45,7 @@ public final class JobRouting {
         return Optional.ofNullable(QUEUES.get(jobType));
     }
 
-    public static Map<String, JobQueue> all() {
+    public static Map<String, JobQueue> listAllQueues() {
         return QUEUES;
     }
 
@@ -57,11 +57,11 @@ public final class JobRouting {
     static final java.util.Set<String> RECOVERABLE = java.util.Set.of(JobTypes.AI_TASK, JobTypes.BACKUP_RUN,
             JobTypes.MATERIAL_TEXT_EXTRACT, JobTypes.EMAIL_SEND, JobTypes.GROUP_DOC_CREATE);
 
-    public static boolean recoverable(String jobType) {
+    public static boolean isRecoverable(String jobType) {
         return RECOVERABLE.contains(jobType);
     }
 
-    public static int priorityOf(String jobType) {
+    public static int resolvePriority(String jobType) {
         return switch (jobType) {
             case JobTypes.OTP_DELIVERY -> EMAIL_MAX_PRIORITY;
             case JobTypes.EMAIL_SEND -> 1;

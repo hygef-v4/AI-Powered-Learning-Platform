@@ -42,14 +42,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        Optional<String> token = AuthCookies.read(request, AuthCookies.ACCESS);
+        Optional<String> token = AuthCookies.readCookie(request, AuthCookies.ACCESS);
         if (token.isPresent()) {
             Optional<SessionAuthority.AuthenticatedSession> session;
             try {
                 session = authority.authenticate(token.get());
             } catch (DataAccessException e) {
                 log.warn("Không kiểm được phiên: {}", e.getClass().getSimpleName());
-                ProblemResponses.write(response, objectMapper, HttpStatus.SERVICE_UNAVAILABLE, "SYSTEM_BUSY",
+                ProblemResponses.writeProblem(response, objectMapper, HttpStatus.SERVICE_UNAVAILABLE, "SYSTEM_BUSY",
                         "Hệ thống tạm bận, vui lòng thử lại sau");
                 return;
             }

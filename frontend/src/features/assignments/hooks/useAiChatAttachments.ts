@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { readTemplateFile, useSourceUploads, type SourceUpload, type TemplateFile } from "../components/sourceUploads";
+import { msg } from "@/i18n/msg";
 
 type Replacement = { item: SourceUpload } | { templateId: string };
 export type AttachmentSnapshot = { template: TemplateFile | null; templateId: string; uploads: SourceUpload[] };
@@ -26,13 +27,13 @@ export function useAiChatAttachments(assignmentId: string, onError: (message: st
     if (version !== operation.current) return;
     changing.current = false;
     setProcessing(false);
-    if (result.status !== "READY") { onError(result.error ?? "Không đọc được mẫu đề."); return; }
+    if (result.status !== "READY") { onError(result.error ?? msg("assignments.hooks.useAiChatAttachments.couldNotReadTheTemplate")); return; }
     setTemplate(result);
     setTemplateId("");
     sources.remove(item);
   }
 
-  async function demote() {
+  async function demoteAttachment() {
     if (!template || changing.current) return;
     const version = ++operation.current;
     changing.current = true;
@@ -42,7 +43,7 @@ export function useAiChatAttachments(assignmentId: string, onError: (message: st
     changing.current = false;
     setProcessing(false);
     if (result?.status === "READY") setTemplate(null);
-    else if (result) { sources.remove(result); onError(result.error ?? "Không thể dùng tệp làm tham khảo."); }
+    else if (result) { sources.remove(result); onError(result.error ?? msg("assignments.hooks.useAiChatAttachments.thisFileCannotBeUsed")); }
   }
 
   function chooseExisting(id: string, confirmed = false) {
@@ -77,7 +78,7 @@ export function useAiChatAttachments(assignmentId: string, onError: (message: st
     sources, template, templateId, replacement, processing,
     pending: sources.pending || processing,
     addFiles: sources.add,
-    promote, demote, chooseExisting, removeTemplate, clear, restore,
+    promote, demote: demoteAttachment, chooseExisting, removeTemplate, clear, restore,
     snapshot: (): AttachmentSnapshot => ({ template, templateId, uploads: [...sources.uploads] }),
     cancelReplacement: () => setReplacement(null),
     confirmReplacement: async () => {

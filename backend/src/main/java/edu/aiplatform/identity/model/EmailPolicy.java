@@ -22,7 +22,7 @@ public final class EmailPolicy {
     }
 
     /** Phần trước {@code @}, dùng cho BR-U01-31. */
-    public static String localPart(String email) {
+    public static String extractLocalPart(String email) {
         int at = email.indexOf('@');
         return at < 0 ? email : email.substring(0, at);
     }

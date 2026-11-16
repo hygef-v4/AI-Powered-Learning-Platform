@@ -12,12 +12,13 @@ import { TableFrame, Td, Th } from "@/shared/ui/Table";
 import { ROLE_LABELS } from "../../model/types";
 import { commitImport, validateImport, type ImportResult } from "../api";
 import { IMPORT_REASON_LABELS } from "../model/labels";
-import { Pagination } from "./Pagination";
+import { Pagination } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 const ROWS_PER_PAGE = 10;
 
 /** Lý do lỗi viết hoa chữ cái đầu. */
-function sentence(text: string) {
+function formatSentence(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
@@ -34,7 +35,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function run(action: (file: File) => Promise<ImportResult>, target: File) {
+  async function runImport(action: (file: File) => Promise<ImportResult>, target: File) {
     setBusy(true);
     setError(null);
     try {
@@ -52,8 +53,8 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
     } catch (e) {
       setError(
         e instanceof ApiError && e.problem.status === 400
-          ? (e.problem.detail ?? "Tệp không hợp lệ.")
-          : "Không xử lý được tệp, vui lòng thử lại.",
+          ? (e.problem.detail ?? msg("identity.admin.components.ImportAccountsPanel.invalidFile"))
+          : msg("identity.admin.components.ImportAccountsPanel.couldNotProcessTheFile"),
       );
     } finally {
       setBusy(false);
@@ -63,27 +64,27 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
   function choose(next: File | null) {
     setFile(next);
     setPreview(null);
-    if (next) void run(validateImport, next);
+    if (next) void runImport(validateImport, next);
   }
 
   const rows = preview?.rows.slice(page * ROWS_PER_PAGE, (page + 1) * ROWS_PER_PAGE) ?? [];
 
   return (
     <Section
-      title="Nhập tài khoản từ Excel"
+      title={msg("identity.admin.components.ImportAccountsPanel.importAccountsFromExcel")}
       icon="upload_file"
       actions={
-        <button type="button" onClick={onClose} aria-label="Đóng" className="text-muted hover:text-ink">
+        <button type="button" onClick={onClose} aria-label={msg("identity.admin.components.ImportAccountsPanel.close")} className="text-muted hover:text-ink">
           <Icon name="close" />
         </button>
       }
     >
-      <p className="text-xs text-muted">Cột: email, display_name, role, student_code (MSSV bắt buộc với sinh viên).</p>
+      <p className="text-xs text-muted">{msg("identity.admin.components.ImportAccountsPanel.columnsEmailDisplayNameRole")}</p>
       <input
         ref={input}
         type="file"
         accept=".xlsx"
-        aria-label="Chọn tệp Excel"
+        aria-label={msg("identity.admin.components.ImportAccountsPanel.chooseAnExcelFile")}
         disabled={busy}
         className="sr-only"
         onChange={(e) => choose(e.target.files?.[0] ?? null)}
@@ -96,7 +97,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
           </div>
         )}
         <Button icon="folder_open" onClick={() => input.current?.click()} disabled={busy}>
-          {file ? "Chọn tệp khác" : "Chọn tệp"}
+          {file ? msg("identity.admin.components.ImportAccountsPanel.chooseAnotherFile") : msg("identity.admin.components.ImportAccountsPanel.chooseFile")}
         </Button>
         <a
           href="/templates/account-import.xlsx"
@@ -104,11 +105,10 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
           className="inline-flex items-center gap-1 text-xs font-semibold text-primary-ink hover:underline"
         >
           <Icon name="download" size={16} />
-          Tải tệp mẫu
-        </a>
+          {msg("identity.admin.components.ImportAccountsPanel.downloadTemplate")}</a>
       </div>
 
-      {busy && !preview && <p className="text-xs text-muted">Đang kiểm tra tệp...</p>}
+      {busy && !preview && <p className="text-xs text-muted">{msg("identity.admin.components.ImportAccountsPanel.checkingFile")}</p>}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -118,21 +118,21 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
       {preview && (
         <>
           <div className="flex flex-wrap items-center gap-2" role="status">
-            <Pill>{preview.rows.length} dòng</Pill>
+            <Pill>{preview.rows.length} {msg("identity.admin.components.ImportAccountsPanel.rows")}</Pill>
             <Pill tone="success">
-              {preview.validCount} {preview.committed ? "đã tạo" : "hợp lệ"}
+              {preview.validCount} {preview.committed ? msg("identity.admin.components.ImportAccountsPanel.created") : msg("identity.admin.components.ImportAccountsPanel.valid")}
             </Pill>
-            {preview.rejectedCount > 0 && <Pill tone="danger">{preview.rejectedCount} lỗi</Pill>}
+            {preview.rejectedCount > 0 && <Pill tone="danger">{preview.rejectedCount} {msg("identity.admin.components.ImportAccountsPanel.errors")}</Pill>}
           </div>
           <TableFrame filledHead className="[&_table]:min-w-[820px] [&_table]:table-fixed">
             <colgroup><col className="w-[72px]" /><col className="w-[28%]" /><col /><col className="w-[120px]" /><col className="w-[110px]" /><col className="w-[200px]" /></colgroup><thead>
               <tr>
-                <Th className="w-16">Dòng</Th>
+                <Th className="w-16">{msg("identity.admin.components.ImportAccountsPanel.row")}</Th>
                 <Th>Email</Th>
-                <Th>Họ tên</Th>
-                <Th>Vai trò</Th>
+                <Th>{msg("identity.admin.components.ImportAccountsPanel.fullName")}</Th>
+                <Th>{msg("identity.admin.components.ImportAccountsPanel.role")}</Th>
                 <Th>MSSV</Th>
-                <Th>Kết quả kiểm tra</Th>
+                <Th>{msg("identity.admin.components.ImportAccountsPanel.checkResults")}</Th>
               </tr>
             </thead>
             <tbody>
@@ -145,9 +145,9 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
                   <Td>{row.studentCode}</Td>
                   <Td>
                     {row.reason ? (
-                      <Pill tone="danger">{sentence(IMPORT_REASON_LABELS[row.reason] ?? row.reason)}</Pill>
+                      <Pill tone="danger">{formatSentence(IMPORT_REASON_LABELS[row.reason] ?? row.reason)}</Pill>
                     ) : (
-                      <Pill tone="success">{row.outcome === "CREATED" ? "Đã tạo" : "Hợp lệ"}</Pill>
+                      <Pill tone="success">{row.outcome === "CREATED" ? msg("identity.admin.components.ImportAccountsPanel.created2") : msg("identity.admin.components.ImportAccountsPanel.valid2")}</Pill>
                     )}
                   </Td>
                 </tr>
@@ -155,21 +155,20 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
             </tbody>
           </TableFrame>
           {preview.rows.length > ROWS_PER_PAGE && (
-            <Pagination page={page} size={ROWS_PER_PAGE} total={preview.rows.length} unit="dòng" onPage={setPage} />
+            <Pagination page={page} pageSize={ROWS_PER_PAGE} total={preview.rows.length} itemLabel={msg("identity.admin.components.ImportAccountsPanel.rows2")} onPageChange={setPage} summary={false} />
           )}
           {!preview.committed && (
             <>
               <div className="flex justify-end gap-2 border-t border-line pt-3.5">
                 <Button onClick={onClose} disabled={busy}>
-                  Hủy
-                </Button>
+                  {msg("identity.admin.components.ImportAccountsPanel.cancel")}</Button>
                 <Button
                   variant="primary"
                   icon="check"
                   disabled={busy || preview.validCount === 0 || !file}
-                  onClick={() => file && run(commitImport, file)}
+                  onClick={() => file && runImport(commitImport, file)}
                 >
-                  {`Nhập ${preview.validCount} tài khoản`}
+                  {msg("identity.admin.components.ImportAccountsPanel.importAccounts", { validCount: String(preview.validCount) })}
                 </Button>
               </div>
             </>

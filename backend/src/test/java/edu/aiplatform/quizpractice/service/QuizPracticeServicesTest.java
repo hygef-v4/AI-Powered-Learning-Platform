@@ -203,9 +203,9 @@ class QuizPracticeServicesTest {
         submitFresh(student);
         submitFresh(student);
         ApiException noMore = api(() -> attemptsService.start(student, quizId, classA));
-        assertThat(noMore.code()).isEqualTo("NO_ATTEMPTS_LEFT");
+        assertThat(noMore.readCode()).isEqualTo("NO_ATTEMPTS_LEFT");
         assertThat(audits).extracting(AuditEvent::action).contains("QUIZ_SUBMIT_REJECTED");
-        assertThat(queries.detail(student, quizId, classA).blockedReason()).contains("2/2");
+        assertThat(queries.loadQuiz(student, quizId, classA).blockedReason()).contains("2/2");
 
         settings = new QuizSettings(false, false, null, null, true, true);
         assertThat(attemptsService.start(student, quizId, classA).attemptNo()).isEqualTo(3);
@@ -214,11 +214,11 @@ class QuizPracticeServicesTest {
     @Test
     void onlyEnrolledStudentsOfTheQuizClassCanStart() {
         Actor stranger = new Actor(UUID.randomUUID(), Role.STUDENT);
-        assertThat(api(() -> attemptsService.start(stranger, quizId, classA)).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> attemptsService.start(stranger, quizId, classA)).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCESS_DENIED");
-        assertThat(api(() -> attemptsService.start(teacher, quizId, classA)).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> attemptsService.start(teacher, quizId, classA)).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         quizStatus = QuizStatus.RETIRED;
-        assertThat(api(() -> attemptsService.start(student, quizId, classA)).code()).isEqualTo("QUIZ_NOT_OPEN");
+        assertThat(api(() -> attemptsService.start(student, quizId, classA)).readCode()).isEqualTo("QUIZ_NOT_OPEN");
     }
 
     @Test
@@ -226,20 +226,20 @@ class QuizPracticeServicesTest {
         var taking = attemptsService.start(student, quizId, classA);
         var saved = attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1")), 0);
         assertThat(saved.answerVersion()).isEqualTo(1);
-        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("2")), 0)).code())
+        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("2")), 0)).readCode())
                 .isEqualTo("ANSWER_VERSION_CONFLICT");
-        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("9")), 1)).code())
+        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("9")), 1)).readCode())
                 .isEqualTo("ANSWER_INVALID");
-        assertThat(api(() -> attemptsService.saveAnswers(other, taking.attemptId(), Map.of(), 1)).status())
+        assertThat(api(() -> attemptsService.saveAnswers(other, taking.attemptId(), Map.of(), 1)).readStatus())
                 .isEqualTo(HttpStatus.NOT_FOUND);
 
         clock.advance(Duration.ofMinutes(10).plusSeconds(20));
         assertThat(attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1"), q2, List.of("1", "2")), 1)
                 .answerVersion()).as("trong 30 giây ân hạn").isEqualTo(2);
         clock.advance(Duration.ofSeconds(15));
-        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(), 2)).code())
+        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(), 2)).readCode())
                 .isEqualTo("ATTEMPT_TIME_UP");
-        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).code()).isEqualTo("ATTEMPT_TIME_UP");
+        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).readCode()).isEqualTo("ATTEMPT_TIME_UP");
     }
 
     @Test
@@ -247,11 +247,11 @@ class QuizPracticeServicesTest {
         var taking = attemptsService.start(student, quizId, classA);
         practiceAllowed = false;
 
-        assertThat(api(() -> attemptsService.get(student, taking.attemptId())).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> attemptsService.loadAttempt(student, taking.attemptId())).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1")), 0))
-                .status()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).status()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(store.byId.get(taking.attemptId()).inProgress()).isTrue();
+                .readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(store.byId.get(taking.attemptId()).hasInProgressStatus()).isTrue();
         assertThat(audits).extracting(AuditEvent::action).contains("ACCESS_DENIED");
     }
 
@@ -302,9 +302,9 @@ class QuizPracticeServicesTest {
             version[0]++;
         };
 
-        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).code())
+        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).readCode())
                 .isEqualTo("ANSWER_VERSION_CONFLICT");
-        assertThat(store.byId.get(taking.attemptId()).inProgress()).isTrue();
+        assertThat(store.byId.get(taking.attemptId()).hasInProgressStatus()).isTrue();
         assertThat(version[0]).isEqualTo(PracticeSupport.SUBMIT_TRIES);
     }
 
@@ -312,7 +312,7 @@ class QuizPracticeServicesTest {
     void resultFollowsSnapshotSettingsAndIsOwnOnly() {
         settings = new QuizSettings(false, false, null, 3, false, false);
         UUID attemptId = submitFresh(student);
-        var result = attemptsService.result(student, attemptId);
+        var result = attemptsService.loadResult(student, attemptId);
         assertThat(result.showScore()).isFalse();
         assertThat(result.score()).isNull();
         assertThat(result.questions()).allSatisfy(q -> {
@@ -325,9 +325,9 @@ class QuizPracticeServicesTest {
         assertThat(result.wrongCount()).isNull();
         assertThat(result.blankCount()).as("câu 2 bỏ trống").isEqualTo(1);
         assertThat(result.canRetry()).isTrue();
-        assertThat(api(() -> attemptsService.result(other, attemptId)).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> attemptsService.loadResult(other, attemptId)).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
 
-        var forTeacher = teacherService.detail(teacher, classA, attemptId).result();
+        var forTeacher = teacherService.loadAttempt(teacher, classA, attemptId).result();
         assertThat(forTeacher.questions()).allSatisfy(q -> assertThat(q.correct()).isNotNull());
         assertThat(forTeacher.correctCount()).isNotNull();
     }
@@ -337,7 +337,7 @@ class QuizPracticeServicesTest {
         settings = new QuizSettings(false, false, null, 3, true, false);
         UUID attemptId = submitFresh(student);
 
-        var result = attemptsService.result(student, attemptId);
+        var result = attemptsService.loadResult(student, attemptId);
 
         assertThat(result.questions()).allSatisfy(q -> {
             assertThat(q.correct()).as("điểm từng câu đã cho biết đúng sai").isNotNull();
@@ -349,15 +349,15 @@ class QuizPracticeServicesTest {
     @Test
     void resultCannotRetryAfterQuizRetirementOrClassClosure() {
         UUID attemptId = submitFresh(student);
-        assertThat(attemptsService.result(student, attemptId).canRetry()).isTrue();
+        assertThat(attemptsService.loadResult(student, attemptId).canRetry()).isTrue();
 
         quizStatus = QuizStatus.RETIRED;
-        assertThat(attemptsService.result(student, attemptId).canRetry()).isFalse();
+        assertThat(attemptsService.loadResult(student, attemptId).canRetry()).isFalse();
         assertThat(attemptsService.submit(student, attemptId).canRetry()).isFalse();
 
         quizStatus = QuizStatus.OPEN;
         when(classes.getClassRef(classA)).thenReturn(Optional.of(classRef(classA, ClassStatus.ARCHIVED)));
-        assertThat(attemptsService.result(student, attemptId).canRetry()).isFalse();
+        assertThat(attemptsService.loadResult(student, attemptId).canRetry()).isFalse();
     }
 
     @Test
@@ -365,7 +365,7 @@ class QuizPracticeServicesTest {
         UUID attemptId = submitFresh(student);
         practiceAllowed = false;
 
-        var result = attemptsService.result(student, attemptId);
+        var result = attemptsService.loadResult(student, attemptId);
 
         assertThat(result.attemptId()).isEqualTo(attemptId);
         assertThat(result.score()).isEqualByComparingTo("1");
@@ -389,7 +389,7 @@ class QuizPracticeServicesTest {
             assertThat(q.correctOptionIds()).isNull();
         });
         settings = new QuizSettings(false, false, null, null, true, true);
-        assertThat(attemptsService.result(student, taking.attemptId()).canRetry()).isTrue();
+        assertThat(attemptsService.loadResult(student, taking.attemptId()).canRetry()).isTrue();
     }
 
     @ParameterizedTest
@@ -415,9 +415,9 @@ class QuizPracticeServicesTest {
                 new PracticeSupport(store, quizzes, scoring, classes, access, new AttemptActivityAssessor(activityQuery), clock),
                 access, clock);
 
-        ApiException rejected = api(() -> guarded.result(student, attemptId));
+        ApiException rejected = api(() -> guarded.loadResult(student, attemptId));
 
-        assertThat(rejected.status()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+        assertThat(rejected.readStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(rejected.getMessage()).doesNotContain("private provider detail");
         assertThat(guardAudits).isEmpty();
         assertThat(store.byId.get(attemptId).status()).isEqualTo(AttemptStatus.SUBMITTED);
@@ -459,7 +459,7 @@ class QuizPracticeServicesTest {
 
         scanner.scan(clock.instant());
 
-        assertThat(store.byId.get(broken.attemptId()).inProgress()).as("lượt lỗi chờ lần chạy sau").isTrue();
+        assertThat(store.byId.get(broken.attemptId()).hasInProgressStatus()).as("lượt lỗi chờ lần chạy sau").isTrue();
         assertThat(store.byId.get(fine.attemptId()).status()).isEqualTo(AttemptStatus.SUBMITTED);
         assertThat(store.byId.get(fine.attemptId()).submitMode()).isEqualTo(SubmitMode.AUTO_TIME_LIMIT);
     }
@@ -475,26 +475,26 @@ class QuizPracticeServicesTest {
 
     @Test
     void historyShowsOpenQuizzesAndRetiredOnesWithOwnAttempts() {
-        assertThat(queries.history(student, null)).singleElement().satisfies(row -> {
+        assertThat(queries.listHistory(student, null)).singleElement().satisfies(row -> {
             assertThat(row.attemptsUsed()).isZero();
             assertThat(row.canStart()).isTrue();
         });
         submitFresh(student);
         quizStatus = QuizStatus.RETIRED;
 
-        assertThat(queries.history(student, null)).singleElement().satisfies(row -> {
+        assertThat(queries.listHistory(student, null)).singleElement().satisfies(row -> {
             assertThat(row.status()).isEqualTo(QuizStatus.RETIRED);
             assertThat(row.attemptsUsed()).isEqualTo(1);
             assertThat(row.bestScore()).isNotNull();
             assertThat(row.canStart()).isFalse();
         });
-        assertThat(api(() -> queries.history(teacher, null)).status()).isEqualTo(HttpStatus.FORBIDDEN);
+        assertThat(api(() -> queries.listHistory(teacher, null)).readStatus()).isEqualTo(HttpStatus.FORBIDDEN);
     }
 
     @Test
     void teacherSeesClassStudentsAttemptsReadOnly() {
         UUID attemptId = submitFresh(student);
-        var list = teacherService.list(teacher, classA, quizId);
+        var list = teacherService.listAttempts(teacher, classA, quizId);
         assertThat(list.totalStudents()).isEqualTo(2);
         assertThat(list.studentsAttempted()).isEqualTo(1);
         assertThat(list.students().get(0).attempts()).isEqualTo(1);
@@ -503,9 +503,9 @@ class QuizPracticeServicesTest {
         verify(lookups, never()).getContact(any());
 
         settings = new QuizSettings(false, false, null, 2, false, false);
-        var detail = teacherService.detail(teacher, classA, attemptId);
+        var detail = teacherService.loadAttempt(teacher, classA, attemptId);
         assertThat(detail.result().questions()).allSatisfy(q -> assertThat(q.correctOptionIds()).isNotNull());
-        assertThat(api(() -> teacherService.detail(teacher, classB, attemptId)).status()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(api(() -> teacherService.loadAttempt(teacher, classB, attemptId)).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     private void leaves(int count) {
@@ -533,27 +533,27 @@ class QuizPracticeServicesTest {
         assertThat(raw).isPositive();
         assertThat(submitted.score()).as("nộp bài không tự trừ").isEqualByComparingTo(raw);
 
-        var row = teacherService.list(teacher, classA, quizId).students().stream().filter(s -> s.attempts() > 0).findFirst().orElseThrow();
+        var row = teacherService.listAttempts(teacher, classA, quizId).students().stream().filter(s -> s.attempts() > 0).findFirst().orElseThrow();
         assertThat(row.lastLeaveCount()).isEqualTo(2);
         assertThat(row.rows().get(0).leaveCount()).isEqualTo(2);
         assertThat(row.rows().get(0).suggestedPenalty()).isEqualByComparingTo("1");
         assertThat(row.penaltyPending()).isTrue();
-        assertThat(teacherService.detail(teacher, classA, taking.attemptId()).result().penalty().suggestedPenalty())
+        assertThat(teacherService.loadAttempt(teacher, classA, taking.attemptId()).result().penalty().suggestedPenalty())
                 .isEqualByComparingTo("1");
 
         UUID id = taking.attemptId();
-        assertThat(api(() -> teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.APPLIED, BigDecimal.ONE, "  ")).code())
+        assertThat(api(() -> teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.APPLIED, BigDecimal.ONE, "  ")).readCode())
                 .isEqualTo("PENALTY_REASON_INVALID");
-        assertThat(api(() -> teacherService.decidePenalty(other, classA, id, PenaltyDecision.APPLIED, BigDecimal.ONE, "Lý do")).status())
+        assertThat(api(() -> teacherService.decidePenalty(other, classA, id, PenaltyDecision.APPLIED, BigDecimal.ONE, "Lý do")).readStatus())
                 .isEqualTo(HttpStatus.NOT_FOUND);
         for (BigDecimal bad : new BigDecimal[] {null, BigDecimal.ZERO, new BigDecimal("0.125"), raw.add(BigDecimal.ONE)}) {
-            assertThat(api(() -> teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.APPLIED, bad, "Lý do")).code())
+            assertThat(api(() -> teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.APPLIED, bad, "Lý do")).readCode())
                     .isEqualTo("PENALTY_POINTS_INVALID");
         }
 
         var applied = teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.APPLIED, new BigDecimal("0.5"), "Rời nhiều lần");
         assertThat(applied.result().score()).as("giảng viên chọn số điểm khác mức gợi ý").isEqualByComparingTo(raw.subtract(new BigDecimal("0.5")));
-        var seen = attemptsService.result(student, id);
+        var seen = attemptsService.loadResult(student, id);
         assertThat(seen.score()).isEqualByComparingTo(raw.subtract(new BigDecimal("0.5")));
         assertThat(seen.penalty().decision()).isEqualTo(PenaltyDecision.APPLIED);
         assertThat(seen.penalty().decisionReason()).isEqualTo("Rời nhiều lần");
@@ -562,8 +562,8 @@ class QuizPracticeServicesTest {
         var dismissed = teacherService.decidePenalty(teacher, classA, id, PenaltyDecision.DISMISSED, null, "Máy sinh viên báo lỗi");
         assertThat(dismissed.result().score()).as("đổi quyết định").isEqualByComparingTo(raw);
         assertThat(dismissed.result().penalty().penaltyPoints()).isEqualByComparingTo("0");
-        assertThat(attemptsService.result(student, id).score()).isEqualByComparingTo(raw);
-        assertThat(teacherService.list(teacher, classA, quizId).students().stream().filter(s -> s.attempts() > 0)
+        assertThat(attemptsService.loadResult(student, id).score()).isEqualByComparingTo(raw);
+        assertThat(teacherService.listAttempts(teacher, classA, quizId).students().stream().filter(s -> s.attempts() > 0)
                 .findFirst().orElseThrow().penaltyPending()).isFalse();
     }
 
@@ -576,7 +576,7 @@ class QuizPracticeServicesTest {
         attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1")), taking.answerVersion());
         attemptsService.submit(student, taking.attemptId());
         assertThat(api(() -> teacherService.decidePenalty(teacher, classA, taking.attemptId(), PenaltyDecision.APPLIED,
-                new BigDecimal("0.5"), "Lý do")).code()).isEqualTo("PENALTY_NOT_DECIDABLE");
+                new BigDecimal("0.5"), "Lý do")).readCode()).isEqualTo("PENALTY_NOT_DECIDABLE");
     }
 
     @Test
@@ -585,7 +585,7 @@ class QuizPracticeServicesTest {
         leaves(1);
         var taking = attemptsService.start(student, quizId, classA);
         attemptsService.submit(student, taking.attemptId());
-        var mine = queries.detail(student, quizId, classA).attempts().get(0);
+        var mine = queries.loadQuiz(student, quizId, classA).attempts().get(0);
         assertThat(mine.activitySignal()).isNull();
         assertThat(mine.leaveCount()).isNull();
     }
@@ -599,14 +599,14 @@ class QuizPracticeServicesTest {
         var taking = attemptsService.start(student, quizId, classA);
         attemptsService.submit(student, taking.attemptId());
         clock.advance(Duration.ofDays(2));
-        assertThat(teacherService.detail(teacher, classA, taking.attemptId()).activity().policyState())
+        assertThat(teacherService.loadAttempt(teacher, classA, taking.attemptId()).activity().policyState())
                 .isEqualTo(ActivityPolicyState.EXPIRED);
     }
 
     @Test
     void activityNeedsMonitoringEnabledInSnapshot() {
         var taking = attemptsService.start(student, quizId, classA);
-        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of())).code())
+        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of())).readCode())
                 .isEqualTo("ACTIVITY_NOT_ENABLED");
         verify(activityWrite, never()).record(any(), any(), anyList());
         assertThat(taking.activityMonitoringEnabled()).isFalse();
@@ -622,7 +622,7 @@ class QuizPracticeServicesTest {
         verify(activityWrite).record(any(), any(), anyList());
 
         clock.advance(Duration.ofMinutes(10).plusSeconds(31));
-        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of(event))).code())
+        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of(event))).readCode())
                 .isEqualTo("ATTEMPT_TIME_UP");
         verify(activityWrite).record(any(), any(), anyList());
     }
@@ -633,7 +633,7 @@ class QuizPracticeServicesTest {
         var taking = attemptsService.start(student, quizId, classA);
         monitoring = false;
 
-        var resumed = attemptsService.get(student, taking.attemptId());
+        var resumed = attemptsService.loadAttempt(student, taking.attemptId());
         assertThat(resumed.activityMonitoringEnabled()).as("theo ảnh chụp, không theo Quiz hiện tại").isTrue();
         assertThat(resumed.activityNotice()).isEqualTo("Ghi lại khi rời trang");
     }
@@ -647,11 +647,11 @@ class QuizPracticeServicesTest {
         attemptsService.submit(student, hiddenAttempt.attemptId());
 
         settings = new QuizSettings(false, false, 10, 5, true, true);
-        assertThat(queries.detail(student, quizId, classA)).satisfies(detail -> {
+        assertThat(queries.loadQuiz(student, quizId, classA)).satisfies(detail -> {
             assertThat(detail.bestScore()).isNull();
             assertThat(detail.attempts().get(0).score()).isNull();
         });
-        assertThat(queries.history(student, classA)).singleElement().satisfies(row -> {
+        assertThat(queries.listHistory(student, classA)).singleElement().satisfies(row -> {
             assertThat(row.bestScore()).isNull();
             assertThat(row.lastScore()).isNull();
         });
@@ -662,10 +662,10 @@ class QuizPracticeServicesTest {
         attemptsService.submit(student, visibleAttempt.attemptId());
 
         settings = new QuizSettings(false, false, 10, 5, false, false);
-        assertThat(queries.detail(student, quizId, classA).bestScore())
+        assertThat(queries.loadQuiz(student, quizId, classA).bestScore())
                 .as("giữ điểm của lượt cho phép xem và không lộ điểm cao hơn của lượt ẩn")
                 .isEqualByComparingTo("1");
-        assertThat(queries.history(student, classA)).singleElement().satisfies(row -> {
+        assertThat(queries.listHistory(student, classA)).singleElement().satisfies(row -> {
             assertThat(row.bestScore()).isEqualByComparingTo("1");
             assertThat(row.lastScore()).isEqualByComparingTo("1");
         });
@@ -674,7 +674,7 @@ class QuizPracticeServicesTest {
     @Test
     void startReverifiesQuizStatusAfterLockAndActiveAttemptRequiresOpenClass() {
         store.onLockStart = () -> quizStatus = QuizStatus.RETIRED;
-        assertThat(api(() -> attemptsService.start(student, quizId, classA)).code()).isEqualTo("QUIZ_NOT_OPEN");
+        assertThat(api(() -> attemptsService.start(student, quizId, classA)).readCode()).isEqualTo("QUIZ_NOT_OPEN");
         assertThat(store.byId).isEmpty();
 
         store.onLockStart = null;
@@ -683,12 +683,12 @@ class QuizPracticeServicesTest {
         var taking = attemptsService.start(student, quizId, classA);
         when(classes.getClassRef(classA)).thenReturn(Optional.of(classRef(classA, ClassStatus.ARCHIVED)));
 
-        assertThat(api(() -> attemptsService.get(student, taking.attemptId())).code()).isEqualTo("CLASS_NOT_OPEN");
-        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(), 0)).code())
+        assertThat(api(() -> attemptsService.loadAttempt(student, taking.attemptId())).readCode()).isEqualTo("CLASS_NOT_OPEN");
+        assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(), 0)).readCode())
                 .isEqualTo("CLASS_NOT_OPEN");
-        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).code()).isEqualTo("CLASS_NOT_OPEN");
+        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).readCode()).isEqualTo("CLASS_NOT_OPEN");
         var event = new ActivityEventInput(UUID.randomUUID(), "e1", 0, ActivityKind.SESSION_START, clock.instant());
-        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of(event))).code())
+        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of(event))).readCode())
                 .isEqualTo("CLASS_NOT_OPEN");
     }
 
@@ -698,17 +698,17 @@ class QuizPracticeServicesTest {
         monitoring = true;
         var taking = attemptsService.start(student, quizId, classA);
 
-        var detailInClassB = queries.detail(student, quizId, classB);
+        var detailInClassB = queries.loadQuiz(student, quizId, classB);
         assertThat(detailInClassB.attemptsUsed()).isZero();
         assertThat(detailInClassB.inProgressAttemptId()).isNull();
 
         List<ActivityEventInput> tooMany = java.util.stream.IntStream.range(0, 51)
                 .mapToObj(i -> new ActivityEventInput(UUID.randomUUID(), "e" + i, i, ActivityKind.HIDDEN, clock.instant()))
                 .toList();
-        assertThat(api(() -> activity.record(student, taking.attemptId(), tooMany)).code())
+        assertThat(api(() -> activity.record(student, taking.attemptId(), tooMany)).readCode())
                 .isEqualTo("ACTIVITY_BATCH_INVALID");
         var longId = new ActivityEventInput(UUID.randomUUID(), "x".repeat(65), 0, ActivityKind.HIDDEN, clock.instant());
-        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of(longId))).code())
+        assertThat(api(() -> activity.record(student, taking.attemptId(), List.of(longId))).readCode())
                 .isEqualTo("ACTIVITY_EVENT_INVALID");
     }
 
@@ -723,10 +723,10 @@ class QuizPracticeServicesTest {
         assertThat(fresh.attemptId()).isNotEqualTo(old.attemptId());
         assertThat(fresh.attemptNo()).isEqualTo(1);
         assertThat(fresh.answers()).isEmpty();
-        assertThat(store.find(old.attemptId()).orElseThrow().answers()).containsKey(q1);
-        assertThat(store.find(old.attemptId()).orElseThrow().classId()).isEqualTo(classA);
+        assertThat(store.findAttempt(old.attemptId()).orElseThrow().answers()).containsKey(q1);
+        assertThat(store.findAttempt(old.attemptId()).orElseThrow().classId()).isEqualTo(classA);
         assertThat(attemptsService.start(student, quizId, classB).attemptId()).isEqualTo(fresh.attemptId());
-        assertThat(queries.detail(student, quizId, classB).attemptsUsed()).isEqualTo(1);
+        assertThat(queries.loadQuiz(student, quizId, classB).attemptsUsed()).isEqualTo(1);
     }
     private UUID submitFresh(Actor actor) {
         var taking = attemptsService.start(actor, quizId, classA);
@@ -774,17 +774,17 @@ class QuizPracticeServicesTest {
         public boolean decidePenalty(UUID attemptId, PenaltyDecision decision, BigDecimal points, UUID decidedBy, Instant at,
                                      String reason) {
             QuizAttempt current = byId.get(attemptId);
-            if (current == null || current.outcome() == null || !current.outcome().decidable()) {
+            if (current == null || current.outcome() == null || !current.outcome().canDecide()) {
                 return false;
             }
             ActivityOutcome o = current.outcome();
-            byId.put(attemptId, current.withOutcome(new ActivityOutcome(o.rawScore(), o.suggestedPenalty(), points,
+            byId.put(attemptId, current.applyOutcome(new ActivityOutcome(o.rawScore(), o.suggestedPenalty(), points,
                     o.leaveCount(), o.signal(), decision, decidedBy, at, reason), o.rawScore().subtract(points)));
             return true;
         }
 
         @Override
-        public Optional<QuizAttempt> find(UUID id) {
+        public Optional<QuizAttempt> findAttempt(UUID id) {
             return Optional.ofNullable(byId.get(id));
         }
 
@@ -798,7 +798,7 @@ class QuizPracticeServicesTest {
         @Override
         public Optional<QuizAttempt> findInProgress(UUID quizId, UUID accountId) {
             return byId.values().stream().filter(a -> a.quizId().equals(quizId) && a.accountId().equals(accountId)
-                    && a.inProgress()).findFirst();
+                    && a.hasInProgressStatus()).findFirst();
         }
 
         @Override
@@ -819,7 +819,7 @@ class QuizPracticeServicesTest {
         @Override
         public boolean saveAnswers(QuizAttempt attempt, long expectedVersion) {
             QuizAttempt current = byId.get(attempt.id());
-            if (current == null || !current.inProgress() || current.answerVersion() != expectedVersion) {
+            if (current == null || !current.hasInProgressStatus() || current.answerVersion() != expectedVersion) {
                 return false;
             }
             byId.put(attempt.id(), attempt);
@@ -832,7 +832,7 @@ class QuizPracticeServicesTest {
                 beforeSubmit.run();
             }
             QuizAttempt current = byId.get(attempt.id());
-            if (current == null || !current.inProgress() || current.answerVersion() != attempt.answerVersion()) {
+            if (current == null || !current.hasInProgressStatus() || current.answerVersion() != attempt.answerVersion()) {
                 return false;
             }
             byId.put(attempt.id(), attempt);
@@ -845,7 +845,7 @@ class QuizPracticeServicesTest {
         }
 
         @Override
-        public Map<UUID, UUID> quizzesAttemptedBy(UUID accountId) {
+        public Map<UUID, UUID> mapQuizzesAttemptedBy(UUID accountId) {
             Map<UUID, UUID> result = new LinkedHashMap<>();
             byId.values().stream().filter(a -> a.accountId().equals(accountId)).forEach(a -> result.put(a.quizId(), a.classId()));
             return result;
@@ -853,13 +853,13 @@ class QuizPracticeServicesTest {
 
         @Override
         public List<QuizAttempt> findOverdue(Instant cutoff, int limit) {
-            return byId.values().stream().filter(a -> a.inProgress() && a.deadlineAt() != null
+            return byId.values().stream().filter(a -> a.hasInProgressStatus() && a.deadlineAt() != null
                     && a.deadlineAt().isBefore(cutoff)).limit(limit).toList();
         }
 
         @Override
         public List<QuizAttempt> findInProgressByQuiz(UUID quizId) {
-            return byId.values().stream().filter(a -> a.quizId().equals(quizId) && a.inProgress()).toList();
+            return byId.values().stream().filter(a -> a.quizId().equals(quizId) && a.hasInProgressStatus()).toList();
         }
 
         @Override

@@ -6,6 +6,7 @@ import { FullPageStatus } from "@/shared/ui/FullPageStatus";
 import { useEffect, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { getProfile } from "../api";
+import { msg } from "@/i18n/msg";
 
 /** Post-Login (F15): đã đăng nhập thì tới dashboard theo role, chưa thì về User Login. Dùng cho / và /post-login. */
 export function PostLoginRedirect() {
@@ -25,5 +26,5 @@ export function PostLoginRedirect() {
   if (unavailable) {
     return <ErrorPage kind="unavailable" />;
   }
-  return <FullPageStatus>Đang chuyển trang...</FullPageStatus>;
+  return <FullPageStatus>{msg("identity.components.PostLoginRedirect.redirecting")}</FullPageStatus>;
 }

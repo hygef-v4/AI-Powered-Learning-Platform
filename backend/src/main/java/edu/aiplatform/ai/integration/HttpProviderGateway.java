@@ -68,20 +68,20 @@ public class HttpProviderGateway implements IProviderGateway {
     @Override
     public Response call(AiProvider provider, Request request) {
         return switch (provider) {
-            case GEMINI -> gemini(request);
+            case GEMINI -> callGemini(request);
             case OPENAI -> openAi(request);
-            case CLAUDE -> claude(request);
+            case CLAUDE -> callClaude(request);
         };
     }
 
-    private Response gemini(Request r) {
+    private Response callGemini(Request r) {
         ObjectNode body = json.createObjectNode();
         if (r.system() != null) {
             body.putObject("systemInstruction").putArray("parts").addObject().put("text", r.system());
         }
         ArrayNode parts = body.putArray("contents").addObject().put("role", "user").putArray("parts");
         for (AiImage image : r.images()) {
-            parts.addObject().putObject("inline_data").put("mime_type", image.mediaType()).put("data", base64(image));
+            parts.addObject().putObject("inline_data").put("mime_type", image.mediaType()).put("data", encodeBase64(image));
         }
         parts.addObject().put("text", r.user());
         ObjectNode config = body.putObject("generationConfig");
@@ -98,15 +98,15 @@ public class HttpProviderGateway implements IProviderGateway {
         }
         String url = baseUrls.get(AiProvider.GEMINI) + "/v1beta/models/"
                 + URLEncoder.encode(r.model(), StandardCharsets.UTF_8) + ":generateContent";
-        JsonNode reply = send(HttpRequest.newBuilder(URI.create(url)).header("x-goog-api-key", r.apiKey()), body, r);
+        JsonNode reply = sendRequest(HttpRequest.newBuilder(URI.create(url)).header("x-goog-api-key", r.apiKey()), body, r);
         JsonNode meta = reply.path("usageMetadata");
         // Gemini đếm token suy nghĩ riêng ngoài candidatesTokenCount nhưng vẫn tính tiền: gộp vào token ra như OpenAI
         // (completion_tokens đã gồm reasoning) để quota quyết toán đủ.
-        Long thoughts = number(meta, "thoughtsTokenCount");
-        Long candidates = number(meta, "candidatesTokenCount");
+        Long thoughts = readNumber(meta, "thoughtsTokenCount");
+        Long candidates = readNumber(meta, "candidatesTokenCount");
         Long output = candidates == null && thoughts == null ? null
                 : (candidates == null ? 0 : candidates) + (thoughts == null ? 0 : thoughts);
-        Usage usage = new Usage(number(meta, "promptTokenCount"), output, number(meta, "cachedContentTokenCount"),
+        Usage usage = new Usage(readNumber(meta, "promptTokenCount"), output, readNumber(meta, "cachedContentTokenCount"),
                 thoughts);
         String finishReason = reply.path("candidates").path(0).path("finishReason").asText("");
         StringBuilder text = new StringBuilder();
@@ -117,7 +117,7 @@ public class HttpProviderGateway implements IProviderGateway {
                 : trimGeminiArraysToSchema(text.toString(), readSchema(r.outputSchema()));
         // Gemini chặn ngay đầu vào thì không có candidate, lý do nằm ở promptFeedback.blockReason.
         String blockReason = reply.path("promptFeedback").path("blockReason").asText("");
-        return response(AiProvider.GEMINI, r.model(), answer, reply.path("responseId").asText(null), usage,
+        return buildResponse(AiProvider.GEMINI, r.model(), answer, reply.path("responseId").asText(null), usage,
                 blockReason.isEmpty() || NORMAL_STOPS.contains(blockReason) ? finishReason : blockReason,
                 !blockReason.isEmpty() && !NORMAL_STOPS.contains(blockReason));
     }
@@ -147,7 +147,7 @@ public class HttpProviderGateway implements IProviderGateway {
             ArrayNode content = messages.addObject().put("role", "user").putArray("content");
             for (AiImage image : r.images()) {
                 content.addObject().put("type", "image_url").putObject("image_url")
-                        .put("url", "data:" + image.mediaType() + ";base64," + base64(image)).put("detail", "high");
+                        .put("url", "data:" + image.mediaType() + ";base64," + encodeBase64(image)).put("detail", "high");
             }
             content.addObject().put("type", "text").put("text", r.user());
         }
@@ -159,21 +159,21 @@ public class HttpProviderGateway implements IProviderGateway {
             schema.put("name", "result");
             schema.set("schema", readSchema(r.outputSchema()));
         }
-        JsonNode reply = send(HttpRequest.newBuilder(URI.create(baseUrls.get(AiProvider.OPENAI) + "/v1/chat/completions"))
+        JsonNode reply = sendRequest(HttpRequest.newBuilder(URI.create(baseUrls.get(AiProvider.OPENAI) + "/v1/chat/completions"))
                 .header("Authorization", "Bearer " + r.apiKey()), body, r);
         JsonNode u = reply.path("usage");
-        Usage usage = new Usage(number(u, "prompt_tokens"), number(u, "completion_tokens"),
-                number(u.path("prompt_tokens_details"), "cached_tokens"),
-                number(u.path("completion_tokens_details"), "reasoning_tokens"));
+        Usage usage = new Usage(readNumber(u, "prompt_tokens"), readNumber(u, "completion_tokens"),
+                readNumber(u.path("prompt_tokens_details"), "cached_tokens"),
+                readNumber(u.path("completion_tokens_details"), "reasoning_tokens"));
         String finishReason = reply.path("choices").path(0).path("finish_reason").asText("");
         JsonNode message = reply.path("choices").path(0).path("message");
         // Model từ chối trả lời: OpenAI để lời từ chối ở message.refusal thay vì content.
         String reason = message.path("refusal").asText("").isBlank() ? finishReason : "refusal";
-        return response(AiProvider.OPENAI, r.model(), message.path("content").asText(""),
+        return buildResponse(AiProvider.OPENAI, r.model(), message.path("content").asText(""),
                 reply.path("id").asText(null), usage, reason, false);
     }
 
-    private Response claude(Request r) {
+    private Response callClaude(Request r) {
         ObjectNode body = json.createObjectNode();
         body.put("model", r.model());
         body.put("max_tokens", r.maxOutputTokens());
@@ -186,7 +186,7 @@ public class HttpProviderGateway implements IProviderGateway {
             ArrayNode content = body.putArray("messages").addObject().put("role", "user").putArray("content");
             for (AiImage image : r.images()) {
                 content.addObject().put("type", "image").putObject("source").put("type", "base64")
-                        .put("media_type", image.mediaType()).put("data", base64(image));
+                        .put("media_type", image.mediaType()).put("data", encodeBase64(image));
             }
             content.addObject().put("type", "text").put("text", r.user());
         }
@@ -197,11 +197,11 @@ public class HttpProviderGateway implements IProviderGateway {
             tool.set("input_schema", readSchema(r.outputSchema()));
             body.putObject("tool_choice").put("type", "tool").put("name", RESULT_TOOL);
         }
-        JsonNode reply = send(HttpRequest.newBuilder(URI.create(baseUrls.get(AiProvider.CLAUDE) + "/v1/messages"))
+        JsonNode reply = sendRequest(HttpRequest.newBuilder(URI.create(baseUrls.get(AiProvider.CLAUDE) + "/v1/messages"))
                 .header("x-api-key", r.apiKey()).header("anthropic-version", "2023-06-01"), body, r);
         JsonNode u = reply.path("usage");
-        Usage usage = new Usage(number(u, "input_tokens"), number(u, "output_tokens"),
-                number(u, "cache_read_input_tokens"), null);
+        Usage usage = new Usage(readNumber(u, "input_tokens"), readNumber(u, "output_tokens"),
+                readNumber(u, "cache_read_input_tokens"), null);
         String stopReason = reply.path("stop_reason").asText("");
         String output = "";
         for (JsonNode block : reply.path("content")) {
@@ -213,10 +213,10 @@ public class HttpProviderGateway implements IProviderGateway {
                 output += block.path("text").asText("");
             }
         }
-        return response(AiProvider.CLAUDE, r.model(), output, reply.path("id").asText(null), usage, stopReason, false);
+        return buildResponse(AiProvider.CLAUDE, r.model(), output, reply.path("id").asText(null), usage, stopReason, false);
     }
 
-    private JsonNode send(HttpRequest.Builder builder, ObjectNode body, Request r) {
+    private JsonNode sendRequest(HttpRequest.Builder builder, ObjectNode body, Request r) {
         HttpRequest request = builder.timeout(r.timeout())
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body.toString(), StandardCharsets.UTF_8))
@@ -246,10 +246,10 @@ public class HttpProviderGateway implements IProviderGateway {
         if (status == 400 && !r.images().isEmpty() && mentionsImage(response.body())) {
             throw new ProviderException(FailureKind.REJECTED, status, IMAGES_NOT_SUPPORTED, null);
         }
-        throw new ProviderException(kindOf(status), status, safeMessage(status, response.body()), null);
+        throw new ProviderException(classifyFailure(status), status, buildSafeMessage(status, response.body()), null);
     }
 
-    private static String base64(AiImage image) {
+    private static String encodeBase64(AiImage image) {
         return Base64.getEncoder().encodeToString(image.bytes());
     }
 
@@ -259,7 +259,7 @@ public class HttpProviderGateway implements IProviderGateway {
     }
 
     /** 4xx và quá tải là từ chối, không tính token; lỗi 5xx khác không rõ đã xử lý chưa (BR-U06-14). */
-    static FailureKind kindOf(int status) {
+    static FailureKind classifyFailure(int status) {
         if (status < 500 || status == 503 || status == 529) {
             return FailureKind.REJECTED;
         }
@@ -270,7 +270,7 @@ public class HttpProviderGateway implements IProviderGateway {
      * Gemini trả HTTP 400 (không phải 401) khi key sai; nhận ra qua mã lỗi trong body để báo đúng "key không hợp lệ".
      * Body chỉ dùng để phân loại, không đưa vào thông báo.
      */
-    String safeMessage(int status, String body) {
+    String buildSafeMessage(int status, String body) {
         if (status == 400 && body != null && (body.contains("API_KEY_INVALID") || body.contains("API key not valid"))) {
             return "Key API không hợp lệ (HTTP 400)";
         }
@@ -289,7 +289,7 @@ public class HttpProviderGateway implements IProviderGateway {
                 // HTTP429 alone cannot distinguish rate limits from exhausted quota.
             }
         }
-        return safeMessage(status);
+        return buildSafeMessage(status);
     }
 
     private static void requireCompleteOutput(String reason, Usage usage) {
@@ -298,7 +298,7 @@ public class HttpProviderGateway implements IProviderGateway {
         }
     }
 
-    static String safeMessage(int status) {
+    static String buildSafeMessage(int status) {
         return switch (status) {
             case 400 -> "Nhà cung cấp AI từ chối yêu cầu (HTTP 400): model hoặc tham số không hợp lệ";
             case 401, 403 -> "Key API không hợp lệ hoặc không có quyền (HTTP " + status + ")";
@@ -313,7 +313,7 @@ public class HttpProviderGateway implements IProviderGateway {
      * Chữ rỗng: báo lý do nhà cung cấp dừng hoặc chặn (mã lý do kèm giải thích) thay vì câu chung, ghi log mã lý do
      * không kèm nội dung. {@code promptBlocked}: chặn ngay đầu vào (Gemini {@code promptFeedback.blockReason}).
      */
-    private Response response(AiProvider provider, String model, String output, String requestId, Usage usage,
+    private Response buildResponse(AiProvider provider, String model, String output, String requestId, Usage usage,
                               String reason, boolean promptBlocked) {
         if (!promptBlocked) {
             requireCompleteOutput(reason, usage);
@@ -321,13 +321,13 @@ public class HttpProviderGateway implements IProviderGateway {
         if (promptBlocked || !NORMAL_STOPS.contains(reason) || output == null || output.isBlank()) {
             log.warn("AI provider returned unusable output provider={} model={} requestId={} reason={} promptBlocked={}",
                     provider, model, requestId, reason.isEmpty() ? "-" : reason, promptBlocked);
-            throw new ProviderException(FailureKind.CHARGED, 200, emptyOutputMessage(reason, promptBlocked), usage);
+            throw new ProviderException(FailureKind.CHARGED, 200, describeEmptyOutput(reason, promptBlocked), usage);
         }
         return new Response(output, requestId, usage);
     }
 
     /** Câu báo lỗi khi không có chữ; chỉ dùng mã lý do do nhà cung cấp trả, không dùng nội dung phản hồi. */
-    static String emptyOutputMessage(String reason, boolean promptBlocked) {
+    static String describeEmptyOutput(String reason, boolean promptBlocked) {
         if (reason == null || NORMAL_STOPS.contains(reason)) {
             return EMPTY_OUTPUT;
         }
@@ -412,7 +412,7 @@ public class HttpProviderGateway implements IProviderGateway {
         }
     }
 
-    private static Long number(JsonNode node, String field) {
+    private static Long readNumber(JsonNode node, String field) {
         JsonNode value = node.path(field);
         return value.isNumber() ? value.asLong() : null;
     }

@@ -102,7 +102,7 @@ class AdminDashboardBackupTest {
             doThrow(new IllegalStateException("secret")).when(f.backups).history(any());
             assertThat(f.adminDashboardService.loadDashboard(f.admin).backup().recentRuns().availability()).isEqualTo(Availability.UNAVAILABLE);
             assertThatThrownBy(() -> f.adminDashboardService.listBackups(f.admin, 0, 20)).isInstanceOfSatisfying(ApiException.class,
-                    e -> assertThat(e.code()).isEqualTo("DASHBOARD_BACKUP_UNAVAILABLE"));
+                    e -> assertThat(e.readCode()).isEqualTo("DASHBOARD_BACKUP_UNAVAILABLE"));
             reset(f.backups);
             assertThatThrownBy(() -> f.adminDashboardService.listBackups(f.admin, -1, 20)).isInstanceOf(ApiException.class);
             assertThatThrownBy(() -> f.adminDashboardService.listBackups(f.admin, 0, 101)).isInstanceOf(ApiException.class);

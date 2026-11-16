@@ -65,15 +65,15 @@ public interface IProviderGateway {
             this.status = status;
         }
 
-        public FailureKind kind() {
+        public FailureKind readKind() {
             return kind;
         }
 
-        public Usage usage() {
+        public Usage readUsage() {
             return usage;
         }
 
-        public int status() {
+        public int readStatus() {
             return status;
         }
     }

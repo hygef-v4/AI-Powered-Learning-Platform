@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
-import { useSession } from "@/features/identity/hooks/session";
+import { useSession } from "@/features/identity/hooks/SessionProvider";
 import { AccountDetailPage } from "@/features/identity/admin/pages/AccountDetailPage";
 import { changeRole, changeStatus, commitImport, createAccount, getAccount, updateAccount, validateImport, type AccountDetail } from "@/features/identity/admin/api";
 import { ImportAccountsPanel } from "@/features/identity/admin/components/ImportAccountsPanel";
@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({ useParams: () => ({ id: "acc-1" }) }));
 
 const EMAIL = /^Email trường/;
 const NAME = /^Họ và tên/;
-vi.mock("@/features/identity/hooks/session", () => ({ useSession: vi.fn() }));
+vi.mock("@/features/identity/hooks/SessionProvider", () => ({ useSession: vi.fn() }));
 
 const ACCOUNT: AccountDetail = {
   id: "acc-1",

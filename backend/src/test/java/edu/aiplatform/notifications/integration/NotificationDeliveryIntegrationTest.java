@@ -336,14 +336,14 @@ class NotificationDeliveryIntegrationTest {
         UUID classId = UUID.randomUUID(), otherClass = UUID.randomUUID(), teacher = UUID.randomUUID();
         var jdbc = new JdbcTemplate(dataSource);
         jdbc.update("insert into course_classes(id) values (?),(?)", classId, otherClass);
-        var old = edu.aiplatform.announcements.model.Announcement.create(classId, teacher,
+        var old = edu.aiplatform.announcements.model.Announcement.createAnnouncement(classId, teacher,
                 "Older", "Body", false, false, NOW.minusSeconds(10));
-        var recent = edu.aiplatform.announcements.model.Announcement.create(classId, teacher,
+        var recent = edu.aiplatform.announcements.model.Announcement.createAnnouncement(classId, teacher,
                 "Newest", "Body", false, false, NOW);
-        var deleted = edu.aiplatform.announcements.model.Announcement.create(classId, teacher,
+        var deleted = edu.aiplatform.announcements.model.Announcement.createAnnouncement(classId, teacher,
                 "Deleted", "Body", false, false, NOW.plusSeconds(1));
-        deleted.delete(teacher, NOW.plusSeconds(2));
-        var foreign = edu.aiplatform.announcements.model.Announcement.create(otherClass, teacher,
+        deleted.markDeleted(teacher, NOW.plusSeconds(2));
+        var foreign = edu.aiplatform.announcements.model.Announcement.createAnnouncement(otherClass, teacher,
                 "Foreign", "Body", false, false, NOW.plusSeconds(3));
         transaction.executeWithoutResult(tx -> List.of(old, recent, deleted, foreign)
                 .forEach(announcementRepository::insertAnnouncement));

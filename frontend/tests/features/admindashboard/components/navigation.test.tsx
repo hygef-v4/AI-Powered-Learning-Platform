@@ -3,7 +3,7 @@ import {afterEach, expect, it, vi} from "vitest";
 import Page from "@/app/admin/page";
 import {navEntries} from "@/features/identity/slots";
 import {getProfile} from "@/features/identity/api";
-import {SessionProvider} from "@/features/identity/hooks/session";
+import {SessionProvider} from "@/features/identity/hooks/SessionProvider";
 import {RoleGuard} from "@/features/identity/shell/components/RoleGuard";
 import {routes} from "../model/testFixtures";
 import "@/features/admindashboard/register";

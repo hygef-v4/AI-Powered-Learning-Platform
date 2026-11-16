@@ -37,204 +37,204 @@ final class QuizRequests {
     record DrawRules(QuizPaperMode paperMode, List<QuizPaperService.RuleInput> rules, long version) {
     }
 
-    static String title(JsonNode body) {
-        fields(body, Set.of("title"));
-        return text(body, "title", true);
+    static String readTitle(JsonNode body) {
+        rejectUnknownFields(body, Set.of("title"));
+        return readText(body, "title", true);
     }
 
-    static Details details(JsonNode body) {
-        fields(body, Set.of("title", "instructions", "settings", "activityMonitoringEnabled", "activityNotice",
+    static Details parseDetails(JsonNode body) {
+        rejectUnknownFields(body, Set.of("title", "instructions", "settings", "activityMonitoringEnabled", "activityNotice",
                 "version", "instructionsDocument"));
         JsonNode settings = body.get("settings");
         if (settings == null || !settings.isObject()) {
-            throw invalid("settings cần là object");
+            throw createInvalidError("settings cần là object");
         }
-        fields(settings, Set.of("shuffleQuestions", "shuffleOptions", "timeLimitMinutes", "maxAttempts",
+        rejectUnknownFields(settings, Set.of("shuffleQuestions", "shuffleOptions", "timeLimitMinutes", "maxAttempts",
                 "showScoreAfterSubmit", "showCorrectAnswers", "leavePenalty"));
-        QuizSettings parsed = new QuizSettings(bool(settings, "shuffleQuestions"), bool(settings, "shuffleOptions"),
-                integer(settings, "timeLimitMinutes"), integer(settings, "maxAttempts"),
-                bool(settings, "showScoreAfterSubmit"), bool(settings, "showCorrectAnswers"),
+        QuizSettings parsed = new QuizSettings(readBool(settings, "shuffleQuestions"), readBool(settings, "shuffleOptions"),
+                readInteger(settings, "timeLimitMinutes"), readInteger(settings, "maxAttempts"),
+                readBool(settings, "showScoreAfterSubmit"), readBool(settings, "showCorrectAnswers"),
                 leavePenalty(settings.get("leavePenalty")));
-        return new Details(new QuizAuthoringService.Details(text(body, "title", true), text(body, "instructions", false),
-                parsed, bool(body, "activityMonitoringEnabled"), text(body, "activityNotice", false),
+        return new Details(new QuizAuthoringService.Details(readText(body, "title", true), readText(body, "instructions", false),
+                parsed, readBool(body, "activityMonitoringEnabled"), readText(body, "activityNotice", false),
                 edu.aiplatform.shared.content.FormattedText.parseDocument(body.get("instructionsDocument"))),
-                version(body));
+                readVersion(body));
     }
 
     private static LeavePenalty leavePenalty(JsonNode node) {
         if (node == null || node.isNull()) {
             return null;
         }
-        fields(node, Set.of("freeLeaves", "pointsPerLeave", "maxPenalty", "minAwaySeconds"));
-        Integer free = integer(node, "freeLeaves");
-        Integer minAway = integer(node, "minAwaySeconds");
-        BigDecimal perLeave = decimal(node, "pointsPerLeave");
+        rejectUnknownFields(node, Set.of("freeLeaves", "pointsPerLeave", "maxPenalty", "minAwaySeconds"));
+        Integer free = readInteger(node, "freeLeaves");
+        Integer minAway = readInteger(node, "minAwaySeconds");
+        BigDecimal perLeave = readDecimal(node, "pointsPerLeave");
         if (free == null || minAway == null || perLeave == null) {
-            throw invalid("leavePenalty cần freeLeaves, pointsPerLeave, minAwaySeconds");
+            throw createInvalidError("leavePenalty cần freeLeaves, pointsPerLeave, minAwaySeconds");
         }
-        return new LeavePenalty(free, perLeave, decimal(node, "maxPenalty"), minAway);
+        return new LeavePenalty(free, perLeave, readDecimal(node, "maxPenalty"), minAway);
     }
 
     /** Lưu chế độ đề và quy tắc sinh đề (BR-U10-17). */
     static DrawRules drawRules(JsonNode body) {
-        fields(body, Set.of("paperMode", "rules", "version"));
-        String mode = text(body, "paperMode", true);
+        rejectUnknownFields(body, Set.of("paperMode", "rules", "version"));
+        String mode = readText(body, "paperMode", true);
         QuizPaperMode parsedMode;
         try {
             parsedMode = QuizPaperMode.valueOf(mode);
         } catch (IllegalArgumentException unknown) {
-            throw invalid("paperMode không hợp lệ");
+            throw createInvalidError("paperMode không hợp lệ");
         }
         JsonNode list = body.get("rules");
         if (list == null || !list.isArray()) {
-            throw invalid("rules cần là danh sách");
+            throw createInvalidError("rules cần là danh sách");
         }
         List<QuizPaperService.RuleInput> rules = new ArrayList<>();
         for (JsonNode node : list) {
-            fields(node, Set.of("tag", "difficulty", "questionCount", "pointsEach"));
-            Integer count = integer(node, "questionCount");
-            BigDecimal points = decimal(node, "pointsEach");
+            rejectUnknownFields(node, Set.of("tag", "difficulty", "questionCount", "pointsEach"));
+            Integer count = readInteger(node, "questionCount");
+            BigDecimal points = readDecimal(node, "pointsEach");
             if (count == null || points == null) {
-                throw invalid("Mỗi quy tắc cần questionCount và pointsEach");
+                throw createInvalidError("Mỗi quy tắc cần questionCount và pointsEach");
             }
-            rules.add(new QuizPaperService.RuleInput(text(node, "tag", true), difficulty(text(node, "difficulty", false)),
+            rules.add(new QuizPaperService.RuleInput(readText(node, "tag", true), parseDifficulty(readText(node, "difficulty", false)),
                     count, points));
         }
-        return new DrawRules(parsedMode, rules, version(body));
+        return new DrawRules(parsedMode, rules, readVersion(body));
     }
 
-    static Items items(JsonNode body) {
-        fields(body, Set.of("items", "version"));
+    static Items parseItems(JsonNode body) {
+        rejectUnknownFields(body, Set.of("items", "version"));
         JsonNode list = body.get("items");
         if (list == null || !list.isArray()) {
-            throw invalid("items cần là danh sách");
+            throw createInvalidError("items cần là danh sách");
         }
         List<QuizAuthoringService.ItemInput> items = new ArrayList<>();
         for (JsonNode node : list) {
-            fields(node, Set.of("questionId", "points"));
+            rejectUnknownFields(node, Set.of("questionId", "points"));
             JsonNode points = node.get("points");
             if (points != null && !points.isNull() && !points.isNumber()) {
-                throw invalid("points cần là số");
+                throw createInvalidError("points cần là số");
             }
-            items.add(new QuizAuthoringService.ItemInput(uuid(node.get("questionId"), "questionId"),
+            items.add(new QuizAuthoringService.ItemInput(parseUuid(node.get("questionId"), "questionId"),
                     points == null || points.isNull() ? null : points.decimalValue()));
         }
-        return new Items(items, version(body));
+        return new Items(items, readVersion(body));
     }
 
     static Retire retire(JsonNode body) {
-        fields(body, Set.of("reason", "version"));
-        return new Retire(text(body, "reason", false), version(body));
+        rejectUnknownFields(body, Set.of("reason", "version"));
+        return new Retire(readText(body, "reason", false), readVersion(body));
     }
 
     static UUID copySource(JsonNode body) {
-        fields(body, Set.of("sourceQuizId"));
-        return uuid(body.get("sourceQuizId"), "sourceQuizId");
+        rejectUnknownFields(body, Set.of("sourceQuizId"));
+        return parseUuid(body.get("sourceQuizId"), "sourceQuizId");
     }
 
-    static RandomPreview randomPreview(JsonNode body) {
-        fields(body, Set.of("count", "difficulty", "tag"));
-        Integer count = integer(body, "count");
+    static RandomPreview parseRandomPreview(JsonNode body) {
+        rejectUnknownFields(body, Set.of("count", "difficulty", "tag"));
+        Integer count = readInteger(body, "count");
         if (count == null) {
-            throw invalid("Thiếu count");
+            throw createInvalidError("Thiếu count");
         }
-        return new RandomPreview(count, difficulty(text(body, "difficulty", false)), text(body, "tag", false));
+        return new RandomPreview(count, parseDifficulty(readText(body, "difficulty", false)), readText(body, "tag", false));
     }
 
-    private static Difficulty difficulty(String value) {
+    private static Difficulty parseDifficulty(String value) {
         try {
             return value == null ? null : Difficulty.valueOf(value);
         } catch (IllegalArgumentException unknown) {
-            throw invalid("difficulty không hợp lệ");
+            throw createInvalidError("difficulty không hợp lệ");
         }
     }
 
-    private static BigDecimal decimal(JsonNode body, String field) {
+    private static BigDecimal readDecimal(JsonNode body, String field) {
         JsonNode value = body.get(field);
         if (value == null || value.isNull()) {
             return null;
         }
         if (!value.isNumber()) {
-            throw invalid(field + " cần là số");
+            throw createInvalidError(field + " cần là số");
         }
         return value.decimalValue();
     }
 
     static void query(MultiValueMap<String, String> params, Set<String> allowed) {
         if (!allowed.containsAll(params.keySet()) || params.values().stream().anyMatch(v -> v.size() != 1)) {
-            throw invalid("Chỉ nhận " + String.join(", ", allowed) + ", mỗi trường một giá trị");
+            throw createInvalidError("Chỉ nhận " + String.join(", ", allowed) + ", mỗi trường một giá trị");
         }
         String q = params.getFirst("q");
         if (q != null && q.length() > 200) {
-            throw invalid("Từ khóa tối đa 200 ký tự");
+            throw createInvalidError("Từ khóa tối đa 200 ký tự");
         }
     }
 
-    private static void fields(JsonNode body, Set<String> allowed) {
+    private static void rejectUnknownFields(JsonNode body, Set<String> allowed) {
         if (body == null || !body.isObject()) {
-            throw invalid("Cần một JSON object");
+            throw createInvalidError("Cần một JSON object");
         }
         Iterator<String> names = body.fieldNames();
         while (names.hasNext()) {
             if (!allowed.contains(names.next())) {
-                throw invalid("Có trường không được phép trong yêu cầu");
+                throw createInvalidError("Có trường không được phép trong yêu cầu");
             }
         }
     }
 
-    private static String text(JsonNode body, String field, boolean required) {
+    private static String readText(JsonNode body, String field, boolean required) {
         JsonNode value = body.get(field);
         if (value == null || value.isNull()) {
             if (required) {
-                throw invalid("Thiếu " + field);
+                throw createInvalidError("Thiếu " + field);
             }
             return null;
         }
         if (!value.isTextual()) {
-            throw invalid(field + " cần là chuỗi");
+            throw createInvalidError(field + " cần là chuỗi");
         }
         return value.asText();
     }
 
-    private static boolean bool(JsonNode body, String field) {
+    private static boolean readBool(JsonNode body, String field) {
         JsonNode value = body.get(field);
         if (value == null || !value.isBoolean()) {
-            throw invalid(field + " cần là true hoặc false");
+            throw createInvalidError(field + " cần là true hoặc false");
         }
         return value.asBoolean();
     }
 
-    private static Integer integer(JsonNode body, String field) {
+    private static Integer readInteger(JsonNode body, String field) {
         JsonNode value = body.get(field);
         if (value == null || value.isNull()) {
             return null;
         }
         if (!value.canConvertToExactIntegral() || !value.canConvertToInt()) {
-            throw invalid(field + " cần là số nguyên");
+            throw createInvalidError(field + " cần là số nguyên");
         }
         return value.asInt();
     }
 
-    private static UUID uuid(JsonNode value, String field) {
+    private static UUID parseUuid(JsonNode value, String field) {
         if (value == null || !value.isTextual()) {
-            throw invalid(field + " cần là mã định danh");
+            throw createInvalidError(field + " cần là mã định danh");
         }
         try {
             return UUID.fromString(value.asText());
         } catch (IllegalArgumentException invalid) {
-            throw invalid(field + " cần là mã định danh");
+            throw createInvalidError(field + " cần là mã định danh");
         }
     }
 
-    private static long version(JsonNode body) {
+    private static long readVersion(JsonNode body) {
         JsonNode value = body.get("version");
         if (value == null || !value.canConvertToExactIntegral() || value.asLong() < 0) {
-            throw invalid("Thiếu version hoặc version không hợp lệ");
+            throw createInvalidError("Thiếu version hoặc version không hợp lệ");
         }
         return value.asLong();
     }
 
-    private static ApiException invalid(String message) {
-        return ApiException.badRequest("QUIZ_REQUEST_INVALID", message);
+    private static ApiException createInvalidError(String message) {
+        return ApiException.createBadRequest("QUIZ_REQUEST_INVALID", message);
     }
 }

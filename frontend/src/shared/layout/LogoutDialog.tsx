@@ -2,10 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { clearCurrentUser } from "@/shared/auth/useCurrentUser";
 import { Button } from "@/shared/ui/Button";
 import { Dialog } from "@/shared/ui/Dialog";
+import { msg } from "@/i18n/msg";
 
 /** Xác nhận đăng xuất (UC 03): gọi logout, xóa trạng thái phía client, về trang đăng nhập. */
 export function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -17,11 +18,11 @@ export function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => 
     setBusy(true);
     setError(null);
     try {
-      await apiFetch("/api/v1/auth/logout", { method: "POST" });
+      await fetchApi("/api/v1/auth/logout", { method: "POST" });
       clearCurrentUser();
       router.replace("/login");
     } catch {
-      setError("Không đăng xuất được, thử lại sau.");
+      setError(msg("shared.layout.LogoutDialog.couldNotSignOutPlease"));
       setBusy(false);
     }
   }
@@ -29,14 +30,13 @@ export function LogoutDialog({ open, onClose }: { open: boolean; onClose: () => 
   return (
     <Dialog
       open={open}
-      title="Đăng xuất?"
+      title={msg("shared.layout.LogoutDialog.signOut")}
       onClose={onClose}
       dismissible={!busy}
       footer={
         <>
           <Button variant="danger" icon="logout" onClick={() => void logout()} disabled={busy}>
-            Đăng xuất
-          </Button>
+            {msg("shared.layout.LogoutDialog.signOut2")}</Button>
         </>
       }
     >

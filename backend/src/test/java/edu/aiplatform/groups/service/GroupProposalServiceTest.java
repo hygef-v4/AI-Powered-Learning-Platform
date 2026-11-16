@@ -173,7 +173,7 @@ class GroupProposalServiceTest {
 
         assertThatThrownBy(() -> service.renameProposal(invitee, draft.id(), new RenameProposalCommand("B", 0L)))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("GROUP_PROPOSAL_NOT_FOUND"));
+                        e -> assertThat(e.readCode()).isEqualTo("GROUP_PROPOSAL_NOT_FOUND"));
         ArgumentCaptor<AuditEvent> denied = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(denied.capture());
         assertThat(denied.getValue().action()).isEqualTo("ACCESS_DENIED");
@@ -228,7 +228,7 @@ class GroupProposalServiceTest {
 
     @Test
     void submittedProposalIsLockedUntilWithdrawn() {
-        GroupProposal submitted = draft.submitted(NOW);
+        GroupProposal submitted = draft.markSubmitted(NOW);
         when(proposals.lockProposal(draft.id())).thenReturn(Optional.of(submitted));
         members(member(leader.accountId(), ProposalMember.Status.ACCEPTED, true),
                 member(invitee.accountId(), ProposalMember.Status.ACCEPTED, true));
@@ -305,6 +305,6 @@ class GroupProposalServiceTest {
 
     private static void assertCode(Runnable call, String code) {
         assertThatThrownBy(call::run).isInstanceOfSatisfying(ApiException.class,
-                e -> assertThat(e.code()).isEqualTo(code));
+                e -> assertThat(e.readCode()).isEqualTo(code));
     }
 }

@@ -56,7 +56,7 @@ public class GroupProposalCleanup {
                 long members = proposalRepository.listMembers(proposalId).stream()
                         .filter(ProposalMember::isActiveMember).count();
                 GroupProposal next = proposal.status() == Status.SUBMITTED && members < minSize
-                        ? proposal.backToDraft(now) : proposal.touched(now);
+                        ? proposal.returnToDraft(now) : proposal.markTouched(now);
                 proposalRepository.updateProposal(next);
             });
         }
@@ -64,7 +64,7 @@ public class GroupProposalCleanup {
 
     /** Hủy đề xuất: thành viên thôi hoạt động, lời mời chờ bị thu hồi. */
     void cancelProposal(GroupProposal proposal, EndReason reason, Instant now) {
-        proposalRepository.updateProposal(proposal.cancelled(reason, now));
+        proposalRepository.updateProposal(proposal.markCancelled(reason, now));
         proposalRepository.deactivateMembers(proposal.id());
         proposalRepository.closeInvitations(proposal.id(), ProposalMember.Status.REVOKED, now);
     }

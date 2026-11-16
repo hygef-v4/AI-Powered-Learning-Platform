@@ -1,6 +1,7 @@
 import type { Align, Run } from "@/shared/document/types";
 import type { DiagramType, DocumentModel, RubricCriterion, ValidationIssue } from "@/shared/document";
 import type { Tone } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 export type AssignmentScope = "CLASS" | "SUBJECT";
 export type AssignmentStatus = "DRAFT" | "REVIEWED" | "SCHEDULED" | "OPEN" | "CLOSED" | "RETIRED";
@@ -226,7 +227,7 @@ export type ScheduleInput = {
 
 export const statusLabels: Record<AssignmentStatus, string> = {
   // Không còn bước duyệt (yêu cầu 2026-10-22): bài đã duyệt từ trước hiện như bản nháp.
-  DRAFT: "Nháp", REVIEWED: "Hoàn tất", SCHEDULED: "Đã lên lịch", OPEN: "Đang mở", CLOSED: "Đã đóng", RETIRED: "Ngưng giao",
+  DRAFT: msg("assignments.model.types.draft"), REVIEWED: msg("assignments.model.types.finalized"), SCHEDULED: msg("assignments.model.types.scheduled"), OPEN: msg("assignments.model.types.open"), CLOSED: msg("assignments.model.types.closed"), RETIRED: msg("assignments.model.types.withdrawn"),
 };
 
 export const statusTones: Record<AssignmentStatus, Tone> = {
@@ -234,7 +235,7 @@ export const statusTones: Record<AssignmentStatus, Tone> = {
 };
 
 export const gradingLabels: Record<GradingMode, string> = { GRADED: "Graded", PRACTICE: "Practice" };
-export const submissionLabels: Record<SubmissionMode, string> = { INDIVIDUAL: "Cá nhân", GROUP: "Nhóm" };
+export const submissionLabels: Record<SubmissionMode, string> = { INDIVIDUAL: msg("assignments.model.types.individual"), GROUP: msg("assignments.model.types.group") };
 export const originLabels: Record<AssignmentOrigin, string> = {
-  MANUAL: "Tạo mới", CLONE: "Nhân bản", NEW_VERSION: "Version mới", CLASS_COPY: "Copy từ bài khác",
+  MANUAL: msg("assignments.model.types.new"), CLONE: msg("assignments.model.types.duplicate"), NEW_VERSION: msg("assignments.model.types.newVersion"), CLASS_COPY: msg("assignments.model.types.copiedFromAnotherAssignment"),
 };

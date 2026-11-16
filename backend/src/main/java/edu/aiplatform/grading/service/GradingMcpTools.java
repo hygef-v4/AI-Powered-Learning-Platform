@@ -59,7 +59,7 @@ public class GradingMcpTools implements IMcpToolProvider {
         // Step 1: Verify caller holds active teacher or subject manager permission
         edu.aiplatform.ai.contract.McpInput.teaching(actor);
         if (!"record_grading_proposal".equals(name))
-            throw ApiException.notFound("MCP_TOOL_NOT_FOUND");
+            throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
         try {
             // Step 2: Parse and validate submission reference (kind, id, classId, assignmentId)
             var root = objectMapper.valueToTree(args);
@@ -73,13 +73,13 @@ public class GradingMcpTools implements IMcpToolProvider {
                     || !root.has("expectedVersion")
                     || !root.path("expectedVersion").isIntegralNumber()
                     || root.path("expectedVersion").asLong() < 0)
-                throw ApiException.badRequest("INVALID_MCP_ARGUMENTS",
+                throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS",
                         "Invalid submission reference or version");
 
             // Step 3: Check request reference and snapshot fingerprint format (64-char hex)
             String requestRef = root.path("requestRef").asText();
             if (requestRef.isBlank() || requestRef.length() > 200)
-                throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid request reference");
+                throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", "Invalid request reference");
             String fingerprint = root.path("snapshotFingerprint").asText();
             if (!fingerprint.matches("[0-9a-f]{64}"))
                 throw GradingMcpReadProgress.createReadRequiredError();
@@ -102,7 +102,7 @@ public class GradingMcpTools implements IMcpToolProvider {
         } catch (ApiException ex) {
             throw ex;
         } catch (IllegalArgumentException ex) {
-            throw ApiException.badRequest("INVALID_MCP_ARGUMENTS",
+            throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS",
                     "Invalid grading proposal arguments");
         }
     }
@@ -117,19 +117,19 @@ public class GradingMcpTools implements IMcpToolProvider {
     private JsonNode readSubmissionReference(JsonNode arguments) {
         arguments.fieldNames().forEachRemaining(field -> {
             if (!ARGUMENT_FIELDS.contains(field))
-                throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Unknown tool argument");
+                throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", "Unknown tool argument");
         });
         var reference = arguments.path("submissionRef");
         if (!reference.isObject())
-            throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid submission reference");
+            throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", "Invalid submission reference");
         reference.fieldNames().forEachRemaining(field -> {
             if (!REFERENCE_FIELDS.contains(field))
-                throw ApiException.badRequest("INVALID_MCP_ARGUMENTS",
+                throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS",
                         "Unknown submission reference argument");
         });
         if (arguments.has("agentLabel") && (!arguments.get("agentLabel").isTextual()
                 || arguments.get("agentLabel").asText().length() > 200))
-            throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid agent label");
+            throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", "Invalid agent label");
         return reference;
     }
 
@@ -138,12 +138,12 @@ public class GradingMcpTools implements IMcpToolProvider {
             UUID assignmentId) {
         if (kind.equals("ATTEMPT"))
             return evaluationRepository.findByAttemptId(submissionId)
-                    .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                    .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         if (kind.equals("GROUP_DOCUMENT"))
             return evaluationRepository.findForAssignmentAndClass(assignmentId, classId).stream()
                     .filter(evaluation -> evaluation.kind == EvaluationKind.GROUP_DOCUMENT
                             && submissionId.equals(evaluation.groupDocumentId))
-                    .findFirst().orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
-        throw ApiException.badRequest("INVALID_MCP_ARGUMENTS", "Invalid submission kind");
+                    .findFirst().orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
+        throw ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", "Invalid submission kind");
     }
 }

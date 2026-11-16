@@ -45,25 +45,25 @@ public class GroupDocImportService {
     /** Xem trước DOCX của người giữ mục: heading thành đoạn in đậm vì heading của mục là khung cố định. */
     @Transactional(readOnly = true)
     public SectionImport previewSection(Actor actor, UUID documentId, UUID sectionId, byte[] file) {
-        GroupDocContext ctx = access.read(actor, documentId);
+        GroupDocContext ctx = access.loadContext(actor, documentId);
         GroupDocAccess.requireMember(ctx);
         access.requireEditable(ctx, false);
         GroupSection section = documents.listSections(documentId).stream().filter(s -> s.id().equals(sectionId))
-                .findFirst().orElseThrow(() -> ApiException.notFound("SECTION_NOT_FOUND"));
+                .findFirst().orElseThrow(() -> ApiException.createNotFound("SECTION_NOT_FOUND"));
         if (SectionRules.canEdit(section, actor.accountId()) != null) {
-            throw ApiException.conflict("SECTION_NOT_HELD", "Bạn không giữ mục này");
+            throw ApiException.createConflict("SECTION_NOT_HELD", "Bạn không giữ mục này");
         }
         boolean diagramEnabled = assignments.get(ctx.document().assignmentId())
                 .map(AssignmentView::diagramEnabled).orElse(false);
         DocxImportPreview preview = docx.importPreview(actor, file, BlockOrigin.STUDENT, diagramEnabled,
                 ref -> Optional.empty());
-        List<DocumentBlock> blocks = preview.document().blocks().stream().map(GroupDocImportService::asBody).toList();
+        List<DocumentBlock> blocks = preview.document().blocks().stream().map(GroupDocImportService::convertToBody).toList();
         return new SectionImport(new DocumentModel(blocks), preview.warnings(), countBlocks(blocks, BlockType.IMAGE),
                 countBlocks(blocks, BlockType.DIAGRAM));
     }
 
     /** Heading trong nội dung mục thành đoạn in đậm như bài cá nhân; block nào cũng là của nhóm. */
-    static DocumentBlock asBody(DocumentBlock block) {
+    static DocumentBlock convertToBody(DocumentBlock block) {
         if (block.type() == BlockType.HEADING) {
             ObjectNode content = JsonNodeFactory.instance.objectNode();
             content.putArray("runs").addObject().put("text", block.content().path("text").asText("")).put("bold", true);

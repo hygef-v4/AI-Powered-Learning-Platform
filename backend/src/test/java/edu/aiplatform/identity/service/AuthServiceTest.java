@@ -72,7 +72,7 @@ class AuthServiceTest {
         active = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, encoder.encode(PASSWORD));
         when(throttle.loginAllowed(anyString())).thenReturn(true);
         when(accounts.findByEmail("taivm@fpt.edu.vn")).thenReturn(Optional.of(active));
-        when(sessions.create(any(), any())).thenReturn(new SessionStore.IssuedSession("sid-1", "refresh-1"));
+        when(sessions.createSession(any(), any())).thenReturn(new SessionStore.IssuedSession("sid-1", "refresh-1"));
     }
 
     @ParameterizedTest
@@ -113,19 +113,19 @@ class AuthServiceTest {
             resume.countDown();
             AuthService.LoginResult result = login.get(10, TimeUnit.SECONDS);
             String sid = jwt.parse(result.accessToken()).orElseThrow().sid();
-            assertThat(realSessions.find(sid)).hasValueSatisfying(session ->
+            assertThat(realSessions.findSession(sid)).hasValueSatisfying(session ->
                     assertThat(session.pwdStamp()).isEqualTo(active.passwordChangedAt().toEpochMilli()));
             if (refresh) {
                 assertThatThrownBy(() -> pausedAuth.refresh(result.refreshToken()))
                         .isInstanceOfSatisfying(ApiException.class, e -> {
-                            assertThat(e.status()).isEqualTo(HttpStatus.UNAUTHORIZED);
-                            assertThat(e.code()).isEqualTo(AuthService.SESSION_EXPIRED);
+                            assertThat(e.readStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
+                            assertThat(e.readCode()).isEqualTo(AuthService.SESSION_EXPIRED);
                         });
             } else {
                 SessionAuthority authority = new SessionAuthority(jwt, realSessions, accounts);
                 assertThat(authority.authenticate(result.accessToken())).isEmpty();
             }
-            assertThat(realSessions.find(sid)).isEmpty();
+            assertThat(realSessions.findSession(sid)).isEmpty();
         } finally {
             resume.countDown();
             pool.shutdownNow();
@@ -140,7 +140,7 @@ class AuthServiceTest {
         assertThat(result.refreshToken()).isEqualTo("refresh-1");
         assertThat(jwt.parse(result.accessToken())).hasValueSatisfying(c -> assertThat(c.sid()).isEqualTo("sid-1"));
         verify(accounts).resetLoginThrottle(active.id());
-        verify(sessions).create(active.id(), active.passwordChangedAt().toEpochMilli());
+        verify(sessions).createSession(active.id(), active.passwordChangedAt().toEpochMilli());
     }
 
     @Test
@@ -156,12 +156,12 @@ class AuthServiceTest {
                 {"disabled@fpt.edu.vn", PASSWORD}, {"none@fpt.edu.vn", PASSWORD}}) {
             assertThatThrownBy(() -> service.login(attempt[0], attempt[1], IP))
                     .isInstanceOfSatisfying(ApiException.class, e -> {
-                        assertThat(e.status()).isEqualTo(HttpStatus.UNAUTHORIZED);
-                        assertThat(e.code()).isEqualTo(AuthService.AUTH_FAILED);
+                        assertThat(e.readStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
+                        assertThat(e.readCode()).isEqualTo(AuthService.AUTH_FAILED);
                         assertThat(e.getMessage()).isEqualTo(AuthService.AUTH_FAILED_MESSAGE);
                     });
         }
-        verify(sessions, never()).create(any(), any());
+        verify(sessions, never()).createSession(any(), any());
     }
 
     @Test
@@ -182,7 +182,7 @@ class AuthServiceTest {
         when(accounts.findByEmail("taivm@fpt.edu.vn")).thenReturn(Optional.of(locked));
 
         assertThatThrownBy(() -> service.login("taivm@fpt.edu.vn", PASSWORD, IP))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(AuthService.AUTH_FAILED));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo(AuthService.AUTH_FAILED));
 
         assertThat(audits).extracting(AuditEvent::action).containsExactly("LOGIN_BLOCKED_LOCKED");
         verify(accounts, never()).recordFailedLogin(any(), anyInt(), any());
@@ -233,14 +233,14 @@ class AuthServiceTest {
 
         if (accepted) {
             assertThat(service.refresh("r").refreshToken()).isEqualTo("r2");
-            verify(sessions, never()).delete(any());
+            verify(sessions, never()).deleteSession(any());
         } else {
             assertThatThrownBy(() -> service.refresh("r"))
                     .isInstanceOfSatisfying(ApiException.class, e -> {
-                        assertThat(e.status()).isEqualTo(HttpStatus.UNAUTHORIZED);
-                        assertThat(e.code()).isEqualTo(AuthService.SESSION_EXPIRED);
+                        assertThat(e.readStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
+                        assertThat(e.readCode()).isEqualTo(AuthService.SESSION_EXPIRED);
                     });
-            verify(sessions).delete("sid-1");
+            verify(sessions).deleteSession("sid-1");
         }
     }
 
@@ -255,16 +255,16 @@ class AuthServiceTest {
                 replacement.equals("stale") ? NOW.minusMillis(1).toEpochMilli() : NOW.toEpochMilli());
         when(sessions.rotate("r")).thenReturn(new SessionStore.Rotated("sid-1", oldSession, "r2"));
         when(accounts.findById(active.id())).thenReturn(Optional.of(active));
-        when(sessions.find("sid-1")).thenReturn(replacement.equals("deleted")
+        when(sessions.findSession("sid-1")).thenReturn(replacement.equals("deleted")
                 ? Optional.empty() : Optional.of(liveSession));
 
         assertThatThrownBy(() -> service.refresh("r"))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.status()).isEqualTo(HttpStatus.UNAUTHORIZED);
-                    assertThat(e.code()).isEqualTo(AuthService.SESSION_EXPIRED);
+                    assertThat(e.readStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
+                    assertThat(e.readCode()).isEqualTo(AuthService.SESSION_EXPIRED);
                 });
-        verify(sessions).find("sid-1");
-        verify(sessions).delete("sid-1");
+        verify(sessions).findSession("sid-1");
+        verify(sessions).deleteSession("sid-1");
     }
 
     @Test
@@ -272,9 +272,9 @@ class AuthServiceTest {
         var realSessions = new SessionStore(new FakeRedis().template,
                 JsonMapper.builder().findAndAddModules().build(), Clock.fixed(NOW, ZoneOffset.UTC),
                 IdentityTestData.properties());
-        var issued = realSessions.create(active.id(), NOW.minusMillis(1).toEpochMilli());
+        var issued = realSessions.createSession(active.id(), NOW.minusMillis(1).toEpochMilli());
         when(accounts.findById(active.id())).thenAnswer(invocation -> {
-            realSessions.restamp(issued.sid(), NOW.toEpochMilli());
+            realSessions.restampSession(issued.sid(), NOW.toEpochMilli());
             return Optional.of(active);
         });
         var authService = new AuthService(accounts, realSessions, jwt, throttle, encoder, audit,
@@ -282,8 +282,8 @@ class AuthServiceTest {
 
         var refreshed = authService.refresh(issued.refreshToken());
 
-        assertThat(realSessions.sidOf(refreshed.refreshToken())).hasValue(issued.sid());
-        assertThat(realSessions.find(issued.sid())).hasValueSatisfying(session ->
+        assertThat(realSessions.findSid(refreshed.refreshToken())).hasValue(issued.sid());
+        assertThat(realSessions.findSession(issued.sid())).hasValueSatisfying(session ->
                 assertThat(session.isPasswordCurrent(active.passwordChangedAt())).isTrue());
     }
 
@@ -299,7 +299,7 @@ class AuthServiceTest {
 
         assertThat(result.refreshToken()).isEqualTo("r2");
         assertThat(jwt.parse(result.accessToken())).hasValueSatisfying(c -> assertThat(c.role()).isEqualTo(Role.TEACHER));
-        verify(sessions, never()).find(any());
+        verify(sessions, never()).findSession(any());
     }
 
     @Test
@@ -310,8 +310,8 @@ class AuthServiceTest {
         when(accounts.findById(disabled.id())).thenReturn(Optional.of(disabled));
 
         assertThatThrownBy(() -> service.refresh("r"))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(AuthService.SESSION_EXPIRED));
-        verify(sessions).delete("sid-9");
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo(AuthService.SESSION_EXPIRED));
+        verify(sessions).deleteSession("sid-9");
     }
 
     @Test
@@ -319,7 +319,7 @@ class AuthServiceTest {
         when(sessions.rotate("old")).thenReturn(new SessionStore.Rejected(SessionStore.Reason.REUSED));
 
         assertThatThrownBy(() -> service.refresh("old"))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status()).isEqualTo(HttpStatus.UNAUTHORIZED));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus()).isEqualTo(HttpStatus.UNAUTHORIZED));
     }
 
     @Test
@@ -328,43 +328,43 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> service.refresh("r"))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.status()).isEqualTo(HttpStatus.CONFLICT);
-                    assertThat(e.code()).isEqualTo(AuthService.REFRESH_CONCURRENT);
+                    assertThat(e.readStatus()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(e.readCode()).isEqualTo(AuthService.REFRESH_CONCURRENT);
                 });
-        verify(sessions, never()).delete(any());
+        verify(sessions, never()).deleteSession(any());
     }
 
     @Test
     void logoutDeletesOnlyCurrentSession() {
         service.logout("sid-1", null);
-        verify(sessions).delete("sid-1");
+        verify(sessions).deleteSession("sid-1");
         service.logout(null, null);
         verify(sessions, never()).deleteAll(any(UUID.class));
     }
 
     @Test
     void logoutWithExpiredAccessTokenRevokesSessionOfRefreshToken() {
-        when(sessions.sidOf("r")).thenReturn(Optional.of("sid-2"));
+        when(sessions.findSid("r")).thenReturn(Optional.of("sid-2"));
 
         service.logout(null, "r");
 
-        verify(sessions).delete("sid-2");
+        verify(sessions).deleteSession("sid-2");
     }
 
     @Test
     void logoutDoesNotDeleteSameSessionTwice() {
-        when(sessions.sidOf("r")).thenReturn(Optional.of("sid-1"));
+        when(sessions.findSid("r")).thenReturn(Optional.of("sid-1"));
 
         service.logout("sid-1", "r");
 
-        verify(sessions, times(1)).delete("sid-1");
+        verify(sessions, times(1)).deleteSession("sid-1");
     }
 
     @Test
     void homePathFollowsRole() {
-        assertThat(HomePaths.of(Role.STUDENT)).isEqualTo("/classes");
-        assertThat(HomePaths.of(Role.TEACHER)).isEqualTo("/classes");
-        assertThat(HomePaths.of(Role.SUBJECT_MANAGER)).isEqualTo("/teaching/classes");
-        assertThat(HomePaths.of(Role.ADMIN)).isEqualTo("/admin");
+        assertThat(HomePaths.resolveHomePath(Role.STUDENT)).isEqualTo("/classes");
+        assertThat(HomePaths.resolveHomePath(Role.TEACHER)).isEqualTo("/classes");
+        assertThat(HomePaths.resolveHomePath(Role.SUBJECT_MANAGER)).isEqualTo("/teaching/classes");
+        assertThat(HomePaths.resolveHomePath(Role.ADMIN)).isEqualTo("/admin");
     }
 }

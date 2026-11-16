@@ -35,21 +35,21 @@ public class DocxService implements IDocx {
     private final DocxImporter importer;
     private final AssignmentSupport support;
     private final AssignmentAccess access;
-    private final RubricService rubrics;
-    private final DocumentModelService documents;
+    private final RubricService rubricService;
+    private final DocumentModelService documentModelService;
     private final AssignmentRepository assignments;
     private final String publicUrl;
 
-    public DocxService(IArtifact artifacts, AssignmentSupport support, AssignmentAccess access, RubricService rubrics,
-                       DocumentModelService documents,
+    public DocxService(IArtifact artifacts, AssignmentSupport support, AssignmentAccess access, RubricService rubricService,
+                       DocumentModelService documentModelService,
                        AssignmentRepository assignments,
                        @Value("${platform.assignments.public-url:http://localhost:8088}") String publicUrl) {
         this.exporter = new DocxExporter(artifacts);
         this.importer = new DocxImporter(artifacts);
         this.support = support;
         this.access = access;
-        this.rubrics = rubrics;
-        this.documents = documents;
+        this.rubricService = rubricService;
+        this.documentModelService = documentModelService;
         this.assignments = assignments;
         this.publicUrl = publicUrl.endsWith("/") ? publicUrl.substring(0, publicUrl.length() - 1) : publicUrl;
     }
@@ -63,32 +63,32 @@ public class DocxService implements IDocx {
     public DocxImportPreview importPreview(Actor actor, byte[] docx, BlockOrigin origin, boolean diagramEnabled,
                                            IDiagramResolver diagramResolver) {
         DocxImportPreview preview = importer.preview(actor, docx, origin, diagramEnabled, diagramResolver);
-        return new DocxImportPreview(documents.sanitize(preview.document()), preview.warnings());
+        return new DocxImportPreview(documentModelService.sanitize(preview.document()), preview.warnings());
     }
 
     /** F7 xuất đề: người đọc được bài; không lưu file. Rubric xuất riêng ({@link #exportRubric}, yêu cầu 2026-10-22). */
     @Transactional(readOnly = true)
     public Export exportAssignment(Actor actor, UUID id) {
-        Assignment assignment = support.readable(actor, id, "ASSIGNMENT_DOCX_EXPORTED");
+        Assignment assignment = support.loadReadable(actor, id, "ASSIGNMENT_DOCX_EXPORTED");
         // Không xuất phần hướng dẫn cũ (instructions): trang soạn không hiện nó nên tệp tải về cũng không có chữ lạ dưới
         // tên bài (yêu cầu 2026-11-12).
         byte[] bytes = exporter.export(assignment.title(), null, assignment.skeleton(),
-                linker(assignment.id()));
-        return new Export(fileName(assignment.title()), bytes);
+                createLinker(assignment.id()));
+        return new Export(buildFileName(assignment.title()), bytes);
     }
 
     /** Rubric các phần thành một tệp DOCX riêng, theo thứ tự phần; người đọc được bài (sinh viên không đọc được). */
     @Transactional(readOnly = true)
     public Export exportRubric(Actor actor, UUID id) {
-        Assignment assignment = support.readable(actor, id, "ASSIGNMENT_RUBRIC_EXPORTED");
-        Map<String, AssignmentRubric> byPart = rubrics.all(assignment.id()).stream()
+        Assignment assignment = support.loadReadable(actor, id, "ASSIGNMENT_RUBRIC_EXPORTED");
+        Map<String, AssignmentRubric> byPart = rubricService.listRubricModels(assignment.id()).stream()
                 .collect(Collectors.toMap(AssignmentRubric::partId, r -> r, (a, b) -> a));
         List<DocxExporter.RubricSection> sections = new ArrayList<>();
         AssignmentRubric whole = byPart.get(RubricService.WHOLE);
         if (whole != null && RubricService.hasWhole(assignment.parts()) && !whole.criteria().isEmpty()) {
             sections.add(new DocxExporter.RubricSection(RubricService.WHOLE_TITLE, whole.criteria(), whole.totalPoints()));
         }
-        Map<UUID, String> numbered = numberedHeadings(assignment);
+        Map<UUID, String> numbered = numberHeadings(assignment);
         for (DocumentPart part : assignment.parts() == null ? List.<DocumentPart>of() : assignment.parts()) {
             AssignmentRubric rubric = byPart.get(part.partId());
             if (rubric != null && rubric.criteria() != null && !rubric.criteria().isEmpty()) {
@@ -97,20 +97,20 @@ public class DocxService implements IDocx {
             }
         }
         String title = assignment.title() == null ? "" : assignment.title();
-        return new Export(fileName("Rubric - " + title), exporter.exportRubric(title, sections));
+        return new Export(buildFileName("Rubric - " + title), exporter.exportRubric(title, sections));
     }
 
     /** Tiêu đề từng câu hỏi kèm số như trong tệp đề (I., I.1.); câu chưa đặt tên chỉ có số. */
-    private static Map<UUID, String> numberedHeadings(Assignment assignment) {
+    private static Map<UUID, String> numberHeadings(Assignment assignment) {
         Map<UUID, String> out = new java.util.HashMap<>();
         if (assignment.skeleton() == null || assignment.skeleton().blocks() == null) {
             return out;
         }
         DocxExporter.SectionNumbers numbers = new DocxExporter.SectionNumbers();
         for (DocumentBlock block : assignment.skeleton().blocks()) {
-            int level = edu.aiplatform.assignments.model.PartCalculator.level(block);
+            int level = edu.aiplatform.assignments.model.PartCalculator.resolveHeadingLevel(block);
             if (level > 0) {
-                out.put(block.id(), (numbers.next(level) + " " + block.content().path("text").asText("")).strip());
+                out.put(block.id(), (numbers.nextNumber(level) + " " + block.content().path("text").asText("")).strip());
             }
         }
         return out;
@@ -119,10 +119,10 @@ public class DocxService implements IDocx {
     /** F7 nhập: bài nháp, đọc trong bộ nhớ; sơ đồ theo mã chỉ lấy khi người nhập đọc được bài nguồn. */
     @Transactional(readOnly = true)
     public AssignmentViews.ImportPreview importAssignment(Actor actor, UUID id, byte[] docx) {
-        Assignment assignment = support.manageable(actor, id, "ASSIGNMENT_DOCX_IMPORTED");
+        Assignment assignment = support.loadManageable(actor, id, "ASSIGNMENT_DOCX_IMPORTED");
         access.requireOwnerWritable(assignment);
-        if (!assignment.editable()) {
-            throw ApiException.conflict("ASSIGNMENT_NOT_EDITABLE",
+        if (!assignment.canEdit()) {
+            throw ApiException.createConflict("ASSIGNMENT_NOT_EDITABLE",
                     "Bài đã phát hành, không nhập DOCX được");
         }
         DocxImportPreview preview = importPreview(actor, docx, BlockOrigin.TEACHER, assignment.diagramEnabled(),
@@ -143,7 +143,7 @@ public class DocxService implements IDocx {
         try {
             UUID assignmentId = UUID.fromString(parts[0]);
             UUID blockId = UUID.fromString(parts[1]);
-            return assignments.find(assignmentId).filter(a -> access.canRead(actor, a))
+            return assignments.findAssignment(assignmentId).filter(a -> access.canRead(actor, a))
                     .flatMap(a -> a.skeleton().blocks().stream()
                             .filter(b -> blockId.equals(b.id()) && b.type() == BlockType.DIAGRAM).findFirst())
                     .map(b -> b.content().path("xml").asText(null));
@@ -152,7 +152,7 @@ public class DocxService implements IDocx {
         }
     }
 
-    IDiagramLinker linker(UUID assignmentId) {
+    IDiagramLinker createLinker(UUID assignmentId) {
         return new IDiagramLinker() {
             @Override
             public String linkFor(UUID blockId) {
@@ -166,7 +166,7 @@ public class DocxService implements IDocx {
         };
     }
 
-    static String fileName(String title) {
+    static String buildFileName(String title) {
         String base = title == null ? "bai-tap" : title.replaceAll("[\\\\/:*?\"<>|\\r\\n]+", " ").strip();
         if (base.isEmpty()) {
             base = "bai-tap";

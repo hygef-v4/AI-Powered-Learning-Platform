@@ -8,7 +8,7 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
-/** Health Drive (P7): gọi {@code drives.get} có cache 60 giây; lỗi chỉ báo DEGRADED, backend vẫn UP. */
+/** Health Drive (P7): đọc thư mục gốc (Shared Drive hoặc thư mục app), cache 60 giây; lỗi chỉ báo DEGRADED. */
 @Component("drive")
 public class DriveHealthIndicator implements HealthIndicator {
 
@@ -16,26 +16,34 @@ public class DriveHealthIndicator implements HealthIndicator {
 
     private final FilesProperties properties;
     private final DriveClientFactory clients;
+    private final DriveFolders folders;
     private final Clock clock;
     private volatile Instant checkedAt = Instant.EPOCH;
     private volatile String state = "UNKNOWN";
 
-    public DriveHealthIndicator(FilesProperties properties, DriveClientFactory clients, Clock clock) {
+    public DriveHealthIndicator(FilesProperties properties, DriveClientFactory clients, DriveFolders folders,
+                                Clock clock) {
         this.properties = properties;
         this.clients = clients;
+        this.folders = folders;
         this.clock = clock;
     }
 
     @Override
     public Health health() {
-        if (!properties.driveConfigured()) {
+        if (!properties.hasDrive()) {
             return Health.up().withDetail("drive", properties.requireDrive() ? "NOT_CONFIGURED" : "LOCAL").build();
         }
         Instant now = clock.instant();
         if (now.isAfter(checkedAt.plus(CACHE))) {
             try {
-                DriveClientFactory.withRetry(() -> clients.drive().drives().get(properties.sharedDriveId())
-                        .setFields("id").execute());
+                if (properties.hasSharedDrive()) {
+                    DriveClientFactory.runWithRetry(() -> clients.createDrive().drives().get(properties.sharedDriveId())
+                            .setFields("id").execute());
+                } else {
+                    String root = folders.resolveRoot();
+                    DriveClientFactory.runWithRetry(() -> clients.createDrive().files().get(root).setFields("id").execute());
+                }
                 state = "UP";
             } catch (RuntimeException e) {
                 state = "DEGRADED";

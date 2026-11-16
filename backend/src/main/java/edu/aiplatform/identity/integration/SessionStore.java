@@ -128,11 +128,11 @@ public class SessionStore {
         UNKNOWN, EXPIRED, REUSED, CONCURRENT
     }
 
-    public IssuedSession create(UUID accountId, Long pwdStamp) {
+    public IssuedSession createSession(UUID accountId, Long pwdStamp) {
         Instant now = clock.instant();
         String sid = UUID.randomUUID().toString();
-        String refreshToken = Hashing.randomToken(32);
-        String refreshHash = Hashing.sha256Hex(refreshToken);
+        String refreshToken = Hashing.generateRandomToken(32);
+        String refreshHash = Hashing.hashSha256Hex(refreshToken);
         redis.execute(CREATE, List.of(SESSION_PREFIX + sid, REFRESH_PREFIX + refreshHash,
                         ACCOUNT_SESSIONS_PREFIX + accountId),
                 serialize(new SessionRecord(accountId, now, now, refreshHash, pwdStamp)), sid,
@@ -141,10 +141,10 @@ public class SessionStore {
     }
 
     /** Phiên còn hiệu lực (chưa xóa, chưa quá 7 ngày); mỗi request đã xác thực đều gọi (BR-U01-44). */
-    public Optional<SessionRecord> find(String sid) {
-        Optional<SessionRecord> session = read(sid);
-        if (session.isPresent() && remaining(session.get().issuedAt(), clock.instant()).isZero()) {
-            delete(sid);
+    public Optional<SessionRecord> findSession(String sid) {
+        Optional<SessionRecord> session = readSession(sid);
+        if (session.isPresent() && calculateRemaining(session.get().issuedAt(), clock.instant()).isZero()) {
+            deleteSession(sid);
             return Optional.empty();
         }
         return session;
@@ -156,7 +156,7 @@ public class SessionStore {
             return new Rejected(Reason.UNKNOWN);
         }
         Instant now = clock.instant();
-        String hash = Hashing.sha256Hex(refreshToken);
+        String hash = Hashing.hashSha256Hex(refreshToken);
         String value = redis.execute(CLAIM_REFRESH, List.of(REFRESH_PREFIX + hash),
                 String.valueOf(now.toEpochMilli()), String.valueOf(idleTtl.toMillis()));
         if (value == null) {
@@ -166,8 +166,8 @@ public class SessionStore {
             return rejectUsed(value.substring(USED_MARK.length()), now);
         }
         String sid = value;
-        String newToken = Hashing.randomToken(32);
-        String newHash = Hashing.sha256Hex(newToken);
+        String newToken = Hashing.generateRandomToken(32);
+        String newHash = Hashing.hashSha256Hex(newToken);
         for (int attempt = 0; attempt < CAS_ATTEMPTS; attempt++) {
             String currentJson = redis.opsForValue().get(SESSION_PREFIX + sid);
             Optional<SessionRecord> current = parse(sid, currentJson);
@@ -176,15 +176,15 @@ public class SessionStore {
             }
             SessionRecord session = current.get();
             if (!hash.equals(session.refreshHash())) {
-                delete(sid);
+                deleteSession(sid);
                 return new Rejected(Reason.REUSED);
             }
-            Duration ttl = min(idleTtl, remaining(session.issuedAt(), now));
+            Duration ttl = pickShorter(idleTtl, calculateRemaining(session.issuedAt(), now));
             if (ttl.isZero()) {
-                delete(sid);
+                deleteSession(sid);
                 return new Rejected(Reason.EXPIRED);
             }
-            afterRead();
+            recordRead();
             SessionRecord rotated = new SessionRecord(session.accountId(), session.issuedAt(), now,
                     newHash, session.pwdStamp());
             Long updated = redis.execute(ROTATE_CAS, List.of(SESSION_PREFIX + sid, REFRESH_PREFIX + newHash),
@@ -196,14 +196,14 @@ public class SessionStore {
         return new Rejected(Reason.UNKNOWN);
     }
 
-    void afterRead() {
+    void recordRead() {
     }
 
     /**
      * Keeps the current session without extending its lifetime or restoring revocation.
      * Exhausted CAS conflicts throw so the caller's password transaction rolls back.
      */
-    public void restamp(String sid, long pwdStamp) {
+    public void restampSession(String sid, long pwdStamp) {
         for (int attempt = 0; attempt < CAS_ATTEMPTS; attempt++) {
             String json = redis.opsForValue().get(SESSION_PREFIX + sid);
             Optional<SessionRecord> current = parse(sid, json);
@@ -218,7 +218,7 @@ public class SessionStore {
                 return;
             }
         }
-        if (read(sid).isPresent()) {
+        if (readSession(sid).isPresent()) {
             throw new IllegalStateException("Không cập nhật được dấu mật khẩu của phiên");
         }
     }
@@ -236,21 +236,21 @@ public class SessionStore {
                 // Dấu không có thời điểm: coi là dùng lại.
             }
         }
-        delete(colon > 0 ? mark.substring(0, colon) : mark);
+        deleteSession(colon > 0 ? mark.substring(0, colon) : mark);
         return new Rejected(Reason.REUSED);
     }
 
     /** {@code sid} mà refresh token còn hiệu lực trỏ tới; dùng khi đăng xuất lúc access token đã hết hạn. */
-    public Optional<String> sidOf(String refreshToken) {
+    public Optional<String> findSid(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return Optional.empty();
         }
-        String value = redis.opsForValue().get(REFRESH_PREFIX + Hashing.sha256Hex(refreshToken));
+        String value = redis.opsForValue().get(REFRESH_PREFIX + Hashing.hashSha256Hex(refreshToken));
         return value == null || value.startsWith(USED_MARK) ? Optional.empty() : Optional.of(value);
     }
 
     /** Đăng xuất: chỉ phiên này (BR-U01-45). */
-    public void delete(String sid) {
+    public void deleteSession(String sid) {
         redis.execute(DELETE_SESSION, List.of(SESSION_PREFIX + sid), sid);
     }
 
@@ -267,22 +267,22 @@ public class SessionStore {
         }
         for (String sid : sids) {
             if (!sid.equals(keepSid)) {
-                delete(sid);
+                deleteSession(sid);
             }
         }
     }
 
     /** Thời gian còn lại tới trần 7 ngày; không âm. */
-    Duration remaining(Instant issuedAt, Instant now) {
+    Duration calculateRemaining(Instant issuedAt, Instant now) {
         Duration left = Duration.between(now, issuedAt.plus(maxTtl));
         return left.isNegative() ? Duration.ZERO : left;
     }
 
-    private static Duration min(Duration a, Duration b) {
+    private static Duration pickShorter(Duration a, Duration b) {
         return a.compareTo(b) <= 0 ? a : b;
     }
 
-    private Optional<SessionRecord> read(String sid) {
+    private Optional<SessionRecord> readSession(String sid) {
         return parse(sid, redis.opsForValue().get(SESSION_PREFIX + sid));
     }
 
@@ -295,12 +295,12 @@ public class SessionStore {
             if (session == null || session.accountId() == null || session.issuedAt() == null
                     || session.lastUsedAt() == null || session.refreshHash() == null
                     || session.refreshHash().isBlank()) {
-                delete(sid);
+                deleteSession(sid);
                 return Optional.empty();
             }
             return Optional.of(session);
         } catch (JsonProcessingException e) {
-            delete(sid);
+            deleteSession(sid);
             return Optional.empty();
         }
     }

@@ -109,10 +109,10 @@ public class GradingProposalValidator {
                     RubricScoring.copyItemScores(itemScores), structuredFeedback);
         } catch (ApiException ex) {
             log.warn("AI proposal validation rejected stage={} diagnostic={}", stage, buildRejectionDiagnostic(ex));
-            throw ApiException.badRequest("INVALID_AI_PROPOSAL", ex.getMessage());
+            throw ApiException.createBadRequest("INVALID_AI_PROPOSAL", ex.getMessage());
         } catch (RuntimeException ex) {
             log.warn("AI proposal validation rejected stage={} exception={}", stage, ex.getClass().getSimpleName());
-            throw ApiException.badRequest("INVALID_AI_PROPOSAL",
+            throw ApiException.createBadRequest("INVALID_AI_PROPOSAL",
                     "AI proposal does not match the rubric schema");
         }
     }
@@ -132,7 +132,7 @@ public class GradingProposalValidator {
                     boolean checked = checks.getOrDefault(rubric.rubricId(), Set.of())
                             .contains(item.itemId());
                     if (checked != (points.compareTo(item.points()) == 0))
-                        throw ApiException.badRequest("INVALID_AI_PROPOSAL",
+                        throw ApiException.createBadRequest("INVALID_AI_PROPOSAL",
                                 "Checks must match full-credit item scores");
                 }
         }
@@ -178,7 +178,7 @@ public class GradingProposalValidator {
     private void requireMatchingScore(JsonNode scoreNode, BigDecimal computedScore) {
         var suppliedScore = new BigDecimal(scoreNode.asText());
         if (suppliedScore.scale() > 2 || computedScore.compareTo(suppliedScore) != 0) {
-            throw ApiException.badRequest("INVALID_AI_PROPOSAL",
+            throw ApiException.createBadRequest("INVALID_AI_PROPOSAL",
                     "AI total does not match rubric item scores");
         }
     }
@@ -212,7 +212,7 @@ public class GradingProposalValidator {
                     || !seenPartIds.add(section.path("partId").asText())
                     || !section.path("feedback").isTextual()
                     || section.path("feedback").asText().length() > MAX_FEEDBACK_LENGTH) {
-                throw ApiException.badRequest("INVALID_AI_PROPOSAL", "Invalid section reference");
+                throw ApiException.createBadRequest("INVALID_AI_PROPOSAL", "Invalid section reference");
             }
         }
     }
@@ -220,7 +220,7 @@ public class GradingProposalValidator {
     /** Parses proposal JSON and rejects malformed or oversized payloads. */
     public JsonNode parseProposal(String value) {
         if (value == null || value.length() > MAX_PAYLOAD_LENGTH)
-            throw ApiException.badRequest("INVALID_AI_PROPOSAL", "AI proposal too large");
+            throw ApiException.createBadRequest("INVALID_AI_PROPOSAL", "AI proposal too large");
         try {
             return objectMapper.reader()
                     .with(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
@@ -228,7 +228,7 @@ public class GradingProposalValidator {
                     .readTree(value);
         } catch (Exception ex) {
             log.warn("AI proposal validation rejected stage=JSON_PARSE exception={}", ex.getClass().getSimpleName());
-            throw ApiException.badRequest("INVALID_AI_PROPOSAL", "Invalid AI proposal JSON");
+            throw ApiException.createBadRequest("INVALID_AI_PROPOSAL", "Invalid AI proposal JSON");
         }
     }
 }

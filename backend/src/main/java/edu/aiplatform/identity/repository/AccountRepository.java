@@ -50,9 +50,9 @@ public class AccountRepository {
                         + ":version, :studentCode)")
                 .param("id", account.id()).param("email", account.schoolEmail())
                 .param("role", account.role().name()).param("status", account.status().name())
-                .param("hash", account.passwordHash()).param("changedAt", timestamp(account.passwordChangedAt()))
+                .param("hash", account.passwordHash()).param("changedAt", convertTimestamp(account.passwordChangedAt()))
                 .param("name", account.displayName()).param("phone", account.phoneNumber())
-                .param("createdAt", timestamp(account.createdAt())).param("updatedAt", timestamp(account.updatedAt()))
+                .param("createdAt", convertTimestamp(account.createdAt())).param("updatedAt", convertTimestamp(account.updatedAt()))
                 .param("version", account.version()).param("studentCode", account.studentCode())
                 .update();
     }
@@ -64,7 +64,7 @@ public class AccountRepository {
     }
 
     /** Các mã đã chuẩn hóa trong danh sách đã thuộc một tài khoản nào đó (BR-U01-101, 108, 110). */
-    public Set<String> existingStudentCodes(Collection<String> studentCodes) {
+    public Set<String> findExistingStudentCodes(Collection<String> studentCodes) {
         if (studentCodes.isEmpty()) {
             return Set.of();
         }
@@ -91,7 +91,7 @@ public class AccountRepository {
                         + "student_code = :studentCode, updated_at = :now, version = version + 1 "
                         + "where id = :id and version = :version")
                 .param("name", displayName).param("phone", phoneNumber).param("studentCode", studentCode)
-                .param("now", timestamp(now)).param("id", id).param("version", expectedVersion)
+                .param("now", convertTimestamp(now)).param("id", id).param("version", expectedVersion)
                 .update();
     }
 
@@ -141,7 +141,7 @@ public class AccountRepository {
     }
 
     /** Các email trong danh sách đã có tài khoản; dùng khi kiểm cả file CSV bằng một truy vấn (BR-U01-82). */
-    public Set<String> existingEmails(Collection<String> schoolEmails) {
+    public Set<String> findExistingEmails(Collection<String> schoolEmails) {
         if (schoolEmails.isEmpty()) {
             return Set.of();
         }
@@ -203,7 +203,7 @@ public class AccountRepository {
         return jdbc.sql("update accounts set display_name = :name, phone_number = :phone, updated_at = :now, "
                         + "version = version + 1 where id = :id"
                         + (expectedVersion == null ? "" : " and version = :version"))
-                .param("name", displayName).param("phone", phoneNumber).param("now", timestamp(now))
+                .param("name", displayName).param("phone", phoneNumber).param("now", convertTimestamp(now))
                 .param("id", id).params(expectedVersion == null ? Map.of() : Map.of("version", expectedVersion))
                 .update();
     }
@@ -213,7 +213,7 @@ public class AccountRepository {
         return jdbc.sql("update accounts set password_hash = :hash, password_changed_at = :now, "
                         + "failed_login_count = 0, locked_until = null, updated_at = :now, version = version + 1 "
                         + "where id = :id")
-                .param("hash", passwordHash).param("now", timestamp(now)).param("id", id).update();
+                .param("hash", passwordHash).param("now", convertTimestamp(now)).param("id", id).update();
     }
 
     /** Kích hoạt: chỉ thành công khi tài khoản vẫn {@code PENDING} (BR-U01-13). */
@@ -221,13 +221,13 @@ public class AccountRepository {
         return jdbc.sql("update accounts set password_hash = :hash, password_changed_at = :now, status = 'ACTIVE', "
                         + "failed_login_count = 0, locked_until = null, updated_at = :now, version = version + 1 "
                         + "where id = :id and status = 'PENDING'")
-                .param("hash", passwordHash).param("now", timestamp(now)).param("id", id).update();
+                .param("hash", passwordHash).param("now", convertTimestamp(now)).param("id", id).update();
     }
 
     public int updateRole(UUID id, Role role, long expectedVersion, Instant now) {
         return jdbc.sql("update accounts set role = :role, updated_at = :now, version = version + 1 "
                         + "where id = :id and version = :version")
-                .param("role", role.name()).param("now", timestamp(now)).param("id", id)
+                .param("role", role.name()).param("now", convertTimestamp(now)).param("id", id)
                 .param("version", expectedVersion).update();
     }
 
@@ -235,7 +235,7 @@ public class AccountRepository {
     public int updateStatus(UUID id, AccountStatus status, long expectedVersion, Instant now) {
         return jdbc.sql("update accounts set status = :status, failed_login_count = 0, locked_until = null, "
                         + "updated_at = :now, version = version + 1 where id = :id and version = :version")
-                .param("status", status.name()).param("now", timestamp(now)).param("id", id)
+                .param("status", status.name()).param("now", convertTimestamp(now)).param("id", id)
                 .param("version", expectedVersion).update();
     }
 
@@ -250,7 +250,7 @@ public class AccountRepository {
                         + "failed_login_count = case when failed_login_count + 1 >= :threshold then 0 "
                         + "else failed_login_count + 1 end "
                         + "where id = :id returning locked_until = :lockUntil as locked")
-                .param("threshold", threshold).param("lockUntil", timestamp(lockUntil)).param("id", id)
+                .param("threshold", threshold).param("lockUntil", convertTimestamp(lockUntil)).param("id", id)
                 .query(Boolean.class).optional().orElse(false);
     }
 
@@ -270,7 +270,7 @@ public class AccountRepository {
                 .query(UUID.class).list();
     }
 
-    public boolean anyAdminExists() {
+    public boolean hasAnyAdmin() {
         return jdbc.sql("select exists (select 1 from accounts where role = 'ADMIN')").query(Boolean.class).single();
     }
 
@@ -294,11 +294,11 @@ public class AccountRepository {
         return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
-    private static Timestamp timestamp(Instant instant) {
+    private static Timestamp convertTimestamp(Instant instant) {
         return instant == null ? null : Timestamp.from(instant);
     }
 
-    private static Instant instant(ResultSet rs, String column) throws SQLException {
+    private static Instant readInstant(ResultSet rs, String column) throws SQLException {
         Timestamp value = rs.getTimestamp(column);
         return value == null ? null : value.toInstant();
     }
@@ -306,9 +306,9 @@ public class AccountRepository {
     private static Account map(ResultSet rs, int row) throws SQLException {
         return new Account(rs.getObject("id", UUID.class), rs.getString("school_email"),
                 Role.valueOf(rs.getString("role")), AccountStatus.valueOf(rs.getString("status")),
-                rs.getString("password_hash"), instant(rs, "password_changed_at"), rs.getString("display_name"),
-                rs.getString("phone_number"), rs.getInt("failed_login_count"), instant(rs, "locked_until"),
-                instant(rs, "created_at"), instant(rs, "updated_at"), rs.getLong("version"),
+                rs.getString("password_hash"), readInstant(rs, "password_changed_at"), rs.getString("display_name"),
+                rs.getString("phone_number"), rs.getInt("failed_login_count"), readInstant(rs, "locked_until"),
+                readInstant(rs, "created_at"), readInstant(rs, "updated_at"), rs.getLong("version"),
                 rs.getString("student_code"));
     }
 }

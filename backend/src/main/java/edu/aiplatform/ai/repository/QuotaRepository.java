@@ -34,13 +34,13 @@ public class QuotaRepository {
 
     // ---- hạn mức ---------------------------------------------------------------------------------------------
 
-    public QuotaPolicy policy() {
+    public QuotaPolicy loadPolicy() {
         return jdbc.sql("select default_day_tokens, global_day_tokens, version, updated_by, updated_at from ai_quota_policy "
                         + "where id = 1")
                 .query((rs, n) -> new QuotaPolicy(rs.getObject("default_day_tokens", Long.class),
                         rs.getObject("global_day_tokens", Long.class), rs.getLong("version"),
                         rs.getObject("updated_by", UUID.class), rs.getTimestamp("updated_at").toInstant()))
-                .optional().orElse(QuotaPolicy.empty());
+                .optional().orElse(QuotaPolicy.createEmptyPolicy());
     }
 
     /** Lưu hạn mức khi {@code version} khớp; chưa có dòng thì tạo khi {@code expected} = 0. */
@@ -59,16 +59,16 @@ public class QuotaRepository {
                 .param("expected", expected).update() == 1;
     }
 
-    public Optional<TeacherQuota> teacherQuota(UUID accountId) {
+    public Optional<TeacherQuota> findTeacherQuota(UUID accountId) {
         return jdbc.sql("select account_id, day_tokens, version, updated_by, updated_at from ai_teacher_quotas "
                         + "where account_id = :id")
-                .param("id", accountId).query(QuotaRepository::teacher).optional();
+                .param("id", accountId).query(QuotaRepository::mapTeacherQuota).optional();
     }
 
     public List<TeacherQuota> listTeacherQuotas() {
         return jdbc.sql("select account_id, day_tokens, version, updated_by, updated_at from ai_teacher_quotas "
                         + "order by updated_at desc")
-                .query(QuotaRepository::teacher).list();
+                .query(QuotaRepository::mapTeacherQuota).list();
     }
 
     public void upsertTeacherQuota(UUID accountId, long dayTokens, UUID by, Instant now) {
@@ -93,13 +93,13 @@ public class QuotaRepository {
     public Window lockWindow(String scopeKey, LocalDate day) {
         return jdbc.sql("select scope_key, day, reserved_tokens, used_tokens from ai_quota_windows "
                         + "where scope_key = :key and day = :day for update")
-                .param("key", scopeKey).param("day", Date.valueOf(day)).query(QuotaRepository::window).single();
+                .param("key", scopeKey).param("day", Date.valueOf(day)).query(QuotaRepository::mapWindow).single();
     }
 
     public Optional<Window> findWindow(String scopeKey, LocalDate day) {
         return jdbc.sql("select scope_key, day, reserved_tokens, used_tokens from ai_quota_windows "
                         + "where scope_key = :key and day = :day")
-                .param("key", scopeKey).param("day", Date.valueOf(day)).query(QuotaRepository::window).optional();
+                .param("key", scopeKey).param("day", Date.valueOf(day)).query(QuotaRepository::mapWindow).optional();
     }
 
     public List<Window> listWindows(Collection<String> scopeKeys, LocalDate day) {
@@ -108,7 +108,7 @@ public class QuotaRepository {
         }
         return jdbc.sql("select scope_key, day, reserved_tokens, used_tokens from ai_quota_windows "
                         + "where scope_key in (:keys) and day = :day")
-                .param("keys", scopeKeys).param("day", Date.valueOf(day)).query(QuotaRepository::window).list();
+                .param("keys", scopeKeys).param("day", Date.valueOf(day)).query(QuotaRepository::mapWindow).list();
     }
 
     /** Cộng hoặc trừ phần giữ chỗ và phần đã dùng; không xuống dưới 0. */
@@ -119,12 +119,12 @@ public class QuotaRepository {
                 .update();
     }
 
-    private static Window window(ResultSet rs, int n) throws SQLException {
+    private static Window mapWindow(ResultSet rs, int n) throws SQLException {
         return new Window(rs.getString("scope_key"), rs.getDate("day").toLocalDate(), rs.getLong("reserved_tokens"),
                 rs.getLong("used_tokens"));
     }
 
-    private static TeacherQuota teacher(ResultSet rs, int n) throws SQLException {
+    private static TeacherQuota mapTeacherQuota(ResultSet rs, int n) throws SQLException {
         return new TeacherQuota(rs.getObject("account_id", UUID.class), rs.getLong("day_tokens"), rs.getLong("version"),
                 rs.getObject("updated_by", UUID.class), rs.getTimestamp("updated_at").toInstant());
     }

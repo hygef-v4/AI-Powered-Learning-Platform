@@ -20,7 +20,7 @@ public class AiSourcePreferenceRepository {
         this.jdbc = jdbc;
     }
 
-    public Optional<AiSourcePreference> find(UUID accountId) {
+    public Optional<AiSourcePreference> findPreference(UUID accountId) {
         return jdbc.sql("select source, provider from ai_source_preferences where account_id = :id")
                 .param("id", accountId)
                 .query((rs, n) -> new AiSourcePreference(AiSource.valueOf(rs.getString("source")),
@@ -28,7 +28,7 @@ public class AiSourcePreferenceRepository {
                 .optional();
     }
 
-    public void save(UUID accountId, AiSourcePreference preference, Instant now) {
+    public void savePreference(UUID accountId, AiSourcePreference preference, Instant now) {
         jdbc.sql("insert into ai_source_preferences (account_id, source, provider, updated_at) values "
                         + "(:id, :source, :provider, :now) on conflict (account_id) do update set source = :source, "
                         + "provider = :provider, updated_at = :now")
@@ -37,7 +37,7 @@ public class AiSourcePreferenceRepository {
                 .param("now", Timestamp.from(now)).update();
     }
 
-    public void delete(UUID accountId) {
+    public void deletePreference(UUID accountId) {
         jdbc.sql("delete from ai_source_preferences where account_id = :id").param("id", accountId).update();
     }
 }

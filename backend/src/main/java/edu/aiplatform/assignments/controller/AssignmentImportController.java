@@ -57,12 +57,12 @@ public class AssignmentImportController {
                 continue;
             }
             if (file.getSize() > MAX_FILE_BYTES) {
-                throw ApiException.badRequest("ASSIGNMENT_IMPORT_TOO_LARGE", "Mỗi tệp tối đa 10 MB");
+                throw ApiException.createBadRequest("ASSIGNMENT_IMPORT_TOO_LARGE", "Mỗi tệp tối đa 10 MB");
             }
             try {
                 read.add(new ImportFile(file.getOriginalFilename(), file.getBytes()));
             } catch (IOException e) {
-                throw ApiException.badRequest("ASSIGNMENT_IMPORT_UNREADABLE", "Không đọc được tệp đã gửi");
+                throw ApiException.createBadRequest("ASSIGNMENT_IMPORT_UNREADABLE", "Không đọc được tệp đã gửi");
             }
         }
         return read;

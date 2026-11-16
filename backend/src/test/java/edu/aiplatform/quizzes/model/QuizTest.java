@@ -24,11 +24,11 @@ class QuizTest {
                         edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
                         edu.aiplatform.shared.content.FormattedText.Align.LEFT, 0,
                         java.util.List.of(new edu.aiplatform.shared.content.FormattedText.Run("", null, null, null)))));
-        Quiz quiz = draft().withInstructionsDocument(document);
-        Quiz edited = quiz.withDetails(quiz.title(), quiz.instructions().strip(), quiz.settings(), false, null, NOW);
+        Quiz quiz = draft().replaceInstructionsDocument(document);
+        Quiz edited = quiz.updateDetails(quiz.title(), quiz.instructions().strip(), quiz.settings(), false, null, NOW);
         assertThat(edited.instructionsDocument()).isEqualTo(document);
         assertThat(edited.instructions()).isEqualTo("Nội dung\n");
-        assertThat(edited.published(NOW).retired("Archive", NOW).reopened(NOW).instructionsDocument()).isEqualTo(document);
+        assertThat(edited.markPublished(NOW).markRetired("Archive", NOW).markReopened(NOW).instructionsDocument()).isEqualTo(document);
     }
 
     @Test
@@ -38,13 +38,13 @@ class QuizTest {
                         edu.aiplatform.shared.content.FormattedText.Type.PARAGRAPH,
                         edu.aiplatform.shared.content.FormattedText.Align.CENTER, 0,
                         java.util.List.of(new edu.aiplatform.shared.content.FormattedText.Run("Nội dung", true, null, null)))));
-        Quiz quiz = draft().withInstructionsDocument(document);
+        Quiz quiz = draft().replaceInstructionsDocument(document);
         assertThat(quiz.instructions()).isEqualTo("Nội dung");
-        assertThat(quiz.published(NOW).instructionsDocument()).isEqualTo(document);
+        assertThat(quiz.markPublished(NOW).instructionsDocument()).isEqualTo(document);
         assertThat(quiz.copyAs(QuizOrigin.CLONE, 1, null, author, NOW).instructionsDocument()).isEqualTo(document);
-        assertThat(quiz.withDetails(quiz.title(), quiz.instructions(), quiz.settings(), false, null, NOW)
+        assertThat(quiz.updateDetails(quiz.title(), quiz.instructions(), quiz.settings(), false, null, NOW)
                 .instructionsDocument()).isEqualTo(document);
-        assertThat(quiz.withDetails(quiz.title(), "Plain edit", quiz.settings(), false, null, NOW)
+        assertThat(quiz.updateDetails(quiz.title(), "Plain edit", quiz.settings(), false, null, NOW)
                 .instructionsDocument()).isNull();
     }
 
@@ -53,40 +53,40 @@ class QuizTest {
     private final UUID author = UUID.randomUUID();
 
     private Quiz draft() {
-        return Quiz.create(QuizScope.SUBJECT, null, subject, "Luyện tập", author, NOW);
+        return Quiz.createQuiz(QuizScope.SUBJECT, null, subject, "Luyện tập", author, NOW);
     }
 
     @Test
     void lifecycleGoesDraftOpenRetired() {
-        assertThat(draft().edited(NOW).status()).as("sửa nháp vẫn nháp").isEqualTo(QuizStatus.DRAFT);
+        assertThat(draft().markEdited(NOW).status()).as("sửa nháp vẫn nháp").isEqualTo(QuizStatus.DRAFT);
 
-        Quiz open = draft().published(NOW);
+        Quiz open = draft().markPublished(NOW);
         assertThat(open.status()).isEqualTo(QuizStatus.OPEN);
         assertThat(open.isEditable()).as("quiz đang mở sửa tại chỗ").isTrue();
         assertThat(open.isDeletable()).isFalse();
-        assertThat(open.edited(NOW).status()).as("sửa quiz đang mở vẫn mở").isEqualTo(QuizStatus.OPEN);
+        assertThat(open.markEdited(NOW).status()).as("sửa quiz đang mở vẫn mở").isEqualTo(QuizStatus.OPEN);
 
-        Quiz retired = open.retired("Hết dùng", NOW);
+        Quiz retired = open.markRetired("Hết dùng", NOW);
         assertThat(retired.status()).isEqualTo(QuizStatus.RETIRED);
         assertThat(retired.retiredReason()).isEqualTo("Hết dùng");
-        assertThat(retired.reopened(NOW).status()).as("trùng thời điểm vẫn là Quiz từng phát hành")
+        assertThat(retired.markReopened(NOW).status()).as("trùng thời điểm vẫn là Quiz từng phát hành")
                 .isEqualTo(QuizStatus.OPEN);
-        assertThatThrownBy(() -> open.published(NOW)).as("chỉ phát hành từ nháp").isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> open.markPublished(NOW)).as("chỉ phát hành từ nháp").isInstanceOf(IllegalStateException.class);
 
-        Quiz later = open.retired("Hết dùng", NOW.plusSeconds(60));
-        assertThat(later.reopened(NOW.plusSeconds(120)).status()).as("quiz đã phát hành mở lại").isEqualTo(QuizStatus.OPEN);
-        assertThat(later.reopened(NOW.plusSeconds(120)).retiredAt()).isNull();
-        Quiz archivedDraft = draft().retired("Lưu trữ", NOW);
+        Quiz later = open.markRetired("Hết dùng", NOW.plusSeconds(60));
+        assertThat(later.markReopened(NOW.plusSeconds(120)).status()).as("quiz đã phát hành mở lại").isEqualTo(QuizStatus.OPEN);
+        assertThat(later.markReopened(NOW.plusSeconds(120)).retiredAt()).isNull();
+        Quiz archivedDraft = draft().markRetired("Lưu trữ", NOW);
         assertThat(archivedDraft.publishedAt()).as("lưu trữ không phải phát hành").isNull();
-        assertThat(archivedDraft.reopened(NOW.plusSeconds(60)).status()).as("lưu trữ khi còn nháp thì về nháp").isEqualTo(QuizStatus.DRAFT);
-        assertThat(archivedDraft.reopened(NOW.plusSeconds(60)).publishedAt()).isNull();
-        assertThat(archivedDraft.reopened(NOW.plusSeconds(60)).isDeletable()).isTrue();
+        assertThat(archivedDraft.markReopened(NOW.plusSeconds(60)).status()).as("lưu trữ khi còn nháp thì về nháp").isEqualTo(QuizStatus.DRAFT);
+        assertThat(archivedDraft.markReopened(NOW.plusSeconds(60)).publishedAt()).isNull();
+        assertThat(archivedDraft.markReopened(NOW.plusSeconds(60)).isDeletable()).isTrue();
     }
 
     @Test
     void copyStartsAsDraftWithoutPublicationHistory() {
-        Quiz open = draft().withDetails("Bài", "Hướng dẫn", new QuizSettings(true, true, 30, 3, true, true), false,
-                null, NOW).withPaperMode(QuizPaperMode.GENERATED, NOW).published(NOW);
+        Quiz open = draft().updateDetails("Bài", "Hướng dẫn", new QuizSettings(true, true, 30, 3, true, true), false,
+                null, NOW).changePaperMode(QuizPaperMode.GENERATED, NOW).markPublished(NOW);
 
         Quiz copy = open.copyAs(QuizOrigin.NEW_VERSION, 2, null, author, NOW);
 
@@ -102,9 +102,9 @@ class QuizTest {
 
     @Test
     void itemPointsMustBePositiveWithTwoDecimals() {
-        assertThat(QuizRules.validPoints(new BigDecimal("0.25"))).isTrue();
-        assertThat(QuizRules.validPoints(BigDecimal.ZERO)).isFalse();
-        assertThat(QuizRules.validPoints(new BigDecimal("0.125"))).isFalse();
+        assertThat(QuizRules.isValidPoints(new BigDecimal("0.25"))).isTrue();
+        assertThat(QuizRules.isValidPoints(BigDecimal.ZERO)).isFalse();
+        assertThat(QuizRules.isValidPoints(new BigDecimal("0.125"))).isFalse();
         assertThat(QuizRules.validateSettings(new QuizSettings(false, false, 0, 0, true, false)))
                 .extracting(Violation::code).containsExactly("TIME_LIMIT_INVALID", "ATTEMPTS_INVALID");
     }

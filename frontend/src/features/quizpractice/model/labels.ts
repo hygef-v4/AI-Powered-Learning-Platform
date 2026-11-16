@@ -1,22 +1,23 @@
 import { ApiError } from "@/shared/api/client";
 import type { ActivitySignal, LeavePenalty, PenaltyView, SubmitMode } from "./types";
+import { msg } from "@/i18n/msg";
 
-const SYSTEM_BUSY = "Hệ thống tạm bận, vui lòng thử lại sau.";
+const SYSTEM_BUSY = msg("quizpractice.model.labels.theSystemIsBusyPlease");
 
 const ERROR_LABELS: Record<string, string> = {
-  QUIZ_NOT_FOUND: "Không tìm thấy quiz hoặc bạn không học lớp này.",
-  QUIZ_ATTEMPT_NOT_FOUND: "Không tìm thấy lượt làm.",
-  QUIZ_NOT_OPEN: "Quiz đã ngưng hoặc lớp không còn mở.",
-  ANSWER_VERSION_CONFLICT: "Câu trả lời vừa được lưu từ nơi khác. Dữ liệu mới nhất đã được tải lại.",
-  ATTEMPT_TIME_UP: "Đã hết thời gian làm bài.",
-  ATTEMPT_SUBMITTED: "Lượt này đã nộp.",
-  QUIZ_PRACTICE_STUDENT_ONLY: "Chỉ sinh viên làm Quiz Practice.",
-  PENALTY_NOT_DECIDABLE: "Lượt này không có mức trừ gợi ý.",
-  PENALTY_POINTS_INVALID: "Điểm trừ phải lớn hơn 0, không quá điểm gốc, tối đa 2 chữ số thập phân.",
+  QUIZ_NOT_FOUND: msg("quizpractice.model.labels.quizNotFoundOrYou"),
+  QUIZ_ATTEMPT_NOT_FOUND: msg("quizpractice.model.labels.attemptNotFound"),
+  QUIZ_NOT_OPEN: msg("quizpractice.model.labels.theQuizWasWithdrawnOr"),
+  ANSWER_VERSION_CONFLICT: msg("quizpractice.model.labels.answersWereJustSavedFrom"),
+  ATTEMPT_TIME_UP: msg("quizpractice.model.labels.timeIsUp"),
+  ATTEMPT_SUBMITTED: msg("quizpractice.model.labels.thisAttemptHasBeenSubmitted"),
+  QUIZ_PRACTICE_STUDENT_ONLY: msg("quizpractice.model.labels.onlyStudentsTakeQuizPractice"),
+  PENALTY_NOT_DECIDABLE: msg("quizpractice.model.labels.thisAttemptHasNoSuggested"),
+  PENALTY_POINTS_INVALID: msg("quizpractice.model.labels.theDeductionMustBeGreater"),
   SYSTEM_BUSY,
 };
 
-export function errorMessage(error: unknown): string {
+export function describeError(error: unknown): string {
   if (error instanceof ApiError) {
     const code = error.problem.code;
     const label = code ? ERROR_LABELS[code] : undefined;
@@ -27,13 +28,11 @@ export function errorMessage(error: unknown): string {
   return SYSTEM_BUSY;
 }
 
-export function errorCode(error: unknown): string | undefined {
+export function readErrorCode(error: unknown): string | undefined {
   return error instanceof ApiError ? error.problem.code : undefined;
 }
 
-export function formatDateTime(value: string | null): string {
-  return value ? new Date(value).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" }) : "—";
-}
+export { formatDateTime } from "@/shared/dateTime";
 
 export function formatPoints(value: number | null | undefined): string {
   return value === null || value === undefined ? "—" : Number(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 });
@@ -42,40 +41,40 @@ export function formatPoints(value: number | null | undefined): string {
 export function formatDuration(fromIso: string, toIso: string | null): string {
   if (!toIso) return "—";
   const minutes = Math.max(0, Math.round((new Date(toIso).getTime() - new Date(fromIso).getTime()) / 60000));
-  return `${minutes} phút`;
+  return msg("quizpractice.model.labels.min", { minutes: String(minutes) });
 }
 
-export function attemptsText(used: number, max: number | null): string {
-  return max === null ? `${used} lượt · không giới hạn` : `${used} / ${max} lượt`;
+export function formatAttempts(used: number, max: number | null): string {
+  return max === null ? msg("quizpractice.model.labels.attemptsUnlimited", { used: String(used) }) : msg("quizpractice.model.labels.attempts", { used: String(used), max: String(max) });
 }
 
 /** Cờ tín hiệu cho giảng viên (BR-U11-32); chỉ là dấu hiệu, tín hiệu tốt thì không hiện gì. */
-export function signalText(signal: ActivitySignal | null | undefined): string | null {
-  return signal === "NO_SIGNAL" ? "Không nhận được tín hiệu"
-    : signal === "SIGNAL_LOST" ? "Mất tín hiệu một phần"
-      : signal === "UNAVAILABLE" ? "Không đọc được dữ liệu lúc nộp" : null;
+export function describeSignal(signal: ActivitySignal | null | undefined): string | null {
+  return signal === "NO_SIGNAL" ? msg("quizpractice.model.labels.noSignalReceived")
+    : signal === "SIGNAL_LOST" ? msg("quizpractice.model.labels.signalPartlyLost")
+      : signal === "UNAVAILABLE" ? msg("quizpractice.model.labels.couldNotReadDataAt") : null;
 }
 
 /** Quy tắc gợi ý trừ điểm để báo sinh viên trước và trong khi làm bài (BR-U11-33): giảng viên mới là người quyết định. */
-export function penaltyRuleText(rule: LeavePenalty): string {
-  const free = rule.freeLeaves > 0 ? `Được miễn ${rule.freeLeaves} lần đầu rời trang; sau đó mỗi lần` : "Mỗi lần rời trang";
-  const max = rule.maxPenalty === null ? "" : `, tối đa ${formatPoints(rule.maxPenalty)} điểm`;
-  const min = rule.minAwaySeconds > 0 ? ` Chỉ tính khi rời từ ${rule.minAwaySeconds} giây trở lên.` : "";
-  return `${free} có thể bị trừ ${formatPoints(rule.pointsPerLeave)} điểm${max}, do giảng viên quyết định khi xem lượt làm.${min}`;
+export function describePenaltyRule(rule: LeavePenalty): string {
+  const free = rule.freeLeaves > 0 ? msg("quizpractice.model.labels.theFirstPageLeavesAre", { freeLeaves: String(rule.freeLeaves) }) : msg("quizpractice.model.labels.eachPageLeave");
+  const max = rule.maxPenalty === null ? "" : msg("quizpractice.model.labels.upToPoints", { value: String(formatPoints(rule.maxPenalty)) });
+  const min = rule.minAwaySeconds > 0 ? msg("quizpractice.model.labels.onlyCountedWhenAwayFor", { minAwaySeconds: String(rule.minAwaySeconds) }) : "";
+  return msg("quizpractice.model.labels.mayLosePointsDecidedBy", { free: String(free), value: String(formatPoints(rule.pointsPerLeave)), max: String(max), min: String(min) });
 }
 
 /** Dòng rời trang và điểm trừ trên kết quả của sinh viên (BR-U11-33); không có gì để báo thì trả về null. */
-export function penaltyResultText(penalty: PenaltyView): string | null {
-  const leaves = `Rời trang ${penalty.leaveCount ?? 0} lần`;
+export function describePenaltyResult(penalty: PenaltyView): string | null {
+  const leaves = msg("quizpractice.model.labels.leftThePageTimes", { value: String(penalty.leaveCount ?? 0) });
   if (penalty.decision === "APPLIED") {
-    return `Điểm gốc ${formatPoints(penalty.rawScore)} · ${leaves.toLowerCase()} · giảng viên trừ ${formatPoints(penalty.penaltyPoints)} điểm: ${penalty.decisionReason}`;
+    return msg("quizpractice.model.labels.originalScoreLecturerDeductedPoints", { value: String(formatPoints(penalty.rawScore)), value2: String(leaves.toLowerCase()), value3: String(formatPoints(penalty.penaltyPoints)), decisionReason: String(penalty.decisionReason) });
   }
-  if (penalty.decision === "DISMISSED") return `${leaves} · giảng viên quyết định không trừ điểm: ${penalty.decisionReason}`;
-  if (penalty.decisionPending) return `${leaves} · chưa bị trừ điểm, giảng viên sẽ xem xét.`;
+  if (penalty.decision === "DISMISSED") return msg("quizpractice.model.labels.theLecturerDecidedNotTo", { leaves: String(leaves), decisionReason: String(penalty.decisionReason) });
+  if (penalty.decisionPending) return msg("quizpractice.model.labels.noPointsDeductedYetThe", { leaves: String(leaves) });
   return (penalty.leaveCount ?? 0) > 0 ? `${leaves}.` : null;
 }
 
 /** Lượt được hệ thống tự nộp thì ghi rõ lý do (L4); nộp tay thì không có nhãn. */
 export function submitModeText(mode: SubmitMode): string | null {
-  return mode === "AUTO_TIME_LIMIT" ? "Tự nộp khi hết giờ" : mode === "AUTO_RETIRED" ? "Tự nộp khi quiz bị ngưng" : null;
+  return mode === "AUTO_TIME_LIMIT" ? msg("quizpractice.model.labels.autoSubmittedWhenTimeRan") : mode === "AUTO_RETIRED" ? msg("quizpractice.model.labels.autoSubmittedWhenTheQuiz") : null;
 }

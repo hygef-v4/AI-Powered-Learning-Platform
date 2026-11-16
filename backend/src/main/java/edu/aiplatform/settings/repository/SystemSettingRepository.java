@@ -26,7 +26,7 @@ public class SystemSettingRepository {
         return jdbc.sql("select " + COLUMNS + " from system_settings").query(SystemSettingRepository::map).list();
     }
 
-    public Optional<SettingRow> find(String key) {
+    public Optional<SettingRow> findSetting(String key) {
         return jdbc.sql("select " + COLUMNS + " from system_settings where key = :key")
                 .param("key", key).query(SystemSettingRepository::map).optional();
     }
@@ -48,7 +48,7 @@ public class SystemSettingRepository {
     }
 
     /** Cập nhật có điều kiện {@code version} khớp; trả số dòng cập nhật (0 là xung đột). */
-    public int update(String key, String valueJson, long expectedVersion, UUID updatedBy, Instant now) {
+    public int updateSetting(String key, String valueJson, long expectedVersion, UUID updatedBy, Instant now) {
         return jdbc.sql("update system_settings set value = cast(:value as jsonb), version = version + 1, "
                         + "updated_by = :by, updated_at = :now where key = :key and version = :version")
                 .param("value", valueJson).param("by", updatedBy).param("now", Timestamp.from(now))

@@ -15,7 +15,7 @@ public class RuleViolationException extends ApiException {
         this.violations = List.copyOf(violations);
     }
 
-    public List<Violation> violations() {
+    public List<Violation> listViolations() {
         return violations;
     }
 }

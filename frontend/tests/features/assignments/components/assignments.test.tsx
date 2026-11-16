@@ -1,15 +1,15 @@
-import { studentAssignmentContext } from "@/features/assignments/components/assignmentNav";
+import { resolveStudentAssignmentContext } from "@/features/assignments/components/AssignmentNav";
 import * as filesApi from "@/features/files/api";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { RubricNote, rubricComplete, rubricTotal, type DocumentModel, type RubricCriterion } from "@/shared/document";
+import { RubricNote, isRubricComplete, sumRubricTotal, type DocumentModel, type RubricCriterion } from "@/shared/document";
 import { assignmentsApi } from "@/features/assignments/api";
 import { AssignmentListCard } from "@/features/assignments/components/AssignmentListCard";
-import { WHOLE_PART, cardIssues, hasWholePart, listRestoredCriteria, mergeSaved, missingText, reappearedParts, rubricIssues } from "@/features/assignments/pages/AssignmentFormPage";
+import { WHOLE_PART, filterCardIssues, hasWholePart, listRestoredCriteria, mergeSaved, describeMissing, findReappearedParts, listRubricIssues } from "@/features/assignments/pages/AssignmentFormPage";
 import { CreateAssignmentDialog } from "@/features/assignments/components/CreateAssignmentDialog";
 import { clearPendingImport, peekPendingImport } from "@/features/assignments/model/pendingImports";
 import { fromLocalInput, toLocalInput } from "@/features/assignments/model/format";
-import { RubricEditor, cleanCriteria, rubricPointsMalformed } from "@/features/assignments/components/RubricEditor";
+import { RubricEditor, cleanCriteria, isRubricPointsMalformed } from "@/features/assignments/components/RubricEditor";
 import { ScheduleForm } from "@/features/assignments/components/ScheduleForm";
 import { statusLabels, type AssignmentDetail } from "@/features/assignments/model/types";
 
@@ -60,12 +60,12 @@ describe("RubricEditor", () => {
     expect(screen.getByLabelText("Điểm mục 1")).toHaveAttribute("aria-invalid", "true");
     expect(screen.getByLabelText("Điểm mục 1")).toHaveClass("border-danger", "bg-danger-soft", "text-danger");
     expect(screen.getByLabelText("Điểm mục 1")).not.toHaveClass("border-line", "bg-transparent", "text-ink");
-    expect(rubricPointsMalformed(wrong)).toBe(true);
-    expect(rubricPointsMalformed(criteria)).toBe(false);
-    expect(rubricPointsMalformed([{ ...criteria[0]!, items: [{ itemId: "i", text: "Đủ ý", points: 0 }] }])).toBe(false);
-    expect(rubricTotal(wrong)).toBe(0);
-    expect(rubricComplete(wrong)).toBe(false);
-    expect(rubricComplete([{ ...criteria[0]!, items: [{ itemId: "i", text: "Đủ ý", points: 1.25 }] }])).toBe(true);
+    expect(isRubricPointsMalformed(wrong)).toBe(true);
+    expect(isRubricPointsMalformed(criteria)).toBe(false);
+    expect(isRubricPointsMalformed([{ ...criteria[0]!, items: [{ itemId: "i", text: "Đủ ý", points: 0 }] }])).toBe(false);
+    expect(sumRubricTotal(wrong)).toBe(0);
+    expect(isRubricComplete(wrong)).toBe(false);
+    expect(isRubricComplete([{ ...criteria[0]!, items: [{ itemId: "i", text: "Đủ ý", points: 1.25 }] }])).toBe(true);
   });
 
   it("Enter ở ô điểm cũng thêm mục ngay dưới", () => {
@@ -370,43 +370,43 @@ describe("trạng thái Hoàn tất", () => {
   });
 });
 
-describe("missingText", () => {
+describe("describeMissing", () => {
   it("xếp lịch mà bài còn thiếu: nói rõ thiếu gì, không ghi chung chung", () => {
-    expect(missingText([
+    expect(describeMissing([
       { code: "RUBRIC_INCOMPLETE", blockId: "h1", message: "Mục chưa đủ rubric" },
       { code: "HEADING_EMPTY", blockId: "h2", message: "Tiêu đề trống" },
     ])).toBe("1 rubric bị lỗi điểm; Đề còn chỗ lỗi");
-    expect(missingText([
+    expect(describeMissing([
       { code: "TITLE_REQUIRED", blockId: null, message: "Bài cần tiêu đề" },
       { code: "ACTIVITY_NOTICE_REQUIRED", blockId: null, message: "Cần lời báo" },
     ])).toBe("Bài cần tiêu đề; Cần lời báo");
   });
 });
 
-describe("rubricIssues", () => {
+describe("listRubricIssues", () => {
   const part = (id: string) => ({ partId: id, headingBlockId: `h-${id}`, ancestorHeadingIds: [], title: id });
   const cards = [WHOLE_PART, part("p1"), part("p2")];
   const rubric = (...items: { text: string; points: number | null }[]) => [{ criterionId: "c", title: "", description: "",
     kind: "TEXT" as const, items: items.map((item, i) => ({ itemId: `i${i}`, ...item })) }];
 
   it("cả bài tổng 0 điểm: chỉ báo chung, không tô đỏ thẻ nào, kể cả Toàn bài", () => {
-    const issues = rubricIssues(cards, { ASSIGNMENT: rubric({ text: "Trình bày", points: 0 }), p1: rubric({ text: "Có", points: null }) });
+    const issues = listRubricIssues(cards, { ASSIGNMENT: rubric({ text: "Trình bày", points: 0 }), p1: rubric({ text: "Có", points: null }) });
     expect(issues).toEqual([{ code: "RUBRIC_MISSING", blockId: null, message: "Bài làm chưa có rubric chấm điểm" }]);
-    expect(cards.flatMap((card) => cardIssues(issues, card))).toEqual([]);
-    expect(missingText(issues)).toBe("Bài làm chưa có rubric chấm điểm");
+    expect(cards.flatMap((card) => filterCardIssues(issues, card))).toEqual([]);
+    expect(describeMissing(issues)).toBe("Bài làm chưa có rubric chấm điểm");
   });
 
   it("thẻ tổng không quá 0 hoặc mục ghi dở thì thiếu điểm; dòng trống hẳn bỏ qua", () => {
-    const issues = rubricIssues(cards, {
+    const issues = listRubricIssues(cards, {
       ASSIGNMENT: rubric({ text: "Trình bày", points: null }),
       p1: rubric({ text: "Đủ actor", points: 2 }, { text: "", points: null }),
       p2: rubric({ text: "", points: 1 }),
     });
-    expect(cardIssues(issues, WHOLE_PART).map((issue) => issue.message))
+    expect(filterCardIssues(issues, WHOLE_PART).map((issue) => issue.message))
       .toEqual(["Có mục chấm thiếu nội dung hoặc thiếu điểm", "Tổng điểm của rubric phải lớn hơn 0"]);
-    expect(cardIssues(issues, part("p1"))).toEqual([]);
-    expect(cardIssues(issues, part("p2")).map((issue) => issue.message)).toEqual(["Có mục chấm thiếu nội dung hoặc thiếu điểm"]);
-    expect(missingText(issues)).toBe("3 rubric bị lỗi điểm");
+    expect(filterCardIssues(issues, part("p1"))).toEqual([]);
+    expect(filterCardIssues(issues, part("p2")).map((issue) => issue.message)).toEqual(["Có mục chấm thiếu nội dung hoặc thiếu điểm"]);
+    expect(describeMissing(issues)).toBe("3 rubric bị lỗi điểm");
   });
 });
 
@@ -531,7 +531,7 @@ it("uses the first assignment page for invalid URL page numbers", () => {
 it("mục thành phần chấm lại mà trang còn giữ tiêu chí cũ thì lưu lại rubric đó; mục mới chưa có tiêu chí thì không", () => {
   const part = (partId: string) => ({ partId, headingBlockId: partId, ancestorHeadingIds: [], title: partId });
   const criterion = { criterionId: "c", title: "Đúng", order: 0, atomic: true, points: 2, items: [] } as never;
-  expect(reappearedParts(new Set(["b"]), [part("a"), part("b"), part("n")], { a: [criterion], b: [criterion] })).toEqual(["a"]);
+  expect(findReappearedParts(new Set(["b"]), [part("a"), part("b"), part("n")], { a: [criterion], b: [criterion] })).toEqual(["a"]);
 });
 
 it("Ctrl+Z sau khi AI sửa đề: ghi lại tiêu chí của mọi phần đã tải trong bản trước, kể cả phần trống và Toàn bài", () => {
@@ -557,9 +557,9 @@ it("thẻ Toàn bài chỉ có ở bài có mục; thẻ soạn chỉ mở trìn
   expect(screen.getByText("Trình sửa")).toBeInTheDocument();
 });
 
-describe("studentAssignmentContext", () => {
+describe("resolveStudentAssignmentContext", () => {
   it("trang làm bài và lịch sử nộp bài của sinh viên có sidebar mục lục của bài", () => {
-    const at = (pathname: string) => studentAssignmentContext({ pathname, search: new URLSearchParams() });
+    const at = (pathname: string) => resolveStudentAssignmentContext({ pathname, search: new URLSearchParams() });
     expect(at("/attempts/a1")?.label).toBe("Các phần của bài");
     expect(at("/my-assignments/x1/history")?.label).toBe("Các phần của bài");
     expect(at("/my-assignments/x1")).toBeNull();

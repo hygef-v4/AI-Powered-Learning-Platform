@@ -77,7 +77,7 @@ public class SubjectScopeService implements ISubjectScope {
             }
             Subject after = before.changeManager(null, now);
             if (!subjectRepository.updateSubject(after, before.version())) {
-                throw ApiException.conflict(
+                throw ApiException.createConflict(
                         "SUBJECT_VERSION_CONFLICT", "Dữ liệu môn đã thay đổi. Hãy thử lại");
             }
             subjectAuditRecorder.recordManagerChanged(actor, before, after);

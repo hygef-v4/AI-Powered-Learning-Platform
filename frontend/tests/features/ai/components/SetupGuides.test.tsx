@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { McpClientSetup, McpSetupGuide, mcpConfigSample } from "@/features/ai/components/SetupGuides";
+import { McpClientSetup, McpSetupGuide, buildMcpConfigSample } from "@/features/ai/components/SetupGuides";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -18,16 +18,16 @@ describe("MCP client setup", () => {
   });
   it("generates each client's native personal configuration for copy and paste", () => {
     const endpoint = "http://localhost:3000/mcp";
-    const openCode = JSON.parse(mcpConfigSample(endpoint, "secret", "opencode"));
+    const openCode = JSON.parse(buildMcpConfigSample(endpoint, "secret", "opencode"));
     expect(openCode.mcp["nen-tang-hoc-tap"]).toEqual({ type: "remote", url: endpoint,
       oauth: false, headers: { Authorization: "Bearer secret" } });
-    const codex = mcpConfigSample(endpoint, "secret", "codex");
+    const codex = buildMcpConfigSample(endpoint, "secret", "codex");
     expect(codex).toContain('http_headers = { Authorization = "Bearer secret" }');
-    expect(mcpConfigSample(endpoint, undefined, "codex")).not.toContain("secret");
-    const claude = JSON.parse(mcpConfigSample(endpoint, "secret", "claude-code"));
+    expect(buildMcpConfigSample(endpoint, undefined, "codex")).not.toContain("secret");
+    const claude = JSON.parse(buildMcpConfigSample(endpoint, "secret", "claude-code"));
     expect(claude.mcpServers["nen-tang-hoc-tap"]).toEqual({ type: "http", url: endpoint,
       headers: { Authorization: "Bearer secret" } });
-    expect(JSON.parse(mcpConfigSample(endpoint, "secret", "antigravity"))
+    expect(JSON.parse(buildMcpConfigSample(endpoint, "secret", "antigravity"))
       .mcpServers["nen-tang-hoc-tap"]).toEqual({ serverUrl: endpoint, headers: { Authorization: "Bearer secret" } });
   });
 
@@ -55,7 +55,7 @@ describe("MCP client setup", () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledOnce());
     const prompt = writeText.mock.calls[0]?.[0];
     expect(prompt).toContain("~/.codex/config.toml");
-    expect(prompt).toContain(mcpConfigSample(`${window.location.origin}/mcp`, "<your MCP token>", "codex"));
+    expect(prompt).toContain(buildMcpConfigSample(`${window.location.origin}/mcp`, "<your MCP token>", "codex"));
     expect(prompt).toContain("No real token is provided");
     expect(prompt).toContain("preserve all other servers");
     expect(prompt).toContain("get_my_capabilities");

@@ -57,13 +57,13 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
     public void onSubmitted(UUID attemptId) {
         // Step 1: Fetch submission and assignment details, ensuring assignment is graded and individual
         var submission = submissionQuery.getSubmission(attemptId).orElseThrow(() -> ApiException
-                .unavailable("SUBMISSION_UNAVAILABLE", "Submitted snapshot unavailable"));
+                .createUnavailable("SUBMISSION_UNAVAILABLE", "Submitted snapshot unavailable"));
         var assignment = assignmentQuery.get(submission.assignmentId()).orElseThrow(
-                () -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
+                () -> ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
         if (assignment.gradingMode() != GradingMode.GRADED)
             return;
         if (assignment.submissionMode() == SubmissionMode.GROUP)
-            throw ApiException.badRequest("INVALID_SUBMISSION_KIND",
+            throw ApiException.createBadRequest("INVALID_SUBMISSION_KIND",
                     "Group submission requires group listener");
 
         // Step 2: Lock submission identity and avoid duplicate evaluation for same attemptId
@@ -78,12 +78,12 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
             if (previous.kind == EvaluationKind.ATTEMPT
                     && submission.accountId().equals(previous.accountId)) {
                 var locked = evaluationRepository.lockById(previous.id).orElseThrow();
-                locked.supersede();
-                evaluationRepository.save(locked);
+                locked.supersedeEvaluation();
+                evaluationRepository.saveEvaluation(locked);
             }
 
         // Step 4: Create new PENDING evaluation with locked rubric snapshot
-        evaluationRepository.save(Evaluation.createPendingEvaluation(attemptId,
+        evaluationRepository.saveEvaluation(Evaluation.createPendingEvaluation(attemptId,
                 submission.assignmentId(), submission.classId(), submission.accountId(),
                 submission.receiptHash(), rubric.maxPoints(submission.assignmentId()), GradingJson
                         .writeSnapshot(objectMapper, rubric.listRubrics(submission.assignmentId())),
@@ -99,17 +99,17 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
             List<UUID> members) {
         // Step 1: Validate group assignment, class reference, and members list
         var assignment = assignmentQuery.get(assignmentId).orElseThrow(
-                () -> ApiException.unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
+                () -> ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
         if (assignment.gradingMode() != GradingMode.GRADED
                 || assignment.submissionMode() != SubmissionMode.GROUP)
-            throw ApiException.badRequest("INVALID_GROUP_ASSIGNMENT", "Invalid group assignment");
+            throw ApiException.createBadRequest("INVALID_GROUP_ASSIGNMENT", "Invalid group assignment");
         SubmissionReviewService.requireAssignment(assignment,
                 classAccess.getClassRef(classId).orElseThrow(
-                        () -> ApiException.unavailable("CLASS_UNAVAILABLE", "Class unavailable")));
+                        () -> ApiException.createUnavailable("CLASS_UNAVAILABLE", "Class unavailable")));
         if (hash == null || hash.isBlank() || members == null || members.isEmpty()
                 || members.stream().anyMatch(Objects::isNull)
                 || new HashSet<>(members).size() != members.size())
-            throw ApiException.badRequest("INVALID_GROUP_SUBMISSION", "Invalid group snapshot");
+            throw ApiException.createBadRequest("INVALID_GROUP_SUBMISSION", "Invalid group snapshot");
 
         // Step 2: Lock group document identity and load existing group evaluations
         members.stream().sorted().forEach(member ->
@@ -138,15 +138,15 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
                     && !documentId.equals(previous.groupDocumentId)) {
                 var locked = evaluationRepository.lockById(previous.id).orElseThrow();
                 if (!locked.hasOfficialGrade() && locked.state != EvaluationStatus.SUPERSEDED) {
-                    locked.supersede();
-                    evaluationRepository.save(locked);
+                    locked.supersedeEvaluation();
+                    evaluationRepository.saveEvaluation(locked);
                 }
             }
         }
         group.kind = EvaluationKind.GROUP_DOCUMENT;
         group.groupDocumentId = documentId;
         resetEvaluation(group, hash, maxScore, rubricSnapshot);
-        evaluationRepository.save(group);
+        evaluationRepository.saveEvaluation(group);
 
         // Step 4: Synchronize member evaluations (reset retained members, supersede removed ones, add new ones)
         Set<UUID> retained = new HashSet<>();
@@ -162,7 +162,7 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
                     retained.add(evaluation.accountId);
                 } else
                     evaluation.state = EvaluationStatus.SUPERSEDED;
-                evaluationRepository.save(evaluation);
+                evaluationRepository.saveEvaluation(evaluation);
             }
         for (var member : members)
             if (!retained.contains(member)) {
@@ -170,7 +170,7 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
                         member, hash, maxScore, rubricSnapshot, clock.instant());
                 evaluation.kind = EvaluationKind.MEMBER;
                 evaluation.groupDocumentId = documentId;
-                evaluationRepository.save(evaluation);
+                evaluationRepository.saveEvaluation(evaluation);
             }
     }
 

@@ -28,35 +28,35 @@ public class JobPublisher implements IJob {
 
     @Override
     public void enqueue(String jobType, Map<String, Object> payload, String idempotencyKey) {
-        JobMessage message = build(jobType, payload, idempotencyKey);
-        afterCommit.run(() -> send(message), () -> lost(message, "hàng chờ gửi đầy"));
+        JobMessage message = buildMessage(jobType, payload, idempotencyKey);
+        afterCommit.runAfterCommit(() -> sendMessage(message), () -> recordLost(message, "hàng chờ gửi đầy"));
     }
 
     /** Gửi lại ngay việc còn chờ do {@code IPendingSweeper} trả (J3). */
     public void resend(String jobType, PendingJob pending) {
-        send(build(jobType, pending.payload(), pending.idempotencyKey()));
+        sendMessage(buildMessage(jobType, pending.payload(), pending.idempotencyKey()));
     }
 
-    static JobMessage build(String jobType, Map<String, Object> payload, String idempotencyKey) {
+    static JobMessage buildMessage(String jobType, Map<String, Object> payload, String idempotencyKey) {
         if (JobRouting.queueOf(jobType).isEmpty()) {
             throw new IllegalArgumentException("Loại việc chưa đăng ký: " + jobType);
         }
         Map<String, Object> safePayload = payload == null ? Map.of() : payload;
-        ForbiddenKeyGuard.check(safePayload);
+        ForbiddenKeyGuard.checkForbiddenKeys(safePayload);
         return new JobMessage(SCHEMA_VERSION, jobType, idempotencyKey, safePayload, 0, UUID.randomUUID().toString());
     }
 
-    private void send(JobMessage message) {
+    private void sendMessage(JobMessage message) {
         try {
             sender.sendJob(message);
         } catch (RuntimeException e) {
-            lost(message, "gửi RabbitMQ lỗi");
+            recordLost(message, "gửi RabbitMQ lỗi");
         }
     }
 
     /** Message chưa tới broker: chỉ loại việc có sweeper được gửi lại; loại khác ghi ERROR kèm khóa để xử lý tay. */
-    private static void lost(JobMessage message, String reason) {
-        if (JobRouting.recoverable(message.jobType())) {
+    private static void recordLost(JobMessage message, String reason) {
+        if (JobRouting.isRecoverable(message.jobType())) {
             log.warn("Chưa gửi được việc {} key={} ({}); sweeper sẽ gửi lại", message.jobType(),
                     message.idempotencyKey(), reason);
         } else {

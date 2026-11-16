@@ -1,6 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { GroupProgressCard } from "@/features/groups/components/GroupProgressCard";
+import { GroupProgressTable } from "@/features/groups/components/GroupProgressTable";
 import type { GroupSetView } from "@/features/groups/model/types";
 
 vi.mock("next/link", () => ({
@@ -60,12 +60,12 @@ function backend(assignments: unknown[]) {
   );
 }
 
-describe("GroupProgressCard", () => {
+describe("GroupProgressTable", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   it("hiện tiến độ từng nhóm, mục đang soạn và lối vào tài liệu nhóm", async () => {
     backend([{ assignmentId: "a1", title: "Tài liệu thiết kế nhóm", status: "OPEN", opensAt: null, closesAt: "2026-11-17T11:51:00Z" }]);
-    render(<GroupProgressCard classId="c1" set={set} />);
+    render(<GroupProgressTable classId="c1" set={set} />);
 
     const first = (await screen.findByText("Nhóm 1")).closest("tr")!;
     expect(within(first).getByText("2 / 4")).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe("GroupProgressCard", () => {
 
   it("lớp chưa có bài nhóm thì không hiện thẻ", async () => {
     backend([]);
-    const { container } = render(<GroupProgressCard classId="c1" set={set} />);
+    const { container } = render(<GroupProgressTable classId="c1" set={set} />);
     await vi.waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled());
     await new Promise((r) => setTimeout(r, 0));
     expect(container).toBeEmptyDOMElement();

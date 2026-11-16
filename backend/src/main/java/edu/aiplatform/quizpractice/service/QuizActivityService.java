@@ -36,24 +36,24 @@ public class QuizActivityService {
 
     @Transactional
     public void record(Actor actor, UUID attemptId, List<ActivityEventInput> events) {
-        QuizAttempt attempt = support.ownActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
-        if (!attempt.inProgress()) {
-            throw ApiException.conflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp");
+        QuizAttempt attempt = support.loadOwnActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        if (!attempt.hasInProgressStatus()) {
+            throw ApiException.createConflict("ATTEMPT_SUBMITTED", "Lượt này đã nộp");
         }
         // Quá hạn cộng ân hạn là hết giờ làm bài, dù scanner chưa kịp tự nộp: không nhận thêm hoạt động như lưu câu trả lời.
         if (!attempt.acceptsAnswersAt(clock.instant())) {
-            throw ApiException.conflict("ATTEMPT_TIME_UP", "Đã hết thời gian làm bài");
+            throw ApiException.createConflict("ATTEMPT_TIME_UP", "Đã hết thời gian làm bài");
         }
         if (!attempt.snapshot().activityMonitoringEnabled()) {
-            throw ApiException.conflict("ACTIVITY_NOT_ENABLED", "Quiz này không ghi nhận hoạt động");
+            throw ApiException.createConflict("ACTIVITY_NOT_ENABLED", "Quiz này không ghi nhận hoạt động");
         }
         if (events.isEmpty() || events.size() > MAX_EVENTS) {
-            throw ApiException.badRequest("ACTIVITY_BATCH_INVALID", "Mỗi lần gửi 1–50 sự kiện");
+            throw ApiException.createBadRequest("ACTIVITY_BATCH_INVALID", "Mỗi lần gửi 1–50 sự kiện");
         }
         for (ActivityEventInput event : events) {
             if (event == null || event.clientEventId() == null || event.clientEventId().isBlank()
                     || event.clientEventId().length() > MAX_CLIENT_EVENT_ID_LENGTH) {
-                throw ApiException.badRequest("ACTIVITY_EVENT_INVALID", "Sự kiện hoạt động không hợp lệ");
+                throw ApiException.createBadRequest("ACTIVITY_EVENT_INVALID", "Sự kiện hoạt động không hợp lệ");
             }
         }
         try {
@@ -61,7 +61,7 @@ public class QuizActivityService {
         } catch (ApiException rejected) {
             throw rejected;
         } catch (RuntimeException unavailable) {
-            throw ApiException.unavailable("ACTIVITY_UNAVAILABLE", "Chưa ghi được hoạt động, vui lòng thử lại");
+            throw ApiException.createUnavailable("ACTIVITY_UNAVAILABLE", "Chưa ghi được hoạt động, vui lòng thử lại");
         }
     }
 }

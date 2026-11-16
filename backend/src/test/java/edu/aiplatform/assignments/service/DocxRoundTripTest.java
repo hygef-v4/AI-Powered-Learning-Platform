@@ -95,7 +95,7 @@ class DocxRoundTripTest {
         DocxImportPreview preview = importer.preview(teacher, docx, BlockOrigin.TEACHER, true, ref -> Optional.empty());
         assertThat(preview.warnings()).extracting(ValidationIssue::code).contains("DIAGRAM_RESTORED_BY_PNG");
         assertThat(preview.document().blocks()).filteredOn(b -> b.type() == BlockType.DIAGRAM).singleElement()
-                .satisfies(b -> assertThat(DiagramXml.cellCount(b.content().path("xml").asText())).isEqualTo(1));
+                .satisfies(b -> assertThat(DiagramXml.countCells(b.content().path("xml").asText())).isEqualTo(1));
     }
 
     @Test
@@ -170,7 +170,7 @@ class DocxRoundTripTest {
                     .anySatisfy(text -> assertThat(text).contains("Chưa có sơ đồ"))
                     .noneSatisfy(text -> assertThat(text).contains("bấm vào ảnh"));
         }
-        assertThat(PngChunks.diagramPlaceholder(null, false)).isNotEqualTo(PngChunks.diagramPlaceholder(null, true));
+        assertThat(PngChunks.drawDiagramPlaceholder(null, false)).isNotEqualTo(PngChunks.drawDiagramPlaceholder(null, true));
     }
 
     @Test
@@ -215,10 +215,10 @@ class DocxRoundTripTest {
 
     @Test
     void exportedPngCarriesMxfileChunk() {
-        byte[] png = PngChunks.diagramPlaceholder(DocumentModelServiceTest.DIAGRAM);
+        byte[] png = PngChunks.drawDiagramPlaceholder(DocumentModelServiceTest.DIAGRAM);
         assertThat(PngChunks.isPng(png)).isTrue();
         assertThat(PngChunks.readMxfile(png)).contains(DocumentModelServiceTest.DIAGRAM);
-        assertThat(PngChunks.size(png)).hasValueSatisfying(size -> assertThat(size).containsExactly(480, 270));
+        assertThat(PngChunks.readSize(png)).hasValueSatisfying(size -> assertThat(size).containsExactly(480, 270));
     }
 
     private static byte[] docx(java.util.function.Consumer<XWPFDocument> build) {

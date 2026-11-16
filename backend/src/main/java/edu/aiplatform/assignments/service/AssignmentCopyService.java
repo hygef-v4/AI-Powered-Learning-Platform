@@ -34,7 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AssignmentCopyService {
 
     private final AssignmentRepository assignments;
-    private final RubricService rubrics;
+    private final RubricService rubricService;
     private final AssignmentAccess access;
     private final AssignmentSupport support;
     private final AssignmentAudit audit;
@@ -42,11 +42,11 @@ public class AssignmentCopyService {
     private final IReferenceMaterial materials;
     private final Clock clock;
 
-    public AssignmentCopyService(AssignmentRepository assignments, RubricService rubrics, AssignmentAccess access,
+    public AssignmentCopyService(AssignmentRepository assignments, RubricService rubricService, AssignmentAccess access,
                                  AssignmentSupport support, AssignmentAudit audit, IClassScope classScope,
                                  IReferenceMaterial materials, Clock clock) {
         this.assignments = assignments;
-        this.rubrics = rubrics;
+        this.rubricService = rubricService;
         this.access = access;
         this.support = support;
         this.audit = audit;
@@ -58,25 +58,25 @@ public class AssignmentCopyService {
     /** BR-U07-40: bản nháp mới cùng lớp hoặc cùng môn; giữ nguyên tên như bài thường (yêu cầu 2026-10-22, bỏ "(bản sao)"). */
     @Transactional
     public AssignmentViews.Detail cloneAssignment(Actor actor, UUID id) {
-        Assignment source = support.manageable(actor, id, "ASSIGNMENT_CLONED");
+        Assignment source = support.loadManageable(actor, id, "ASSIGNMENT_CLONED");
         access.requireOwnerWritable(source);
         requireGroupSupport(source, source.classId());
         Assignment copy = insertCopy(actor, source, source.classId(), source.subjectId(), AssignmentOrigin.CLONE, 1,
                 source.title(), source.referenceMaterialIds());
-        audit.success(actor, "ASSIGNMENT_CLONED", copy.id(), AssignmentAudit.details("sourceAssignmentId", source.id()));
-        return support.detail(actor, copy, List.of());
+        audit.recordSuccess(actor, "ASSIGNMENT_CLONED", copy.id(), AssignmentAudit.collectDetails("sourceAssignmentId", source.id()));
+        return support.buildDetail(actor, copy, List.of());
     }
 
     /** BR-U07-41: từ bài đã đóng hoặc ngưng giao; mỗi bài nguồn tối đa một version đang soạn. */
     @Transactional
-    public AssignmentViews.Detail newVersion(Actor actor, UUID id) {
-        Assignment source = support.manageable(actor, id, "ASSIGNMENT_VERSION_CREATED");
+    public AssignmentViews.Detail createNewVersion(Actor actor, UUID id) {
+        Assignment source = support.loadManageable(actor, id, "ASSIGNMENT_VERSION_CREATED");
         access.requireOwnerWritable(source);
         if (source.status() != AssignmentStatus.CLOSED && source.status() != AssignmentStatus.RETIRED) {
-            throw ApiException.conflict("ASSIGNMENT_STATUS_INVALID", "Chỉ tạo version mới từ bài đã đóng hoặc ngưng giao");
+            throw ApiException.createConflict("ASSIGNMENT_STATUS_INVALID", "Chỉ tạo version mới từ bài đã đóng hoặc ngưng giao");
         }
         if (assignments.hasOpenVersion(source.id())) {
-            throw ApiException.conflict("VERSION_ALREADY_OPEN", "Bài này đã có một version đang soạn");
+            throw ApiException.createConflict("VERSION_ALREADY_OPEN", "Bài này đã có một version đang soạn");
         }
         requireGroupSupport(source, source.classId());
         Assignment copy;
@@ -84,11 +84,11 @@ public class AssignmentCopyService {
             copy = insertCopy(actor, source, source.classId(), source.subjectId(), AssignmentOrigin.NEW_VERSION,
                     source.versionNo() + 1, source.title(), source.referenceMaterialIds());
         } catch (DuplicateKeyException e) {
-            throw ApiException.conflict("VERSION_ALREADY_OPEN", "Bài này đã có một version đang soạn");
+            throw ApiException.createConflict("VERSION_ALREADY_OPEN", "Bài này đã có một version đang soạn");
         }
-        audit.success(actor, "ASSIGNMENT_VERSION_CREATED", copy.id(), AssignmentAudit.details(
+        audit.recordSuccess(actor, "ASSIGNMENT_VERSION_CREATED", copy.id(), AssignmentAudit.collectDetails(
                 "sourceAssignmentId", source.id(), "versionNo", copy.versionNo()));
-        return support.detail(actor, copy, List.of());
+        return support.buildDetail(actor, copy, List.of());
     }
 
     /**
@@ -98,8 +98,8 @@ public class AssignmentCopyService {
     public List<AssignmentViews.CopySource> copySources(Actor actor, UUID targetClassId) {
         ClassRef target = access.requireClassManager(actor, targetClassId, "ASSIGNMENT_COPY_SOURCES");
         List<AssignmentViews.CopySource> sources = new ArrayList<>();
-        subjectSource(target.subjectId(), AssignmentCopyService::isSubjectTemplate).ifPresent(sources::add);
-        sources.addAll(taughtClassSources(actor, targetClassId));
+        findSubjectSource(target.subjectId(), AssignmentCopyService::isSubjectTemplate).ifPresent(sources::add);
+        sources.addAll(listTaughtClassSources(actor, targetClassId));
         return sources;
     }
 
@@ -108,11 +108,11 @@ public class AssignmentCopyService {
      * (yêu cầu 2026-11-09).
      */
     @Transactional(readOnly = true)
-    public List<AssignmentViews.CopySource> subjectCopySources(Actor actor, UUID subjectId) {
+    public List<AssignmentViews.CopySource> listSubjectCopySources(Actor actor, UUID subjectId) {
         access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_COPY_SOURCES");
         List<AssignmentViews.CopySource> sources = new ArrayList<>();
-        subjectSource(subjectId, a -> true).ifPresent(sources::add);
-        sources.addAll(taughtClassSources(actor, null));
+        findSubjectSource(subjectId, a -> true).ifPresent(sources::add);
+        sources.addAll(listTaughtClassSources(actor, null));
         return sources;
     }
 
@@ -128,13 +128,13 @@ public class AssignmentCopyService {
     public AssignmentViews.Detail copyToSubject(Actor actor, UUID subjectId, UUID sourceAssignmentId, String title,
                                                 SubmissionMode submissionMode, GradingMode gradingMode) {
         access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_COPIED");
-        if (access.subjectStatus(subjectId) == SubjectStatus.ARCHIVED) {
-            throw ApiException.conflict("ASSIGNMENT_READ_ONLY", "Môn đã lưu trữ, không tạo bài được");
+        if (access.loadSubjectStatus(subjectId) == SubjectStatus.ARCHIVED) {
+            throw ApiException.createConflict("ASSIGNMENT_READ_ONLY", "Môn đã lưu trữ, không tạo bài được");
         }
         if (sourceAssignmentId == null) {
-            throw ApiException.badRequest("SOURCE_REQUIRED", "Chọn bài để copy");
+            throw ApiException.createBadRequest("SOURCE_REQUIRED", "Chọn bài để copy");
         }
-        Assignment source = assignments.find(sourceAssignmentId).orElseThrow(() -> access.deny(actor,
+        Assignment source = assignments.findAssignment(sourceAssignmentId).orElseThrow(() -> access.deny(actor,
                 "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, sourceAssignmentId, "NOT_FOUND"));
         if (source.scope() == AssignmentScope.SUBJECT) {
             if (!source.subjectId().equals(subjectId)) {
@@ -143,36 +143,36 @@ public class AssignmentCopyService {
         } else {
             access.requireClassManager(actor, source.classId(), "ASSIGNMENT_COPIED");
         }
-        Set<UUID> allowed = selectable(actor, ResourceRef.subject(subjectId));
+        Set<UUID> allowed = listSelectableIds(actor, ResourceRef.subject(subjectId));
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();
-        Assignment copy = insertCopy(actor, source.withModes(submissionMode, gradingMode), null, subjectId,
+        Assignment copy = insertCopy(actor, source.changeModes(submissionMode, gradingMode), null, subjectId,
                 AssignmentOrigin.CLASS_COPY, 1, copyTitle(title, source), kept);
-        audit.success(actor, "ASSIGNMENT_COPIED", copy.id(), AssignmentAudit.details("sourceAssignmentId", source.id(),
+        audit.recordSuccess(actor, "ASSIGNMENT_COPIED", copy.id(), AssignmentAudit.collectDetails("sourceAssignmentId", source.id(),
                 "targetSubjectId", subjectId));
-        return support.detail(actor, copy, List.of());
+        return support.buildDetail(actor, copy, List.of());
     }
 
     /** Bài của môn lọc theo {@code keep}; không có bài nào thì không có nhóm. */
-    private java.util.Optional<AssignmentViews.CopySource> subjectSource(UUID subjectId,
+    private java.util.Optional<AssignmentViews.CopySource> findSubjectSource(UUID subjectId,
             java.util.function.Predicate<Assignment> keep) {
-        var subject = access.subjectRef(subjectId);
+        var subject = access.loadSubjectRef(subjectId);
         List<AssignmentViews.Row> rows = assignments.listOfSubject(subjectId).stream()
                 .filter(keep)
-                .map(a -> support.row(a, true)).toList();
+                .map(a -> support.buildRow(a, true)).toList();
         return rows.isEmpty() ? java.util.Optional.empty()
                 : java.util.Optional.of(new AssignmentViews.CopySource(subjectId, subject.code(), subject.name(), null, rows, "SUBJECT"));
     }
 
     /** Các lớp mình dạy (trừ {@code exceptClassId}) có ít nhất một bài, mỗi lớp một nhóm. */
-    private List<AssignmentViews.CopySource> taughtClassSources(Actor actor, UUID exceptClassId) {
+    private List<AssignmentViews.CopySource> listTaughtClassSources(Actor actor, UUID exceptClassId) {
         List<AssignmentViews.CopySource> sources = new ArrayList<>();
         for (UUID classId : classScope.listTaughtClasses(actor.accountId())) {
             if (classId.equals(exceptClassId)) {
                 continue;
             }
-            ClassRef ref = access.classRef(classId);
+            ClassRef ref = access.loadClassRef(classId);
             List<AssignmentViews.Row> rows = assignments.listOfClass(classId).stream()
-                    .map(a -> support.row(a, true)).toList();
+                    .map(a -> support.buildRow(a, true)).toList();
             if (!rows.isEmpty()) {
                 sources.add(new AssignmentViews.CopySource(classId, ref.code(), ref.name(), ref.status(), rows,
                         "CLASS", ref.term()));
@@ -194,12 +194,12 @@ public class AssignmentCopyService {
                                               SubmissionMode submissionMode, GradingMode gradingMode) {
         ClassRef target = access.requireClassManager(actor, targetClassId, "ASSIGNMENT_COPIED");
         if (target.status() == ClassStatus.ARCHIVED) {
-            throw ApiException.conflict("ASSIGNMENT_READ_ONLY", "Lớp đã lưu trữ, không tạo bài được");
+            throw ApiException.createConflict("ASSIGNMENT_READ_ONLY", "Lớp đã lưu trữ, không tạo bài được");
         }
         if (sourceAssignmentId == null) {
-            throw ApiException.badRequest("SOURCE_REQUIRED", "Chọn bài để copy");
+            throw ApiException.createBadRequest("SOURCE_REQUIRED", "Chọn bài để copy");
         }
-        Assignment source = assignments.find(sourceAssignmentId).orElseThrow(() -> access.deny(actor,
+        Assignment source = assignments.findAssignment(sourceAssignmentId).orElseThrow(() -> access.deny(actor,
                 "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, sourceAssignmentId, "NOT_FOUND"));
         if (source.scope() == AssignmentScope.SUBJECT) {
             // Đề mẫu của cùng môn (yêu cầu 2026-11-09: bài của môn không còn phát hành cho các lớp).
@@ -210,20 +210,20 @@ public class AssignmentCopyService {
         } else {
             access.requireClassManager(actor, source.classId(), "ASSIGNMENT_COPIED");
             if (source.classId().equals(targetClassId)) {
-                throw ApiException.badRequest("COPY_SAME_CLASS", "Bài đã thuộc lớp này, hãy dùng Nhân bản");
+                throw ApiException.createBadRequest("COPY_SAME_CLASS", "Bài đã thuộc lớp này, hãy dùng Nhân bản");
             }
         }
-        source = source.withModes(submissionMode, gradingMode);
+        source = source.changeModes(submissionMode, gradingMode);
         requireGroupSupport(source, targetClassId);
-        Set<UUID> allowed = selectable(actor, ResourceRef.courseClass(targetClassId));
+        Set<UUID> allowed = listSelectableIds(actor, ResourceRef.courseClass(targetClassId));
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();
         Assignment copy = insertCopy(actor, source, targetClassId, target.subjectId(), AssignmentOrigin.CLASS_COPY, 1,
                 copyTitle(title, source), kept);
-        audit.success(actor, "ASSIGNMENT_COPIED", copy.id(), source.classId() == null
-                ? AssignmentAudit.details("sourceAssignmentId", source.id(), "targetClassId", targetClassId)
-                : AssignmentAudit.details("sourceAssignmentId", source.id(), "sourceClassId", source.classId(),
+        audit.recordSuccess(actor, "ASSIGNMENT_COPIED", copy.id(), source.classId() == null
+                ? AssignmentAudit.collectDetails("sourceAssignmentId", source.id(), "targetClassId", targetClassId)
+                : AssignmentAudit.collectDetails("sourceAssignmentId", source.id(), "sourceClassId", source.classId(),
                         "targetClassId", targetClassId));
-        return support.detail(actor, copy, List.of());
+        return support.buildDetail(actor, copy, List.of());
     }
 
     /** Bài của môn dùng làm đề mẫu cho lớp: mọi trạng thái trừ đã ngưng giao. */
@@ -232,7 +232,7 @@ public class AssignmentCopyService {
     }
 
     private static String copyTitle(String title, Assignment source) {
-        return title == null || title.isBlank() ? source.title() : AssignmentAuthoringService.title(title);
+        return title == null || title.isBlank() ? source.title() : AssignmentAuthoringService.normalizeTitle(title);
     }
 
     private Assignment insertCopy(Actor actor, Assignment source, UUID classId, UUID subjectId,
@@ -241,17 +241,17 @@ public class AssignmentCopyService {
         Assignment copy = source.copyAsDraft(UUID.randomUUID(), classId, subjectId, origin, versionNo, title, kept,
                 actor.accountId(), now);
         assignments.insert(copy);
-        rubrics.copy(source.id(), copy.id(), now);
+        rubricService.copy(source.id(), copy.id(), now);
         return copy;
     }
 
     private void requireGroupSupport(Assignment source, UUID classId) {
         if (source.submissionMode() == SubmissionMode.GROUP && !support.groupSupported(classId)) {
-            throw ApiException.badRequest("GROUP_NOT_SUPPORTED", "Chưa dùng được bài nhóm cho lớp này");
+            throw ApiException.createBadRequest("GROUP_NOT_SUPPORTED", "Chưa dùng được bài nhóm cho lớp này");
         }
     }
 
-    private Set<UUID> selectable(Actor actor, ResourceRef scope) {
+    private Set<UUID> listSelectableIds(Actor actor, ResourceRef scope) {
         try {
             List<SelectableMaterial> list = materials.listSelectable(actor, scope);
             return list == null ? Set.of() : list.stream().map(SelectableMaterial::materialId).collect(Collectors.toSet());

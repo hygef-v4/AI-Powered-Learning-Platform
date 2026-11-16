@@ -10,8 +10,8 @@ class GroupSourceUnavailableTest {
     void missingGroupProviderCannotLookLikeSuccessfulEmptyData() {
         var source = new GradingContractStubs().groupSubmissionSourceStub();
         assertThatThrownBy(() -> source.listGroupSubmissions(UUID.randomUUID(), UUID.randomUUID()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(503));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(503));
         assertThatThrownBy(() -> source.getGroupSubmission(UUID.randomUUID()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status().value()).isEqualTo(503));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(503));
     }
 }

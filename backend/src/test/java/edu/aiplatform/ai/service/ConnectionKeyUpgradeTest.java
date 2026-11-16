@@ -32,7 +32,7 @@ class ConnectionKeyUpgradeTest {
     @Test
     void legacyKeyIsResealedForItsConnectionWithTheLatestKeyVersion() {
         EncryptedKey legacy = new KeyCipher(KeyCipherAndCatalogTest.properties(KeyCipherAndCatalogTest.KEY_V1, null))
-                .encrypt("AIza-legacy-0000");
+                .encryptKey("AIza-legacy-0000");
         when(connectionRepository.listWithKey()).thenReturn(List.of(connection(legacy)));
 
         upgrade.upgradeLegacyKeys();
@@ -55,7 +55,7 @@ class ConnectionKeyUpgradeTest {
     }
 
     private static AiConnection connection(EncryptedKey key) {
-        return AiConnection.create(ID, Scope.PERSONAL, OWNER, AiProvider.GEMINI, "gemini-2.5-flash", key, "0000",
+        return AiConnection.createConnection(ID, Scope.PERSONAL, OWNER, AiProvider.GEMINI, "gemini-2.5-flash", key, "0000",
                 Instant.EPOCH);
     }
 }

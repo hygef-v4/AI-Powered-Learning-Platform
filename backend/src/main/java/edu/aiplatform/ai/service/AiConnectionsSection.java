@@ -41,11 +41,11 @@ public class AiConnectionsSection implements ISettingsSectionProvider {
             return "Chưa cấu hình";
         }
         return Arrays.stream(AiProvider.values())
-                .map(p -> label(p) + ": " + state(byProvider.get(p)))
+                .map(p -> label(p) + ": " + describeState(byProvider.get(p)))
                 .collect(Collectors.joining(" · "));
     }
 
-    private static String state(AiConnection c) {
+    private static String describeState(AiConnection c) {
         if (c == null) {
             return "chưa cấu hình";
         }

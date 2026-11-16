@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button, PageHeader, PageNav, cx, showToast } from "@/shared/ui";
+import { Button, Card, Pagination, PageHeader, cx, showToast } from "@/shared/ui";
 import { listSubjects } from "../api";
 import { SubjectFilters } from "../components/SubjectFilters";
 import { SubjectReadError } from "../components/SubjectReadError";
@@ -9,6 +9,7 @@ import { SubjectTable } from "../components/SubjectTable";
 import { SubjectFormDialog } from "../components/SubjectFormDialog";
 import type { SubjectPage, SubjectStatus } from "../model/types";
 import { useSubjectRead } from "../hooks/useSubjectRead";
+import { msg } from "@/i18n/msg";
 
 const PAGE_SIZE = 20;
 
@@ -55,7 +56,7 @@ export function SubjectListPage() {
   return (
     <>
       <PageHeader
-        title="Môn học"
+        title={msg("subjects.pages.SubjectListPage.subjects")}
         actions={
           <Button
             id="subjects-create-open"
@@ -65,8 +66,7 @@ export function SubjectListPage() {
             disabled={resource.error !== null}
             data-testid="subjects-create-open"
           >
-            Thêm môn học
-          </Button>
+            {msg("subjects.pages.SubjectListPage.addSubject")}</Button>
         }
       />
       {creating && (
@@ -75,12 +75,12 @@ export function SubjectListPage() {
           onCreated={() => {
             setCreating(false);
             focusAfterCreate.current = true;
-            showToast("Đã thêm môn học");
+            showToast(msg("subjects.pages.SubjectListPage.subjectAdded"));
             resource.reload();
           }}
         />
       )}
-      <section className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+      <Card as="section" padding="lg" className="flex flex-col gap-3.5">
         <SubjectFilters
           search={search}
           status={query.status}
@@ -91,8 +91,7 @@ export function SubjectListPage() {
         />
         {!data && resource.loading && (
           <p role="status" className="py-8 text-center text-sm text-muted">
-            Đang tải môn học…
-          </p>
+            {msg("subjects.pages.SubjectListPage.loadingSubjects")}</p>
         )}
         {resource.error !== null && (
           <SubjectReadError error={resource.error} onRetry={resource.reload} />
@@ -106,15 +105,16 @@ export function SubjectListPage() {
             )}
           >
             <SubjectTable items={data.items} offset={data.page * data.size} />
-            <PageNav
+            <Pagination
               page={data.page}
-              size={data.size}
+              pageSize={data.size}
               total={data.totalElements}
-              onPage={(page) => setQuery((current) => ({ ...current, page }))}
+              onPageChange={(page) => setQuery((current) => ({ ...current, page }))}
+              summary={false}
             />
           </div>
         )}
-      </section>
+      </Card>
     </>
   );
 }

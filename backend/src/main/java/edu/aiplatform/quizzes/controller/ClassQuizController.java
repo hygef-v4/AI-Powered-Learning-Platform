@@ -29,67 +29,67 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/classes/{classId}")
 public class ClassQuizController {
 
-    private final QuizAuthoringService authoring;
-    private final QuizCopyService copies;
-    private final QuestionProposalService proposals;
+    private final QuizAuthoringService quizAuthoringService;
+    private final QuizCopyService quizCopyService;
+    private final QuestionProposalService questionProposalService;
 
-    public ClassQuizController(QuizAuthoringService authoring, QuizCopyService copies,
-                               QuestionProposalService proposals) {
-        this.authoring = authoring;
-        this.copies = copies;
-        this.proposals = proposals;
+    public ClassQuizController(QuizAuthoringService quizAuthoringService, QuizCopyService quizCopyService,
+                               QuestionProposalService questionProposalService) {
+        this.quizAuthoringService = quizAuthoringService;
+        this.quizCopyService = quizCopyService;
+        this.questionProposalService = questionProposalService;
     }
 
     /** Câu mình đã đề xuất vào ngân hàng của môn từ lớp này (BR-U10-09). */
     @GetMapping("/question-proposals")
-    public List<ProposalView> proposals(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
-        return proposals.list(actor, classId);
+    public List<ProposalView> listProposals(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
+        return questionProposalService.listProposals(actor, classId);
     }
 
     @PostMapping(value = "/question-proposals", consumes = "application/json")
     public ResponseEntity<ProposalView> propose(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                                 @RequestBody JsonNode body) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(proposals.propose(actor, classId, QuestionRequests.create(body)));
+        return ResponseEntity.status(HttpStatus.CREATED).body(questionProposalService.propose(actor, classId, QuestionRequests.parseCreate(body)));
     }
 
     /** Sửa đề xuất đang chờ hoặc đã bị từ chối; lưu là gửi lại để duyệt. */
     @PatchMapping(value = "/question-proposals/{id}", consumes = "application/json")
     public ProposalView resubmit(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                  @PathVariable UUID id, @RequestBody JsonNode body) {
-        QuestionRequests.Update update = QuestionRequests.update(body);
-        return proposals.resubmit(actor, classId, id, update.content(), update.version());
+        QuestionRequests.Update update = QuestionRequests.parseUpdate(body);
+        return questionProposalService.resubmitProposal(actor, classId, id, update.content(), update.version());
     }
 
     @DeleteMapping("/question-proposals/{id}")
     public ResponseEntity<Void> withdraw(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                          @PathVariable UUID id, @RequestParam long version) {
-        proposals.withdraw(actor, classId, id, version);
+        questionProposalService.withdrawProposal(actor, classId, id, version);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/quizzes")
-    public List<QuizRow> list(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
-        return authoring.listClass(actor, classId);
+    public List<QuizRow> listQuizzes(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
+        return quizAuthoringService.listClass(actor, classId);
     }
 
     @PostMapping(value = "/quizzes", consumes = "application/json")
-    public ResponseEntity<QuizDetail> create(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
+    public ResponseEntity<QuizDetail> createQuiz(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                              @RequestBody JsonNode body) {
-        return created(authoring.createForClass(actor, classId, QuizRequests.title(body)));
+        return respondCreated(quizAuthoringService.createForClass(actor, classId, QuizRequests.readTitle(body)));
     }
 
     @GetMapping("/quiz-copy-sources")
     public List<QuizRow> copySources(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId) {
-        return copies.copySources(actor, classId);
+        return quizCopyService.copySources(actor, classId);
     }
 
     @PostMapping(value = "/quizzes:copy", consumes = "application/json")
     public ResponseEntity<QuizDetail> copy(@AuthenticationPrincipal Actor actor, @PathVariable UUID classId,
                                            @RequestBody JsonNode body) {
-        return created(copies.copyToClass(actor, classId, QuizRequests.copySource(body)));
+        return respondCreated(quizCopyService.copyToClass(actor, classId, QuizRequests.copySource(body)));
     }
 
-    private static ResponseEntity<QuizDetail> created(QuizDetail detail) {
+    private static ResponseEntity<QuizDetail> respondCreated(QuizDetail detail) {
         return ResponseEntity.created(URI.create("/api/v1/quizzes/" + detail.quiz().id())).body(detail);
     }
 }

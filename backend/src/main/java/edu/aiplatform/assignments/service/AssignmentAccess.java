@@ -45,15 +45,15 @@ class AssignmentAccess {
     /** Giảng viên chính của lớp; trả lớp để kiểm trạng thái. */
     ClassRef requireClassManager(Actor actor, UUID classId, String action) {
         requireSignedIn(actor);
-        if (!allowed(actor, Actions.ASSIGNMENT_CLASS_MANAGE, ResourceRef.courseClass(classId))) {
+        if (!isAllowed(actor, Actions.ASSIGNMENT_CLASS_MANAGE, ResourceRef.courseClass(classId))) {
             throw deny(actor, action, "COURSE_CLASS", classId, "OUT_OF_CLASS_SCOPE");
         }
-        return classRef(classId);
+        return loadClassRef(classId);
     }
 
     void requireSubjectManager(Actor actor, UUID subjectId, String action) {
         requireSignedIn(actor);
-        if (!allowed(actor, Actions.ASSIGNMENT_SUBJECT_MANAGE, ResourceRef.subject(subjectId))) {
+        if (!isAllowed(actor, Actions.ASSIGNMENT_SUBJECT_MANAGE, ResourceRef.subject(subjectId))) {
             throw deny(actor, action, "SUBJECT", subjectId, "OUT_OF_SUBJECT_SCOPE");
         }
     }
@@ -63,8 +63,8 @@ class AssignmentAccess {
             return false;
         }
         return assignment.scope() == AssignmentScope.CLASS
-                ? allowed(actor, Actions.ASSIGNMENT_CLASS_MANAGE, ResourceRef.courseClass(assignment.classId()))
-                : allowed(actor, Actions.ASSIGNMENT_SUBJECT_MANAGE, ResourceRef.subject(assignment.subjectId()));
+                ? isAllowed(actor, Actions.ASSIGNMENT_CLASS_MANAGE, ResourceRef.courseClass(assignment.classId()))
+                : isAllowed(actor, Actions.ASSIGNMENT_SUBJECT_MANAGE, ResourceRef.subject(assignment.subjectId()));
     }
 
     void requireManage(Actor actor, Assignment assignment, String action) {
@@ -79,13 +79,13 @@ class AssignmentAccess {
         if (canManage(actor, assignment)) {
             return true;
         }
-        if (assignment.scope() != AssignmentScope.SUBJECT || !assignment.published()
+        if (assignment.scope() != AssignmentScope.SUBJECT || !assignment.hasPublished()
                 || actor.role() == Role.STUDENT || actor.role() == Role.ADMIN) {
             return false;
         }
         for (UUID classId : classScope.listTaughtClasses(actor.accountId())) {
             if (classScope.subjectOfClass(classId).map(assignment.subjectId()::equals).orElse(false)
-                    && allowed(actor, Actions.ASSIGNMENT_CLASS_MANAGE, ResourceRef.courseClass(classId))) {
+                    && isAllowed(actor, Actions.ASSIGNMENT_CLASS_MANAGE, ResourceRef.courseClass(classId))) {
                 return true;
             }
         }
@@ -100,7 +100,7 @@ class AssignmentAccess {
         } catch (ApiException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         if (!readable) {
             throw deny(actor, action, AssignmentAudit.OBJECT_ASSIGNMENT, assignment.id(), "OUT_OF_ASSIGNMENT_SCOPE");
@@ -108,72 +108,72 @@ class AssignmentAccess {
     }
 
     /** Lớp hoặc môn đã lưu trữ thì bài chỉ đọc (BR-U07-04). */
-    boolean ownerArchived(Assignment assignment) {
+    boolean isOwnerArchived(Assignment assignment) {
         if (assignment.scope() == AssignmentScope.CLASS) {
-            return classRef(assignment.classId()).status() == ClassStatus.ARCHIVED;
+            return loadClassRef(assignment.classId()).status() == ClassStatus.ARCHIVED;
         }
-        return subjectStatus(assignment.subjectId()) == SubjectStatus.ARCHIVED;
+        return loadSubjectStatus(assignment.subjectId()) == SubjectStatus.ARCHIVED;
     }
 
     void requireOwnerWritable(Assignment assignment) {
-        if (ownerArchived(assignment)) {
-            throw ApiException.conflict("ASSIGNMENT_READ_ONLY", assignment.scope() == AssignmentScope.CLASS
+        if (isOwnerArchived(assignment)) {
+            throw ApiException.createConflict("ASSIGNMENT_READ_ONLY", assignment.scope() == AssignmentScope.CLASS
                     ? "Lớp đã lưu trữ, bài chỉ xem được" : "Môn đã lưu trữ, bài chỉ xem được");
         }
     }
 
-    ClassRef classRef(UUID classId) {
+    ClassRef loadClassRef(UUID classId) {
         try {
-            return classes.getClassRef(classId).orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+            return classes.getClassRef(classId).orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         } catch (ApiException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw unavailable();
+            throw createUnavailableError();
         }
     }
 
-    edu.aiplatform.subjects.contract.SubjectRef subjectRef(UUID subjectId) {
+    edu.aiplatform.subjects.contract.SubjectRef loadSubjectRef(UUID subjectId) {
         try {
-            return subjects.getSubject(subjectId).orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+            return subjects.getSubject(subjectId).orElseThrow(() -> ApiException.createNotFound("SUBJECT_NOT_FOUND"));
         } catch (ApiException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw unavailable();
+            throw createUnavailableError();
         }
     }
 
-    SubjectStatus subjectStatus(UUID subjectId) {
+    SubjectStatus loadSubjectStatus(UUID subjectId) {
         try {
-            return subjects.getSubject(subjectId).orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"))
+            return subjects.getSubject(subjectId).orElseThrow(() -> ApiException.createNotFound("SUBJECT_NOT_FOUND"))
                     .status();
         } catch (ApiException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw unavailable();
+            throw createUnavailableError();
         }
     }
 
     ApiException deny(Actor actor, String action, String objectType, UUID objectId, String reason) {
         try {
-            audit.denied(actor, action, objectType, objectId, reason);
+            audit.recordDenied(actor, action, objectType, objectId, reason);
         } catch (RuntimeException e) {
-            return ApiException.unavailable("AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
+            return ApiException.createUnavailable("AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
         }
-        return ApiException.notFound("ASSIGNMENT_NOT_FOUND");
+        return ApiException.createNotFound("ASSIGNMENT_NOT_FOUND");
     }
 
-    private boolean allowed(Actor actor, String action, ResourceRef resource) {
+    private boolean isAllowed(Actor actor, String action, ResourceRef resource) {
         AuthorizationDecision decision;
         try {
             decision = authorization.authorize(actor, action, resource);
         } catch (ApiException e) {
             throw e;
         } catch (RuntimeException e) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         // U01 không kiểm được phạm vi (database, U04, U05 lỗi): báo bận, không trả 404 và ghi từ chối oan.
         if (decision == null || (!decision.allowed() && "DEPENDENCY_UNAVAILABLE".equals(decision.reason()))) {
-            throw unavailable();
+            throw createUnavailableError();
         }
         return decision.allowed();
     }
@@ -184,7 +184,7 @@ class AssignmentAccess {
         }
     }
 
-    private static ApiException unavailable() {
-        return ApiException.unavailable("ASSIGNMENT_DEPENDENCY_UNAVAILABLE", "Chưa kiểm tra được quyền, vui lòng thử lại");
+    private static ApiException createUnavailableError() {
+        return ApiException.createUnavailable("ASSIGNMENT_DEPENDENCY_UNAVAILABLE", "Chưa kiểm tra được quyền, vui lòng thử lại");
     }
 }

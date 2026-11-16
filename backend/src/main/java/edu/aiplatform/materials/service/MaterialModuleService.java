@@ -115,7 +115,7 @@ public class MaterialModuleService {
 
     public void renameModule(Actor actor, UUID id, MaterialCommands.ModuleUpdate input) {
         var module = requireWritableModule(actor, id, input.version());
-        var next = module.revise(input.title(), module.orderNo(), clock.instant());
+        var next = module.reviseModule(input.title(), module.orderNo(), clock.instant());
         if (
                 !materialModuleRepository.updateModule(
                         next, module.version())) throw createVersionConflict();
@@ -126,7 +126,7 @@ public class MaterialModuleService {
     public void deleteModule(Actor actor, UUID id, long expected) {
         var module = requireWritableModule(actor, id, expected);
         if (materialModuleRepository.countActiveMaterials(id) > 0)
-            throw ApiException.conflict(
+            throw ApiException.createConflict(
                     "MATERIAL_MODULE_NOT_EMPTY",
                     "Module còn học liệu, chuyển hoặc lưu trữ học liệu trước khi xóa");
         if (materialModuleRepository.countArchivedMaterials(id) > 0) {
@@ -136,7 +136,7 @@ public class MaterialModuleService {
                             .findFirst()
                             .orElseThrow(
                                     () ->
-                                            ApiException.conflict(
+                                            ApiException.createConflict(
                                                     "MATERIAL_MODULE_LAST",
                                                     "Môn cần ít nhất một module để giữ học liệu đã lưu trữ"));
             materialModuleRepository.moveArchivedMaterials(id, other.id());
@@ -151,12 +151,12 @@ public class MaterialModuleService {
         List<MaterialModule> rows = new ArrayList<>();
         for (var position : input.items()) {
             if (!seen.add(position.id()))
-                throw ApiException.badRequest(
+                throw ApiException.createBadRequest(
                         "MATERIAL_REORDER_INVALID", "Danh sách có module trùng");
             var module =
                     materialModuleRepository.findModule(position.id())
                             .filter(m -> m.subjectId().equals(subjectId))
-                            .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                            .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
             if (module.version() != position.version()) throw createVersionConflict();
             rows.add(module);
         }
@@ -164,7 +164,7 @@ public class MaterialModuleService {
         for (int i = 0; i < rows.size(); i++) positions.put(rows.get(i).id(), i);
         rows.sort(Comparator.comparing(MaterialModule::id));
         for (var module : rows) {
-            var next = module.revise(module.title(), positions.get(module.id()), clock.instant());
+            var next = module.reviseModule(module.title(), positions.get(module.id()), clock.instant());
             if (
                     !materialModuleRepository.updateModule(
                             next, module.version())) throw createVersionConflict();
@@ -175,7 +175,7 @@ public class MaterialModuleService {
     public void attachQuiz(Actor actor, UUID moduleId, UUID quizId) {
         var module =
                 materialModuleRepository.findModule(moduleId)
-                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
         var quiz = requireManageableQuiz(actor, module, quizId);
         var current = materialModuleRepository.findQuizLink(quizId);
         if (current.isPresent()) {
@@ -195,26 +195,26 @@ public class MaterialModuleService {
     public void detachQuiz(Actor actor, UUID moduleId, UUID quizId) {
         var module =
                 materialModuleRepository.findModule(moduleId)
-                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
         requireManageableQuiz(actor, module, quizId);
         if (!materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)) throw ApiException
-                .notFound("MATERIAL_NOT_FOUND");
+                .createNotFound("MATERIAL_NOT_FOUND");
         recordAudit(actor, "MATERIAL_MODULE_QUIZ_DETACHED", module);
     }
 
     private QuizView requireManageableQuiz(Actor actor, MaterialModule module, UUID quizId) {
         var quiz =
                 quizQuery.get(quizId)
-                        .orElseThrow(() -> ApiException.notFound("MATERIAL_QUIZ_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("MATERIAL_QUIZ_NOT_FOUND"));
         if (!quiz.subjectId().equals(module.subjectId()))
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "MATERIAL_QUIZ_INVALID", "Quiz không thuộc môn của module");
         if (!materialAccessPolicy.canManageQuiz(
                 actor, quiz.subjectId(), quiz.scope() == QuizScope.CLASS ? quiz.classId() : null)) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
                     "ACCESS_DENIED", "MATERIAL_MODULE", module.id().toString(), AuditResult.DENIED,
                     "QUIZ_MANAGE_DENIED", Map.of("quizId", quizId.toString()), clock.instant()));
-            throw ApiException.notFound("MATERIAL_QUIZ_NOT_FOUND");
+            throw ApiException.createNotFound("MATERIAL_QUIZ_NOT_FOUND");
         }
         return quiz;
     }
@@ -272,14 +272,14 @@ public class MaterialModuleService {
         var module =
                 materialModuleRepository
                         .findModule(id)
-                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
         materialAccessPolicy.requireModuleManagement(actor, module.subjectId());
         if (module.version() != expected) throw createVersionConflict();
         return module;
     }
 
     private ApiException createVersionConflict() {
-        return ApiException.conflict(
+        return ApiException.createConflict(
                 "MATERIAL_VERSION_CONFLICT", "Module đã thay đổi, vui lòng tải lại");
     }
 

@@ -1,4 +1,5 @@
 import { cx } from "./cx";
+import { msg } from "@/i18n/msg";
 
 // Màu cố định, không đổi khi đổi sáng tối: cam và xanh lơ đậm vừa đủ đọc rõ trên cả nền trắng lẫn nền xanh đêm.
 export const INK_ORANGE = "#e8833a";
@@ -64,7 +65,7 @@ export function Logo({ className }: { className?: string }) {
     <span className={cx("inline-flex items-center gap-2.5 text-ink", className)}>
       <LogoMark />
       <span className="font-display text-[17px] leading-none tracking-[-0.02em] whitespace-nowrap">
-        Nền tảng <i className="rounded-md bg-primary px-1.5 pb-0.5 text-on-primary">học tập</i>
+        {msg("shared.ui.Logo.learning")}<i className="rounded-md bg-primary px-1.5 pb-0.5 text-on-primary">{msg("shared.ui.Logo.platform")}</i>
       </span>
     </span>
   );

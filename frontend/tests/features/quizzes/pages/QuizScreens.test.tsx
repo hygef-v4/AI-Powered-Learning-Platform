@@ -7,7 +7,7 @@ import {
 } from "@/features/quizzes/api";
 import { BankQuestionPicker } from "@/features/quizzes/components/BankQuestionPicker";
 import { ClassQuizzesSection } from "@/features/quizzes/components/ClassQuizzesSection";
-import { settingsFormOf, settingsInput } from "@/features/quizzes/components/QuizDetailParts";
+import { buildSettingsForm, buildSettingsInput } from "@/features/quizzes/components/QuizDetailParts";
 import { QuizDetailPage } from "@/features/quizzes/pages/QuizDetailPage";
 import { SubjectQuizListPage } from "@/features/quizzes/pages/SubjectQuizListPage";
 import { quizDetailSections } from "@/features/quizzes/slots";
@@ -111,8 +111,8 @@ describe("QuizDetailPage", () => {
       { type: "PARAGRAPH" as const, align: "LEFT" as const, indent: 0, runs: [{ text: "Mô tả", bold: true }] },
       { type: "PARAGRAPH" as const, align: "LEFT" as const, indent: 0, runs: [{ text: "" }] },
     ] };
-    const form = settingsFormOf({ ...INFO, instructions: "Mô tả\n", instructionsDocument: document });
-    const result = settingsInput({ ...form, timeLimit: "10" });
+    const form = buildSettingsForm({ ...INFO, instructions: "Mô tả\n", instructionsDocument: document });
+    const result = buildSettingsInput({ ...form, timeLimit: "10" });
     expect(result.input?.instructionsDocument).toEqual(document);
   });
 
@@ -474,9 +474,9 @@ describe("QuizSettingsPanel", () => {
 
 describe("settingsInput (BR-U10-15)", () => {
   it("kiểm thời gian, số lượt và chuyển sang dữ liệu gửi API", () => {
-    const form = settingsFormOf(INFO);
-    expect(settingsInput({ ...form, timeLimit: "301", maxAttempts: "0" }).errors).toMatchObject({ timeLimit: expect.any(String), maxAttempts: expect.any(String) });
-    const { input } = settingsInput({ ...form, timeLimit: "45", maxAttempts: "", instructions: "  " });
+    const form = buildSettingsForm(INFO);
+    expect(buildSettingsInput({ ...form, timeLimit: "301", maxAttempts: "0" }).errors).toMatchObject({ timeLimit: expect.any(String), maxAttempts: expect.any(String) });
+    const { input } = buildSettingsInput({ ...form, timeLimit: "45", maxAttempts: "", instructions: "  " });
     expect(input?.settings).toMatchObject({ timeLimitMinutes: 45, maxAttempts: null });
     expect(input?.instructions).toBeNull();
   });

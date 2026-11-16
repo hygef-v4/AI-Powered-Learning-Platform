@@ -60,7 +60,7 @@ public class AiUsageRepository {
     /** Lịch sử của chính một người, mới nhất trước (BR-U06-40). */
     public List<AiUsageRecord> listOwn(UUID accountId, Source source, Instant from, Instant to, int offset, int limit) {
         Map<String, Object> p = new HashMap<>();
-        String where = where(accountId, source, from, to, p);
+        String where = buildWhereClause(accountId, source, from, to, p);
         p.put("offset", offset);
         p.put("limit", limit);
         return jdbc.sql("select " + COLUMNS + " from ai_usage_records" + where
@@ -70,16 +70,16 @@ public class AiUsageRepository {
 
     public long countOwn(UUID accountId, Source source, Instant from, Instant to) {
         Map<String, Object> p = new HashMap<>();
-        return jdbc.sql("select count(*) from ai_usage_records" + where(accountId, source, from, to, p)).params(p)
+        return jdbc.sql("select count(*) from ai_usage_records" + buildWhereClause(accountId, source, from, to, p)).params(p)
                 .query(Long.class).single();
     }
 
     /** Tổng số lượt và token theo nguồn của một người trong kỳ (thẻ trên AI Usage History). */
-    public Map<Source, long[]> totalsOwn(UUID accountId, Instant from, Instant to) {
+    public Map<Source, long[]> sumOwnTotals(UUID accountId, Instant from, Instant to) {
         Map<Source, long[]> totals = new HashMap<>();
         Map<String, Object> p = new HashMap<>();
         jdbc.sql("select source, count(*) as n, coalesce(sum(input_tokens), 0) + coalesce(sum(output_tokens), 0) as tokens "
-                        + "from ai_usage_records" + where(accountId, null, from, to, p) + " group by source")
+                        + "from ai_usage_records" + buildWhereClause(accountId, null, from, to, p) + " group by source")
                 .params(p).query((rs, n) -> totals.put(Source.valueOf(rs.getString("source")),
                         new long[] {rs.getLong("n"), rs.getLong("tokens")}))
                 .list();
@@ -87,7 +87,7 @@ public class AiUsageRepository {
     }
 
     /** Token của một task (lấy dòng usage mới nhất của task) cho {@code AiTaskView}. */
-    public Optional<AiUsageSummary> summaryOfTask(UUID taskId) {
+    public Optional<AiUsageSummary> findTaskSummary(UUID taskId) {
         return jdbc.sql("select input_tokens, output_tokens, provenance from ai_usage_records where task_id = :taskId "
                         + "order by created_at desc limit 1")
                 .param("taskId", taskId)
@@ -97,7 +97,7 @@ public class AiUsageRepository {
     }
 
     /** Tổng hợp API chung cho Admin (BR-U06-41): theo giảng viên, ngày, provider và model; không có nội dung. */
-    public List<SharedRow> sharedSummary(Instant from, Instant to) {
+    public List<SharedRow> listSharedSummary(Instant from, Instant to) {
         return jdbc.sql("select account_id, (created_at at time zone 'Asia/Ho_Chi_Minh')::date as day, provider, model, "
                         + "count(*) as requests, coalesce(sum(input_tokens), 0) + coalesce(sum(output_tokens), 0) as tokens "
                         + "from ai_usage_records where source = 'SHARED' and created_at >= :from and created_at < :to "
@@ -113,7 +113,7 @@ public class AiUsageRepository {
                             long tokens) {
     }
 
-    private static String where(UUID accountId, Source source, Instant from, Instant to, Map<String, Object> p) {
+    private static String buildWhereClause(UUID accountId, Source source, Instant from, Instant to, Map<String, Object> p) {
         List<String> conditions = new ArrayList<>();
         conditions.add("account_id = :accountId");
         p.put("accountId", accountId);

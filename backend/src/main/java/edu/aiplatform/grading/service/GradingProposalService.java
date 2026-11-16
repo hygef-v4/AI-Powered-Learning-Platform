@@ -70,7 +70,7 @@ public class GradingProposalService {
                     prepared.maxOutputTokens()));
         } catch (ApiException ex) {
             // Record failure in database if AI task submission failed with domain error
-            return gradingProposalTransactions.recordDispatch(proposal.id, null, ex.code());
+            return gradingProposalTransactions.recordDispatch(proposal.id, null, ex.readCode());
         } catch (RuntimeException ex) {
             // Record failure in database if AI service is unreachable or network timed out
             return gradingProposalTransactions.recordDispatch(proposal.id, null,
@@ -90,7 +90,7 @@ public class GradingProposalService {
     public List<GradingProposal> listProposals(Actor actor, UUID evaluationId) {
         // 1. Verify that the evaluation exists and actor has teacher review permission
         var evaluation = evaluationRepository.findById(evaluationId)
-                .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_REVIEW);
 
         // 2. Mark existing proposals as STALE if the submission snapshot or rubric changed
@@ -167,7 +167,7 @@ public class GradingProposalService {
             try {
                 // Verify evaluation existence, teacher permission, and version concurrency
                 var evaluation = evaluationRepository.findById(item.evaluationId())
-                        .orElseThrow(() -> ApiException.notFound("GRADE_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
                 gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_WRITE);
                 evaluation.checkVersion(item.version());
 
@@ -183,7 +183,7 @@ public class GradingProposalService {
                 if ("FAILED".equals(proposal.status))
                     sourceBlocked = true;
             } catch (ApiException ex) {
-                outcomes.add(new ItemResult(item.evaluationId(), "FAILED", ex.code(), null));
+                outcomes.add(new ItemResult(item.evaluationId(), "FAILED", ex.readCode(), null));
             } catch (RuntimeException ex) {
                 outcomes.add(new ItemResult(item.evaluationId(), "FAILED", "AI_SERVICE_UNAVAILABLE",
                         null));

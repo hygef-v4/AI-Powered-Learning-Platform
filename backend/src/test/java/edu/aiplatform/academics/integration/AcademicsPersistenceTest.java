@@ -34,7 +34,7 @@ class AcademicsPersistenceTest {
         var repository = new CourseClassRepository(namedParameterJdbcTemplate);
         var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, start, null, now);
         when(namedParameterJdbcTemplate.update(anyString(), anyMap())).thenReturn(0);
-        assertThatThrownBy(() -> repository.update(original.updateInfo("New", null, start, now), 0))
+        assertThatThrownBy(() -> repository.updateClass(original.updateInfo("New", null, start, now), 0))
                 .isInstanceOf(AcademicRuleException.class).hasMessageContaining("tải lại");
         verify(namedParameterJdbcTemplate).update(argThat(sql -> sql.contains("where id = :id and version = :expectedVersion") &&
                 !sql.contains("set subject_id") && !sql.contains("set code")),
@@ -46,7 +46,7 @@ class AcademicsPersistenceTest {
         var original = CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C1", "Class", null, start, null, now);
         assertThatThrownBy(() -> repository.insert(original)).isInstanceOf(IllegalStateException.class);
         TransactionSynchronizationManager.setActualTransactionActive(true);
-        assertThatThrownBy(() -> repository.update(original, 5)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> repository.updateClass(original, 5)).isInstanceOf(IllegalArgumentException.class);
         TransactionSynchronizationManager.setCurrentTransactionReadOnly(true);
         assertThatThrownBy(() -> repository.insert(original)).isInstanceOf(IllegalStateException.class);
         verifyNoInteractions(namedParameterJdbcTemplate);
@@ -78,7 +78,7 @@ class AcademicsPersistenceTest {
                 .hasMessageNotContaining("SQL details");
         reset(namedParameterJdbcTemplate);
         when(namedParameterJdbcTemplate.update(anyString(), anyMap())).thenReturn(0);
-        assertThatThrownBy(() -> repository.update(value.removeEnrollment(now), EnrollmentStatus.ACTIVE))
+        assertThatThrownBy(() -> repository.updateEnrollment(value.removeEnrollment(now), EnrollmentStatus.ACTIVE))
                 .isInstanceOf(AcademicRuleException.class).hasMessageContaining("tải lại");
     }
 
@@ -90,8 +90,8 @@ class AcademicsPersistenceTest {
         var value = Enrollment.createEnrollment(classId, accountId, EnrollmentSource.MANUAL, now);
         assertThatThrownBy(() -> repository.insert(value)).isInstanceOf(IllegalStateException.class);
         when(namedParameterJdbcTemplate.queryForObject(anyString(), anyMap(), eq(Boolean.class))).thenReturn(true, false);
-        assertThat(repository.activeInOtherClass(accountId, subjectId, classId)).isTrue();
-        assertThat(repository.activeInOtherClass(accountId, subjectId, classId)).isFalse();
+        assertThat(repository.hasActiveEnrollmentElsewhere(accountId, subjectId, classId)).isTrue();
+        assertThat(repository.hasActiveEnrollmentElsewhere(accountId, subjectId, classId)).isFalse();
         verify(namedParameterJdbcTemplate, times(2)).queryForObject(anyString(), anyMap(), eq(Boolean.class));
     }
 
@@ -102,13 +102,13 @@ class AcademicsPersistenceTest {
         when(namedParameterJdbcTemplate.update(anyString(), anyMap())).thenThrow(new DuplicateKeyException("SQL details"));
         assertThatThrownBy(() -> repository.insert(original))
                 .isInstanceOfSatisfying(AcademicRuleException.class, error -> {
-                    assertThat(error.code()).isEqualTo("CLASS_EXISTS");
+                    assertThat(error.readCode()).isEqualTo("CLASS_EXISTS");
                     assertThat(error.getMessage()).isEqualTo("Mã lớp đã tồn tại trong môn ở học kỳ này");
                 });
         var moved = original.updateInfo("Class", null, LocalDate.of(2027, 5, 15), now.plusSeconds(1));
-        assertThatThrownBy(() -> repository.update(moved, 0))
+        assertThatThrownBy(() -> repository.updateClass(moved, 0))
                 .isInstanceOfSatisfying(AcademicRuleException.class,
-                        error -> assertThat(error.code()).isEqualTo("CLASS_EXISTS"));
+                        error -> assertThat(error.readCode()).isEqualTo("CLASS_EXISTS"));
         verify(namedParameterJdbcTemplate).update(argThat(sql -> sql.contains("insert") && sql.contains("starts_on")
                 && !sql.contains(" term")), argThat((Map<String, ?> params) ->
                 params.get("startsOn").equals(java.sql.Date.valueOf(start))));

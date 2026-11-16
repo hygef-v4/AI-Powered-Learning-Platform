@@ -13,7 +13,7 @@ public class PasswordPolicyException extends RuntimeException {
         this.violations = Set.copyOf(violations);
     }
 
-    public Set<PasswordPolicy.Violation> violations() {
+    public Set<PasswordPolicy.Violation> listViolations() {
         return violations;
     }
 }

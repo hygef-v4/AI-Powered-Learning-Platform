@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { DocumentPart } from "@/shared/document";
 import { attemptResultSources, type AttemptResult, type AttemptResultItem } from "../slots";
+import { msg } from "@/i18n/msg";
 
 /** Kết quả đã công bố của một lượt, lấy từ nguồn U09 đăng ký; chưa có nguồn hay chưa chọn lượt thì không tải. */
 export function useAttemptResult(attemptId: string | null) {
@@ -27,7 +28,7 @@ export type ResultPart = { key: string; title: string; awarded: number; max: num
  * Điểm theo từng bài: gom các mục rubric về nhánh con trực tiếp của gốc tài liệu (heading cấp cao nhất của phần), giữ thứ tự
  * các bài trong tài liệu. Không có danh sách phần thì mỗi phần của rubric là một bài.
  */
-export function resultByPart(items: AttemptResultItem[], parts: DocumentPart[] | undefined): ResultPart[] {
+export function groupResultByPart(items: AttemptResultItem[], parts: DocumentPart[] | undefined): ResultPart[] {
   const partOf = new Map((parts ?? []).map((part) => [part.partId, part]));
   const order = new Map<string, number>();
   (parts ?? []).forEach((part, index) => {
@@ -38,7 +39,7 @@ export function resultByPart(items: AttemptResultItem[], parts: DocumentPart[] |
   for (const item of items) {
     const part = partOf.get(item.partId);
     const key = part ? part.ancestorHeadingIds[0] ?? part.partId : item.partId;
-    const title = part ? part.title.split(" › ")[0]! : item.criterionTitle || "Bài";
+    const title = part ? part.title.split(" › ")[0]! : item.criterionTitle || msg("assignmentwork.model.attemptResult.assignment");
     const group = groups.get(key) ?? { key, title, awarded: 0, max: 0, items: [] };
     group.awarded += item.awarded;
     group.max += item.max;

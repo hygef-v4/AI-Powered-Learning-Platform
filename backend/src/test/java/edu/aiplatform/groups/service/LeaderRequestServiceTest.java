@@ -92,17 +92,17 @@ class LeaderRequestServiceTest {
     @Test
     void submitRejectsLongReasonBadProposalSecondPendingOutsiderAndClosedClass() {
         assertThatThrownBy(() -> service.submit(member, group.id(), "x".repeat(1001), null))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_REASON_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_REQUEST_REASON_INVALID"));
         assertThatThrownBy(() -> service.submit(member, group.id(), REASON, leader.accountId()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_PROPOSAL_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_REQUEST_PROPOSAL_INVALID"));
         assertThatThrownBy(() -> service.submit(outsider, group.id(), REASON, null))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(GroupAccess.NOT_FOUND));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo(GroupAccess.NOT_FOUND));
         when(groups.findPending(group.id())).thenReturn(Optional.of(pending(null)));
         assertThatThrownBy(() -> service.submit(member, group.id(), REASON, null))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_PENDING"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_REQUEST_PENDING"));
         status(ClassStatus.DRAFT);
         assertThatThrownBy(() -> service.submit(member, group.id(), REASON, null))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_CLASS_NOT_OPEN"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_CLASS_NOT_OPEN"));
         verify(groups, never()).insertRequest(any());
     }
 
@@ -130,9 +130,9 @@ class LeaderRequestServiceTest {
         LeaderChangeRequest open = pending(null);
         when(groups.lockRequest(open.id())).thenReturn(Optional.of(open));
         assertThatThrownBy(() -> service.approve(teacher, open.id(), null))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUIRED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_REQUIRED"));
         assertThatThrownBy(() -> service.approve(teacher, open.id(), outsider.accountId()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_NOT_MEMBER"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_NOT_MEMBER"));
     }
 
     @Test
@@ -145,7 +145,7 @@ class LeaderRequestServiceTest {
         LeaderChangeRequest done = request.decide(Status.REJECTED, null, teacher.accountId(), "x", NOW);
         when(groups.lockRequest(request.id())).thenReturn(Optional.of(done));
         assertThatThrownBy(() -> service.approve(teacher, request.id(), member.accountId()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_CLOSED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_REQUEST_CLOSED"));
         verify(groups, never()).bumpSetVersion(any(), anyLong(), any());
     }
 
@@ -163,7 +163,7 @@ class LeaderRequestServiceTest {
         doThrow(new DuplicateKeyException("concurrent request")).when(groups).insertRequest(any());
 
         assertThatThrownBy(() -> service.submit(member, group.id(), "   ", null))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_PENDING"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_REQUEST_PENDING"));
 
         verifyNoInteractions(events, audit);
     }
@@ -174,7 +174,7 @@ class LeaderRequestServiceTest {
         when(groups.lockRequest(decided.id())).thenReturn(Optional.of(decided));
 
         assertThatThrownBy(() -> service.cancel(member, decided.id()))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_REQUEST_CLOSED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_REQUEST_CLOSED"));
 
         verify(groups, never()).updateRequest(any());
         verifyNoInteractions(events, audit);
@@ -186,10 +186,10 @@ class LeaderRequestServiceTest {
         when(groups.lockRequest(request.id())).thenReturn(Optional.of(request));
         when(classes.isActiveStudent(member.accountId(), classId)).thenReturn(false);
         assertThatThrownBy(() -> service.approve(teacher, request.id(), null))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("LEADER_NOT_MEMBER"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_NOT_MEMBER"));
         status(ClassStatus.ARCHIVED);
         assertThatThrownBy(() -> service.approve(teacher, request.id(), null))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("GROUP_CLASS_ARCHIVED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_CLASS_ARCHIVED"));
         verify(groups, never()).setLeader(any(), any(), any());
         verify(groups, never()).updateRequest(any());
         verifyNoInteractions(events, audit);
@@ -203,7 +203,7 @@ class LeaderRequestServiceTest {
         when(authorization.authorize(eq(foreign), any(), any())).thenReturn(AuthorizationDecision.deny("OUT_OF_CLASS_SCOPE"));
 
         assertThatThrownBy(() -> service.reject(foreign, request.id(), "No"))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(GroupAccess.NOT_FOUND));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo(GroupAccess.NOT_FOUND));
 
         verify(groups, never()).updateRequest(any());
         verifyNoInteractions(events);
@@ -214,7 +214,7 @@ class LeaderRequestServiceTest {
         LeaderChangeRequest request = pending(null);
         when(groups.lockRequest(request.id())).thenReturn(Optional.of(request));
         assertThatThrownBy(() -> service.reject(teacher, request.id(), "x".repeat(1001)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("REJECT_REASON_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("REJECT_REASON_INVALID"));
         var result = service.reject(teacher, request.id(), "  " + "x".repeat(1000) + "  ");
 
         assertThat(result.decisionReason()).isEqualTo("x".repeat(1000));
