@@ -1,5 +1,18 @@
 # AI-DLC State Tracking
 
+## Sửa các điểm rà soát toàn dự án trên nền staging — 2026-11-16
+
+Người dùng yêu cầu rà soát toàn dự án (2026-11-15), rồi chọn phương án 1: chỉ mang lên staging những điểm staging còn thiếu. Nhánh `chi-cuongg/audit-project-bugs-docs` trên `origin/staging@f1c351dd`. [Kế hoạch và phạm vi](construction/plans/code-generation-plan/2026-11-16-review-fixes-on-staging.md); [kết quả và giới hạn](construction/build-and-test/2026-11-16-review-fixes-on-staging-results.md).
+
+- [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering.
+- [x] Requirements Analysis (Minimal): phạm vi là các điểm của báo cáo rà soát còn tồn tại trên staging.
+- [x] Workflow Planning: chỉ Code Generation và Build and Test; các giai đoạn khác bỏ qua vì không có thành phần hay quy tắc nghiệp vụ mới.
+- [x] Code Generation: 6/6 bước. Quét bù nhắc hạn 24 giờ (U14); migration bỏ trần 10 của số thứ tự lượt và bỏ bảng `group_peer_reviews`; frontend bỏ `GRADE_LOCKED` và nhãn đánh giá chéo; OpenAPI grading và tài liệu đồng bộ.
+- [x] Build and Test: backend `mvn -B verify` có Docker 2.492 test, 0 thất bại, 0 lỗi, 1 bỏ qua; bộ kiểm bắt buộc của CI qua; 48 migration áp trên PostgreSQL thật; frontend ESLint, TypeScript, Vitest 1.134/1.134 và production build qua.
+- [ ] Người dùng duyệt mã và quyết định push, mở PR vào staging.
+
+Bản sửa đầu trên `3b86e57d` có thêm chặn nộp lại khi đã có điểm công bố, trạng thái `CANCELLED` của lượt làm và hộp xác nhận công bố. Các phần đó không mang lên vì staging đã có quy tắc chỉ chấm khi bài đã đóng (`fe492df5`); bản đầy đủ giữ ở nhánh cục bộ `backup/review-fixes-full-2026-11-15`. Chưa kiểm trên trình duyệt, chưa push hay deploy. Security/Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
 ## Ngày tháng, kiểm API key và mở chấm sau đóng bài — 2026-11-15
 
 User duyệt đề xuất audit bằng “ok giúp tôi sửa theo đề xuất $ponytail:ponytail”.
@@ -490,7 +503,7 @@ After the dark-mode select report, added theme foreground/background to native s
 | Resiliency Baseline | Yes | Requirements Analysis; scope retained |
 | Property-Based Testing | No | Requirements Analysis; unchanged |
 
-Security scope: SECURITY-03/04/05/08/09/12/15. Resiliency scope: RESILIENCY-04/06/10. Other controls N/A outside approved project scope. Automated authorization/privacy/resiliency regressions passed within the approved remediation scope; this does not certify every runtime control. Key-reveal design delta remains explicit.
+Security scope: SECURITY-03/04/05/08/09/12/15. Resiliency scope: RESILIENCY-04/06/10. Other controls N/A outside approved project scope. Automated authorization/privacy/resiliency regressions passed within the approved remediation scope; this does not certify every runtime control. AI API keys are write-only (D15 closed 2026-11-11); only MCP tokens can be shown again.
 
 ## Historical lifecycle and approvals
 

@@ -93,7 +93,7 @@ US-GRP-007…010, [SG-01…09](../../../inception/requirements/2026-11-11-studen
 | BR-U12-70 | Chỉ giảng viên chính của lớp `DRAFT`/`OPEN` đọc và sửa cài đặt đợt. Bật cần `minSize`, `maxSize` là số nguyên 2–20, `minSize ≤ maxSize`; `deadline` trống hoặc sau thời điểm lưu. Tắt giữ nguyên sĩ số và hạn chót đã lưu. Lưu kèm `version`, lệch thì `409`. Audit `GROUP_FORMATION_UPDATED` với giá trị trước/sau. | SG-01, US-GRP-007 S1, S2 |
 | BR-U12-71 | Đợt **mở** khi `enabled`, lớp `OPEN` và (`deadline` trống hoặc `now < deadline`); tính mỗi lần đọc/ghi, không dùng job. Lớp chưa có cài đặt coi như tắt. | SG-01 |
 | BR-U12-72 | Khi đợt đóng: sinh viên không tạo, đổi tên, mời, chấp nhận, gửi duyệt được (`FORMATION_CLOSED`); vẫn rời, rút về, hủy đề xuất được. Lời mời `INVITED` hiển thị là hết hạn và chuyển `EXPIRED` ở lần ghi kế tiếp chạm tới đề xuất hoặc khi đợt được mở lại. Đề xuất `SUBMITTED` vẫn duyệt/từ chối được; `DRAFT` được giữ. | SG-01, US-GRP-007 S3 |
-| BR-U12-73 | Đổi sĩ số khi đợt đang bật không đổi đề xuất đã có; đề xuất `SUBMITTED` không còn thỏa sĩ số mới hiện cảnh báo cho giảng viên, vẫn duyệt được. | SG-01 |
+| BR-U12-73 | Đổi sĩ số khi đợt đang bật không đổi đề xuất đã có. Đề xuất `SUBMITTED` vượt sĩ số tối đa mới hiện cảnh báo cho giảng viên và vẫn duyệt được. Đề xuất còn dưới sĩ số tối thiểu mới cũng hiện cảnh báo, nhưng khi duyệt thì lỗi `PROPOSAL_INCOMPLETE` và về `DRAFT` (BR-U12-85). | SG-01; làm rõ 2026-11-16 |
 
 ### Đề xuất và lời mời
 

@@ -4,7 +4,7 @@
 
 > Revision Inception 2026-10-13 theo yêu cầu người dùng: SWR/SWD; hai loại bài Assignment/Quiz; Assignment cá nhân/nhóm, Draw.io tùy chọn; API chung theo quota giảng viên, API cá nhân và agent riêng qua MCP. Không mua credit, không Code Lab. Đây là revision tài liệu, Construction design/plans đã đồng bộ; chưa xác nhận triển khai code/runtime. D01–D04 đã chốt 2026-10-15.
 
-**50 MVP stories + 1 extension story**, 66 active UC, 15 logical units. IDs giữ lịch sử; US-ASM-005 và US-PAY-* retired; US-ASM-007 gộp tài liệu thuần vào US-ASM-004.
+**54 MVP stories + 1 extension story** (US-GRP-007…010 thêm ngày 2026-11-11), 66 active UC, 15 logical units. IDs giữ lịch sử; US-ASM-005 và US-PAY-* retired; US-ASM-007 gộp tài liệu thuần vào US-ASM-004.
 
 Quy tắc chung: server kiểm R1–R5/ownership/state/version cho web/API/MCP; chỉ ASSIGNMENT/QUIZ; Student không shared quota; AI không tự official decisions. Đã chốt 2026-10-15: Quiz chỉ Practice (D01), GROUP chỉ Graded (D02), bài nhóm không có AI cho Student (D03 bỏ), quota chung theo ngày và trần hệ thống (D04). Chưa có bằng chứng survey.
 

@@ -1,5 +1,7 @@
 # Locked grades; resubmission invalidates previous grades
 
+> Superseded. The grade lock in rule 1 (`GRADE_LOCKED`) was withdrawn on 2026-11-11: published grades can be corrected. The group rule in point 5 was replaced on 2026-11-10 and grading was tied to closed assignments on 2026-11-15. Current rules: [U09 business rules](../../construction/u09-assignment-grading/functional-design/business-rules.md) (BR-U09-10, 42, 50, 51). The text below is kept as the record of the 2026-11-02 decision.
+
 Latest user decision: "tôi nghĩ để cái cũ đi nộp lại thì bỏ điểm cũ". This supersedes the earlier choice to retain separate official group grading rounds. Keep the existing DB design; remove the unexecuted group-round migration.
 
 1. Current PENDING/DRAFT can be edited. FINALIZED/PUBLISHED rubric, score, adjustments, feedback and member grades cannot be manually edited or changed by applying AI, even with a reason: HTTP 409 GRADE_LOCKED.

@@ -425,6 +425,7 @@ Primary UC 37–41; FR-018, FR-030, FR-039.
 ### Migrations
 
 - [V20260925_1400__create_assignment_work_tables.sql](../../../backend/src/main/resources/db/migration/assignmentwork/V20260925_1400__create_assignment_work_tables.sql)
+- [V20261116_1010__unlimited_attempt_numbers.sql](../../../backend/src/main/resources/db/migration/assignmentwork/V20261116_1010__unlimited_attempt_numbers.sql) — bỏ trần 10 của số thứ tự lượt (2026-11-16)
 
 ### Frontend
 
@@ -658,6 +659,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [V20261102_1000__group_section_collaboration.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1000__group_section_collaboration.sql)
 - [V20261102_1200__group_assignment_phase.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1200__group_assignment_phase.sql)
 - [V20261111_1800__group_self_formation.sql](../../../backend/src/main/resources/db/migration/groups/V20261111_1800__group_self_formation.sql) — đợt tự chia nhóm, đề xuất, lời mời (2026-11-11)
+- [V20261116_1000__drop_group_peer_reviews.sql](../../../backend/src/main/resources/db/migration/groups/V20261116_1000__drop_group_peer_reviews.sql) — bỏ bảng đánh giá chéo không còn dùng (2026-11-16)
 
 ### Frontend
 

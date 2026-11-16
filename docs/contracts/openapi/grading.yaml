@@ -406,8 +406,9 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied. Only current PENDING/DRAFT grades are editable. FINALIZED/PUBLISHED
-        writes, including AI proposal application, return 409 GRADE_LOCKED even with a reason.
+        authority are denied. Writes need an OPEN class (else 409 GRADING_CLASS_READ_ONLY) and
+        an assignment closed to submissions, CLOSED or RETIRED (else 409 GRADING_ASSIGNMENT_OPEN).
+        A correction to a PUBLISHED grade stays PUBLISHED; SUPERSEDED returns 409.
       parameters:
       - name: id
         in: path
@@ -441,8 +442,8 @@ paths:
       tags:
       - U09
       description: Assigned Teacher/SubjectManager only. Admin and class-management-only
-        authority are denied. Both group root and member must be editable. FINALIZED/PUBLISHED
-        root or member returns 409 GRADE_LOCKED, including requests containing a reason.
+        authority are denied. Both group root and member must be editable under the same class
+        and closed-assignment conditions; PUBLISHED root and member grades can be corrected.
       parameters:
       - name: id
         in: path
@@ -868,7 +869,7 @@ components:
           - type: 'null'
         changeReason:
           deprecated: true
-          description: Legacy field retained for request compatibility. FINALIZED/PUBLISHED grades reject writes with HTTP 409 GRADE_LOCKED even when a reason is provided.
+          description: Legacy field retained for request compatibility; optional note stored with a score change.
           anyOf:
           - type: string
             maxLength: 2000
