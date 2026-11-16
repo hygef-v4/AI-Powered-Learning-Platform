@@ -16,7 +16,7 @@ public interface IQuizAttemptRepository {
 
     Optional<QuizAttempt> find(UUID id);
 
-    /** Khóa theo (Quiz, người học) tới hết transaction để bắt đầu lượt không trùng (NFR-U11-11). */
+    /** Lock the quiz row, then (quiz, learner), until commit to protect its paper and prevent duplicate starts. */
     void lockStart(UUID quizId, UUID accountId);
 
     Optional<QuizAttempt> findInProgress(UUID quizId, UUID accountId);

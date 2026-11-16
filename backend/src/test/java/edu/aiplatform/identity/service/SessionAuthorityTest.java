@@ -4,6 +4,7 @@ import static edu.aiplatform.identity.IdentityTestData.NOW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 import edu.aiplatform.identity.IdentityTestData;
 import edu.aiplatform.identity.contract.AccountStatus;
@@ -12,11 +13,16 @@ import edu.aiplatform.identity.model.Account;
 import edu.aiplatform.identity.repository.AccountRepository;
 import edu.aiplatform.identity.integration.JwtService;
 import edu.aiplatform.identity.integration.SessionStore;
+import edu.aiplatform.identity.integration.FakeRedis;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.time.Clock;
 import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class SessionAuthorityTest {
 
@@ -26,7 +32,95 @@ class SessionAuthorityTest {
     private final SessionAuthority authority = new SessionAuthority(jwt, sessions, accounts);
 
     private SessionStore.SessionRecord sessionOf(UUID accountId) {
-        return new SessionStore.SessionRecord(accountId, NOW, NOW, "hash");
+        return new SessionStore.SessionRecord(accountId, NOW, NOW, "hash", null);
+    }
+
+    @Test
+    void legacySessionIssuedBeforePasswordChangeIsRejectedAndDeleted() {
+        Account account = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h");
+        when(sessions.find("sid")).thenReturn(Optional.of(new SessionStore.SessionRecord(
+                account.id(), NOW.minusMillis(1), NOW, "hash", null)));
+        when(accounts.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThat(authority.authenticate(jwt.issue(account.id(), Role.STUDENT, "sid"))).isEmpty();
+        verify(sessions).delete("sid");
+    }
+
+    @Test
+    void oldStampIsRejectedEvenWhenIssuedAfterPasswordReset() {
+        Account account = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h");
+        when(sessions.find("sid")).thenReturn(Optional.of(new SessionStore.SessionRecord(
+                account.id(), NOW.plusSeconds(1), NOW, "hash", NOW.minusMillis(1).toEpochMilli())));
+        when(accounts.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThat(authority.authenticate(jwt.issue(account.id(), Role.STUDENT, "sid"))).isEmpty();
+        verify(sessions).delete("sid");
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0", "1"})
+    void equalOrFutureStampIsAcceptedEvenWhenIssuedEarlier(long offset) {
+        Account account = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h");
+        when(sessions.find("sid")).thenReturn(Optional.of(new SessionStore.SessionRecord(
+                account.id(), NOW.minusSeconds(1), NOW, "hash", NOW.toEpochMilli() + offset)));
+        when(accounts.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThat(authority.authenticate(jwt.issue(account.id(), Role.STUDENT, "sid"))).isPresent();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0", "1"})
+    void legacySessionIssuedAtOrAfterPasswordChangeIsAccepted(long offset) {
+        Account account = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h");
+        when(sessions.find("sid")).thenReturn(Optional.of(new SessionStore.SessionRecord(
+                account.id(), NOW.plusMillis(offset), NOW, "hash", null)));
+        when(accounts.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThat(authority.authenticate(jwt.issue(account.id(), Role.STUDENT, "sid"))).isPresent();
+    }
+
+    @Test
+    void nullAccountPasswordTimestampAcceptsLegacySession() {
+        Account account = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, null);
+        when(sessions.find("sid")).thenReturn(Optional.of(sessionOf(account.id())));
+        when(accounts.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThat(authority.authenticate(jwt.issue(account.id(), Role.STUDENT, "sid"))).isPresent();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"foreign", "stale", "deleted"})
+    void staleAuthenticationSnapshotCannotAcceptAnInvalidReplacement(String replacement) {
+        Account account = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h");
+        var oldSession = new SessionStore.SessionRecord(account.id(), NOW, NOW,
+                "hash", NOW.minusMillis(1).toEpochMilli());
+        var liveSession = new SessionStore.SessionRecord(
+                replacement.equals("foreign") ? UUID.randomUUID() : account.id(), NOW, NOW, "hash",
+                replacement.equals("stale") ? NOW.minusMillis(1).toEpochMilli() : NOW.toEpochMilli());
+        when(sessions.find("sid")).thenReturn(Optional.of(oldSession), replacement.equals("deleted")
+                ? Optional.empty() : Optional.of(liveSession));
+        when(accounts.findById(account.id())).thenReturn(Optional.of(account));
+
+        assertThat(authority.authenticate(jwt.issue(account.id(), account.role(), "sid"))).isEmpty();
+        verify(sessions, org.mockito.Mockito.times(2)).find("sid");
+        verify(sessions).delete("sid");
+    }
+
+    @Test
+    void authenticationSurvivesRestampAfterSessionRead() {
+        Account account = IdentityTestData.account(Role.STUDENT, AccountStatus.ACTIVE, "h");
+        var realSessions = new SessionStore(new FakeRedis().template,
+                JsonMapper.builder().findAndAddModules().build(), Clock.fixed(NOW, ZoneOffset.UTC),
+                IdentityTestData.properties());
+        var issued = realSessions.create(account.id(), NOW.minusMillis(1).toEpochMilli());
+        when(accounts.findById(account.id())).thenAnswer(invocation -> {
+            realSessions.restamp(issued.sid(), NOW.toEpochMilli());
+            return Optional.of(account);
+        });
+        var realAuthority = new SessionAuthority(jwt, realSessions, accounts);
+
+        assertThat(realAuthority.authenticate(jwt.issue(account.id(), account.role(), issued.sid()))).isPresent();
+        assertThat(realSessions.find(issued.sid())).isPresent();
     }
 
     @Test
@@ -42,6 +136,7 @@ class SessionAuthorityTest {
             assertThat(s.actor().role()).isEqualTo(Role.TEACHER);
             assertThat(s.sid()).isEqualTo("sid");
         });
+        verify(sessions).find("sid");
     }
 
     @Test

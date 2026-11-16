@@ -1,6 +1,7 @@
 package edu.aiplatform.assignments.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -350,6 +351,27 @@ class DocumentModelServiceTest {
         String compact = service.compactDiagramXml(packed);
         assertThat(compact).contains("Trang 1 \"Lớp\"", "hình a: Order", "nối a -> b: has");
         assertThat(DiagramXml.cellCount(packed)).isEqualTo(3);
+    }
+
+    @Test
+    void diagramPagesShareOneExpansionBudget() {
+        String model = "<mxGraphModel><root><!--" + "a".repeat(500) + "--></root></mxGraphModel>";
+        String page = "<diagram>" + deflate(model) + "</diagram>";
+        String single = "<mxfile>" + page + "</mxfile>";
+        String multiple = "<mxfile>" + page.repeat(2) + "</mxfile>";
+        assertThat(DiagramXml.graphModels(single, 1000)).hasSize(1);
+        assertThatThrownBy(() -> DiagramXml.graphModels(multiple, 1000))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void diagramPageLimitAppliesToEveryReadPath() {
+        assertThat(DiagramXml.cellCount(null)).isZero();
+        String xml = "<mxfile>" + "<diagram><mxGraphModel/></diagram>".repeat(101) + "</mxfile>";
+        assertThat(DiagramXml.validate(xml)).contains("DIAGRAM_XML_INVALID");
+        assertThat(DiagramXml.detectType(xml)).isEqualTo(DiagramType.OTHER);
+        assertThat(DiagramXml.cellCount(xml)).isZero();
+        assertThat(DiagramXml.compact(xml, 100)).isEqualTo("(sơ đồ không đọc được)");
     }
 
     @Test

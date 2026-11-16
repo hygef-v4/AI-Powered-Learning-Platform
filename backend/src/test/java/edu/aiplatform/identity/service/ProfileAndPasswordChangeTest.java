@@ -26,6 +26,9 @@ import edu.aiplatform.identity.model.OtpPurpose;
 import edu.aiplatform.identity.integration.OtpChallengeStore;
 import edu.aiplatform.identity.integration.RequestThrottle;
 import edu.aiplatform.identity.integration.SessionStore;
+import edu.aiplatform.identity.integration.FakeRedis;
+import edu.aiplatform.identity.integration.JwtService;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import edu.aiplatform.identity.integration.VerificationTicketStore;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
@@ -116,12 +119,58 @@ class ProfileAndPasswordChangeTest {
     }
 
     @Test
+    void changedPasswordRestampsCurrentSessionAndRejectsLateOldPasswordLogin() {
+        Clock changeClock = Clock.fixed(NOW.plusSeconds(1).plusNanos(123456), ZoneOffset.UTC);
+        SessionStore realSessions = new SessionStore(new FakeRedis().template,
+                JsonMapper.builder().findAndAddModules().build(), changeClock, IdentityTestData.properties());
+        var keep = realSessions.create(account.id(), NOW.toEpochMilli());
+        var other = realSessions.create(account.id(), NOW.toEpochMilli());
+        PasswordChangeService changeService = new PasswordChangeService(accounts, authorization, realSessions,
+                otpChallenges, tickets, throttle, encoder, audit, TransactionOperations.withoutTransaction(), changeClock);
+
+        changeService.change(actor, keep.sid(), PASSWORD, NEW_PASSWORD);
+
+        var changedAt = NOW.plusSeconds(1);
+        verify(accounts).updatePassword(eq(account.id()), anyString(), eq(changedAt));
+        assertThat(realSessions.find(keep.sid())).hasValueSatisfying(session -> {
+            assertThat(session.pwdStamp()).isEqualTo(changedAt.toEpochMilli());
+            assertThat(session.isPasswordCurrent(account.passwordChangedAt())).isTrue();
+        });
+        Account changed = new Account(account.id(), account.schoolEmail(), account.role(), account.status(),
+                encoder.encode(NEW_PASSWORD), changedAt, account.displayName(), account.phoneNumber(), 0, null,
+                account.createdAt(), changedAt, account.version() + 1);
+        when(accounts.findById(account.id())).thenReturn(Optional.of(changed));
+        JwtService jwt = new JwtService(IdentityTestData.properties(), changeClock);
+        SessionAuthority authority = new SessionAuthority(jwt, realSessions, accounts);
+        assertThat(authority.authenticate(jwt.issue(account.id(), account.role(), keep.sid()))).isPresent();
+        assertThat(realSessions.find(other.sid())).isEmpty();
+        var lateLogin = realSessions.create(account.id(), NOW.toEpochMilli());
+        assertThat(authority.authenticate(jwt.issue(account.id(), account.role(), lateLogin.sid()))).isEmpty();
+        assertThat(realSessions.find(lateLogin.sid())).isEmpty();
+    }
+
+    @Test
+    void restampFailureAbortsPasswordChangeInsteadOfReportingSuccess() {
+        org.mockito.Mockito.doThrow(new IllegalStateException("CAS contention"))
+                .when(sessions).restamp("sid-now", NOW.toEpochMilli());
+
+        assertThatThrownBy(() -> passwords.change(actor, "sid-now", PASSWORD, NEW_PASSWORD))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(sessions, never()).deleteAllExcept(any(), any());
+        verify(otpChallenges, never()).delete(any(), any());
+        verify(tickets, never()).revoke(any(), any());
+    }
+
+    @Test
     void changePasswordKeepsCurrentSessionAndRevokesOthers() {
         passwords.change(actor, "sid-now", PASSWORD, NEW_PASSWORD);
 
         verify(accounts).updatePassword(eq(account.id()), org.mockito.ArgumentMatchers.argThat(
                 hash -> encoder.matches(NEW_PASSWORD, hash)), eq(NOW));
-        verify(sessions, times(2)).deleteAllExcept(account.id(), "sid-now");
+        var order = org.mockito.Mockito.inOrder(sessions);
+        order.verify(sessions).restamp("sid-now", NOW.toEpochMilli());
+        order.verify(sessions, times(2)).deleteAllExcept(account.id(), "sid-now");
         verify(sessions, never()).deleteAll(any());
         verify(otpChallenges).delete(account.id(), OtpPurpose.PASSWORD_RESET);
         verify(tickets).revoke(account.id(), OtpPurpose.PASSWORD_RESET);

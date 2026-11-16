@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Objects;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -19,16 +21,16 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 
 /** {@link StringRedisTemplate} giả trong bộ nhớ cho các lệnh U01 dùng; ghi lại TTL để test kiểm. */
-final class FakeRedis {
+public final class FakeRedis {
 
     final Map<String, String> values = new HashMap<>();
     final Map<String, Duration> ttls = new HashMap<>();
     final Map<String, Set<String>> sets = new HashMap<>();
     final Map<String, Map<Object, Object>> hashes = new HashMap<>();
-    final StringRedisTemplate template = mock(StringRedisTemplate.class);
+    public final StringRedisTemplate template = mock(StringRedisTemplate.class);
 
     @SuppressWarnings("unchecked")
-    FakeRedis() {
+    public FakeRedis() {
         ValueOperations<String, String> valueOps = mock(ValueOperations.class);
         SetOperations<String, String> setOps = mock(SetOperations.class);
         when(template.opsForValue()).thenReturn(valueOps);
@@ -50,9 +52,10 @@ final class FakeRedis {
             return true;
         });
 
-        // SessionStore.CLAIM_REFRESH: đọc refresh token và đánh dấu "used:{sid}:{millis}" trong một bước.
         when(template.execute(any(RedisScript.class), anyList(), any(Object[].class))).thenAnswer(i -> {
-            String key = i.<List<String>>getArgument(1).get(0);
+            RedisScript<?> script = i.getArgument(0);
+            List<String> keys = i.getArgument(1);
+            String key = keys.get(0);
             if (i.getArgument(0) == OtpChallengeStore.VERIFY) {
                 // OtpChallengeStore.VERIFY: trừ lượt trước rồi so mã, một bước.
                 Map<Object, Object> hash = hashes.get(key);
@@ -74,13 +77,63 @@ final class FakeRedis {
                 }
                 return 0L;
             }
-            String value = values.get(key);
-            if (value == null || value.startsWith(SessionStore.USED_MARK)) {
+            if (script == SessionStore.CLAIM_REFRESH) {
+                String value = values.get(key);
+                if (value == null || value.startsWith(SessionStore.USED_MARK)) {
+                    return value;
+                }
+                values.put(key, SessionStore.USED_MARK + value + ":" + i.getArgument(2));
+                ttls.put(key, Duration.ofMillis(Long.parseLong(i.getArgument(3))));
                 return value;
             }
-            values.put(key, SessionStore.USED_MARK + value + ":" + i.getArgument(2));
-            ttls.put(key, Duration.ofMillis(Long.parseLong(i.getArgument(3))));
-            return value;
+            if (script == SessionStore.CREATE) {
+                Duration idle = Duration.ofMillis(Long.parseLong(i.getArgument(4)));
+                values.put(key, i.getArgument(2));
+                values.put(keys.get(1), i.getArgument(3));
+                ttls.put(key, idle);
+                ttls.put(keys.get(1), idle);
+                sets.computeIfAbsent(keys.get(2), k -> new HashSet<>()).add(i.getArgument(3));
+                ttls.put(keys.get(2), Duration.ofMillis(Long.parseLong(i.getArgument(5))));
+                return 1L;
+            }
+            if (script == SessionStore.DELETE_SESSION) {
+                String json = values.remove(key);
+                ttls.remove(key);
+                if (json == null) {
+                    return 0L;
+                }
+                try {
+                    var session = JsonMapper.builder().findAndAddModules().build()
+                            .readValue(json, SessionStore.SessionRecord.class);
+                    if (session == null) {
+                        return 1L;
+                    }
+                    String refreshKey = SessionStore.REFRESH_PREFIX + session.refreshHash();
+                    values.remove(refreshKey);
+                    ttls.remove(refreshKey);
+                    Set<String> sids = sets.get(SessionStore.ACCOUNT_SESSIONS_PREFIX + session.accountId());
+                    if (sids != null) {
+                        sids.remove(i.getArgument(2));
+                    }
+                } catch (com.fasterxml.jackson.core.JsonProcessingException ignored) {
+                    // Corrupt JSON still loses the session key, just like DELETE_SESSION.
+                }
+                return 1L;
+            }
+            if (script == SessionStore.ROTATE_CAS || script == SessionStore.RESTAMP_CAS) {
+                if (!Objects.equals(values.get(key), i.getArgument(2))) {
+                    return 0L;
+                }
+                values.put(key, i.getArgument(3));
+                if (script == SessionStore.ROTATE_CAS) {
+                    Duration ttl = Duration.ofMillis(Long.parseLong(i.getArgument(4)));
+                    ttls.put(key, ttl);
+                    values.put(keys.get(1), i.getArgument(5));
+                    ttls.put(keys.get(1), ttl);
+                }
+                return 1L;
+            }
+            throw new AssertionError("Unexpected Redis script: " + script.getScriptAsString());
         });
 
         when(template.delete(anyString())).thenAnswer(i -> values.remove(i.<String>getArgument(0)) != null

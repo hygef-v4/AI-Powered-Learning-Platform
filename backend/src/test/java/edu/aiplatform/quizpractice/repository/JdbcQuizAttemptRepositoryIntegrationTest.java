@@ -24,6 +24,26 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Set;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.time.Clock;
+import edu.aiplatform.academics.contract.*;
+import edu.aiplatform.identity.contract.*;
+import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.assignmentwork.contract.IActivityQuery;
+import edu.aiplatform.subjects.contract.ISubjectQuery;
+import edu.aiplatform.quizzes.contract.*;
+import edu.aiplatform.quizzes.model.*;
+import edu.aiplatform.quizzes.repository.*;
+import edu.aiplatform.quizzes.service.QuizAuthoringService;
+import edu.aiplatform.quizzes.service.QuizScorer;
+import edu.aiplatform.quizpractice.service.QuizAttemptService;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import static org.mockito.Mockito.*;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -127,6 +147,103 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         AttemptSnapshot snapshot = new AttemptSnapshot(1, "Quiz", new QuizSettings(true, false, minutes, 2, true, false),
                 false, null, 99L, List.of(q), Map.of(q, List.of("2", "1")), new BigDecimal("2"));
         return QuizAttempt.start(quizId, classId, student, no, snapshot, NOW);
+    }
+
+    @Test
+    void firstAttemptWaitsForQuestionEditAndUsesItsCommittedPaperAndKey() throws Exception {
+        JdbcClient app = JdbcClient.create(appDataSource);
+        ObjectMapper json = new ObjectMapper().findAndRegisterModules();
+        var quizzes = new JdbcQuizRepository(app, json);
+        var questions = new JdbcQuestionRepository(app, json);
+        var quiz = quizzes.find(quizId).orElseThrow();
+        questions.insert(Question.newInline(quizId, quiz.subjectId(), createQuestionContent("Old paper", "1"), student, NOW));
+        UUID questionId = questions.inlineOf(quizId).get(0).id();
+        quizzes.replaceItems(quizId, List.of(new QuizItem(quizId, questionId, 1, BigDecimal.ONE)));
+        assertThat(quizzes.update(quiz.published(Instant.now()))).isTrue();
+        long version = quizzes.find(quizId).orElseThrow().version();
+        CountDownLatch checkedPresence = new CountDownLatch(1);
+        CountDownLatch resumeEdit = new CountDownLatch(1);
+        CountDownLatch startedTransaction = new CountDownLatch(1);
+        IClassAccess classes = mock(IClassAccess.class);
+        when(classes.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId, quiz.subjectId(),
+                "SE1801", "Class", ClassStatus.OPEN, student, false)));
+        ISubjectQuery subjects = mock(ISubjectQuery.class);
+        when(subjects.isActive(quiz.subjectId())).thenReturn(true);
+        var executor = Executors.newFixedThreadPool(2);
+        try (var context = new AnnotationConfigApplicationContext()) {
+            context.registerBean(IQuizRepository.class, () -> quizzes);
+            context.registerBean(IQuestionRepository.class, () -> questions);
+            context.registerBean(IQuizAttemptRepository.class, () -> repository);
+            context.registerBean(IClassAccess.class, () -> classes);
+            context.registerBean(ISubjectQuery.class, () -> subjects);
+            context.registerBean(IAuthorization.class, () -> (actor, action, ref) -> AuthorizationDecision.allow());
+            context.registerBean(IAudit.class, () -> event -> { });
+            context.registerBean(IActivityQuery.class, () -> mock(IActivityQuery.class));
+            context.registerBean(Clock.class, Clock::systemUTC);
+            context.registerBean(IQuizAttemptPresence.class, () -> id -> {
+                boolean present = repository.existsForQuiz(id);
+                checkedPresence.countDown();
+                awaitLatch(resumeEdit);
+                return present;
+            });
+            for (String name : List.of("quizzes.service.QuizAuthoringService", "quizzes.service.QuizSupport",
+                    "quizzes.service.QuizAccess", "quizzes.service.QuizAudit", "quizzes.service.ActiveSubjects",
+                    "quizzes.service.QuizQueryService", "quizzes.service.QuizPaperService", "quizzes.service.QuizScorer",
+                    "quizpractice.service.QuizAttemptService", "quizpractice.service.PracticeSupport",
+                    "quizpractice.service.PracticeAccess", "quizpractice.service.AttemptActivityAssessor")) {
+                context.register(Class.forName("edu.aiplatform." + name));
+            }
+            context.refresh();
+            Actor actor = new Actor(student, Role.STUDENT);
+            var edit = executor.submit(() -> tx.execute(status -> context.getBean(QuizAuthoringService.class)
+                    .updateInline(actor, quizId, questionId, createQuestionContent("Updated paper", "2"), version)));
+            try {
+                assertThat(checkedPresence.await(5, TimeUnit.SECONDS)).isTrue();
+                var start = executor.submit(() -> tx.execute(status -> {
+                    startedTransaction.countDown();
+                    return context.getBean(QuizAttemptService.class).start(actor, quizId, classId);
+                }));
+                assertThat(startedTransaction.await(5, TimeUnit.SECONDS)).isTrue();
+                try {
+                    start.get(500, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException expectedWhileEditing) {
+                    // The attempt waits until the edit commits its paper and key.
+                }
+                resumeEdit.countDown();
+                edit.get(5, TimeUnit.SECONDS);
+                var taking = start.get(5, TimeUnit.SECONDS);
+                assertThat(taking.questions()).singleElement().satisfies(question ->
+                        assertThat(question.stem()).isEqualTo("Updated paper"));
+                assertThat(context.getBean(QuizScorer.class).score(quizId,
+                        List.of(new QuizAnswer(questionId, Set.of("2")))).total()).isEqualByComparingTo("1");
+                assertThatThrownBy(() -> tx.execute(status -> context.getBean(QuizAuthoringService.class)
+                        .updateInline(actor, quizId, questionId, createQuestionContent("Later paper", "1"), version + 1)))
+                        .isInstanceOf(edu.aiplatform.shared.error.ApiException.class)
+                        .extracting(error -> ((edu.aiplatform.shared.error.ApiException) error).code())
+                        .isEqualTo("QUIZ_HAS_ATTEMPTS");
+            } finally {
+                resumeEdit.countDown();
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    private static QuestionContent createQuestionContent(String stem, String correctOption) {
+        return QuestionContent.of(QuestionType.MCQ_SINGLE, stem,
+                List.of(new QuestionOption("1", "First"), new QuestionOption("2", "Second")),
+                List.of(correctOption), null, BigDecimal.ONE, Difficulty.MEDIUM, List.of());
+    }
+
+    private static void awaitLatch(CountDownLatch latch) {
+        try {
+            if (!latch.await(10, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Timed out waiting for edit release");
+            }
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(interrupted);
+        }
     }
 
     @Test

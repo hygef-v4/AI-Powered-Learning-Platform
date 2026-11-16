@@ -25,6 +25,7 @@ final class DiagramXml {
 
     static final int MAX_XML_BYTES = 2 * 1024 * 1024;
     private static final int MAX_INFLATED_BYTES = 10 * 1024 * 1024;
+    private static final int MAX_PAGES = 100;
     private static final int MAX_LABEL = 200;
 
     private DiagramXml() {
@@ -128,13 +129,13 @@ final class DiagramXml {
     static String compact(String xml, int maxChars) {
         StringBuilder out = new StringBuilder();
         try {
+            List<Element> models = graphModels(xml);
             Document document = SecureXml.parse(xml);
             Element root = document.getDocumentElement();
             List<Element> pages = new ArrayList<>();
             if ("mxfile".equals(name(root))) {
                 pages.addAll(children(root, "diagram"));
             }
-            List<Element> models = graphModels(xml);
             for (int i = 0; i < models.size(); i++) {
                 String page = i < pages.size() ? pages.get(i).getAttribute("name") : "";
                 out.append("Trang ").append(i + 1);
@@ -172,6 +173,18 @@ final class DiagramXml {
 
     /** Các {@code mxGraphModel}: gốc là model, hoặc mỗi {@code diagram} của {@code mxfile} (giải nén nếu cần). */
     static List<Element> graphModels(String xml) {
+        return graphModels(xml, MAX_INFLATED_BYTES);
+    }
+
+    static List<Element> graphModels(String xml, int maxExpandedBytes) {
+        if (xml == null) {
+            throw new IllegalArgumentException("Sơ đồ không hợp lệ");
+        }
+        int xmlBytes = xml.getBytes(StandardCharsets.UTF_8).length;
+        if (xmlBytes > MAX_XML_BYTES || xmlBytes > maxExpandedBytes) {
+            throw new IllegalArgumentException("Sơ đồ quá lớn");
+        }
+        int[] remainingBytes = {maxExpandedBytes - xmlBytes};
         Document document = SecureXml.parse(xml);
         Element root = document.getDocumentElement();
         String rootName = name(root);
@@ -182,7 +195,11 @@ final class DiagramXml {
             throw new IllegalArgumentException("Gốc phải là mxfile hoặc mxGraphModel");
         }
         List<Element> models = new ArrayList<>();
-        for (Element diagram : children(root, "diagram")) {
+        List<Element> diagrams = children(root, "diagram");
+        if (diagrams.size() > MAX_PAGES) {
+            throw new IllegalArgumentException("Sơ đồ có quá nhiều trang");
+        }
+        for (Element diagram : diagrams) {
             List<Element> inline = children(diagram, "mxGraphModel");
             if (!inline.isEmpty()) {
                 models.add(inline.get(0));
@@ -192,7 +209,7 @@ final class DiagramXml {
             if (packed.isEmpty()) {
                 continue;
             }
-            Element model = SecureXml.parse(inflate(packed)).getDocumentElement();
+            Element model = SecureXml.parse(inflate(packed, remainingBytes)).getDocumentElement();
             if (!"mxGraphModel".equals(name(model))) {
                 throw new IllegalArgumentException("Trang sơ đồ không hợp lệ");
             }
@@ -202,7 +219,7 @@ final class DiagramXml {
     }
 
     /** Trang nén của Draw.io: base64 → raw deflate → URL-decode. */
-    static String inflate(String packed) {
+    private static String inflate(String packed, int[] remainingBytes) {
         byte[] compressed;
         try {
             compressed = Base64.getDecoder().decode(packed.replaceAll("\\s", ""));
@@ -219,10 +236,11 @@ final class DiagramXml {
                 if (n == 0 && (inflater.needsInput() || inflater.needsDictionary())) {
                     break;
                 }
-                out.write(buffer, 0, n);
-                if (out.size() > MAX_INFLATED_BYTES) {
+                if (n > remainingBytes[0]) {
                     throw new IllegalArgumentException("Trang sơ đồ quá lớn");
                 }
+                remainingBytes[0] -= n;
+                out.write(buffer, 0, n);
             }
             return URLDecoder.decode(out.toString(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
         } catch (DataFormatException e) {

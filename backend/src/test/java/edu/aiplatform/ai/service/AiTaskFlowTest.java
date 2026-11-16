@@ -579,6 +579,24 @@ class AiTaskFlowTest {
         assertThat(worker.findStalePending(NOW.plusSeconds(1))).isEmpty();
     }
 
+    @Test
+    void scannerRetriesCancelledCallbackAfterFailure() {
+        AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "cancel-retry"));
+        doThrow(new IllegalStateException("temporary failure")).doNothing()
+                .when(handler).onFailed(any(AiTaskFailure.class));
+        AiTask queued = tasks.rows.get(view.taskId());
+        tasks.rows.put(view.taskId(), queued.moveTo(AiTaskState.CANCELLED, NOW));
+
+        worker.scan(NOW.plusSeconds(120));
+        assertThat(tasks.rows.get(view.taskId()).handlerDone()).isFalse();
+        assertThat(tasks.rows.get(view.taskId()).inputPayload()).isNotNull();
+
+        worker.scan(NOW.plusSeconds(180));
+        assertThat(tasks.rows.get(view.taskId()).handlerDone()).isTrue();
+        assertThat(tasks.rows.get(view.taskId()).inputPayload()).isNull();
+        verify(handler, times(2)).onFailed(any(AiTaskFailure.class));
+    }
+
     // ---- ảnh trong prompt (BR-U06-54…59) -------------------------------------------------------------------
 
     private final Map<String, byte[]> pages = new ConcurrentHashMap<>();

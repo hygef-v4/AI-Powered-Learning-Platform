@@ -36,14 +36,22 @@ public class SessionAuthority {
             return Optional.empty();
         }
         JwtService.AccessClaims c = claims.get();
-        boolean sessionAlive = sessions.find(c.sid())
-                .filter(session -> session.accountId().equals(c.accountId()))
-                .isPresent();
-        if (!sessionAlive) {
+        Optional<SessionStore.SessionRecord> session = sessions.find(c.sid())
+                .filter(s -> s.accountId().equals(c.accountId()));
+        if (session.isEmpty()) {
             return Optional.empty();
         }
         Optional<Account> account = accounts.findById(c.accountId())
                 .filter(a -> a.status() == AccountStatus.ACTIVE);
+        if (account.isPresent() && !session.get().isPasswordCurrent(account.get().passwordChangedAt())) {
+            session = sessions.find(c.sid())
+                    .filter(s -> s.accountId().equals(c.accountId()))
+                    .filter(s -> s.isPasswordCurrent(account.get().passwordChangedAt()));
+            if (session.isEmpty()) {
+                sessions.delete(c.sid());
+                return Optional.empty();
+            }
+        }
         return account.map(a -> new AuthenticatedSession(new Actor(a.id(), a.role()), c.sid()));
     }
 }

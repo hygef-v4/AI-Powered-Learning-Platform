@@ -14860,3 +14860,289 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: User cho phép push và tạo PR. PR skill dùng cho nội dung; chỉ thêm tài liệu bàn giao, không sửa source. Kết quả1135 frontend/282 tích hợp/build thuộc đợt trước merge; không coi đó là kiểm toàn bộ head sau merge. CI sẽ kiểm head PR. Chưa key thật/browser/tải lớn. Security/Resiliency giữ phạm vi, PBT disabled. GitHub display name xác nhận bằng gh api user --jq .name; giữ requester lịch sử.
 
 ---
+
+## Orca - chính sách routing model và quyền Codex
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Dynamic Model Routing & Permission Policy (Sonnet 5.5 Medium điều phối, Opus 5.5 High kiến trúc, Codex GPT-6.1 Sol High/Medium cho code, GPT-6 Luna High cho tài liệu; Auto Approve cho worker Codex; 15 quy tắc: tối đa 2 worker Codex, worktree riêng, không push/merge nhánh bảo vệ khi chưa duyệt, ưu tiên Orca orchestration thay subagent). [Dán kèm lệnh /effort medium] Nội dung do user dán nguyên văn vào phiên; chỉ ghi tiêu đề ở đây vì dài, bản đầy đủ nằm trong transcript phiên Claude Code."
+**AI Response**: "Ghi nhận chính sách, tóm tắt vai trò/quy tắc, nêu chưa kiểm tra Orca và model Sol/Luna sẵn sàng."
+**Context**: Cấu hình quy trình điều phối, không đổi mã nguồn.
+
+---
+
+## Orca - đọc log tab Claude
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Đọc log của 1 tab terminal claude đang mở trong orca"
+**AI Response**: "Dùng orca-cli liệt kê terminal; chỉ có một tab Claude (chính phiên này), đọc phần cuối log và liệt kê các tab khác."
+**Context**: Thao tác chỉ đọc, không đổi mã.
+
+---
+
+## Orca - chính sách QA/Tester độc lập
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Additional Policy: Independent QA / Testing Agent (Codex Sol Medium, escalation High; Developer vs Tester; quy trình QA 14 bước; checklist test; báo cáo PASS/FAIL/BLOCKED có bằng chứng; Tester không tự sửa bug; Definition of Done). Nội dung do user dán nguyên văn vào phiên; chỉ ghi tiêu đề ở đây vì dài, bản đầy đủ nằm trong transcript phiên Claude Code."
+**AI Response**: "Ghi nhận và áp dụng cho mọi tác vụ triển khai về sau; không sửa file repo để cài chính sách."
+**Context**: Mở rộng quy trình điều phối.
+
+---
+
+## Orca - dùng ponytail khi sửa code/audit
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Thêm rule các agent nếu sửa code hoặc audit nên dùng skill của pony tail"
+**AI Response**: "Thêm quy tắc: Developer dùng ponytail:ponytail, audit dùng ponytail-audit, review dùng ponytail-review; ghi vào brief mỗi worker."
+**Context**: Cấu hình quy trình.
+
+---
+
+## Audit nhánh staging và sửa lỗi quan trọng
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Có sẵn skill rồi. Ok bắt đầu công việc, giúp tôi audit lại nhánh staging, nhớ chia việc theo rule tôi vừa phân công, tạo 1 branch mới để audit và sửa bug, tự động audit , sửa bug cần thiết, chưa cần commit hay push, tôi sẽ là người check lại cuối cùng, cứ sửa những lỗi quan trọng trước"
+**AI Response**: "Tạo nhánh audit-staging từ staging@f1c351dd (worktree Orca). Auditor Codex Sol High (ponytail-audit, chỉ đọc) xác nhận 8 lỗi AUD-001..008, ghi AUDIT-FINDINGS.md chưa theo dõi. Chưa sửa code ở lượt này."
+**Context**: Construction - audit. Chưa commit/push theo yêu cầu.
+
+---
+
+## Orca - điều phối theo sự kiện
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Event-Driven Orchestration Policy (không poll liên tục, kết thúc lượt và chờ Orca đánh thức, worker_done thì giao việc kế tiếp, tự động giao QA sau Developer, tối đa 2 worker Codex, không nói PASS khi chưa có bằng chứng). Nội dung do user dán nguyên văn vào phiên; chỉ ghi tiêu đề ở đây vì dài, bản đầy đủ nằm trong transcript phiên Claude Code."
+**AI Response**: "Chuyển sang worker-start/check; với auditor khởi động bằng handoff dùng một lệnh orca terminal wait chạy nền thay vì polling."
+**Context**: Cấu hình quy trình.
+
+---
+
+## Orca - quyền quyết định kỹ thuật của Opus
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Architect–Orchestrator Decision Authority (Opus 5.5 High quyết định kiến trúc/bảo mật/hợp đồng API, Sonnet điều phối thực thi, quy trình leo thang, Opus không bỏ qua duyệt Git của user, không chạy Opus liên tục). Nội dung do user dán nguyên văn vào phiên; chỉ ghi tiêu đề ở đây vì dài, bản đầy đủ nằm trong transcript phiên Claude Code."
+**AI Response**: "Ghi nhận; lỗi bảo mật critical/high chuyển Opus review trước khi giao Developer."
+**Context**: Cấu hình quy trình.
+
+---
+
+## Orca - kiểm tra trạng thái auditor
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Tôi thấy codex audit xong r mà b vẫn chưa nhận đc status à"
+**AI Response**: "Kiểm tra terminal: auditor chưa idle, báo cáo chưa ghi; giải thích lệnh chờ chỉ kích hoạt khi idle."
+**Context**: Thao tác chỉ đọc.
+
+---
+
+## Orca - hết quota Codex
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Nếu codex hết usage b có thể dùng reset cho nó"
+**AI Response**: "Giải thích không reset được quota (reset lúc 11:15 ngày 22/11); nếu hết quota thì dừng, báo, không tự chuyển code sang Claude."
+**Context**: Hỏi đáp.
+
+---
+
+## Orca - hỏi tiến độ và phát hiện Developer chết
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Các agent làm đến đâu r"
+**AI Response**: "Phát hiện Developer đầu bị crash (Rust memory allocation failed), chưa sửa gì; đề xuất dừng và chạy lại."
+**Context**: Thao tác chỉ đọc.
+
+---
+
+## Orca - chạy lại Developer
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Dùng cách 1"
+**AI Response**: "Dừng dispatch lỗi, giải phóng, chạy lại cùng task với chỉ dẫn tiết kiệm bộ nhớ. Developer #1 sửa AUD-005, 008, 003, 004 trong audit-staging (chưa commit)."
+**Context**: Construction - code generation, Level 2. Mã sửa: backend AiTaskRepository, DiagramXml, restore-isolated.sh, frontend AssignmentWorkspacePage cùng test liên quan.
+
+---
+
+## Orca - bổ sung chất lượng nhẹ
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "ORCA MASTER WORKFLOW — Lightweight Quality Addendum (test-first thích ứng, blind review, tối đa 3 lần tự sửa/lỗi, không cài Ralph/Beads). Nội dung do user dán nguyên văn vào phiên; chỉ ghi tiêu đề ở đây vì dài, bản đầy đủ nằm trong transcript phiên Claude Code."
+**AI Response**: "Ghi nhận, không sửa file repo; áp dụng cho các việc tiếp theo."
+**Context**: Cấu hình quy trình.
+
+---
+
+## Orca - lưu workflow thành skill Claude
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi lưu, tạo tòan bộ workflow thống nhất từ trc đến thành 1 skill cho claude"
+**AI Response**: "Tạo skill toàn cục C:\Users\Quang Hung\.claude\skills\orca-master-workflow\SKILL.md (ngoài repo)."
+**Context**: Không đổi mã nguồn dự án.
+
+---
+
+## Orca - đơn giản hóa workflow v2.1 và cập nhật skill
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Workflow Simplification Policy — v2.1 (3 level: Level 1 đơn giản, Level 2 chuẩn, Level 3 phức tạp/rủi ro cao; dùng quy trình đơn giản nhất đủ tin cậy; thay thế yêu cầu QA độc lập cho mọi tác vụ) ... Cập nhật skill. Nội dung do user dán nguyên văn vào phiên; chỉ ghi tiêu đề ở đây vì dài, bản đầy đủ nằm trong transcript phiên Claude Code."
+**AI Response**: "Cập nhật skill lên v2.1 với phân loại 3 cấp."
+**Context**: Không đổi mã nguồn dự án.
+
+---
+
+## Orca - kiểm tra lại việc, phát hiện Developer #2 chưa bắt đầu
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Check lại việc"
+**AI Response**: "Developer #2 (AUD-001/002) chưa có thay đổi, terminal trống và hiển thị chế độ YOLO; báo user và hỏi hướng xử lý."
+**Context**: Thao tác chỉ đọc.
+
+---
+
+## Orca - chấp nhận Yolo/Auto Approve
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Để yolo hay auto approve cũng đv"
+**AI Response**: "Cập nhật skill: ưu tiên Auto Approve, chấp nhận Yolo; nhắc Developer #2 qua send, nó bắt đầu làm AUD-001/002."
+**Context**: Construction - code generation, Level 3. Mã sửa: identity SessionStore/AuthService/SessionAuthority/PasswordChangeService cùng test, theo thiết kế Opus.
+
+---
+
+## Orca - tự khởi động lại worker khi kẹt
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Nếu kẹt thì cứ chủ động khởi động lại worker"
+**AI Response**: "Ghi vào skill; về sau nhắc qua send, rồi dừng/giải phóng/chạy lại khi worker kẹt. Báo user chỉ khi chạy lại vẫn lỗi hoặc hết quota."
+**Context**: Cấu hình quy trình.
+
+---
+
+## Orca - làm rõ ý khởi động lại worker
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Ý là b khởi động lại worker chứ k phải skill"
+**AI Response**: "Xác nhận hiểu nhầm; dòng thêm vào skill chỉ ghi quy tắc, việc chính là tự khởi động lại worker khi kẹt; Developer #2 đang chạy bình thường."
+**Context**: Hỏi đáp.
+
+---
+
+## Orca - hỏi tiến độ QA
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Xong chưa"
+**AI Response**: "Tester QA đợt 2 kẹt giống trước; nhắc qua send, nó bắt đầu chạy."
+**Context**: Thao tác điều phối.
+
+---
+
+## Sửa AUD-006 và AUD-007, QA
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi phân việc làm luôn aud 7 7 và test luôn"
+**AI Response**: "Developer #3 (Sol High) sửa AUD-006 (khóa quiz) và AUD-007 (ảnh nhóm); QA đợt 3 PASS. Cùng giai đoạn: QA đợt 1 FAIL AUD-004 và QA đợt 2 FAIL AUD-002 được sửa qua các vòng sửa lỗi; QA đợt 4 PASS AUD-001/002; Opus duyệt cuối APPROVE WITH CONDITIONS."
+**Context**: Construction - code generation + build-and-test. Mã sửa: quizpractice/quizzes (khóa), GroupSectionEditorPage, identity, AssignmentWorkspacePage cùng test.
+
+---
+
+## Orca - hỏi vị trí Tester
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "[Ảnh chụp sidebar Orca] tester đang chạy ở đâu"
+**AI Response**: "Chỉ ra qa-batch3 và qa-batch4 trong sidebar."
+**Context**: Hỏi đáp.
+
+---
+
+## Orca - worker không chạy thật
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "tôi có thấy worker nào đang chạy đâu nhỉ? b check lại xem"
+**AI Response**: "Cả hai Tester để prompt dán trong ô nhập chưa gửi; gửi Enter để chạy; quota Codex còn 3%."
+**Context**: Thao tác điều phối.
+
+---
+
+## Kiểm tra Claude Code
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "claude doctor"
+**AI Response**: "Chạy claude doctor: không có vấn đề cài đặt; Claude Code 2.1.325; lần tự cập nhật gần nhất lỗi install_failed."
+**Context**: Không đổi mã nguồn.
+
+---
+
+## Dọn worktree QA
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi dọn các worktree trước , tôi đã reset codex rồi"
+**AI Response**: "Sao lưu báo cáo/test QA ra C:\Users\Quang Hung\orca-qa-backup, gỡ liên kết node_modules, xóa worktree và branch qa-batch1..4. Giữ audit-staging."
+**Context**: Dọn dẹp; không đổi mã nguồn trong audit-staging.
+
+---
+
+## Opus chạy test BE/FE và review audit-staging
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi nhờ opus 5.5 chạy lại be fe, chạy unit test, review lại changes trên audit-staging trước khi tôi quyết định commit"
+**AI Response**: "Giao Opus 5.5 High chạy test backend/frontend và review 32 file; worker đầu mất khi Orca khởi động lại, đã chạy lại; kết quả chưa có."
+**Context**: Build-and-test. Chưa có kết quả; NOT TESTED: full suite, build production, trình duyệt, restore image thật, tải lớn.
+
+---
+
+## Cập nhật aidlc-state.md và audit.md
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "với giúp tôi cập nhật aidlc state với audit.md"
+**AI Response**: "Thêm mục trạng thái AUD-001..008 vào aidlc-state.md và một entry audit gộp (nay đã tách thành từng lượt theo yêu cầu bên dưới)."
+**Context**: Tài liệu AIDLC trong audit-staging.
+
+---
+
+## Quy tắc luôn cập nhật tài liệu AIDLC
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "sửa bất kì code hay thay đổi gì thì cũng phải cập nhật doc aidlc"
+**AI Response**: "Ghi nhớ quy tắc (memory) và thêm vào skill orca-master-workflow; áp dụng từ giờ."
+**Context**: Cấu hình quy trình.
+
+---
+
+## Tách audit thành từng prompt
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
+**Requested by:** Quang Hung
+**User Input**: "sửa audit tách nhiều prompt ra, tôi có prompt nhiều lần mà"
+**AI Response**: "Thay entry gộp bằng từng entry theo từng prompt của user; chính sách dài chỉ ghi tiêu đề; giờ chính xác từng lượt không còn nên ghi theo thứ tự phiên."
+**Context**: Sửa tài liệu audit trong audit-staging theo yêu cầu user; các entry lịch sử khác giữ nguyên.
+
+---
+## Opus 5.5 High kiểm chứng test BE/FE và review audit-staging (kết quả)
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác không được lưu lại)
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi nhờ opus 5.5 chạy lại be fe, chạy unit test, review lại changes trên audit-staging trước khi tôi quyết định commit"
+**AI Response**: "Opus báo READY WITH CONDITIONS. Backend mvn test: BUILD SUCCESS, 2539 test, 0 lỗi, 1 bỏ qua (GradingAiEvaluationTest cần ai.eval.mode). Frontend: tsc, eslint, vitest (156 file, 1147 test) qua; next build lỗi trên ổ C: do liên kết node_modules khác ổ, cùng diff build qua trên worktree tạm ở ổ F: (đã xóa); test restore qua và fail trên bản gốc như mong đợi. Cả 8 sửa AUD-001..008 có mặt và có test. Chưa sửa mã ở lượt này. Còn mở: (1) quay lại nhanh khi lưu rời trang chậm có thể xung đột phiên bản và mất bản sửa (AssignmentWorkspacePage.tsx:120, từ đọc mã), (2) test-restore-isolated.sh chưa vào CI, (3) lock bắt đầu attempt xếp hàng toàn quiz, nên cân nhắc for share, (4) tên test có tiền tố qa. Điều kiện: không commit AUDIT-*.md gốc, stage từng đường dẫn, deploy mọi backend cùng lúc, Redis một node và >= 6.0."
+**Context**: Build-and-test. Opus chỉ đọc và chạy test, không sửa mã; dịch vụ dev của repo chính không bị đụng. NOT TESTED: trình duyệt thật AUD-004/007, restore bằng image thật, shellcheck, deploy nhiều instance, Redis sập/cluster, tải, tài khoản ACTIVE có password_changed_at null. aidlc-state.md cập nhật theo kết quả này.
+
+---
+
+## Opus 5.5 High sửa các mục review còn mở và chuẩn bị commit
+**Timestamp**: 2026-11-16T03:55:05Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi nhờ opus sửa lỗi luôn và cbi commit"
+**AI Response**: "Sửa (1) AssignmentWorkspacePage.tsx: lần lưu lúc rời trang ghi vào Map<attemptId, Promise> cấp module, mở lại cùng attempt chờ lần lưu đó rồi mới gọi workApi.attempt; test vitest mới đỏ trước (lần lưu sau gửi version 1) rồi xanh. (2) ci.yml job deploy-script: shellcheck thêm infra/scripts/restore-isolated.sh và test-restore-isolated.sh, thêm bước sh infra/scripts/test-restore-isolated.sh. (4) Bỏ tiền tố qa ở 3 test SessionStoreIntegrationTest. Mục (3) for share giữ là nợ đã ghi nhận, không đổi khóa. Kiểm tra: vitest workspace-ui + assignmentwork 18/18 qua; eslint 2 file đã sửa qua; tsc --noEmit qua; mvn test -Dtest=SessionStoreIntegrationTest 24/24 qua (Redis thật); sh infra/scripts/test-restore-isolated.sh qua; YAML ci.yml parse được. Viết commit-plan.md ngoài repo (8 nhóm, git add theo đường dẫn, loại AUDIT-*.md). Không stage, commit, push hay đổi nhánh."
+**Context**: Construction - sửa mục review theo ponytail, người dùng cho phép Opus sửa code thay Codex. NOT TESTED: shellcheck (không cài trên máy), trình duyệt thật, full suite sau lần sửa này (chỉ chạy kiểm tra có mục tiêu), restore bằng image thật. Security/Resiliency tuân thủ trong phạm vi; PBT disabled.
+
+---
+## Commit các thay đổi audit-staging
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác không được lưu lại)
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit changes, k dùng claude co author"
+**AI Response**: "Commit cục bộ 8 commit trên nhánh audit-staging theo kế hoạch Opus (identity, Draw.io, assignmentwork, infra restore + CI, quiz, groupdocs, AI, docs), stage theo từng đường dẫn, không thêm dòng Co-Authored-By của Claude theo yêu cầu. Ba file AUDIT-*.md ở thư mục gốc không đưa vào commit. Không push, không merge."
+**Context**: Git commit cục bộ theo yêu cầu. Không đổi mã nguồn. Chưa kiểm compile từng commit riêng, chỉ cây thư mục đầy đủ đã build/test. NOT TESTED như đã ghi ở các entry trước (shellcheck, trình duyệt thật, restore image thật, deploy nhiều instance).
+
+---
+
+## Tạo PR audit-staging vào staging
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác không được lưu lại)
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo pr lên staging"
+**AI Response**: "Fetch origin: origin/staging là tổ tiên của audit-staging (không cần merge), chưa có PR cùng head. Push audit-staging (8 commit, không dòng đồng tác giả Claude) và tạo PR #92 vào staging bằng GitHub CLI: https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/92. PR MERGEABLE; mô tả gồm bảng 8 lỗi, kiểm chứng, điều kiện deploy, phần NOT TESTED và nợ kỹ thuật. Không merge, không bật auto-merge, không deploy."
+**Context**: User cho phép push và tạo PR. Chỉ thêm tài liệu bàn giao. Kết quả test trong PR thuộc đợt trước vòng sửa cuối ở mức toàn suite; CI sẽ kiểm head PR, trong đó shellcheck chạy lần đầu trên restore-isolated.sh. Trạng thái CI chưa kiểm tại thời điểm ghi.
+
+---
