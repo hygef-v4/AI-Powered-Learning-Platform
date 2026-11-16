@@ -51,6 +51,10 @@ class InMemoryQuizStore {
     class Quizzes implements IQuizRepository {
 
         @Override
+        public void lockQuiz(UUID id) {
+        }
+
+        @Override
         public Optional<Quiz> find(UUID id) {
             return Optional.ofNullable(quizzes.get(id));
         }

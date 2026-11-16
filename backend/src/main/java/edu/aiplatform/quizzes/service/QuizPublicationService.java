@@ -90,6 +90,7 @@ public class QuizPublicationService {
     /** Ngưng Quiz đang mở, lý do bắt buộc (BR-U10-23); lượt đang làm được U11 tự nộp trong cùng transaction. */
     @Transactional
     public QuizDetail retire(Actor actor, UUID id, String reason, long version) {
+        quizzes.lockQuiz(id);
         Quiz quiz = support.loadManaged(actor, id);
         if (quiz.status() == QuizStatus.RETIRED) {
             throw ApiException.conflict("QUIZ_NOT_OPEN", "Quiz đã lưu trữ");

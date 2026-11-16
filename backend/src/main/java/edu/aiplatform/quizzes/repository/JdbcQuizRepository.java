@@ -70,6 +70,12 @@ public class JdbcQuizRepository implements IQuizRepository {
     }
 
     @Override
+    public void lockQuiz(UUID id) {
+        jdbc.sql("select id from quizzes where id = :id for update")
+                .param("id", id).query(UUID.class).optional();
+    }
+
+    @Override
     public void insert(Quiz q) {
         jdbc.sql("""
                         insert into quizzes (id, scope, class_id, subject_id, source_quiz_id, origin, version_no, title,

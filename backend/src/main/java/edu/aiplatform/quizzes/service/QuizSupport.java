@@ -108,6 +108,7 @@ class QuizSupport {
 
     /** Quiz đang soạn được: người có quyền, Quiz chưa lưu trữ, lớp/môn chưa lưu trữ. */
     Quiz loadEditable(Actor actor, UUID id, long version) {
+        quizzes.lockQuiz(id);
         Quiz quiz = loadManaged(actor, id);
         if (!quiz.isEditable()) {
             throw ApiException.conflict("QUIZ_NOT_EDITABLE", "Quiz đã lưu trữ không sửa được");
