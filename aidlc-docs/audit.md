@@ -15569,3 +15569,11 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Không tự merge. Số PR ghi trên GitHub và trong phản hồi cuối.
 
 ---
+## Security remediation — backend dependency upgrade
+**Timestamp**: 2026-11-16T14:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Nâng Spring Boot"
+**AI Response**: "Tạo nhánh chore/upgrade-spring-boot-3.5.16 từ origin/staging@b121f0ca (worktree riêng, không đặt upstream). Sửa backend/pom.xml: spring-boot-starter-parent 3.5.6 lên 3.5.16; ghi đè bản vá cho Tomcat 10.1.62, Jackson 2.21.8, Netty 4.1.140.Final, PostgreSQL JDBC 42.7.14, commons-lang3 3.18.0; thêm dependencyManagement cho Bouncy Castle 1.87 và Guava 33.8.0-jre; bỏ ghi đè testcontainers vì Boot 3.5.16 đã quản lý 1.21.4. Tra OSV theo các phiên bản dự kiến: còn 13 cảnh báo ở 3 thư viện (amqp-client, spring-webmvc, log4j-api), mã không dùng tính năng bị ảnh hưởng."
+**Context**: Code Generation tối giản cho thay đổi phụ thuộc; không đổi mã Java, schema hay cấu hình. Chưa biên dịch và chưa chạy test: máy này không có Maven và Docker engine đang tắt. Chưa commit, chưa push.
+
+---
