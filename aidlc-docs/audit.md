@@ -15428,3 +15428,12 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Người dùng cho phép đưa lên staging. Kết quả kiểm tra của bản đã gộp giữ nguyên; mục audit này là thay đổi duy nhất sau lần kiểm đó.
 
 ---
+
+## U02/U06/U12 regression on updated staging and e2e script fixes
+**Timestamp**: 2026-11-16T12:35:00Z
+**Requested by:** Vo Minh Tai
+**User Input**: "chạy lại e2e và test của u02 u06 u12 đi"; "sửa u06b.mjs theo API mới đi"; "test lại cho tôi toàn bộ các uc đi rồi merch"
+**AI Response**: Re-ran the suites on staging `abca8520`. Full backend: 2504 tests, 0 failures, 1 skipped. Full frontend: 1159 tests pass, lint clean, no type errors in source. E2E on the local stack: u02 16/16, u06 24/24, u06b 18/18, u12 59/59, u12b 36/36, u12c 20/20, u12-notify 3/3. Two e2e scripts were outdated, not the system: `u06b.mjs` called personal AI keys by provider name while the API is id-based with several keys per provider since 2026-11-05, and its failing-task case succeeded through the automatic fallback to another personal key; the script now uses ids, checks the multi-key rule, and pauses the lecturer's other personal keys while AI tasks run (status toggle only, restored afterwards) so a real key is never called. `u12-notify.mjs` counted notifications in a 50-item window and missed a new one on an account with many notifications; it now detects the new notification by id. The first u06b run before the fix consumed about 3,000 input and 2,350 output tokens of the lecturer test account's working Gemini key through that fallback; the user was told.
+**Context**: Construction — Build and Test, regression after 157 teammate commits; test scripts only, no application code changed.
+
+---
