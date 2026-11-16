@@ -15463,3 +15463,11 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Review only; no application change, merge, push or deploy. Existing AI-DLC context reused; design/code generation not applicable.
 
 ---
+## Documentation sync on staging — commit and PR
+**Timestamp**: 2026-11-16T13:11:48Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."; sau đó chọn Create PR trong ứng dụng (lệnh create-pr, base ghi là main).
+**AI Response**: "Commit 9 file tài liệu thành d19f0329 trên nhánh docs/sync-ops-docs-staging. Push nhánh và mở PR vào staging, không vào main: nhánh tạo từ staging nên PR vào main sẽ kéo theo toàn bộ commit của staging, trong khi việc đưa staging lên main còn chờ kiểm cấu hình Drive của production. File chưa theo dõi aidlc-docs/construction/build-and-test/2026-11-16-staging-readiness.md do một lượt khác tạo, không đưa vào commit."
+**Context**: Chỉ tài liệu. Số PR và trạng thái CI ghi trên GitHub và trong phản hồi cuối.
+
+---
