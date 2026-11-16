@@ -8,7 +8,7 @@ Phát hiện khi đưa PR 101 lên staging: `platform-deploy` không tạo lại
 - [x] Code Generation: `switch_to` so `infra/nginx` giữa bản đang chạy và bản mới, khác thì `compose restart nginx` sau `compose up`; áp cho cả lúc quay về. Thêm test, cập nhật runbook mục 10.
 - [x] Build and Test: `test-platform-deploy.sh` 16/16 (chạy trong thư mục tạm trên VPS vì máy phát triển không có `jq`, `flock`). Chưa chạy với Docker và nginx thật.
 - [x] Người dùng yêu cầu commit cục bộ (2026-11-16).
-- [ ] Người dùng quyết định push và mở PR vào staging.
+- [x] Người dùng yêu cầu push và mở PR vào staging (2026-11-16). Không tự merge.
 
 Sau khi bản này lên VPS phải cài lại `/usr/local/bin/platform-deploy` và `/usr/local/bin/platform-staging-deploy` một lần nữa. Security/Resiliency trong phạm vi đã duyệt; PBT tắt.
 

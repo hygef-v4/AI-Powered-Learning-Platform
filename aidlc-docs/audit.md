@@ -15601,3 +15601,11 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Người dùng duyệt mã bằng yêu cầu commit. Chưa push, chưa mở PR, chưa cài lên VPS.
 
 ---
+## Deploy script — pull request
+**Timestamp**: 2026-11-16T14:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Push và mở PR"
+**AI Response**: "Push nhánh fix/deploy-restart-nginx và mở PR vào staging. Không tự merge."
+**Context**: Số PR ghi trên GitHub và trong phản hồi cuối.
+
+---
