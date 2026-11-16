@@ -15336,3 +15336,12 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Người dùng nhắn "tiếp tục" khi lượt bị ngắt giữa chừng. Chờ người dùng quyết định push và mở PR vào staging.
 
 ---
+
+## Delivery to staging
+**Timestamp**: 2026-11-16T10:34:13Z
+**Requested by:** Đào Chí Cường
+**User Input**: "đưa lên staging cho tôi"
+**AI Response**: "Kiểm lại nhánh vẫn ngang origin/staging mới nhất, push chi-cuongg/audit-project-bugs-docs và mở PR vào staging; theo dõi CI của PR. Trạng thái PR và CI ghi trên GitHub và trong phản hồi cuối."
+**Context**: Người dùng cho phép đưa lên staging. Kết quả kiểm tra của bản đã gộp giữ nguyên; mục audit này là thay đổi duy nhất sau lần kiểm đó.
+
+---
