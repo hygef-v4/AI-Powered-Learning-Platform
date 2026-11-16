@@ -20,6 +20,7 @@ import edu.aiplatform.shared.error.ApiException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -88,11 +89,12 @@ public class PasswordChangeService {
             throw new PasswordPolicyException(violations);
         }
         String hash = passwordEncoder.encode(newPassword);
-        Instant now = clock.instant();
+        Instant now = clock.instant().truncatedTo(ChronoUnit.MILLIS);
         transactions.executeWithoutResult(status -> {
             accounts.updatePassword(account.id(), hash, now);
             audit.record(new AuditEvent(UUID.randomUUID(), account.id(), "PASSWORD_CHANGED", "ACCOUNT",
                     account.id().toString(), AuditResult.SUCCESS, null, Map.of(), now));
+            sessions.restamp(currentSid, now.toEpochMilli());
             sessions.deleteAllExcept(account.id(), currentSid);
         });
         // Lặp lại sau commit để không sót phiên tạo chen giữa (P1).

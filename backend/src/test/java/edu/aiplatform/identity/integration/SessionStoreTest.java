@@ -30,8 +30,18 @@ class SessionStoreTest {
     }
 
     @Test
+    void corruptJsonNullIsDeletedByTheFakeScriptToo() {
+        var session = store.create(accountId, NOW.toEpochMilli());
+        String key = SessionStore.SESSION_PREFIX + session.sid();
+        redis.values.put(key, "null");
+
+        assertThat(store.find(session.sid())).isEmpty();
+        assertThat(redis.values).doesNotContainKey(key);
+    }
+
+    @Test
     void createdSessionIsFoundAndRefreshTokenIsStoredHashed() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.create(accountId, NOW.toEpochMilli());
 
         assertThat(store.find(session.sid())).hasValueSatisfying(s -> assertThat(s.accountId()).isEqualTo(accountId));
         assertThat(redis.values).doesNotContainValue(session.refreshToken());
@@ -41,7 +51,7 @@ class SessionStoreTest {
 
     @Test
     void rotateIssuesNewTokenAndReuseOfOldTokenRevokesSession() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.create(accountId, NOW.toEpochMilli());
 
         SessionStore.IRotateResult first = store.rotate(session.refreshToken());
         assertThat(first).isInstanceOf(SessionStore.Rotated.class);
@@ -59,7 +69,7 @@ class SessionStoreTest {
     /** Hai tab refresh cùng lúc: bên thua bị từ chối nhưng phiên và token mới của bên thắng vẫn dùng được. */
     @Test
     void concurrentRefreshWithinGraceKeepsSession() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.create(accountId, NOW.toEpochMilli());
         String newToken = ((SessionStore.Rotated) store.rotate(session.refreshToken())).refreshToken();
 
         clock.set(NOW.plus(SessionStore.REUSE_GRACE));
@@ -72,7 +82,7 @@ class SessionStoreTest {
 
     @Test
     void legacyUsedMarkWithoutTimestampCountsAsReuse() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.create(accountId, NOW.toEpochMilli());
         String key = SessionStore.REFRESH_PREFIX + Hashing.sha256Hex(session.refreshToken());
         redis.values.put(key, SessionStore.USED_MARK + session.sid());
 
@@ -83,7 +93,7 @@ class SessionStoreTest {
 
     @Test
     void sidOfReturnsSessionOnlyForLiveRefreshToken() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.create(accountId, NOW.toEpochMilli());
         assertThat(store.sidOf(session.refreshToken())).contains(session.sid());
 
         String newToken = ((SessionStore.Rotated) store.rotate(session.refreshToken())).refreshToken();
@@ -94,7 +104,7 @@ class SessionStoreTest {
 
     @Test
     void sessionEndsAfterSevenDaysEvenWhenUsed() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.create(accountId, NOW.toEpochMilli());
         clock.set(NOW.plus(Duration.ofDays(7)));
 
         assertThat(store.rotate(session.refreshToken()))
@@ -104,7 +114,7 @@ class SessionStoreTest {
 
     @Test
     void rotationTtlNeverPassesSevenDayCeiling() {
-        SessionStore.IssuedSession session = store.create(accountId);
+        SessionStore.IssuedSession session = store.create(accountId, NOW.toEpochMilli());
         clock.set(NOW.plus(Duration.ofDays(7)).minus(Duration.ofMinutes(30)));
 
         store.rotate(session.refreshToken());
@@ -120,8 +130,8 @@ class SessionStoreTest {
 
     @Test
     void logoutRemovesOnlyThatSession() {
-        SessionStore.IssuedSession a = store.create(accountId);
-        SessionStore.IssuedSession b = store.create(accountId);
+        SessionStore.IssuedSession a = store.create(accountId, NOW.toEpochMilli());
+        SessionStore.IssuedSession b = store.create(accountId, NOW.toEpochMilli());
 
         store.delete(a.sid());
 
@@ -131,9 +141,9 @@ class SessionStoreTest {
 
     @Test
     void deleteAllExceptKeepsCurrentSession() {
-        SessionStore.IssuedSession current = store.create(accountId);
-        SessionStore.IssuedSession other = store.create(accountId);
-        SessionStore.IssuedSession someoneElse = store.create(UUID.randomUUID());
+        SessionStore.IssuedSession current = store.create(accountId, NOW.toEpochMilli());
+        SessionStore.IssuedSession other = store.create(accountId, NOW.toEpochMilli());
+        SessionStore.IssuedSession someoneElse = store.create(UUID.randomUUID(), NOW.toEpochMilli());
 
         store.deleteAllExcept(accountId, current.sid());
         assertThat(store.find(current.sid())).isPresent();

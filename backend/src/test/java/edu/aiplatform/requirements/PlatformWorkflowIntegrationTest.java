@@ -309,7 +309,7 @@ class PlatformWorkflowIntegrationTest {
     @Test
     void redisSessionAndCurrentAccountStatusProtectRealSecurityFilter() throws Exception {
         Actor admin = actor(Role.ADMIN);
-        var session = sessionStore.create(admin.accountId());
+        var session = sessionStore.create(admin.accountId(), null);
         Cookie cookie = new Cookie("access_token", jwtService.issue(admin.accountId(), admin.role(), session.sid()));
         mvc.perform(get("/api/v1/admin/subjects").cookie(cookie)).andExpect(status().isOk());
         jdbc.update("update accounts set status='DISABLED',version=version+1 where id=?", admin.accountId());

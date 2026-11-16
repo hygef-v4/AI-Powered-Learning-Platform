@@ -108,7 +108,8 @@ public class AuthService {
 
     /** Tạo phiên mới cho tài khoản {@code ACTIVE}; dùng cả khi kích hoạt xong (BR-U01-13). */
     public LoginResult startSession(Account account) {
-        SessionStore.IssuedSession session = sessions.create(account.id());
+        SessionStore.IssuedSession session = sessions.create(account.id(),
+                account.passwordChangedAt() == null ? null : account.passwordChangedAt().toEpochMilli());
         String accessToken = jwt.issue(account.id(), account.role(), session.sid());
         SessionInfo info = new SessionInfo(account.id(), account.displayName(), account.role(),
                 HomePaths.of(account.role()));
@@ -124,13 +125,20 @@ public class AuthService {
         if (!(result instanceof SessionStore.Rotated rotated)) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, SESSION_EXPIRED, "Phiên đăng nhập đã hết hạn");
         }
-        Optional<Account> account = accounts.findById(rotated.accountId())
+        Optional<Account> account = accounts.findById(rotated.session().accountId())
                 .filter(a -> a.status() == AccountStatus.ACTIVE);
-        if (account.isEmpty()) {
+        Optional<SessionStore.SessionRecord> session = Optional.of(rotated.session());
+        if (account.isPresent() && !rotated.session().isPasswordCurrent(account.get().passwordChangedAt())) {
+            session = sessions.find(rotated.sid())
+                    .filter(s -> s.accountId().equals(rotated.session().accountId()))
+                    .filter(s -> s.refreshHash().equals(rotated.session().refreshHash()));
+        }
+        if (account.isEmpty() || session.isEmpty()
+                || !session.get().isPasswordCurrent(account.get().passwordChangedAt())) {
             sessions.delete(rotated.sid());
             throw new ApiException(HttpStatus.UNAUTHORIZED, SESSION_EXPIRED, "Phiên đăng nhập đã hết hạn");
         }
-        String accessToken = jwt.issue(rotated.accountId(), account.get().role(), rotated.sid());
+        String accessToken = jwt.issue(rotated.session().accountId(), account.get().role(), rotated.sid());
         return new RefreshResult(accessToken, rotated.refreshToken());
     }
 
