@@ -43,6 +43,16 @@ function stub(respond: (call: Call) => Promise<Response>) {
 }
 
 describe("ProposalReviewList", () => {
+  it("shows student codes for the leader and every member, including duplicate names", async () => {
+    const row = proposal("p1", "Nhóm Mây");
+    row.leader = { accountId: "a", name: "An", email: null, studentCode: "SE000001" };
+    row.members = [row.leader, { accountId: "b", name: "An", email: null, studentCode: "SE000002" }];
+    stub(() => json({ ...VIEW, proposals: [row] }));
+    render(<ProposalReviewList classId="c1" setVersion={4} readOnly onGroupsChanged={vi.fn()} />);
+    const card = await screen.findByTestId("proposal-review-p1");
+    expect(card).toHaveTextContent("An · SE000001");
+    expect(card).toHaveTextContent("An · SE000002");
+  });
   afterEach(() => vi.unstubAllGlobals());
 
   it("duyệt nhiều: báo lỗi tại thẻ đề xuất không duyệt được và tải lại bộ nhóm", async () => {

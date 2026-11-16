@@ -1,3 +1,4 @@
+import { formatStudentLabel } from "@/shared/studentCode";
 import type { Tone } from "@/shared/ui";
 import type { SectionView, WorkspaceView } from "./types";
 
@@ -18,8 +19,8 @@ export function sectionPerson(section: SectionView): string | null {
 /** Tên thành viên để hiện: chính mình là "Bạn". */
 export function memberName(view: Pick<WorkspaceView, "members" | "viewerId">, id: string | null): string {
   if (id === null) return "Chưa ai nhận";
-  if (id === view.viewerId) return "Bạn";
-  return view.members.find((m) => m.accountId === id)?.name ?? "Thành viên";
+  const member = view.members.find((m) => m.accountId === id);
+  return formatStudentLabel({ name: id === view.viewerId ? "Bạn" : member?.name ?? "Thành viên", studentCode: member?.studentCode });
 }
 
 /** Mục của mình: đang giữ, hoặc đã Xong do mình viết. */

@@ -445,8 +445,9 @@ public class GroupProposalService {
         long members = ProposalRules.countEffectiveMembers(proposalRepository.listMembers(p.id()),
                 ctx.activeStudents(), ctx.groupedStudents());
         boolean canAccept = !inProposal && p.status() == Status.DRAFT && ctx.closedReason() == null;
-        return new InvitationView(p.id(), p.name(), p.status().name(), people.loadPerson(p.leaderId()).name(),
-                (int) members, ctx.closedReason() != null, canAccept);
+        var leader = people.loadPerson(p.leaderId());
+        return new InvitationView(p.id(), p.name(), p.status().name(), leader.name(),
+                (int) members, ctx.closedReason() != null, canAccept, leader.studentCode());
     }
 
     private List<CandidateView> candidates(Context ctx, GroupProposal mine, ProposalPeople people) {
@@ -523,7 +524,7 @@ public class GroupProposalService {
     }
 
     public record InvitationView(UUID proposalId, String proposalName, String status, String leaderName,
-                                 int memberCount, boolean expired, boolean canAccept) {
+                                 int memberCount, boolean expired, boolean canAccept, String leaderStudentCode) {
     }
 
     public record RejectedView(UUID proposalId, String name, String reason, Instant decidedAt) {

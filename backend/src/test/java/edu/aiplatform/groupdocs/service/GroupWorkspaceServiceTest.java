@@ -4,9 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
@@ -31,6 +34,8 @@ import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groups.service.GroupAccess;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
+import edu.aiplatform.identity.contract.AccountContact;
+import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAccountLookup;
@@ -59,9 +64,10 @@ class GroupWorkspaceServiceTest {
     private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final GroupAccess groupAccess = new GroupAccess(authorization, classes, audit, clock);
+    private final IAccountLookup accounts = mock(IAccountLookup.class);
     private final GroupWorkspaceService service = new GroupWorkspaceService(documents, groups,
             new GroupDocAccess(documents, groups, groupAccess, assignments, clock), groupAccess,
-            mock(GroupDocumentService.class), assignments, mock(IAccountLookup.class));
+            mock(GroupDocumentService.class), assignments, accounts);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", member.accountId(), null, NOW,
             NOW, List.of(member.accountId()));
     private final GroupDocument document = GroupDocument.create(UUID.randomUUID(), group.id(), assignmentId, classId,
@@ -77,6 +83,18 @@ class GroupWorkspaceServiceTest {
         when(documents.listSections(document.id())).thenReturn(List.of());
         when(groups.findGroup(group.id())).thenReturn(Optional.of(group));
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.ON_TIME);
+    }
+
+    @Test
+    void workspaceMembersCarryStudentCodesWithoutLookingUpPeopleOutsideTheGroup() {
+        when(accounts.getContact(member.accountId())).thenReturn(Optional.of(
+                new AccountContact(member.accountId(), "an@school.test", "An",
+                        Role.STUDENT, AccountStatus.ACTIVE, "SE000001")));
+        var members = new ObjectMapper()
+                .valueToTree(service.workspace(member, document.id()).members());
+        assertThat(members.get(0).path("studentCode").asText()).isEqualTo("SE000001");
+        verify(accounts).getContact(member.accountId());
+        verifyNoMoreInteractions(accounts);
     }
 
     @Test

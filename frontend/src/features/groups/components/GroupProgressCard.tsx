@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Alert, Pill, Select, TableFrame, Td, Th } from "@/shared/ui";
 import { getGroupAssignments, getProgress } from "../api";
 import { formatDate } from "../model/format";
-import { personLabel } from "../model/groupDrafts";
+import { formatStudentLabel } from "@/shared/studentCode";
 import type { GroupAssignment, GroupProgress, GroupSetView } from "../model/types";
 
 /**
@@ -97,7 +97,7 @@ export function GroupProgressCard({ classId, set }: { classId: string; set: Grou
               return (
                 <tr key={row.groupId}>
                   <Td className="font-semibold">{row.groupName}</Td>
-                  <Td>{personLabel(people.get(row.leaderId ?? ""))}</Td>
+                  <Td>{formatStudentLabel(people.get(row.leaderId ?? ""))}</Td>
                   <Td>
                     {row.done} / {total}
                   </Td>
@@ -105,7 +105,7 @@ export function GroupProgressCard({ classId, set }: { classId: string; set: Grou
                     <Pill tone={row.submitted ? "success" : started ? "info" : "neutral"}>{status}</Pill>
                   </Td>
                   <Td className="text-xs">
-                    {holding.length === 0 ? "—" : holding.map((s) => `${s.title} · ${personLabel(people.get(s.holderId ?? ""))}`).join("; ")}
+                    {holding.length === 0 ? "—" : holding.map((s) => `${s.title} · ${formatStudentLabel(people.get(s.holderId ?? ""))}`).join("; ")}
                   </Td>
                   <Td>
                     {row.documentId && (

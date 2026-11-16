@@ -378,6 +378,21 @@ describe("QuizResultPage (UC 52)", () => {
 });
 
 describe("QuizAttemptsSection (UC 42)", () => {
+  it("keeps the selected student's code when opening attempt history and detail", async () => {
+    vi.mocked(getClassAttempts).mockResolvedValue({ quizId: "z1", classId: "c1", maxAttempts: 2, studentsAttempted: 1, totalStudents: 1,
+      students: [{ accountId: "s1", displayName: "An", studentCode: "SE000001", email: null, attempts: 1, bestScore: 2, lastScore: 2,
+        lastSubmittedAt: null, rows: [{ attemptId: "a1", attemptNo: 1, status: "SUBMITTED", startedAt: "2026-10-20T08:00:00Z",
+          submittedAt: "2026-10-20T08:05:00Z", score: 2, maxScore: 10, leaveCount: null, activitySignal: null,
+          suggestedPenalty: null, penaltyDecision: null }], lastLeaveCount: null, signalWarning: false, penaltyPending: false }] });
+    vi.mocked(getTeacherAttempt).mockResolvedValue({ result: RESULT, displayName: "An", activity: null, activitySignal: null });
+    render(<QuizAttemptsSection quizId="z1" classId="c1" />);
+    fireEvent.click(await screen.findByTestId("quiz-attempts-row"));
+    expect(await screen.findByRole("dialog")).toHaveTextContent("An · SE000001");
+    fireEvent.click(screen.getByRole("button", { name: "Xem bài" }));
+    await waitFor(() => expect(getTeacherAttempt).toHaveBeenCalledWith("c1", "a1"));
+    expect(await screen.findByTestId("teacher-attempt-summary")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toHaveTextContent("An · SE000001");
+  });
   it("giảng viên xem bảng lượt làm (tiêu đề không kèm số, không có dòng tóm tắt); không có lớp thì không hiện", async () => {
     vi.mocked(getClassAttempts).mockResolvedValue({ quizId: "z1", classId: "c1", maxAttempts: 2, studentsAttempted: 1, totalStudents: 30,
       students: [{ accountId: "s1", displayName: "Sinh viên A", email: "a@fpt.edu.vn", attempts: 1, bestScore: 2, lastScore: 2,

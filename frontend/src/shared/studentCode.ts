@@ -22,6 +22,13 @@ export const STUDENT_CODE_ERROR_LABELS: Record<string, string> = {
   INVALID_STUDENT_CODE: STUDENT_CODE_FORMAT_MESSAGE,
 };
 
+/** Nhãn một dòng để phân biệt sinh viên trùng tên. */
+export function formatStudentLabel(
+  person: { name?: string | null; email?: string | null; studentCode?: string | null } | null | undefined,
+): string {
+  return [person?.name || person?.email || "Không rõ tên", person?.studentCode].filter(Boolean).join(" · ");
+}
+
 /** So khớp ô tìm theo tên, email hoặc MSSV, không phân biệt hoa thường. */
 export function matchesPersonQuery(
   person: { name?: string | null; email?: string | null; studentCode?: string | null },

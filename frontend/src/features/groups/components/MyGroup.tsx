@@ -1,5 +1,6 @@
 "use client";
 
+import { formatStudentLabel } from "@/shared/studentCode";
 import Link from "next/link";
 import { useCallback, useEffect, useId, useState } from "react";
 import { ApiError } from "@/shared/api/client";
@@ -264,14 +265,14 @@ export function LeaderChangeRequestDialog({ view, onClose, onSent }: { view: MyG
       }
     >
       <Field label="Trưởng nhóm hiện tại" htmlFor={`${fieldId}-current`}>
-        <LockedInput id={`${fieldId}-current`} value={leader ? (leader.name ?? leader.email ?? "") : "Chưa có"} />
+        <LockedInput id={`${fieldId}-current`} value={leader ? formatStudentLabel(leader) : "Chưa có"} />
       </Field>
       <Field label="Trưởng nhóm mới" htmlFor={`${fieldId}-p`} error={error}>
         <Select id={`${fieldId}-p`} value={proposed} onChange={(e) => setProposed(e.target.value)}>
           <option value="">Không đề xuất</option>
           {view.members.filter((m) => !m.leader).map((m) => (
             <option key={m.accountId} value={m.accountId}>
-              {m.name ?? m.email}
+              {formatStudentLabel(m)}
             </option>
           ))}
         </Select>

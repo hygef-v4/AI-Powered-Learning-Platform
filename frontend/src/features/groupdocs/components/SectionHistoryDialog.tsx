@@ -1,5 +1,6 @@
 "use client";
 
+import { formatStudentLabel } from "@/shared/studentCode";
 import { useEffect, useState } from "react";
 import { formatDateTime } from "@/features/groups/model/format";
 import { ApiError } from "@/shared/api/client";
@@ -10,8 +11,8 @@ import type { RevisionView, SectionView, WorkspaceView } from "../model/types";
 
 function memberName(view: Pick<WorkspaceView, "members" | "viewerId">, id: string | null | undefined): string {
   if (!id) return "—";
-  if (id === view.viewerId) return "Bạn";
-  return view.members.find((m) => m.accountId === id)?.name ?? "Thành viên đã rời nhóm";
+  const member = view.members.find((m) => m.accountId === id);
+  return formatStudentLabel({ name: id === view.viewerId ? "Bạn" : member?.name ?? "Thành viên đã rời nhóm", studentCode: member?.studentCode });
 }
 
 /** Lịch sử mục chỉ xem (BR-U12-35): mỗi lần bấm Xong là một bản kèm người viết và thời điểm. */

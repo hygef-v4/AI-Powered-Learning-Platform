@@ -12,7 +12,6 @@ import { ProposalReviewList } from "./ProposalReviewList";
 import { RandomSplitDialog } from "./RandomSplitDialog";
 import type { Draft, GroupSetView } from "../model/types";
 import { matchesPersonQuery } from "@/shared/studentCode";
-import { PersonSubline } from "@/shared/ui/PersonSubline";
 
 const PAGE_SIZE = 20;
 
@@ -199,22 +198,23 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
                 onChange={(e) => { setQuery(e.target.value); setPage(0); }} />
             </div>
           </div>
-          <TableFrame filledHead className="[&_table]:table-fixed">
-            <colgroup><col /><col className="w-[24%]" /><col className="w-[96px]" /><col className="w-[108px]" /><col className="w-[100px]" /></colgroup>
-            <thead><tr><Th>Họ tên</Th><Th>Email</Th><Th>Nhóm</Th><Th>Ngày vào lớp</Th><Th><span className="sr-only">Bảng điểm</span></Th></tr></thead>
+          <TableFrame filledHead className="[&_table]:min-w-[980px] [&_table]:table-fixed">
+            <colgroup><col className="w-[112px]" /><col className="w-[220px]" /><col className="w-[28%]" /><col /><col className="w-[120px]" /><col className="w-[104px]" /></colgroup>
+            <thead><tr><Th>MSSV</Th><Th>Họ tên</Th><Th>Email</Th><Th>Nhóm</Th><Th>Ngày vào lớp</Th><Th><span className="sr-only">Bảng điểm</span></Th></tr></thead>
             <tbody>
               {rows.map((p) => {
                 const g = groupOf(p.accountId);
                 const cells = <>
+                  <Td className="font-medium whitespace-nowrap text-body tabular-nums">{p.studentCode ?? "—"}</Td>
                   <Td>
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span className="truncate font-semibold text-ink">{personLabel(p)}</span>
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="max-w-full truncate font-semibold text-ink" title={personLabel(p)}>{personLabel(p)}</span>
                       {g?.leaderId === p.accountId && <Pill tone="warning">Trưởng nhóm</Pill>}
                     </span>
                   </Td>
-                  <Td className="min-w-0"><PersonSubline className="truncate" studentCode={p.studentCode} email={p.email} /></Td>
-                  <Td className="truncate">{g?.name ?? <span className="text-muted">Chưa có nhóm</span>}</Td>
-                  <Td className="text-muted">{formatDate(p.enrolledAt)}</Td>
+                  <Td className="truncate text-muted" title={p.email ?? undefined}>{p.email ?? "—"}</Td>
+                  <Td className="truncate" title={g?.name}>{g?.name ?? <span className="text-muted">Chưa có nhóm</span>}</Td>
+                  <Td className="whitespace-nowrap text-muted tabular-nums">{formatDate(p.enrolledAt)}</Td>
                   <Td className="text-right">
                     {/* Sang trang Chấm điểm, chế độ Theo sinh viên với người này. */}
                     <Link href={`/teaching/classes/${encodeURIComponent(classId)}?tab=gradebook&student=${encodeURIComponent(p.accountId)}`}
@@ -228,7 +228,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
                   ? <ClickableRow key={p.accountId} onClick={() => onView(p.accountId)}>{cells}</ClickableRow>
                   : <tr key={p.accountId}>{cells}</tr>;
               })}
-              {rows.length === 0 && <tr><Td colSpan={5} className="py-10 text-center! text-muted">Không có sinh viên phù hợp.</Td></tr>}
+              {rows.length === 0 && <tr><Td colSpan={6} className="py-10 text-center! text-muted">Không có sinh viên phù hợp.</Td></tr>}
             </tbody>
           </TableFrame>
           <PageNav page={current} size={PAGE_SIZE} total={visible.length} onPage={setPage} />

@@ -39,7 +39,7 @@ export type WorkspaceView = {
   groupId: string;
   groupName: string;
   leaderId: string | null;
-  members: { accountId: string; name: string | null; leader: boolean }[];
+  members: { accountId: string; name: string | null; leader: boolean; studentCode?: string | null }[];
   status: "IN_PROGRESS" | "CLOSED";
   window: "ON_TIME" | "LATE" | "CLOSED";
   sharedBlocks: DocumentModel;

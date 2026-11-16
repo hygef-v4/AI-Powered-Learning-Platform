@@ -95,7 +95,8 @@ public class GroupWorkspaceService {
         } catch (RuntimeException e) {
             contact = Optional.empty();
         }
-        return new Member(id, contact.map(AccountContact::displayName).orElse(null), id.equals(group.leaderId()));
+        return new Member(id, contact.map(AccountContact::displayName).orElse(null), id.equals(group.leaderId()),
+                contact.map(AccountContact::studentCode).orElse(null));
     }
 
     public record WorkspaceView(UUID documentId, UUID assignmentId, String assignmentTitle, Instant closesAt,
@@ -105,7 +106,7 @@ public class GroupWorkspaceService {
                                 boolean activityMonitoring, boolean diagramEnabled, long version, UUID viewerId) {
     }
 
-    public record Member(UUID accountId, String name, boolean leader) {
+    public record Member(UUID accountId, String name, boolean leader, String studentCode) {
     }
 
     public record Role(boolean member, boolean leader, boolean teacher) {
