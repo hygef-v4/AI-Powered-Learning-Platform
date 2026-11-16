@@ -15437,3 +15437,37 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Construction — Build and Test, regression after 157 teammate commits; test scripts only, no application code changed.
 
 ---
+## Staging readiness check before main
+**Timestamp**: 2026-11-16T12:55:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem staging còn lỗi nào không, doc đã đồng bộ chưa, có thể đưa staging lên main chưa"
+**AI Response**: "Kiểm tra `origin/staging@d8ac7d21` so với `origin/main@e3825aa6`: main không có commit nào ngoài staging, không có PR mở. CI của d8ac7d21 qua cả bốn job (backend, frontend, images, deploy-script); không chạy lại test ở máy. Staging trên VPS chạy abca8520 (khác HEAD ở hai script e2e và audit.md), mọi dịch vụ khỏe, schema 20261116.1010, 6 giờ không có dòng ERROR ở backend; lần deploy gần nhất chưa kéo được HEAD vì git fetch tới GitHub timeout. Kết luận: chưa nên đưa lên main. Mã mới dùng Google Drive khi có biến GOOGLE_DRIVE_OAUTH_*, kể cả khi U03_REQUIRE_DRIVE=false, trong khi production đang lưu tệp trên đĩa VPS; production và staging dùng chung thư mục Drive mặc định. Tài liệu lệch: runbook deploy-vps mục 6, README và restore-isolated chưa có Drive cá nhân và khóa backup tùy chọn; đa ngôn ngữ và trang quyền riêng tư chưa được ghi; một ô trong aidlc-state.md còn trống dù PR #97 đã gộp."
+**Context**: Chỉ kiểm tra; không bắt đầu giai đoạn AI-DLC, không đổi file nào. Lệnh đọc `.env` production bị từ chối quyền nên rủi ro về Drive dựa trên ghi chú của phiên trước, chưa xác nhận. Mục audit này ghi bù ở lượt sau vì lúc kiểm tra thư mục làm việc đang ở main.
+
+---
+
+## Documentation sync on staging
+**Timestamp**: 2026-11-16T13:06:33Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa tài liệu"
+**AI Response**: "Tạo nhánh `docs/sync-ops-docs-staging` từ origin/staging@d8ac7d21 (không đặt upstream) và sửa tài liệu theo mã hiện có: deploy-vps.md mục 6 thêm Drive cá nhân qua OAuth, thứ tự chọn nơi lưu, GOOGLE_DRIVE_FOLDER_NAME/ID và khóa backup tùy chọn; restore-isolated.md thêm archive không mã hóa và thư mục backup của Drive cá nhân; deploy-staging.md nhắc đặt thư mục Drive khác production; README; requirements FR-006, FR-013, FR-038, NFR-002 ghi as-built 2026-11-16 (ngôn ngữ bản nháp AI, hai cách dùng Drive, khóa backup tùy chọn, giao diện ba ngôn ngữ, trang /privacy); code-summary của U03; current-code-baseline thêm delta 2026-11-16; aidlc-state.md đánh dấu PR #97 đã gộp và thêm mục của lượt này."
+**Context**: Chỉ tài liệu; không đổi mã, test, schema hay cấu hình, không chạy build hay test. Các dòng requirements ghi hành vi đã có trên staging, không phải yêu cầu mới do người dùng duyệt. Chưa commit, push hay mở PR.
+
+---
+
+## Staging readiness check
+**Timestamp**: 2026-11-16T13:10:01.7696837Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: kiểm tra code mới nhất xem có xung đột gì không, có thể đưa lên staging chưa
+**AI Response**: Fetched origin; HEAD and staging both d8ac7d21, 0/0 divergence, no unmerged files or application conflict markers. Exact-SHA GitHub CI 43866345656 succeeded for backend, frontend, deploy-script and images. Local checks limited by missing next-intl installation and stopped Docker engine. Concurrent docs preserved. Report: construction/build-and-test/2026-11-16-staging-readiness.md.
+**Context**: Review only; no application change, merge, push or deploy. Existing AI-DLC context reused; design/code generation not applicable.
+
+---
+## Documentation sync on staging — commit and PR
+**Timestamp**: 2026-11-16T13:11:48Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."; sau đó chọn Create PR trong ứng dụng (lệnh create-pr, base ghi là main).
+**AI Response**: "Commit 9 file tài liệu thành d19f0329 trên nhánh docs/sync-ops-docs-staging. Push nhánh và mở PR vào staging, không vào main: nhánh tạo từ staging nên PR vào main sẽ kéo theo toàn bộ commit của staging, trong khi việc đưa staging lên main còn chờ kiểm cấu hình Drive của production. File chưa theo dõi aidlc-docs/construction/build-and-test/2026-11-16-staging-readiness.md do một lượt khác tạo, không đưa vào commit."
+**Context**: Chỉ tài liệu. Số PR và trạng thái CI ghi trên GitHub và trong phản hồi cuối.
+
+---
