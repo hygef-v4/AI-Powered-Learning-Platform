@@ -43,7 +43,7 @@ và báo cáo Opus lưu ngoài repo, trên máy của user.
 - [ ] NOT TESTED: trình duyệt thật cho AUD-004/007, restore bằng image thật, shellcheck,
   deploy nhiều instance/lệch phiên bản, Redis sập/cluster, tải, tài khoản ACTIVE có
   `password_changed_at` null (rơi về luật `issuedAt`, không chống race AUD-001).
-- [x] Đã commit cục bộ 8 commit theo nhóm (identity, Draw.io, assignmentwork, infra, quiz, groupdocs, AI, docs), không dòng đồng tác giả Claude theo yêu cầu. [ ] Push/PR do người dùng quyết định. Điều kiện: không commit `AUDIT-*.md` gốc, stage theo
+- [x] Đã commit cục bộ 8 commit theo nhóm (identity, Draw.io, assignmentwork, infra, quiz, groupdocs, AI, docs), không dòng đồng tác giả Claude theo yêu cầu. [x] Đã push `audit-staging` và mở [PR #92](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/92) vào staging (8 commit, MERGEABLE); không merge/deploy. [ ] CI và merge do người dùng quyết định. Điều kiện: không commit `AUDIT-*.md` gốc, stage theo
   từng đường dẫn, deploy mọi backend cùng lúc, giữ Redis một node và ≥ 6.0. Gợi ý chia 8
   commit: identity, Draw.io, assignmentwork, infra restore, quiz, groupdocs, AI, tài liệu.
 

@@ -15137,3 +15137,12 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Git commit cục bộ theo yêu cầu. Không đổi mã nguồn. Chưa kiểm compile từng commit riêng, chỉ cây thư mục đầy đủ đã build/test. NOT TESTED như đã ghi ở các entry trước (shellcheck, trình duyệt thật, restore image thật, deploy nhiều instance).
 
 ---
+
+## Tạo PR audit-staging vào staging
+**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác không được lưu lại)
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo pr lên staging"
+**AI Response**: "Fetch origin: origin/staging là tổ tiên của audit-staging (không cần merge), chưa có PR cùng head. Push audit-staging (8 commit, không dòng đồng tác giả Claude) và tạo PR #92 vào staging bằng GitHub CLI: https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/92. PR MERGEABLE; mô tả gồm bảng 8 lỗi, kiểm chứng, điều kiện deploy, phần NOT TESTED và nợ kỹ thuật. Không merge, không bật auto-merge, không deploy."
+**Context**: User cho phép push và tạo PR. Chỉ thêm tài liệu bàn giao. Kết quả test trong PR thuộc đợt trước vòng sửa cuối ở mức toàn suite; CI sẽ kiểm head PR, trong đó shellcheck chạy lần đầu trên restore-isolated.sh. Trạng thái CI chưa kiểm tại thời điểm ghi.
+
+---
