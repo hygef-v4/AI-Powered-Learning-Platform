@@ -11,8 +11,6 @@ export function formatErrorMessage(error: unknown) {
     switch (error.problem.code) {
       case "GRADING_CLASS_READ_ONLY":
         return "Lớp đã lưu trữ hoặc chưa mở. Bạn chỉ có thể xem điểm; nội dung đang sửa vẫn được giữ.";
-      case "GRADE_LOCKED":
-        return "Điểm đã chốt không thể chỉnh sửa. Tải lại để xem bản chấm đã khóa; nội dung bạn đang sửa vẫn được giữ.";
       case "SUBMISSION_CHANGED":
       case "NOT_LATEST_ATTEMPT":
         return "Bài nộp đã thay đổi. Mở bài nộp hiện tại để kiểm tra trước khi chấm tiếp; nội dung bạn đang sửa vẫn được giữ.";

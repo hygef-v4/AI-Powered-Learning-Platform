@@ -14,7 +14,6 @@ const OUTCOME_CODE_MESSAGES: Record<string, string> = {
   ALREADY_PUBLISHED: "Bài này đã được công bố điểm trước đó. Điểm được giữ nguyên.",
   INVALID_GRADE_STATE: "Trạng thái bài đã thay đổi hoặc chưa phù hợp với thao tác này. Tải lại danh sách để kiểm tra.",
   GRADE_VERSION_CONFLICT: "Bài chấm đã được cập nhật. Tải lại danh sách để dùng phiên bản mới nhất.",
-  GRADE_LOCKED: "Điểm đã được khóa. Tải lại danh sách để xem trạng thái hiện tại.",
   GRADING_CLASS_READ_ONLY: "Lớp đã lưu trữ hoặc chưa mở. Không thể chỉnh sửa hay công bố điểm.",
   GRADING_ASSIGNMENT_OPEN: "Bài tập đang nhận bài. Đóng nhận bài trước khi chấm hoặc công bố điểm.",
   DUPLICATE_ITEM: "Bài bị chọn trùng; chỉ xử lý một lần.",

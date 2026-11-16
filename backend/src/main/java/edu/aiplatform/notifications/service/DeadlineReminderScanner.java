@@ -45,12 +45,13 @@ public class DeadlineReminderScanner implements IScheduledScanner {
         return "u14-deadline-reminders";
     }
 
+    /**
+     * Quét mọi bài còn dưới 24 giờ tới hạn, không chỉ 5 phút đầu: worker ngừng lâu hơn một chu kỳ thì lần quét sau
+     * vẫn nhắc. Bản ghi {@code deadline_reminders} bảo đảm mỗi (bài, lớp, hạn) chỉ nhắc một lần.
+     */
     public void scan(Instant now) {
         for (var candidate :
-                assignmentQuery
-                        .listClosingBetween(
-                                now.plus(Duration.ofHours(24)).minus(Duration.ofMinutes(5)),
-                                now.plus(Duration.ofHours(24)))) {
+                assignmentQuery.listClosingBetween(now, now.plus(Duration.ofHours(24)))) {
             try {
                 var current = assignmentQuery.get(candidate.assignmentId()).orElse(null);
                 if (current == null || !isEligible(current, now)) continue;
@@ -95,8 +96,7 @@ public class DeadlineReminderScanner implements IScheduledScanner {
                 || assignment.opensAt() == null
                 || assignment.closesAt() == null
                 || !assignment.closesAt().isAfter(now)) return false;
-        Instant due = assignment.closesAt().minus(Duration.ofHours(24));
-        return !now.isBefore(due) && !now.isAfter(due.plus(Duration.ofMinutes(5)));
+        return !now.isBefore(assignment.closesAt().minus(Duration.ofHours(24)));
     }
 
     private void remindStudents(AssignmentView candidate, ClassRef courseClass, Instant now) {

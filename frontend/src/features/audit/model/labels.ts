@@ -129,7 +129,6 @@ export const ACTION_LABELS: Record<string, string> = {
   GRADEBOOK_EXPORTED: "Xuất sổ điểm",
   // U12 Tài liệu nhóm
   GROUP_DOC_IMPORTED: "Nhập tài liệu nhóm",
-  GROUP_PEER_REVIEW_SAVED: "Lưu đánh giá chéo",
   GROUP_ASSIGNMENT_LOCKED: "Chốt phân công tài liệu nhóm",
   GROUP_ASSIGNMENT_UNLOCKED: "Mở chốt phân công tài liệu nhóm",
   GROUP_SECTION_LOCKED: "Khóa mục tài liệu nhóm",

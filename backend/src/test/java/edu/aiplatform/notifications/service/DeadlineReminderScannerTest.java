@@ -279,11 +279,30 @@ class DeadlineReminderScannerTest {
     }
 
     @Test
-    void outsideFiveMinuteWindowNotSent() {
+    void missedFirstWindowIsRemindedOnTheNextScan() {
+        var missed = assignment(now.minus(Duration.ofDays(3)), now.plus(Duration.ofHours(14)), classId);
+        source(missed);
+        deadlineReminderScanner.scan(now);
+        verify(assignmentQuery).listClosingBetween(now, now.plus(Duration.ofHours(24)));
+        verify(notificationRepository).insertReminder(id, classId, missed.closesAt(), "SENT", now);
+        verify(notificationService)
+                .createNotification(
+                        any(),
+                        eq(NotificationType.DEADLINE_REMINDER),
+                        eq(List.of(student)),
+                        anyString(),
+                        anyString(),
+                        anyString(),
+                        eq("DEADLINE_REMINDER"),
+                        any());
+    }
+
+    @Test
+    void assignmentMoreThanADayFromItsDeadlineIsNotReminded() {
         source(
                 assignment(
                         now.minusSeconds(1000),
-                        now.plus(Duration.ofHours(24)).minusSeconds(301),
+                        now.plus(Duration.ofHours(24)).plusSeconds(1),
                         classId));
         deadlineReminderScanner.scan(now);
         verifyNoInteractions(notificationService);
@@ -387,14 +406,15 @@ class DeadlineReminderScannerTest {
     }
 
     @Test
-    void reminderTimingWindowIncludesEndpointsAndExcludesOneInstantOutside() {
+    void reminderWindowStaysOpenUntilTheDeadlineSoMissedScansCatchUp() {
         var assignment = assignment(now.minusSeconds(60), now.plus(Duration.ofHours(24)), classId);
         assertThat(DeadlineReminderScanner.isEligible(assignment, now.minusNanos(1))).isFalse();
         assertThat(DeadlineReminderScanner.isEligible(assignment, now)).isTrue();
         assertThat(DeadlineReminderScanner.isEligible(assignment, now.plusSeconds(300))).isTrue();
-        assertThat(
-                DeadlineReminderScanner.isEligible(
-                        assignment, now.plusSeconds(300).plusNanos(1))).isFalse();
+        // Quét bù: lỡ cửa sổ đầu vẫn nhắc cho tới sát hạn; tới hạn thì thôi.
+        assertThat(DeadlineReminderScanner.isEligible(assignment, now.plusSeconds(301))).isTrue();
+        assertThat(DeadlineReminderScanner.isEligible(assignment, assignment.closesAt().minusNanos(1))).isTrue();
+        assertThat(DeadlineReminderScanner.isEligible(assignment, assignment.closesAt())).isFalse();
     }
 
     @Test
