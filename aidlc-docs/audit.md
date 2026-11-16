@@ -15229,6 +15229,89 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **AI Response**: Chuẩn bị PR mới từ audit-staging vào staging cho phần MSSV và tách cột Email; kiểm tra PR hiện hữu để tránh trùng. PR audit trước đã được merge. Người dùng cho phép publish nhánh phục vụ PR; không thực hiện merge PR vào staging.
 **Context**: Diff ứng dụng với staging đúng phần đã review/test; merge staging vào nhánh không thay cây mã ứng dụng đã kiểm chứng. Kết quả kiểm thử và giới hạn giữ như báo cáo browser. Backfill database local, ảnh/script tạm và ba báo cáo AUDIT gốc không thuộc nội dung PR.
 
+---
+
+## Build and Test - bổ sung integration test còn thiếu cho Report 5.2
+**Timestamp**: 2026-11-16T06:16:46Z
+**Requested by:** Hải Nam
+**User Input**: "giúp tôi hoàn thiện report 5.2, viết code test còn thiếu (ngoài phần cho google drive vì 1 thành vien trong nhóm đang sửa chưa đẩy lên)"
+**AI Response**: "Bắt đầu viết integration test mới (chỉ thêm file test, không sửa mã nguồn chính) cho 7 luồng nối module chưa có test: AI gợi ý chấm điểm (U09-U06), nhập đề từ ảnh (U07-U03-U06), đặt lại mật khẩu bằng OTP (U01-U03-mail-Redis-U02), yêu cầu đổi trưởng nhóm (U12-U14 qua RabbitMQ), học liệu gắn vào bài (U13-U07-U08), dọn tệp chưa gắn (U03-Redis-kho tệp local), header bảo mật khi tải SVG (U03-U01 qua HTTP). Không viết test cho Google Drive theo yêu cầu. Sau đó đưa các test đã có và test mới vào Report-5.2 (file Excel ngoài repo)."
+**Context**: Construction / Build and Test, phạm vi chỉ thêm test. Trước đó trong cùng phiên: cập nhật Report-5.2 (ngoài repo) theo phân chia 5.2/5.3/5.4, thêm case kết nối hệ thống bên ngoài; không đổi mã nguồn.
+
+---
+
+## Build and Test - kết quả bổ sung integration test và hoàn thiện Report 5.2
+**Timestamp**: 2026-11-16T06:43:41Z
+**Requested by:** Hải Nam
+**User Input**: "giúp tôi hoàn thiện report 5.2, viết code test còn thiếu (ngoài phần cho google drive vì 1 thành vien trong nhóm đang sửa chưa đẩy lên)"
+**AI Response**: "Thêm file test backend/src/test/java/edu/aiplatform/requirements/CrossUnitFlowIntegrationTest.java (7 test, Spring context thật với PostgreSQL, Redis, RabbitMQ qua Testcontainers và kho tệp local; chỉ ghi nhận mail provider và nạp kết quả AI qua handler thật, không gọi AI hay gửi email thật). Chạy: 7/7 Passed. Chạy lại 10 test có sẵn đưa vào report (NotificationDeliveryIntegrationTest 2, AccountRepositoryIntegrationTest 1, SessionStoreIntegrationTest 2, RequestThrottleIntegrationTest 2, GradingPersistenceTest 1, EvaluationVersionIntegrationTest 1, MaterialModuleMigrationIntegrationTest 1): 10/10 Passed. Cập nhật Report-5.2 (E:/FPTUni/sem9_fa26/test_report, ngoài repo): thêm 17 case tự động (IT-U01-010..015, IT-U03-006..007, IT-U07-008, IT-U09-006..008, IT-U12-009, IT-U13-012..013, IT-U14-012..013), bỏ IT-U06-014 (unit test hàm thuần) và đổi IT-U06-015 thành IT-U06-014, bỏ NFR-U03-44 khỏi IT-U14-006, IT-U14-M04 và B3 của U14. Tổng 162 case: 119 tự động Passed, 43 thủ công Pending; độ phủ 73,46%, tỉ lệ đạt 100%. Không sửa Report 5.3, 5.4. Bản trước được giữ trong scratchpad."
+**Context**: Construction / Build and Test, chỉ thêm test, không sửa mã nguồn chính. NOT TESTED: Google Drive (theo yêu cầu, thành viên khác đang sửa); không mở được file Excel mới bằng Excel để kiểm tra trực quan vì Excel đang kẹt hộp thoại (HRESULT 0x800AC472, cả với file gốc) - đã kiểm bằng cách parse toàn bộ XML, đọc lại nội dung từng sheet và đối chiếu phạm vi công thức; chưa chạy lại toàn bộ test suite backend, chỉ chạy các test nêu trên. File test mới chưa commit.
+
+---
+
+## Giải quyết conflict audit.md sau khi áp stash
+**Timestamp**: 2026-11-16T09:18:23Z
+**Requested by:** Hải Nam
+**User Input**: "solve conflict cho tôi"
+**AI Response**: "Conflict chỉ ở aidlc-docs/audit.md (Updated upstream / Stashed changes): giữ toàn bộ các entry upstream (MSSV, PR student code UI của Quang Hung) rồi nối hai entry Build and Test Report 5.2 phía sau, thêm dấu ---, giữ CRLF; so với HEAD chỉ thêm dòng, không xóa dòng nào. Đánh dấu đã giải quyết bằng git add. Chạy lại CrossUnitFlowIntegrationTest trên HEAD e3825aa6: 7/7 Passed. Không commit, không pull, không đụng stash@{0} cũ (ngày 03/11, không liên quan)."
+**Context**: Git conflict resolution, không sửa mã nguồn. Nhánh staging vẫn sau origin/staging 21 commit (gồm phần Google Drive và đổi tên method/field theo code conventions, có sửa PlatformWorkflowIntegrationTest); chưa kiểm test mới trên code đó.
+
+---
+
+## Pull origin/staging và sửa integration test theo tên mới
+**Timestamp**: 2026-11-16T09:38:20Z
+**Requested by:** Hải Nam
+**User Input**: "Pull và sửa test"
+**AI Response**: "git pull --ff-only lên 5f9c0173 (21 commit, gồm Google Drive, đa ngôn ngữ và đổi tên method/field theo code conventions), giữ nguyên thay đổi đã staged. Sửa CrossUnitFlowIntegrationTest theo tên mới: SessionStore.createSession/findSession, AssignmentAuthoringService.loadAssignment/loadRubric, AttemptService.saveAttempt, IStorage.putFile/loadMetadata, AiImageSourceRegistry.findSource, JobListener.receiveEmail, ClassGroupService.saveGroups, StudentAssignmentService.loadAssignment, ApiException.readCode. Chạy lại: 7/7 Passed; chạy lại toàn bộ 119 test được Report-5.2 tham chiếu trên 5f9c0173: 119/119 Passed (222 test trong các lớp liên quan, 0 lỗi). Report-5.2 chỉ đổi mã nguồn tham chiếu thành staging@5f9c0173, kết quả không đổi."
+**Context**: Build and Test, chỉ sửa file test, không sửa mã nguồn chính. NOT TESTED: chưa viết test cho phần Google Drive mới merge; chưa mở report bằng Excel (Excel bị kẹt hộp thoại), đã kiểm bằng parse XML và đọc lại nội dung. Chưa commit.
+
+---
+
+## Tạo nhánh integration-test-drive và viết integration test cho Google Drive
+**Timestamp**: 2026-11-16T09:55:29Z
+**Requested by:** Hải Nam
+**User Input**: "tạo nhánh khác từ staging rồi viết test Drive ở đó, mang hết changes sang branch đó luôn"
+**AI Response**: "Tạo nhánh integration-test-drive từ staging (5f9c0173), mang theo thay đổi đang staged (audit.md, CrossUnitFlowIntegrationTest). Thêm backend/src/test/java/edu/aiplatform/requirements/DriveStorageIntegrationTest.java: context Spring thật với cấu hình Drive cá nhân (require-drive=true), PostgreSQL/Redis/RabbitMQ qua Testcontainers; dùng thư viện Google Drive client, GoogleDriveStorageAdapter, DriveFolders, DriveBackupStore thật, chỉ trỏ client Drive vào HTTP server cục bộ giả lập Drive v3 (upload resumable, metadata, tải media qua /download, list, tạo thư mục, xóa, chèn lỗi). 7 test: upload vào thư mục theo purpose và tải đúng byte; lỗi 503 được thử lại còn 403 không thử lại và không để lại tệp; tệp bị đánh dấu abuse trả 410 và ghi audit; scanner xóa tệp chưa gắn và thử lại khi xóa lỗi; job DRIVE_CLEANUP qua jobs.drive; archive backup trong thư mục backups/runId và xóa theo run; chọn thư mục gốc (id cấu hình, quay về theo tên có dấu nháy và gạch chéo) và health UP/DEGRADED. Kết quả: 7/7 Passed (lần đầu 2 lỗi do server giả chưa xử lý đường dẫn /download của client, đã sửa trong test). Report-5.2: thêm IT-U03-008..014; tổng 169 case, 126 tự động Passed, 43 thủ công Pending, độ phủ 74,56%."
+**Context**: Build and Test, chỉ thêm file test, không sửa mã nguồn chính. NOT TESTED: trao đổi OAuth token với Google và Drive thật (vẫn do case thủ công IT-U03-M03); thời gian backoff thử lại không đo; chưa mở report bằng Excel. Chưa commit, chưa push.
+
+---
+
+## Commit integration test trên nhánh integration-test-drive
+**Timestamp**: 2026-11-16T10:01:19Z
+**Requested by:** Hải Nam
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Commit CrossUnitFlowIntegrationTest.java, DriveStorageIntegrationTest.java và audit.md trên nhánh integration-test-drive với thông điệp test(backend): add cross-unit flow and Google Drive storage integration tests. Không push."
+**Context**: Build and Test, commit theo yêu cầu người dùng; chưa push.
+
+---
+
+## Sửa GitGuardian trên PR #96
+**Timestamp**: 2026-11-16T10:14:34Z
+**Requested by:** Hải Nam
+**User Input**: "check ci, hiện git guardian bị failed"
+**AI Response**: "CI của PR #96 (d01db2cb): backend, frontend, deploy-script đạt; GitGuardian Security Checks failed với 1 Generic Password ở CrossUnitFlowIntegrationTest.java (ba mật khẩu test viết cứng, chỉ dùng cho tài khoản tạo trong container test, không phải bí mật thật). Đã thay bằng generateTestPassword() sinh mật khẩu ngẫu nhiên mỗi lần chạy (đúng PasswordPolicy). Chạy lại passwordResetDeliversOtpThroughQueueRevokesSessionsAndAcceptsOnlyTheNewPassword: 1/1 Passed. Commit d01db2cb vẫn chứa chuỗi cũ nên cần amend + force push hoặc đánh dấu incident là test credential trên GitGuardian."
+**Context**: Build and Test, sửa file test; chưa commit, chưa push.
+
+---
+
+## Amend và force push nhánh integration-test-drive
+**Timestamp**: 2026-11-16T10:15:20Z
+**Requested by:** Hải Nam
+**User Input**: "Amend + force push"
+**AI Response**: "Gộp bản sửa mật khẩu test và audit.md vào commit d01db2cb (git commit --amend, giữ thông điệp), rồi git push --force-with-lease origin integration-test-drive để PR #96 không còn chứa mật khẩu viết cứng."
+**Context**: Build and Test, sửa lịch sử nhánh PR theo yêu cầu người dùng.
+
+---
+
+## GitGuardian vẫn báo lỗi sau lần force push đầu
+**Timestamp**: 2026-11-16T10:20:04Z
+**Requested by:** Hải Nam
+**User Input**: "Amend + force push"
+**AI Response**: "Sau push 1f086cf9, GitGuardian vẫn báo cùng incident ở dòng authService.login(email, newPassword, <IP>): bộ dò Generic Password coi chuỗi IP literal đứng sau biến mật khẩu là mật khẩu. Đã thay các IP 198.51.100.x trong test đặt lại mật khẩu bằng buildDocumentationIp(n). Chạy lại test: 1/1 Passed. Amend lại commit và force push với lease."
+**Context**: Build and Test, tiếp tục sửa GitGuardian trên PR #96.
+
+---
+
 ## Project-wide review request
 **Timestamp**: 2026-11-15T10:22:30Z
 **Requested by:** Đào Chí Cường
