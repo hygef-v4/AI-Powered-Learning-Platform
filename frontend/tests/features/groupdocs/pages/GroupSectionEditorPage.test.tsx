@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { groupDocContext } from "@/features/groupdocs/components/groupDocNav";
-import { GroupSectionEditorPage } from "@/features/groupdocs/pages/GroupSectionEditorPage";
+import { GroupSectionEditorPage, mergeSaved } from "@/features/groupdocs/pages/GroupSectionEditorPage";
 import type { DocumentBlock } from "@/shared/document";
 import { publishOutline } from "@/shared/document/outline";
 import type { SectionView, WorkspaceView } from "@/features/groupdocs/model/types";
@@ -114,6 +114,72 @@ it("tự lưu sau 10 giây chỉ block của người học, kèm version của 
   expect(body.version).toBe(2);
   expect(body.blocks).toHaveLength(1);
   expect(body.blocks[0]).toMatchObject({ origin: "STUDENT", content: { runs: [{ text: "Đoạn một" }] } });
+});
+
+it("merges saved images without losing in-flight edits or resending expired upload references", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const uploadedAt = Date.now();
+  const image: DocumentBlock = {
+    id: "image1", origin: "STUDENT", type: "IMAGE", content: { fileRef: "upload-ref", alt: "Diagram" },
+  };
+  const view = workspace({ sections: [section("s2", ME, {
+    draftBlocks: [paragraph("d1", "Initial text", "STUDENT"), image],
+  })] });
+  const requests: { version: number; blocks: DocumentBlock[] }[] = [];
+  let completeSave!: () => void;
+  vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    if (!String(input).endsWith("/draft")) return json(view);
+    const body = JSON.parse(String(init?.body)) as typeof requests[number];
+    requests.push(body);
+    const expired = Date.now() - uploadedAt > 3_600_000;
+    if (expired && body.blocks.some((block) => block.type === "IMAGE" && block.content.fileRef)) {
+      return json({ status: 400, code: "FILE_REF_EXPIRED", detail: "Expired upload" }, 400);
+    }
+    const saved = section("s2", ME, {
+      version: body.version + 1,
+      draftBlocks: body.blocks.map((block) => block.type === "IMAGE"
+        ? { ...block, content: { ...block.content, fileRef: undefined, hasFile: true } } : block),
+    });
+    if (requests.length === 1) {
+      return new Promise<Response>((resolve) => { completeSave = () => void json(saved).then(resolve); });
+    }
+    return json(saved);
+  }));
+  render(<GroupSectionEditorPage documentId="doc1" focusPart="s2" />);
+  const field = await screen.findByLabelText("Đoạn văn");
+  field.textContent = "First save";
+  fireEvent.input(field);
+  await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
+  expect(requests).toHaveLength(1);
+  expect(requests[0]!.blocks.find((block) => block.type === "IMAGE")!.content)
+    .toMatchObject({ fileRef: "upload-ref" });
+  field.textContent = "Edited while saving";
+  fireEvent.input(field);
+  await act(async () => { completeSave(); });
+  expect(screen.getByLabelText("Đoạn văn")).toHaveTextContent("Edited while saving");
+
+  vi.setSystemTime(uploadedAt + 3_600_001);
+  const currentField = screen.getByLabelText("Đoạn văn");
+  currentField.textContent = "Edited after upload expiry";
+  fireEvent.input(currentField);
+  await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
+  expect(requests).toHaveLength(2);
+  expect(requests[1]!.version).toBe(3);
+  expect(requests[1]!.blocks.find((block) => block.type === "IMAGE")!.content)
+    .toEqual({ alt: "Diagram", hasFile: true });
+  expect(requests[1]!.blocks.find((block) => block.type === "PARAGRAPH")!.content)
+    .toEqual({ runs: [{ text: "Edited after upload expiry" }] });
+  expect(screen.queryByText("Expired upload")).not.toBeInTheDocument();
+});
+
+it("keeps replacement image references and images absent from the saved response", () => {
+  const sent: DocumentBlock = {
+    id: "image1", origin: "STUDENT", type: "IMAGE", content: { fileRef: "first-upload" },
+  };
+  const replacement: DocumentBlock = { ...sent, content: { fileRef: "new-upload", alt: "New caption" } };
+  const attached: DocumentBlock = { ...sent, content: { hasFile: true } };
+  expect(mergeSaved([replacement], [sent], [attached])).toEqual([replacement]);
+  expect(mergeSaved([sent], [sent], [])).toEqual([sent]);
 });
 
 it("còn phần chưa lưu thì trình duyệt hỏi lại khi rời trang", async () => {
