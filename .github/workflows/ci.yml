@@ -73,10 +73,13 @@ jobs:
   # (infra/deploy/platform-deploy.sh, docs/runbooks/deploy-vps.md mục 10). Job images thành công thì workflow mới
   # thành công, nên image của SHA đó chắc chắn đã có trên GHCR.
 
-  # Test script deploy bằng lệnh giả, không cần VPS.
+  # Test script deploy và restore bằng lệnh giả, không cần VPS.
   deploy-script:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: shellcheck infra/deploy/platform-deploy.sh infra/deploy/test-platform-deploy.sh
+      - run: >-
+          shellcheck infra/deploy/platform-deploy.sh infra/deploy/test-platform-deploy.sh
+          infra/scripts/restore-isolated.sh infra/scripts/test-restore-isolated.sh
       - run: bash infra/deploy/test-platform-deploy.sh
+      - run: sh infra/scripts/test-restore-isolated.sh

@@ -1,3 +1,4 @@
+import { formatStudentLabel } from "@/shared/studentCode";
 import { ACTIVITY_LABELS, type Detail } from "../model/types";
 import { Card } from "@/shared/ui";
 import { msg } from "@/i18n/msg";
@@ -19,7 +20,7 @@ export function ActivityReview({ detail }: { detail: Detail }) {
         <div>
           {detail.memberActivities?.map((m) => (
             <p key={m.student.accountId}>
-              {m.student.name}: {ACTIVITY_LABELS[m.state] ?? m.state}
+              {formatStudentLabel(m.student)}: {ACTIVITY_LABELS[m.state] ?? m.state}
               {m.activity
                 ? msg("grading.components.GradingReviewPanels.lanRoiTrangKhoangThieuDu", { awayCount: String(m.activity.awayCount), unknownGaps: String(m.activity.unknownGaps) })
                 : ""}

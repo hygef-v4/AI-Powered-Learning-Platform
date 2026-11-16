@@ -5,9 +5,8 @@ import { Alert, Button, Dialog, Field, Pill, Select, TextInput, cx, showToast } 
 import { saveGroups } from "../api";
 import { draftsFrom, freeNames, personLabel, saveErrorText, withdraw, type StudentRow } from "../model/groupDrafts";
 import type { Draft, GroupSetView } from "../model/types";
-import { matchesPersonQuery } from "@/shared/studentCode";
+import { formatStudentLabel, matchesPersonQuery } from "@/shared/studentCode";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
-import { msg } from "@/i18n/msg";
 
 /**
  * Popup Tạo nhóm / Sửa nhóm (t02f, BR-U12-02–04): tên nhóm, chọn thành viên trong danh sách người chưa có nhóm có ô tìm
@@ -50,7 +49,7 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
   const moved = members.filter((m) => groupOf(m)).length;
   const trimmed = name.trim();
   const duplicate = others.some((d) => d.name.trim().toLowerCase() === trimmed.toLowerCase());
-  const nameError = !trimmed ? msg("groups.components.GroupFormDialog.nhapTenNhom") : duplicate ? msg("groups.components.GroupFormDialog.tenNhomBiTrung") : null;
+  const nameError = !trimmed ? "Nhập tên nhóm" : duplicate ? "Tên nhóm bị trùng" : null;
   const valid = !nameError && members.length > 0 && blocked.length === 0;
 
   const toggle = (accountId: string) =>
@@ -64,7 +63,7 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
     setError(null);
     try {
       onSaved(await saveGroups(classId, set.version, next), trimmed);
-      showToast(group ? msg("groups.components.GroupFormDialog.daLuuNhom") : msg("groups.components.GroupFormDialog.daTao", { trimmed: String(trimmed) }));
+      showToast(group ? "Đã lưu nhóm" : `Đã tạo ${trimmed}`);
     } catch (e) {
       setError(saveErrorText(e, next));
     } finally {
@@ -73,59 +72,59 @@ export function GroupFormDialog({ classId, set, people, group, leaderOnly = fals
   };
 
   return (
-    <Dialog open title={leaderOnly ? msg("groups.components.GroupFormDialog.doiTruongNhom", { name: String(group?.name) }) : group ? msg("groups.components.GroupFormDialog.sua", { name: String(group.name) }) : msg("groups.components.GroupFormDialog.taoNhom")} size="lg" onClose={onClose} dismissible={!busy}
-      footer={<Button variant="primary" icon="save" disabled={!valid || busy} onClick={() => void save()}>{group ? msg("groups.components.GroupFormDialog.luuNhom") : msg("groups.components.GroupFormDialog.taoNhom")}</Button>}>
+    <Dialog open title={leaderOnly ? `Đổi trưởng nhóm — ${group?.name}` : group ? `Sửa ${group.name}` : "Tạo nhóm"} size="lg" onClose={onClose} dismissible={!busy}
+      footer={<Button variant="primary" icon="save" disabled={!valid || busy} onClick={() => void save()}>{group ? "Lưu nhóm" : "Tạo nhóm"}</Button>}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       <div className={cx("grid gap-4", !leaderOnly && "sm:grid-cols-2")}>
-        {!leaderOnly && <Field label={msg("groups.components.GroupFormDialog.tenNhom")} htmlFor={`${id}-name`} required error={nameError}>
+        {!leaderOnly && <Field label="Tên nhóm" htmlFor={`${id}-name`} required error={nameError}>
           <TextInput id={`${id}-name`} value={name} maxLength={100} disabled={busy} onChange={(e) => setName(e.target.value)} />
         </Field>}
-        <Field label={msg("groups.components.GroupFormDialog.truongNhom")} htmlFor={`${id}-leader`} required>
+        <Field label="Trưởng nhóm" htmlFor={`${id}-leader`} required>
           <Select id={`${id}-leader`} value={leader ?? ""} disabled={busy || members.length === 0} onChange={(e) => setLeaderId(e.target.value)}>
-            {members.length === 0 && <option value="">{msg("groups.components.GroupFormDialog.chonThanhVienTruoc")}</option>}
-            {members.map((m) => <option key={m} value={m}>{personLabel(people.find((p) => p.accountId === m))}</option>)}
+            {members.length === 0 && <option value="">Chọn thành viên trước</option>}
+            {members.map((m) => <option key={m} value={m}>{formatStudentLabel(people.find((p) => p.accountId === m))}</option>)}
           </Select>
         </Field>
       </div>
       {!leaderOnly && <div className="flex flex-col gap-2">
-        <span className="text-xs font-semibold text-body">{msg("groups.components.GroupFormDialog.thanhVien")}{members.length})</span>
-        <TextInput type="search" icon="search" aria-label={msg("groups.components.GroupFormDialog.timSinhVien")} placeholder={msg("groups.components.GroupFormDialog.timSinhVien")} value={query} disabled={busy} onChange={(e) => setQuery(e.target.value)} />
+        <span className="text-xs font-semibold text-body">Thành viên ({members.length})</span>
+        <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm sinh viên" value={query} disabled={busy} onChange={(e) => setQuery(e.target.value)} />
         <label className="flex items-center gap-3 text-xs font-semibold">
           <input type="checkbox" className="size-4 accent-primary" checked={allSelected} disabled={busy || !list.length}
             ref={node => { if (node) node.indeterminate = someSelected && !allSelected; }}
             onChange={() => setMembers(current => allSelected ? current.filter(member => !list.some(person => person.accountId === member))
               : [...new Set([...current, ...list.map(person => person.accountId)])])} />
-          {msg("groups.components.GroupFormDialog.chonTatCaKetQuaLoc")}{list.length})
+          Chọn tất cả kết quả lọc ({list.length})
         </label>
-        <ul aria-label={msg("groups.components.GroupFormDialog.chonThanhVien")} className="max-h-72 overflow-y-auto rounded-lg border border-line [scrollbar-color:var(--c-muted)_transparent]">
+        <ul aria-label="Chọn thành viên" className="max-h-72 overflow-y-auto rounded-lg border border-line [scrollbar-color:var(--c-muted)_transparent]">
           {list.map((p) => {
             const picked = members.includes(p.accountId);
             const current = groupOf(p.accountId);
             return (
               <li key={p.accountId} className="border-b border-line last:border-b-0">
                 <label className={cx("flex cursor-pointer items-center gap-3 px-3 py-2 transition-colors", picked ? "bg-primary-soft/50" : "hover:bg-shell")}>
-                  <input type="checkbox" className="size-4 accent-primary" checked={picked} disabled={busy} onChange={() => toggle(p.accountId)} aria-label={msg("groups.components.GroupFormDialog.chon", { value: String(personLabel(p)) })} />
+                  <input type="checkbox" className="size-4 accent-primary" checked={picked} disabled={busy} onChange={() => toggle(p.accountId)} aria-label={`Chọn ${personLabel(p)}`} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13.5px] font-semibold text-ink">{personLabel(p)}</span>
                     <PersonSubline className="truncate" studentCode={p.studentCode} email={p.email} />
                   </span>
-                  {picked && p.accountId === leader && <Pill tone="warning">{msg("groups.components.GroupFormDialog.truongNhom")}</Pill>}
+                  {picked && p.accountId === leader && <Pill tone="warning">Trưởng nhóm</Pill>}
                   {current && <span className="shrink-0 text-xs text-muted">{current.name}</span>}
                 </label>
               </li>
             );
           })}
           {list.length === 0 && (
-            <li className="px-3 py-8 text-center text-[13px] text-muted">{q ? msg("groups.components.GroupFormDialog.khongCoSinhVienPhuHop") : msg("groups.components.GroupFormDialog.moiSinhVienDaCoNhom")}</li>
+            <li className="px-3 py-8 text-center text-[13px] text-muted">{q ? "Không có sinh viên phù hợp." : "Mọi sinh viên đã có nhóm."}</li>
           )}
         </ul>
       </div>}
       {(moved > 0 || emptied.length > 0) && (
         <p className={cx("text-[13px]", blocked.length ? "text-danger" : "text-muted")}>
-          {moved > 0 && msg("groups.components.GroupFormDialog.chuyenNguoiTuNhomKhacSang", { moved: String(moved) })}
+          {moved > 0 && `Chuyển ${moved} người từ nhóm khác sang. `}
           {blocked.length > 0
-            ? msg("groups.components.GroupFormDialog.daCoBaiNenKhongDuoc", { value: String(blocked.map((d) => d.name).join(", ")) })
-            : emptied.length > 0 && msg("groups.components.GroupFormDialog.khongConAiSeBiXoa", { value: String(emptied.map((d) => d.name).join(", ")) })}
+            ? `${blocked.map((d) => d.name).join(", ")} đã có bài nên không được để trống.`
+            : emptied.length > 0 && `${emptied.map((d) => d.name).join(", ")} không còn ai sẽ bị xóa.`}
         </p>
       )}
     </Dialog>

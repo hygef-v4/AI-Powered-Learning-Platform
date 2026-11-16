@@ -52,14 +52,14 @@ public class QuizAttemptService {
 
     /**
      * Bắt đầu lượt mới, hoặc mở lại lượt đang làm (BR-U11-10). Lớp phải đang mở, Quiz đang mở trong lớp, còn lượt.
-     * Khóa theo (Quiz, người học) để hai lần bấm không tạo hai lượt (NFR-U11-11).
+     * Khóa Quiz trước khi đọc đề, rồi (Quiz, người học), tới commit (NFR-U11-11).
      */
     @Transactional
     public TakingView start(Actor actor, UUID quizId, UUID classId) {
         access.requireClass(actor, Actions.QUIZ_PRACTICE, classId, "QUIZ", quizId, PracticeSupport.QUIZ_NOT_FOUND);
         ClassRef ref = support.classRef(classId);
-        QuizView quiz = support.quizInClass(quizId, ref);
         attempts.lockStart(quizId, actor.accountId());
+        QuizView quiz = support.quizInClass(quizId, ref);
         var existing = attempts.findInProgress(quizId, actor.accountId(), classId);
         if (existing.isPresent()) {
             return taking(existing.get());

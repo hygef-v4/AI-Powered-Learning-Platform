@@ -87,6 +87,17 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("ClassGradebookTab: danh sách – chi tiết", () => {
+  it("shows the student code in both the student picker and selected student heading", async () => {
+    mocks.loadGradebook.mockResolvedValue({ ...samplePage, rows: samplePage.rows.map((row, i) => ({
+      ...row, student: { ...row.student, studentCode: `SE00000${i + 1}` },
+    })) });
+    window.history.replaceState(null, "", "/?student=s-2");
+    render(<ClassGradebookTab classId="class-1" />);
+    expect(await screen.findByRole("button", { name: /Trần Thị Bình.*SE000002/ })).toHaveAttribute("aria-pressed", "true");
+    const heading = screen.getByRole("heading", { name: "Trần Thị Bình" });
+    expect(heading.parentElement).toHaveTextContent("SE000002");
+    expect(heading.parentElement).toHaveTextContent("binh@school.test");
+  });
   it("links directly to each submitted group's evaluation above the member grades", async () => {
     mocks.listSubmissions.mockResolvedValue({
       rows: [

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatStudentLabel } from "@/shared/studentCode";
 import { useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { SearchPicker } from "@/features/assignments/components/SearchPicker";
@@ -7,11 +8,10 @@ import { Alert, Button, Dialog, Field, Pill, TableFrame, Td, Th } from "@/shared
 import { SECTION_STATUS } from "../model/status";
 import { assignSection, submitDocument } from "../api";
 import type { Receipt, SectionView, WorkspaceView } from "../model/types";
-import { msg } from "@/i18n/msg";
 
 function problemMessage(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
-    if (e.problem.status === 409) return e.problem.detail ?? msg("groupdocs.components.SectionDialogs.duLieuVuaThayDoiHay");
+    if (e.problem.status === 409) return e.problem.detail ?? "Dữ liệu vừa thay đổi, hãy tải lại.";
     return e.problem.detail ?? fallback;
   }
   return fallback;
@@ -45,29 +45,30 @@ export function AssignSectionDialog({
       onChanged();
       onClose();
     } catch (e) {
-      setError(problemMessage(e, msg("groupdocs.components.SectionDialogs.khongGiaoDuocMuc")));
+      setError(problemMessage(e, "Không giao được mục."));
       setBusy(false);
     }
   };
   return (
     <Dialog
       open
-      title={msg("groupdocs.components.SectionDialogs.giaoMuc")}
+      title="Giao mục"
       icon="person_add"
       onClose={onClose}
       footer={
         <Button variant="primary" onClick={() => void assign()} disabled={!changed || busy}>
-          {msg("groupdocs.components.SectionDialogs.giaoMuc")}</Button>
+          Giao mục
+        </Button>
       }
     >
-      <Field label={msg("groupdocs.components.SectionDialogs.thanhVienNhanMuc")} htmlFor="assign-member">
-        <SearchPicker id="assign-member" label={msg("groupdocs.components.SectionDialogs.thanhVienNhanMuc")} placeholder={msg("groupdocs.components.SectionDialogs.timThanhVien")} optionIcon="person"
-          emptyText={msg("groupdocs.components.SectionDialogs.khongCoThanhVienPhuHop")}
-          options={view.members.filter((m) => m.accountId !== assignee).map((m) => ({ id: m.accountId, label: m.name ?? m.accountId }))}
+      <Field label="Thành viên nhận mục" htmlFor="assign-member">
+        <SearchPicker id="assign-member" label="Thành viên nhận mục" placeholder="Tìm thành viên" optionIcon="person"
+          emptyText="Không có thành viên phù hợp."
+          options={view.members.filter((m) => m.accountId !== assignee).map((m) => ({ id: m.accountId, label: formatStudentLabel({ ...m, name: m.name ?? m.accountId }) }))}
           onPick={setAssignee}
-          selected={chosen ? { label: chosen.name ?? chosen.accountId, clearLabel: msg("groupdocs.components.SectionDialogs.boChonThanhVien"), onClear: () => setAssignee("") } : undefined} />
+          selected={chosen ? { label: formatStudentLabel({ ...chosen, name: chosen.name ?? chosen.accountId }), clearLabel: "Bỏ chọn thành viên", onClear: () => setAssignee("") } : undefined} />
       </Field>
-      {heldByOther && <Alert tone="warning">{msg("groupdocs.components.SectionDialogs.giaoChoNguoiKhacSeNha")}</Alert>}
+      {heldByOther && <Alert tone="warning">Giao cho người khác sẽ nhả mục trước đó.</Alert>}
       {error && (
         <Alert tone="danger" role="alert">
           {error}
@@ -94,7 +95,10 @@ export function SubmitGroupDialog({
 }) {
   const [busy, setBusy] = useState(false);
   const undone = view.sections.filter((s) => s.status !== "DONE");
-  const name = (id: string | null) => view.members.find((m) => m.accountId === id)?.name ?? msg("groupdocs.components.SectionDialogs.chuaAiNhan");
+  const name = (id: string | null) => {
+    const member = view.members.find((m) => m.accountId === id);
+    return formatStudentLabel({ name: member?.name ?? "Chưa ai nhận", studentCode: member?.studentCode });
+  };
   const submit = async () => {
     setBusy(true);
     try {
@@ -103,13 +107,13 @@ export function SubmitGroupDialog({
       const problem = e instanceof ApiError ? (e.problem as ApiError["problem"] & { issues?: { blockId?: string }[] }) : undefined;
       const blockIds = (problem?.issues ?? []).map((i) => i.blockId ?? "").filter(Boolean);
       const invalid = problem?.issues !== undefined;
-      onFailed(invalid ? msg("groupdocs.components.SectionDialogs.chuaNopDuocViConMuc") : problemMessage(e, msg("groupdocs.components.SectionDialogs.khongNopDuocThuLaiSau")), blockIds);
+      onFailed(invalid ? "Chưa nộp được vì còn mục chưa xong." : problemMessage(e, "Không nộp được, thử lại sau."), blockIds);
     }
   };
   return (
     <Dialog
       open
-      title={msg("groupdocs.components.SectionDialogs.nopTaiLieuNhom")}
+      title="Nộp tài liệu nhóm?"
       icon="upload_file"
       size="lg"
       onClose={onClose}
@@ -117,9 +121,10 @@ export function SubmitGroupDialog({
       footer={
         <>
           <Button onClick={onClose} disabled={busy}>
-            {msg("groupdocs.components.SectionDialogs.quayLai")}</Button>
+            Quay lại
+          </Button>
           <Button variant="primary" onClick={() => void submit()} disabled={busy}>
-            {undone.length ? msg("groupdocs.components.SectionDialogs.vanNop") : msg("groupdocs.components.SectionDialogs.nop")}
+            {undone.length ? "Vẫn nộp" : "Nộp"}
           </Button>
         </>
       }
@@ -128,9 +133,9 @@ export function SubmitGroupDialog({
         <TableFrame filledHead className="[&_table]:table-fixed">
           <colgroup><col /><col className="w-[32%]" /><col className="w-[140px]" /></colgroup><thead>
             <tr>
-              <Th>{msg("groupdocs.components.SectionDialogs.muc")}</Th>
-              <Th>{msg("groupdocs.components.SectionDialogs.nguoiGiu")}</Th>
-              <Th>{msg("groupdocs.components.SectionDialogs.trangThai")}</Th>
+              <Th>Mục</Th>
+              <Th>Người giữ</Th>
+              <Th>Trạng thái</Th>
             </tr>
           </thead>
           <tbody>

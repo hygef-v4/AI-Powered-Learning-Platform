@@ -2,18 +2,16 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-import { Alert, Button, Card, ClickableRow, cx, Dialog, IconButton, Pagination, Pill, showToast, TableFrame, Td, TextInput, Th } from "@/shared/ui";
+import { Alert, Button, ClickableRow, Dialog, IconButton, PageNav, Pill, TableFrame, Td, TextInput, Th, cx, showToast } from "@/shared/ui";
 import { getGroups, saveGroups } from "../api";
 import { GroupFormDialog } from "./GroupFormDialog";
-import { GroupProgressTable } from "./GroupProgressTable";
+import { GroupProgressCard } from "./GroupProgressCard";
 import { byGroupName, draftsFrom, personLabel, saveErrorText, UNGROUPED, type StudentRow } from "../model/groupDrafts";
 import { LeaderRequestList } from "./LeaderRequestList";
 import { ProposalReviewList } from "./ProposalReviewList";
 import { RandomSplitDialog } from "./RandomSplitDialog";
 import type { Draft, GroupSetView } from "../model/types";
 import { matchesPersonQuery } from "@/shared/studentCode";
-import { PersonSubline } from "@/shared/ui/PersonSubline";
-import { msg } from "@/i18n/msg";
 
 const PAGE_SIZE = 20;
 
@@ -77,7 +75,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
   }, [onGroupNamesLoaded]);
 
   const load = useCallback(
-    () => getGroups(classId).then(receive, () => setError(msg("groups.components.ClassGroupsPanel.khongTaiDuocNhomCuaLop"))),
+    () => getGroups(classId).then(receive, () => setError("Không tải được nhóm của lớp, thử lại sau.")),
     [classId, receive],
   );
 
@@ -88,7 +86,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
         if (active) receive(loaded);
       },
       () => {
-        if (active) setError(msg("groups.components.ClassGroupsPanel.khongTaiDuocNhomCuaLop"));
+        if (active) setError("Không tải được nhóm của lớp, thử lại sau.");
       },
     );
     return () => {
@@ -98,12 +96,12 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
 
   if (error && !set) {
     return (
-      <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void load()}>{msg("groups.components.ClassGroupsPanel.taiLai")}</Button>}>
+      <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void load()}>Tải lại</Button>}>
         {error}
       </Alert>
     );
   }
-  if (!set) return <p role="status" className="text-[13px] text-muted">{msg("groups.components.ClassGroupsPanel.dangTaiSinhVienVaNhom")}</p>;
+  if (!set) return <p role="status" className="text-[13px] text-muted">Đang tải sinh viên và nhóm…</p>;
 
   const readOnly = set.classStatus === "ARCHIVED";
   const drafts = draftsFrom(set);
@@ -142,7 +140,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
     setDeleteError(null);
     try {
       saved(await saveGroups(classId, set.version, next));
-      showToast(msg("groups.components.ClassGroupsPanel.daXoa", { name: String(group.name) }), "danger");
+      showToast(`Đã xóa ${group.name}`, "danger");
     } catch (e) {
       setDeleteError(saveErrorText(e, drafts));
     } finally {
@@ -153,86 +151,88 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
   const gq = groupQuery.toLocaleLowerCase("vi").trim();
   const shownGroups = sorted.filter((d) => d.name.toLocaleLowerCase("vi").includes(gq));
   const pick = (key: string) => { setFilter(key); setPage(0); };
-  const selectedName = filter === UNGROUPED ? msg("groups.components.ClassGroupsPanel.chuaCoNhom") : (drafts.find((d) => d.key === filter)?.name ?? msg("groups.components.ClassGroupsPanel.tatCaSinhVien"));
+  const selectedName = filter === UNGROUPED ? "Chưa có nhóm" : (drafts.find((d) => d.key === filter)?.name ?? "Tất cả sinh viên");
 
   return (
     <div className="flex flex-col gap-4">
       <ProposalReviewList classId={classId} setVersion={set.version} readOnly={readOnly} onGroupsChanged={() => void load()} />
       <LeaderRequestList set={set} groupId={filter || undefined} onChanged={() => void load()} />
-      <GroupProgressTable classId={classId} set={set} />
+      <GroupProgressCard classId={classId} set={set} />
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
         {/* Thẻ Nhóm: mọi việc với nhóm ở đây, mỗi nhóm có sẵn nút sửa, xóa; bấm nhóm để lọc bảng bên cạnh. */}
-        <Card as="section" className="flex min-w-0 flex-col gap-3" aria-label={msg("groups.components.ClassGroupsPanel.nhom")}>
-          <h2 className="font-display text-[15px] font-bold text-ink">{msg("groups.components.ClassGroupsPanel.nhom")}</h2>
+        <section aria-label="Nhóm" className="flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-surface p-4">
+          <h2 className="font-display text-[15px] font-bold text-ink">Nhóm</h2>
           {!readOnly && (
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="primary" icon="add" disabled={all.length === 0} onClick={() => setOpen({ kind: "create" })}>{msg("groups.components.ClassGroupsPanel.taoNhom")}</Button>
-              <Button icon="shuffle" disabled={all.length === 0} onClick={() => setOpen({ kind: "random" })}>{msg("groups.components.ClassGroupsPanel.chiaNgauNhien")}</Button>
+              <Button variant="primary" icon="add" disabled={all.length === 0} onClick={() => setOpen({ kind: "create" })}>Tạo nhóm</Button>
+              <Button icon="shuffle" disabled={all.length === 0} onClick={() => setOpen({ kind: "random" })}>Chia ngẫu nhiên</Button>
             </div>
           )}
           {drafts.length > 6 && (
-            <TextInput type="search" icon="search" aria-label={msg("groups.components.ClassGroupsPanel.timNhom")} placeholder={msg("groups.components.ClassGroupsPanel.timNhom")} value={groupQuery} onChange={(e) => setGroupQuery(e.target.value)} />
+            <TextInput type="search" icon="search" aria-label="Tìm nhóm" placeholder="Tìm nhóm" value={groupQuery} onChange={(e) => setGroupQuery(e.target.value)} />
           )}
-          <ul aria-label={msg("groups.components.ClassGroupsPanel.danhSachNhom")} className="-mx-1 flex max-h-[60vh] flex-col gap-0.5 overflow-y-auto px-1 [scrollbar-color:var(--c-muted)_transparent]">
-            <GroupItem name={msg("groups.components.ClassGroupsPanel.tatCa")} meta={msg("groups.components.ClassGroupsPanel.sinhVien", { length: String(all.length) })} active={!filter} onPick={() => pick("")} />
+          <ul aria-label="Danh sách nhóm" className="-mx-1 flex max-h-[60vh] flex-col gap-0.5 overflow-y-auto px-1 [scrollbar-color:var(--c-muted)_transparent]">
+            <GroupItem name="Tất cả" meta={`${all.length} sinh viên`} active={!filter} onPick={() => pick("")} />
             {shownGroups.map((d) => (
-              <GroupItem key={d.key} name={d.name} meta={msg("groups.components.ClassGroupsPanel.sinhVien", { length: String(d.memberIds.length) })}
+              <GroupItem key={d.key} name={d.name} meta={`${d.memberIds.length} sinh viên`}
                 active={filter === d.key} onPick={() => pick(d.key)}
                 actions={!readOnly && <>
-                  <Button size="sm" variant="ghost" aria-label={msg("groups.components.ClassGroupsPanel.doiTruongNhom", { name: String(d.name) })} onClick={() => setOpen({ kind: "leader", group: d })}>{msg("groups.components.ClassGroupsPanel.doiTruongNhom2")}</Button>
-                  <IconButton icon="edit" size={28} label={msg("groups.components.ClassGroupsPanel.sua", { name: String(d.name) })} onClick={() => setOpen({ kind: "edit", group: d })} />
+                  <Button size="sm" variant="ghost" aria-label={`Đổi trưởng nhóm ${d.name}`} onClick={() => setOpen({ kind: "leader", group: d })}>Đổi trưởng nhóm</Button>
+                  <IconButton icon="edit" size={28} label={`Sửa ${d.name}`} onClick={() => setOpen({ kind: "edit", group: d })} />
                   <IconButton icon="trash" size={28} disabled={used(d)} className="text-danger! hover:bg-danger-soft"
-                    label={used(d) ? msg("groups.components.ClassGroupsPanel.khongXoaDuocNhomDaCo", { name: String(d.name) }) : msg("groups.components.ClassGroupsPanel.xoa", { name: String(d.name) })}
+                    label={used(d) ? `Không xóa được ${d.name}: nhóm đã có tài liệu hoặc bài nộp` : `Xóa ${d.name}`}
                     onClick={() => { setDeleteError(null); setOpen({ kind: "delete", group: d }); }} />
                 </>} />
             ))}
-            {drafts.length > 0 && shownGroups.length === 0 && <li className="px-2.5 py-3 text-[13px] text-muted">{msg("groups.components.ClassGroupsPanel.khongCoNhomPhuHop")}</li>}
-            <GroupItem name={msg("groups.components.ClassGroupsPanel.chuaCoNhom")} meta={msg("groups.components.ClassGroupsPanel.sinhVien2", { ungroupedCount: String(ungroupedCount) })} active={filter === UNGROUPED} onPick={() => pick(UNGROUPED)} />
+            {drafts.length > 0 && shownGroups.length === 0 && <li className="px-2.5 py-3 text-[13px] text-muted">Không có nhóm phù hợp.</li>}
+            <GroupItem name="Chưa có nhóm" meta={`${ungroupedCount} sinh viên`} active={filter === UNGROUPED} onPick={() => pick(UNGROUPED)} />
           </ul>
-        </Card>
+        </section>
 
         {/* Bảng sinh viên chỉ để xem. */}
-        <Card as="section" padding="lg" className="flex min-w-0 flex-col gap-3.5" aria-label={msg("groups.components.ClassGroupsPanel.sinhVienTrongLop")}>
+        <section aria-label="Sinh viên trong lớp" className="flex min-w-0 flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="min-w-0 flex-1 truncate font-display text-[15px] font-bold text-ink" title={selectedName}>{selectedName}</h2>
             <div role="search" className="w-full sm:w-72">
-              <TextInput type="search" icon="search" aria-label={msg("groups.components.ClassGroupsPanel.locTheoTenEmailHoacMssv")} placeholder={msg("groups.components.ClassGroupsPanel.locTheoTenEmailHoacMssv")} value={query}
+              <TextInput type="search" icon="search" aria-label="Lọc theo tên, email hoặc MSSV" placeholder="Lọc theo tên, email hoặc MSSV" value={query}
                 onChange={(e) => { setQuery(e.target.value); setPage(0); }} />
             </div>
           </div>
-          <TableFrame filledHead className="[&_table]:table-fixed">
-            <colgroup><col /><col className="w-[24%]" /><col className="w-[96px]" /><col className="w-[108px]" /><col className="w-[100px]" /></colgroup>
-            <thead><tr><Th>{msg("groups.components.ClassGroupsPanel.hoTen")}</Th><Th>Email</Th><Th>{msg("groups.components.ClassGroupsPanel.nhom")}</Th><Th>{msg("groups.components.ClassGroupsPanel.ngayVaoLop")}</Th><Th><span className="sr-only">{msg("groups.components.ClassGroupsPanel.bangDiem")}</span></Th></tr></thead>
+          <TableFrame filledHead className="[&_table]:min-w-[980px] [&_table]:table-fixed">
+            <colgroup><col className="w-[112px]" /><col className="w-[220px]" /><col className="w-[28%]" /><col /><col className="w-[120px]" /><col className="w-[104px]" /></colgroup>
+            <thead><tr><Th>MSSV</Th><Th>Họ tên</Th><Th>Email</Th><Th>Nhóm</Th><Th>Ngày vào lớp</Th><Th><span className="sr-only">Bảng điểm</span></Th></tr></thead>
             <tbody>
               {rows.map((p) => {
                 const g = groupOf(p.accountId);
                 const cells = <>
+                  <Td className="font-medium whitespace-nowrap text-body tabular-nums">{p.studentCode ?? "—"}</Td>
                   <Td>
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span className="truncate font-semibold text-ink">{personLabel(p)}</span>
-                      {g?.leaderId === p.accountId && <Pill tone="warning">{msg("groups.components.ClassGroupsPanel.truongNhom")}</Pill>}
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="max-w-full truncate font-semibold text-ink" title={personLabel(p)}>{personLabel(p)}</span>
+                      {g?.leaderId === p.accountId && <Pill tone="warning">Trưởng nhóm</Pill>}
                     </span>
                   </Td>
-                  <Td className="min-w-0"><PersonSubline className="truncate" studentCode={p.studentCode} email={p.email} /></Td>
-                  <Td className="truncate">{g?.name ?? <span className="text-muted">{msg("groups.components.ClassGroupsPanel.chuaCoNhom")}</span>}</Td>
-                  <Td className="text-muted">{formatDate(p.enrolledAt)}</Td>
+                  <Td className="truncate text-muted" title={p.email ?? undefined}>{p.email ?? "—"}</Td>
+                  <Td className="truncate" title={g?.name}>{g?.name ?? <span className="text-muted">Chưa có nhóm</span>}</Td>
+                  <Td className="whitespace-nowrap text-muted tabular-nums">{formatDate(p.enrolledAt)}</Td>
                   <Td className="text-right">
                     {/* Sang trang Chấm điểm, chế độ Theo sinh viên với người này. */}
                     <Link href={`/teaching/classes/${encodeURIComponent(classId)}?tab=gradebook&student=${encodeURIComponent(p.accountId)}`}
                       onClick={(event) => event.stopPropagation()}
                       className="inline-flex h-8 items-center rounded-lg border border-line-strong bg-surface px-2.5 text-xs font-semibold whitespace-nowrap text-ink transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary-ink">
-                      {msg("groups.components.ClassGroupsPanel.bangDiem")}</Link>
+                      Bảng điểm
+                    </Link>
                   </Td>
                 </>;
                 return onView
                   ? <ClickableRow key={p.accountId} onClick={() => onView(p.accountId)}>{cells}</ClickableRow>
                   : <tr key={p.accountId}>{cells}</tr>;
               })}
-              {rows.length === 0 && <tr><Td colSpan={5} className="py-10 text-center! text-muted">{msg("groups.components.ClassGroupsPanel.khongCoSinhVienPhuHop")}</Td></tr>}
+              {rows.length === 0 && <tr><Td colSpan={6} className="py-10 text-center! text-muted">Không có sinh viên phù hợp.</Td></tr>}
             </tbody>
           </TableFrame>
-          <Pagination page={current} pageSize={PAGE_SIZE} total={visible.length} onPageChange={setPage} summary={false} />
-        </Card>
+          <PageNav page={current} size={PAGE_SIZE} total={visible.length} onPage={setPage} />
+        </section>
       </div>
 
       {(open?.kind === "create" || open?.kind === "edit" || open?.kind === "leader") && (
@@ -243,9 +243,9 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
         <RandomSplitDialog classId={classId} set={set} people={all} onClose={() => setOpen(null)} onSaved={(next) => saved(next)} />
       )}
       {open?.kind === "delete" && (
-        <Dialog open title={msg("groups.components.ClassGroupsPanel.xoa2", { name: String(open.group.name) })} onClose={() => setOpen(null)} dismissible={!busy}
-          footer={<Button variant="danger" disabled={busy} onClick={() => void remove(open.group)}>{msg("groups.components.ClassGroupsPanel.xoaNhom")}</Button>}>
-          <p>{msg("groups.components.ClassGroupsPanel.banCoChacMuonXoa")}{open.group.name} {msg("groups.components.ClassGroupsPanel.khong")}</p>
+        <Dialog open title={`Xóa ${open.group.name}?`} onClose={() => setOpen(null)} dismissible={!busy}
+          footer={<Button variant="danger" disabled={busy} onClick={() => void remove(open.group)}>Xóa nhóm</Button>}>
+          <p>Bạn có chắc muốn xóa {open.group.name} không?</p>
           {deleteError && <Alert tone="danger" role="alert">{deleteError}</Alert>}
         </Dialog>
       )}

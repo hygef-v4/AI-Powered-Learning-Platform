@@ -53,6 +53,8 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
 
     @Override
     public void lockStart(UUID quizId, UUID accountId) {
+        jdbc.sql("select id from quizzes where id = :id for update")
+                .param("id", quizId).query(UUID.class).optional();
         jdbc.sql("select pg_advisory_xact_lock(hashtextextended(:key, 0))")
                 .param("key", "quiz-attempt:" + quizId + ":" + accountId).query((rs, n) -> 1).list();
     }

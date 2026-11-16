@@ -185,6 +185,20 @@ class AiRepositoriesIntegrationTest {
     }
 
     @Test
+    void cancelledTasksRemainUnhandledUntilDelivered() {
+        AiTaskRepository tasks = new AiTaskRepository(jdbc);
+        AiTask task = new AiTask(UUID.randomUUID(), "ref-" + UUID.randomUUID(), "fp", account, AiSource.SHARED, null,
+                AiProvider.GEMINI, "gemini-2.5-flash", "GRADING_PROPOSAL", "evaluation:1", 3, AiTaskState.QUEUED,
+                "{\"system\":\"s\",\"user\":\"u\"}", "{\"type\":\"object\"}", null, 500, 700L, LocalDate.of(2026, 10, 30), null, null,
+                null, false, null, NOW, null, 0);
+        tasks.insert(task);
+        assertThat(tasks.update(task.moveTo(AiTaskState.CANCELLED, NOW))).isTrue();
+        assertThat(tasks.listUnhandled(NOW.plusSeconds(1))).extracting(AiTask::id)
+                .containsExactly(task.id());
+        assertThat(tasks.listUnhandled(NOW)).isEmpty();
+    }
+
+    @Test
     void tasksQuotaUsageAndCredentials() {
         AiTaskRepository tasks = new AiTaskRepository(jdbc);
         AiTask task = new AiTask(UUID.randomUUID(), "ref-" + UUID.randomUUID(), "fp", account, AiSource.SHARED, null,

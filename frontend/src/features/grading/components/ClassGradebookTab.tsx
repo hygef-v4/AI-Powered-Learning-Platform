@@ -4,7 +4,7 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, ButtonLink, Card, ClickableRow, cx, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, type Tone } from "@/shared/ui";
+import { Button, ButtonLink, ClickableRow, Icon, Pill, Segmented, Select, TableFrame, Td, TextInput, Th, cx, type Tone } from "@/shared/ui";
 import { Pagination } from "@/shared/ui/Pagination";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
@@ -12,7 +12,6 @@ import { GRADE_STATUS_LABELS, type Decimal, type GradebookPage, type GradeCell }
 import { GradebookBatchControls } from "./GradebookBatchControls";
 import { GradebookMatrix } from "./GradebookMatrix";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
-import { msg } from "@/i18n/msg";
 
 type Assignment = GradebookPage["assignments"][number];
 type Mode = "assignment" | "student";
@@ -28,13 +27,13 @@ function statusTone(status: string): Tone {
 }
 
 function actionLabel(status: string, evaluated: boolean) {
-  if (!evaluated) return msg("grading.components.ClassGradebookTab.chuaNopBai");
-  if (status === "PENDING") return msg("grading.components.ClassGradebookTab.chamBai");
-  if (status === "DRAFT") return msg("grading.components.ClassGradebookTab.tiepTucCham");
-  return msg("grading.components.ClassGradebookTab.xemDiem");
+  if (!evaluated) return "Chưa nộp bài";
+  if (status === "PENDING") return "Chấm bài";
+  if (status === "DRAFT") return "Tiếp tục chấm";
+  return "Xem điểm";
 }
 
-const kindLabel = (assignment: Assignment) => (assignment.submissionMode === "GROUP" ? msg("grading.components.ClassGradebookTab.nhom") : msg("grading.components.ClassGradebookTab.caNhan"));
+const kindLabel = (assignment: Assignment) => (assignment.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân");
 /** Số điểm bỏ số 0 thừa ở cuối: 8.50 → 8.5, 10.00 → 10. */
 const trim = (value: Decimal) => String(Number(Number(value).toFixed(2)));
 const statusOf = (grade: GradeCell | undefined) => {
@@ -94,22 +93,22 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   const matrixParams = new URLSearchParams(params?.toString());
   matrixParams.set("tab", "gradebook");
   matrixParams.set("gradebookView", "matrix");
-  const gradebookButton = <ButtonLink href={`/teaching/classes/${encodeURIComponent(classId)}?${matrixParams}`} icon="assignment">{msg("grading.components.ClassGradebookTab.bangDiem")}</ButtonLink>;
+  const gradebookButton = <ButtonLink href={`/teaching/classes/${encodeURIComponent(classId)}?${matrixParams}`} icon="assignment">Bảng điểm</ButtonLink>;
   const studentSearch = (
-    <TextInput type="search" icon="search" aria-label={msg("grading.components.ClassGradebookTab.timSinhVien")} placeholder={msg("grading.components.ClassGradebookTab.timTenEmailHoacMssv")} value={query}
+    <TextInput type="search" icon="search" aria-label="Tìm sinh viên" placeholder="Tìm tên, email hoặc MSSV" value={query}
       onChange={(e) => { setQuery(e.target.value); setPage(1); }} />
   );
   const groupSearch = (
-    <TextInput type="search" icon="search" aria-label={msg("grading.components.ClassGradebookTab.timNhom")} placeholder={msg("grading.components.ClassGradebookTab.timNhom")} value={groupQuery}
+    <TextInput type="search" icon="search" aria-label="Tìm nhóm" placeholder="Tìm nhóm" value={groupQuery}
       onChange={(e) => setGroupQuery(e.target.value)} />
   );
   const assignmentSearch = (
-    <TextInput type="search" icon="search" aria-label={msg("grading.components.ClassGradebookTab.timBaiTap")} placeholder={msg("grading.components.ClassGradebookTab.timBaiTap")} value={assignmentQuery}
+    <TextInput type="search" icon="search" aria-label="Tìm bài tập" placeholder="Tìm bài tập" value={assignmentQuery}
       onChange={(e) => setAssignmentQuery(e.target.value)} />
   );
   const statusFilter = (
-    <Select aria-label={msg("grading.components.ClassGradebookTab.locTheoTrangThai")} value={status} wrapperClassName="w-44 shrink-0" onChange={(e) => setStatus(e.target.value)}>
-      <option value="">{msg("grading.components.ClassGradebookTab.moiTrangThai")}</option>
+    <Select aria-label="Lọc theo trạng thái" value={status} wrapperClassName="w-44 shrink-0" onChange={(e) => setStatus(e.target.value)}>
+      <option value="">Mọi trạng thái</option>
       {STATUS_FILTERS.map((value) => <option key={value} value={value}>{GRADE_STATUS_LABELS[value]}</option>)}
     </Select>
   );
@@ -125,35 +124,35 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   return (
     <div className="flex min-w-0 flex-col gap-3">
       {headerActions ? createPortal(gradebookButton, headerActions) : <div className="flex justify-end">{gradebookButton}</div>}
-      <Card as="section" padding="lg" className="flex min-w-0 flex-col gap-3.5" aria-label={msg("grading.components.ClassGradebookTab.chamDiem")}>
-        <Segmented as="tab" ariaLabel={msg("grading.components.ClassGradebookTab.cheDoChamDiem")} value={mode} onChange={setMode} className="self-start"
-          options={[{ value: "assignment", label: msg("grading.components.ClassGradebookTab.theoBaiTap") }, { value: "student", label: msg("grading.components.ClassGradebookTab.theoSinhVien") }]} />
+      <section aria-label="Chấm điểm" className="flex min-w-0 flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+        <Segmented as="tab" ariaLabel="Chế độ chấm điểm" value={mode} onChange={setMode} className="self-start"
+          options={[{ value: "assignment", label: "Theo bài tập" }, { value: "student", label: "Theo sinh viên" }]} />
 
         {resource.error && (
           <div role="alert" className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-danger-line bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
             <span>{resource.error}</span>
-            <Button size="sm" onClick={() => void resource.refresh()}>{msg("grading.components.ClassGradebookTab.thuTaiLai")}</Button>
+            <Button size="sm" onClick={() => void resource.refresh()}>Thử tải lại</Button>
           </div>
         )}
-        {!data && !resource.error && <p role="status" className="py-8 text-center text-sm text-muted">{msg("grading.components.ClassGradebookTab.dangTaiBangChamDiem")}</p>}
-        {data && assignments.length === 0 && <p className="py-8 text-center text-sm text-muted">{msg("grading.components.ClassGradebookTab.chuaCoBaiTinhDiemTrong")}</p>}
+        {!data && !resource.error && <p role="status" className="py-8 text-center text-sm text-muted">Đang tải bảng chấm điểm…</p>}
+        {data && assignments.length === 0 && <p className="py-8 text-center text-sm text-muted">Chưa có bài tính điểm trong lớp.</p>}
 
         {data && assignments.length > 0 && (
           <div className="grid min-w-0 gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
             {/* Cột trái: danh sách để chọn. */}
             <div className="flex min-w-0 flex-col gap-2.5 lg:border-r lg:border-line lg:pr-4">
               {mode === "assignment" ? assignmentSearch : studentSearch}
-              <ul aria-label={mode === "assignment" ? msg("grading.components.ClassGradebookTab.baiTap") : msg("grading.components.ClassGradebookTab.sinhVien")}
+              <ul aria-label={mode === "assignment" ? "Bài tập" : "Sinh viên"}
                 className="-mx-1 flex max-h-[62vh] min-h-40 flex-col overflow-y-auto px-1 [scrollbar-color:var(--c-muted)_transparent]">
                 {mode === "assignment" ? shownAssignments.map((assignment) => (
                   <PickItem key={assignment.id} active={assignment.id === activeAssignment?.id} onPick={() => setSelectedAssignmentId(assignment.id)}
                     title={assignment.title} meta={kindLabel(assignment)} />
                 )) : data.rows.map((row) => (
                   <PickItem key={row.student.accountId} active={row.student.accountId === activeStudent?.student.accountId}
-                    onPick={() => setSelectedStudentId(row.student.accountId)} title={row.student.name} meta={row.student.email} />
+                    onPick={() => setSelectedStudentId(row.student.accountId)} title={row.student.name} meta={<PersonSubline studentCode={row.student.studentCode} email={row.student.email} />} />
                 ))}
-                {mode === "assignment" && shownAssignments.length === 0 && <li className="py-6 text-center text-[13px] text-muted">{msg("grading.components.ClassGradebookTab.khongCoBaiPhuHop")}</li>}
-                {mode === "student" && data.rows.length === 0 && <li className="py-6 text-center text-[13px] text-muted">{msg("grading.components.ClassGradebookTab.khongCoSinhVienPhuHop")}</li>}
+                {mode === "assignment" && shownAssignments.length === 0 && <li className="py-6 text-center text-[13px] text-muted">Không có bài phù hợp.</li>}
+                {mode === "student" && data.rows.length === 0 && <li className="py-6 text-center text-[13px] text-muted">Không có sinh viên phù hợp.</li>}
               </ul>
               {mode === "student" && pager}
             </div>
@@ -170,13 +169,13 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
                     onDone={() => void resource.refresh().catch(() => {})} />
                   {activeAssignment.submissionMode === "GROUP" && (
                     <details className="border-t border-line pt-3">
-                      <summary className="cursor-pointer text-sm font-semibold text-body">{msg("grading.components.ClassGradebookTab.diemThanhVien")}</summary>
-                      <GradeTable first={msg("grading.components.ClassGradebookTab.sinhVien")}>
+                      <summary className="cursor-pointer text-sm font-semibold text-body">Điểm thành viên</summary>
+                      <GradeTable first="Sinh viên">
                         {assignmentRows.map(({ row, grade }) => (
                           <GradeRow key={row.student.accountId} grade={grade} maxScore={activeAssignment.maxScore}
                             label={<><strong className="block truncate text-ink">{row.student.name}</strong><PersonSubline className="truncate" studentCode={row.student.studentCode} email={row.student.email} /></>} />
                         ))}
-                        {!assignmentRows.length && <EmptyRow text={msg("grading.components.ClassGradebookTab.khongCoSinhVienPhuHop")} />}
+                        {!assignmentRows.length && <EmptyRow text="Không có sinh viên phù hợp." />}
                       </GradeTable>
                       {pager}
                     </details>
@@ -185,27 +184,27 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
               )}
               {mode === "student" && activeStudent && (
                 <>
-                  <DetailHead title={activeStudent.student.name} meta={activeStudent.student.email} search={assignmentSearch} filter={statusFilter} />
-                  <GradeTable first={msg("grading.components.ClassGradebookTab.baiTap")}>
+                  <DetailHead title={activeStudent.student.name} meta={<PersonSubline studentCode={activeStudent.student.studentCode} email={activeStudent.student.email} />} search={assignmentSearch} filter={statusFilter} />
+                  <GradeTable first="Bài tập">
                     {studentRows.map(({ assignment, grade }) => (
                       <GradeRow key={assignment.id} grade={grade} maxScore={assignment.maxScore}
                         label={<><strong className="block truncate text-ink" title={assignment.title}>{assignment.title}</strong><p className="text-xs text-muted">{kindLabel(assignment)}</p></>} />
                     ))}
-                    {!studentRows.length && <EmptyRow text={msg("grading.components.ClassGradebookTab.khongCoBaiPhuHop")} />}
+                    {!studentRows.length && <EmptyRow text="Không có bài phù hợp." />}
                   </GradeTable>
                 </>
               )}
-              {mode === "student" && !activeStudent && <p className="py-8 text-center text-sm text-muted">{msg("grading.components.ClassGradebookTab.khongCoSinhVienPhuHop")}</p>}
+              {mode === "student" && !activeStudent && <p className="py-8 text-center text-sm text-muted">Không có sinh viên phù hợp.</p>}
             </div>
           </div>
         )}
-      </Card>
+      </section>
     </div>
   );
 }
 
 /** Đầu cột phải: tên mục đang chọn (dài thì cắt bằng dấu ...), dòng phụ, lọc trạng thái rồi ô tìm, cùng một hàng. */
-function DetailHead({ title, meta, search, filter }: { title: string; meta: string; search: ReactNode; filter: ReactNode }) {
+function DetailHead({ title, meta, search, filter }: { title: string; meta: ReactNode; search: ReactNode; filter: ReactNode }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1">
@@ -225,7 +224,7 @@ function GradeTable({ first, children }: { first: string; children: ReactNode })
   return (
     <TableFrame filledHead className="[&_table]:table-fixed">
       <colgroup><col /><col className="w-[120px]" /><col className="w-[210px]" /><col className="w-[56px]" /></colgroup>
-      <thead><tr><Th>{first}</Th><Th>{msg("grading.components.ClassGradebookTab.diem")}</Th><Th>{msg("grading.components.ClassGradebookTab.trangThai")}</Th><Th><span className="sr-only">{msg("grading.components.ClassGradebookTab.thaoTac")}</span></Th></tr></thead>
+      <thead><tr><Th>{first}</Th><Th>Điểm</Th><Th>Trạng thái</Th><Th><span className="sr-only">Thao tác</span></Th></tr></thead>
       <tbody>{children}</tbody>
     </TableFrame>
   );
@@ -236,7 +235,7 @@ function EmptyRow({ text }: { text: string }) {
 }
 
 /** Một mục trong danh sách chọn bên trái. */
-function PickItem({ title, meta, active, onPick }: { title: string; meta: string; active: boolean; onPick: () => void }) {
+function PickItem({ title, meta, active, onPick }: { title: string; meta: ReactNode; active: boolean; onPick: () => void }) {
   return (
     <li>
       <button type="button" aria-pressed={active} onClick={onPick}
@@ -271,7 +270,7 @@ function GradeRow({ label, grade, maxScore }: { label: ReactNode; grade: GradeCe
       <Td>
         <div className="flex flex-wrap items-center gap-1.5">
           <Pill tone={statusTone(status)}>{GRADE_STATUS_LABELS[status] ?? status}</Pill>
-          {grade?.late && <Pill tone="danger">{msg("grading.components.ClassGradebookTab.tre")}</Pill>}
+          {grade?.late && <Pill tone="danger">Trễ</Pill>}
         </div>
       </Td>
       <Td className="text-right">

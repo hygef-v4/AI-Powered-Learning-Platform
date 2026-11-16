@@ -29,6 +29,8 @@ import { msg } from "@/i18n/msg";
 export const AUTOSAVE_MS = 5 * 60_000;
 /** Trình duyệt giới hạn body của yêu cầu {@code keepalive} khoảng 64 KB; bài lớn hơn thì lưu bằng yêu cầu thường. */
 const KEEPALIVE_MAX = 60_000;
+/** Departure saves still running after unmount; reopening the same attempt waits so it loads their version. */
+const departures = new Map<string, Promise<boolean>>();
 
 /** Ảnh vừa tải lên đã được gắn khi lưu: bỏ {@code fileRef} trong bản đang sửa để lần lưu sau không gắn lại. */
 export function mergeSaved(local: DocumentModel, saved: DocumentModel): DocumentModel {
@@ -95,22 +97,59 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const halt = useRef<Halt>(null);
   const inflight = useRef<Promise<boolean> | null>(null);
   const latest = useRef({ content, dirty });
+  const draftKey = `assignment-work-draft:${attemptId}`;
+  const storedDraft = useRef<string | null>(null);
+  const persistDraft = useCallback((onlyIfUnchanged = false) => {
+    try {
+      // A late save from a departed page must not overwrite a newer departure draft.
+      if (onlyIfUnchanged && sessionStorage.getItem(draftKey) !== storedDraft.current) return;
+      if (latest.current.dirty) {
+        const draft = JSON.stringify({
+          contentVersion: version.current, content: latest.current.content,
+        });
+        sessionStorage.setItem(draftKey, draft);
+        storedDraft.current = draft;
+      } else {
+        sessionStorage.removeItem(draftKey);
+        storedDraft.current = null;
+      }
+    } catch { /* Storage may be disabled or full; server saving must still work. */ }
+  }, [draftKey]);
   useEffect(() => {
     latest.current = { content, dirty };
   }, [content, dirty]);
 
   useEffect(() => {
     const controller = new AbortController();
-    workApi.attempt(attemptId, controller.signal).then((value) => {
+    void (departures.get(attemptId) ?? Promise.resolve(true)).then(() => {
+      return workApi.attempt(attemptId, controller.signal);
+    }).then((value) => {
       if (controller.signal.aborted) return;
+      let recovered: DocumentModel | null = null;
+      try {
+        storedDraft.current = sessionStorage.getItem(draftKey);
+        const draft = JSON.parse(storedDraft.current ?? "null") as {
+          contentVersion: number; content: DocumentModel;
+        } | null;
+        // The unsaved draft extends this exact server version; a newer server save takes precedence.
+        if (value.editable && value.status === "IN_PROGRESS"
+          && draft?.contentVersion === value.contentVersion && Array.isArray(draft.content?.blocks)) {
+          recovered = draft.content;
+        } else {
+          sessionStorage.removeItem(draftKey);
+        }
+      } catch { /* An unreadable draft must not prevent opening the server copy. */ }
       setAttempt(value);
-      setContent(value.content);
+      setContent(recovered ?? value.content);
+      setDirty(!!recovered);
+      latest.current = { content: recovered ?? value.content, dirty: !!recovered };
+      if (recovered) setBanner({ tone: "warning", text: "Đã khôi phục bản chưa lưu trên thiết bị này" });
       setSavedAt(value.lastSavedAt);
       version.current = value.contentVersion;
       setOffset(new Date(value.serverTime).getTime() - Date.now());
     }, (error) => { if (!controller.signal.aborted) setLoadError(error); });
     return () => controller.abort();
-  }, [attemptId]);
+  }, [attemptId, draftKey]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -136,8 +175,11 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
           setDirty(false);
           latest.current = { content: saved.content, dirty: false };
         } else {
-          setContent((current) => mergeSaved(current, saved.content));
+          const merged = mergeSaved(latest.current.content, saved.content);
+          latest.current = { content: merged, dirty: true };
+          setContent(merged);
         }
+        persistDraft(true);
         halt.current = null;
         setIssues([]);
         setBanner(null);
@@ -171,7 +213,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
     } finally {
       if (inflight.current === run) inflight.current = null;
     }
-  }, [attemptId]);
+  }, [attemptId, persistDraft]);
 
   // Đếm từ lần sửa đầu tiên chưa lưu, không dời theo từng lần gõ: gõ liên tục vẫn lưu đều mỗi 5 phút.
   useEffect(() => {
@@ -181,10 +223,20 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   }, [dirty, retry, save]);
 
   useEffect(() => {
-    const leave = () => { void save(true); };
+    const leave = () => {
+      if (latest.current.dirty) persistDraft();
+      const departure = save(true);
+      departures.set(attemptId, departure);
+      void departure.finally(() => {
+        if (departures.get(attemptId) === departure) departures.delete(attemptId);
+      });
+    };
     window.addEventListener("pagehide", leave);
-    return () => window.removeEventListener("pagehide", leave);
-  }, [save]);
+    return () => {
+      window.removeEventListener("pagehide", leave);
+      leave();
+    };
+  }, [attemptId, save, persistDraft]);
 
   const sendActivity = useCallback((events: ActivityEventInput[], options: { keepalive: boolean }) =>
     workApi.activity(attemptId, events, options.keepalive), [attemptId]);
@@ -202,6 +254,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
 
   function edit(next: DocumentModel) {
     edits.current += 1;
+    latest.current = { content: next, dirty: true };
     if (halt.current === "invalid") halt.current = null;
     setContent(next);
     setDirty(true);

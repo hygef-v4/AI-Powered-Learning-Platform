@@ -40,6 +40,14 @@ function sameBlocks(a: DocumentBlock[] | undefined, b: DocumentBlock[] | undefin
   return !!a && !!b && a.length === b.length && a.every((block, i) => block === b[i]);
 }
 
+export function mergeSaved(local: DocumentBlock[], sent: DocumentBlock[], saved: DocumentBlock[]): DocumentBlock[] {
+  const persisted = new Set(saved.filter((b) => b.type === "IMAGE" && b.content.hasFile).map((b) => b.id));
+  const sentRefs = new Map(sent.filter((b) => b.type === "IMAGE").map((b) => [b.id, b.content.fileRef]));
+  return local.map((block): DocumentBlock => block.type === "IMAGE" && block.content.fileRef
+    && block.content.fileRef === sentRefs.get(block.id) && persisted.has(block.id)
+    ? { ...block, content: { ...block.content, fileRef: undefined, hasFile: true } } : block);
+}
+
 /**
  * Trang soạn bài nhóm (s18b, BR-U12-34), thay trình soạn che kín trang: mọi mục mình đang giữ trên một trang, mở ở chế độ
  * Từng phần; hướng dẫn của giảng viên nằm ngay trong mục (chỉ xem), phần chung của đề (không thuộc mục nào) chỉ xem, mục của
@@ -124,7 +132,15 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
       try {
         const saved = await saveDraft(documentId, id, latest.current.versions[id] ?? 0, blocks);
         latest.current.versions[id] = saved.version;
-        setDirty((prev) => (latest.current.drafts[id] === blocks ? prev.filter((d) => d !== id) : prev));
+        const current = latest.current.drafts[id];
+        const unchanged = current === blocks;
+        if (current) {
+          const persisted = saved.draftBlocks ?? [];
+          latest.current.drafts = { ...latest.current.drafts, [id]: mergeSaved(current, blocks, persisted) };
+          setDrafts((prev) => prev[id]
+            ? { ...prev, [id]: mergeSaved(prev[id], blocks, persisted) } : prev);
+        }
+        setDirty((prev) => (unchanged ? prev.filter((d) => d !== id) : prev));
         setError(null);
       } catch (e) {
         setError(problemMessage(e, msg("groupdocs.pages.GroupSectionEditorPage.khongLuuDuocBanNhap")));
