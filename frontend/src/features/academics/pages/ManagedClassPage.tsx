@@ -10,6 +10,7 @@ import { AssignTeacherDialog, ClassStateActions } from "../components/ClassDialo
 import { EnrollmentPanel } from "../components/EnrollmentPanel";
 import { formatDate } from "../model/format";
 import { CLASS_STATUS_LABELS, type ClassInfoInput, type ClassStatus, type CourseClassView, type EnrollmentRowResult, type EnrollmentView, type PersonView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 export type ManagedClassActions = {
   onSaveInfo: (input: ClassInfoInput) => Promise<void>;
@@ -34,32 +35,32 @@ export function ManagedClassPage({ value, students, teachers, candidates, action
   const [tabActions, setTabActions] = useState<HTMLElement | null>(null);
   const archived = value.status === "ARCHIVED";
   const tabs: TabItem<Tab>[] = [
-    { key: "info", label: "Thông tin" },
-    { key: "students", label: "Sinh viên", count: students.filter((student) => student.status === "ACTIVE").length },
+    { key: "info", label: msg("academics.pages.ManagedClassPage.thongTin") },
+    { key: "students", label: msg("academics.pages.ManagedClassPage.sinhVien"), count: students.filter((student) => student.status === "ACTIVE").length },
   ];
   return <>
     <PageHeader backHref="/manager/classes" title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{value.code}<span className="ml-2 font-mono text-base font-medium text-muted" data-testid="class-header-term">{value.term}</span></span>}
-      breadcrumb={[{ label: "Lớp học", href: "/manager/classes" }, { label: `${value.code} · ${value.term}` }]} />
+      breadcrumb={[{ label: msg("academics.pages.ManagedClassPage.lopHoc"), href: "/manager/classes" }, { label: `${value.code} · ${value.term}` }]} />
     {/* Nút thêm sinh viên của tab Sinh viên nằm cùng hàng tab, bên phải. */}
     <div className="relative">
-      <Tabs items={tabs} value={tab} onChange={openTab} label="Chi tiết lớp" testIdPrefix="class-tab-" panelId="class-tab-panel" />
+      <Tabs items={tabs} value={tab} onChange={openTab} label={msg("academics.pages.ManagedClassPage.chiTietLop")} testIdPrefix="class-tab-" panelId="class-tab-panel" />
       <div ref={setTabActions} className="absolute right-0 bottom-1.5" />
     </div>
     {tab === "info" ? <div role="tabpanel" id="class-tab-panel" aria-labelledby={tabId("class-tab-panel", tab)} className="grid items-start gap-4 lg:grid-cols-[1fr_280px]">
       <ClassInfoForm value={value} onSave={actions.onSaveInfo}/>
       <div className="flex flex-col gap-4">
-        <Section title="Trạng thái">
+        <Section title={msg("academics.pages.ManagedClassPage.trangThai")}>
           <dl className="flex flex-col gap-2.5 text-[13px]">
-            <div className="flex items-center justify-between"><dt className="text-muted">Trạng thái</dt><dd><Pill tone={TONES[value.status]}>{CLASS_STATUS_LABELS[value.status]}</Pill></dd></div>
-            <div className="flex items-center justify-between"><dt className="text-muted">Ngày tạo</dt><dd className="text-ink">{formatDate(value.createdAt)}</dd></div>
+            <div className="flex items-center justify-between"><dt className="text-muted">{msg("academics.pages.ManagedClassPage.trangThai")}</dt><dd><Pill tone={TONES[value.status]}>{CLASS_STATUS_LABELS[value.status]}</Pill></dd></div>
+            <div className="flex items-center justify-between"><dt className="text-muted">{msg("academics.pages.ManagedClassPage.ngayTao")}</dt><dd className="text-ink">{formatDate(value.createdAt)}</dd></div>
           </dl>
           <div className="flex flex-col gap-2"><ClassStateActions value={value} onChange={actions.onChangeStatus}/></div>
         </Section>
-        <Section title="Giảng viên" actions={!archived && <Button size="sm" onClick={() => setAssigning(true)} data-testid="class-assign-teacher">{value.teacher ? "Đổi giảng viên" : "Phân công"}</Button>}>
+        <Section title={msg("academics.pages.ManagedClassPage.giangVien")} actions={!archived && <Button size="sm" onClick={() => setAssigning(true)} data-testid="class-assign-teacher">{value.teacher ? msg("academics.pages.ManagedClassPage.doiGiangVien") : msg("academics.pages.ManagedClassPage.phanCong")}</Button>}>
           {value.teacher ? <div className="flex items-center gap-3">
             <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">{initials(value.teacher.name)}</span>
             <div className="min-w-0"><p className="text-sm font-semibold">{value.teacher.name}</p><p className="break-all text-xs text-muted">{value.teacher.email}</p></div>
-          </div> : <div><Pill>Chưa phân công</Pill></div>}
+          </div> : <div><Pill>{msg("academics.pages.ManagedClassPage.chuaPhanCong")}</Pill></div>}
         </Section>
       </div>
     </div> : <div role="tabpanel" id="class-tab-panel" aria-labelledby={tabId("class-tab-panel", tab)}>

@@ -1,4 +1,5 @@
 import { Alert, Pill } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 export type ActivityInterval = { start: string; end: string | null; certainty: "KNOWN" | "UNKNOWN" };
 export type ActivitySummary = {
@@ -22,7 +23,7 @@ export function formatDuration(value: string | number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const rest = seconds % 60;
-  return [hours && `${hours} giờ`, minutes && `${minutes} phút`, (rest || (!hours && !minutes)) && `${rest} giây`]
+  return [hours && msg("shared.activity.ActivityTimeline.gio", { hours: String(hours) }), minutes && msg("shared.activity.ActivityTimeline.phut", { minutes: String(minutes) }), (rest || (!hours && !minutes)) && msg("shared.activity.ActivityTimeline.giay", { rest: String(rest) })]
     .filter(Boolean).join(" ");
 }
 
@@ -32,18 +33,18 @@ function time(value: string | null) {
 
 /** Dòng thời gian rời trang cho giảng viên (U09, U11): chỉ là dấu hiệu, không kết luận gian lận (BR-U08-53). */
 export function ActivityTimeline({ summary }: { summary: ActivitySummary }) {
-  if (summary.policyState === "DISABLED") return <p className="text-xs text-muted">Bài không bật ghi nhận hoạt động.</p>;
-  if (summary.policyState === "EXPIRED") return <p className="text-xs text-muted">Dữ liệu đã quá thời hạn lưu.</p>;
-  if (summary.policyState === "NO_DATA") return <p className="text-xs text-muted">Chưa có dữ liệu hoạt động.</p>;
+  if (summary.policyState === "DISABLED") return <p className="text-xs text-muted">{msg("shared.activity.ActivityTimeline.baiKhongBatGhiNhanHoat")}</p>;
+  if (summary.policyState === "EXPIRED") return <p className="text-xs text-muted">{msg("shared.activity.ActivityTimeline.duLieuDaQuaThoiHan")}</p>;
+  if (summary.policyState === "NO_DATA") return <p className="text-xs text-muted">{msg("shared.activity.ActivityTimeline.chuaCoDuLieuHoatDong")}</p>;
   return (
     <div className="flex flex-col gap-2">
       <p className="text-[13px] text-ink">
-        Rời trang {summary.awayCount} lần · tổng thời gian đã biết {formatDuration(summary.knownAwayDuration)}
+        {msg("shared.activity.ActivityTimeline.roiTrang")}{summary.awayCount} {msg("shared.activity.ActivityTimeline.lanTongThoiGianDaBiet")}{formatDuration(summary.knownAwayDuration)}
       </p>
       <ul className="flex flex-col gap-1 text-xs">
         {summary.intervals.map((interval, index) => (
           <li key={index} className="flex items-center gap-2">
-            <Pill tone={interval.certainty === "KNOWN" ? "warning" : "neutral"}>{interval.certainty === "KNOWN" ? "Rời trang" : "Không rõ"}</Pill>
+            <Pill tone={interval.certainty === "KNOWN" ? "warning" : "neutral"}>{interval.certainty === "KNOWN" ? msg("shared.activity.ActivityTimeline.roiTrang2") : msg("shared.activity.ActivityTimeline.khongRo")}</Pill>
             {time(interval.start)} – {time(interval.end)}
           </li>
         ))}

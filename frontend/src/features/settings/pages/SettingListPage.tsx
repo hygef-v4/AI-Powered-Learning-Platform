@@ -11,6 +11,7 @@ import { SettingsCard, SettingsGroup } from "@/shared/ui/SettingsCard";
 import { getSettings } from "../api";
 import { SettingRow } from "../components/SettingRow";
 import { groupMeta, type SettingItem, type SettingsOverview } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 const BACKUP_ENABLED = "backup.enabled";
 const BACKUP_DAILY_AT = "backup.dailyAt";
@@ -27,7 +28,7 @@ export function SettingListPage() {
         setOverview(loaded);
         setError(null);
       })
-      .catch(() => setError("Không tải được cài đặt, thử lại sau."));
+      .catch(() => setError(msg("settings.pages.SettingListPage.khongTaiDuocCaiDatThu")));
   }, []);
 
   useEffect(load, [load]);
@@ -46,13 +47,13 @@ export function SettingListPage() {
 
   return (
     <>
-      <PageHeader title="Cài đặt" />
+      <PageHeader title={msg("settings.pages.SettingListPage.caiDat")} />
       {error && (
         <Alert tone="danger" role="alert">
           {error}
         </Alert>
       )}
-      {!overview && !error && <p className="text-[13px] text-muted">Đang tải…</p>}
+      {!overview && !error && <p className="text-[13px] text-muted">{msg("settings.pages.SettingListPage.dangTai")}</p>}
       {overview && (
         <SettingsCard>
           {ai && (
@@ -63,14 +64,14 @@ export function SettingListPage() {
                   className="my-1 flex items-center gap-4 rounded-xl border border-line bg-canvas p-4 transition-colors hover:border-line-strong hover:bg-sunken"
                 >
                   <IconTile icon="smart_toy" />
-                  <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink">Cài đặt AI</span>
+                  <span className="min-w-0 flex-1 text-[15px] font-semibold text-ink">{msg("settings.pages.SettingListPage.caiDatAi")}</span>
                   <Icon name="chevron_right" size={18} className="text-muted" />
                 </Link>
               ) : (
                 <div className="my-1 flex items-center gap-4 rounded-xl border border-line p-4 text-muted">
                   <IconTile icon="smart_toy" />
-                  <span className="min-w-0 flex-1 text-[15px] font-semibold">Cài đặt AI</span>
-                  <Pill tone="warning">Không khả dụng</Pill>
+                  <span className="min-w-0 flex-1 text-[15px] font-semibold">{msg("settings.pages.SettingListPage.caiDatAi")}</span>
+                  <Pill tone="warning">{msg("settings.pages.SettingListPage.khongKhaDung")}</Pill>
                 </div>
               )}
             </SettingsGroup>

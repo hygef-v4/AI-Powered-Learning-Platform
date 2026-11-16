@@ -5,6 +5,7 @@ import { Button, Card, Icon } from "@/shared/ui";
 import { materialApi, describeMaterialError } from "../api";
 import { DocumentViewer, detectDocumentKind } from "./DocumentViewer";
 import { describeFile, type Material } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Tải tệp hiện hành bằng link tải mới. */
 async function downloadMaterial(material: Material, classId?: string) {
@@ -36,8 +37,7 @@ export function DownloadButton({ material, classId }: { material: Material; clas
         disabled={busy}
         onClick={() => void handleDownload()}
       >
-        Tải xuống
-      </Button>
+        {msg("materials.components.MaterialPreview.taiXuong")}</Button>
       {error && (
         <span role="alert" className="text-xs text-danger">
           {error}
@@ -89,7 +89,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
           target="_blank"
           rel="noopener noreferrer"
         >
-          Mở trên YouTube <Icon name="arrow_forward" size={13} className="-rotate-45" />
+          {msg("materials.components.MaterialPreview.moTrenYoutube")}<Icon name="arrow_forward" size={13} className="-rotate-45" />
         </a>
         {valid ? (
           <iframe
@@ -103,8 +103,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
           />
         ) : (
           <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-black text-sm text-white/70">
-            Không phát được video
-          </div>
+            {msg("materials.components.MaterialPreview.khongPhatDuocVideo")}</div>
         )}
       </div>
     );
@@ -123,8 +122,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
             icon="refresh"
             onClick={() => setRevision((v) => v + 1)}
           >
-            Thử lại
-          </Button>
+            {msg("materials.components.MaterialPreview.thuLai")}</Button>
         </div>
       );
     if (!current?.blob)
@@ -133,8 +131,7 @@ export function MaterialPreview({ material, classId }: { material: Material; cla
           role="status"
           className="flex h-[calc(100dvh-13rem)] min-h-[360px] sm:min-h-[560px] items-center justify-center rounded-xl bg-viewer text-sm text-white/75"
         >
-          Đang mở tệp…
-        </div>
+          {msg("materials.components.MaterialPreview.dangMoTep")}</div>
       );
     return (
       <DocumentViewer

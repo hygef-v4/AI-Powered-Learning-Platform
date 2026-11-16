@@ -7,6 +7,7 @@ import { errorMessage, STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import type { ProposalView, QuestionContent } from "../model/types";
 import { InlineQuestionDialog } from "./QuizDetailParts";
 import { SimilarQuestionsAlert } from "./SimilarQuestionsAlert";
+import { msg } from "@/i18n/msg";
 
 /**
  * "Câu hỏi đề xuất" trong tab Học liệu của lớp (BR-U10-09): giảng viên đề xuất câu vào ngân hàng của môn, xem kết quả
@@ -38,7 +39,7 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
       throw new Error(errorMessage(failure));
     }
     setEditing(null);
-    showToast("Đã gửi đề xuất cho Chủ nhiệm môn");
+    showToast(msg("quizzes.components.QuestionProposalsSection.daGuiDeXuatChoChu"));
     load();
   };
 
@@ -46,7 +47,7 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
     setBusy(true);
     try {
       await withdrawProposal(classId, row.question.id, row.question.version);
-      showToast("Đã rút đề xuất");
+      showToast(msg("quizzes.components.QuestionProposalsSection.daRutDeXuat"));
       load();
     } catch (failure) {
       setError(errorMessage(failure));
@@ -56,12 +57,12 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
   };
 
   return (
-    <Section title="Câu hỏi đề xuất vào ngân hàng" icon="help_center" className="mt-4" actions={
-      <Button size="sm" icon="add" onClick={() => setEditing("new")} data-testid="proposals-new">Đề xuất câu</Button>
+    <Section title={msg("quizzes.components.QuestionProposalsSection.cauHoiDeXuatVaoNgan")} icon="help_center" className="mt-4" actions={
+      <Button size="sm" icon="add" onClick={() => setEditing("new")} data-testid="proposals-new">{msg("quizzes.components.QuestionProposalsSection.deXuatCau")}</Button>
     }>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
-      {!error && !rows && <p role="status" className="text-sm text-muted">Đang tải đề xuất…</p>}
-      {rows?.length === 0 && <p className="text-[13px] text-muted">Chưa có đề xuất. Chủ nhiệm môn duyệt thì câu mới vào ngân hàng của môn.</p>}
+      {!error && !rows && <p role="status" className="text-sm text-muted">{msg("quizzes.components.QuestionProposalsSection.dangTaiDeXuat")}</p>}
+      {rows?.length === 0 && <p className="text-[13px] text-muted">{msg("quizzes.components.QuestionProposalsSection.chuaCoDeXuatChuNhiem")}</p>}
       <ul className="flex flex-col gap-2">
         {rows?.map((row) => {
           const open = row.question.status === "PENDING" || row.question.status === "REJECTED";
@@ -72,13 +73,13 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
                 <span className="line-clamp-2 whitespace-pre-wrap text-ink">{row.question.stem}</span>
               </p>
               {row.question.status === "REJECTED" && row.review?.reason && (
-                <p className="text-danger" data-testid="proposal-reason">Lý do từ chối: {row.review.reason}</p>
+                <p className="text-danger" data-testid="proposal-reason">{msg("quizzes.components.QuestionProposalsSection.lyDoTuChoi")}{row.review.reason}</p>
               )}
               <SimilarQuestionsAlert similar={row.similar} />
               {open && (
                 <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(row)} data-testid="proposal-edit">Sửa và gửi lại</Button>
-                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => void withdraw(row)} data-testid="proposal-withdraw">Rút đề xuất</Button>
+                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(row)} data-testid="proposal-edit">{msg("quizzes.components.QuestionProposalsSection.suaVaGuiLai")}</Button>
+                  <Button size="sm" variant="ghost" disabled={busy} onClick={() => void withdraw(row)} data-testid="proposal-withdraw">{msg("quizzes.components.QuestionProposalsSection.rutDeXuat")}</Button>
                 </div>
               )}
             </li>
@@ -86,7 +87,7 @@ export function QuestionProposalsSection({ classId }: { classId: string }) {
         })}
       </ul>
       {editing && (
-        <InlineQuestionDialog initial={editing === "new" ? null : editing} title={editing === "new" ? "Đề xuất câu hỏi" : "Sửa câu đề xuất"}
+        <InlineQuestionDialog initial={editing === "new" ? null : editing} title={editing === "new" ? msg("quizzes.components.QuestionProposalsSection.deXuatCauHoi") : msg("quizzes.components.QuestionProposalsSection.suaCauDeXuat")}
           onClose={() => setEditing(null)} onSave={save} />
       )}
     </Section>

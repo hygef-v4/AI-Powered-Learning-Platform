@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Icon } from "@/shared/ui/Icon";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   /** Gọi API của unit sở hữu (đã kiểm quyền) để lấy link tải 5 phút. */
@@ -23,7 +24,7 @@ export function FileLink({ fetchUrl, children }: Props) {
             const { url } = await fetchUrl();
             window.open(url, "_blank", "noopener");
           } catch {
-            setError("Không mở được tệp");
+            setError(msg("files.components.FileLink.khongMoDuocTep"));
           }
         }}
       >

@@ -2,6 +2,7 @@
 import { cx } from "./cx";
 import { Icon } from "./Icon";
 import { Menu } from "./Menu";
+import { msg } from "@/i18n/msg";
 
 /**
  * Ô lọc theo học kỳ của lớp (D-U04-05), cùng kiểu `Menu` với `ClassFilter`: "Tất cả học kỳ" rồi các học kỳ đã có, mới trước.
@@ -20,11 +21,11 @@ export function TermFilter({ options, value, onChange, testId }: { options: read
   };
   return (
     <div data-testid={testId}>
-      <Menu ariaLabel="Lọc theo học kỳ" variant="tool" align="right" className="w-44"
+      <Menu ariaLabel={msg("shared.ui.TermFilter.locTheoHocKy")} variant="tool" align="right" className="w-44"
         summaryClassName="!h-10 w-full rounded-lg border border-line bg-surface !px-2.5 text-left text-[13px] hover:!bg-surface hover:border-line-strong [&>svg:last-child]:ml-auto [&>svg:last-child]:shrink-0"
-        label={<span className={cx("min-w-0 flex-1 truncate text-ink", value && "font-mono")}>{value || "Tất cả học kỳ"}</span>}>
+        label={<span className={cx("min-w-0 flex-1 truncate text-ink", value && "font-mono")}>{value || msg("shared.ui.TermFilter.tatCaHocKy")}</span>}>
         <div className="flex max-h-72 w-[160px] flex-col gap-0.5 overflow-y-auto">
-          {option("", "Tất cả học kỳ")}
+          {option("", msg("shared.ui.TermFilter.tatCaHocKy"))}
           {options.map((term) => option(term, term))}
         </div>
       </Menu>

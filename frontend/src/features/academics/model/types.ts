@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/msg";
+
 export type ClassStatus = "DRAFT" | "OPEN" | "ARCHIVED";
 export type Audience = "student" | "teacher" | "manager";
 export type PersonView = { id: string; name: string; email: string; studentCode?: string | null };
@@ -33,9 +35,9 @@ export type CreateClassInput = Omit<ClassInfoInput, "version"> & { subjectId: st
 export type EnrollmentResult = "ENROLLED" | "RESTORED" | "ALREADY_ENROLLED" | "NOT_FOUND" | "NOT_STUDENT" | "DISABLED" | "IN_OTHER_CLASS" | "INVALID_IDENTIFIER" | "DUPLICATE_IN_LIST";
 /** `email` là giá trị đã nhập: email hoặc MSSV (BR-U05-58). */
 export type EnrollmentRowResult = { line: number; email: string; result: EnrollmentResult };
-export const CLASS_STATUS_LABELS: Record<ClassStatus, string> = { DRAFT: "Nháp", OPEN: "Đang mở", ARCHIVED: "Lưu trữ" };
+export const CLASS_STATUS_LABELS: Record<ClassStatus, string> = { DRAFT: msg("academics.model.types.nhap"), OPEN: msg("academics.model.types.dangMo"), ARCHIVED: msg("academics.model.types.luuTru") };
 export const ENROLLMENT_RESULT_LABELS: Record<EnrollmentResult, string> = {
-  ENROLLED: "Đã thêm", RESTORED: "Đã thêm lại", ALREADY_ENROLLED: "Đã có trong lớp", NOT_FOUND: "Không tìm thấy tài khoản",
-  NOT_STUDENT: "Không phải sinh viên", DISABLED: "Tài khoản vô hiệu hóa", IN_OTHER_CLASS: "Đang ở lớp khác cùng môn",
-  INVALID_IDENTIFIER: "Không phải email hay MSSV hợp lệ", DUPLICATE_IN_LIST: "Trùng trong danh sách",
+  ENROLLED: msg("academics.model.types.daThem"), RESTORED: msg("academics.model.types.daThemLai"), ALREADY_ENROLLED: msg("academics.model.types.daCoTrongLop"), NOT_FOUND: msg("academics.model.types.khongTimThayTaiKhoan"),
+  NOT_STUDENT: msg("academics.model.types.khongPhaiSinhVien"), DISABLED: msg("academics.model.types.taiKhoanVoHieuHoa"), IN_OTHER_CLASS: msg("academics.model.types.dangOLopKhacCungMon"),
+  INVALID_IDENTIFIER: msg("academics.model.types.khongPhaiEmailHayMssvHop"), DUPLICATE_IN_LIST: msg("academics.model.types.trungTrongDanhSach"),
 };

@@ -21,9 +21,10 @@ import { ImportAccountsPanel } from "../components/ImportAccountsPanel";
 import { STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import { NewAccountDialog } from "../components/NewAccountDialog";
 import { Card, Pagination } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 const ROLE_TABS: { value: Role | ""; label: string }[] = [
-  { value: "", label: "Tất cả" },
+  { value: "", label: msg("identity.admin.pages.AccountListPage.tatCa") },
   { value: "STUDENT", label: ROLE_LABELS.STUDENT },
   { value: "TEACHER", label: ROLE_LABELS.TEACHER },
   { value: "SUBJECT_MANAGER", label: ROLE_LABELS.SUBJECT_MANAGER },
@@ -61,7 +62,7 @@ export function AccountListPage() {
         setError(null);
       })
       .catch(() => {
-        if (active) setError("Không tải được danh sách tài khoản.");
+        if (active) setError(msg("identity.admin.pages.AccountListPage.khongTaiDuocDanhSachTai"));
       });
     return () => {
       active = false;
@@ -89,15 +90,13 @@ export function AccountListPage() {
   return (
     <>
       <PageHeader
-        title="Tài khoản"
+        title={msg("identity.admin.pages.AccountListPage.taiKhoan")}
         actions={
           <>
             <Button icon="upload_file" onClick={() => setImporting((v) => !v)} aria-expanded={importing}>
-              Nhập Excel
-            </Button>
+              {msg("identity.admin.pages.AccountListPage.nhapExcel")}</Button>
             <Button variant="primary" icon="add" onClick={() => setCreating(true)}>
-              Thêm tài khoản
-            </Button>
+              {msg("identity.admin.pages.AccountListPage.themTaiKhoan")}</Button>
           </>
         }
       />
@@ -105,7 +104,7 @@ export function AccountListPage() {
       {importing && (
         <ImportAccountsPanel
           onImported={(count) => {
-            showToast(`Đã tạo ${count} tài khoản`);
+            showToast(msg("identity.admin.pages.AccountListPage.daTaoTaiKhoan", { count: String(count) }));
             setReloadKey((k) => k + 1);
           }}
           onClose={() => setImporting(false)}
@@ -117,8 +116,8 @@ export function AccountListPage() {
           <TextInput
             type="search"
             icon="search"
-            aria-label="Tìm theo email, tên hoặc MSSV"
-            placeholder="Tìm theo email, tên hoặc MSSV"
+            aria-label={msg("identity.admin.pages.AccountListPage.timTheoEmailTenHoacMssv")}
+            placeholder={msg("identity.admin.pages.AccountListPage.timTheoEmailTenHoacMssv")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -126,21 +125,21 @@ export function AccountListPage() {
         <div className="flex flex-wrap items-center gap-3">
           <Segmented
             as="tab"
-            ariaLabel="Vai trò"
+            ariaLabel={msg("identity.admin.pages.AccountListPage.vaiTro")}
             value={role}
             onChange={(value) => navigate({ role: value, page: 0 })}
             options={ROLE_TABS}
           />
           <Select
-            aria-label="Trạng thái"
+            aria-label={msg("identity.admin.pages.AccountListPage.trangThai")}
             value={status}
             onChange={(e) => navigate({ status: e.target.value, page: 0 })}
             wrapperClassName="ml-auto w-48"
           >
-            <option value="">Trạng thái: Tất cả</option>
+            <option value="">{msg("identity.admin.pages.AccountListPage.trangThaiTatCa")}</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                Trạng thái: {STATUS_LABELS[s]}
+                {msg("identity.admin.pages.AccountListPage.trangThai2")}{STATUS_LABELS[s]}
               </option>
             ))}
           </Select>
@@ -152,8 +151,7 @@ export function AccountListPage() {
             role="alert"
             action={
               <Button size="sm" icon="refresh" onClick={() => setReloadKey((k) => k + 1)}>
-                Tải lại
-              </Button>
+                {msg("identity.admin.pages.AccountListPage.taiLai")}</Button>
             }
           >
             {error}
@@ -164,12 +162,12 @@ export function AccountListPage() {
             <thead>
               <tr>
                 <Th>MSSV</Th>
-                <Th>Họ tên</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.hoTen")}</Th>
                 <Th>Email</Th>
-                <Th>Vai trò</Th>
-                <Th>Trạng thái</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.vaiTro")}</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.trangThai")}</Th>
                 <Th className="w-10">
-                  <span className="sr-only">Mở</span>
+                  <span className="sr-only">{msg("identity.admin.pages.AccountListPage.mo")}</span>
                 </Th>
               </tr>
             </thead>
@@ -177,8 +175,7 @@ export function AccountListPage() {
               {!data && (
                 <tr>
                   <Td colSpan={6} className="py-8 text-center text-muted">
-                    Đang tải…
-                  </Td>
+                    {msg("identity.admin.pages.AccountListPage.dangTai")}</Td>
                 </tr>
               )}
               {data?.items.map((account) => (
@@ -218,8 +215,7 @@ export function AccountListPage() {
               {data && data.items.length === 0 && (
                 <tr>
                   <Td colSpan={6} className="py-10 text-center text-muted">
-                    Không có tài khoản phù hợp.
-                  </Td>
+                    {msg("identity.admin.pages.AccountListPage.khongCoTaiKhoanPhuHop")}</Td>
                 </tr>
               )}
             </tbody>
@@ -234,7 +230,7 @@ export function AccountListPage() {
           onClose={() => setCreating(false)}
           onCreated={() => {
             setCreating(false);
-            showToast("Đã thêm tài khoản");
+            showToast(msg("identity.admin.pages.AccountListPage.daThemTaiKhoan"));
             setReloadKey((k) => k + 1);
           }}
         />

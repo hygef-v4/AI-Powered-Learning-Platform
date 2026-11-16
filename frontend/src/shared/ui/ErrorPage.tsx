@@ -6,26 +6,27 @@ import { ErrorMark, type ErrorKind } from "@/shared/ui/ErrorMark";
 import { Icon } from "@/shared/ui/Icon";
 import { Logo } from "@/shared/ui/Logo";
 import styles from "../styles/error-page.module.css";
+import { msg } from "@/i18n/msg";
 
 /** Chữ của từng trang lỗi: chỉ nói lỗi gì, không hướng dẫn thêm; `code` chỉ có ở lỗi mang mã HTTP. */
 const COPY: Record<ErrorKind, { code?: string; title: string; description: string }> = {
   "not-found": {
     code: "404",
-    title: "Không tìm thấy trang",
-    description: "Đường dẫn không tồn tại hoặc đã bị đổi.",
+    title: msg("shared.ui.ErrorPage.khongTimThayTrang"),
+    description: msg("shared.ui.ErrorPage.duongDanKhongTonTaiHoac"),
   },
   unavailable: {
     code: "503",
-    title: "Hệ thống đang bận",
-    description: "Máy chủ chưa phản hồi.",
+    title: msg("shared.ui.ErrorPage.heThongDangBan"),
+    description: msg("shared.ui.ErrorPage.mayChuChuaPhanHoi"),
   },
   offline: {
-    title: "Mất kết nối mạng",
-    description: "Thiết bị đang không có mạng.",
+    title: msg("shared.ui.ErrorPage.matKetNoiMang"),
+    description: msg("shared.ui.ErrorPage.thietBiDangKhongCoMang"),
   },
   generic: {
-    title: "Đã xảy ra lỗi",
-    description: "Hệ thống không hoàn tất được yêu cầu.",
+    title: msg("shared.ui.ErrorPage.daXayRaLoi"),
+    description: msg("shared.ui.ErrorPage.heThongKhongHoanTatDuoc"),
   },
 };
 
@@ -41,35 +42,33 @@ export function ErrorPage({ kind, retry }: { kind: ErrorKind; retry?: () => void
   return (
     <main className={styles.page}>
       <div className={styles.top}>
-        <Link className={styles.brand} href="/" aria-label="Nền tảng học tập - Trang chủ">
+        <Link className={styles.brand} href="/" aria-label={msg("shared.ui.ErrorPage.nenTangHocTapTrangChu")}>
           <Logo />
         </Link>
         <button
           className={styles.themeToggle}
           type="button"
           onClick={toggleTheme}
-          aria-label={theme === "dark" ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
+          aria-label={theme === "dark" ? msg("shared.ui.ErrorPage.chuyenGiaoDienSang") : msg("shared.ui.ErrorPage.chuyenGiaoDienToi")}
         >
           <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
         </button>
       </div>
       <section className={styles.content} aria-labelledby="error-title">
         <ErrorMark kind={kind} />
-        {copy.code && <span className={styles.code}>Lỗi {copy.code}</span>}
+        {copy.code && <span className={styles.code}>{msg("shared.ui.ErrorPage.loi")}{copy.code}</span>}
         <h1 id="error-title">{copy.title}</h1>
         <p>{copy.description}</p>
         <div className={styles.actions}>
           {reloadable && (
             <button className={styles.primary} type="button" onClick={retry ?? (() => window.location.reload())}>
-              Tải lại trang
-            </button>
+              {msg("shared.ui.ErrorPage.taiLaiTrang")}</button>
           )}
           <Link className={styles.secondary} href="/">
-            Về trang chủ
-          </Link>
+            {msg("shared.ui.ErrorPage.veTrangChu")}</Link>
         </div>
       </section>
-      <footer className={styles.footer}>© 2026 Nền tảng học tập</footer>
+      <footer className={styles.footer}>{msg("shared.ui.ErrorPage.t2026NenTangHocTap")}</footer>
     </main>
   );
 }

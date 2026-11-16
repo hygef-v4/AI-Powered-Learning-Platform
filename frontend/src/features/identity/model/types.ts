@@ -1,4 +1,5 @@
 import type { Role } from "@/shared/auth/roles";
+import { msg } from "@/i18n/msg";
 
 export type AccountStatus = "PENDING" | "ACTIVE" | "DISABLED";
 
@@ -26,8 +27,8 @@ export type Profile = {
 };
 
 export const ROLE_LABELS: Record<Role, string> = {
-  STUDENT: "Sinh viên",
-  TEACHER: "Giảng viên",
-  SUBJECT_MANAGER: "Chủ nhiệm môn",
-  ADMIN: "Quản trị viên",
+  STUDENT: msg("identity.model.types.sinhVien"),
+  TEACHER: msg("identity.model.types.giangVien"),
+  SUBJECT_MANAGER: msg("identity.model.types.chuNhiemMon"),
+  ADMIN: msg("identity.model.types.quanTriVien"),
 };

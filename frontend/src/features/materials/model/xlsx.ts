@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/msg";
+
 /** Một sheet Excel đã đọc: tên và bảng giá trị (chuỗi đã định dạng như trong Excel) theo hàng, cột. */
 export type Sheet = { sheet: string; data: string[][] };
 
@@ -11,7 +13,7 @@ const MAX_COLUMNS = 200;
 export async function readWorkbook(blob: Blob): Promise<Sheet[]> {
   const XLSX = await import("xlsx");
   const workbook = XLSX.read(await blob.arrayBuffer(), { type: "array" });
-  if (workbook.SheetNames.length === 0) throw new Error("Không phải tệp Excel");
+  if (workbook.SheetNames.length === 0) throw new Error(msg("materials.model.xlsx.khongPhaiTepExcel"));
   return workbook.SheetNames.map((name) => {
     const sheet = workbook.Sheets[name];
     const rows = sheet

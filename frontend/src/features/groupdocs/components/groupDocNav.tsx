@@ -2,6 +2,7 @@
 
 import type { NavContext, NavLocation } from "@/shared/layout/navigation";
 import { AssignmentNav } from "@/features/assignments/components/assignmentNav";
+import { msg } from "@/i18n/msg";
 
 /**
  * Trang tài liệu nhóm (`/group-docs/{id}`) và trang soạn (`/group-docs/{id}/edit`): sidebar là mục lục của bài như trang làm bài cá nhân (lối về Bài tập, các mục
@@ -10,5 +11,5 @@ import { AssignmentNav } from "@/features/assignments/components/assignmentNav";
 export function groupDocContext({ pathname }: NavLocation): NavContext | null {
   const match = /^\/group-docs\/([^/]+)(?:\/edit)?$/.exec(pathname);
   if (!match) return null;
-  return { key: `group-doc:${match[1]}`, label: "Các phần của bài", header: <AssignmentNav />, items: [] };
+  return { key: `group-doc:${match[1]}`, label: msg("groupdocs.components.groupDocNav.cacPhanCuaBai"), header: <AssignmentNav />, items: [] };
 }

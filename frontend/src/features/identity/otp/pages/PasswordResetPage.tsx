@@ -4,27 +4,28 @@ import { useRouter } from "next/navigation";
 import { completePasswordReset } from "../../api";
 import { InfoCard } from "../../components/InfoCard";
 import { OtpFlow, type OtpFlowCopy } from "../components/OtpFlow";
+import { msg } from "@/i18n/msg";
 
 // Chữ theo design `c03a`, `c03`, `c04`.
 const COPY: OtpFlowCopy = {
   purpose: "PASSWORD_RESET",
-  title: (step) => (step === 2 ? "Đặt lại mật khẩu" : "Khôi phục mật khẩu"),
-  steps: ["Email", "Mã OTP", "Mật khẩu mới"],
-  sendLabel: "Gửi mã khôi phục",
-  codeLabel: "Mã xác thực OTP",
-  submitLabel: "Đặt lại mật khẩu",
+  title: (step) => (step === 2 ? msg("identity.otp.pages.PasswordResetPage.datLaiMatKhau") : msg("identity.otp.pages.PasswordResetPage.khoiPhucMatKhau")),
+  steps: ["Email", msg("identity.otp.pages.PasswordResetPage.maOtp"), msg("identity.otp.pages.PasswordResetPage.matKhauMoi")],
+  sendLabel: msg("identity.otp.pages.PasswordResetPage.guiMaKhoiPhuc"),
+  codeLabel: msg("identity.otp.pages.PasswordResetPage.maXacThucOtp"),
+  submitLabel: msg("identity.otp.pages.PasswordResetPage.datLaiMatKhau"),
   aside: (step) =>
     step === 2 ? (
       <InfoCard
-        title="Bảo mật tài khoản"
-        subtitle="Lưu ý khi đặt lại mật khẩu"
-        points={["Đăng nhập lại bằng mật khẩu mới sau khi hoàn tất."]}
+        title={msg("identity.otp.pages.PasswordResetPage.baoMatTaiKhoan")}
+        subtitle={msg("identity.otp.pages.PasswordResetPage.luuYKhiDatLaiMat")}
+        points={[msg("identity.otp.pages.PasswordResetPage.dangNhapLaiBangMatKhau")]}
       />
     ) : (
       <InfoCard
-        title="Bảo mật tài khoản"
-        subtitle="Chính sách bảo vệ tài khoản FPT"
-        points={["Khôi phục sẽ đăng xuất mọi thiết bị đang hoạt động.", "Đăng nhập lại bằng mật khẩu mới sau khi hoàn tất."]}
+        title={msg("identity.otp.pages.PasswordResetPage.baoMatTaiKhoan")}
+        subtitle={msg("identity.otp.pages.PasswordResetPage.chinhSachBaoVeTaiKhoan")}
+        points={[msg("identity.otp.pages.PasswordResetPage.khoiPhucSeDangXuatMoi"), msg("identity.otp.pages.PasswordResetPage.dangNhapLaiBangMatKhau")]}
       />
     ),
   tagline: (step) => step < 2,

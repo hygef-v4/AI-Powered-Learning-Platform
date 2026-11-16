@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cx } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 /** Một chuỗi số trên biểu đồ: tên (chú thích, tooltip) và màu (token CSS). */
 export type Series = { name: string; color: string };
@@ -28,7 +29,7 @@ export function Reveal({ label, className, children }: { label: string; classNam
     if (event.key === "Escape") setShown(false);
   };
   return (
-    <div ref={ref} role="button" tabIndex={0} aria-pressed={shown} aria-label={`${label}; bấm để ${shown ? "giữ" : "hiện"} số`}
+    <div ref={ref} role="button" tabIndex={0} aria-pressed={shown} aria-label={msg("admindashboard.components.DashboardCharts.bamDeSo", { label: String(label), value: String(shown ? msg("admindashboard.components.DashboardCharts.giu") : msg("admindashboard.components.DashboardCharts.hien")) })}
       onClick={() => setShown(true)} onKeyDown={onKeyDown}
       className={cx("cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-focus/40", className)}>
       {children(shown)}

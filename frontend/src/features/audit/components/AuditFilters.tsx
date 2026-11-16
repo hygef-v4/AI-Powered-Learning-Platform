@@ -3,6 +3,7 @@
 import { Button, DateInput, Field, Section, Select, TextInput } from "@/shared/ui";
 import { ACTION_LABELS, OBJECT_TYPE_LABELS, RESULT_LABELS } from "../model/labels";
 import type { AuditFilterForm, AuditResult } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   value: AuditFilterForm;
@@ -10,7 +11,7 @@ type Props = {
   onClear: () => void;
 };
 
-export const DATE_ORDER_ERROR = "Ngày bắt đầu phải trước ngày kết thúc.";
+export const DATE_ORDER_ERROR = msg("audit.components.AuditFilters.ngayBatDauPhaiTruocNgay");
 
 /**
  * Bộ lọc màn Audit Log (artboard a13): đổi ô nào lọc ngay ô đó, không có nút Lọc. Hàng trên 4 ô bằng nhau (người
@@ -24,7 +25,7 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
     <Section className="p-4">
       <div className="flex flex-col gap-3" data-testid="audit-filters-form">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Người thực hiện" htmlFor="audit-actor">
+          <Field label={msg("audit.components.AuditFilters.nguoiThucHien")} htmlFor="audit-actor">
             <TextInput
               id="audit-actor"
               type="search"
@@ -35,9 +36,9 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
               data-testid="audit-filters-actor-input"
             />
           </Field>
-          <Field label="Hành động" htmlFor="audit-action">
+          <Field label={msg("audit.components.AuditFilters.hanhDong")} htmlFor="audit-action">
             <Select id="audit-action" value={value.action} onChange={(e) => set("action", e.target.value)} data-testid="audit-filters-action-select">
-              <option value="">Tất cả</option>
+              <option value="">{msg("audit.components.AuditFilters.tatCa")}</option>
               {Object.entries(ACTION_LABELS).map(([code, label]) => (
                 <option key={code} value={code}>
                   {label}
@@ -45,14 +46,14 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
               ))}
             </Select>
           </Field>
-          <Field label="Đối tượng" htmlFor="audit-object-type">
+          <Field label={msg("audit.components.AuditFilters.doiTuong")} htmlFor="audit-object-type">
             <Select
               id="audit-object-type"
               value={value.objectType}
               onChange={(e) => onChange({ ...value, objectType: e.target.value, objectId: "" })}
               data-testid="audit-filters-object-type-select"
             >
-              <option value="">Tất cả</option>
+              <option value="">{msg("audit.components.AuditFilters.tatCa")}</option>
               {Object.entries(OBJECT_TYPE_LABELS).map(([code, label]) => (
                 <option key={code} value={code}>
                   {label}
@@ -60,14 +61,14 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
               ))}
             </Select>
           </Field>
-          <Field label="Kết quả" htmlFor="audit-result">
+          <Field label={msg("audit.components.AuditFilters.ketQua")} htmlFor="audit-result">
             <Select
               id="audit-result"
               value={value.result}
               onChange={(e) => set("result", e.target.value as AuditResult | "")}
               data-testid="audit-filters-result-select"
             >
-              <option value="">Tất cả</option>
+              <option value="">{msg("audit.components.AuditFilters.tatCa")}</option>
               {(Object.keys(RESULT_LABELS) as AuditResult[]).map((code) => (
                 <option key={code} value={code}>
                   {RESULT_LABELS[code].label}
@@ -77,11 +78,11 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
           </Field>
         </div>
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <Field label="Thời gian" htmlFor="audit-from" error={dateInvalid ? DATE_ORDER_ERROR : null}>
+          <Field label={msg("audit.components.AuditFilters.thoiGian")} htmlFor="audit-from" error={dateInvalid ? DATE_ORDER_ERROR : null}>
             <div className="flex items-center gap-2">
               <DateInput
                 id="audit-from"
-                aria-label="Từ ngày"
+                aria-label={msg("audit.components.AuditFilters.tuNgay")}
                 value={value.fromDate}
                 invalid={dateInvalid}
                 onChange={(date) => set("fromDate", date)}
@@ -89,7 +90,7 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
               />
               <span aria-hidden="true" className="text-muted">–</span>
               <DateInput
-                aria-label="Đến ngày"
+                aria-label={msg("audit.components.AuditFilters.denNgay")}
                 value={value.toDate}
                 invalid={dateInvalid}
                 onChange={(date) => set("toDate", date)}
@@ -98,8 +99,7 @@ export function AuditFilters({ value, onChange, onClear }: Props) {
             </div>
           </Field>
           <Button type="button" variant="danger" icon="filter_alt_off" onClick={onClear} data-testid="audit-filters-clear-button">
-            Xóa lọc
-          </Button>
+            {msg("audit.components.AuditFilters.xoaLoc")}</Button>
         </div>
       </div>
     </Section>

@@ -4,8 +4,9 @@ import { teacherClassTabs } from "@/features/academics/slots";
 import { contextNavEntries, subjectNavEntries } from "@/features/identity/slots";
 import { assignmentContext, studentAssignmentContext } from "./components/assignmentNav";
 import { ClassAssignmentsSection } from "./components/ClassAssignmentsSection";
+import { msg } from "@/i18n/msg";
 
-subjectNavEntries.register({ key: "manager-assignments", order: 40, title: "Đề mẫu", icon: "assignment", path: "/manager/assignments" });
+subjectNavEntries.register({ key: "manager-assignments", order: 40, title: msg("assignments.register.deMau"), icon: "assignment", path: "/manager/assignments" });
 teacherClassTabs.register({ key: "assignments", order: 10, component: ClassAssignmentsSection });
 contextNavEntries.register({ key: "assignment-outline", order: 4, roles: ["SUBJECT_MANAGER", "TEACHER"], resolve: assignmentContext });
 contextNavEntries.register({ key: "assignment-work-outline", order: 4, roles: ["STUDENT"], resolve: studentAssignmentContext });

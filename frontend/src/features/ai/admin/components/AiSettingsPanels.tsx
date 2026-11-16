@@ -6,12 +6,13 @@ import { PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
 import { InstitutionalKeysSection } from "./InstitutionalKeysSection";
 import { QuotaPolicySection, TeacherQuotaTable } from "./QuotaSections";
 import { SharedUsageTab } from "./SharedUsageTab";
+import { msg } from "@/i18n/msg";
 
 type Tab = "usage" | "settings";
 
 const TABS: TabItem<Tab>[] = [
-  { key: "usage", label: "Lịch sử sử dụng" },
-  { key: "settings", label: "Cài đặt" },
+  { key: "usage", label: msg("ai.admin.components.AiSettingsPanels.lichSuSuDung") },
+  { key: "settings", label: msg("ai.admin.components.AiSettingsPanels.caiDat") },
 ];
 
 /**
@@ -26,11 +27,11 @@ function AiSettingsPage({ focusQuota = false, initialTab = "usage" }: { focusQuo
   return (
     <>
       <PageHeader
-        title="Cài đặt AI"
+        title={msg("ai.admin.components.AiSettingsPanels.caiDatAi")}
         backHref="/admin/settings"
-        breadcrumb={[{ label: "Cài đặt", href: "/admin/settings" }, { label: "Cài đặt AI" }]}
+        breadcrumb={[{ label: msg("ai.admin.components.AiSettingsPanels.caiDat"), href: "/admin/settings" }, { label: msg("ai.admin.components.AiSettingsPanels.caiDatAi") }]}
       />
-      <Tabs items={TABS} value={tab} onChange={setTab} label="Cài đặt AI" />
+      <Tabs items={TABS} value={tab} onChange={setTab} label={msg("ai.admin.components.AiSettingsPanels.caiDatAi")} />
       {tab === "usage" && <SharedUsageTab />}
       {tab === "settings" && (
         <SettingsCard>

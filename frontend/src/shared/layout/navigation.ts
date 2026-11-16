@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { Role } from "@/shared/auth/roles";
 import type { IconName } from "@/shared/ui/Icon";
 import type { Tone } from "@/shared/ui/tones";
+import { msg } from "@/i18n/msg";
 
 /**
  * `section`: tiêu đề nhóm vẽ phía trên mục đầu tiên của nhóm. `active`: sidebar theo ngữ cảnh tự quyết mục đang mở (khi
@@ -28,10 +29,10 @@ export type NavLocation = { pathname: string; search: URLSearchParams };
 export type NavContext = { key: string; label: string; header: ReactNode; items: NavItem[]; parentHref?: string };
 
 export const ROLE_LABELS: Record<Role, string> = {
-  STUDENT: "Sinh viên",
-  TEACHER: "Giảng viên",
-  SUBJECT_MANAGER: "Chủ nhiệm môn",
-  ADMIN: "Quản trị viên",
+  STUDENT: msg("shared.layout.navigation.sinhVien"),
+  TEACHER: msg("shared.layout.navigation.giangVien"),
+  SUBJECT_MANAGER: msg("shared.layout.navigation.chuNhiemMon"),
+  ADMIN: msg("shared.layout.navigation.quanTriVien"),
 };
 
 export const AVATAR_TONES: Record<Role, Tone> = {

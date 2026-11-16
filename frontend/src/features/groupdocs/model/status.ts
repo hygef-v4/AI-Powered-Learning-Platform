@@ -1,10 +1,11 @@
 import type { Tone } from "@/shared/ui";
 import type { SectionView, WorkspaceView } from "./types";
+import { msg } from "@/i18n/msg";
 
 /** Nhãn và màu trạng thái mục, dùng chung cho trang tài liệu nhóm và thẻ Tiến độ. */
 export const SECTION_STATUS: Record<SectionView["status"], { text: string; tone: Tone }> = {
-  OPEN: { text: "Chưa làm", tone: "neutral" },
-  CLAIMED: { text: "Đang làm", tone: "info" },
+  OPEN: { text: msg("groupdocs.model.status.chuaLam"), tone: "neutral" },
+  CLAIMED: { text: msg("groupdocs.model.status.dangLam"), tone: "info" },
   DONE: { text: "Xong", tone: "success" },
 };
 
@@ -17,9 +18,9 @@ export function sectionPerson(section: SectionView): string | null {
 
 /** Tên thành viên để hiện: chính mình là "Bạn". */
 export function memberName(view: Pick<WorkspaceView, "members" | "viewerId">, id: string | null): string {
-  if (id === null) return "Chưa ai nhận";
-  if (id === view.viewerId) return "Bạn";
-  return view.members.find((m) => m.accountId === id)?.name ?? "Thành viên";
+  if (id === null) return msg("groupdocs.model.status.chuaAiNhan");
+  if (id === view.viewerId) return msg("groupdocs.model.status.ban");
+  return view.members.find((m) => m.accountId === id)?.name ?? msg("groupdocs.model.status.thanhVien");
 }
 
 /** Mục của mình: đang giữ, hoặc đã Xong do mình viết. */

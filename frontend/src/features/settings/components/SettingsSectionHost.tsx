@@ -3,6 +3,7 @@
 import { Alert } from "@/shared/ui/Alert";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { settingsSectionRegistry } from "../slots";
+import { msg } from "@/i18n/msg";
 
 /**
  * Hiện panel do unit sở hữu đăng ký cho {@code sectionKey}; panel tự vẽ đầu trang (PageHeader có nút quay lại).
@@ -13,10 +14,9 @@ export function SettingsSectionHost({ sectionKey, tab }: { sectionKey: string; t
   if (!entry) {
     return (
       <>
-        <PageHeader backHref="/admin/settings" title="Cài đặt" />
+        <PageHeader backHref="/admin/settings" title={msg("settings.components.SettingsSectionHost.caiDat")} />
         <Alert tone="warning" className="max-w-[680px]">
-          Phần cài đặt này hiện không khả dụng.
-        </Alert>
+          {msg("settings.components.SettingsSectionHost.phanCaiDatNayHienKhong")}</Alert>
       </>
     );
   }

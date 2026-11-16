@@ -5,6 +5,7 @@ import { ModuleBoard } from "./ModuleBoard";
 import { useMaterialResource } from "../hooks/useMaterialResource";
 import { describeFile, buildMaterialHref, type Material } from "../model/types";
 import styles from "../styles/materials.module.css";
+import { msg } from "@/i18n/msg";
 
 export function MaterialLinkList({
   classId,
@@ -14,7 +15,7 @@ export function MaterialLinkList({
   materialIds: string[];
 }) {
   const ids = [...new Set(materialIds)].sort();
-  return <MaterialLinks classId={classId} ids={ids} title="Học liệu gắn kèm" />;
+  return <MaterialLinks classId={classId} ids={ids} title={msg("materials.components.MaterialSections.hocLieuGanKem")} />;
 }
 /** Học liệu của lớp (sinh viên): module của môn với học liệu và Quiz đang mở của lớp. */
 export function ClassMaterialsCard({ classId }: { classId: string }) {
@@ -42,14 +43,14 @@ function MaterialLinks({
         {title}
         {resource.data && ` (${resource.data.length})`}
       </h2>
-      {resource.loading && <p role="status">Đang tải học liệu…</p>}
+      {resource.loading && <p role="status">{msg("materials.components.MaterialSections.dangTaiHocLieu")}</p>}
       {resource.error && (
         <p role="alert" className={styles.error}>
           {resource.error}
-          <Button onClick={resource.reload}>Thử lại</Button>
+          <Button onClick={resource.reload}>{msg("materials.components.MaterialSections.thuLai")}</Button>
         </p>
       )}
-      {resource.data?.length === 0 && <p className={styles.muted}>Chưa có học liệu.</p>}
+      {resource.data?.length === 0 && <p className={styles.muted}>{msg("materials.components.MaterialSections.chuaCoHocLieu")}</p>}
       <div className={styles.linkList}>
         {resource.data?.map((m, i) => (
           <Link
@@ -60,7 +61,7 @@ function MaterialLinks({
             {i + 1}. {m.title}
             <span className="ml-2 text-xs text-muted">
               {describeFile(m)}
-              {m.scope === "CLASS" && " · của lớp"}
+              {m.scope === "CLASS" && msg("materials.components.MaterialSections.cuaLop")}
             </span>
           </Link>
         ))}

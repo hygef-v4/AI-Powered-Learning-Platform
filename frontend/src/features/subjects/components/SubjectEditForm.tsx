@@ -10,6 +10,7 @@ import {
   type SubjectMutationProps,
 } from "../hooks/useSubjectMutation";
 import { validateSubjectInformation, type SubjectFieldErrors } from "../model/validation";
+import { msg } from "@/i18n/msg";
 
 /** Sửa tên, mô tả ngay trên thẻ; mã môn khóa. Hủy đưa về giá trị đang lưu, hai nút chỉ bấm được khi đã sửa. */
 export function SubjectEditForm({
@@ -55,10 +56,10 @@ export function SubjectEditForm({
       className="flex flex-col gap-4"
     >
       <fieldset disabled={mutation.busy} className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <Field label="Mã môn" htmlFor={`${id}-code`}>
+        <Field label={msg("subjects.components.SubjectEditForm.maMon")} htmlFor={`${id}-code`}>
           <LockedInput id={`${id}-code`} value={subject.code} />
         </Field>
-        <Field label="Tên môn học" htmlFor={`${id}-name`} required error={errors.name}>
+        <Field label={msg("subjects.components.SubjectEditForm.tenMonHoc")} htmlFor={`${id}-name`} required error={errors.name}>
           <TextInput
             id={`${id}-name`}
             value={name}
@@ -72,7 +73,7 @@ export function SubjectEditForm({
           />
         </Field>
         <div className="sm:col-span-2">
-          <Field label="Mô tả" htmlFor={`${id}-description`} error={errors.description}>
+          <Field label={msg("subjects.components.SubjectEditForm.moTa")} htmlFor={`${id}-description`} error={errors.description}>
             <Textarea
               id={`${id}-description`}
               value={description}
@@ -95,8 +96,7 @@ export function SubjectEditForm({
           disabled={!dirty || mutation.busy}
           data-testid="subject-edit-cancel"
         >
-          Hủy
-        </Button>
+          {msg("subjects.components.SubjectEditForm.huy")}</Button>
         <Button
           type="submit"
           variant="primary"
@@ -104,8 +104,7 @@ export function SubjectEditForm({
           disabled={!dirty || mutation.busy || conflict}
           data-testid="subject-edit-save"
         >
-          Lưu thay đổi
-        </Button>
+          {msg("subjects.components.SubjectEditForm.luuThayDoi")}</Button>
       </div>
     </form>
   );

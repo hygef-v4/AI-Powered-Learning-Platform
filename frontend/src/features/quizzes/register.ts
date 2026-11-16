@@ -5,7 +5,8 @@ import { createElement } from "react";
 import { teacherClassTabs } from "@/features/academics/slots";
 import { subjectNavEntries } from "@/features/identity/slots";
 import { QuestionProposalsSection } from "./components/QuestionProposalsSection";
+import { msg } from "@/i18n/msg";
 
 teacherClassTabs.register({ key: "quiz-question-proposals", order: 60, component: ({ classId, tab }) => tab === "materials" ? createElement(QuestionProposalsSection, { classId }) : null });
-subjectNavEntries.register({ key: "manager-questions", order: 50, title: "Ngân hàng câu hỏi", icon: "help_center", path: "/manager/questions" });
+subjectNavEntries.register({ key: "manager-questions", order: 50, title: msg("quizzes.register.nganHangCauHoi"), icon: "help_center", path: "/manager/questions" });
 

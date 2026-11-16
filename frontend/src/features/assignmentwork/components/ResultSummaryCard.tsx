@@ -5,6 +5,7 @@ import type { DocumentPart } from "@/shared/document";
 import { ButtonLink, Section } from "@/shared/ui";
 import { workApi } from "../api";
 import { formatPoints, resultByPart, useAttemptResult } from "../model/attemptResult";
+import { msg } from "@/i18n/msg";
 
 /**
  * Thẻ Kết quả trên Assignment Detail: chỉ điểm tổng và điểm từng bài (nhánh con trực tiếp của gốc tài liệu); nhận xét chi
@@ -24,15 +25,15 @@ export function ResultSummaryCard({ attemptId, detailsHref }: { attemptId: strin
   const groups = result ? resultByPart(result.items, parts?.attemptId === attemptId ? parts.parts : undefined) : [];
 
   return (
-    <Section title="Kết quả">
-      {failed ? <p role="alert" className="text-[13px] text-danger">Không tải được kết quả.</p>
-        : loading ? <p role="status" className="text-[13px] text-muted">Đang tải kết quả…</p>
-        : result?.score == null ? <p className="text-[13px] text-muted">Chưa có điểm công bố.</p>
+    <Section title={msg("assignmentwork.components.ResultSummaryCard.ketQua")}>
+      {failed ? <p role="alert" className="text-[13px] text-danger">{msg("assignmentwork.components.ResultSummaryCard.khongTaiDuocKetQua")}</p>
+        : loading ? <p role="status" className="text-[13px] text-muted">{msg("assignmentwork.components.ResultSummaryCard.dangTaiKetQua")}</p>
+        : result?.score == null ? <p className="text-[13px] text-muted">{msg("assignmentwork.components.ResultSummaryCard.chuaCoDiemCongBo")}</p>
         : (
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
               <div className="flex shrink-0 flex-col justify-center rounded-xl bg-shell px-6 py-4 text-center">
-                <span className="text-xs text-muted">Tổng điểm</span>
+                <span className="text-xs text-muted">{msg("assignmentwork.components.ResultSummaryCard.tongDiem")}</span>
                 <span className="mt-1 font-display text-[34px] leading-none tracking-[-0.02em] text-ink tabular-nums">{formatPoints(result.score)}</span>
                 <span className="mt-1 text-xs text-muted tabular-nums">/ {formatPoints(result.maxScore)}</span>
               </div>
@@ -50,7 +51,7 @@ export function ResultSummaryCard({ attemptId, detailsHref }: { attemptId: strin
                 </ul>
               )}
             </div>
-            <ButtonLink href={detailsHref} className="self-start">Xem chi tiết chấm điểm</ButtonLink>
+            <ButtonLink href={detailsHref} className="self-start">{msg("assignmentwork.components.ResultSummaryCard.xemChiTietChamDiem")}</ButtonLink>
           </div>
         )}
     </Section>

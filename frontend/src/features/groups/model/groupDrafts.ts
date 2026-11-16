@@ -1,5 +1,6 @@
 import { ApiError } from "@/shared/api/client";
 import type { Draft, GroupSetView, Issue, Person } from "./types";
+import { msg } from "@/i18n/msg";
 
 /** Một sinh viên đang học trên tab Sinh viên, kèm ngày vào lớp khi trang lớp có danh sách ghi danh. */
 export type StudentRow = Person & { enrolledAt?: string | null };
@@ -8,7 +9,7 @@ export type StudentRow = Person & { enrolledAt?: string | null };
 export const UNGROUPED = "__none";
 
 export function personLabel(p: Pick<Person, "name" | "email"> | null | undefined): string {
-  return p?.name || p?.email || "Không rõ tên";
+  return p?.name || p?.email || msg("groups.model.groupDrafts.khongRoTen");
 }
 
 /** Thứ tự tên nhóm tự nhiên: Nhóm 2 trước Nhóm 10. */
@@ -30,7 +31,7 @@ export function freeNames(drafts: Draft[], count: number): string[] {
   const taken = new Set(drafts.map((d) => d.name.trim().toLowerCase()));
   const names: string[] = [];
   for (let n = drafts.length + 1; names.length < count; n++) {
-    if (!taken.has(`nhóm ${n}`)) names.push(`Nhóm ${n}`);
+    if (!taken.has(msg("groups.model.groupDrafts.nhom", { n: String(n) }))) names.push(msg("groups.model.groupDrafts.nhom2", { n: String(n) }));
   }
   return names;
 }
@@ -62,10 +63,10 @@ export function saveErrorText(e: unknown, drafts: Draft[]): string {
       const d = drafts.find((x) => x.key === i.groupKey);
       return d ? `${d.name}: ${i.message}` : i.message;
     });
-    return `Chưa lưu: ${lines.join("; ")}`;
+    return msg("groups.model.groupDrafts.chuaLuu", { value: String(lines.join("; ")) });
   }
   if (problem?.status === 409) {
-    return problem.code === "GROUP_CLASS_ARCHIVED" ? "Lớp đã lưu trữ, chỉ xem được nhóm." : "Nhóm vừa được thay đổi ở nơi khác, hãy tải lại trang.";
+    return problem.code === "GROUP_CLASS_ARCHIVED" ? msg("groups.model.groupDrafts.lopDaLuuTruChiXem") : msg("groups.model.groupDrafts.nhomVuaDuocThayDoiO");
   }
-  return problem?.detail ?? "Không lưu được nhóm, thử lại sau.";
+  return problem?.detail ?? msg("groups.model.groupDrafts.khongLuuDuocNhomThuLai");
 }

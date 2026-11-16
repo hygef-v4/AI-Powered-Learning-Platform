@@ -2,6 +2,7 @@
 import { PageHeader } from "@/shared/ui";
 import { ModuleBoard } from "./ModuleBoard";
 import { useMaterialResource } from "../hooks/useMaterialResource";
+import { msg } from "@/i18n/msg";
 
 type SubjectOption = { id: string; code: string; name: string; status?: string };
 
@@ -20,11 +21,10 @@ export function SubjectMaterialListPage({ initialSubjectId = "" }: { initialSubj
     );
   return (
     <>
-      <PageHeader title="Học liệu" />
+      <PageHeader title={msg("materials.components.MaterialList.hocLieu")} />
       {subjects.loading && (
         <p role="status" className="py-10 text-center text-sm text-muted">
-          Đang tải môn học…
-        </p>
+          {msg("materials.components.MaterialList.dangTaiMonHoc")}</p>
       )}
       {subjects.error && (
         <p role="alert" className="text-sm text-danger">
@@ -32,7 +32,7 @@ export function SubjectMaterialListPage({ initialSubjectId = "" }: { initialSubj
         </p>
       )}
       {subjects.data && (
-        <p className="py-10 text-center text-sm text-muted">Bạn chưa được phân công môn học.</p>
+        <p className="py-10 text-center text-sm text-muted">{msg("materials.components.MaterialList.banChuaDuocPhanCongMon")}</p>
       )}
     </>
   );

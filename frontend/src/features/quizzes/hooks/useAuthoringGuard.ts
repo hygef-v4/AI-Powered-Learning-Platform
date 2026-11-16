@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
+import { msg } from "@/i18n/msg";
 
 /** Giữ bản soạn tại chỗ khi đóng trang hoặc chuyển liên kết trước khi lưu. */
 export function useAuthoringGuard(dirty: boolean) {
-  const confirmDiscard = useCallback(() => !dirty || window.confirm("Bạn có nội dung chưa lưu. Bỏ các thay đổi này?"), [dirty]);
+  const confirmDiscard = useCallback(() => !dirty || window.confirm(msg("quizzes.hooks.useAuthoringGuard.banCoNoiDungChuaLuu")), [dirty]);
   useEffect(() => {
     if (!dirty) return;
     const currentUrl = window.location.href;

@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/msg";
+
 // Tài liệu dùng chung cho khung đề (U07), bài làm (U08) và tài liệu nhóm (U12). Khớp DocumentModel của backend U07.
 
 export type BlockOrigin = "TEACHER" | "STUDENT";
@@ -146,17 +148,17 @@ export function rubricPointsMissing(criteria: RubricCriterion[]): boolean {
 }
 
 export const headingLabels: Record<HeadingStyle, string> = {
-  TITLE: "Tiêu đề", SUBTITLE: "Phụ đề", H1: "Tiêu đề 1", H2: "Tiêu đề 2", H3: "Tiêu đề 3",
-  H4: "Tiêu đề 4", H5: "Tiêu đề 5", H6: "Tiêu đề 6",
+  TITLE: msg("shared.document.types.tieuDe"), SUBTITLE: msg("shared.document.types.phuDe"), H1: msg("shared.document.types.tieuDe1"), H2: msg("shared.document.types.tieuDe2"), H3: msg("shared.document.types.tieuDe3"),
+  H4: msg("shared.document.types.tieuDe4"), H5: msg("shared.document.types.tieuDe5"), H6: msg("shared.document.types.tieuDe6"),
 };
 
 export const diagramTypeLabels: Record<DiagramType, string> = {
-  USE_CASE: "Use case", CLASS: "Sơ đồ lớp", SEQUENCE: "Sơ đồ tuần tự", ACTIVITY: "Sơ đồ hoạt động",
-  ER: "Sơ đồ ER", COMPONENT: "Sơ đồ thành phần", STATE: "Sơ đồ trạng thái", OTHER: "Loại khác",
+  USE_CASE: "Use case", CLASS: msg("shared.document.types.soDoLop"), SEQUENCE: msg("shared.document.types.soDoTuanTu"), ACTIVITY: msg("shared.document.types.soDoHoatDong"),
+  ER: msg("shared.document.types.soDoEr"), COMPONENT: msg("shared.document.types.soDoThanhPhan"), STATE: msg("shared.document.types.soDoTrangThai"), OTHER: msg("shared.document.types.loaiKhac"),
 };
 
 export const blockTypeLabels: Record<BlockType, string> = {
-  HEADING: "Tiêu đề", PARAGRAPH: "Đoạn văn", LIST: "Danh sách", TABLE: "Bảng", IMAGE: "Ảnh", DIAGRAM: "Sơ đồ",
+  HEADING: msg("shared.document.types.tieuDe"), PARAGRAPH: msg("shared.document.types.doanVan"), LIST: msg("shared.document.types.danhSach"), TABLE: msg("shared.document.types.bang"), IMAGE: msg("shared.document.types.anh"), DIAGRAM: msg("shared.document.types.soDo"),
 };
 
 export function newId(): string {
@@ -231,7 +233,7 @@ export function computeParts(document: DocumentModel): DocumentPart[] {
     .map((block) => ({ block, level: headingLevel(block) }))
     .filter((h) => h.level > 0)
     .map(({ block, level }) => ({ id: block.id, level, title: blockText(block).trim() }));
-  if (headings.length === 0) return [{ partId: WHOLE_DOCUMENT, headingBlockId: null, ancestorHeadingIds: [], title: "Toàn bài" }];
+  if (headings.length === 0) return [{ partId: WHOLE_DOCUMENT, headingBlockId: null, ancestorHeadingIds: [], title: msg("shared.document.types.toanBai") }];
   const parts: DocumentPart[] = [];
   const branch: (typeof headings[number] & { label: string })[] = [];
   // Số thứ tự như trong trang (I., I.1.): câu hỏi chưa đặt tên thì gọi bằng số của nó.

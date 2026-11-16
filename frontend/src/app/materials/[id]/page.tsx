@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { serverMsg } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Học liệu" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await serverMsg("app.materials.id.page.hocLieu") };
+}
 
 /** Trang sửa học liệu cũ: nay sửa và lưu trữ ngay trên trang chi tiết (`/view`). */
 export default async function Page({

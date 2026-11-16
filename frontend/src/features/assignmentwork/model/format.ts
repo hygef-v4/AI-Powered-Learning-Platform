@@ -2,6 +2,7 @@ import { ApiError } from "@/shared/api/client";
 import type { ValidationIssue } from "@/shared/document";
 
 import { formatRemaining, formatTime as sharedFormatTime } from "@/shared/dateTime";
+import { msg } from "@/i18n/msg";
 
 /** Ngày giờ theo giờ Việt Nam (UTC+7), dùng chung từ shared/dateTime. */
 export { formatDateTime } from "@/shared/dateTime";
@@ -34,7 +35,7 @@ export function formatTime(iso: string | null | undefined): string {
 /** Còn lại tới hạn dạng "2 ngày 3 giờ", "15 phút"; quá hạn trả "Đã quá hạn". */
 export function remaining(deadline: string | null, now: number): string {
   if (!deadline) return "";
-  return formatRemaining(deadline, now) ?? "Đã quá hạn";
+  return formatRemaining(deadline, now) ?? msg("assignmentwork.model.format.daQuaHan");
 }
 
 
@@ -44,9 +45,9 @@ export function problemIssues(error: unknown): ValidationIssue[] {
   return Array.isArray(issues) ? issues : [];
 }
 
-export function errorMessage(error: unknown, fallback = "Không thực hiện được. Hãy thử lại."): string {
+export function errorMessage(error: unknown, fallback = msg("assignmentwork.model.format.khongThucHienDuocHayThu")): string {
   if (error instanceof ApiError) {
-    if (error.problem.status === 404) return "Không tìm thấy hoặc bạn không có quyền.";
+    if (error.problem.status === 404) return msg("assignmentwork.model.format.khongTimThayHoacBanKhong");
     return error.problem.detail ?? fallback;
   }
   return error instanceof Error && error.message ? error.message : fallback;

@@ -2,6 +2,7 @@
 import { cx } from "./cx";
 import { Icon } from "./Icon";
 import { Menu } from "./Menu";
+import { msg } from "@/i18n/msg";
 
 export type ClassFilterOption = { classId: string; code: string; subjectCode: string | null; term?: string | null };
 
@@ -38,11 +39,11 @@ export function ClassFilter({ classes, value, onChange, testId }: { classes: Cla
   };
   return (
     <div data-testid={testId}>
-      <Menu ariaLabel="Lọc theo lớp" variant="tool" align="right" className="w-60"
+      <Menu ariaLabel={msg("shared.ui.ClassFilter.locTheoLop")} variant="tool" align="right" className="w-60"
         summaryClassName="!h-10 w-full rounded-lg border border-line bg-surface !px-2.5 text-left hover:!bg-surface hover:border-line-strong [&>svg:last-child]:ml-auto [&>svg:last-child]:shrink-0"
-        label={<ClassLabel subjectCode={current?.subjectCode ?? null} code={current?.code ?? "Tất cả lớp"} term={current?.term} />}>
+        label={<ClassLabel subjectCode={current?.subjectCode ?? null} code={current?.code ?? msg("shared.ui.ClassFilter.tatCaLop")} term={current?.term} />}>
         <div className="flex max-h-72 w-[228px] flex-col gap-0.5 overflow-y-auto">
-          {option("", null, "Tất cả lớp")}
+          {option("", null, msg("shared.ui.ClassFilter.tatCaLop"))}
           {classes.map((c) => option(c.classId, c.subjectCode, c.code, c.term))}
         </div>
       </Menu>

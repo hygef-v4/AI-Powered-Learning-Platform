@@ -28,6 +28,7 @@ import {
 } from "../api";
 import type { OutlineItem } from "../model/outline";
 import type { Material, ModuleQuiz, ModuleScope } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 type Content = "FILE" | "YOUTUBE_LINK" | "QUIZ";
 type StaffScope = Extract<ModuleScope, { kind: "subject" } | { kind: "class" }>;
@@ -129,7 +130,7 @@ export function ModuleItemDialog({
   async function handleSave() {
     if (lock.current) return;
     if (!title.trim()) {
-      setError("Nhập tên học liệu.");
+      setError(msg("materials.components.MaterialDialogs.nhapTenHocLieu"));
       return;
     }
     if (
@@ -137,11 +138,11 @@ export function ModuleItemDialog({
       (!editing || url.trim() !== (material?.current.videoUrl ?? "")) &&
       !isValidYoutubeUrl(url)
     ) {
-      setError("Dán link của một video YouTube.");
+      setError(msg("materials.components.MaterialDialogs.danLinkCuaMotVideoYoutube"));
       return;
     }
     if (content === "FILE" && !editing && !fileRef) {
-      setError("Chọn tệp.");
+      setError(msg("materials.components.MaterialDialogs.chonTep"));
       return;
     }
     lock.current = true;
@@ -161,7 +162,7 @@ export function ModuleItemDialog({
           enabled,
           descriptionDocument,
         });
-        onSaved("Đã lưu thay đổi");
+        onSaved(msg("materials.components.MaterialDialogs.daLuuThayDoi"));
       } else if (quiz) {
         if (!detail) return;
         await updateQuizDetails(
@@ -169,7 +170,7 @@ export function ModuleItemDialog({
           describeQuiz(detail, title.trim(), description, descriptionDocument),
           detail.quiz.version,
         );
-        onSaved("Đã lưu thay đổi");
+        onSaved(msg("materials.components.MaterialDialogs.daLuuThayDoi"));
       } else if (content === "QUIZ") {
         const template = quizzes?.find((q) => q.id === quizId);
         let created: QuizDetail;
@@ -197,7 +198,7 @@ export function ModuleItemDialog({
         }
         await moduleApi.attachQuiz(moduleId, created.quiz.id);
         // Đóng popup trước khi điều hướng từ sidebar sang quiz vừa tạo.
-        onSaved("Đã tạo quiz");
+        onSaved(msg("materials.components.MaterialDialogs.daTaoQuiz"));
         router.push(
           scope.kind === "class"
             ? `/quizzes/${encodeURIComponent(created.quiz.id)}?classId=${encodeURIComponent(scope.classId)}`
@@ -214,7 +215,7 @@ export function ModuleItemDialog({
           source: content === "FILE" ? { fileRef } : { videoUrl: url.trim() },
           moduleId,
         });
-        onSaved("Đã thêm học liệu");
+        onSaved(msg("materials.components.MaterialDialogs.daThemHocLieu"));
       }
     } catch (e) {
       setError(describeMaterialError(e));
@@ -228,7 +229,7 @@ export function ModuleItemDialog({
     <Dialog
       open
       size="lg"
-      title={editing ? "Sửa học liệu" : "Tạo học liệu"}
+      title={editing ? msg("materials.components.MaterialDialogs.suaHocLieu") : msg("materials.components.MaterialDialogs.taoHocLieu")}
       onClose={onClose}
       dismissible={!busy}
       footer={
@@ -238,7 +239,7 @@ export function ModuleItemDialog({
           disabled={busy || (!!quiz && !detail)}
           onClick={() => void handleSave()}
         >
-          {editing ? "Lưu" : "Tạo"}
+          {editing ? msg("materials.components.MaterialDialogs.luu") : msg("materials.components.MaterialDialogs.tao")}
         </Button>
       }
     >
@@ -250,7 +251,7 @@ export function ModuleItemDialog({
         noValidate
         className="flex flex-col gap-4"
       >
-        <Field label="Tên học liệu" htmlFor={`${id}-title`} required>
+        <Field label={msg("materials.components.MaterialDialogs.tenHocLieu")} htmlFor={`${id}-title`} required>
           <TextInput
             id={`${id}-title`}
             data-testid="material-source-title"
@@ -264,16 +265,16 @@ export function ModuleItemDialog({
           />
         </Field>
         {content !== "QUIZ" && <div className="flex flex-wrap items-center justify-between gap-2">
-          <Switch checked={enabled} onChange={setEnabled} ariaLabel="Bật học liệu" disabled={busy}
-            label={enabled ? "Bật" : "Tắt"} />
-          <span className="text-xs text-muted">Tắt để ẩn với sinh viên và không dùng làm nguồn AI mới.</span>
+          <Switch checked={enabled} onChange={setEnabled} ariaLabel={msg("materials.components.MaterialDialogs.batHocLieu")} disabled={busy}
+            label={enabled ? msg("materials.components.MaterialDialogs.bat") : msg("materials.components.MaterialDialogs.tat")} />
+          <span className="text-xs text-muted">{msg("materials.components.MaterialDialogs.tatDeAnVoiSinhVien")}</span>
         </div>}
         <div className="flex flex-col gap-3">
           <span className="text-xs font-semibold text-body">
-            Nội dung <span className="text-primary-ink">*</span>
+            {msg("materials.components.MaterialDialogs.noiDung")}<span className="text-primary-ink">*</span>
           </span>
           <Segmented<Content>
-            ariaLabel="Nội dung"
+            ariaLabel={msg("materials.components.MaterialDialogs.noiDung2")}
             value={content}
             onChange={(value) => {
               if (!editing) {
@@ -282,7 +283,7 @@ export function ModuleItemDialog({
               }
             }}
             options={[
-              { value: "FILE", label: "Tệp", disabled: editing && content !== "FILE" },
+              { value: "FILE", label: msg("materials.components.MaterialDialogs.tep"), disabled: editing && content !== "FILE" },
               {
                 value: "YOUTUBE_LINK",
                 label: "YouTube",
@@ -329,9 +330,9 @@ export function ModuleItemDialog({
                   onChange={(e) => chooseQuiz(e.target.value)}
                   data-testid="module-quiz-select"
                 >
-                  <option value={NEW_QUIZ}>Quiz trống</option>
+                  <option value={NEW_QUIZ}>{msg("materials.components.MaterialDialogs.quizTrong")}</option>
                   {quizzes && quizzes.length > 0 && (
-                    <optgroup label="Tạo từ quiz cũ">
+                    <optgroup label={msg("materials.components.MaterialDialogs.taoTuQuizCu")}>
                       {quizzes.map((row) => (
                         <option key={row.id} value={row.id}>
                           {row.title}
@@ -344,9 +345,9 @@ export function ModuleItemDialog({
             </Card>
           )}
         </div>
-        <Field label="Mô tả">
+        <Field label={msg("materials.components.MaterialDialogs.moTa")}>
           <FormattedTextEditor value={descriptionDocument} plainText={description}
-            maxLength={content === "QUIZ" ? 5000 : 2000} disabled={busy} aria-label="Mô tả"
+            maxLength={content === "QUIZ" ? 5000 : 2000} disabled={busy} aria-label={msg("materials.components.MaterialDialogs.moTa")}
             onChange={(text, document) => { setDescription(text); setDescriptionDocument(document); }} />
         </Field>
         {error && (
@@ -367,14 +368,14 @@ export function isQuizDeletable(quiz: ModuleQuiz) {
 /** Nút gỡ một mục khỏi module: học liệu và Quiz nháp là Xóa, Quiz đã phát hành là Lưu trữ. */
 export function resolveRemovalAction(item: OutlineItem) {
   return item.kind === "quiz" && !isQuizDeletable(item.quiz)
-    ? { icon: "archive" as const, label: "Lưu trữ" }
-    : { icon: "trash" as const, label: "Xóa" };
+    ? { icon: "archive" as const, label: msg("materials.components.MaterialDialogs.luuTru") }
+    : { icon: "trash" as const, label: msg("materials.components.MaterialDialogs.xoa") };
 }
 
 /** Thông báo sau khi gỡ mục: học liệu bị ẩn, Quiz nháp bị xóa, Quiz khác bị lưu trữ. */
 export function describeRemoval(item: OutlineItem) {
-  if (item.kind === "material") return "Đã xóa học liệu";
-  return isQuizDeletable(item.quiz) ? "Đã xóa quiz" : "Đã lưu trữ quiz";
+  if (item.kind === "material") return msg("materials.components.MaterialDialogs.daXoaHocLieu");
+  return isQuizDeletable(item.quiz) ? msg("materials.components.MaterialDialogs.daXoaQuiz") : msg("materials.components.MaterialDialogs.daLuuTruQuiz");
 }
 
 /**
@@ -398,8 +399,8 @@ export function ArchiveItemDialog({
   const isQuiz = "quiz" in item;
   const deletesQuiz = isQuiz && isQuizDeletable(item.quiz);
   const title = isQuiz ? item.quiz.title : item.material.title;
-  const action = isQuiz && !deletesQuiz ? "Lưu trữ" : "Xóa";
-  const noun = isQuiz ? "quiz" : "học liệu";
+  const action = isQuiz && !deletesQuiz ? msg("materials.components.MaterialDialogs.luuTru") : msg("materials.components.MaterialDialogs.xoa");
+  const noun = isQuiz ? "quiz" : msg("materials.components.MaterialDialogs.hocLieu");
   async function handleRemove() {
     if (lock.current) return;
     lock.current = true;
@@ -438,8 +439,7 @@ export function ArchiveItemDialog({
       }
     >
       <p>
-        Bạn có chắc muốn {action.toLowerCase()} {noun} {title} không?
-        {deletesQuiz && " Quiz nháp sẽ bị xóa vĩnh viễn, không khôi phục được."}
+        {msg("materials.components.MaterialDialogs.banCoChacMuon")}{action.toLowerCase()} {noun} {title} {msg("materials.components.MaterialDialogs.khong")}{deletesQuiz && msg("materials.components.MaterialDialogs.quizNhapSeBiXoaVinh")}
       </p>
       {error && (
         <p role="alert" className="text-sm text-danger">

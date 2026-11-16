@@ -4,6 +4,7 @@ import { showErrorToast, showToast } from "@/shared/ui/Toast";
 import { gradingApi } from "../api";
 import { formatErrorMessage } from "./format";
 import type { Proposal } from "./types";
+import { msg } from "@/i18n/msg";
 
 export const POLL_INTERVAL_MS = 3000;
 export const MAX_POLL_ATTEMPTS = 100;
@@ -23,7 +24,7 @@ function findEntry(evaluationId: string): Entry {
   if (!entry) {
     entry = { snapshot: { proposals: [], loaded: false, pollExhausted: false, error: "" },
       listeners: new Set(), inFlight: false, generation: 0, revision: 0, attempts: 0, errors: 0,
-      notifyFor: new Set(), diagnostics: new Map(), label: "bài chấm" };
+      notifyFor: new Set(), diagnostics: new Map(), label: msg("grading.model.gradingAiTasks.baiCham") };
     entries.set(evaluationId, entry);
   }
   return entry;
@@ -74,9 +75,9 @@ async function pollProposals(evaluationId: string, entry: Entry) {
     for (const proposal of next) {
       if (proposal.status === "PENDING") entry.notifyFor.add(proposal.id);
       else if (entry.notifyFor.delete(proposal.id)) {
-        if (proposal.status === "READY") showToast(`Đề xuất AI cho ${entry.label} đã sẵn sàng. Mở Xem đề xuất AI để kiểm tra.`);
+        if (proposal.status === "READY") showToast(msg("grading.model.gradingAiTasks.deXuatAiChoDaSan", { label: String(entry.label) }));
         else if (proposal.status === "FAILED" || proposal.status === "REJECTED") {
-          showErrorToast(proposal.safeError || `Không tạo được đề xuất AI cho ${entry.label}.`);
+          showErrorToast(proposal.safeError || msg("grading.model.gradingAiTasks.khongTaoDuocDeXuatAi", { label: String(entry.label) }));
         }
       }
     }

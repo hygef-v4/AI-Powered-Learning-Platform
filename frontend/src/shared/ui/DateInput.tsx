@@ -4,6 +4,7 @@ import { useId, useRef, useState, type InputHTMLAttributes } from "react";
 import { cx } from "./cx";
 import { Icon } from "./Icon";
 import { TextInput } from "./inputs";
+import { msg } from "@/i18n/msg";
 
 type DateInputProps = Omit<InputHTMLAttributes<HTMLInputElement>,
   "type" | "value" | "defaultValue" | "onChange" | "min" | "max"> & {
@@ -81,7 +82,7 @@ export function DateInput({ value, onChange, onValidityChange, min, max, invalid
             openCalendar();
           }
         }}
-        suffix={<button type="button" aria-label="Chọn ngày từ lịch" disabled={disabled || readOnly}
+        suffix={<button type="button" aria-label={msg("shared.ui.DateInput.chonNgayTuLich")} disabled={disabled || readOnly}
           data-testid={props["data-testid"] ? `${props["data-testid"]}-calendar` : undefined}
           onClick={openCalendar}
           className="flex size-7 items-center justify-center rounded text-muted hover:bg-sunken focus-visible:outline-2 focus-visible:outline-focus disabled:cursor-not-allowed">
@@ -93,8 +94,7 @@ export function DateInput({ value, onChange, onValidityChange, min, max, invalid
         className="pointer-events-none absolute bottom-0 left-0 size-px opacity-0"
         onChange={(event) => updateDate(formatDate(event.target.value))} />
       {dateInvalid && <p id={errorId} role="alert" className="mt-1.5 text-xs text-danger">
-        Nhập ngày hợp lệ theo dd/MM/yyyy.
-      </p>}
+        {msg("shared.ui.DateInput.nhapNgayHopLeTheoDd")}</p>}
     </div>
   );
 }

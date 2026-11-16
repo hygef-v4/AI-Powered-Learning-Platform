@@ -6,6 +6,7 @@ import { Alert, Button, PageHeader, Pill, Select, TableFrame, TableSkeletonRows,
 import { getPracticeHistory, startAttempt } from "../api";
 import { attemptsText, errorMessage, formatDateTime, formatPoints } from "../model/labels";
 import type { PracticeQuizRow } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 const detailHref = (row: PracticeQuizRow) => `/quiz-practice/${row.quizId}?classId=${encodeURIComponent(row.classId)}`;
 
@@ -47,36 +48,36 @@ export function QuizPracticeHistoryPage() {
 
   return (
     <>
-      <PageHeader title="Luyện tập Quiz"
+      <PageHeader title={msg("quizpractice.pages.QuizPracticeHistoryPage.luyenTapQuiz")}
         actions={classes.length > 1 && (
-          <Select aria-label="Lọc theo lớp" value={classId} onChange={(event) => setClassId(event.target.value)} data-testid="practice-history-class">
-            <option value="">Mọi lớp</option>
+          <Select aria-label={msg("quizpractice.pages.QuizPracticeHistoryPage.locTheoLop")} value={classId} onChange={(event) => setClassId(event.target.value)} data-testid="practice-history-class">
+            <option value="">{msg("quizpractice.pages.QuizPracticeHistoryPage.moiLop")}</option>
             {classes.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
           </Select>
         )} />
       {error && <Alert tone="danger" role="alert" className="mb-3">{error}</Alert>}
       {(rows || !error) && (
         <TableFrame stackOnMobile className="sm:[&_table]:min-w-[720px] [&_table]:table-fixed">
-          <colgroup><col /><col className="w-[140px]" /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[170px]" /><col className="w-[110px]" /></colgroup><thead><tr><Th>Quiz</Th><Th>Lớp</Th><Th>Số lần làm</Th><Th>Điểm cao nhất</Th><Th>Lần gần nhất</Th><Th></Th></tr></thead>
+          <colgroup><col /><col className="w-[140px]" /><col className="w-[110px]" /><col className="w-[130px]" /><col className="w-[170px]" /><col className="w-[110px]" /></colgroup><thead><tr><Th>Quiz</Th><Th>{msg("quizpractice.pages.QuizPracticeHistoryPage.lop")}</Th><Th>{msg("quizpractice.pages.QuizPracticeHistoryPage.soLanLam")}</Th><Th>{msg("quizpractice.pages.QuizPracticeHistoryPage.diemCaoNhat")}</Th><Th>{msg("quizpractice.pages.QuizPracticeHistoryPage.lanGanNhat")}</Th><Th></Th></tr></thead>
           <tbody>
-            {!rows && <TableSkeletonRows columns={6} label="Đang tải quiz…" />}
-            {rows && shown.length === 0 && <tr><Td colSpan={6} className="py-8 text-center text-muted">Chưa có quiz luyện tập.</Td></tr>}
+            {!rows && <TableSkeletonRows columns={6} label={msg("quizpractice.pages.QuizPracticeHistoryPage.dangTaiQuiz")} />}
+            {rows && shown.length === 0 && <tr><Td colSpan={6} className="py-8 text-center text-muted">{msg("quizpractice.pages.QuizPracticeHistoryPage.chuaCoQuizLuyenTap")}</Td></tr>}
             {shown.map((row) => (
               <tr key={`${row.quizId}/${row.classId}`} data-testid="practice-history-row">
                 <Td>
                   <span className="font-semibold">{row.title}</span>
                   <span className="ml-2 inline-flex gap-1">
-                    <Pill tone="info">Luyện tập</Pill>
-                    {row.attemptsUsed === 0 && <Pill tone="warning">Chưa làm</Pill>}
+                    <Pill tone="info">{msg("quizpractice.pages.QuizPracticeHistoryPage.luyenTap")}</Pill>
+                    {row.attemptsUsed === 0 && <Pill tone="warning">{msg("quizpractice.pages.QuizPracticeHistoryPage.chuaLam")}</Pill>}
                   </span>
                 </Td>
-                <Td label="Lớp">{row.classCode}</Td>
-                <Td label="Số lần làm">{attemptsText(row.attemptsUsed, row.maxAttempts)}</Td>
-                <Td label="Điểm cao nhất">{row.bestScore === null ? "—" : `${formatPoints(row.bestScore)} / ${formatPoints(row.maxScore)}`}</Td>
-                <Td label="Lần gần nhất" className="whitespace-nowrap text-muted">{formatDateTime(row.lastAttemptAt)}</Td>
+                <Td label={msg("quizpractice.pages.QuizPracticeHistoryPage.lop")}>{row.classCode}</Td>
+                <Td label={msg("quizpractice.pages.QuizPracticeHistoryPage.soLanLam")}>{attemptsText(row.attemptsUsed, row.maxAttempts)}</Td>
+                <Td label={msg("quizpractice.pages.QuizPracticeHistoryPage.diemCaoNhat")}>{row.bestScore === null ? "—" : `${formatPoints(row.bestScore)} / ${formatPoints(row.maxScore)}`}</Td>
+                <Td label={msg("quizpractice.pages.QuizPracticeHistoryPage.lanGanNhat")} className="whitespace-nowrap text-muted">{formatDateTime(row.lastAttemptAt)}</Td>
                 <Td className="whitespace-nowrap">
                   {row.attemptsUsed === 0 && row.canStart
-                    ? <Button size="sm" variant="primary" disabled={busy} onClick={() => void start(row)} data-testid="practice-history-start">Bắt đầu</Button>
+                    ? <Button size="sm" variant="primary" disabled={busy} onClick={() => void start(row)} data-testid="practice-history-start">{msg("quizpractice.pages.QuizPracticeHistoryPage.batDau")}</Button>
                     : <Button size="sm" onClick={() => router.push(detailHref(row))} data-testid="practice-history-view">Xem</Button>}
                 </Td>
               </tr>

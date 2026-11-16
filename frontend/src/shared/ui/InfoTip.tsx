@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { Icon } from "./Icon";
 import { cx } from "./cx";
+import { msg } from "@/i18n/msg";
 
 /**
  * Chữ i nhỏ cạnh nhãn: rê chuột hoặc focus mới hiện lời giải thích. Rê chuột vào lời giải thích vẫn giữ nó (có dải nối
@@ -24,7 +25,7 @@ export function InfoTip({ text, label }: { text: string; label: string }) {
     >
       <button
         type="button"
-        aria-label={`Giải thích: ${label}`}
+        aria-label={msg("shared.ui.InfoTip.giaiThich", { label: String(label) })}
         aria-describedby={id}
         className="inline-flex size-5 items-center justify-center rounded-full text-faint transition-colors hover:text-primary-ink focus-visible:text-primary-ink"
       >

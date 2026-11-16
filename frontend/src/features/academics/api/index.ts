@@ -11,6 +11,7 @@ import type {
   PersonView,
   SubjectView,
 } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 export type Scope = "me" | "teaching" | "manager";
 export type ListQuery = {
@@ -101,7 +102,7 @@ export const academicsApi = {
       { accountId },
     );
     if (!["ENROLLED", "RESTORED", "ALREADY_ENROLLED"].includes(response.result)) {
-      throw new Error(ENROLLMENT_RESULT_LABELS[response.result] ?? "Không thể ghi danh sinh viên.");
+      throw new Error(ENROLLMENT_RESULT_LABELS[response.result] ?? msg("academics.api.index.khongTheGhiDanhSinhVien"));
     }
     return response;
   },

@@ -4,12 +4,13 @@ import { useUrlState } from "@/shared/navigation/useUrlState";
 import { Card, Segmented, TextInput } from "@/shared/ui";
 import { SubjectClassesTable } from "./SubjectClassesTable";
 import type { SubjectClassStatus, SubjectClassSummary } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 const TABS: { value: SubjectClassStatus | "ALL"; label: string }[] = [
-  { value: "ALL", label: "Tất cả" },
-  { value: "DRAFT", label: "Nháp" },
-  { value: "OPEN", label: "Đang mở" },
-  { value: "ARCHIVED", label: "Lưu trữ" },
+  { value: "ALL", label: msg("subjects.components.SubjectClassesTab.tatCa") },
+  { value: "DRAFT", label: msg("subjects.components.SubjectClassesTab.nhap") },
+  { value: "OPEN", label: msg("subjects.components.SubjectClassesTab.dangMo") },
+  { value: "ARCHIVED", label: msg("subjects.components.SubjectClassesTab.luuTru") },
 ];
 
 /** Lớp của môn (chỉ xem), cùng kiểu danh sách Môn học: tab trạng thái bên trái, ô tìm theo mã hoặc tên lớp bên phải. */
@@ -32,7 +33,7 @@ export function SubjectClassesTab({ items }: { items: SubjectClassSummary[] }) {
       <div className="flex flex-wrap items-center gap-3">
         <Segmented
           as="tab"
-          ariaLabel="Trạng thái lớp"
+          ariaLabel={msg("subjects.components.SubjectClassesTab.trangThaiLop")}
           value={status}
           onChange={setStatus}
           options={TABS.map((tab) => ({ ...tab, testId: `subjects-classes-filter-${tab.value}` }))}
@@ -41,8 +42,8 @@ export function SubjectClassesTab({ items }: { items: SubjectClassSummary[] }) {
           <TextInput
             type="search"
             icon="search"
-            aria-label="Lọc theo mã lớp"
-            placeholder="Lọc theo mã lớp"
+            aria-label={msg("subjects.components.SubjectClassesTab.locTheoMaLop")}
+            placeholder={msg("subjects.components.SubjectClassesTab.locTheoMaLop")}
             value={search}
             maxLength={200}
             data-testid="subjects-classes-search"

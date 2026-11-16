@@ -7,13 +7,14 @@ import { Section, Segmented } from "@/shared/ui";
 import { DeadlineChip } from "./DeadlineChip";
 import type { StudentRow } from "../model/types";
 import { doing, upcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { msg } from "@/i18n/msg";
 
 type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
 
 const TABS: { mode: Kind; label: string; empty: string }[] = [
-  { mode: "INDIVIDUAL", label: "Bài cá nhân", empty: "Không còn bài cá nhân cần làm." },
-  { mode: "GROUP", label: "Bài nhóm", empty: "Không còn bài nhóm cần làm." },
-  { mode: "PRACTICE", label: "Luyện tập", empty: "Không còn bài luyện tập cần làm." },
+  { mode: "INDIVIDUAL", label: msg("assignmentwork.components.ClassTodoCard.baiCaNhan"), empty: msg("assignmentwork.components.ClassTodoCard.khongConBaiCaNhanCan") },
+  { mode: "GROUP", label: msg("assignmentwork.components.ClassTodoCard.baiNhom"), empty: msg("assignmentwork.components.ClassTodoCard.khongConBaiNhomCanLam") },
+  { mode: "PRACTICE", label: msg("assignmentwork.components.ClassTodoCard.luyenTap"), empty: msg("assignmentwork.components.ClassTodoCard.khongConBaiLuyenTapCan") },
 ];
 
 /** Loại bài như trên bảng Bài tập: bài luyện tập là loại riêng, còn lại theo cá nhân hay nhóm. */
@@ -35,12 +36,12 @@ export function ClassTodoCard({ classId }: { classId: string }) {
   const shown = todo.filter((row) => kindOf(row) === mode);
   const assignmentsHref = `/my-assignments?classId=${encodeURIComponent(classId)}`;
   return (
-    <Section title="Tổng quan bài tập">
+    <Section title={msg("assignmentwork.components.ClassTodoCard.tongQuanBaiTap")}>
       {rows && !error && <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { label: "Chưa làm", tab: "upcoming", count: rows.filter(row => upcoming(row) && !doing(row)).length },
-          { label: "Đang làm", tab: "doing", count: rows.filter(doing).length },
-          { label: "Đã nộp", tab: "submitted", count: rows.filter(row => row.submittedCount > 0 || row.group?.submitted).length },
+          { label: msg("assignmentwork.components.ClassTodoCard.chuaLam"), tab: "upcoming", count: rows.filter(row => upcoming(row) && !doing(row)).length },
+          { label: msg("assignmentwork.components.ClassTodoCard.dangLam"), tab: "doing", count: rows.filter(doing).length },
+          { label: msg("assignmentwork.components.ClassTodoCard.daNop"), tab: "submitted", count: rows.filter(row => row.submittedCount > 0 || row.group?.submitted).length },
         ].map(item => <Link key={item.tab} href={`${assignmentsHref}&tab=${item.tab}`}
           aria-label={`${item.count} ${item.label}`}
           className="row-interactive flex items-baseline gap-3 rounded-lg px-2 py-3 hover:bg-shell">
@@ -50,12 +51,12 @@ export function ClassTodoCard({ classId }: { classId: string }) {
       </div>}
       <div className="flex flex-col gap-4 border-t border-line pt-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-ink">Bài tập cần làm</h3>
-          <Link href={assignmentsHref} className="text-[13px] font-semibold text-primary-ink hover:underline">Tất cả bài tập</Link>
+          <h3 className="text-sm font-semibold text-ink">{msg("assignmentwork.components.ClassTodoCard.baiTapCanLam")}</h3>
+          <Link href={assignmentsHref} className="text-[13px] font-semibold text-primary-ink hover:underline">{msg("assignmentwork.components.ClassTodoCard.tatCaBaiTap")}</Link>
         </div>
         <Segmented
           as="tab"
-          ariaLabel="Loại bài"
+          ariaLabel={msg("assignmentwork.components.ClassTodoCard.loaiBai")}
           className="-mt-1 w-fit"
           value={mode}
           onChange={setMode}
@@ -67,8 +68,8 @@ export function ClassTodoCard({ classId }: { classId: string }) {
         />
         {/* Tối đa5 dòng; ít bài thì thẻ co theo nội dung. */}
         <div className="-mx-2 max-h-[256px] overflow-x-hidden overflow-y-auto px-2 [scrollbar-color:var(--c-muted)_transparent] [scrollbar-gutter:stable]">
-        {error ? <p role="alert" className="py-6 text-center text-[13px] text-danger">Không tải được bài tập.</p>
-          : !rows ? <p role="status" className="py-6 text-center text-[13px] text-muted">Đang tải bài tập…</p>
+        {error ? <p role="alert" className="py-6 text-center text-[13px] text-danger">{msg("assignmentwork.components.ClassTodoCard.khongTaiDuocBaiTap")}</p>
+          : !rows ? <p role="status" className="py-6 text-center text-[13px] text-muted">{msg("assignmentwork.components.ClassTodoCard.dangTaiBaiTap")}</p>
           : shown.length === 0 ? <p className="py-6 text-center text-[13px] text-muted">{TABS.find((tab) => tab.mode === mode)!.empty}</p>
           : (
             <ul className="flex flex-col">

@@ -1,4 +1,5 @@
 import type { FormattedText } from "@/shared/document/formattedText";
+import { msg } from "@/i18n/msg";
 
 export type MaterialKind = "FILE" | "YOUTUBE_LINK";
 export type TextStatus = "PENDING" | "EXTRACTED" | "NO_TEXT" | "FAILED";
@@ -70,14 +71,14 @@ export type ModuleScope =
   | { kind: "student"; classId: string };
 export type DownloadToken = { url: string; expiresAt: string };
 export const textLabels: Record<TextStatus, string> = {
-  PENDING: "Đang xử lý",
-  EXTRACTED: "Đã trích",
-  NO_TEXT: "Không có chữ",
-  FAILED: "Lỗi",
+  PENDING: msg("materials.model.types.dangXuLy"),
+  EXTRACTED: msg("materials.model.types.daTrich"),
+  NO_TEXT: msg("materials.model.types.khongCoChu"),
+  FAILED: msg("materials.model.types.loi"),
 };
 export function describeFile(m: Material): string {
   if (m.kind === "YOUTUBE_LINK") return "YouTube";
-  const type = m.current.fileName?.split(".").pop()?.toUpperCase() ?? "Tệp";
+  const type = m.current.fileName?.split(".").pop()?.toUpperCase() ?? msg("materials.model.types.tep");
   const bytes = m.current.byteSize;
   if (bytes && bytes < 1024 * 1024) return `${type} · ${Math.max(1, Math.round(bytes / 1024))} KB`;
   return bytes

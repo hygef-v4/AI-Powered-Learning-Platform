@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/msg";
+
 /** {@code ASSIGNMENT_IMPORT}: ảnh/PDF đề cũ nhập thành khung đề, máy chủ chỉ kiểm, không lưu (BR-U03-99). */
 export type ArtifactPurpose = "MATERIAL" | "DOCUMENT_IMAGE" | "ASSIGNMENT_SOURCE" | "ASSIGNMENT_IMPORT";
 
@@ -26,10 +28,10 @@ export function acceptAttribute(policy: PurposePolicy): string {
 export function checkFile(file: { name: string; size: number }, policy: PurposePolicy): string | null {
   const ext = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase() : "";
   if (!policy.extensions.includes(ext)) {
-    return `Chỉ nhận tệp ${policy.allowedTypes.join(", ")}`;
+    return msg("files.model.purposes.chiNhanTep", { value: String(policy.allowedTypes.join(", ")) });
   }
   if (file.size > policy.maxSizeMb * 1024 * 1024) {
-    return `Tệp vượt ${policy.maxSizeMb} MB`;
+    return msg("files.model.purposes.tepVuotMb", { maxSizeMb: String(policy.maxSizeMb) });
   }
   return null;
 }

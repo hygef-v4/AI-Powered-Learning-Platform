@@ -9,6 +9,7 @@ import { SubjectTable } from "../components/SubjectTable";
 import { SubjectFormDialog } from "../components/SubjectFormDialog";
 import type { SubjectPage, SubjectStatus } from "../model/types";
 import { useSubjectRead } from "../hooks/useSubjectRead";
+import { msg } from "@/i18n/msg";
 
 const PAGE_SIZE = 20;
 
@@ -55,7 +56,7 @@ export function SubjectListPage() {
   return (
     <>
       <PageHeader
-        title="Môn học"
+        title={msg("subjects.pages.SubjectListPage.monHoc")}
         actions={
           <Button
             id="subjects-create-open"
@@ -65,8 +66,7 @@ export function SubjectListPage() {
             disabled={resource.error !== null}
             data-testid="subjects-create-open"
           >
-            Thêm môn học
-          </Button>
+            {msg("subjects.pages.SubjectListPage.themMonHoc")}</Button>
         }
       />
       {creating && (
@@ -75,7 +75,7 @@ export function SubjectListPage() {
           onCreated={() => {
             setCreating(false);
             focusAfterCreate.current = true;
-            showToast("Đã thêm môn học");
+            showToast(msg("subjects.pages.SubjectListPage.daThemMonHoc"));
             resource.reload();
           }}
         />
@@ -91,8 +91,7 @@ export function SubjectListPage() {
         />
         {!data && resource.loading && (
           <p role="status" className="py-8 text-center text-sm text-muted">
-            Đang tải môn học…
-          </p>
+            {msg("subjects.pages.SubjectListPage.dangTaiMonHoc")}</p>
         )}
         {resource.error !== null && (
           <SubjectReadError error={resource.error} onRetry={resource.reload} />

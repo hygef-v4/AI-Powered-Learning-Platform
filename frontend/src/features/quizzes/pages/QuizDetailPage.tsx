@@ -22,6 +22,7 @@ import {
 import type { QuizDetail, QuizItemView, Violation } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { useAuthoringGuard } from "../hooks/useAuthoringGuard";
+import { msg } from "@/i18n/msg";
 
 const MAX_ITEMS = 200;
 type Dialogs = "picker" | "inline" | "ai" | "preview" | "edit" | "archive" | "publish" | null;
@@ -114,8 +115,8 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const save = () => detail && settings && void run(async () => {
     const { errors, input } = settingsDirty ? settingsInput(settings) : { errors: {}, input: undefined };
     setSettingsErrors(errors);
-    const invalid = settingsDirty && !input ? "Cấu hình chưa hợp lệ."
-      : itemsDirty && items.some((d) => !validPoints(d.points)) ? "Điểm mỗi câu phải lớn hơn 0, tối đa 2 chữ số thập phân." : null;
+    const invalid = settingsDirty && !input ? msg("quizzes.pages.QuizDetailPage.cauHinhChuaHopLe")
+      : itemsDirty && items.some((d) => !validPoints(d.points)) ? msg("quizzes.pages.QuizDetailPage.diemMoiCauPhaiLonHon") : null;
     if (invalid) {
       setError(invalid);
       return;
@@ -127,7 +128,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
         points: Number(d.points.replace(",", ".")) })), current.quiz.version);
     }
     show(current);
-    showToast("Đã lưu thay đổi");
+    showToast(msg("quizzes.pages.QuizDetailPage.daLuuThayDoi"));
   });
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
@@ -136,7 +137,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     setAuthorDirty(false);
     setDialog(null);
     show(next);
-    showToast("Đã thêm câu từ đề xuất AI");
+    showToast(msg("quizzes.pages.QuizDetailPage.daThemCauTuDeXuat"));
   }, [show]);
 
   const addFromBank = async (questionIds: string[]) => {
@@ -149,7 +150,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
       ], detail.quiz.version);
       show(next);
       setDialog(null);
-      showToast(`Đã thêm ${questionIds.length} câu từ ngân hàng`);
+      showToast(msg("quizzes.pages.QuizDetailPage.daThemCauTuNganHang", { length: String(questionIds.length) }));
     } finally { setBusy(false); }
   };
 
@@ -171,20 +172,20 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
   const publish = () => quiz && void run(async () => {
     setDialog(null);
     show(await publishQuiz(quiz.id, quiz.version));
-    showToast("Đã phát hành quiz");
+    showToast(msg("quizzes.pages.QuizDetailPage.daPhatHanhQuiz"));
     notifyOutlineChanged();
   });
 
   // Giảng viên gửi câu riêng vào ngân hàng của môn để Chủ nhiệm môn duyệt (BR-U10-09); câu trong quiz giữ nguyên.
   const propose = (item: QuizItemView) => quiz?.classId && void run(async () => {
     await proposeQuestion(quiz.classId as string, item.question);
-    showToast("Đã gửi đề xuất cho Chủ nhiệm môn");
+    showToast(msg("quizzes.pages.QuizDetailPage.daGuiDeXuatChoChu"));
   });
 
   if (loadError) {
     return <PageLoadError onRetry={() => setReloadKey((k) => k + 1)}>{loadError}</PageLoadError>;
   }
-  if (!detail || !quiz || !settings) return <PageLoading label="Đang tải quiz…" />;
+  if (!detail || !quiz || !settings) return <PageLoading label={msg("quizzes.pages.QuizDetailPage.dangTaiQuiz")} />;
 
   const free = MAX_ITEMS - detail.items.length;
   const questionEditor = dialog === "inline" ? <InlineQuestionDialog key={editing?.question.id ?? "new"}
@@ -203,18 +204,18 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
         title={<><span className="min-w-0 [overflow-wrap:anywhere]">{quiz.title}</span><Pill tone={QUIZ_STATUS_TONES[quiz.status]}>{QUIZ_STATUS_LABELS[quiz.status]}</Pill></>}
         breadcrumb={place.moduleTitle ? [{ label: place.moduleTitle }, { label: quiz.title }] : undefined}
         actions={<>
-          {!generated && <Button icon="visibility" disabled={busy} onClick={() => chooseDialog("preview")} data-testid="quiz-detail-preview">Xem trước</Button>}
-          {editable && dirty && <Button icon="save" disabled={busy || authorDirty} onClick={save} data-testid="quiz-detail-save">Lưu thay đổi</Button>}
+          {!generated && <Button icon="visibility" disabled={busy} onClick={() => chooseDialog("preview")} data-testid="quiz-detail-preview">{msg("quizzes.pages.QuizDetailPage.xemTruoc")}</Button>}
+          {editable && dirty && <Button icon="save" disabled={busy || authorDirty} onClick={save} data-testid="quiz-detail-save">{msg("quizzes.pages.QuizDetailPage.luuThayDoi")}</Button>}
           {detail.canManage && quiz.status === "DRAFT" && (
-            <Button variant="primary" disabled={busy || dirty || authorDirty} title={dirty || authorDirty ? "Lưu thay đổi trước khi phát hành" : undefined}
-              onClick={() => chooseDialog("publish")} data-testid="quiz-detail-publish">Phát hành</Button>
+            <Button variant="primary" disabled={busy || dirty || authorDirty} title={dirty || authorDirty ? msg("quizzes.pages.QuizDetailPage.luuThayDoiTruocKhiPhat") : undefined}
+              onClick={() => chooseDialog("publish")} data-testid="quiz-detail-publish">{msg("quizzes.pages.QuizDetailPage.phatHanh")}</Button>
           )}
           {detail.canManage && quiz.status === "RETIRED" && (
             <Button variant="primary" icon="lock_open" disabled={busy} data-testid="quiz-detail-reopen"
-              onClick={() => void run(async () => { show(await reopenQuiz(quiz.id, quiz.version)); showToast("Đã mở lại quiz"); notifyOutlineChanged(); })}>Mở lại</Button>
+              onClick={() => void run(async () => { show(await reopenQuiz(quiz.id, quiz.version)); showToast(msg("quizzes.pages.QuizDetailPage.daMoLaiQuiz")); notifyOutlineChanged(); })}>{msg("quizzes.pages.QuizDetailPage.moLai")}</Button>
           )}
           {editable && <>
-            <Button icon="edit" disabled={busy} onClick={() => chooseDialog("edit")} data-testid="quiz-detail-edit">Sửa</Button>
+            <Button icon="edit" disabled={busy} onClick={() => chooseDialog("edit")} data-testid="quiz-detail-edit">{msg("quizzes.pages.QuizDetailPage.sua")}</Button>
             <Button variant="danger" icon={removal.icon} disabled={busy} onClick={() => chooseDialog("archive")} data-testid="quiz-detail-archive">{removal.label}</Button>
           </>}
         </>}
@@ -222,7 +223,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
       <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} position="top" />
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {violations.length > 0 && (
-        <Alert tone="danger" title="Cần sửa trước khi phát hành">
+        <Alert tone="danger" title={msg("quizzes.pages.QuizDetailPage.canSuaTruocKhiPhatHanh")}>
           <ul className="list-disc pl-4" data-testid="quiz-detail-violations">{violations.map((v, i) => <li key={i}>{v.message}</li>)}</ul>
         </Alert>
       )}
@@ -238,19 +239,19 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
               if (errorCode(failure) === "QUIZ_VERSION_CONFLICT") setReloadKey((k) => k + 1);
             }} />
         )}
-        {!generated && <Section title="Câu hỏi"
+        {!generated && <Section title={msg("quizzes.pages.QuizDetailPage.cauHoi")}
           actions={editable && (
-            <Menu align="right" icon="add" label="Thêm câu hỏi" ariaLabel="Thêm câu hỏi">
+            <Menu align="right" icon="add" label={msg("quizzes.pages.QuizDetailPage.themCauHoi")} ariaLabel={msg("quizzes.pages.QuizDetailPage.themCauHoi")}>
               <MenuItem icon="edit" disabled={busy || dirty || free <= 0} onClick={() => chooseDialog("inline")}
-                data-testid="quiz-detail-add-inline">Soạn câu mới</MenuItem>
+                data-testid="quiz-detail-add-inline">{msg("quizzes.pages.QuizDetailPage.soanCauMoi")}</MenuItem>
               <MenuItem icon="help_center" disabled={busy || dirty || free <= 0} onClick={() => chooseDialog("picker")}
-                data-testid="quiz-detail-add-bank">Lấy từ ngân hàng</MenuItem>
+                data-testid="quiz-detail-add-bank">{msg("quizzes.pages.QuizDetailPage.layTuNganHang")}</MenuItem>
               <MenuItem icon="sparkle" disabled={busy || dirty || free <= 0} onClick={() => chooseDialog("ai")}
-                data-testid="quiz-ai-draft-open">Soạn bằng AI</MenuItem>
+                data-testid="quiz-ai-draft-open">{msg("quizzes.pages.QuizDetailPage.soanBangAi")}</MenuItem>
             </Menu>
           )}>
-          {(dialog === "inline" || dialog === "picker" || dialog === "ai") && <div role="group" aria-label="Cách thêm câu hỏi" className="mb-4 flex flex-wrap gap-1 border-b border-line pb-3">
-            {([["inline", "Soạn câu mới"], ["picker", "Ngân hàng"], ["ai", "Soạn bằng AI"]] as const).map(([mode, label]) =>
+          {(dialog === "inline" || dialog === "picker" || dialog === "ai") && <div role="group" aria-label={msg("quizzes.pages.QuizDetailPage.cachThemCauHoi")} className="mb-4 flex flex-wrap gap-1 border-b border-line pb-3">
+            {([["inline", msg("quizzes.pages.QuizDetailPage.soanCauMoi")], ["picker", msg("quizzes.pages.QuizDetailPage.nganHang")], ["ai", msg("quizzes.pages.QuizDetailPage.soanBangAi")]] as const).map(([mode, label]) =>
               <Button key={mode} size="sm" variant={dialog === mode ? "primary" : "ghost"} disabled={busy}
                 aria-pressed={dialog === mode} onClick={() => chooseDialog(mode)}>{label}</Button>)}
           </div>}
@@ -265,7 +266,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
             onRequestOpen={() => chooseDialog("ai")}
             onRequestClose={() => chooseDialog(null)} onDirtyChange={setAuthorDirty} onBusyChange={setBusy} />}
         </Section>}
-        {quiz.instructions && <Section title="Mô tả"><FormattedTextView text={quiz.instructions} document={quiz.instructionsDocument} /></Section>}
+        {quiz.instructions && <Section title={msg("quizzes.pages.QuizDetailPage.moTa")}><FormattedTextView text={quiz.instructions} document={quiz.instructionsDocument} /></Section>}
         </div>
         <div className="flex min-w-0 flex-col gap-4">
           <QuizSettingsPanel value={settings} onChange={setSettings} errors={settingsErrors} readOnly={!editable || !!dialog} />
@@ -279,11 +280,10 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
       <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} />
 
       {dialog === "publish" && (
-        <Dialog open onClose={() => setDialog(null)} title="Phát hành quiz?" tone="warning"
-          footer={<Button variant="primary" disabled={busy} onClick={publish} data-testid="quiz-detail-publish-confirm">Phát hành</Button>}>
+        <Dialog open onClose={() => setDialog(null)} title={msg("quizzes.pages.QuizDetailPage.phatHanhQuiz")} tone="warning"
+          footer={<Button variant="primary" disabled={busy} onClick={publish} data-testid="quiz-detail-publish-confirm">{msg("quizzes.pages.QuizDetailPage.phatHanh")}</Button>}>
           <p className="text-[13px]" data-testid="quiz-detail-publish-summary">
-            {generated ? `Mỗi lượt làm nhận một đề mới gồm ${questionCount} câu` : `Quiz có ${questionCount} câu`}, tổng {formatPoints(detail.maxScore)} điểm. Sau khi phát hành, sinh viên của lớp hoặc môn sẽ làm được ngay.
-          </p>
+            {generated ? msg("quizzes.pages.QuizDetailPage.moiLuotLamNhanMotDe", { questionCount: String(questionCount) }) : msg("quizzes.pages.QuizDetailPage.quizCoCau", { questionCount: String(questionCount) })}{msg("quizzes.pages.QuizDetailPage.tong")}{formatPoints(detail.maxScore)} {msg("quizzes.pages.QuizDetailPage.diemSauKhiPhatHanhSinh")}</p>
         </Dialog>
       )}
       {dialog === "preview" && <QuizPreviewDialog title={quiz.title} items={detail.items} onClose={() => setDialog(null)} />}

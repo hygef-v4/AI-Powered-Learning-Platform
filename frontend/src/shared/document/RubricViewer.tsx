@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Pill, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { atomicItems, rubricTotal, type RubricCriterion } from "./types";
+import { msg } from "@/i18n/msg";
 
 export function formatPoints(points: number | null | undefined): string {
   if (points === null || points === undefined) return "–";
@@ -10,23 +11,23 @@ export function formatPoints(points: number | null | undefined): string {
 /** Bảng rubric chỉ đọc (dành cho giảng viên): mỗi dòng một mục chấm atomic kèm điểm; tổng tự tính. */
 export function RubricViewer({ title, criteria, total }: { title?: string; criteria: RubricCriterion[]; total: number }) {
   const items = atomicItems(criteria);
-  if (items.length === 0) return <p className="text-xs text-muted">{title ? `${title}: ` : ""}Chưa có rubric.</p>;
+  if (items.length === 0) return <p className="text-xs text-muted">{title ? `${title}: ` : ""}{msg("shared.document.RubricViewer.chuaCoRubric")}</p>;
   return (
     <div className="flex flex-col gap-1.5">
       {title && <p className="text-[13px] font-semibold text-ink">{title}</p>}
       <TableFrame className="[&_table]:table-fixed">
         <colgroup><col /><col className="w-[100px]" /></colgroup><thead>
-          <tr><Th>Mục chấm</Th><Th className="text-right">Điểm</Th></tr>
+          <tr><Th>{msg("shared.document.RubricViewer.mucCham")}</Th><Th className="text-right">{msg("shared.document.RubricViewer.diem")}</Th></tr>
         </thead>
         <tbody>
           {items.map((item, i) => (
             <tr key={item.itemId ?? i}>
-              <Td>{item.text || "(Chưa có nội dung)"}</Td>
+              <Td>{item.text || msg("shared.document.RubricViewer.chuaCoNoiDung")}</Td>
               <Td className="text-right">{formatPoints(item.points)}</Td>
             </tr>
           ))}
           <tr>
-            <Td className="font-semibold">Tổng</Td>
+            <Td className="font-semibold">{msg("shared.document.RubricViewer.tong")}</Td>
             <Td className="text-right font-semibold">{formatPoints(total)}</Td>
           </tr>
         </tbody>
@@ -70,7 +71,7 @@ export function RubricNote({ title, criteria, active = false, onActivate, issues
         {/* Mục chưa có mục chấm không phải phần chấm: không ghi "0 điểm"; ghi dở cũng không tô vàng, chỉ báo khi xếp lịch
             (yêu cầu 2026-11-05). */}
         {(total !== undefined || criteria.length > 0) && (
-          <Pill>{total !== undefined ? `Tổng ${formatPoints(total)} điểm` : `${formatPoints(rubricTotal(criteria))} điểm`}</Pill>
+          <Pill>{total !== undefined ? msg("shared.document.RubricViewer.tongDiem", { value: String(formatPoints(total)) }) : msg("shared.document.RubricViewer.diem2", { value: String(formatPoints(rubricTotal(criteria))) })}</Pill>
         )}
       </div>
       {editor && (active || !editOnActive) ? editor : <RubricLines criteria={criteria} expanded={active} editable={!!editor} />}
@@ -82,13 +83,13 @@ export function RubricNote({ title, criteria, active = false, onActivate, issues
 function RubricLines({ criteria, expanded, editable = false }: { criteria: RubricCriterion[]; expanded: boolean; editable?: boolean }) {
   const items = atomicItems(criteria);
   // Người soạn sửa được: chỉ cách thêm mục chấm cho người mới (yêu cầu 2026-11-10).
-  if (items.length === 0) return <p className="text-xs text-muted">{editable ? "Chưa có mục chấm. Bấm vào thẻ để thêm." : "Chưa có mục chấm."}</p>;
+  if (items.length === 0) return <p className="text-xs text-muted">{editable ? msg("shared.document.RubricViewer.chuaCoMucChamBamVao") : msg("shared.document.RubricViewer.chuaCoMucCham")}</p>;
   return (
     <ul className="flex flex-col gap-1 text-xs text-body">
       {items.map((item, i) => (
         <li key={item.itemId ?? i} className="flex gap-2">
           <span aria-hidden className="text-faint">☐</span>
-          <span className={cx("min-w-0 flex-1", !expanded && "truncate")}>{item.text || "(Chưa có nội dung)"}</span>
+          <span className={cx("min-w-0 flex-1", !expanded && "truncate")}>{item.text || msg("shared.document.RubricViewer.chuaCoNoiDung")}</span>
           <span className="shrink-0 text-muted">{formatPoints(item.points)}</span>
         </li>
       ))}

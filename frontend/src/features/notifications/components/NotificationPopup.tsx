@@ -8,6 +8,7 @@ import { EmailPreferencePanel } from "./EmailPreferencePanel";
 import type { NotificationItem } from "../model/types";
 import styles from "../styles/notifications.module.css";
 import { formatDateTime, formatRelativeTime } from "@/shared/dateTime";
+import { msg } from "@/i18n/msg";
 /**
  * Popup thông báo: tiêu đề kèm nút cài đặt mở tùy chọn email theo vai trò trong popup; hàng tab
  * Tất cả / Chưa đọc mang luôn nút đánh dấu đã đọc. Làm mới (SSE, định kỳ, sau khi đọc) giữ danh sách cũ của cùng bộ lọc cho tới khi
@@ -81,7 +82,7 @@ export function NotificationPopup({
             key,
             items: previous.filter === filter ? previous.items : [],
             hasMore: false,
-            error: "Không thể tải thông báo.",
+            error: msg("notifications.components.NotificationPopup.khongTheTaiThongBao"),
           }));
       });
     return () => controller.abort();
@@ -107,7 +108,7 @@ export function NotificationPopup({
   async function handleOpen(item: NotificationItem) {
     const link = sanitizeNotificationLink(item.link);
     if (!link) {
-      setMutationError("Liên kết không hợp lệ.");
+      setMutationError(msg("notifications.components.NotificationPopup.lienKetKhongHopLe"));
       return;
     }
     setBusy(true);
@@ -117,7 +118,7 @@ export function NotificationPopup({
       onClose();
       router.push(link);
     } catch {
-      setMutationError("Chưa đánh dấu đã đọc được. Hãy thử lại.");
+      setMutationError(msg("notifications.components.NotificationPopup.chuaDanhDauDaDocDuoc"));
     } finally {
       setBusy(false);
     }
@@ -129,7 +130,7 @@ export function NotificationPopup({
       setPage(1);
       onChanged();
     } catch {
-      setMutationError("Không thể đánh dấu tất cả đã đọc.");
+      setMutationError(msg("notifications.components.NotificationPopup.khongTheDanhDauTatCa"));
     } finally {
       setBusy(false);
     }
@@ -144,7 +145,7 @@ export function NotificationPopup({
       ref={panel}
       tabIndex={-1}
       role="dialog"
-      aria-label="Thông báo"
+      aria-label={msg("notifications.components.NotificationPopup.thongBao")}
       className={styles.popup}
       onKeyDown={(e) => {
         if (e.key !== "Escape") return;
@@ -160,24 +161,24 @@ export function NotificationPopup({
             <button
               ref={back}
               type="button"
-              aria-label="Quay lại thông báo"
-              title="Quay lại thông báo"
+              aria-label={msg("notifications.components.NotificationPopup.quayLaiThongBao")}
+              title={msg("notifications.components.NotificationPopup.quayLaiThongBao")}
               className={styles.iconButton}
               onClick={() => handleShowSettings(false)}
             >
               <Icon name="arrow_back" size={18} />
             </button>
-            <h2>Cài đặt</h2>
+            <h2>{msg("notifications.components.NotificationPopup.caiDat")}</h2>
           </>
         ) : (
           <>
-            <h2>Thông báo</h2>
+            <h2>{msg("notifications.components.NotificationPopup.thongBao")}</h2>
             <button
               ref={gear}
               type="button"
               data-testid="notification-settings"
-              aria-label="Cài đặt thông báo"
-              title="Cài đặt thông báo"
+              aria-label={msg("notifications.components.NotificationPopup.caiDatThongBao")}
+              title={msg("notifications.components.NotificationPopup.caiDatThongBao")}
               className={styles.iconButton}
               onClick={() => handleShowSettings(true)}
             >
@@ -191,7 +192,7 @@ export function NotificationPopup({
       </div>
       <div hidden={settings} className={styles.listView}>
         <div className={styles.tabbar}>
-          <div role="tablist" aria-label="Lọc thông báo" onKeyDown={handleTabListKey} className={styles.tabs}>
+          <div role="tablist" aria-label={msg("notifications.components.NotificationPopup.locThongBao")} onKeyDown={handleTabListKey} className={styles.tabs}>
             <button
               role="tab"
               aria-selected={!unread}
@@ -201,8 +202,7 @@ export function NotificationPopup({
                 setPage(1);
               }}
             >
-              Tất cả
-            </button>
+              {msg("notifications.components.NotificationPopup.tatCa")}</button>
             <button
               role="tab"
               aria-selected={unread}
@@ -212,7 +212,7 @@ export function NotificationPopup({
                 setPage(1);
               }}
             >
-              Chưa đọc ({count})
+              {msg("notifications.components.NotificationPopup.chuaDoc")}{count})
             </button>
           </div>
           <button
@@ -223,8 +223,7 @@ export function NotificationPopup({
             onClick={() => void handleMarkAllRead()}
           >
             <Icon name="check" size={15} />
-            Đánh dấu đã đọc
-          </button>
+            {msg("notifications.components.NotificationPopup.danhDauDaDoc")}</button>
         </div>
         <div className={styles.scroll} aria-busy={loading}>
           {mutationError && (
@@ -241,8 +240,7 @@ export function NotificationPopup({
                   onChanged();
                 }}
               >
-                Thử lại
-              </button>
+                {msg("notifications.components.NotificationPopup.thuLai")}</button>
             </p>
           )}
           {items.map((item) => (
@@ -266,14 +264,13 @@ export function NotificationPopup({
           ))}
           {loading && !items.length ? (
             <p role="status" className={styles.empty}>
-              Đang tải…
-            </p>
+              {msg("notifications.components.NotificationPopup.dangTai")}</p>
           ) : (
             !loading &&
             !items.length &&
             !(result.filter === filter && result.error) && (
               <p className={styles.empty}>
-                {unread ? "Bạn đã đọc tất cả thông báo." : "Chưa có thông báo."}
+                {unread ? msg("notifications.components.NotificationPopup.banDaDocTatCaThong") : msg("notifications.components.NotificationPopup.chuaCoThongBao")}
               </p>
             )
           )}
@@ -284,7 +281,7 @@ export function NotificationPopup({
               className={styles.loadMore}
               onClick={() => setPage((p) => p + 1)}
             >
-              {loading ? "Đang tải…" : "Tải thêm"}
+              {loading ? msg("notifications.components.NotificationPopup.dangTai") : msg("notifications.components.NotificationPopup.taiThem")}
             </button>
           )}
         </div>

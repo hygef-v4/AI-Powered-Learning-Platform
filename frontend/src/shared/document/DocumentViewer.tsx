@@ -11,6 +11,7 @@ import {
   type ListItem,
   type Run,
 } from "./types";
+import { msg } from "@/i18n/msg";
 
 export type ImageUrl = (blockId: string) => string | null;
 
@@ -153,7 +154,7 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
       return (
         <figure className="flex flex-col gap-1">
           <button type="button" onClick={() => onOpenDiagram?.(block.id)} disabled={!onOpenDiagram}
-            aria-label={onOpenDiagram ? (drawn ? "Sửa sơ đồ" : "Vẽ sơ đồ") : undefined}
+            aria-label={onOpenDiagram ? (drawn ? msg("shared.document.DocumentViewer.suaSoDo") : msg("shared.document.DocumentViewer.veSoDo")) : undefined}
             className={cx("flex min-h-60 w-full items-center justify-center overflow-hidden rounded-lg p-0 transition-colors",
               drawn ? "bg-surface" : "bg-canvas",
               onOpenDiagram ? "cursor-pointer border-2 border-dashed border-line-strong hover:border-primary"
@@ -167,7 +168,7 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
                 <svg aria-hidden width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><path d="M10 6.5h4a2 2 0 0 1 2 2V14" />
                 </svg>
-                {onOpenDiagram ? "Vẽ sơ đồ" : "Chưa có sơ đồ"}
+                {onOpenDiagram ? msg("shared.document.DocumentViewer.veSoDo") : msg("shared.document.DocumentViewer.chuaCoSoDo")}
               </span>
             )}
           </button>
@@ -182,7 +183,7 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
  * Tài liệu chỉ đọc; block của người soạn có thể làm nhạt khi xem bài làm. {@code previews}: id block ảnh → URL ảnh
  * chưa lưu (ví dụ hình cắt trong bản xem trước nhập đề).
  */
-export function DocumentViewer({ document, imageUrl, previews, markTeacherBlocks = false, empty = "Tài liệu trống." }: {
+export function DocumentViewer({ document, imageUrl, previews, markTeacherBlocks = false, empty = msg("shared.document.DocumentViewer.taiLieuTrong") }: {
   document: DocumentModel;
   imageUrl?: ImageUrl;
   previews?: Record<string, string>;

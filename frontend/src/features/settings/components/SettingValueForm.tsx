@@ -8,6 +8,7 @@ import { ChipToggleGroup, Field, Select, Switch, TextInput } from "@/shared/ui/i
 import { updateSetting } from "../api";
 import type { SettingItem, SettingValue } from "../model/types";
 import { canBeEmpty, options, unitOf, validateSettingValue } from "../model/validation";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   item: SettingItem;
@@ -15,7 +16,7 @@ type Props = {
   onReload: () => void;
 };
 
-const LABEL = "Giá trị mới";
+const LABEL = msg("settings.components.SettingValueForm.giaTriMoi");
 
 /**
  * Ô nhập theo kiểu (UC 15). Kiểm ngay khi sửa và khóa nút Lưu khi giá trị sai; 400 hiện lý do,
@@ -49,9 +50,9 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
       if (e instanceof ApiError && e.problem.status === 409) {
         setConflict(true);
       } else if (e instanceof ApiError && e.problem.status === 400) {
-        setServerError(e.problem.detail ?? "Giá trị không hợp lệ");
+        setServerError(e.problem.detail ?? msg("settings.components.SettingValueForm.giaTriKhongHopLe"));
       } else {
-        setServerError("Không lưu được, thử lại sau");
+        setServerError(msg("settings.components.SettingValueForm.khongLuuDuocThuLaiSau"));
       }
     } finally {
       setSaving(false);
@@ -71,22 +72,19 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
         <Alert
           tone="warning"
           role="alert"
-          title="Người khác vừa sửa"
+          title={msg("settings.components.SettingValueForm.nguoiKhacVuaSua")}
           action={
             <Button size="sm" icon="refresh" onClick={onReload}>
-              Tải lại
-            </Button>
+              {msg("settings.components.SettingValueForm.taiLai")}</Button>
           }
         >
-          Cài đặt đã được người khác sửa. Tải lại để xem giá trị mới trước khi lưu.
-        </Alert>
+          {msg("settings.components.SettingValueForm.caiDatDaDuocNguoiKhac")}</Alert>
       )}
       <ValueField item={item} value={draft} error={error} onChange={change} disabled={saving} />
       <div className="flex items-center justify-end gap-2">
         {canBeEmpty(item) && item.value !== null && (
           <Button disabled={saving} onClick={() => void save(null)} className="mr-auto">
-            Bỏ trống
-          </Button>
+            {msg("settings.components.SettingValueForm.boTrong")}</Button>
         )}
         <Button
           disabled={saving || !changed}
@@ -96,10 +94,9 @@ export function SettingValueForm({ item, onSaved, onReload }: Props) {
             setServerError(null);
           }}
         >
-          Hủy
-        </Button>
+          {msg("settings.components.SettingValueForm.huy")}</Button>
         <Button type="submit" variant="primary" icon="save" disabled={saving || !changed || invalid !== null}>
-          {saving ? "Đang lưu…" : "Lưu"}
+          {saving ? msg("settings.components.SettingValueForm.dangLuu") : msg("settings.components.SettingValueForm.luu")}
         </Button>
       </div>
     </form>
@@ -143,14 +140,14 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
             ariaLabel={LABEL}
             checked={value === true}
             disabled={disabled}
-            label={value === true ? "Bật" : "Tắt"}
+            label={value === true ? msg("settings.components.SettingValueForm.bat") : msg("settings.components.SettingValueForm.tat")}
             onChange={onChange}
           />
         </Field>
       );
     case "TIME_OF_DAY":
       return (
-        <Field label={LABEL} htmlFor={id} required={required} error={error} hint="Giờ Việt Nam (Asia/Ho_Chi_Minh)">
+        <Field label={LABEL} htmlFor={id} required={required} error={error} hint={msg("settings.components.SettingValueForm.gioVietNamAsiaHoChi")}>
           <TextInput
             id={id}
             type="time"
@@ -174,7 +171,7 @@ function ValueField({ item, value, error, onChange, disabled }: FieldProps) {
             disabled={disabled}
             onChange={(e) => onChange(e.target.value === "" ? null : e.target.value)}
           >
-            {value === null && <option value="">Chưa chọn</option>}
+            {value === null && <option value="">{msg("settings.components.SettingValueForm.chuaChon")}</option>}
             {options(item).map((option) => (
               <option key={option} value={option}>
                 {option}

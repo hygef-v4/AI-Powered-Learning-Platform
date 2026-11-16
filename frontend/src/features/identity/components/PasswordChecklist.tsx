@@ -1,5 +1,6 @@
 import { Icon } from "@/shared/ui/Icon";
 import { checkPassword } from "../model/passwordRules";
+import { msg } from "@/i18n/msg";
 
 /**
  * Hai điều kiện dưới ô mật khẩu: "Ít nhất 8 ký tự", "Có cả chữ và số" (design `c02`, `c04`, `c06`).
@@ -8,8 +9,8 @@ import { checkPassword } from "../model/passwordRules";
 export function PasswordChecklist({ password, chips }: { password: string; chips?: boolean }) {
   const checks = checkPassword(password);
   const items = [
-    { ok: checks.minLength, label: "Ít nhất 8 ký tự" },
-    { ok: checks.letterAndDigit, label: "Có cả chữ và số" },
+    { ok: checks.minLength, label: msg("identity.components.PasswordChecklist.itNhat8KyTu") },
+    { ok: checks.letterAndDigit, label: msg("identity.components.PasswordChecklist.coCaChuVaSo") },
   ];
   return (
     <ul className={chips ? "flex flex-wrap gap-2" : "mt-2.5 flex flex-wrap gap-4 text-xs font-medium"}>
@@ -23,13 +24,13 @@ export function PasswordChecklist({ password, chips }: { password: string; chips
           >
             <Icon name="check_circle" size={14} />
             {item.label}
-            <span className="sr-only">{item.ok ? " (đạt)" : " (chưa đạt)"}</span>
+            <span className="sr-only">{item.ok ? msg("identity.components.PasswordChecklist.dat") : msg("identity.components.PasswordChecklist.chuaDat")}</span>
           </li>
         ) : (
           <li key={item.label} className={`flex items-center gap-1 ${item.ok ? "text-success" : "text-muted"}`}>
             <Icon name="check" size={14} />
             {item.label}
-            <span className="sr-only">{item.ok ? " (đạt)" : " (chưa đạt)"}</span>
+            <span className="sr-only">{item.ok ? msg("identity.components.PasswordChecklist.dat") : msg("identity.components.PasswordChecklist.chuaDat")}</span>
           </li>
         ),
       )}

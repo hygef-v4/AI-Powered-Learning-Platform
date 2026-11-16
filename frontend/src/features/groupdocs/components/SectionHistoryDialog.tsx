@@ -7,11 +7,12 @@ import { DocumentViewer } from "@/shared/document";
 import { Alert, Dialog, cx } from "@/shared/ui";
 import { getRevisions, groupDocImageUrl } from "../api";
 import type { RevisionView, SectionView, WorkspaceView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 function memberName(view: Pick<WorkspaceView, "members" | "viewerId">, id: string | null | undefined): string {
   if (!id) return "—";
-  if (id === view.viewerId) return "Bạn";
-  return view.members.find((m) => m.accountId === id)?.name ?? "Thành viên đã rời nhóm";
+  if (id === view.viewerId) return msg("groupdocs.components.SectionHistoryDialog.ban");
+  return view.members.find((m) => m.accountId === id)?.name ?? msg("groupdocs.components.SectionHistoryDialog.thanhVienDaRoiNhom");
 }
 
 /** Lịch sử mục chỉ xem (BR-U12-35): mỗi lần bấm Xong là một bản kèm người viết và thời điểm. */
@@ -37,7 +38,7 @@ export function SectionHistoryDialog({
         setSelected(loaded[0]?.id ?? null);
       },
       (e: unknown) => {
-        if (active) setError(e instanceof ApiError ? (e.problem.detail ?? "Không tải được lịch sử mục.") : "Không tải được lịch sử mục.");
+        if (active) setError(e instanceof ApiError ? (e.problem.detail ?? msg("groupdocs.components.SectionHistoryDialog.khongTaiDuocLichSuMuc")) : msg("groupdocs.components.SectionHistoryDialog.khongTaiDuocLichSuMuc"));
       },
     );
     return () => {
@@ -47,18 +48,18 @@ export function SectionHistoryDialog({
 
   const current = revisions?.find((r) => r.id === selected) ?? null;
   return (
-    <Dialog open size="xl" icon="history" title="Lịch sử" onClose={onClose}>
+    <Dialog open size="xl" icon="history" title={msg("groupdocs.components.SectionHistoryDialog.lichSu")} onClose={onClose}>
       {error && (
         <Alert tone="danger" role="alert">
           {error}
         </Alert>
       )}
-      {!revisions && !error && <p className="text-sm text-muted">Đang tải…</p>}
-      {revisions && revisions.length === 0 && <p className="text-sm text-muted">Mục chưa có bản lịch sử nào.</p>}
+      {!revisions && !error && <p className="text-sm text-muted">{msg("groupdocs.components.SectionHistoryDialog.dangTai")}</p>}
+      {revisions && revisions.length === 0 && <p className="text-sm text-muted">{msg("groupdocs.components.SectionHistoryDialog.mucChuaCoBanLichSu")}</p>}
       {revisions && revisions.length > 0 && (
         // Chiều cao cố định: đổi bản xem không làm popup cao thấp theo nội dung; mỗi cột tự cuộn.
         <div className="grid h-[min(52vh,440px)] gap-3 md:grid-cols-[240px_1fr]">
-          <ul aria-label="Các bản lịch sử" className="flex min-h-0 flex-col gap-1 overflow-y-auto">
+          <ul aria-label={msg("groupdocs.components.SectionHistoryDialog.cacBanLichSu")} className="flex min-h-0 flex-col gap-1 overflow-y-auto">
             {revisions.map((r) => (
               <li key={r.id}>
                 <button
@@ -77,7 +78,7 @@ export function SectionHistoryDialog({
             ))}
           </ul>
           <div className="min-h-0 overflow-y-auto rounded-xl border border-line p-3">
-            {current && <DocumentViewer document={{ blocks: current.blocks }} imageUrl={groupDocImageUrl(view.documentId)} empty="Bản này trống." />}
+            {current && <DocumentViewer document={{ blocks: current.blocks }} imageUrl={groupDocImageUrl(view.documentId)} empty={msg("groupdocs.components.SectionHistoryDialog.banNayTrong")} />}
           </div>
         </div>
       )}

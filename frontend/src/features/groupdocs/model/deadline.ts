@@ -1,5 +1,6 @@
 import { formatTime } from "@/shared/dateTime";
 import type { WorkspaceView } from "./types";
+import { msg } from "@/i18n/msg";
 
 /** Bắt đầu nhắc hạn trên trang tài liệu nhóm khi còn 30 phút. */
 export const DEADLINE_WARNING_MS = 30 * 60_000;
@@ -33,17 +34,17 @@ export function describeDeadline(
   if (remaining <= 0 || (!late && remaining > DEADLINE_WARNING_MS)) return null;
 
   const title = late
-    ? `Đã quá hạn ${formatClock(view.closesAt)}, nộp bây giờ bị tính trễ. Còn ${countMinutes(remaining)} phút tới khi đóng nhận bài (${formatClock(cutoffIso)}).`
-    : `Còn ${countMinutes(remaining)} phút tới hạn nộp (${formatClock(view.closesAt)}).`;
+    ? msg("groupdocs.model.deadline.daQuaHanNopBayGio", { value: String(formatClock(view.closesAt)), value2: String(countMinutes(remaining)), value3: String(formatClock(cutoffIso)) })
+    : msg("groupdocs.model.deadline.conPhutToiHanNop", { value: String(countMinutes(remaining)), value2: String(formatClock(view.closesAt)) });
   const open = view.sections.filter((s) => s.status === "OPEN").length;
   const claimed = view.sections.filter((s) => s.status === "CLAIMED").length;
   const details: string[] = [];
-  if (open > 0) details.push(`${open} mục chưa ai làm, sẽ không vào bản nộp.`);
+  if (open > 0) details.push(msg("groupdocs.model.deadline.mucChuaAiLamSeKhong", { open: String(open) }));
   if (claimed > 0) {
-    details.push(`${claimed} mục đang soạn: hãy bấm Xong. Khi đóng nhận bài, hệ thống tự chốt các mục này bằng bản nháp đã lưu.`);
+    details.push(msg("groupdocs.model.deadline.mucDangSoanHayBamXong", { claimed: String(claimed) }));
   }
-  if (open === 0 && claimed === 0) details.push("Mọi mục đã Xong.");
-  if (!view.lastSubmission) details.push("Nhóm chưa nộp bản nào; trưởng nhóm nên nộp trước hạn.");
+  if (open === 0 && claimed === 0) details.push(msg("groupdocs.model.deadline.moiMucDaXong"));
+  if (!view.lastSubmission) details.push(msg("groupdocs.model.deadline.nhomChuaNopBanNaoTruong"));
   return { tone: late || remaining <= 5 * 60_000 ? "danger" : "warning", title, details };
 }
 

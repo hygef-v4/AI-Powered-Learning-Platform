@@ -6,6 +6,7 @@ import { announcementsApi, describeAnnouncementError } from "../api";
 import { AnnouncementFeed } from "../components/AnnouncementFeed";
 import { CreateAnnouncementDialog } from "../components/AnnouncementDialogs";
 import type { AnnouncementFeed as Feed } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /**
  * Thông báo lớp (U14). Trong một lớp (`classId`, đường dẫn dưới trang lớp) chỉ có thông báo của lớp đó, không có ô chọn lớp.
@@ -54,7 +55,7 @@ export function ClassAnnouncementsPage({
     return error ? (
       <PageLoadError>{error}</PageLoadError>
     ) : (
-      <PageLoading label="Đang tải thông báo…" />
+      <PageLoading label={msg("announcements.pages.ClassAnnouncementsPage.dangTaiThongBao")} />
     );
   const manageable = data.classes.filter(
     (c) => c.canManage && (!fixedClassId || c.classId === fixedClassId),
@@ -66,7 +67,7 @@ export function ClassAnnouncementsPage({
   return (
     <div className="flex flex-col gap-4">
       <PageHeader
-        title={fixedClassId ? "Thông báo lớp" : "Tất cả thông báo"}
+        title={fixedClassId ? msg("announcements.pages.ClassAnnouncementsPage.thongBaoLop") : msg("announcements.pages.ClassAnnouncementsPage.tatCaThongBao")}
         actions={
           <>
             {!fixedClassId && (
@@ -84,8 +85,7 @@ export function ClassAnnouncementsPage({
                 onClick={() => setCreating(true)}
                 data-testid="announcement-create"
               >
-                Tạo thông báo
-              </Button>
+                {msg("announcements.pages.ClassAnnouncementsPage.taoThongBao")}</Button>
             )}
           </>
         }
@@ -94,16 +94,14 @@ export function ClassAnnouncementsPage({
         <div role="alert" className="flex items-center gap-3 text-[13px] text-danger">
           {error}
           <Button size="sm" onClick={handleReload}>
-            Thử lại
-          </Button>
+            {msg("announcements.pages.ClassAnnouncementsPage.thuLai")}</Button>
         </div>
       )}
       <AnnouncementFeed items={data.items} classCodes={codes} onChanged={handleReload} />
       {(page > 1 || data.hasMore) && (
-        <nav className="flex items-center justify-end gap-2" aria-label="Phân trang thông báo">
+        <nav className="flex items-center justify-end gap-2" aria-label={msg("announcements.pages.ClassAnnouncementsPage.phanTrangThongBao")}>
           <Button size="sm" disabled={page === 1} onClick={() => setPage(page - 1)}>
-            Trước
-          </Button>
+            {msg("announcements.pages.ClassAnnouncementsPage.truoc")}</Button>
           <span className="text-[13px] text-muted tabular-nums">Trang {page}</span>
           <Button size="sm" disabled={!data.hasMore} onClick={() => setPage(page + 1)}>
             Sau

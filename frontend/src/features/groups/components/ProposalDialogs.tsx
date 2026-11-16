@@ -6,6 +6,7 @@ import { MAX_PROPOSAL_NAME, validateProposalName } from "../model/proposals";
 import type { CandidateView } from "../model/types";
 import { matchesPersonQuery } from "@/shared/studentCode";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
+import { msg } from "@/i18n/msg";
 
 /** Popup đặt tên nhóm khi tạo hoặc đổi tên đề xuất (BR-U12-75, 76): bắt buộc, 1–100 ký tự sau khi cắt khoảng trắng. */
 export function ProposalNameDialog({ title, initial = "", confirmLabel, onClose, onSave }: {
@@ -34,7 +35,7 @@ export function ProposalNameDialog({ title, initial = "", confirmLabel, onClose,
     <Dialog open title={title} onClose={onClose} dismissible={!busy}
       footer={<Button variant="primary" disabled={busy} onClick={() => void save()} data-testid="proposal-name-save">{confirmLabel}</Button>}>
       <form onSubmit={(event) => { event.preventDefault(); void save(); }}>
-        <Field label="Tên nhóm" htmlFor={fieldId} required error={error}>
+        <Field label={msg("groups.components.ProposalDialogs.tenNhom")} htmlFor={fieldId} required error={error}>
           <TextInput id={fieldId} value={value} maxLength={MAX_PROPOSAL_NAME} invalid={!!error} autoFocus disabled={busy}
             onChange={(event) => { setValue(event.target.value); setError(null); }} data-testid="proposal-name-input" />
         </Field>
@@ -74,20 +75,20 @@ export function InviteMembersDialog({ candidates, freeSeats, onClose, onInvite }
     if (failed) setError(failed);
   };
   return (
-    <Dialog open title="Mời bạn vào nhóm" size="lg" onClose={onClose} dismissible={!busy}
+    <Dialog open title={msg("groups.components.ProposalDialogs.moiBanVaoNhom")} size="lg" onClose={onClose} dismissible={!busy}
       footer={
         <Button variant="primary" icon="person_add" disabled={busy || picked.length === 0} onClick={() => void invite()}
           data-testid="invite-members-submit">
-          {picked.length > 0 ? `Mời ${picked.length} người` : "Mời"}
+          {picked.length > 0 ? msg("groups.components.ProposalDialogs.moiNguoi", { length: String(picked.length) }) : msg("groups.components.ProposalDialogs.moi")}
         </Button>
       }>
-      <p className="text-[13px] text-muted">Còn {freeSeats} chỗ. Người được mời cần chấp nhận mới vào nhóm.</p>
-      <TextInput type="search" icon="search" aria-label="Tìm theo tên, email hoặc MSSV" placeholder="Tìm theo tên, email hoặc MSSV"
+      <p className="text-[13px] text-muted">{msg("groups.components.ProposalDialogs.con")}{freeSeats} {msg("groups.components.ProposalDialogs.choNguoiDuocMoiCanChap")}</p>
+      <TextInput type="search" icon="search" aria-label={msg("groups.components.ProposalDialogs.timTheoTenEmailHoacMssv")} placeholder={msg("groups.components.ProposalDialogs.timTheoTenEmailHoacMssv")}
         value={query} onChange={(event) => setQuery(event.target.value)} />
       {shown.length === 0 ? (
-        <p className="py-6 text-center text-[13px] text-muted">Không có sinh viên phù hợp.</p>
+        <p className="py-6 text-center text-[13px] text-muted">{msg("groups.components.ProposalDialogs.khongCoSinhVienPhuHop")}</p>
       ) : (
-        <ul aria-label="Sinh viên chưa có nhóm" className="flex max-h-[50vh] flex-col gap-1 overflow-y-auto">
+        <ul aria-label={msg("groups.components.ProposalDialogs.sinhVienChuaCoNhom")} className="flex max-h-[50vh] flex-col gap-1 overflow-y-auto">
           {shown.map((c) => {
             const checked = picked.includes(c.accountId);
             const disabled = busy || (!checked && full);
@@ -98,10 +99,10 @@ export function InviteMembersDialog({ candidates, freeSeats, onClose, onInvite }
                   <input type="checkbox" className="size-4 accent-[var(--c-primary)]" checked={checked} disabled={disabled}
                     onChange={() => toggle(c.accountId)} data-testid={`invite-candidate-${c.accountId}`} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13.5px] font-semibold text-ink">{c.name ?? c.email ?? "Chưa rõ tên"}</span>
+                    <span className="block truncate text-[13.5px] font-semibold text-ink">{c.name ?? c.email ?? msg("groups.components.ProposalDialogs.chuaRoTen")}</span>
                     <PersonSubline className="truncate" studentCode={c.studentCode} email={c.email} />
                   </span>
-                  {c.inOtherProposal && <span className="shrink-0 text-xs text-muted">Đang ở đề xuất khác</span>}
+                  {c.inOtherProposal && <span className="shrink-0 text-xs text-muted">{msg("groups.components.ProposalDialogs.dangODeXuatKhac")}</span>}
                 </label>
               </li>
             );

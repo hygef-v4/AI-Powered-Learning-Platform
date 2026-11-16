@@ -11,6 +11,7 @@ import { buildContextQuery, materialApi, describeMaterialError, buildMaterialPat
 import { buildBoardHref, notifyOutlineChanged, useOutlineChanged } from "../model/outline";
 import { useMaterialResource } from "../hooks/useMaterialResource";
 import type { Material, ModuleScope } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Nơi xem học liệu: lớp (sinh viên, giảng viên) theo `?classId=`, không có thì là môn (Chủ nhiệm môn). */
 export function useMaterialScope(
@@ -45,7 +46,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
 
   if (resource.error)
     return <PageLoadError onRetry={resource.reload}>{resource.error}</PageLoadError>;
-  if (!m) return <PageLoading label="Đang tải học liệu…" />;
+  if (!m) return <PageLoading label={msg("materials.pages.LearningMaterialPage.dangTaiHocLieu")} />;
   async function handleEnabledChange(enabled: boolean) {
     if (!m || saving) return;
     setSaving(true); setChangeError("");
@@ -69,15 +70,14 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
           m.status === "ACTIVE" && (
             <>
               <Switch checked={m.enabled !== false} onChange={handleEnabledChange} disabled={saving}
-                ariaLabel="Bật học liệu" label={m.enabled !== false ? "Bật" : "Tắt"} />
+                ariaLabel={msg("materials.pages.LearningMaterialPage.batHocLieu")} label={m.enabled !== false ? msg("materials.pages.LearningMaterialPage.bat") : msg("materials.pages.LearningMaterialPage.tat")} />
               <Button
                 icon="edit"
                 onClick={() => setDialog("edit")}
                 data-testid="material-edit-open"
                 disabled={saving}
               >
-                Sửa
-              </Button>
+                {msg("materials.pages.LearningMaterialPage.sua")}</Button>
               <Button
                 variant="danger"
                 icon="trash"
@@ -85,8 +85,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
                 data-testid="material-archive-open"
                 disabled={saving}
               >
-                Xóa
-              </Button>
+                {msg("materials.pages.LearningMaterialPage.xoa")}</Button>
             </>
           )
         }
@@ -95,7 +94,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
       <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} position="top" />
       <MaterialPreview material={m} classId={classId} />
       {m.description && (
-        <Section title="Mô tả">
+        <Section title={msg("materials.pages.LearningMaterialPage.moTa")}>
           <FormattedTextView document={m.descriptionDocument} text={m.description}
             className="text-[14px] leading-relaxed" />
         </Section>
@@ -120,7 +119,7 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
           classId={classId}
           onClose={() => setDialog(null)}
           onSaved={() => {
-            showToast("Đã xóa học liệu", "danger");
+            showToast(msg("materials.pages.LearningMaterialPage.daXoaHocLieu"), "danger");
             notifyOutlineChanged();
             router.push(scope ? buildBoardHref(scope) : "/");
           }}

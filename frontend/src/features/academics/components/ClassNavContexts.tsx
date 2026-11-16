@@ -10,6 +10,7 @@ import type { NavContext, NavItem, NavLocation } from "@/shared/layout/navigatio
 import { NavTree, type NavTreeNode } from "@/shared/layout/NavTree";
 import type { IconName } from "@/shared/ui/Icon";
 import { academicsApi, type Scope } from "../api";
+import { msg } from "@/i18n/msg";
 
 const encodeId = encodeURIComponent;
 
@@ -47,7 +48,7 @@ export function resolveSubjectContext({ pathname, search }: NavLocation): NavCon
     }));
   return {
     key: "subject",
-    label: "Môn được phân công",
+    label: msg("academics.components.ClassNavContexts.monDuocPhanCong"),
     parentHref: SUBJECTS_HREF,
     header: <SubjectNavTree subjectId={subjectId} itemsFor={build} />,
     items: subjectId ? build(subjectId) : [],
@@ -63,26 +64,26 @@ const studentAnnouncements = (id: string) => `/classes/${encodeId(id)}/announcem
 
 /** Các tab của trang lớp (`?tab=`) đưa ra sidebar, thêm Thông báo lớp của lớp đó. */
 const TEACHING_ITEMS: ClassItem[] = [
-  { key: "info", label: "Thông tin lớp", icon: "info", href: teachingPage() },
-  { key: "students", label: "Sinh viên", icon: "groups", href: teachingPage("students") },
-  { key: "materials", label: "Học liệu", icon: "folder_open", href: teachingPage("materials") },
-  { key: "evals", label: "Bài tập", icon: "assignment", href: teachingPage("evals") },
-  { key: "gradebook", label: "Chấm điểm", icon: "receipt_long", href: teachingPage("gradebook") },
-  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: teachingAnnouncements },
+  { key: "info", label: msg("academics.components.ClassNavContexts.thongTinLop"), icon: "info", href: teachingPage() },
+  { key: "students", label: msg("academics.components.ClassNavContexts.sinhVien"), icon: "groups", href: teachingPage("students") },
+  { key: "materials", label: msg("academics.components.ClassNavContexts.hocLieu"), icon: "folder_open", href: teachingPage("materials") },
+  { key: "evals", label: msg("academics.components.ClassNavContexts.baiTap"), icon: "assignment", href: teachingPage("evals") },
+  { key: "gradebook", label: msg("academics.components.ClassNavContexts.chamDiem"), icon: "receipt_long", href: teachingPage("gradebook") },
+  { key: "announcements", label: msg("academics.components.ClassNavContexts.thongBaoLop"), icon: "campaign", href: teachingAnnouncements },
 ];
 /** Các trang sinh viên vào được của một lớp. */
 const STUDENT_ITEMS: ClassItem[] = [
-  { key: "info", label: "Thông tin lớp", icon: "info", href: (id) => `/classes/${encodeId(id)}` },
-  { key: "group", label: "Nhóm của tôi", icon: "group", href: (id) => `/classes/${encodeId(id)}/group` },
-  { key: "materials", label: "Học liệu", icon: "folder_open", href: (id) => `/classes/${encodeId(id)}?tab=materials` },
-  { key: "assignments", label: "Bài tập", icon: "assignment", href: (id) => `/my-assignments?classId=${encodeId(id)}` },
-  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: studentAnnouncements },
+  { key: "info", label: msg("academics.components.ClassNavContexts.thongTinLop"), icon: "info", href: (id) => `/classes/${encodeId(id)}` },
+  { key: "group", label: msg("academics.components.ClassNavContexts.nhomCuaToi"), icon: "group", href: (id) => `/classes/${encodeId(id)}/group` },
+  { key: "materials", label: msg("academics.components.ClassNavContexts.hocLieu"), icon: "folder_open", href: (id) => `/classes/${encodeId(id)}?tab=materials` },
+  { key: "assignments", label: msg("academics.components.ClassNavContexts.baiTap"), icon: "assignment", href: (id) => `/my-assignments?classId=${encodeId(id)}` },
+  { key: "announcements", label: msg("academics.components.ClassNavContexts.thongBaoLop"), icon: "campaign", href: studentAnnouncements },
 ];
 
 /** Mục cha của cây lớp trên menu role. */
 const CLASS_ROOTS: Record<ClassScope, { href: string; label: string }> = {
-  teaching: { href: "/teaching/classes", label: "Lớp được phân công" },
-  me: { href: "/classes", label: "Lớp của tôi" },
+  teaching: { href: "/teaching/classes", label: msg("academics.components.ClassNavContexts.lopDuocPhanCong") },
+  me: { href: "/classes", label: msg("academics.components.ClassNavContexts.lopCuaToi") },
 };
 
 /** `id` rỗng: trang danh sách lớp, cây chưa mở lớp nào. */
@@ -144,8 +145,8 @@ function SubjectNavTree({ subjectId, itemsFor }: { subjectId: string | null; ite
   }, []);
   return (
     <NavTree
-      label="Các môn được phân công"
-      placeholder="Chọn môn"
+      label={msg("academics.components.ClassNavContexts.cacMonDuocPhanCong")}
+      placeholder={msg("academics.components.ClassNavContexts.chonMon")}
       nodes={withCurrent(subjects ?? [], subjectId)}
       currentId={subjectId}
       itemsFor={itemsFor}
@@ -167,8 +168,8 @@ function ClassNavTree({ scope, id, itemsFor }: { scope: ClassScope; id: string |
   }, [scope]);
   return (
     <NavTree
-      label={`Các ${CLASS_ROOTS[scope].label.toLowerCase()}`}
-      placeholder="Chọn lớp"
+      label={msg("academics.components.ClassNavContexts.cac", { value: String(CLASS_ROOTS[scope].label.toLowerCase()) })}
+      placeholder={msg("academics.components.ClassNavContexts.chonLop")}
       nodes={withCurrent(classes ?? [], id)}
       currentId={id}
       itemsFor={itemsFor}

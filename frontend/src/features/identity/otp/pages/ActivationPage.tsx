@@ -4,20 +4,21 @@ import { useRouter } from "next/navigation";
 import { completeActivation } from "../../api";
 import { InfoCard } from "../../components/InfoCard";
 import { OtpFlow, type OtpFlowCopy } from "../components/OtpFlow";
+import { msg } from "@/i18n/msg";
 
 // Chữ theo design `c02a`, `c02b`, `c02`.
 const COPY: OtpFlowCopy = {
   purpose: "ACTIVATION",
-  title: () => "Kích hoạt tài khoản",
-  steps: ["Email", "Mã OTP", "Đặt mật khẩu"],
-  sendLabel: "Gửi mã kích hoạt",
-  codeLabel: "Mã kích hoạt",
-  submitLabel: "Kích hoạt và đăng nhập",
+  title: () => msg("identity.otp.pages.ActivationPage.kichHoatTaiKhoan"),
+  steps: ["Email", msg("identity.otp.pages.ActivationPage.maOtp"), msg("identity.otp.pages.ActivationPage.datMatKhau")],
+  sendLabel: msg("identity.otp.pages.ActivationPage.guiMaKichHoat"),
+  codeLabel: msg("identity.otp.pages.ActivationPage.maKichHoat"),
+  submitLabel: msg("identity.otp.pages.ActivationPage.kichHoatVaDangNhap"),
   aside: () => (
     <InfoCard
-      title="Lần đầu sử dụng?"
-      subtitle="Hướng dẫn kích hoạt tài khoản"
-      points={["Dùng email trường đã được cấp.", "Mã OTP có hiệu lực 10 phút."]}
+      title={msg("identity.otp.pages.ActivationPage.lanDauSuDung")}
+      subtitle={msg("identity.otp.pages.ActivationPage.huongDanKichHoatTaiKhoan")}
+      points={[msg("identity.otp.pages.ActivationPage.dungEmailTruongDaDuocCap"), msg("identity.otp.pages.ActivationPage.maOtpCoHieuLuc10")]}
     />
   ),
 };

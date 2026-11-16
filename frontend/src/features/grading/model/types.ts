@@ -1,5 +1,6 @@
 import type { SubmissionDocumentDto } from "./submissionDocument";
 import type { ContributionLevel } from "./contributionLevels";
+import { msg } from "@/i18n/msg";
 
 export type Decimal = string | number;
 export type GradeStatus = "PENDING" | "DRAFT" | "FINALIZED" | "PUBLISHED" | "SUPERSEDED";
@@ -220,25 +221,25 @@ export type StudentGrade = {
   contributionReason?: string | null;
 };
 export const GRADE_STATUS_LABELS: Record<string, string> = {
-  PENDING: "Chờ chấm",
-  DRAFT: "Đã chấm",
-  FINALIZED: "Đã chấm",
-  PUBLISHED: "Đã công bố",
-  SUPERSEDED: "Bài nộp cũ",
-  NOT_SUBMITTED: "Chưa nộp",
-  IN_PROGRESS: "Chưa nộp",
+  PENDING: msg("grading.model.types.choCham"),
+  DRAFT: msg("grading.model.types.daCham"),
+  FINALIZED: msg("grading.model.types.daCham"),
+  PUBLISHED: msg("grading.model.types.daCongBo"),
+  SUPERSEDED: msg("grading.model.types.baiNopCu"),
+  NOT_SUBMITTED: msg("grading.model.types.chuaNop"),
+  IN_PROGRESS: msg("grading.model.types.chuaNop"),
 };
 export function formatPoints(score: Decimal | null | undefined, max: Decimal | null | undefined) {
   return score == null ? "—" : `${Number(score).toFixed(2)} / ${Number(max ?? 0).toFixed(2)}`;
 }
 
 export const ACTIVITY_LABELS: Record<string, string> = {
-  DISABLED: "Không bật theo dõi hoạt động",
-  NO_DATA: "Chưa có dữ liệu hoạt động",
-  AVAILABLE: "Có dữ liệu hoạt động",
-  EXPIRED: "Dữ liệu hoạt động đã hết thời hạn lưu",
-  UNAVAILABLE: "Tạm thời không đọc được dữ liệu hoạt động",
-  PER_MEMBER: "Hoạt động theo từng thành viên",
+  DISABLED: msg("grading.model.types.khongBatTheoDoiHoatDong"),
+  NO_DATA: msg("grading.model.types.chuaCoDuLieuHoatDong"),
+  AVAILABLE: msg("grading.model.types.coDuLieuHoatDong"),
+  EXPIRED: msg("grading.model.types.duLieuHoatDongDaHet"),
+  UNAVAILABLE: msg("grading.model.types.tamThoiKhongDocDuocDu"),
+  PER_MEMBER: msg("grading.model.types.hoatDongTheoTungThanhVien"),
 };
 
 export type GradingFormValues = {

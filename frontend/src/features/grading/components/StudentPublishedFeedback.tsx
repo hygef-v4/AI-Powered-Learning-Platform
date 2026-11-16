@@ -6,6 +6,7 @@ import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
 import { Button, Section } from "@/shared/ui";
 import { CONTRIBUTION_LEVELS } from "../model/contributionLevels";
+import { msg } from "@/i18n/msg";
 
 type Props = { classId: string; assignmentId: string };
 
@@ -17,7 +18,7 @@ export function StudentPublishedFeedback({ classId, assignmentId, partTitles }: 
   const load = useCallback(() => gradingApi.listMyGrades(classId), [classId]);
   const { value, error, refresh } = useResource(load);
   const grade = value?.find(g => g.assignmentId === assignmentId);
-  if (error) return <p role="alert">{error} <Button size="sm" onClick={() => void refresh().catch(() => {})}>Thử lại</Button></p>;
+  if (error) return <p role="alert">{error} <Button size="sm" onClick={() => void refresh().catch(() => {})}>{msg("grading.components.StudentPublishedFeedback.thuLai")}</Button></p>;
   if (!grade || grade.score == null) return null;
   const items = (grade.rubricItems ?? []).map(item => ({ ...item, awarded: Number(item.awardedPoints), max: Number(item.maxPoints) }));
   const order = Object.keys(partTitles ?? {});
@@ -31,10 +32,10 @@ export function StudentPublishedFeedback({ classId, assignmentId, partTitles }: 
   const rank = (id: string) => (order.indexOf(id) < 0 ? Infinity : order.indexOf(id));
   const rows = [...parts.entries()].sort(([a], [b]) => rank(a) - rank(b));
   const contribution = CONTRIBUTION_LEVELS.find(level => level.value === grade.contributionLevel);
-  return <Section title="Kết quả">
+  return <Section title={msg("grading.components.StudentPublishedFeedback.ketQua")}>
     <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
       <div className="flex shrink-0 flex-col justify-center rounded-xl bg-shell px-6 py-4 text-center">
-        <span className="text-xs text-muted">Tổng điểm</span>
+        <span className="text-xs text-muted">{msg("grading.components.StudentPublishedFeedback.tongDiem")}</span>
         <span className="mt-1 font-display text-[34px] leading-none tracking-[-0.02em] text-ink tabular-nums">{formatPoints(grade.score)}</span>
         <span className="mt-1 text-xs text-muted tabular-nums">/ {formatPoints(grade.maxScore)}</span>
       </div>
@@ -48,9 +49,9 @@ export function StudentPublishedFeedback({ classId, assignmentId, partTitles }: 
         </li>)}
       </ul>}
     </div>
-    {grade.memberOverride && <p className="text-xs text-muted">Điểm cá nhân đã được giảng viên điều chỉnh riêng.</p>}
+    {grade.memberOverride && <p className="text-xs text-muted">{msg("grading.components.StudentPublishedFeedback.diemCaNhanDaDuocGiang")}</p>}
     {(contribution || grade.contributionReason) && <div className="space-y-1 text-sm">
-      {contribution && <p><strong>Mức đóng góp: {contribution.label}</strong></p>}
+      {contribution && <p><strong>{msg("grading.components.StudentPublishedFeedback.mucDongGop")}{contribution.label}</strong></p>}
       {grade.contributionReason && <p className="whitespace-pre-wrap wrap-break-word">{grade.contributionReason}</p>}
     </div>}
     <PublishedFeedback feedback={grade.feedback} summary={grade.structuredSummary ?? null} />
@@ -62,10 +63,10 @@ export function StudentPublishedFeedback({ classId, assignmentId, partTitles }: 
 export function StudentGradeDistribution({ classId, assignmentId }: Props) {
   const load = useCallback(() => gradingApi.loadMyGradeDistribution(classId, assignmentId), [classId, assignmentId]);
   const { value, error, refresh } = useResource(load);
-  if (error) return <p role="alert">Không tải được phân bố điểm. <Button size="sm" onClick={() => void refresh().catch(() => {})}>Thử lại</Button></p>;
+  if (error) return <p role="alert">{msg("grading.components.StudentPublishedFeedback.khongTaiDuocPhanBoDiem")}<Button size="sm" onClick={() => void refresh().catch(() => {})}>{msg("grading.components.StudentPublishedFeedback.thuLai")}</Button></p>;
   if (!value?.length) return null;
-  return <section aria-label="Phân bố điểm" className="space-y-2 text-sm">
-    <h3 className="font-semibold text-ink">Phân bố điểm của lớp</h3>
+  return <section aria-label={msg("grading.components.StudentPublishedFeedback.phanBoDiem")} className="space-y-2 text-sm">
+    <h3 className="font-semibold text-ink">{msg("grading.components.StudentPublishedFeedback.phanBoDiemCuaLop")}</h3>
     <ul className="flex flex-wrap gap-x-5 gap-y-2 text-muted">
       {value.map(bucket => <li key={bucket.label}>{bucket.label}: <strong className="text-ink">{bucket.count}</strong></li>)}
     </ul>

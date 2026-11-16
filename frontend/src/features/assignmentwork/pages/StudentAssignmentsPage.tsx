@@ -11,19 +11,20 @@ import { errorMessage, formatDateTime } from "../model/format";
 import { studentAssignmentResults } from "../slots";
 import type { StudentRow } from "../model/types";
 import { doing, isClosedUnsubmitted, rowStatus, upcoming, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { msg } from "@/i18n/msg";
 
 type Tab = "upcoming" | "doing" | "submitted" | "closed";
 
 const PAGE_SIZE = 20;
 const TABS: { value: Tab; label: string }[] = [
-  { value: "upcoming", label: "Chưa làm" },
-  { value: "doing", label: "Đang làm" },
-  { value: "submitted", label: "Đã nộp" },
-  { value: "closed", label: "Đã đóng" },
+  { value: "upcoming", label: msg("assignmentwork.pages.StudentAssignmentsPage.chuaLam") },
+  { value: "doing", label: msg("assignmentwork.pages.StudentAssignmentsPage.dangLam") },
+  { value: "submitted", label: msg("assignmentwork.pages.StudentAssignmentsPage.daNop") },
+  { value: "closed", label: msg("assignmentwork.pages.StudentAssignmentsPage.daDong") },
 ];
 
 type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
-const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: "Cá nhân", GROUP: "Nhóm", PRACTICE: "Luyện tập" };
+const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: msg("assignmentwork.pages.StudentAssignmentsPage.caNhan"), GROUP: msg("assignmentwork.pages.StudentAssignmentsPage.nhom"), PRACTICE: msg("assignmentwork.pages.StudentAssignmentsPage.luyenTap") };
 
 /** Loại bài hiển thị: bài luyện tập (không chấm điểm) là một loại riêng, còn lại theo cá nhân hay nhóm. */
 function kindOf(row: StudentRow): Kind {
@@ -91,25 +92,25 @@ export function StudentAssignmentsPage() {
 
   return (
     <>
-      <PageHeader title="Bài tập" actions={!classId && (
+      <PageHeader title={msg("assignmentwork.pages.StudentAssignmentsPage.baiTap")} actions={!classId && (
         <ClassFilter classes={classes} value={classFilter} onChange={(value) => { setClassFilter(value); setPage(0); }} testId="assignment-class-filter" />
       )} />
       {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
-      <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label="Danh sách bài tập">
+      <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label={msg("assignmentwork.pages.StudentAssignmentsPage.danhSachBaiTap")}>
         <div className="flex flex-wrap items-center gap-3">
           <Segmented
             as="tab"
-            ariaLabel="Nhóm bài"
+            ariaLabel={msg("assignmentwork.pages.StudentAssignmentsPage.nhomBai")}
             value={tab}
             onChange={(value) => { setTab(value); setPage(0); }}
             options={TABS.map((item) => ({ ...item, count: rows ? count(item.value) : undefined }))}
           />
-          <Select aria-label="Loại bài" value={mode} wrapperClassName="ml-auto w-40" onChange={(e) => { setMode(e.target.value); setPage(0); }}>
-            <option value="">Mọi loại</option>
+          <Select aria-label={msg("assignmentwork.pages.StudentAssignmentsPage.loaiBai")} value={mode} wrapperClassName="ml-auto w-40" onChange={(e) => { setMode(e.target.value); setPage(0); }}>
+            <option value="">{msg("assignmentwork.pages.StudentAssignmentsPage.moiLoai")}</option>
             {(Object.keys(KIND_LABELS) as Kind[]).map((kind) => <option key={kind} value={kind}>{KIND_LABELS[kind]}</option>)}
           </Select>
           <div role="search" className="w-full sm:w-64">
-            <TextInput type="search" icon="search" aria-label="Tìm bài tập" placeholder="Tìm bài tập" value={query} maxLength={200}
+            <TextInput type="search" icon="search" aria-label={msg("assignmentwork.pages.StudentAssignmentsPage.timBaiTap")} placeholder={msg("assignmentwork.pages.StudentAssignmentsPage.timBaiTap")} value={query} maxLength={200}
               onChange={(e) => { setQuery(e.target.value); setPage(0); }} />
           </div>
         </div>
@@ -128,8 +129,8 @@ export function StudentAssignmentsPage() {
           </colgroup>
           <thead>
             <tr>
-              <Th>Bài tập</Th><Th>Lớp</Th><Th>Môn học</Th><Th>Loại</Th><Th>Hạn nộp</Th><Th>Trạng thái</Th>{tab === "submitted" && <Th>Điểm</Th>}
-              <Th><span className="sr-only">Mở bài</span></Th>
+              <Th>{msg("assignmentwork.pages.StudentAssignmentsPage.baiTap")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.lop")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.monHoc")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.loai")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.hanNop")}</Th><Th>{msg("assignmentwork.pages.StudentAssignmentsPage.trangThai")}</Th>{tab === "submitted" && <Th>{msg("assignmentwork.pages.StudentAssignmentsPage.diem")}</Th>}
+              <Th><span className="sr-only">{msg("assignmentwork.pages.StudentAssignmentsPage.moBai")}</span></Th>
             </tr>
           </thead>
           <tbody>
@@ -138,25 +139,25 @@ export function StudentAssignmentsPage() {
                 <Td>
                   <Link href={detailHref(row, !classId)} onClick={(e) => e.stopPropagation()} className="block truncate font-semibold text-ink hover:text-primary-ink">{row.title}</Link>
                 </Td>
-                <Td label="Lớp" className="truncate" title={row.classCode || undefined}>{row.classCode || "—"}</Td>
-                <Td label="Môn học" className="truncate" title={row.subjectCode || undefined}>{row.subjectCode || "—"}</Td>
-                <Td label="Loại" className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
-                <Td label="Hạn nộp" className="whitespace-nowrap">
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.lop")} className="truncate" title={row.classCode || undefined}>{row.classCode || "—"}</Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.monHoc")} className="truncate" title={row.subjectCode || undefined}>{row.subjectCode || "—"}</Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.loai")} className="whitespace-nowrap">{KIND_LABELS[kindOf(row)]}</Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.hanNop")} className="whitespace-nowrap">
                   <span className="font-mono text-xs text-muted">{formatDateTime(row.closesAt)}</span>
                   {(tab === "upcoming" || tab === "doing") && <DueIn closesAt={row.closesAt} />}
                 </Td>
-                <Td label="Trạng thái"><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
+                <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.trangThai")}><Pill tone={rowStatus(row).tone}>{rowStatus(row).label}</Pill></Td>
                 {tab === "submitted" && (
-                  <Td label="Điểm">
+                  <Td label={msg("assignmentwork.pages.StudentAssignmentsPage.diem")}>
                     {row.gradingMode === "GRADED" ? <SlotOutlet slot={studentAssignmentResults} props={{ assignmentId: row.assignmentId, classId: row.classId }} /> : <span className="text-muted">—</span>}
                   </Td>
                 )}
                 <Td hideWhenStacked className="text-faint"><Icon name="chevron_right" size={18} /></Td>
               </ClickableRow>
             ))}
-            {loading && !rows && <TableSkeletonRows columns={columnCount} label="Đang tải bài tập…" />}
+            {loading && !rows && <TableSkeletonRows columns={columnCount} label={msg("assignmentwork.pages.StudentAssignmentsPage.dangTaiBaiTap")} />}
             {rows && shown.length === 0 && (
-              <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted">{tab === "upcoming" ? "Không còn bài chưa làm." : tab === "doing" ? "Không có bài đang làm." : tab === "closed" ? "Không có bài đã đóng chưa nộp." : "Chưa nộp bài nào."}</Td></tr>
+              <tr><Td colSpan={columnCount} className="py-10 text-center! text-muted">{tab === "upcoming" ? msg("assignmentwork.pages.StudentAssignmentsPage.khongConBaiChuaLam") : tab === "doing" ? msg("assignmentwork.pages.StudentAssignmentsPage.khongCoBaiDangLam") : tab === "closed" ? msg("assignmentwork.pages.StudentAssignmentsPage.khongCoBaiDaDongChua") : msg("assignmentwork.pages.StudentAssignmentsPage.chuaNopBaiNao")}</Td></tr>
             )}
           </tbody>
         </TableFrame>

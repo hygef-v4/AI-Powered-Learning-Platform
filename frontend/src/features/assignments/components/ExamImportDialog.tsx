@@ -9,6 +9,7 @@ import { assignmentsApi } from "../api";
 import { errorMessage, requestRef } from "../model/format";
 import { checkImportFiles, IMPORT_ACCEPT, importKindOf } from "../model/importFiles";
 import type { ImportDraft, ImportPlacement, ImportProposal, ImportWarning } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   assignmentId: string;
@@ -28,7 +29,7 @@ type Preview =
   | { kind: "DOCX"; document: DocumentModel; warnings: ImportWarning[]; counts: ImportProposal["counts"] };
 
 const POLL_MS = 2000;
-const APPLIED_MESSAGE = "Đã nhập đề. Nhấn Ctrl+Z để quay lại bản trước.";
+const APPLIED_MESSAGE = msg("assignments.components.ExamImportDialog.daNhapDeNhanCtrlZ");
 
 /**
  * Nhập đề cũ (ảnh, PDF, DOCX) thành khung đề (BR-U07-87…101): chọn và sắp tệp, chờ AI đọc (có Hủy), xem trước kèm
@@ -79,7 +80,7 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
       setPreview({ kind: "AI", draft: next, proposal: next.proposal });
       setPhase("preview");
     } else if (next.status === "FAILED" || next.status === "DISCARDED") {
-      fail(next.safeError ?? "AI không đọc được đề. Hãy thử lại.");
+      fail(next.safeError ?? msg("assignments.components.ExamImportDialog.aiKhongDocDuocDeHay"));
     }
   }
 
@@ -180,36 +181,32 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
 
   const footer = phase === "preview" || phase === "applying" ? (
     <div className="flex flex-wrap justify-end gap-2">
-      <Button data-testid="exam-import-discard" disabled={busy} onClick={() => void close()}>Bỏ</Button>
+      <Button data-testid="exam-import-discard" disabled={busy} onClick={() => void close()}>{msg("assignments.components.ExamImportDialog.bo")}</Button>
       {hasContent ? <>
-        <Button data-testid="exam-import-append" disabled={busy} onClick={() => void apply("APPEND")}>Chèn vào cuối</Button>
+        <Button data-testid="exam-import-append" disabled={busy} onClick={() => void apply("APPEND")}>{msg("assignments.components.ExamImportDialog.chenVaoCuoi")}</Button>
         <Button variant="primary" data-testid="exam-import-replace" disabled={busy} onClick={() => void apply("REPLACE")}>
-          Thay toàn bộ
-        </Button>
+          {msg("assignments.components.ExamImportDialog.thayToanBo")}</Button>
       </> : (
         <Button variant="primary" data-testid="exam-import-apply" disabled={busy} onClick={() => void apply("REPLACE")}>
-          Ghi vào đề
-        </Button>
+          {msg("assignments.components.ExamImportDialog.ghiVaoDe")}</Button>
       )}
     </div>
   ) : phase === "pick" ? (
     <div className="flex justify-end">
       <Button variant="primary" icon="sparkle" data-testid="exam-import-convert" disabled={files.length === 0}
-        onClick={() => void convert()}>Chuyển thành đề</Button>
+        onClick={() => void convert()}>{msg("assignments.components.ExamImportDialog.chuyenThanhDe")}</Button>
     </div>
   ) : undefined;
 
   return (
-    <Dialog open title="Nhập đề từ tệp" size={phase === "preview" || phase === "applying" ? "xl" : "lg"}
+    <Dialog open title={msg("assignments.components.ExamImportDialog.nhapDeTuTep")} size={phase === "preview" || phase === "applying" ? "xl" : "lg"}
       dismissible={!busy} onClose={() => void close()} footer={footer}>
       <div className="flex flex-col gap-4" data-testid="exam-import-dialog">
         {error && <Alert tone="danger" role="alert">{error}</Alert>}
 
         {phase === "pick" && <>
           <p className="text-[13.5px] text-muted">
-            Chọn tối đa 5 ảnh (PNG, JPEG, WEBP), hoặc 1 PDF tối đa 10 trang, hoặc 1 tệp DOCX. AI chép đúng nguyên văn đề
-            cũ thành khung đề để bạn chỉnh sửa; ảnh và PDF tính vào hạn mức AI.
-          </p>
+            {msg("assignments.components.ExamImportDialog.chonToiDa5AnhPng")}</p>
           <label
             onDragOver={(event) => { event.preventDefault(); setOver(true); }}
             onDragLeave={() => setOver(false)}
@@ -219,12 +216,11 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
             }`}
           >
             <Icon name="upload_file" size={18} className="text-primary-ink" />
-            Kéo thả hoặc bấm để chọn ảnh, PDF, DOCX
-            <input type="file" multiple accept={IMPORT_ACCEPT} className="sr-only" aria-label="Chọn tệp đề cũ"
+            {msg("assignments.components.ExamImportDialog.keoThaHoacBamDeChon")}<input type="file" multiple accept={IMPORT_ACCEPT} className="sr-only" aria-label={msg("assignments.components.ExamImportDialog.chonTepDeCu")}
               data-testid="exam-import-input" onChange={(event) => { addFiles(event.target.files); event.target.value = ""; }} />
           </label>
           {files.length > 0 && (
-            <ol className="flex flex-col gap-2" aria-label="Tệp đã chọn" data-testid="exam-import-files">
+            <ol className="flex flex-col gap-2" aria-label={msg("assignments.components.ExamImportDialog.tepDaChon")} data-testid="exam-import-files">
               {files.map((file, index) => (
                 <li key={`${file.name}-${index}`} draggable
                   onDragStart={(event) => event.dataTransfer.setData("text/plain", String(index))}
@@ -243,11 +239,11 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
                   className="flex items-center gap-3 rounded-[10px] border border-line bg-sunken px-3 py-2 text-[13.5px]">
                   <span className="w-12 shrink-0 text-xs font-semibold text-muted">Trang {index + 1}</span>
                   <span className="min-w-0 flex-1 truncate font-semibold text-ink" title={file.name}>{file.name}</span>
-                  <IconButton icon="expand_more" label={`Đưa ${file.name} lên trước`} size={28} className="rotate-180"
+                  <IconButton icon="expand_more" label={msg("assignments.components.ExamImportDialog.duaLenTruoc", { name: String(file.name) })} size={28} className="rotate-180"
                     disabled={index === 0} onClick={() => move(index, -1)} />
-                  <IconButton icon="expand_more" label={`Đưa ${file.name} xuống sau`} size={28}
+                  <IconButton icon="expand_more" label={msg("assignments.components.ExamImportDialog.duaXuongSau", { name: String(file.name) })} size={28}
                     disabled={index === files.length - 1} onClick={() => move(index, 1)} />
-                  <IconButton icon="close" label={`Bỏ ${file.name}`} size={28}
+                  <IconButton icon="close" label={msg("assignments.components.ExamImportDialog.bo2", { name: String(file.name) })} size={28}
                     onClick={() => setFiles((current) => current.filter((_, i) => i !== index))} />
                 </li>
               ))}
@@ -260,19 +256,18 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
             <div role="status" aria-live="polite" className="flex items-center gap-3">
               <span aria-hidden="true"
                 className="size-5 animate-spin rounded-full border-2 border-line-strong border-t-primary motion-reduce:animate-none" />
-              <span className="text-[14px] font-semibold text-ink">Đang đọc đề… có thể mất tới một phút</span>
+              <span className="text-[14px] font-semibold text-ink">{msg("assignments.components.ExamImportDialog.dangDocDeCoTheMat")}</span>
             </div>
-            {draft && <Button data-testid="exam-import-cancel" onClick={() => void cancel()}>Hủy</Button>}
+            {draft && <Button data-testid="exam-import-cancel" onClick={() => void cancel()}>{msg("assignments.components.ExamImportDialog.huy")}</Button>}
           </div>
         )}
 
         {(phase === "preview" || phase === "applying") && document && counts && <>
           <p className="text-[13.5px] text-muted" role="status" aria-live="polite" data-testid="exam-import-counts">
-            {counts.headings} tiêu đề · {counts.tables} bảng · {counts.images} hình
-            {counts.illegible > 0 && <> · <span className="font-semibold text-warning">{counts.illegible} chỗ không đọc rõ</span></>}
+            {counts.headings} {msg("assignments.components.ExamImportDialog.tieuDe")}{counts.tables} {msg("assignments.components.ExamImportDialog.bang")}{counts.images} {msg("assignments.components.ExamImportDialog.hinh")}{counts.illegible > 0 && <> · <span className="font-semibold text-warning">{counts.illegible} {msg("assignments.components.ExamImportDialog.choKhongDocRo")}</span></>}
           </p>
           {warnings.length > 0 && (
-            <Alert tone="warning" title="Cần kiểm tra lại">
+            <Alert tone="warning" title={msg("assignments.components.ExamImportDialog.canKiemTraLai")}>
               <ul className="list-disc pl-5" data-testid="exam-import-warnings">
                 {warnings.map((warning, index) => (
                   <li key={index}>{warning.page ? `Trang ${warning.page}: ` : ""}{warning.message}</li>
@@ -284,8 +279,7 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
             <label className="flex items-center gap-2 text-[13.5px] text-body">
               <input type="checkbox" checked={useTitle} onChange={(event) => setUseTitle(event.target.checked)}
                 data-testid="exam-import-use-title" />
-              Dùng “{examTitle}” làm tên bài
-            </label>
+              {msg("assignments.components.ExamImportDialog.dung")}{examTitle}{msg("assignments.components.ExamImportDialog.lamTenBai")}</label>
           )}
           <div className="max-h-[55vh] overflow-y-auto rounded-xl border border-line p-4" data-testid="exam-import-preview">
             <DocumentViewer document={document} previews={preview?.kind === "AI" ? preview.proposal.previews : undefined} />

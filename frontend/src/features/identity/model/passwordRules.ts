@@ -1,3 +1,5 @@
+import { msg } from "@/i18n/msg";
+
 // Kiểm sơ bộ phía client cùng quy tắc với PasswordPolicy của backend (BR-U01-30, 31); backend vẫn là nơi quyết định.
 
 export type PasswordChecks = {
@@ -19,9 +21,9 @@ export function passwordAcceptable(password: string): boolean {
 
 /** Lý do backend từ chối (mã PasswordPolicy.Violation) bằng tiếng Việt. */
 export const PASSWORD_VIOLATION_MESSAGES: Record<string, string> = {
-  TOO_SHORT: "Mật khẩu cần ít nhất 8 ký tự.",
-  TOO_LONG: "Mật khẩu quá dài (tối đa 72 byte).",
-  NEED_LETTER: "Mật khẩu cần có chữ cái.",
-  NEED_DIGIT: "Mật khẩu cần có chữ số.",
-  CONTAINS_EMAIL_NAME: "Mật khẩu không được chứa tên trong email.",
+  TOO_SHORT: msg("identity.model.passwordRules.matKhauCanItNhat8"),
+  TOO_LONG: msg("identity.model.passwordRules.matKhauQuaDaiToiDa"),
+  NEED_LETTER: msg("identity.model.passwordRules.matKhauCanCoChuCai"),
+  NEED_DIGIT: msg("identity.model.passwordRules.matKhauCanCoChuSo"),
+  CONTAINS_EMAIL_NAME: msg("identity.model.passwordRules.matKhauKhongDuocChuaTen"),
 };

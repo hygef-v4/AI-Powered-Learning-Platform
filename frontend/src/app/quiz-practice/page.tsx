@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { QuizPracticeHistoryPage } from "@/features/quizpractice/pages/QuizPracticeHistoryPage";
+import { serverMsg } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Luyện tập Quiz" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await serverMsg("app.quizpractice.page.luyenTapQuiz") };
+}
 
 // U11 #42 Quiz Practice History.
 export default function Page() {

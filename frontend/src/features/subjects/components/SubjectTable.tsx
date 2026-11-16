@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ClickableRow, Icon, Pill, TableFrame, Td, Th } from "@/shared/ui";
 import type { SubjectListItem } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Bảng môn học cùng kiểu bảng Tài khoản: tên đậm bấm được, mũi tên mở chi tiết; cột cố định, tên môn rộng nhất. */
 export function SubjectTable({ items }: { items: SubjectListItem[]; offset?: number }) {
   const router = useRouter();
   return (
     <TableFrame filledHead className="[&_table]:min-w-[680px] [&_table]:table-fixed">
-      <caption className="sr-only">Danh sách môn học</caption>
+      <caption className="sr-only">{msg("subjects.components.SubjectTable.danhSachMonHoc")}</caption>
       <colgroup>
         <col className="w-[130px]" />
         <col />
@@ -20,12 +21,12 @@ export function SubjectTable({ items }: { items: SubjectListItem[]; offset?: num
       </colgroup>
       <thead>
         <tr>
-          <Th>Mã môn</Th>
-          <Th>Tên môn</Th>
-          <Th>Chủ nhiệm môn</Th>
-          <Th>Trạng thái</Th>
+          <Th>{msg("subjects.components.SubjectTable.maMon")}</Th>
+          <Th>{msg("subjects.components.SubjectTable.tenMon")}</Th>
+          <Th>{msg("subjects.components.SubjectTable.chuNhiemMon")}</Th>
+          <Th>{msg("subjects.components.SubjectTable.trangThai")}</Th>
           <Th>
-            <span className="sr-only">Mở</span>
+            <span className="sr-only">{msg("subjects.components.SubjectTable.mo")}</span>
           </Th>
         </tr>
       </thead>
@@ -54,20 +55,20 @@ export function SubjectTable({ items }: { items: SubjectListItem[]; offset?: num
               </Td>
               <Td className="truncate">
                 {subject.managerId === null ? (
-                  <Pill>Chưa phân công</Pill>
+                  <Pill>{msg("subjects.components.SubjectTable.chuaPhanCong")}</Pill>
                 ) : (
-                  (subject.manager?.displayName ?? "Không tra được chủ nhiệm")
+                  (subject.manager?.displayName ?? msg("subjects.components.SubjectTable.khongTraDuocChuNhiem"))
                 )}
               </Td>
               <Td>
                 <Pill tone={subject.status === "ACTIVE" ? "success" : "danger"}>
-                  {subject.status === "ACTIVE" ? "Hoạt động" : "Lưu trữ"}
+                  {subject.status === "ACTIVE" ? msg("subjects.components.SubjectTable.hoatDong") : msg("subjects.components.SubjectTable.luuTru")}
                 </Pill>
               </Td>
               <Td className="text-faint">
                 <Link
                   href={href}
-                  aria-label={`Chi tiết môn học ${subject.code}`}
+                  aria-label={msg("subjects.components.SubjectTable.chiTietMonHoc", { code: String(subject.code) })}
                   className="inline-flex"
                 >
                   <Icon name="chevron_right" size={18} />
@@ -79,8 +80,7 @@ export function SubjectTable({ items }: { items: SubjectListItem[]; offset?: num
         {items.length === 0 && (
           <tr>
             <Td colSpan={5} className="py-10 text-center! text-muted">
-              Không có môn học phù hợp.
-            </Td>
+              {msg("subjects.components.SubjectTable.khongCoMonHocPhuHop")}</Td>
           </tr>
         )}
       </tbody>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { Icon } from "./Icon";
 import { BackLink } from "../navigation/BackLink";
+import { msg } from "@/i18n/msg";
 
 export type Crumb = { label: string; href?: string };
 
@@ -21,11 +22,11 @@ export function PageHeader({ title, subtitle, breadcrumb, backHref, actions }: P
     <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pb-1">
       <div className="flex min-w-0 flex-[1_1_22rem] flex-col gap-2.5">
         {(backHref || trail.length > 0) && (
-          <nav aria-label="Đường dẫn" className="flex flex-wrap items-center gap-1 text-[12.5px] font-semibold text-muted">
+          <nav aria-label={msg("shared.ui.PageHeader.duongDan")} className="flex flex-wrap items-center gap-1 text-[12.5px] font-semibold text-muted">
             {backHref && (
               <BackLink
                 href={backHref}
-                aria-label="Quay lại"
+                aria-label={msg("shared.ui.PageHeader.quayLai")}
                 className="-ml-1 inline-flex size-6 items-center justify-center rounded-md transition-colors hover:bg-sunken hover:text-ink"
               >
                 <Icon name="arrow_back" size={14} />

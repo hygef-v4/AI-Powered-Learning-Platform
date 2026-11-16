@@ -1,11 +1,12 @@
 import type { AttemptResult, AttemptResultItem } from "../slots";
 import { formatPoints } from "../model/attemptResult";
+import { msg } from "@/i18n/msg";
 
 export function PublishedFeedback({ feedback, summary }: Pick<AttemptResult, "feedback" | "summary">) {
   return <div className="space-y-3 text-[13px] text-body">
     {feedback && <p className="whitespace-pre-wrap">{feedback}</p>}
     {summary && ([
-      ["Điểm mạnh", summary.strengths], ["Cần cải thiện", summary.improvements], ["Bước tiếp theo", summary.nextSteps],
+      [msg("assignmentwork.components.PublishedFeedback.diemManh"), summary.strengths], [msg("assignmentwork.components.PublishedFeedback.canCaiThien"), summary.improvements], [msg("assignmentwork.components.PublishedFeedback.buocTiepTheo"), summary.nextSteps],
     ] as const).map(([title, lines]) => lines.length > 0 && <section key={title}>
       <h4 className="font-semibold text-ink">{title}</h4>
       <ul className="list-disc space-y-1 pl-4">{lines.map((line, index) => <li key={index}>{line}</li>)}</ul>

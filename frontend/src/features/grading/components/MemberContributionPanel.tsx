@@ -6,6 +6,7 @@ import { gradingApi } from "../api";
 import { formatErrorMessage } from "../model/format";
 import type { Evaluation } from "../model/types";
 import { CONTRIBUTION_LEVELS, type ContributionLevel } from "../model/contributionLevels";
+import { msg } from "@/i18n/msg";
 
 type MemberPart = { partId: string; title: string };
 type AssessmentValues = { score: string; reason: string; level: ContributionLevel | "" };
@@ -63,49 +64,40 @@ export function MemberContributionPanel({
     <section id="group-member-grades" aria-labelledby="group-member-grades-title" tabIndex={-1}
       className="@container min-w-0 scroll-mt-36">
       <h2 id="group-member-grades-title" className="sr-only">
-        Điểm thành viên
-      </h2>
+        {msg("grading.components.MemberContributionPanel.diemThanhVien")}</h2>
       <p className="mt-1 text-xs text-muted">
-        Điểm nhóm: {root.score == null ? "Chưa chấm" : `${Number(root.score)} / ${Number(root.maxScore)}`}.
-        {" "}Thành viên mặc định nhận điểm nhóm; giảng viên có thể điều chỉnh riêng.
-      </p>
+        {msg("grading.components.MemberContributionPanel.diemNhom")}{root.score == null ? msg("grading.components.MemberContributionPanel.chuaCham") : `${Number(root.score)} / ${Number(root.maxScore)}`}.
+        {" "}{msg("grading.components.MemberContributionPanel.thanhVienMacDinhNhanDiem")}</p>
       <details className="mt-3 rounded-lg border border-line-soft px-3 py-2 text-sm">
-        <summary className="cursor-pointer font-semibold text-ink">Cách đánh giá</summary>
+        <summary className="cursor-pointer font-semibold text-ink">{msg("grading.components.MemberContributionPanel.cachDanhGia")}</summary>
         <div className="mt-2 space-y-3 text-body">
-          <p>Mức 1 là cao nhất, mức 5 thấp nhất. Các mức không tự quy đổi thành điểm.</p>
+          <p>{msg("grading.components.MemberContributionPanel.muc1LaCaoNhatMuc")}</p>
           <ol className="list-decimal space-y-1 pl-5">
             {CONTRIBUTION_LEVELS.map((level) => (
               <li key={level.value}><strong>{level.label}:</strong> {level.description}</li>
             ))}
           </ol>
           <p>
-            Chấm bài nhóm theo rubric trước. Đối chiếu phần việc được giao, sản phẩm,
-            ghi nhận đóng góp và trình bày/vấn đáp để chọn mức; nhập điểm cá nhân từ 0
-            đến điểm tối đa của bài và ghi căn cứ cụ thể khi điều chỉnh.
-          </p>
+            {msg("grading.components.MemberContributionPanel.chamBaiNhomTheoRubricTruoc")}</p>
           <p>
-            Ví dụ: nhóm 8/10, thành viên thiếu luồng lỗi có thể được đánh giá Đạt một phần
-            và cho 7/10. Đây là minh họa, không phải điểm cố định của mức này.
-          </p>
+            {msg("grading.components.MemberContributionPanel.viDuNhom810Thanh")}</p>
           <p>
-            Lưu điểm thành viên rồi công bố khi đã kiểm tra xong. Điểm đã lưu riêng
-            được giữ khi điểm nhóm thay đổi. Nhóm nộp phiên bản mới sẽ cần đánh giá lại.
-          </p>
+            {msg("grading.components.MemberContributionPanel.luuDiemThanhVienRoiCong")}</p>
         </div>
       </details>
       {current && <div className="mt-3 space-y-2">
-        <Field label="Thành viên" htmlFor={selectorId}>
+        <Field label={msg("grading.components.MemberContributionPanel.thanhVien")} htmlFor={selectorId}>
           <Select id={selectorId} value={current.accountId ?? ""} onChange={event => handleSelect(event.target.value)}>
             {members.map(member => <option key={member.id} value={member.accountId ?? ""}>
-              {names[member.accountId!] ?? "Thành viên"}{dirtyMembers[member.id] ? " · Chưa lưu" : ""}
+              {names[member.accountId!] ?? msg("grading.components.MemberContributionPanel.thanhVien")}{dirtyMembers[member.id] ? msg("grading.components.MemberContributionPanel.chuaLuu") : ""}
             </option>)}
           </Select>
         </Field>
         <div className="flex items-center justify-between gap-2">
-          <Button size="sm" icon="chevron_left" aria-label="Thành viên trước" disabled={selectedIndex <= 0}
-            onClick={() => handleSelect(members[selectedIndex - 1]!.accountId!)}>Trước</Button>
+          <Button size="sm" icon="chevron_left" aria-label={msg("grading.components.MemberContributionPanel.thanhVienTruoc")} disabled={selectedIndex <= 0}
+            onClick={() => handleSelect(members[selectedIndex - 1]!.accountId!)}>{msg("grading.components.MemberContributionPanel.truoc")}</Button>
           <span className="text-xs text-muted">{selectedIndex + 1} / {members.length}</span>
-          <Button size="sm" icon="chevron_right" aria-label="Thành viên sau" disabled={selectedIndex >= members.length - 1}
+          <Button size="sm" icon="chevron_right" aria-label={msg("grading.components.MemberContributionPanel.thanhVienSau")} disabled={selectedIndex >= members.length - 1}
             onClick={() => handleSelect(members[selectedIndex + 1]!.accountId!)}>Sau</Button>
         </div>
       </div>}
@@ -117,7 +109,7 @@ export function MemberContributionPanel({
             rootId={root.id}
             locked={!editable || root.state === "SUPERSEDED"}
             member={member}
-            name={names[member.accountId!] ?? "Thành viên"}
+            name={names[member.accountId!] ?? msg("grading.components.MemberContributionPanel.thanhVien")}
             onSaved={onSaved}
             parts={sections[member.accountId!] ?? []}
             onShowPart={onShowPart}
@@ -194,27 +186,27 @@ function MemberRow({
     <li className="py-3">
       <fieldset className="min-w-0">
         <legend className="mb-2 wrap-break-word text-sm font-semibold text-ink">
-          {name} {dirty && <span className="text-xs font-normal text-warning">Chưa lưu</span>}
+          {name} {dirty && <span className="text-xs font-normal text-warning">{msg("grading.components.MemberContributionPanel.chuaLuu2")}</span>}
         </legend>
         <div className="mb-3 space-y-1 text-xs">
-          <p className="font-semibold text-body">Phần phụ trách</p>
+          <p className="font-semibold text-body">{msg("grading.components.MemberContributionPanel.phanPhuTrach")}</p>
           {parts.length ? parts.map(part => <button key={part.partId} type="button"
-            aria-label={`Xem phần ${part.title}`} onClick={() => onShowPart?.(part.partId)}
+            aria-label={msg("grading.components.MemberContributionPanel.xemPhan", { title: String(part.title) })} onClick={() => onShowPart?.(part.partId)}
             className="block cursor-pointer text-left text-primary-ink underline underline-offset-2 hover:text-ink">
             {part.title}
-          </button>) : <p className="text-muted">Chưa có thông tin phần phụ trách.</p>}
+          </button>) : <p className="text-muted">{msg("grading.components.MemberContributionPanel.chuaCoThongTinPhanPhu")}</p>}
         </div>
         <div className="grid items-end gap-3 @lg:grid-cols-[minmax(0,1fr)_7rem]">
-          <Field label="Mức đóng góp (tùy chọn)" htmlFor={`${fieldId}-level`}>
+          <Field label={msg("grading.components.MemberContributionPanel.mucDongGopTuyChon")} htmlFor={`${fieldId}-level`}>
             <Select id={`${fieldId}-level`} disabled={disabled} value={level}
               onChange={(event) => updateValues({ level: event.target.value as ContributionLevel | "" })}>
-              <option value="">Chưa đánh giá</option>
+              <option value="">{msg("grading.components.MemberContributionPanel.chuaDanhGia")}</option>
               {CONTRIBUTION_LEVELS.map((option, index) => (
                 <option key={option.value} value={option.value}>{index + 1}. {option.label}</option>
               ))}
             </Select>
           </Field>
-          <Field label="Điểm cá nhân" htmlFor={`${fieldId}-score`}>
+          <Field label={msg("grading.components.MemberContributionPanel.diemCaNhan")} htmlFor={`${fieldId}-score`}>
             <TextInput
               id={`${fieldId}-score`}
               type="number"
@@ -227,13 +219,13 @@ function MemberRow({
             />
           </Field>
           <div className="@lg:col-span-2">
-            <Field label="Căn cứ đánh giá" htmlFor={`${fieldId}-reason`}>
+            <Field label={msg("grading.components.MemberContributionPanel.canCuDanhGia")} htmlFor={`${fieldId}-reason`}>
               <div className="rounded-lg border border-field p-2 text-sm focus-within:border-primary">
               <AutoTextarea
                 id={`${fieldId}-reason`}
                 value={reason}
                 maxLength={2000}
-                placeholder="Phần phụ trách, chất lượng hoàn thành, kết quả vấn đáp…"
+                placeholder={msg("grading.components.MemberContributionPanel.phanPhuTrachChatLuongHoan")}
                 disabled={disabled}
                 onChange={(event) => updateValues({ reason: event.target.value })}
               />
@@ -245,8 +237,7 @@ function MemberRow({
             onClick={() => void handleSave()}
             className="h-10 justify-self-start"
           >
-            Lưu điểm thành viên
-          </Button>
+            {msg("grading.components.MemberContributionPanel.luuDiemThanhVien")}</Button>
         </div>
         {error && <p role="alert" className="mt-2 text-xs text-danger">{error}</p>}
       </fieldset>

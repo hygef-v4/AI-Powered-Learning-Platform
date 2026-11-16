@@ -1,19 +1,20 @@
 import { ApiError } from "@/shared/api/client";
+import { msg } from "@/i18n/msg";
 
 export function formatOperationError(cause: unknown) {
-  if (cause instanceof ApiError && cause.problem.status === 409) return "Dữ liệu đã thay đổi. Vui lòng tải lại trước khi tiếp tục.";
+  if (cause instanceof ApiError && cause.problem.status === 409) return msg("academics.model.format.duLieuDaThayDoiVui");
   // Nội dung server chưa kiểm chứng không được hiển thị SQL/stack trace cho người dùng.
-  return cause instanceof ApiError ? "Không thể hoàn tất thao tác. Vui lòng thử lại." : cause instanceof Error ? cause.message : "Không thể hoàn tất thao tác. Vui lòng thử lại.";
+  return cause instanceof ApiError ? msg("academics.model.format.khongTheHoanTatThaoTac") : cause instanceof Error ? cause.message : msg("academics.model.format.khongTheHoanTatThaoTac");
 }
 
 export { formatDate } from "@/shared/dateTime";
 
 export type ClassFieldError = { field: "code" | "startsOn"; message: string };
 
-export const CLASS_START_DATE_REQUIRED = "Chọn ngày bắt đầu";
-export const CLASS_START_DATE_RANGE = "Ngày bắt đầu phải trong khoảng 2000–2099";
+export const CLASS_START_DATE_REQUIRED = msg("academics.model.format.chonNgayBatDau");
+export const CLASS_START_DATE_RANGE = msg("academics.model.format.ngayBatDauPhaiTrongKhoang");
 const CLASS_FIELD_ERRORS: Record<string, ClassFieldError> = {
-  CLASS_EXISTS: { field: "code", message: "Mã lớp đã tồn tại trong môn ở học kỳ này" },
+  CLASS_EXISTS: { field: "code", message: msg("academics.model.format.maLopDaTonTaiTrong") },
   INVALID_CLASS_START_DATE: { field: "startsOn", message: CLASS_START_DATE_RANGE },
 };
 

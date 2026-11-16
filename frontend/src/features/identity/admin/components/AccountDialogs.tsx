@@ -13,6 +13,7 @@ import { ROLE_LABELS } from "../../model/types";
 import { changeRole, changeStatus, type AccountDetail } from "../api";
 import { ADMIN_ERROR_LABELS } from "../model/labels";
 import { ROLES } from "./NewAccountDialog";
+import { msg } from "@/i18n/msg";
 
 /** Môn hoặc lớp còn giữ; `code`, `name` là null khi unit sở hữu chưa trả được (khi đó chỉ có ID). */
 export type HeldAssignment = { id: string; code: string | null; name: string | null };
@@ -44,7 +45,7 @@ type DialogProps = {
 function errorMessage(error: unknown) {
   const code = error instanceof ApiError ? error.problem.code : undefined;
   if (code && ADMIN_ERROR_LABELS[code]) return ADMIN_ERROR_LABELS[code];
-  return (error instanceof ApiError && error.problem.detail) || "Không thực hiện được, vui lòng thử lại.";
+  return (error instanceof ApiError && error.problem.detail) || msg("identity.admin.components.AccountDialogs.khongThucHienDuocVuiLong");
 }
 
 /** Không đổi vai trò vào hoặc ra khỏi Sinh viên (BR-U01-107): popup chỉ mở cho tài khoản khác sinh viên. */
@@ -86,18 +87,17 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
   return (
     <Dialog
       open
-      title="Đổi vai trò"
+      title={msg("identity.admin.components.AccountDialogs.doiVaiTro")}
       icon="swap_horiz"
       onClose={onClose}
       footer={
         <>
           <Button variant="primary" onClick={confirm} disabled={busy || role === account.role}>
-            Đổi vai trò
-          </Button>
+            {msg("identity.admin.components.AccountDialogs.doiVaiTro")}</Button>
         </>
       }
     >
-      <Field label="Vai trò" htmlFor={roleId}>
+      <Field label={msg("identity.admin.components.AccountDialogs.vaiTro")} htmlFor={roleId}>
         <Select id={roleId} value={role} onChange={(e) => setRole(e.target.value as Role)}>
           {STAFF_ROLES.map((r) => (
             <option key={r} value={r}>
@@ -118,20 +118,19 @@ export function RoleChangeDialog({ account, onClose, onChanged, onConflict, onBl
 /** Popup Không đổi được vai trò (design `a04c`): một câu ngắn và bảng Loại, Mã, Tên; môn có link tới trang môn. */
 export function RoleChangeRejectedDialog({ account, block, onClose }: { account: AccountDetail; block: RoleChangeBlock; onClose: () => void }) {
   const items = [
-    ...block.subjects.map((item) => ({ kind: "Môn", item, href: `/admin/subjects/${item.id}` })),
-    ...block.classes.map((item) => ({ kind: "Lớp", item, href: null })),
+    ...block.subjects.map((item) => ({ kind: msg("identity.admin.components.AccountDialogs.mon"), item, href: `/admin/subjects/${item.id}` })),
+    ...block.classes.map((item) => ({ kind: msg("identity.admin.components.AccountDialogs.lop"), item, href: null })),
   ];
   return (
-    <Dialog open title="Không đổi được vai trò" icon="block" tone="danger" onClose={onClose}>
+    <Dialog open title={msg("identity.admin.components.AccountDialogs.khongDoiDuocVaiTro")} icon="block" tone="danger" onClose={onClose}>
       <Alert tone="danger" role="alert">
-        {account.displayName} đang giữ các môn hoặc lớp.
-      </Alert>
+        {account.displayName} {msg("identity.admin.components.AccountDialogs.dangGiuCacMonHoacLop")}</Alert>
       <TableFrame filledHead className="[&_table]:table-fixed">
         <colgroup><col className="w-[110px]" /><col className="w-[140px]" /><col /></colgroup><thead>
           <tr>
-            <Th>Loại</Th>
-            <Th>Mã</Th>
-            <Th>Tên</Th>
+            <Th>{msg("identity.admin.components.AccountDialogs.loai")}</Th>
+            <Th>{msg("identity.admin.components.AccountDialogs.ma")}</Th>
+            <Th>{msg("identity.admin.components.AccountDialogs.ten")}</Th>
           </tr>
         </thead>
         <tbody>
@@ -142,7 +141,7 @@ export function RoleChangeRejectedDialog({ account, block, onClose }: { account:
                 {item.code ? (
                   href ? <Link href={href} className="font-medium text-ink hover:underline">{item.code}</Link> : <span className="font-medium">{item.code}</span>
                 ) : (
-                  <span className="font-mono text-xs break-all text-muted" title="Chưa tải được mã">{item.id}</span>
+                  <span className="font-mono text-xs break-all text-muted" title={msg("identity.admin.components.AccountDialogs.chuaTaiDuocMa")}>{item.id}</span>
                 )}
               </Td>
               <Td>{item.name ?? "—"}</Td>
@@ -176,19 +175,19 @@ export function StatusToggleDialog({ account, onClose, onChanged, onConflict }: 
   return (
     <Dialog
       open
-      title={reopening ? "Mở lại tài khoản?" : "Vô hiệu hóa tài khoản?"}
+      title={reopening ? msg("identity.admin.components.AccountDialogs.moLaiTaiKhoan") : msg("identity.admin.components.AccountDialogs.voHieuHoaTaiKhoan")}
       icon={reopening ? "lock_open" : "block"}
       tone={reopening ? "primary" : "danger"}
       onClose={onClose}
       footer={
         <>
           <Button variant={reopening ? "primary" : "danger"} className="w-full" onClick={confirm} disabled={busy}>
-            {reopening ? "Mở lại" : "Vô hiệu hóa"}
+            {reopening ? msg("identity.admin.components.AccountDialogs.moLai") : msg("identity.admin.components.AccountDialogs.voHieuHoa")}
           </Button>
         </>
       }
     >
-      <p>Bạn có chắc muốn {reopening ? "mở lại" : "vô hiệu hóa"} tài khoản {account.displayName} không?</p>
+      <p>{msg("identity.admin.components.AccountDialogs.banCoChacMuon")}{reopening ? msg("identity.admin.components.AccountDialogs.moLai2") : msg("identity.admin.components.AccountDialogs.voHieuHoa2")} {msg("identity.admin.components.AccountDialogs.taiKhoan")}{account.displayName} {msg("identity.admin.components.AccountDialogs.khong")}</p>
       {error && (
         <Alert tone="danger" role="alert">
           {error}

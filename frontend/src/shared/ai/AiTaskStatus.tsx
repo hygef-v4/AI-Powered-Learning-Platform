@@ -5,16 +5,17 @@ import { apiFetch } from "@/shared/api/client";
 import { usePollStatus } from "@/shared/status/usePollStatus";
 import { Button, Pill, type Tone } from "@/shared/ui";
 import type { AiTaskState, AiTaskView } from "./types";
+import { msg } from "@/i18n/msg";
 
 const FINAL: AiTaskState[] = ["READY", "FAILED", "UNKNOWN", "CANCELLED"];
 
 const LABEL: Record<AiTaskState, { text: string; tone: Tone }> = {
-  QUEUED: { text: "Đang chờ", tone: "neutral" },
-  RUNNING: { text: "Đang chạy", tone: "info" },
+  QUEUED: { text: msg("shared.ai.AiTaskStatus.dangCho"), tone: "neutral" },
+  RUNNING: { text: msg("shared.ai.AiTaskStatus.dangChay"), tone: "info" },
   READY: { text: "Xong", tone: "success" },
-  FAILED: { text: "Lỗi", tone: "danger" },
-  UNKNOWN: { text: "Không rõ kết quả", tone: "warning" },
-  CANCELLED: { text: "Đã hủy", tone: "neutral" },
+  FAILED: { text: msg("shared.ai.AiTaskStatus.loi"), tone: "danger" },
+  UNKNOWN: { text: msg("shared.ai.AiTaskStatus.khongRoKetQua"), tone: "warning" },
+  CANCELLED: { text: msg("shared.ai.AiTaskStatus.daHuy"), tone: "neutral" },
 };
 
 type Props = {
@@ -44,27 +45,26 @@ export function AiTaskStatus({ taskId, onFinished }: Props) {
     try {
       await apiFetch<void>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}:cancel`, { method: "POST" });
     } catch {
-      setCancelError("Không hủy được, task có thể đã bắt đầu chạy.");
+      setCancelError(msg("shared.ai.AiTaskStatus.khongHuyDuocTaskCoThe"));
     } finally {
       setCancelling(false);
     }
   };
 
-  if (error && !data) return <p className="text-xs text-danger">Không xem được trạng thái yêu cầu AI.</p>;
-  if (!data) return <p className="text-xs text-muted">Đang tải trạng thái...</p>;
+  if (error && !data) return <p className="text-xs text-danger">{msg("shared.ai.AiTaskStatus.khongXemDuocTrangThaiYeu")}</p>;
+  if (!data) return <p className="text-xs text-muted">{msg("shared.ai.AiTaskStatus.dangTaiTrangThai")}</p>;
   const label = LABEL[data.state];
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs" aria-live="polite">
       <Pill tone={label.tone}>{label.text}</Pill>
       {data.state === "UNKNOWN" && (
-        <span className="text-muted">Nhà cung cấp không trả kết quả rõ ràng; kiểm tra lại trước khi gửi lần nữa.</span>
+        <span className="text-muted">{msg("shared.ai.AiTaskStatus.nhaCungCapKhongTraKet")}</span>
       )}
       {data.safeError && data.state !== "UNKNOWN" && <span className="text-danger">{data.safeError}</span>}
-      {data.applyResult === "STALE" && <span className="text-warning">Dữ liệu đã đổi trong lúc chờ, kết quả không được áp dụng.</span>}
+      {data.applyResult === "STALE" && <span className="text-warning">{msg("shared.ai.AiTaskStatus.duLieuDaDoiTrongLuc")}</span>}
       {data.state === "QUEUED" && (
         <Button size="sm" onClick={() => void cancel()} disabled={cancelling}>
-          Hủy
-        </Button>
+          {msg("shared.ai.AiTaskStatus.huy")}</Button>
       )}
       {cancelError && <span className="text-danger">{cancelError}</span>}
     </div>

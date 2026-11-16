@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { AuditLogPage } from "@/features/audit/pages/AuditLogPage";
+import { serverMsg } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Nhật ký audit" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await serverMsg("app.admin.audit.page.nhatKyAudit") };
+}
 
 export default function Page() {
   return (

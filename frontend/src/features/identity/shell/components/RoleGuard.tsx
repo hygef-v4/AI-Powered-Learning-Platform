@@ -6,6 +6,7 @@ import { FullPageStatus } from "@/shared/ui/FullPageStatus";
 import { useEffect, type ReactNode } from "react";
 import type { Role } from "@/shared/auth/roles";
 import { loginPathFor, useSession } from "../../hooks/session";
+import { msg } from "@/i18n/msg";
 
 /**
  * Chặn route theo role để trải nghiệm tốt (BR-U01-48): chưa đăng nhập → /login, sai role → homePath của mình.
@@ -25,7 +26,7 @@ export function RoleGuard({ roles, children }: { roles?: Role[]; children: React
     return <ErrorPage kind="unavailable" />;
   }
   if (!allowed) {
-    return <FullPageStatus>Đang tải…</FullPageStatus>;
+    return <FullPageStatus>{msg("identity.shell.components.RoleGuard.dangTai")}</FullPageStatus>;
   }
   return <>{children}</>;
 }

@@ -11,6 +11,7 @@ import { GRADE_STATUS_LABELS, type ItemVersion, type SubmissionRow } from "../mo
 import { buildEvaluationHref } from "../model/navigation";
 import { matchesPersonQuery } from "@/shared/studentCode";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   classId: string; assignmentId: string; onDone: () => void;
@@ -65,43 +66,42 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
   }
 
   if (error) return <div role="alert" className="flex flex-wrap items-center gap-2 text-sm text-danger">
-    {error}<Button size="sm" onClick={() => void refresh().catch(() => {})}>Thử lại</Button>
+    {error}<Button size="sm" onClick={() => void refresh().catch(() => {})}>{msg("grading.components.GradebookBatchControls.thuLai")}</Button>
   </div>;
-  if (!value) return <p role="status" className="text-sm text-muted">Đang tải bài nộp…</p>;
+  if (!value) return <p role="status" className="text-sm text-muted">{msg("grading.components.GradebookBatchControls.dangTaiBaiNop")}</p>;
 
   return <>
-    {readOnly && <Alert tone="info">{directory.readOnlyReason || "Bài tập chỉ cho phép xem bài nộp."}</Alert>}
-    {selectedCount > 0 && <div role="toolbar" aria-label="Thao tác bài đã chọn"
+    {readOnly && <Alert tone="info">{directory.readOnlyReason || msg("grading.components.GradebookBatchControls.baiTapChiChoPhepXem")}</Alert>}
+    {selectedCount > 0 && <div role="toolbar" aria-label={msg("grading.components.GradebookBatchControls.thaoTacBaiDaChon")}
       className="sticky top-14 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-line bg-surface p-3">
-      <span className="mr-auto text-sm font-semibold text-ink" aria-live="polite">Đã chọn {selectedCount} bài</span>
-      <Button size="sm" disabled={!aiItems.length} onClick={() => setAction({ kind: "ai", items: aiItems })}>Chấm bằng AI ({aiItems.length})</Button>
-      <Button size="sm" disabled={!publishItems.length} onClick={() => setAction({ kind: "publish", items: publishItems })}>Công bố điểm ({publishItems.length})</Button>
-      <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Bỏ chọn</Button>
+      <span className="mr-auto text-sm font-semibold text-ink" aria-live="polite">{msg("grading.components.GradebookBatchControls.daChon")}{selectedCount} {msg("grading.components.GradebookBatchControls.bai")}</span>
+      <Button size="sm" disabled={!aiItems.length} onClick={() => setAction({ kind: "ai", items: aiItems })}>{msg("grading.components.GradebookBatchControls.chamBangAi")}{aiItems.length})</Button>
+      <Button size="sm" disabled={!publishItems.length} onClick={() => setAction({ kind: "publish", items: publishItems })}>{msg("grading.components.GradebookBatchControls.congBoDiem")}{publishItems.length})</Button>
+      <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>{msg("grading.components.GradebookBatchControls.boChon")}</Button>
     </div>}
     {allPageSelected && selectedCount < eligible.length && <div className="flex flex-wrap items-center gap-2 text-sm">
       <Button size="sm" variant="secondary" disabled={eligible.length > MAX_BATCH}
         onClick={() => setSelected(new Set(eligible.map(row => row.evaluationId!)))}>
-        Chọn toàn bộ {eligible.length} bài phù hợp
-      </Button>
-      {eligible.length > MAX_BATCH && <span className="text-muted">Tối đa 100 bài mỗi lần.</span>}
+        {msg("grading.components.GradebookBatchControls.chonToanBo")}{eligible.length} {msg("grading.components.GradebookBatchControls.baiPhuHop")}</Button>
+      {eligible.length > MAX_BATCH && <span className="text-muted">{msg("grading.components.GradebookBatchControls.toiDa100BaiMoiLan")}</span>}
     </div>}
-    {selectedCount === MAX_BATCH && <p className="text-xs text-muted">Tối đa 100 bài mỗi lần.</p>}
+    {selectedCount === MAX_BATCH && <p className="text-xs text-muted">{msg("grading.components.GradebookBatchControls.toiDa100BaiMoiLan")}</p>}
     <TableFrame filledHead className="[&_table]:min-w-[560px] [&_table]:table-fixed">
-      <caption className="sr-only">{group ? "Bài nộp của nhóm" : "Bài nộp của sinh viên"}</caption>
+      <caption className="sr-only">{group ? msg("grading.components.GradebookBatchControls.baiNopCuaNhom") : msg("grading.components.GradebookBatchControls.baiNopCuaSinhVien")}</caption>
       <colgroup><col className="w-11" /><col /><col className="w-24" /><col className="w-36" /><col className="w-11" /></colgroup>
       <thead><tr>
-        <Th><input type="checkbox" aria-label="Chọn tất cả trên trang" className="size-4 accent-primary"
+        <Th><input type="checkbox" aria-label={msg("grading.components.GradebookBatchControls.chonTatCaTrenTrang")} className="size-4 accent-primary"
           checked={allPageSelected} disabled={!pageItems.length || (!allPageSelected && !pageFits)}
           ref={node => { if (node) node.indeterminate = somePageSelected && !allPageSelected; }}
           onChange={event => togglePage(event.target.checked)} /></Th>
-        <Th>{group ? "Nhóm" : "Sinh viên"}</Th><Th>Điểm</Th><Th>Trạng thái</Th><Th><span className="sr-only">Thao tác</span></Th>
+        <Th>{group ? msg("grading.components.GradebookBatchControls.nhom") : msg("grading.components.GradebookBatchControls.sinhVien")}</Th><Th>{msg("grading.components.GradebookBatchControls.diem")}</Th><Th>{msg("grading.components.GradebookBatchControls.trangThai")}</Th><Th><span className="sr-only">{msg("grading.components.GradebookBatchControls.thaoTac")}</span></Th>
       </tr></thead>
       <tbody>{shown.map(row => {
         const state = formatStatus(row.status);
         const href = canSelect(row) ? buildEvaluationHref(row.evaluationId!) : null;
-        const label = group ? `Xem bản nộp chung của ${row.student.name}` : readOnly ? "Xem bài" : state === "PENDING" ? "Chấm bài" : state === "DRAFT" ? "Tiếp tục chấm" : "Xem điểm";
+        const label = group ? msg("grading.components.GradebookBatchControls.xemBanNopChungCua", { name: String(row.student.name) }) : readOnly ? msg("grading.components.GradebookBatchControls.xemBai") : state === "PENDING" ? msg("grading.components.GradebookBatchControls.chamBai") : state === "DRAFT" ? msg("grading.components.GradebookBatchControls.tiepTucCham") : msg("grading.components.GradebookBatchControls.xemDiem");
         const cells = <>
-          <Td onClick={(event) => event.stopPropagation()}><input type="checkbox" aria-label={`Chọn ${row.student.name}`} className="size-4 accent-primary"
+          <Td onClick={(event) => event.stopPropagation()}><input type="checkbox" aria-label={msg("grading.components.GradebookBatchControls.chon", { name: String(row.student.name) })} className="size-4 accent-primary"
             checked={!!row.evaluationId && selected.has(row.evaluationId)}
             disabled={readOnly || !canSelect(row) || (selectedCount >= MAX_BATCH && !selected.has(row.evaluationId!))}
             onChange={event => toggleRow(row.evaluationId!, event.target.checked)} /></Td>
@@ -112,7 +112,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
           <Td className="font-semibold whitespace-nowrap tabular-nums">{row.score == null ? "—" : `${Number(row.score)} / ${Number(row.maxScore ?? 10)}`}</Td>
           <Td><div className="flex flex-wrap gap-1.5">
             <Pill tone={state === "PUBLISHED" ? "success" : state === "DRAFT" ? "info" : state === "PENDING" ? "warning" : "neutral"}>{GRADE_STATUS_LABELS[state] ?? state}</Pill>
-            {row.late && <Pill tone="danger">Trễ</Pill>}
+            {row.late && <Pill tone="danger">{msg("grading.components.GradebookBatchControls.tre")}</Pill>}
           </div></Td>
           <Td>{href && <Link href={href} aria-label={label} title={label}
             onClick={(event) => event.stopPropagation()}
@@ -123,7 +123,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
           ? <ClickableRow key={row.student.accountId} onClick={() => router.push(href)}>{cells}</ClickableRow>
           : <tr key={row.student.accountId}>{cells}</tr>;
       })}
-        {!shown.length && <tr><Td colSpan={5} className="py-8 text-center! text-muted">Không có bài phù hợp.</Td></tr>}
+        {!shown.length && <tr><Td colSpan={5} className="py-8 text-center! text-muted">{msg("grading.components.GradebookBatchControls.khongCoBaiPhuHop")}</Td></tr>}
       </tbody>
     </TableFrame>
     <Pagination page={currentPage} pageSize={PAGE_SIZE} total={rows.length} summary={false} onPageChange={setPage} />

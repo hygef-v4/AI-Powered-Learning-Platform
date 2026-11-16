@@ -6,6 +6,7 @@ import { ApiError, setUnauthenticatedHandler } from "@/shared/api/client";
 import { clearCurrentUser } from "@/shared/auth/useCurrentUser";
 import { getProfile } from "../api";
 import type { Profile } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Trang không cần đăng nhập; hết phiên ở đây thì không chuyển hướng. */
 export const PUBLIC_PATHS = ["/login", "/activate", "/reset-password"];
@@ -92,6 +93,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
 export function useSession() {
   const value = useContext(SessionContext);
-  if (!value) throw new Error("useSession phải nằm trong SessionProvider");
+  if (!value) throw new Error(msg("identity.hooks.session.usesessionPhaiNamTrongSessionprovider"));
   return value;
 }

@@ -13,6 +13,7 @@ import { showToast } from "@/shared/ui/Toast";
 import { STATUS_LABELS, STATUS_TONES } from "../../admin/model/labels";
 import { updateProfile } from "../../api";
 import { ROLE_LABELS, type Profile } from "../../model/types";
+import { msg } from "@/i18n/msg";
 
 const PHONE_FORMAT = /^\+?[0-9]{8,15}$/;
 
@@ -44,8 +45,8 @@ export function ProfileForm({
     const name = displayName.trim();
     const phone = phoneNumber.trim();
     const errors = {
-      name: name.length === 0 || [...name].length > 150 ? "Họ và tên cần từ 1 đến 150 ký tự." : undefined,
-      phone: phone && !PHONE_FORMAT.test(phone) ? "Số điện thoại gồm 8–15 chữ số, có thể có dấu + ở đầu." : undefined,
+      name: name.length === 0 || [...name].length > 150 ? msg("identity.profile.components.ProfileForm.hoVaTenCanTu1") : undefined,
+      phone: phone && !PHONE_FORMAT.test(phone) ? msg("identity.profile.components.ProfileForm.soDienThoaiGom815") : undefined,
     };
     setFieldError(errors);
     if (errors.name || errors.phone) return;
@@ -55,11 +56,11 @@ export function ProfileForm({
       const saved = await updateProfile(name, phone);
       setDisplayName(saved.displayName);
       setPhoneNumber(saved.phoneNumber ?? "");
-      showToast("Đã lưu thay đổi");
+      showToast(msg("identity.profile.components.ProfileForm.daLuuThayDoi"));
       onSaved(saved);
     } catch (e) {
       const detail = e instanceof ApiError && e.problem.status === 400 ? e.problem.detail : undefined;
-      setMessage({ kind: "error", text: detail ?? "Không lưu được, vui lòng thử lại sau." });
+      setMessage({ kind: "error", text: detail ?? msg("identity.profile.components.ProfileForm.khongLuuDuocVuiLongThu") });
     } finally {
       setSaving(false);
     }
@@ -67,9 +68,9 @@ export function ProfileForm({
 
   return (
     <Section
-      title="Thông tin cá nhân"
+      title={msg("identity.profile.components.ProfileForm.thongTinCaNhan")}
       icon="person"
-      description="Email trường, vai trò và trạng thái do quản trị viên quản lý."
+      description={msg("identity.profile.components.ProfileForm.emailTruongVaiTroVaTrang")}
     >
       <div className="flex items-center gap-4 rounded-lg bg-shell p-4">
         <span
@@ -87,7 +88,7 @@ export function ProfileForm({
 
       <form onSubmit={submit} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Họ và tên" htmlFor={nameId} error={fieldError.name}>
+          <Field label={msg("identity.profile.components.ProfileForm.hoVaTen")} htmlFor={nameId} error={fieldError.name}>
             <TextInput
               id={nameId}
               value={displayName}
@@ -95,7 +96,7 @@ export function ProfileForm({
               onChange={(e) => setDisplayName(e.target.value)}
             />
           </Field>
-          <Field label="Số điện thoại" htmlFor={phoneId} error={fieldError.phone}>
+          <Field label={msg("identity.profile.components.ProfileForm.soDienThoai")} htmlFor={phoneId} error={fieldError.phone}>
             <TextInput
               id={phoneId}
               inputMode="tel"
@@ -104,16 +105,16 @@ export function ProfileForm({
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
           </Field>
-          <Field label="Email trường" htmlFor={emailId}>
+          <Field label={msg("identity.profile.components.ProfileForm.emailTruong")} htmlFor={emailId}>
             <LockedInput id={emailId} value={profile.email} />
           </Field>
-          <Field label="Vai trò" htmlFor={roleId}>
+          <Field label={msg("identity.profile.components.ProfileForm.vaiTro")} htmlFor={roleId}>
             <LockedInput id={roleId} value={ROLE_LABELS[profile.role]} />
           </Field>
           {profile.role === "STUDENT" && (
             // BR-U01-106: sinh viên chỉ xem MSSV, không sửa được.
-            <Field label="Mã số sinh viên" htmlFor={studentCodeId}>
-              <LockedInput id={studentCodeId} value={profile.studentCode ?? "Chưa có MSSV"} />
+            <Field label={msg("identity.profile.components.ProfileForm.maSoSinhVien")} htmlFor={studentCodeId}>
+              <LockedInput id={studentCodeId} value={profile.studentCode ?? msg("identity.profile.components.ProfileForm.chuaCoMssv")} />
             </Field>
           )}
         </div>
@@ -129,8 +130,7 @@ export function ProfileForm({
 
         <div className="flex justify-end border-t border-line pt-5">
           <Button type="submit" variant="primary" disabled={!dirty || saving}>
-            Lưu thay đổi
-          </Button>
+            {msg("identity.profile.components.ProfileForm.luuThayDoi")}</Button>
         </div>
       </form>
     </Section>

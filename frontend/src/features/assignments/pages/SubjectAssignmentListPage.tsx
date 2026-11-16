@@ -10,6 +10,7 @@ import { CreateAssignmentDialog } from "../components/CreateAssignmentDialog";
 import { errorMessage } from "../model/format";
 import { useAssignmentPage } from "../hooks/useAssignmentPage";
 import { rememberAssignmentsPage } from "../model/outline";
+import { msg } from "@/i18n/msg";
 
 type ManagedSubject = { id: string; code: string; name: string };
 
@@ -42,11 +43,11 @@ export function SubjectAssignmentListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Đề mẫu bài tập"
+      <PageHeader title={msg("assignments.pages.SubjectAssignmentListPage.deMauBaiTap")}
         actions={<Button variant="primary" icon="add" disabled={!subjectId || !page.data || page.data.ownerArchived}
-          onClick={() => setCreating(true)} data-testid="subject-assignment-create">Tạo đề mẫu</Button>} />
+          onClick={() => setCreating(true)} data-testid="subject-assignment-create">{msg("assignments.pages.SubjectAssignmentListPage.taoDeMau")}</Button>} />
       {subjectsError !== null && <Alert tone="danger" role="alert">{errorMessage(subjectsError)}</Alert>}
-      {subjects && subjects.length === 0 && <Alert tone="info">Bạn chưa được giao quản lý môn nào.</Alert>}
+      {subjects && subjects.length === 0 && <Alert tone="info">{msg("assignments.pages.SubjectAssignmentListPage.banChuaDuocGiaoQuanLy")}</Alert>}
       {subjectId && <AssignmentListCard page={page} />}
       {creating && subjectId && (
         <CreateAssignmentDialog target={{ kind: "subject", subjectId }} onClose={() => setCreating(false)}

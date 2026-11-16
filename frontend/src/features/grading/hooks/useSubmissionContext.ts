@@ -4,8 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { gradingApi } from "../api";
 import { academicsApi } from "@/features/academics/api";
 import type { AssignmentContext } from "../model/types";
+import { msg } from "@/i18n/msg";
 
-const CONTEXT_ERROR = "Không tải được thông tin bài tập/lớp.";
+const CONTEXT_ERROR = msg("grading.hooks.useSubmissionContext.khongTaiDuocThongTinBai");
 type ContextState = { key: string; value: AssignmentContext | null; error: string };
 
 /** Independent of submission filters; stale route responses never supply page labels. */

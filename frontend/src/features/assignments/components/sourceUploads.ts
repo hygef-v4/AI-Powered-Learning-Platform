@@ -7,6 +7,7 @@ import { assignmentsApi } from "../api";
 import { errorMessage } from "../model/format";
 import { templateText } from "../model/templateText";
 import type { AiSourcePreview } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 export const MAX_SOURCE_FILES = 3;
 
@@ -26,11 +27,11 @@ export type TemplateFile = { file: File; status: "READING" | "READY" | "ERROR"; 
 /** Đọc mẫu đề bằng bộ nhập DOCX; số câu hỏi là số mục ngoài cùng của mẫu. Không đọc được thì trả trạng thái lỗi. */
 export async function readTemplateFile(assignmentId: string, file: File): Promise<TemplateFile> {
   try {
-    if (!file.name.toLowerCase().endsWith(".docx")) throw new Error("Mẫu đề phải là DOCX.");
-    if (file.size < 1 || file.size > 20 * 1024 * 1024) throw new Error("Tệp DOCX phải có nội dung và tối đa 20 MB.");
+    if (!file.name.toLowerCase().endsWith(".docx")) throw new Error(msg("assignments.components.sourceUploads.mauDePhaiLaDocx"));
+    if (file.size < 1 || file.size > 20 * 1024 * 1024) throw new Error(msg("assignments.components.sourceUploads.tepDocxPhaiCoNoiDung"));
     const preview = await assignmentsApi.importDocx(assignmentId, file);
     const { text, questionCount } = templateText(preview.document);
-    if (!text.trim()) throw new Error("Mẫu đề không có nội dung đọc được.");
+    if (!text.trim()) throw new Error(msg("assignments.components.sourceUploads.mauDeKhongCoNoiDung"));
     return { file, status: "READY", text, questionCount };
   } catch (cause) {
     return { file, status: "ERROR", error: errorMessage(cause) };
@@ -59,7 +60,7 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
         if (active) setPolicy(policies.find((item) => item.purpose === "ASSIGNMENT_SOURCE") ?? null);
       })
       .catch(() => {
-        if (active) report.current("Không tải được giới hạn tệp nguồn.");
+        if (active) report.current(msg("assignments.components.sourceUploads.khongTaiDuocGioiHanTep"));
       });
     return () => {
       active = false;
@@ -85,13 +86,13 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
   }
 
   async function upload(file: File, id: string = crypto.randomUUID()): Promise<SourceUpload | undefined> {
-    if (!policy) { report.current("Chưa tải được chính sách tệp nguồn."); return; }
+    if (!policy) { report.current(msg("assignments.components.sourceUploads.chuaTaiDuocChinhSachTep")); return; }
     if (!current.current.some(item => item.id === id) && current.current.length >= MAX_SOURCE_FILES) {
-      report.current("Chỉ chọn tối đa 3 tệp nguồn."); return;
+      report.current(msg("assignments.components.sourceUploads.chiChonToiDa3Tep")); return;
     }
     aborts.current.get(id)?.();
     aborts.current.delete(id);
-    const issue = file.size < 1 ? "Tệp không có nội dung." : checkFile(file, policy);
+    const issue = file.size < 1 ? msg("assignments.components.sourceUploads.tepKhongCoNoiDung") : checkFile(file, policy);
     const start: SourceUpload = issue ? { id, file, status: "ERROR", percent: 0, error: issue }
       : { id, file, status: "UPLOADING", percent: 0 };
     commit(current.current.some(item => item.id === id)
@@ -112,14 +113,14 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
       update(id, item => ({ ...item, status: "READING", percent: 100, fileRef: result.fileRef.value }));
       const previews = await assignmentsApi.previewAiSources(assignmentId, [result.fileRef.value], controller.signal);
       if (!active()) return;
-      if (!previews[0]) throw new Error("Không đọc được nội dung tệp.");
+      if (!previews[0]) throw new Error(msg("assignments.components.sourceUploads.khongDocDuocNoiDungTep"));
       const ready: SourceUpload = { id, file, status: "READY", percent: 100, fileRef: result.fileRef.value, preview: previews[0] };
       update(id, () => ready);
       return ready;
     } catch (cause) {
       if (!active()) return;
       const failed: SourceUpload = { id, file, status: "ERROR", percent: 0,
-        error: cause instanceof Error ? cause.message : "Tải tệp lên không thành công" };
+        error: cause instanceof Error ? cause.message : msg("assignments.components.sourceUploads.taiTepLenKhongThanhCong") };
       update(id, () => failed);
       return failed;
     } finally {
@@ -131,7 +132,7 @@ export function useSourceUploads(assignmentId: string, onError: (message: string
     if (!files) return;
     const unique = [...new Set(Array.from(files))].filter(file => !current.current.some(item => item.file === file));
     const remaining = MAX_SOURCE_FILES - current.current.length;
-    if (unique.length > remaining) report.current(`Chỉ chọn tối đa 3 tệp nguồn; ${unique.length - Math.max(remaining, 0)} tệp chưa được thêm.`);
+    if (unique.length > remaining) report.current(msg("assignments.components.sourceUploads.chiChonToiDa3Tep2", { value: String(unique.length - Math.max(remaining, 0)) }));
     unique.slice(0, Math.max(0, remaining)).forEach(file => void upload(file));
   }
 

@@ -8,6 +8,7 @@ import { SettingLine } from "@/shared/ui/SettingsCard";
 import { updateSetting } from "../api";
 import type { SettingItem, SettingValue } from "../model/types";
 import { options, unitOf, validateSettingValue } from "../model/validation";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   item: SettingItem;
@@ -41,10 +42,10 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
       if (problem?.status === 409) {
-        setServerError("Vừa có người sửa mục này, đã tải lại giá trị mới.");
+        setServerError(msg("settings.components.SettingRow.vuaCoNguoiSuaMucNay"));
         onConflict();
       } else {
-        setServerError(problem?.status === 400 ? (problem.detail ?? "Giá trị không hợp lệ") : "Không lưu được, thử lại sau");
+        setServerError(problem?.status === 400 ? (problem.detail ?? msg("settings.components.SettingRow.giaTriKhongHopLe")) : msg("settings.components.SettingRow.khongLuuDuocThuLaiSau"));
       }
     } finally {
       setSaving(false);
@@ -107,7 +108,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
           disabled={locked}
           onChange={(e) => change(e.target.value === "" ? null : e.target.value)}
         >
-          {draft === null && <option value="">Chưa chọn</option>}
+          {draft === null && <option value="">{msg("settings.components.SettingRow.chuaChon")}</option>}
           {options(item).map((option) => (
             <option key={option} value={option}>
               {option}
@@ -141,8 +142,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
         item.type !== "BOOLEAN" &&
         dirty && (
           <Button size="sm" variant="primary" disabled={locked || invalid !== null} onClick={() => void save(draft)}>
-            Lưu
-          </Button>
+            {msg("settings.components.SettingRow.luu")}</Button>
         )
       }
     />

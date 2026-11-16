@@ -10,6 +10,7 @@ import { AuditTable } from "../components/AuditTable";
 import { getAuditLogs } from "../api";
 import { defaultFilter, toQuery } from "../model/labels";
 import type { AuditFilterForm, AuditLogPage as Page, AuditQuery } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 export const PAGE_SIZE = 50;
 /** Gõ hay chọn liền nhiều ô thì gom lại một lần tra cứu. */
@@ -64,8 +65,8 @@ export function AuditLogPage() {
     setData(null);
     setError(
       e instanceof ApiError && e.problem.status === 403
-        ? "Bạn không có quyền xem Nhật ký."
-        : "Không tải được nhật ký audit, thử lại sau.",
+        ? msg("audit.pages.AuditLogPage.banKhongCoQuyenXemNhat")
+        : msg("audit.pages.AuditLogPage.khongTaiDuocNhatKyAudit"),
     );
     setLoading(false);
   };
@@ -119,7 +120,7 @@ export function AuditLogPage() {
 
   return (
     <>
-      <PageHeader title="Nhật ký" />
+      <PageHeader title={msg("audit.pages.AuditLogPage.nhatKy")} />
       {/* Bộ lọc dính dưới thanh trên cùng khi cuộn; khi dính thì phủ nền cả khoảng trên card để dòng bảng không lộ ra. */}
       <div ref={sentinel} aria-hidden="true" className="-mb-7 h-px" />
       <div
@@ -138,8 +139,7 @@ export function AuditLogPage() {
       )}
       {loading && !data && (
         <p className="text-[13px] text-muted" data-testid="audit-loading">
-          Đang tải…
-        </p>
+          {msg("audit.pages.AuditLogPage.dangTai")}</p>
       )}
       {data && (
         <div className={loading ? "opacity-60" : undefined} aria-busy={loading}>

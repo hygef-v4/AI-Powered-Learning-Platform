@@ -13,6 +13,7 @@ import type {
   SubmissionRow,
 } from "../model/types";
 import type { SubmissionDocumentDto } from "../model/submissionDocument";
+import { msg } from "@/i18n/msg";
 
 /** Link tải có hạn cho từng ảnh trong bài nộp (U03 qua U09), lấy một lần khi mở bài. */
 export function useSubmissionImages(
@@ -68,7 +69,7 @@ export function noteCriteria(rubric: Rubric): RubricCriterion[] {
 /** Thẻ Tổng điểm tạm tính bên lề trang chấm; dáng chung từ `TotalScoreCard`. */
 export function TotalCard({ total, maxScore }: { total: number; maxScore: number }) {
   return (
-    <TotalScoreCard score={total} maxScore={maxScore} ariaLabel="Điểm tạm tính"
+    <TotalScoreCard score={total} maxScore={maxScore} ariaLabel={msg("grading.components.GradingWorkspaceHeader.diemTamTinh")}
       format={(value) => (value ?? 0).toFixed(2)} />
   );
 }
@@ -139,7 +140,7 @@ export function StudentPickerDropdown({
     <div ref={dropdownRef} className="relative">
       <button
         type="button"
-        aria-label="Chọn sinh viên"
+        aria-label={msg("grading.components.GradingWorkspaceHeader.chonSinhVien")}
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
         className="flex max-w-[min(18rem,40vw)] cursor-pointer items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 py-1 text-left transition-colors hover:bg-sunken"
@@ -153,10 +154,9 @@ export function StudentPickerDropdown({
       {open && (
         <Card padding="sm" className="absolute left-1/2 top-full z-20 mt-2 w-[min(22rem,calc(100vw-3rem))] -translate-x-1/2 shadow-[var(--shadow-float)]">
           <label className="flex flex-col gap-2 text-sm font-semibold text-ink">
-            Tìm sinh viên
-            <input
+            {msg("grading.components.GradingWorkspaceHeader.timSinhVien")}<input
               type="search"
-              placeholder="Tên, email hoặc MSSV"
+              placeholder={msg("grading.components.GradingWorkspaceHeader.tenEmailHoacMssv")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               className="w-full rounded-lg border border-field px-3 py-2 text-sm font-normal"
@@ -164,17 +164,15 @@ export function StudentPickerDropdown({
           </label>
           {directory.error ? (
             <p role="alert" className="mt-3 text-sm text-danger">
-              Không tải được danh sách.{" "}
+              {msg("grading.components.GradingWorkspaceHeader.khongTaiDuocDanhSach")}{" "}
               <button type="button" className="underline" onClick={() => void directory.refresh().catch(() => {})}>
-                Thử lại
-              </button>
+                {msg("grading.components.GradingWorkspaceHeader.thuLai")}</button>
             </p>
           ) : !directory.value ? (
             <p role="status" className="mt-3 text-sm text-muted">
-              Đang tải sinh viên…
-            </p>
+              {msg("grading.components.GradingWorkspaceHeader.dangTaiSinhVien")}</p>
           ) : (
-            <ul aria-label="Bài nộp sinh viên" className="mt-2 max-h-64 overflow-y-auto">
+            <ul aria-label={msg("grading.components.GradingWorkspaceHeader.baiNopSinhVien")} className="mt-2 max-h-64 overflow-y-auto">
               {matches.map((row) => (
                 <li key={row.student.accountId}>
                   <button
@@ -191,7 +189,7 @@ export function StudentPickerDropdown({
                   </button>
                 </li>
               ))}
-              {!matches.length && <li className="py-3 text-sm text-muted">Không có bài nộp phù hợp.</li>}
+              {!matches.length && <li className="py-3 text-sm text-muted">{msg("grading.components.GradingWorkspaceHeader.khongCoBaiNopPhuHop")}</li>}
             </ul>
           )}
         </Card>
@@ -225,30 +223,29 @@ export function GradingHeaderSection({
         {assignmentKind}
       </p>
       {unanchoredAuthors.length > 0 && (
-        <p className="text-xs text-muted">Người thực hiện: {unanchoredAuthors.join(", ")}</p>
+        <p className="text-xs text-muted">{msg("grading.components.GradingWorkspaceHeader.nguoiThucHien")}{unanchoredAuthors.join(", ")}</p>
       )}
-      <section aria-label="Nhận xét chung" className="mt-1 text-sm leading-relaxed text-body">
-        <label htmlFor="grading-general-feedback" className="text-sm font-semibold text-ink">Nhận xét chung</label>
+      <section aria-label={msg("grading.components.GradingWorkspaceHeader.nhanXetChung")} className="mt-1 text-sm leading-relaxed text-body">
+        <label htmlFor="grading-general-feedback" className="text-sm font-semibold text-ink">{msg("grading.components.GradingWorkspaceHeader.nhanXetChung")}</label>
         <AutoTextarea
           id="grading-general-feedback"
-          aria-label="Nhận xét chung"
+          aria-label={msg("grading.components.GradingWorkspaceHeader.nhanXetChung")}
           disabled={disabled}
           rows={3}
           maxLength={10000}
           value={form.feedback}
           onChange={(event) => setFeedback(event.target.value)}
-          placeholder="Nhập nhận xét chung cho bài làm…"
+          placeholder={msg("grading.components.GradingWorkspaceHeader.nhapNhanXetChungChoBai")}
           className="mt-2 min-h-28 rounded-lg border! border-line bg-surface! p-3! text-sm font-normal leading-6 text-ink focus:border-focus disabled:opacity-60"
         />
         {form.feedback.trim() && <p className="sr-only">{form.feedback}</p>}
       </section>
       <div className="flex flex-wrap items-end gap-3">
         <label className="block text-xs font-semibold text-ink">
-          Điểm cộng/trừ
-          <input
+          {msg("grading.components.GradingWorkspaceHeader.diemCongTru")}<input
             type="number"
             step="0.25"
-            aria-label="Điểm cộng/trừ"
+            aria-label={msg("grading.components.GradingWorkspaceHeader.diemCongTru")}
             disabled={disabled}
             value={form.adjustment}
             onChange={(event) => setAdjustment(event.target.value)}
@@ -257,14 +254,14 @@ export function GradingHeaderSection({
         </label>
       </div>
       {!disabled && <details className="text-xs text-muted">
-        <summary className="cursor-pointer">Ghi chú thay đổi (tùy chọn)</summary>
-        <input aria-label="Ghi chú thay đổi" value={form.changeReason}
+        <summary className="cursor-pointer">{msg("grading.components.GradingWorkspaceHeader.ghiChuThayDoiTuyChon")}</summary>
+        <input aria-label={msg("grading.components.GradingWorkspaceHeader.ghiChuThayDoi")} value={form.changeReason}
           onChange={event => setChangeReason(event.target.value)}
           className="mt-2 block w-full rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-normal text-ink focus:border-focus focus:outline-none" />
       </details>}
       <GradingFeedbackSummary
         summary={form.structuredFeedback?.summary}
-        title="Điểm mạnh và điểm cần cải thiện"
+        title={msg("grading.components.GradingWorkspaceHeader.diemManhVaDiemCanCai")}
         editable={!disabled}
         disabled={disabled}
         onChange={updateStructuredSummary}

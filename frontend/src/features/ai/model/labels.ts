@@ -1,6 +1,7 @@
 import type { Tone } from "@/shared/ui";
 import type { McpAccess, McpStatus, Provenance, UsageSource } from "./types";
 import type { AiProvider } from "@/shared/ai";
+import { msg } from "@/i18n/msg";
 
 export const PROVIDER_CONSOLE: Record<AiProvider, string> = {
   GEMINI: "Google AI Studio",
@@ -19,47 +20,47 @@ export function defaultModel(provider: AiProvider, models: string[]): string {
 }
 
 export const ACCESS_LABEL: Record<McpAccess, string> = {
-  READ_ONLY: "Chỉ đọc",
-  READ_WRITE: "Đọc và ghi",
+  READ_ONLY: msg("ai.model.labels.chiDoc"),
+  READ_WRITE: msg("ai.model.labels.docVaGhi"),
 };
 
 export const MCP_STATUS: Record<McpStatus, { text: string; tone: Tone }> = {
-  ACTIVE: { text: "Hiệu lực", tone: "success" },
-  EXPIRED: { text: "Hết hạn", tone: "neutral" },
-  REVOKED: { text: "Thu hồi", tone: "danger" },
+  ACTIVE: { text: msg("ai.model.labels.hieuLuc"), tone: "success" },
+  EXPIRED: { text: msg("ai.model.labels.hetHan"), tone: "neutral" },
+  REVOKED: { text: msg("ai.model.labels.thuHoi"), tone: "danger" },
 };
 
 export const SOURCE_LABEL: Record<UsageSource, string> = {
-  SHARED: "API hệ thống",
-  PERSONAL: "API cá nhân",
+  SHARED: msg("ai.model.labels.apiHeThong"),
+  PERSONAL: msg("ai.model.labels.apiCaNhan"),
   MCP: "Agent MCP",
 };
 
 export const PROVENANCE_LABEL: Record<Provenance, string> = {
-  PROVIDER_MEASURED: "Nhà cung cấp đo",
-  ESTIMATED: "Ước tính",
-  EXTERNALLY_REPORTED: "Agent tự báo",
-  UNAVAILABLE: "Không có số liệu",
+  PROVIDER_MEASURED: msg("ai.model.labels.nhaCungCapDo"),
+  ESTIMATED: msg("ai.model.labels.uocTinh"),
+  EXTERNALLY_REPORTED: msg("ai.model.labels.agentTuBao"),
+  UNAVAILABLE: msg("ai.model.labels.khongCoSoLieu"),
 };
 
 export const OUTCOME_LABEL: Record<string, { text: string; tone: Tone }> = {
   READY: { text: "Xong", tone: "success" },
   OK: { text: "Xong", tone: "success" },
-  REJECTED: { text: "Bị từ chối", tone: "danger" },
-  FAILED: { text: "Lỗi", tone: "danger" },
-  ERROR: { text: "Lỗi", tone: "danger" },
-  DENIED: { text: "Không có quyền", tone: "danger" },
-  UNKNOWN: { text: "Không rõ kết quả", tone: "warning" },
-  CANCELLED: { text: "Đã hủy", tone: "neutral" },
+  REJECTED: { text: msg("ai.model.labels.biTuChoi"), tone: "danger" },
+  FAILED: { text: msg("ai.model.labels.loi"), tone: "danger" },
+  ERROR: { text: msg("ai.model.labels.loi"), tone: "danger" },
+  DENIED: { text: msg("ai.model.labels.khongCoQuyen"), tone: "danger" },
+  UNKNOWN: { text: msg("ai.model.labels.khongRoKetQua"), tone: "warning" },
+  CANCELLED: { text: msg("ai.model.labels.daHuy"), tone: "neutral" },
 };
 
 /** Tên tác vụ AI theo mã loại task của unit gọi; mã chưa biết thì hiện nguyên mã. */
 export const TASK_LABEL: Record<string, string> = {
-  ASSIGNMENT_DRAFT: "Tạo nháp bài tập",
-  QUIZ_QUESTION_DRAFT: "Tạo nháp câu hỏi",
-  GRADING_PROPOSAL: "Đề xuất chấm bài",
-  PRACTICE_FEEDBACK: "Góp ý bài luyện tập",
-  CONNECTION_TEST: "Kiểm tra kết nối",
+  ASSIGNMENT_DRAFT: msg("ai.model.labels.taoNhapBaiTap"),
+  QUIZ_QUESTION_DRAFT: msg("ai.model.labels.taoNhapCauHoi"),
+  GRADING_PROPOSAL: msg("ai.model.labels.deXuatChamBai"),
+  PRACTICE_FEEDBACK: msg("ai.model.labels.gopYBaiLuyenTap"),
+  CONNECTION_TEST: msg("ai.model.labels.kiemTraKetNoi"),
 };
 
 export const MAX_AGENTS = 5;
@@ -68,12 +69,12 @@ export const MAX_AGENTS = 5;
 export function errorMessage(code: string | undefined, fallback: string): string {
   switch (code) {
     case "AI_KEY_ENCRYPTION_NOT_CONFIGURED":
-      return "Hệ thống chưa bật mã hóa khóa API, hãy báo Quản trị viên.";
+      return msg("ai.model.labels.heThongChuaBatMaHoa");
     case "AI_CONNECTION_VERSION_CONFLICT":
     case "AI_QUOTA_VERSION_CONFLICT":
-      return "Dữ liệu vừa được thay đổi ở nơi khác, hãy tải lại.";
+      return msg("ai.model.labels.duLieuVuaDuocThayDoi");
     case "MCP_LIMIT_REACHED":
-      return "Bạn đã có 5 agent còn hiệu lực; hãy thu hồi bớt.";
+      return msg("ai.model.labels.banDaCo5AgentCon");
     default:
       return fallback;
   }
@@ -84,17 +85,17 @@ export function errorMessage(code: string | undefined, fallback: string): string
  */
 export function shortTestResult(text: string | null | undefined): string {
   const value = text?.trim() ?? "";
-  if (value === "Đạt") return "Đạt";
-  if (/key api|khóa|HTTP 40[13]/i.test(value)) return "Sai khóa";
+  if (value === msg("ai.model.labels.dat")) return msg("ai.model.labels.dat");
+  if (/key api|khóa|HTTP 40[13]/i.test(value)) return msg("ai.model.labels.saiKhoa");
   if (/model|HTTP 404/i.test(value)) return "Sai model";
-  if (/giới hạn token/i.test(value)) return "Giới hạn token";
-  if (/tần suất.*hoặc.*hạn mức/i.test(value)) return "Tần suất / hạn mức";
-  if (/tần suất/i.test(value)) return "Giới hạn tần suất";
-  if (/hạn mức|số dư/i.test(value)) return "Hết hạn mức";
-  if (/HTTP 429/i.test(value)) return "Tần suất / hạn mức";
-  if (/quá tải|HTTP 5(03|29)/i.test(value)) return "Quá tải";
-  if (/kịp|timeout/i.test(value)) return "Quá giờ";
-  if (/kết nối/i.test(value)) return "Mất kết nối";
-  if (/từ chối|HTTP 400/i.test(value)) return "Bị từ chối";
-  return "Không đạt";
+  if (/giới hạn token/i.test(value)) return msg("ai.model.labels.gioiHanToken");
+  if (/tần suất.*hoặc.*hạn mức/i.test(value)) return msg("ai.model.labels.tanSuatHanMuc");
+  if (/tần suất/i.test(value)) return msg("ai.model.labels.gioiHanTanSuat");
+  if (/hạn mức|số dư/i.test(value)) return msg("ai.model.labels.hetHanMuc");
+  if (/HTTP 429/i.test(value)) return msg("ai.model.labels.tanSuatHanMuc");
+  if (/quá tải|HTTP 5(03|29)/i.test(value)) return msg("ai.model.labels.quaTai");
+  if (/kịp|timeout/i.test(value)) return msg("ai.model.labels.quaGio");
+  if (/kết nối/i.test(value)) return msg("ai.model.labels.matKetNoi");
+  if (/từ chối|HTTP 400/i.test(value)) return msg("ai.model.labels.biTuChoi");
+  return msg("ai.model.labels.khongDat");
 }

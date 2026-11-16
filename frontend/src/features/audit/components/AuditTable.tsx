@@ -4,13 +4,14 @@ import { Card, Pagination, Pill, Td } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
 import { RESULT_LABELS, actionLabel, formatDateTime, formatFull, objectTypeLabel, shortId, shortReason } from "../model/labels";
 import type { AuditLogPage } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   data: AuditLogPage;
   onPageChange: (page: number) => void;
 };
 
-export const SYSTEM_ACTOR = "Hệ thống";
+export const SYSTEM_ACTOR = msg("audit.components.AuditTable.heThong");
 
 /** Ô chữ dài: tối đa 2 dòng, dài hơn thì cắt (đủ chữ khi rê chuột). */
 const CLAMP = "line-clamp-2 leading-snug";
@@ -39,20 +40,19 @@ export function AuditTable({ data, onPageChange }: Props) {
           <thead>
             <tr>
               <th scope="col" className={cx(HEAD, "text-right")}>STT</th>
-              <th scope="col" className={HEAD}>Thời gian</th>
-              <th scope="col" className={HEAD}>Người thực hiện</th>
-              <th scope="col" className={HEAD}>Hành động</th>
-              <th scope="col" className={HEAD}>Đối tượng</th>
-              <th scope="col" className={HEAD}>Kết quả</th>
-              <th scope="col" className={HEAD}>Lý do</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.thoiGian")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.nguoiThucHien")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.hanhDong")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.doiTuong")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.ketQua")}</th>
+              <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.lyDo")}</th>
             </tr>
           </thead>
           <tbody>
             {data.items.length === 0 && (
               <tr>
                 <Td colSpan={7} className="px-3 text-muted" data-testid="audit-table-empty">
-                  Không có bản ghi nào phù hợp.
-                </Td>
+                  {msg("audit.components.AuditTable.khongCoBanGhiNaoPhu")}</Td>
               </tr>
             )}
             {data.items.map((item, index) => {

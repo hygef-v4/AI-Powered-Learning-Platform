@@ -9,10 +9,11 @@ import { login } from "../api";
 import { AUTH_INPUT, AUTH_LABEL, LOGIN_BUTTON } from "./authStyles";
 import { FieldError, PasswordField } from "./PasswordField";
 import type { SessionInfo } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Một câu cho mọi thất bại: không phân biệt sai mật khẩu, khóa tạm, chưa kích hoạt hay không tồn tại (BR-U01-40, Q05). */
-export const LOGIN_FAILED_MESSAGE = "Email hoặc mật khẩu không đúng, hoặc tài khoản chưa sẵn sàng.";
-export const SYSTEM_BUSY_MESSAGE = "Hệ thống tạm bận, vui lòng thử lại sau.";
+export const LOGIN_FAILED_MESSAGE = msg("identity.components.LoginForm.emailHoacMatKhauKhongDung");
+export const SYSTEM_BUSY_MESSAGE = msg("identity.components.LoginForm.heThongTamBanVuiLong");
 
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -32,8 +33,8 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
   async function submit(event: FormEvent) {
     event.preventDefault();
     // Lỗi nhập nằm dưới đúng ô; ô lỗi đầu tiên nhận focus.
-    const invalidEmail = EMAIL_FORMAT.test(email.trim()) ? null : "Nhập đúng email do trường cấp.";
-    const missingPassword = password.length === 0 ? "Nhập mật khẩu." : null;
+    const invalidEmail = EMAIL_FORMAT.test(email.trim()) ? null : msg("identity.components.LoginForm.nhapDungEmailDoTruongCap");
+    const missingPassword = password.length === 0 ? msg("identity.components.LoginForm.nhapMatKhau") : null;
     setEmailError(invalidEmail);
     setPasswordError(missingPassword);
     setError(null);
@@ -59,7 +60,7 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
 
   return (
     <form onSubmit={submit} noValidate>
-      <h1 className="font-display text-[34px] leading-none tracking-[-0.03em] text-ink">Đăng nhập</h1>
+      <h1 className="font-display text-[34px] leading-none tracking-[-0.03em] text-ink">{msg("identity.components.LoginForm.dangNhap")}</h1>
 
       <div className="mt-7">
         <label htmlFor={emailId} className={AUTH_LABEL}>
@@ -83,7 +84,7 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
       </div>
       <PasswordField
         className="mt-4"
-        label="Mật khẩu"
+        label={msg("identity.components.LoginForm.matKhau")}
         autoComplete="current-password"
         value={password}
         error={passwordError}
@@ -106,19 +107,17 @@ export function LoginForm({ onSuccess }: { onSuccess: (session: SessionInfo) => 
         disabled={submitting}
         className={cx(LOGIN_BUTTON, "mt-6")}
       >
-        {submitting ? "Đang đăng nhập…" : "Đăng nhập"}
+        {submitting ? msg("identity.components.LoginForm.dangDangNhap") : msg("identity.components.LoginForm.dangNhap")}
       </button>
 
       <div className="mt-4 text-right">
         <Link href="/reset-password" className="inline-flex min-h-6 items-center text-xs font-medium text-primary-ink hover:underline">
-          Quên mật khẩu?
-        </Link>
+          {msg("identity.components.LoginForm.quenMatKhau")}</Link>
       </div>
       <p className="mt-3 text-center text-xs text-muted">
-        Lần đầu sử dụng?{" "}
+        {msg("identity.components.LoginForm.lanDauSuDung")}{" "}
         <Link href="/activate" className="inline-flex min-h-6 items-center font-semibold text-primary-ink hover:underline">
-          Kích hoạt tài khoản
-        </Link>
+          {msg("identity.components.LoginForm.kichHoatTaiKhoan")}</Link>
       </p>
     </form>
   );

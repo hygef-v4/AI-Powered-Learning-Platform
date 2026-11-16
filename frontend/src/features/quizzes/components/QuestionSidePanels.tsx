@@ -6,6 +6,7 @@ import { Field, Pill, Section, Select, TextInput } from "@/shared/ui";
 import { DIFFICULTY_LABELS, formatDateTime, STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import type { FormErrors, QuestionForm } from "../model/questionForm";
 import type { Difficulty, QuestionDetail } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** "Phân loại": độ khó và thẻ (tối đa 10). */
 export function QuestionMetaPanel({ value, onChange, errors, readOnly = false }: {
@@ -16,9 +17,9 @@ export function QuestionMetaPanel({ value, onChange, errors, readOnly = false }:
 }) {
   const id = useId();
   return (
-    <Section title="Phân loại" icon="tune">
+    <Section title={msg("quizzes.components.QuestionSidePanels.phanLoai")} icon="tune">
       <fieldset disabled={readOnly} className="flex flex-col gap-3">
-        <Field label="Độ khó" htmlFor={`${id}-difficulty`}>
+        <Field label={msg("quizzes.components.QuestionSidePanels.doKho")} htmlFor={`${id}-difficulty`}>
           <Select id={`${id}-difficulty`} value={value.difficulty} data-testid="question-meta-difficulty"
             onChange={(event) => onChange({ ...value, difficulty: event.target.value as Difficulty })}>
             {(Object.keys(DIFFICULTY_LABELS) as Difficulty[]).map((difficulty) => (
@@ -26,8 +27,8 @@ export function QuestionMetaPanel({ value, onChange, errors, readOnly = false }:
             ))}
           </Select>
         </Field>
-        <Field label="Thẻ" htmlFor={`${id}-tags`} hint="Cách nhau bằng dấu phẩy, tối đa 10 thẻ" error={errors.tags}>
-          <TextInput id={`${id}-tags`} placeholder="uml, sơ đồ lớp" value={value.tagsText} invalid={!!errors.tags} data-testid="question-meta-tags"
+        <Field label={msg("quizzes.components.QuestionSidePanels.the")} htmlFor={`${id}-tags`} hint={msg("quizzes.components.QuestionSidePanels.cachNhauBangDauPhayToi")} error={errors.tags}>
+          <TextInput id={`${id}-tags`} placeholder={msg("quizzes.components.QuestionSidePanels.umlSoDoLop")} value={value.tagsText} invalid={!!errors.tags} data-testid="question-meta-tags"
             onChange={(event) => onChange({ ...value, tagsText: event.target.value })} />
         </Field>
       </fieldset>
@@ -39,28 +40,27 @@ export function QuestionMetaPanel({ value, onChange, errors, readOnly = false }:
 export function QuestionVersionPanel({ detail }: { detail: QuestionDetail }) {
   const { question, versions, usedInQuizzes, draftId } = detail;
   return (
-    <Section title="Trạng thái" icon="history">
+    <Section title={msg("quizzes.components.QuestionSidePanels.trangThai")} icon="history">
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[13px]">
-        <dt className="text-muted">Trạng thái</dt>
+        <dt className="text-muted">{msg("quizzes.components.QuestionSidePanels.trangThai")}</dt>
         <dd><Pill tone={STATUS_TONES[question.status]}>{STATUS_LABELS[question.status]}</Pill></dd>
-        <dt className="text-muted">Phiên bản</dt>
+        <dt className="text-muted">{msg("quizzes.components.QuestionSidePanels.phienBan")}</dt>
         <dd>v{question.versionNo} · {formatDateTime(question.updatedAt)}</dd>
-        <dt className="text-muted">Quiz đang dùng</dt>
+        <dt className="text-muted">{msg("quizzes.components.QuestionSidePanels.quizDangDung")}</dt>
         <dd data-testid="question-version-used">{usedInQuizzes}</dd>
       </dl>
       {draftId && (
         <p className="mt-3 text-[13px]">
           <Link href={`/manager/questions/${draftId}`} className="font-semibold text-primary-ink hover:underline" data-testid="question-version-draft-link">
-            Mở bản nháp mới của câu này
-          </Link>
+            {msg("quizzes.components.QuestionSidePanels.moBanNhapMoiCuaCau")}</Link>
         </p>
       )}
       {versions.length > 1 && (
-        <ol className="mt-3 flex flex-col gap-1 border-t border-line-soft pt-3 text-[13px]" aria-label="Lịch sử phiên bản">
+        <ol className="mt-3 flex flex-col gap-1 border-t border-line-soft pt-3 text-[13px]" aria-label={msg("quizzes.components.QuestionSidePanels.lichSuPhienBan")}>
           {versions.map((version) => (
             <li key={version.id} className="flex items-center justify-between gap-2">
               {version.id === question.id
-                ? <span className="font-semibold">v{version.versionNo} (đang xem)</span>
+                ? <span className="font-semibold">v{version.versionNo} {msg("quizzes.components.QuestionSidePanels.dangXem")}</span>
                 : <Link href={`/manager/questions/${version.id}`} className="text-primary-ink hover:underline">v{version.versionNo}</Link>}
               <Pill tone={STATUS_TONES[version.status]}>{STATUS_LABELS[version.status]}</Pill>
             </li>

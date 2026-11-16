@@ -7,6 +7,7 @@ import { getGroupAssignments, getProgress } from "../api";
 import { formatDate } from "../model/format";
 import { personLabel } from "../model/groupDrafts";
 import type { GroupAssignment, GroupProgress, GroupSetView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /**
  * Tiến độ bài nhóm cho giảng viên (BR-U12-52): mỗi nhóm có trưởng nhóm, số mục Xong, trạng thái nộp, mục đang soạn và
@@ -29,7 +30,7 @@ export function GroupProgressTable({ classId, set }: { classId: string; set: Gro
         if (open) setSelected(open.assignmentId);
       },
       () => {
-        if (active) setError("Không tải được danh sách bài nhóm.");
+        if (active) setError(msg("groups.components.GroupProgressTable.khongTaiDuocDanhSachBai"));
       },
     );
     return () => {
@@ -45,7 +46,7 @@ export function GroupProgressTable({ classId, set }: { classId: string; set: Gro
         if (active) setRows(list);
       },
       () => {
-        if (active) setError("Không tải được tiến độ bài nhóm.");
+        if (active) setError(msg("groups.components.GroupProgressTable.khongTaiDuocTienDoBai"));
       },
     );
     return () => {
@@ -56,15 +57,15 @@ export function GroupProgressTable({ classId, set }: { classId: string; set: Gro
   if (assignments !== null && assignments.length === 0) return null;
 
   return (
-    <Card as="section" className="flex min-w-0 flex-col gap-3" aria-label="Tiến độ bài nhóm">
+    <Card as="section" className="flex min-w-0 flex-col gap-3" aria-label={msg("groups.components.GroupProgressTable.tienDoBaiNhom")}>
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="font-display text-[15px] font-bold text-ink">Tiến độ bài nhóm</h2>
+        <h2 className="font-display text-[15px] font-bold text-ink">{msg("groups.components.GroupProgressTable.tienDoBaiNhom")}</h2>
         {assignments && assignments.length > 1 && (
-          <Select aria-label="Bài nhóm" value={selected} onChange={(e) => setSelected(e.target.value)} wrapperClassName="ml-auto max-w-[360px]">
+          <Select aria-label={msg("groups.components.GroupProgressTable.baiNhom")} value={selected} onChange={(e) => setSelected(e.target.value)} wrapperClassName="ml-auto max-w-[360px]">
             {assignments.map((a) => (
               <option key={a.assignmentId} value={a.assignmentId}>
                 {a.title}
-                {a.closesAt ? ` · hạn ${formatDate(a.closesAt)}` : ""}
+                {a.closesAt ? msg("groups.components.GroupProgressTable.han", { value: String(formatDate(a.closesAt)) }) : ""}
               </option>
             ))}
           </Select>
@@ -80,19 +81,19 @@ export function GroupProgressTable({ classId, set }: { classId: string; set: Gro
         <TableFrame>
           <thead>
             <tr>
-              <Th>Nhóm</Th>
-              <Th>Trưởng nhóm</Th>
-              <Th>Mục Xong</Th>
-              <Th>Trạng thái</Th>
-              <Th>Đang soạn</Th>
-              <Th aria-label="Thao tác" />
+              <Th>{msg("groups.components.GroupProgressTable.nhom")}</Th>
+              <Th>{msg("groups.components.GroupProgressTable.truongNhom")}</Th>
+              <Th>{msg("groups.components.GroupProgressTable.mucXong")}</Th>
+              <Th>{msg("groups.components.GroupProgressTable.trangThai")}</Th>
+              <Th>{msg("groups.components.GroupProgressTable.dangSoan")}</Th>
+              <Th aria-label={msg("groups.components.GroupProgressTable.thaoTac")} />
             </tr>
           </thead>
           <tbody>
             {rows.map((row) => {
               const total = row.done + row.claimed + row.open;
               const started = row.done + row.claimed > 0;
-              const status = row.submitted ? (row.late ? "Đã nộp · trễ" : "Đã nộp") : started ? "Đang làm" : "Chưa bắt đầu";
+              const status = row.submitted ? (row.late ? msg("groups.components.GroupProgressTable.daNopTre") : msg("groups.components.GroupProgressTable.daNop")) : started ? msg("groups.components.GroupProgressTable.dangLam") : msg("groups.components.GroupProgressTable.chuaBatDau");
               const holding = row.sections.filter((s) => s.status === "CLAIMED");
               return (
                 <tr key={row.groupId}>
@@ -110,8 +111,7 @@ export function GroupProgressTable({ classId, set }: { classId: string; set: Gro
                   <Td>
                     {row.documentId && (
                       <Link href={`/group-docs/${encodeURIComponent(row.documentId)}`} className="text-[13px] font-semibold text-primary-ink underline">
-                        Xem tài liệu
-                      </Link>
+                        {msg("groups.components.GroupProgressTable.xemTaiLieu")}</Link>
                     )}
                   </Td>
                 </tr>

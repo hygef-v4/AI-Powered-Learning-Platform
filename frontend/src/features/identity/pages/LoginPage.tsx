@@ -9,6 +9,7 @@ import { AuthToast, type AuthNotice } from "../components/AuthToast";
 import { InfoCard } from "../components/InfoCard";
 import { LoginForm } from "../components/LoginForm";
 import { safeNextPath } from "../hooks/session";
+import { msg } from "@/i18n/msg";
 
 /**
  * Màn User Login (UC 02). Đã đăng nhập rồi thì chuyển thẳng tới dashboard theo role (F15). Có `?next=` (bị đưa về đây
@@ -19,7 +20,7 @@ export function LoginPage() {
   const params = useSearchParams();
   // Vừa đặt lại mật khẩu (`?reset=1`): báo một câu ngắn rồi tự ẩn.
   const [notice, setNotice] = useState<AuthNotice | null>(() =>
-    params.get("reset") === "1" ? { id: 1, text: "Đã đặt lại mật khẩu", tone: "success" } : null,
+    params.get("reset") === "1" ? { id: 1, text: msg("identity.pages.LoginPage.daDatLaiMatKhau"), tone: "success" } : null,
   );
   const clearNotice = useCallback(() => setNotice(null), []);
   const next = safeNextPath(params.get("next"));
@@ -36,9 +37,9 @@ export function LoginPage() {
       toast={<AuthToast notice={notice} onDone={clearNotice} />}
       aside={
         <InfoCard
-          title="Lần đầu sử dụng?"
-          subtitle="Tài khoản do Phòng Đào tạo cấp"
-          text="Kích hoạt bằng email trường và mã OTP. Quên mật khẩu thì khôi phục bằng mã gửi về email."
+          title={msg("identity.pages.LoginPage.lanDauSuDung")}
+          subtitle={msg("identity.pages.LoginPage.taiKhoanDoPhongDaoTao")}
+          text={msg("identity.pages.LoginPage.kichHoatBangEmailTruongVa")}
         />
       }
     >

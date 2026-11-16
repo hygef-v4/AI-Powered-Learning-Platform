@@ -5,6 +5,7 @@ import { Alert, Button, Dialog, Field, Pill, TableFrame, Td, TextInput, Th, show
 import { saveGroups } from "../api";
 import { byGroupName, draftsFrom, freeNames, personLabel, saveErrorText, type StudentRow } from "../model/groupDrafts";
 import type { Draft, GroupSetView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 function shuffle<T>(items: T[]): T[] {
   const out = [...items];
@@ -69,7 +70,7 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
     setError(null);
     try {
       onSaved(await saveGroups(classId, set.version, preview));
-      showToast("Đã chia nhóm");
+      showToast(msg("groups.components.RandomSplitDialog.daChiaNhom"));
     } catch (e) {
       setError(saveErrorText(e, preview));
     } finally {
@@ -85,16 +86,16 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
   const nameOf = (accountId: string) => personLabel(people.find((p) => p.accountId === accountId));
 
   return (
-    <Dialog open title="Chia ngẫu nhiên" size="lg" onClose={onClose} dismissible={!busy}
+    <Dialog open title={msg("groups.components.RandomSplitDialog.chiaNgauNhien")} size="lg" onClose={onClose} dismissible={!busy}
       footer={preview ? <>
-        <Button icon="refresh" disabled={busy} onClick={split}>Chia lại</Button>
-        <Button variant="primary" icon="save" disabled={busy} onClick={() => void save()}>Lưu {changed.length} nhóm</Button>
+        <Button icon="refresh" disabled={busy} onClick={split}>{msg("groups.components.RandomSplitDialog.chiaLai")}</Button>
+        <Button variant="primary" icon="save" disabled={busy} onClick={() => void save()}>{msg("groups.components.RandomSplitDialog.luu")}{changed.length} {msg("groups.components.RandomSplitDialog.nhom")}</Button>
       </> : (
-        <Button variant="primary" onClick={split} disabled={!valid || ungrouped.length === 0}>Xem trước</Button>
+        <Button variant="primary" onClick={split} disabled={!valid || ungrouped.length === 0}>{msg("groups.components.RandomSplitDialog.xemTruoc")}</Button>
       )}>
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {/* Ô còn trống thì chưa báo lỗi; chỉ báo khi đã nhập mà sai. */}
-      <Field label="Số thành viên tối đa mỗi nhóm" htmlFor={sizeId} required error={valid || size.trim() === "" ? null : "Từ 2 đến 20"}>
+      <Field label={msg("groups.components.RandomSplitDialog.soThanhVienToiDaMoi")} htmlFor={sizeId} required error={valid || size.trim() === "" ? null : msg("groups.components.RandomSplitDialog.tu2Den20")}>
         <TextInput id={sizeId} inputMode="numeric" value={size} wrapperClassName="w-32"
           onChange={(e) => { setSize(e.target.value); setPreview(null); setError(null); }} />
       </Field>
@@ -102,7 +103,7 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
         <div className="max-h-80 overflow-y-auto [scrollbar-color:var(--c-muted)_transparent]">
           <TableFrame filledHead className="[&_table]:table-fixed">
             <colgroup><col className="w-[140px]" /><col /></colgroup>
-            <thead><tr><Th>Nhóm</Th><Th>Thành viên</Th></tr></thead>
+            <thead><tr><Th>{msg("groups.components.RandomSplitDialog.nhom2")}</Th><Th>{msg("groups.components.RandomSplitDialog.thanhVien")}</Th></tr></thead>
             <tbody>
               {changed.map(({ d }) => (
                 <tr key={d.key}>
@@ -113,7 +114,7 @@ export function RandomSplitDialog({ classId, set, people, onClose, onSaved }: {
                       {[...d.memberIds].sort((a, b) => Number(b === d.leaderId) - Number(a === d.leaderId)).map((id, index, all) => (
                         <span key={id} className="inline-flex items-center gap-1.5">
                           {nameOf(id)}
-                          {id === d.leaderId && <Pill tone="warning">Trưởng nhóm</Pill>}
+                          {id === d.leaderId && <Pill tone="warning">{msg("groups.components.RandomSplitDialog.truongNhom")}</Pill>}
                           {index < all.length - 1 && <span className="text-muted">,</span>}
                         </span>
                       ))}

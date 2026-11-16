@@ -1,8 +1,10 @@
+import { msg } from "@/i18n/msg";
+
 // Mã số sinh viên (BR-U01-100): 2 chữ cái và 6 chữ số, lưu chữ in hoa. Backend là nơi kiểm cuối cùng.
 
 export const STUDENT_CODE_PATTERN = /^[A-Z]{2}[0-9]{6}$/;
 
-export const STUDENT_CODE_FORMAT_MESSAGE = "MSSV gồm 2 chữ cái và 6 chữ số, ví dụ SE123456.";
+export const STUDENT_CODE_FORMAT_MESSAGE = msg("shared.studentCode.mssvGom2ChuCaiVa");
 
 /** Cắt khoảng trắng hai đầu và đổi chữ in hoa; giữ ký tự ở giữa để kiểm định dạng báo lỗi. */
 export function normalizeStudentCode(raw: string) {
@@ -15,10 +17,10 @@ export function isValidStudentCode(code: string) {
 
 /** Câu báo cho lỗi MSSV từ backend (frontend-components U01 mục 6). */
 export const STUDENT_CODE_ERROR_LABELS: Record<string, string> = {
-  STUDENT_CODE_EXISTS: "MSSV này đã được dùng cho tài khoản khác.",
-  STUDENT_CODE_LOCKED: "MSSV đã khóa vì sinh viên đã kích hoạt tài khoản.",
-  MISSING_STUDENT_CODE: "Cần nhập MSSV cho tài khoản sinh viên.",
-  STUDENT_CODE_NOT_ALLOWED: "Chỉ tài khoản sinh viên mới có MSSV.",
+  STUDENT_CODE_EXISTS: msg("shared.studentCode.mssvNayDaDuocDungCho"),
+  STUDENT_CODE_LOCKED: msg("shared.studentCode.mssvDaKhoaViSinhVien"),
+  MISSING_STUDENT_CODE: msg("shared.studentCode.canNhapMssvChoTaiKhoan"),
+  STUDENT_CODE_NOT_ALLOWED: msg("shared.studentCode.chiTaiKhoanSinhVienMoi"),
   INVALID_STUDENT_CODE: STUDENT_CODE_FORMAT_MESSAGE,
 };
 

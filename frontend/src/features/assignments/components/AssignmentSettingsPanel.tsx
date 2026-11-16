@@ -6,6 +6,7 @@ import { Field, InfoTip, Switch, Textarea } from "@/shared/ui";
 import { Choice, ChoiceHint } from "./Choice";
 import { assignmentFormSections, assignmentSettingsSections } from "../slots";
 import { type AssignmentDetail, type GradingMode, type SubmissionMode } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 export type Settings = {
   gradingMode: GradingMode;
@@ -18,12 +19,12 @@ export type Settings = {
 
 /** Một câu ngắn dưới mỗi lựa chọn, giống popup tạo bài (yêu cầu 2026-11-10). */
 const SUBMISSION_HINTS: Record<SubmissionMode, string> = {
-  INDIVIDUAL: "Mỗi sinh viên nộp một bài.",
-  GROUP: "Mỗi nhóm nộp chung một bài.",
+  INDIVIDUAL: msg("assignments.components.AssignmentSettingsPanel.moiSinhVienNopMotBai"),
+  GROUP: msg("assignments.components.AssignmentSettingsPanel.moiNhomNopChungMotBai"),
 };
 const GRADING_HINTS: Record<GradingMode, string> = {
-  GRADED: "Tính vào sổ điểm.",
-  PRACTICE: "Tự luyện, không tính điểm.",
+  GRADED: msg("assignments.components.AssignmentSettingsPanel.tinhVaoSoDiem"),
+  PRACTICE: msg("assignments.components.AssignmentSettingsPanel.tuLuyenKhongTinhDiem"),
 };
 
 export function settingsOf(detail: AssignmentDetail): Settings {
@@ -52,16 +53,16 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
   const group = detail.submissionMode === "GROUP";
   return (
     <div className="flex flex-col gap-4" data-testid="assignment-settings">
-      <Field label="Hình thức">
-        <Choice<SubmissionMode> name="Hình thức" value={detail.submissionMode} disabled onChange={() => {}} options={[
-          { value: "INDIVIDUAL", label: "Cá nhân" },
-          { value: "GROUP", label: "Nhóm" },
+      <Field label={msg("assignments.components.AssignmentSettingsPanel.hinhThuc")}>
+        <Choice<SubmissionMode> name={msg("assignments.components.AssignmentSettingsPanel.hinhThuc")} value={detail.submissionMode} disabled onChange={() => {}} options={[
+          { value: "INDIVIDUAL", label: msg("assignments.components.AssignmentSettingsPanel.caNhan") },
+          { value: "GROUP", label: msg("assignments.components.AssignmentSettingsPanel.nhom") },
         ]} />
         <ChoiceHint>{SUBMISSION_HINTS[detail.submissionMode]}</ChoiceHint>
       </Field>
       {group && detail.classId && <SlotOutlet slot={assignmentFormSections} props={{ assignmentId: detail.id, classId: detail.classId }} />}
-      <Field label="Chế độ">
-        <Choice<GradingMode> name="Chế độ" value={value.gradingMode} disabled={readOnly || group}
+      <Field label={msg("assignments.components.AssignmentSettingsPanel.cheDo")}>
+        <Choice<GradingMode> name={msg("assignments.components.AssignmentSettingsPanel.cheDo")} value={value.gradingMode} disabled={readOnly || group}
           onChange={(gradingMode) => onChange({ ...value, gradingMode })} options={[
             { value: "GRADED", label: "Graded" },
             { value: "PRACTICE", label: "Practice" },
@@ -70,14 +71,14 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
       </Field>
       {classId && <SlotOutlet slot={assignmentSettingsSections} props={{ assignmentId: detail.id, classId, gradingMode: value.gradingMode }} />}
       <div className="flex items-center gap-1">
-        <Switch checked={value.activityMonitoringEnabled} label="Ghi nhận hoạt động"
+        <Switch checked={value.activityMonitoringEnabled} label={msg("assignments.components.AssignmentSettingsPanel.ghiNhanHoatDong")}
           disabled={readOnly}
           onChange={(checked) => onChange({ ...value, activityMonitoringEnabled: checked })} />
-        <InfoTip label="Ghi nhận hoạt động"
-          text="Ghi lại khi sinh viên rời trang lúc làm bài." />
+        <InfoTip label={msg("assignments.components.AssignmentSettingsPanel.ghiNhanHoatDong")}
+          text={msg("assignments.components.AssignmentSettingsPanel.ghiLaiKhiSinhVienRoi")} />
       </div>
       {value.activityMonitoringEnabled && (
-        <Field label="Lời báo cho sinh viên" htmlFor="activity-notice" required>
+        <Field label={msg("assignments.components.AssignmentSettingsPanel.loiBaoChoSinhVien")} htmlFor="activity-notice" required>
           <Textarea id="activity-notice" rows={2} maxLength={1000} value={value.activityNotice} disabled={readOnly}
             onChange={(e) => onChange({ ...value, activityNotice: e.target.value })} />
         </Field>

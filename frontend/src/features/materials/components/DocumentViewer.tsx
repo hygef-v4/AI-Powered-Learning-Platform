@@ -4,6 +4,7 @@ import { Icon, cx } from "@/shared/ui";
 import { handleTabListKey } from "@/shared/ui/tabKeys";
 import { PdfPages } from "./PdfPages";
 import { readWorkbook, type Sheet } from "../model/xlsx";
+import { msg } from "@/i18n/msg";
 
 export type DocumentKind = "pdf" | "docx" | "pptx" | "xlsx";
 
@@ -19,7 +20,7 @@ export function detectDocumentKind(mimeType: string | null): DocumentKind | null
 }
 
 const ZOOMS = [0.5, 0.67, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
-const FAILED = "Không mở được tệp, hãy tải xuống để xem.";
+const FAILED = msg("materials.components.DocumentViewer.khongMoDuocTepHayTai");
 
 /**
  * Nonce CSP của trang (layout gắn vào script khởi tạo theme). Trình duyệt ẩn thuộc tính `nonce` khỏi DOM nhưng vẫn đọc
@@ -227,14 +228,14 @@ export function DocumentViewer({
           </span>
         )}
         <span className="mx-1 h-5 w-px bg-white/15" aria-hidden="true" />
-        <ToolButton label="Thu nhỏ" disabled={zoom <= ZOOMS[0]!} onClick={() => handleZoomStep(-1)}>
+        <ToolButton label={msg("materials.components.DocumentViewer.thuNho")} disabled={zoom <= ZOOMS[0]!} onClick={() => handleZoomStep(-1)}>
           <span className="text-lg leading-none">−</span>
         </ToolButton>
         <span className="w-11 shrink-0 text-center font-mono text-xs text-white/85">
           {Math.round(zoom * 100)}%
         </span>
         <ToolButton
-          label="Phóng to"
+          label={msg("materials.components.DocumentViewer.phongTo")}
           disabled={zoom >= ZOOMS[ZOOMS.length - 1]!}
           onClick={() => handleZoomStep(1)}
         >
@@ -242,13 +243,13 @@ export function DocumentViewer({
         </ToolButton>
         <span className="mx-1 h-5 w-px bg-white/15" aria-hidden="true" />
         <ToolButton
-          label={fullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+          label={fullscreen ? msg("materials.components.DocumentViewer.thoatToanManHinh") : msg("materials.components.DocumentViewer.toanManHinh")}
           onClick={handleToggleFullscreen}
         >
           <Icon name={fullscreen ? "fullscreen_exit" : "fullscreen"} size={18} />
         </ToolButton>
         {onDownload && (
-          <ToolButton label="Tải xuống" onClick={onDownload}>
+          <ToolButton label={msg("materials.components.DocumentViewer.taiXuong")} onClick={onDownload}>
             <Icon name="download" size={18} />
           </ToolButton>
         )}
@@ -300,13 +301,12 @@ export function DocumentViewer({
                 </tbody>
               </table>
               {sheet.data.length === 0 && (
-                <p className="p-10 text-center text-sm text-sheet-muted">Sheet trống</p>
+                <p className="p-10 text-center text-sm text-sheet-muted">{msg("materials.components.DocumentViewer.sheetTrong")}</p>
               )}
             </div>
           ) : (
             <p role="status" className="mt-24 text-center text-sm text-white/70">
-              Đang mở tệp…
-            </p>
+              {msg("materials.components.DocumentViewer.dangMoTep")}</p>
           )
         ) : (
           <div

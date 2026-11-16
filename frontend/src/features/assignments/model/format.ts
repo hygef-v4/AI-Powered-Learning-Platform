@@ -1,5 +1,6 @@
 import { ApiError } from "@/shared/api/client";
 import type { ValidationIssue } from "@/shared/document";
+import { msg } from "@/i18n/msg";
 
 /** Ngày giờ theo giờ Việt Nam (UTC+7) và cặp đổi giá trị ô datetime-local, dùng chung từ shared/dateTime. */
 export { formatDateTime, formatTime, fromLocalInput, toLocalInput } from "@/shared/dateTime";
@@ -14,9 +15,9 @@ export function problemCode(error: unknown): string | undefined {
   return error instanceof ApiError ? error.problem.code : undefined;
 }
 
-export function errorMessage(error: unknown, fallback = "Không thực hiện được. Hãy thử lại."): string {
+export function errorMessage(error: unknown, fallback = msg("assignments.model.format.khongThucHienDuocHayThu")): string {
   if (error instanceof ApiError) {
-    if (error.problem.status === 404) return "Không tìm thấy hoặc bạn không có quyền.";
+    if (error.problem.status === 404) return msg("assignments.model.format.khongTimThayHoacBanKhong");
     return error.problem.detail ?? fallback;
   }
   return error instanceof Error && error.message ? error.message : fallback;

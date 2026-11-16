@@ -5,6 +5,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { notificationsApi } from "../api";
 import { NotificationPopup } from "./NotificationPopup";
 import styles from "../styles/notifications.module.css";
+import { msg } from "@/i18n/msg";
 export function NotificationBell() {
   const session = useSession();
   return session.status === "authenticated" ? (
@@ -81,7 +82,7 @@ function Bell() {
         data-testid="notification-bell"
         type="button"
         aria-label={
-          failed ? "Thông báo, chưa tải được số chưa đọc" : `Thông báo, ${count} chưa đọc`
+          failed ? msg("notifications.components.NotificationBell.thongBaoChuaTaiDuocSo") : msg("notifications.components.NotificationBell.thongBaoChuaDoc", { count: String(count) })
         }
         aria-expanded={open}
         aria-controls={open ? "notification-popup" : undefined}
