@@ -1,5 +1,20 @@
 # AI-DLC State Tracking
 
+## Sửa các điểm trong báo cáo hiệu năng production — 2026-11-16
+
+Người dùng yêu cầu kiểm tra hiệu năng production, rồi yêu cầu "sửa toàn bộ". [Báo cáo](construction/build-and-test/2026-11-16-performance-report.md); [kế hoạch](construction/plans/code-generation-plan/2026-11-16-performance-fixes.md).
+
+- [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering.
+- [x] Requirements Analysis (Minimal): phạm vi là mục 6.1–6.5 của báo cáo.
+- [x] Workflow Planning: chỉ Code Generation và Build and Test; các giai đoạn khác bỏ qua vì không có thành phần, API hay schema mới.
+- [x] Người dùng duyệt kế hoạch, chọn phương án deploy A.
+- [x] Code Generation: 13/13 bước. Bước 7 chỉ áp cho 502/503; Redis `maxmemory` 96 MB (staging giới hạn 128 MB).
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-16-performance-fixes-results.md). Frontend ESLint, TypeScript, Vitest 1.160/1.160, production build qua; test script deploy 15/15; nginx, Postgres, Redis kiểm trong container tạm.
+- [x] Người dùng yêu cầu commit cục bộ (2026-11-16).
+- [ ] Người dùng quyết định push và mở PR vào staging.
+
+Chưa kiểm: `docker compose config` và cả stack chạy cùng nhau (Docker ở máy không chạy); template nginx của production và staging (cần chứng chỉ); thời gian khởi động backend với 2 CPU; các trang sau đăng nhập trên trình duyệt. Phát hiện mới ngoài phạm vi: `src/i18n/msg.ts` đóng gói cả ba ngôn ngữ (643 KB) vào mọi trang. Security/Resiliency trong phạm vi đã duyệt; PBT tắt.
+
 ## Kiểm tra staging trước khi lên main và đồng bộ tài liệu vận hành — 2026-11-16
 
 Người dùng yêu cầu kiểm tra `staging@d8ac7d21` trước khi đưa lên main, rồi yêu cầu sửa tài liệu. Nhánh `docs/sync-ops-docs-staging` từ `origin/staging`; chỉ sửa tài liệu, không đổi mã, test, schema hay cấu hình.

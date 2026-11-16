@@ -1,3 +1,5 @@
+include /etc/nginx/snippets/http.conf;
+
 server {
     listen 80;
     server_name ${DOMAIN};

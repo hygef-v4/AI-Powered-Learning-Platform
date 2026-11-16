@@ -15471,3 +15471,93 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Chỉ tài liệu. Số PR và trạng thái CI ghi trên GitHub và trong phản hồi cuối.
 
 ---
+## Security review — project and production VPS
+**Timestamp**: 2026-11-16T13:14:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra sercurity dự án và gửi tôi báo cáo, bạn có thể truy cập vps của tôi để kiểm tra, dự án đã được deploy tại https://alapedu.online/login?next=%2Fassignments%2Fbabb748c-7f46-4cbf-8006-9d5dc4ba361d%3FclassId%3Dd49234ef-fc5b-4608-a94f-dcbb9203bef5"
+**AI Response**: "Bắt đầu rà soát bảo mật chỉ đọc: mã nguồn backend/frontend/infra, site production từ bên ngoài và cấu hình VPS. Kết quả ghi trong báo cáo ở construction/build-and-test."
+**Context**: Review only; không đổi mã ứng dụng, cấu hình hay dữ liệu trên VPS. Không áp dụng các stage thiết kế/sinh mã của AI-DLC.
+
+---
+## Performance review — project and production VPS
+**Timestamp**: 2026-11-16T13:17:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra performance dự án và gửi tôi báo cáo, bạn có thể truy cập vps của tôi để kiểm tra, dự án đã được deploy tại https://alapedu.online/login?next=%2Fassignments%2Fbabb748c-7f46-4cbf-8006-9d5dc4ba361d%3FclassId%3Dd49234ef-fc5b-4608-a94f-dcbb9203bef5"
+**AI Response**: "Đo chỉ đọc: thời gian phản hồi và tài nguyên trang /login từ bên ngoài, tài nguyên VPS, container, JVM, Postgres, Redis, log nginx, và mã frontend liên quan. Báo cáo ở aidlc-docs/construction/build-and-test/2026-11-16-performance-report.md. Chưa đo các trang sau đăng nhập và chưa load test."
+**Context**: Review only; không đổi mã ứng dụng, cấu hình hay dữ liệu trên VPS. Không áp dụng các stage thiết kế/sinh mã của AI-DLC.
+
+---
+## Security review — report delivered
+**Timestamp**: 2026-11-16T13:24:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: (không có input mới; tiếp theo yêu cầu "kiểm tra sercurity dự án và gửi tôi báo cáo, ...")
+**AI Response**: "Hoàn tất rà soát chỉ đọc: mã nguồn (xác thực, CSRF, CSP, tệp, MCP, key AI, SQL), site production từ bên ngoài, và VPS (SSH, tường lửa, Docker, PostgreSQL, TLS, backup). Báo cáo ghi ở .tmp/security-review-2026-11-16.md (gitignored vì chứa chi tiết điểm yếu hạ tầng): 3 mục mức Cao đều thuộc vận hành VPS/database, 3 mục Trung bình, 8 mục Thấp; mã ứng dụng không có phát hiện nghiêm trọng trong phần đã đọc."
+**Context**: Review only; không đổi mã, cấu hình, dữ liệu hay VPS. Chưa đối chiếu quyền của từng endpoint, chưa quét CVE Maven, không tấn công chủ động. Chưa sửa mục nào.
+
+---
+## Performance fixes — request
+**Timestamp**: 2026-11-16T13:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa toàn bộ cho tôi"
+**AI Response**: "Bắt đầu theo AI-DLC: đọc quy ước mã, trạng thái workflow và mã liên quan, rồi lập kế hoạch sửa các mục trong báo cáo hiệu năng 2026-11-16."
+**Context**: Workspace Detection (brownfield, resume). Chưa đổi mã.
+
+---
+
+## NFR review — báo cáo phi chức năng
+**Timestamp**: 2026-11-16T13:20:00Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "kiểm tra non-functionality của dự án và gửi tôi báo cáo"
+**AI Response**: "Rà soát NFR hiện hữu qua requirements, source/config, kiểm thử có thể chạy trong môi trường local; lập báo cáo với bằng chứng, ưu tiên và giới hạn kiểm chứng."
+**Context**: Review-only theo CLAUDE.md; dùng lại reverse engineering và yêu cầu đã chốt, không mở stage thiết kế/sinh mã. Security/Resiliency theo phạm vi trong state; PBT disabled. gh không có trong PATH nên không suy diễn danh tính từ audit lịch sử. Giữ nguyên công việc đồng thời; không sửa source, deploy, dữ liệu thật, commit/push.
+
+---
+## Performance fixes — plan approval prompt
+**Timestamp**: 2026-11-16T13:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa toàn bộ cho tôi"
+**AI Response**: "Lập kế hoạch 13 bước ở construction/plans/code-generation-plan/2026-11-16-performance-fixes.md. Hỏi người dùng duyệt kế hoạch và chọn phương án deploy: A (trang 503 thân thiện và tăng CPU backend) hoặc B (thêm deploy cuốn chiếu)."
+**Context**: Workflow Planning xong; chờ duyệt trước khi sang Code Generation. Chưa đổi mã.
+
+---
+## Performance fixes — plan approved
+**Timestamp**: 2026-11-16T13:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, phương án A"
+**AI Response**: "Bắt đầu Code Generation theo kế hoạch 13 bước, phương án deploy A, trên nhánh perf/production-fixes từ origin/staging."
+**Context**: Code Generation, Part 2.
+
+---
+
+## NFR review — bàn giao báo cáo
+**Timestamp**: 2026-11-16T13:25:32Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "kiểm tra non-functionality của dự án và gửi tôi báo cáo"
+**AI Response**: "Đã lập construction/build-and-test/2026-11-16-non-functional-review.md: 8 phát hiện (2 P1, 5 P2, 1 P3), ma trận NFR, bằng chứng kiểm thử và kế hoạch nghiệm thu. 2 CSP tests, 14 MCP hook scenarios, restore cleanup harness và 4 crypto probes qua. Frontend thiếu next-intl, Maven offline thiếu dependency, Docker engine chưa chạy, deploy harness thiếu flock nên các phần tương ứng chưa được xác minh. 25 link nội bộ hợp lệ, diff whitespace đạt."
+**Context**: Review-only hoàn tất, không phê duyệt deploy. Baseline source 281362a5; chốt lúc HEAD b121f0ca và có frontend WIP của lượt khác, không nghiệm thu WIP đó. Security/Resiliency còn các điểm F01/F02/F04; PBT disabled. Chỉ tạo báo cáo, probe trong .tmp và append audit; không sửa source ứng dụng, commit/push hoặc thay đổi runtime.
+
+---
+## Security review — fail2ban and remaining checks
+**Timestamp**: 2026-11-16T13:45:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "đăng nhập ssh bằng mật khẩu và fail2ban khác gì nhau"; sau đó: "tạm thời chưa tắt ssh, chỉ thêm fail2ban, kiểm tra các phần còn lại cho tôi"
+**AI Response**: "Giải thích khác biệt giữa tắt đăng nhập SSH bằng mật khẩu và fail2ban. Cài fail2ban trên VPS với jail sshd (5 lần sai trong 10 phút, chặn 1 giờ, tăng dần tới 1 tuần); không đổi cấu hình sshd. Kiểm bổ sung: phân quyền endpoint bằng script (345 endpoint, 621 method nhận Actor), CVE thư viện backend qua OSV từ danh sách jar của image production, thử production từ ngoài không đăng nhập, cấu hình repo GitHub. Cập nhật báo cáo .tmp/security-review-2026-11-16.md (thêm hai phát hiện về thư viện backend cũ và quy tắc nhánh main)."
+**Context**: Thay đổi duy nhất trên hạ tầng là cài fail2ban. Không đổi mã ứng dụng, database hay cấu hình deploy. Chưa thử IDOR bằng tài khoản thật; chưa xác nhận CVE nào khai thác được.
+
+---
+## Performance fixes — code generation and build/test complete
+**Timestamp**: 2026-11-16T14:35:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tiếp tục"
+**AI Response**: "Hoàn tất 13/13 bước trên nhánh perf/production-fixes: chuông thông báo chỉ polling khi SSE đứt, dời đăng ký slot khỏi root layout, cache font, nginx (log thời gian, gzip JSON, 404 cho bot PHP, 503 thân thiện), backend 2 CPU, Postgres pg_stat_statements và log truy vấn chậm, Redis maxmemory, dọn image trong script deploy, runbook. Kết quả ở construction/build-and-test/2026-11-16-performance-fixes-results.md. Hỏi người dùng duyệt mã và quyết định commit, push, mở PR vào staging."
+**Context**: Code Generation và Build and Test xong; chờ duyệt. Chưa commit, push hay deploy. Phát hiện ngoài phạm vi: chuỗi dịch ba ngôn ngữ (643 KB) nạp ở mọi trang.
+
+---
+## Performance fixes — commit request
+**Timestamp**: 2026-11-16T14:45:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Commit cục bộ phần mã, cấu hình và tài liệu của lượt sửa hiệu năng trên nhánh perf/production-fixes. Không đưa vào commit hai báo cáo chưa theo dõi do lượt khác tạo (staging-readiness, non-functional-review). Không push."
+**Context**: Người dùng duyệt mã bằng yêu cầu commit. Chưa push, chưa mở PR.
+
+---

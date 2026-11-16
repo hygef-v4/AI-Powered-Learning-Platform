@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   devIndicators: false,
+  async headers() {
+    // Tên tệp font không có hash nên không đặt immutable; 30 ngày, quá hạn thì trình duyệt hỏi lại bằng ETag.
+    return [
+      {
+        source: "/fonts/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=2592000" }],
+      },
+    ];
+  },
   async rewrites() {
     if (process.env.NODE_ENV === "production") return [];
     return [
