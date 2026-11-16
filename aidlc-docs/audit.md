@@ -15220,3 +15220,11 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **User Input**: "giúp tôi commit"
 **AI Response**: Chuẩn bị một commit local cho source/backend/frontend, test và tài liệu MSSV đã thực hiện trong phiên; giữ ba báo cáo AUDIT gốc ngoài phạm vi, không push. Thao tác backfill seed database local không phải nội dung Git; không thêm file tạm, ảnh local, cấu hình hoặc bí mật.
 **Context**: Yêu cầu mới thay thế giới hạn không commit trước đó; không thay đổi phạm vi triển khai hoặc kết quả kiểm thử đã ghi nhận.
+
+
+## Pull request request: student code UI to staging
+**Timestamp**: 2026-11-16T05:59:13Z
+**Requested by:** Quang Hung
+**User Input**: "tạo pr lên staging"
+**AI Response**: Chuẩn bị PR mới từ audit-staging vào staging cho phần MSSV và tách cột Email; kiểm tra PR hiện hữu để tránh trùng. PR audit trước đã được merge. Người dùng cho phép publish nhánh phục vụ PR; không thực hiện merge PR vào staging.
+**Context**: Diff ứng dụng với staging đúng phần đã review/test; merge staging vào nhánh không thay cây mã ứng dụng đã kiểm chứng. Kết quả kiểm thử và giới hạn giữ như báo cáo browser. Backfill database local, ảnh/script tạm và ba báo cáo AUDIT gốc không thuộc nội dung PR.

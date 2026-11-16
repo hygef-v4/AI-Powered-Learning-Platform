@@ -14,6 +14,8 @@ Theo ảnh phản hồi tiếp theo, đã tách cột MSSV/Email và cân chữ/
 
 Người dùng tiếp tục yêu cầu “giúp tôi commit”: cho phép commit local phần source, test và tài liệu MSSV trong phiên; ba báo cáo AUDIT gốc vẫn không đưa vào Git, không push. Backfill HE19 ở DB local và ảnh/script dưới .tmp không thuộc nội dung commit.
 
+Người dùng yêu cầu “tạo pr lên staging”: cho phép publish nhánh audit-staging và tạo PR mới vào staging cho phần MSSV; PR audit trước đã được merge. Không tự merge PR. Mô tả PR nêu kết quả kiểm thử và các ca browser còn thiếu dữ liệu; backfill DB local không thuộc PR.
+
 ## Audit staging và sửa lỗi quan trọng (AUD-001..008) — 2026-11-16
 
 User yêu cầu audit nhánh staging, tạo nhánh mới để audit/sửa lỗi, chưa commit/push.
