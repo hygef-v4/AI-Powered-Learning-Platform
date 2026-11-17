@@ -23,7 +23,7 @@ jobs:
           cache: maven
       # Testcontainers dùng Docker có sẵn trên runner.
       - run: mvn -B verify
-      - name: Require U04 and notification PostgreSQL tests without skips
+      - name: Require core and NFR PostgreSQL tests without skips
         shell: pwsh
         run: ../scripts/assert-required-backend-tests.ps1
 
@@ -40,6 +40,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci --no-audit --no-fund
+      - run: node ../scripts/check-image-pins.mjs
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
@@ -81,5 +82,6 @@ jobs:
       - run: >-
           shellcheck infra/deploy/platform-deploy.sh infra/deploy/test-platform-deploy.sh
           infra/scripts/restore-isolated.sh infra/scripts/test-restore-isolated.sh
+          infra/scripts/test-restore-container.sh
       - run: bash infra/deploy/test-platform-deploy.sh
       - run: sh infra/scripts/test-restore-isolated.sh

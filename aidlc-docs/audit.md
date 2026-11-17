@@ -15609,3 +15609,59 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Số PR ghi trên GitHub và trong phản hồi cuối.
 
 ---
+## Deploy script — merged and installed on the VPS
+**Timestamp**: 2026-11-17T03:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "merge đi"
+**AI Response**: "Merge PR 102 vào staging (706e46f1). Chép commit sang VPS bằng git bundle; hai lần deploy đầu dừng ở git fetch vì VPS không tới được GitHub, lần thứ ba qua và staging lên 706e46f1, mọi dịch vụ khỏe. Cài lại /usr/local/bin/platform-deploy và /usr/local/bin/platform-staging-deploy từ bản mới (bản trước giữ ở *.bak-20261117)."
+**Context**: Operations theo yêu cầu của người dùng. Production vẫn chạy e3825aa6, không đổi.
+
+---
+
+## NFR remediation — tiếp tục kiểm chứng
+**Timestamp**: 2026-11-17T02:32:06Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tiếp tục"
+**AI Response**: "Tiếp tục sửa F01–F08. Sửa thêm mapping SQLState 55P03/57014 sau test PostgreSQL thật; ShellCheck sửa assertion trong restore harness. Backend verify 2570 tests, 0 failure/error, 1 skip AI evaluation; 66 frontend tests qua. Đang hoàn tất kiểm image/restore và tài liệu."
+**Context**: Lượt trước dừng khi automatic approval review không thực hiện được vì hết hạn mức, không phải do hành động bị đánh giá không an toàn. Hạn mức hiện cho phép tiếp tục các kiểm thử Docker cô lập. Không deploy/commit/push, không thay dữ liệu production.
+
+---
+## NFR remediation — hoàn tất Code Generation và Build and Test
+**Timestamp**: 2026-11-17T02:56:37Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "tiếp tục"
+**AI Response**: "Đã sửa và kiểm chứng F01–F08. Backend verify 2570 tests, 0 failures/errors, 1 skip AI evaluation; 16 test health/worker chạy lại sau chỉnh trình bày qua; frontend liên quan 66/66. Guard PostgreSQL, deploy 15/15, restore harness 4/4, ShellCheck, image pins và Compose config qua. Dockerfile backend build thành công; restore fixture PostgreSQL thật bằng image đó qua, script báo 5 giây. Báo cáo: aidlc-docs/construction/build-and-test/2026-11-17-nfr-remediation-results.md."
+**Context**: Hoàn tất 9/9 bước kế hoạch. Giữ công việc đồng thời; không commit/push/deploy phần NFR, không đổi dữ liệu production. Tải mục tiêu, RPO/RTO production, accessibility toàn hành trình và soak/chaos chưa nghiệm thu. Security/Resiliency tuân thủ trong phạm vi đã duyệt, PBT disabled. Các trở ngại môi trường của lượt trước đã được giải quyết để chạy kiểm local; không còn hành động bị chặn bởi approval review.
+
+---
+## NFR staging readiness — kiểm tra trước phát hành
+**Timestamp**: 2026-11-17T03:04:53Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "kiể tra xem đưa lên staging đuộc chưa"
+**AI Response**: "Fetch staging, xác minh CI 706e46f1 thành công cả 4 job. Nhánh local e7110051 chậm 4 commit; mã NFR không xung đột, hai tài liệu state/audit xung đột trong mô phỏng gộp trên bản sao tạm. Guard DB/image qua; harness deploy mới nhất staging 16/16 qua. Kiểm Dockerfile frontend với digest mới trước khi chốt kết luận."
+**Context**: Review-only trong workflow NFR đã có; không commit/push/merge/deploy, không truy cập VPS. Báo cáo ở aidlc-docs/construction/build-and-test/2026-11-17-nfr-staging-readiness.md. Không suy ra danh tính requester từ tên Git commit hoặc các entry lịch sử.
+
+---
+## NFR staging readiness — kết quả
+**Timestamp**: 2026-11-17T03:07:07Z
+**Requested by:** Unknown — GitHub display name not confirmed
+**User Input**: "kiể tra xem đưa lên staging đuộc chưa"
+**AI Response**: "Đủ điều kiện chuẩn bị PR vào staging về mặt mã nguồn. Dockerfile frontend đã build thành công; container 384 MiB/0,5 CPU trả 200 ở health/login và chạy UID 100; đã dọn container. Trước merge cần đưa phần NFR chưa commit lên nền staging mới, gộp hai tài liệu xung đột và chờ CI của PR mới. CI staging hiện tại không thay CI của phần NFR."
+**Context**: Báo cáo readiness đã hoàn tất. Không đổi branch/source, không commit/push/merge/deploy hoặc truy cập VPS. Bản mô phỏng gộp chỉ ở .tmp; workspace chính không chứa conflict marker do lượt kiểm này tạo.
+
+---
+## NFR — yêu cầu đồng bộ staging, commit và mở PR
+**Timestamp**: 2026-11-17T03:10:40Z
+**Requested by:** Đào Chí Cường
+**User Input**:
+```text
+Làm cho tôi
+
+1. Đồng bộ 4 commit mới từ staging.
+2. Gộp hai tài liệu xung đột: `aidlc-state.md`, `audit.md`.
+3. Commit phần NFR, mở PR và chờ CI của PR đạt.
+```
+**AI Response**: "Đồng bộ staging mới nhất trên nhánh codex/nfr-remediation, gộp đầy đủ hai tài liệu, commit phần NFR và mở PR vào staging. Theo dõi CI và sửa lỗi nếu phát sinh; chưa merge PR hay deploy."
+**Context**: Người dùng cho phép commit/push và tạo PR trong lượt này. Giữ riêng báo cáo readiness chưa theo dõi của công việc khác. Tên GitHub display name được xác minh từ /user qua credential hiện có; không sửa attribution lịch sử.
+
+---

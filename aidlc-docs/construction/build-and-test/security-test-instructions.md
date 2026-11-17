@@ -4,7 +4,7 @@ Baseline staging@794a4053; document sync does not certify runtime controls. Reta
 
 - Check current ACTIVE role/session/resource permission server-side for web and MCP. Admin MCP denied, including existing tokens. Student MCP supports own submitted PRACTICE feedback with the same ownership/enrollment/hash/schema/pending/daily-limit rules as personal APIs; no grading/authoring/hidden Quiz answers. Role/scope changes apply next call.
 - Reject wrong owner, expired/revoked credential; legacy missing ciphertext cannot reveal. Check CSRF, cache headers, bounds/rate limits, output schema/version and error redaction.
-- API-key list stays masked. Source exception: Admin institutional-key reveal for non-REVOKED connection returns raw key and records AI_CONNECTION_KEY_REVEALED. This supersedes the blanket old no-readback description; security design review of that exception remains pending. Personal keys are not thereby readable by Admin.
+- API keys are write-only (D15 closed 2026-11-11), including institutional keys owned by Admin. Lists and connection responses must not expose raw keys; obsolete API-key reveal routes must not return credentials. Verify direct owner/Admin requests and denied cross-account requests, and ensure error/audit output never contains the submitted key. MCP token readback is a separate capability below, not an API-key exception.
 - Owner ACTIVE MCP credential reveal when ciphertext exists records MCP_TOKEN_REVEALED; hash still authenticates, encryption key must stay out of doc/logs. No secret values should be captured as test evidence.
 - Recheck scope on module/Quiz attachment and material read, hidden results, grading/submission snapshots, private download tokens and backup metadata.
 

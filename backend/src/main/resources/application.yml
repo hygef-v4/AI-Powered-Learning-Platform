@@ -8,6 +8,15 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:platform}
     username: ${POSTGRES_APP_USER:app}
     password: ${POSTGRES_APP_PASSWORD:}
+    hikari:
+      connection-timeout: 3000
+      validation-timeout: 1000
+      maximum-pool-size: 10
+      data-source-properties:
+        connectTimeout: 5
+        socketTimeout: 30
+        # Only the application pool uses these limits; Flyway and pg_dump have separate connections.
+        options: -c statement_timeout=15000 -c lock_timeout=2000
   flyway:
     # Mỗi unit một thư mục con trong db/migration/<package>; Flyway quét cả thư mục con.
     url: ${spring.datasource.url}
