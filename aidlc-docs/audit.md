@@ -15577,3 +15577,35 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Code Generation tối giản cho thay đổi phụ thuộc; không đổi mã Java, schema hay cấu hình. Chưa biên dịch và chưa chạy test: máy này không có Maven và Docker engine đang tắt. Chưa commit, chưa push.
 
 ---
+## Performance fixes — merged and applied on staging
+**Timestamp**: 2026-11-16T14:15:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "merge vào staging giúp tôi, sau đó truy cập vào vps của tôi và xử lí 2 việc trên"
+**AI Response**: "PR 101 merge vào staging (e2014177) sau khi xung đột audit.md với PR 100 được gộp trên nhánh (e7110051) và CI qua. VPS không git fetch được từ GitHub nên chép commit qua git bundle; staging tự deploy c9f68aab rồi e2014177, mọi dịch vụ khỏe. Trên VPS: cài lại /usr/local/bin/platform-deploy và /usr/local/bin/platform-staging-deploy từ bản mới (bản cũ giữ ở *.bak-20261116); CREATE EXTENSION pg_stat_statements cho database staging; restart container nginx của staging vì deploy không tạo lại nginx nên cấu hình mới chưa được nạp."
+**Context**: Operations. Không đụng container hay database production. Production chưa có bản này; khi lên production cần restart nginx và tạo extension cho database production.
+
+---
+## Deploy script — restart nginx when its config changes
+**Timestamp**: 2026-11-16T14:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, sửa đi"
+**AI Response**: "Trả lời câu hỏi có sửa script deploy để tự nạp lại nginx khi cấu hình nginx đổi hay không. Tạo nhánh fix/deploy-restart-nginx từ origin/staging@e2014177 trong worktree riêng. platform-deploy.sh: switch_to khởi động lại nginx khi infra/nginx khác nhau giữa hai bản, kể cả lúc quay về. Thêm test (16/16 qua), cập nhật runbook. Hỏi người dùng duyệt mã và quyết định commit, push, mở PR vào staging."
+**Context**: Code Generation và Build and Test xong; chờ duyệt. Chưa commit, push hay cài lên VPS.
+
+---
+## Deploy script — commit request
+**Timestamp**: 2026-11-16T14:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Commit cục bộ thay đổi script deploy, test, runbook và tài liệu AI-DLC trên nhánh fix/deploy-restart-nginx. Không push."
+**Context**: Người dùng duyệt mã bằng yêu cầu commit. Chưa push, chưa mở PR, chưa cài lên VPS.
+
+---
+## Deploy script — pull request
+**Timestamp**: 2026-11-16T14:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Push và mở PR"
+**AI Response**: "Push nhánh fix/deploy-restart-nginx và mở PR vào staging. Không tự merge."
+**Context**: Số PR ghi trên GitHub và trong phản hồi cuối.
+
+---

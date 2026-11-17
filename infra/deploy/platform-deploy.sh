@@ -143,11 +143,23 @@ dump_database() {
     log "Đã sao lưu database: $file"
 }
 
+# Cấu hình nginx là tệp mount: đổi tệp không làm compose tạo lại container, và template chỉ được dựng lúc container
+# khởi động. Vì vậy khi infra/nginx khác nhau giữa hai bản thì khởi động lại nginx để nạp cấu hình của bản mới.
+nginx_config_changed() {
+    [[ -n $1 ]] && ! git -C "$PLATFORM_DIR" diff --quiet "$1" "$2" -- infra/nginx
+}
+
 switch_to() {
+    local before
     LAST_PROBLEM=""
+    before=$(git -C "$PLATFORM_DIR" rev-parse -q --verify HEAD 2>/dev/null || true)
     git -C "$PLATFORM_DIR" checkout -q --detach "$1" &&
         set_image_tag "$1" &&
-        compose up -d --remove-orphans
+        compose up -d --remove-orphans || return 1
+    if nginx_config_changed "$before" "$1"; then
+        log "Cấu hình nginx thay đổi, khởi động lại nginx"
+        compose restart nginx
+    fi
 }
 
 containers_ok() {
