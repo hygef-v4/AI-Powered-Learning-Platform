@@ -10,6 +10,13 @@
 
 **Delta 2026-11-10 (`staging@062a43f5`):** danh sách controller, test và migration bên dưới đã đối chiếu lại với source: thêm 15 mục còn thiếu, bỏ 2 liên kết tới file đã xóa. Frontend có thêm `shared/layout/NavTree.tsx` (cây môn/lớp trong sidebar), `app/opengraph-image.tsx` và `shared/siteMetadata.ts` (metadata Open Graph/Twitter, ảnh 1200×630; `/opengraph-image` nằm ngoài `proxy.ts`), `features/assignments/components/AiReviseChat.tsx`; đã xóa `features/assignmentwork/pages/ReceiptPage.tsx` và route `/attempts/[attemptId]/receipt`. Sau khi merge tới `staging@1e77eb79` thêm 4 migration (assignments, grading, quizpractice) và 2 test class; frontend có thêm `shared/document/SectionNumber.tsx`, bỏ `features/assignments/model/templateStore.ts`. Fixture/helper test không liệt kê. [Báo cáo đối chiếu](../../construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md); không chạy lại test.
 
+**Delta 2026-11-16 (`staging@d8ac7d21`):** ghi nhận các thay đổi của staging chưa có trong tài liệu; không đối chiếu lại toàn bộ bảng controller, test và migration.
+
+- Đa ngôn ngữ: `frontend/src/i18n` dùng next-intl. `locales.ts` khai báo `en` (mặc định), `vi`, `ja` và cookie `locale`; `messages/<mã>.json` cùng bộ khóa ở cả ba ngôn ngữ; `msg.ts` có `msg(key, values)` cho client và quay về câu tiếng Anh khi thiếu khóa; `server.ts` dịch metadata và trang dựng trên máy chủ; `LocaleGate.tsx` hoãn vẽ nội dung tới khi trình duyệt nạp xong để chữ không lệch giữa máy chủ và trình duyệt. Chọn ngôn ngữ ở `shared/layout/LanguageDialog.tsx` (menu tài khoản) và nút trên màn đăng nhập. Chuỗi giao diện không viết thẳng trong component. Test: `frontend/tests/i18n/locales.test.ts` kiểm ba tệp cùng khóa; `frontend/tests/locale.setup.ts` đặt cookie tiếng Việt cho bộ test.
+- AI soạn Assignment nhận ngôn ngữ `VI`, `EN`, `JA` hoặc `AUTO`, mặc định `EN` (`AssignmentAiDraftService`, `AssignmentDraftPromptBuilder`).
+- Trang công khai `frontend/src/app/privacy/page.tsx` (`/privacy`), liên kết từ chân màn đăng nhập; bản gốc [PRIVACY.md](../../../PRIVACY.md).
+- U03: Drive cá nhân qua OAuth, thư mục gốc cấu hình được, khóa mã hóa backup tùy chọn; chi tiết ở [code-summary của U03](../../construction/u03-job-and-settings/code/code-summary.md) và [runbook deploy](../../../docs/runbooks/deploy-vps.md) mục 6.
+
 ## U01 — Account & Access
 
 Primary UC 01–12; FR-001, FR-002, FR-015.
@@ -425,6 +432,7 @@ Primary UC 37–41; FR-018, FR-030, FR-039.
 ### Migrations
 
 - [V20260925_1400__create_assignment_work_tables.sql](../../../backend/src/main/resources/db/migration/assignmentwork/V20260925_1400__create_assignment_work_tables.sql)
+- [V20261116_1010__unlimited_attempt_numbers.sql](../../../backend/src/main/resources/db/migration/assignmentwork/V20261116_1010__unlimited_attempt_numbers.sql) — bỏ trần 10 của số thứ tự lượt (2026-11-16)
 
 ### Frontend
 
@@ -658,6 +666,7 @@ Primary UC 53–57; FR-025, FR-026, FR-039.
 - [V20261102_1000__group_section_collaboration.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1000__group_section_collaboration.sql)
 - [V20261102_1200__group_assignment_phase.sql](../../../backend/src/main/resources/db/migration/groups/V20261102_1200__group_assignment_phase.sql)
 - [V20261111_1800__group_self_formation.sql](../../../backend/src/main/resources/db/migration/groups/V20261111_1800__group_self_formation.sql) — đợt tự chia nhóm, đề xuất, lời mời (2026-11-11)
+- [V20261116_1000__drop_group_peer_reviews.sql](../../../backend/src/main/resources/db/migration/groups/V20261116_1000__drop_group_peer_reviews.sql) — bỏ bảng đánh giá chéo không còn dùng (2026-11-16)
 
 ### Frontend
 

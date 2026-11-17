@@ -50,17 +50,17 @@ public class McpServer {
     private final McpToolRegistry registry;
     private final IMcpRateLimiter rateLimiter;
     private final JsonSchemaChecker schemas;
-    private final AiUsageService usage;
+    private final AiUsageService aiUsageService;
     private final IAudit audit;
     private final ObjectMapper json;
     private final Clock clock;
 
     public McpServer(McpToolRegistry registry, IMcpRateLimiter rateLimiter, JsonSchemaChecker schemas,
-                     AiUsageService usage, IAudit audit, ObjectMapper json, Clock clock) {
+                     AiUsageService aiUsageService, IAudit audit, ObjectMapper json, Clock clock) {
         this.registry = registry;
         this.rateLimiter = rateLimiter;
         this.schemas = schemas;
-        this.usage = usage;
+        this.aiUsageService = aiUsageService;
         this.audit = audit;
         this.json = json;
         this.clock = clock;
@@ -72,44 +72,44 @@ public class McpServer {
 
     /** Thân lời gọi không phải JSON. */
     public ObjectNode parseError() {
-        return error(null, PARSE_ERROR, "Thân yêu cầu không phải JSON");
+        return buildError(null, PARSE_ERROR, "Thân yêu cầu không phải JSON");
     }
 
     /**
      * Processes an incoming JSON-RPC 2.0 message according to MCP specification.
      */
-    public Optional<ObjectNode> handle(McpPrincipal principal, JsonNode message) {
+    public Optional<ObjectNode> handleMessage(McpPrincipal principal, JsonNode message) {
         // Step 1: Validate root JSON-RPC structure and format
         if (message == null || !message.isObject()) {
-            return Optional.of(error(null, INVALID_REQUEST, "Cần một thông điệp JSON-RPC"));
+            return Optional.of(buildError(null, INVALID_REQUEST, "Cần một thông điệp JSON-RPC"));
         }
         JsonNode id = message.get("id");
         JsonNode method = message.get("method");
         if (!"2.0".equals(message.path("jsonrpc").asText(null))) {
-            return Optional.of(error(id, INVALID_REQUEST, "Cần jsonrpc 2.0"));
+            return Optional.of(buildError(id, INVALID_REQUEST, "Cần jsonrpc 2.0"));
         }
         if (method == null) {
             return message.has("result") || message.has("error") ? Optional.empty()
-                    : Optional.of(error(id, INVALID_REQUEST, "Thiếu method"));
+                    : Optional.of(buildError(id, INVALID_REQUEST, "Thiếu method"));
         }
         if (!method.isTextual()) {
-            return Optional.of(error(id, INVALID_REQUEST, "method phải là chuỗi"));
+            return Optional.of(buildError(id, INVALID_REQUEST, "method phải là chuỗi"));
         }
         if (id == null) {
             return Optional.empty();
         }
         if (!(id.isTextual() || id.isIntegralNumber())) {
-            return Optional.of(error(null, INVALID_REQUEST, "id phải là chuỗi hoặc số"));
+            return Optional.of(buildError(null, INVALID_REQUEST, "id phải là chuỗi hoặc số"));
         }
 
         // Step 2: Route request by method: initialize, ping, tools/list, or tools/call
         JsonNode params = message.path("params");
         return Optional.of(switch (method.asText()) {
-            case "initialize" -> result(id, initialize(params));
-            case "ping" -> result(id, json.createObjectNode());
-            case "tools/list" -> result(id, toolsList(principal));
-            case "tools/call" -> toolsCall(principal, id, params);
-            default -> error(id, METHOD_NOT_FOUND, "Không hỗ trợ method này");
+            case "initialize" -> buildResult(id, initialize(params));
+            case "ping" -> buildResult(id, json.createObjectNode());
+            case "tools/list" -> buildResult(id, listTools(principal));
+            case "tools/call" -> callTool(principal, id, params);
+            default -> buildError(id, METHOD_NOT_FOUND, "Không hỗ trợ method này");
         });
     }
 
@@ -130,14 +130,14 @@ public class McpServer {
     /**
      * Lists all tools accessible to the caller based on their role and credential access level.
      */
-    private ObjectNode toolsList(McpPrincipal principal) {
+    private ObjectNode listTools(McpPrincipal principal) {
         ObjectNode out = json.createObjectNode();
         ArrayNode tools = out.putArray("tools");
-        for (McpToolDefinition d : registry.visible(principal.actor().role(), principal.credential().access())) {
+        for (McpToolDefinition d : registry.listVisibleTools(principal.actor().role(), principal.credential().access())) {
             ObjectNode tool = tools.addObject();
             tool.put("name", d.name());
             tool.put("description", d.description());
-            tool.set("inputSchema", schemaNode(d.parameterSchema()));
+            tool.set("inputSchema", parseSchemaNode(d.parameterSchema()));
             tool.putObject("annotations").put("readOnlyHint", d.kind() == McpToolKind.READ);
         }
         return out;
@@ -146,13 +146,13 @@ public class McpServer {
     /**
      * Dispatches an individual tool call with rate limiting, schema verification, and auditing.
      */
-    private ObjectNode toolsCall(McpPrincipal principal, JsonNode id, JsonNode params) {
+    private ObjectNode callTool(McpPrincipal principal, JsonNode id, JsonNode params) {
         // Step 1: Validate tool name format and length constraints
         UUID accountId = principal.actor().accountId();
         UUID credentialId = principal.credential().id();
         JsonNode nameNode = params.path("name");
         if (!nameNode.isTextual() || nameNode.asText().isBlank() || nameNode.asText().length() > MAX_TOOL_NAME) {
-            return error(id, INVALID_PARAMS, "Thiếu hoặc sai tên tool");
+            return buildError(id, INVALID_PARAMS, "Thiếu hoặc sai tên tool");
         }
         String name = nameNode.asText();
 
@@ -166,32 +166,32 @@ public class McpServer {
         }
         if (!allowed) {
             record(accountId, name, AuditResult.DENIED, "RATE_LIMITED");
-            return error(id, RATE_LIMITED, "Vượt 60 lời gọi mỗi phút; hãy thử lại sau");
+            return buildError(id, RATE_LIMITED, "Vượt 60 lời gọi mỗi phút; hãy thử lại sau");
         }
 
         // Step 3: Lookup tool definition in registry matching caller role and access permission
-        Optional<McpToolRegistry.Entry> entry = registry.find(name, principal.actor().role(),
+        Optional<McpToolRegistry.Entry> entry = registry.findTool(name, principal.actor().role(),
                 principal.credential().access());
         if (entry.isEmpty()) {
-            denied(accountId, name);
-            return error(id, INVALID_PARAMS, "Không có tool này");
+            recordDenied(accountId, name);
+            return buildError(id, INVALID_PARAMS, "Không có tool này");
         }
 
         // Step 4: Validate arguments object size (max 64 KB) and JSON schema compliance
         JsonNode args = params.has("arguments") ? params.get("arguments") : json.createObjectNode();
         if (!args.isObject()) {
-            return error(id, INVALID_PARAMS, "arguments phải là object");
+            return buildError(id, INVALID_PARAMS, "arguments phải là object");
         }
-        if (bytes(args.toString()) > MAX_ARGS_BYTES) {
+        if (countBytes(args.toString()) > MAX_ARGS_BYTES) {
             record(accountId, name, AuditResult.DENIED, "ARGS_TOO_LARGE");
-            return error(id, INVALID_PARAMS, "Tham số vượt 64 KB");
+            return buildError(id, INVALID_PARAMS, "Tham số vượt 64 KB");
         }
-        Optional<String> invalid = schemas.check(entry.get().definition().parameterSchema(), args);
+        Optional<String> invalid = schemas.validateValue(entry.get().definition().parameterSchema(), args);
         if (invalid.isPresent()) {
-            return error(id, INVALID_PARAMS, "Tham số không đúng schema: " + invalid.get());
+            return buildError(id, INVALID_PARAMS, "Tham số không đúng schema: " + invalid.get());
         }
-        Long inputTokens = reported(params.path("_meta").path("inputTokens"));
-        Long outputTokens = reported(params.path("_meta").path("outputTokens"));
+        Long inputTokens = readReportedTokens(params.path("_meta").path("inputTokens"));
+        Long outputTokens = readReportedTokens(params.path("_meta").path("outputTokens"));
 
         // Step 5: Execute domain tool provider call and catch domain/runtime exceptions
         McpToolResult result;
@@ -200,46 +200,46 @@ public class McpServer {
             Map<String, Object> map = json.convertValue(args, Map.class);
             result = "get_my_capabilities".equals(name)
                     ? new McpToolResult(false, Map.of("role", principal.actor().role(), "access", principal.credential().access(),
-                            "tools", registry.visible(principal.actor().role(), principal.credential().access()).stream().map(McpToolDefinition::name).toList(),
-                            "workflow",McpCapabilitiesTools.workflow(principal.actor().role())))
+                            "tools", registry.listVisibleTools(principal.actor().role(), principal.credential().access()).stream().map(McpToolDefinition::name).toList(),
+                            "workflow",McpCapabilitiesTools.describeWorkflow(principal.actor().role())))
                     : entry.get().provider().call(principal.actor(), name, map);
         } catch (ApiException e) {
-            if (e.status().value() == 403 || e.status().value() == 404) {
-                denied(accountId, name);
-                usage.recordMcp(accountId, credentialId, name, "DENIED", inputTokens, outputTokens);
-                return result(id, toolResult("Không tìm thấy hoặc không có quyền", true));
+            if (e.readStatus().value() == 403 || e.readStatus().value() == 404) {
+                recordDenied(accountId, name);
+                aiUsageService.recordMcp(accountId, credentialId, name, "DENIED", inputTokens, outputTokens);
+                return buildResult(id, buildToolResult("Không tìm thấy hoặc không có quyền", true));
             }
-            usage.recordMcp(accountId, credentialId, name, "ERROR", inputTokens, outputTokens);
-            record(accountId, name, AuditResult.FAILURE, e.code());
-            return result(id, toolResult(text(Map.of("code", e.code(), "message", e.getMessage())), true));
+            aiUsageService.recordMcp(accountId, credentialId, name, "ERROR", inputTokens, outputTokens);
+            record(accountId, name, AuditResult.FAILURE, e.readCode());
+            return buildResult(id, buildToolResult(renderText(Map.of("code", e.readCode(), "message", e.getMessage())), true));
         } catch (RuntimeException e) {
             log.warn("Tool MCP {} lỗi: {}", name, e.getClass().getName());
-            usage.recordMcp(accountId, credentialId, name, "ERROR", inputTokens, outputTokens);
+            aiUsageService.recordMcp(accountId, credentialId, name, "ERROR", inputTokens, outputTokens);
             record(accountId, name, AuditResult.FAILURE, "TOOL_ERROR");
-            return result(id, toolResult("Tool gặp lỗi; hãy thử lại sau", true));
+            return buildResult(id, buildToolResult("Tool gặp lỗi; hãy thử lại sau", true));
         }
 
         // Step 6: Verify result size limit (max 256 KB) and record usage and audit metrics
         boolean isError = result == null || result.error();
         Object content = result == null ? null : result.content();
-        String text = text(content);
-        if (bytes(text) > 192 * 1024 || bytes(text(toolResult(text, isError))) > MAX_RESULT_BYTES - 512) {
+        String text = renderText(content);
+        if (countBytes(text) > 192 * 1024 || countBytes(renderText(buildToolResult(text, isError))) > MAX_RESULT_BYTES - 512) {
             isError = true;
             text = "{\"code\":\"MCP_RESULT_TOO_LARGE\",\"complete\":false,\"message\":\"Reduce page size or use continuation\"}";
         }
-        usage.recordMcp(accountId, credentialId, name, isError ? "ERROR" : "OK", inputTokens, outputTokens);
+        aiUsageService.recordMcp(accountId, credentialId, name, isError ? "ERROR" : "OK", inputTokens, outputTokens);
         record(accountId, name, isError ? AuditResult.FAILURE : AuditResult.SUCCESS, null);
-        return result(id, toolResult(text, isError));
+        return buildResult(id, buildToolResult(text, isError));
     }
 
-    private ObjectNode toolResult(String text, boolean isError) {
+    private ObjectNode buildToolResult(String text, boolean isError) {
         ObjectNode out = json.createObjectNode();
         out.putArray("content").addObject().put("type", "text").put("text", text);
         out.put("isError", isError);
         return out;
     }
 
-    private String text(Object content) {
+    private String renderText(Object content) {
         if (content == null) {
             return "";
         }
@@ -259,7 +259,7 @@ public class McpServer {
         if (raw.length <= MAX_RESULT_BYTES) {
             return text;
         }
-        int limit = MAX_RESULT_BYTES - bytes(TRUNCATED);
+        int limit = MAX_RESULT_BYTES - countBytes(TRUNCATED);
         int end = 0;
         int used = 0;
         while (end < text.length()) {
@@ -274,16 +274,16 @@ public class McpServer {
         return text.substring(0, end) + TRUNCATED;
     }
 
-    private static int bytes(String s) {
+    private static int countBytes(String s) {
         return s.getBytes(StandardCharsets.UTF_8).length;
     }
 
     /** Số token agent tự báo; không phải số nguyên không âm thì coi như không có (BR-U06-35). */
-    private static Long reported(JsonNode node) {
+    private static Long readReportedTokens(JsonNode node) {
         return node.isIntegralNumber() && node.asLong() >= 0 ? node.asLong() : null;
     }
 
-    private JsonNode schemaNode(String schema) {
+    private JsonNode parseSchemaNode(String schema) {
         try {
             return json.readTree(schema);
         } catch (JsonProcessingException | RuntimeException e) {
@@ -291,7 +291,7 @@ public class McpServer {
         }
     }
 
-    private void denied(UUID accountId, String tool) {
+    private void recordDenied(UUID accountId, String tool) {
         audit.record(new AuditEvent(UUID.randomUUID(), accountId, "ACCESS_DENIED", "MCP_TOOL", tool,
                 AuditResult.DENIED, "MCP", Map.of(), clock.instant()));
     }
@@ -304,19 +304,19 @@ public class McpServer {
                 details, clock.instant()));
     }
 
-    private ObjectNode result(JsonNode id, JsonNode result) {
-        ObjectNode out = envelope(id);
+    private ObjectNode buildResult(JsonNode id, JsonNode result) {
+        ObjectNode out = createEnvelope(id);
         out.set("result", result);
         return out;
     }
 
-    ObjectNode error(JsonNode id, int code, String message) {
-        ObjectNode out = envelope(id);
+    ObjectNode buildError(JsonNode id, int code, String message) {
+        ObjectNode out = createEnvelope(id);
         out.putObject("error").put("code", code).put("message", message);
         return out;
     }
 
-    private ObjectNode envelope(JsonNode id) {
+    private ObjectNode createEnvelope(JsonNode id) {
         ObjectNode out = json.createObjectNode();
         out.put("jsonrpc", "2.0");
         if (id == null) {

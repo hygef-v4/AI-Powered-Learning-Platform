@@ -55,12 +55,12 @@ class AttemptSubmitter {
         Instant effective = mode == SubmitMode.MANUAL ? now
                 : attempt.lastSavedAt() != null ? attempt.lastSavedAt() : attempt.startedAt();
         boolean late = lateUntil != null && closesAt != null && effective.isAfter(closesAt);
-        String hash = receiptHash(attempt.content());
+        String hash = hashReceipt(attempt.content());
         if (attempts.submit(attempt.id(), mode, late, hash, now, warnings) != 1) {
             return false;
         }
         listeners.orderedStream().forEach(listener -> listener.onSubmitted(attempt.id()));
-        audit.success(actorId, "ASSIGNMENT_SUBMITTED", WorkAudit.OBJECT_ATTEMPT, attempt.id(), WorkAudit.details(
+        audit.recordSuccess(actorId, "ASSIGNMENT_SUBMITTED", WorkAudit.OBJECT_ATTEMPT, attempt.id(), WorkAudit.collectDetails(
                 "assignmentId", attempt.assignmentId(), "classId", attempt.classId(), "accountId", attempt.accountId(),
                 "attemptNo", attempt.attemptNo(), "submitMode", mode, "late", late, "warningCount", warnings.size()));
         return true;
@@ -70,14 +70,14 @@ class AttemptSubmitter {
      * Tự nộp bản đã lưu gần nhất, kể cả rỗng, không kiểm điều kiện nộp; lỗi kiểm ghi thành cảnh báo cho giảng viên.
      * Hết hạn mà bài vừa được kéo dài hạn thì lượt nhận hạn mới, chưa nộp.
      */
-    boolean autoSubmit(UUID attemptId, SubmitMode mode, Instant now) {
-        AssignmentAttempt snapshot = attempts.find(attemptId).orElse(null);
+    boolean submitAutomatically(UUID attemptId, SubmitMode mode, Instant now) {
+        AssignmentAttempt snapshot = attempts.findAttempt(attemptId).orElse(null);
         if (snapshot == null) {
             return false;
         }
         assignments.lockSubmission(snapshot.assignmentId());
         AssignmentAttempt attempt = attempts.findForUpdate(attemptId).orElse(null);
-        if (attempt == null || !attempt.inProgress()) {
+        if (attempt == null || !attempt.hasInProgressStatus()) {
             return false;
         }
         AssignmentView view = assignments.get(attempt.assignmentId()).orElse(null);
@@ -100,7 +100,7 @@ class AttemptSubmitter {
         return submit(attempt, mode, null, now, closesAt, warnings);
     }
 
-    String receiptHash(DocumentModel content) {
+    String hashReceipt(DocumentModel content) {
         try {
             byte[] bytes = json.writeValueAsString(content).getBytes(StandardCharsets.UTF_8);
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));

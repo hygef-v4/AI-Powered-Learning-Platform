@@ -51,10 +51,10 @@ public class SubjectStatusService {
         subjectAdminAccess.requireAccess(
                 actor, Actions.SUBJECT_STATUS_CHANGE, ResourceRef.subject(subjectId));
         if (subjectId == null || command == null || command.status() == null) {
-            throw ApiException.badRequest("SUBJECT_STATUS_INVALID", "Cần môn và trạng thái hợp lệ");
+            throw ApiException.createBadRequest("SUBJECT_STATUS_INVALID", "Cần môn và trạng thái hợp lệ");
         }
         if (command.version() == null || command.version() < 1) {
-            throw ApiException.badRequest("SUBJECT_VERSION_REQUIRED", "Cần version môn từ 1");
+            throw ApiException.createBadRequest("SUBJECT_VERSION_REQUIRED", "Cần version môn từ 1");
         }
         SubjectLifecycleBudget budget = new SubjectLifecycleBudget(Duration.ofSeconds(1));
         Subject before;
@@ -62,9 +62,9 @@ public class SubjectStatusService {
             before =
                     subjectRepository
                             .findByIdForUpdate(subjectId, budget.calculateRemaining())
-                            .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+                            .orElseThrow(() -> ApiException.createNotFound("SUBJECT_NOT_FOUND"));
         } catch (DataAccessException failure) {
-            throw ApiException.unavailable(
+            throw ApiException.createUnavailable(
                     "SUBJECT_LIFECYCLE_UNAVAILABLE", "Chưa khóa được môn, vui lòng thử lại");
         }
         before.requireVersion(command.version());
@@ -93,7 +93,7 @@ public class SubjectStatusService {
                         ? before.archive(clock.instant())
                         : before.reopen(clock.instant());
         if (!subjectRepository.updateSubject(after, command.version())) {
-            throw ApiException.conflict(
+            throw ApiException.createConflict(
                     "SUBJECT_VERSION_CONFLICT",
                     "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
         }
@@ -105,7 +105,7 @@ public class SubjectStatusService {
     }
 
     private ApiException createClassesUnavailableError() {
-        return ApiException.unavailable(
+        return ApiException.createUnavailable(
                 "SUBJECT_CLASSES_UNAVAILABLE", "Chưa kiểm tra được lớp, vui lòng thử lại");
     }
 }

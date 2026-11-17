@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getPolicies, uploadFile } from "../api";
 import { checkFile, type ArtifactPurpose, type PurposePolicy, type UploadResult } from "../model/purposes";
+import { msg } from "@/i18n/msg";
 
 export type UploadState =
   | { status: "idle" }
@@ -22,7 +23,7 @@ export function useFileUpload(purpose: ArtifactPurpose) {
         if (active) setPolicy(policies.find((p) => p.purpose === purpose) ?? null);
       })
       .catch(() => {
-        if (active) setState({ status: "error", message: "Không tải được giới hạn tệp" });
+        if (active) setState({ status: "error", message: msg("files.hooks.useFileUpload.couldNotLoadTheFile") });
       });
     return () => {
       active = false;
@@ -45,7 +46,7 @@ export function useFileUpload(purpose: ArtifactPurpose) {
       setState({ status: "done", result });
       return result;
     } catch (e) {
-      setState({ status: "error", message: e instanceof Error ? e.message : "Tải tệp lên không thành công" });
+      setState({ status: "error", message: e instanceof Error ? e.message : msg("files.hooks.useFileUpload.uploadFailed") });
       return null;
     } finally {
       abortRef.current = null;

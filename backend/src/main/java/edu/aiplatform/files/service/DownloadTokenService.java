@@ -38,7 +38,7 @@ public class DownloadTokenService {
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         try {
-            redis.opsForValue().set(key(token), objectMapper.writeValueAsString(new Grant(fileId, accountId)), TTL);
+            redis.opsForValue().set(buildKey(token), objectMapper.writeValueAsString(new Grant(fileId, accountId)), TTL);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException(e);
         }
@@ -46,7 +46,7 @@ public class DownloadTokenService {
     }
 
     public Optional<Grant> resolve(String token) {
-        String value = redis.opsForValue().get(key(token));
+        String value = redis.opsForValue().get(buildKey(token));
         if (value == null) {
             return Optional.empty();
         }
@@ -57,7 +57,7 @@ public class DownloadTokenService {
         }
     }
 
-    static String key(String token) {
+    static String buildKey(String token) {
         try {
             byte[] hash = MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.US_ASCII));
             return KEY_PREFIX + HexFormat.of().formatHex(hash);

@@ -39,7 +39,7 @@ public class RedisMcpRateLimiter implements IMcpRateLimiter {
                         .build())
                 .build();
         try {
-            return proxyManager().builder()
+            return createProxyManager().builder()
                     .build((PREFIX + credentialId).getBytes(StandardCharsets.UTF_8), () -> configuration)
                     .tryConsume(1);
         } catch (RuntimeException e) {
@@ -47,7 +47,7 @@ public class RedisMcpRateLimiter implements IMcpRateLimiter {
         }
     }
 
-    private ProxyManager<byte[]> proxyManager() {
+    private ProxyManager<byte[]> createProxyManager() {
         ProxyManager<byte[]> manager = proxyManager;
         if (manager == null) {
             synchronized (this) {

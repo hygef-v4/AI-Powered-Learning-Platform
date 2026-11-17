@@ -127,7 +127,7 @@ class SubjectAuditTest {
     @Test
     void successPayloadsAreAllowlistedAndKeepExplicitNullForUnassignment() {
         Subject before =
-                Subject.create(
+                Subject.createSubject(
                         id,
                         "ABC",
                         "Name",
@@ -159,7 +159,7 @@ class SubjectAuditTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         error -> {
-                            assertThat(error.code()).isEqualTo(expected);
+                            assertThat(error.readCode()).isEqualTo(expected);
                             assertThat(error.getMessage())
                                     .doesNotContain("SQL", "password", "secret-token");
                         });

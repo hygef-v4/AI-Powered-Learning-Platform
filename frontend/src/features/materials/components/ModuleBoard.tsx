@@ -6,6 +6,7 @@ import { getQuiz, reopenQuiz } from "@/features/quizzes/api";
 import { QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "@/features/quizzes/model/labels";
 import {
   Button,
+  Card,
   Dialog,
   Field,
   Icon,
@@ -30,6 +31,7 @@ import {
   type OutlineItem,
 } from "../model/outline";
 import type { MaterialModule, ModuleScope } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 type Dialogs =
   | { type: "item"; module: MaterialModule; item?: OutlineItem }
@@ -94,7 +96,7 @@ export function ModuleBoard({
     order.splice(index + offset, 0, moved!);
     void runAction(() => moduleApi.reorderModules(scope.subjectId, order));
   }
-  const closed = () => {
+  const handleClosed = () => {
     setDialog(null);
     setError("");
   };
@@ -110,20 +112,18 @@ export function ModuleBoard({
       onClick={() => setDialog({ type: "create" })}
       data-testid="module-create"
     >
-      Thêm module
-    </Button>
+      {msg("materials.components.ModuleBoard.addModule")}</Button>
   );
 
   return (
     <div className="flex flex-col gap-4">
-      {header && <PageHeader title="Học liệu" actions={canCreate && createButton} />}
+      {header && <PageHeader title={msg("materials.components.ModuleBoard.learningMaterials")} actions={canCreate && createButton} />}
       {!header && canCreate && <div className="flex justify-end">{createButton}</div>}
       {data.error && (
         <p role="alert" className="text-sm text-danger">
           {data.error}{" "}
           <Button size="sm" onClick={data.reload}>
-            Tải lại
-          </Button>
+            {msg("materials.components.ModuleBoard.reload")}</Button>
         </p>
       )}
       {error && !dialog && (
@@ -133,24 +133,19 @@ export function ModuleBoard({
       )}
       {!data.outline && !data.error && (
         <p role="status" className="py-10 text-center text-sm text-muted">
-          Đang tải học liệu…
-        </p>
+          {msg("materials.components.ModuleBoard.loadingLearningMaterials")}</p>
       )}
       {data.outline && outline.length === 0 && (
         <section className="rounded-xl border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-muted">
-          Chưa có module
-        </section>
+          {msg("materials.components.ModuleBoard.noModulesYet")}</section>
       )}
       {outline.map(({ module, items }, index) => {
         const addable = writable && (scope.kind === "class" || module.canManage);
         const open = !collapsed.has(module.id);
         return (
-          <section
-            key={module.id}
+          <Card as="section" padding="none" className="flex flex-col" key={module.id}
             aria-label={module.title}
-            data-testid={`module-${module.id}`}
-            className="flex flex-col rounded-xl border border-line bg-surface"
-          >
+            data-testid={`module-${module.id}`}>
             {/* Cả hàng đầu bấm được để thu gọn / mở; các nút thao tác không làm đổi trạng thái. */}
             <div
               className="flex cursor-pointer flex-wrap items-center gap-2 py-3.5 pr-3 pl-5 select-none"
@@ -168,44 +163,39 @@ export function ModuleBoard({
                     onClick={() => setDialog({ type: "item", module })}
                     data-testid={`module-add-${module.id}`}
                   >
-                    Tạo học liệu
-                  </Button>
+                    {msg("materials.components.ModuleBoard.createLearningMaterial")}</Button>
                 )}
                 {scope.kind === "subject" && module.canManage && !readOnly && (
                   <Menu
                     label={null}
                     icon="more_horiz"
-                    ariaLabel={`Thao tác module ${module.title}`}
+                    ariaLabel={msg("materials.components.ModuleBoard.actionsForModule", { title: String(module.title) })}
                     variant="tool"
                     align="right"
                     summaryClassName="[&>svg:last-child]:hidden"
                   >
                     <MenuItem icon="edit" onClick={() => setDialog({ type: "rename", module })}>
-                      Đổi tên
-                    </MenuItem>
+                      {msg("materials.components.ModuleBoard.rename")}</MenuItem>
                     <MenuItem
                       icon="chevron_left"
                       className="[&>svg]:rotate-90"
                       disabled={busy || index === 0}
                       onClick={() => handleMove(index, -1)}
                     >
-                      Lên trên
-                    </MenuItem>
+                      {msg("materials.components.ModuleBoard.moveUp")}</MenuItem>
                     <MenuItem
                       icon="chevron_right"
                       className="[&>svg]:rotate-90"
                       disabled={busy || index === outline.length - 1}
                       onClick={() => handleMove(index, 1)}
                     >
-                      Xuống dưới
-                    </MenuItem>
+                      {msg("materials.components.ModuleBoard.moveDown")}</MenuItem>
                     <MenuItem
                       icon="trash"
                       tone="danger"
                       onClick={() => setDialog({ type: "delete", module })}
                     >
-                      Xóa module
-                    </MenuItem>
+                      {msg("materials.components.ModuleBoard.deleteModule")}</MenuItem>
                   </Menu>
                 )}
               </span>
@@ -214,8 +204,8 @@ export function ModuleBoard({
                 aria-expanded={open}
                 aria-controls={`module-body-${module.id}`}
                 data-testid={`module-toggle-${module.id}`}
-                aria-label={open ? `Thu gọn ${module.title}` : `Mở ${module.title}`}
-                title={open ? "Thu gọn" : "Mở"}
+                aria-label={open ? msg("materials.components.ModuleBoard.collapse", { title: String(module.title) }) : msg("materials.components.ModuleBoard.expand", { title: String(module.title) })}
+                title={open ? msg("materials.components.ModuleBoard.collapse2") : msg("materials.components.ModuleBoard.expand2")}
                 className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-sunken hover:text-ink"
               >
                 <Icon
@@ -232,8 +222,7 @@ export function ModuleBoard({
               <ul className="flex flex-col">
                 {items.length === 0 && (
                   <li className="border-t border-line px-5 py-4 text-[13px] text-muted">
-                    Chưa có học liệu
-                  </li>
+                    {msg("materials.components.ModuleBoard.noLearningMaterialsYet")}</li>
                 )}
                 {items.map((item) => (
                   <ModuleRow
@@ -251,7 +240,7 @@ export function ModuleBoard({
                     busy={busy}
                     onReopen={() =>
                       item.kind === "quiz" &&
-                      void runAction(() => reopen(item.quiz.quizId, scope), "Đã mở lại quiz")
+                      void runAction(() => reopen(item.quiz.quizId, scope), msg("materials.components.ModuleBoard.quizReopened"))
                     }
                     onEdit={() => setDialog({ type: "item", module, item })}
                     onArchive={() => setDialog({ type: "archive", item })}
@@ -259,54 +248,53 @@ export function ModuleBoard({
                 ))}
               </ul>
             </CollapseBody>
-          </section>
+          </Card>
         );
       })}
       {dialog?.type === "create" && scope.kind === "subject" && (
         <ModuleNameDialog
-          title="Thêm module"
+          title={msg("materials.components.ModuleBoard.addModule")}
           initial=""
           busy={busy}
           error={error}
-          onClose={closed}
+          onClose={handleClosed}
           onSubmit={(name) =>
-            void runAction(() => moduleApi.createModule(scope.subjectId, name), "Đã thêm module")
+            void runAction(() => moduleApi.createModule(scope.subjectId, name), msg("materials.components.ModuleBoard.moduleAdded"))
           }
         />
       )}
       {dialog?.type === "rename" && (
         <ModuleNameDialog
-          title="Đổi tên module"
+          title={msg("materials.components.ModuleBoard.renameModule")}
           initial={dialog.module.title}
           busy={busy}
           error={error}
-          onClose={closed}
+          onClose={handleClosed}
           onSubmit={(name) =>
-            void runAction(() => moduleApi.renameModule(dialog.module, name), "Đã lưu thay đổi")
+            void runAction(() => moduleApi.renameModule(dialog.module, name), msg("materials.components.ModuleBoard.changesSaved"))
           }
         />
       )}
       {dialog?.type === "delete" && (
         <Dialog
           open
-          title="Xóa module?"
+          title={msg("materials.components.ModuleBoard.deleteModule2")}
           tone="danger"
-          onClose={closed}
+          onClose={handleClosed}
           dismissible={!busy}
           footer={
             <Button
               variant="danger"
               disabled={busy}
               onClick={() =>
-                void runAction(() => moduleApi.deleteModule(dialog.module), "Đã xóa module", "danger")
+                void runAction(() => moduleApi.deleteModule(dialog.module), msg("materials.components.ModuleBoard.moduleDeleted"), "danger")
               }
               data-testid="module-delete-confirm"
             >
-              Xóa
-            </Button>
+              {msg("materials.components.ModuleBoard.delete")}</Button>
           }
         >
-          <p>Bạn có chắc muốn xóa module {dialog.module.title} không?</p>
+          <p>{msg("materials.components.ModuleBoard.areYouSureYouWant")}{dialog.module.title} {msg("materials.components.ModuleBoard.text")}</p>
           {error && (
             <p role="alert" className="text-sm text-danger">
               {error}
@@ -320,7 +308,7 @@ export function ModuleBoard({
           scope={scope}
           moduleId={dialog.module.id}
           item={dialog.item}
-          onClose={closed}
+          onClose={handleClosed}
           onSaved={(message) => handleSaved(message)}
         />
       )}
@@ -332,7 +320,7 @@ export function ModuleBoard({
               : { quiz: dialog.item.quiz }
           }
           classId={scope.kind === "subject" ? undefined : scope.classId}
-          onClose={closed}
+          onClose={handleClosed}
           onSaved={() => handleSaved(describeRemoval(dialog.item), "danger")}
         />
       )}
@@ -428,12 +416,12 @@ function ModuleRow({
       {quiz && staff && (
         <Pill tone={QUIZ_STATUS_TONES[quiz.status]}>{QUIZ_STATUS_LABELS[quiz.status]}</Pill>
       )}
-      {material && staff && material.enabled === false && <Pill>Tắt</Pill>}
+      {material && staff && material.enabled === false && <Pill>{msg("materials.components.ModuleBoard.off")}</Pill>}
       {reopenable && (
         <span className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
           <IconButton
             icon="lock_open"
-            label={`Mở lại ${title}`}
+            label={msg("materials.components.ModuleBoard.reopen", { title: String(title) })}
             disabled={busy}
             className="text-success! hover:bg-success-soft"
             onClick={onReopen}
@@ -445,7 +433,7 @@ function ModuleRow({
           className="flex shrink-0 items-center gap-0.5"
           onClick={(event) => event.stopPropagation()}
         >
-          <IconButton icon="edit" label={`Sửa ${title}`} onClick={onEdit} />
+          <IconButton icon="edit" label={msg("materials.components.ModuleBoard.edit", { title: String(title) })} onClick={onEdit} />
           <IconButton
             icon={removal.icon}
             label={`${removal.label} ${title}`}
@@ -492,8 +480,7 @@ function ModuleNameDialog({
       dismissible={!busy}
       footer={
         <Button variant="primary" disabled={busy} onClick={handleSubmit} data-testid="module-name-save">
-          Lưu
-        </Button>
+          {msg("materials.components.ModuleBoard.save")}</Button>
       }
     >
       <form
@@ -505,10 +492,10 @@ function ModuleNameDialog({
         className="flex flex-col gap-3"
       >
         <Field
-          label="Tên module"
+          label={msg("materials.components.ModuleBoard.moduleName")}
           htmlFor={`${id}-name`}
           required
-          error={invalid ? "Nhập tên module." : null}
+          error={invalid ? msg("materials.components.ModuleBoard.enterTheModuleName") : null}
         >
           <TextInput
             id={`${id}-name`}

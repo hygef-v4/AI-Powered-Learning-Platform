@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, InfoTip, Switch } from "@/shared/ui";
 import { gradingApi, type GradeDistributionVisibility } from "../api";
+import { msg } from "@/i18n/msg";
 
 export function GradeDistributionSettings({ classId, assignmentId, gradingMode }: {
   classId: string;
@@ -28,7 +29,7 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
       (cause) => {
         if (controller.signal.aborted) return;
         if (cause instanceof ApiError && [401, 403, 404].includes(cause.problem.status)) return;
-        setError("Không tải được cài đặt phổ điểm. Vui lòng tải lại để thử lại.");
+        setError(msg("grading.components.GradeDistributionSettings.couldNotLoadTheGrade"));
       },
     );
     return () => controller.abort();
@@ -42,8 +43,8 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
     } catch (cause) {
       if (cause instanceof ApiError && [401, 403, 404].includes(cause.problem.status)) setValue(null);
       setError(cause instanceof ApiError && cause.problem.status === 409
-        ? "Cài đặt phổ điểm đã thay đổi ở nơi khác. Tải lại trước khi thay đổi."
-        : "Chưa lưu được cài đặt phổ điểm. Tải lại để kiểm tra trạng thái rồi thử lại.");
+        ? msg("grading.components.GradeDistributionSettings.theGradeDistributionSettingsChanged")
+        : msg("grading.components.GradeDistributionSettings.couldNotSaveTheGrade"));
     } finally {
       setBusy(false);
     }
@@ -53,17 +54,17 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
   return <div className="flex flex-col gap-1" data-testid="grade-distribution-settings">
     {value?.canEdit && <>
       <span className="flex items-center gap-1">
-        <Switch checked={value.enabled} label="Cho sinh viên xem phổ điểm" ariaLabel="Cho sinh viên xem phổ điểm"
+        <Switch checked={value.enabled} label={msg("grading.components.GradeDistributionSettings.showGradeDistributionToStudents")} ariaLabel={msg("grading.components.GradeDistributionSettings.showGradeDistributionToStudents")}
           disabled={busy || !!error} onChange={(enabled) => handleSave(enabled)} />
-        <InfoTip label="Phổ điểm" text="Sinh viên xem được phổ điểm của cả lớp." />
+        <InfoTip label={msg("grading.components.GradeDistributionSettings.gradeDistribution")} text={msg("grading.components.GradeDistributionSettings.studentsCanSeeTheGrade")} />
       </span>
       {/* Công tắc tự cho thấy đang lưu; dòng báo chỉ cho trình đọc màn hình để thẻ không xô lên xuống khi lưu. */}
-      <p className="sr-only" role="status">{busy ? "Đang lưu cài đặt phổ điểm…" : ""}</p>
+      <p className="sr-only" role="status">{busy ? msg("grading.components.GradeDistributionSettings.savingGradeDistributionSettings") : ""}</p>
     </>}
     {error && <Alert tone="danger" role="alert" action={<Button size="sm" data-testid="grade-distribution-settings-retry" onClick={() => {
       setValue(null);
       setError(null);
       setEpoch((current) => current + 1);
-    }}>Tải lại cài đặt phổ điểm</Button>}>{error}</Alert>}
+    }}>{msg("grading.components.GradeDistributionSettings.reloadGradeDistributionSettings")}</Button>}>{error}</Alert>}
   </div>;
 }

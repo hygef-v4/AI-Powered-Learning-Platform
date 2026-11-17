@@ -18,36 +18,36 @@ public class ProviderCatalog {
         this.properties = properties;
     }
 
-    public List<String> models(AiProvider provider) {
-        AiProperties.Provider config = config(provider);
+    public List<String> listModels(AiProvider provider) {
+        AiProperties.Provider config = loadProviderConfig(provider);
         return config == null ? List.of() : config.models();
     }
 
-    public boolean allowed(AiProvider provider, String model) {
-        return model != null && models(provider).contains(model);
+    public boolean isAllowed(AiProvider provider, String model) {
+        return model != null && listModels(provider).contains(model);
     }
 
     /** Model đọc được ảnh: theo {@code vision-models}, không đặt thì mọi model cho phép (BR-U06-57). */
     public boolean supportsImages(AiProvider provider, String model) {
-        if (!allowed(provider, model)) {
+        if (!isAllowed(provider, model)) {
             return false;
         }
-        List<String> vision = config(provider).visionModels();
+        List<String> vision = loadProviderConfig(provider).visionModels();
         return vision.isEmpty() || vision.contains(model);
     }
 
-    public int maxOutputTokens(AiProvider provider) {
-        AiProperties.Provider config = config(provider);
+    public int readMaxOutputTokens(AiProvider provider) {
+        AiProperties.Provider config = loadProviderConfig(provider);
         return config == null || config.maxOutputTokens() <= 0 ? 4096 : config.maxOutputTokens();
     }
 
-    public List<ProviderInfo> providers() {
+    public List<ProviderInfo> listProviders() {
         return Arrays.stream(AiProvider.values())
-                .map(p -> new ProviderInfo(p, models(p), maxOutputTokens(p)))
+                .map(p -> new ProviderInfo(p, listModels(p), readMaxOutputTokens(p)))
                 .toList();
     }
 
-    private AiProperties.Provider config(AiProvider provider) {
+    private AiProperties.Provider loadProviderConfig(AiProvider provider) {
         return properties.providers().get(provider.name().toLowerCase(Locale.ROOT));
     }
 

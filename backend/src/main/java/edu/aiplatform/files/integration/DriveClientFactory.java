@@ -8,6 +8,7 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.UserCredentials;
 import edu.aiplatform.files.config.FilesProperties;
 import edu.aiplatform.files.service.StorageUnavailableException;
 import java.io.ByteArrayInputStream;
@@ -20,8 +21,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Component;
 
 /**
- * Tạo client Drive từ JSON key service account (base64) và gọi Drive có thử lại (P6): 429, 5xx và lỗi mạng
- * thử lại 3 lần, backoff 1, 2, 4 giây có jitter; lỗi quyền hoặc abuse không thử lại.
+ * Tạo client Drive và gọi Drive có thử lại (P6): 429, 5xx và lỗi mạng thử lại 3 lần, backoff 1, 2, 4 giây có jitter;
+ * lỗi quyền hoặc abuse không thử lại. Shared Drive dùng JSON key service account (base64); Drive cá nhân dùng OAuth
+ * client và refresh token của chủ tài khoản.
  */
 @Component
 public class DriveClientFactory {
@@ -36,12 +38,12 @@ public class DriveClientFactory {
         this.properties = properties;
     }
 
-    public Drive drive() {
+    public Drive createDrive() {
         Drive current = drive;
         if (current == null) {
             synchronized (this) {
                 if (drive == null) {
-                    drive = create(properties.driveServiceAccountKey());
+                    drive = createDrive(properties);
                 }
                 current = drive;
             }
@@ -49,11 +51,16 @@ public class DriveClientFactory {
         return current;
     }
 
-    static Drive create(String base64Key) {
+    static Drive createDrive(FilesProperties properties) {
         try {
-            GoogleCredentials credentials = GoogleCredentials
-                    .fromStream(new ByteArrayInputStream(Base64.getDecoder().decode(base64Key.strip())))
-                    .createScoped(List.of(DriveScopes.DRIVE));
+            GoogleCredentials credentials = properties.hasSharedDrive()
+                    ? GoogleCredentials.fromStream(new ByteArrayInputStream(
+                            Base64.getDecoder().decode(properties.driveServiceAccountKey().strip())))
+                            .createScoped(List.of(DriveScopes.DRIVE))
+                    // Scope nằm trong refresh token (drive.file), không đặt lại ở đây.
+                    : UserCredentials.newBuilder().setClientId(properties.driveOauthClientId().strip())
+                            .setClientSecret(properties.driveOauthClientSecret().strip())
+                            .setRefreshToken(properties.driveOauthRefreshToken().strip()).build();
             HttpCredentialsAdapter adapter = new HttpCredentialsAdapter(credentials);
             HttpRequestInitializer initializer = request -> {
                 adapter.initialize(request);
@@ -68,22 +75,22 @@ public class DriveClientFactory {
     }
 
     /** Gọi Drive có thử lại; hết lượt thì ném {@link StorageUnavailableException}. */
-    public static <T> T withRetry(Callable<T> call) {
+    public static <T> T runWithRetry(Callable<T> call) {
         long[] backoffMs = {1_000, 2_000, 4_000};
         for (int attempt = 0; ; attempt++) {
             try {
                 return call.call();
             } catch (GoogleJsonResponseException e) {
-                if (!retryable(e.getStatusCode()) || attempt >= backoffMs.length) {
+                if (!isRetryable(e.getStatusCode()) || attempt >= backoffMs.length) {
                     throw e.getStatusCode() == 404 ? new DriveNotFoundException(e)
                             : new StorageUnavailableException("Drive trả lỗi " + e.getStatusCode(), e);
                 }
-                sleep(backoffMs[attempt]);
+                sleepBackoff(backoffMs[attempt]);
             } catch (IOException e) {
                 if (attempt >= backoffMs.length) {
                     throw new StorageUnavailableException("Không kết nối được Drive", e);
                 }
-                sleep(backoffMs[attempt]);
+                sleepBackoff(backoffMs[attempt]);
             } catch (RuntimeException e) {
                 throw e;
             } catch (Exception e) {
@@ -92,11 +99,11 @@ public class DriveClientFactory {
         }
     }
 
-    static boolean retryable(int status) {
+    static boolean isRetryable(int status) {
         return status == 429 || status >= 500;
     }
 
-    private static void sleep(long baseMs) {
+    private static void sleepBackoff(long baseMs) {
         try {
             Thread.sleep(baseMs + ThreadLocalRandom.current().nextLong(250));
         } catch (InterruptedException e) {

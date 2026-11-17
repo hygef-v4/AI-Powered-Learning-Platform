@@ -15,7 +15,7 @@ class GradingMcpBatchServiceTest {
     @Test void failedAndRepeatedItemsDoNotDiscardSuccessfulWrites() {
         when(gradingMcpTools.call(eq(actor),anyString(),anyMap())).thenAnswer(call -> {
             Map<String,Object> in=call.getArgument(2);
-            if("stale".equals(in.get("requestRef")))throw ApiException.conflict("STALE_PROPOSAL","changed");
+            if("stale".equals(in.get("requestRef")))throw ApiException.createConflict("STALE_PROPOSAL","changed");
             return new McpToolResult(false,Map.of("proposalId","proposal-"+in.get("requestRef")));
         });
         var result=(Map<String,Object>)gradingMcpBatchService.call(actor,"record_grading_proposals_batch",Map.of("items",List.of(

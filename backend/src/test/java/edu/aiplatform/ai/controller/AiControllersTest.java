@@ -111,7 +111,7 @@ class AiControllersTest {
 
     @Test
     void sourcePreferenceRoutesReadSaveAndClear() throws Exception {
-        when(sources.preference(actor)).thenReturn(Optional.empty());
+        when(sources.findPreference(actor)).thenReturn(Optional.empty());
         when(sources.savePreference(actor, AiSource.PERSONAL, AiProvider.GEMINI))
                 .thenReturn(Optional.of(new AiSourcePreference(AiSource.PERSONAL, AiProvider.GEMINI)));
 
@@ -131,8 +131,8 @@ class AiControllersTest {
     void mcpCredentialCreateReturnsTokenOnce() throws Exception {
         CredentialView view = new CredentialView(UUID.randomUUID(), "Claude Desktop", Access.READ_ONLY, "AbCd", NOW,
                 NOW.plusSeconds(86400), null, McpCredential.Status.ACTIVE, true);
-        when(credentials.create(actor, "Claude Desktop", Access.READ_ONLY, 30)).thenReturn(new Created(view, "mcp_xyzAbCd"));
-        when(credentials.list(actor)).thenReturn(List.of(view));
+        when(credentials.createCredential(actor, "Claude Desktop", Access.READ_ONLY, 30)).thenReturn(new Created(view, "mcp_xyzAbCd"));
+        when(credentials.listCredentials(actor)).thenReturn(List.of(view));
 
         mvc.perform(post("/api/v1/me/mcp-credentials").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"label\":\"Claude Desktop\",\"access\":\"READ_ONLY\",\"days\":30}"))
@@ -201,11 +201,11 @@ class AiControllersTest {
         when(credentials.authenticate("mcp_ok")).thenReturn(Optional.of(principal));
         ObjectNode reply = json.createObjectNode().put("jsonrpc", "2.0").put("id", 1);
         reply.putObject("result");
-        when(server.handle(eq(principal), any())).thenReturn(Optional.of(reply));
+        when(server.handleMessage(eq(principal), any())).thenReturn(Optional.of(reply));
         mvc.perform(post("/mcp").header("Authorization", "Bearer mcp_ok").contentType(MediaType.APPLICATION_JSON)
                 .content(body)).andExpect(status().isOk()).andExpect(jsonPath("$.id").value(1));
 
-        when(server.handle(eq(principal), any())).thenReturn(Optional.empty());
+        when(server.handleMessage(eq(principal), any())).thenReturn(Optional.empty());
         mvc.perform(post("/mcp").header("Authorization", "Bearer mcp_ok").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}")).andExpect(status().isAccepted());
 

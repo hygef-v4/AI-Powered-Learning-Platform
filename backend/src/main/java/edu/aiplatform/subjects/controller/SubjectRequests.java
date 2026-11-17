@@ -125,7 +125,7 @@ public final class SubjectRequests {
             fieldErrors = Map.of(field, message);
         }
 
-        public Map<String, String> fieldErrors() {
+        public Map<String, String> listFieldErrors() {
             return fieldErrors;
         }
     }

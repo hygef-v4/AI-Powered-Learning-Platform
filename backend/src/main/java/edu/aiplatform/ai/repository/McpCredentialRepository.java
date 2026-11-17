@@ -84,12 +84,12 @@ public class McpCredentialRepository {
     }
 
     /** Agent của một người có bản mã token (xem lại được). */
-    public Set<UUID> revealableIds(UUID accountId) {
+    public Set<UUID> listRevealableIds(UUID accountId) {
         return Set.copyOf(jdbc.sql("select id from mcp_credentials where account_id = :id and token_ciphertext is not null")
                 .param("id", accountId).query(UUID.class).list());
     }
 
-    public int update(UUID id, String label, Access access) {
+    public int updateCredential(UUID id, String label, Access access) {
         return jdbc.sql("update mcp_credentials set label = :label, access = :access where id = :id and revoked_at is null")
                 .param("id", id).param("label", label).param("access", access.name()).update();
     }

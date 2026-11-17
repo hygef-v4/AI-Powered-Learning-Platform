@@ -17,22 +17,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/me/assignments")
 public class StudentAssignmentController {
 
-    private final StudentAssignmentService assignments;
+    private final StudentAssignmentService studentAssignmentService;
 
-    public StudentAssignmentController(StudentAssignmentService assignments) {
-        this.assignments = assignments;
+    public StudentAssignmentController(StudentAssignmentService studentAssignmentService) {
+        this.studentAssignmentService = studentAssignmentService;
     }
 
     @GetMapping
-    public List<WorkViews.Row> list(@AuthenticationPrincipal Actor actor,
+    public List<WorkViews.Row> listAssignments(@AuthenticationPrincipal Actor actor,
                                     @RequestParam(required = false) UUID classId) {
-        return assignments.list(actor, classId);
+        return studentAssignmentService.listAssignments(actor, classId);
     }
 
     /** Trang thông tin trước khi làm bài: không có đề (ảnh của khung chỉ mở trong lượt làm). */
     @GetMapping("/{assignmentId}")
-    public WorkViews.Detail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID assignmentId,
+    public WorkViews.Detail loadAssignment(@AuthenticationPrincipal Actor actor, @PathVariable UUID assignmentId,
                                    @RequestParam UUID classId) {
-        return assignments.detail(actor, assignmentId, classId);
+        return studentAssignmentService.loadAssignment(actor, assignmentId, classId);
     }
 }

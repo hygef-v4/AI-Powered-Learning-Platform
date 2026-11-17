@@ -6,11 +6,12 @@ import { FormattedTextView } from "@/shared/document/FormattedTextView";
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "@/features/materials/components/ModulePlace";
 import { Alert, Button, ClickableRow, Icon, PageHeader, Section, TableFrame, Td, Th } from "@/shared/ui";
 import { getPracticeHistory, getPracticeQuiz, startAttempt } from "../api";
-import { errorMessage, formatDateTime, formatPoints, penaltyRuleText } from "../model/labels";
+import { describeError, formatDateTime, formatPoints, describePenaltyRule } from "../model/labels";
 import type { PracticeQuizDetail, PracticeQuizRow } from "../model/types";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
+import { msg } from "@/i18n/msg";
 
-const detailHref = (quizId: string, classId: string) => `/quiz-practice/${encodeURIComponent(quizId)}?classId=${encodeURIComponent(classId)}`;
+const buildDetailHref = (quizId: string, classId: string) => `/quiz-practice/${encodeURIComponent(quizId)}?classId=${encodeURIComponent(classId)}`;
 
 /**
  * Màn #43 Quiz Practice Detail (UC 50, BR-U11-03): cột trái Thông tin (số câu, thời gian) rồi Mô tả; cột phải thẻ Làm bài
@@ -34,32 +35,31 @@ function ClassResolver({ quizId }: { quizId: string }) {
       .then((list) => {
         if (!active) return;
         const matches = list.filter((row) => row.quizId === quizId);
-        if (matches.length === 1 && matches[0]) router.replace(detailHref(quizId, matches[0].classId));
+        if (matches.length === 1 && matches[0]) router.replace(buildDetailHref(quizId, matches[0].classId));
         else setRows(matches);
       })
-      .catch((failure: unknown) => active && setError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setError(describeError(failure)));
     return () => {
       active = false;
     };
   }, [quizId, router]);
 
   if (error) return <PageLoadError>{error}</PageLoadError>;
-  if (rows === null) return <PageLoading label="Đang tải quiz…" />;
+  if (rows === null) return <PageLoading label={msg("quizpractice.pages.QuizPracticeDetailPage.loadingQuiz")} />;
   if (rows.length === 0) {
     return (
-      <Alert tone="warning" role="alert" action={<Button size="sm" onClick={() => router.push("/quiz-practice")}>Luyện tập Quiz</Button>}>
-        Quiz không có trong lớp bạn đang học hoặc đã ngưng.
-      </Alert>
+      <Alert tone="warning" role="alert" action={<Button size="sm" onClick={() => router.push("/quiz-practice")}>{msg("quizpractice.pages.QuizPracticeDetailPage.quizPractice")}</Button>}>
+        {msg("quizpractice.pages.QuizPracticeDetailPage.theQuizIsNotIn")}</Alert>
     );
   }
   return (
     <>
-      <PageHeader backHref="/quiz-practice" breadcrumb={[{ label: "Luyện tập Quiz", href: "/quiz-practice" }, { label: rows[0]?.title ?? "" }]}
+      <PageHeader backHref="/quiz-practice" breadcrumb={[{ label: msg("quizpractice.pages.QuizPracticeDetailPage.quizPractice"), href: "/quiz-practice" }, { label: rows[0]?.title ?? "" }]}
         title={rows[0]?.title ?? "Quiz"} />
       <ul className="flex flex-col gap-2" data-testid="practice-detail-classes">
         {rows.map((row) => (
           <li key={row.classId}>
-            <Button onClick={() => router.push(detailHref(quizId, row.classId))} data-testid="practice-detail-class">
+            <Button onClick={() => router.push(buildDetailHref(quizId, row.classId))} data-testid="practice-detail-class">
               {row.subjectCode ? `${row.subjectCode} · ` : ""}{row.classCode}
             </Button>
           </li>
@@ -82,7 +82,7 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
     let active = true;
     getPracticeQuiz(quizId, classId)
       .then((next) => active && setDetail(next))
-      .catch((failure: unknown) => active && setError(errorMessage(failure)));
+      .catch((failure: unknown) => active && setError(describeError(failure)));
     return () => {
       active = false;
     };
@@ -94,13 +94,13 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
     try {
       router.push(`/quiz-attempts/${(await startAttempt(quizId, classId)).attemptId}`);
     } catch (failure) {
-      setError(errorMessage(failure));
+      setError(describeError(failure));
       setBusy(false);
     }
   };
 
   if (!detail) {
-    return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label="Đang tải quiz…" />;
+    return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label={msg("quizpractice.pages.QuizPracticeDetailPage.loadingQuiz")} />;
   }
   const open = (attempt: PracticeQuizDetail["attempts"][number]) =>
     router.push(attempt.status === "SUBMITTED" ? `/quiz-attempts/${attempt.attemptId}/result` : `/quiz-attempts/${attempt.attemptId}`);
@@ -111,42 +111,42 @@ function PracticeDetail({ quizId, classId }: { quizId: string; classId: string }
     <div className="flex flex-col gap-4">
       <PageHeader title={detail.title}
         breadcrumb={place.moduleTitle ? [{ label: place.moduleTitle }, { label: detail.title }]
-          : [{ label: "Luyện tập Quiz", href: "/quiz-practice" }, { label: detail.title }]} />
+          : [{ label: msg("quizpractice.pages.QuizPracticeDetailPage.quizPractice"), href: "/quiz-practice" }, { label: detail.title }]} />
       <ModuleNeighbours scope={scope} previous={place.previous} next={place.next} position="top" />
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex min-w-0 flex-col gap-4">
-          <Section title="Thông tin">
+          <Section title={msg("quizpractice.pages.QuizPracticeDetailPage.information")}>
             <dl className="grid gap-x-6 gap-y-3 text-[13px] sm:grid-cols-2" data-testid="practice-detail-info">
-              <div><dt className="text-xs text-muted">Số câu</dt><dd className="mt-0.5 font-semibold text-ink">{detail.questionCount} câu</dd></div>
-              <div><dt className="text-xs text-muted">Thời gian</dt><dd className="mt-0.5 font-semibold text-ink">{detail.timeLimitMinutes ? `${detail.timeLimitMinutes} phút` : "Không giới hạn"}</dd></div>
+              <div><dt className="text-xs text-muted">{msg("quizpractice.pages.QuizPracticeDetailPage.questions")}</dt><dd className="mt-0.5 font-semibold text-ink">{detail.questionCount} {msg("quizpractice.pages.QuizPracticeDetailPage.questions2")}</dd></div>
+              <div><dt className="text-xs text-muted">{msg("quizpractice.pages.QuizPracticeDetailPage.time")}</dt><dd className="mt-0.5 font-semibold text-ink">{detail.timeLimitMinutes ? msg("quizpractice.pages.QuizPracticeDetailPage.min", { timeLimitMinutes: String(detail.timeLimitMinutes) }) : msg("quizpractice.pages.QuizPracticeDetailPage.unlimited")}</dd></div>
             </dl>
           </Section>
-          {detail.instructions && <Section title="Mô tả"><FormattedTextView text={detail.instructions} document={detail.instructionsDocument} /></Section>}
+          {detail.instructions && <Section title={msg("quizpractice.pages.QuizPracticeDetailPage.description")}><FormattedTextView text={detail.instructions} document={detail.instructionsDocument} /></Section>}
         </div>
         <div className="flex min-w-0 flex-col gap-4">
-          <Section title="Làm bài" className={action || detail.activityNotice ? undefined : "gap-0"}
-            actions={<span className="text-[13px] text-muted tabular-nums" title="Lượt đã dùng / tối đa" data-testid="practice-detail-attempts">
-              {detail.maxAttempts === null ? `${detail.attemptsUsed} lượt` : `${detail.attemptsUsed}/${detail.maxAttempts}`}</span>}>
+          <Section title={msg("quizpractice.pages.QuizPracticeDetailPage.takeTheQuiz")} className={action || detail.activityNotice ? undefined : "gap-0"}
+            actions={<span className="text-[13px] text-muted tabular-nums" title={msg("quizpractice.pages.QuizPracticeDetailPage.attemptsUsedMax")} data-testid="practice-detail-attempts">
+              {detail.maxAttempts === null ? msg("quizpractice.pages.QuizPracticeDetailPage.attempts", { attemptsUsed: String(detail.attemptsUsed) }) : `${detail.attemptsUsed}/${detail.maxAttempts}`}</span>}>
             {detail.activityNotice && <Alert tone="info">
               {detail.activityNotice}
-              {detail.leavePenalty && <span className="block" data-testid="practice-detail-penalty-rule">{penaltyRuleText(detail.leavePenalty)}</span>}
+              {detail.leavePenalty && <span className="block" data-testid="practice-detail-penalty-rule">{describePenaltyRule(detail.leavePenalty)}</span>}
             </Alert>}
             {action && <Button variant="primary" disabled={busy} onClick={() => void start()} data-testid="practice-detail-start">
-              {detail.inProgressAttemptId ? "Tiếp tục làm bài" : detail.attemptsUsed > 0 ? "Làm lại" : "Bắt đầu làm bài"}
+              {detail.inProgressAttemptId ? msg("quizpractice.pages.QuizPracticeDetailPage.continue") : detail.attemptsUsed > 0 ? msg("quizpractice.pages.QuizPracticeDetailPage.retake") : msg("quizpractice.pages.QuizPracticeDetailPage.start")}
             </Button>}
           </Section>
-          <Section title="Kết quả">
+          <Section title={msg("quizpractice.pages.QuizPracticeDetailPage.results")}>
             {/* Cao tối đa khoảng 6 lần làm; nhiều hơn thì cuộn trong thẻ, hàng tiêu đề đứng yên. */}
             <TableFrame filledHead className="max-h-[296px] overflow-y-auto overscroll-contain [&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-[1]">
-              <thead><tr><Th>Lần</Th><Th>Bắt đầu</Th><Th>Điểm</Th><Th className="w-8"><span className="sr-only">Mở</span></Th></tr></thead>
+              <thead><tr><Th>{msg("quizpractice.pages.QuizPracticeDetailPage.attempt")}</Th><Th>{msg("quizpractice.pages.QuizPracticeDetailPage.started")}</Th><Th>{msg("quizpractice.pages.QuizPracticeDetailPage.score")}</Th><Th className="w-8"><span className="sr-only">{msg("quizpractice.pages.QuizPracticeDetailPage.open")}</span></Th></tr></thead>
               <tbody>
-                {detail.attempts.length === 0 && <tr><Td colSpan={4} className="py-6 text-center! text-muted">Chưa có lần làm</Td></tr>}
+                {detail.attempts.length === 0 && <tr><Td colSpan={4} className="py-6 text-center! text-muted">{msg("quizpractice.pages.QuizPracticeDetailPage.noAttemptsYet")}</Td></tr>}
                 {detail.attempts.map((a) => (
                   <ClickableRow key={a.attemptId} data-testid="practice-detail-attempt" onClick={() => open(a)}>
-                    <Td className="font-semibold whitespace-nowrap">Lần {a.attemptNo}</Td>
+                    <Td className="font-semibold whitespace-nowrap">{msg("quizpractice.pages.QuizPracticeDetailPage.attempt2")}{a.attemptNo}</Td>
                     <Td className="whitespace-nowrap text-muted">{formatDateTime(a.startedAt)}</Td>
-                    <Td className="whitespace-nowrap tabular-nums">{a.status !== "SUBMITTED" ? "Đang làm" : detail.showScoreAfterSubmit && a.score !== null ? `${formatPoints(a.score)} / ${formatPoints(a.maxScore)}` : "-"}</Td>
+                    <Td className="whitespace-nowrap tabular-nums">{a.status !== "SUBMITTED" ? msg("quizpractice.pages.QuizPracticeDetailPage.inProgress") : detail.showScoreAfterSubmit && a.score !== null ? `${formatPoints(a.score)} / ${formatPoints(a.maxScore)}` : "-"}</Td>
                     <Td className="text-faint"><Icon name="chevron_right" size={18} /></Td>
                   </ClickableRow>
                 ))}

@@ -51,7 +51,7 @@ class BootstrapAdminInitializerTest {
     @Test
     void skipsMalformedEmailOrExistingAdmin() {
         run("admin@gmail");
-        when(accounts.anyAdminExists()).thenReturn(true);
+        when(accounts.hasAnyAdmin()).thenReturn(true);
         run("admin@gmail.com");
 
         verify(accounts, never()).insert(any());

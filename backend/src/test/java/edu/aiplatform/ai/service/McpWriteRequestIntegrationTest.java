@@ -46,7 +46,7 @@ class McpWriteRequestIntegrationTest {
             for(var call:calls) assertThat(call.get(20,TimeUnit.SECONDS)).isEqualTo(first);
             assertThat(count.get()).isEqualTo(1);
             assertThatThrownBy(() -> service.execute(actor,"create","retry","changed",Map::of))
-                    .isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.code()).isEqualTo("MCP_REQUEST_CONFLICT"));
+                    .isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.readCode()).isEqualTo("MCP_REQUEST_CONFLICT"));
         } finally { pool.shutdownNow(); }
     }
     @Test void failedMutationRollsBackBothDraftAndRetryRecord() {

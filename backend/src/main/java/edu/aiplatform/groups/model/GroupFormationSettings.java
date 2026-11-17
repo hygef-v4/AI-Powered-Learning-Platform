@@ -22,7 +22,7 @@ public record GroupFormationSettings(UUID classId, boolean enabled, int minSize,
     }
 
     /** Lớp chưa có cài đặt: coi như tắt. */
-    public static GroupFormationSettings defaults(UUID classId) {
+    public static GroupFormationSettings createDefaults(UUID classId) {
         return new GroupFormationSettings(classId, false, DEFAULT_MIN_SIZE, DEFAULT_MAX_SIZE, null, null, null, 0);
     }
 
@@ -30,7 +30,7 @@ public record GroupFormationSettings(UUID classId, boolean enabled, int minSize,
         return size >= MIN_SIZE && size <= MAX_SIZE;
     }
 
-    public ClosedReason closedReason(ClassStatus classStatus, Instant now) {
+    public ClosedReason resolveClosedReason(ClassStatus classStatus, Instant now) {
         if (!enabled) {
             return ClosedReason.DISABLED;
         }
@@ -44,6 +44,6 @@ public record GroupFormationSettings(UUID classId, boolean enabled, int minSize,
     }
 
     public boolean isOpen(ClassStatus classStatus, Instant now) {
-        return closedReason(classStatus, now) == null;
+        return resolveClosedReason(classStatus, now) == null;
     }
 }

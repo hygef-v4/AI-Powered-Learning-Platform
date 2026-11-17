@@ -64,7 +64,7 @@ public class OtpService {
         Optional<Account> account = accounts.findByEmail(email).filter(purpose::appliesTo);
         if (account.isEmpty() || code == null || !code.strip().matches("\\d{6}")
                 || challenges.verify(account.get().id(), purpose, code) != OtpChallengeStore.Verification.VALID) {
-            throw ApiException.badRequest(OTP_INVALID, OTP_INVALID_MESSAGE);
+            throw ApiException.createBadRequest(OTP_INVALID, OTP_INVALID_MESSAGE);
         }
         return tickets.issue(account.get().id(), purpose);
     }

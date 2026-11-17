@@ -46,7 +46,7 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
     }
 
     @Override
-    public Optional<QuizAttempt> find(UUID id) {
+    public Optional<QuizAttempt> findAttempt(UUID id) {
         return jdbc.sql("select " + COLUMNS + " from quiz_attempts where id = :id").param("id", id)
                 .query(this::map).optional();
     }
@@ -104,9 +104,9 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
                         """)
                 .param("id", a.id()).param("quizId", a.quizId()).param("classId", a.classId())
                 .param("accountId", a.accountId()).param("attemptNo", a.attemptNo())
-                .param("snapshot", write(a.snapshot())).param("answers", write(a.answers()))
+                .param("snapshot", writeJson(a.snapshot())).param("answers", writeJson(a.answers()))
                 .param("answerVersion", a.answerVersion()).param("status", a.status().name())
-                .param("startedAt", timestamp(a.startedAt())).param("deadlineAt", timestamp(a.deadlineAt()))
+                .param("startedAt", convertTimestamp(a.startedAt())).param("deadlineAt", convertTimestamp(a.deadlineAt()))
                 .update();
     }
 
@@ -117,8 +117,8 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
                             last_saved_at = :savedAt
                         where id = :id and status = 'IN_PROGRESS' and answer_version = :expected
                         """)
-                .param("answers", write(a.answers())).param("answerVersion", a.answerVersion())
-                .param("savedAt", timestamp(a.lastSavedAt())).param("id", a.id()).param("expected", expectedVersion)
+                .param("answers", writeJson(a.answers())).param("answerVersion", a.answerVersion())
+                .param("savedAt", convertTimestamp(a.lastSavedAt())).param("id", a.id()).param("expected", expectedVersion)
                 .update() == 1;
     }
 
@@ -131,9 +131,9 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
                             penalty_points = :penalty, leave_count = :leaveCount, activity_signal = :signal
                         where id = :id and status = 'IN_PROGRESS' and answer_version = :answerVersion
                         """)
-                .param("mode", a.submitMode().name()).param("submittedAt", timestamp(a.submittedAt()))
+                .param("mode", a.submitMode().name()).param("submittedAt", convertTimestamp(a.submittedAt()))
                 .param("score", a.score()).param("maxScore", a.maxScore()).param("correct", a.correctCount())
-                .param("result", write(a.result())).param("id", a.id()).param("answerVersion", a.answerVersion())
+                .param("result", writeJson(a.result())).param("id", a.id()).param("answerVersion", a.answerVersion())
                 .param("rawScore", a.outcome() == null ? null : a.outcome().rawScore())
                 .param("suggested", a.outcome() == null ? null : a.outcome().suggestedPenalty())
                 .param("penalty", a.outcome() == null ? null : a.outcome().penaltyPoints())
@@ -152,7 +152,7 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
                         where id = :id and status = 'SUBMITTED' and suggested_penalty > 0 and raw_score >= :points
                         """)
                 .param("points", points).param("decision", decision.name()).param("decidedBy", decidedBy)
-                .param("at", timestamp(at)).param("reason", reason).param("id", attemptId)
+                .param("at", convertTimestamp(at)).param("reason", reason).param("id", attemptId)
                 .update() == 1;
     }
 
@@ -167,7 +167,7 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
     }
 
     @Override
-    public Map<UUID, UUID> quizzesAttemptedBy(UUID accountId) {
+    public Map<UUID, UUID> mapQuizzesAttemptedBy(UUID accountId) {
         Map<UUID, UUID> result = new LinkedHashMap<>();
         jdbc.sql("select distinct on (quiz_id) quiz_id, class_id from quiz_attempts where account_id = :accountId"
                         + " order by quiz_id, started_at desc")
@@ -181,7 +181,7 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
     public List<QuizAttempt> findOverdue(Instant cutoff, int limit) {
         return jdbc.sql("select " + COLUMNS + " from quiz_attempts where status = 'IN_PROGRESS' and deadline_at < :cutoff"
                         + " order by deadline_at limit :limit")
-                .param("cutoff", timestamp(cutoff)).param("limit", limit).query(this::map).list();
+                .param("cutoff", convertTimestamp(cutoff)).param("limit", limit).query(this::map).list();
     }
 
     @Override
@@ -204,16 +204,16 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
         Object correct = rs.getObject("correct_count");
         return new QuizAttempt(rs.getObject("id", UUID.class), rs.getObject("quiz_id", UUID.class),
                 rs.getObject("class_id", UUID.class), rs.getObject("account_id", UUID.class), rs.getInt("attempt_no"),
-                read(rs.getString("snapshot"), AttemptSnapshot.class), read(rs.getString("answers"), ANSWERS),
+                readJson(rs.getString("snapshot"), AttemptSnapshot.class), readJson(rs.getString("answers"), ANSWERS),
                 rs.getLong("answer_version"), AttemptStatus.valueOf(rs.getString("status")),
-                mode == null ? null : SubmitMode.valueOf(mode), instant(rs.getTimestamp("started_at")),
-                instant(rs.getTimestamp("deadline_at")), instant(rs.getTimestamp("last_saved_at")),
-                instant(rs.getTimestamp("submitted_at")), rs.getBigDecimal("score"), rs.getBigDecimal("max_score"),
-                correct == null ? null : ((Number) correct).intValue(), result == null ? null : read(result, RESULTS),
-                outcome(rs));
+                mode == null ? null : SubmitMode.valueOf(mode), convertInstant(rs.getTimestamp("started_at")),
+                convertInstant(rs.getTimestamp("deadline_at")), convertInstant(rs.getTimestamp("last_saved_at")),
+                convertInstant(rs.getTimestamp("submitted_at")), rs.getBigDecimal("score"), rs.getBigDecimal("max_score"),
+                correct == null ? null : ((Number) correct).intValue(), result == null ? null : readJson(result, RESULTS),
+                mapOutcome(rs));
     }
 
-    private static ActivityOutcome outcome(ResultSet rs) throws SQLException {
+    private static ActivityOutcome mapOutcome(ResultSet rs) throws SQLException {
         String signal = rs.getString("activity_signal");
         if (signal == null) {
             return null;
@@ -223,11 +223,11 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
         return new ActivityOutcome(rs.getBigDecimal("raw_score"), rs.getBigDecimal("suggested_penalty"),
                 rs.getBigDecimal("penalty_points"), leaves == null ? null : ((Number) leaves).intValue(),
                 ActivitySignal.valueOf(signal), decision == null ? null : PenaltyDecision.valueOf(decision),
-                rs.getObject("penalty_decided_by", UUID.class), instant(rs.getTimestamp("penalty_decided_at")),
+                rs.getObject("penalty_decided_by", UUID.class), convertInstant(rs.getTimestamp("penalty_decided_at")),
                 rs.getString("penalty_decision_reason"));
     }
 
-    private String write(Object value) {
+    private String writeJson(Object value) {
         try {
             return json.writeValueAsString(value);
         } catch (JsonProcessingException e) {
@@ -235,7 +235,7 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
         }
     }
 
-    private <T> T read(String value, Class<T> type) {
+    private <T> T readJson(String value, Class<T> type) {
         try {
             return json.readValue(value, type);
         } catch (JsonProcessingException e) {
@@ -243,7 +243,7 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
         }
     }
 
-    private <T> T read(String value, TypeReference<T> type) {
+    private <T> T readJson(String value, TypeReference<T> type) {
         try {
             return json.readValue(value, type);
         } catch (JsonProcessingException e) {
@@ -251,11 +251,11 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
         }
     }
 
-    private static Timestamp timestamp(Instant value) {
+    private static Timestamp convertTimestamp(Instant value) {
         return value == null ? null : Timestamp.from(value);
     }
 
-    private static Instant instant(Timestamp value) {
+    private static Instant convertInstant(Timestamp value) {
         return value == null ? null : value.toInstant();
     }
 }

@@ -43,7 +43,7 @@ class BackupRetentionServiceTest {
 
         retention.purgeOld(now);
 
-        verify(store).delete(old.id().toString());
+        verify(store).deleteArchive(old.id().toString());
         verify(runs).markPurged(old.id(), now);
     }
 
@@ -51,7 +51,7 @@ class BackupRetentionServiceTest {
     void keepsTheRowWhenDriveCannotDeleteNow() {
         BackupRun old = success(Instant.parse("2026-10-01T19:00:00Z"));
         when(runs.findPurgeCandidates(any())).thenReturn(List.of(old));
-        doThrow(new StorageUnavailableException("down", null)).when(store).delete(any());
+        doThrow(new StorageUnavailableException("down", null)).when(store).deleteArchive(any());
 
         retention.purgeOld(now);
 

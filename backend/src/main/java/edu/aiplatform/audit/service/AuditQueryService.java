@@ -97,16 +97,16 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
     @Transactional
     public Page<AuditLogView> query(Actor actor, AuditFilter filter, Pageable page, boolean recordView) {
         requireAdmin(actor);
-        AuditFilter normalized = withActorMatches(normalize(filter));
+        AuditFilter normalized = resolveActorMatches(normalize(filter));
         validatePage(page);
         long total = repository.count(normalized);
         List<AuditRow> rows = total == 0 ? List.of()
-                : repository.find(normalized, page.getOffset(), page.getPageSize());
-        Map<UUID, String> emails = emailsOf(rows);
+                : repository.findRows(normalized, page.getOffset(), page.getPageSize());
+        Map<UUID, String> emails = loadEmails(rows);
         Map<String, Optional<String>> labels = new HashMap<>();
         List<AuditLogView> items = rows.stream()
-                .map(row -> new AuditLogView(toEvent(row), row.actorId() == null ? null : emails.get(row.actorId()),
-                        labels.computeIfAbsent(row.objectType() + ":" + row.objectId(), key -> objectLabel(row))
+                .map(row -> new AuditLogView(mapEvent(row), row.actorId() == null ? null : emails.get(row.actorId()),
+                        labels.computeIfAbsent(row.objectType() + ":" + row.objectId(), key -> resolveObjectLabel(row))
                                 .orElse(null)))
                 .toList();
         if (recordView) {
@@ -126,11 +126,11 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
     @Transactional(readOnly = true)
     public List<AuditLogView> recentSecurityEvents(Instant from, int limit) {
         List<AuditRow> rows = repository.findSecurity(from, SECURITY_ACTIONS, Math.max(1, Math.min(limit, MAX_PAGE_SIZE)));
-        Map<UUID, String> emails = emailsOf(rows);
+        Map<UUID, String> emails = loadEmails(rows);
         Map<String, Optional<String>> labels = new HashMap<>();
         return rows.stream()
-                .map(row -> new AuditLogView(toEvent(row), row.actorId() == null ? null : emails.get(row.actorId()),
-                        labels.computeIfAbsent(row.objectType() + ":" + row.objectId(), key -> objectLabel(row))
+                .map(row -> new AuditLogView(mapEvent(row), row.actorId() == null ? null : emails.get(row.actorId()),
+                        labels.computeIfAbsent(row.objectType() + ":" + row.objectId(), key -> resolveObjectLabel(row))
                                 .orElse(null)))
                 .toList();
     }
@@ -147,7 +147,7 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
         if (!allowed) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                     OBJECT_TYPE, null, AuditResult.DENIED, READ_ACTION, Map.of(), clock.instant()));
-            throw ApiException.forbidden("AUDIT_FORBIDDEN");
+            throw ApiException.createForbidden("AUDIT_FORBIDDEN");
         }
     }
 
@@ -156,18 +156,18 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
         if (filter == null) {
             return new AuditFilter(null, null, null, null, null, null, null);
         }
-        AuditFilter result = new AuditFilter(filter.actorId(), text(filter.action(), MAX_ACTION, "action"),
-                text(filter.objectType(), MAX_OBJECT_TYPE, "objectType"),
-                text(filter.objectId(), MAX_OBJECT_ID, "objectId"), filter.result(), filter.from(), filter.to(),
-                text(filter.actor(), MAX_ACTOR_QUERY, "actor"), filter.actorIds());
+        AuditFilter result = new AuditFilter(filter.actorId(), normalizeText(filter.action(), MAX_ACTION, "action"),
+                normalizeText(filter.objectType(), MAX_OBJECT_TYPE, "objectType"),
+                normalizeText(filter.objectId(), MAX_OBJECT_ID, "objectId"), filter.result(), filter.from(), filter.to(),
+                normalizeText(filter.actor(), MAX_ACTOR_QUERY, "actor"), filter.actorIds());
         if (result.from() != null && result.to() != null && result.from().isAfter(result.to())) {
-            throw invalid("Thời điểm bắt đầu phải trước thời điểm kết thúc");
+            throw createInvalidError("Thời điểm bắt đầu phải trước thời điểm kết thúc");
         }
         return result;
     }
 
     /** Có phần email hoặc tên người thực hiện mà chưa có actorId: tra các tài khoản khớp qua U01 (không phân biệt hoa thường). */
-    private AuditFilter withActorMatches(AuditFilter filter) {
+    private AuditFilter resolveActorMatches(AuditFilter filter) {
         if (filter.actor() == null || filter.actorId() != null) {
             return filter;
         }
@@ -177,29 +177,29 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
                 filter.from(), filter.to(), filter.actor(), ids);
     }
 
-    private static String text(String value, int max, String field) {
+    private static String normalizeText(String value, int max, String field) {
         if (value == null || value.isBlank()) {
             return null;
         }
         String trimmed = value.trim();
         if (trimmed.length() > max) {
-            throw invalid("Giá trị lọc " + field + " dài quá " + max + " ký tự");
+            throw createInvalidError("Giá trị lọc " + field + " dài quá " + max + " ký tự");
         }
         return trimmed;
     }
 
     private static void validatePage(Pageable page) {
         if (page == null || page.isUnpaged() || page.getPageSize() < 1 || page.getPageSize() > MAX_PAGE_SIZE) {
-            throw invalid("Mỗi trang từ 1 đến " + MAX_PAGE_SIZE + " bản ghi");
+            throw createInvalidError("Mỗi trang từ 1 đến " + MAX_PAGE_SIZE + " bản ghi");
         }
     }
 
-    private static ApiException invalid(String message) {
-        return ApiException.badRequest("AUDIT_FILTER_INVALID", message);
+    private static ApiException createInvalidError(String message) {
+        return ApiException.createBadRequest("AUDIT_FILTER_INVALID", message);
     }
 
     /** Mỗi người thực hiện tra một lần; U01 lỗi hoặc không có thì để trống, không làm hỏng trang. */
-    private Map<UUID, String> emailsOf(List<AuditRow> rows) {
+    private Map<UUID, String> loadEmails(List<AuditRow> rows) {
         Map<UUID, String> emails = new HashMap<>();
         rows.stream().map(AuditRow::actorId).filter(Objects::nonNull).distinct().forEach(id -> {
             try {
@@ -212,7 +212,7 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
     }
 
     /** Tên dễ đọc của đối tượng: email tài khoản, "mã · tên" của môn hoặc lớp; loại khác hay lỗi thì rỗng. */
-    private Optional<String> objectLabel(AuditRow row) {
+    private Optional<String> resolveObjectLabel(AuditRow row) {
         if (row.objectType() == null || row.objectId() == null) {
             return Optional.empty();
         }
@@ -227,10 +227,10 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
                 case "ACCOUNT" -> accounts.getContact(id).map(AccountContact::email);
                 case "SUBJECT" -> subjects == null ? Optional.empty()
                         : Optional.ofNullable(subjects.getIfAvailable()).flatMap(q -> q.getSubject(id))
-                                .map(AuditQueryService::subjectLabel);
+                                .map(AuditQueryService::formatSubjectLabel);
                 case "CLASS" -> classes == null ? Optional.empty()
                         : Optional.ofNullable(classes.getIfAvailable()).flatMap(q -> q.getClassRef(id))
-                                .map(AuditQueryService::classLabel);
+                                .map(AuditQueryService::formatClassLabel);
                 default -> Optional.empty();
             };
         } catch (RuntimeException e) {
@@ -238,12 +238,12 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
         }
     }
 
-    static String subjectLabel(SubjectRef subject) {
+    static String formatSubjectLabel(SubjectRef subject) {
         return join(subject.code(), subject.name());
     }
 
     /** Lớp không còn tên (yêu cầu 2026-11-02): mã môn rồi mã lớp. */
-    static String classLabel(ClassRef ref) {
+    static String formatClassLabel(ClassRef ref) {
         return ref.subjectCode() == null ? ref.code() : join(ref.subjectCode(), ref.code());
     }
 
@@ -254,7 +254,7 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
         return name == null || name.isBlank() || name.equals(code) ? code : code + " · " + name;
     }
 
-    private AuditEvent toEvent(AuditRow row) {
+    private AuditEvent mapEvent(AuditRow row) {
         return new AuditEvent(row.id(), row.actorId(), row.action(), row.objectType(), row.objectId(),
                 AuditResult.valueOf(row.result()), row.reason(), parse(row.detailsJson()), row.occurredAt());
     }

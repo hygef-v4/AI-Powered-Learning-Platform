@@ -88,26 +88,26 @@ public class AttemptService {
         });
         AssignmentView view = access.requireVisible(actor, ref, assignmentId, "ATTEMPT_STARTED");
         attempts.lockStart(assignmentId, actor.accountId());
-        Optional<AssignmentAttempt> existing = attempts.inProgress(assignmentId, actor.accountId());
+        Optional<AssignmentAttempt> existing = attempts.findInProgress(assignmentId, actor.accountId());
         if (existing.isPresent()) {
             return new Started(attemptView(existing.get(), view), false);
         }
         if (view.submissionMode() == SubmissionMode.GROUP) {
-            throw ApiException.conflict("GROUP_ASSIGNMENT", "Bài nhóm làm trong tài liệu nhóm");
+            throw ApiException.createConflict("GROUP_ASSIGNMENT", "Bài nhóm làm trong tài liệu nhóm");
         }
         Instant now = clock.instant();
         SubmissionWindow window = WorkAccess.call(() -> assignments.submissionWindow(assignmentId, now));
         if (window == SubmissionWindow.CLOSED) {
             throw reject(actor, assignmentId, "SUBMISSION_CLOSED", "Bài đã hết hạn nhận bài");
         }
-        int used = attempts.maxAttemptNo(assignmentId, actor.accountId());
+        int used = attempts.findMaxAttemptNo(assignmentId, actor.accountId());
         // Bài có chấm nộp bao nhiêu lần cũng được khi còn hạn; chỉ bài Luyện tập giới hạn lượt (yêu cầu 2026-11-10).
         int max = view.maxAttempts() == null ? 1 : view.maxAttempts();
         if (view.gradingMode() == GradingMode.PRACTICE && used >= max) {
             throw reject(actor, assignmentId, "ATTEMPTS_EXHAUSTED", "Bạn đã dùng hết số lượt nộp");
         }
         AssignmentContent content = WorkAccess.call(() -> assignments.getContent(assignmentId))
-                .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         Instant deadline = view.lateUntil() != null ? view.lateUntil() : view.closesAt();
         // Bài có chấm nộp lại: bắt đầu từ bài nộp gần nhất để sửa tiếp, không phải làm lại từ đề trống (yêu cầu 2026-11-10);
         // bài nộp cũ không còn khớp khung đề thì bắt đầu từ đề. Bài Luyện tập mỗi lượt làm lại từ đề.
@@ -116,37 +116,37 @@ public class AttemptService {
                         .filter(a -> a.status() == AttemptStatus.SUBMITTED)
                         .max(java.util.Comparator.comparingInt(AssignmentAttempt::attemptNo))
                         // Danh sách lượt không mang nội dung bài: tải lại đủ bài nộp gần nhất.
-                        .flatMap(last -> attempts.find(last.id())).map(AssignmentAttempt::content)
+                        .flatMap(last -> attempts.findAttempt(last.id())).map(AssignmentAttempt::content)
                         .filter(previous -> documents.validateForSave(content.skeleton(), previous).errors().isEmpty())
                         .orElse(content.skeleton());
         AssignmentAttempt attempt = new AssignmentAttempt(UUID.randomUUID(), assignmentId, ref.classId(),
-                actor.accountId(), used + 1, AttemptSnapshot.of(view, content.requiredDiagrams()), startFrom,
+                actor.accountId(), used + 1, AttemptSnapshot.createSnapshot(view, content.requiredDiagrams()), startFrom,
                 0, AttemptStatus.IN_PROGRESS, null, false, now, deadline, null, null, null, List.of());
         attempts.insert(attempt);
         return new Started(attemptView(attempt, view), true);
     }
 
     @Transactional(readOnly = true)
-    public WorkViews.Attempt get(Actor actor, UUID attemptId) {
+    public WorkViews.Attempt loadAttempt(Actor actor, UUID attemptId) {
         AssignmentAttempt attempt = access.requireOwnAttempt(actor, attemptId, "ATTEMPT_VIEW");
         AssignmentView view = WorkAccess.call(() -> assignments.get(attempt.assignmentId()))
-                .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         return attemptView(attempt, view);
     }
 
     /** F4 (P1): chủ lượt, còn làm, chưa quá hạn cộng ân hạn, {@code contentVersion} khớp, không đụng khung. */
     @Transactional
-    public WorkViews.Saved save(Actor actor, UUID attemptId, long contentVersion, DocumentModel content) {
-        AssignmentAttempt attempt = writable(actor, attemptId, "ATTEMPT_SAVED");
+    public WorkViews.Saved saveAttempt(Actor actor, UUID attemptId, long contentVersion, DocumentModel content) {
+        AssignmentAttempt attempt = loadWritable(actor, attemptId, "ATTEMPT_SAVED");
         if (attempt.contentVersion() != contentVersion) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
         AssignmentContent assignment = WorkAccess.call(() -> assignments.getContent(attempt.assignmentId()))
-                .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         DocumentModel stored = prepare(actor, attempt, assignment.skeleton(), content);
         Instant now = clock.instant();
         if (attempts.saveContent(attempt.id(), stored, contentVersion, now) != 1) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
         return new WorkViews.Saved(attempt.id(), contentVersion + 1, now, DocumentFiles.hideFiles(stored),
                 submitIssues(attempt, assignment.skeleton(), stored));
@@ -157,31 +157,31 @@ public class AttemptService {
     public WorkViews.Receipt submit(Actor actor, UUID attemptId, long contentVersion) {
         AssignmentAttempt current = access.requireOwnAttemptForUpdate(actor, attemptId, "ASSIGNMENT_SUBMITTED");
         if (current.status() == AttemptStatus.SUBMITTED) {
-            return receipt(current);
+            return buildReceipt(current);
         }
         Instant now = clock.instant();
         AssignmentView view = WorkAccess.call(() -> assignments.get(current.assignmentId()))
-                .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         if (!WorkAccess.openForStudents(view)) {
             throw reject(actor, current.assignmentId(), "SUBMISSION_CLOSED", "Bài đã đóng nhận bài");
         }
-        if (!now.isBefore(effectiveDeadline(current, view).plus(AssignmentAttempt.GRACE))) {
+        if (!now.isBefore(calculateEffectiveDeadline(current, view).plus(AssignmentAttempt.GRACE))) {
             throw reject(actor, current.assignmentId(), "DEADLINE_PASSED", "Đã quá hạn nộp bài");
         }
         if (current.contentVersion() != contentVersion) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
         submitter.submit(current, SubmitMode.MANUAL, actor.accountId(), now, view.closesAt(), List.of());
-        return receipt(attempts.find(current.id()).orElseThrow());
+        return buildReceipt(attempts.findAttempt(current.id()).orElseThrow());
     }
 
     @Transactional(readOnly = true)
-    public WorkViews.Receipt receipt(Actor actor, UUID attemptId) {
+    public WorkViews.Receipt loadReceipt(Actor actor, UUID attemptId) {
         AssignmentAttempt attempt = access.requireOwnAttempt(actor, attemptId, "ATTEMPT_RECEIPT_VIEW");
         if (attempt.status() != AttemptStatus.SUBMITTED) {
-            throw ApiException.conflict("ATTEMPT_NOT_SUBMITTED", "Lượt chưa nộp");
+            throw ApiException.createConflict("ATTEMPT_NOT_SUBMITTED", "Lượt chưa nộp");
         }
-        return receipt(attempt);
+        return buildReceipt(attempt);
     }
 
     /**
@@ -190,12 +190,12 @@ public class AttemptService {
      */
     @Transactional
     public WorkViews.ImportPreview importPreview(Actor actor, UUID attemptId, byte[] file) {
-        AssignmentAttempt attempt = writable(actor, attemptId, "ATTEMPT_DOCX_IMPORTED");
+        AssignmentAttempt attempt = loadWritable(actor, attemptId, "ATTEMPT_DOCX_IMPORTED");
         DocxImportPreview preview = docx.importPreview(actor, file, BlockOrigin.STUDENT,
                 attempt.snapshot().diagramEnabled(), ref -> resolve(actor, attempt, ref));
         List<DocumentBlock> blocks = new ArrayList<>();
         for (DocumentBlock block : preview.document().blocks()) {
-            blocks.add(block.type() == BlockType.HEADING ? headingAsParagraph(block) : block);
+            blocks.add(block.type() == BlockType.HEADING ? convertHeadingToParagraph(block) : block);
         }
         int images = (int) blocks.stream().filter(b -> b.type() == BlockType.IMAGE).count();
         int diagrams = (int) blocks.stream().filter(b -> b.type() == BlockType.DIAGRAM).count();
@@ -209,24 +209,24 @@ public class AttemptService {
         // Bài có chấm không còn khái niệm lượt (yêu cầu 2026-11-10): tên tệp chỉ có tên bài; bài Luyện tập vẫn ghi lượt.
         String title = attempt.snapshot().gradingMode() == GradingMode.PRACTICE
                 ? attempt.snapshot().title() + " – Lượt " + attempt.attemptNo() : attempt.snapshot().title();
-        byte[] bytes = docx.export(attempt.content(), title, linker(attempt.id()));
-        return new Export(fileName(title), bytes);
+        byte[] bytes = docx.export(attempt.content(), title, createLinker(attempt.id()));
+        return new Export(buildFileName(title), bytes);
     }
 
     @Transactional(readOnly = true)
-    public String imageUrl(Actor actor, UUID attemptId, UUID blockId) {
+    public String resolveImageUrl(Actor actor, UUID attemptId, UUID blockId) {
         AssignmentAttempt attempt = access.requireReadableAttempt(actor, attemptId, "ATTEMPT_IMAGE_VIEW");
         String fileId = DocumentFiles.fileId(attempt.content(), blockId)
-                .orElseThrow(() -> ApiException.notFound("IMAGE_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("IMAGE_NOT_FOUND"));
         return artifacts.issueDownloadToken(fileId, actor.accountId()).url();
     }
 
     @Transactional(readOnly = true)
-    public WorkViews.Diagram diagram(Actor actor, UUID attemptId, UUID blockId) {
+    public WorkViews.Diagram loadDiagram(Actor actor, UUID attemptId, UUID blockId) {
         AssignmentAttempt attempt = access.requireReadableAttempt(actor, attemptId, "ATTEMPT_DIAGRAM_VIEW");
         DocumentBlock block = attempt.content().blocks().stream()
                 .filter(b -> blockId.equals(b.id()) && b.type() == BlockType.DIAGRAM).findFirst()
-                .orElseThrow(() -> ApiException.notFound("DIAGRAM_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("DIAGRAM_NOT_FOUND"));
         return new WorkViews.Diagram(attempt.id(), blockId, attempt.snapshot().title(),
                 block.content().path("diagramType").asText(), block.content().path("alt").asText(""),
                 block.content().path("xml").asText(""), block.content().path("svgPreview").asText(null));
@@ -238,14 +238,14 @@ public class AttemptService {
      */
     private DocumentModel prepare(Actor actor, AssignmentAttempt attempt, DocumentModel skeleton, DocumentModel content) {
         if (content == null || content.blocks() == null) {
-            throw ApiException.badRequest("DOCUMENT_INVALID", "Bài làm không hợp lệ");
+            throw ApiException.createBadRequest("DOCUMENT_INVALID", "Bài làm không hợp lệ");
         }
         DocumentModel pending = DocumentFiles.resolveFiles(attempt.content(), documents.sanitize(content), null);
         ValidationResult result = documents.validateForSave(skeleton, pending);
         List<ValidationIssue> errors = new ArrayList<>(result.errors());
-        errors.addAll(disabledDiagrams(attempt, pending));
+        errors.addAll(listDisabledDiagrams(attempt, pending));
         if (!errors.isEmpty()) {
-            throw WorkProblem.issues(HttpStatus.BAD_REQUEST, "DOCUMENT_INVALID", "Bài làm có lỗi", errors);
+            throw WorkProblem.createIssuesProblem(HttpStatus.BAD_REQUEST, "DOCUMENT_INVALID", "Bài làm có lỗi", errors);
         }
         DocumentModel attached = DocumentFiles.resolveFiles(attempt.content(), pending,
                 ref -> artifacts.attach(new FileRef(ref), actor, ArtifactPurpose.DOCUMENT_IMAGE).fileId());
@@ -255,8 +255,8 @@ public class AttemptService {
         for (DocumentBlock block : attached.blocks()) {
             DocumentBlock original = block.origin() == BlockOrigin.TEACHER ? teacher.get(block.id()) : null;
             canonical.add(original == null ? block : switch (original.type()) {
-                case DIAGRAM -> drawn(original, block);
-                case TABLE -> filled(original, block);
+                case DIAGRAM -> mergeDrawnBlock(original, block);
+                case TABLE -> mergeFilledBlock(original, block);
                 default -> original;
             });
         }
@@ -267,7 +267,7 @@ public class AttemptService {
      * Sơ đồ của người soạn với XML, loại (suy từ hình vẽ) và ảnh xem trước người học vừa vẽ; mô tả giữ theo đề. XML chỉ
      * khác đề khi sơ đồ nằm trong phần (validateForSave đã kiểm), không thì giữ nguyên bản của đề.
      */
-    private static DocumentBlock drawn(DocumentBlock original, DocumentBlock block) {
+    private static DocumentBlock mergeDrawnBlock(DocumentBlock original, DocumentBlock block) {
         if (original.content().path("xml").equals(block.content().path("xml"))) {
             return original;
         }
@@ -283,7 +283,7 @@ public class AttemptService {
     }
 
     /** Bảng của người soạn với các ô người học điền (chỉ khác đề khi bảng nằm trong phần, validateForSave đã kiểm). */
-    private static DocumentBlock filled(DocumentBlock original, DocumentBlock block) {
+    private static DocumentBlock mergeFilledBlock(DocumentBlock original, DocumentBlock block) {
         if (original.content().path("rows").equals(block.content().path("rows"))) {
             return original;
         }
@@ -292,7 +292,7 @@ public class AttemptService {
         return new DocumentBlock(original.id(), original.origin(), original.type(), content);
     }
 
-    private static List<ValidationIssue> disabledDiagrams(AssignmentAttempt attempt, DocumentModel content) {
+    private static List<ValidationIssue> listDisabledDiagrams(AssignmentAttempt attempt, DocumentModel content) {
         if (attempt.snapshot().diagramEnabled()) {
             return List.of();
         }
@@ -300,28 +300,28 @@ public class AttemptService {
                 .map(b -> new ValidationIssue("DIAGRAM_DISABLED", b.id(), "Bài không dùng sơ đồ")).toList();
     }
 
-    private AssignmentAttempt writable(Actor actor, UUID attemptId, String action) {
+    private AssignmentAttempt loadWritable(Actor actor, UUID attemptId, String action) {
         AssignmentAttempt attempt = access.requireOwnAttemptForUpdate(actor, attemptId, action);
-        if (!attempt.inProgress()) {
-            throw ApiException.conflict("ATTEMPT_SUBMITTED", "Lượt đã nộp, không sửa được");
+        if (!attempt.hasInProgressStatus()) {
+            throw ApiException.createConflict("ATTEMPT_SUBMITTED", "Lượt đã nộp, không sửa được");
         }
         AssignmentView view = WorkAccess.call(() -> assignments.get(attempt.assignmentId()))
-                .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
-        Instant deadline = effectiveDeadline(attempt, view);
+                .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
+        Instant deadline = calculateEffectiveDeadline(attempt, view);
         if (!WorkAccess.openForStudents(view)) {
-            throw ApiException.conflict("SUBMISSION_CLOSED", "Bài đã đóng nhận bài");
+            throw ApiException.createConflict("SUBMISSION_CLOSED", "Bài đã đóng nhận bài");
         }
         if (deadline.isAfter(attempt.deadlineAt())) {
             attempts.extendDeadline(attempt.id(), deadline);
         }
         if (clock.instant().isAfter(deadline.plus(AssignmentAttempt.GRACE))) {
-            throw ApiException.conflict("DEADLINE_PASSED", "Đã quá hạn, không lưu được nữa");
+            throw ApiException.createConflict("DEADLINE_PASSED", "Đã quá hạn, không lưu được nữa");
         }
         return attempt;
     }
 
     /** Hạn của lượt; bài được kéo dài hạn sau khi bắt đầu thì lượt nhận hạn mới (BR-U07-35). */
-    static Instant effectiveDeadline(AssignmentAttempt attempt, AssignmentView view) {
+    static Instant calculateEffectiveDeadline(AssignmentAttempt attempt, AssignmentView view) {
         Instant current = view.lateUntil() != null ? view.lateUntil() : view.closesAt();
         return current != null && current.isAfter(attempt.deadlineAt()) ? current : attempt.deadlineAt();
     }
@@ -331,13 +331,13 @@ public class AttemptService {
         try {
             if (parts.length == 2 && UUID.fromString(parts[0]).equals(attempt.assignmentId())) {
                 UUID blockId = UUID.fromString(parts[1]);
-                return assignments.getContent(attempt.assignmentId()).flatMap(c -> diagramXml(c.skeleton(), blockId));
+                return assignments.getContent(attempt.assignmentId()).flatMap(c -> findDiagramXml(c.skeleton(), blockId));
             }
             if (parts.length == 3 && parts[0].equals("attempt")) {
                 UUID otherId = UUID.fromString(parts[1]);
                 UUID blockId = UUID.fromString(parts[2]);
-                return attempts.find(otherId).filter(a -> a.accountId().equals(actor.accountId()))
-                        .flatMap(a -> diagramXml(a.content(), blockId));
+                return attempts.findAttempt(otherId).filter(a -> a.accountId().equals(actor.accountId()))
+                        .flatMap(a -> findDiagramXml(a.content(), blockId));
             }
         } catch (IllegalArgumentException e) {
             return Optional.empty();
@@ -345,12 +345,12 @@ public class AttemptService {
         return Optional.empty();
     }
 
-    private static Optional<String> diagramXml(DocumentModel document, UUID blockId) {
+    private static Optional<String> findDiagramXml(DocumentModel document, UUID blockId) {
         return document.blocks().stream().filter(b -> blockId.equals(b.id()) && b.type() == BlockType.DIAGRAM)
                 .findFirst().map(b -> b.content().path("xml").asText(null));
     }
 
-    private IDiagramLinker linker(UUID attemptId) {
+    private IDiagramLinker createLinker(UUID attemptId) {
         return new IDiagramLinker() {
             @Override
             public String linkFor(UUID blockId) {
@@ -366,12 +366,12 @@ public class AttemptService {
 
     private WorkViews.Attempt attemptView(AssignmentAttempt a, AssignmentView view) {
         AssignmentContent content = WorkAccess.call(() -> assignments.getContent(a.assignmentId()))
-                .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         BigDecimal maxPoints = content.rubrics().stream().map(RubricView::maxPoints)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         Instant now = clock.instant();
-        Instant deadline = effectiveDeadline(a, view);
-        boolean editable = WorkAccess.openForStudents(view) && a.inProgress()
+        Instant deadline = calculateEffectiveDeadline(a, view);
+        boolean editable = WorkAccess.openForStudents(view) && a.hasInProgressStatus()
                 && !now.isAfter(deadline.plus(AssignmentAttempt.GRACE));
         return new WorkViews.Attempt(a.id(), a.assignmentId(), a.classId(), a.snapshot().title(), a.attemptNo(),
                 a.snapshot().maxAttempts(), a.status(), DocumentFiles.hideFiles(a.content()), a.contentVersion(),
@@ -388,16 +388,16 @@ public class AttemptService {
      * đề gốc nên không tự biết sơ đồ, bảng của đề đã được vẽ, điền khác đề hay chưa. Lượt đã nộp thì rỗng.
      */
     private List<ValidationIssue> submitIssues(AssignmentAttempt attempt, DocumentModel skeleton, DocumentModel content) {
-        if (!attempt.inProgress()) {
+        if (!attempt.hasInProgressStatus()) {
             return List.of();
         }
         ValidationResult result = documents.validateForSubmit(skeleton, content, attempt.snapshot().requiredDiagrams());
         List<ValidationIssue> errors = new ArrayList<>(result.errors());
-        errors.addAll(disabledDiagrams(attempt, content));
+        errors.addAll(listDisabledDiagrams(attempt, content));
         return List.copyOf(errors);
     }
 
-    private static WorkViews.Receipt receipt(AssignmentAttempt a) {
+    private static WorkViews.Receipt buildReceipt(AssignmentAttempt a) {
         int diagrams = (int) a.content().blocks().stream()
                 .filter(b -> b.origin() == BlockOrigin.STUDENT && b.type() == BlockType.DIAGRAM).count();
         int blocks = (int) a.content().blocks().stream().filter(b -> b.origin() == BlockOrigin.STUDENT).count();
@@ -406,7 +406,7 @@ public class AttemptService {
     }
 
     /** Người học không thêm tiêu đề mục (BR-U07-15): tiêu đề trong DOCX thành đoạn chữ đậm. */
-    private static DocumentBlock headingAsParagraph(DocumentBlock block) {
+    private static DocumentBlock convertHeadingToParagraph(DocumentBlock block) {
         ObjectNode content = JsonNodeFactory.instance.objectNode();
         content.putArray("runs").addObject().put("text", block.content().path("text").asText("")).put("bold", true);
         return new DocumentBlock(block.id(), block.origin(), BlockType.PARAGRAPH, content);
@@ -414,18 +414,18 @@ public class AttemptService {
 
     private ApiException reject(Actor actor, UUID assignmentId, String code, String message) {
         try {
-            audit.rejected(actor, "SUBMIT_REJECTED", WorkAudit.OBJECT_ASSIGNMENT, assignmentId, code, Map.of());
+            audit.recordRejected(actor, "SUBMIT_REJECTED", WorkAudit.OBJECT_ASSIGNMENT, assignmentId, code, Map.of());
         } catch (RuntimeException e) {
-            return ApiException.unavailable("AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
+            return ApiException.createUnavailable("AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
         }
-        return ApiException.conflict(code, message);
+        return ApiException.createConflict(code, message);
     }
 
-    private static ApiException versionConflict() {
-        return ApiException.conflict("CONTENT_VERSION_CONFLICT", "Bài đang mở ở nơi khác. Hãy tải lại");
+    private static ApiException createVersionConflictError() {
+        return ApiException.createConflict("CONTENT_VERSION_CONFLICT", "Bài đang mở ở nơi khác. Hãy tải lại");
     }
 
-    static String fileName(String title) {
+    static String buildFileName(String title) {
         String base = title.replaceAll("[\\\\/:*?\"<>|\\r\\n]+", " ").strip();
         return (base.isEmpty() ? "bai-lam" : base.length() > 120 ? base.substring(0, 120) : base) + ".docx";
     }

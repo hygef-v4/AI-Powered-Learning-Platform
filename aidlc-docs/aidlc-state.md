@@ -1,5 +1,56 @@
 # AI-DLC State Tracking
 
+## Script deploy tự khởi động lại nginx khi cấu hình nginx đổi — 2026-11-16
+
+Phát hiện khi đưa PR 101 lên staging: `platform-deploy` không tạo lại container nginx, nên thay đổi trong `infra/nginx` không được nạp và `nginx -t` trên container cũ báo `unknown log format "timed"`; phải restart tay. Người dùng đồng ý sửa ("Có, sửa đi"). Nhánh `fix/deploy-restart-nginx` từ `origin/staging@e2014177`, worktree riêng.
+
+- [x] Requirements Analysis (Minimal) và Workflow Planning: một thay đổi trong script deploy, chỉ Code Generation và Build and Test.
+- [x] Code Generation: `switch_to` so `infra/nginx` giữa bản đang chạy và bản mới, khác thì `compose restart nginx` sau `compose up`; áp cho cả lúc quay về. Thêm test, cập nhật runbook mục 10.
+- [x] Build and Test: `test-platform-deploy.sh` 16/16 (chạy trong thư mục tạm trên VPS vì máy phát triển không có `jq`, `flock`). Chưa chạy với Docker và nginx thật.
+- [x] Người dùng yêu cầu commit cục bộ (2026-11-16).
+- [x] Người dùng yêu cầu push và mở PR vào staging (2026-11-16). Không tự merge.
+
+Sau khi bản này lên VPS phải cài lại `/usr/local/bin/platform-deploy` và `/usr/local/bin/platform-staging-deploy` một lần nữa. Security/Resiliency trong phạm vi đã duyệt; PBT tắt.
+
+## Sửa các điểm trong báo cáo hiệu năng production — 2026-11-16
+
+Người dùng yêu cầu kiểm tra hiệu năng production, rồi yêu cầu "sửa toàn bộ". [Báo cáo](construction/build-and-test/2026-11-16-performance-report.md); [kế hoạch](construction/plans/code-generation-plan/2026-11-16-performance-fixes.md).
+
+- [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering.
+- [x] Requirements Analysis (Minimal): phạm vi là mục 6.1–6.5 của báo cáo.
+- [x] Workflow Planning: chỉ Code Generation và Build and Test; các giai đoạn khác bỏ qua vì không có thành phần, API hay schema mới.
+- [x] Người dùng duyệt kế hoạch, chọn phương án deploy A.
+- [x] Code Generation: 13/13 bước. Bước 7 chỉ áp cho 502/503; Redis `maxmemory` 96 MB (staging giới hạn 128 MB).
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-16-performance-fixes-results.md). Frontend ESLint, TypeScript, Vitest 1.160/1.160, production build qua; test script deploy 15/15; nginx, Postgres, Redis kiểm trong container tạm.
+- [x] Người dùng yêu cầu commit cục bộ (2026-11-16).
+- [x] Người dùng yêu cầu mở PR (2026-11-16): push nhánh, PR vào staging. Không tự merge.
+
+Chưa kiểm: `docker compose config` và cả stack chạy cùng nhau (Docker ở máy không chạy); template nginx của production và staging (cần chứng chỉ); thời gian khởi động backend với 2 CPU; các trang sau đăng nhập trên trình duyệt. Phát hiện mới ngoài phạm vi: `src/i18n/msg.ts` đóng gói cả ba ngôn ngữ (643 KB) vào mọi trang. Security/Resiliency trong phạm vi đã duyệt; PBT tắt.
+
+## Kiểm tra staging trước khi lên main và đồng bộ tài liệu vận hành — 2026-11-16
+
+Người dùng yêu cầu kiểm tra `staging@d8ac7d21` trước khi đưa lên main, rồi yêu cầu sửa tài liệu. Nhánh `docs/sync-ops-docs-staging` từ `origin/staging`; chỉ sửa tài liệu, không đổi mã, test, schema hay cấu hình.
+
+- [x] Kiểm tra: CI của `d8ac7d21` qua cả bốn job; staging trên VPS chạy `abca8520` (khác HEAD ở hai script e2e và audit.md), mọi dịch vụ khỏe, 6 giờ không có dòng ERROR ở backend. Không chạy lại test ở máy.
+- [x] Tài liệu: runbook deploy-vps mục 6 (Drive cá nhân qua OAuth, thứ tự chọn nơi lưu, khóa backup tùy chọn), restore-isolated (archive không mã hóa, thư mục backup của Drive cá nhân), deploy-staging, README, requirements (FR-006, FR-013, FR-038, NFR-002), code-summary của U03, current-code-baseline (delta 2026-11-16).
+- [ ] Trước khi gộp vào main, người vận hành kiểm `.env` production: mã mới dùng Drive khi có biến `GOOGLE_DRIVE_OAUTH_*`, kể cả khi `U03_REQUIRE_DRIVE=false`; tệp production đang ở đĩa VPS không tự chuyển sang Drive; production và staging cần `GOOGLE_DRIVE_FOLDER_NAME` khác nhau. Phiên này không đọc được `.env` production nên chưa xác nhận.
+- [ ] Người dùng duyệt tài liệu và quyết định commit, push, mở PR vào staging.
+
+Chưa cập nhật: `nfr-design-patterns.md` và `logical-components.md` của U03 vẫn mô tả archive luôn mã hóa (đã ghi là khác thiết kế trong code-summary); chú thích trong `frontend/src/i18n/LocaleGate.tsx` còn ghi máy chủ dựng chữ bằng tiếng Việt trong khi mặc định là tiếng Anh (mã nguồn, ngoài phạm vi lượt này).
+
+## Sửa các điểm rà soát toàn dự án trên nền staging — 2026-11-16
+
+Người dùng yêu cầu rà soát toàn dự án (2026-11-15), rồi chọn phương án 1: chỉ mang lên staging những điểm staging còn thiếu. Nhánh `chi-cuongg/audit-project-bugs-docs` trên `origin/staging@f1c351dd`, đã gộp `origin/staging@5f9c0173`. [Kế hoạch và phạm vi](construction/plans/code-generation-plan/2026-11-16-review-fixes-on-staging.md); [kết quả và giới hạn](construction/build-and-test/2026-11-16-review-fixes-on-staging-results.md).
+
+- [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering.
+- [x] Requirements Analysis (Minimal): phạm vi là các điểm của báo cáo rà soát còn tồn tại trên staging.
+- [x] Workflow Planning: chỉ Code Generation và Build and Test; các giai đoạn khác bỏ qua vì không có thành phần hay quy tắc nghiệp vụ mới.
+- [x] Code Generation: 7/7 bước, gồm bước gộp lại staging. Quét bù nhắc hạn 24 giờ (U14); migration bỏ trần 10 của số thứ tự lượt và bỏ bảng `group_peer_reviews`; frontend bỏ `GRADE_LOCKED` và nhãn đánh giá chéo; OpenAPI grading và tài liệu đồng bộ.
+- [x] Build and Test trên bản đã gộp: backend `mvn -B verify` có Docker 2.546 test, 0 thất bại, 0 lỗi, 1 bỏ qua; bộ kiểm bắt buộc của CI qua; migration áp trên PostgreSQL thật tới `v20261116.1010`; frontend ESLint, TypeScript, Vitest 1.159/1.159 và production build qua.
+- [x] Người dùng duyệt mã và quyết định push, mở PR vào staging: PR #97 đã gộp vào staging (`abca8520`, 2026-11-16).
+
+Bản sửa đầu trên `3b86e57d` có thêm chặn nộp lại khi đã có điểm công bố, trạng thái `CANCELLED` của lượt làm và hộp xác nhận công bố. Các phần đó không mang lên vì staging đã có quy tắc chỉ chấm khi bài đã đóng (`fe492df5`); bản đầy đủ giữ ở nhánh cục bộ `backup/review-fixes-full-2026-11-15`. Chưa kiểm trên trình duyệt, chưa push hay deploy. Security/Resiliency giữ phạm vi đã duyệt, PBT tắt.
+
 ## Rà soát MSSV trên danh sách và bộ chọn sinh viên — 2026-11-16
 
 - [x] Đối chiếu yêu cầu SC-10/SC-11, component hiện có và đường truyền `studentCode`.
@@ -556,7 +607,7 @@ After the dark-mode select report, added theme foreground/background to native s
 | Resiliency Baseline | Yes | Requirements Analysis; scope retained |
 | Property-Based Testing | No | Requirements Analysis; unchanged |
 
-Security scope: SECURITY-03/04/05/08/09/12/15. Resiliency scope: RESILIENCY-04/06/10. Other controls N/A outside approved project scope. Automated authorization/privacy/resiliency regressions passed within the approved remediation scope; this does not certify every runtime control. Key-reveal design delta remains explicit.
+Security scope: SECURITY-03/04/05/08/09/12/15. Resiliency scope: RESILIENCY-04/06/10. Other controls N/A outside approved project scope. Automated authorization/privacy/resiliency regressions passed within the approved remediation scope; this does not certify every runtime control. AI API keys are write-only (D15 closed 2026-11-11); only MCP tokens can be shown again.
 
 ## Historical lifecycle and approvals
 
@@ -1071,3 +1122,9 @@ Plan: construction/plans/code-generation-plan/2026-11-13-group-grading-side-pane
 - [x] User authorized clear local commits. Separated optional contribution-level data/API/published-student visibility from group-side-panel UI and unsaved-draft safeguards; plans/evidence/audit recorded in a documentation commit.
 - [x] Fresh precommit backend55/55 and frontend grading/shared document/submission-history276/276 across26 files pass; whitespace/index checks pass. No source edits since verification, no log/screenshot/temp config added to git.
 - No push, merge or deploy requested/performed. Earlier UI/typecheck/full-suite evidence and production-build limitation remain recorded in the reports.
+
+## Staging readiness — 2026-11-16
+
+- [x] HEAD matches freshly fetched origin/staging at d8ac7d21; no merge conflicts found. Exact-SHA CI backend/frontend/deploy-script/images succeeded.
+- [x] Report: construction/build-and-test/2026-11-16-staging-readiness.md. Local frontend dependency installation incomplete and Docker engine stopped; no live deployment verification, push or deploy.
+

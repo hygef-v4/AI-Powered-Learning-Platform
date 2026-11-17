@@ -20,10 +20,10 @@ class ActiveSubjects {
         try {
             active = subjects.isActive(subjectId);
         } catch (RuntimeException unavailable) {
-            throw ApiException.unavailable("SUBJECT_UNAVAILABLE", "Chưa kiểm tra được môn, vui lòng thử lại");
+            throw ApiException.createUnavailable("SUBJECT_UNAVAILABLE", "Chưa kiểm tra được môn, vui lòng thử lại");
         }
         if (!active) {
-            throw ApiException.conflict("SUBJECT_NOT_ACTIVE", "Môn đã lưu trữ, ngân hàng câu hỏi chỉ xem");
+            throw ApiException.createConflict("SUBJECT_NOT_ACTIVE", "Môn đã lưu trữ, ngân hàng câu hỏi chỉ xem");
         }
     }
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DateInput } from "@/shared/ui/DateInput";
-import { Field } from "@/shared/ui/inputs";
+import { Field } from "@/shared/ui/Inputs";
 
 function Controlled({ initial = "2026-11-15", min, max }: {
   initial?: string; min?: string; max?: string;

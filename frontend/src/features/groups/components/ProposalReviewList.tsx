@@ -2,17 +2,18 @@
 
 import { formatStudentLabel } from "@/shared/studentCode";
 import { useCallback, useEffect, useId, useState } from "react";
-import { Alert, Button, Dialog, Field, Pill, Section, cx, showToast } from "@/shared/ui";
+import { Alert, Button, cx, Dialog, Field, Pill, Section, showToast, Textarea } from "@/shared/ui";
 import { approveProposals, getClassProposals, rejectProposal } from "../api";
 import {
   describeFormation,
   MAX_REJECT_REASON,
   PROPOSAL_STATUS_LABELS,
-  proposalErrorText,
+  describeProposalError,
   WARNING_LABELS,
 } from "../model/proposals";
 import type { ClassProposalsView, ReviewProposalView } from "../model/types";
 import { SelfGroupingSettingsDialog } from "./SelfGroupingSettingsDialog";
+import { msg } from "@/i18n/msg";
 
 /**
  * Sinh viên tự chia nhóm ở tab Sinh viên của giảng viên (US-GRP-007, 010): trạng thái đợt và nút cài đặt; đề xuất đang hoạt
@@ -38,14 +39,14 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
     setView(loaded);
     setLoadError(null);
     setPicked((current) => current.filter((id) => loaded.proposals.some((p) => p.id === id && p.status === "SUBMITTED")));
-  }, () => setLoadError("Không tải được đề xuất nhóm.")), [classId]);
+  }, () => setLoadError(msg("groups.components.ProposalReviewList.couldNotLoadGroupProposals"))), [classId]);
 
   useEffect(() => {
     void load();
   }, [load, setVersion]);
 
   if (loadError && !view) {
-    return <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void load()}>Tải lại</Button>}>{loadError}</Alert>;
+    return <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void load()}>{msg("groups.components.ProposalReviewList.reload")}</Button>}>{loadError}</Alert>;
   }
   if (!view) return null;
 
@@ -62,13 +63,13 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
       const result = await approveProposals(classId, ids);
       setFailures(Object.fromEntries(result.failed.map((f) => [f.proposalId, f.message])));
       if (result.approved.length > 0) {
-        showToast(`Đã duyệt ${result.approved.length} đề xuất thành nhóm`);
+        showToast(msg("groups.components.ProposalReviewList.approvedProposalsAsGroups", { length: String(result.approved.length) }));
         onGroupsChanged();
       }
-      if (result.failed.length > 0) setError(`${result.failed.length} đề xuất chưa duyệt được, xem lý do ở từng thẻ.`);
+      if (result.failed.length > 0) setError(msg("groups.components.ProposalReviewList.proposalsCouldNotBeApproved", { length: String(result.failed.length) }));
       await load();
     } catch (e) {
-      setError(proposalErrorText(e, "Không duyệt được đề xuất."));
+      setError(describeProposalError(e, msg("groups.components.ProposalReviewList.couldNotApproveTheProposal")));
       await load();
     } finally {
       setBusy(false);
@@ -78,23 +79,23 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
   const toggle = (id: string) => setPicked((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
 
   return (
-    <Section title="Sinh viên tự chia nhóm" icon="groups" description={`Tự chia nhóm: ${describeFormation(formation)}`}
-      actions={!readOnly && <Button size="sm" icon="settings" onClick={() => setSettingsOpen(true)} data-testid="formation-open">Cài đặt</Button>}>
+    <Section title={msg("groups.components.ProposalReviewList.studentSelfGrouping")} icon="groups" description={msg("groups.components.ProposalReviewList.selfGrouping", { value: String(describeFormation(formation)) })}
+      actions={!readOnly && <Button size="sm" icon="settings" onClick={() => setSettingsOpen(true)} data-testid="formation-open">{msg("groups.components.ProposalReviewList.settings")}</Button>}>
       {idle ? (
-        <p className="text-[13px] text-muted">Bật để sinh viên tự lập nhóm và gửi bạn duyệt.</p>
+        <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.turnOnToLetStudents")}</p>
       ) : (
         <div className="flex flex-col gap-4">
           {error && <Alert tone="danger" role="alert">{error}</Alert>}
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-[13.5px] font-semibold text-ink">Chờ duyệt ({submitted.length})</h3>
+            <h3 className="text-[13.5px] font-semibold text-ink">{msg("groups.components.ProposalReviewList.awaitingApproval")}{submitted.length})</h3>
             {!readOnly && submitted.length > 0 && (
               <Button size="sm" variant="primary" icon="check" disabled={busy || picked.length === 0}
                 onClick={() => void approve(picked)} data-testid="proposals-approve-selected">
-                Duyệt đã chọn ({picked.length})
+                {msg("groups.components.ProposalReviewList.approveSelected")}{picked.length})
               </Button>
             )}
           </div>
-          {submitted.length === 0 && <p className="text-[13px] text-muted">Chưa có đề xuất chờ duyệt.</p>}
+          {submitted.length === 0 && <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.noProposalsAwaitingApproval")}</p>}
           <ul className="flex flex-col gap-2">
             {submitted.map((p) => (
               <ProposalRow key={p.id} proposal={p} failure={failures[p.id]} busy={busy} readOnly={readOnly}
@@ -104,7 +105,7 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
           </ul>
           {drafts.length > 0 && (
             <details className="rounded-lg border border-line px-4 py-2">
-              <summary className="cursor-pointer py-1 text-[13.5px] font-semibold text-ink">Đang lập ({drafts.length})</summary>
+              <summary className="cursor-pointer py-1 text-[13.5px] font-semibold text-ink">{msg("groups.components.ProposalReviewList.forming")}{drafts.length})</summary>
               <ul className="mt-2 flex flex-col gap-2">
                 {drafts.map((p) => <ProposalRow key={p.id} proposal={p} busy={busy} readOnly />)}
               </ul>
@@ -116,11 +117,11 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
 
       {settingsOpen && (
         <SelfGroupingSettingsDialog classId={classId} onClose={() => setSettingsOpen(false)}
-          onSaved={() => { setSettingsOpen(false); showToast("Đã lưu cài đặt tự chia nhóm"); void load(); }} />
+          onSaved={() => { setSettingsOpen(false); showToast(msg("groups.components.ProposalReviewList.selfGroupingSettingsSaved")); void load(); }} />
       )}
       {rejecting && (
         <RejectProposalDialog proposal={rejecting} onClose={() => setRejecting(null)}
-          onRejected={(next) => { setRejecting(null); setView(next); showToast(`Đã từ chối ${rejecting.name}`, "danger"); }} />
+          onRejected={(next) => { setRejecting(null); setView(next); showToast(msg("groups.components.ProposalReviewList.rejected", { name: String(rejecting.name) }), "danger"); }} />
       )}
     </Section>
   );
@@ -143,7 +144,7 @@ function ProposalRow({ proposal, failure, busy, readOnly, checked, onToggle, onA
       <div className="flex flex-wrap items-start gap-3">
         {reviewable && (
           <input type="checkbox" className="mt-1 size-4 accent-[var(--c-primary)]" checked={!!checked} disabled={busy}
-            onChange={onToggle} aria-label={`Chọn ${proposal.name}`} />
+            onChange={onToggle} aria-label={msg("groups.components.ProposalReviewList.select", { name: String(proposal.name) })} />
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -151,16 +152,15 @@ function ProposalRow({ proposal, failure, busy, readOnly, checked, onToggle, onA
             <Pill tone={proposal.status === "SUBMITTED" ? "warning" : "neutral"}>{PROPOSAL_STATUS_LABELS[proposal.status]}</Pill>
           </div>
           <p className="text-xs text-muted">
-            Trưởng nhóm {formatStudentLabel({ ...proposal.leader, name: proposal.leader.name ?? proposal.leader.email ?? "chưa rõ tên" })} · {proposal.members.length} thành viên
-            {proposal.pendingInvitations > 0 && ` · ${proposal.pendingInvitations} lời mời chờ`}
+            {msg("groups.components.ProposalReviewList.leader")}{formatStudentLabel({ ...proposal.leader, name: proposal.leader.name ?? proposal.leader.email ?? msg("groups.components.ProposalReviewList.unknownName") })} · {proposal.members.length} {msg("groups.components.ProposalReviewList.members")}{proposal.pendingInvitations > 0 && msg("groups.components.ProposalReviewList.pendingInvitations", { pendingInvitations: String(proposal.pendingInvitations) })}
           </p>
           <p className="mt-1 text-[13px] text-ink">{proposal.members.map(formatStudentLabel).join(", ")}</p>
           {proposal.warnings.map((w) => <p key={w} className="mt-1 text-xs text-warning">{WARNING_LABELS[w]}</p>)}
         </div>
         {reviewable && (
           <div className="flex gap-2">
-            <Button size="sm" variant="danger" disabled={busy} onClick={onReject} data-testid={`proposal-reject-${proposal.id}`}>Từ chối</Button>
-            <Button size="sm" variant="primary" disabled={busy} onClick={onApprove} data-testid={`proposal-approve-${proposal.id}`}>Duyệt</Button>
+            <Button size="sm" variant="danger" disabled={busy} onClick={onReject} data-testid={`proposal-reject-${proposal.id}`}>{msg("groups.components.ProposalReviewList.reject")}</Button>
+            <Button size="sm" variant="primary" disabled={busy} onClick={onApprove} data-testid={`proposal-approve-${proposal.id}`}>{msg("groups.components.ProposalReviewList.approve")}</Button>
           </div>
         )}
       </div>
@@ -171,20 +171,20 @@ function ProposalRow({ proposal, failure, busy, readOnly, checked, onToggle, onA
 
 /** Sinh viên đang học chưa có nhóm, kèm đề xuất họ đang ở; dùng cùng dữ liệu với Chia ngẫu nhiên. */
 function UngroupedStudentsList({ view }: { view: ClassProposalsView }) {
-  if (view.ungrouped.length === 0) return <p className="text-[13px] text-muted">Mọi sinh viên đã có nhóm.</p>;
+  if (view.ungrouped.length === 0) return <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.allStudentsAlreadyHaveA")}</p>;
   return (
     <details className="rounded-lg border border-line px-4 py-2" data-testid="ungrouped-students">
-      <summary className="cursor-pointer py-1 text-[13.5px] font-semibold text-ink">Chưa có nhóm ({view.ungrouped.length})</summary>
+      <summary className="cursor-pointer py-1 text-[13.5px] font-semibold text-ink">{msg("groups.components.ProposalReviewList.noGroup")}{view.ungrouped.length})</summary>
       <ul className="mt-2 flex flex-col divide-y divide-line">
         {view.ungrouped.map((u) => (
           <li key={u.person.accountId} className="flex flex-wrap items-center justify-between gap-2 py-2 text-[13px]">
             <span className="min-w-0">
-              <span className="font-semibold text-ink">{u.person.name ?? u.person.email ?? "Chưa rõ tên"}</span>
+              <span className="font-semibold text-ink">{u.person.name ?? u.person.email ?? msg("groups.components.ProposalReviewList.unknownName2")}</span>
               {(u.person.studentCode || u.person.email) && <span className="ml-2 text-muted">
                 {[u.person.studentCode, u.person.email].filter(Boolean).join(" · ")}</span>}
             </span>
             <span className="text-muted">
-              {u.proposalName ? `${u.proposalName} · ${PROPOSAL_STATUS_LABELS[u.proposalStatus ?? "DRAFT"]}` : "Chưa có đề xuất"}
+              {u.proposalName ? `${u.proposalName} · ${PROPOSAL_STATUS_LABELS[u.proposalStatus ?? "DRAFT"]}` : msg("groups.components.ProposalReviewList.noProposalYet")}
             </span>
           </li>
         ))}
@@ -210,20 +210,19 @@ function RejectProposalDialog({ proposal, onClose, onRejected }: {
     try {
       onRejected(await rejectProposal(proposal.id, reason.trim() || null));
     } catch (e) {
-      setError(proposalErrorText(e, "Không từ chối được đề xuất."));
+      setError(describeProposalError(e, msg("groups.components.ProposalReviewList.couldNotRejectTheProposal")));
       setBusy(false);
     }
   };
   return (
-    <Dialog open title={`Từ chối đề xuất ${proposal.name}?`} tone="danger" onClose={onClose} dismissible={!busy}
-      footer={<Button variant="danger" disabled={busy || tooLong} onClick={() => void reject()} data-testid="proposal-reject-confirm">Từ chối</Button>}>
-      <Field label="Lý do (tùy chọn)" htmlFor={fieldId} error={tooLong ? "Lý do tối đa 1.000 ký tự." : error}>
-        <textarea id={fieldId} rows={3} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)}
-          className="w-full rounded-lg border border-line-strong bg-surface px-3 py-2 text-base text-ink sm:text-[13.5px]"
+    <Dialog open title={msg("groups.components.ProposalReviewList.rejectProposal", { name: String(proposal.name) })} tone="danger" onClose={onClose} dismissible={!busy}
+      footer={<Button variant="danger" disabled={busy || tooLong} onClick={() => void reject()} data-testid="proposal-reject-confirm">{msg("groups.components.ProposalReviewList.reject")}</Button>}>
+      <Field label={msg("groups.components.ProposalReviewList.reasonOptional")} htmlFor={fieldId} error={tooLong ? msg("groups.components.ProposalReviewList.theReasonCanBeAt") : error}>
+        <Textarea id={fieldId} rows={3} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)}
           data-testid="proposal-reject-reason" />
       </Field>
       <p className="text-right text-xs text-muted">{reason.trim().length}/{MAX_REJECT_REASON}</p>
-      <p className="text-[13px] text-muted">Thành viên được báo và có thể lập hoặc vào đề xuất khác.</p>
+      <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.membersAreNotifiedAndCan")}</p>
     </Dialog>
   );
 }

@@ -20,7 +20,7 @@ class SubjectTest {
     private static final Instant LATER = CREATED.plusSeconds(60);
 
     private Subject subject() {
-        return Subject.create(ID, "swr302", "  Software Requirements  ", null, null, CREATED);
+        return Subject.createSubject(ID, "swr302", "  Software Requirements  ", null, null, CREATED);
     }
 
     @Test
@@ -47,9 +47,9 @@ class SubjectTest {
     @Test
     void enforcesNameAndDescriptionBoundariesOnCreateAndEdit() {
         Subject boundary =
-                Subject.create(ID, "SWR302", "N".repeat(200), "D".repeat(2000), MANAGER, CREATED);
+                Subject.createSubject(ID, "SWR302", "N".repeat(200), "D".repeat(2000), MANAGER, CREATED);
         assertThat(boundary.description()).hasSize(2000);
-        assertThatThrownBy(() -> Subject.create(ID, "SWR302", "N".repeat(201), null, null, CREATED))
+        assertThatThrownBy(() -> Subject.createSubject(ID, "SWR302", "N".repeat(201), null, null, CREATED))
                 .isInstanceOf(ApiException.class)
                 .extracting("code")
                 .isEqualTo("SUBJECT_NAME_INVALID");

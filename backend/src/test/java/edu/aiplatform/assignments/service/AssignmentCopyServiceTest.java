@@ -32,7 +32,7 @@ class AssignmentCopyServiceTest {
         try {
             action.run();
         } catch (ApiException e) {
-            return e.code();
+            return e.readCode();
         }
         throw new AssertionError("Cần lỗi nghiệp vụ");
     }
@@ -49,7 +49,7 @@ class AssignmentCopyServiceTest {
         assertThat(copy.skeleton().blocks()).hasSize(1);
         List<AssignmentRubric> rubrics = f.rubricsOf(copy.id());
         assertThat(rubrics).hasSize(1).allSatisfy(r -> {
-            assertThat(r.locked()).isFalse();
+            assertThat(r.hasLocked()).isFalse();
             assertThat(r.complete()).isTrue();
         });
         assertThat(rubrics.get(0).id()).isNotIn(f.rubricsOf(open.id()).stream().map(AssignmentRubric::id).toList());
@@ -59,12 +59,12 @@ class AssignmentCopyServiceTest {
     @Test
     void newVersionOnlyFromClosedOrRetiredAndOneOpenVersion() {
         Assignment open = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
-        assertThat(code(() -> f.copies.newVersion(f.teacher, open.id()))).isEqualTo("ASSIGNMENT_STATUS_INVALID");
+        assertThat(code(() -> f.copies.createNewVersion(f.teacher, open.id()))).isEqualTo("ASSIGNMENT_STATUS_INVALID");
         Assignment closed = f.put(AssignmentScope.CLASS, AssignmentStatus.CLOSED, new DocumentModel(List.of()), true);
-        AssignmentViews.Detail next = f.copies.newVersion(f.teacher, closed.id());
+        AssignmentViews.Detail next = f.copies.createNewVersion(f.teacher, closed.id());
         assertThat(next.versionNo()).isEqualTo(closed.versionNo() + 1);
         assertThat(next.sourceAssignmentId()).isEqualTo(closed.id());
-        assertThat(code(() -> f.copies.newVersion(f.teacher, closed.id()))).isEqualTo("VERSION_ALREADY_OPEN");
+        assertThat(code(() -> f.copies.createNewVersion(f.teacher, closed.id()))).isEqualTo("VERSION_ALREADY_OPEN");
     }
 
     @Test

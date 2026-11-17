@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cx } from "./cx";
 import { Icon } from "./Icon";
+import { msg } from "@/i18n/msg";
 
 type Props = {
   /** Trang hiện tại, bắt đầu từ 0. */
@@ -20,7 +21,7 @@ type Props = {
 const NUMBER = new Intl.NumberFormat("vi-VN");
 
 /** Các trang cần hiện: đầu, cuối, quanh trang hiện tại; khoảng trống thành "…". */
-export function pageItems(current: number, count: number): (number | "gap")[] {
+export function listPageItems(current: number, count: number): (number | "gap")[] {
   if (count <= 7) return Array.from({ length: count }, (_, i) => i);
   const wanted = new Set([0, count - 1, current - 1, current, current + 1].filter((p) => p >= 0 && p < count));
   if (current <= 2) [1, 2, 3].forEach((p) => wanted.add(p));
@@ -41,12 +42,12 @@ const BOX =
   "pointer-coarse:h-11 pointer-coarse:min-w-11";
 
 /** Dòng "Hiển thị a–b trong N …" và nút chuyển trang, theo design. */
-export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "bản ghi", note, summary: showSummary = true, testId = "pagination" }: Props) {
+export function Pagination({ page, pageSize, total, onPageChange, itemLabel = msg("shared.ui.Pagination.records"), note, summary: showSummary = true, testId = "pagination" }: Props) {
   const count = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min(total, (page + 1) * pageSize);
   const summary =
-    total === 0 ? `Không có ${itemLabel}` : `Hiển thị ${NUMBER.format(from)}–${NUMBER.format(to)} trong ${NUMBER.format(total)} ${itemLabel}`;
+    total === 0 ? msg("shared.ui.Pagination.no", { itemLabel: String(itemLabel) }) : msg("shared.ui.Pagination.showingOf", { value: String(NUMBER.format(from)), value2: String(NUMBER.format(to)), value3: String(NUMBER.format(total)), itemLabel: String(itemLabel) });
 
   return (
     <div className={cx("flex flex-wrap items-center gap-3", showSummary ? "justify-between" : "justify-center")} data-testid={testId}>
@@ -57,10 +58,10 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
         </p>
       )}
       {count > 1 && (
-        <nav aria-label="Phân trang" className="flex max-w-full flex-wrap items-center justify-center gap-1.5">
+        <nav aria-label={msg("shared.ui.Pagination.pagination")} className="flex max-w-full flex-wrap items-center justify-center gap-1.5">
           <button
             type="button"
-            aria-label="Trang trước"
+            aria-label={msg("shared.ui.Pagination.previousPage")}
             disabled={page === 0}
             onClick={() => onPageChange(page - 1)}
             className={cx(BOX, "text-body hover:bg-sunken disabled:cursor-not-allowed disabled:opacity-35")}
@@ -68,7 +69,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
           >
             <Icon name="chevron_left" size={16} />
           </button>
-          {pageItems(page, count).map((item, i) =>
+          {listPageItems(page, count).map((item, i) =>
             item === "gap" ? (
               <span key={`gap-${i}`} className={cx(BOX, "text-muted")} aria-hidden>
                 …
@@ -77,6 +78,7 @@ export function Pagination({ page, pageSize, total, onPageChange, itemLabel = "b
               <button
                 key={item}
                 type="button"
+                aria-label={`Trang ${item + 1}`}
                 aria-current={item === page ? "page" : undefined}
                 onClick={() => onPageChange(item)}
                 className={cx(BOX, item === page ? "bg-primary-soft font-mono text-ink" : "font-mono text-muted hover:bg-sunken hover:text-ink")}

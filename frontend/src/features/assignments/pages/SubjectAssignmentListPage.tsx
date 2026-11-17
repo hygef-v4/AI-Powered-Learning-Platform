@@ -2,14 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 import { Alert, Button, PageHeader } from "@/shared/ui";
 import { assignmentsApi, type ListFilter } from "../api";
 import { ALL_ASSIGNMENTS, AssignmentListCard } from "../components/AssignmentListCard";
 import { CreateAssignmentDialog } from "../components/CreateAssignmentDialog";
-import { errorMessage } from "../model/format";
+import { describeError } from "../model/format";
 import { useAssignmentPage } from "../hooks/useAssignmentPage";
 import { rememberAssignmentsPage } from "../model/outline";
+import { msg } from "@/i18n/msg";
 
 type ManagedSubject = { id: string; code: string; name: string };
 
@@ -27,7 +28,7 @@ export function SubjectAssignmentListPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    apiFetch<ManagedSubject[]>("/api/v1/manager/subjects", { signal: controller.signal }).then(
+    fetchApi<ManagedSubject[]>("/api/v1/manager/subjects", { signal: controller.signal }).then(
       (list) => { if (!controller.signal.aborted) setSubjects(list); },
       (error) => { if (!controller.signal.aborted) setSubjectsError(error); },
     );
@@ -42,11 +43,11 @@ export function SubjectAssignmentListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Đề mẫu bài tập"
+      <PageHeader title={msg("assignments.pages.SubjectAssignmentListPage.assignmentTemplates")}
         actions={<Button variant="primary" icon="add" disabled={!subjectId || !page.data || page.data.ownerArchived}
-          onClick={() => setCreating(true)} data-testid="subject-assignment-create">Tạo đề mẫu</Button>} />
-      {subjectsError !== null && <Alert tone="danger" role="alert">{errorMessage(subjectsError)}</Alert>}
-      {subjects && subjects.length === 0 && <Alert tone="info">Bạn chưa được giao quản lý môn nào.</Alert>}
+          onClick={() => setCreating(true)} data-testid="subject-assignment-create">{msg("assignments.pages.SubjectAssignmentListPage.createTemplate")}</Button>} />
+      {subjectsError !== null && <Alert tone="danger" role="alert">{describeError(subjectsError)}</Alert>}
+      {subjects && subjects.length === 0 && <Alert tone="info">{msg("assignments.pages.SubjectAssignmentListPage.youHaveNotBeenAssigned")}</Alert>}
       {subjectId && <AssignmentListCard page={page} />}
       {creating && subjectId && (
         <CreateAssignmentDialog target={{ kind: "subject", subjectId }} onClose={() => setCreating(false)}

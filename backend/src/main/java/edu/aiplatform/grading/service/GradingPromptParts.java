@@ -131,10 +131,10 @@ final class GradingPromptParts {
 
     private static String resolveCurrentPartId(DocumentBlock block, boolean whole,
             Set<UUID> leaves, String currentPartId) {
-        if (!whole && headingLevel(block) > 0) {
+        if (!whole && resolveHeadingLevel(block) > 0) {
             return leaves.contains(block.id()) ? block.id().toString() : null;
         }
-        if (!whole && under(block) >= 0) {
+        if (!whole && countChildDepth(block) >= 0) {
             return null;
         }
         return currentPartId;
@@ -200,7 +200,7 @@ final class GradingPromptParts {
         return hasNonEmptyText(block);
     }
 
-    private static int headingLevel(DocumentBlock block) {
+    private static int resolveHeadingLevel(DocumentBlock block) {
         if (block.type() != BlockType.HEADING || block.content() == null) {
             return 0;
         }
@@ -219,10 +219,10 @@ final class GradingPromptParts {
         }
         return switch (block.type()) {
             case HEADING -> !isBlankText(content.path("text").asText(""));
-            case PARAGRAPH -> !isBlankText(runs(content.path("runs")));
+            case PARAGRAPH -> !isBlankText(joinRunText(content.path("runs")));
             case LIST -> {
                 for (JsonNode item : content.path("items")) {
-                    if (!isBlankText(runs(item.path("runs")))) {
+                    if (!isBlankText(joinRunText(item.path("runs")))) {
                         yield true;
                     }
                 }
@@ -239,7 +239,7 @@ final class GradingPromptParts {
         }
         for (JsonNode row : rows) {
             for (JsonNode cell : row) {
-                if (!isBlankText(runs(cell.path("runs")))) {
+                if (!isBlankText(joinRunText(cell.path("runs")))) {
                     return true;
                 }
             }
@@ -251,7 +251,7 @@ final class GradingPromptParts {
         return text == null || text.isBlank();
     }
 
-    private static String runs(JsonNode runs) {
+    private static String joinRunText(JsonNode runs) {
         if (runs == null || !runs.isArray()) {
             return "";
         }
@@ -262,7 +262,7 @@ final class GradingPromptParts {
         return sb.toString();
     }
 
-    private static int under(DocumentBlock block) {
+    private static int countChildDepth(DocumentBlock block) {
         if (block.type() == BlockType.HEADING || block.content() == null) {
             return -1;
         }

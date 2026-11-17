@@ -9,7 +9,7 @@
 - Yêu cầu: sửa Inception theo các quyết định trong cuộc trao đổi, không sửa code/Construction hoặc tài liệu Google.
 - Phạm vi: web desktop-first cho một tổ chức, focus Assignment tài liệu SWR/SWD; Quiz bổ trợ, Lesson mở rộng.
 - Đây là scope revision toàn hệ thống ở cấp tài liệu; approvals/checkpoints 09/10 là lịch sử, không phê duyệt thiết kế mới hoặc xác nhận runtime.
-- Catalog hiện hành: [use-cases.md](use-cases.md). Bảng tiếng Anh docs/usecase_table.md đã đồng bộ catalog current. Không dùng docs/history/use-cases-73.md hoặc Page-2 G21_Diagrams.drawio làm nguồn current; chúng là baseline lịch sử.
+- Catalog hiện hành: [use-cases.md](use-cases.md). Bảng tiếng Anh docs/usecase_table.md đã đồng bộ catalog current. Bảng 73 UC cũ không còn trong repo; không dùng Page-2 G21_Diagrams.drawio làm nguồn current, đó là baseline lịch sử.
 
 ## 2. Scope và phân quyền
 
@@ -100,6 +100,7 @@ Người soạn có quyền lựa chọn nguồn AI chung hoặc cá nhân; agen
 - Người soạn sửa/duyệt trước phát hành. Không AI tự publish, không thêm bài Code.
 - Không có AI hoặc hết quota vẫn soạn thủ công được; không tự đổi sang kết nối cá nhân.
 - Không mặc định mọi agent hỗ trợ MCP; hướng dẫn và compatibility phải được thử cho từng client.
+- Khi soạn Assignment bằng AI, người soạn chọn ngôn ngữ bản nháp: tiếng Việt, tiếng Anh hoặc tiếng Nhật; yêu cầu không gửi ngôn ngữ thì bản nháp bằng tiếng Anh (as-built 2026-11-16).
 
 ### FR-007 - Assignment và Quiz; phát hành và giao bài
 
@@ -158,6 +159,8 @@ Hỗ trợ hai kênh: ALAP gọi API (Gemini/OpenAI/Claude), và agent riêng g�
 
 Hệ thống phải lưu tệp học tập qua một dịch vụ lưu trữ riêng tư, cấp quyền truy cập ngắn hạn và không công khai trực tiếp object chứa dữ liệu học tập. Dung lượng tối đa theo mục đích do Administrator chỉnh trên Settings trong giới hạn hệ thống (FR-033). Riêng học liệu MATERIAL có định dạng cố định PDF, DOCX, PPTX, XLSX; Admin không bật/tắt từng định dạng học liệu. Các purpose khác giữ chính sách riêng. XLSX được xem/tải và trích nội dung làm nguồn AI theo quyền; không tự gọi AI khi upload.
 
+As-built 2026-11-16: dịch vụ lưu trữ là Google Drive theo một trong hai cách, Shared Drive với service account hoặc Drive cá nhân (Gmail) qua OAuth scope `drive.file`; có cả hai thì dùng Shared Drive. Môi trường demo có thể lưu trên đĩa máy chủ. Cấu hình ở [runbook deploy](../../../docs/runbooks/deploy-vps.md) mục 6.
+
 ### FR-014 - Audit nghiệp vụ và bảo mật
 
 Administrator xem/tìm Audit Log (UC 13) theo actor, action, object, result và thời gian; chỉ đọc, không sửa/xóa log. Vai trò khác không có quyền tra cứu audit toàn nền tảng.
@@ -189,7 +192,7 @@ Hệ thống tự lưu và khôi phục bản nháp theo người học và bài
 
 ### FR-019 - Theo dõi nộp bài và nhắc nhở
 
-Giảng viên phải xem được trạng thái đã nộp, chưa nộp, đang làm và nộp trễ của lớp được phân công. Hệ thống tự nhắc người học chưa nộp 24 giờ trước hạn (một lần mỗi bài); giảng viên không gửi nhắc thủ công.
+Giảng viên phải xem được trạng thái đã nộp, chưa nộp, đang làm và nộp trễ của lớp được phân công. Hệ thống tự nhắc người học chưa nộp 24 giờ trước hạn (một lần mỗi bài); giảng viên không gửi nhắc thủ công. Hạn được dời thì nhắc lại theo hạn mới, mỗi hạn một lần; bài mở khi còn dưới 24 giờ tới hạn thì không nhắc; worker gián đoạn thì lần quét sau nhắc bù, miễn chưa tới hạn (BR-U14-30…32).
 
 ### FR-020 - Công bố điểm hàng loạt
 
@@ -329,7 +332,7 @@ Có hướng dẫn kết nối API cho Gemini/OpenAI/Claude và hướng dẫn M
 
 ### FR-038 - Backup và khôi phục dữ liệu lên Google Drive
 
-U03 chỉ backup database: dump PostgreSQL nhất quán lên thư mục Drive riêng tư, tách lưu trữ đang dùng, giữ các bản trong 7 ngày gần nhất; Admin xem trạng thái/lịch sử (UC 66) và chỉnh lịch qua Settings. Archive mã hóa, khóa giải mã giữ riêng; không export secrets dạng rõ.
+U03 chỉ backup database: dump PostgreSQL nhất quán lên thư mục Drive riêng tư, tách lưu trữ đang dùng, giữ các bản trong 7 ngày gần nhất; Admin xem trạng thái/lịch sử (UC 66) và chỉnh lịch qua Settings. Archive mã hóa, khóa giải mã giữ riêng; không export secrets dạng rõ. As-built 2026-11-16: khóa mã hóa `U03_BACKUP_PUBLIC_KEY` là tùy chọn; để trống thì backup vẫn chạy và archive là bản dump không mã hóa, có cảnh báo trong log. Production nên đặt khóa.
 
 **Tiêu chí chấp nhận:**
 - Chỉ SUCCESS khi dump/upload/checksum đầy đủ; lỗi không xóa bản tốt gần nhất, retry hữu hạn, phát failure event cho U14.
@@ -377,6 +380,8 @@ Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc �
 - Giao diện người học phải desktop-first và tối ưu cho trình duyệt máy tính, đặc biệt canvas Draw.io và các luồng làm bài; tablet/mobile vẫn phải responsive cho đăng nhập, đọc nội dung, thông báo và xem kết quả nhưng không phải mục tiêu chính cho thao tác vẽ/làm bài phức tạp.
 - Các luồng cốt lõi phải dùng được bằng bàn phím và có nhãn hỗ trợ công nghệ trợ năng.
 - Thông báo lỗi phải nêu hành động khắc phục mà không lộ chi tiết nội bộ.
+- Giao diện có ba ngôn ngữ: tiếng Anh (mặc định), tiếng Việt và tiếng Nhật. Người dùng đổi ngôn ngữ ở màn đăng nhập hoặc menu tài khoản; lựa chọn lưu trong cookie `locale` một năm. Câu chưa dịch ở một ngôn ngữ thì hiện bằng tiếng Anh (as-built 2026-11-16).
+- Trang `/privacy` xem được khi chưa đăng nhập, nêu phạm vi truy cập Google Drive và dữ liệu hệ thống lưu (as-built 2026-11-16).
 
 ### NFR-003 - Quy mô và hiệu năng
 
@@ -398,7 +403,7 @@ Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc �
 - Secret triển khai truyền qua môi trường/secret store; API key cấu hình trong app lưu ở trường credentials được bảo vệ phía server, không raw Settings, không commit hoặc log. Không tự yêu cầu mã hóa toàn database; protected connection secrets là yêu cầu riêng.
 - Image và dependency phải khóa phiên bản; không dùng tag `latest` cho artifact triển khai.
 
-## 7. Yêu cầu bảo mật và quyền riêng tư
+## 8. Yêu cầu bảo mật và quyền riêng tư
 
 Phạm vi rút gọn cho đồ án sinh viên, chỉ giữ các control rẻ để làm và cần có. Giữ phạm vi extension rút gọn ở state; điều chỉnh boundary MCP/API key như FR-012/035.
 
@@ -430,7 +435,7 @@ Có global error handler; phản hồi lỗi không lộ stack trace, đường 
 
 Không thuộc scope mới; giữ ID lịch sử. Request AI/quota/MCP có idempotency theo FR-034/035/036, không kế thừa webhook payment.
 
-## 8. Yêu cầu vận hành
+## 9. Yêu cầu vận hành
 
 ### REL-001 - Triển khai
 
@@ -455,7 +460,7 @@ Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện 
 AI API chung do đơn vị vận hành cung cấp/tài trợ có quota và kill-switch; personal API/agent theo tài khoản người dùng. Không mặc định API miễn phí hoặc ngân sách trường đã có. Embedding/RAG chỉ extension với nguồn chi phí riêng.
 
 
-## 8. Security/resiliency và downstream
+## 10. Security/resiliency và downstream
 
 Giữ SECURITY-03/04/05/08/09/12/15 và RESILIENCY-04/06/10 theo phạm vi đã chọn; Property-Based Testing disabled. Áp dụng cho input/API/MCP, secret, audit, auth và lỗi an toàn ở cấp tài liệu; runtime chưa kiểm chứng. Backup/activity/email bổ sung không tự kích hoạt extension khác; archive bảo vệ dữ liệu, activity tối thiểu và kiểm quyền theo phạm vi đã chọn.
 
@@ -463,13 +468,13 @@ Construction design/shared infrastructure/code planning đã revision theo scope
 
 ## UC consolidation — 66 active UC
 
-UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U06 giữ quota service/data và connection/provider/credentials bảo vệ, test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U15 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U09 review, U08 activity). UC 35 soạn Individual (U07), UC 53 soạn Group (U12); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 50 MVP + 1 extension story, 15 units; D01–D04 đã chốt 2026-10-15; không tự phê duyệt runtime.
+UC 14 View Settings và UC 15 Edit Setting là hai UC riêng, primary U03; bao gồm UI cấu hình quota/API chung. U06 giữ quota service/data và connection/provider/credentials bảo vệ, test synthetic qua public port. UC 76/78/82 (ID cũ) không còn độc lập. UC 66 gộp UC 80 (ID cũ) (U15 dashboard, U03 backup); UC 42 gộp UC 81 (ID cũ) (U09 review, U08 activity). UC 35 soạn Individual (U07), UC 53 soạn Group (U12); Draw.io tùy chọn trong UC 39/56, UC 26 (ID cũ) retired. UC 79 (ID cũ) retired; UC 41 chỉ feedback Assignment Practice đã nộp. 54 MVP + 1 extension story (thêm US-GRP-007…010 ngày 2026-11-11), 15 units; D01–D04 đã chốt 2026-10-15; không tự phê duyệt runtime.
 
 ### Tiêu chí tích hợp UC đã gộp
 
-- UC14/15: chỉ Admin; UC14 chỉ xem, UC15 sửa/test/revoke; cập nhật Settings và quota là hai thao tác có owner/version/audit riêng, không hứa transaction nguyên tử xuyên unit. Quota service chưa sẵn sàng hiển thị unavailable, không báo cập nhật thành công giả. Institutional credentials are viewed/edited through UC14/15 via U13 protected connection records, not ordinary Settings plaintext.
-- UC 66: U14 đọc IBackupStatus của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
-- UC 42: U15 đọc IActivityQuery của U11 sau kiểm R3/R4, attempt/class/member và policy; policy off hiển thị monitoring disabled, không có sự kiện hiển thị no recorded data, lỗi port hiển thị unavailable. Không coi các trạng thái này là không gian lận hoặc 0 lần chắc chắn.
+- UC14/15: chỉ Admin; UC14 chỉ xem, UC15 sửa/test/revoke; cập nhật Settings và quota là hai thao tác có owner/version/audit riêng, không hứa transaction nguyên tử xuyên unit. Quota service chưa sẵn sàng hiển thị unavailable, không báo cập nhật thành công giả. Institutional credentials are viewed/edited through UC14/15 via U06 protected connection records, not ordinary Settings plaintext.
+- UC 66: U15 đọc IBackupStatus của U03; không đọc repository hoặc trả archive/secrets. Khi lỗi port hiển thị unavailable/last-known timestamp, không ghi SUCCESS hoặc không có backup giả.
+- UC 42: U09 đọc IActivityQuery của U08 sau kiểm R3/R4, attempt/class/member và policy; policy off hiển thị monitoring disabled, không có sự kiện hiển thị no recorded data, lỗi port hiển thị unavailable. Không coi các trạng thái này là không gian lận hoặc 0 lần chắc chắn.
 
 Construction current docs: [README](../../construction/README.md). Stage approvals/code progress không thay vì revision tài liệu.
 

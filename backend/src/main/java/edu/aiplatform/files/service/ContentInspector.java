@@ -21,7 +21,7 @@ public class ContentInspector {
     public Optional<FileType> detect(Path file, String originalFileName) {
         try (InputStream in = Files.newInputStream(file)) {
             String mediaType = tika.detect(in, originalFileName);
-            return FileType.fromMediaType(mediaType);
+            return FileType.findByMediaType(mediaType);
         } catch (IOException e) {
             return Optional.empty();
         }

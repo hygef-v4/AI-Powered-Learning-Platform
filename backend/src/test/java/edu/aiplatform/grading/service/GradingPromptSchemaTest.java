@@ -67,7 +67,7 @@ class GradingPromptSchemaTest {
                 .isEqualTo(itemId);
 
         var checker = new JsonSchemaChecker(json);
-        assertThat(checker.validSchema(schemaText)).isTrue();
+        assertThat(checker.isValidSchema(schemaText)).isTrue();
         String validOutput = """
             {
               "checks": {"%s": []},
@@ -95,7 +95,7 @@ class GradingPromptSchemaTest {
               }
             }
             """.formatted(rubricId, rubricId, itemId, rubricId, itemId);
-        assertThat(checker.check(schemaText, validOutput)).isEmpty();
+        assertThat(checker.validateValue(schemaText, validOutput)).isEmpty();
 
         // Regression: wire schema rejects null evidence without review. Empty evidence passes the schema
         // (F6, 2026-11-15) because normalization turns it into an explicit teacher review flag.
@@ -103,21 +103,21 @@ class GradingPromptSchemaTest {
         var feedbackItem = (com.fasterxml.jackson.databind.node.ObjectNode)
                 missingEvidence.path("structuredFeedback").path("items").get(0);
         feedbackItem.putNull("evidence");
-        assertThat(checker.check(schemaText, missingEvidence)).isPresent();
+        assertThat(checker.validateValue(schemaText, missingEvidence)).isPresent();
         feedbackItem.put("evidence", "");
-        assertThat(checker.check(schemaText, missingEvidence)).isEmpty();
+        assertThat(checker.validateValue(schemaText, missingEvidence)).isEmpty();
         var flagged = GradingPromptBuilder.sanitizeAndNormalizeProposal(missingEvidence.deepCopy(),
                 GradingJson.readRubrics(json, evaluation.rubricSnapshot), java.util.Set.of("q1"), json);
         assertThat(flagged.at("/structuredFeedback/items/0/requiresReview").asBoolean()).isTrue();
         feedbackItem.putNull("evidence");
         feedbackItem.put("requiresReview", true);
         feedbackItem.put("reviewReason", "Không đọc được nội dung sơ đồ; cần giáo viên kiểm tra.");
-        assertThat(checker.check(schemaText, missingEvidence)).isEmpty();
+        assertThat(checker.validateValue(schemaText, missingEvidence)).isEmpty();
         var validatedReview = new GradingProposalValidator(json).validateProposal(missingEvidence, GradingJson.readRubrics(json,
                 evaluation.rubricSnapshot), java.util.Set.of("q1"));
         assertThat(validatedReview.structuredFeedback().items().get(0).requiresReview()).isTrue();
         feedbackItem.put("reviewReason", "");
-        assertThat(checker.check(schemaText, missingEvidence)).isPresent();
+        assertThat(checker.validateValue(schemaText, missingEvidence)).isPresent();
     }
 
     @Test
@@ -138,7 +138,7 @@ class GradingPromptSchemaTest {
                 new BigDecimal("30"))));
         int tokens = builder.calculateMaxOutputTokens(maxSupportedEval);
         assertThat(tokens).isEqualTo(8192);
-        assertThat(new JsonSchemaChecker(json).validSchema(builder.buildOutputSchema(maxSupportedEval))).isTrue();
+        assertThat(new JsonSchemaChecker(json).isValidSchema(builder.buildOutputSchema(maxSupportedEval))).isTrue();
 
         var groupEval = new Evaluation();
         groupEval.kind = EvaluationKind.GROUP_DOCUMENT;
@@ -168,8 +168,8 @@ class GradingPromptSchemaTest {
                 List.of(new RubricCriterion(UUID.randomUUID(), "C", "", CriterionKind.values()[0], thirtyOneItems)),
                 new BigDecimal("31"))));
         assertThatThrownBy(() -> builder.calculateMaxOutputTokens(oversizedEval))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("RUBRIC_TOO_LARGE_FOR_AI"));
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.readCode()).isEqualTo("RUBRIC_TOO_LARGE_FOR_AI"));
         assertThatThrownBy(() -> builder.buildOutputSchema(oversizedEval))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("RUBRIC_TOO_LARGE_FOR_AI"));
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.readCode()).isEqualTo("RUBRIC_TOO_LARGE_FOR_AI"));
     }
 }

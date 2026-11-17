@@ -28,7 +28,7 @@ class ConnectionKeyUpgrade {
 
     @EventListener(ApplicationReadyEvent.class)
     void upgradeLegacyKeys() {
-        if (!keyCipher.configured()) {
+        if (!keyCipher.hasKeys()) {
             return;
         }
         int upgraded = 0;
@@ -56,7 +56,7 @@ class ConnectionKeyUpgrade {
         }
         String plain;
         try {
-            plain = keyCipher.decrypt(connection.encryptedKey());
+            plain = keyCipher.decryptKey(connection.readEncryptedKey());
         } catch (RuntimeException failure) {
             // Khóa mã hóa đã đổi hoặc bản mã hỏng: người dùng phải nhập lại khóa, không ghi gì.
             return Outcome.UNREADABLE;

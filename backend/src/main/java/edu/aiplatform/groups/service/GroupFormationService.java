@@ -37,7 +37,7 @@ public class GroupFormationService {
     @Transactional(readOnly = true)
     public FormationView loadFormation(Actor actor, UUID classId) {
         ClassRef ref = access.requireTeacher(actor, classId);
-        return FormationView.of(loadSettings(classId), ref, clock.instant());
+        return FormationView.createFormationView(loadSettings(classId), ref, clock.instant());
     }
 
     @Transactional
@@ -46,28 +46,28 @@ public class GroupFormationService {
         GroupAccess.requireEditable(ref);
         if (command == null || command.version() == null || command.enabled() == null || command.minSize() == null
                 || command.maxSize() == null) {
-            throw ApiException.badRequest("FORMATION_INVALID", "Cần gửi đủ cài đặt kèm version");
+            throw ApiException.createBadRequest("FORMATION_INVALID", "Cần gửi đủ cài đặt kèm version");
         }
         int minSize = command.minSize();
         int maxSize = command.maxSize();
         if (!GroupFormationSettings.isValidSize(minSize) || !GroupFormationSettings.isValidSize(maxSize)) {
-            throw ApiException.badRequest("FORMATION_SIZE_INVALID", "Sĩ số từ 2 đến 20");
+            throw ApiException.createBadRequest("FORMATION_SIZE_INVALID", "Sĩ số từ 2 đến 20");
         }
         if (minSize > maxSize) {
-            throw ApiException.badRequest("FORMATION_SIZE_INVALID", "Sĩ số tối thiểu không lớn hơn tối đa");
+            throw ApiException.createBadRequest("FORMATION_SIZE_INVALID", "Sĩ số tối thiểu không lớn hơn tối đa");
         }
         Instant now = clock.instant();
         if (command.enabled() && command.deadline() != null && !command.deadline().isAfter(now)) {
-            throw ApiException.badRequest("FORMATION_DEADLINE_PAST", "Hạn chót phải ở tương lai");
+            throw ApiException.createBadRequest("FORMATION_DEADLINE_PAST", "Hạn chót phải ở tương lai");
         }
         GroupFormationSettings before = loadSettings(classId);
         if (before.version() != command.version()) {
-            throw ApiException.conflict("FORMATION_VERSION_CONFLICT", "Cài đặt vừa được thay đổi, hãy tải lại");
+            throw ApiException.createConflict("FORMATION_VERSION_CONFLICT", "Cài đặt vừa được thay đổi, hãy tải lại");
         }
         GroupFormationSettings after = new GroupFormationSettings(classId, command.enabled(), minSize, maxSize,
                 command.deadline(), actor.accountId(), now, before.version() + 1);
         if (!proposalRepository.saveSettings(after, before.version())) {
-            throw ApiException.conflict("FORMATION_VERSION_CONFLICT", "Cài đặt vừa được thay đổi, hãy tải lại");
+            throw ApiException.createConflict("FORMATION_VERSION_CONFLICT", "Cài đặt vừa được thay đổi, hãy tải lại");
         }
         // Mở lại đợt: lời mời cũ không tự sống lại (BR-U12-72).
         if (!before.isOpen(ref.status(), now) && after.isOpen(ref.status(), now)) {
@@ -79,12 +79,12 @@ public class GroupFormationService {
         details.put("after", snapshot(after));
         audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GROUP_FORMATION_UPDATED", "CLASS",
                 classId.toString(), AuditResult.SUCCESS, null, details, now));
-        return FormationView.of(after, ref, now);
+        return FormationView.createFormationView(after, ref, now);
     }
 
     /** Cài đặt đã lưu, hoặc mặc định (tắt) khi lớp chưa có. */
     GroupFormationSettings loadSettings(UUID classId) {
-        return proposalRepository.findSettings(classId).orElseGet(() -> GroupFormationSettings.defaults(classId));
+        return proposalRepository.findSettings(classId).orElseGet(() -> GroupFormationSettings.createDefaults(classId));
     }
 
     private static Map<String, Object> snapshot(GroupFormationSettings s) {
@@ -104,8 +104,8 @@ public class GroupFormationService {
     public record FormationView(UUID classId, boolean enabled, int minSize, int maxSize, Instant deadline,
                                 long version, boolean open, String closedReason) {
 
-        static FormationView of(GroupFormationSettings s, ClassRef ref, Instant now) {
-            ClosedReason reason = s.closedReason(ref.status(), now);
+        static FormationView createFormationView(GroupFormationSettings s, ClassRef ref, Instant now) {
+            ClosedReason reason = s.resolveClosedReason(ref.status(), now);
             return new FormationView(s.classId(), s.enabled(), s.minSize(), s.maxSize(), s.deadline(), s.version(),
                     reason == null, reason == null ? null : reason.name());
         }

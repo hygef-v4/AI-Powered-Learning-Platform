@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button, cx } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 export const DRAWIO_ORIGIN = "https://embed.diagrams.net";
 const DRAWIO_URL = `${DRAWIO_ORIGIN}/?embed=1&ui=min&spin=1&proto=json&saveAndExit=1&noExitBtn=0&lang=vi`;
@@ -75,12 +76,12 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
   useEffect(() => {
     if (!dragging) return;
     const move = (event: MouseEvent) => setWidth(clampWidth(window.innerWidth - event.clientX));
-    const up = () => setDragging(false);
+    const stopDragging = () => setDragging(false);
     window.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", up);
+    window.addEventListener("mouseup", stopDragging);
     return () => {
       window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", up);
+      window.removeEventListener("mouseup", stopDragging);
     };
   }, [dragging]);
 
@@ -120,7 +121,7 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
       {dragging && <div aria-hidden className="fixed inset-0 z-[59] cursor-col-resize" />}
       <aside role="dialog" aria-label={title} data-testid="drawio-panel" style={{ width }}
         className="fixed inset-y-0 right-0 z-[60] flex animate-[drawio-slide-in_0.25s_ease] flex-col overflow-hidden border-l-2 border-line bg-surface shadow-[-4px_0_24px_rgba(0,0,0,0.18)]">
-        <div role="separator" aria-orientation="vertical" aria-label="Kéo để đổi độ rộng" title="Kéo để đổi độ rộng"
+        <div role="separator" aria-orientation="vertical" aria-label={msg("shared.document.DiagramEditor.dragToResize")} title={msg("shared.document.DiagramEditor.dragToResize")}
           onMouseDown={(event) => { event.preventDefault(); setDragging(true); }}
           className={cx("group absolute inset-y-0 left-0 z-[61] flex w-3.5 cursor-col-resize items-center justify-center hover:bg-primary/10",
             dragging && "bg-primary/20")}>
@@ -131,8 +132,8 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-line py-2 pr-3.5 pl-[22px]">
           <span className="truncate text-sm font-semibold text-ink">{title}</span>
           <div className="flex shrink-0 items-center gap-2">
-            {!ready && <span role="status" className="text-xs text-muted">Đang mở Draw.io…</span>}
-            <Button size="sm" onClick={onClose}>✕ Đóng</Button>
+            {!ready && <span role="status" className="text-xs text-muted">{msg("shared.document.DiagramEditor.openingDrawIo")}</span>}
+            <Button size="sm" onClick={onClose}>{msg("shared.document.DiagramEditor.close")}</Button>
           </div>
         </div>
         <div className="relative min-h-0 flex-1">

@@ -25,7 +25,7 @@ public class SubjectMutationGuard implements ISubjectMutationGuard {
     @Transactional(propagation = Propagation.MANDATORY)
     public SubjectRef lockActive(UUID subjectId, Duration timeout) {
         if (subjectId == null) {
-            throw ApiException.badRequest("SUBJECT_ID_REQUIRED", "Cần mã định danh môn học");
+            throw ApiException.createBadRequest("SUBJECT_ID_REQUIRED", "Cần mã định danh môn học");
         }
         SubjectLifecycleBudget budget = new SubjectLifecycleBudget(timeout);
         Subject subject;
@@ -33,14 +33,14 @@ public class SubjectMutationGuard implements ISubjectMutationGuard {
             subject =
                     subjectRepository
                             .findByIdForUpdate(subjectId, budget.calculateRemaining())
-                            .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+                            .orElseThrow(() -> ApiException.createNotFound("SUBJECT_NOT_FOUND"));
         } catch (DataAccessException failure) {
-            throw ApiException.unavailable(
+            throw ApiException.createUnavailable(
                     "SUBJECT_LIFECYCLE_UNAVAILABLE", "Chưa khóa được môn, vui lòng thử lại");
         }
         budget.calculateRemaining();
         if (subject.status() != SubjectStatus.ACTIVE) {
-            throw ApiException.conflict(
+            throw ApiException.createConflict(
                     "SUBJECT_ARCHIVED", "Môn đã lưu trữ, không thể tạo hoặc mở lớp");
         }
         return new SubjectRef(

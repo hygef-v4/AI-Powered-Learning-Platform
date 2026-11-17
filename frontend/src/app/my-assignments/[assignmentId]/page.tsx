@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { StudentAssignmentDetailPage } from "@/features/assignmentwork/pages/StudentAssignmentDetailPage";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Bài tập" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.myassignments.assignmentId.page.assignment") };
+}
 
 // U08 #39 Assignment Detail (classId trong query).
 export default async function Page({ params }: { params: Promise<{ assignmentId: string }> }) {

@@ -2,41 +2,42 @@
 
 import Link from "next/link";
 import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
-import { actionLabel, shortReason } from "@/features/audit/model/labels";
-import { Alert, PageHeader, TableFrame, Td, Th, cx } from "@/shared/ui";
+import { describeAction, shortenReason } from "@/features/audit/model/labels";
+import { Alert, Card, PageHeader, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { Donut, LineChart, Legend, Reveal, SegmentBar, StackedColumns, formatNumber, type Series } from "../components/DashboardCharts";
 import type { BackupRunItem, SecurityEventItem } from "../model/types";
 import { isDenied, useLiveOverview, type Overview } from "../hooks/useLiveOverview";
 import { BackupStatus } from "../components/BackupStatus";
+import { msg } from "@/i18n/msg";
 
 const ZONE = "Asia/Ho_Chi_Minh";
 const KINDS: Series[] = [
-  { name: "Cá nhân", color: "var(--c-info)" },
-  { name: "Nhóm", color: "var(--c-orange)" },
-  { name: "Luyện tập", color: "var(--c-success)" },
+  { name: msg("admindashboard.pages.AdminDashboardPage.individual"), color: "var(--c-info)" },
+  { name: msg("admindashboard.pages.AdminDashboardPage.group"), color: "var(--c-orange)" },
+  { name: msg("admindashboard.pages.AdminDashboardPage.practice"), color: "var(--c-success)" },
 ];
 const ROLES: (Series & { role: "STUDENT" | "TEACHER" | "SUBJECT_MANAGER" | "ADMIN" })[] = [
-  { role: "STUDENT", name: "Sinh viên", color: "var(--c-info)" },
-  { role: "TEACHER", name: "Giảng viên", color: "var(--c-orange)" },
-  { role: "SUBJECT_MANAGER", name: "Chủ nhiệm môn", color: "var(--c-success)" },
-  { role: "ADMIN", name: "Quản trị viên", color: "var(--c-accent)" },
+  { role: "STUDENT", name: msg("admindashboard.pages.AdminDashboardPage.students"), color: "var(--c-info)" },
+  { role: "TEACHER", name: msg("admindashboard.pages.AdminDashboardPage.lecturers"), color: "var(--c-orange)" },
+  { role: "SUBJECT_MANAGER", name: msg("admindashboard.pages.AdminDashboardPage.subjectManagers"), color: "var(--c-success)" },
+  { role: "ADMIN", name: msg("admindashboard.pages.AdminDashboardPage.administrators"), color: "var(--c-accent)" },
 ];
-const STATES = { open: { name: "Mở", color: "var(--c-info)" }, draft: { name: "Nháp", color: "var(--c-warning)" }, archived: { name: "Lưu trữ", color: "var(--c-faint)" } };
+const STATES = { open: { name: msg("admindashboard.pages.AdminDashboardPage.open"), color: "var(--c-info)" }, draft: { name: msg("admindashboard.pages.AdminDashboardPage.draft"), color: "var(--c-warning)" }, archived: { name: msg("admindashboard.pages.AdminDashboardPage.archived"), color: "var(--c-faint)" } };
 const BACKUP = {
-  ok: { name: "Thành công", color: "var(--c-success)" },
-  failed: { name: "Thất bại", color: "var(--c-danger)" },
-  running: { name: "Đang chạy", color: "var(--c-info)" },
-  none: { name: "Không chạy", color: "var(--c-line-strong)" },
+  ok: { name: msg("admindashboard.pages.AdminDashboardPage.succeeded"), color: "var(--c-success)" },
+  failed: { name: msg("admindashboard.pages.AdminDashboardPage.failed"), color: "var(--c-danger)" },
+  running: { name: msg("admindashboard.pages.AdminDashboardPage.running"), color: "var(--c-info)" },
+  none: { name: msg("admindashboard.pages.AdminDashboardPage.notRun"), color: "var(--c-line-strong)" },
 };
 const SECURITY_LABELS: Record<string, string> = {
-  ACCESS_DENIED: "Truy cập bị chặn",
-  LOGIN_FAILED: "Đăng nhập không thành",
-  LOGIN_BLOCKED_LOCKED: "Đăng nhập khi đang khóa",
-  ACCOUNT_TEMP_LOCKED: "Tài khoản bị khóa tạm",
-  AUTH_FAILED: "Xác thực thất bại",
-  ACCOUNT_DISABLED: "Vô hiệu hóa tài khoản",
-  PASSWORD_RESET: "Đặt lại mật khẩu",
+  ACCESS_DENIED: msg("admindashboard.pages.AdminDashboardPage.accessBlocked"),
+  LOGIN_FAILED: msg("admindashboard.pages.AdminDashboardPage.failedSignIn"),
+  LOGIN_BLOCKED_LOCKED: msg("admindashboard.pages.AdminDashboardPage.signInWhileLocked"),
+  ACCOUNT_TEMP_LOCKED: msg("admindashboard.pages.AdminDashboardPage.accountTemporarilyLocked"),
+  AUTH_FAILED: msg("admindashboard.pages.AdminDashboardPage.authenticationFailed"),
+  ACCOUNT_DISABLED: msg("admindashboard.pages.AdminDashboardPage.accountDisabled"),
+  PASSWORD_RESET: msg("admindashboard.pages.AdminDashboardPage.passwordReset"),
   MCP_TOKEN_REVEALED: "Xem token MCP",
 };
 
@@ -65,11 +66,11 @@ export function AdminDashboardPage() {
   const { data, error, live, retry } = useLiveOverview();
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title={<>Tổng quan{data && <LiveBadge live={live} />}</>} />
+      <PageHeader title={<>{msg("admindashboard.pages.AdminDashboardPage.overview")}{data && <LiveBadge live={live} />}</>} />
       {!data && !error && <PageLoading />}
       {error !== null && !data && (isDenied(error)
-        ? <Alert tone="danger" role="alert">Không có quyền xem tổng quan hệ thống.</Alert>
-        : <PageLoadError onRetry={retry}>Không tải được tổng quan hệ thống.</PageLoadError>)}
+        ? <Alert tone="danger" role="alert">{msg("admindashboard.pages.AdminDashboardPage.youDoNotHavePermission")}</Alert>
+        : <PageLoadError onRetry={retry}>{msg("admindashboard.pages.AdminDashboardPage.couldNotLoadTheSystem")}</PageLoadError>)}
       {data && <Board data={data} />}
     </div>
   );
@@ -84,7 +85,7 @@ function LiveBadge({ live }: { live: boolean }) {
         {live && <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60 motion-reduce:animate-none" />}
         <span className={cx("relative inline-flex size-2 rounded-full", live ? "bg-success" : "bg-warning")} />
       </span>
-      {live ? "Trực tiếp" : "Mất kết nối"}
+      {live ? msg("admindashboard.pages.AdminDashboardPage.live") : msg("admindashboard.pages.AdminDashboardPage.disconnected")}
     </span>
   );
 }
@@ -98,44 +99,44 @@ function Board({ data }: { data: Overview }) {
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi tone="info" label="Tài khoản hoạt động" value={accounts?.activeTotal} testId="dashboard-accounts" order={0}>
+        <Kpi tone="info" label={msg("admindashboard.pages.AdminDashboardPage.activeAccounts")} value={accounts?.activeTotal} testId="dashboard-accounts" order={0}>
           {change !== null && (
             <span className={change > 0 ? "text-success" : change < 0 ? "text-danger" : undefined}>
-              {change === 0 ? "Không đổi hôm nay" : `${change > 0 ? "+" : "−"}${formatNumber(Math.abs(change))} hôm nay`}
+              {change === 0 ? msg("admindashboard.pages.AdminDashboardPage.noChangeToday") : msg("admindashboard.pages.AdminDashboardPage.today", { value: String(change > 0 ? "+" : "−"), value2: String(formatNumber(Math.abs(change))) })}
             </span>
           )}
         </Kpi>
-        <Kpi tone="orange" label="Môn đang mở" value={subjects?.ACTIVE} testId="dashboard-subjects" order={1}>
-          {subjects && <span className="text-danger">{formatNumber(subjects.ARCHIVED)} lưu trữ</span>}
+        <Kpi tone="orange" label={msg("admindashboard.pages.AdminDashboardPage.openSubjects")} value={subjects?.ACTIVE} testId="dashboard-subjects" order={1}>
+          {subjects && <span className="text-danger">{formatNumber(subjects.ARCHIVED)} {msg("admindashboard.pages.AdminDashboardPage.archived2")}</span>}
         </Kpi>
-        <Kpi tone="success" label="Lớp đang mở" value={classes?.OPEN} testId="dashboard-classes" order={2}>
-          {classes && <><span className="text-danger">{formatNumber(classes.ARCHIVED)} lưu trữ</span> · <span className="text-warning">{formatNumber(classes.DRAFT)} nháp</span></>}
+        <Kpi tone="success" label={msg("admindashboard.pages.AdminDashboardPage.openClasses")} value={classes?.OPEN} testId="dashboard-classes" order={2}>
+          {classes && <><span className="text-danger">{formatNumber(classes.ARCHIVED)} {msg("admindashboard.pages.AdminDashboardPage.archived2")}</span> · <span className="text-warning">{formatNumber(classes.DRAFT)} {msg("admindashboard.pages.AdminDashboardPage.draft2")}</span></>}
         </Kpi>
-        <Kpi tone="warning" label="Token AI hệ thống" value={usage?.todayTokens} loading={loading.usage} testId="dashboard-tokens" order={3}>
-          {usage && (usage.globalDayTokens === null ? "Không giới hạn" : `/ ${formatNumber(usage.globalDayTokens)}`)}
+        <Kpi tone="warning" label={msg("admindashboard.pages.AdminDashboardPage.systemAiTokens")} value={usage?.todayTokens} loading={loading.usage} testId="dashboard-tokens" order={3}>
+          {usage && (usage.globalDayTokens === null ? msg("admindashboard.pages.AdminDashboardPage.unlimited") : `/ ${formatNumber(usage.globalDayTokens)}`)}
         </Kpi>
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-        <Panel title="Bài tập" subtitle="Trong 7 ngày gần nhất" testId="dashboard-assignments" order={4}>
+        <Panel title={msg("admindashboard.pages.AdminDashboardPage.assignments")} subtitle={msg("admindashboard.pages.AdminDashboardPage.inTheLast7Days")} testId="dashboard-assignments" order={4}>
           {activity?.assignmentsByDay.data ? <>
             <Legend series={KINDS} className="mb-2" />
-            <Reveal label="Số bài tập được giao mỗi ngày theo loại">
+            <Reveal label={msg("admindashboard.pages.AdminDashboardPage.assignmentsGivenPerDayBy")}>
               {(shown) => <StackedColumns shown={shown} series={KINDS}
                 days={activity.assignmentsByDay.data!.map((d) => ({ label: formatShortDay(d.day), values: [d.individual, d.group, d.practice] }))} />}
             </Reveal>
           </> : <Unavailable loading={loading.activity} />}
         </Panel>
-        <Panel title="Sao lưu" subtitle="Trong 30 ngày gần nhất" testId="dashboard-backups" order={5}>
+        <Panel title={msg("admindashboard.pages.AdminDashboardPage.backups")} subtitle={msg("admindashboard.pages.AdminDashboardPage.inTheLast30Days")} testId="dashboard-backups" order={5}>
           {backups ? <BackupCalendar runs={backups} /> : <Unavailable loading={loading.backups} />}
           <BackupStatus backup={dashboard.backup} />
         </Panel>
       </div>
 
       <div className="grid gap-3 md:grid-cols-3">
-        <Panel title="Tài khoản" subtitle="Theo vai trò" testId="dashboard-roles" order={6}>
+        <Panel title={msg("admindashboard.pages.AdminDashboardPage.accounts")} subtitle={msg("admindashboard.pages.AdminDashboardPage.byRole")} testId="dashboard-roles" order={6}>
           {accounts ? (
-            <Reveal label="Tài khoản theo vai trò" className="flex items-center gap-4">
+            <Reveal label={msg("admindashboard.pages.AdminDashboardPage.accountsByRole")} className="flex items-center gap-4">
               {(shown) => <>
                 <Donut shown={shown} items={ROLES.map((r) => ({ ...r, value: Object.values(accounts.byRoleAndStatus[r.role] ?? {}).reduce((a, b) => a + b, 0) }))} />
                 <Legend series={ROLES} className="flex-col" />
@@ -143,30 +144,30 @@ function Board({ data }: { data: Overview }) {
             </Reveal>
           ) : <Unavailable />}
         </Panel>
-        <Panel title="Lớp và môn học" subtitle="Theo trạng thái" testId="dashboard-states" order={7}>
+        <Panel title={msg("admindashboard.pages.AdminDashboardPage.classesAndSubjects")} subtitle={msg("admindashboard.pages.AdminDashboardPage.byStatus")} testId="dashboard-states" order={7}>
           {classes || subjects ? (
-            <Reveal label="Lớp và môn học theo trạng thái" className="flex flex-col gap-2.5">
+            <Reveal label={msg("admindashboard.pages.AdminDashboardPage.classesAndSubjectsByStatus")} className="flex flex-col gap-2.5">
               {(shown) => <>
-                <span className="text-xs text-muted">Lớp</span>
+                <span className="text-xs text-muted">{msg("admindashboard.pages.AdminDashboardPage.classes")}</span>
                 {classes ? <SegmentBar shown={shown} items={[{ ...STATES.open, value: classes.OPEN }, { ...STATES.draft, value: classes.DRAFT }, { ...STATES.archived, value: classes.ARCHIVED }]} /> : <Unavailable />}
-                <span className="mt-1 text-xs text-muted">Môn học</span>
+                <span className="mt-1 text-xs text-muted">{msg("admindashboard.pages.AdminDashboardPage.subjects")}</span>
                 {subjects ? <SegmentBar shown={shown} items={[{ ...STATES.open, value: subjects.ACTIVE }, { ...STATES.archived, value: subjects.ARCHIVED }]} /> : <Unavailable />}
                 <Legend series={[STATES.open, STATES.draft, STATES.archived]} className="mt-1" />
               </>}
             </Reveal>
           ) : <Unavailable />}
         </Panel>
-        <Panel title="Token AI Hệ thống" subtitle="Theo ngày" testId="dashboard-token-trend" order={8}>
+        <Panel title={msg("admindashboard.pages.AdminDashboardPage.systemAiTokens2")} subtitle={msg("admindashboard.pages.AdminDashboardPage.byDay")} testId="dashboard-token-trend" order={8}>
           {usage ? (
-            <Reveal label="Token AI hệ thống theo ngày">
+            <Reveal label={msg("admindashboard.pages.AdminDashboardPage.systemAiTokensByDay")}>
               {(shown) => <LineChart shown={shown} color="var(--c-info)" points={usage.byDay.map((d) => ({ label: formatShortDay(d.day), value: d.tokens }))} />}
             </Reveal>
           ) : <Unavailable loading={loading.usage} />}
         </Panel>
       </div>
 
-      <Panel title="Hoạt động đáng ngờ" subtitle="Các sự việc đáng chú ý gần đây" testId="dashboard-security" order={9}
-        action={<Link href="/admin/audit" className="text-[13px] font-semibold text-primary-ink hover:underline">Mở Nhật ký</Link>}>
+      <Panel title={msg("admindashboard.pages.AdminDashboardPage.suspiciousActivity")} subtitle={msg("admindashboard.pages.AdminDashboardPage.recentNotableEvents")} testId="dashboard-security" order={9}
+        action={<Link href="/admin/audit" className="text-[13px] font-semibold text-primary-ink hover:underline">{msg("admindashboard.pages.AdminDashboardPage.openAuditLog")}</Link>}>
         {activity?.securityEvents.data ? <SecurityTable events={activity.securityEvents.data} /> : <Unavailable loading={loading.activity} />}
       </Panel>
     </>
@@ -222,15 +223,15 @@ function Kpi({ tone, label, value, loading, testId, order, children }: { tone: k
       className={cx("flex min-w-0 flex-col gap-1 rounded-xl px-5 py-4", ENTER, KPI_TONES[tone])}>
       <h2 className="text-[13px] font-semibold">{label}</h2>
       <p className="font-display text-[34px] leading-none font-bold tracking-[-0.02em] tabular-nums">{value === undefined ? "—" : <CountUp value={value} />}</p>
-      <p className="min-h-[1.25rem] text-[13px] font-semibold">{loading ? "Đang tải…" : value === undefined ? "Không khả dụng" : children}</p>
+      <p className="min-h-[1.25rem] text-[13px] font-semibold">{loading ? msg("admindashboard.pages.AdminDashboardPage.loading") : value === undefined ? msg("admindashboard.pages.AdminDashboardPage.unavailable") : children}</p>
     </section>
   );
 }
 
 function Panel({ title, subtitle, action, testId, order, children }: { title: string; subtitle: string; action?: ReactNode; testId: string; order: number; children: ReactNode }) {
   return (
-    <section aria-label={title} data-testid={testId} style={createEnterDelay(order)}
-      className={cx("flex min-w-0 flex-col gap-3 rounded-xl border border-line bg-surface p-5", ENTER)}>
+    <Card as="section" padding="lg" aria-label={title} data-testid={testId} style={createEnterDelay(order)}
+      className={cx("flex min-w-0 flex-col gap-3", ENTER)}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-[16px] font-bold text-ink">{title}</h2>
@@ -239,28 +240,28 @@ function Panel({ title, subtitle, action, testId, order, children }: { title: st
         {action}
       </div>
       {children}
-    </section>
+    </Card>
   );
 }
 
 function Unavailable({ loading = false }: { loading?: boolean }) {
-  return <p role={loading ? "status" : undefined} className="py-6 text-center text-[13px] text-muted">{loading ? "Đang tải…" : "Không khả dụng"}</p>;
+  return <p role={loading ? "status" : undefined} className="py-6 text-center text-[13px] text-muted">{loading ? msg("admindashboard.pages.AdminDashboardPage.loading") : msg("admindashboard.pages.AdminDashboardPage.unavailable")}</p>;
 }
 
 /** Mỗi ô một ngày trong 30 ngày gần nhất (7 ô một hàng, cũ trước), màu theo kết quả sao lưu của ngày đó. */
 function BackupCalendar({ runs }: { runs: BackupRunItem[] }) {
   const byDay = new Map(runs.map((run) => [run.scheduledFor, run]));
   const days = Array.from({ length: 30 }, (_, i) => formatVietnamDay(29 - i));
-  const stateOf = (day: string) => {
+  const resolveDayState = (day: string) => {
     const run = byDay.get(day);
     if (!run) return BACKUP.none;
     return run.state === "SUCCESS" ? BACKUP.ok : run.state === "FAILED" ? BACKUP.failed : BACKUP.running;
   };
   return (
     <div className="flex flex-col gap-3">
-      <ul className="grid grid-cols-7 gap-1.5" aria-label="Kết quả sao lưu theo ngày">
+      <ul className="grid grid-cols-7 gap-1.5" aria-label={msg("admindashboard.pages.AdminDashboardPage.backupResultsByDay")}>
         {days.map((day, i) => {
-          const state = stateOf(day);
+          const state = resolveDayState(day);
           return (
             <li key={day} title={`${formatShortDay(day)}: ${state.name}`} aria-label={`${formatShortDay(day)}: ${state.name}`}
               className="aspect-square animate-pop rounded-md transition-transform duration-150 hover:scale-110 motion-reduce:animate-none motion-reduce:transition-none"
@@ -274,21 +275,21 @@ function BackupCalendar({ runs }: { runs: BackupRunItem[] }) {
 }
 
 function SecurityTable({ events }: { events: SecurityEventItem[] }) {
-  if (events.length === 0) return <p className="py-6 text-center text-[13px] text-muted">Không có hoạt động đáng ngờ trong 30 ngày qua.</p>;
+  if (events.length === 0) return <p className="py-6 text-center text-[13px] text-muted">{msg("admindashboard.pages.AdminDashboardPage.noSuspiciousActivityInThe")}</p>;
   return (
     <TableFrame filledHead className="[&_table]:min-w-[640px] [&_table]:table-fixed">
       <colgroup><col className="w-[130px]" /><col className="w-[28%]" /><col /><col className="w-[160px]" /></colgroup>
-      <thead><tr><Th>Thời gian</Th><Th>Sự việc</Th><Th>Tài khoản</Th><Th>Lý do</Th></tr></thead>
+      <thead><tr><Th>{msg("admindashboard.pages.AdminDashboardPage.time")}</Th><Th>{msg("admindashboard.pages.AdminDashboardPage.event")}</Th><Th>{msg("admindashboard.pages.AdminDashboardPage.accounts")}</Th><Th>{msg("admindashboard.pages.AdminDashboardPage.reason")}</Th></tr></thead>
       <tbody>
         {events.slice(0, 10).map((event, i) => {
           const time = formatShortTime(event.occurredAt);
-          const label = SECURITY_LABELS[event.action] ?? `Bị từ chối: ${actionLabel(event.action)}`;
+          const label = SECURITY_LABELS[event.action] ?? msg("admindashboard.pages.AdminDashboardPage.rejected", { value: String(describeAction(event.action)) });
           return (
             <tr key={`${event.occurredAt}-${i}`}>
               <Td className="text-muted tabular-nums">{`${time.hour}:${time.minute} ${time.day}/${time.month}`}</Td>
               <Td className="[overflow-wrap:anywhere]">{label}</Td>
-              <Td className="[overflow-wrap:anywhere]">{event.account ?? <span className="text-muted">Không rõ</span>}</Td>
-              <Td className={cx("[overflow-wrap:anywhere]", event.reason ? "text-danger" : "text-muted")} title={event.reason ?? undefined}>{event.reason ? shortReason(event.reason) : "—"}</Td>
+              <Td className="[overflow-wrap:anywhere]">{event.account ?? <span className="text-muted">{msg("admindashboard.pages.AdminDashboardPage.unknown")}</span>}</Td>
+              <Td className={cx("[overflow-wrap:anywhere]", event.reason ? "text-danger" : "text-muted")} title={event.reason ?? undefined}>{event.reason ? shortenReason(event.reason) : "—"}</Td>
             </tr>
           );
         })}

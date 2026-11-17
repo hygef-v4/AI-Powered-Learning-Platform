@@ -178,7 +178,7 @@ class SubjectAdminReadTest {
                 accountLookup.getContact(
                         managerId)).thenThrow(new IllegalStateException("unavailable"));
         when(subjectClasses.countClasses(any()))
-                .thenThrow(ApiException.unavailable("SUBJECT_CLASSES_UNAVAILABLE", "retry"));
+                .thenThrow(ApiException.createUnavailable("SUBJECT_CLASSES_UNAVAILABLE", "retry"));
         var detail = subjectAdminService.loadSubject(admin, id);
         assertThat(detail.id()).isEqualTo(id);
         assertThat(detail.managerId()).isEqualTo(managerId);
@@ -229,7 +229,7 @@ class SubjectAdminReadTest {
     }
 
     private Subject subject(UUID subjectId, String code, UUID manager) {
-        return Subject.create(
+        return Subject.createSubject(
                 subjectId,
                 code,
                 "Name",
@@ -250,6 +250,6 @@ class SubjectAdminReadTest {
     private void assertCode(Runnable call, String code) {
         assertThatThrownBy(call::run)
                 .isInstanceOfSatisfying(
-                        ApiException.class, error -> assertThat(error.code()).isEqualTo(code));
+                        ApiException.class, error -> assertThat(error.readCode()).isEqualTo(code));
     }
 }

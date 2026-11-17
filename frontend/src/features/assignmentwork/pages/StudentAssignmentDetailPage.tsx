@@ -7,16 +7,17 @@ import { SlotOutlet } from "@/shared/slots/SlotOutlet";
 import { Alert, Button, ButtonLink, PageHeader, Pill, Section } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { workApi } from "../api";
-import { errorMessage, formatDateTime, historyOpen } from "../model/format";
+import { describeError, formatDateTime, canOpenHistory } from "../model/format";
 import { ResultSummaryCard } from "../components/ResultSummaryCard";
 import { assignmentMaterialSections, groupProgressSections, groupWorkEntries } from "../slots";
 import { myStatusLabels, myStatusTones, type AttemptSummary, type StudentDetail } from "../model/types";
-import { rowStatus, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { resolveRowStatus, useStudentAssignments } from "../hooks/useStudentAssignments";
+import { msg } from "@/i18n/msg";
 
 /** Loại bài như trên bảng Bài tập: luyện tập là loại riêng, còn lại theo cá nhân hay nhóm. */
-function kindLabel(detail: StudentDetail) {
-  if (detail.gradingMode === "PRACTICE") return "Luyện tập";
-  return detail.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân";
+function describeKind(detail: StudentDetail) {
+  if (detail.gradingMode === "PRACTICE") return msg("assignmentwork.pages.StudentAssignmentDetailPage.practice");
+  return detail.submissionMode === "GROUP" ? msg("assignmentwork.pages.StudentAssignmentDetailPage.group") : msg("assignmentwork.pages.StudentAssignmentDetailPage.individual");
 }
 
 /**
@@ -64,9 +65,9 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
     }
   }
 
-  if (!classId) return <Alert tone="danger" role="alert">Thiếu lớp của bài.</Alert>;
-  if (error && !detail) return <PageLoadError>{errorMessage(error)}</PageLoadError>;
-  if (!detail) return <PageLoading label="Đang tải bài tập…" />;
+  if (!classId) return <Alert tone="danger" role="alert">{msg("assignmentwork.pages.StudentAssignmentDetailPage.theAssignmentsClassIsMissing")}</Alert>;
+  if (error && !detail) return <PageLoadError>{describeError(error)}</PageLoadError>;
+  if (!detail) return <PageLoading label={msg("assignmentwork.pages.StudentAssignmentDetailPage.loadingAssignment")} />;
 
   // Quay lại về danh sách kèm `focus`: danh sách tự mở đúng tab của bài theo trạng thái mới nhất lúc quay về
   // (đang làm mà đã hết hạn thì bài đã tự nộp, sẽ nằm ở tab Đã nộp).
@@ -77,9 +78,9 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
   const submitted = !!row && (row.submittedCount > 0 || !!row.group?.submitted);
   // Hạn nộp trễ chỉ có nghĩa với bài chưa nộp mà đã quá hạn nộp.
   const lateDeadline = pastDeadline && !!detail.lateUntil && !submitted;
-  const status = row ? rowStatus(row) : null;
+  const status = row ? resolveRowStatus(row) : null;
   const latest = detail.latestAttempt;
-  const statusKey = (a: { status: string; late: boolean }) => (a.status === "IN_PROGRESS" ? "IN_PROGRESS" : a.late ? "SUBMITTED_LATE" : "SUBMITTED");
+  const resolveStatusKey = (a: { status: string; late: boolean }) => (a.status === "IN_PROGRESS" ? "IN_PROGRESS" : a.late ? "SUBMITTED_LATE" : "SUBMITTED");
   // Bài luyện tập: mỗi lượt một dòng, có bộ đếm lượt (chỉ ở trang này). Bài cá nhân (yêu cầu 2026-11-10): chỉ một bài
   // nộp, nộp lại là ghi đè bản cũ, không đếm số lần: một dòng là bản đang sửa nếu có, không thì bản nộp mới nhất.
   const practice = detail.gradingMode === "PRACTICE";
@@ -94,22 +95,22 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
     : (submittedOnly ? submittedOnly.slice(0, 1) : latestSubmitted ? [latestSubmitted] : []).map((a) => ({ ...a, attemptNo: null }));
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader backHref={back} title={detail.title} breadcrumb={[{ label: "Bài tập", href: back }, { label: detail.title }]} />
-      {error !== null && <Alert tone="danger" role="alert">{errorMessage(error)}</Alert>}
+      <PageHeader backHref={back} title={detail.title} breadcrumb={[{ label: msg("assignmentwork.pages.StudentAssignmentDetailPage.assignment"), href: back }, { label: detail.title }]} />
+      {error !== null && <Alert tone="danger" role="alert">{describeError(error)}</Alert>}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-4">
-          <Section title="Thông tin bài">
+          <Section title={msg("assignmentwork.pages.StudentAssignmentDetailPage.assignmentInformation")}>
             <dl className="grid gap-x-6 gap-y-3 text-[13px] sm:grid-cols-2" data-testid="assignment-info">
-              <div><dt className="text-xs text-muted">Loại</dt><dd className="mt-0.5 font-semibold text-ink">{kindLabel(detail)}</dd></div>
-              <div><dt className="text-xs text-muted">Trạng thái</dt><dd className="mt-0.5">{status ? <Pill tone={status.tone}>{status.label}</Pill> : <span className="text-muted">—</span>}</dd></div>
+              <div><dt className="text-xs text-muted">{msg("assignmentwork.pages.StudentAssignmentDetailPage.type")}</dt><dd className="mt-0.5 font-semibold text-ink">{describeKind(detail)}</dd></div>
+              <div><dt className="text-xs text-muted">{msg("assignmentwork.pages.StudentAssignmentDetailPage.status")}</dt><dd className="mt-0.5">{status ? <Pill tone={status.tone}>{status.label}</Pill> : <span className="text-muted">—</span>}</dd></div>
               <div>
-                <dt className="text-xs text-muted">{lateDeadline ? "Hạn nộp trễ" : "Hạn nộp"}</dt>
+                <dt className="text-xs text-muted">{lateDeadline ? msg("assignmentwork.pages.StudentAssignmentDetailPage.lateDeadline") : msg("assignmentwork.pages.StudentAssignmentDetailPage.deadline")}</dt>
                 <dd className="mt-0.5 font-mono font-semibold text-ink">{formatDateTime(lateDeadline ? detail.lateUntil : detail.closesAt)}</dd>
               </div>
-              <div><dt className="text-xs text-muted">Số bài</dt><dd className="mt-0.5 font-semibold text-ink">{detail.partCount}</dd></div>
+              <div><dt className="text-xs text-muted">{msg("assignmentwork.pages.StudentAssignmentDetailPage.work")}</dt><dd className="mt-0.5 font-semibold text-ink">{detail.partCount}</dd></div>
             </dl>
             {detail.activityMonitoringEnabled && detail.activityNotice && (
-              <Alert tone="info" title="Bài có ghi nhận hoạt động">{detail.activityNotice}</Alert>
+              <Alert tone="info" title={msg("assignmentwork.pages.StudentAssignmentDetailPage.activityIsMonitored")}>{detail.activityNotice}</Alert>
             )}
           </Section>
           {/* Bài nhóm: thẻ Tiến độ ngay dưới Thông tin; nhóm nộp rồi thì thành thẻ Kết quả (khi đã có điểm). */}
@@ -119,20 +120,20 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
             detailsHref={`${history}&attempt=${encodeURIComponent(gradedAttempt.attemptId)}`} />}
         </div>
         {/* Chỉ bài luyện tập có bộ đếm lượt; bài cá nhân, nhóm không đếm số lần nộp (yêu cầu 2026-11-10). */}
-        <Section title="Làm bài" actions={practice
-          ? <span className="text-[13px] text-muted tabular-nums" title="Lượt đã dùng / tối đa">{detail.attemptsUsed}/{detail.maxAttempts ?? 1} lượt</span>
+        <Section title={msg("assignmentwork.pages.StudentAssignmentDetailPage.doAssignment")} actions={practice
+          ? <span className="text-[13px] text-muted tabular-nums" title={msg("assignmentwork.pages.StudentAssignmentDetailPage.attemptsUsedMax")}>{detail.attemptsUsed}/{detail.maxAttempts ?? 1} {msg("assignmentwork.pages.StudentAssignmentDetailPage.attempts")}</span>
           : undefined}>
           {rowsOfAttempts.length > 0 && (
             // Mỗi lượt một dòng; bấm để mở lịch sử nộp bài đúng lượt đó (lượt đang làm thì mở trang làm bài).
-            <ul aria-label={practice ? "Các lượt làm" : "Bài nộp"} className="-mx-2 flex flex-col">
+            <ul aria-label={practice ? msg("assignmentwork.pages.StudentAssignmentDetailPage.attempts2") : msg("assignmentwork.pages.StudentAssignmentDetailPage.submission")} className="-mx-2 flex flex-col">
               {rowsOfAttempts.map((a) => {
-                const key = statusKey(a);
+                const key = resolveStatusKey(a);
                 const href = a.status === "IN_PROGRESS" ? `/attempts/${encodeURIComponent(a.attemptId)}` : `${history}&attempt=${encodeURIComponent(a.attemptId)}`;
                 return (
                   <li key={a.attemptId}>
                     <Link href={href} className="row-interactive flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-[13px] hover:bg-shell">
                       <span className="flex min-w-0 flex-col">
-                        {practice && a.attemptNo !== null && <span className="font-semibold text-ink">Lượt {a.attemptNo}</span>}
+                        {practice && a.attemptNo !== null && <span className="font-semibold text-ink">{msg("assignmentwork.pages.StudentAssignmentDetailPage.attempt")}{a.attemptNo}</span>}
                         <span className="font-mono text-xs text-muted">{formatDateTime(a.submittedAt ?? a.lastSavedAt ?? a.startedAt)}</span>
                       </span>
                       <Pill tone={myStatusTones[key]}>{myStatusLabels[key]}</Pill>
@@ -145,16 +146,16 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
           {detail.submissionMode === "GROUP" ? (
             <SlotOutlet slot={groupWorkEntries} props={{ assignmentId, classId }} />
           ) : detail.inProgressAttemptId ? (
-            <ButtonLink variant="primary" href={`/attempts/${encodeURIComponent(detail.inProgressAttemptId)}`}>Tiếp tục làm bài</ButtonLink>
+            <ButtonLink variant="primary" href={`/attempts/${encodeURIComponent(detail.inProgressAttemptId)}`}>{msg("assignmentwork.pages.StudentAssignmentDetailPage.continueWorking")}</ButtonLink>
           ) : detail.canStart ? (
             // Còn hạn nộp (hoặc hạn nộp trễ); bài luyện tập còn lượt. Bài cá nhân đã nộp thì sửa bài đã nộp rồi nộp lại (ghi đè).
             <Button variant="primary" onClick={() => void start()} disabled={starting} data-testid="start-attempt">
-              {!practice && detail.attemptsUsed > 0 ? "Sửa và nộp lại" : "Bắt đầu làm bài"}
+              {!practice && detail.attemptsUsed > 0 ? msg("assignmentwork.pages.StudentAssignmentDetailPage.editAndResubmit") : msg("assignmentwork.pages.StudentAssignmentDetailPage.startWorking")}
             </Button>
           ) : null}
           {/* Bài cá nhân, nhóm: lịch sử chỉ có khi đã nộp và qua hạn nộp đúng giờ (yêu cầu 2026-11-10). */}
-          {historyOpen(detail, submitted || !!attempts?.some((a) => a.status === "SUBMITTED")) && (
-            <ButtonLink href={history}>Xem lịch sử nộp bài</ButtonLink>
+          {canOpenHistory(detail, submitted || !!attempts?.some((a) => a.status === "SUBMITTED")) && (
+            <ButtonLink href={history}>{msg("assignmentwork.pages.StudentAssignmentDetailPage.viewSubmissionHistory")}</ButtonLink>
           )}
         </Section>
       </div>

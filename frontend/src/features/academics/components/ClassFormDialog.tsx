@@ -2,11 +2,12 @@
 
 import { type CandidateLoader } from "../hooks/useCandidates";
 import { useId, useState, type FormEvent } from "react";
-import { Button, DateInput, Dialog, Field, TextInput, showToast } from "@/shared/ui";
+import { Button, DateInput, Dialog, Field, showToast, Textarea, TextInput } from "@/shared/ui";
 import { PersonPicker } from "./PersonPicker";
 import type { CreateClassInput, PersonView, SubjectView } from "../model/types";
 import { CLASS_START_DATE_RANGE, CLASS_START_DATE_REQUIRED, formatClassFieldError, formatOperationError } from "../model/format";
-import { termOf } from "../model/term";
+import { deriveTerm } from "../model/term";
+import { msg } from "@/i18n/msg";
 
 type Errors = { code?: string; startsOn?: string };
 
@@ -21,8 +22,8 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const term = termOf(values.startsOn);
-  function set(key: keyof typeof values, value: string) {
+  const term = deriveTerm(values.startsOn);
+  function setValue(key: keyof typeof values, value: string) {
     setValues({ ...values, [key]: value });
     setErrors((current) => ({ ...current, [key]: undefined }));
   }
@@ -30,7 +31,7 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
     event.preventDefault();
     if (busy) return;
     const next: Errors = {};
-    if (!values.code.trim()) next.code = "Nhập mã lớp.";
+    if (!values.code.trim()) next.code = msg("academics.components.ClassFormDialog.enterTheClassCode");
     if (!values.startsOn) next.startsOn = CLASS_START_DATE_REQUIRED;
     else if (!term) next.startsOn = CLASS_START_DATE_RANGE;
     setErrors(next);
@@ -38,7 +39,7 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
     setBusy(true); setError("");
     try {
       await onSubmit({ subjectId: subject.id, code: values.code.trim(), name: values.code.trim(), description: values.description.trim(), startsOn: values.startsOn, teacherId: teacher?.id ?? null });
-      showToast("Đã tạo lớp");
+      showToast(msg("academics.components.ClassFormDialog.classCreated"));
       onClose();
     } catch (cause) {
       const fieldError = formatClassFieldError(cause);
@@ -46,24 +47,24 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
       else setError(formatOperationError(cause));
     } finally { setBusy(false); }
   }
-  return <Dialog open title="Tạo lớp" size="lg" onClose={onClose} dismissible={!busy}
-    footer={<Button type="submit" form={`${id}-form`} variant="primary" disabled={busy} data-testid="class-form-submit">Tạo lớp</Button>}>
+  return <Dialog open title={msg("academics.components.ClassFormDialog.createClass")} size="lg" onClose={onClose} dismissible={!busy}
+    footer={<Button type="submit" form={`${id}-form`} variant="primary" disabled={busy} data-testid="class-form-submit">{msg("academics.components.ClassFormDialog.createClass")}</Button>}>
     <form id={`${id}-form`} onSubmit={(event) => void handleSubmit(event)} noValidate className="flex flex-col gap-3.5">
       <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3.5">
-        <Field label="Mã lớp" htmlFor={`${id}-code`} required error={errors.code}>
-          <TextInput id={`${id}-code`} maxLength={30} value={values.code} invalid={!!errors.code} onChange={(event) => set("code", event.target.value)} data-testid="class-form-code" />
+        <Field label={msg("academics.components.ClassFormDialog.classCode")} htmlFor={`${id}-code`} required error={errors.code}>
+          <TextInput id={`${id}-code`} maxLength={30} value={values.code} invalid={!!errors.code} onChange={(event) => setValue("code", event.target.value)} data-testid="class-form-code" />
         </Field>
         <div className="flex flex-col gap-1.5">
-          <Field label="Ngày bắt đầu" htmlFor={`${id}-starts-on`} required error={errors.startsOn}>
+          <Field label={msg("academics.components.ClassFormDialog.startDate")} htmlFor={`${id}-starts-on`} required error={errors.startsOn}>
             <DateInput id={`${id}-starts-on`} min="2000-01-01" max="2099-12-31" value={values.startsOn} invalid={!!errors.startsOn}
-              onChange={(value) => set("startsOn", value)} data-testid="class-form-starts-on" />
+              onChange={(value) => setValue("startsOn", value)} data-testid="class-form-starts-on" />
           </Field>
-          {term && <p aria-live="polite" className="text-xs text-muted" data-testid="class-form-term">Học kỳ: <span className="font-mono text-ink">{term}</span></p>}
+          {term && <p aria-live="polite" className="text-xs text-muted" data-testid="class-form-term">{msg("academics.components.ClassFormDialog.term")}<span className="font-mono text-ink">{term}</span></p>}
         </div>
-        <PersonPicker label="Giảng viên" value={teacher} onChange={setTeacher} people={teachers} loader={loadTeachers} clearable disabled={busy} />
-        <Field label="Mô tả" htmlFor={`${id}-description`}>
-          <textarea id={`${id}-description`} maxLength={2000} value={values.description} onChange={(event) => set("description", event.target.value)}
-            className="min-h-20 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] text-ink outline-none focus:border-focus" />
+        <PersonPicker label={msg("academics.components.ClassFormDialog.lecturer")} value={teacher} onChange={setTeacher} people={teachers} loader={loadTeachers} clearable disabled={busy} />
+        <Field label={msg("academics.components.ClassFormDialog.description")} htmlFor={`${id}-description`}>
+          <Textarea id={`${id}-description`} maxLength={2000} value={values.description} onChange={(event) => setValue("description", event.target.value)}
+            className="min-h-20" />
         </Field>
       </fieldset>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}

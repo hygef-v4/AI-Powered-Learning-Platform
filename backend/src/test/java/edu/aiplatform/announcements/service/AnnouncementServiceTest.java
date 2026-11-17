@@ -66,7 +66,7 @@ class AnnouncementServiceTest {
 
     Announcement item() {
         var a =
-                Announcement.create(
+                Announcement.createAnnouncement(
                         classId,
                         teacherId,
                         "Tiêu đề",
@@ -205,8 +205,8 @@ class AnnouncementServiceTest {
         var actor = new Actor(UUID.randomUUID(), role);
         assertThatThrownBy(() -> announcementAccessPolicy.requireClassAccess(actor, classId, true))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.status().value()).isEqualTo(404);
-                    assertThat(e.code()).isEqualTo("ANNOUNCEMENT_NOT_FOUND");
+                    assertThat(e.readStatus().value()).isEqualTo(404);
+                    assertThat(e.readCode()).isEqualTo("ANNOUNCEMENT_NOT_FOUND");
                 });
         verify(audit).record(argThat(e -> e.result() == AuditResult.DENIED));
     }
@@ -218,7 +218,7 @@ class AnnouncementServiceTest {
                                 announcementAccessPolicy.requireClassAccess(
                                         new Actor(UUID.randomUUID(), Role.TEACHER), classId, true))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.status().value()).isEqualTo(404));
+                        e -> assertThat(e.readStatus().value()).isEqualTo(404));
     }
 
     @Test
@@ -271,12 +271,12 @@ class AnnouncementServiceTest {
     @Test
     void invalidMarkdownAndEmailCombinationRejected() {
         assertThatThrownBy(
-                        () -> Announcement.create(classId, teacherId, "t", "b", false, true, now))
+                        () -> Announcement.createAnnouncement(classId, teacherId, "t", "b", false, true, now))
                 .isInstanceOf(ApiException.class);
         for (String body : List.of("", "<script>alert(1)</script>", "x".repeat(5001)))
             assertThatThrownBy(
                             () ->
-                                    Announcement.create(
+                                    Announcement.createAnnouncement(
                                             classId, teacherId, "t", body, false, false, now))
                     .isInstanceOf(ApiException.class);
     }

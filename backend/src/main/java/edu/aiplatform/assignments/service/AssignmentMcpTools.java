@@ -37,20 +37,20 @@ public class AssignmentMcpTools implements IMcpToolProvider {
 
     private final AssignmentRepository assignments;
     private final AssignmentAccess access;
-    private final RubricService rubrics;
-    private final DocumentModelService documents;
-    private final AssignmentAiDraftService drafts;
+    private final RubricService rubricService;
+    private final DocumentModelService documentModelService;
+    private final AssignmentAiDraftService assignmentAiDraftService;
     private final IClassAccess classes;
     private final ObjectMapper json;
 
-    public AssignmentMcpTools(AssignmentRepository assignments, AssignmentAccess access, RubricService rubrics,
-                              DocumentModelService documents, AssignmentAiDraftService drafts, IClassAccess classes,
+    public AssignmentMcpTools(AssignmentRepository assignments, AssignmentAccess access, RubricService rubricService,
+                              DocumentModelService documentModelService, AssignmentAiDraftService assignmentAiDraftService, IClassAccess classes,
                               ObjectMapper json) {
         this.assignments = assignments;
         this.access = access;
-        this.rubrics = rubrics;
-        this.documents = documents;
-        this.drafts = drafts;
+        this.rubricService = rubricService;
+        this.documentModelService = documentModelService;
+        this.assignmentAiDraftService = assignmentAiDraftService;
         this.classes = classes;
         this.json = json;
     }
@@ -76,36 +76,36 @@ public class AssignmentMcpTools implements IMcpToolProvider {
     public McpToolResult call(Actor actor, String toolName, Map<String, Object> args) {
         boolean educator = actor != null && (actor.role() == Role.TEACHER || actor.role() == Role.SUBJECT_MANAGER);
         if (!educator && !(actor != null && actor.role() == Role.STUDENT && READ.equals(toolName))) {
-            return error("TOOL_NOT_FOUND", "Không có quyền dùng tool này");
+            return buildError("TOOL_NOT_FOUND", "Không có quyền dùng tool này");
         }
         try {
             UUID id = UUID.fromString(String.valueOf(args.get("assignmentId")));
             return switch (toolName) {
-                case READ -> new McpToolResult(false, read(actor, id));
+                case READ -> new McpToolResult(false, readAssignment(actor, id));
                 case SAVE -> {
                     long expected = Long.parseLong(String.valueOf(args.get("expectedVersion")));
                     JsonNode draft = json.valueToTree(args.get("draft"));
                     Object label = args.get("agentLabel");
-                    AssignmentAiDraft saved = drafts.saveFromAgent(actor, id, expected, draft,
+                    AssignmentAiDraft saved = assignmentAiDraftService.saveFromAgent(actor, id, expected, draft,
                             label == null ? null : String.valueOf(label));
                     yield new McpToolResult(false, Map.of("draftId", saved.id().toString(), "proposalId",saved.id().toString(),
                             "assignmentId",id.toString(),"status", "READY",
                             "reviewUrl","/assignments/"+id+"?proposalId="+saved.id()));
                 }
-                default -> error("TOOL_NOT_FOUND", "Không có tool này");
+                default -> buildError("TOOL_NOT_FOUND", "Không có tool này");
             };
         } catch (ApiException e) {
-            return error(e.code(), e.getMessage());
+            return buildError(e.readCode(), e.getMessage());
         } catch (IllegalArgumentException | NullPointerException e) {
-            return error("INVALID_ARGUMENTS", "Tham số không hợp lệ");
+            return buildError("INVALID_ARGUMENTS", "Tham số không hợp lệ");
         }
     }
 
-    private Map<String, Object> read(Actor actor, UUID id) {
-        Assignment assignment = assignments.find(id).orElseThrow(() -> access.deny(actor, READ,
+    private Map<String, Object> readAssignment(Actor actor, UUID id) {
+        Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.deny(actor, READ,
                 AssignmentAudit.OBJECT_ASSIGNMENT, id, "NOT_FOUND"));
         boolean teacher = actor.role() != Role.STUDENT && access.canRead(actor, assignment);
-        if (!teacher && !(actor.role() == Role.STUDENT && studentCanRead(actor, assignment))) {
+        if (!teacher && !(actor.role() == Role.STUDENT && canStudentRead(actor, assignment))) {
             throw access.deny(actor, READ, AssignmentAudit.OBJECT_ASSIGNMENT, id, "OUT_OF_ASSIGNMENT_SCOPE");
         }
         Map<String, Object> out = new LinkedHashMap<>();
@@ -122,11 +122,11 @@ public class AssignmentMcpTools implements IMcpToolProvider {
             return out;
         }
         out.put("instructions", assignment.instructions());
-        out.put("document", documents.toPlainText(assignment.skeleton()));
+        out.put("document", documentModelService.toPlainText(assignment.skeleton()));
         out.put("parts", assignment.parts().stream().map(p -> Map.of("partId", p.partId(), "title", p.title())).toList());
         out.put("requiredDiagrams", assignment.requiredDiagrams());
-        out.put("rubrics", rubrics.ordered(assignment, rubrics.all(assignment.id())).stream()
-                .map(r -> rubric(r.view())).toList());
+        out.put("rubrics", rubricService.orderRubrics(assignment, rubricService.listRubricModels(assignment.id())).stream()
+                .map(r -> mapRubric(r.view())).toList());
         putSchedule(out, assignment);
         out.put("version", assignment.version());
         return out;
@@ -145,7 +145,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
     }
 
     /** Người học đọc bài OPEN, CLOSED của lớp OPEN mình đang học, như Assignment Detail (BR-U07-37). */
-    private boolean studentCanRead(Actor actor, Assignment assignment) {
+    private boolean canStudentRead(Actor actor, Assignment assignment) {
         if (assignment.status() != AssignmentStatus.OPEN && assignment.status() != AssignmentStatus.CLOSED) {
             return false;
         }
@@ -159,14 +159,14 @@ public class AssignmentMcpTools implements IMcpToolProvider {
         return false;
     }
 
-    private static Map<String, Object> rubric(RubricView view) {
+    private static Map<String, Object> mapRubric(RubricView view) {
         return Map.of("partId", view.partId(), "maxPoints", view.maxPoints(), "criteria", view.criteria().stream()
                 .map(c -> Map.of("title", c.title(), "kind", c.kind().name(), "items", c.items().stream()
                         .map(i -> Map.of("text", i.text(), "points", i.points() == null ? 0 : i.points())).toList()))
                 .toList());
     }
 
-    private static McpToolResult error(String code, String message) {
+    private static McpToolResult buildError(String code, String message) {
         return new McpToolResult(true, Map.of("code", code, "message", message));
     }
 }

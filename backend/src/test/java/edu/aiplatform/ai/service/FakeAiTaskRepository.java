@@ -32,7 +32,7 @@ class FakeAiTaskRepository extends AiTaskRepository {
     }
 
     @Override
-    public boolean update(AiTask t) {
+    public boolean updateTask(AiTask t) {
         AiTask current = rows.get(t.id());
         if (current == null || current.version() != t.version()) {
             return false;
@@ -64,7 +64,7 @@ class FakeAiTaskRepository extends AiTaskRepository {
 
     @Override
     public int countActive(UUID actorId) {
-        return (int) rows.values().stream().filter(r -> r.actorId().equals(actorId) && r.active()).count();
+        return (int) rows.values().stream().filter(r -> r.actorId().equals(actorId) && r.hasActiveStatus()).count();
     }
 
     @Override

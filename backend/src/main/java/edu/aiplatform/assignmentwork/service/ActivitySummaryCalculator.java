@@ -46,8 +46,8 @@ final class ActivitySummaryCalculator {
         ordered.sort(Comparator.comparing(list -> list.get(0).serverTime()));
         for (List<ActivityEvent> session : ordered) {
             session.sort(Comparator.comparingLong(ActivityEvent::sequence));
-            Duration offset = offset(session);
-            Instant first = time(session.get(0), offset);
+            Duration offset = calculateOffset(session);
+            Instant first = resolveEventTime(session.get(0), offset);
             if (previousEnd != null && Duration.between(previousEnd, first).compareTo(HEARTBEAT_GAP) > 0) {
                 intervals.add(new ActivityInterval(previousEnd, first, IntervalCertainty.UNKNOWN));
                 unknown++;
@@ -57,7 +57,7 @@ final class ActivitySummaryCalculator {
             Instant last = null;
             long lastSequence = -1;
             for (ActivityEvent event : session) {
-                Instant at = time(event, offset);
+                Instant at = resolveEventTime(event, offset);
                 if (event.clientTime() != null && Duration.between(event.serverTime(), at).abs().compareTo(CLOCK_SKEW) > 0) {
                     at = event.serverTime();
                     unknown++;
@@ -100,7 +100,7 @@ final class ActivitySummaryCalculator {
     }
 
     /** Lệch giữa đồng hồ server và client của phiên, lấy ở sự kiện đầu có giờ client. */
-    private static Duration offset(List<ActivityEvent> session) {
+    private static Duration calculateOffset(List<ActivityEvent> session) {
         for (ActivityEvent event : session) {
             if (event.clientTime() != null) {
                 return Duration.between(event.clientTime(), event.serverTime());
@@ -109,7 +109,7 @@ final class ActivitySummaryCalculator {
         return Duration.ZERO;
     }
 
-    private static Instant time(ActivityEvent event, Duration offset) {
+    private static Instant resolveEventTime(ActivityEvent event, Duration offset) {
         return event.clientTime() == null ? event.serverTime() : event.clientTime().plus(offset);
     }
 }

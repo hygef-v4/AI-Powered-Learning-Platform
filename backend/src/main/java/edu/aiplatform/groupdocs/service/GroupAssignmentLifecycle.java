@@ -52,6 +52,6 @@ public class GroupAssignmentLifecycle implements IAssignmentLifecycleListener {
         documents.listByAssignment(assignmentId).stream()
                 .filter(document -> document.status() == edu.aiplatform.groupdocs.model.GroupDocument.Status.IN_PROGRESS)
                 .sorted(java.util.Comparator.comparing(edu.aiplatform.groupdocs.model.GroupDocument::id))
-                .forEach(document -> groupSubmissionService.autoSubmit(document.id()));
+                .forEach(document -> groupSubmissionService.submitAutomatically(document.id()));
     }
 }

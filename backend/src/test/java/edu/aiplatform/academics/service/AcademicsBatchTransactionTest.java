@@ -49,12 +49,12 @@ class AcademicsBatchTransactionTest {
         when(authorization.authorize(any(),anyString(),any())).thenReturn(AuthorizationDecision.allow());
         when(scope.isSubjectManager(managerId,subjectId)).thenReturn(true);
         when(subjectQuery.getSubject(subjectId)).thenReturn(Optional.of(new SubjectRef(subjectId,"S","Subject",SubjectStatus.ACTIVE,managerId)));
-        when(courseClassRepository.find(classId)).thenReturn(Optional.of(new CourseClass(classId,subjectId,"C","Class","",LocalDate.of(2027, 1, 10),ClassStatus.OPEN,managerId,false,now,now,0)));
+        when(courseClassRepository.findClass(classId)).thenReturn(Optional.of(new CourseClass(classId,subjectId,"C","Class","",LocalDate.of(2027, 1, 10),ClassStatus.OPEN,managerId,false,now,now,0)));
         var students=List.of(contact(first,"first@example.test",Role.STUDENT),contact(second,"second@example.test",Role.STUDENT),contact(third,"third@example.test",Role.STUDENT));
         when(accountLookup.findByEmails(any())).thenReturn(students);
         when(accountLookup.lockContact(any())).thenAnswer(call->students.stream()
                 .filter(student->student.accountId().equals(call.getArgument(0))).findFirst());
-        when(enrollmentRepository.find(eq(classId),any())).thenAnswer(call->{
+        when(enrollmentRepository.findEnrollment(eq(classId),any())).thenAnswer(call->{
             UUID account=call.getArgument(1);
             return recordingTransactions.committed.contains(account)?Optional.of(Enrollment.createEnrollment(classId,account,EnrollmentSource.LIST,now)):Optional.empty();
         });
@@ -78,7 +78,7 @@ class AcademicsBatchTransactionTest {
             return null;
         }).when(audit).record(any());
         assertThatThrownBy(()->academicsService.enrollStudents(manager,classId,input)).isInstanceOfSatisfying(ApiException.class,error->{
-            assertThat(error.status().value()).isEqualTo(503);assertThat(error.getMessage()).doesNotContain("password");
+            assertThat(error.readStatus().value()).isEqualTo(503);assertThat(error.getMessage()).doesNotContain("password");
         });
         assertThat(recordingTransactions.committed).containsExactly(first);
         assertThat(recordingTransactions.commits).isEqualTo(1);assertThat(recordingTransactions.rollbacks).isEqualTo(1);
@@ -117,7 +117,7 @@ class AcademicsBatchTransactionTest {
 
     @Test void successAuditFailureRollsBackThePendingEnrollmentAndSuppressesActivation() {
         doAnswer(call->{AuditEvent event=call.getArgument(0);if(event.result()==AuditResult.SUCCESS)throw new IllegalStateException("audit down");return null;}).when(audit).record(any());
-        assertThatThrownBy(()->academicsService.enrollStudents(manager,classId,"first@example.test")).isInstanceOfSatisfying(ApiException.class,error->assertThat(error.status().value()).isEqualTo(503));
+        assertThatThrownBy(()->academicsService.enrollStudents(manager,classId,"first@example.test")).isInstanceOfSatisfying(ApiException.class,error->assertThat(error.readStatus().value()).isEqualTo(503));
         assertThat(recordingTransactions.committed).isEmpty();assertThat(recordingTransactions.rollbacks).isEqualTo(1);assertThat(recordingTransactions.commits).isZero();
         verifyNoInteractions(eventPublisher);
         verify(audit).record(argThat(event->event.result()==AuditResult.FAILURE));
@@ -127,7 +127,7 @@ class AcademicsBatchTransactionTest {
         // Quyền bị thu hồi ngay sau khi dòng đầu commit.
         when(authorization.authorize(any(),anyString(),any())).thenAnswer(call->
                 call.<String>getArgument(1).equals("CLASS_MANAGE")&&!recordingTransactions.committed.isEmpty()?AuthorizationDecision.deny("revoked"):AuthorizationDecision.allow());
-        assertThatThrownBy(()->academicsService.enrollStudents(manager,classId,input)).isInstanceOfSatisfying(ApiException.class,error->assertThat(error.status().value()).isEqualTo(404));
+        assertThatThrownBy(()->academicsService.enrollStudents(manager,classId,input)).isInstanceOfSatisfying(ApiException.class,error->assertThat(error.readStatus().value()).isEqualTo(404));
         assertThat(recordingTransactions.committed).containsExactly(first);assertThat(recordingTransactions.commits).isEqualTo(1);assertThat(recordingTransactions.rollbacks).isEqualTo(1);
         verify(enrollmentRepository,never()).insert(argThat(value->!value.accountId().equals(first)));
         verify(audit).record(argThat(event->event.action().equals("ACCESS_DENIED")&&event.result()==AuditResult.DENIED));

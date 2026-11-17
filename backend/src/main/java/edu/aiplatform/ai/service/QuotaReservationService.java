@@ -31,7 +31,7 @@ public class QuotaReservationService {
         this.clock = clock;
     }
 
-    public LocalDate today() {
+    public LocalDate resolveToday() {
         return LocalDate.now(clock.withZone(VN));
     }
 
@@ -43,52 +43,52 @@ public class QuotaReservationService {
     /** Mức ngày của một giảng viên: mức riêng nếu có (0 là chặn), không thì mức mặc định; chưa cấu hình là rỗng. */
     @Transactional(readOnly = true)
     public Long limitOf(UUID accountId) {
-        QuotaPolicy policy = repository.policy();
-        if (!policy.configured()) {
+        QuotaPolicy policy = repository.loadPolicy();
+        if (!policy.hasLimits()) {
             return null;
         }
-        return repository.teacherQuota(accountId).map(QuotaPolicy.TeacherQuota::dayTokens)
+        return repository.findTeacherQuota(accountId).map(QuotaPolicy.TeacherQuota::dayTokens)
                 .orElse(policy.defaultDayTokens());
     }
 
     /** Còn lại hôm nay của người gọi, đã tính trần toàn hệ thống; rỗng khi chưa cấu hình. */
     @Transactional(readOnly = true)
-    public Remaining remaining(UUID accountId) {
-        QuotaPolicy policy = repository.policy();
+    public Remaining calculateRemaining(UUID accountId) {
+        QuotaPolicy policy = repository.loadPolicy();
         Long limit = limitOf(accountId);
         if (limit == null) {
             return null;
         }
-        LocalDate day = today();
-        long own = repository.findWindow(accountId.toString(), day).map(Window::consumed).orElse(0L);
-        long global = repository.findWindow(QuotaRepository.GLOBAL, day).map(Window::consumed).orElse(0L);
+        LocalDate day = resolveToday();
+        long own = repository.findWindow(accountId.toString(), day).map(Window::sumConsumed).orElse(0L);
+        long global = repository.findWindow(QuotaRepository.GLOBAL, day).map(Window::sumConsumed).orElse(0L);
         long left = Math.max(0, Math.min(limit - own, policy.globalDayTokens() - global));
-        return new Remaining(own, limit, left, nextReset());
+        return new Remaining(own, limit, left, calculateNextReset());
     }
 
     @Transactional(propagation = Propagation.MANDATORY, noRollbackFor = QuotaUnavailableException.class)
     public Reservation reserve(UUID accountId, long tokens) {
-        QuotaPolicy policy = repository.policy();
-        if (!policy.configured()) {
-            throw exceeded("AI_QUOTA_NOT_CONFIGURED", "API của trường chưa được cấu hình hạn mức");
+        QuotaPolicy policy = repository.loadPolicy();
+        if (!policy.hasLimits()) {
+            throw createExceededError("AI_QUOTA_NOT_CONFIGURED", "API của trường chưa được cấu hình hạn mức");
         }
-        long limit = repository.teacherQuota(accountId).map(QuotaPolicy.TeacherQuota::dayTokens)
+        long limit = repository.findTeacherQuota(accountId).map(QuotaPolicy.TeacherQuota::dayTokens)
                 .orElse(policy.defaultDayTokens());
         if (limit == 0) {
-            throw exceeded("AI_QUOTA_BLOCKED", "Bạn không được dùng API của trường; hãy chọn API cá nhân");
+            throw createExceededError("AI_QUOTA_BLOCKED", "Bạn không được dùng API của trường; hãy chọn API cá nhân");
         }
-        LocalDate day = today();
+        LocalDate day = resolveToday();
         String own = accountId.toString();
         repository.ensureWindow(QuotaRepository.GLOBAL, day);
         repository.ensureWindow(own, day);
         Window global = repository.lockWindow(QuotaRepository.GLOBAL, day);
         Window mine = repository.lockWindow(own, day);
-        if (global.consumed() + tokens > policy.globalDayTokens()) {
-            throw exceeded("AI_QUOTA_GLOBAL_EXCEEDED",
+        if (global.sumConsumed() + tokens > policy.globalDayTokens()) {
+            throw createExceededError("AI_QUOTA_GLOBAL_EXCEEDED",
                     "API của trường đã hết hạn mức hôm nay; đặt lại lúc 00:00 hoặc chọn API cá nhân");
         }
-        if (mine.consumed() + tokens > limit) {
-            throw exceeded("AI_QUOTA_EXCEEDED", "Bạn đã dùng hết hạn mức hôm nay; đặt lại lúc 00:00 hoặc chọn API cá nhân");
+        if (mine.sumConsumed() + tokens > limit) {
+            throw createExceededError("AI_QUOTA_EXCEEDED", "Bạn đã dùng hết hạn mức hôm nay; đặt lại lúc 00:00 hoặc chọn API cá nhân");
         }
         repository.adjust(QuotaRepository.GLOBAL, day, tokens, 0);
         repository.adjust(own, day, tokens, 0);
@@ -114,12 +114,12 @@ public class QuotaReservationService {
         settle(accountId, day, reserved, reserved);
     }
 
-    public ZonedDateTime nextReset() {
-        return today().plusDays(1).atStartOfDay(VN);
+    public ZonedDateTime calculateNextReset() {
+        return resolveToday().plusDays(1).atStartOfDay(VN);
     }
 
-    private ApiException exceeded(String code, String message) {
-        return new QuotaUnavailableException(code, message + " (cửa sổ mới lúc " + nextReset() + ")");
+    private ApiException createExceededError(String code, String message) {
+        return new QuotaUnavailableException(code, message + " (cửa sổ mới lúc " + calculateNextReset() + ")");
     }
 
     public record Reservation(LocalDate day, long tokens) {

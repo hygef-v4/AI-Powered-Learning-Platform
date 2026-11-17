@@ -15,6 +15,7 @@ import { SubjectMetaCard } from "../components/SubjectMetaCard";
 import { isSubjectAccessError, SubjectReadError } from "../components/SubjectReadError";
 import { useSubjectRead } from "../hooks/useSubjectRead";
 import { PageLoading } from "@/shared/ui/PageStatus";
+import { msg } from "@/i18n/msg";
 
 type Props = { subjectId: string; searchManagers?: SearchSubjectManagers };
 type Tab = "information" | "classes";
@@ -64,30 +65,30 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
   if (subject.error !== null || accessError !== null)
     return (
       <>
-        <PageHeader title="Môn học" backHref="/admin/subjects" />
+        <PageHeader title={msg("subjects.pages.SubjectDetailPage.subjects")} backHref="/admin/subjects" />
         <SubjectReadError error={subject.error ?? accessError} onRetry={handleReload} />
       </>
     );
-  if (!subject.data) return <PageLoading label="Đang tải môn học…" />;
+  if (!subject.data) return <PageLoading label={msg("subjects.pages.SubjectDetailPage.loadingSubjects")} />;
   const data = subject.data;
   const archived = data.status === "ARCHIVED";
   const base = { subject: data, onReload: handleReload, onAccessError: setMutationAccessError };
   const tabs: TabItem<Tab>[] = [
-    { key: "information", label: "Thông tin" },
-    { key: "classes", label: "Lớp học", count: data.classCount ?? undefined },
+    { key: "information", label: msg("subjects.pages.SubjectDetailPage.information") },
+    { key: "classes", label: msg("subjects.pages.SubjectDetailPage.classes"), count: data.classCount ?? undefined },
   ];
   return (
     <>
       <PageHeader
         backHref="/admin/subjects"
         title={<span className="min-w-0 break-words [overflow-wrap:anywhere]">{data.name}</span>}
-        breadcrumb={[{ label: "Môn học", href: "/admin/subjects" }, { label: data.code }]}
+        breadcrumb={[{ label: msg("subjects.pages.SubjectDetailPage.subjects"), href: "/admin/subjects" }, { label: data.code }]}
       />
       <Tabs
         items={tabs}
         value={tab}
         onChange={setTab}
-        label="Nội dung môn học"
+        label={msg("subjects.pages.SubjectDetailPage.subjectContent")}
         testIdPrefix="subjects-tab-"
         panelId="subject-tab-panel"
       />
@@ -98,7 +99,7 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
           aria-labelledby={tabId("subject-tab-panel", tab)}
           className="grid items-start gap-4 lg:grid-cols-[1fr_280px]"
         >
-          <SubjectInfoTab key={data.version} {...base} onSaved={() => handleSaved("Đã lưu thay đổi")} />
+          <SubjectInfoTab key={data.version} {...base} onSaved={() => handleSaved(msg("subjects.pages.SubjectDetailPage.changesSaved"))} />
           <div className="flex flex-col gap-4">
             <SubjectMetaCard
               subject={data}
@@ -116,18 +117,16 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
         <div role="tabpanel" id="subject-tab-panel" aria-labelledby={tabId("subject-tab-panel", tab)} className="flex flex-col gap-3">
           {classes.loading && (
             <p role="status" className="py-8 text-center text-sm text-muted">
-              Đang tải lớp học…
-            </p>
+              {msg("subjects.pages.SubjectDetailPage.loadingClasses")}</p>
           )}
           {classes.error !== null && (
             <SubjectReadError error={classes.error} onRetry={classes.reload} />
           )}
           {classes.data?.availability === "UNAVAILABLE" && (
-            <Section title="Danh sách lớp">
-              <p className="text-sm text-muted">Dữ liệu lớp hiện không khả dụng.</p>
+            <Section title={msg("subjects.pages.SubjectDetailPage.classList")}>
+              <p className="text-sm text-muted">{msg("subjects.pages.SubjectDetailPage.classDataIsCurrentlyUnavailable")}</p>
               <Button onClick={classes.reload} data-testid="subjects-classes-retry">
-                Thử lại
-              </Button>
+                {msg("subjects.pages.SubjectDetailPage.retry")}</Button>
             </Section>
           )}
           {classes.data?.availability === "AVAILABLE" && (
@@ -141,8 +140,8 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
           searchManagers={searchManagers}
           onSaved={(next: SubjectDetail) =>
             next.managerId === null
-              ? handleSaved("Đã bỏ chủ nhiệm môn", "danger")
-              : handleSaved("Đã đổi chủ nhiệm môn")
+              ? handleSaved(msg("subjects.pages.SubjectDetailPage.subjectManagerRemoved"), "danger")
+              : handleSaved(msg("subjects.pages.SubjectDetailPage.subjectManagerChanged"))
           }
           onClose={() => setMode(null)}
         />
@@ -152,8 +151,8 @@ function SubjectDetailContent({ subjectId, searchManagers }: Props) {
           {...base}
           onSaved={(next: SubjectDetail) =>
             next.status === "ARCHIVED"
-              ? handleSaved("Đã lưu trữ môn học", "danger")
-              : handleSaved("Đã mở lại môn học")
+              ? handleSaved(msg("subjects.pages.SubjectDetailPage.subjectArchived"), "danger")
+              : handleSaved(msg("subjects.pages.SubjectDetailPage.subjectReopened"))
           }
           onClose={() => setMode(null)}
         />

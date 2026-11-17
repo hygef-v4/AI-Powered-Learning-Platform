@@ -25,7 +25,7 @@ public record MaterialModule(
             throw new IllegalArgumentException("Invalid module information");
     }
 
-    public MaterialModule revise(String title, int order, Instant now) {
+    public MaterialModule reviseModule(String title, int order, Instant now) {
         return new MaterialModule(
                 id, subjectId, title, order, createdBy, createdAt, now, version + 1);
     }

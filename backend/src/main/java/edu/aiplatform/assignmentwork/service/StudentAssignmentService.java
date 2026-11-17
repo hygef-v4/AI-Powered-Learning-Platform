@@ -62,7 +62,7 @@ public class StudentAssignmentService {
 
     /** F1: bài của các lớp OPEN đang học, gồm bài của môn; sắp theo hạn gần nhất. */
     @Transactional(readOnly = true)
-    public List<WorkViews.Row> list(Actor actor, UUID classId) {
+    public List<WorkViews.Row> listAssignments(Actor actor, UUID classId) {
         if (actor == null || actor.accountId() == null || actor.role() != Role.STUDENT) {
             throw access.deny(actor, "STUDENT_ASSIGNMENT_LIST", "ACCOUNT", actor == null ? null : actor.accountId(),
                     "NOT_STUDENT");
@@ -78,7 +78,7 @@ public class StudentAssignmentService {
         Map<UUID, AssignmentView> views = new HashMap<>();
         for (ClassRef ref : refs) {
             for (AssignmentView view : WorkAccess.call(() -> assignments.listForClass(ref.classId()))) {
-                if (WorkAccess.belongs(view, ref) && (view.status() == AssignmentStatus.OPEN
+                if (WorkAccess.belongsToClass(view, ref) && (view.status() == AssignmentStatus.OPEN
                         || view.status() == AssignmentStatus.CLOSED || view.status() == AssignmentStatus.RETIRED)) {
                     views.putIfAbsent(view.assignmentId(), view);
                     classOf.putIfAbsent(view.assignmentId(), ref);
@@ -98,7 +98,7 @@ public class StudentAssignmentService {
             if (view.status() == AssignmentStatus.RETIRED && !submitted) {
                 continue;
             }
-            rows.add(row(view, classOf.get(view.assignmentId()), list, groups.get(view.assignmentId()), now));
+            rows.add(buildRow(view, classOf.get(view.assignmentId()), list, groups.get(view.assignmentId()), now));
         }
         rows.sort(Comparator.comparing(WorkViews.Row::closesAt, Comparator.nullsLast(Comparator.naturalOrder())));
         return rows;
@@ -109,25 +109,25 @@ public class StudentAssignmentService {
      * khung đề, rubric (yêu cầu 2026-10-21 thay BR-U08-03): đề chỉ hiện khi đã vào lượt làm.
      */
     @Transactional(readOnly = true)
-    public WorkViews.Detail detail(Actor actor, UUID assignmentId, UUID classId) {
+    public WorkViews.Detail loadAssignment(Actor actor, UUID assignmentId, UUID classId) {
         ClassRef ref = access.requireStudentOfClass(actor, classId, "STUDENT_ASSIGNMENT_VIEW");
         AssignmentView view = access.requireVisible(actor, ref, assignmentId, "STUDENT_ASSIGNMENT_VIEW");
         AssignmentContent content = WorkAccess.call(() -> assignments.getContent(assignmentId))
-                .orElseThrow(() -> ApiException.notFound("NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         List<AssignmentAttempt> list = attempts.listMine(assignmentId, actor.accountId());
         Instant now = clock.instant();
         SubmissionWindow window = WorkAccess.call(() -> assignments.submissionWindow(assignmentId, now));
-        AssignmentAttempt inProgress = list.stream().filter(AssignmentAttempt::inProgress).findFirst().orElse(null);
+        AssignmentAttempt inProgress = list.stream().filter(AssignmentAttempt::hasInProgressStatus).findFirst().orElse(null);
         String blocked = startBlocked(view, window, list.size(), inProgress);
-        Map<UUID, Long> feedbackCounts = feedback.readyCounts(list.stream().map(AssignmentAttempt::id).toList());
-        UUID graded = gradedAttemptId(view.gradingMode(), list);
+        Map<UUID, Long> feedbackCounts = feedback.countReadyFeedback(list.stream().map(AssignmentAttempt::id).toList());
+        UUID graded = findGradedAttemptId(view.gradingMode(), list);
         WorkViews.AttemptSummary latest = list.isEmpty() ? null
-                : summary(list.get(0), graded, feedbackCounts.getOrDefault(list.get(0).id(), 0L));
+                : buildSummary(list.get(0), graded, feedbackCounts.getOrDefault(list.get(0).id(), 0L));
         BigDecimal maxPoints = content.rubrics().stream().map(RubricView::maxPoints)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new WorkViews.Detail(view.assignmentId(), ref.classId(), ref.code(), ref.subjectCode(), view.scope(),
                 view.title(), view.submissionMode(), view.gradingMode(), view.diagramEnabled(), view.status(),
-                view.opensAt(), view.closesAt(), view.lateUntil(), view.maxAttempts(), topLevelParts(content.parts(), content.rubrics()), maxPoints,
+                view.opensAt(), view.closesAt(), view.lateUntil(), view.maxAttempts(), countTopLevelParts(content.parts(), content.rubrics()), maxPoints,
                 content.requiredDiagrams(), view.activityMonitoringEnabled(),
                 view.activityMonitoringEnabled() ? view.activityNotice() : null, view.referenceMaterialIds(),
                 list.size(), latest, inProgress == null ? null : inProgress.id(),
@@ -136,13 +136,13 @@ public class StudentAssignmentService {
 
     /** F8: các lượt của mình, lượt được chấm, số phản hồi AI (BR-U08-30, 31). */
     @Transactional(readOnly = true)
-    public List<WorkViews.AttemptSummary> history(Actor actor, UUID assignmentId, UUID classId) {
+    public List<WorkViews.AttemptSummary> listHistory(Actor actor, UUID assignmentId, UUID classId) {
         ClassRef ref = access.requireStudentOfClass(actor, classId, "SUBMISSION_HISTORY_VIEW");
         AssignmentView view = access.requireVisible(actor, ref, assignmentId, "SUBMISSION_HISTORY_VIEW");
         List<AssignmentAttempt> list = attempts.listMine(assignmentId, actor.accountId());
-        Map<UUID, Long> counts = feedback.readyCounts(list.stream().map(AssignmentAttempt::id).toList());
-        UUID graded = gradedAttemptId(view.gradingMode(), list);
-        return list.stream().map(a -> summary(a, graded, counts.getOrDefault(a.id(), 0L))).toList();
+        Map<UUID, Long> counts = feedback.countReadyFeedback(list.stream().map(AssignmentAttempt::id).toList());
+        UUID graded = findGradedAttemptId(view.gradingMode(), list);
+        return list.stream().map(a -> buildSummary(a, graded, counts.getOrDefault(a.id(), 0L))).toList();
     }
 
     /** Bài GRADED chấm lượt nộp cuối (BR-U08-30); Practice không có lượt được chấm. */
@@ -150,7 +150,7 @@ public class StudentAssignmentService {
      * Số bài hiện cho người học: số nhánh con trực tiếp của gốc tài liệu (heading cấp cao nhất của mỗi phần, hoặc chính phần
      * nếu không có heading cha) mà nhánh đó hoặc con cháu của nó có rubric; khung không có heading là một bài nếu có rubric.
      */
-    static int topLevelParts(List<DocumentPart> parts, List<RubricView> rubrics) {
+    static int countTopLevelParts(List<DocumentPart> parts, List<RubricView> rubrics) {
         if (parts == null || parts.isEmpty() || rubrics == null || rubrics.isEmpty()) {
             return 0;
         }
@@ -161,7 +161,7 @@ public class StudentAssignmentService {
                 .distinct().count();
     }
 
-    static UUID gradedAttemptId(GradingMode mode, List<AssignmentAttempt> attempts) {
+    static UUID findGradedAttemptId(GradingMode mode, List<AssignmentAttempt> attempts) {
         if (mode != GradingMode.GRADED) {
             return null;
         }
@@ -186,15 +186,15 @@ public class StudentAssignmentService {
         return null;
     }
 
-    static WorkViews.AttemptSummary summary(AssignmentAttempt a, UUID graded, long feedbackCount) {
+    static WorkViews.AttemptSummary buildSummary(AssignmentAttempt a, UUID graded, long feedbackCount) {
         return new WorkViews.AttemptSummary(a.id(), a.attemptNo(), a.status(), a.startedAt(), a.deadlineAt(),
                 a.lastSavedAt(), a.submittedAt(), a.late(), a.submitMode(), a.receiptHash(), a.id().equals(graded),
                 feedbackCount, a.submitWarnings());
     }
 
-    private WorkViews.Row row(AssignmentView view, ClassRef ref, List<AssignmentAttempt> list, GroupWorkStatus group,
+    private WorkViews.Row buildRow(AssignmentView view, ClassRef ref, List<AssignmentAttempt> list, GroupWorkStatus group,
                               Instant now) {
-        AssignmentAttempt inProgress = list.stream().filter(AssignmentAttempt::inProgress).findFirst().orElse(null);
+        AssignmentAttempt inProgress = list.stream().filter(AssignmentAttempt::hasInProgressStatus).findFirst().orElse(null);
         List<AssignmentAttempt> submitted = list.stream().filter(a -> a.status() == AttemptStatus.SUBMITTED).toList();
         AssignmentAttempt last = submitted.stream().max(Comparator.comparingInt(AssignmentAttempt::attemptNo))
                 .orElse(null);
@@ -205,7 +205,7 @@ public class StudentAssignmentService {
             status = "IN_PROGRESS";
         } else if (last != null) {
             status = last.late() ? "SUBMITTED_LATE" : "SUBMITTED";
-        } else if (view.status() != AssignmentStatus.OPEN || closed(view, now)) {
+        } else if (view.status() != AssignmentStatus.OPEN || isClosed(view, now)) {
             status = "MISSED";
         } else {
             status = "NOT_STARTED";
@@ -219,7 +219,7 @@ public class StudentAssignmentService {
                 ref.term());
     }
 
-    private static boolean closed(AssignmentView view, Instant now) {
+    private static boolean isClosed(AssignmentView view, Instant now) {
         Instant deadline = view.lateUntil() != null ? view.lateUntil() : view.closesAt();
         return deadline != null && now.isAfter(deadline);
     }

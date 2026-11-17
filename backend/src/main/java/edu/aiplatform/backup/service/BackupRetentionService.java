@@ -33,7 +33,7 @@ public class BackupRetentionService {
     public void purgeOld(Instant now) {
         for (BackupRun run : runs.findPurgeCandidates(now.minus(KEEP))) {
             try {
-                store.delete(run.id().toString());
+                store.deleteArchive(run.id().toString());
                 runs.markPurged(run.id(), now);
             } catch (StorageUnavailableException e) {
                 log.warn("Chưa xóa được bản backup {}, thử lại ở lần chạy sau", run.scheduledFor());

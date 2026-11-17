@@ -2,7 +2,7 @@ import { attemptResultSources } from "@/features/assignmentwork/slots";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { workApi } from "@/features/assignmentwork/api";
-import { resultByPart } from "@/features/assignmentwork/model/attemptResult";
+import { groupResultByPart } from "@/features/assignmentwork/model/attemptResult";
 import { SubmissionHistoryPage } from "@/features/assignmentwork/pages/SubmissionHistoryPage";
 import type { Attempt, AttemptSummary, Feedback, StudentDetail } from "@/features/assignmentwork/model/types";
 
@@ -185,7 +185,7 @@ describe("SubmissionHistoryPage (yêu cầu 2026-11-10)", () => {
   });
 });
 
-describe("resultByPart", () => {
+describe("groupResultByPart", () => {
   it("gom điểm các mục rubric về nhánh con trực tiếp của gốc tài liệu, theo thứ tự trong tài liệu", () => {
     const item = (partId: string, awarded: number, max: number) => ({ rubricId: partId, partId, criterionTitle: "", itemText: partId, awarded, max, evidence: null, reason: null, suggestion: null });
     const parts = [
@@ -193,7 +193,7 @@ describe("resultByPart", () => {
       { partId: "h12", headingBlockId: "h12", ancestorHeadingIds: ["c1"], title: "Chương 1 › 1.2" },
       { partId: "c2", headingBlockId: "c2", ancestorHeadingIds: [], title: "Chương 2" },
     ];
-    expect(resultByPart([item("c2", 1, 2), item("h11", 2, 3), item("h12", 1, 1)], parts)).toEqual([
+    expect(groupResultByPart([item("c2", 1, 2), item("h11", 2, 3), item("h12", 1, 1)], parts)).toEqual([
       expect.objectContaining({ title: "Chương 1", awarded: 3, max: 4 }),
       expect.objectContaining({ title: "Chương 2", awarded: 1, max: 2 }),
     ]);

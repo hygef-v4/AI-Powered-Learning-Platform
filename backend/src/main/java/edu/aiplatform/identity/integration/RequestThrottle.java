@@ -42,7 +42,7 @@ public class RequestThrottle {
      * ({@link #recordLoginFailure}) để nhiều sinh viên đăng nhập đúng qua chung một NAT của trường không bị chặn.
      */
     public boolean loginAllowed(String clientIp) {
-        return available("login-ip:" + clientIp, loginBandwidth());
+        return isAvailable("login-ip:" + clientIp, loginBandwidth());
     }
 
     public void recordLoginFailure(String clientIp) {
@@ -50,32 +50,32 @@ public class RequestThrottle {
     }
 
     /** Đổi mật khẩu: tài khoản còn lượt nhập sai mật khẩu hiện tại không (mặc định 5 lần mỗi 15 phút). */
-    public boolean passwordChangeAllowed(UUID accountId) {
-        return available("password-change:" + accountId, passwordChangeBandwidth());
+    public boolean isPasswordChangeAllowed(UUID accountId) {
+        return isAvailable("password-change:" + accountId, buildPasswordChangeBandwidth());
     }
 
     public void recordPasswordChangeFailure(UUID accountId) {
-        consume("password-change:" + accountId, passwordChangeBandwidth());
+        consume("password-change:" + accountId, buildPasswordChangeBandwidth());
     }
 
     private Bandwidth loginBandwidth() {
-        return bandwidth(limits.loginPerIp(), limits.loginIpWindow());
+        return buildBandwidth(limits.loginPerIp(), limits.loginIpWindow());
     }
 
-    private Bandwidth passwordChangeBandwidth() {
-        return bandwidth(limits.passwordChangeFailures(), limits.passwordChangeWindow());
+    private Bandwidth buildPasswordChangeBandwidth() {
+        return buildBandwidth(limits.passwordChangeFailures(), limits.passwordChangeWindow());
     }
 
     /** Yêu cầu OTP: 5 lần/giờ và cách nhau tối thiểu 60 giây mỗi email; 20 lần/giờ mỗi IP (BR-U01-25). */
     public boolean tryOtpRequest(String normalizedEmail, String clientIp) {
         boolean ipAllowed = tryConsume("otp-ip:" + clientIp,
-                bandwidth(limits.otpPerIpPerHour(), Duration.ofHours(1)));
+                buildBandwidth(limits.otpPerIpPerHour(), Duration.ofHours(1)));
         if (!ipAllowed) {
             return false;
         }
-        return tryConsume("otp-email:" + Hashing.sha256Hex(normalizedEmail),
-                bandwidth(limits.otpPerEmailPerHour(), Duration.ofHours(1)),
-                bandwidth(1, limits.otpCooldown()));
+        return tryConsume("otp-email:" + Hashing.hashSha256Hex(normalizedEmail),
+                buildBandwidth(limits.otpPerEmailPerHour(), Duration.ofHours(1)),
+                buildBandwidth(1, limits.otpCooldown()));
     }
 
     /**
@@ -83,39 +83,39 @@ public class RequestThrottle {
      * chặn dò mã của nhiều tài khoản từ một nơi.
      */
     public boolean tryOtpVerify(String clientIp) {
-        return tryConsume("otp-verify-ip:" + clientIp, bandwidth(OTP_VERIFY_PER_IP, OTP_VERIFY_WINDOW));
+        return tryConsume("otp-verify-ip:" + clientIp, buildBandwidth(OTP_VERIFY_PER_IP, OTP_VERIFY_WINDOW));
     }
 
     static final int OTP_VERIFY_PER_IP = 30;
     static final Duration OTP_VERIFY_WINDOW = Duration.ofMinutes(15);
 
-    static Bandwidth bandwidth(int capacity, Duration period) {
+    static Bandwidth buildBandwidth(int capacity, Duration period) {
         return Bandwidth.builder().capacity(capacity).refillIntervally(capacity, period).build();
     }
 
     private boolean tryConsume(String key, Bandwidth... bandwidths) {
-        return redisCall(() -> bucket(key, bandwidths).tryConsume(1));
+        return callRedis(() -> resolveBucket(key, bandwidths).tryConsume(1));
     }
 
     /** Ghi một lượt; hết lượt thì thôi (không chờ). */
     private void consume(String key, Bandwidth... bandwidths) {
-        redisCall(() -> bucket(key, bandwidths).tryConsume(1));
+        callRedis(() -> resolveBucket(key, bandwidths).tryConsume(1));
     }
 
-    private boolean available(String key, Bandwidth... bandwidths) {
-        return redisCall(() -> bucket(key, bandwidths).getAvailableTokens() > 0);
+    private boolean isAvailable(String key, Bandwidth... bandwidths) {
+        return callRedis(() -> resolveBucket(key, bandwidths).getAvailableTokens() > 0);
     }
 
-    private Bucket bucket(String key, Bandwidth... bandwidths) {
+    private Bucket resolveBucket(String key, Bandwidth... bandwidths) {
         ConfigurationBuilder builder = BucketConfiguration.builder();
         for (Bandwidth bandwidth : bandwidths) {
             builder.addLimit(bandwidth);
         }
         BucketConfiguration configuration = builder.build();
-        return proxyManager().builder().build((PREFIX + key).getBytes(StandardCharsets.UTF_8), () -> configuration);
+        return createProxyManager().builder().build((PREFIX + key).getBytes(StandardCharsets.UTF_8), () -> configuration);
     }
 
-    private static boolean redisCall(BooleanSupplier call) {
+    private static boolean callRedis(BooleanSupplier call) {
         try {
             return call.getAsBoolean();
         } catch (RuntimeException e) {
@@ -124,7 +124,7 @@ public class RequestThrottle {
         }
     }
 
-    private ProxyManager<byte[]> proxyManager() {
+    private ProxyManager<byte[]> createProxyManager() {
         ProxyManager<byte[]> manager = proxyManager;
         if (manager == null) {
             synchronized (this) {

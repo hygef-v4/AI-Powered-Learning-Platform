@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { apiFetch, ApiError } from "@/shared/api/client";
+import { fetchApi, ApiError } from "@/shared/api/client";
 import { materialApi, describeMaterialError, isValidYoutubeUrl } from "@/features/materials/api";
 import type { Material } from "@/features/materials/model/types";
 vi.mock("@/shared/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/api/client")>()),
-  apiFetch: vi.fn(),
+  fetchApi: vi.fn(),
 }));
 beforeEach(() => {
-  vi.mocked(apiFetch).mockReset();
+  vi.mocked(fetchApi).mockReset();
 });
 describe("single video validation", () => {
   it.each([
@@ -37,7 +37,7 @@ describe("single video validation", () => {
 });
 it("replacement carries the signed file reference and optimistic version", async () => {
   await materialApi.replaceMaterialVersion({ id: "id", version: 3 } as Material, { fileRef: "signed-reference" });
-  expect(apiFetch).toHaveBeenCalledWith("/api/v1/materials/id/versions", {
+  expect(fetchApi).toHaveBeenCalledWith("/api/v1/materials/id/versions", {
     method: "POST",
     body: JSON.stringify({ version: 3, source: { fileRef: "signed-reference" } }),
   });
@@ -47,7 +47,7 @@ it("reorder submits all expected versions in requested order", async () => {
     { id: "b", version: 4 },
     { id: "a", version: 2 },
   ] as Material[]);
-  expect(apiFetch).toHaveBeenCalledWith("/scope/materials:reorder", {
+  expect(fetchApi).toHaveBeenCalledWith("/scope/materials:reorder", {
     method: "PUT",
     body: JSON.stringify({
       items: [
@@ -59,7 +59,7 @@ it("reorder submits all expected versions in requested order", async () => {
 });
 it("token request preserves class and historical version", async () => {
   await materialApi.issueDownloadToken("id", "class", 1);
-  expect(apiFetch).toHaveBeenCalledWith(
+  expect(fetchApi).toHaveBeenCalledWith(
     "/api/v1/materials/id/download-token?classId=class&versionNo=1",
     { method: "POST" },
   );

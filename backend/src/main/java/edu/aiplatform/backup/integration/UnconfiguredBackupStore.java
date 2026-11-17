@@ -9,17 +9,17 @@ import java.util.UUID;
 public class UnconfiguredBackupStore implements IBackupStore {
 
     @Override
-    public boolean available() {
+    public boolean isAvailable() {
         return false;
     }
 
     @Override
-    public StoredArchive put(UUID runId, Path archive) {
+    public StoredArchive putArchive(UUID runId, Path archive) {
         throw new StorageUnavailableException("Chưa cấu hình thư mục backup trên Drive", null);
     }
 
     @Override
-    public void delete(String runId) {
+    public void deleteArchive(String runId) {
         throw new StorageUnavailableException("Chưa cấu hình thư mục backup trên Drive", null);
     }
 }

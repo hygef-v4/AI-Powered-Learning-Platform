@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   canSubmit,
   describeFormation,
-  fromLocalInput,
-  toLocalInput,
+  convertFromLocalInput,
+  convertToLocalInput,
   validateFormation,
   validateProposalName,
 } from "@/features/groups/model/proposals";
@@ -59,8 +59,8 @@ describe("đề xuất nhóm", () => {
   });
 
   it("đổi hạn chót qua lại giữa ISO và giờ Việt Nam", () => {
-    expect(toLocalInput("2026-11-20T03:00:00Z")).toBe("2026-11-20T10:00");
-    expect(fromLocalInput("2026-11-20T10:00")).toBe("2026-11-20T03:00:00.000Z");
-    expect(fromLocalInput("")).toBeNull();
+    expect(convertToLocalInput("2026-11-20T03:00:00Z")).toBe("2026-11-20T10:00");
+    expect(convertFromLocalInput("2026-11-20T10:00")).toBe("2026-11-20T03:00:00.000Z");
+    expect(convertFromLocalInput("")).toBeNull();
   });
 });

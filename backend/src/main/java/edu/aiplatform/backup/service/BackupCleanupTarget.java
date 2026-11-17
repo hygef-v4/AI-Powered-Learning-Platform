@@ -16,12 +16,12 @@ public class BackupCleanupTarget implements IDriveCleanupTarget {
     }
 
     @Override
-    public String area() {
+    public String describeArea() {
         return AREA;
     }
 
     @Override
-    public void delete(String ref) {
-        store.delete(ref);
+    public void deleteRef(String ref) {
+        store.deleteArchive(ref);
     }
 }

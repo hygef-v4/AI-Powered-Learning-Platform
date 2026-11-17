@@ -107,7 +107,7 @@ final class AiDraftProposal {
                 }
                 ObjectNode i = items.addObject();
                 i.put("text", cut(item.path("text").asText(""), AssignmentRubric.ITEM_TEXT_MAX));
-                BigDecimal points = points(item.path("points"));
+                BigDecimal points = parsePoints(item.path("points"));
                 if (points != null) {
                     i.put("points", points);
                 }
@@ -117,13 +117,13 @@ final class AiDraftProposal {
     }
 
     /** Tiêu chí chấm từ rubric đã chuẩn hóa. */
-    static List<RubricCriterion> criteria(JsonNode rubric) {
+    static List<RubricCriterion> parseCriteria(JsonNode rubric) {
         List<RubricCriterion> criteria = new ArrayList<>();
         for (JsonNode criterion : rubric) {
             List<RubricItem> items = new ArrayList<>();
             for (JsonNode item : criterion.path("items")) {
                 items.add(new RubricItem(UUID.randomUUID(), item.path("text").asText(""),
-                        points(item.path("points"))));
+                        parsePoints(item.path("points"))));
             }
             criteria.add(new RubricCriterion(UUID.randomUUID(), criterion.path("title").asText(""),
                     criterion.path("description").asText(""),
@@ -133,7 +133,7 @@ final class AiDraftProposal {
     }
 
     /** Khung mới từ đề xuất và gợi ý rubric theo id block heading. */
-    static Built build(JsonNode proposal) {
+    static Built buildProposal(JsonNode proposal) {
         List<DocumentBlock> blocks = new ArrayList<>();
         Map<UUID, List<RubricCriterion>> suggestions = new HashMap<>();
         String businessContext = proposal.path("businessContext").asText("").strip();
@@ -147,14 +147,14 @@ final class AiDraftProposal {
             heading.put("text", section.path("title").asText(""));
             if (!section.path("titleFormat").isEmpty()) {
                 heading.putArray("runs").addObject().put("text", section.path("title").asText(""));
-                AiDraftFormatting.apply(heading, section.path("titleFormat"));
+                AiDraftFormatting.applyFormat(heading, section.path("titleFormat"));
             }
             blocks.add(new DocumentBlock(headingId, BlockOrigin.TEACHER, BlockType.HEADING, heading));
             String guidance = section.path("guidance").asText("");
             if (!guidance.isBlank()) {
                 addParagraphs(blocks, guidance, section.path("guidanceFormat"));
             }
-            List<RubricCriterion> criteria = criteria(section.path("rubric"));
+            List<RubricCriterion> criteria = parseCriteria(section.path("rubric"));
             if (!criteria.isEmpty()) {
                 suggestions.put(headingId, criteria);
             }
@@ -167,7 +167,7 @@ final class AiDraftProposal {
         for (String value : (format.isEmpty() ? text.strip().split("\\n\\s*\\n", 8) : new String[]{text})) {
             ObjectNode paragraph = JsonNodeFactory.instance.objectNode();
             paragraph.putArray("runs").addObject().put("text", value.strip());
-            AiDraftFormatting.apply(paragraph, format);
+            AiDraftFormatting.applyFormat(paragraph, format);
             blocks.add(new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.PARAGRAPH, paragraph));
         }
     }
@@ -175,7 +175,7 @@ final class AiDraftProposal {
     record Built(DocumentModel skeleton, Map<UUID, List<RubricCriterion>> rubricByHeading) {
     }
 
-    static BigDecimal points(JsonNode value) {
+    static BigDecimal parsePoints(JsonNode value) {
         if (value == null || !value.isNumber()) {
             return null;
         }

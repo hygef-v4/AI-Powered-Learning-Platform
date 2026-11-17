@@ -7,8 +7,9 @@ import { Alert, Button, Dialog, IconButton, SettingsGroup, Switch, TableFrame, T
 import type { AiProvider } from "@/shared/ai";
 import { ApiKeyDialog } from "./ApiKeyDialog";
 import { getProviders } from "../api";
-import { errorMessage, shortTestResult } from "../model/labels";
+import { describeErrorCode, shortenTestResult } from "../model/labels";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Các lời gọi của một bảng khóa: khóa của trường (Admin) hoặc khóa cá nhân. */
 export type KeysApi = {
@@ -21,8 +22,8 @@ export type KeysApi = {
   revoke: (id: string) => Promise<unknown>;
 };
 
-const CONFLICT = "Khóa vừa được thay đổi ở nơi khác, hãy tải lại.";
-const OK = "Đạt";
+const CONFLICT = msg("ai.components.KeysSection.theKeyWasJustChanged");
+const OK = msg("ai.components.KeysSection.passed");
 
 /**
  * Bảng khóa API dùng chung cho khóa của trường (UC 14, 15) và khóa cá nhân (UC 31; yêu cầu 2026-11-05): nhiều khóa cho
@@ -70,7 +71,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
     };
   }, [api, loadError]);
 
-  const run = async (id: string, action: () => Promise<unknown>, fallback: string) => {
+  const runAction = async (id: string, action: () => Promise<unknown>, fallback: string) => {
     setBusy(id);
     setError(null);
     try {
@@ -78,7 +79,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
       await reload();
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(problem?.status === 409 ? CONFLICT : errorMessage(problem?.code, fallback));
+      setError(problem?.status === 409 ? CONFLICT : describeErrorCode(problem?.code, fallback));
     } finally {
       setBusy(null);
     }
@@ -92,7 +93,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
       await reload();
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(problem?.status === 409 ? CONFLICT : errorMessage(problem?.code, "Không đổi được trạng thái khóa."));
+      setError(problem?.status === 409 ? CONFLICT : describeErrorCode(problem?.code, msg("ai.components.KeysSection.couldNotChangeTheKey")));
     }
   };
 
@@ -103,26 +104,25 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
       title={title}
       action={
         <Button variant="primary" size="sm" icon="add" onClick={() => setEditing("new")}>
-          Thêm khóa
-        </Button>
+          {msg("ai.components.KeysSection.addKey")}</Button>
       }
     >
       {error && (
-        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>Tải lại</Button>}>
+        <Alert tone="danger" role="alert" action={<Button size="sm" onClick={() => void reload()}>{msg("ai.components.KeysSection.reload")}</Button>}>
           {error}
         </Alert>
       )}
-      {!connections && !error && <p className="py-3 text-[13px] text-muted">Đang tải…</p>}
+      {!connections && !error && <p className="py-3 text-[13px] text-muted">{msg("ai.components.KeysSection.loading")}</p>}
       {connections && (
         <TableFrame filledHead className="mt-2 [&_table]:min-w-[800px] [&_table]:table-fixed">
           <colgroup><col className="w-[140px]" /><col className="w-[150px]" /><col /><col className="w-[240px]" /><col className="w-[140px]" /></colgroup><thead>
             <tr>
-              <Th>Nhà cung cấp</Th>
-              <Th>Khóa</Th>
-              <Th>Mô hình</Th>
-              <Th>Kiểm tra</Th>
+              <Th>{msg("ai.components.KeysSection.provider")}</Th>
+              <Th>{msg("ai.components.KeysSection.key")}</Th>
+              <Th>{msg("ai.components.KeysSection.model")}</Th>
+              <Th>{msg("ai.components.KeysSection.check")}</Th>
               <Th>
-                <span className="sr-only">Bật và thao tác</span>
+                <span className="sr-only">{msg("ai.components.KeysSection.enableAndActions")}</span>
               </Th>
             </tr>
           </thead>
@@ -130,8 +130,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
             {connections.length === 0 && (
               <tr>
                 <Td colSpan={5} className="py-6 text-center! text-muted">
-                  Chưa có khóa
-                </Td>
+                  {msg("ai.components.KeysSection.noKeysYet")}</Td>
               </tr>
             )}
             {connections.map((c) => {
@@ -152,7 +151,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
                             c.lastTestResult === OK ? "bg-success-soft text-success" : "bg-danger-soft text-danger",
                           )}
                         >
-                          {shortTestResult(c.lastTestResult)}
+                          {shortenTestResult(c.lastTestResult)}
                         </span>
                       ) : (
                         <span />
@@ -161,9 +160,9 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
                         size="sm"
                         className="shrink-0"
                         disabled={busy !== null}
-                        onClick={() => void run(id, () => api.test(id), "Không kiểm tra được kết nối.")}
+                        onClick={() => void runAction(id, () => api.test(id), msg("ai.components.KeysSection.couldNotCheckTheConnection"))}
                       >
-                        {busy === id ? "Đang kiểm tra…" : "Kiểm tra"}
+                        {busy === id ? msg("ai.components.KeysSection.checking") : msg("ai.components.KeysSection.check")}
                       </Button>
                     </div>
                   </Td>
@@ -172,13 +171,13 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
                       <Switch
                         checked={c.status === "ACTIVE"}
                         label=""
-                        ariaLabel={`Bật khóa ${label} ••••${c.keyHint ?? ""}`}
+                        ariaLabel={msg("ai.components.KeysSection.enableKey", { label: String(label), value: String(c.keyHint ?? "") })}
                         onChange={(enabled) => toggle(id, enabled, c.version)}
                       />
-                      <IconButton icon="edit" label={`Thay khóa ${label}`} disabled={busy !== null} onClick={() => setEditing(c)} />
+                      <IconButton icon="edit" label={msg("ai.components.KeysSection.replaceKey", { label: String(label) })} disabled={busy !== null} onClick={() => setEditing(c)} />
                       <IconButton
                         icon="trash"
-                        label={`Thu hồi khóa ${label}`}
+                        label={msg("ai.components.KeysSection.revokeKey", { label: String(label) })}
                         disabled={busy !== null}
                         className="text-danger! hover:bg-danger-soft"
                         onClick={() => setRevoking(c)}
@@ -191,7 +190,7 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
           </tbody>
         </TableFrame>
       )}
-      <p className="pt-2 text-xs text-muted">Kiểm tra có thể tính phí nhỏ.</p>
+      <p className="pt-2 text-xs text-muted">{msg("ai.components.KeysSection.checkingMayIncurASmall")}</p>
       {editing && (
         <ApiKeyDialog
           key={current ? `${current.id}-${current.version}` : "new"}
@@ -223,14 +222,13 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
             onClick={() => {
               const target = revoking;
               setRevoking(null);
-              if (target?.id) void run(target.id, () => api.revoke(target.id as string), "Không thu hồi được khóa.");
+              if (target?.id) void runAction(target.id, () => api.revoke(target.id as string), msg("ai.components.KeysSection.couldNotRevokeTheKey"));
             }}
           >
-            Thu hồi
-          </Button>
+            {msg("ai.components.KeysSection.revoke")}</Button>
         }
       >
-        <p>Bạn có chắc muốn thu hồi khóa {revoking ? `${PROVIDER_LABEL[revoking.provider]} ••••${revoking.keyHint ?? ""}` : ""} không?</p>
+        <p>{msg("ai.components.KeysSection.areYouSureYouWant")}{revoking ? `${PROVIDER_LABEL[revoking.provider]} ••••${revoking.keyHint ?? ""}` : ""} {msg("ai.components.KeysSection.text")}</p>
       </Dialog>
     </SettingsGroup>
   );

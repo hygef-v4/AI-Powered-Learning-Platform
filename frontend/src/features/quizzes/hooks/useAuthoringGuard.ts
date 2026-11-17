@@ -1,36 +1,37 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
+import { msg } from "@/i18n/msg";
 
 /** Giữ bản soạn tại chỗ khi đóng trang hoặc chuyển liên kết trước khi lưu. */
 export function useAuthoringGuard(dirty: boolean) {
-  const confirmDiscard = useCallback(() => !dirty || window.confirm("Bạn có nội dung chưa lưu. Bỏ các thay đổi này?"), [dirty]);
+  const confirmDiscard = useCallback(() => !dirty || window.confirm(msg("quizzes.hooks.useAuthoringGuard.youHaveUnsavedContentDiscard")), [dirty]);
   useEffect(() => {
     if (!dirty) return;
     const currentUrl = window.location.href;
     const currentState: unknown = window.history.state;
-    const samePage = (href: string) => {
+    const isSamePage = (href: string) => {
       const next = new URL(href, currentUrl);
       const current = new URL(currentUrl);
       return next.pathname === current.pathname && next.search === current.search;
     };
     let approvedTraversal = false;
     const navigation = "navigation" in window && window.navigation instanceof EventTarget ? window.navigation : null;
-    const traverse = (event: Event) => {
+    const traverseHistory = (event: Event) => {
       const next = event as Event & { navigationType?: string; destination?: { url: string } };
-      if (next.navigationType !== "traverse" || !event.cancelable || !next.destination || samePage(next.destination.url)) return;
+      if (next.navigationType !== "traverse" || !event.cancelable || !next.destination || isSamePage(next.destination.url)) return;
       approvedTraversal = confirmDiscard();
       if (!approvedTraversal) event.preventDefault();
     };
-    const popState = (event: PopStateEvent) => {
-      if (approvedTraversal || samePage(window.location.href)) { approvedTraversal = false; return; }
+    const handlePopState = (event: PopStateEvent) => {
+      if (approvedTraversal || isSamePage(window.location.href)) { approvedTraversal = false; return; }
       if (!confirmDiscard()) {
         event.stopImmediatePropagation();
         // shortcut: older browsers restore a canceled traversal with pushState, remove when Navigation API is universal.
         window.history.pushState(currentState, "", currentUrl);
       }
     };
-    const beforeUnload = (event: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
@@ -45,14 +46,14 @@ export function useAuthoringGuard(dirty: boolean) {
         event.stopPropagation();
       }
     };
-    window.addEventListener("beforeunload", beforeUnload);
-    window.addEventListener("popstate", popState, true);
-    navigation?.addEventListener("navigate", traverse);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("popstate", handlePopState, true);
+    navigation?.addEventListener("navigate", traverseHistory);
     document.addEventListener("click", followLink, true);
     return () => {
-      window.removeEventListener("beforeunload", beforeUnload);
-      window.removeEventListener("popstate", popState, true);
-      navigation?.removeEventListener("navigate", traverse);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("popstate", handlePopState, true);
+      navigation?.removeEventListener("navigate", traverseHistory);
       document.removeEventListener("click", followLink, true);
     };
   }, [dirty, confirmDiscard]);

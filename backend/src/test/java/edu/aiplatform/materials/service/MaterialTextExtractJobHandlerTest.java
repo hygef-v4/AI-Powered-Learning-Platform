@@ -114,7 +114,7 @@ class MaterialTextExtractJobHandlerTest {
     void supersededBeforeStartSkipsStorageAndWrite() {
         when(materialRepository.findMaterial(id))
                 .thenReturn(
-                        Optional.of(material.revise("Title", "", 0, 2, material.status(), now)));
+                        Optional.of(material.reviseMaterial("Title", "", 0, 2, material.status(), now)));
         materialTextExtractJobHandler.handle(message());
         verifyNoInteractions(materialTextExtractor);
         verify(materialRepository, never()).completeText(any(), anyInt(), any(), any());
@@ -128,7 +128,7 @@ class MaterialTextExtractJobHandlerTest {
                             when(materialRepository.findMaterial(id))
                                     .thenReturn(
                                             Optional.of(
-                                                    material.revise(
+                                                    material.reviseMaterial(
                                                             "Title",
                                                             "",
                                                             0,

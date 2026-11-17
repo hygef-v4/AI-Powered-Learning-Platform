@@ -36,7 +36,7 @@ class GradingProposalServiceTest {
         var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
         assertThat(service.listProposals(actor, evaluation.id).get(0).safeError)
                 .contains("Tổng điểm", "không khớp").doesNotContain("PROPOSAL_");
-        verify(proposals, never()).save(any());
+        verify(proposals, never()).saveProposal(any());
         verifyNoInteractions(ai);
     }
 
@@ -56,14 +56,14 @@ class GradingProposalServiceTest {
         assertThatThrownBy(() -> service.requestProposals(actor,
                 new AiBatch(items, new AiRequest(null, null, "batch"))))
                 .isInstanceOfSatisfying(ApiException.class, error -> {
-                    assertThat(error.status().value()).isEqualTo(400);
-                    assertThat(error.code()).isEqualTo("INVALID_BATCH");
+                    assertThat(error.readStatus().value()).isEqualTo(400);
+                    assertThat(error.readCode()).isEqualTo("INVALID_BATCH");
                     assertThat(error.getMessage()).isEqualTo("Batch must contain 1–200 items");
                 });
         assertThatThrownBy(() -> service.estimateProposalTokens(actor, new Batch(items)))
                 .isInstanceOfSatisfying(ApiException.class, error -> {
-                    assertThat(error.status().value()).isEqualTo(400);
-                    assertThat(error.code()).isEqualTo("INVALID_BATCH");
+                    assertThat(error.readStatus().value()).isEqualTo(400);
+                    assertThat(error.readCode()).isEqualTo("INVALID_BATCH");
                     assertThat(error.getMessage()).isEqualTo("Batch must contain 1–200 items");
                 });
         verifyNoInteractions(transactions, aiTask, evaluations, proposals, access);

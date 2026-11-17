@@ -95,7 +95,7 @@ public class NotificationService {
     public Feed listNotifications(Actor actor, boolean unread, int page, int size) {
         UUID owner = notificationAccess.requireSelf(actor);
         if (page < 1 || page > 100000 || size < 1 || size > 50)
-            throw ApiException.badRequest("PAGE_INVALID", "Trang phải từ1, tối đa50 mục");
+            throw ApiException.createBadRequest("PAGE_INVALID", "Trang phải từ1, tối đa50 mục");
         var rows = notificationRepository.listNotifications(owner, unread, page, size);
         boolean more =
                 rows.size() == size

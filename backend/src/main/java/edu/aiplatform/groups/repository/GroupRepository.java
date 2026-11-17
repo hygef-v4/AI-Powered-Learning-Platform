@@ -169,7 +169,7 @@ public class GroupRepository {
     }
 
     /** Hai yêu cầu gần nhất của một người trong nhóm (BR-U12-50: gần nhất và dòng tóm tắt lần trước). */
-    public List<LeaderChangeRequest> latestOf(UUID groupId, UUID accountId, int limit) {
+    public List<LeaderChangeRequest> listLatest(UUID groupId, UUID accountId, int limit) {
         return jdbc.sql("select " + REQUEST_COLUMNS + " from leader_change_requests where group_id = :groupId "
                         + "and requested_by = :accountId order by created_at desc limit :limit")
                 .param("groupId", groupId).param("accountId", accountId).param("limit", limit)

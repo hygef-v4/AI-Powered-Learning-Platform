@@ -1,9 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import Link from "next/link";
+import { useState, type ReactNode } from "react";
 import { useTheme } from "@/shared/theme";
 import { Icon } from "@/shared/ui/Icon";
 import { HankoMark, Logo } from "@/shared/ui/Logo";
+import { msg } from "@/i18n/msg";
+import { LanguageDialog } from "@/shared/layout/LanguageDialog";
 
 type Variant = "login" | "flow";
 
@@ -24,20 +27,35 @@ export function AuthLayout({
   children: ReactNode;
 }) {
   const [theme, toggleTheme] = useTheme();
+  const [languageOpen, setLanguageOpen] = useState(false);
   return (
     <div className="paper-grid relative flex min-h-dvh flex-col overflow-hidden">
       {toast}
       <header className="flex items-center justify-between px-6 py-5 sm:px-10">
         <Logo />
+        <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={toggleTheme}
-          aria-label={theme === "dark" ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
+          aria-label={theme === "dark" ? msg("identity.components.AuthLayout.switchToLightMode") : msg("identity.components.AuthLayout.switchToDarkMode")}
           className="inline-flex size-10 items-center justify-center rounded-lg text-body transition-colors hover:bg-sunken hover:text-ink"
         >
           <Icon name={theme === "dark" ? "sun" : "moon"} size={17} />
         </button>
+        {/* Đổi ngôn ngữ ngay ở màn đăng nhập, bên phải nút sáng / tối (yêu cầu 2026-11-16). */}
+        <button
+          type="button"
+          onClick={() => setLanguageOpen(true)}
+          aria-label={msg("shared.layout.AppShell.language")}
+          title={msg("shared.layout.AppShell.language")}
+          data-testid="auth-language"
+          className="inline-flex size-10 items-center justify-center rounded-lg text-body transition-colors hover:bg-sunken hover:text-ink"
+        >
+          <Icon name="language" size={17} />
+        </button>
+        </div>
       </header>
+      {languageOpen && <LanguageDialog open onClose={() => setLanguageOpen(false)} />}
       <main className="flex flex-1 items-center justify-center px-4 py-10 sm:py-16">
         <div className="relative w-full max-w-[480px]">
           <Decorations />
@@ -46,7 +64,12 @@ export function AuthLayout({
           </div>
         </div>
       </main>
-      <footer className="px-6 pb-6 text-center text-xs text-muted">© 2026 Nền tảng học tập</footer>
+      <footer className="px-6 pb-6 text-center text-xs text-muted">
+        {/* Chữ chân trang mở trang chính sách quyền riêng tư (yêu cầu 2026-11-16). */}
+        <Link href="/privacy" className="underline-offset-4 transition-colors hover:text-ink hover:underline">
+          {msg("identity.components.AuthLayout.n2026LearningPlatform")}
+        </Link>
+      </footer>
     </div>
   );
 }

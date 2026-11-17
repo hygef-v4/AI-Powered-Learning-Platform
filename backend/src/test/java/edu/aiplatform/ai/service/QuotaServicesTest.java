@@ -50,8 +50,8 @@ class QuotaServicesTest {
 
     @BeforeEach
     void setUp() {
-        when(repository.policy()).thenReturn(new QuotaPolicy(10_000L, 50_000L, 1, null, NOW));
-        when(repository.teacherQuota(any())).thenReturn(Optional.empty());
+        when(repository.loadPolicy()).thenReturn(new QuotaPolicy(10_000L, 50_000L, 1, null, NOW));
+        when(repository.findTeacherQuota(any())).thenReturn(Optional.empty());
         when(repository.lockWindow(eq(QuotaRepository.GLOBAL), any())).thenReturn(new Window("GLOBAL", VN_DAY, 0, 1_000));
         when(repository.lockWindow(eq(teacher.toString()), any())).thenReturn(new Window(teacher.toString(), VN_DAY, 500, 2_000));
     }
@@ -64,7 +64,7 @@ class QuotaServicesTest {
 
     @Test
     void dayFollowsVietnamTime() {
-        assertThat(reservations.today()).isEqualTo(VN_DAY);
+        assertThat(reservations.resolveToday()).isEqualTo(VN_DAY);
     }
 
     @Test
@@ -83,8 +83,8 @@ class QuotaServicesTest {
     void ownDailyLimitIsEnforced() {
         assertThatThrownBy(() -> reservations.reserve(teacher, 7_600))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.code()).isEqualTo("AI_QUOTA_EXCEEDED");
-                    assertThat(e.status()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+                    assertThat(e.readCode()).isEqualTo("AI_QUOTA_EXCEEDED");
+                    assertThat(e.readStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
                     assertThat(e.getMessage()).contains("2026-10-23T00:00+07:00");
                 });
         verify(repository, never()).adjust(any(), any(), anyLong(), anyLong());
@@ -94,23 +94,23 @@ class QuotaServicesTest {
     void globalCeilingIsEnforced() {
         when(repository.lockWindow(eq(QuotaRepository.GLOBAL), any())).thenReturn(new Window("GLOBAL", VN_DAY, 0, 49_900));
         assertThatThrownBy(() -> reservations.reserve(teacher, 200))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_QUOTA_GLOBAL_EXCEEDED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUOTA_GLOBAL_EXCEEDED"));
     }
 
     @Test
     void notConfiguredOrBlockedTeacherCannotUseShared() {
-        when(repository.teacherQuota(teacher)).thenReturn(Optional.of(new TeacherQuota(teacher, 0, 1, null, NOW)));
+        when(repository.findTeacherQuota(teacher)).thenReturn(Optional.of(new TeacherQuota(teacher, 0, 1, null, NOW)));
         assertThatThrownBy(() -> reservations.reserve(teacher, 10))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_QUOTA_BLOCKED"));
-        when(repository.policy()).thenReturn(QuotaPolicy.empty());
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUOTA_BLOCKED"));
+        when(repository.loadPolicy()).thenReturn(QuotaPolicy.createEmptyPolicy());
         assertThatThrownBy(() -> reservations.reserve(teacher, 10))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_QUOTA_NOT_CONFIGURED"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUOTA_NOT_CONFIGURED"));
         assertThat(reservations.limitOf(teacher)).isNull();
     }
 
     @Test
     void teacherOverrideReplacesDefault() {
-        when(repository.teacherQuota(teacher)).thenReturn(Optional.of(new TeacherQuota(teacher, 30_000, 1, null, NOW)));
+        when(repository.findTeacherQuota(teacher)).thenReturn(Optional.of(new TeacherQuota(teacher, 30_000, 1, null, NOW)));
         assertThat(reservations.limitOf(teacher)).isEqualTo(30_000);
         reservations.reserve(teacher, 20_000);
         verify(repository).adjust(teacher.toString(), VN_DAY, 20_000, 0);
@@ -130,7 +130,7 @@ class QuotaServicesTest {
     void remainingTakesTheSmallerOfOwnAndGlobal() {
         when(repository.findWindow(teacher.toString(), VN_DAY)).thenReturn(Optional.of(new Window(teacher.toString(), VN_DAY, 0, 4_000)));
         when(repository.findWindow(QuotaRepository.GLOBAL, VN_DAY)).thenReturn(Optional.of(new Window("GLOBAL", VN_DAY, 0, 48_000)));
-        var remaining = reservations.remaining(teacher);
+        var remaining = reservations.calculateRemaining(teacher);
         assertThat(remaining.used()).isEqualTo(4_000);
         assertThat(remaining.left()).isEqualTo(2_000);
     }
@@ -156,14 +156,14 @@ class QuotaServicesTest {
         UUID student = UUID.randomUUID();
         when(accounts.getContact(student)).thenReturn(Optional.of(new AccountContact(student, "sv@fpt.edu.vn", "SV",
                 Role.STUDENT, AccountStatus.ACTIVE)));
-        assertThatThrownBy(() -> service.teacherCandidates(admin, "a".repeat(101)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_QUERY_TOO_LONG"));
+        assertThatThrownBy(() -> service.listTeacherCandidates(admin, "a".repeat(101)))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUERY_TOO_LONG"));
         assertThatThrownBy(() -> service.setTeacherQuota(admin, student, 1000L))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_QUOTA_NOT_TEACHER"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUOTA_NOT_TEACHER"));
         assertThatThrownBy(() -> service.savePolicy(admin, -1L, 10L, 1L))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("AI_QUOTA_INVALID"));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUOTA_INVALID"));
         when(repository.savePolicy(anyLong(), anyLong(), anyLong(), any(), any())).thenReturn(false);
         assertThatThrownBy(() -> service.savePolicy(admin, 1L, 10L, 0L))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.status()).isEqualTo(HttpStatus.CONFLICT));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus()).isEqualTo(HttpStatus.CONFLICT));
     }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { newId } from "@/shared/document/types";
+import { generateId } from "@/shared/document/types";
 
 export type ActivityKind = "SESSION_START" | "HIDDEN" | "VISIBLE" | "HEARTBEAT" | "SESSION_END";
 export type ActivityEventInput = { sessionId: string; clientEventId: string; sequence: number; kind: ActivityKind; clientTime: string };
@@ -28,13 +28,13 @@ export function useActivityTracker({ enabled, send, trackFocus = false }: { enab
 
   useEffect(() => {
     if (!enabled || typeof document === "undefined") return;
-    const sessionId = newId();
+    const sessionId = generateId();
     let sequence = 0;
     let queue: ActivityEventInput[] = [];
     let inflight: Promise<void> | null = null;
 
     const push = (kind: ActivityKind) => {
-      queue.push({ sessionId, clientEventId: newId(), sequence: sequence++, kind, clientTime: new Date().toISOString() });
+      queue.push({ sessionId, clientEventId: generateId(), sequence: sequence++, kind, clientTime: new Date().toISOString() });
       if (queue.length > MAX_QUEUE) queue = queue.slice(queue.length - MAX_QUEUE);
     };
     const flush = (keepalive = false): Promise<void> => {

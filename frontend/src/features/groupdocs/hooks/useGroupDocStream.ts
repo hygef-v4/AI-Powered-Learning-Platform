@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { refreshSession } from "@/shared/api/client";
-import { eventsUrl } from "../api";
+import { buildEventsUrl } from "../api";
 import type { StreamEvent } from "../model/types";
 
 const MAX_RETRY_MS = 30_000;
@@ -28,7 +28,7 @@ export function useGroupDocStream(documentId: string | null, onEvent: (event: St
 
     const connect = () => {
       if (stopped) return;
-      source = new EventSource(eventsUrl(documentId), { withCredentials: true });
+      source = new EventSource(buildEventsUrl(documentId), { withCredentials: true });
       source.onmessage = (message) => {
         try {
           handlers.current.onEvent(JSON.parse(message.data) as StreamEvent);

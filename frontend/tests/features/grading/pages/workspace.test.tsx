@@ -398,15 +398,15 @@ describe("workspace save", () => {
     expect(mocks.requestProposal).not.toHaveBeenCalled();
   });
 
-  it("explains a concurrent grade lock without discarding unsaved checklist changes or retrying", async () => {
+  it("explains a changed submission without discarding unsaved checklist changes or retrying", async () => {
     mocks.loadEvaluation.mockResolvedValue({ ...detail, rubrics: [
       { rubricId: "r", partId: "p", maxPoints: 1, criteria: [{ criterionId: "c", title: "Đúng", items: [{ itemId: "i", text: "Đúng nội dung", points: 1 }] }] },
     ] });
-    mocks.saveEvaluation.mockRejectedValue(new ApiError({ status: 409, title: "Conflict", code: "GRADE_LOCKED" }));
+    mocks.saveEvaluation.mockRejectedValue(new ApiError({ status: 409, title: "Conflict", code: "SUBMISSION_CHANGED" }));
     render(<GradingWorkspacePage evaluationId="e" />);
     fireEvent.click(await screen.findByRole("checkbox", { name: "Đúng nội dung" }));
     fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Điểm đã chốt");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Bài nộp đã thay đổi");
     expect(screen.getByRole("checkbox", { name: "Đúng nội dung" })).toBeChecked();
     expect(mocks.saveEvaluation).toHaveBeenCalledTimes(1);
     expect(mocks.push).not.toHaveBeenCalled();

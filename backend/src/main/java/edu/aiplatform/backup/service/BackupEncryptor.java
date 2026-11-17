@@ -45,7 +45,14 @@ public final class BackupEncryptor {
     private BackupEncryptor() {
     }
 
-    public static void encrypt(InputStream in, OutputStream out, PublicKey publicKey) throws IOException {
+    /** Archive có phải bản đã mã hóa không: nhận diện bằng 8 byte {@code "ALAPBK01"} đầu tệp. */
+    public static boolean isEncrypted(java.nio.file.Path archive) throws IOException {
+        try (InputStream in = java.nio.file.Files.newInputStream(archive)) {
+            return Arrays.equals(in.readNBytes(MAGIC.length), MAGIC);
+        }
+    }
+
+    public static void encryptArchive(InputStream in, OutputStream out, PublicKey publicKey) throws IOException {
         try {
             KeyGenerator generator = KeyGenerator.getInstance("AES");
             generator.init(256);
@@ -67,7 +74,7 @@ public final class BackupEncryptor {
             while (true) {
                 byte[] next = readChunk(in);
                 boolean last = next.length == 0;
-                byte[] cipherText = aes(Cipher.ENCRYPT_MODE, key, prefix, index, last, current);
+                byte[] cipherText = runAes(Cipher.ENCRYPT_MODE, key, prefix, index, last, current);
                 data.writeInt(cipherText.length);
                 data.write(cipherText);
                 if (last) {
@@ -82,7 +89,7 @@ public final class BackupEncryptor {
         }
     }
 
-    public static void decrypt(InputStream in, OutputStream out, PrivateKey privateKey) throws IOException {
+    public static void decryptArchive(InputStream in, OutputStream out, PrivateKey privateKey) throws IOException {
         try {
             DataInputStream data = new DataInputStream(in);
             byte[] magic = data.readNBytes(MAGIC.length);
@@ -103,7 +110,7 @@ public final class BackupEncryptor {
             while (true) {
                 byte[] next = readBlock(data);
                 boolean last = next == null;
-                out.write(aes(Cipher.DECRYPT_MODE, key, prefix, index, last, current));
+                out.write(runAes(Cipher.DECRYPT_MODE, key, prefix, index, last, current));
                 if (last) {
                     break;
                 }
@@ -117,19 +124,19 @@ public final class BackupEncryptor {
     }
 
     public static PublicKey parsePublicKey(String pemOrBase64) throws GeneralSecurityException {
-        return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(der(pemOrBase64)));
+        return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(decodeDer(pemOrBase64)));
     }
 
     public static PrivateKey parsePrivateKey(String pemOrBase64) throws GeneralSecurityException {
-        return KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(der(pemOrBase64)));
+        return KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(decodeDer(pemOrBase64)));
     }
 
-    private static byte[] der(String pemOrBase64) {
+    private static byte[] decodeDer(String pemOrBase64) {
         String body = pemOrBase64.replaceAll("-----[A-Z ]+-----", "").replaceAll("\\s", "");
         return Base64.getDecoder().decode(body);
     }
 
-    private static byte[] aes(int mode, SecretKey key, byte[] prefix, long index, boolean last, byte[] input)
+    private static byte[] runAes(int mode, SecretKey key, byte[] prefix, long index, boolean last, byte[] input)
             throws GeneralSecurityException {
         byte[] nonce = ByteBuffer.allocate(12).put(prefix).putLong(index).array();
         byte[] aad = ByteBuffer.allocate(9).putLong(index).put((byte) (last ? 1 : 0)).array();

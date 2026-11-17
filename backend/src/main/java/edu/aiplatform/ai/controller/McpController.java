@@ -30,15 +30,15 @@ public class McpController {
     static final long MAX_BODY_BYTES = 1024 * 1024;
     static final String PROTOCOL_HEADER = "MCP-Protocol-Version";
 
-    private final McpCredentialService credentials;
+    private final McpCredentialService mcpCredentialService;
     private final McpServer server;
     private final ObjectMapper json;
 
     /**
      * Initializes the controller with credentials, core server, and JSON mapper.
      */
-    public McpController(McpCredentialService credentials, McpServer server, ObjectMapper json) {
-        this.credentials = credentials;
+    public McpController(McpCredentialService mcpCredentialService, McpServer server, ObjectMapper json) {
+        this.mcpCredentialService = mcpCredentialService;
         this.server = server;
         this.json = json;
     }
@@ -58,7 +58,7 @@ public class McpController {
         }
 
         // Step 2: Extract Bearer token and authenticate caller principal
-        Optional<McpPrincipal> principal = bearer(authorization).flatMap(credentials::authenticate);
+        Optional<McpPrincipal> principal = extractBearer(authorization).flatMap(mcpCredentialService::authenticate);
         if (principal.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"mcp\"").build();
@@ -83,7 +83,7 @@ public class McpController {
         }
 
         // Step 6: Delegate message handling to McpServer and wrap output
-        return server.handle(principal.get(), message)
+        return server.handleMessage(principal.get(), message)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.accepted().build());
     }
@@ -92,14 +92,14 @@ public class McpController {
      * Rejects unsupported HTTP methods (GET, DELETE) on the MCP endpoint.
      */
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.DELETE})
-    public ResponseEntity<Void> notSupported() {
+    public ResponseEntity<Void> rejectUnsupported() {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).header(HttpHeaders.ALLOW, "POST").build();
     }
 
     /**
      * Extracts the raw token string from the Authorization header if it has a Bearer prefix.
      */
-    static Optional<String> bearer(String header) {
+    static Optional<String> extractBearer(String header) {
         if (header == null || !header.regionMatches(true, 0, "Bearer ", 0, 7)) {
             return Optional.empty();
         }

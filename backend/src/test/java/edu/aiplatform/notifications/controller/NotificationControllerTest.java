@@ -69,7 +69,7 @@ class NotificationControllerTest {
     @Test
     void foreignNotificationStays404() throws Exception {
         UUID id = UUID.randomUUID();
-        doThrow(edu.aiplatform.shared.error.ApiException.notFound("NOTIFICATION_NOT_FOUND"))
+        doThrow(edu.aiplatform.shared.error.ApiException.createNotFound("NOTIFICATION_NOT_FOUND"))
                 .when(notificationService)
                 .markRead(actor, id);
         mvc.perform(post("/api/v1/me/notifications/" + id + ":read"))

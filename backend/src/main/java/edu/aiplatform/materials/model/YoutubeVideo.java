@@ -68,7 +68,7 @@ public record YoutubeVideo(String id) {
         }
     }
 
-    public String url() {
+    public String buildUrl() {
         return "https://www.youtube.com/watch?v=" + id;
     }
 }

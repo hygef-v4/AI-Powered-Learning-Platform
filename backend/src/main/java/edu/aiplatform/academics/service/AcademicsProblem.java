@@ -14,7 +14,7 @@ public class AcademicsProblem extends ApiException {
     }
 
     /** Returns the structured problem properties. */
-    public Map<String, Object> properties() {
+    public Map<String, Object> describeProperties() {
         return properties;
     }
 }

@@ -38,9 +38,9 @@ public final class QuestionFingerprint {
     }
 
     /** Hệ số Dice trên bộ ba ký tự của hai nội dung đã chuẩn hóa, từ 0 đến 1. */
-    public static double similarity(String normalizedA, String normalizedB) {
-        Set<String> a = trigrams(normalizedA);
-        Set<String> b = trigrams(normalizedB);
+    public static double calculateSimilarity(String normalizedA, String normalizedB) {
+        Set<String> a = collectTrigrams(normalizedA);
+        Set<String> b = collectTrigrams(normalizedB);
         if (a.isEmpty() || b.isEmpty()) {
             return normalizedA.equals(normalizedB) ? 1 : 0;
         }
@@ -49,7 +49,7 @@ public final class QuestionFingerprint {
         return 2.0 * a.size() / total;
     }
 
-    private static Set<String> trigrams(String text) {
+    private static Set<String> collectTrigrams(String text) {
         Set<String> result = new HashSet<>();
         String padded = "  " + text + " ";
         for (int i = 0; i + 3 <= padded.length(); i++) {

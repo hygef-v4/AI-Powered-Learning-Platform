@@ -24,7 +24,7 @@ public final class ProposalRules {
     }
 
     /** Khóa so trùng tên không phân biệt hoa thường. */
-    public static String nameKey(String name) {
+    public static String normalizeNameKey(String name) {
         return name.trim().toLowerCase(Locale.ROOT);
     }
 

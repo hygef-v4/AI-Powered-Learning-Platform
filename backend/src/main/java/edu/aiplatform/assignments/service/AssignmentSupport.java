@@ -46,15 +46,15 @@ class AssignmentSupport {
     }
 
     /** Bài tồn tại và người gọi đọc được; không thì 404 kèm audit. */
-    Assignment readable(Actor actor, UUID id, String action) {
-        Assignment assignment = assignments.find(id).orElseThrow(() -> access.deny(actor, action,
+    Assignment loadReadable(Actor actor, UUID id, String action) {
+        Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.deny(actor, action,
                 AssignmentAudit.OBJECT_ASSIGNMENT, id, "NOT_FOUND"));
         access.requireRead(actor, assignment, action);
         return assignment;
     }
 
-    Assignment manageable(Actor actor, UUID id, String action) {
-        Assignment assignment = assignments.find(id).orElseThrow(() -> access.deny(actor, action,
+    Assignment loadManageable(Actor actor, UUID id, String action) {
+        Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.deny(actor, action,
                 AssignmentAudit.OBJECT_ASSIGNMENT, id, "NOT_FOUND"));
         access.requireManage(actor, assignment, action);
         return assignment;
@@ -73,8 +73,8 @@ class AssignmentSupport {
     /** Khóa bài còn sửa được nội dung (DRAFT, REVIEWED). */
     Assignment lockEditable(Actor actor, UUID id, long version, String action) {
         Assignment assignment = lock(actor, id, version, action);
-        if (!assignment.editable()) {
-            throw ApiException.conflict("ASSIGNMENT_NOT_EDITABLE",
+        if (!assignment.canEdit()) {
+            throw ApiException.createConflict("ASSIGNMENT_NOT_EDITABLE",
                     "Bài đã phát hành, không sửa nội dung được. Hãy nhân bản hoặc tạo version mới");
         }
         return assignment;
@@ -82,12 +82,12 @@ class AssignmentSupport {
 
     static void requireVersion(Assignment assignment, long version) {
         if (assignment.version() != version) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
     }
 
-    static ApiException versionConflict() {
-        return ApiException.conflict("ASSIGNMENT_VERSION_CONFLICT", "Bài đã thay đổi ở nơi khác. Hãy tải lại");
+    static ApiException createVersionConflictError() {
+        return ApiException.createConflict("ASSIGNMENT_VERSION_CONFLICT", "Bài đã thay đổi ở nơi khác. Hãy tải lại");
     }
 
     /** U12 chưa cài hoặc lỗi thì không có bài nhóm (BR-U07-03, 72). */
@@ -112,24 +112,24 @@ class AssignmentSupport {
         }
     }
 
-    AssignmentViews.Row row(Assignment a, boolean readOnly) {
+    AssignmentViews.Row buildRow(Assignment a, boolean readOnly) {
         return new AssignmentViews.Row(a.id(), a.scope(), a.classId(), a.subjectId(), a.title(), a.submissionMode(),
                 a.gradingMode(), a.diagramEnabled(), a.status(), a.versionNo(), a.origin(), a.opensAt(), a.closesAt(),
                 a.lateUntil(), a.maxAttempts(), a.updatedAt(), readOnly);
     }
 
-    AssignmentViews.Detail detail(Actor actor, Assignment a, List<ValidationIssue> warnings) {
+    AssignmentViews.Detail buildDetail(Actor actor, Assignment a, List<ValidationIssue> warnings) {
         boolean manage = access.canManage(actor, a);
-        boolean archived = access.ownerArchived(a);
+        boolean archived = access.isOwnerArchived(a);
         boolean write = manage && !archived;
-        List<AssignmentViews.Part> parts = detailParts(a);
+        List<AssignmentViews.Part> parts = buildDetailParts(a);
         BigDecimal total = parts.stream().map(AssignmentViews.Part::totalPoints).reduce(BigDecimal.ZERO, BigDecimal::add);
         AssignmentStatus status = a.status();
         AssignmentViews.Permissions permissions = new AssignmentViews.Permissions(manage,
-                write && a.editable(),
+                write && a.canEdit(),
                 write && (status == AssignmentStatus.SCHEDULED || status == AssignmentStatus.OPEN),
                 write && (status == AssignmentStatus.SCHEDULED || status == AssignmentStatus.OPEN),
-                write && a.editable(),
+                write && a.canEdit(),
                 write && status == AssignmentStatus.DRAFT,
                 // Phải hoàn tất bài (REVIEWED) rồi mới xếp lịch giao (yêu cầu 2026-11-11); bài của môn là đề mẫu,
                 // không phát hành (yêu cầu 2026-11-09).
@@ -137,7 +137,7 @@ class AssignmentSupport {
                 write,
                 write && (status == AssignmentStatus.CLOSED || status == AssignmentStatus.RETIRED),
                 archived);
-        return new AssignmentViews.Detail(a.id(), a.scope(), a.classId(), a.subjectId(), ownerName(a),
+        return new AssignmentViews.Detail(a.id(), a.scope(), a.classId(), a.subjectId(), resolveOwnerName(a),
                 a.sourceAssignmentId(), a.origin(), a.versionNo(), a.submissionMode(), a.diagramEnabled(),
                 a.gradingMode(), a.title(), a.instructions(), DocumentFiles.hideFiles(a.skeleton()), parts, total,
                 a.requiredDiagrams(), a.referenceMaterialIds(), a.activityMonitoringEnabled(), a.activityNotice(),
@@ -146,7 +146,7 @@ class AssignmentSupport {
                 a.scope() == AssignmentScope.CLASS && groupSupported(a.classId()), List.copyOf(warnings));
     }
 
-    private List<AssignmentViews.Part> detailParts(Assignment a) {
+    private List<AssignmentViews.Part> buildDetailParts(Assignment a) {
         Map<String, AssignmentRubric> byPart = new HashMap<>();
         rubrics.listByAssignment(a.id()).forEach(r -> byPart.put(r.partId(), r));
         List<AssignmentViews.Part> parts = new ArrayList<>();
@@ -154,22 +154,22 @@ class AssignmentSupport {
         if (whole != null && RubricService.hasWhole(a.parts())
                 && (!whole.criteria().isEmpty() || a.parts().isEmpty())) {
             parts.add(new AssignmentViews.Part(RubricService.WHOLE, null, List.of(), RubricService.WHOLE_TITLE,
-                    whole.id(), whole.criteria().size(), whole.totalPoints(), whole.complete(), whole.locked()));
+                    whole.id(), whole.criteria().size(), whole.totalPoints(), whole.complete(), whole.hasLocked()));
         }
         for (DocumentPart part : a.parts()) {
             AssignmentRubric rubric = byPart.get(part.partId());
             BigDecimal points = rubric == null ? BigDecimal.ZERO : rubric.totalPoints();
             parts.add(new AssignmentViews.Part(part.partId(), part.headingBlockId(), part.ancestorHeadingIds(),
                     part.title(), rubric == null ? null : rubric.id(), rubric == null ? 0 : rubric.criteria().size(),
-                    points, rubric != null && rubric.complete(), rubric != null && rubric.locked()));
+                    points, rubric != null && rubric.complete(), rubric != null && rubric.hasLocked()));
         }
         return parts;
     }
 
-    String ownerName(Assignment a) {
+    String resolveOwnerName(Assignment a) {
         try {
             if (a.scope() == AssignmentScope.CLASS) {
-                var ref = access.classRef(a.classId());
+                var ref = access.loadClassRef(a.classId());
                 // Lớp không còn tên (yêu cầu 2026-11-02): mã môn rồi mã lớp.
                 return ref.subjectCode() == null ? ref.code() : ref.subjectCode() + " · " + ref.code();
             }
@@ -179,11 +179,11 @@ class AssignmentSupport {
         }
     }
 
-    boolean classArchived(UUID classId) {
-        return access.classRef(classId).status() == ClassStatus.ARCHIVED;
+    boolean isClassArchived(UUID classId) {
+        return access.loadClassRef(classId).status() == ClassStatus.ARCHIVED;
     }
 
-    boolean subjectArchived(UUID subjectId) {
-        return access.subjectStatus(subjectId) == SubjectStatus.ARCHIVED;
+    boolean isSubjectArchived(UUID subjectId) {
+        return access.loadSubjectStatus(subjectId) == SubjectStatus.ARCHIVED;
     }
 }

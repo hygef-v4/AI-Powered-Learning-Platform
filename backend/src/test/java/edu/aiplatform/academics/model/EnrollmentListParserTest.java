@@ -19,7 +19,7 @@ class EnrollmentListParserTest {
 
     @Test void acceptsStudentCodesWithOptionalHeaderAndMarksInvalidIdentifiers() {
         var rows = EnrollmentListParser.parseEnrollmentRows("MSSV\n se000001 \nSE000001\na@example.com\nSE-00001\nAB12345");
-        assertThat(rows).extracting(EnrollmentListParser.Row::identifier)
+        assertThat(rows).extracting(EnrollmentListParser.Row::readIdentifier)
                 .containsExactly("SE000001", "SE000001", "a@example.com", "se-00001", "ab12345");
         assertThat(rows.get(0).studentCode()).isEqualTo("SE000001");
         assertThat(rows.get(0).email()).isNull();

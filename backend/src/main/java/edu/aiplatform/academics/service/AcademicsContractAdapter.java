@@ -48,27 +48,27 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
     /** Returns a lightweight ClassRef object by class ID. */
     @Override
     public Optional<ClassRef> getClassRef(UUID classId) {
-        return courseClassRepository.find(classId).map(this::mapClassReference);
+        return courseClassRepository.findClass(classId).map(this::mapClassReference);
     }
 
     /** Checks whether the account is the designated teacher of a class. */
     @Override
     public boolean isTeacherOf(UUID accountId, UUID classId) {
-        return accountId != null && courseClassRepository.find(classId)
+        return accountId != null && courseClassRepository.findClass(classId)
                 .map(c -> accountId.equals(c.teacherId())).orElse(false);
     }
 
     /** Checks whether the account is an actively enrolled student in a class. */
     @Override
     public boolean isEnrolledStudent(UUID accountId, UUID classId) {
-        return accountId != null && enrollmentRepository.find(classId, accountId)
+        return accountId != null && enrollmentRepository.findEnrollment(classId, accountId)
                 .map(e -> e.status() == EnrollmentStatus.ACTIVE).orElse(false);
     }
 
     /** Returns the parent subject ID for a course class. */
     @Override
     public Optional<UUID> subjectOfClass(UUID classId) {
-        return courseClassRepository.find(classId).map(CourseClass::subjectId);
+        return courseClassRepository.findClass(classId).map(CourseClass::subjectId);
     }
 
     /** Returns all class IDs taught by a specific teacher account. */
@@ -86,7 +86,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
     /** Lists all active student account IDs currently enrolled in a class. */
     @Override
     public List<UUID> listActiveStudents(UUID classId) {
-        return allPages(offset -> enrollmentRepository.listByClass(classId, true, 100, offset))
+        return collectAllPages(offset -> enrollmentRepository.listByClass(classId, true, 100, offset))
                 .stream().map(Enrollment::accountId).toList();
     }
 
@@ -95,7 +95,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
     public boolean isClassManager(UUID accountId, UUID classId) {
         if (accountId == null)
             return false;
-        return courseClassRepository.find(classId)
+        return courseClassRepository.findClass(classId)
                 .flatMap(c -> subjectQuery.getSubject(c.subjectId()))
                 .map(s -> accountId.equals(s.managerId())).orElse(false);
     }
@@ -104,9 +104,9 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
     @Override
     public List<ClassRef> listOpenClassesOf(UUID accountId) {
         var combined = new LinkedHashMap<UUID, ClassRef>();
-        allPages(offset -> academicsReadRepository.listForTeacher(accountId, null, ClassStatus.OPEN, null,
+        collectAllPages(offset -> academicsReadRepository.listForTeacher(accountId, null, ClassStatus.OPEN, null,
                 100, offset)).forEach(c -> combined.put(c.id(), mapClassReference(c)));
-        allPages(offset -> academicsReadRepository.listForStudent(accountId, null, ClassStatus.OPEN, null,
+        collectAllPages(offset -> academicsReadRepository.listForStudent(accountId, null, ClassStatus.OPEN, null,
                 100, offset)).forEach(c -> combined.put(c.id(), mapClassReference(c)));
         return List.copyOf(combined.values());
     }
@@ -135,7 +135,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
     public List<SubjectClassSummary> listClassesOfSubject(UUID subjectId) {
         var rows = academicsReadRepository.listOfSubject(subjectId);
         var counts = academicsReadRepository
-                .enrollmentCounts(rows.stream().map(CourseClass::id).toList());
+                .countEnrollments(rows.stream().map(CourseClass::id).toList());
         var names = new HashMap<UUID, String>();
         return rows.stream().map(c -> {
             String teacher = c.teacherId() == null ? null
@@ -144,7 +144,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
             long active = counts
                     .getOrDefault(c.id(), new IAcademicsReadRepository.EnrollmentCounts(0, 0))
                     .active();
-            return new SubjectClassSummary(c.id(), c.code(), c.term(), c.name(), c.status().name(),
+            return new SubjectClassSummary(c.id(), c.code(), c.deriveTerm(), c.name(), c.status().name(),
                     teacher, Math.toIntExact(active));
         }).toList();
     }
@@ -175,7 +175,7 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
             if (current.status() == ClassStatus.ARCHIVED)
                 continue;
             CourseClass changed = current.changeStatus(ClassStatus.ARCHIVED, true, false, now);
-            courseClassRepository.update(changed, current.version());
+            courseClassRepository.updateClass(changed, current.version());
             audit.record(
                     new AuditEvent(UUID.randomUUID(), actor.accountId(), "CLASS_STATUS_CHANGED",
                             "COURSE_CLASS", current.id().toString(), AuditResult.SUCCESS, null,
@@ -192,11 +192,11 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
         String subjectCode = subjectQuery.getSubject(c.subjectId()).map(SubjectRef::code)
                 .orElse(null);
         return new ClassRef(c.id(), c.subjectId(), c.code(), c.name(), c.status(), c.teacherId(),
-                c.showGradeDistribution(), subjectCode, c.term());
+                c.showGradeDistribution(), subjectCode, c.deriveTerm());
     }
 
     /** Fetches every page from the supplied repository query. */
-    private static <T> List<T> allPages(IntFunction<List<T>> fetch) {
+    private static <T> List<T> collectAllPages(IntFunction<List<T>> fetch) {
         var all = new ArrayList<T>();
         for (int offset = 0;; offset = Math.addExact(offset, 100)) {
             var page = fetch.apply(offset);

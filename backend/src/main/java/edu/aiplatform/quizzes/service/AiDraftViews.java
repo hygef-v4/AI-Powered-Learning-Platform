@@ -33,27 +33,27 @@ public final class AiDraftViews {
                               String failureCode, String failureMessage, UUID createdBy, Instant createdAt,
                               Instant decidedAt, List<String> sourceWarnings) {
 
-        static AiDraftView of(QuizAiDraft d) {
+        static AiDraftView createDraftView(QuizAiDraft d) {
             Map<String, Object> p = d.provenance();
             Object count = p.get(REQUESTED_COUNT);
             return new AiDraftView(d.id(), d.target(), d.quizId(), d.subjectId(), d.origin(), d.taskId(), d.status(),
-                    d.proposal(), count instanceof Number n ? n.intValue() : null, string(p, SOURCE), string(p, PROVIDER),
-                    materials(p.get(MATERIALS)), string(p, AGENT_LABEL), d.baseVersion(),
-                    string(p, QuizAiDraft.FAILURE_CODE), string(p, QuizAiDraft.FAILURE_MESSAGE), d.createdBy(),
-                    d.createdAt(), d.decidedAt(), warnings(p.get("sourceWarnings")));
+                    d.proposal(), count instanceof Number n ? n.intValue() : null, readString(p, SOURCE), readString(p, PROVIDER),
+                    readMaterials(p.get(MATERIALS)), readString(p, AGENT_LABEL), d.baseVersion(),
+                    readString(p, QuizAiDraft.FAILURE_CODE), readString(p, QuizAiDraft.FAILURE_MESSAGE), d.createdBy(),
+                    d.createdAt(), d.decidedAt(), readWarnings(p.get("sourceWarnings")));
         }
 
-        private static List<String> warnings(Object value) {
+        private static List<String> readWarnings(Object value) {
             return value instanceof List<?> list ? list.stream().filter(String.class::isInstance)
                     .map(String.class::cast).toList() : List.of();
         }
 
-        private static String string(Map<String, Object> provenance, String key) {
+        private static String readString(Map<String, Object> provenance, String key) {
             Object value = provenance.get(key);
             return value == null ? null : value.toString();
         }
 
-        private static List<MaterialRef> materials(Object value) {
+        private static List<MaterialRef> readMaterials(Object value) {
             List<MaterialRef> result = new ArrayList<>();
             if (value instanceof List<?> list) {
                 for (Object item : list) {

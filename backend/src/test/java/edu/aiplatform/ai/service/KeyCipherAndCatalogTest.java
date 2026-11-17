@@ -32,20 +32,20 @@ class KeyCipherAndCatalogTest {
     @Test
     void encryptsWithRandomIvAndDecryptsBack() {
         KeyCipher cipher = new KeyCipher(properties(KEY_V1, null));
-        EncryptedKey a = cipher.encrypt("sk-secret-3kQf");
-        EncryptedKey b = cipher.encrypt("sk-secret-3kQf");
+        EncryptedKey a = cipher.encryptKey("sk-secret-3kQf");
+        EncryptedKey b = cipher.encryptKey("sk-secret-3kQf");
         assertThat(a.ciphertext()).isNotEqualTo("sk-secret-3kQf".getBytes());
         assertThat(a.iv()).isNotEqualTo(b.iv());
         assertThat(a.version()).isEqualTo(1);
-        assertThat(cipher.decrypt(a)).isEqualTo("sk-secret-3kQf");
+        assertThat(cipher.decryptKey(a)).isEqualTo("sk-secret-3kQf");
     }
 
     @Test
     void newKeysUseLatestVersionAndOldOnesStillDecrypt() {
-        EncryptedKey old = new KeyCipher(properties(KEY_V1, null)).encrypt("old-key");
+        EncryptedKey old = new KeyCipher(properties(KEY_V1, null)).encryptKey("old-key");
         KeyCipher rotated = new KeyCipher(properties(KEY_V1, KEY_V2));
-        assertThat(rotated.encrypt("new-key").version()).isEqualTo(2);
-        assertThat(rotated.decrypt(old)).isEqualTo("old-key");
+        assertThat(rotated.encryptKey("new-key").version()).isEqualTo(2);
+        assertThat(rotated.decryptKey(old)).isEqualTo("old-key");
     }
 
     @Test
@@ -74,48 +74,48 @@ class KeyCipherAndCatalogTest {
     @Test
     void legacyUnboundCiphertextIsRejectedForConnections() {
         KeyCipher cipher = new KeyCipher(properties(KEY_V1, null));
-        EncryptedKey legacy = cipher.encrypt("AIza-legacy-0000");
+        EncryptedKey legacy = cipher.encryptKey("AIza-legacy-0000");
 
         assertThatThrownBy(() -> cipher.decryptConnectionKey(
                 connection(UUID.randomUUID(), Scope.INSTITUTIONAL, null, AiProvider.GEMINI, legacy)))
                 .isInstanceOf(IllegalStateException.class);
-        assertThat(cipher.decrypt(legacy)).isEqualTo("AIza-legacy-0000");
+        assertThat(cipher.decryptKey(legacy)).isEqualTo("AIza-legacy-0000");
     }
 
     static AiConnection connection(UUID id, Scope scope, UUID owner, AiProvider provider, EncryptedKey key) {
-        return AiConnection.create(id, scope, owner, provider, "gemini-2.5-flash", key, "0000",
+        return AiConnection.createConnection(id, scope, owner, provider, "gemini-2.5-flash", key, "0000",
                 Instant.parse("2026-11-11T00:00:00Z"));
     }
 
     @Test
     void missingEncryptionKeyFailsClosed() {
         KeyCipher cipher = new KeyCipher(properties(null, " "));
-        assertThat(cipher.configured()).isFalse();
-        assertThatThrownBy(() -> cipher.encrypt("x"))
+        assertThat(cipher.hasKeys()).isFalse();
+        assertThatThrownBy(() -> cipher.encryptKey("x"))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("AI_KEY_ENCRYPTION_NOT_CONFIGURED"));
+                        e -> assertThat(e.readCode()).isEqualTo("AI_KEY_ENCRYPTION_NOT_CONFIGURED"));
     }
 
     @Test
     void wrongKeyLengthIsRejected() {
         KeyCipher cipher = new KeyCipher(properties(Base64.getEncoder().encodeToString(new byte[16]), null));
-        assertThatThrownBy(() -> cipher.encrypt("x")).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> cipher.encryptKey("x")).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void hintShowsOnlyLastFourCharacters() {
-        assertThat(KeyCipher.hint("  sk-proj-abcdef3kQf ")).isEqualTo("3kQf");
-        assertThat(KeyCipher.hint("ab")).isEqualTo("ab");
+        assertThat(KeyCipher.buildHint("  sk-proj-abcdef3kQf ")).isEqualTo("3kQf");
+        assertThat(KeyCipher.buildHint("ab")).isEqualTo("ab");
     }
 
     @Test
     void catalogAllowsOnlyConfiguredModels() {
         ProviderCatalog catalog = new ProviderCatalog(properties(KEY_V1, null));
-        assertThat(catalog.allowed(AiProvider.GEMINI, "gemini-2.5-pro")).isTrue();
-        assertThat(catalog.allowed(AiProvider.GEMINI, "gemini-1.0")).isFalse();
-        assertThat(catalog.allowed(AiProvider.CLAUDE, "claude-sonnet-5-5")).as("chưa cấu hình").isFalse();
-        assertThat(catalog.maxOutputTokens(AiProvider.OPENAI)).isEqualTo(4096);
-        assertThat(catalog.providers()).hasSize(3);
+        assertThat(catalog.isAllowed(AiProvider.GEMINI, "gemini-2.5-pro")).isTrue();
+        assertThat(catalog.isAllowed(AiProvider.GEMINI, "gemini-1.0")).isFalse();
+        assertThat(catalog.isAllowed(AiProvider.CLAUDE, "claude-sonnet-5-5")).as("chưa cấu hình").isFalse();
+        assertThat(catalog.readMaxOutputTokens(AiProvider.OPENAI)).isEqualTo(4096);
+        assertThat(catalog.listProviders()).hasSize(3);
     }
 
     @Test

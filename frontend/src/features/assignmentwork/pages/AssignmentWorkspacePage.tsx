@@ -8,9 +8,9 @@ import { useActivityTracker, type ActivityEventInput } from "@/shared/activity/u
 import {
   DocumentEditor,
   DocxImportDialog,
-  outlineOf,
+  buildOutline,
   publishOutline,
-  sectionsOf,
+  numberSections,
   type DocumentBlock,
   type DocumentModel,
   type DocumentPart,
@@ -18,10 +18,12 @@ import {
 } from "@/shared/document";
 import { Alert, Button, Dialog, Menu, MenuItem, Pill } from "@/shared/ui";
 import { attemptImageUrl, exportUrl, workApi } from "../api";
-import { errorCode, errorMessage, formatDateTime, formatTime, problemIssues, remaining } from "../model/format";
+import { readErrorCode, describeError, formatDateTime, formatTime, readProblemIssues, describeRemaining } from "../model/format";
 
-const NOOP = () => {};
 import type { Attempt } from "../model/types";
+import { NOOP } from "@/shared/noop";
+import { WorkspaceTopBar } from "@/shared/layout/WorkspaceTopBar";
+import { msg } from "@/i18n/msg";
 
 /** Tự lưu mỗi 5 phút khi có thay đổi (yêu cầu 2026-11-05), và khi rời trang, trước khi nộp. */
 export const AUTOSAVE_MS = 5 * 60_000;
@@ -44,7 +46,7 @@ export function mergeSaved(local: DocumentModel, saved: DocumentModel): Document
  * chỗ luôn thuộc phần cuối của đề (yêu cầu 2026-10-21: người học chỉ viết trong các phần).
  */
 export function insertIntoPart(content: DocumentModel, parts: DocumentPart[], partId: string | null, added: DocumentBlock[]): DocumentModel {
-  const sections = sectionsOf(content, parts);
+  const sections = numberSections(content, parts);
   let at = -1;
   if (partId) content.blocks.forEach((block, index) => { if (sections.get(block.id) === partId) at = index; });
   if (at < 0) return { blocks: [...content.blocks, ...added] };
@@ -141,7 +143,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       setContent(recovered ?? value.content);
       setDirty(!!recovered);
       latest.current = { content: recovered ?? value.content, dirty: !!recovered };
-      if (recovered) setBanner({ tone: "warning", text: "Đã khôi phục bản chưa lưu trên thiết bị này" });
+      if (recovered) setBanner({ tone: "warning", text: msg("assignmentwork.pages.AssignmentWorkspacePage.restoredTheUnsavedVersionOn") });
       setSavedAt(value.lastSavedAt);
       version.current = value.contentVersion;
       setOffset(new Date(value.serverTime).getTime() - Date.now());
@@ -184,21 +186,21 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         return true;
       } catch (error) {
         // Giữ đánh dấu chưa lưu trong mọi trường hợp: Nộp chỉ đi tiếp khi lần lưu cuối thành công.
-        const code = errorCode(error);
+        const code = readErrorCode(error);
         const transient = !(error instanceof ApiError) || error.problem.status >= 500;
         if (code === "CONTENT_VERSION_CONFLICT") {
           halt.current = "conflict";
-          setBanner({ tone: "warning", reload: true, text: "Bài đang mở ở nơi khác, bản đang sửa chưa lưu" });
+          setBanner({ tone: "warning", reload: true, text: msg("assignmentwork.pages.AssignmentWorkspacePage.theWorkIsOpenElsewhere") });
         } else if (code === "DEADLINE_PASSED" || code === "ATTEMPT_SUBMITTED") {
           halt.current = "closed";
-          setBanner({ tone: "danger", text: errorMessage(error) });
+          setBanner({ tone: "danger", text: describeError(error) });
         } else if (transient) {
-          setBanner({ tone: "warning", text: "Mất kết nối, chưa lưu" });
+          setBanner({ tone: "warning", text: msg("assignmentwork.pages.AssignmentWorkspacePage.connectionLostNotSaved") });
           setRetry((value) => value + 1);
         } else {
           halt.current = "invalid";
-          setIssues(problemIssues(error));
-          setBanner({ tone: "danger", text: `Chưa lưu: ${errorMessage(error)}` });
+          setIssues(readProblemIssues(error));
+          setBanner({ tone: "danger", text: msg("assignmentwork.pages.AssignmentWorkspacePage.notSaved", { value: String(describeError(error)) }) });
         }
         return false;
       } finally {
@@ -240,13 +242,13 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
     workApi.activity(attemptId, events, options.keepalive), [attemptId]);
   useActivityTracker({ enabled: !!attempt?.activityMonitoringEnabled && attempt.status === "IN_PROGRESS", send: sendActivity });
 
-  const sections = useMemo(() => sectionsOf(content, attempt?.parts ?? []), [content, attempt?.parts]);
+  const sections = useMemo(() => numberSections(content, attempt?.parts ?? []), [content, attempt?.parts]);
 
   // Sidebar mục lục của bài, như trang soạn của giảng viên; lối về trang bài tập.
   useEffect(() => {
     if (!attempt) return;
     const backHref = `/my-assignments/${encodeURIComponent(attempt.assignmentId)}?classId=${encodeURIComponent(attempt.classId)}`;
-    publishOutline({ assignmentId: attempt.assignmentId, backHref, backLabel: "Bài tập", entries: outlineOf(content.blocks) });
+    publishOutline({ assignmentId: attempt.assignmentId, backHref, backLabel: msg("assignmentwork.pages.AssignmentWorkspacePage.assignment"), entries: buildOutline(content.blocks) });
   }, [attempt, content.blocks]);
   useEffect(() => () => publishOutline(null), []);
 
@@ -258,59 +260,56 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
     setDirty(true);
   }
 
-  if (loadError) return <Alert tone="danger" role="alert">{errorMessage(loadError)}</Alert>;
-  if (!attempt) return <p role="status" className="text-sm text-muted">Đang mở bài làm…</p>;
+  if (loadError) return <Alert tone="danger" role="alert">{describeError(loadError)}</Alert>;
+  if (!attempt) return <p role="status" className="text-sm text-muted">{msg("assignmentwork.pages.AssignmentWorkspacePage.openingYourWork")}</p>;
 
   const editable = attempt.editable && attempt.status === "IN_PROGRESS";
-  const left = remaining(attempt.deadlineAt, now + offset);
+  const left = describeRemaining(attempt.deadlineAt, now + offset);
   const beforeDeadline = new Date(attempt.deadlineAt).getTime() > now + offset;
   const active = attempt.parts.find((part) => part.partId === activePart);
-  const saveText = saving ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : savedAt ? `Đã lưu lúc ${formatTime(savedAt)}` : "Đã lưu";
+  const saveText = saving ? msg("assignmentwork.pages.AssignmentWorkspacePage.saving") : dirty ? msg("assignmentwork.pages.AssignmentWorkspacePage.unsavedChanges") : savedAt ? msg("assignmentwork.pages.AssignmentWorkspacePage.savedAt", { value: String(formatTime(savedAt)) }) : msg("assignmentwork.pages.AssignmentWorkspacePage.saved");
 
   // Dòng dưới tên bài như trang xem trước: chỉ ghi loại bài (Luyện tập, hoặc Cá nhân / Nhóm).
   const header = (
     <div className="mb-5 flex flex-col gap-2 border-b border-line pb-4">
       <p className="text-[13px] text-muted" data-testid="assignment-kind">
-        {attempt.gradingMode === "PRACTICE" ? "Luyện tập" : attempt.submissionMode === "GROUP" ? "Nhóm" : "Cá nhân"}
+        {attempt.gradingMode === "PRACTICE" ? msg("assignmentwork.pages.AssignmentWorkspacePage.practice") : attempt.submissionMode === "GROUP" ? msg("assignmentwork.pages.AssignmentWorkspacePage.group") : msg("assignmentwork.pages.AssignmentWorkspacePage.individual")}
       </p>
     </div>
   );
 
   return (
     <div data-wide-workspace className="flex flex-col gap-4" style={{ "--doc-toolbar-top": `${56 + headerHeight}px` } as CSSProperties}>
-      <header ref={headerRef} className="sticky top-14 z-30 main-bleed -mt-8 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 border-b border-line bg-[var(--c-topbar)] py-3 backdrop-blur-md md:-mt-10">
-        {/* Quay lại nằm ở sidebar của bài; đầu trang chỉ còn tên bài và trạng thái, như trang xem trước của giảng viên. */}
-        <div className="flex min-w-0 flex-1 items-center gap-x-3">
-          <h1 className="min-w-0 truncate text-[15px] font-semibold text-ink" title={attempt.title}>{attempt.title}</h1>
+      {/* Quay lại nằm ở sidebar của bài; đầu trang chỉ còn tên bài và trạng thái, như trang xem trước của giảng viên. */}
+      <WorkspaceTopBar barRef={headerRef} title={attempt.title} setViewSlot={setViewSlot}
+        status={<>
           {/* Cạnh tên bài chỉ có thời gian còn lại (yêu cầu 2026-11-05). */}
           {editable && beforeDeadline && (
-            <span title={`Hạn nộp: ${formatDateTime(attempt.deadlineAt)}`}><Pill tone="warning">Còn {left}</Pill></span>
+            <span title={msg("assignmentwork.pages.AssignmentWorkspacePage.deadline", { value: String(formatDateTime(attempt.deadlineAt)) })}><Pill tone="warning">{msg("assignmentwork.pages.AssignmentWorkspacePage.text")}{left}</Pill></span>
           )}
           <span data-testid="save-state" className="sr-only" role="status">{saveText}</span>
-        </div>
-        <div ref={setViewSlot} data-testid="view-slot" className="flex justify-center" />
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Menu label="" icon="more_horiz" ariaLabel="Thao tác khác" align="right">
-            <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(attempt.attemptId); }}>Tải DOCX</MenuItem>
-            {editable && <MenuItem icon="upload_file" onClick={() => setDialog("docx")}>Nhập DOCX</MenuItem>}
+        </>}
+        actions={<>
+          <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.AssignmentWorkspacePage.moreActions")} align="right">
+            <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(attempt.attemptId); }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.downloadDocx")}</MenuItem>
+            {editable && <MenuItem icon="upload_file" onClick={() => setDialog("docx")}>{msg("assignmentwork.pages.AssignmentWorkspacePage.importDocx")}</MenuItem>}
           </Menu>
           {editable && (
             <Button variant="primary" icon="check_circle" data-testid="open-submit" onClick={() => {
               // Lưu ngay khi mở popup: lưu xong thì popup dùng kết quả kiểm nộp của server cho đúng bản đang có.
               setDialog("submit");
               void save();
-            }}>Nộp bài</Button>
+            }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.submit")}</Button>
           )}
-        </div>
-      </header>
+        </>} />
 
-      {banner && <Alert tone={banner.tone} role="alert" action={banner.reload ? <Button size="sm" onClick={() => window.location.reload()}>Tải lại</Button> : undefined}>
+      {banner && <Alert tone={banner.tone} role="alert" action={banner.reload ? <Button size="sm" onClick={() => window.location.reload()}>{msg("assignmentwork.pages.AssignmentWorkspacePage.reload")}</Button> : undefined}>
         {banner.text}
         {issues.length > 0 && <ul className="mt-1 list-disc pl-4">{issues.slice(0, 8).map((issue, i) => <li key={i}>{issue.message}</li>)}</ul>}
       </Alert>}
-      {attempt.status === "SUBMITTED" && <Alert tone="info">Đã nộp lúc {formatTime(attempt.submittedAt)} · chỉ xem</Alert>}
-      {!attempt.editable && attempt.status === "IN_PROGRESS" && <Alert tone="warning">Đã quá hạn</Alert>}
-      {attempt.activityMonitoringEnabled && attempt.activityNotice && <Alert tone="info" title="Bài có ghi nhận hoạt động">{attempt.activityNotice}</Alert>}
+      {attempt.status === "SUBMITTED" && <Alert tone="info">{msg("assignmentwork.pages.AssignmentWorkspacePage.submittedAt")}{formatTime(attempt.submittedAt)} {msg("assignmentwork.pages.AssignmentWorkspacePage.viewOnly")}</Alert>}
+      {!attempt.editable && attempt.status === "IN_PROGRESS" && <Alert tone="warning">{msg("assignmentwork.pages.AssignmentWorkspacePage.pastDeadline")}</Alert>}
+      {attempt.activityMonitoringEnabled && attempt.activityNotice && <Alert tone="info" title={msg("assignmentwork.pages.AssignmentWorkspacePage.activityIsMonitored")}>{attempt.activityNotice}</Alert>}
 
       <DocumentEditor fullWidth document={content} mode="student" answerGuidance diagramEnabled={attempt.diagramEnabled} readOnly={!editable}
         imageUrl={attemptImageUrl(attempt.attemptId)} issues={issues}
@@ -325,7 +324,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       {dialog === "submit" && (
         <SubmitDialog onClose={() => setDialog(null)}
           onSubmit={async () => {
-            if (!(await save())) throw new Error("Bài chưa lưu");
+            if (!(await save())) throw new Error(msg("assignmentwork.pages.AssignmentWorkspacePage.workNotSaved"));
             await workApi.submit(attempt.attemptId, version.current);
             const target = attempt.classId
               ? `/my-assignments/${encodeURIComponent(attempt.assignmentId)}?classId=${encodeURIComponent(attempt.classId)}`
@@ -335,7 +334,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
       )}
       {dialog === "docx" && (
         <DocxImportDialog allowReplace={false}
-          title={active ? `Nhập DOCX vào phần “${active.title.split(" › ").at(-1)}”` : "Nhập DOCX vào phần cuối của bài"}
+          title={active ? msg("assignmentwork.pages.AssignmentWorkspacePage.importDocxIntoPart", { value: String(active.title.split(" › ").at(-1)) }) : msg("assignmentwork.pages.AssignmentWorkspacePage.importDocxIntoTheLast")}
           preview={(file) => workApi.importDocx(attempt.attemptId, file)}
           onClose={() => setDialog(null)}
           onImport={(document) => edit(insertIntoPart(latest.current.content, attempt.parts, activePart, document.blocks))} />
@@ -351,7 +350,7 @@ function SubmitDialog({ onClose, onSubmit }: {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   return (
-    <Dialog open title="Nộp bài" onClose={onClose} dismissible={!busy}
+    <Dialog open title={msg("assignmentwork.pages.AssignmentWorkspacePage.submit")} onClose={onClose} dismissible={!busy}
       footer={<>
         <Button variant="primary" disabled={busy} data-testid="confirm-submit" onClick={async () => {
           setBusy(true);
@@ -359,10 +358,10 @@ function SubmitDialog({ onClose, onSubmit }: {
           try {
             await onSubmit();
           } catch (error) {
-            setMessage(errorMessage(error));
+            setMessage(describeError(error));
             setBusy(false);
           }
-        }}>Nộp bài</Button>
+        }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.submit")}</Button>
       </>}>
       {message && <Alert tone="danger" role="alert">{message}</Alert>}
     </Dialog>

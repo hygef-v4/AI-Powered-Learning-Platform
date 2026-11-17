@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { Role } from "@/shared/auth/roles";
-import { AVATAR_TONES, initials } from "@/shared/layout/navigation";
+import { AVATAR_TONES, extractInitials } from "@/shared/layout/navigation";
 import { Alert } from "@/shared/ui/Alert";
 import { Button } from "@/shared/ui/Button";
 import { cx } from "@/shared/ui/cx";
 import { Icon } from "@/shared/ui/Icon";
-import { Segmented, Select, TextInput } from "@/shared/ui/inputs";
+import { Segmented, Select, TextInput } from "@/shared/ui/Inputs";
 import { PageHeader } from "@/shared/ui/PageHeader";
 import { showToast } from "@/shared/ui/Toast";
 import { Pill } from "@/shared/ui/Pill";
@@ -20,10 +20,11 @@ import { listAccounts, type AccountPage } from "../api";
 import { ImportAccountsPanel } from "../components/ImportAccountsPanel";
 import { STATUS_LABELS, STATUS_TONES } from "../model/labels";
 import { NewAccountDialog } from "../components/NewAccountDialog";
-import { Pagination } from "../components/Pagination";
+import { Card, Pagination } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 const ROLE_TABS: { value: Role | ""; label: string }[] = [
-  { value: "", label: "Tất cả" },
+  { value: "", label: msg("identity.admin.pages.AccountListPage.all") },
   { value: "STUDENT", label: ROLE_LABELS.STUDENT },
   { value: "TEACHER", label: ROLE_LABELS.TEACHER },
   { value: "SUBJECT_MANAGER", label: ROLE_LABELS.SUBJECT_MANAGER },
@@ -61,7 +62,7 @@ export function AccountListPage() {
         setError(null);
       })
       .catch(() => {
-        if (active) setError("Không tải được danh sách tài khoản.");
+        if (active) setError(msg("identity.admin.pages.AccountListPage.couldNotLoadTheAccount"));
       });
     return () => {
       active = false;
@@ -89,15 +90,13 @@ export function AccountListPage() {
   return (
     <>
       <PageHeader
-        title="Tài khoản"
+        title={msg("identity.admin.pages.AccountListPage.accounts")}
         actions={
           <>
             <Button icon="upload_file" onClick={() => setImporting((v) => !v)} aria-expanded={importing}>
-              Nhập Excel
-            </Button>
+              {msg("identity.admin.pages.AccountListPage.importExcel")}</Button>
             <Button variant="primary" icon="add" onClick={() => setCreating(true)}>
-              Thêm tài khoản
-            </Button>
+              {msg("identity.admin.pages.AccountListPage.addAccount")}</Button>
           </>
         }
       />
@@ -105,20 +104,20 @@ export function AccountListPage() {
       {importing && (
         <ImportAccountsPanel
           onImported={(count) => {
-            showToast(`Đã tạo ${count} tài khoản`);
+            showToast(msg("identity.admin.pages.AccountListPage.createdAccounts", { count: String(count) }));
             setReloadKey((k) => k + 1);
           }}
           onClose={() => setImporting(false)}
         />
       )}
 
-      <section className="flex flex-col gap-3.5 rounded-xl border border-line bg-surface p-5">
+      <Card as="section" padding="lg" className="flex flex-col gap-3.5">
         <div role="search">
           <TextInput
             type="search"
             icon="search"
-            aria-label="Tìm theo email, tên hoặc MSSV"
-            placeholder="Tìm theo email, tên hoặc MSSV"
+            aria-label={msg("identity.admin.pages.AccountListPage.searchByEmailNameOr")}
+            placeholder={msg("identity.admin.pages.AccountListPage.searchByEmailNameOr")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -126,21 +125,21 @@ export function AccountListPage() {
         <div className="flex flex-wrap items-center gap-3">
           <Segmented
             as="tab"
-            ariaLabel="Vai trò"
+            ariaLabel={msg("identity.admin.pages.AccountListPage.role")}
             value={role}
             onChange={(value) => navigate({ role: value, page: 0 })}
             options={ROLE_TABS}
           />
           <Select
-            aria-label="Trạng thái"
+            aria-label={msg("identity.admin.pages.AccountListPage.status")}
             value={status}
             onChange={(e) => navigate({ status: e.target.value, page: 0 })}
             wrapperClassName="ml-auto w-48"
           >
-            <option value="">Trạng thái: Tất cả</option>
+            <option value="">{msg("identity.admin.pages.AccountListPage.statusAll")}</option>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                Trạng thái: {STATUS_LABELS[s]}
+                {msg("identity.admin.pages.AccountListPage.status2")}{STATUS_LABELS[s]}
               </option>
             ))}
           </Select>
@@ -152,8 +151,7 @@ export function AccountListPage() {
             role="alert"
             action={
               <Button size="sm" icon="refresh" onClick={() => setReloadKey((k) => k + 1)}>
-                Tải lại
-              </Button>
+                {msg("identity.admin.pages.AccountListPage.reload")}</Button>
             }
           >
             {error}
@@ -164,12 +162,12 @@ export function AccountListPage() {
             <thead>
               <tr>
                 <Th>MSSV</Th>
-                <Th>Họ tên</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.fullName")}</Th>
                 <Th>Email</Th>
-                <Th>Vai trò</Th>
-                <Th>Trạng thái</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.role")}</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.status")}</Th>
                 <Th className="w-10">
-                  <span className="sr-only">Mở</span>
+                  <span className="sr-only">{msg("identity.admin.pages.AccountListPage.open")}</span>
                 </Th>
               </tr>
             </thead>
@@ -177,8 +175,7 @@ export function AccountListPage() {
               {!data && (
                 <tr>
                   <Td colSpan={6} className="py-8 text-center text-muted">
-                    Đang tải…
-                  </Td>
+                    {msg("identity.admin.pages.AccountListPage.loading")}</Td>
                 </tr>
               )}
               {data?.items.map((account) => (
@@ -193,7 +190,7 @@ export function AccountListPage() {
                           SOFT_TONES[AVATAR_TONES[account.role]],
                         )}
                       >
-                        {initials(account.displayName)}
+                        {extractInitials(account.displayName)}
                       </span>
                       <Link
                         href={`/admin/accounts/${account.id}`}
@@ -218,23 +215,22 @@ export function AccountListPage() {
               {data && data.items.length === 0 && (
                 <tr>
                   <Td colSpan={6} className="py-10 text-center text-muted">
-                    Không có tài khoản phù hợp.
-                  </Td>
+                    {msg("identity.admin.pages.AccountListPage.noMatchingAccounts")}</Td>
                 </tr>
               )}
             </tbody>
           </TableFrame>
         )}
 
-        {data && data.total > 0 && <Pagination page={page} size={data.size} total={data.total} onPage={(p) => navigate({ page: p })} />}
-      </section>
+        {data && data.total > 0 && <Pagination page={page} pageSize={data.size} total={data.total} onPageChange={(p) => navigate({ page: p })} summary={false} />}
+      </Card>
 
       {creating && (
         <NewAccountDialog
           onClose={() => setCreating(false)}
           onCreated={() => {
             setCreating(false);
-            showToast("Đã thêm tài khoản");
+            showToast(msg("identity.admin.pages.AccountListPage.accountAdded"));
             setReloadKey((k) => k + 1);
           }}
         />

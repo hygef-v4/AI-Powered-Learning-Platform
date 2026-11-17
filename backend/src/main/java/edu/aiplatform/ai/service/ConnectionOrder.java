@@ -18,22 +18,22 @@ final class ConnectionOrder {
     private ConnectionOrder() {
     }
 
-    static List<AiConnection> active(List<AiConnection> connections, ProviderCatalog catalog) {
+    static List<AiConnection> filterActive(List<AiConnection> connections, ProviderCatalog catalog) {
         return connections.stream().filter(c -> c.status() == Status.ACTIVE)
-                .sorted(Comparator.<AiConnection>comparingInt(c -> providerRank(c.provider()))
-                        .thenComparingInt(c -> modelRank(catalog, c))
+                .sorted(Comparator.<AiConnection>comparingInt(c -> rankProvider(c.provider()))
+                        .thenComparingInt(c -> rankModel(catalog, c))
                         .thenComparing(c -> c.createdAt() == null ? Instant.EPOCH : c.createdAt())
                         .thenComparing(c -> c.id().toString()))
                 .toList();
     }
 
-    static int providerRank(AiProvider provider) {
+    static int rankProvider(AiProvider provider) {
         int at = PROVIDERS.indexOf(provider);
         return at < 0 ? PROVIDERS.size() : at;
     }
 
-    private static int modelRank(ProviderCatalog catalog, AiConnection connection) {
-        int at = catalog.models(connection.provider()).indexOf(connection.model());
+    private static int rankModel(ProviderCatalog catalog, AiConnection connection) {
+        int at = catalog.listModels(connection.provider()).indexOf(connection.model());
         return at < 0 ? Integer.MAX_VALUE : at;
     }
 }

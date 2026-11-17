@@ -140,7 +140,7 @@ class AuditControllerTest {
 
     @Test
     void forbiddenFromQueryBecomes403ProblemDetail() throws Exception {
-        when(auditQuery.query(any(), any(), any(), anyBoolean())).thenThrow(ApiException.forbidden("AUDIT_FORBIDDEN"));
+        when(auditQuery.query(any(), any(), any(), anyBoolean())).thenThrow(ApiException.createForbidden("AUDIT_FORBIDDEN"));
 
         mvc.perform(get("/api/v1/admin/audit-logs"))
                 .andExpect(status().isForbidden())

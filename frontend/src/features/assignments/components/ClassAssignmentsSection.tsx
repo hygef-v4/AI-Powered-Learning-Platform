@@ -9,6 +9,7 @@ import { ALL_ASSIGNMENTS, AssignmentListCard } from "./AssignmentListCard";
 import { CreateAssignmentDialog } from "./CreateAssignmentDialog";
 import { useAssignmentPage } from "../hooks/useAssignmentPage";
 import { rememberAssignmentsPage } from "../model/outline";
+import { msg } from "@/i18n/msg";
 
 /**
  * Tab Bài tập của Teacher Class Detail (F1, UC 34), gắn qua TeacherClassTab: nút Tạo bài tập trên dòng tiêu đề trang lớp;
@@ -25,7 +26,7 @@ function ClassAssignments({ classId, headerActions }: { classId: string; headerA
   const page = useAssignmentPage(load, ALL_ASSIGNMENTS);
   const create = (
     <Button variant="primary" icon="add" onClick={() => setCreating(true)}
-      disabled={!page.data || page.data.ownerArchived} data-testid="class-assignment-create">Tạo bài tập</Button>
+      disabled={!page.data || page.data.ownerArchived} data-testid="class-assignment-create">{msg("assignments.components.ClassAssignmentsSection.createAssignment")}</Button>
   );
   return (
     <div className="flex flex-col gap-3">

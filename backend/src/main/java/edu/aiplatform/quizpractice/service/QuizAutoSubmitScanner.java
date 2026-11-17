@@ -41,8 +41,8 @@ public class QuizAutoSubmitScanner implements IScheduledScanner {
     public void scan(Instant now) {
         for (QuizAttempt overdue : attempts.findOverdue(now.minus(QuizAttempt.GRACE), BATCH)) {
             try {
-                transactions.executeWithoutResult(status -> attempts.find(overdue.id())
-                        .filter(attempt -> attempt.overdueAt(now))
+                transactions.executeWithoutResult(status -> attempts.findAttempt(overdue.id())
+                        .filter(attempt -> attempt.isOverdueAt(now))
                         .ifPresent(attempt -> support.submit(null, attempt, SubmitMode.AUTO_TIME_LIMIT)));
             } catch (RuntimeException e) {
                 log.warn("Tự nộp lượt quiz {} lỗi: {}", overdue.id(), e.getClass().getSimpleName());

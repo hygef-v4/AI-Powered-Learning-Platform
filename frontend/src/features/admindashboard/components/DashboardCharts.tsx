@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cx } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 /** Một chuỗi số trên biểu đồ: tên (chú thích, tooltip) và màu (token CSS). */
 export type Series = { name: string; color: string };
@@ -28,7 +29,7 @@ export function Reveal({ label, className, children }: { label: string; classNam
     if (event.key === "Escape") setShown(false);
   };
   return (
-    <div ref={ref} role="button" tabIndex={0} aria-pressed={shown} aria-label={`${label}; bấm để ${shown ? "giữ" : "hiện"} số`}
+    <div ref={ref} role="button" tabIndex={0} aria-pressed={shown} aria-label={msg("admindashboard.components.DashboardCharts.clickToTheNumbers", { label: String(label), value: String(shown ? msg("admindashboard.components.DashboardCharts.pin") : msg("admindashboard.components.DashboardCharts.show")) })}
       onClick={() => setShown(true)} onKeyDown={onKeyDown}
       className={cx("cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-focus/40", className)}>
       {children(shown)}
@@ -64,12 +65,12 @@ export function Legend({ series, className }: { series: Series[]; className?: st
 }
 
 /** Cột chỉ bo góc trên (đầu dữ liệu), đáy vuông tại trục. */
-function topRounded(x: number, y: number, w: number, h: number, r: number) {
+function drawTopRounded(x: number, y: number, w: number, h: number, r: number) {
   const rr = Math.min(r, w / 2, h);
   return `M${x},${y + h}V${y + rr}Q${x},${y} ${x + rr},${y}H${x + w - rr}Q${x + w},${y} ${x + w},${y + rr}V${y + h}Z`;
 }
 
-function niceMax(value: number) {
+function roundNiceMax(value: number) {
   if (value <= 4) return 4;
   const step = 10 ** Math.floor(Math.log10(value));
   const nice = [1, 2, 2.5, 5, 10].map((m) => m * step).find((m) => m * 4 >= value) ?? step * 10;
@@ -90,18 +91,18 @@ export function StackedColumns({ days, series, shown, height = 200 }: {
   const [hover, setHover] = useState<number | null>(null);
   const left = 28, right = 4, top = 18, bottom = 22;
   const plotH = height - top - bottom;
-  const max = niceMax(Math.max(1, ...days.map((d) => d.values.reduce((a, b) => a + b, 0))));
+  const max = roundNiceMax(Math.max(1, ...days.map((d) => d.values.reduce((a, b) => a + b, 0))));
   const band = (width - left - right) / Math.max(1, days.length);
   const barW = Math.min(24, band * 0.5);
-  const y = (v: number) => top + plotH - (v / max) * plotH;
+  const scaleY = (v: number) => top + plotH - (v / max) * plotH;
   const ticks = [0, max / 4, max / 2, (3 * max) / 4, max];
   return (
     <div ref={ref} className="w-full">
       <svg width={width} height={height} className="block overflow-visible" onMouseLeave={() => setHover(null)}>
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={left} x2={width - right} y1={y(t)} y2={y(t)} stroke="var(--c-line)" strokeWidth={1} />
-            <text x={left - 6} y={y(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} fill="var(--c-faint)" className="tabular-nums">{t}</text>
+            <line x1={left} x2={width - right} y1={scaleY(t)} y2={scaleY(t)} stroke="var(--c-line)" strokeWidth={1} />
+            <text x={left - 6} y={scaleY(t)} textAnchor="end" dominantBaseline="middle" fontSize={10} fill="var(--c-faint)" className="tabular-nums">{t}</text>
           </g>
         ))}
         {days.map((day, i) => {
@@ -110,7 +111,7 @@ export function StackedColumns({ days, series, shown, height = 200 }: {
           // Các phần khác 0 từ dưới lên, khe 2px giữa hai phần liền nhau.
           const parts: { v: number; si: number; yTop: number; h: number }[] = [];
           const nonZero = day.values.map((v, si) => ({ v, si })).filter((p) => p.v > 0);
-          for (let pi = 0, cursor = y(0); pi < nonZero.length; pi++) {
+          for (let pi = 0, cursor = scaleY(0); pi < nonZero.length; pi++) {
             const p = nonZero[pi]!;
             const h = Math.max(2, (p.v / max) * plotH - (pi < nonZero.length - 1 ? 2 : 0));
             parts.push({ ...p, yTop: cursor - h, h });
@@ -121,14 +122,14 @@ export function StackedColumns({ days, series, shown, height = 200 }: {
               <title>{`${day.label}: ${series.map((s, si) => `${s.name} ${day.values[si] ?? 0}`).join(", ")}`}</title>
               <rect x={left + band * i} y={top} width={band} height={plotH} fill={hover === i ? "var(--c-line-soft)" : "transparent"} rx={6} />
               <g className="animate-grow-y motion-reduce:animate-none"
-                style={{ transformOrigin: `${cx0}px ${y(0)}px`, animationDelay: `${120 + i * 60}ms` }}>
+                style={{ transformOrigin: `${cx0}px ${scaleY(0)}px`, animationDelay: `${120 + i * 60}ms` }}>
               {parts.map(({ v, si, yTop, h }, pi) => {
                 const p = { v, si };
                 const isTop = pi === parts.length - 1;
                 const fill = series[si]!.color;
                 return (
                   <g key={p.si}>
-                    {isTop ? <path d={topRounded(cx0 - barW / 2, yTop, barW, h, 4)} fill={fill} />
+                    {isTop ? <path d={drawTopRounded(cx0 - barW / 2, yTop, barW, h, 4)} fill={fill} />
                       : <rect x={cx0 - barW / 2} y={yTop} width={barW} height={h} fill={fill} />}
                     {shown && h >= 14 && parts.length > 1 && (
                       <text x={cx0} y={yTop + h / 2} textAnchor="middle" dominantBaseline="middle" fontSize={10} fontWeight={600} fill="var(--c-surface)">{p.v}</text>
@@ -138,13 +139,13 @@ export function StackedColumns({ days, series, shown, height = 200 }: {
               })}
               </g>
               {shown && total > 0 && (
-                <text x={cx0} y={y(total) - 6} textAnchor="middle" fontSize={11} fontWeight={600} fill="var(--c-ink)" className="tabular-nums">{total}</text>
+                <text x={cx0} y={scaleY(total) - 6} textAnchor="middle" fontSize={11} fontWeight={600} fill="var(--c-ink)" className="tabular-nums">{total}</text>
               )}
               <text x={cx0} y={height - 6} textAnchor="middle" fontSize={10} fill="var(--c-faint)">{day.label}</text>
             </g>
           );
         })}
-        <line x1={left} x2={width - right} y1={y(0)} y2={y(0)} stroke="var(--c-line-strong)" strokeWidth={1} />
+        <line x1={left} x2={width - right} y1={scaleY(0)} y2={scaleY(0)} stroke="var(--c-line-strong)" strokeWidth={1} />
       </svg>
     </div>
   );
@@ -167,7 +168,7 @@ export function Donut({ items, shown, size = 132 }: { items: (Series & { value: 
     arcs.push({ item: visible[i]!, start: angle, end: angle + sweep, mid: angle + sweep / 2 });
     angle += sweep;
   }
-  const point = (a: number, radius: number) => [c + radius * Math.cos(a), c + radius * Math.sin(a)] as const;
+  const computePoint = (a: number, radius: number) => [c + radius * Math.cos(a), c + radius * Math.sin(a)] as const;
   const gap = visible.length > 1 ? 0.035 : 0;
   const drawDelay = (i: number) => `${150 + i * 140}ms`;
   return (
@@ -175,9 +176,9 @@ export function Donut({ items, shown, size = 132 }: { items: (Series & { value: 
       {total === 0 && <circle cx={c} cy={c} r={r} fill="none" stroke="var(--c-line)" strokeWidth={thick} />}
       {arcs.map(({ item, start, end, mid }, index) => {
         const s = start + gap / 2, e = Math.max(s + 0.001, end - gap / 2);
-        const [x1, y1] = point(s, r), [x2, y2] = point(e, r);
+        const [x1, y1] = computePoint(s, r), [x2, y2] = computePoint(e, r);
         const large = e - s > Math.PI ? 1 : 0;
-        const [lx, ly] = point(mid, r + thick / 2 + 9);
+        const [lx, ly] = computePoint(mid, r + thick / 2 + 9);
         const d = visible.length === 1 ? `M${c},${c - r}A${r},${r} 0 1 1 ${c - 0.01},${c - r}` : `M${x1},${y1}A${r},${r} 0 ${large} 1 ${x2},${y2}`;
         return (
           <g key={item.name} onMouseEnter={() => setHover(item.name)}>

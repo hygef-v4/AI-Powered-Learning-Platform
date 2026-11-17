@@ -32,7 +32,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     }
 
     @Override
-    public Optional<Question> find(UUID id) {
+    public Optional<Question> findQuestion(UUID id) {
         return jdbc.sql("select " + COLUMNS + " from questions where id = :id").param("id", id).query(this::map).optional();
     }
 
@@ -43,13 +43,13 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     }
 
     @Override
-    public List<Question> lineage(UUID lineageId) {
+    public List<Question> listLineage(UUID lineageId) {
         return jdbc.sql("select " + COLUMNS + " from questions where lineage_id = :lineageId order by version_no desc")
                 .param("lineageId", lineageId).query(this::map).list();
     }
 
     @Override
-    public int maxVersionNo(UUID lineageId) {
+    public int findMaxVersionNo(UUID lineageId) {
         return jdbc.sql("select coalesce(max(version_no), 0) from questions where lineage_id = :lineageId")
                 .param("lineageId", lineageId).query(Integer.class).single();
     }
@@ -64,11 +64,11 @@ public class JdbcQuestionRepository implements IQuestionRepository {
                 + " :createdBy, :createdAt, :updatedAt, :version, :hash, :normalized)"), q)
                 .param("lineageId", q.lineageId()).param("versionNo", q.versionNo()).param("scope", q.scope().name())
                 .param("subjectId", q.subjectId()).param("quizId", q.quizId()).param("createdBy", q.createdBy())
-                .param("createdAt", timestamp(q.createdAt())).update();
+                .param("createdAt", convertTimestamp(q.createdAt())).update();
     }
 
     @Override
-    public boolean update(Question q) {
+    public boolean updateQuestion(Question q) {
         return bindQuestion(jdbc.sql("update questions set type = :type, stem = :stem, explanation = :explanation,"
                 + " options = cast(:options as jsonb), correct_option_ids = cast(:correct as jsonb), default_points = :points,"
                 + " difficulty = :difficulty, tags = cast(:tags as jsonb), status = :status, activated_at = :activatedAt,"
@@ -79,23 +79,23 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     private JdbcClient.StatementSpec bindQuestion(JdbcClient.StatementSpec spec, Question q) {
         QuestionContent c = q.content();
         return spec.param("id", q.id()).param("type", c.type().name()).param("stem", c.stem())
-                .param("explanation", c.explanation()).param("options", write(c.options()))
-                .param("correct", write(c.correctOptionIds())).param("points", c.defaultPoints())
-                .param("difficulty", c.difficulty().name()).param("tags", write(c.tags())).param("status", q.status().name())
-                .param("activatedAt", timestamp(q.activatedAt())).param("updatedAt", timestamp(q.updatedAt()))
+                .param("explanation", c.explanation()).param("options", writeJson(c.options()))
+                .param("correct", writeJson(c.correctOptionIds())).param("points", c.defaultPoints())
+                .param("difficulty", c.difficulty().name()).param("tags", writeJson(c.tags())).param("status", q.status().name())
+                .param("activatedAt", convertTimestamp(q.activatedAt())).param("updatedAt", convertTimestamp(q.updatedAt()))
                 .param("version", q.version()).param("hash", QuestionFingerprint.hash(c))
                 .param("normalized", QuestionFingerprint.normalize(c.stem()));
     }
 
     @Override
-    public boolean delete(UUID id, long version) {
+    public boolean deleteQuestion(UUID id, long version) {
         return jdbc.sql("delete from questions where id = :id and version = :version and status = 'DRAFT' and activated_at is null")
                 .param("id", id).param("version", version).update() == 1;
     }
 
     @Override
     public BankPage searchBank(UUID subjectId, BankQuery query) {
-        Filter filter = bankFilter(subjectId, query);
+        Filter filter = buildBankFilter(subjectId, query);
         String body = ("with ranked as (select %s, %s, bool_or(status = 'DRAFT') over (partition by lineage_id) as lineage_has_draft"
                 + " from questions where scope = 'BANK' and subject_id = :subjectId)"
                 + " select %s, (lineage_has_draft and status <> 'DRAFT') as has_draft, count(*) over () as total"
@@ -128,7 +128,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     }
 
     @Override
-    public List<Question> inlineOf(UUID quizId) {
+    public List<Question> listInline(UUID quizId) {
         return jdbc.sql("select " + COLUMNS + " from questions where scope = 'QUIZ' and quiz_id = :quizId")
                 .param("quizId", quizId).query(this::map).list();
     }
@@ -142,7 +142,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     @Override
     public BankPage searchActive(UUID subjectId, PickQuery query) {
         Filter filter = pickFilter(subjectId, query);
-        String sql = activeSql(filter.where) + " order by updated_at desc, id limit :limit offset :offset";
+        String sql = buildActiveSql(filter.where) + " order by updated_at desc, id limit :limit offset :offset";
         long[] total = {0};
         List<BankRow> rows = bind(jdbc.sql(sql), filter.params)
                 .param("limit", query.size()).param("offset", (long) query.page() * query.size())
@@ -157,27 +157,27 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     }
 
     @Override
-    public List<Question> randomActive(UUID subjectId, PickQuery query, int count) {
+    public List<Question> pickRandomActive(UUID subjectId, PickQuery query, int count) {
         Filter filter = pickFilter(subjectId, query);
-        return bind(jdbc.sql(activeSql(filter.where) + " order by random() limit :count"), filter.params)
+        return bind(jdbc.sql(buildActiveSql(filter.where) + " order by random() limit :count"), filter.params)
                 .param("count", count).query(this::map).list();
     }
 
     @Override
     public long countActive(UUID subjectId, PickQuery query) {
         Filter filter = pickFilter(subjectId, query);
-        return bind(jdbc.sql("select count(*) from (" + activeSql(filter.where) + ") counted"), filter.params)
+        return bind(jdbc.sql("select count(*) from (" + buildActiveSql(filter.where) + ") counted"), filter.params)
                 .query(Long.class).single();
     }
 
     @Override
-    public List<PoolEntry> activePool(UUID subjectId) {
+    public List<PoolEntry> listActivePool(UUID subjectId) {
         String sql = "with ranked as (select id, lineage_id, tags, difficulty, content_hash, status, " + LINEAGE_RANK
                 + " from questions where scope = 'BANK' and subject_id = :subjectId)"
                 + " select id, lineage_id, tags, difficulty, content_hash from ranked where rn = 1 and status = 'ACTIVE'";
         return jdbc.sql(sql).param("subjectId", subjectId)
                 .query((rs, n) -> new PoolEntry(rs.getObject("id", UUID.class), rs.getObject("lineage_id", UUID.class),
-                        read(rs.getString("tags"), STRINGS), Difficulty.valueOf(rs.getString("difficulty")),
+                        readJson(rs.getString("tags"), STRINGS), Difficulty.valueOf(rs.getString("difficulty")),
                         rs.getString("content_hash"))).list();
     }
 
@@ -198,12 +198,12 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     }
 
     @Override
-    public List<StemEntry> bankStems(UUID subjectId, UUID excludeLineage) {
+    public List<StemEntry> listBankStems(UUID subjectId, UUID excludeLineage) {
         String sql = "select id, normalized_stem, left(stem, 300) as stem, status from questions where scope = 'BANK'"
                 + " and subject_id = :subjectId and status in ('DRAFT', 'PENDING', 'ACTIVE') and normalized_stem is not null"
                 + (excludeLineage != null ? " and lineage_id <> :lineage" : "");
         JdbcClient.StatementSpec spec = jdbc.sql(sql).param("subjectId", subjectId);
-        return (excludeLineage != null ? spec.param("lineage", excludeLineage) : spec).query(this::stemEntry).list();
+        return (excludeLineage != null ? spec.param("lineage", excludeLineage) : spec).query(this::mapStemEntry).list();
     }
 
     @Override
@@ -215,13 +215,13 @@ public class JdbcQuestionRepository implements IQuestionRepository {
                 + " and status in ('DRAFT', 'PENDING', 'ACTIVE') and content_hash is not null"
                 + " group by content_hash having count(distinct lineage_id) > 1) order by content_hash, updated_at desc")
                 .param("subjectId", subjectId)
-                .query((rs, n) -> groups.computeIfAbsent(rs.getString("content_hash"), k -> new ArrayList<>()).add(stemEntry(rs, n)))
+                .query((rs, n) -> groups.computeIfAbsent(rs.getString("content_hash"), k -> new ArrayList<>()).add(mapStemEntry(rs, n)))
                 .list();
         return List.copyOf(groups.values());
     }
 
     @Override
-    public List<Question> withoutFingerprint(int limit) {
+    public List<Question> listWithoutFingerprint(int limit) {
         return jdbc.sql("select " + COLUMNS + " from questions where content_hash is null limit :limit")
                 .param("limit", limit).query(this::map).list();
     }
@@ -239,26 +239,26 @@ public class JdbcQuestionRepository implements IQuestionRepository {
                         + " values (:id, :questionId, :decision, :reason, :reviewerId, :createdAt)")
                 .param("id", r.id()).param("questionId", r.questionId()).param("decision", r.decision())
                 .param("reason", r.reason()).param("reviewerId", r.reviewerId())
-                .param("createdAt", timestamp(r.createdAt())).update();
+                .param("createdAt", convertTimestamp(r.createdAt())).update();
     }
 
     @Override
-    public Optional<QuestionReview> latestReview(UUID questionId) {
+    public Optional<QuestionReview> findLatestReview(UUID questionId) {
         return jdbc.sql("select id, question_id, decision, reason, reviewer_id, created_at from question_reviews"
                         + " where question_id = :id order by created_at desc, id limit 1").param("id", questionId)
                 .query((rs, n) -> new QuestionReview(rs.getObject("id", UUID.class), rs.getObject("question_id", UUID.class),
                         rs.getString("decision"), rs.getString("reason"), rs.getObject("reviewer_id", UUID.class),
-                        instant(rs.getTimestamp("created_at")))).optional();
+                        convertInstant(rs.getTimestamp("created_at")))).optional();
     }
 
     @Override
     public void insertProposal(UUID questionId, UUID classId, Instant now) {
         jdbc.sql("insert into question_proposals (question_id, class_id, created_at) values (:id, :classId, :now)")
-                .param("id", questionId).param("classId", classId).param("now", timestamp(now)).update();
+                .param("id", questionId).param("classId", classId).param("now", convertTimestamp(now)).update();
     }
 
     @Override
-    public Optional<UUID> proposalClass(UUID questionId) {
+    public Optional<UUID> findProposalClass(UUID questionId) {
         return jdbc.sql("select class_id from question_proposals where question_id = :id")
                 .param("id", questionId).query(UUID.class).optional();
     }
@@ -276,14 +276,14 @@ public class JdbcQuestionRepository implements IQuestionRepository {
                 .param("id", id).param("version", version).update() == 1;
     }
 
-    private StemEntry stemEntry(ResultSet rs, int row) throws SQLException {
+    private StemEntry mapStemEntry(ResultSet rs, int row) throws SQLException {
         return new StemEntry(rs.getObject("id", UUID.class), rs.getString("normalized_stem"), rs.getString("stem"),
                 QuestionStatus.valueOf(rs.getString("status")));
     }
 
     private record Filter(String where, List<Object[]> params) { }
 
-    private static Filter bankFilter(UUID subjectId, BankQuery query) {
+    private static Filter buildBankFilter(UUID subjectId, BankQuery query) {
         StringBuilder where = new StringBuilder("rn = 1");
         List<Object[]> params = new ArrayList<>();
         params.add(new Object[] {"subjectId", subjectId});
@@ -331,7 +331,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
         }
     }
 
-    private static String activeSql(String where) {
+    private static String buildActiveSql(String where) {
         return "with ranked as (select %s, %s from questions where scope = 'BANK' and subject_id = :subjectId)"
                 .formatted(COLUMNS, LINEAGE_RANK) + " select " + COLUMNS + ", count(*) over () as total from ranked where " + where;
     }
@@ -345,18 +345,18 @@ public class JdbcQuestionRepository implements IQuestionRepository {
 
     private Question map(ResultSet rs, int row) throws SQLException {
         QuestionContent content = new QuestionContent(QuestionType.valueOf(rs.getString("type")), rs.getString("stem"),
-                read(rs.getString("options"), OPTIONS), read(rs.getString("correct_option_ids"), STRINGS),
+                readJson(rs.getString("options"), OPTIONS), readJson(rs.getString("correct_option_ids"), STRINGS),
                 rs.getString("explanation"), rs.getBigDecimal("default_points"),
-                Difficulty.valueOf(rs.getString("difficulty")), read(rs.getString("tags"), STRINGS));
+                Difficulty.valueOf(rs.getString("difficulty")), readJson(rs.getString("tags"), STRINGS));
         return new Question(rs.getObject("id", UUID.class), rs.getObject("lineage_id", UUID.class),
                 rs.getInt("version_no"), QuestionScope.valueOf(rs.getString("scope")),
                 rs.getObject("subject_id", UUID.class), rs.getObject("quiz_id", UUID.class), content,
-                QuestionStatus.valueOf(rs.getString("status")), instant(rs.getTimestamp("activated_at")),
-                rs.getObject("created_by", UUID.class), instant(rs.getTimestamp("created_at")),
-                instant(rs.getTimestamp("updated_at")), rs.getLong("version"));
+                QuestionStatus.valueOf(rs.getString("status")), convertInstant(rs.getTimestamp("activated_at")),
+                rs.getObject("created_by", UUID.class), convertInstant(rs.getTimestamp("created_at")),
+                convertInstant(rs.getTimestamp("updated_at")), rs.getLong("version"));
     }
 
-    private String write(Object value) {
+    private String writeJson(Object value) {
         try {
             return json.writeValueAsString(value);
         } catch (JsonProcessingException e) {
@@ -364,7 +364,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
         }
     }
 
-    private <T> T read(String value, TypeReference<T> type) {
+    private <T> T readJson(String value, TypeReference<T> type) {
         try {
             return json.readValue(value, type);
         } catch (JsonProcessingException e) {
@@ -376,7 +376,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
         return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
-    private static Timestamp timestamp(Instant value) { return value == null ? null : Timestamp.from(value); }
+    private static Timestamp convertTimestamp(Instant value) { return value == null ? null : Timestamp.from(value); }
 
-    private static Instant instant(Timestamp value) { return value == null ? null : value.toInstant(); }
+    private static Instant convertInstant(Timestamp value) { return value == null ? null : value.toInstant(); }
 }

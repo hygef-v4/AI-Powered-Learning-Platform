@@ -20,14 +20,14 @@ class AssignmentQueryServiceTest {
     @Test
     void submissionWindowFollowsSchedule() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
-        Assignment late = a.withSchedule(AssignmentStatus.OPEN, NOW.minus(Duration.ofDays(2)), NOW.plus(Duration.ofDays(1)),
+        Assignment late = a.applySchedule(AssignmentStatus.OPEN, NOW.minus(Duration.ofDays(2)), NOW.plus(Duration.ofDays(1)),
                 NOW.plus(Duration.ofDays(3)), 1, NOW);
-        assertThat(AssignmentQueryService.window(late, NOW)).isEqualTo(SubmissionWindow.ON_TIME);
-        assertThat(AssignmentQueryService.window(late, NOW.plus(Duration.ofDays(2)))).isEqualTo(SubmissionWindow.LATE);
-        assertThat(AssignmentQueryService.window(late, NOW.plus(Duration.ofDays(4)))).isEqualTo(SubmissionWindow.CLOSED);
-        assertThat(AssignmentQueryService.window(late.withStatus(AssignmentStatus.RETIRED, NOW), NOW))
+        assertThat(AssignmentQueryService.resolveWindow(late, NOW)).isEqualTo(SubmissionWindow.ON_TIME);
+        assertThat(AssignmentQueryService.resolveWindow(late, NOW.plus(Duration.ofDays(2)))).isEqualTo(SubmissionWindow.LATE);
+        assertThat(AssignmentQueryService.resolveWindow(late, NOW.plus(Duration.ofDays(4)))).isEqualTo(SubmissionWindow.CLOSED);
+        assertThat(AssignmentQueryService.resolveWindow(late.changeStatus(AssignmentStatus.RETIRED, NOW), NOW))
                 .isEqualTo(SubmissionWindow.CLOSED);
-        assertThat(AssignmentQueryService.window(late, NOW.minus(Duration.ofDays(3)))).isEqualTo(SubmissionWindow.CLOSED);
+        assertThat(AssignmentQueryService.resolveWindow(late, NOW.minus(Duration.ofDays(3)))).isEqualTo(SubmissionWindow.CLOSED);
     }
 
     @Test

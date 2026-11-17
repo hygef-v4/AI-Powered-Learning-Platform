@@ -42,6 +42,11 @@ x-backend-env: &backend-env
   U03_BACKUP_TMP_DIR: /tmp/backup
   GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:-}
   GOOGLE_SHARED_DRIVE_ID: ${GOOGLE_SHARED_DRIVE_ID:-}
+  GOOGLE_DRIVE_OAUTH_CLIENT_ID: ${GOOGLE_DRIVE_OAUTH_CLIENT_ID:-}
+  GOOGLE_DRIVE_OAUTH_CLIENT_SECRET: ${GOOGLE_DRIVE_OAUTH_CLIENT_SECRET:-}
+  GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN: ${GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN:-}
+  GOOGLE_DRIVE_FOLDER_NAME: ${GOOGLE_DRIVE_FOLDER_NAME:-}
+  GOOGLE_DRIVE_FOLDER_ID: ${GOOGLE_DRIVE_FOLDER_ID:-}
   GOOGLE_BACKUP_FOLDER_ID: ${GOOGLE_BACKUP_FOLDER_ID:-}
   U03_BACKUP_PUBLIC_KEY: ${U03_BACKUP_PUBLIC_KEY:-}
   BACKUP_DB_PASSWORD: ${BACKUP_DB_PASSWORD:-}
@@ -105,8 +110,10 @@ services:
     volumes:
       - upload-tmp:/tmp/uploads
     networks: [edge, internal]
+    # 2 CPU: khởi động nhanh hơn (đo trên VPS với 1 CPU: 73 giây, trong lúc đó nginx trả 503) và JVM chọn G1
+    # thay cho SerialGC.
     deploy:
-      resources: { limits: { cpus: "1", memory: 1G } }
+      resources: { limits: { cpus: "2", memory: 1G } }
     logging: *logging
     restart: unless-stopped
 
@@ -140,6 +147,16 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    # Ghi truy vấn chậm hơn 500 ms (không ghi giá trị tham số) và thống kê theo câu lệnh.
+    # Xem thống kê cần chạy một lần CREATE EXTENSION pg_stat_statements: docs/runbooks/deploy-vps.md.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - log_min_duration_statement=500
+      - -c
+      - log_parameter_max_length=0
     networks: [internal]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d platform"]
@@ -152,9 +169,11 @@ services:
     restart: unless-stopped
 
   # Không bật persistence: khởi động lại thì phiên, OTP, token tải tệp mất (U01, U03).
+  # maxmemory thấp hơn giới hạn container (staging 128M) để đầy thì Redis từ chối ghi thay vì bị OOM kill;
+  # noeviction vì dữ liệu là phiên và OTP, không phải cache.
   redis:
     image: redis:7.4-alpine
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?}", "--appendonly", "no", "--save", ""]
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?}", "--appendonly", "no", "--save", "", "--maxmemory", "96mb", "--maxmemory-policy", "noeviction"]
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?}
     networks: [internal]

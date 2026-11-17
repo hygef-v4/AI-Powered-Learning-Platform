@@ -32,7 +32,7 @@ public final class GroupSnapshot {
     public record Result(DocumentModel document, List<SectionAuthor> authors, List<String> undone) {
     }
 
-    public static Result build(DocumentModel shared, List<GroupSection> sections) {
+    public static Result buildSnapshot(DocumentModel shared, List<GroupSection> sections) {
         List<DocumentBlock> skeleton = shared == null || shared.blocks() == null ? List.of() : shared.blocks();
         List<GroupSection> ordered = sections.stream().sorted(Comparator.comparingInt(GroupSection::orderNo)).toList();
         Map<Integer, List<DocumentBlock>> inserts = new HashMap<>();
@@ -46,7 +46,7 @@ public final class GroupSnapshot {
                 undone.add(s.title());
                 continue;
             }
-            int at = insertionPoint(skeleton, s.headingBlockId());
+            int at = findInsertionPoint(skeleton, s.headingBlockId());
             (at < 0 ? tail : inserts.computeIfAbsent(at, k -> new ArrayList<>())).addAll(s.publishedBlocks());
         }
         List<DocumentBlock> out = new ArrayList<>();
@@ -63,16 +63,16 @@ public final class GroupSnapshot {
      * Khung kèm nội dung của một mục đặt đúng chỗ của phần đó, để kiểm nháp như một bài hoàn chỉnh: bộ kiểm của U07
      * so block của người soạn trên cả tài liệu, nên không kiểm riêng nội dung mục được.
      */
-    public static DocumentModel withSection(DocumentModel shared, UUID headingBlockId, List<DocumentBlock> content) {
+    public static DocumentModel insertSection(DocumentModel shared, UUID headingBlockId, List<DocumentBlock> content) {
         List<DocumentBlock> skeleton = shared == null || shared.blocks() == null ? List.of() : shared.blocks();
         List<DocumentBlock> out = new ArrayList<>(skeleton);
-        int at = insertionPoint(skeleton, headingBlockId);
+        int at = findInsertionPoint(skeleton, headingBlockId);
         out.addAll(at < 0 ? out.size() : at, content);
         return new DocumentModel(out);
     }
 
     /** Vị trí ngay trước heading kế tiếp sau heading của phần; không có heading của phần thì −1 (cuối tài liệu). */
-    static int insertionPoint(List<DocumentBlock> skeleton, UUID headingId) {
+    static int findInsertionPoint(List<DocumentBlock> skeleton, UUID headingId) {
         if (headingId == null) {
             return -1;
         }
@@ -90,7 +90,7 @@ public final class GroupSnapshot {
     }
 
     /** Mã biên nhận: SHA-256 của tài liệu, tác giả, mã tài liệu và thời điểm nộp (BR-U12-41). */
-    public static String receiptHash(ObjectMapper json, UUID documentId, Result result, Instant at) {
+    public static String hashReceipt(ObjectMapper json, UUID documentId, Result result, Instant at) {
         Map<String, Object> material = new LinkedHashMap<>();
         material.put("documentId", documentId.toString());
         material.put("submittedAt", at.toString());

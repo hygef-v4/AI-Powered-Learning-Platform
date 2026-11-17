@@ -268,7 +268,7 @@ class SubjectStatusTest {
     @Test
     void archiveWithManagerEmitsBothNamedAuditsForOneVersionChange() {
         UUID managerId = UUID.randomUUID();
-        Subject before = Subject.create(id, "ABC", "Name", null, managerId, NOW.minusSeconds(60));
+        Subject before = Subject.createSubject(id, "ABC", "Name", null, managerId, NOW.minusSeconds(60));
         when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
                 .thenReturn(Optional.of(before));
         when(checker.archiveClassesOfSubject(id, admin)).thenReturn(List.of());
@@ -294,7 +294,7 @@ class SubjectStatusTest {
     }
 
     private Subject active() {
-        return Subject.create(id, "ABC", "Name", null, null, NOW.minusSeconds(60));
+        return Subject.createSubject(id, "ABC", "Name", null, null, NOW.minusSeconds(60));
     }
 
     private SubjectStatusService.ChangeStatus archive() {
@@ -304,6 +304,6 @@ class SubjectStatusTest {
     private void code(Runnable call, String code) {
         assertThatThrownBy(call::run)
                 .isInstanceOfSatisfying(
-                        ApiException.class, error -> assertThat(error.code()).isEqualTo(code));
+                        ApiException.class, error -> assertThat(error.readCode()).isEqualTo(code));
     }
 }

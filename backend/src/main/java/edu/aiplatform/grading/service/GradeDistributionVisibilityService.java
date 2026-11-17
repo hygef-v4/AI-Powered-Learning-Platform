@@ -60,16 +60,16 @@ public class GradeDistributionVisibilityService {
             long version) {
         // Step 1: Ensure class is active and assignment is not retired
         if (!requireAssignedTeacher(actor, classId, assignmentId))
-            throw ApiException.conflict("GRADE_DISTRIBUTION_READ_ONLY",
+            throw ApiException.createConflict("GRADE_DISTRIBUTION_READ_ONLY",
                     "Archived class or retired assignment");
         gradingAccess.requireTeacher(actor, classId, Actions.GRADING_WRITE);
         if (version < 0)
-            throw ApiException.badRequest("INVALID_VERSION", "Version must be nonnegative");
+            throw ApiException.createBadRequest("INVALID_VERSION", "Version must be nonnegative");
 
         // Step 2: Update visibility in DB using optimistic locking
         if (!gradeDistributionVisibilityRepository.updateVisibility(classId, assignmentId, enabled,
                 version))
-            throw ApiException.conflict("GRADE_DISTRIBUTION_VERSION_CONFLICT",
+            throw ApiException.createConflict("GRADE_DISTRIBUTION_VERSION_CONFLICT",
                     "Visibility changed; reload and retry");
 
         // Step 3: Record audit trail event for visibility toggle
@@ -85,18 +85,18 @@ public class GradeDistributionVisibilityService {
         // Step 1: Verify teacher permission and course class existence
         gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
         var courseClass = classAccess.getClassRef(classId)
-                .orElseThrow(() -> ApiException.notFound("CLASS_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
         if (actor == null || !actor.accountId().equals(courseClass.teacherId()))
-            throw ApiException.notFound("GRADE_NOT_FOUND");
+            throw ApiException.createNotFound("GRADE_NOT_FOUND");
 
         // Step 2: Verify assignment belongs to class/subject and is published
         var assignment = assignmentQuery.get(assignmentId)
-                .orElseThrow(() -> ApiException.notFound("ASSIGNMENT_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("ASSIGNMENT_NOT_FOUND"));
         SubmissionReviewService.requireAssignment(assignment, courseClass);
         if (assignment.scope() == AssignmentScope.SUBJECT
                 && (assignment.status() == AssignmentStatus.DRAFT
                         || assignment.status() == AssignmentStatus.REVIEWED))
-            throw ApiException.notFound("ASSIGNMENT_NOT_FOUND");
+            throw ApiException.createNotFound("ASSIGNMENT_NOT_FOUND");
 
         // Step 3: Teacher can edit only if class is unarchived and assignment is not retired
         return courseClass.status() != ClassStatus.ARCHIVED

@@ -29,7 +29,7 @@ class OtpStoresTest {
     void storesOnlyHashWithTenMinuteExpiry() {
         challenges.replace(accountId, OtpPurpose.ACTIVATION, "048213");
 
-        String key = OtpChallengeStore.key(accountId, OtpPurpose.ACTIVATION);
+        String key = OtpChallengeStore.buildKey(accountId, OtpPurpose.ACTIVATION);
         assertThat(redis.hashes.get(key)).doesNotContainValue("048213").containsEntry("attemptsLeft", "5");
         org.mockito.Mockito.verify(redis.template).expire(key, Duration.ofMinutes(10));
     }
@@ -59,7 +59,7 @@ class OtpStoresTest {
         }
 
         assertThat(challenges.verify(accountId, OtpPurpose.ACTIVATION, "048213")).isEqualTo(Verification.INVALID);
-        assertThat(redis.hashes).doesNotContainKey(OtpChallengeStore.key(accountId, OtpPurpose.ACTIVATION));
+        assertThat(redis.hashes).doesNotContainKey(OtpChallengeStore.buildKey(accountId, OtpPurpose.ACTIVATION));
     }
 
     @Test

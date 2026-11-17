@@ -31,25 +31,25 @@ public record GroupSection(UUID id, UUID documentId, String partId, UUID heading
     }
 
     /** Nhận hoặc được giao: {@code CLAIMED} cho người giữ; bản nháp bắt đầu từ nội dung đã đăng. */
-    public GroupSection claimedBy(UUID holder, UUID by, Instant now) {
+    public GroupSection markClaimed(UUID holder, UUID by, Instant now) {
         return new GroupSection(id, documentId, partId, headingBlockId, ancestorHeadingIds, orderNo, title, Status.CLAIMED,
                 holder, now, by, publishedBlocks, publishedBlocks, null, lastAuthorId, version);
     }
 
     /** Nhả: bỏ bản nháp; về {@code DONE} nếu đã có nội dung đăng, không thì {@code OPEN} (BR-U12-36). */
-    public GroupSection released() {
+    public GroupSection markReleased() {
         return new GroupSection(id, documentId, partId, headingBlockId, ancestorHeadingIds, orderNo, title,
                 hasPublished() ? Status.DONE : Status.OPEN, null, null, null, publishedBlocks, null, null, lastAuthorId,
                 version);
     }
 
-    public GroupSection withDraft(List<DocumentBlock> blocks, Instant now) {
+    public GroupSection replaceDraft(List<DocumentBlock> blocks, Instant now) {
         return new GroupSection(id, documentId, partId, headingBlockId, ancestorHeadingIds, orderNo, title, status,
                 claimedBy, claimedAt, assignedBy, publishedBlocks, blocks, now, lastAuthorId, version);
     }
 
     /** Xong: bản nháp thành nội dung đã đăng, bỏ khóa (BR-U12-35). */
-    public GroupSection done(Instant now) {
+    public GroupSection markDone(Instant now) {
         List<DocumentBlock> content = draftBlocks == null ? publishedBlocks : draftBlocks;
         return new GroupSection(id, documentId, partId, headingBlockId, ancestorHeadingIds, orderNo, title, Status.DONE,
                 null, null, null, content, null, now, claimedBy, version);

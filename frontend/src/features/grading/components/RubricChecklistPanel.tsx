@@ -3,6 +3,7 @@ import type { Checks, ItemScores, Rubric, StructuredFeedbackItem } from "../mode
 
 import { resolveItemPoints, calculateChecklistPoints } from "../model/rubricScores";
 import { RubricItemFeedback } from "./StructuredFeedbackSection";
+import { msg } from "@/i18n/msg";
 
 export type ChecklistProps = {
   checks: Checks;
@@ -35,7 +36,7 @@ export function RubricChecklist({
   onChangeStructuredItem,
   onToggleAcknowledge,
 }: ChecklistProps & { rubric: Rubric }) {
-  function award(itemId: string, max: number, achieved: boolean) {
+  function awardItem(itemId: string, max: number, achieved: boolean) {
     const selected = new Set(checks[rubric.rubricId] ?? []);
     if (achieved) selected.add(itemId); else selected.delete(itemId);
     onChange({ ...checks, [rubric.rubricId]: [...selected] });
@@ -57,7 +58,7 @@ export function RubricChecklist({
       rubric.rubricId, itemId);
   }
   const items = rubric.criteria.flatMap((criterion) => criterion.items.map((item) => ({ criterion, item })));
-  if (items.length === 0) return <p className="text-xs text-muted">Phần này chưa có mục chấm.</p>;
+  if (items.length === 0) return <p className="text-xs text-muted">{msg("grading.components.RubricChecklistPanel.thisPartHasNoCriteria")}</p>;
   return (
     <ul className="flex flex-col gap-1.5">
       {items.map(({ criterion, item }) => {
@@ -79,7 +80,7 @@ export function RubricChecklist({
             <div className="flex items-start justify-between gap-2">
               <label className="flex min-w-0 flex-1 cursor-pointer items-start gap-2">
                 <input type="checkbox" aria-label={item.text} checked={achieved} disabled={disabled}
-                  onChange={(event) => award(item.itemId, max, event.target.checked)}
+                  onChange={(event) => awardItem(item.itemId, max, event.target.checked)}
                   className="mt-0.5 size-4 shrink-0 accent-primary disabled:cursor-not-allowed" />
                 <span className="min-w-0 flex-1 break-words text-ink">
                   {showCriterion && <span className="block text-xs text-faint">{criterion.title}</span>}
@@ -93,7 +94,7 @@ export function RubricChecklist({
                     min={0}
                     max={max}
                     step="0.25"
-                    aria-label={`Điểm mục ${item.text}`}
+                    aria-label={msg("grading.components.RubricChecklistPanel.pointsForItem", { text: String(item.text) })}
                     value={Number.isFinite(value) ? value : 0}
                     onChange={(event) => handleScoreInput(item.itemId, max, event.target.value)}
                     className="w-16 rounded border border-line bg-surface px-1.5 py-0.5 text-right text-xs text-ink focus:border-focus focus:outline-none"
@@ -137,19 +138,18 @@ export function RubricChecklistPanel({ rubrics, partTitles = {}, ...props }: Che
   rubrics: Rubric[];
   partTitles?: Record<string, string>;
 }) {
-  return <section aria-label="Chấm theo rubric">
-    <h2 className="text-base font-bold text-ink">Chấm theo rubric</h2>
-    <p className="mt-0.5 text-xs text-muted">Tích mục đạt; mỗi mục đạt được đủ điểm của mục.</p>
-    {!rubrics.length && <p className="mt-3 rounded-lg bg-shell p-3 text-sm text-muted">Bài chưa có rubric khả dụng. Hãy kiểm tra lại cấu hình bài tập.</p>}
+  return <section aria-label={msg("grading.components.RubricChecklistPanel.gradeWithTheRubric")}>
+    <h2 className="text-base font-bold text-ink">{msg("grading.components.RubricChecklistPanel.gradeWithTheRubric")}</h2>
+    <p className="mt-0.5 text-xs text-muted">{msg("grading.components.RubricChecklistPanel.tickTheItemsMetEach")}</p>
+    {!rubrics.length && <p className="mt-3 rounded-lg bg-shell p-3 text-sm text-muted">{msg("grading.components.RubricChecklistPanel.theAssignmentHasNoUsable")}</p>}
     {rubrics.map((rubric, index) => {
-      const title = partTitles[rubric.partId] || `Phần ${index + 1}`;
+      const title = partTitles[rubric.partId] || msg("grading.components.RubricChecklistPanel.part", { value: String(index + 1) });
       return <fieldset key={rubric.rubricId} disabled={props.disabled} aria-label={title}
         className="mt-3 min-w-0 rounded-xl border border-line bg-surface p-2.5 sm:p-3">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <span className="min-w-0 flex-1 break-words text-sm font-semibold text-ink">{title}</span>
           <span className="shrink-0 text-sm font-bold tabular-nums text-primary-ink">
-            {calculateChecklistPoints([rubric], props.checks, props.itemScores).toFixed(2)} / {Number(rubric.maxPoints).toFixed(2)} điểm
-          </span>
+            {calculateChecklistPoints([rubric], props.checks, props.itemScores).toFixed(2)} / {Number(rubric.maxPoints).toFixed(2)} {msg("grading.components.RubricChecklistPanel.points")}</span>
         </div>
         <RubricChecklist rubric={rubric} {...props} />
       </fieldset>;

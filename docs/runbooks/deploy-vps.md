@@ -10,8 +10,8 @@ Trong runbook: `<VPS_IP>` là IP của VPS, `<DOMAIN>` là tên miền trỏ v�
 |---|---|---|
 | Tên miền trỏ về `<VPS_IP>` (ví dụ subdomain DuckDNS miễn phí) | Chứng chỉ HTTPS của Let's Encrypt; cookie đăng nhập đặt cờ `Secure` nên phải chạy HTTPS | Có |
 | Tài khoản Brevo: SMTP login và SMTP key (hoặc API key nếu VPS chặn SMTP), email người gửi thuộc tên miền đã xác thực | Gửi OTP kích hoạt tài khoản (cả Admin đầu tiên) và email thông báo | Có |
-| Service account Google Drive, Shared Drive, thư mục backup | Lưu tệp người dùng và backup database | Không, xem mục 6 |
-| Cặp khóa RSA của người vận hành | Mã hóa backup (xem `restore-isolated.md`) | Khi bật backup |
+| Google Drive: service account với Shared Drive, hoặc OAuth client và refresh token của một tài khoản Gmail | Lưu tệp người dùng và backup database | Không, xem mục 6 |
+| Cặp khóa RSA của người vận hành | Mã hóa backup (xem `restore-isolated.md`) | Không; thiếu thì backup lưu bản dump không mã hóa |
 
 ## 1. Đăng nhập và cập nhật máy
 
@@ -98,14 +98,25 @@ Lưu bản sao `.env` ở nơi an toàn ngoài VPS (trình quản lý mật kh�
 
 Mặc định `U03_REQUIRE_DRIVE=true`. Thiếu cấu hình Drive thì ứng dụng vẫn chạy nhưng upload, tải tệp và backup báo tạm thời không khả dụng.
 
-**Cách A, Google Drive (khuyến nghị cho production).** Điền vào `.env`:
+Ứng dụng chọn nơi lưu theo thứ tự: Shared Drive (cách A1) nếu có đủ biến, không thì Drive cá nhân (cách A2), không thì theo `U03_REQUIRE_DRIVE` (cách B hoặc báo không khả dụng). **Có cấu hình Drive thì luôn dùng Drive**, kể cả khi đã đặt `U03_REQUIRE_DRIVE=false` và thư mục local của cách B. Tệp đã lưu ở nơi cũ không tự chuyển sang nơi mới: muốn đổi nơi lưu trên một môi trường đã có dữ liệu thì phải chép tệp sang trước, nếu không các tệp cũ không mở được.
+
+**Cách A1, Shared Drive với service account (Google Workspace).** Điền vào `.env`:
 
 - `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY`: tệp JSON key của service account, mã hóa base64 trên một dòng (`base64 -w0 key.json`).
 - `GOOGLE_SHARED_DRIVE_ID`: ID Shared Drive đã thêm service account làm thành viên.
-- `GOOGLE_BACKUP_FOLDER_ID`: ID thư mục backup trong Shared Drive.
-- `U03_BACKUP_PUBLIC_KEY`: phần base64 của `public-key.pem` trên một dòng (bỏ hai dòng `-----BEGIN/END-----`).
+- `GOOGLE_BACKUP_FOLDER_ID`: ID thư mục backup trong Shared Drive. Thiếu biến này thì tệp vẫn lưu trên Shared Drive nhưng backup không dùng Drive.
 
-**Cách B, lưu trên đĩa VPS (demo).** Tạo `infra/docker-compose.override.yml`. Compose tự ghép tệp này khi chạy không có `-f`:
+**Cách A2, Drive cá nhân (Gmail) với OAuth.** Dùng khi không có Google Workspace. Tạo OAuth client loại Web application, lấy refresh token của tài khoản Gmail chứa tệp với scope `drive.file`, rồi điền vào `.env`:
+
+- `GOOGLE_DRIVE_OAUTH_CLIENT_ID`, `GOOGLE_DRIVE_OAUTH_CLIENT_SECRET`, `GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN`: phải có đủ cả ba.
+- `GOOGLE_DRIVE_FOLDER_NAME` (tùy chọn): tên thư mục gốc ứng dụng tự tạo trong My Drive, bỏ trống là `AI Learning Platform`. Mỗi loại tệp nằm trong một thư mục con; backup nằm trong thư mục con `backups`, không dùng `GOOGLE_BACKUP_FOLDER_ID`.
+- `GOOGLE_DRIVE_FOLDER_ID` (tùy chọn): ID một thư mục gốc do chính ứng dụng tạo từ trước. Scope `drive.file` không thấy thư mục tạo tay; ID không truy cập được thì ứng dụng quay về tìm hoặc tạo theo tên.
+
+Nhiều môi trường dùng chung một tài khoản Gmail (ví dụ production và staging) thì đặt `GOOGLE_DRIVE_FOLDER_NAME` khác nhau cho từng môi trường. Để mặc định thì tệp và backup của các môi trường nằm chung một thư mục. Trang `/privacy` của ứng dụng là URL chính sách quyền riêng tư cần khai khi publish màn hình đồng ý OAuth; nội dung gốc ở [PRIVACY.md](../../PRIVACY.md).
+
+**Mã hóa backup (tùy chọn, áp dụng cho cả A1, A2 và B).** `U03_BACKUP_PUBLIC_KEY` là phần base64 của `public-key.pem` trên một dòng (bỏ hai dòng `-----BEGIN/END-----`). Bỏ trống thì backup vẫn chạy nhưng archive là bản dump thường, ứng dụng ghi cảnh báo trong log; ai đọc được thư mục backup là đọc được dữ liệu. Production nên đặt khóa.
+
+**Cách B, lưu trên đĩa VPS (demo).** Chỉ có tác dụng khi các biến Drive ở A1 và A2 để trống. Tạo `infra/docker-compose.override.yml`. Compose tự ghép tệp này khi chạy không có `-f`:
 
 ```yaml
 services:
@@ -207,6 +218,25 @@ docker stats --no-stream
 
 Mở `https://<DOMAIN>`, kích hoạt Admin đầu tiên bằng OTP gửi tới `U01_BOOTSTRAP_ADMIN_EMAIL`. Không nhận được OTP thì xem `docker compose --env-file .env logs backend worker | grep -iE 'mail|otp'` (OTP do worker gửi) và kiểm thông tin Brevo.
 
+### Số đo hiệu năng
+
+Log truy cập của nginx có thời gian xử lý ở cuối mỗi dòng: `rt` là cả request, `urt` là riêng backend hoặc frontend (giây).
+
+```bash
+# 20 request chậm nhất trong log hiện có
+docker compose --env-file .env logs --no-log-prefix nginx | grep -o '"[A-Z]* [^ ]* HTTP[^"]*" [0-9]* .* rt=[0-9.]*' | sed -E 's/^"([A-Z]+ [^ ?]+).* rt=([0-9.]+)$/ /' | sort -rn | head -20
+```
+
+Postgres ghi mọi truy vấn chậm hơn 500 ms vào log (không ghi giá trị tham số) và nạp sẵn `pg_stat_statements`. Bật thống kê một lần cho mỗi database (production và staging riêng):
+
+```bash
+docker compose --env-file .env exec -T postgres psql -U postgres -d platform -c 'CREATE EXTENSION IF NOT EXISTS pg_stat_statements'
+docker compose --env-file .env logs postgres | grep 'duration:'    # truy vấn chậm
+docker compose --env-file .env exec -T postgres psql -U postgres -d platform -c \n  'SELECT calls, round(mean_exec_time::numeric, 1) AS mean_ms, round(total_exec_time::numeric) AS total_ms, left(query, 100) FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 15'
+```
+
+Bản đầu tiên có cấu hình này sẽ tạo lại container `postgres` (đổi `command`), nên backend và worker mất kết nối database trong vài giây ở lần deploy đó.
+
 ## 10. Tự động deploy và rollback
 
 Staging cho nhóm kiểm thử chạy cạnh production trên cùng VPS (cổng 8443, project `platform-staging`, tự deploy theo nhánh `staging`): [deploy-staging.md](deploy-staging.md).
@@ -220,9 +250,12 @@ GitHub Actions không SSH vào VPS. Lý do: nhà cung cấp chặn kết nối t
 Mỗi lần deploy làm theo thứ tự:
 1. Kéo image backend và frontend của SHA mới, `git fetch`. Lỗi ở bước này thì dừng, chưa đổi gì.
 2. Sao lưu database vào `/var/backups/platform/predeploy-<thời điểm>-<SHA cũ>.dump`, giữ 5 bản gần nhất.
-3. `git checkout` đúng SHA, đặt `IMAGE_TAG`, chạy `docker compose up -d`.
+3. `git checkout` đúng SHA, đặt `IMAGE_TAG`, chạy `docker compose up -d`. Nếu `infra/nginx` khác bản đang chạy thì khởi động lại container nginx để nạp cấu hình mới (gián đoạn một hai giây); quay về bản trước cũng làm như vậy.
 4. Trong 5 phút, mọi container phải `running` và có health `healthy` (hoặc không có healthcheck), và `https://<DOMAIN>/` phải trả 2xx.
 5. Không đạt thì tự quay về bản trước. SHA lỗi vào danh sách bỏ qua để timer không deploy lặp lại. Service kết thúc `failed`.
+6. Deploy đạt thì xóa image backend và frontend không thuộc 5 bản deploy tốt gần nhất (`KEEP_IMAGES`). Image đang chạy, kể cả của staging, Docker không cho xóa. Quay về một bản đã bị xóa image thì script kéo lại từ GHCR.
+
+Trong lúc backend hoặc frontend khởi động lại, nginx trả 503 kèm `Retry-After: 15`: API nhận `application/problem+json`, trang nhận trang bảo trì tĩnh tự tải lại (`infra/nginx/snippets/maintenance.html`). Khoảng gián đoạn này vẫn còn; backend được 2 CPU để khởi động nhanh hơn.
 
 ### Cài lần đầu
 
@@ -273,7 +306,7 @@ Dữ liệu ghi vào sau thời điểm dump sẽ mất. Để tránh tình hu�
 
 ```bash
 platform-deploy deploy <SHA>   # vẫn có sao lưu, kiểm tra sức khỏe và tự quay về
-docker image prune -f          # thỉnh thoảng dọn image cũ
+docker image prune -f          # dọn layer mồ côi; image backend/frontend cũ do platform-deploy tự xóa
 ```
 
 ## Sự cố thường gặp

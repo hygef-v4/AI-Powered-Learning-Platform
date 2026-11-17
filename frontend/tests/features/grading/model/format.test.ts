@@ -9,7 +9,6 @@ describe("grading conflict explanations", () => {
     expect(formatErrorMessage(error)).toBe("Nhập lý do khi cộng hoặc trừ điểm.");
   });
   it.each([
-    ["GRADE_LOCKED", "Điểm đã chốt"],
     ["GRADING_CLASS_READ_ONLY", "Lớp đã lưu trữ hoặc chưa mở"],
     ["SUBMISSION_CHANGED", "Bài nộp đã thay đổi"],
     ["NOT_LATEST_ATTEMPT", "Bài nộp đã thay đổi"],

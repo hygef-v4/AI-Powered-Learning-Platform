@@ -8,7 +8,7 @@ export type SubmissionDocumentDto = {
 };
 
 /** Submitted image IDs are resolved through the evaluation's authorized image endpoint. */
-export function toEditorDocument(document: SubmissionDocumentDto): DocumentModel {
+export function convertToEditorDocument(document: SubmissionDocumentDto): DocumentModel {
   return {
     blocks: document.blocks.map((block) => block.type === "IMAGE"
       ? {...block, content: {...block.content, hasFile: typeof block.content.fileId === "string" && block.content.fileId !== ""}}

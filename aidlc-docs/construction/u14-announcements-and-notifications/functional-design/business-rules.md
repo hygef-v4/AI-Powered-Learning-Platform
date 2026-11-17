@@ -48,7 +48,7 @@ Refinement approved 2026-10-24: mô tả trong chuông dùng lời dẫn hành �
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U14-30 | Tự nhắc một lần 24 giờ trước `closesAt` của Assignment; Quiz không nhắc; giảng viên không nhắc tay. | FR-019, US-RPT-001 S2 |
+| BR-U14-30 | Tự nhắc một lần khi còn 24 giờ tới `closesAt` của Assignment; Quiz không nhắc; giảng viên không nhắc tay. Bộ quét mỗi phút xét mọi bài còn dưới 24 giờ tới hạn mà chưa có bản ghi nhắc, nên worker gián đoạn thì lần quét sau nhắc bù, miễn chưa tới hạn. | FR-019, US-RPT-001 S2; quét bù từ 2026-11-16 |
 | BR-U14-31 | Người nhận: người học đang ghi danh chưa có bài nộp (bài cá nhân) hoặc thành viên của nhóm chưa nộp (bài nhóm), lấy qua `listStudentsWithoutSubmission` của U08; bài của môn tính trên mọi lớp `OPEN` của môn. | US-RPT-001 S2 |
 | BR-U14-32 | Bài đã ngưng giao, đã đóng thì không nhắc; đổi hạn thì nhắc theo hạn mới (mỗi hạn một lần); bài mở sau thời điểm nhắc thì không nhắc. | US-RPT-001 S2 |
 

@@ -32,34 +32,34 @@ public record GroupDocument(UUID id, UUID groupId, UUID assignmentId, UUID class
         warnings = warnings == null ? List.of() : List.copyOf(warnings);
     }
 
-    public static GroupDocument create(UUID id, UUID groupId, UUID assignmentId, UUID classId, DocumentModel shared,
+    public static GroupDocument createDocument(UUID id, UUID groupId, UUID assignmentId, UUID classId, DocumentModel shared,
                                        boolean activityMonitoring, Instant now) {
         return new GroupDocument(id, groupId, assignmentId, classId, Status.IN_PROGRESS, shared, activityMonitoring, null,
                 null, List.of(), null, null, null, false, null, List.of(), null, 0, now);
     }
 
-    public boolean submitted() {
+    public boolean hasSubmitted() {
         return submittedAt != null;
     }
 
     /** Có sửa sau lần nộp cuối (hoặc chưa nộp lần nào) thì tự nộp mới chụp lại (P5). */
-    public boolean changedSinceSubmit() {
+    public boolean hasChangedSinceSubmit() {
         return lastChangedAt != null && (submittedAt == null || lastChangedAt.isAfter(submittedAt));
     }
 
-    public GroupDocument withSubmission(DocumentModel snapshot, List<SectionAuthor> authors, UUID by, SubmitMode mode,
+    public GroupDocument recordSubmission(DocumentModel snapshot, List<SectionAuthor> authors, UUID by, SubmitMode mode,
                                         Instant at, boolean isLate, String hash, List<String> notes, Status next) {
         return new GroupDocument(id, groupId, assignmentId, classId, next, sharedBlocks, activityMonitoring, autoSubmitReason,
                 snapshot, authors, by, mode, at, isLate, hash, notes, lastChangedAt, version, createdAt);
     }
 
-    public GroupDocument withAutoSubmitReason(SubmitMode reason) {
+    public GroupDocument recordAutoSubmitReason(SubmitMode reason) {
         return new GroupDocument(id, groupId, assignmentId, classId, status, sharedBlocks, activityMonitoring, reason,
                 submittedDocument, sectionAuthors, submittedBy, submitMode, submittedAt, late, receiptHash, warnings,
                 lastChangedAt, version, createdAt);
     }
 
-    public GroupDocument closed() {
+    public GroupDocument markClosed() {
         return new GroupDocument(id, groupId, assignmentId, classId, Status.CLOSED, sharedBlocks, activityMonitoring,
                 autoSubmitReason, submittedDocument, sectionAuthors, submittedBy, submitMode, submittedAt, late,
                 receiptHash, warnings, lastChangedAt, version, createdAt);

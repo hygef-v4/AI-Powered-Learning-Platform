@@ -1,5 +1,6 @@
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 export function isSubjectAccessError(error: unknown): boolean {
   return (
@@ -11,20 +12,19 @@ export function SubjectReadError({ error, onRetry }: { error: unknown; onRetry: 
   const status = error instanceof ApiError ? error.problem.status : null;
   const message =
     status === 401
-      ? "Vui lòng đăng nhập để xem môn học."
+      ? msg("subjects.components.SubjectReadError.pleaseSignInToView")
       : status === 403
-        ? "Bạn không có quyền quản trị môn học."
+        ? msg("subjects.components.SubjectReadError.youDoNotHavePermission")
         : status === 404
-          ? "Không tìm thấy môn học."
-          : "Không tải được dữ liệu môn học. Vui lòng thử lại.";
+          ? msg("subjects.components.SubjectReadError.subjectNotFound")
+          : msg("subjects.components.SubjectReadError.couldNotLoadSubjectData");
   return (
     <Alert
       tone="danger"
       role="alert"
       action={
         <Button size="sm" onClick={onRetry} data-testid="subjects-read-retry">
-          Thử lại
-        </Button>
+          {msg("subjects.components.SubjectReadError.retry")}</Button>
       }
     >
       {message}

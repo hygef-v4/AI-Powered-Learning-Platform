@@ -48,24 +48,24 @@ public class GroupDocController {
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     static final long MAX_DOCX_BYTES = 20L * 1024 * 1024;
 
-    private final GroupWorkspaceService workspace;
-    private final GroupSectionService sections;
-    private final GroupSubmissionService submissions;
-    private final GroupWorkQueryService work;
+    private final GroupWorkspaceService groupWorkspaceService;
+    private final GroupSectionService groupSectionService;
+    private final GroupSubmissionService groupSubmissionService;
+    private final GroupWorkQueryService groupWorkQueryService;
     private final GroupDocAccess access;
     private final IGroupDocStreams streams;
-    private final GroupDocImportService imports;
+    private final GroupDocImportService groupDocImportService;
 
-    public GroupDocController(GroupWorkspaceService workspace, GroupSectionService sections,
-                              GroupSubmissionService submissions, GroupWorkQueryService work, GroupDocAccess access,
-                              IGroupDocStreams streams, GroupDocImportService imports) {
-        this.workspace = workspace;
-        this.sections = sections;
-        this.submissions = submissions;
-        this.work = work;
+    public GroupDocController(GroupWorkspaceService groupWorkspaceService, GroupSectionService groupSectionService,
+                              GroupSubmissionService groupSubmissionService, GroupWorkQueryService groupWorkQueryService, GroupDocAccess access,
+                              IGroupDocStreams streams, GroupDocImportService groupDocImportService) {
+        this.groupWorkspaceService = groupWorkspaceService;
+        this.groupSectionService = groupSectionService;
+        this.groupSubmissionService = groupSubmissionService;
+        this.groupWorkQueryService = groupWorkQueryService;
         this.access = access;
         this.streams = streams;
-        this.imports = imports;
+        this.groupDocImportService = groupDocImportService;
     }
 
     public record AssignRequest(UUID assigneeId, boolean replaceHolder) {
@@ -81,19 +81,19 @@ public class GroupDocController {
     }
 
     @GetMapping("/api/v1/assignments/{assignmentId}/my-group-doc")
-    public WorkspaceView myGroupDoc(@AuthenticationPrincipal Actor actor, @PathVariable UUID assignmentId) {
-        return workspace.myGroupDocument(actor, assignmentId);
+    public WorkspaceView loadMyGroupDoc(@AuthenticationPrincipal Actor actor, @PathVariable UUID assignmentId) {
+        return groupWorkspaceService.loadMyGroupDocument(actor, assignmentId);
     }
 
     @GetMapping("/api/v1/group-docs/{id}")
-    public WorkspaceView get(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return workspace.workspace(actor, id);
+    public WorkspaceView loadWorkspace(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return groupWorkspaceService.loadWorkspace(actor, id);
     }
 
     /** Kênh SSE chỉ mở cho thành viên hiệu lực và giảng viên của lớp; Nginx không đệm (BR-U12-37). */
     @GetMapping(value = "/api/v1/group-docs/{id}/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter events(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, HttpServletResponse response) {
-        access.read(actor, id);
+    public SseEmitter subscribeEvents(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, HttpServletResponse response) {
+        access.loadContext(actor, id);
         response.setHeader("X-Accel-Buffering", "no");
         response.setHeader(HttpHeaders.CACHE_CONTROL, "no-cache");
         return streams.open(id, actor.accountId());
@@ -101,59 +101,59 @@ public class GroupDocController {
 
     @PostMapping("/api/v1/group-docs/{id}/activity")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void activity(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @RequestBody ActivityRequest request) {
-        work.recordActivity(actor, id, request.events());
+    public void recordActivity(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @RequestBody ActivityRequest request) {
+        groupWorkQueryService.recordActivity(actor, id, request.events());
     }
 
     @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:claim")
     public SectionView claim(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
-        return sections.claim(actor, id, sectionId);
+        return groupSectionService.claim(actor, id, sectionId);
     }
 
     @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:assign")
     public SectionView assign(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId,
                               @RequestBody AssignRequest request) {
-        return sections.assign(actor, id, sectionId, request.assigneeId(), request.replaceHolder());
+        return groupSectionService.assign(actor, id, sectionId, request.assigneeId(), request.replaceHolder());
     }
 
     @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:release")
     public SectionView release(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
-        return sections.release(actor, id, sectionId);
+        return groupSectionService.release(actor, id, sectionId);
     }
 
     @PostMapping("/api/v1/group-docs/{id}/sections/{sectionId}:done")
-    public SectionView done(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
-        return sections.done(actor, id, sectionId);
+    public SectionView markSectionDone(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId) {
+        return groupSectionService.markSectionDone(actor, id, sectionId);
     }
 
     @GetMapping("/api/v1/group-docs/{id}/sections/{sectionId}/revisions")
-    public List<RevisionView> revisions(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public List<RevisionView> listRevisions(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                         @PathVariable UUID sectionId) {
-        return sections.revisions(actor, id, sectionId);
+        return groupSectionService.listRevisions(actor, id, sectionId);
     }
 
     /** Người giữ xem trước DOCX để chèn vào mục đang soạn (BR-U12-34, như trình soạn bài cá nhân). */
     @PostMapping(value = "/api/v1/group-docs/{id}/sections/{sectionId}/docx:preview", consumes = "multipart/form-data")
     public SectionImport previewSectionDocx(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                             @PathVariable UUID sectionId, @RequestPart("file") MultipartFile file) {
-        return imports.previewSection(actor, id, sectionId, readDocx(file));
+        return groupDocImportService.previewSection(actor, id, sectionId, readDocx(file));
     }
 
     @PutMapping("/api/v1/group-docs/{id}/sections/{sectionId}/draft")
     public SectionView draft(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @PathVariable UUID sectionId,
                              @RequestBody DraftRequest request) {
-        return sections.saveDraft(actor, id, sectionId, request.version(), request.blocks());
+        return groupSectionService.saveDraft(actor, id, sectionId, request.version(), request.blocks());
     }
 
     @PostMapping("/api/v1/group-docs/{id}/submit")
     public Receipt submit(@AuthenticationPrincipal Actor actor, @PathVariable UUID id, @RequestBody SubmitRequest request) {
-        return submissions.submit(actor, id, request.version());
+        return groupSubmissionService.submit(actor, id, request.version());
     }
 
     @GetMapping("/api/v1/group-docs/{id}/export.docx")
     public ResponseEntity<byte[]> export(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                          @RequestParam(defaultValue = "false") boolean submitted) {
-        Export export = submissions.export(actor, id, submitted);
+        Export export = groupSubmissionService.export(actor, id, submitted);
         return ResponseEntity.ok().contentType(DOCX)
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
                         .filename(export.title() + ".docx", StandardCharsets.UTF_8).build().toString())
@@ -163,15 +163,15 @@ public class GroupDocController {
 
     private static byte[] readDocx(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Chưa chọn tệp DOCX");
+            throw ApiException.createBadRequest("IMPORT_FILE_INVALID", "Chưa chọn tệp DOCX");
         }
         if (file.getSize() > MAX_DOCX_BYTES) {
-            throw ApiException.payloadTooLarge("IMPORT_FILE_TOO_LARGE", "Tệp DOCX tối đa 20 MB");
+            throw ApiException.createPayloadTooLarge("IMPORT_FILE_TOO_LARGE", "Tệp DOCX tối đa 20 MB");
         }
         try {
             return file.getBytes();
         } catch (IOException e) {
-            throw ApiException.badRequest("IMPORT_FILE_INVALID", "Không đọc được tệp DOCX");
+            throw ApiException.createBadRequest("IMPORT_FILE_INVALID", "Không đọc được tệp DOCX");
         }
     }
 }

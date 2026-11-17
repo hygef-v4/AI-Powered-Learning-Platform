@@ -38,28 +38,28 @@ class AssignmentLifecycle {
             return false;
         }
         listeners.orderedStream().forEach(listener -> listener.onOpened(id));
-        assignments.find(id).ifPresent(a -> events.publish(opened(a, now)));
+        assignments.findAssignment(id).ifPresent(a -> events.publish(createOpenedEvent(a, now)));
         return true;
     }
 
-    void retired(UUID id) {
+    void markRetired(UUID id) {
         listeners.orderedStream().forEach(listener -> listener.onRetired(id));
     }
 
     boolean closeAssignment(UUID id, Instant now, boolean scheduled) {
         Assignment current = assignments.findForUpdate(id).orElse(null);
         if (current == null || current.status() != edu.aiplatform.assignments.contract.AssignmentStatus.OPEN
-                || scheduled && (current.finalDeadline() == null
-                        || !now.isAfter(current.finalDeadline().plusSeconds(30)))) {
+                || scheduled && (current.calculateFinalDeadline() == null
+                        || !now.isAfter(current.calculateFinalDeadline().plusSeconds(30)))) {
             return false;
         }
-        assignments.save(current.withStatus(
+        assignments.saveAssignment(current.changeStatus(
                 edu.aiplatform.assignments.contract.AssignmentStatus.CLOSED, now));
         listeners.orderedStream().forEach(listener -> listener.onClosed(id));
         return true;
     }
 
-    private static DomainEvent opened(Assignment a, Instant now) {
+    private static DomainEvent createOpenedEvent(Assignment a, Instant now) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("assignmentId", a.id().toString());
         payload.put("scope", a.scope().name());

@@ -92,7 +92,7 @@ public class MaterialService {
                         ? input.descriptionDocument()
                         : sameDescription ? m.descriptionDocument() : null;
         Material next =
-                target.revise(
+                target.reviseMaterial(
                                 input.title(),
                                 input.description(),
                                 input.orderNo(),
@@ -109,7 +109,7 @@ public class MaterialService {
         Material m = requireWritableMaterial(actor, id, input.version());
         MaterialVersion version = buildVersion(actor, m, m.currentVersionNo() + 1, input.source());
         Material next =
-                m.revise(
+                m.reviseMaterial(
                         m.title(),
                         m.description(),
                         m.orderNo(),
@@ -126,7 +126,7 @@ public class MaterialService {
     public Material archiveMaterial(Actor actor, UUID id, long expected) {
         Material m = requireWritableMaterial(actor, id, expected);
         Material next =
-                m.revise(
+                m.reviseMaterial(
                         m.title(),
                         m.description(),
                         m.orderNo(),
@@ -146,13 +146,13 @@ public class MaterialService {
         List<Material> rows = new ArrayList<>();
         for (var position : input.items()) {
             if (!seen.add(position.id()))
-                throw ApiException.badRequest(
+                throw ApiException.createBadRequest(
                         "MATERIAL_REORDER_INVALID", "Danh sách có học liệu trùng");
             Material m = requireWritableMaterial(actor, position.id(), position.version());
             if (classScope
                     ? !scopeId.equals(m.classId())
                     : m.classId() != null || !scopeId.equals(m.subjectId()))
-                throw ApiException.notFound("MATERIAL_NOT_FOUND");
+                throw ApiException.createNotFound("MATERIAL_NOT_FOUND");
             rows.add(m);
         }
         // Lock/update in UUID order to avoid deadlocks between two reorder transactions.
@@ -161,7 +161,7 @@ public class MaterialService {
         rows.sort(Comparator.comparing(Material::id));
         for (Material m : rows) {
             Material next =
-                    m.revise(
+                    m.reviseMaterial(
                             m.title(),
                             m.description(),
                             positions.get(m.id()),
@@ -177,7 +177,7 @@ public class MaterialService {
         Material m =
                 materialRepository
                         .findMaterial(id)
-                        .orElseThrow(() -> ApiException.notFound("MATERIAL_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
         materialAccessPolicy.requireWriteAccess(actor, m);
         if (expected != m.version()) throw createVersionConflict();
         return m;
@@ -190,7 +190,7 @@ public class MaterialService {
                         .findModule(moduleId)
                         .filter(m -> m.subjectId().equals(subjectId))
                         .isEmpty())
-            throw ApiException.badRequest("MATERIAL_MODULE_INVALID", "Chọn module của môn");
+            throw ApiException.createBadRequest("MATERIAL_MODULE_INVALID", "Chọn module của môn");
         return moduleId;
     }
 
@@ -199,24 +199,24 @@ public class MaterialService {
     }
 
     private ApiException createVersionConflict() {
-        return ApiException.conflict(
+        return ApiException.createConflict(
                 "MATERIAL_VERSION_CONFLICT", "Học liệu đã thay đổi, vui lòng tải lại");
     }
 
     private MaterialVersion buildVersion(
             Actor actor, Material material, int number, MaterialCommands.Source input) {
         if (input == null)
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "MATERIAL_SOURCE_REQUIRED", "Chọn tệp hoặc đường dẫn video");
         if (material.kind() == Material.Kind.YOUTUBE_LINK) {
             if (input.fileRef() != null)
-                throw ApiException.badRequest(
+                throw ApiException.createBadRequest(
                         "MATERIAL_SOURCE_INVALID", "Nguồn không phù hợp loại học liệu");
             YoutubeVideo video;
             try {
                 video = YoutubeVideo.parse(input.videoUrl());
             } catch (IllegalArgumentException e) {
-                throw ApiException.badRequest("MATERIAL_YOUTUBE_INVALID", e.getMessage());
+                throw ApiException.createBadRequest("MATERIAL_YOUTUBE_INVALID", e.getMessage());
             }
             return new MaterialVersion(
                     material.id(),
@@ -225,7 +225,7 @@ public class MaterialService {
                     null,
                     null,
                     null,
-                    video.url(),
+                    video.buildUrl(),
                     video.id(),
                     null,
                     null,
@@ -233,13 +233,13 @@ public class MaterialService {
                     clock.instant());
         }
         if (input.videoUrl() != null || input.fileRef() == null || input.fileRef().isBlank())
-            throw ApiException.badRequest("MATERIAL_SOURCE_INVALID", "Chọn tệp đã tải lên");
+            throw ApiException.createBadRequest("MATERIAL_SOURCE_INVALID", "Chọn tệp đã tải lên");
         StoredFileInfo file =
                 artifact.attach(new FileRef(input.fileRef()), actor, ArtifactPurpose.MATERIAL);
         if (file == null
                 || file.purpose() != ArtifactPurpose.MATERIAL
                 || !actor.accountId().equals(file.ownerAccountId()))
-            throw ApiException.badRequest("MATERIAL_FILE_INVALID", "Tệp không phù hợp");
+            throw ApiException.createBadRequest("MATERIAL_FILE_INVALID", "Tệp không phù hợp");
         return new MaterialVersion(
                 material.id(),
                 number,

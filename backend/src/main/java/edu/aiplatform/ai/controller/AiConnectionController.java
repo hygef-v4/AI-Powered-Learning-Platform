@@ -31,37 +31,37 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AiConnectionController {
 
-    private final AiConnectionService connections;
+    private final AiConnectionService aiConnectionService;
     private final ProviderCatalog catalog;
-    private final AiSourceService sources;
+    private final AiSourceService aiSourceService;
 
-    public AiConnectionController(AiConnectionService connections, ProviderCatalog catalog, AiSourceService sources) {
-        this.connections = connections;
+    public AiConnectionController(AiConnectionService aiConnectionService, ProviderCatalog catalog, AiSourceService aiSourceService) {
+        this.aiConnectionService = aiConnectionService;
         this.catalog = catalog;
-        this.sources = sources;
+        this.aiSourceService = aiSourceService;
     }
 
     /** {@code source} rỗng: hỏi mỗi lần. {@code provider} chỉ có với API cá nhân. */
     public record Preference(AiSource source, AiProvider provider) {
 
-        static Preference of(Optional<AiSourcePreference> p) {
+        static Preference mapPreference(Optional<AiSourcePreference> p) {
             return p.map(x -> new Preference(x.source(), x.provider())).orElse(new Preference(null, null));
         }
     }
 
     @GetMapping("/api/v1/me/ai-source-preference")
-    public Preference preference(@AuthenticationPrincipal Actor actor) {
-        return Preference.of(sources.preference(actor));
+    public Preference loadPreference(@AuthenticationPrincipal Actor actor) {
+        return Preference.mapPreference(aiSourceService.findPreference(actor));
     }
 
     @PutMapping("/api/v1/me/ai-source-preference")
     public Preference savePreference(@AuthenticationPrincipal Actor actor, @RequestBody Preference request) {
-        return Preference.of(sources.savePreference(actor, request.source(), request.provider()));
+        return Preference.mapPreference(aiSourceService.savePreference(actor, request.source(), request.provider()));
     }
 
     @GetMapping("/api/v1/ai/providers")
-    public List<ProviderInfo> providers() {
-        return catalog.providers();
+    public List<ProviderInfo> listProviders() {
+        return catalog.listProviders();
     }
 
     /** Khóa không được in ra log. */
@@ -88,42 +88,42 @@ public class AiConnectionController {
     // Khóa API cá nhân: cùng kiểu với khóa của trường (yêu cầu 2026-11-05), nhiều khóa cho một nhà cung cấp, theo id.
 
     @GetMapping("/api/v1/me/ai-connections")
-    public List<ConnectionView> list(@AuthenticationPrincipal Actor actor) {
-        return connections.listPersonal(actor);
+    public List<ConnectionView> listConnections(@AuthenticationPrincipal Actor actor) {
+        return aiConnectionService.listPersonal(actor);
     }
 
     @PostMapping("/api/v1/me/ai-connections")
-    public ConnectionView add(@AuthenticationPrincipal Actor actor, @RequestBody AddRequest request) {
-        return connections.addPersonal(actor, AiWebSupport.provider(request.provider()),
+    public ConnectionView addConnection(@AuthenticationPrincipal Actor actor, @RequestBody AddRequest request) {
+        return aiConnectionService.addPersonal(actor, AiWebSupport.parseProvider(request.provider()),
                 new SaveCommand(request.apiKey(), request.model(), null));
     }
 
     @PostMapping("/api/v1/me/ai-connections:test")
     public AiConnectionService.TestResult testDraft(@AuthenticationPrincipal Actor actor, @RequestBody TestRequest request) {
-        return connections.testPersonalDraft(actor, AiWebSupport.provider(request.provider()), request.id(),
+        return aiConnectionService.testPersonalDraft(actor, AiWebSupport.parseProvider(request.provider()), request.id(),
                 new SaveCommand(request.apiKey(), request.model(), null));
     }
 
     @PutMapping("/api/v1/me/ai-connections/{id}")
-    public ConnectionView save(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public ConnectionView saveConnection(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                @RequestBody SaveCommand command) {
-        return connections.replacePersonal(actor, id, command);
+        return aiConnectionService.replacePersonal(actor, id, command);
     }
 
     @PostMapping("/api/v1/me/ai-connections/{id}:test")
     public ConnectionView test(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return connections.testPersonal(actor, id);
+        return aiConnectionService.testPersonal(actor, id);
     }
 
     @PutMapping("/api/v1/me/ai-connections/{id}/status")
-    public ConnectionView status(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public ConnectionView updateConnectionStatus(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                  @RequestBody StatusRequest request) {
-        return connections.setPersonalEnabled(actor, id, Boolean.TRUE.equals(request.enabled()), request.version());
+        return aiConnectionService.setPersonalEnabled(actor, id, Boolean.TRUE.equals(request.enabled()), request.version());
     }
 
     @DeleteMapping("/api/v1/me/ai-connections/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void revoke(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        connections.revokePersonal(actor, id);
+        aiConnectionService.revokePersonal(actor, id);
     }
 }

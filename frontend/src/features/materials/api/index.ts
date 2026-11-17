@@ -1,4 +1,4 @@
-import { apiFetch, ApiError } from "@/shared/api/client";
+import { fetchApi, ApiError } from "@/shared/api/client";
 import type { FormattedText } from "@/shared/document/formattedText";
 import type {
   CreateMaterial,
@@ -8,6 +8,7 @@ import type {
   MaterialSource,
   ModuleScope,
 } from "../model/types";
+import { msg } from "@/i18n/msg";
 const encodePathSegment = encodeURIComponent;
 export const buildScopePath = (id: string, kind: "subjects" | "classes") =>
   `/api/v1/${kind}/${encodePathSegment(id)}/materials`;
@@ -30,7 +31,7 @@ export function buildContextQuery(classId?: string) {
   return classId ? `?classId=${encodePathSegment(classId)}` : "";
 }
 function sendWrite<T>(path: string, method: string, body?: unknown) {
-  return apiFetch<T>(path, {
+  return fetchApi<T>(path, {
     method,
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
@@ -84,14 +85,14 @@ export function describeMaterialError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.problem.status === 409)
       return error.problem.code === "MATERIAL_VERSION_CONFLICT" || !error.problem.detail
-        ? "Học liệu đã thay đổi hoặc chỉ đọc. Tải lại dữ liệu trước khi tiếp tục."
+        ? msg("materials.api.index.theLearningMaterialHasChanged")
         : error.problem.detail;
     if (error.problem.status === 404)
-      return "Không tìm thấy học liệu hoặc bạn không có quyền truy cập.";
-    if (error.problem.status === 401) return "Phiên đăng nhập đã hết hạn.";
+      return msg("materials.api.index.learningMaterialNotFoundOr");
+    if (error.problem.status === 401) return msg("materials.api.index.yourSessionHasExpired");
     return error.message;
   }
-  return "Không tải được học liệu, vui lòng thử lại.";
+  return msg("materials.api.index.couldNotLoadTheLearning");
 }
 const WATCH_HOSTS = [
   "youtube.com",

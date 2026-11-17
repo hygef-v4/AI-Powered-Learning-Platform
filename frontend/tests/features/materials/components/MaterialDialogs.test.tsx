@@ -1,21 +1,21 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { apiFetch, ApiError } from "@/shared/api/client";
+import { fetchApi, ApiError } from "@/shared/api/client";
 import { ModuleItemDialog } from "@/features/materials/components/MaterialDialogs";
 vi.mock("@/shared/api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/shared/api/client")>()),
-  apiFetch: vi.fn(),
+  fetchApi: vi.fn(),
 }));
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 beforeEach(() => {
   push.mockReset();
-  vi.mocked(apiFetch).mockReset();
-  vi.mocked(apiFetch).mockImplementation(async (path) =>
+  vi.mocked(fetchApi).mockReset();
+  vi.mocked(fetchApi).mockImplementation(async (path) =>
     String(path).includes("/files/") ? [] : {},
   );
 });
-const posts = () => vi.mocked(apiFetch).mock.calls.filter(([, init]) => init?.method === "POST");
+const posts = () => vi.mocked(fetchApi).mock.calls.filter(([, init]) => init?.method === "POST");
 
 const scope = { kind: "subject" as const, subjectId: "s1" };
 function youtube(saved = vi.fn()) {
@@ -66,7 +66,7 @@ it("creates a video copied from a playlist inside the module", async () => {
 });
 
 it("keeps the dialog open and shows conflict with reload guidance", async () => {
-  vi.mocked(apiFetch).mockImplementation(async (path, init) => {
+  vi.mocked(fetchApi).mockImplementation(async (path, init) => {
     if (init?.method === "POST") throw new ApiError({ status: 409 });
     return String(path).includes("/files/") ? [] : {};
   });
@@ -80,7 +80,7 @@ it("keeps the dialog open and shows conflict with reload guidance", async () => 
 });
 
 it("creating a new quiz notifies the parent before navigating to the attached quiz", async () => {
-  vi.mocked(apiFetch).mockImplementation(async (_path, init) =>
+  vi.mocked(fetchApi).mockImplementation(async (_path, init) =>
     !init?.method || init.method === "GET"
       ? []
       : {

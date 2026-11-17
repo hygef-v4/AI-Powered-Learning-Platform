@@ -1,11 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
+// Slot của mọi unit chỉ dùng sau khi đăng nhập, nên nạp phần đăng ký ở đây thay vì ở root layout:
+// trang đăng nhập, kích hoạt và đặt lại mật khẩu không phải tải bundle của các feature.
+import "@/features/register";
 import type { Role } from "@/shared/auth/roles";
 import { AppShell } from "@/shared/layout/AppShell";
 import type { NavLocation } from "@/shared/layout/navigation";
 import { SlotOutlet } from "@/shared/slots/SlotOutlet";
-import { SessionProvider, useSession } from "../../hooks/session";
+import { SessionProvider, useSession } from "../../hooks/SessionProvider";
 import { accountMenuEntries, contextNavEntries, headerWidgets, navEntries } from "../../slots";
 import { RoleGuard } from "./RoleGuard";
 
@@ -36,7 +39,7 @@ function SessionShell({ children }: { children: ReactNode }) {
     .filter((entry) => entry.roles.includes(role))
     .map(({ href, title, icon }) => ({ href, label: title, icon }));
   const contexts = contextNavEntries.entries().filter((entry) => entry.roles.includes(role));
-  const context = (at: NavLocation) => {
+  const resolveContext = (at: NavLocation) => {
     for (const entry of contexts) {
       const found = entry.resolve(at);
       if (found) return found;
@@ -47,7 +50,7 @@ function SessionShell({ children }: { children: ReactNode }) {
     <AppShell
       role={role}
       nav={nav}
-      context={contexts.length > 0 ? context : undefined}
+      context={contexts.length > 0 ? resolveContext : undefined}
       headerLinks={links}
       headerWidgets={<SlotOutlet slot={headerWidgets} props={{}} />}
       user={{ displayName, email }}

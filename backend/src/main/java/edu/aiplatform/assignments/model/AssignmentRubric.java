@@ -30,17 +30,17 @@ public record AssignmentRubric(UUID id, UUID assignmentId, String partId, List<R
         criteria = List.copyOf(criteria);
     }
 
-    public static AssignmentRubric empty(UUID assignmentId, String partId, Instant now) {
+    public static AssignmentRubric createEmptyRubric(UUID assignmentId, String partId, Instant now) {
         return new AssignmentRubric(UUID.randomUUID(), assignmentId, partId, List.of(), BigDecimal.ZERO, null, now,
                 now, 0);
     }
 
-    public boolean locked() {
+    public boolean hasLocked() {
         return lockedAt != null;
     }
 
-    public AssignmentRubric withCriteria(List<RubricCriterion> next, Instant now) {
-        return new AssignmentRubric(id, assignmentId, partId, next, total(next), lockedAt, createdAt, now, version);
+    public AssignmentRubric replaceCriteria(List<RubricCriterion> next, Instant now) {
+        return new AssignmentRubric(id, assignmentId, partId, next, sumPoints(next), lockedAt, createdAt, now, version);
     }
 
     /** Bản mới, chưa khóa, của bài đích (BR-U07-25); id tiêu chí, mục giữ nguyên trong rubric mới. */
@@ -55,13 +55,13 @@ public record AssignmentRubric(UUID id, UUID assignmentId, String partId, List<R
             return false;
         }
         for (RubricCriterion criterion : criteria) {
-            if (blank(criterion.title()) || criterion.items() == null || criterion.items().isEmpty()
+            if (isBlank(criterion.title()) || criterion.items() == null || criterion.items().isEmpty()
                     || criterion.items().size() > ITEMS_MAX) {
                 return false;
             }
             for (RubricItem item : criterion.items()) {
                 // Mục chấm 0 điểm được (yêu cầu 2026-11-04), chỉ không âm.
-                if (blank(item.text()) || item.points() == null || item.points().signum() < 0) {
+                if (isBlank(item.text()) || item.points() == null || item.points().signum() < 0) {
                     return false;
                 }
             }
@@ -77,13 +77,13 @@ public record AssignmentRubric(UUID id, UUID assignmentId, String partId, List<R
         List<RubricCriterion> clean = criteria.stream()
                 .map(c -> new RubricCriterion(c.criterionId(), c.title(), c.description(), c.kind(),
                         c.items() == null ? List.of()
-                                : c.items().stream().filter(i -> !blank(i.text()) && i.points() != null).toList()))
+                                : c.items().stream().filter(i -> !isBlank(i.text()) && i.points() != null).toList()))
                 .filter(c -> !c.items().isEmpty())
                 .toList();
-        return new RubricView(id, assignmentId, partId, clean, total(clean));
+        return new RubricView(id, assignmentId, partId, clean, sumPoints(clean));
     }
 
-    public static BigDecimal total(List<RubricCriterion> criteria) {
+    public static BigDecimal sumPoints(List<RubricCriterion> criteria) {
         BigDecimal sum = BigDecimal.ZERO;
         for (RubricCriterion criterion : criteria) {
             for (RubricItem item : criterion.items() == null ? List.<RubricItem>of() : criterion.items()) {
@@ -96,13 +96,13 @@ public record AssignmentRubric(UUID id, UUID assignmentId, String partId, List<R
     }
 
     /** Mọi id mục chấm, theo thứ tự; dùng khi tính điểm. */
-    public List<RubricItem> items() {
+    public List<RubricItem> listItems() {
         List<RubricItem> all = new ArrayList<>();
         criteria.forEach(c -> all.addAll(Objects.requireNonNullElse(c.items(), List.of())));
         return all;
     }
 
-    private static boolean blank(String value) {
+    private static boolean isBlank(String value) {
         return value == null || value.isBlank();
     }
 }

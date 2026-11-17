@@ -70,7 +70,7 @@ public class ImportPageNormalizer {
         List<PageWarning> warnings = new ArrayList<>();
         for (CheckedFile file : files) {
             int pageNo = pages.size() + 1;
-            BufferedImage image = orient(decodeImage(file.content()), JpegOrientation.read(file.content()));
+            BufferedImage image = orientImage(decodeImage(file.content()), JpegOrientation.readOrientation(file.content()));
             pages.add(encodePage(pageNo, image, null, warnings));
         }
         return new NormalizedPages(List.copyOf(pages), List.copyOf(warnings));
@@ -80,7 +80,7 @@ public class ImportPageNormalizer {
         try (PDDocument document = Loader.loadPDF(file.content())) {
             int count = document.getNumberOfPages();
             if (count == 0 || count > MAX_PAGES) {
-                throw ApiException.badRequest("ASSIGNMENT_IMPORT_PDF_PAGES", "PDF phải có từ 1 đến 10 trang");
+                throw ApiException.createBadRequest("ASSIGNMENT_IMPORT_PDF_PAGES", "PDF phải có từ 1 đến 10 trang");
             }
             PDFRenderer renderer = new PDFRenderer(document);
             PDFTextStripper stripper = new PDFTextStripper();
@@ -88,7 +88,7 @@ public class ImportPageNormalizer {
             List<PageWarning> warnings = new ArrayList<>();
             int hintChars = 0;
             for (int index = 0; index < count; index++) {
-                BufferedImage image = renderer.renderImageWithDPI(index, dpiFor(document.getPage(index)), ImageType.RGB);
+                BufferedImage image = renderer.renderImageWithDPI(index, calculateDpi(document.getPage(index)), ImageType.RGB);
                 String hint = null;
                 if (hintChars < MAX_HINT_TOTAL) {
                     stripper.setStartPage(index + 1);
@@ -100,17 +100,17 @@ public class ImportPageNormalizer {
             }
             return new NormalizedPages(List.copyOf(pages), List.copyOf(warnings));
         } catch (InvalidPasswordException e) {
-            throw ApiException.badRequest("ASSIGNMENT_IMPORT_PDF_ENCRYPTED", "PDF có mật khẩu, hãy bỏ mật khẩu rồi thử lại");
+            throw ApiException.createBadRequest("ASSIGNMENT_IMPORT_PDF_ENCRYPTED", "PDF có mật khẩu, hãy bỏ mật khẩu rồi thử lại");
         } catch (IOException | RuntimeException e) {
             if (e instanceof ApiException api) {
                 throw api;
             }
-            throw unreadable();
+            throw createUnreadableError();
         }
     }
 
     /** Trang PDF khổ lớn: hạ DPI để ảnh dựng không vượt 40 megapixel. */
-    private static float dpiFor(PDPage page) {
+    private static float calculateDpi(PDPage page) {
         PDRectangle box = page.getCropBox();
         double pixels = (box.getWidth() / 72.0 * PDF_DPI) * (box.getHeight() / 72.0 * PDF_DPI);
         return pixels <= MAX_PIXELS ? PDF_DPI : (float) (PDF_DPI * Math.sqrt(MAX_PIXELS / pixels));
@@ -129,19 +129,19 @@ public class ImportPageNormalizer {
         try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(content))) {
             Iterator<ImageReader> readers = input == null ? null : ImageIO.getImageReaders(input);
             if (readers == null || !readers.hasNext()) {
-                throw unreadable();
+                throw createUnreadableError();
             }
             ImageReader reader = readers.next();
             try {
                 reader.setInput(input, true, true);
                 long pixels = (long) reader.getWidth(0) * reader.getHeight(0);
                 if (pixels > MAX_PIXELS) {
-                    throw ApiException.badRequest("ASSIGNMENT_IMPORT_IMAGE_TOO_LARGE",
+                    throw ApiException.createBadRequest("ASSIGNMENT_IMPORT_IMAGE_TOO_LARGE",
                             "Ảnh quá lớn (trên 40 megapixel); hãy thu nhỏ ảnh rồi thử lại");
                 }
                 BufferedImage image = reader.read(0);
                 if (image == null) {
-                    throw unreadable();
+                    throw createUnreadableError();
                 }
                 return image;
             } finally {
@@ -151,12 +151,12 @@ public class ImportPageNormalizer {
             if (e instanceof ApiException api) {
                 throw api;
             }
-            throw unreadable();
+            throw createUnreadableError();
         }
     }
 
-    private static ApiException unreadable() {
-        return ApiException.badRequest("ASSIGNMENT_IMPORT_UNREADABLE", "Không đọc được tệp; kiểm tra tệp rồi thử lại");
+    private static ApiException createUnreadableError() {
+        return ApiException.createBadRequest("ASSIGNMENT_IMPORT_UNREADABLE", "Không đọc được tệp; kiểm tra tệp rồi thử lại");
     }
 
     private static ImportPage encodePage(int pageNo, BufferedImage source, String hint, List<PageWarning> warnings) {
@@ -200,7 +200,7 @@ public class ImportPageNormalizer {
     }
 
     /** Xoay/lật ảnh theo EXIF Orientation 1–8 để chữ đứng thẳng như người chụp thấy. */
-    static BufferedImage orient(BufferedImage image, int orientation) {
+    static BufferedImage orientImage(BufferedImage image, int orientation) {
         if (orientation <= 1 || orientation > 8) {
             return image;
         }
@@ -258,7 +258,7 @@ public class ImportPageNormalizer {
         private JpegOrientation() {
         }
 
-        static int read(byte[] jpeg) {
+        static int readOrientation(byte[] jpeg) {
             if (jpeg.length < 4 || (jpeg[0] & 0xFF) != 0xFF || (jpeg[1] & 0xFF) != 0xD8) {
                 return 1;
             }
@@ -283,31 +283,31 @@ public class ImportPageNormalizer {
                 return 1;
             }
             boolean little = b[start] == 'I';
-            int ifd = start + int32(b, start + 4, little);
+            int ifd = start + readInt32(b, start + 4, little);
             if (ifd < start || ifd + 2 > end) {
                 return 1;
             }
-            int entries = int16(b, ifd, little);
+            int entries = readInt16(b, ifd, little);
             for (int i = 0; i < entries; i++) {
                 int entry = ifd + 2 + i * 12;
                 if (entry + 12 > end) {
                     return 1;
                 }
-                if (int16(b, entry, little) == 0x0112) {
-                    int value = int16(b, entry + 8, little);
+                if (readInt16(b, entry, little) == 0x0112) {
+                    int value = readInt16(b, entry + 8, little);
                     return value >= 1 && value <= 8 ? value : 1;
                 }
             }
             return 1;
         }
 
-        private static int int16(byte[] b, int at, boolean little) {
+        private static int readInt16(byte[] b, int at, boolean little) {
             return little ? (b[at] & 0xFF) | ((b[at + 1] & 0xFF) << 8) : ((b[at] & 0xFF) << 8) | (b[at + 1] & 0xFF);
         }
 
-        private static int int32(byte[] b, int at, boolean little) {
-            return little ? int16(b, at, true) | (int16(b, at + 2, true) << 16)
-                    : (int16(b, at, false) << 16) | int16(b, at + 2, false);
+        private static int readInt32(byte[] b, int at, boolean little) {
+            return little ? readInt16(b, at, true) | (readInt16(b, at + 2, true) << 16)
+                    : (readInt16(b, at, false) << 16) | readInt16(b, at + 2, false);
         }
     }
 }

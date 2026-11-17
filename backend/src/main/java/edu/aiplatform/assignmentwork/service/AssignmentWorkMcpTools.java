@@ -29,14 +29,14 @@ public class AssignmentWorkMcpTools implements IMcpToolProvider {
     static final String RECORD = "record_private_feedback";
     static final String READ_SUBMISSION = "read_authorized_submission";
 
-    private final PracticeFeedbackService feedback;
+    private final PracticeFeedbackService practiceFeedbackService;
     private final WorkAccess access;
     private final IDocumentModel documents;
     private final ObjectMapper json;
 
-    public AssignmentWorkMcpTools(PracticeFeedbackService feedback, WorkAccess access, IDocumentModel documents,
+    public AssignmentWorkMcpTools(PracticeFeedbackService practiceFeedbackService, WorkAccess access, IDocumentModel documents,
                                   ObjectMapper json) {
-        this.feedback = feedback;
+        this.practiceFeedbackService = practiceFeedbackService;
         this.access = access;
         this.documents = documents;
         this.json = json;
@@ -64,31 +64,31 @@ public class AssignmentWorkMcpTools implements IMcpToolProvider {
         boolean ownTool = READ_OWN.equals(toolName) || RECORD.equals(toolName);
         boolean educator = actor != null && (actor.role() == Role.TEACHER || actor.role() == Role.SUBJECT_MANAGER);
         if (actor == null || (ownTool ? actor.role() != Role.STUDENT : !educator)) {
-            return error("TOOL_NOT_FOUND", "Không có quyền dùng tool này");
+            return buildError("TOOL_NOT_FOUND", "Không có quyền dùng tool này");
         }
         try {
             UUID attemptId = UUID.fromString(String.valueOf(args.get("attemptId")));
             return switch (toolName) {
-                case READ_OWN -> new McpToolResult(false, feedback.readOwnWork(actor, attemptId));
+                case READ_OWN -> new McpToolResult(false, practiceFeedbackService.readOwnWork(actor, attemptId));
                 case RECORD -> {
-                    PracticeFeedback saved = feedback.recordFromAgent(actor, attemptId,
+                    PracticeFeedback saved = practiceFeedbackService.recordFromAgent(actor, attemptId,
                             args.get("submissionHash") == null ? null : String.valueOf(args.get("submissionHash")),
                             json.valueToTree(args.get("feedback")),
                             args.get("agentLabel") == null ? null : String.valueOf(args.get("agentLabel")));
                     yield new McpToolResult(false, Map.of("feedbackId", saved.id().toString(), "status", "READY"));
                 }
-                case READ_SUBMISSION -> new McpToolResult(false, submission(actor, attemptId));
-                default -> error("TOOL_NOT_FOUND", "Không có tool này");
+                case READ_SUBMISSION -> new McpToolResult(false, loadSubmission(actor, attemptId));
+                default -> buildError("TOOL_NOT_FOUND", "Không có tool này");
             };
         } catch (ApiException e) {
-            return error(e.code(), e.getMessage());
+            return buildError(e.readCode(), e.getMessage());
         } catch (IllegalArgumentException | NullPointerException e) {
-            return error("INVALID_ARGUMENTS", "Tham số không hợp lệ");
+            return buildError("INVALID_ARGUMENTS", "Tham số không hợp lệ");
         }
     }
 
     /** F10 bước 4: giảng viên chính của lớp ghi trên lượt, lượt đã nộp; không có dữ liệu người khác. */
-    private Map<String, Object> submission(Actor actor, UUID attemptId) {
+    private Map<String, Object> loadSubmission(Actor actor, UUID attemptId) {
         if (actor.role() == Role.STUDENT) {
             throw access.deny(actor, READ_SUBMISSION, WorkAudit.OBJECT_ATTEMPT, attemptId, "ROLE_NOT_ALLOWED");
         }
@@ -104,7 +104,7 @@ public class AssignmentWorkMcpTools implements IMcpToolProvider {
         return out;
     }
 
-    private static McpToolResult error(String code, String message) {
+    private static McpToolResult buildError(String code, String message) {
         return new McpToolResult(true, Map.of("code", code, "message", message));
     }
 }

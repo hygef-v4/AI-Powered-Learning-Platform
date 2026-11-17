@@ -17,7 +17,7 @@ public class SettingsSectionRegistry {
     static final Duration SUMMARY_TIMEOUT = Duration.ofSeconds(1);
 
     private final List<ISettingsSectionProvider> providers;
-    private final ExecutorService executor = Executors.newCachedThreadPool(runnable -> {
+    private final ExecutorService executorService = Executors.newCachedThreadPool(runnable -> {
         Thread thread = new Thread(runnable, "settings-section");
         thread.setDaemon(true);
         return thread;
@@ -30,7 +30,7 @@ public class SettingsSectionRegistry {
     public record SectionView(String sectionKey, String title, String summary, boolean available) {
     }
 
-    public List<SectionView> summaries() {
+    public List<SectionView> listSummaries() {
         List<SectionView> views = new ArrayList<>();
         for (ISettingsSectionProvider provider : providers) {
             String key;
@@ -41,7 +41,7 @@ public class SettingsSectionRegistry {
             } catch (RuntimeException e) {
                 continue;
             }
-            Future<String> summary = executor.submit(provider::summary);
+            Future<String> summary = executorService.submit(provider::summary);
             try {
                 views.add(new SectionView(key, title, summary.get(SUMMARY_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS),
                         true));

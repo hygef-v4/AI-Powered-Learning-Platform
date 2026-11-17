@@ -1,28 +1,27 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { Alert, Button, Dialog } from "@/shared/ui";
-import { Icon } from "@/shared/ui/Icon";
+import { useEffect, useState } from "react";
+import { Alert, Button, Dialog, showToast } from "@/shared/ui";
 import { buildAiRequest } from "./AiProposalPanel";
 import type { SourceChoice } from "@/shared/ai";
 import { gradingApi } from "../api";
 import { readGradingAiAccount, resumeGradingPolling } from "../model/gradingAiTasks";
 import { formatErrorMessage } from "../model/format";
 import type { BatchResult, ItemVersion } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 const OUTCOME_CODE_MESSAGES: Record<string, string> = {
-  ALREADY_FINALIZED: "Bài này đã được chốt điểm trước đó. Điểm được giữ nguyên.",
-  ALREADY_PUBLISHED: "Bài này đã được công bố điểm trước đó. Điểm được giữ nguyên.",
-  INVALID_GRADE_STATE: "Trạng thái bài đã thay đổi hoặc chưa phù hợp với thao tác này. Tải lại danh sách để kiểm tra.",
-  GRADE_VERSION_CONFLICT: "Bài chấm đã được cập nhật. Tải lại danh sách để dùng phiên bản mới nhất.",
-  GRADE_LOCKED: "Điểm đã được khóa. Tải lại danh sách để xem trạng thái hiện tại.",
-  GRADING_CLASS_READ_ONLY: "Lớp đã lưu trữ hoặc chưa mở. Không thể chỉnh sửa hay công bố điểm.",
-  GRADING_ASSIGNMENT_OPEN: "Bài tập đang nhận bài. Đóng nhận bài trước khi chấm hoặc công bố điểm.",
-  DUPLICATE_ITEM: "Bài bị chọn trùng; chỉ xử lý một lần.",
-  INCOMPLETE_BATCH_RESULT: "Chưa nhận đủ kết quả xử lý. Tải lại danh sách để kiểm tra.",
+  ALREADY_FINALIZED: msg("grading.components.BatchActionDialog.thisSubmissionsGradeWasAlready"),
+  ALREADY_PUBLISHED: msg("grading.components.BatchActionDialog.thisSubmissionsGradeWasAlready2"),
+  INVALID_GRADE_STATE: msg("grading.components.BatchActionDialog.theSubmissionStatusHasChanged"),
+  GRADE_VERSION_CONFLICT: msg("grading.components.BatchActionDialog.theGradingWasUpdatedReload"),
+  GRADING_CLASS_READ_ONLY: msg("grading.components.BatchActionDialog.theClassIsArchivedOr"),
+  GRADING_ASSIGNMENT_OPEN: msg("grading.components.BatchActionDialog.theAssignmentIsStillAccepting"),
+  DUPLICATE_ITEM: msg("grading.components.BatchActionDialog.aSubmissionWasSelectedTwice"),
+  INCOMPLETE_BATCH_RESULT: msg("grading.components.BatchActionDialog.notAllResultsWereReceived"),
   STRUCTURED_FEEDBACK_REVIEW_REQUIRED:
-    "Còn mục nhận xét cần giảng viên kiểm tra và xác nhận trước khi công bố hoặc lưu điểm đã công bố.",
+    msg("grading.components.BatchActionDialog.someFeedbackItemsStillNeed"),
   STRUCTURED_FEEDBACK_SCORE_MISMATCH:
-    "Có mục đã thay đổi điểm nhưng chưa cập nhật hoặc xác nhận lại giải thích nhận xét.",
+    msg("grading.components.BatchActionDialog.someItemsHadTheirPoints"),
 };
 
 function isAlreadyCompleted(row: BatchResult["items"][number]) {
@@ -42,7 +41,8 @@ export function BatchActionDialog({
 }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
-  const [successMessage, setSuccessMessage] = useState("");
+  /** Đã chốt / công bố xong: thông báo nổi chung của trang thay cho popup. */
+  const [completed, setCompleted] = useState(false);
   const [error, setError] = useState("");
   const [estimate, setEstimate] = useState<{ key: string; state: "ready" | "failed"; tokens?: number }>({
     key: "",
@@ -64,7 +64,7 @@ export function BatchActionDialog({
       active = false;
     };
   }, [action, items]);
-  async function run(choice?: SourceChoice) {
+  async function runBatch(choice?: SourceChoice) {
     if (busy || items.length === 0) return;
     setBusy(true);
     setError("");
@@ -100,9 +100,11 @@ export function BatchActionDialog({
         const skipped = completed.items.filter(isAlreadyCompleted).length;
         const changed = items.length - skipped;
         const message = changed > 0
-          ? action === "publish" ? `Đã công bố điểm cho ${changed} bài.` : `Đã chốt điểm cho ${changed} bài.`
-          : "Các bài đã được chốt hoặc công bố trước đó. Điểm được giữ nguyên.";
-        setSuccessMessage(message + (skipped > 0 && changed > 0 ? ` ${skipped} bài đã hoàn tất trước đó, điểm được giữ nguyên.` : ""));
+          ? action === "publish" ? msg("grading.components.BatchActionDialog.gradesPublishedForSubmissions", { changed: String(changed) }) : msg("grading.components.BatchActionDialog.gradesFinalizedForSubmissions", { changed: String(changed) })
+          : msg("grading.components.BatchActionDialog.theSubmissionsWereAlreadyFinalized");
+        showToast(message + (skipped > 0 && changed > 0 ? msg("grading.components.BatchActionDialog.submissionsWereAlreadyCompletedTheir", { skipped: String(skipped) }) : ""));
+        setCompleted(true);
+        onClose();
       }
       onDone();
     } catch (e) {
@@ -113,15 +115,13 @@ export function BatchActionDialog({
   }
   const title =
     action === "publish"
-      ? "Công bố điểm"
+      ? msg("grading.components.BatchActionDialog.publishGrades")
       : action === "finalize"
-        ? "Chốt điểm"
-        : "Đề xuất AI hàng loạt";
+        ? msg("grading.components.BatchActionDialog.finalizeGrades")
+        : msg("grading.components.BatchActionDialog.batchAiProposals");
   const estimateIsCurrent = estimate.key === JSON.stringify(items);
   const estimateState = estimateIsCurrent ? estimate.state : "loading";
-  if (successMessage) {
-    return <SuccessNotice onDismiss={onClose} message={successMessage} />;
-  }
+  if (completed) return null;
   return (
     <Dialog
       open
@@ -130,36 +130,36 @@ export function BatchActionDialog({
       dismissible={!busy}
       footer={
         <>
-          {result ? <Button onClick={onClose}>Đóng</Button> : <Button
+          {result ? <Button onClick={onClose}>{msg("grading.components.BatchActionDialog.close")}</Button> : <Button
             variant="primary"
             disabled={busy || items.length === 0}
-            onClick={() => void run()}
+            onClick={() => void runBatch()}
           >
-            {busy ? "Đang xử lý…" : "Xác nhận"}
+            {busy ? msg("grading.components.BatchActionDialog.processing") : msg("grading.components.BatchActionDialog.confirm")}
           </Button>}
         </>
       }
     >
       {/* Popup công bố điểm bỏ phần nội dung (yêu cầu 2026-11-07). */}
       {action !== "publish" && (
-        <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">bài đã chọn</span></p>
+        <p className="font-display text-[34px] leading-none text-ink">{items.length} <span className="font-sans text-[13.5px] text-muted">{msg("grading.components.BatchActionDialog.selectedSubmissions")}</span></p>
       )}
       {/* Nguồn AI do hệ thống tự chọn: API chung nếu còn đủ hạn mức cho lượt này, không thì khóa cá nhân (yêu cầu 2026-11-05). */}
       {action === "ai" && (
         <p className="text-xs text-muted">
-          {estimateState === "loading" ? "Đang ước tính token…" : estimateState === "ready" && estimate.tokens != null
-            ? `Ước tính khoảng ${estimate.tokens.toLocaleString("vi-VN")} token.` : "Chưa ước tính được token."}
+          {estimateState === "loading" ? msg("grading.components.BatchActionDialog.estimatingTokens") : estimateState === "ready" && estimate.tokens != null
+            ? msg("grading.components.BatchActionDialog.estimatedAboutTokens", { value: String(estimate.tokens.toLocaleString("vi-VN")) }) : msg("grading.components.BatchActionDialog.couldNotEstimateTokens")}
         </p>
       )}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {result && (
         <ul className="flex flex-col">
           {result.items.map((r, index) => {
-            const detailMsg = r.code ? OUTCOME_CODE_MESSAGES[r.code] ?? "Không thể thực hiện thao tác. Tải lại danh sách và thử lại." : undefined;
+            const detailMsg = r.code ? OUTCOME_CODE_MESSAGES[r.code] ?? msg("grading.components.BatchActionDialog.couldNotPerformTheAction") : undefined;
             return (
               <li key={`${r.evaluationId}-${index}`} className="border-b border-line py-2 last:border-b-0">
                 <p>
-                  Bài {index + 1}: {r.outcome === "SUCCESS" ? "Thành công" : r.outcome === "QUEUED" || r.outcome === "PENDING" ? "Đã gửi yêu cầu AI" : r.outcome === "READY" ? "Đã có đề xuất AI" : r.outcome === "SKIPPED" ? "Bỏ qua" : "Chưa thực hiện được"}
+                  {msg("grading.components.BatchActionDialog.submission")}{index + 1}: {r.outcome === "SUCCESS" ? msg("grading.components.BatchActionDialog.succeeded") : r.outcome === "QUEUED" || r.outcome === "PENDING" ? msg("grading.components.BatchActionDialog.aiRequestSent") : r.outcome === "READY" ? msg("grading.components.BatchActionDialog.aiProposalAvailable") : r.outcome === "SKIPPED" ? msg("grading.components.BatchActionDialog.skipped") : msg("grading.components.BatchActionDialog.notDoneYet")}
                 </p>
                 {detailMsg && (
                   <p role={r.outcome === "FAILED" ? "alert" : undefined}
@@ -174,23 +174,4 @@ export function BatchActionDialog({
       )}
     </Dialog>
   );
-}
-
-/** Replaces the completed dialog without blocking the grading page or repeating the action. */
-function SuccessNotice({ message, onDismiss }: { message: string; onDismiss: () => void }) {
-  const dismiss = useRef(onDismiss);
-  useEffect(() => { dismiss.current = onDismiss; }, [onDismiss]);
-  useEffect(() => {
-    const timer = setTimeout(() => dismiss.current(), 4000);
-    return () => clearTimeout(timer);
-  }, []);
-  return <div role="status" aria-live="polite" aria-atomic="true"
-    className="fixed top-20 right-4 z-60 flex max-w-[calc(100vw-2rem)] items-center gap-2.5 rounded-xl border border-success/25 bg-success-soft px-4 py-3 text-sm font-medium text-success shadow-[var(--shadow-float)]">
-    <Icon name="check_circle" size={20} />
-    <span>{message}</span>
-    <button type="button" aria-label="Đóng thông báo" onClick={onDismiss}
-      className="ml-1 rounded-md p-1 hover:bg-success/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-success">
-      <Icon name="close" size={18} />
-    </button>
-  </div>;
 }

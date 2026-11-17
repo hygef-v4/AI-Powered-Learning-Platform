@@ -42,7 +42,7 @@ public class QuizScorer implements IQuizScoring {
     @Override
     @Transactional(readOnly = true)
     public QuizScore score(UUID quizId, List<QuizAnswer> answers) {
-        return scoreItems(quizzes.items(quizId), answers);
+        return scoreItems(quizzes.listItems(quizId), answers);
     }
 
     /** Lượt sinh đề chấm đúng các câu và điểm đã lưu trong lượt, không theo {@code quiz_items} (BR-U10-17). */
@@ -58,7 +58,7 @@ public class QuizScorer implements IQuizScoring {
     }
 
     private QuizScore scoreItems(List<QuizItem> items, List<QuizAnswer> answers) {
-        Map<UUID, Question> byId = byId(items);
+        Map<UUID, Question> byId = indexById(items);
         Map<UUID, Set<String>> selected = new HashMap<>();
         for (QuizAnswer answer : answers == null ? List.<QuizAnswer>of() : answers) {
             selected.put(answer.questionId(), answer.selectedOptionIds() == null ? Set.of() : answer.selectedOptionIds());
@@ -81,8 +81,8 @@ public class QuizScorer implements IQuizScoring {
     @Override
     @Transactional(readOnly = true)
     public AnswerReview answerReview(UUID quizId) {
-        List<QuizItem> items = quizzes.items(quizId);
-        Map<UUID, Question> byId = byId(items);
+        List<QuizItem> items = quizzes.listItems(quizId);
+        Map<UUID, Question> byId = indexById(items);
         List<AnswerKey> keys = items.stream().filter(item -> byId.containsKey(item.questionId()))
                 .map(item -> {
                     Question q = byId.get(item.questionId());
@@ -100,7 +100,7 @@ public class QuizScorer implements IQuizScoring {
                 .toList());
     }
 
-    private Map<UUID, Question> byId(List<QuizItem> items) {
+    private Map<UUID, Question> indexById(List<QuizItem> items) {
         return questions.findAll(items.stream().map(QuizItem::questionId).toList()).stream()
                 .collect(Collectors.toMap(Question::id, Function.identity()));
     }

@@ -23,7 +23,7 @@ public class PgDumpRunner implements IDumpRunner {
     }
 
     @Override
-    public void dump(Path target) {
+    public void dumpDatabase(Path target) {
         List<String> command = List.of("pg_dump", "--format=custom", "--no-owner", "--no-privileges",
                 "--file", target.toString(), "--host", properties.dbHost(), "--port", String.valueOf(properties.dbPort()),
                 "--username", properties.dbUser(), "--dbname", properties.dbName());

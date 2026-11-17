@@ -36,15 +36,15 @@ class AiDomainTest {
         assertThat(running.dispatchedAt()).isEqualTo(NOW);
         assertThat(running.finishedAt()).isNull();
         AiTask ready = running.moveTo(AiTaskState.READY, NOW.plusSeconds(5));
-        assertThat(ready.finished()).isTrue();
+        assertThat(ready.hasFinished()).isTrue();
         assertThat(ready.finishedAt()).isEqualTo(NOW.plusSeconds(5));
         assertThatThrownBy(() -> ready.moveTo(AiTaskState.FAILED, NOW)).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void handledTaskDropsPromptAndResult() {
-        AiTask handled = task().moveTo(AiTaskState.RUNNING, NOW).withResult("{\"a\":1}", "req-1")
-                .moveTo(AiTaskState.READY, NOW).handled(ApplyOutcome.STALE);
+        AiTask handled = task().moveTo(AiTaskState.RUNNING, NOW).completeWithResult("{\"a\":1}", "req-1")
+                .moveTo(AiTaskState.READY, NOW).markHandled(ApplyOutcome.STALE);
         assertThat(handled.inputPayload()).isNull();
         assertThat(handled.outputSchema()).isNull();
         assertThat(handled.resultPayload()).isNull();
@@ -54,42 +54,42 @@ class AiDomainTest {
 
     @Test
     void errorIsCutTo500Characters() {
-        assertThat(task().withError("x".repeat(800)).safeError()).hasSize(500);
+        assertThat(task().failWithError("x".repeat(800)).safeError()).hasSize(500);
     }
 
     @Test
     void onlyInstitutionalConnectionCanBeDisabledAndRevokeDropsCiphertext() {
-        AiConnection personal = AiConnection.create(UUID.randomUUID(), Scope.PERSONAL, UUID.randomUUID(), AiProvider.OPENAI,
+        AiConnection personal = AiConnection.createConnection(UUID.randomUUID(), Scope.PERSONAL, UUID.randomUUID(), AiProvider.OPENAI,
                 "gpt-4.1-mini", new EncryptedKey(new byte[] {1}, new byte[] {2}, 1), "3kQf", NOW);
         // Khóa cá nhân cũng tắt được (yêu cầu 2026-11-05).
-        assertThat(personal.withStatus(Status.DISABLED, NOW).status()).isEqualTo(Status.DISABLED);
-        AiConnection revoked = personal.revoked(NOW);
+        assertThat(personal.changeStatus(Status.DISABLED, NOW).status()).isEqualTo(Status.DISABLED);
+        AiConnection revoked = personal.markRevoked(NOW);
         assertThat(revoked.status()).isEqualTo(Status.REVOKED);
         assertThat(revoked.keyCiphertext()).isNull();
         assertThat(revoked.keyIv()).isNull();
         assertThat(revoked.keyHint()).isEqualTo("3kQf");
 
-        AiConnection shared = AiConnection.create(UUID.randomUUID(), Scope.INSTITUTIONAL, null, AiProvider.GEMINI,
+        AiConnection shared = AiConnection.createConnection(UUID.randomUUID(), Scope.INSTITUTIONAL, null, AiProvider.GEMINI,
                 "gemini-2.5-flash", new EncryptedKey(new byte[] {1}, new byte[] {2}, 1), "abcd", NOW);
-        assertThat(shared.withStatus(Status.DISABLED, NOW).status()).isEqualTo(Status.DISABLED);
+        assertThat(shared.changeStatus(Status.DISABLED, NOW).status()).isEqualTo(Status.DISABLED);
     }
 
     @Test
     void credentialStatusDependsOnRevocationAndExpiry() {
         McpCredential credential = new McpCredential(UUID.randomUUID(), UUID.randomUUID(), "Claude Desktop",
                 McpCredential.Access.READ_ONLY, "hash", "a1b2", NOW.plus(Duration.ofDays(30)), null, null, NOW);
-        assertThat(credential.status(NOW)).isEqualTo(McpCredential.Status.ACTIVE);
-        assertThat(credential.status(NOW.plus(Duration.ofDays(31)))).isEqualTo(McpCredential.Status.EXPIRED);
+        assertThat(credential.resolveStatus(NOW)).isEqualTo(McpCredential.Status.ACTIVE);
+        assertThat(credential.resolveStatus(NOW.plus(Duration.ofDays(31)))).isEqualTo(McpCredential.Status.EXPIRED);
         McpCredential revoked = new McpCredential(credential.id(), credential.accountId(), credential.label(),
                 credential.access(), credential.tokenHash(), credential.tokenHint(), credential.expiresAt(), NOW, null, NOW);
-        assertThat(revoked.status(NOW)).isEqualTo(McpCredential.Status.REVOKED);
+        assertThat(revoked.resolveStatus(NOW)).isEqualTo(McpCredential.Status.REVOKED);
     }
 
     @Test
     void quotaPolicyNeedsBothLimits() {
-        assertThat(QuotaPolicy.empty().configured()).isFalse();
-        assertThat(new QuotaPolicy(1000L, null, 1, null, NOW).configured()).isFalse();
-        assertThat(new QuotaPolicy(1000L, 50000L, 1, null, NOW).configured()).isTrue();
+        assertThat(QuotaPolicy.createEmptyPolicy().hasLimits()).isFalse();
+        assertThat(new QuotaPolicy(1000L, null, 1, null, NOW).hasLimits()).isFalse();
+        assertThat(new QuotaPolicy(1000L, 50000L, 1, null, NOW).hasLimits()).isTrue();
     }
 
     private static AiTask task() {

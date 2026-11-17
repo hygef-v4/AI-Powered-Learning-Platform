@@ -1,6 +1,7 @@
 package edu.aiplatform.files.config;
 
 import edu.aiplatform.files.integration.DriveClientFactory;
+import edu.aiplatform.files.integration.DriveFolders;
 import edu.aiplatform.files.integration.GoogleDriveStorageAdapter;
 import edu.aiplatform.files.integration.LocalFolderStorageAdapter;
 import edu.aiplatform.files.integration.UnconfiguredStorageAdapter;
@@ -21,9 +22,11 @@ public class StorageConfig {
     private static final Logger log = LoggerFactory.getLogger(StorageConfig.class);
 
     @Bean
-    IStorage storage(FilesProperties properties, DriveClientFactory driveClients) {
-        if (properties.driveConfigured()) {
-            return new GoogleDriveStorageAdapter(driveClients, properties.sharedDriveId());
+    IStorage storage(FilesProperties properties, DriveClientFactory driveClients, DriveFolders folders) {
+        if (properties.hasDrive()) {
+            log.info("Lưu tệp trên Google Drive ({})",
+                    properties.hasSharedDrive() ? "Shared Drive" : "Drive cá nhân");
+            return new GoogleDriveStorageAdapter(driveClients, folders);
         }
         if (properties.requireDrive()) {
             log.warn("Chưa cấu hình Google Drive: upload và tải tệp báo tạm thời không khả dụng");

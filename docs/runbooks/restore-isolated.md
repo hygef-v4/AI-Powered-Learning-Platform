@@ -5,7 +5,7 @@ Runbook của U03 (BR-U03-98, NFR-U03-75). Chỉ khôi phục **database**; tệ
 ## Chuẩn bị
 
 - Máy của người vận hành có Docker, **không phải VPS production**.
-- Private key RSA của người vận hành (`private-key.pem`, PKCS#8), giữ ngoài VPS. Public key tương ứng nằm trong biến `U03_BACKUP_PUBLIC_KEY` của production.
+- Private key RSA của người vận hành (`private-key.pem`, PKCS#8), giữ ngoài VPS. Public key tương ứng nằm trong biến `U03_BACKUP_PUBLIC_KEY` của production. Biến này là tùy chọn: backup chạy khi biến để trống tạo archive không mã hóa (bản dump thường), khôi phục không cần private key.
 - Image backend đúng phiên bản ghi trong lần backup (`app_version` trên Admin Dashboard) hoặc mới hơn, để có công cụ giải mã.
 
 Tạo cặp khóa lần đầu (chạy trên máy người vận hành, rồi đưa public key lên `.env` của VPS):
@@ -18,12 +18,14 @@ openssl pkey -in private-key.pem -pubout -out public-key.pem
 ## Các bước
 
 1. Trên Admin Dashboard, chọn lần backup `SUCCESS` cần khôi phục, ghi lại ngày chạy.
-2. Trong thư mục backup trên Google Drive (`GOOGLE_BACKUP_FOLDER_ID`), mở thư mục con trùng mã lần chạy, tải `archive.alapbk` về máy.
+2. Trong thư mục backup trên Google Drive, mở thư mục con trùng mã lần chạy, tải `archive.alapbk` về máy. Thư mục backup là `GOOGLE_BACKUP_FOLDER_ID` với Shared Drive, hoặc thư mục con `backups` trong thư mục gốc của ứng dụng (mặc định `AI Learning Platform`) với Drive cá nhân.
 3. Chạy script (tạo PostgreSQL 16 tạm, giải mã, `pg_restore`, đếm số dòng, ghi thời gian):
 
    ```bash
    infra/scripts/restore-isolated.sh archive.alapbk private-key.pem ghcr.io/max2min/platform-backend:<tag>
    ```
+
+   Archive không mã hóa: script vẫn đòi đủ ba tham số và tham số thứ hai phải là một tệp có thật, nhưng nội dung tệp không được đọc. Truyền một tệp bất kỳ; công cụ in `Archive không mã hóa, đã chép nguyên trạng` rồi chạy tiếp.
 
 4. Kiểm theo danh sách dưới đây trên database tạm (script in lệnh `psql` để kết nối).
 5. Lưu tệp bằng chứng `restore-evidence-<thời điểm>.txt` do script tạo, kèm kết quả kiểm tay.

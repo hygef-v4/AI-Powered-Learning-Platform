@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiFetch } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
 
 export type CurrentUser = { displayName: string; email?: string };
 
@@ -21,7 +21,7 @@ export function useCurrentUser(enabled = true): CurrentUser | null {
   useEffect(() => {
     if (!enabled) return;
     let active = true;
-    cached ??= apiFetch<CurrentUser>("/api/v1/me/profile").catch(() => {
+    cached ??= fetchApi<CurrentUser>("/api/v1/me/profile").catch(() => {
       cached = null;
       return null;
     });

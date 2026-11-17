@@ -60,7 +60,7 @@ public class Evaluation {
         evaluation.submissionHash = Objects.requireNonNull(hash);
         evaluation.maxScore = Objects.requireNonNull(max);
         if (max.signum() < 0 || max.compareTo(new BigDecimal("9999.99")) > 0)
-            throw ApiException.badRequest("INVALID_RUBRIC", "Invalid maximum score");
+            throw ApiException.createBadRequest("INVALID_RUBRIC", "Invalid maximum score");
         evaluation.rubricSnapshot = rubrics;
         evaluation.createdAt = now;
         return evaluation;
@@ -69,7 +69,7 @@ public class Evaluation {
     /** Rejects a write when the evaluation version has changed. */
     public void checkVersion(long expected) {
         if (version != expected)
-            throw ApiException.conflict("GRADE_VERSION_CONFLICT",
+            throw ApiException.createConflict("GRADE_VERSION_CONFLICT",
                     "Reload the evaluation before saving");
     }
 
@@ -78,10 +78,10 @@ public class Evaluation {
             String deltaReason, String feedback, String changeReason, UUID actor, Instant now) {
         requireMutableGrade();
         if (feedback != null && feedback.length() > 10000)
-            throw ApiException.badRequest("FEEDBACK_TOO_LONG", "Feedback exceeds 10000 characters");
+            throw ApiException.createBadRequest("FEEDBACK_TOO_LONG", "Feedback exceeds 10000 characters");
         delta = delta == null ? BigDecimal.ZERO : delta;
         if (delta.scale() > 2 || delta.abs().compareTo(new BigDecimal("9999.99")) > 0)
-            throw ApiException.badRequest("INVALID_ADJUSTMENT", "Invalid adjustment");
+            throw ApiException.createBadRequest("INVALID_ADJUSTMENT", "Invalid adjustment");
         var next = rubricScore.add(delta).max(BigDecimal.ZERO).min(maxScore).setScale(2,
                 RoundingMode.HALF_UP);
         if (gradedAt != null && score != null && score.compareTo(next) != 0) {
@@ -103,7 +103,7 @@ public class Evaluation {
     public void finalizeGrade(UUID actor, Instant now) {
         if ((state != EvaluationStatus.DRAFT && state != EvaluationStatus.FINALIZED
                 && state != EvaluationStatus.PUBLISHED) || score == null)
-            throw ApiException.conflict("INVALID_GRADE_STATE",
+            throw ApiException.createConflict("INVALID_GRADE_STATE",
                     "Only saved DRAFT grades can be reviewed");
         if (state == EvaluationStatus.FINALIZED) state = EvaluationStatus.DRAFT;
     }
@@ -112,7 +112,7 @@ public class Evaluation {
     public void publishGrade(UUID actor, Instant now) {
         if (state == EvaluationStatus.PUBLISHED) return;
         if ((state != EvaluationStatus.DRAFT && state != EvaluationStatus.FINALIZED) || score == null)
-            throw ApiException.conflict("INVALID_GRADE_STATE",
+            throw ApiException.createConflict("INVALID_GRADE_STATE",
                     "Only saved DRAFT grades can be published");
         state = EvaluationStatus.PUBLISHED;
         publishedAt = now;
@@ -153,7 +153,7 @@ public class Evaluation {
         requireMutableGrade();
         if (memberScore == null || memberScore.signum() < 0 || memberScore.compareTo(maxScore) > 0
                 || memberScore.scale() > 2) {
-            throw ApiException.badRequest("INVALID_MEMBER_SCORE", "Invalid member score");
+            throw ApiException.createBadRequest("INVALID_MEMBER_SCORE", "Invalid member score");
         }
         saveGrade(rubricChecks, memberScore, BigDecimal.ZERO, null, feedback, reason, actorId, now);
         adjustment = memberScore.subtract(groupRubricScore);
@@ -190,7 +190,7 @@ public class Evaluation {
     }
 
     /** Marks this evaluation as superseded. */
-    public void supersede() {
+    public void supersedeEvaluation() {
         state = EvaluationStatus.SUPERSEDED;
     }
 
@@ -202,11 +202,11 @@ public class Evaluation {
     /** Rejects edits to a superseded evaluation. */
     public void requireEditableGrade() {
         if (state == EvaluationStatus.SUPERSEDED)
-            throw ApiException.conflict("SUPERSEDED", "Evaluation is superseded");
+            throw ApiException.createConflict("SUPERSEDED", "Evaluation is superseded");
     }
 
     /** Returns the current evaluation status. */
-    public EvaluationStatus status() {
+    public EvaluationStatus resolveStatus() {
         return state;
     }
 
@@ -216,7 +216,7 @@ public class Evaluation {
     }
 
     /** Returns an immutable view of grade change history. */
-    public List<EvaluationHistory> history() {
+    public List<EvaluationHistory> listHistory() {
         return List.copyOf(changes);
     }
 

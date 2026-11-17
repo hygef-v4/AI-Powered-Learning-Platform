@@ -36,7 +36,7 @@ final class PromptTextAnalysis {
     private PromptTextAnalysis() {
     }
 
-    static List<Segment> segments(String text) {
+    static List<Segment> splitSegments(String text) {
         List<Segment> out = new ArrayList<>();
         StringBuilder directive = new StringBuilder();
         int i = 0;
@@ -61,7 +61,7 @@ final class PromptTextAnalysis {
                 i = end;
                 continue;
             }
-            char close = closingQuote(c);
+            char close = findClosingQuote(c);
             if (close != 0) {
                 int end = text.indexOf(close, i + 1);
                 if (end > i) {
@@ -80,7 +80,7 @@ final class PromptTextAnalysis {
         return out;
     }
 
-    private static char closingQuote(char c) {
+    private static char findClosingQuote(char c) {
         switch (c) {
             case '"':
                 return '"';
@@ -101,7 +101,7 @@ final class PromptTextAnalysis {
     }
 
     /** Ghép các phần chỉ dẫn, ngăn bằng xuống dòng để câu ở hai phía phần trích dẫn không dính nhau. */
-    static String directiveText(List<Segment> segments) {
+    static String joinDirectiveText(List<Segment> segments) {
         StringBuilder out = new StringBuilder();
         for (Segment segment : segments) {
             if (!segment.quoted()) {
@@ -111,7 +111,7 @@ final class PromptTextAnalysis {
         return out.toString();
     }
 
-    static List<String> sentences(String text) {
+    static List<String> splitSentences(String text) {
         List<String> out = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         for (int i = 0; i < text.length(); i++) {
@@ -137,13 +137,13 @@ final class PromptTextAnalysis {
     }
 
     static Tokens tokenize(String text) {
-        String accented = tokenLine(Normalizer.normalize(text == null ? "" : text, Normalizer.Form.NFC)
+        String accented = buildTokenLine(Normalizer.normalize(text == null ? "" : text, Normalizer.Form.NFC)
                 .toLowerCase(Locale.ROOT));
-        String folded = tokenLine(PromptTextNormalizer.fold(text == null ? "" : text));
+        String folded = buildTokenLine(PromptTextNormalizer.fold(text == null ? "" : text));
         return new Tokens(accented, folded, accented.equals(folded));
     }
 
-    private static String tokenLine(String text) {
+    private static String buildTokenLine(String text) {
         StringBuilder out = new StringBuilder(text.length() + 2).append(' ');
         boolean inWord = false;
         int i = 0;

@@ -22,17 +22,17 @@ class AiTaskResultHandlerRegistryTest {
         });
 
         assertThat(lookups).as("dựng bean không đụng tới handler (tránh vòng phụ thuộc)").hasValue(0);
-        assertThat(registry.find("ASSIGNMENT_DRAFT")).contains(draft);
-        assertThat(registry.find("UNKNOWN")).isEmpty();
+        assertThat(registry.findHandler("ASSIGNMENT_DRAFT")).contains(draft);
+        assertThat(registry.findHandler("UNKNOWN")).isEmpty();
         assertThat(lookups).as("chỉ lấy danh sách một lần").hasValue(1);
     }
 
     @Test
     void twoHandlersForOneTaskTypeAreRejected() {
-        AiTaskResultHandlerRegistry registry = AiTaskResultHandlerRegistry.of(
+        AiTaskResultHandlerRegistry registry = AiTaskResultHandlerRegistry.createRegistry(
                 List.of(handler("PRACTICE_FEEDBACK"), handler("PRACTICE_FEEDBACK")));
 
-        assertThatThrownBy(() -> registry.find("PRACTICE_FEEDBACK")).isInstanceOf(IllegalStateException.class)
+        assertThatThrownBy(() -> registry.findHandler("PRACTICE_FEEDBACK")).isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("PRACTICE_FEEDBACK");
     }
 

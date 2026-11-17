@@ -4,8 +4,9 @@ import { useId, useState } from "react";
 import { PROVIDER_LABEL, PROVIDERS, type AiProvider } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Button, Dialog, Field, IconButton, Select, cx } from "@/shared/ui";
-import { PROVIDER_CONSOLE, defaultModel, errorMessage, shortTestResult } from "../model/labels";
+import { PROVIDER_CONSOLE, defaultModel, describeErrorCode, shortenTestResult } from "../model/labels";
 import type { ConnectionView, ProviderInfo, SaveConnection } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 export type KeyTestResult = { ok: boolean; text: string };
 
@@ -56,25 +57,25 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
     setTest(null);
   };
 
-  const body = (): SaveConnection => ({
+  const buildBody = (): SaveConnection => ({
     apiKey: apiKey.trim() || undefined,
     model,
     version: editing ? current?.version : undefined,
   });
 
-  const save = async () => {
+  const saveConnection = async () => {
     if (!editing && !apiKey.trim()) {
-      setError("Hãy nhập khóa API.");
+      setError(msg("ai.components.ApiKeyDialog.enterAnApiKey"));
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      await onSave(provider, body());
+      await onSave(provider, buildBody());
       setApiKey("");
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setError(errorMessage(problem?.code, problem?.detail ?? "Không lưu được khóa, thử lại sau."));
+      setError(describeErrorCode(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.couldNotSaveTheKey")));
     } finally {
       setBusy(false);
     }
@@ -83,16 +84,16 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
   const runTest = async () => {
     if (!onTest) return;
     if (!editing && !apiKey.trim()) {
-      setError("Hãy nhập khóa API.");
+      setError(msg("ai.components.ApiKeyDialog.enterAnApiKey"));
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      setTest(await onTest(provider, body()));
+      setTest(await onTest(provider, buildBody()));
     } catch (e) {
       const problem = e instanceof ApiError ? e.problem : undefined;
-      setTest({ ok: false, text: errorMessage(problem?.code, problem?.detail ?? "Không kiểm tra được") });
+      setTest({ ok: false, text: describeErrorCode(problem?.code, problem?.detail ?? msg("ai.components.ApiKeyDialog.couldNotCheck")) });
     } finally {
       setBusy(false);
     }
@@ -101,18 +102,17 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
   return (
     <Dialog
       open
-      title={editing ? "Sửa khóa API" : "Thêm khóa API"}
+      title={editing ? msg("ai.components.ApiKeyDialog.editApiKey") : msg("ai.components.ApiKeyDialog.addApiKey")}
       icon="key"
       size="lg"
       onClose={onClose}
       dismissible={!busy}
       footer={
-        <Button variant="primary" onClick={() => void save()} disabled={busy || !model}>
-          Lưu khóa
-        </Button>
+        <Button variant="primary" onClick={() => void saveConnection()} disabled={busy || !model}>
+          {msg("ai.components.ApiKeyDialog.saveKey")}</Button>
       }
     >
-      <Field label="Nhà cung cấp" htmlFor={ids.provider} required>
+      <Field label={msg("ai.components.ApiKeyDialog.provider")} htmlFor={ids.provider} required>
         <Select
           id={ids.provider}
           value={provider}
@@ -126,7 +126,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
           ))}
         </Select>
       </Field>
-      <Field label="Khóa API" htmlFor={ids.key} required={!editing} error={error}>
+      <Field label={msg("ai.components.ApiKeyDialog.apiKey")} htmlFor={ids.key} required={!editing} error={error}>
         <div
           className={cx(
             "flex items-center gap-1 py-1 pr-1 pl-3 focus-within:border-focus",
@@ -148,24 +148,24 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
               setTest(null);
               setCopied(false);
             }}
-            placeholder={editing ? `••••••••${current?.keyHint ?? ""}` : "Dán khóa API"}
+            placeholder={editing ? `••••••••${current?.keyHint ?? ""}` : msg("ai.components.ApiKeyDialog.pasteTheApiKey")}
             className="min-w-0 flex-1 bg-transparent font-mono text-xs text-ink outline-none placeholder:text-muted"
           />
           <IconButton
             icon={shown ? "visibility_off" : "visibility"}
-            label={shown ? "Ẩn khóa" : "Xem khóa"}
+            label={shown ? msg("ai.components.ApiKeyDialog.hideKey") : msg("ai.components.ApiKeyDialog.showKey")}
             disabled={busy || !apiKey}
             onClick={() => setShown((value) => !value)}
           />
           <IconButton
             icon={copied ? "check" : "copy"}
-            label={copied ? "Đã sao chép" : "Sao chép khóa"}
+            label={copied ? msg("ai.components.ApiKeyDialog.copied") : msg("ai.components.ApiKeyDialog.copyKey")}
             disabled={busy || !apiKey}
             onClick={() => void copyKey()}
           />
         </div>
       </Field>
-      <Field label="Mô hình" htmlFor={ids.model} required>
+      <Field label={msg("ai.components.ApiKeyDialog.model")} htmlFor={ids.model} required>
         <Select
           id={ids.model}
           value={model}
@@ -186,8 +186,7 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
         <div className="flex flex-col gap-1.5">
           <div className="flex min-h-8 items-center gap-3">
             <Button size="sm" onClick={() => void runTest()} disabled={busy || !model}>
-              Kiểm tra
-            </Button>
+              {msg("ai.components.ApiKeyDialog.check")}</Button>
             {test && (
               <span
                 role="status"
@@ -198,11 +197,11 @@ export function ApiKeyDialog({ current, initialProvider, providers, taken = [], 
                     : "rounded-md bg-danger-soft px-2 py-0.5 text-[13px] font-medium text-danger"
                 }
               >
-                {test.ok ? test.text : shortTestResult(test.text)}
+                {test.ok ? test.text : shortenTestResult(test.text)}
               </span>
             )}
           </div>
-          <p className="text-xs text-muted">Kiểm tra có thể tính phí nhỏ.</p>
+          <p className="text-xs text-muted">{msg("ai.components.ApiKeyDialog.checkingMayIncurASmall")}</p>
         </div>
       )}
     </Dialog>

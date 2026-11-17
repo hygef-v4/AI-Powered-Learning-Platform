@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ApiError } from "@/shared/api/client";
 import { getMyGroupDoc } from "../api";
 import type { WorkspaceView } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Tài liệu nhóm của mình cho một bài; chưa có nhóm hoặc lỗi thì trả lời báo thay cho tài liệu. */
 export function useMyGroupDoc(assignmentId: string) {
@@ -17,7 +18,7 @@ export function useMyGroupDoc(assignmentId: string) {
       },
       (e: unknown) => {
         if (!active) return;
-        const message = e instanceof ApiError && e.problem.code === "GROUP_NONE" ? "Bạn chưa có nhóm cho bài này." : "Chưa mở được tài liệu nhóm.";
+        const message = e instanceof ApiError && e.problem.code === "GROUP_NONE" ? msg("groupdocs.hooks.useMyGroupDoc.youDoNotHaveA") : msg("groupdocs.hooks.useMyGroupDoc.theGroupDocumentCouldNot");
         setState({ assignmentId, view: null, message });
       },
     );

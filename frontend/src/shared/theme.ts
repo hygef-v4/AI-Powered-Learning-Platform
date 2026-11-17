@@ -5,7 +5,7 @@ import { DARK_SCHEME_QUERY, THEME_KEY as KEY } from "./themeBoot";
 
 export type Theme = "light" | "dark";
 
-function current(): Theme {
+function readCurrentTheme(): Theme {
   return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
 }
 
@@ -52,7 +52,7 @@ export function setTheme(theme: Theme) {
 
 /** Theme đang dùng và hàm đảo sáng/tối. */
 export function useTheme(): [Theme, () => void] {
-  const theme = useSyncExternalStore(subscribe, current, () => "light" as Theme);
-  const toggle = useCallback(() => setTheme(current() === "dark" ? "light" : "dark"), []);
+  const theme = useSyncExternalStore(subscribe, readCurrentTheme, () => "light" as Theme);
+  const toggle = useCallback(() => setTheme(readCurrentTheme() === "dark" ? "light" : "dark"), []);
   return [theme, toggle];
 }

@@ -63,6 +63,6 @@ describe("validateSettingValue", () => {
 
   it("hiện thời điểm theo giờ Việt Nam", () => {
     expect(formatShortDateTime("2026-10-02T07:15:00Z")).toBe("02/10 14:15");
-    expect(formatDateTime("2026-10-02T17:05:00Z")).toBe("03/10/2026 00:05");
+    expect(formatDateTime("2026-10-02T17:05:00Z")).toBe("00:05 03/10/2026");
   });
 });

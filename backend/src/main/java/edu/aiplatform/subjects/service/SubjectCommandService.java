@@ -53,7 +53,7 @@ public class SubjectCommandService {
         subjectAdminAccess.requireAccess(actor, Actions.SUBJECT_CREATE, ResourceRef.none());
         requireCommand(command);
         Subject subject =
-                Subject.create(
+                Subject.createSubject(
                         UUID.randomUUID(),
                         command.code(),
                         command.name(),
@@ -61,7 +61,7 @@ public class SubjectCommandService {
                         command.managerId(),
                         clock.instant());
         if (subjectRepository.hasSubjectWithCode(subject.code())) {
-            throw ApiException.conflict(
+            throw ApiException.createConflict(
                     "SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
         }
         if (subject.managerId() != null) {
@@ -73,7 +73,7 @@ public class SubjectCommandService {
             for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
                 if (cause instanceof org.hibernate.exception.ConstraintViolationException constraint
                         && "uk_subjects_code".equals(constraint.getConstraintName())) {
-                    throw ApiException.conflict(
+                    throw ApiException.createConflict(
                             "SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
                 }
             }
@@ -123,7 +123,7 @@ public class SubjectCommandService {
         Subject before =
                 subjectRepository
                         .findByIdForUpdate(subjectId)
-                        .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+                        .orElseThrow(() -> ApiException.createNotFound("SUBJECT_NOT_FOUND"));
         before.requireVersion(version);
         if (command.managerId() != null) {
             if (before.status() == SubjectStatus.ARCHIVED) {
@@ -138,7 +138,7 @@ public class SubjectCommandService {
     }
 
     private static ApiException createArchivedSubjectError() {
-        return ApiException.conflict(
+        return ApiException.createConflict(
                 "SUBJECT_ARCHIVED", "Môn đã lưu trữ không có Chủ nhiệm môn. Hãy mở lại môn trước");
     }
 
@@ -147,7 +147,7 @@ public class SubjectCommandService {
         try {
             return accountLookup.lockContact(id).orElse(null);
         } catch (RuntimeException unavailable) {
-            throw ApiException.unavailable(
+            throw ApiException.createUnavailable(
                     "SUBJECT_ACCOUNT_LOOKUP_UNAVAILABLE",
                     "Chưa kiểm tra được tài khoản, vui lòng thử lại");
         }
@@ -158,7 +158,7 @@ public class SubjectCommandService {
                 || !id.equals(contact.accountId())
                 || contact.role() != Role.SUBJECT_MANAGER
                 || contact.status() != AccountStatus.ACTIVE) {
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "SUBJECT_MANAGER_INVALID",
                     "Chủ nhiệm môn phải là tài khoản Chủ nhiệm môn đang hoạt động");
         }
@@ -166,16 +166,16 @@ public class SubjectCommandService {
 
     private Subject requireSubject(UUID id) {
         if (id == null) {
-            throw ApiException.badRequest("SUBJECT_ID_REQUIRED", "Cần mã định danh môn học");
+            throw ApiException.createBadRequest("SUBJECT_ID_REQUIRED", "Cần mã định danh môn học");
         }
         return subjectRepository
                 .findById(id)
-                .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("SUBJECT_NOT_FOUND"));
     }
 
     private void saveSubject(Subject after, long version) {
         if (!subjectRepository.updateSubject(after, version)) {
-            throw ApiException.conflict(
+            throw ApiException.createConflict(
                     "SUBJECT_VERSION_CONFLICT",
                     "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
         }
@@ -183,14 +183,14 @@ public class SubjectCommandService {
 
     private long requireVersion(Long version) {
         if (version == null || version < 1) {
-            throw ApiException.badRequest("SUBJECT_VERSION_REQUIRED", "Cần version môn từ 1");
+            throw ApiException.createBadRequest("SUBJECT_VERSION_REQUIRED", "Cần version môn từ 1");
         }
         return version;
     }
 
     private void requireCommand(Object command) {
         if (command == null) {
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "SUBJECT_COMMAND_REQUIRED", "Cần dữ liệu thao tác môn học");
         }
     }

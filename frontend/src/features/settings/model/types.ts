@@ -1,5 +1,6 @@
 import type { IconName } from "@/shared/ui/Icon";
 import type { Tone } from "@/shared/ui/tones";
+import { msg } from "@/i18n/msg";
 
 export type SettingType = "INTEGER" | "BOOLEAN" | "TIME_OF_DAY" | "ENUM" | "ENUM_SET";
 
@@ -40,20 +41,20 @@ export type GroupMeta = { label: string; description: string; icon: IconName; to
 
 export const GROUP_META: Record<string, GroupMeta> = {
   FILES: {
-    label: "Tệp",
-    description: "Giới hạn khi tải học liệu và ảnh trong tài liệu",
+    label: msg("settings.model.types.files"),
+    description: msg("settings.model.types.limitsWhenUploadingLearningMaterials"),
     icon: "folder",
     tone: "primary",
   },
   BACKUP: {
-    label: "Sao lưu",
-    description: "Sao lưu cơ sở dữ liệu lên Google Drive · giữ 7 ngày (cố định)",
+    label: msg("settings.model.types.backup"),
+    description: msg("settings.model.types.backUpTheDatabaseTo"),
     icon: "backup",
     tone: "success",
   },
   ACTIVITY: {
-    label: "Hoạt động làm bài",
-    description: "Dữ liệu rời trang, ẩn tab khi bài bật Ghi nhận hoạt động",
+    label: msg("settings.model.types.workActivity"),
+    description: msg("settings.model.types.pageLeaveAndTabHide"),
     icon: "monitoring",
     tone: "warning",
   },
@@ -64,9 +65,9 @@ export function groupMeta(group: string): GroupMeta {
 }
 
 export const TYPE_LABELS: Record<SettingType, string> = {
-  INTEGER: "số nguyên",
-  BOOLEAN: "bật / tắt",
-  TIME_OF_DAY: "giờ:phút",
-  ENUM: "chọn một",
-  ENUM_SET: "chọn nhiều",
+  INTEGER: msg("settings.model.types.integer"),
+  BOOLEAN: msg("settings.model.types.onOff"),
+  TIME_OF_DAY: msg("settings.model.types.hourMinute"),
+  ENUM: msg("settings.model.types.singleChoice"),
+  ENUM_SET: msg("settings.model.types.multipleChoice"),
 };

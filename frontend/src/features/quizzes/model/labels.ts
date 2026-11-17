@@ -1,51 +1,52 @@
 import { ApiError } from "@/shared/api/client";
 import type { Tone } from "@/shared/ui";
 import type { Difficulty, QuestionStatus, QuestionType, QuizStatus } from "./types";
+import { msg } from "@/i18n/msg";
 
-export const TYPE_LABELS: Record<QuestionType, string> = { MCQ_SINGLE: "Một đáp án", MCQ_MULTI: "Nhiều đáp án" };
-export const DIFFICULTY_LABELS: Record<Difficulty, string> = { EASY: "Dễ", MEDIUM: "Trung bình", HARD: "Khó" };
-export const STATUS_LABELS: Record<QuestionStatus, string> = { DRAFT: "Nháp", PENDING: "Chờ duyệt", REJECTED: "Bị từ chối", ACTIVE: "Đang dùng", RETIRED: "Ngưng" };
+export const TYPE_LABELS: Record<QuestionType, string> = { MCQ_SINGLE: msg("quizzes.model.labels.singleAnswer"), MCQ_MULTI: msg("quizzes.model.labels.multipleAnswers") };
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = { EASY: msg("quizzes.model.labels.easy"), MEDIUM: msg("quizzes.model.labels.medium"), HARD: msg("quizzes.model.labels.hard") };
+export const STATUS_LABELS: Record<QuestionStatus, string> = { DRAFT: msg("quizzes.model.labels.draft"), PENDING: msg("quizzes.model.labels.awaitingApproval"), REJECTED: msg("quizzes.model.labels.rejected"), ACTIVE: msg("quizzes.model.labels.active"), RETIRED: msg("quizzes.model.labels.retired") };
 export const STATUS_TONES: Record<QuestionStatus, Tone> = { DRAFT: "warning", PENDING: "info", REJECTED: "danger", ACTIVE: "success", RETIRED: "neutral" };
 export const DIFFICULTY_TONES: Record<Difficulty, Tone> = { EASY: "success", MEDIUM: "info", HARD: "danger" };
 
-const SYSTEM_BUSY = "Hệ thống tạm bận, vui lòng thử lại sau.";
+const SYSTEM_BUSY = msg("quizzes.model.labels.theSystemIsBusyPlease");
 
 const ERROR_LABELS: Record<string, string> = {
-  QUESTION_NOT_FOUND: "Không tìm thấy câu hỏi hoặc bạn không quản lý môn này.",
-  SUBJECT_NOT_FOUND: "Không tìm thấy môn hoặc bạn không quản lý môn này.",
-  SUBJECT_NOT_ACTIVE: "Môn đã lưu trữ, ngân hàng câu hỏi chỉ xem.",
-  QUESTION_VERSION_CONFLICT: "Câu hỏi đã được thay đổi ở phiên khác. Dữ liệu mới nhất đã được tải lại.",
-  QUESTION_DELETE_BLOCKED: "Câu đã kích hoạt không xóa được; hãy ngưng dùng câu này.",
-  IMPORT_FILE_TYPE: "Chỉ nhận tệp .xlsx hoặc .csv UTF-8.",
-  IMPORT_FILE_TOO_LARGE: "Tệp tối đa 5 MB.",
-  IMPORT_TOO_MANY_ROWS: "Tối đa 500 dòng mỗi lần nhập.",
-  QUIZ_NOT_FOUND: "Không tìm thấy quiz hoặc bạn không có quyền với quiz này.",
-  CLASS_NOT_FOUND: "Không tìm thấy lớp hoặc bạn không dạy lớp này.",
-  QUIZ_VERSION_CONFLICT: "Quiz đã được thay đổi ở phiên khác. Dữ liệu mới nhất đã được tải lại.",
-  QUIZ_NOT_EDITABLE: "Quiz đã phát hành không sửa được; hãy tạo version mới.",
-  QUIZ_DELETE_BLOCKED: "Quiz đã phát hành không xóa được; hãy ngưng quiz.",
-  QUIZ_VERSION_EXISTS: "Quiz này đã có một version mới đang soạn.",
-  CLASS_NOT_OPEN: "Lớp chưa mở nên chưa phát hành được quiz của lớp.",
-  CLASS_ARCHIVED: "Lớp đã lưu trữ, quiz của lớp chỉ xem.",
-  QUIZ_COPY_SUBJECT_MISMATCH: "Chỉ copy quiz giữa các lớp cùng môn.",
-  QUIZ_FULL: "Quiz tối đa 200 câu.",
-  AI_DRAFT_NOT_FOUND: "Không tìm thấy đề xuất AI.",
-  AI_DRAFT_CLOSED: "Đề xuất đã được chấp nhận hoặc bỏ ở phiên khác.",
-  AI_DRAFT_NOT_READY: "AI chưa soạn xong đề xuất.",
-  AI_DRAFT_INVALID: "Có câu chưa hợp lệ, hãy sửa trước khi chấp nhận.",
-  MATERIAL_NOT_SELECTABLE: "Có tài liệu không chọn được hoặc chưa trích được chữ.",
-  MATERIAL_SERVICE_UNAVAILABLE: "Chưa lấy được tài liệu nguồn, vui lòng thử lại.",
-  AI_SERVICE_UNAVAILABLE: "Chưa gửi được yêu cầu AI, vui lòng thử lại.",
-  AI_OUTPUT_INVALID: "Kết quả AI không đúng định dạng câu hỏi; hãy gửi lại yêu cầu.",
+  QUESTION_NOT_FOUND: msg("quizzes.model.labels.questionNotFoundOrYou"),
+  SUBJECT_NOT_FOUND: msg("quizzes.model.labels.subjectNotFoundOrYou"),
+  SUBJECT_NOT_ACTIVE: msg("quizzes.model.labels.theSubjectIsArchivedThe"),
+  QUESTION_VERSION_CONFLICT: msg("quizzes.model.labels.theQuestionWasChangedIn"),
+  QUESTION_DELETE_BLOCKED: msg("quizzes.model.labels.activatedQuestionsCannotBeDeleted"),
+  IMPORT_FILE_TYPE: msg("quizzes.model.labels.onlyXlsxOrUtf8"),
+  IMPORT_FILE_TOO_LARGE: msg("quizzes.model.labels.filesCanBeAtMost"),
+  IMPORT_TOO_MANY_ROWS: msg("quizzes.model.labels.atMost500RowsPer"),
+  QUIZ_NOT_FOUND: msg("quizzes.model.labels.quizNotFoundOrYou"),
+  CLASS_NOT_FOUND: msg("quizzes.model.labels.classNotFoundOrYou"),
+  QUIZ_VERSION_CONFLICT: msg("quizzes.model.labels.theQuizWasChangedIn"),
+  QUIZ_NOT_EDITABLE: msg("quizzes.model.labels.publishedQuizzesCannotBeEdited"),
+  QUIZ_DELETE_BLOCKED: msg("quizzes.model.labels.publishedQuizzesCannotBeDeleted"),
+  QUIZ_VERSION_EXISTS: msg("quizzes.model.labels.thisQuizAlreadyHasA"),
+  CLASS_NOT_OPEN: msg("quizzes.model.labels.theClassIsNotOpen"),
+  CLASS_ARCHIVED: msg("quizzes.model.labels.theClassIsArchivedIts"),
+  QUIZ_COPY_SUBJECT_MISMATCH: msg("quizzes.model.labels.quizzesCanOnlyBeCopied"),
+  QUIZ_FULL: msg("quizzes.model.labels.aQuizCanHaveAt"),
+  AI_DRAFT_NOT_FOUND: msg("quizzes.model.labels.aiProposalNotFound"),
+  AI_DRAFT_CLOSED: msg("quizzes.model.labels.theProposalWasAcceptedOr"),
+  AI_DRAFT_NOT_READY: msg("quizzes.model.labels.theAiHasNotFinished"),
+  AI_DRAFT_INVALID: msg("quizzes.model.labels.someQuestionsAreInvalidFix"),
+  MATERIAL_NOT_SELECTABLE: msg("quizzes.model.labels.someDocumentsCannotBeSelected"),
+  MATERIAL_SERVICE_UNAVAILABLE: msg("quizzes.model.labels.couldNotGetTheSource"),
+  AI_SERVICE_UNAVAILABLE: msg("quizzes.model.labels.couldNotSendTheAi"),
+  AI_OUTPUT_INVALID: msg("quizzes.model.labels.theAiResultIsNot"),
   SYSTEM_BUSY,
 };
 
 /** Lý do đề xuất lỗi: nhãn theo mã, không có thì thông điệp an toàn của U06. */
-export function failureLabel(code: string | null, message: string | null): string {
-  return (code && ERROR_LABELS[code]) || message || "AI chưa soạn được đề xuất.";
+export function describeFailure(code: string | null, message: string | null): string {
+  return (code && ERROR_LABELS[code]) || message || msg("quizzes.model.labels.theAiCouldNotWrite");
 }
 
-export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: "Nháp", OPEN: "Đang mở", RETIRED: "Lưu trữ" };
+export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: msg("quizzes.model.labels.draft"), OPEN: msg("quizzes.model.labels.open"), RETIRED: msg("quizzes.model.labels.archived") };
 export const QUIZ_STATUS_TONES: Record<QuizStatus, Tone> = { DRAFT: "warning", OPEN: "success", RETIRED: "danger" };
 
 export function formatPoints(value: number): string {
@@ -53,7 +54,7 @@ export function formatPoints(value: number): string {
 }
 
 /** Thông điệp cho người dùng: ưu tiên nhãn theo mã, sau đó thông điệp an toàn của server. */
-export function errorMessage(error: unknown): string {
+export function describeError(error: unknown): string {
   if (error instanceof ApiError) {
     const code = error.problem.code;
     const label = code ? ERROR_LABELS[code] : undefined;
@@ -64,10 +65,8 @@ export function errorMessage(error: unknown): string {
   return SYSTEM_BUSY;
 }
 
-export function errorCode(error: unknown): string | undefined {
+export function readErrorCode(error: unknown): string | undefined {
   return error instanceof ApiError ? error.problem.code : undefined;
 }
 
-export function formatDateTime(value: string): string {
-  return new Date(value).toLocaleString("vi-VN", { dateStyle: "short", timeStyle: "short" });
-}
+export { formatDateTime } from "@/shared/dateTime";

@@ -87,9 +87,9 @@ class CourseClassTest {
     @Test void derivesTermFromStartDateAndRecalculatesWhenDateChanges() {
         var before = draft();
         assertThat(before.startsOn()).isEqualTo(start);
-        assertThat(before.term()).isEqualTo("SP27");
+        assertThat(before.deriveTerm()).isEqualTo("SP27");
         var moved = before.updateInfo("Lớp 1", null, LocalDate.of(2027, 4, 3), now.plusSeconds(1));
-        assertThat(moved.term()).isEqualTo("SP27-BL5");
+        assertThat(moved.deriveTerm()).isEqualTo("SP27-BL5");
         assertThat(moved.version()).isEqualTo(1);
         assertThat(moved.changeStatus(ClassStatus.OPEN, true, false, now.plusSeconds(2)).startsOn())
                 .isEqualTo(LocalDate.of(2027, 4, 3));
@@ -98,10 +98,10 @@ class CourseClassTest {
     @Test void rejectsMissingOrOutOfRangeStartDate() {
         assertThatThrownBy(() -> CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), "C", "X", null, null, teacher, now))
                 .isInstanceOfSatisfying(AcademicRuleException.class,
-                        error -> assertThat(error.code()).isEqualTo("INVALID_CLASS_START_DATE"));
+                        error -> assertThat(error.readCode()).isEqualTo("INVALID_CLASS_START_DATE"));
         assertThatThrownBy(() -> draft().updateInfo("X", null, LocalDate.of(2100, 1, 1), now))
                 .isInstanceOfSatisfying(AcademicRuleException.class,
-                        error -> assertThat(error.code()).isEqualTo("INVALID_CLASS_START_DATE"));
+                        error -> assertThat(error.readCode()).isEqualTo("INVALID_CLASS_START_DATE"));
     }
 
     @Test void rejectsInvalidTextAndTimestamps() {

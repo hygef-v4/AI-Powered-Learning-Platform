@@ -46,7 +46,7 @@ public class SubjectAdminService {
         int pageNumber = page == null ? 0 : page;
         int pageSize = size == null ? 20 : size;
         if (pageNumber < 0 || pageSize < 1 || pageSize > 100) {
-            throw ApiException.badRequest(
+            throw ApiException.createBadRequest(
                     "SUBJECT_PAGE_INVALID", "Trang phải từ 0, số dòng mỗi trang từ 1 đến 100");
         }
         String search = query == null ? null : query.trim();
@@ -103,11 +103,11 @@ public class SubjectAdminService {
 
     private Subject requireSubject(UUID id) {
         if (id == null) {
-            throw ApiException.badRequest("SUBJECT_ID_REQUIRED", "Cần mã định danh môn học");
+            throw ApiException.createBadRequest("SUBJECT_ID_REQUIRED", "Cần mã định danh môn học");
         }
         return subjectRepository
                 .findById(id)
-                .orElseThrow(() -> ApiException.notFound("SUBJECT_NOT_FOUND"));
+                .orElseThrow(() -> ApiException.createNotFound("SUBJECT_NOT_FOUND"));
     }
 
     private Map<UUID, SubjectAdminViews.Manager> loadManagers(List<Subject> subjects) {

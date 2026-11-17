@@ -39,8 +39,8 @@ class DownloadGrantExpiryIntegrationTest {
             var downloadService = new DownloadService(tokenService, storage, fileAudit, List.of(policy));
             Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
             String token = tokenService.issue("material-file", student.accountId());
-            assertThat(redis.getExpire(DownloadTokenService.key(token))).isBetween(299L, 300L);
-            when(storage.metadata("material-file")).thenReturn(Optional.of(new StoredMetadata(
+            assertThat(redis.getExpire(DownloadTokenService.buildKey(token))).isBetween(299L, 300L);
+            when(storage.loadMetadata("material-file")).thenReturn(Optional.of(new StoredMetadata(
                     student.accountId(), ArtifactPurpose.MATERIAL, "source.pdf", "application/pdf", 1, "sha")));
             when(storage.open("material-file")).thenReturn(new ByteArrayInputStream(new byte[] {1}));
             try (var stream = downloadService.open(student, token).content()) {
@@ -49,13 +49,13 @@ class DownloadGrantExpiryIntegrationTest {
             clearInvocations(storage);
             assertThatThrownBy(() -> downloadService.open(new Actor(UUID.randomUUID(), Role.STUDENT), token))
                     .isInstanceOfSatisfying(ApiException.class,
-                            failure -> assertThat(failure.code()).isEqualTo("DOWNLOAD_TOKEN_NOT_FOUND"));
+                            failure -> assertThat(failure.readCode()).isEqualTo("DOWNLOAD_TOKEN_NOT_FOUND"));
             verifyNoInteractions(storage);
             // Expire only this isolated test key through Redis; do not wait five minutes or alter application TTL.
-            assertThat(redis.expire(DownloadTokenService.key(token), Duration.ZERO)).isTrue();
+            assertThat(redis.expire(DownloadTokenService.buildKey(token), Duration.ZERO)).isTrue();
             assertThatThrownBy(() -> downloadService.open(student, token))
                     .isInstanceOfSatisfying(ApiException.class,
-                            failure -> assertThat(failure.code()).isEqualTo("DOWNLOAD_TOKEN_NOT_FOUND"));
+                            failure -> assertThat(failure.readCode()).isEqualTo("DOWNLOAD_TOKEN_NOT_FOUND"));
             verifyNoInteractions(storage);
         } finally {
             connectionFactory.destroy();

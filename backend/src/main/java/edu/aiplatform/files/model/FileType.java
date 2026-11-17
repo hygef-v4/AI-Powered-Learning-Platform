@@ -25,11 +25,11 @@ public enum FileType {
         this.extensions = extensions;
     }
 
-    public String mediaType() {
+    public String readMediaType() {
         return mediaType;
     }
 
-    public List<String> extensions() {
+    public List<String> listExtensions() {
         return extensions;
     }
 
@@ -38,11 +38,11 @@ public enum FileType {
     }
 
     /** Ảnh và PDF mở trong trình duyệt; loại khác luôn tải xuống (BR-U03-23). */
-    public boolean inline() {
+    public boolean isInline() {
         return isImage() || this == PDF;
     }
 
-    public static Optional<FileType> fromMediaType(String mediaType) {
+    public static Optional<FileType> findByMediaType(String mediaType) {
         return Arrays.stream(values()).filter(type -> type.mediaType.equals(mediaType)).findFirst();
     }
 }

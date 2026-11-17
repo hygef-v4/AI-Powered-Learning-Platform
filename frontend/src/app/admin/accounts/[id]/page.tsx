@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { AccountDetailPage } from "@/features/identity/admin/pages/AccountDetailPage";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Tài khoản" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.admin.accounts.id.page.accounts") };
+}
 
 export default function Page() {
   return <AccountDetailPage />;

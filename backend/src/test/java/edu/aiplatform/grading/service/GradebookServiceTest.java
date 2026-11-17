@@ -103,7 +103,7 @@ class GradebookServiceTest {
         assertThat(service.listMyGrades(actor, cid)).isEmpty();
         when(repo.findByAttemptId(mine.attemptId)).thenReturn(Optional.of(mine));
         assertThat(service.loadAttemptGrade(actor, mine.attemptId).score()).isEqualByComparingTo("1");
-        mine.supersede();
+        mine.supersedeEvaluation();
         assertThat(service.loadAttemptGrade(actor, mine.attemptId).score()).isNull();
         assertThat(service.listMyGrades(actor, cid)).isEmpty();
         when(classes.isActiveStudent(sid, cid)).thenReturn(false);

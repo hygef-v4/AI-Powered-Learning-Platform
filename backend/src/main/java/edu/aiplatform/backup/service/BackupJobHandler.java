@@ -45,9 +45,9 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * {@code BACKUP_RUN} (B2, B4): dump, mã hóa, tải lên thư mục backup, đối chiếu kích thước và MD5, ghi {@code SUCCESS}
- * rồi dọn bản cũ. Lỗi tạm thì thử lại theo việc nền; lỗi vĩnh viễn hoặc hết lượt thì {@code FAILED}, dọn phần dở,
- * audit và phát {@code backup.failed}.
+ * {@code BACKUP_RUN} (B2, B4): dump, mã hóa khi có {@code U03_BACKUP_PUBLIC_KEY} (không có thì lưu bản dump thường),
+ * tải lên thư mục backup, đối chiếu kích thước và MD5, ghi {@code SUCCESS} rồi dọn bản cũ. Lỗi tạm thì thử lại theo
+ * việc nền; lỗi vĩnh viễn hoặc hết lượt thì {@code FAILED}, dọn phần dở, audit và phát {@code backup.failed}.
  */
 @Component
 public class BackupJobHandler implements IJobHandler {
@@ -58,7 +58,7 @@ public class BackupJobHandler implements IJobHandler {
     private final BackupRunRepository runs;
     private final IDumpRunner dumpRunner;
     private final IBackupStore store;
-    private final BackupRetentionService retention;
+    private final BackupRetentionService backupRetentionService;
     private final IAudit audit;
     private final IEventPublisher events;
     private final IJob jobs;
@@ -66,12 +66,12 @@ public class BackupJobHandler implements IJobHandler {
     private final Clock clock;
 
     public BackupJobHandler(BackupRunRepository runs, IDumpRunner dumpRunner, IBackupStore store,
-                            BackupRetentionService retention, IAudit audit, IEventPublisher events, IJob jobs,
+                            BackupRetentionService backupRetentionService, IAudit audit, IEventPublisher events, IJob jobs,
                             BackupProperties properties, Clock clock) {
         this.runs = runs;
         this.dumpRunner = dumpRunner;
         this.store = store;
-        this.retention = retention;
+        this.backupRetentionService = backupRetentionService;
         this.audit = audit;
         this.events = events;
         this.jobs = jobs;
@@ -103,24 +103,24 @@ public class BackupJobHandler implements IJobHandler {
         if (runs.markRunning(runId, clock.instant()) == 0) {
             return;
         }
-        PublicKey publicKey = publicKey();
-        Path dir = Path.of(tmpDir(), runId.toString());
+        PublicKey publicKey = loadPublicKey();
+        Path dir = Path.of(resolveTmpDir(), runId.toString());
         try {
             Files.createDirectories(dir);
             ensureSpace(dir);
             Instant snapshotAt = clock.instant();
             Path dump = dir.resolve("dump.pgc");
-            dumpRunner.dump(dump);
+            dumpRunner.dumpDatabase(dump);
             Path archive = dir.resolve("archive.alapbk");
-            String sha256 = encrypt(dump, archive, publicKey);
+            String sha256 = encryptDump(dump, archive, publicKey);
             long size = Files.size(archive);
-            IBackupStore.StoredArchive stored = store.put(runId, archive);
-            if (stored.byteSize() != size || (stored.md5() != null && !stored.md5().equalsIgnoreCase(md5(archive)))) {
-                store.delete(runId.toString());
+            IBackupStore.StoredArchive stored = store.putArchive(runId, archive);
+            if (stored.byteSize() != size || (stored.md5() != null && !stored.md5().equalsIgnoreCase(hashMd5(archive)))) {
+                store.deleteArchive(runId.toString());
                 throw new RetryableJobException("Bản tải lên không khớp kích thước hoặc checksum");
             }
             Instant now = clock.instant();
-            if (runs.markSuccess(runId, snapshotAt, runs.schemaVersion(), appVersion(), stored.ref(), sha256, size,
+            if (runs.markSuccess(runId, snapshotAt, runs.readSchemaVersion(), readAppVersion(), stored.ref(), sha256, size,
                     now) == 0) {
                 throw new RetryableJobException("Chưa ghi được kết quả backup");
             }
@@ -149,21 +149,21 @@ public class BackupJobHandler implements IJobHandler {
                 AuditResult.FAILURE, safeError, Map.of(), now));
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("runId", runId.toString());
-        payload.put("scheduledFor", runs.find(runId).map(BackupRun::scheduledFor).map(Object::toString).orElse(null));
+        payload.put("scheduledFor", runs.findRun(runId).map(BackupRun::scheduledFor).map(Object::toString).orElse(null));
         payload.put("error", safeError);
         events.publish(new DomainEvent(1, UUID.randomUUID(), EventTypes.BACKUP_FAILED, "U03", now, null, payload));
     }
 
     private void purgeAfterCommit(Instant now) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-            retention.purgeOld(now);
+            backupRetentionService.purgeOld(now);
             return;
         }
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 try {
-                    retention.purgeOld(now);
+                    backupRetentionService.purgeOld(now);
                 } catch (RuntimeException e) {
                     // Backup completion is already durable. Retention can retry on the next successful backup.
                     log.warn("Chưa dọn được bản backup cũ; thử lại ở lần backup tiếp theo");
@@ -174,15 +174,17 @@ public class BackupJobHandler implements IJobHandler {
 
     private void ensureSpace(Path dir) throws IOException {
         long free = Files.getFileStore(dir).getUsableSpace();
-        long needed = 2 * runs.databaseSize();
+        long needed = 2 * runs.measureDatabaseSize();
         if (free < needed) {
             throw new BackupFailure("Không đủ dung lượng tạm để dump database");
         }
     }
 
-    private PublicKey publicKey() {
+    /** Khóa mã hóa là tùy chọn: không đặt thì backup vẫn chạy nhưng archive không được mã hóa. */
+    private PublicKey loadPublicKey() {
         if (properties.publicKey() == null || properties.publicKey().isBlank()) {
-            throw new BackupFailure("Chưa cấu hình U03_BACKUP_PUBLIC_KEY");
+            log.warn("Chưa đặt U03_BACKUP_PUBLIC_KEY: bản backup sẽ không được mã hóa");
+            return null;
         }
         try {
             return BackupEncryptor.parsePublicKey(properties.publicKey());
@@ -191,19 +193,23 @@ public class BackupJobHandler implements IJobHandler {
         }
     }
 
-    /** Mã hóa dump thành archive, trả SHA-256 của archive. */
-    static String encrypt(Path dump, Path archive, PublicKey publicKey) throws IOException {
-        try (InputStream in = Files.newInputStream(dump); OutputStream out = Files.newOutputStream(archive)) {
-            BackupEncryptor.encrypt(in, out, publicKey);
+    /** Mã hóa dump thành archive ({@code publicKey} null thì giữ nguyên bản dump), trả SHA-256 của archive. */
+    static String encryptDump(Path dump, Path archive, PublicKey publicKey) throws IOException {
+        if (publicKey == null) {
+            Files.copy(dump, archive);
+            return computeDigest(archive, "SHA-256");
         }
-        return digest(archive, "SHA-256");
+        try (InputStream in = Files.newInputStream(dump); OutputStream out = Files.newOutputStream(archive)) {
+            BackupEncryptor.encryptArchive(in, out, publicKey);
+        }
+        return computeDigest(archive, "SHA-256");
     }
 
-    static String md5(Path file) throws IOException {
-        return digest(file, "MD5");
+    static String hashMd5(Path file) throws IOException {
+        return computeDigest(file, "MD5");
     }
 
-    static String digest(Path file, String algorithm) throws IOException {
+    static String computeDigest(Path file, String algorithm) throws IOException {
         try (InputStream in = new DigestInputStream(Files.newInputStream(file), MessageDigest.getInstance(algorithm))) {
             in.transferTo(OutputStream.nullOutputStream());
             return HexFormat.of().formatHex(((DigestInputStream) in).getMessageDigest().digest());
@@ -212,12 +218,12 @@ public class BackupJobHandler implements IJobHandler {
         }
     }
 
-    private String tmpDir() {
+    private String resolveTmpDir() {
         return properties.tmpDir() == null || properties.tmpDir().isBlank()
                 ? Path.of(System.getProperty("java.io.tmpdir"), "platform-backup").toString() : properties.tmpDir();
     }
 
-    static String appVersion() {
+    static String readAppVersion() {
         String version = BackupJobHandler.class.getPackage().getImplementationVersion();
         return version == null ? "dev" : version;
     }

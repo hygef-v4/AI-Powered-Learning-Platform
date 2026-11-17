@@ -27,16 +27,16 @@ class AiImageSourceRegistryTest {
 
     @Test
     void findsRegisteredSourceByName() {
-        AiImageSourceRegistry registry = AiImageSourceRegistry.of(List.of(source("ASSIGNMENT_IMPORT")));
+        AiImageSourceRegistry registry = AiImageSourceRegistry.createRegistry(List.of(source("ASSIGNMENT_IMPORT")));
 
-        assertThat(registry.find("ASSIGNMENT_IMPORT")).isPresent();
-        assertThat(registry.find("OTHER")).isEmpty();
+        assertThat(registry.findSource("ASSIGNMENT_IMPORT")).isPresent();
+        assertThat(registry.findSource("OTHER")).isEmpty();
     }
 
     @Test
     void duplicateSourceNamesAreRejected() {
-        AiImageSourceRegistry registry = AiImageSourceRegistry.of(List.of(source("A"), source("A")));
+        AiImageSourceRegistry registry = AiImageSourceRegistry.createRegistry(List.of(source("A"), source("A")));
 
-        assertThatThrownBy(() -> registry.find("A")).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> registry.findSource("A")).isInstanceOf(IllegalStateException.class);
     }
 }

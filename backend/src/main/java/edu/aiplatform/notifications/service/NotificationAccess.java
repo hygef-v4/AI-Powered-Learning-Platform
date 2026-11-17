@@ -43,6 +43,6 @@ public class NotificationAccess {
                         "NOT_OWNER",
                         Map.of(),
                         clock.instant()));
-        return ApiException.notFound("NOTIFICATION_NOT_FOUND");
+        return ApiException.createNotFound("NOTIFICATION_NOT_FOUND");
     }
 }

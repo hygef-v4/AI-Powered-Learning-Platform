@@ -10,6 +10,7 @@ import type { NavContext, NavItem, NavLocation } from "@/shared/layout/navigatio
 import { NavTree, type NavTreeNode } from "@/shared/layout/NavTree";
 import type { IconName } from "@/shared/ui/Icon";
 import { academicsApi, type Scope } from "../api";
+import { msg } from "@/i18n/msg";
 
 const encodeId = encodeURIComponent;
 
@@ -38,7 +39,7 @@ export function resolveSubjectContext({ pathname, search }: NavLocation): NavCon
     : entries
         .filter((entry) => isUnderPath(pathname, entry.path))
         .reduce<string | null>((best, entry) => (best === null || entry.path.length > best.length ? entry.path : best), null);
-  const build = (id: string): NavItem[] =>
+  const buildItems = (id: string): NavItem[] =>
     entries.map((entry) => ({
       href: entry.href?.(id) ?? `${entry.path}?subjectId=${encodeId(id)}`,
       label: entry.title,
@@ -47,55 +48,55 @@ export function resolveSubjectContext({ pathname, search }: NavLocation): NavCon
     }));
   return {
     key: "subject",
-    label: "Môn được phân công",
+    label: msg("academics.components.ClassNavContexts.assignedSubjects"),
     parentHref: SUBJECTS_HREF,
-    header: <SubjectNavTree subjectId={subjectId} itemsFor={build} />,
-    items: subjectId ? build(subjectId) : [],
+    header: <SubjectNavTree subjectId={subjectId} itemsFor={buildItems} />,
+    items: subjectId ? buildItems(subjectId) : [],
   };
 }
 
 type ClassItem = { key: string; label: string; icon: IconName; href: (id: string) => string };
 type ClassScope = Extract<Scope, "teaching" | "me">;
 
-const teachingPage = (tab?: string) => (id: string) => `/teaching/classes/${encodeId(id)}${tab ? `?tab=${tab}` : ""}`;
-const teachingAnnouncements = (id: string) => `/teaching/classes/${encodeId(id)}/announcements`;
-const studentAnnouncements = (id: string) => `/classes/${encodeId(id)}/announcements`;
+const buildTeachingPage = (tab?: string) => (id: string) => `/teaching/classes/${encodeId(id)}${tab ? `?tab=${tab}` : ""}`;
+const buildTeachingAnnouncements = (id: string) => `/teaching/classes/${encodeId(id)}/announcements`;
+const buildStudentAnnouncements = (id: string) => `/classes/${encodeId(id)}/announcements`;
 
 /** Các tab của trang lớp (`?tab=`) đưa ra sidebar, thêm Thông báo lớp của lớp đó. */
 const TEACHING_ITEMS: ClassItem[] = [
-  { key: "info", label: "Thông tin lớp", icon: "info", href: teachingPage() },
-  { key: "students", label: "Sinh viên", icon: "groups", href: teachingPage("students") },
-  { key: "materials", label: "Học liệu", icon: "folder_open", href: teachingPage("materials") },
-  { key: "evals", label: "Bài tập", icon: "assignment", href: teachingPage("evals") },
-  { key: "gradebook", label: "Chấm điểm", icon: "receipt_long", href: teachingPage("gradebook") },
-  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: teachingAnnouncements },
+  { key: "info", label: msg("academics.components.ClassNavContexts.classInformation"), icon: "info", href: buildTeachingPage() },
+  { key: "students", label: msg("academics.components.ClassNavContexts.students"), icon: "groups", href: buildTeachingPage("students") },
+  { key: "materials", label: msg("academics.components.ClassNavContexts.learningMaterials"), icon: "folder_open", href: buildTeachingPage("materials") },
+  { key: "evals", label: msg("academics.components.ClassNavContexts.assignments"), icon: "assignment", href: buildTeachingPage("evals") },
+  { key: "gradebook", label: msg("academics.components.ClassNavContexts.grading"), icon: "receipt_long", href: buildTeachingPage("gradebook") },
+  { key: "announcements", label: msg("academics.components.ClassNavContexts.classAnnouncements"), icon: "campaign", href: buildTeachingAnnouncements },
 ];
 /** Các trang sinh viên vào được của một lớp. */
 const STUDENT_ITEMS: ClassItem[] = [
-  { key: "info", label: "Thông tin lớp", icon: "info", href: (id) => `/classes/${encodeId(id)}` },
-  { key: "group", label: "Nhóm của tôi", icon: "group", href: (id) => `/classes/${encodeId(id)}/group` },
-  { key: "materials", label: "Học liệu", icon: "folder_open", href: (id) => `/classes/${encodeId(id)}?tab=materials` },
-  { key: "assignments", label: "Bài tập", icon: "assignment", href: (id) => `/my-assignments?classId=${encodeId(id)}` },
-  { key: "announcements", label: "Thông báo lớp", icon: "campaign", href: studentAnnouncements },
+  { key: "info", label: msg("academics.components.ClassNavContexts.classInformation"), icon: "info", href: (id) => `/classes/${encodeId(id)}` },
+  { key: "group", label: msg("academics.components.ClassNavContexts.myGroup"), icon: "group", href: (id) => `/classes/${encodeId(id)}/group` },
+  { key: "materials", label: msg("academics.components.ClassNavContexts.learningMaterials"), icon: "folder_open", href: (id) => `/classes/${encodeId(id)}?tab=materials` },
+  { key: "assignments", label: msg("academics.components.ClassNavContexts.assignments"), icon: "assignment", href: (id) => `/my-assignments?classId=${encodeId(id)}` },
+  { key: "announcements", label: msg("academics.components.ClassNavContexts.classAnnouncements"), icon: "campaign", href: buildStudentAnnouncements },
 ];
 
 /** Mục cha của cây lớp trên menu role. */
 const CLASS_ROOTS: Record<ClassScope, { href: string; label: string }> = {
-  teaching: { href: "/teaching/classes", label: "Lớp được phân công" },
-  me: { href: "/classes", label: "Lớp của tôi" },
+  teaching: { href: "/teaching/classes", label: msg("academics.components.ClassNavContexts.assignedClasses") },
+  me: { href: "/classes", label: msg("academics.components.ClassNavContexts.myClasses") },
 };
 
 /** `id` rỗng: trang danh sách lớp, cây chưa mở lớp nào. */
 function buildClass(scope: ClassScope, id: string | null, open: string | null): NavContext {
   const list = scope === "teaching" ? TEACHING_ITEMS : STUDENT_ITEMS;
-  const build = (classId: string): NavItem[] =>
+  const buildItems = (classId: string): NavItem[] =>
     list.map((item) => ({ href: item.href(classId), label: item.label, icon: item.icon, active: classId === id && item.key === open }));
   return {
     key: `class:${scope}`,
     label: CLASS_ROOTS[scope].label,
     parentHref: CLASS_ROOTS[scope].href,
-    header: <ClassNavTree scope={scope} id={id} itemsFor={build} />,
-    items: id ? build(id) : [],
+    header: <ClassNavTree scope={scope} id={id} itemsFor={buildItems} />,
+    items: id ? buildItems(id) : [],
   };
 }
 
@@ -127,7 +128,7 @@ export function resolveStudentClassContext({ pathname, search }: NavLocation): N
 }
 
 /** Thêm nút của trang đang mở khi danh sách chưa tải xong hay không có nó, để nhánh đang mở luôn hiện. */
-function withCurrent(nodes: NavTreeNode[], currentId: string | null): NavTreeNode[] {
+function markCurrent(nodes: NavTreeNode[], currentId: string | null): NavTreeNode[] {
   if (!currentId || nodes.some((node) => node.id === currentId)) return nodes;
   return [{ id: currentId }, ...nodes];
 }
@@ -144,9 +145,9 @@ function SubjectNavTree({ subjectId, itemsFor }: { subjectId: string | null; ite
   }, []);
   return (
     <NavTree
-      label="Các môn được phân công"
-      placeholder="Chọn môn"
-      nodes={withCurrent(subjects ?? [], subjectId)}
+      label={msg("academics.components.ClassNavContexts.assignedSubjects2")}
+      placeholder={msg("academics.components.ClassNavContexts.chooseASubject")}
+      nodes={markCurrent(subjects ?? [], subjectId)}
       currentId={subjectId}
       itemsFor={itemsFor}
       loading={subjects === null}
@@ -167,9 +168,9 @@ function ClassNavTree({ scope, id, itemsFor }: { scope: ClassScope; id: string |
   }, [scope]);
   return (
     <NavTree
-      label={`Các ${CLASS_ROOTS[scope].label.toLowerCase()}`}
-      placeholder="Chọn lớp"
-      nodes={withCurrent(classes ?? [], id)}
+      label={msg("academics.components.ClassNavContexts.all", { value: String(CLASS_ROOTS[scope].label.toLowerCase()) })}
+      placeholder={msg("academics.components.ClassNavContexts.chooseAClass")}
+      nodes={markCurrent(classes ?? [], id)}
       currentId={id}
       itemsFor={itemsFor}
       loading={classes === null}

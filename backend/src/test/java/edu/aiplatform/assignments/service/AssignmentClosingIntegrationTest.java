@@ -75,7 +75,7 @@ class AssignmentClosingIntegrationTest {
         jdbc.update("insert into assignments values (?, 'OPEN', ?, null)", open.id(), Timestamp.from(deadline));
         var assignments = org.mockito.Mockito.mock(AssignmentRepository.class);
         org.mockito.Mockito.when(assignments.findForUpdate(open.id())).thenReturn(java.util.Optional.of(open));
-        org.mockito.Mockito.when(assignments.save(org.mockito.ArgumentMatchers.any())).thenAnswer(invocation -> {
+        org.mockito.Mockito.when(assignments.saveAssignment(org.mockito.ArgumentMatchers.any())).thenAnswer(invocation -> {
             edu.aiplatform.assignments.model.Assignment changed = invocation.getArgument(0);
             jdbc.update("update assignments set status = ? where id = ?", changed.status().name(), changed.id());
             return changed;

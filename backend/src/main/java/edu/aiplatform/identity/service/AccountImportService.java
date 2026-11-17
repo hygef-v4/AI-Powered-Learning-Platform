@@ -76,7 +76,7 @@ public class AccountImportService {
     /** Bước kiểm: không ghi database, không audit. */
     public ImportResult validate(Actor actor, byte[] file) {
         require(actor);
-        return check(file, false);
+        return checkImport(file, false);
     }
 
     /** Bước xác nhận: kiểm lại toàn bộ (dữ liệu có thể đã đổi) rồi chỉ tạo dòng hợp lệ (BR-U01-81, 83). */
@@ -87,16 +87,16 @@ public class AccountImportService {
             return commitChecked(actor, file, now);
         } catch (DuplicateKeyException e) {
             // Email hoặc MSSV vừa được dùng ở request khác giữa lúc kiểm và lúc ghi: cả tệp rollback.
-            throw ApiException.conflict("IMPORT_CONFLICT", "Dữ liệu tài khoản vừa thay đổi, hãy kiểm lại tệp nhập");
+            throw ApiException.createConflict("IMPORT_CONFLICT", "Dữ liệu tài khoản vừa thay đổi, hãy kiểm lại tệp nhập");
         }
     }
 
     private ImportResult commitChecked(Actor actor, byte[] file, Instant now) {
         return transactions.execute(status -> {
-            ImportResult checked = check(file, true);
+            ImportResult checked = checkImport(file, true);
             for (RowResult row : checked.rows()) {
                 if (row.outcome() == Outcome.CREATED) {
-                    accounts.insert(Account.newPending(UUID.randomUUID(), row.email(), Role.valueOf(row.role()),
+                    accounts.insert(Account.createPending(UUID.randomUUID(), row.email(), Role.valueOf(row.role()),
                             row.displayName(), null, row.studentCode(), now));
                 }
             }
@@ -107,14 +107,14 @@ public class AccountImportService {
         });
     }
 
-    private ImportResult check(byte[] file, boolean committing) {
+    private ImportResult checkImport(byte[] file, boolean committing) {
         List<TableRow> records = ImportTableReader.readRows(file, REQUIRED_COLUMNS, List.of(STUDENT_CODE_COLUMN),
                 MAX_BYTES, MAX_ROWS);
-        List<String> normalizedEmails = records.stream().map(r -> EmailPolicy.normalize(r.value("email"))).toList();
+        List<String> normalizedEmails = records.stream().map(r -> EmailPolicy.normalize(r.readValue("email"))).toList();
         List<String> normalizedCodes = records.stream()
-                .map(r -> StudentCodePolicy.normalize(r.value(STUDENT_CODE_COLUMN))).toList();
-        Set<String> existing = accounts.existingEmails(normalizedEmails.stream().filter(e -> !e.isEmpty()).toList());
-        Set<String> existingCodes = accounts.existingStudentCodes(normalizedCodes.stream()
+                .map(r -> StudentCodePolicy.normalize(r.readValue(STUDENT_CODE_COLUMN))).toList();
+        Set<String> existing = accounts.findExistingEmails(normalizedEmails.stream().filter(e -> !e.isEmpty()).toList());
+        Set<String> existingCodes = accounts.findExistingStudentCodes(normalizedCodes.stream()
                 .filter(StudentCodePolicy::isValid).distinct().toList());
         Set<String> seen = new HashSet<>();
         Set<String> seenCodes = new HashSet<>();
@@ -124,11 +124,11 @@ public class AccountImportService {
             TableRow record = records.get(i);
             String email = normalizedEmails.get(i);
             String studentCode = normalizedCodes.get(i);
-            String displayName = ProfilePolicy.normalizeDisplayName(record.value("display_name"));
-            String roleText = record.value("role").strip().toUpperCase(Locale.ROOT);
-            String reason = reason(email, displayName, roleText, existing, seen);
+            String displayName = ProfilePolicy.normalizeDisplayName(record.readValue("display_name"));
+            String roleText = record.readValue("role").strip().toUpperCase(Locale.ROOT);
+            String reason = explainRejection(email, displayName, roleText, existing, seen);
             if (reason == null) {
-                reason = studentCodeReason(roleText, studentCode, existingCodes, seenCodes);
+                reason = explainStudentCodeRejection(roleText, studentCode, existingCodes, seenCodes);
             }
             if (!email.isEmpty()) {
                 seen.add(email);
@@ -143,10 +143,10 @@ public class AccountImportService {
             // Số dòng trong tệp: dòng tiêu đề là dòng 1.
             rows.add(new RowResult(record.rowNumber(), email, displayName, roleText, outcome, reason, studentCode));
         }
-        return new ImportResult(ImportTableReader.checksum(file), rows, valid, rows.size() - valid, committing);
+        return new ImportResult(ImportTableReader.computeChecksum(file), rows, valid, rows.size() - valid, committing);
     }
 
-    private String reason(String email, String displayName, String role, Set<String> existing, Set<String> seen) {
+    private String explainRejection(String email, String displayName, String role, Set<String> existing, Set<String> seen) {
         if (email.isEmpty() || displayName.isEmpty() || role.isEmpty()) {
             return "MISSING_FIELD";
         }
@@ -170,7 +170,7 @@ public class AccountImportService {
     }
 
     /** BR-U01-108: xét sau các lỗi email, tên, role; {@code role} đã hợp lệ. */
-    private static String studentCodeReason(String role, String studentCode, Set<String> existingCodes,
+    private static String explainStudentCodeRejection(String role, String studentCode, Set<String> existingCodes,
                                             Set<String> seenCodes) {
         boolean student = Objects.equals(role, Role.STUDENT.name());
         if (student && studentCode == null) {
@@ -195,7 +195,7 @@ public class AccountImportService {
         if (!decision.allowed()) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                     "ACCOUNT", null, AuditResult.DENIED, Actions.ACCOUNT_IMPORT, Map.of(), clock.instant()));
-            throw ApiException.forbidden("ACCOUNT_ADMIN_FORBIDDEN");
+            throw ApiException.createForbidden("ACCOUNT_ADMIN_FORBIDDEN");
         }
     }
 }

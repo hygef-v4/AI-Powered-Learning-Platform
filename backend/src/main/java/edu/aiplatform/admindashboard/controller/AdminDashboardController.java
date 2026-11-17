@@ -83,6 +83,6 @@ public class AdminDashboardController {
 
     /** Builds the client error for invalid dashboard query parameters. */
     private ApiException createInvalidQuery() {
-        return ApiException.badRequest("DASHBOARD_PAGE_INVALID", "Trang hoặc tham số không hợp lệ");
+        return ApiException.createBadRequest("DASHBOARD_PAGE_INVALID", "Trang hoặc tham số không hợp lệ");
     }
 }

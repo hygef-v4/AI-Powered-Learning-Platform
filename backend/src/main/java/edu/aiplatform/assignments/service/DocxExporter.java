@@ -65,18 +65,18 @@ final class DocxExporter {
             List<Boolean> lists = blocks.stream().filter(b -> b.type() == BlockType.LIST)
                     .map(b -> b.content().path("ordered").asBoolean(false)).toList();
             if (!lists.isEmpty()) {
-                doc.createNumbering().setNumbering(NumberingDocument.Factory.parse(numbering(lists)).getNumbering());
+                doc.createNumbering().setNumbering(NumberingDocument.Factory.parse(buildNumbering(lists)).getNumbering());
             }
             JsonNode formatted = document == null ? null : document.title();
-            if (formatted != null && !text(formatted.path("runs")).isBlank()) {
+            if (formatted != null && !joinRunText(formatted.path("runs")).isBlank()) {
                 // Tên bài có định dạng trên trang soạn (đậm, nghiêng, màu, căn lề): xuất đúng như thế.
                 XWPFParagraph p = doc.createParagraph();
                 p.setStyle("Title");
                 p.setAlignment(ParagraphAlignment.CENTER);
-                runs(p, formatted.path("runs"), false);
+                writeRuns(p, formatted.path("runs"), false);
             } else if (title != null && !title.isBlank()) {
                 // Tên bài luôn đứng giữa trang (yêu cầu 2026-11-12), ảnh và sơ đồ cũng vậy.
-                styled(doc, "Title", title).setAlignment(ParagraphAlignment.CENTER);
+                addStyledParagraph(doc, "Title", title).setAlignment(ParagraphAlignment.CENTER);
             }
             if (instructions != null && !instructions.isBlank()) {
                 for (String line : instructions.split("\\r?\\n")) {
@@ -91,7 +91,7 @@ final class DocxExporter {
                 if (block.type() == BlockType.LIST) {
                     listNumber++;
                 }
-                write(doc, block, linker, listNumber, numbers);
+                writeBlock(doc, block, linker, listNumber, numbers);
             }
             doc.write(out);
             return out.toByteArray();
@@ -105,12 +105,12 @@ final class DocxExporter {
         try (XWPFDocument doc = new XWPFDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             doc.createStyles().setStyles(StylesDocument.Factory.parse(STYLES).getStyles());
             if (title != null && !title.isBlank()) {
-                styled(doc, "Title", title).setAlignment(ParagraphAlignment.CENTER);
+                addStyledParagraph(doc, "Title", title).setAlignment(ParagraphAlignment.CENTER);
             }
             if (rubrics.isEmpty()) {
                 doc.createParagraph().createRun().setText("Chưa có mục chấm.");
             } else {
-                rubric(doc, rubrics);
+                writeRubric(doc, rubrics);
             }
             doc.write(out);
             return out.toByteArray();
@@ -127,7 +127,7 @@ final class DocxExporter {
         private final java.util.ArrayDeque<Integer> open = new java.util.ArrayDeque<>();
         private final int[] counters = new int[DocxImporter.MAX_LEVEL];
 
-        String next(int level) {
+        String nextNumber(int level) {
             while (!open.isEmpty() && open.peekLast() >= level) {
                 open.pollLast();
             }
@@ -141,11 +141,11 @@ final class DocxExporter {
             for (int i = 0; i < depth; i++) {
                 used.add(counters[i]);
             }
-            return edu.aiplatform.assignments.model.SectionNumbering.of(used);
+            return edu.aiplatform.assignments.model.SectionNumbering.formatNumber(used);
         }
     }
 
-    private void write(XWPFDocument doc, DocumentBlock block, IDiagramLinker linker, int listNumber,
+    private void writeBlock(XWPFDocument doc, DocumentBlock block, IDiagramLinker linker, int listNumber,
                        SectionNumbers numbers) {
         JsonNode c = block.content();
         switch (block.type()) {
@@ -153,28 +153,28 @@ final class DocxExporter {
                 String style = switch (c.path("style").asText("")) {
                     case "TITLE" -> "Title";
                     case "SUBTITLE" -> "Subtitle";
-                    default -> "Heading" + headingLevel(c.path("style").asText(""));
+                    default -> "Heading" + parseHeadingLevel(c.path("style").asText(""));
                 };
                 String number = style.startsWith("Heading")
-                        ? numbers.next(Integer.parseInt(style.substring("Heading".length()))) : "";
+                        ? numbers.nextNumber(Integer.parseInt(style.substring("Heading".length()))) : "";
                 JsonNode formatted = c.path("runs");
-                if (formatted.isArray() && !text(formatted).isBlank()) {
+                if (formatted.isArray() && !joinRunText(formatted).isBlank()) {
                     // Tiêu đề có định dạng (yêu cầu 2026-11-04): số của câu rồi chữ đúng định dạng trên trang.
                     XWPFParagraph p = doc.createParagraph();
                     p.setStyle(style);
                     if (!number.isEmpty()) {
                         p.createRun().setText(number + " ");
                     }
-                    runs(p, formatted, false);
+                    writeRuns(p, formatted, false);
                     align(p, c);
                 } else {
-                    align(styled(doc, style, (number + " " + c.path("text").asText("")).strip()), c);
+                    align(addStyledParagraph(doc, style, (number + " " + c.path("text").asText("")).strip()), c);
                 }
             }
             case PARAGRAPH -> {
                 XWPFParagraph p = doc.createParagraph();
                 align(p, c);
-                runs(p, c.path("runs"), false);
+                writeRuns(p, c.path("runs"), false);
             }
             case LIST -> {
                 for (JsonNode item : c.path("items")) {
@@ -183,17 +183,17 @@ final class DocxExporter {
                     p.setNumID(BigInteger.valueOf(listNumber));
                     p.setNumILvl(BigInteger.valueOf(Math.max(0, Math.min(4, item.path("level").asInt(0)))));
                     align(p, c);
-                    runs(p, item.path("runs"), false);
+                    writeRuns(p, item.path("runs"), false);
                 }
             }
-            case TABLE -> table(doc, c);
-            case IMAGE -> image(doc, c);
-            case DIAGRAM -> diagram(doc, block, linker);
+            case TABLE -> writeTable(doc, c);
+            case IMAGE -> writeImage(doc, c);
+            case DIAGRAM -> writeDiagram(doc, block, linker);
         }
     }
 
     /** Cấp tiêu đề 1–6 của block; kiểu lạ hay thiếu thì coi là cấp 1 để tệp vẫn xuất được. */
-    private static int headingLevel(String style) {
+    private static int parseHeadingLevel(String style) {
         String digits = style.replaceAll("\\D", "");
         if (digits.isEmpty() || digits.length() > 1) {
             return 1;
@@ -201,7 +201,7 @@ final class DocxExporter {
         return Math.max(1, Math.min(6, Integer.parseInt(digits)));
     }
 
-    private static XWPFParagraph styled(XWPFDocument doc, String style, String text) {
+    private static XWPFParagraph addStyledParagraph(XWPFDocument doc, String style, String text) {
         XWPFParagraph p = doc.createParagraph();
         p.setStyle(style);
         p.createRun().setText(clean(text));
@@ -223,7 +223,7 @@ final class DocxExporter {
     }
 
     /** Chữ thuần của một dãy run. */
-    private static String text(JsonNode runs) {
+    private static String joinRunText(JsonNode runs) {
         StringBuilder out = new StringBuilder();
         for (JsonNode run : runs) {
             out.append(run.path("text").asText(""));
@@ -241,7 +241,7 @@ final class DocxExporter {
         }
     }
 
-    private static void runs(XWPFParagraph p, JsonNode runs, boolean bold) {
+    private static void writeRuns(XWPFParagraph p, JsonNode runs, boolean bold) {
         for (JsonNode run : runs) {
             String[] lines = clean(run.path("text").asText("")).split("\n", -1);
             XWPFRun r = p.createRun();
@@ -283,7 +283,7 @@ final class DocxExporter {
         }
     }
 
-    private static void table(XWPFDocument doc, JsonNode c) {
+    private static void writeTable(XWPFDocument doc, JsonNode c) {
         JsonNode rows = c.path("rows");
         int columns = 1;
         for (JsonNode row : rows) {
@@ -318,7 +318,7 @@ final class DocxExporter {
                 cell.getParagraphs().get(0).setSpacingAfter(60);
                 if (source != null) {
                     align(cell.getParagraphs().get(0), source);
-                    runs(cell.getParagraphs().get(0), source.path("runs"), header && i == 0);
+                    writeRuns(cell.getParagraphs().get(0), source.path("runs"), header && i == 0);
                 }
             }
         }
@@ -326,24 +326,24 @@ final class DocxExporter {
         doc.createParagraph().setSpacingAfter(0);
     }
 
-    private void image(XWPFDocument doc, JsonNode c) {
+    private void writeImage(XWPFDocument doc, JsonNode c) {
         String alt = c.path("alt").asText("");
-        byte[] data = read(c.path(DocumentFiles.FILE_ID).asText(null));
-        int type = pictureType(data);
+        byte[] data = readFile(c.path(DocumentFiles.FILE_ID).asText(null));
+        int type = detectPictureType(data);
         if (type < 0) {
             doc.createParagraph().createRun().setText(clean("[Ảnh" + (alt.isBlank() ? "" : ": " + alt) + "]"));
             return;
         }
-        int[] size = PngChunks.size(data).orElse(new int[]{400, 300});
+        int[] size = PngChunks.readSize(data).orElse(new int[]{400, 300});
         int requested = c.path("width").asInt(size[0]);
         // Ảnh đứng giữa trang như trên trang soạn.
         XWPFParagraph holder = doc.createParagraph();
         holder.setAlignment(ParagraphAlignment.CENTER);
-        picture(holder.createRun(), data, type, "image", Math.max(1, Math.min(requested, MAX_IMAGE_WIDTH_PX)),
+        addPicture(holder.createRun(), data, type, "image", Math.max(1, Math.min(requested, MAX_IMAGE_WIDTH_PX)),
                 size, clean(alt));
     }
 
-    private static void diagram(XWPFDocument doc, DocumentBlock block, IDiagramLinker linker) {
+    private static void writeDiagram(XWPFDocument doc, DocumentBlock block, IDiagramLinker linker) {
         JsonNode c = block.content();
         String alt = c.path("alt").asText("").strip();
         String code = linker == null ? null : linker.linkFor(block.id());
@@ -351,13 +351,13 @@ final class DocxExporter {
                 + (code == null ? "" : " [drawio:" + code + "]");
         // Sơ đồ chưa vẽ (trang soạn hiện "Chưa có sơ đồ"): khung trống, không dùng hình đại diện của sơ đồ đã vẽ.
         boolean drawn = !c.path("svgPreview").asText("").isBlank()
-                || DiagramXml.cellCount(c.path("xml").asText("")) > 0;
-        byte[] png = PngChunks.diagramPlaceholder(c.path("xml").asText(null), drawn);
+                || DiagramXml.countCells(c.path("xml").asText("")) > 0;
+        byte[] png = PngChunks.drawDiagramPlaceholder(c.path("xml").asText(null), drawn);
         String url = linker == null ? null : linker.viewUrlFor(block.id());
         XWPFParagraph p = doc.createParagraph();
         p.setAlignment(ParagraphAlignment.CENTER);
         XWPFRun run = url == null ? p.createRun() : p.createHyperlinkRun(url);
-        picture(run, png, XWPFDocument.PICTURE_TYPE_PNG, "diagram-" + block.id() + ".png", 480, new int[]{480, 270},
+        addPicture(run, png, XWPFDocument.PICTURE_TYPE_PNG, "diagram-" + block.id() + ".png", 480, new int[]{480, 270},
                 description);
         XWPFRun caption = p.createRun();
         caption.addBreak();
@@ -366,7 +366,7 @@ final class DocxExporter {
                 + (url == null ? "" : " (bấm vào ảnh để mở sơ đồ)") : "Chưa có sơ đồ"));
     }
 
-    private static void picture(XWPFRun run, byte[] data, int type, String name, int width, int[] size,
+    private static void addPicture(XWPFRun run, byte[] data, int type, String name, int width, int[] size,
                                 String description) {
         int height = size[0] <= 0 ? width * 3 / 4 : (int) Math.round((double) width * size[1] / size[0]);
         try (InputStream in = new ByteArrayInputStream(data)) {
@@ -390,19 +390,19 @@ final class DocxExporter {
         }
     }
 
-    private static void rubric(XWPFDocument doc, List<RubricSection> sections) {
+    private static void writeRubric(XWPFDocument doc, List<RubricSection> sections) {
         // Tên bài và chữ Rubric đứng giữa trang, tổng điểm ngay dưới chữ Rubric, căn phải (yêu cầu 2026-11-12).
-        styled(doc, "Heading1", "Rubric").setAlignment(ParagraphAlignment.CENTER);
+        addStyledParagraph(doc, "Heading1", "Rubric").setAlignment(ParagraphAlignment.CENTER);
         BigDecimal sum = sections.stream().map(RubricSection::total).filter(java.util.Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         XWPFParagraph totalLine = doc.createParagraph();
         totalLine.setAlignment(ParagraphAlignment.RIGHT);
         XWPFRun total = totalLine.createRun();
         total.setBold(true);
-        total.setText("Tổng điểm: " + points(sum));
+        total.setText("Tổng điểm: " + formatPoints(sum));
         for (RubricSection section : sections) {
             String partTitle = section.partTitle() == null ? "" : section.partTitle().strip();
-            styled(doc, "Heading2", (partTitle + (section.total() == null ? "" : " (" + points(section.total())
+            addStyledParagraph(doc, "Heading2", (partTitle + (section.total() == null ? "" : " (" + formatPoints(section.total())
                     + " điểm)")).strip());
             // Rubric atomic: mỗi dòng một mục chấm có điểm; tiêu chí nhiều mục (bản cũ, đề xuất AI) ghi kèm tên tiêu chí.
             List<String[]> rows = new ArrayList<>();
@@ -413,7 +413,7 @@ final class DocxExporter {
                     String text = item.text() == null ? "" : item.text().strip();
                     boolean atomic = items.size() == 1 && text.startsWith(name);
                     rows.add(new String[]{atomic || name.isEmpty() ? text : text.isEmpty() ? name : name + ": " + text,
-                            item.points() == null ? "" : points(item.points())});
+                            item.points() == null ? "" : formatPoints(item.points())});
                 }
             }
             XWPFTable table = doc.createTable(rows.size() + 1, 2);
@@ -451,11 +451,11 @@ final class DocxExporter {
     }
 
     /** Điểm ghi gọn: 2 thay cho 2.00, 1.5 giữ nguyên. */
-    private static String points(BigDecimal value) {
+    private static String formatPoints(BigDecimal value) {
         return value.signum() == 0 ? "0" : value.stripTrailingZeros().toPlainString();
     }
 
-    private byte[] read(String fileId) {
+    private byte[] readFile(String fileId) {
         if (fileId == null) {
             return null;
         }
@@ -467,7 +467,7 @@ final class DocxExporter {
         }
     }
 
-    private static int pictureType(byte[] data) {
+    private static int detectPictureType(byte[] data) {
         if (data == null || data.length < 4) {
             return -1;
         }
@@ -484,7 +484,7 @@ final class DocxExporter {
     }
 
     /** Mỗi danh sách một {@code num}: 0 là gạch đầu dòng, 1 là đánh số (đánh lại từ 1). */
-    static String numbering(List<Boolean> ordered) {
+    static String buildNumbering(List<Boolean> ordered) {
         StringBuilder xml = new StringBuilder("<w:numbering xmlns:w=\"" + W + "\">");
         for (int abstractId = 0; abstractId < 2; abstractId++) {
             xml.append("<w:abstractNum w:abstractNumId=\"").append(abstractId).append("\">")
@@ -515,14 +515,14 @@ final class DocxExporter {
             + "<w:pPrDefault><w:pPr><w:spacing w:after=\"120\" w:line=\"276\" w:lineRule=\"auto\"/></w:pPr></w:pPrDefault>"
             + "</w:docDefaults>"
             + "<w:style w:type=\"paragraph\" w:default=\"1\" w:styleId=\"Normal\"><w:name w:val=\"Normal\"/><w:qFormat/></w:style>"
-            + style("Title", "Title", -1, "<w:b/><w:sz w:val=\"48\"/><w:szCs w:val=\"48\"/>")
-            + style("Subtitle", "Subtitle", -1, "<w:i/><w:color w:val=\"595959\"/><w:sz w:val=\"30\"/><w:szCs w:val=\"30\"/>")
-            + style("Heading1", "heading 1", 0, "<w:b/><w:sz w:val=\"36\"/><w:szCs w:val=\"36\"/>")
-            + style("Heading2", "heading 2", 1, "<w:b/><w:sz w:val=\"30\"/><w:szCs w:val=\"30\"/>")
-            + style("Heading3", "heading 3", 2, "<w:b/><w:sz w:val=\"26\"/><w:szCs w:val=\"26\"/>")
-            + style("Heading4", "heading 4", 3, "<w:b/><w:i/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/>")
-            + style("Heading5", "heading 5", 4, "<w:b/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/>")
-            + style("Heading6", "heading 6", 5, "<w:i/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/>")
+            + buildStyle("Title", "Title", -1, "<w:b/><w:sz w:val=\"48\"/><w:szCs w:val=\"48\"/>")
+            + buildStyle("Subtitle", "Subtitle", -1, "<w:i/><w:color w:val=\"595959\"/><w:sz w:val=\"30\"/><w:szCs w:val=\"30\"/>")
+            + buildStyle("Heading1", "heading 1", 0, "<w:b/><w:sz w:val=\"36\"/><w:szCs w:val=\"36\"/>")
+            + buildStyle("Heading2", "heading 2", 1, "<w:b/><w:sz w:val=\"30\"/><w:szCs w:val=\"30\"/>")
+            + buildStyle("Heading3", "heading 3", 2, "<w:b/><w:sz w:val=\"26\"/><w:szCs w:val=\"26\"/>")
+            + buildStyle("Heading4", "heading 4", 3, "<w:b/><w:i/><w:sz w:val=\"24\"/><w:szCs w:val=\"24\"/>")
+            + buildStyle("Heading5", "heading 5", 4, "<w:b/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/>")
+            + buildStyle("Heading6", "heading 6", 5, "<w:i/><w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/>")
             + "<w:style w:type=\"paragraph\" w:styleId=\"ListParagraph\"><w:name w:val=\"List Paragraph\"/>"
             + "<w:basedOn w:val=\"Normal\"/><w:qFormat/><w:pPr><w:ind w:left=\"720\"/><w:contextualSpacing/></w:pPr></w:style>"
             + "<w:style w:type=\"table\" w:styleId=\"TableGrid\"><w:name w:val=\"Table Grid\"/><w:tblPr><w:tblBorders>"
@@ -536,7 +536,7 @@ final class DocxExporter {
             + "</w:tblCellMar></w:tblPr></w:style>"
             + "</w:styles>";
 
-    private static String style(String id, String name, int outline, String runProperties) {
+    private static String buildStyle(String id, String name, int outline, String runProperties) {
         return "<w:style w:type=\"paragraph\" w:styleId=\"" + id + "\"><w:name w:val=\"" + name + "\"/>"
                 + "<w:basedOn w:val=\"Normal\"/><w:next w:val=\"Normal\"/><w:qFormat/><w:pPr><w:keepNext/>"
                 + "<w:spacing w:before=\"240\" w:after=\"120\"/>"

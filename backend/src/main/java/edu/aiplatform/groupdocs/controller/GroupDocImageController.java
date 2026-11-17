@@ -16,16 +16,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class GroupDocImageController {
 
-    private final GroupDocImageService images;
+    private final GroupDocImageService groupDocImageService;
 
-    public GroupDocImageController(GroupDocImageService images) {
-        this.images = images;
+    public GroupDocImageController(GroupDocImageService groupDocImageService) {
+        this.groupDocImageService = groupDocImageService;
     }
 
     @GetMapping("/api/v1/group-docs/{id}/blocks/{blockId}/image")
-    public ResponseEntity<Void> image(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public ResponseEntity<Void> redirectImage(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                       @PathVariable UUID blockId) {
-        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(images.imageUrl(actor, id, blockId)))
+        return ResponseEntity.status(HttpStatus.FOUND).location(URI.create(groupDocImageService.resolveImageUrl(actor, id, blockId)))
                 .cacheControl(CacheControl.noStore()).build();
     }
 }

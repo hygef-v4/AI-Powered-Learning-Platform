@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Icon, IconButton, type IconName } from "@/shared/ui";
+import { msg } from "@/i18n/msg";
 
 export type PickerOption = { id: string; label: string };
 
@@ -36,7 +37,7 @@ const MAX_HEIGHT = 256;
  * ngoài vùng cuộn) nên mở gợi ý không làm popup dài ra; gợi ý dài thì cuộn trong khung gợi ý, không tràn lên trên ô tìm.
  * Dùng cho Tài liệu tham khảo (Soạn bằng AI) và Copy từ bài có sẵn (Tạo bài tập).
  */
-export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, disabled, loading, emptyText = "Không có kết quả.",
+export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, disabled, loading, emptyText = msg("assignments.components.SearchPicker.noResults"),
   optionIcon, footer, multiple = false, chips, selected }: Props) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -48,7 +49,7 @@ export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, 
     if (!open) return;
     let frame = 0;
     let last = "";
-    const follow = () => {
+    const followSelection = () => {
       const box = anchor.current?.getBoundingClientRect();
       if (box) {
         const top = box.bottom + 4;
@@ -60,9 +61,9 @@ export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, 
           setPlace(next);
         }
       }
-      frame = requestAnimationFrame(follow);
+      frame = requestAnimationFrame(followSelection);
     };
-    frame = requestAnimationFrame(follow);
+    frame = requestAnimationFrame(followSelection);
     return () => cancelAnimationFrame(frame);
   }, [open]);
   const needle = query.trim().toLocaleLowerCase("vi");
@@ -89,7 +90,7 @@ export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, 
         {selected && <IconButton icon="close" label={selected.clearLabel} size={26} disabled={disabled} onClick={selected.onClear} />}
       </div>
       {open && !disabled && typeof document !== "undefined" && createPortal(
-        <ul id={listId} role="listbox" aria-label={`Gợi ý ${label.toLocaleLowerCase("vi")}`}
+        <ul id={listId} role="listbox" aria-label={msg("assignments.components.SearchPicker.suggestion", { value: String(label.toLocaleLowerCase("vi")) })}
           style={place ? { top: place.top, left: place.left, width: place.width, maxHeight: place.maxHeight } : { visibility: "hidden" }}
           className="fixed z-[110] flex flex-col overflow-y-auto rounded-lg border border-line bg-surface py-1 shadow-[var(--shadow-float)]">
           {shown.map((option) => (
@@ -101,7 +102,7 @@ export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, 
             </li>
           ))}
           {shown.length === 0 && (
-            <li className="shrink-0 px-3 py-2 text-xs text-muted">{loading ? "Đang tải…" : emptyText}</li>
+            <li className="shrink-0 px-3 py-2 text-xs text-muted">{loading ? msg("assignments.components.SearchPicker.loading") : emptyText}</li>
           )}
           {footer && (
             <li role="option" aria-selected={false} aria-disabled={footer.disabled}

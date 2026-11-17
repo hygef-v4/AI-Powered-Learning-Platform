@@ -14,8 +14,8 @@ class AuditLogRepositoryWhereTest {
 
     @Test
     void noFilterHasNoCondition() {
-        assertThat(AuditLogRepository.Where.of(null).sql()).isEmpty();
-        AuditLogRepository.Where where = AuditLogRepository.Where.of(
+        assertThat(AuditLogRepository.Where.buildWhere(null).sql()).isEmpty();
+        AuditLogRepository.Where where = AuditLogRepository.Where.buildWhere(
                 new AuditFilter(null, null, null, null, null, null, null));
         assertThat(where.sql()).isEmpty();
         assertThat(where.params()).isEmpty();
@@ -25,12 +25,12 @@ class AuditLogRepositoryWhereTest {
     void partialActorMatchesBecomeAnInListAndNoMatchMatchesNothing() {
         UUID a = UUID.randomUUID();
         UUID b = UUID.randomUUID();
-        AuditLogRepository.Where some = AuditLogRepository.Where.of(
+        AuditLogRepository.Where some = AuditLogRepository.Where.buildWhere(
                 new AuditFilter(null, null, null, null, null, null, null, "phong", List.of(a, b)));
         assertThat(some.sql()).isEqualTo(" where actor_id in (:actorIds)");
         assertThat(some.params()).containsEntry("actorIds", List.of(a, b));
 
-        AuditLogRepository.Where none = AuditLogRepository.Where.of(
+        AuditLogRepository.Where none = AuditLogRepository.Where.buildWhere(
                 new AuditFilter(null, null, null, null, null, null, null, "zzz", List.of()));
         assertThat(none.sql()).isEqualTo(" where 1 = 0");
     }
@@ -40,7 +40,7 @@ class AuditLogRepositoryWhereTest {
         UUID actor = UUID.randomUUID();
         Instant from = Instant.parse("2026-10-07T00:00:00Z");
         Instant to = Instant.parse("2026-10-14T00:00:00Z");
-        AuditLogRepository.Where where = AuditLogRepository.Where.of(
+        AuditLogRepository.Where where = AuditLogRepository.Where.buildWhere(
                 new AuditFilter(actor, "ROLE_CHANGED", "ACCOUNT", "abc", AuditResult.DENIED, from, to));
 
         assertThat(where.sql()).isEqualTo(" where actor_id = :actorId and action = :action and object_type = :objectType"
@@ -53,7 +53,7 @@ class AuditLogRepositoryWhereTest {
 
     @Test
     void valuesAreBoundNotConcatenated() {
-        AuditLogRepository.Where where = AuditLogRepository.Where.of(
+        AuditLogRepository.Where where = AuditLogRepository.Where.buildWhere(
                 new AuditFilter(null, "x' or '1'='1", null, null, null, null, null));
 
         assertThat(where.sql()).isEqualTo(" where action = :action");

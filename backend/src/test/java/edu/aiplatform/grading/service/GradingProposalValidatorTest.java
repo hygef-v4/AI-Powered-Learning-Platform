@@ -45,16 +45,16 @@ class GradingProposalValidatorTest {
     @Test
     void rejectionDiagnosticsIdentifyValidationStageWithoutEchoingProviderContent() {
         assertThat(GradingProposalValidator.buildRejectionDiagnostic(
-                ApiException.badRequest("INVALID_AI_PROPOSAL", "Checks must match full-credit item scores")))
+                ApiException.createBadRequest("INVALID_AI_PROPOSAL", "Checks must match full-credit item scores")))
                 .isEqualTo("PROPOSAL_CHECKS_MISMATCH");
         assertThat(GradingProposalValidator.buildRejectionDiagnostic(
-                ApiException.badRequest("INVALID_AI_PROPOSAL", "Unknown evidenceBlockId: private-provider-content")))
+                ApiException.createBadRequest("INVALID_AI_PROPOSAL", "Unknown evidenceBlockId: private-provider-content")))
                 .isEqualTo("FEEDBACK_UNKNOWN_EVIDENCE_BLOCK");
         assertThat(GradingProposalValidator.buildRejectionDiagnostic(
-                ApiException.badRequest("INVALID_AI_PROPOSAL", "AI structuredFeedback must provide feedback for every rubric item")))
+                ApiException.createBadRequest("INVALID_AI_PROPOSAL", "AI structuredFeedback must provide feedback for every rubric item")))
                 .isEqualTo("FEEDBACK_ITEM_COVERAGE");
         assertThat(GradingProposalValidator.buildRejectionDiagnostic(
-                ApiException.badRequest("INVALID_AI_PROPOSAL", "private-provider-content")))
+                ApiException.createBadRequest("INVALID_AI_PROPOSAL", "private-provider-content")))
                 .isEqualTo("PROPOSAL_SCHEMA_MISMATCH");
     }
 
@@ -237,7 +237,7 @@ class GradingProposalValidatorTest {
             """.formatted(rid, rid, iid, rid, iid));
         assertThatThrownBy(() -> validator.validateProposal(badBlock, rubric(), Set.of("p", "block-1")))
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
-                    assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL");
+                    assertThat(ex.readCode()).isEqualTo("INVALID_AI_PROPOSAL");
                     assertThat(GradingProposalValidator.buildRejectionDiagnostic(ex)).isEqualTo("FEEDBACK_UNKNOWN_EVIDENCE_BLOCK");
                 });
 
@@ -267,7 +267,7 @@ class GradingProposalValidatorTest {
             """.formatted(rid, rid, iid, rid, iid));
         assertThatThrownBy(() -> validator.validateProposal(missingEvidence, rubric(), Set.of("p")))
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
-                    assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL");
+                    assertThat(ex.readCode()).isEqualTo("INVALID_AI_PROPOSAL");
                     assertThat(GradingProposalValidator.buildRejectionDiagnostic(ex)).isEqualTo("FEEDBACK_MISSING_EVIDENCE");
                 });
 
@@ -297,7 +297,7 @@ class GradingProposalValidatorTest {
         ((ObjectNode) duplicateItems.path("itemScoresByRubric").path(rid.toString())).put(secondItem.toString(), 0);
         assertThatThrownBy(() -> validator.validateProposal(duplicateItems, twoItemRubric, Set.of("p")))
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
-                    assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL");
+                    assertThat(ex.readCode()).isEqualTo("INVALID_AI_PROPOSAL");
                     assertThat(GradingProposalValidator.buildRejectionDiagnostic(ex)).isEqualTo("FEEDBACK_DUPLICATE_ITEM");
                 });
 
@@ -331,7 +331,7 @@ class GradingProposalValidatorTest {
             """.formatted(rid, rid, iid, rid, iid));
         assertThatThrownBy(() -> validator.validateProposal(unknownField, rubric(), Set.of("p")))
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
-                    assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL");
+                    assertThat(ex.readCode()).isEqualTo("INVALID_AI_PROPOSAL");
                     assertThat(GradingProposalValidator.buildRejectionDiagnostic(ex)).isEqualTo("FEEDBACK_UNKNOWN_FIELD");
                 });
     }
@@ -345,7 +345,7 @@ class GradingProposalValidatorTest {
         assertThat(validator.validateProposal(payload, rubric()).feedback()).hasSize(10_000);
         payload.put("feedback", "x".repeat(10_001));
         assertThatThrownBy(() -> validator.validateProposal(payload, rubric()))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.code()).isEqualTo("INVALID_AI_PROPOSAL"));
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.readCode()).isEqualTo("INVALID_AI_PROPOSAL"));
         payload.remove("feedback");
         payload.set("sections", objectMapper.valueToTree(List.of(Map.of("partId", "p", "feedback", "x".repeat(10_001)))));
         assertThatThrownBy(() -> validator.validateProposal(payload, rubric()))

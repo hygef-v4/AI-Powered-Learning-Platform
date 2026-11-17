@@ -93,7 +93,7 @@ Optional Draw.io diagram editing is described within UC 39 and UC 56; UC 26 (ID 
 
 Scheduled backup, activity capture and event email are supporting processes; they do not create extra user-facing UCs beyond the current catalog. Backup/activity/email requirements and acceptance criteria are in the [council feature specification](../aidlc-docs/inception/requirements/council-features-2026-10-13.md).
 
-The original 73-use-case table is retained as a [historical baseline](history/use-cases-73.md). Historical Construction baselines and diagram files retain older scope. Current Construction designs/plans are synchronized; this table does not confirm implementation.
+The original 73-use-case table is no longer kept in this repository. Historical Construction baselines and diagram files retain older scope. Current Construction designs/plans are synchronized; this table does not confirm implementation.
 
 Consolidation changes the user-facing catalog only: U07 still owns quota, U13 still owns institutional AI connection data and protected credentials, U03 still owns backup, and U11/U14 still provide activity data to U15. Functional requirements and acceptance criteria are retained.
 

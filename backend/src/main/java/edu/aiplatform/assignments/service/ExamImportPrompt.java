@@ -79,7 +79,7 @@ final class ExamImportPrompt {
     }
 
     /** Tham chiếu ảnh {@code draftId/pageNo} do {@code AssignmentImportImageSource} nạp lại khi worker gọi AI. */
-    static String pageRef(UUID draftId, int pageNo) {
+    static String buildPageRef(UUID draftId, int pageNo) {
         return draftId + "/" + pageNo;
     }
 
@@ -95,7 +95,7 @@ final class ExamImportPrompt {
             }
         }
         List<AiImageRef> images = pages.stream()
-                .map(page -> new AiImageRef(IMAGE_SOURCE, pageRef(draftId, page.pageNo()), page.mediaType()))
+                .map(page -> new AiImageRef(IMAGE_SOURCE, buildPageRef(draftId, page.pageNo()), page.mediaType()))
                 .toList();
         return new AiPrompt(SYSTEM, user.toString(), images);
     }

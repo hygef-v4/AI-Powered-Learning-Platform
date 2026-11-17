@@ -25,12 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class MeController {
 
-    private final ProfileService profiles;
-    private final PasswordChangeService passwords;
+    private final ProfileService profileService;
+    private final PasswordChangeService passwordChangeService;
 
-    public MeController(ProfileService profiles, PasswordChangeService passwords) {
-        this.profiles = profiles;
-        this.passwords = passwords;
+    public MeController(ProfileService profileService, PasswordChangeService passwordChangeService) {
+        this.profileService = profileService;
+        this.passwordChangeService = passwordChangeService;
     }
 
     /** Chỉ nhận tên và số điện thoại; field khác bị từ chối 400 trước khi ghi (BR-U01-52). */
@@ -52,15 +52,15 @@ public class MeController {
     }
 
     @GetMapping("/profile")
-    public ProfileService.ProfileView profile(@AuthenticationPrincipal Actor actor) {
-        return profiles.get(actor);
+    public ProfileService.ProfileView loadProfile(@AuthenticationPrincipal Actor actor) {
+        return profileService.loadProfile(actor);
     }
 
     @PatchMapping("/profile")
     public ProfileService.ProfileView updateProfile(@AuthenticationPrincipal Actor actor,
                                                     @RequestBody @Validated UpdateProfileRequest request) {
         request.rejectUnknownFields();
-        return profiles.update(actor, request.displayName, request.phoneNumber);
+        return profileService.updateProfile(actor, request.displayName, request.phoneNumber);
     }
 
     @PostMapping("/password")
@@ -69,7 +69,7 @@ public class MeController {
                                                HttpServletRequest http) {
         request.rejectUnknownFields();
         String sid = (String) http.getAttribute(JwtAuthFilter.SID_ATTRIBUTE);
-        passwords.change(actor, sid, request.currentPassword, request.newPassword);
+        passwordChangeService.change(actor, sid, request.currentPassword, request.newPassword);
         return ResponseEntity.noContent().build();
     }
 }

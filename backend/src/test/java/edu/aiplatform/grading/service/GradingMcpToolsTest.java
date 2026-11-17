@@ -22,7 +22,7 @@ class GradingMcpToolsTest {
                 "classId",e.classId.toString(),"assignmentId",e.assignmentId.toString()),"expectedVersion",0,
                 "submissionHash","hash","requestRef","new","proposal",Map.of(),"snapshotFingerprint","a".repeat(64));
         assertThatThrownBy(() -> new GradingMcpTools(repo,tx,new ObjectMapper(),reads).call(actor,"record_grading_proposal",args))
-                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.code()).isEqualTo("MCP_CONTEXT_READ_REQUIRED"));
+                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.readCode()).isEqualTo("MCP_CONTEXT_READ_REQUIRED"));
         verifyNoInteractions(tx);
     }
     @Test void cannotWriteWithoutACompletedSnapshotReference() {
@@ -36,7 +36,7 @@ class GradingMcpToolsTest {
                 "expectedVersion",0,"submissionHash","hash","requestRef","new","proposal",Map.of());
         assertThatThrownBy(() -> new GradingMcpTools(repo,tx,new ObjectMapper(),mock(GradingMcpQueryService.class)).call(
                 new Actor(UUID.randomUUID(),Role.TEACHER),"record_grading_proposal",args))
-                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.code()).isEqualTo("MCP_CONTEXT_READ_REQUIRED"));
+                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.readCode()).isEqualTo("MCP_CONTEXT_READ_REQUIRED"));
         verifyNoInteractions(tx);
     }
     @org.junit.jupiter.params.ParameterizedTest
@@ -82,7 +82,7 @@ class GradingMcpToolsTest {
         assertThatThrownBy(() -> tools.call(new Actor(UUID.randomUUID(), Role.TEACHER),
                 "record_grading_proposal", Map.of("submissionRef", Map.of("unexpected", "value"))))
                 .isInstanceOfSatisfying(ApiException.class, error -> {
-                    assertThat(error.code()).isEqualTo("INVALID_MCP_ARGUMENTS");
+                    assertThat(error.readCode()).isEqualTo("INVALID_MCP_ARGUMENTS");
                     assertThat(error.getMessage()).isEqualTo("Unknown submission reference argument");
                 });
         verifyNoInteractions(repo, tx);
@@ -101,8 +101,8 @@ class GradingMcpToolsTest {
         assertThatThrownBy(() -> new GradingMcpTools(repo, tx, new ObjectMapper(), mock(GradingMcpQueryService.class)).call(
                 new Actor(UUID.randomUUID(), Role.TEACHER), "record_grading_proposal", arguments))
                 .isInstanceOfSatisfying(ApiException.class, error -> {
-                    assertThat(error.status().value()).isEqualTo(404);
-                    assertThat(error.code()).isEqualTo("GRADE_NOT_FOUND");
+                    assertThat(error.readStatus().value()).isEqualTo(404);
+                    assertThat(error.readCode()).isEqualTo("GRADE_NOT_FOUND");
                 });
         verifyNoInteractions(tx);
     }
@@ -115,8 +115,8 @@ class GradingMcpToolsTest {
                 new Actor(UUID.randomUUID(), Role.TEACHER), "record_grading_proposal",
                 Map.of("submissionRef", Map.of("kind", "ATTEMPT", "id", "malformed"))))
                 .isInstanceOfSatisfying(ApiException.class, error -> {
-                    assertThat(error.status().value()).isEqualTo(400);
-                    assertThat(error.code()).isEqualTo("INVALID_MCP_ARGUMENTS");
+                    assertThat(error.readStatus().value()).isEqualTo(400);
+                    assertThat(error.readCode()).isEqualTo("INVALID_MCP_ARGUMENTS");
                     assertThat(error.getMessage()).isEqualTo("Invalid grading proposal arguments");
                 });
         verifyNoInteractions(repo, tx);
@@ -154,7 +154,7 @@ class GradingMcpToolsTest {
         e.assignmentId = UUID.randomUUID();
         when(repo.findByAttemptId(e.attemptId)).thenReturn(Optional.of(e));
         when(tx.recordMcpProposal(any(), eq(e.id), eq(2L), any(), any(), any(), any()))
-                .thenThrow(ApiException.conflict("GRADE_VERSION_CONFLICT", "Reload"));
+                .thenThrow(ApiException.createConflict("GRADE_VERSION_CONFLICT", "Reload"));
         var args = Map.<String, Object>of("submissionRef",
                 Map.of("kind", "ATTEMPT", "id", e.attemptId.toString(), "classId", e.classId.toString(), "assignmentId",
                         e.assignmentId.toString()),
@@ -163,6 +163,6 @@ class GradingMcpToolsTest {
         var tools = new GradingMcpTools(repo, tx, new ObjectMapper(), mock(GradingMcpQueryService.class));
         assertThatThrownBy(
                 () -> tools.call(new Actor(UUID.randomUUID(), Role.TEACHER), "record_grading_proposal", args))
-                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.status().value()).isEqualTo(409));
+                .isInstanceOfSatisfying(ApiException.class, ex -> assertThat(ex.readStatus().value()).isEqualTo(409));
     }
 }

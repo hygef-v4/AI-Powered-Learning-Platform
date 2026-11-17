@@ -24,10 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/me/mcp-credentials")
 public class McpCredentialController {
 
-    private final McpCredentialService credentials;
+    private final McpCredentialService mcpCredentialService;
 
-    public McpCredentialController(McpCredentialService credentials) {
-        this.credentials = credentials;
+    public McpCredentialController(McpCredentialService mcpCredentialService) {
+        this.mcpCredentialService = mcpCredentialService;
     }
 
     public record CreateRequest(String label, Access access, Integer days) {
@@ -55,31 +55,31 @@ public class McpCredentialController {
     }
 
     @GetMapping
-    public List<CredentialView> list(@AuthenticationPrincipal Actor actor) {
-        return credentials.list(actor);
+    public List<CredentialView> listCredentials(@AuthenticationPrincipal Actor actor) {
+        return mcpCredentialService.listCredentials(actor);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CreateResponse create(@AuthenticationPrincipal Actor actor, @RequestBody CreateRequest request) {
-        Created created = credentials.create(actor, request.label(), request.access(), request.days());
+    public CreateResponse createCredential(@AuthenticationPrincipal Actor actor, @RequestBody CreateRequest request) {
+        Created created = mcpCredentialService.createCredential(actor, request.label(), request.access(), request.days());
         return new CreateResponse(created.credential(), created.token(), "/mcp");
     }
 
     @PatchMapping("/{id}")
-    public CredentialView update(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+    public CredentialView updateCredential(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                  @RequestBody UpdateRequest request) {
-        return credentials.update(actor, id, request.label(), request.access());
+        return mcpCredentialService.updateCredential(actor, id, request.label(), request.access());
     }
 
     @GetMapping("/{id}/token")
-    public TokenResponse token(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return new TokenResponse(credentials.reveal(actor, id));
+    public TokenResponse issueToken(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
+        return new TokenResponse(mcpCredentialService.reveal(actor, id));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void revoke(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        credentials.revoke(actor, id);
+        mcpCredentialService.revoke(actor, id);
     }
 }

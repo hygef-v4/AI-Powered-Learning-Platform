@@ -1,12 +1,13 @@
 "use client";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Button, Dialog } from "@/shared/ui";
-import { apiFetch } from "@/shared/api/client";
+import { Button, Card, Dialog } from "@/shared/ui";
+import { fetchApi } from "@/shared/api/client";
 import { formatErrorMessage } from "../model/format";
 import type { SubmissionDocumentDto } from "../model/submissionDocument";
 import { RunsView, alignClass } from "@/shared/document/DocumentViewer";
 import type { Align, Run, DiagramContent } from "@/shared/document/types";
+import { msg } from "@/i18n/msg";
 
 /** Only document text fields become visible content; formatting metadata stays in RunsView. */
 function readContentRuns(value: unknown): Run[] {
@@ -50,16 +51,16 @@ function SubmittedImage({
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  async function load() {
+  async function loadSubmission() {
     setBusy(true);
     setError("");
     try {
-      const token = await apiFetch<{ url: string }>(
+      const token = await fetchApi<{ url: string }>(
         `/api/v1/evaluations/${evaluationId}/images/${encodeURIComponent(fileId)}`,
       );
       const parsed = new URL(token.url, window.location.origin);
       if (!["https:", "http:"].includes(parsed.protocol))
-        throw new Error("Liên kết ảnh không hợp lệ.");
+        throw new Error(msg("grading.components.SubmissionViewer.invalidImageLink"));
       setUrl(parsed.href);
     } catch (e) {
       setError(formatErrorMessage(e));
@@ -80,8 +81,8 @@ function SubmittedImage({
           className="h-auto max-w-full"
         />
       )}
-      <button disabled={!evaluationId || busy} onClick={() => void load()}>
-        {busy ? "Đang tải ảnh…" : url ? "Tải lại ảnh" : "Xem ảnh bài nộp"}
+      <button disabled={!evaluationId || busy} onClick={() => void loadSubmission()}>
+        {busy ? msg("grading.components.SubmissionViewer.loadingImage") : url ? msg("grading.components.SubmissionViewer.reloadImage") : msg("grading.components.SubmissionViewer.viewSubmittedImage")}
       </button>
       {error && <p role="alert">{error}</p>}
     </figure>
@@ -157,22 +158,22 @@ function sanitizeDiagramPreview(value: unknown): string {
 function Diagram({ blockId, content }: { blockId: string; content: DiagramContent }) {
   const [expanded, setExpanded] = useState(false);
   const preview = useMemo(() => sanitizeDiagramPreview(content.svgPreview), [content.svgPreview]);
-  const title = typeof content.alt === "string" && content.alt ? content.alt : "Sơ đồ bài nộp";
+  const title = typeof content.alt === "string" && content.alt ? content.alt : msg("grading.components.SubmissionViewer.submittedDiagram");
   return <figure id={`submission-block-${blockId}`} className="my-4 min-w-0 scroll-mt-24 rounded-lg border border-line bg-shell/30 p-3">
     <figcaption className="mb-2 text-xs font-medium text-muted">{title}</figcaption>
     {preview ? <>
       <Image src={preview} alt={title} width={1000} height={700} unoptimized className="h-auto w-full rounded bg-surface" />
-      <Button size="sm" className="mt-2" onClick={() => setExpanded(true)}>Xem sơ đồ</Button>
+      <Button size="sm" className="mt-2" onClick={() => setExpanded(true)}>{msg("grading.components.SubmissionViewer.viewDiagram")}</Button>
       <Dialog open={expanded} title={title} size="xl" onClose={() => setExpanded(false)}>
         <div className="max-h-[70vh] overflow-auto rounded border border-line bg-surface p-3">
           <Image src={preview} alt={title} width={1600} height={1200} unoptimized className="h-auto max-w-none" />
         </div>
-        <p className="mt-2 text-sm text-muted">Cuộn ngang và dọc để xem chi tiết. Đây là bản đã nộp, chỉ đọc.</p>
+        <p className="mt-2 text-sm text-muted">{msg("grading.components.SubmissionViewer.scrollHorizontallyAndVerticallyTo")}</p>
       </Dialog>
-    </> : <p className="text-sm text-muted">Chưa có ảnh xem trước sơ đồ khả dụng.</p>}
+    </> : <p className="text-sm text-muted">{msg("grading.components.SubmissionViewer.noDiagramPreviewIsAvailable")}</p>}
     <details className="mt-3 text-xs text-muted">
-      <summary className="cursor-pointer">Dữ liệu sơ đồ Draw.io</summary>
-      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre rounded border border-line bg-surface p-2">{typeof content.xml === "string" ? content.xml : "Không có XML"}</pre>
+      <summary className="cursor-pointer">{msg("grading.components.SubmissionViewer.drawIoDiagramData")}</summary>
+      <pre className="mt-2 max-h-48 overflow-auto whitespace-pre rounded border border-line bg-surface p-2">{typeof content.xml === "string" ? content.xml : msg("grading.components.SubmissionViewer.noXml")}</pre>
     </details>
   </figure>;
 }
@@ -184,11 +185,8 @@ export function SubmissionViewer({
   evaluationId?: string;
 }) {
   return (
-    <section
-      aria-label="Bài làm đã nộp"
-      className="min-w-0 break-words rounded-xl border border-line bg-surface p-4 text-sm leading-relaxed sm:p-5"
-    >
-      <h2 className="mb-4 text-base font-bold">Bài làm đã nộp — chỉ đọc</h2>
+    <Card as="section" className="min-w-0 break-words text-sm leading-relaxed sm:p-5" aria-label={msg("grading.components.SubmissionViewer.submittedWork")}>
+      <h2 className="mb-4 text-base font-bold">{msg("grading.components.SubmissionViewer.submittedWorkReadOnly")}</h2>
       {document.blocks.map((block) => {
         const c = block.content;
         const anchorId = `submission-block-${block.id}`;
@@ -200,7 +198,7 @@ export function SubmissionViewer({
               blockId={block.id}
               evaluationId={evaluationId}
               fileId={String(block.content.fileId ?? "")}
-              alt={typeof block.content.alt === "string" ? block.content.alt : "Ảnh bài nộp"}
+              alt={typeof block.content.alt === "string" ? block.content.alt : msg("grading.components.SubmissionViewer.submittedImage")}
             />
           );
         if (block.type === "TABLE" && Array.isArray(block.content.rows)) {
@@ -256,7 +254,7 @@ export function SubmissionViewer({
           </p>
         );
       })}
-      {document.blocks.length === 0 && <p>Chưa có nội dung bài làm khả dụng.</p>}
-    </section>
+      {document.blocks.length === 0 && <p>{msg("grading.components.SubmissionViewer.noWorkContentAvailableYet")}</p>}
+    </Card>
   );
 }

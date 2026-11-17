@@ -30,63 +30,63 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class QuizPracticeController {
 
-    private final QuizPracticeQueryService queries;
-    private final QuizAttemptService attempts;
-    private final QuizActivityService activity;
+    private final QuizPracticeQueryService quizPracticeQueryService;
+    private final QuizAttemptService quizAttemptService;
+    private final QuizActivityService quizActivityService;
 
-    public QuizPracticeController(QuizPracticeQueryService queries, QuizAttemptService attempts,
-                                  QuizActivityService activity) {
-        this.queries = queries;
-        this.attempts = attempts;
-        this.activity = activity;
+    public QuizPracticeController(QuizPracticeQueryService quizPracticeQueryService, QuizAttemptService quizAttemptService,
+                                  QuizActivityService quizActivityService) {
+        this.quizPracticeQueryService = quizPracticeQueryService;
+        this.quizAttemptService = quizAttemptService;
+        this.quizActivityService = quizActivityService;
     }
 
     @GetMapping("/me/quizzes")
-    public List<PracticeQuizRow> history(@AuthenticationPrincipal Actor actor,
+    public List<PracticeQuizRow> listHistory(@AuthenticationPrincipal Actor actor,
                                          @RequestParam(required = false) UUID classId,
                                          @RequestParam MultiValueMap<String, String> params) {
         PracticeRequests.query(params, Set.of("classId"));
-        return queries.history(actor, classId);
+        return quizPracticeQueryService.listHistory(actor, classId);
     }
 
     @GetMapping("/me/quizzes/{quizId}")
-    public PracticeQuizDetail detail(@AuthenticationPrincipal Actor actor, @PathVariable UUID quizId,
+    public PracticeQuizDetail loadQuiz(@AuthenticationPrincipal Actor actor, @PathVariable UUID quizId,
                                      @RequestParam UUID classId, @RequestParam MultiValueMap<String, String> params) {
         PracticeRequests.query(params, Set.of("classId"));
-        return queries.detail(actor, quizId, classId);
+        return quizPracticeQueryService.loadQuiz(actor, quizId, classId);
     }
 
     @PostMapping(value = "/quizzes/{quizId}/attempts", consumes = "application/json")
     public TakingView start(@AuthenticationPrincipal Actor actor, @PathVariable UUID quizId, @RequestBody JsonNode body) {
-        return attempts.start(actor, quizId, PracticeRequests.classId(body));
+        return quizAttemptService.start(actor, quizId, PracticeRequests.parseClassId(body));
     }
 
     @GetMapping("/quiz-attempts/{attemptId}")
     public TakingView attempt(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId) {
-        return attempts.get(actor, attemptId);
+        return quizAttemptService.loadAttempt(actor, attemptId);
     }
 
     @PutMapping(value = "/quiz-attempts/{attemptId}/answers", consumes = "application/json")
-    public SaveResult save(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId,
+    public SaveResult saveAnswers(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId,
                            @RequestBody JsonNode body) {
-        PracticeRequests.Answers request = PracticeRequests.answers(body);
-        return attempts.saveAnswers(actor, attemptId, request.answers(), request.answerVersion());
+        PracticeRequests.Answers request = PracticeRequests.parseAnswers(body);
+        return quizAttemptService.saveAnswers(actor, attemptId, request.answers(), request.answerVersion());
     }
 
     @PostMapping("/quiz-attempts/{attemptId}/submit")
     public ResultView submit(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId) {
-        return attempts.submit(actor, attemptId);
+        return quizAttemptService.submit(actor, attemptId);
     }
 
     @GetMapping("/quiz-attempts/{attemptId}/result")
-    public ResultView result(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId) {
-        return attempts.result(actor, attemptId);
+    public ResultView loadResult(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId) {
+        return quizAttemptService.loadResult(actor, attemptId);
     }
 
     @PostMapping(value = "/quiz-attempts/{attemptId}/activity", consumes = "application/json")
-    public ResponseEntity<Void> activity(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId,
+    public ResponseEntity<Void> recordActivity(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId,
                                          @RequestBody JsonNode body) {
-        activity.record(actor, attemptId, PracticeRequests.activity(body));
+        quizActivityService.record(actor, attemptId, PracticeRequests.parseActivity(body));
         return ResponseEntity.noContent().build();
     }
 }

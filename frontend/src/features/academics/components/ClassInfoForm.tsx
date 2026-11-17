@@ -1,10 +1,11 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
-import { Button, DateInput, Field, LockedInput, Section, showToast } from "@/shared/ui";
+import { Button, DateInput, Field, LockedInput, Section, showToast, Textarea } from "@/shared/ui";
 import type { ClassInfoInput, CourseClassView } from "../model/types";
 import { CLASS_START_DATE_RANGE, CLASS_START_DATE_REQUIRED, formatClassFieldError, formatOperationError } from "../model/format";
-import { termOf } from "../model/term";
+import { deriveTerm } from "../model/term";
+import { msg } from "@/i18n/msg";
 
 /**
  * Thẻ Thông tin lớp, cùng kiểu Thông tin môn học: sửa ngay trên thẻ. Hàng đầu Mã môn và Mã lớp (khóa), rồi Ngày bắt đầu và Học
@@ -26,7 +27,7 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
   const [dateReset, setDateReset] = useState(0);
   const archived = value.status === "ARCHIVED";
   const dirty = !dateValid || fields.description !== original.description || fields.startsOn !== original.startsOn;
-  const nextTerm = termOf(fields.startsOn);
+  const nextTerm = deriveTerm(fields.startsOn);
   const termChanged = fields.startsOn !== original.startsOn && nextTerm !== null && nextTerm !== value.term;
   async function handleSave(event: FormEvent) {
     event.preventDefault();
@@ -37,34 +38,34 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
     setBusy(true); setError("");
     try {
       await onSave({ name: value.name || value.code, description: fields.description.trim(), startsOn: fields.startsOn, version: value.version });
-      showToast("Đã lưu thay đổi");
+      showToast(msg("academics.components.ClassInfoForm.changesSaved"));
     } catch (cause) {
       const fieldError = formatClassFieldError(cause);
       if (fieldError) setDateError(fieldError.message);
       else setError(formatOperationError(cause));
     } finally { setBusy(false); }
   }
-  return <Section title="Thông tin lớp">
-    <form onSubmit={handleSave} aria-label="Thông tin lớp" noValidate className="flex flex-col gap-4">
+  return <Section title={msg("academics.components.ClassInfoForm.classInformation")}>
+    <form onSubmit={handleSave} aria-label={msg("academics.components.ClassInfoForm.classInformation")} noValidate className="flex flex-col gap-4">
       <fieldset disabled={busy} className="grid min-w-0 gap-4 sm:grid-cols-2">
-        <Field label="Mã môn" htmlFor={`${id}-subject`}><LockedInput id={`${id}-subject`} value={value.subject.code} /></Field>
-        <Field label="Mã lớp" htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={value.code} /></Field>
-        <Field label="Ngày bắt đầu" htmlFor={`${id}-starts-on`} required={!archived} error={dateError}>
+        <Field label={msg("academics.components.ClassInfoForm.subjectCode")} htmlFor={`${id}-subject`}><LockedInput id={`${id}-subject`} value={value.subject.code} /></Field>
+        <Field label={msg("academics.components.ClassInfoForm.classCode")} htmlFor={`${id}-code`}><LockedInput id={`${id}-code`} value={value.code} /></Field>
+        <Field label={msg("academics.components.ClassInfoForm.startDate")} htmlFor={`${id}-starts-on`} required={!archived} error={dateError}>
           <DateInput key={dateReset} id={`${id}-starts-on`} min="2000-01-01" max="2099-12-31" disabled={archived} value={fields.startsOn}
             onValidityChange={setDateValid}
             invalid={!!dateError} onChange={(startsOn) => { setFields({ ...fields, startsOn }); setDateError(""); }}
             data-testid="class-info-starts-on" />
         </Field>
         <div className="flex flex-col gap-1.5">
-          <Field label="Học kỳ" htmlFor={`${id}-term`}><LockedInput id={`${id}-term`} value={value.term} /></Field>
+          <Field label={msg("academics.components.ClassInfoForm.term")} htmlFor={`${id}-term`}><LockedInput id={`${id}-term`} value={value.term} /></Field>
           {termChanged && <p aria-live="polite" className="text-xs text-muted" data-testid="class-info-term-change">
-            Học kỳ: <span className="font-mono text-ink">{value.term} → {nextTerm}</span></p>}
+            {msg("academics.components.ClassInfoForm.term2")}<span className="font-mono text-ink">{value.term} → {nextTerm}</span></p>}
         </div>
         <div className="sm:col-span-2">
-          <Field label="Mô tả" htmlFor={`${id}-description`}>
-            <textarea id={`${id}-description`} maxLength={2000} disabled={archived} value={fields.description}
+          <Field label={msg("academics.components.ClassInfoForm.description")} htmlFor={`${id}-description`}>
+            <Textarea id={`${id}-description`} maxLength={2000} disabled={archived} value={fields.description}
               onChange={(event) => setFields({ ...fields, description: event.target.value })}
-              className="min-h-28 w-full rounded-lg border border-field px-3 py-2 text-[13.5px] text-ink outline-none focus:border-focus disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted" />
+              className="min-h-28" />
           </Field>
         </div>
       </fieldset>
@@ -73,8 +74,8 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
         <Button disabled={busy || !dirty} onClick={() => {
           setFields(original); setError(""); setDateError("");
           setDateValid(true); setDateReset((current) => current + 1);
-        }}>Hủy</Button>
-        <Button type="submit" variant="primary" icon="save" disabled={busy || !dirty} data-testid="class-info-save">Lưu thay đổi</Button>
+        }}>{msg("academics.components.ClassInfoForm.cancel")}</Button>
+        <Button type="submit" variant="primary" icon="save" disabled={busy || !dirty} data-testid="class-info-save">{msg("academics.components.ClassInfoForm.saveChanges")}</Button>
       </div>}
     </form>
   </Section>;

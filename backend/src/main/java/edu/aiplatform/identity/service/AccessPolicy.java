@@ -86,7 +86,7 @@ final class AccessPolicy {
     private AccessPolicy() {
     }
 
-    static Optional<Rule> ruleFor(String action) {
+    static Optional<Rule> findRule(String action) {
         return Optional.ofNullable(action == null ? null : RULES.get(action));
     }
 }

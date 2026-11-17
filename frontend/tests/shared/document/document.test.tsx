@@ -5,17 +5,17 @@ import { CommentRail } from "@/shared/document/CommentRail";
 import { decodeSvgDataUri } from "@/shared/document/DiagramEditor";
 import { DocumentEditor, convertBlock } from "@/shared/document/DocumentEditor";
 import { DocumentViewer } from "@/shared/document/DocumentViewer";
-import { readRuns, runsHtml, setCaret } from "@/shared/document/RichText";
+import { readRuns, renderRunsHtml, setCaret } from "@/shared/document/RichText";
 import { colorRange, joinLines, runLines, splitRuns, toggleFlagRange } from "@/shared/document/runs";
 import { RubricNote, RubricViewer } from "@/shared/document/RubricViewer";
 import { SectionNumber } from "@/shared/document/SectionNumber";
 import {
-  atomicItems,
+  splitAtomicItems,
   computeParts,
-  criteriaOf,
-  rubricComplete,
-  rubricTotal,
-  sectionsOf,
+  buildCriteria,
+  isRubricComplete,
+  sumRubricTotal,
+  numberSections,
   type DocumentBlock,
   type DocumentModel,
   type RubricCriterion,
@@ -513,7 +513,7 @@ describe("định dạng từng phần", () => {
 
   it("ô chữ đọc lại đúng run vẽ ra, cả thẻ trình duyệt tự chèn khi xóa, gộp", () => {
     const root = document.createElement("div");
-    root.innerHTML = runsHtml([{ text: "a<b>", bold: true }, { text: "c", color: "#C5221F", highlight: "#FFF475" }]);
+    root.innerHTML = renderRunsHtml([{ text: "a<b>", bold: true }, { text: "c", color: "#C5221F", highlight: "#FFF475" }]);
     expect(readRuns(root)).toEqual([{ text: "a<b>", bold: true }, { text: "c", color: "#C5221F", highlight: "#FFF475" }]);
     root.innerHTML = '<b>đậm</b><span style="font-style: italic; color: rgb(197, 34, 31)">nghiêng</span>thường<br>';
     expect(readRuns(root)).toEqual([{ text: "đậm", bold: true }, { text: "nghiêng", italic: true, color: "#C5221F" }, { text: "thường" }]);
@@ -552,7 +552,7 @@ describe("phần và rubric", () => {
   });
 
   it("block thuộc mục lá gần nhất phía trên", () => {
-    const sections = sectionsOf(tree, computeParts(tree));
+    const sections = numberSections(tree, computeParts(tree));
     expect(sections.get("p1")).toBe("a1");
     expect(sections.get("p2")).toBe("b");
     expect(sections.has("a")).toBe(false);
@@ -561,9 +561,9 @@ describe("phần và rubric", () => {
   it("tổng điểm và rubric đủ để duyệt", () => {
     const criteria: RubricCriterion[] = [{ criterionId: "c", title: "Đúng ký hiệu", description: "", kind: "TEXT",
       items: [{ itemId: "i", text: "Actor", points: 1.5 }, { itemId: "j", text: "", points: null }] }];
-    expect(rubricTotal(criteria)).toBe(1.5);
-    expect(rubricComplete(criteria)).toBe(false);
-    expect(rubricComplete([{ ...criteria[0]!, items: [criteria[0]!.items[0]!] }])).toBe(true);
+    expect(sumRubricTotal(criteria)).toBe(1.5);
+    expect(isRubricComplete(criteria)).toBe(false);
+    expect(isRubricComplete([{ ...criteria[0]!, items: [criteria[0]!.items[0]!] }])).toBe(true);
   });
 
   it("thẻ rubric bên lề: tên mục, tổng điểm, các mục chấm; có trình sửa thì luôn hiện, không cần bấm", () => {
@@ -579,14 +579,14 @@ describe("phần và rubric", () => {
   it("rubric atomic: tiêu chí nhiều mục tách mỗi mục một dòng; lưu mỗi dòng thành một tiêu chí", () => {
     const legacy: RubricCriterion[] = [{ criterionId: "c", title: "Ký hiệu", description: "", kind: "DIAGRAM",
       items: [{ itemId: "i", text: "Có actor", points: 1 }, { itemId: "j", text: "Có use case", points: 2 }] }];
-    const items = atomicItems(legacy);
+    const items = splitAtomicItems(legacy);
     expect(items.map((item) => item.text)).toEqual(["Ký hiệu: Có actor", "Ký hiệu: Có use case"]);
-    const saved = criteriaOf(items);
+    const saved = buildCriteria(items);
     expect(saved).toHaveLength(2);
     expect(saved[0]!).toMatchObject({ title: "Ký hiệu: Có actor", kind: "TEXT", items: [{ itemId: "i", text: "Ký hiệu: Có actor", points: 1 }] });
-    expect(rubricTotal(saved)).toBe(3);
-    expect(rubricComplete(saved)).toBe(true);
-    expect(criteriaOf([{ criterionId: null, itemId: null, text: "x".repeat(300), points: 1 }])[0]!.title).toHaveLength(200);
+    expect(sumRubricTotal(saved)).toBe(3);
+    expect(isRubricComplete(saved)).toBe(true);
+    expect(buildCriteria([{ criterionId: null, itemId: null, text: "x".repeat(300), points: 1 }])[0]!.title).toHaveLength(200);
   });
 });
 

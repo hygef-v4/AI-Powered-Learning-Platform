@@ -2,9 +2,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
 import { McqEditor } from "@/features/quizzes/components/McqEditor";
-import { emptyForm, type FormErrors, type QuestionForm } from "@/features/quizzes/model/questionForm";
+import { createEmptyForm, type FormErrors, type QuestionForm } from "@/features/quizzes/model/questionForm";
 
-function Harness({ initial = emptyForm(), errors = {} }: { initial?: QuestionForm; errors?: FormErrors }) {
+function Harness({ initial = createEmptyForm(), errors = {} }: { initial?: QuestionForm; errors?: FormErrors }) {
   const [value, setValue] = useState(initial);
   return <>
     <McqEditor value={value} onChange={setValue} errors={errors} />

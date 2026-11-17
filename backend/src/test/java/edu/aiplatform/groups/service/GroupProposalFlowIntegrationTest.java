@@ -197,7 +197,7 @@ class GroupProposalFlowIntegrationTest {
 
         // Giảng viên xếp tay sinh viên 3 vào nhóm chính thức: đề xuất thứ hai còn 1 người, về nháp.
         long setVersion = groupRepository.setVersion(classId);
-        classGroupService.save(teacher, classId, new SaveCommand(setVersion, List.of(
+        classGroupService.saveGroups(teacher, classId, new SaveCommand(setVersion, List.of(
                 new Draft("manual", null, "Nhóm Tay", student(3), List.of(student(3), student(4))))));
         assertThat(app.sql("select status from group_proposals where id = ?").param(second)
                 .query(String.class).single()).isEqualTo("DRAFT");
@@ -234,7 +234,7 @@ class GroupProposalFlowIntegrationTest {
                     proposalService.acceptInvitation(students.get(2), proposalId);
                     return "OK";
                 } catch (ApiException e) {
-                    return e.code();
+                    return e.readCode();
                 }
             };
             results.add(pool.submit(accept));

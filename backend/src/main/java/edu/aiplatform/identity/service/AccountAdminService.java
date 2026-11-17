@@ -79,52 +79,52 @@ public class AccountAdminService {
     }
 
     /** F8: lọc role, trạng thái, tìm email/tên; phân trang. */
-    public AccountViews.Page list(Actor actor, AccountSearch search) {
+    public AccountViews.Page listAccounts(Actor actor, AccountSearch search) {
         require(actor, Actions.ACCOUNT_LIST, null);
         AccountSearch.Result result = accounts.search(search);
-        return new AccountViews.Page(result.items().stream().map(AccountViews.Summary::of).toList(), result.total(),
+        return new AccountViews.Page(result.items().stream().map(AccountViews.Summary::createSummary).toList(), result.total(),
                 search.page(), search.size());
     }
 
     /** F14 bước 1 (UC 10). */
-    public AccountViews.Detail detail(Actor actor, UUID id) {
+    public AccountViews.Detail loadAccount(Actor actor, UUID id) {
         require(actor, Actions.ACCOUNT_VIEW, id);
-        return AccountViews.Detail.of(load(id));
+        return AccountViews.Detail.createDetail(loadAccount(id));
     }
 
     /** F9 (UC 09): tạo {@code PENDING}, không mật khẩu, không gửi mail (BR-U01-10); tạo ADMIN chỉ qua đây (BR-U01-84). */
-    public AccountViews.Detail create(Actor actor, String rawEmail, String rawDisplayName, Role role) {
-        return create(actor, rawEmail, rawDisplayName, role, null);
+    public AccountViews.Detail createAccount(Actor actor, String rawEmail, String rawDisplayName, Role role) {
+        return createAccount(actor, rawEmail, rawDisplayName, role, null);
     }
 
     /** F9 kèm MSSV: bắt buộc với {@code STUDENT}, không được có với role khác (BR-U01-102, 103). */
-    public AccountViews.Detail create(Actor actor, String rawEmail, String rawDisplayName, Role role,
+    public AccountViews.Detail createAccount(Actor actor, String rawEmail, String rawDisplayName, Role role,
                                       String rawStudentCode) {
         require(actor, Actions.ACCOUNT_CREATE, null);
         String email = EmailPolicy.normalize(rawEmail);
         if (!EmailPolicy.isValid(email)) {
-            throw ApiException.badRequest("INVALID_EMAIL", "Email không hợp lệ");
+            throw ApiException.createBadRequest("INVALID_EMAIL", "Email không hợp lệ");
         }
         String displayName = ProfilePolicy.normalizeDisplayName(rawDisplayName);
         ProfilePolicy.checkDisplayName(displayName).ifPresent(code -> {
-            throw ApiException.badRequest(code, "Họ và tên cần từ 1 đến 150 ký tự");
+            throw ApiException.createBadRequest(code, "Họ và tên cần từ 1 đến 150 ký tự");
         });
         if (role == null) {
-            throw ApiException.badRequest("INVALID_ROLE", "Chọn vai trò");
+            throw ApiException.createBadRequest("INVALID_ROLE", "Chọn vai trò");
         }
         String studentCode = StudentCodePolicy.normalize(rawStudentCode);
         if (role != Role.STUDENT && studentCode != null) {
-            throw studentCodeNotAllowed();
+            throw createStudentCodeNotAllowedError();
         }
         if (role == Role.STUDENT) {
             requireValidStudentCode(studentCode);
         }
         Instant now = clock.instant();
-        Account account = Account.newPending(UUID.randomUUID(), email, role, displayName, null, studentCode, now);
+        Account account = Account.createPending(UUID.randomUUID(), email, role, displayName, null, studentCode, now);
         try {
             transactions.executeWithoutResult(status -> {
                 if (accounts.findByEmail(email).isPresent()) {
-                    throw emailExists();
+                    throw createEmailExistsError();
                 }
                 requireStudentCodeFree(studentCode);
                 accounts.insert(account);
@@ -132,33 +132,33 @@ public class AccountAdminService {
                         Map.of("role", role.name(), "studentCodeSet", studentCode != null), now);
             });
         } catch (DuplicateKeyException e) {
-            throw AccountRepository.isStudentCodeConflict(e) ? studentCodeExists() : emailExists();
+            throw AccountRepository.isStudentCodeConflict(e) ? createStudentCodeExistsError() : createEmailExistsError();
         }
-        return AccountViews.Detail.of(account);
+        return AccountViews.Detail.createDetail(account);
     }
 
     /** F14 bước 2 (UC 11): chỉ tên, số điện thoại; email không đổi được (BR-U01-04). */
-    public AccountViews.Detail update(Actor actor, UUID id, String rawDisplayName, String rawPhoneNumber,
+    public AccountViews.Detail updateAccount(Actor actor, UUID id, String rawDisplayName, String rawPhoneNumber,
                                      long version) {
-        return update(actor, id, rawDisplayName, rawPhoneNumber, null, version);
+        return updateAccount(actor, id, rawDisplayName, rawPhoneNumber, null, version);
     }
 
     /**
      * F14 kèm MSSV (BR-U01-105): {@code rawStudentCode} rỗng ({@code null}) là không đổi mã; chỉ sửa được khi tài
      * khoản còn {@code PENDING}, còn lại mã đã khóa.
      */
-    public AccountViews.Detail update(Actor actor, UUID id, String rawDisplayName, String rawPhoneNumber,
+    public AccountViews.Detail updateAccount(Actor actor, UUID id, String rawDisplayName, String rawPhoneNumber,
                                      String rawStudentCode, long version) {
         require(actor, Actions.ACCOUNT_UPDATE, id);
         String displayName = ProfilePolicy.normalizeDisplayName(rawDisplayName);
         String phoneNumber = ProfilePolicy.normalizePhone(rawPhoneNumber);
         ProfilePolicy.checkDisplayName(displayName).or(() -> ProfilePolicy.checkPhone(phoneNumber))
                 .ifPresent(code -> {
-                    throw ApiException.badRequest(code, "INVALID_PHONE_NUMBER".equals(code)
+                    throw ApiException.createBadRequest(code, "INVALID_PHONE_NUMBER".equals(code)
                             ? "Số điện thoại gồm 8–15 chữ số, có thể có dấu + ở đầu"
                             : "Họ và tên cần từ 1 đến 150 ký tự");
                 });
-        Account before = load(id);
+        Account before = loadAccount(id);
         List<String> changed = new ArrayList<>();
         if (!before.displayName().equals(displayName)) {
             changed.add("displayName");
@@ -178,15 +178,15 @@ public class AccountAdminService {
                     requireStudentCodeFree(studentCode);
                 }
                 if (accounts.updateAccountDetails(id, displayName, phoneNumber, studentCode, version, now) == 0) {
-                    throw versionConflict();
+                    throw createVersionConflictError();
                 }
                 // Ghi tên trường đã đổi, không ghi giá trị số điện thoại hay MSSV (BR-U01-91, 115).
                 record(actor, "ACCOUNT_UPDATED", id, Map.of("fields", changed), now);
             });
         } catch (DuplicateKeyException e) {
-            throw studentCodeExists();
+            throw createStudentCodeExistsError();
         }
-        return AccountViews.Detail.of(load(id));
+        return AccountViews.Detail.createDetail(loadAccount(id));
     }
 
     /** BR-U01-105: MSSV cuối cùng sau khi xét yêu cầu; trả mã hiện tại khi không đổi. */
@@ -195,17 +195,17 @@ public class AccountAdminService {
             return before.studentCode();
         }
         if (before.role() != Role.STUDENT) {
-            throw studentCodeNotAllowed();
+            throw createStudentCodeNotAllowedError();
         }
         String code = StudentCodePolicy.normalize(rawStudentCode);
         if (code == null) {
             if (!before.hasStudentCode()) {
                 return null;
             }
-            throw invalidStudentCode();
+            throw createInvalidStudentCodeError();
         }
         if (!StudentCodePolicy.isValid(code)) {
-            throw invalidStudentCode();
+            throw createInvalidStudentCodeError();
         }
         if (code.equals(before.studentCode())) {
             return code;
@@ -213,7 +213,7 @@ public class AccountAdminService {
         // Chỉ sửa lỗi gõ khi sinh viên chưa kích hoạt; không có chức năng gán mã cho tài khoản cũ (người dùng chốt
         // 2026-11-14).
         if (before.status() != AccountStatus.PENDING) {
-            throw ApiException.conflict("STUDENT_CODE_LOCKED",
+            throw ApiException.createConflict("STUDENT_CODE_LOCKED",
                     "MSSV đã khóa vì sinh viên đã kích hoạt tài khoản");
         }
         return code;
@@ -221,17 +221,17 @@ public class AccountAdminService {
 
     private static void requireValidStudentCode(String studentCode) {
         if (studentCode == null) {
-            throw ApiException.badRequest("MISSING_STUDENT_CODE", "Cần nhập MSSV cho tài khoản sinh viên");
+            throw ApiException.createBadRequest("MISSING_STUDENT_CODE", "Cần nhập MSSV cho tài khoản sinh viên");
         }
         if (!StudentCodePolicy.isValid(studentCode)) {
-            throw invalidStudentCode();
+            throw createInvalidStudentCodeError();
         }
     }
 
     /** Kiểm trước để báo lỗi rõ; unique index vẫn chặn khi hai request ghi cùng lúc (BR-U01-101). */
     private void requireStudentCodeFree(String studentCode) {
-        if (studentCode != null && !accounts.existingStudentCodes(List.of(studentCode)).isEmpty()) {
-            throw studentCodeExists();
+        if (studentCode != null && !accounts.findExistingStudentCodes(List.of(studentCode)).isEmpty()) {
+            throw createStudentCodeExistsError();
         }
     }
 
@@ -239,23 +239,23 @@ public class AccountAdminService {
     public AccountViews.Detail changeRole(Actor actor, UUID id, Role newRole, long version) {
         require(actor, Actions.ACCOUNT_ROLE_CHANGE, id);
         if (newRole == null) {
-            throw ApiException.badRequest("INVALID_ROLE", "Chọn vai trò");
+            throw ApiException.createBadRequest("INVALID_ROLE", "Chọn vai trò");
         }
-        Account target = load(id);
+        Account target = loadAccount(id);
         if (target.role() == newRole) {
-            return AccountViews.Detail.of(target);
+            return AccountViews.Detail.createDetail(target);
         }
         if (target.role() == Role.STUDENT || newRole == Role.STUDENT) {
             // BR-U01-107: không đổi role vào hoặc ra khỏi STUDENT; xét trước BR-U01-64…66.
             audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "ROLE_CHANGE_REJECTED", "ACCOUNT",
                     id.toString(), AuditResult.DENIED, "STUDENT_ROLE_CHANGE_NOT_ALLOWED",
                     Map.of("from", target.role().name(), "to", newRole.name()), clock.instant()));
-            throw ApiException.conflict("STUDENT_ROLE_CHANGE_NOT_ALLOWED",
+            throw ApiException.createConflict("STUDENT_ROLE_CHANGE_NOT_ALLOWED",
                     "Không đổi được vai trò vào hoặc ra khỏi Sinh viên");
         }
         if (id.equals(actor.accountId())) {
             // Người đổi role luôn là ADMIN nên mọi thay đổi role của chính mình đều là tự hạ quyền (BR-U01-65).
-            throw ApiException.conflict("SELF_CHANGE_BLOCKED", "Không thể tự đổi vai trò của chính mình");
+            throw ApiException.createConflict("SELF_CHANGE_BLOCKED", "Không thể tự đổi vai trò của chính mình");
         }
         Instant now = clock.instant();
         transactions.executeWithoutResult(status -> {
@@ -265,13 +265,13 @@ public class AccountAdminService {
             accounts.lockById(id);
             checkAssignmentsKept(id, newRole);
             if (accounts.updateRole(id, newRole, version, now) == 0) {
-                throw versionConflict();
+                throw createVersionConflictError();
             }
             record(actor, "ROLE_CHANGED", id, Map.of("from", target.role().name(), "to", newRole.name()), now);
             sessions.deleteAll(id);
         });
         sessions.deleteAll(id);
-        return AccountViews.Detail.of(load(id));
+        return AccountViews.Detail.createDetail(loadAccount(id));
     }
 
     /**
@@ -282,24 +282,24 @@ public class AccountAdminService {
     public AccountViews.Detail changeStatus(Actor actor, UUID id, AccountStatus requested, long version) {
         require(actor, Actions.ACCOUNT_STATUS_CHANGE, id);
         if (requested != AccountStatus.ACTIVE && requested != AccountStatus.DISABLED) {
-            throw ApiException.badRequest("INVALID_STATUS", "Chỉ vô hiệu hóa hoặc mở lại");
+            throw ApiException.createBadRequest("INVALID_STATUS", "Chỉ vô hiệu hóa hoặc mở lại");
         }
-        Account target = load(id);
+        Account target = loadAccount(id);
         boolean disable = requested == AccountStatus.DISABLED;
         if (disable == (target.status() == AccountStatus.DISABLED)) {
-            return AccountViews.Detail.of(target);
+            return AccountViews.Detail.createDetail(target);
         }
         if (disable && id.equals(actor.accountId())) {
-            throw ApiException.conflict("SELF_CHANGE_BLOCKED", "Không thể tự vô hiệu hóa chính mình");
+            throw ApiException.createConflict("SELF_CHANGE_BLOCKED", "Không thể tự vô hiệu hóa chính mình");
         }
-        AccountStatus next = disable ? AccountStatus.DISABLED : target.statusAfterReopen();
+        AccountStatus next = disable ? AccountStatus.DISABLED : target.resolveStatusAfterReopen();
         Instant now = clock.instant();
         transactions.executeWithoutResult(status -> {
             if (disable) {
                 protectLastAdmin(target, true);
             }
             if (accounts.updateStatus(id, next, version, now) == 0) {
-                throw versionConflict();
+                throw createVersionConflictError();
             }
             if (disable) {
                 subjectScope.releaseManagerAssignments(id, actor);
@@ -315,7 +315,7 @@ public class AccountAdminService {
             otpChallenges.deleteAll(id);
             tickets.revokeAll(id);
         }
-        return AccountViews.Detail.of(load(id));
+        return AccountViews.Detail.createDetail(loadAccount(id));
     }
 
     /** BR-U01-64: Chủ nhiệm môn cần SUBJECT_MANAGER; giảng viên lớp cần TEACHER hoặc SUBJECT_MANAGER. */
@@ -325,16 +325,16 @@ public class AccountAdminService {
                 ? List.of() : classScope.listTaughtClasses(id);
         if (!subjects.isEmpty() || !classes.isEmpty()) {
             throw new RoleChangeBlockedException(
-                    subjects.stream().map(subjectId -> held(subjectId, () -> subjectQuery.getObject().getSubject(subjectId)
+                    subjects.stream().map(subjectId -> findHeld(subjectId, () -> subjectQuery.getObject().getSubject(subjectId)
                             .map(s -> new RoleChangeBlockedException.Held(subjectId, s.code(), s.name())))).toList(),
-                    classes.stream().map(classId -> held(classId, () -> classAccess.getObject().getClassRef(classId)
+                    classes.stream().map(classId -> findHeld(classId, () -> classAccess.getObject().getClassRef(classId)
                             .map(c -> new RoleChangeBlockedException.Held(classId, c.code(),
                                     c.subjectCode() == null ? null : "Môn " + c.subjectCode())))).toList());
         }
     }
 
     /** Mã, tên của môn/lớp để Admin nhận ra; unit sở hữu lỗi hay không thấy thì chỉ trả id, vẫn chặn đổi role. */
-    private static RoleChangeBlockedException.Held held(UUID id, Supplier<Optional<RoleChangeBlockedException.Held>> lookup) {
+    private static RoleChangeBlockedException.Held findHeld(UUID id, Supplier<Optional<RoleChangeBlockedException.Held>> lookup) {
         try {
             return lookup.get().orElseGet(() -> new RoleChangeBlockedException.Held(id, null, null));
         } catch (RuntimeException unavailable) {
@@ -349,7 +349,7 @@ public class AccountAdminService {
         }
         List<UUID> activeAdmins = accounts.lockActiveAdmins();
         if (activeAdmins.contains(target.id()) && activeAdmins.size() <= 1) {
-            throw ApiException.conflict("LAST_ADMIN", "Phải còn ít nhất một Admin đang hoạt động");
+            throw ApiException.createConflict("LAST_ADMIN", "Phải còn ít nhất một Admin đang hoạt động");
         }
     }
 
@@ -362,12 +362,12 @@ public class AccountAdminService {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
                     "ACCOUNT", target == null ? null : target.toString(), AuditResult.DENIED, action, Map.of(),
                     clock.instant()));
-            throw ApiException.forbidden("ACCOUNT_ADMIN_FORBIDDEN");
+            throw ApiException.createForbidden("ACCOUNT_ADMIN_FORBIDDEN");
         }
     }
 
-    private Account load(UUID id) {
-        return accounts.findById(id).orElseThrow(() -> ApiException.notFound("ACCOUNT_NOT_FOUND"));
+    private Account loadAccount(UUID id) {
+        return accounts.findById(id).orElseThrow(() -> ApiException.createNotFound("ACCOUNT_NOT_FOUND"));
     }
 
     private void record(Actor actor, String action, UUID accountId, Map<String, Object> details, Instant now) {
@@ -375,23 +375,23 @@ public class AccountAdminService {
                 AuditResult.SUCCESS, null, details, now));
     }
 
-    private static ApiException emailExists() {
-        return ApiException.conflict("EMAIL_EXISTS", "Email đã có tài khoản");
+    private static ApiException createEmailExistsError() {
+        return ApiException.createConflict("EMAIL_EXISTS", "Email đã có tài khoản");
     }
 
-    private static ApiException studentCodeExists() {
-        return ApiException.conflict("STUDENT_CODE_EXISTS", "MSSV này đã được dùng cho tài khoản khác");
+    private static ApiException createStudentCodeExistsError() {
+        return ApiException.createConflict("STUDENT_CODE_EXISTS", "MSSV này đã được dùng cho tài khoản khác");
     }
 
-    private static ApiException studentCodeNotAllowed() {
-        return ApiException.badRequest("STUDENT_CODE_NOT_ALLOWED", "Chỉ tài khoản sinh viên mới có MSSV");
+    private static ApiException createStudentCodeNotAllowedError() {
+        return ApiException.createBadRequest("STUDENT_CODE_NOT_ALLOWED", "Chỉ tài khoản sinh viên mới có MSSV");
     }
 
-    private static ApiException invalidStudentCode() {
-        return ApiException.badRequest("INVALID_STUDENT_CODE", "MSSV gồm 2 chữ cái và 6 chữ số, ví dụ SE123456");
+    private static ApiException createInvalidStudentCodeError() {
+        return ApiException.createBadRequest("INVALID_STUDENT_CODE", "MSSV gồm 2 chữ cái và 6 chữ số, ví dụ SE123456");
     }
 
-    private static ApiException versionConflict() {
-        return ApiException.conflict(VERSION_CONFLICT, "Dữ liệu đã được thay đổi ở phiên khác. Hãy tải lại trước khi sửa.");
+    private static ApiException createVersionConflictError() {
+        return ApiException.createConflict(VERSION_CONFLICT, "Dữ liệu đã được thay đổi ở phiên khác. Hãy tải lại trước khi sửa.");
     }
 }

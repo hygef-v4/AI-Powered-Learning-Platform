@@ -330,6 +330,6 @@ public class GradingFeedbackValidator {
 
     /** Builds the client error for invalid structured feedback. */
     private static ApiException createInvalidFeedback(String detail) {
-        return ApiException.badRequest("INVALID_STRUCTURED_FEEDBACK", detail);
+        return ApiException.createBadRequest("INVALID_STRUCTURED_FEEDBACK", detail);
     }
 }

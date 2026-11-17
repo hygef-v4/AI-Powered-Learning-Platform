@@ -72,7 +72,7 @@ public class SubmissionQueryService implements ISubmissionQuery {
     @Override
     @Transactional(readOnly = true)
     public Optional<SubmissionView> getSubmission(UUID attemptId) {
-        return attempts.find(attemptId).filter(a -> a.status() == AttemptStatus.SUBMITTED)
+        return attempts.findAttempt(attemptId).filter(a -> a.status() == AttemptStatus.SUBMITTED)
                 .map(a -> new SubmissionView(a.id(), a.assignmentId(), a.classId(), a.accountId(), a.content(),
                         a.receiptHash(), a.submittedAt(), a.late(), a.submitMode()));
     }

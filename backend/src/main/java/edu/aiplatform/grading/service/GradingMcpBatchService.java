@@ -77,7 +77,7 @@ public class GradingMcpBatchService implements IMcpToolProvider {
                         : Objects.toString(input.get("evaluationId"), "") + ":"
                                 + Objects.toString(input.get("offset"), "0");
                 if (!seen.add(key))
-                    throw ApiException.badRequest("DUPLICATE_ITEM", "Repeated item in batch");
+                    throw ApiException.createBadRequest("DUPLICATE_ITEM", "Repeated item in batch");
                 if (input.containsKey("evaluationId"))
                     outcome.put("evaluationId", input.get("evaluationId"));
                 if (input.containsKey("requestRef"))
@@ -101,7 +101,7 @@ public class GradingMcpBatchService implements IMcpToolProvider {
                 // Item level failure isolation
                 outcome.remove("result");
                 outcome.put("outcome", "ERROR");
-                outcome.put("code", e.code());
+                outcome.put("code", e.readCode());
             } catch (RuntimeException e) {
                 outcome.remove("result");
                 outcome.put("outcome", "ERROR");

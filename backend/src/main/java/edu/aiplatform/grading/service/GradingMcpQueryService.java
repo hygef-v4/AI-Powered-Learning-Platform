@@ -234,18 +234,18 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         var detail = submissionReviewService.loadEvaluation(actor, id);
         var e = detail.evaluation();
         if (e.kind == EvaluationKind.MEMBER)
-            throw ApiException.badRequest("GROUP_ROOT_REQUIRED", "Read the group document root");
+            throw ApiException.createBadRequest("GROUP_ROOT_REQUIRED", "Read the group document root");
         if (!detail.current())
-            throw ApiException.conflict("SUBMISSION_CHANGED", "Snapshot is no longer current");
+            throw ApiException.createConflict("SUBMISSION_CHANGED", "Snapshot is no longer current");
         if (in.has("expectedVersion"))
             e.checkVersion(in.version("expectedVersion"));
         if (in.has("submissionHash")
                 && !Objects.equals(e.submissionHash, in.text("submissionHash", null)))
-            throw ApiException.conflict("SUBMISSION_CHANGED", "Snapshot changed");
+            throw ApiException.createConflict("SUBMISSION_CHANGED", "Snapshot changed");
         var assignment = assignmentQuery.getContent(e.assignmentId).orElseThrow(() -> ApiException
-                .unavailable("ASSIGNMENT_UNAVAILABLE", "Assignment context unavailable"));
+                .createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment context unavailable"));
         if (!GradingJson.writeSnapshot(objectMapper, assignment.rubrics()).equals(e.rubricSnapshot))
-            throw ApiException.conflict("RUBRIC_CHANGED",
+            throw ApiException.createConflict("RUBRIC_CHANGED",
                     "Locked rubric no longer matches submitted snapshot");
         Map<String, Object> assignmentContext = new LinkedHashMap<>();
         assignmentContext.put("assignmentId", assignment.assignmentId());
@@ -260,7 +260,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
                         policy));
         if (in.has("snapshotFingerprint")
                 && !fingerprint.equals(in.text("snapshotFingerprint", null)))
-            throw ApiException.conflict("SUBMISSION_CHANGED",
+            throw ApiException.createConflict("SUBMISSION_CHANGED",
                     "Snapshot or rubric changed; restart reading");
         return new Snapshot(detail, assignmentContext, policy, fingerprint);
     }
@@ -274,7 +274,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         // Filtering precedes pagination, so totals never describe a different scope or filter.
         var listing = submissionReviewService.listRows(actor, classId, assignmentId, state, late);
         if (listing.rows().size() > 10000)
-            throw ApiException.badRequest("MCP_DISCOVERY_TOO_LARGE", "Narrow the status filter");
+            throw ApiException.createBadRequest("MCP_DISCOVERY_TOO_LARGE", "Narrow the status filter");
         var byId = new HashMap<UUID, edu.aiplatform.grading.model.Evaluation>();
         listing.evaluations().forEach(e -> byId.put(e.id, e));
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -303,7 +303,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
             if (row.evaluationId() != null) {
                 var e = byId.get(row.evaluationId());
                 if (e == null)
-                    throw ApiException.conflict("SUBMISSION_CHANGED", "Reload submission metadata");
+                    throw ApiException.createConflict("SUBMISSION_CHANGED", "Reload submission metadata");
                 if (e.kind == EvaluationKind.MEMBER
                         || (type != null && !type.equals(e.kind.name())))
                     continue;
@@ -407,7 +407,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
 
     /** Creates the error returned when the requested MCP result exceeds its size limit. */
     private static ApiException createResultLimitError() {
-        return ApiException.badRequest("MCP_CONTEXT_TOO_LARGE",
+        return ApiException.createBadRequest("MCP_CONTEXT_TOO_LARGE",
                 "Rubric, schema or one document block is too large; manual review is required");
     }
 }

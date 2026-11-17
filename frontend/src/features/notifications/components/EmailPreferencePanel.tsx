@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { notificationsApi } from "../api";
 import { preferenceLabels, type EmailPreferences } from "../model/types";
 import styles from "../styles/notifications.module.css";
+import { msg } from "@/i18n/msg";
 export function EmailPreferencePanel() {
   const [values, setValues] = useState<EmailPreferences | null>(null);
   const [error, setError] = useState("");
@@ -14,7 +15,7 @@ export function EmailPreferencePanel() {
       .loadPreferences(controller.signal)
       .then(setValues)
       .catch(() => {
-        if (!controller.signal.aborted) setError("Không thể tải tùy chọn email.");
+        if (!controller.signal.aborted) setError(msg("notifications.components.EmailPreferencePanel.couldNotLoadEmailPreferences"));
       });
     return () => controller.abort();
   }, [revision]);
@@ -29,7 +30,7 @@ export function EmailPreferencePanel() {
         previous ? { ...previous, [type]: saved[type] ?? value } : previous,
       );
     } catch {
-      setError("Chưa lưu được tùy chọn. Hãy thử lại.");
+      setError(msg("notifications.components.EmailPreferencePanel.couldNotSaveThePreference"));
     } finally {
       setPending((previous) => {
         const next = { ...previous };
@@ -40,7 +41,7 @@ export function EmailPreferencePanel() {
   }
   return (
     <section className={styles.preferences}>
-      <h3>Gửi email cho tôi khi có</h3>
+      <h3>{msg("notifications.components.EmailPreferencePanel.emailMeWhenThereIs")}</h3>
       {error && (
         <p role="alert" className={styles.error}>
           {error}{" "}
@@ -51,16 +52,14 @@ export function EmailPreferencePanel() {
                 setRevision((r) => r + 1);
               }}
             >
-              Thử lại
-            </button>
+              {msg("notifications.components.EmailPreferencePanel.retry")}</button>
           )}
         </p>
       )}
       {!values
         ? !error && (
             <p role="status" className={styles.empty}>
-              Đang tải…
-            </p>
+              {msg("notifications.components.EmailPreferencePanel.loading")}</p>
           )
         : Object.entries(values).map(([type, enabled]) => (
             <div key={type} className={styles.preference}>
@@ -79,9 +78,9 @@ export function EmailPreferencePanel() {
             </div>
           ))}
       {values?.BACKUP_FAILED && (
-        <p className={styles.help}>Email sao lưu thất bại là cảnh báo bắt buộc, không thể tắt.</p>
+        <p className={styles.help}>{msg("notifications.components.EmailPreferencePanel.backupFailureEmailsAreMandatory")}</p>
       )}
-      <p className={styles.help}>Tắt email vẫn nhận thông báo trong ứng dụng.</p>
+      <p className={styles.help}>{msg("notifications.components.EmailPreferencePanel.turningOffEmailStillDelivers")}</p>
     </section>
   );
 }

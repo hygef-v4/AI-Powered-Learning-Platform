@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { getProfile } from "@/features/identity/api";
-import { SessionProvider } from "@/features/identity/hooks/session";
+import { SessionProvider } from "@/features/identity/hooks/SessionProvider";
 import type { Profile } from "@/features/identity/model/types";
 import { RoleGuard } from "@/features/identity/shell/components/RoleGuard";
 

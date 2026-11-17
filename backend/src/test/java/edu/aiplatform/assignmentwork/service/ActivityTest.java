@@ -57,7 +57,7 @@ class ActivityTest {
         try {
             action.run();
         } catch (ApiException e) {
-            return e.code();
+            return e.readCode();
         }
         throw new AssertionError("Cần lỗi nghiệp vụ");
     }

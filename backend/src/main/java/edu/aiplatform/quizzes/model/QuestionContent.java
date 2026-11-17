@@ -21,7 +21,7 @@ public record QuestionContent(QuestionType type, String stem, List<QuestionOptio
         tags = tags == null ? List.of() : List.copyOf(tags);
     }
 
-    public static QuestionContent of(QuestionType type, String stem, List<QuestionOption> options,
+    public static QuestionContent createContent(QuestionType type, String stem, List<QuestionOption> options,
                                      List<String> correctOptionIds, String explanation, BigDecimal defaultPoints,
                                      Difficulty difficulty, List<String> tags) {
         List<QuestionOption> cleanOptions = options == null ? List.of() : options.stream()

@@ -15,8 +15,8 @@ public final class ClassTermPolicy {
     public static final LocalDate MAX_START = LocalDate.of(2099, 12, 31);
     private static final String BLOCK_FIVE = "-BL5";
     private static final Comparator<String> NEWEST_FIRST = Comparator
-            .comparingInt(ClassTermPolicy::yearOf)
-            .thenComparingInt(ClassTermPolicy::seasonRank)
+            .comparingInt(ClassTermPolicy::parseTermYear)
+            .thenComparingInt(ClassTermPolicy::rankTermSeason)
             .thenComparingInt(term -> term.endsWith(BLOCK_FIVE) ? 1 : 0)
             .reversed();
 
@@ -24,7 +24,7 @@ public final class ClassTermPolicy {
     }
 
     /** Calculates the term code of a class that starts on the given date. */
-    public static String termOf(LocalDate startsOn) {
+    public static String deriveTerm(LocalDate startsOn) {
         LocalDate start = requireValidStart(startsOn);
         int month = start.getMonthValue();
         String season = month <= 4 ? "SP" : month <= 8 ? "SU" : "FA";
@@ -55,11 +55,11 @@ public final class ClassTermPolicy {
         return NEWEST_FIRST;
     }
 
-    private static int yearOf(String term) {
+    private static int parseTermYear(String term) {
         return Integer.parseInt(term.substring(2, 4));
     }
 
-    private static int seasonRank(String term) {
+    private static int rankTermSeason(String term) {
         return switch (term.substring(0, 2)) {
         case "SP" -> 0;
         case "SU" -> 1;

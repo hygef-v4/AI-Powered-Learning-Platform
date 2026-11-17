@@ -1,10 +1,12 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSession } from "@/features/identity/hooks/session";
+import { useSession } from "@/features/identity/hooks/SessionProvider";
 import { Icon } from "@/shared/ui/Icon";
 import { notificationsApi } from "../api";
 import { NotificationPopup } from "./NotificationPopup";
 import styles from "../styles/notifications.module.css";
+import { msg } from "@/i18n/msg";
+const FALLBACK_POLL_MS = 30000;
 export function NotificationBell() {
   const session = useSession();
   return session.status === "authenticated" ? (
@@ -37,38 +39,58 @@ function Bell() {
     let stream: EventSource | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let attempts = 0;
+    // Luồng SSE đang mở thì máy chủ tự báo thay đổi; chỉ hỏi định kỳ khi luồng đứt.
+    let connected = false;
+    let reconnecting = false;
     function connect() {
       if (stopped || typeof EventSource === "undefined") return;
       stream = new EventSource("/api/v1/me/notifications/events", { withCredentials: true });
-      const changed = () => {
+      const syncPermission = () => {
         attempts = 0;
+        connected = true;
         handleRefresh();
       };
-      stream.onmessage = changed;
-      stream.addEventListener("notification-changed", changed);
+      stream.onopen = () => {
+        connected = true;
+        // Thông báo phát ra trong lúc mất kết nối không được gửi lại.
+        if (reconnecting) handleRefresh();
+        reconnecting = false;
+      };
+      stream.onmessage = syncPermission;
+      stream.addEventListener("notification-changed", syncPermission);
       stream.onerror = () => {
         stream?.close();
+        connected = false;
+        reconnecting = true;
         handleRefresh();
         if (!stopped)
           timer = setTimeout(connect, Math.min(30000, 1000 * 2 ** Math.min(attempts++, 5)));
       };
     }
     connect();
-    const fallback = setInterval(handleRefresh, 30000);
+    const isTabVisible = () => document.visibilityState === "visible";
+    const fallback = setInterval(() => {
+      if (!connected && isTabVisible()) handleRefresh();
+    }, FALLBACK_POLL_MS);
+    const handleVisibilityChange = () => {
+      if (!connected && isTabVisible()) handleRefresh();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       stopped = true;
       stream?.close();
       if (timer) clearTimeout(timer);
       clearInterval(fallback);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [handleRefresh]);
   useEffect(() => {
     if (!open) return;
-    const outside = (e: PointerEvent) => {
+    const closeOnOutside = (e: PointerEvent) => {
       if (e.target instanceof Node && !host.current?.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("pointerdown", outside);
-    return () => document.removeEventListener("pointerdown", outside);
+    document.addEventListener("pointerdown", closeOnOutside);
+    return () => document.removeEventListener("pointerdown", closeOnOutside);
   }, [open]);
   function handleClose() {
     setOpen(false);
@@ -81,7 +103,7 @@ function Bell() {
         data-testid="notification-bell"
         type="button"
         aria-label={
-          failed ? "Thông báo, chưa tải được số chưa đọc" : `Thông báo, ${count} chưa đọc`
+          failed ? msg("notifications.components.NotificationBell.notificationsUnreadCountNotLoaded") : msg("notifications.components.NotificationBell.notificationsUnread", { count: String(count) })
         }
         aria-expanded={open}
         aria-controls={open ? "notification-popup" : undefined}

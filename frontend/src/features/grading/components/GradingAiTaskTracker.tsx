@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import { useSession } from "@/features/identity/hooks/session";
+import { useSession } from "@/features/identity/hooks/SessionProvider";
 import { activateGradingAiTracking } from "../model/gradingAiTasks";
 
 export function GradingAiTaskTracker() {

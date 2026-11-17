@@ -14,7 +14,7 @@ setup() {
     ROOT=$(mktemp -d)
     export PLATFORM_DIR="$ROOT/platform" STATE_DIR="$ROOT/state" BACKUP_DIR="$ROOT/backups"
     export LOCK_FILE="$ROOT/lock" HEALTH_TIMEOUT=1 HEALTH_INTERVAL=1 KEEP_DUMPS=2
-    export CALLS="$ROOT/calls" BAD_TAGS="" FAIL_PULL="" LATEST="$A" API_FAIL=""
+    export CALLS="$ROOT/calls" BAD_TAGS="" FAIL_PULL="" LATEST="$A" API_FAIL="" IMAGE_TAGS="" NGINX_CHANGED=""
     mkdir -p "$PLATFORM_DIR/infra" "$ROOT/bin"
     printf 'DOMAIN=example.test\nGHCR_OWNER=hygef-v4\nIMAGE_TAG=%s\nSECRET=x\n' "$A" >"$PLATFORM_DIR/infra/.env"
     chmod 600 "$PLATFORM_DIR/infra/.env"
@@ -27,8 +27,11 @@ tag=$(sed -n 's/^IMAGE_TAG=//p' "$PLATFORM_DIR/infra/.env")
 case "$*" in
 pull*) [[ -n $FAIL_PULL && $* == *"$FAIL_PULL"* ]] && exit 1; echo "pull ${*: -1}" >>"$CALLS" ;;
 *" ps -a -q") echo c1; echo c2 ;;
+*" restart nginx") echo "restart-nginx $tag" >>"$CALLS" ;;
 *" up -d"*) echo "up $tag" >>"$CALLS"; [[ " $BAD_TAGS " == *" up:$tag "* ]] && exit 1; exit 0 ;;
 *pg_dump*) echo "dump $tag" >>"$CALLS"; echo DATA ;;
+images*) for t in $IMAGE_TAGS; do echo "${*: -1}:$t"; done ;;
+rmi*) echo "rmi ${*: -1}" >>"$CALLS.rmi" ;;
 inspect*)
     echo "/certbot running none"
     if [[ " $BAD_TAGS " == *" $tag "* ]]; then echo "/backend running unhealthy"; else echo "/backend running healthy"; fi ;;
@@ -39,6 +42,8 @@ STUB
 #!/usr/bin/env bash
 case "$*" in
 *fetch*) exit 0 ;;
+*rev-parse*) echo 0000000000000000000000000000000000000000 ;;
+*diff*) [[ -z $NGINX_CHANGED ]] ;;
 *cat-file*) [[ $* != *dddd* ]] ;;
 *checkout*) echo "checkout ${*: -1}" >>"$CALLS" ;;
 *) exit 2 ;;
@@ -152,6 +157,30 @@ t_keeps_latest_dumps() {
     [[ $(find "$BACKUP_DIR" -name 'predeploy-*.dump' | wc -l) == 2 ]] && ! ls "$BACKUP_DIR"/*aaaaaaaaaaaa.dump >/dev/null 2>&1
 }
 
+t_prunes_images_outside_recent_deploys() {
+    setup
+    KEEP_IMAGES=2 IMAGE_TAGS="$A $B $C" LATEST=$B run check || return 1
+    KEEP_IMAGES=2 IMAGE_TAGS="$A $B $C" LATEST=$C run check || return 1
+    # Lần đầu giữ A, B (xóa C); lần hai giữ B, C (xóa A). Mỗi lần cho cả backend và frontend.
+    [[ $(grep -c ":$C\$" "$CALLS.rmi") == 2 ]] && [[ $(grep -c ":$A\$" "$CALLS.rmi") == 2 ]] &&
+        ! grep -q ":$B\$" "$CALLS.rmi" && grep -q "platform-backend:$A" "$CALLS.rmi" &&
+        grep -q "platform-frontend:$A" "$CALLS.rmi"
+}
+
+t_restarts_nginx_only_when_its_config_changed() {
+    setup
+    LATEST=$B run check || return 1
+    ! grep -q restart-nginx "$CALLS" || return 1
+    NGINX_CHANGED=1 LATEST=$C run check || return 1
+    # Khởi động lại sau compose up của bản mới, đúng một lần.
+    [[ $(grep -c restart-nginx "$CALLS") == 1 ]] && [[ $(tail -n 1 "$CALLS") == "restart-nginx $C" ]] &&
+        grep -q "khởi động lại nginx" "$ROOT/out" || return 1
+    # Bản lỗi có đổi cấu hình nginx: quay về cũng nạp lại cấu hình của bản cũ.
+    setup
+    NGINX_CHANGED=1 BAD_TAGS="$B" LATEST=$B run check && return 1
+    [[ $(tag) == "$A" ]] && grep -qxF "restart-nginx $B" "$CALLS" && [[ $(tail -n 1 "$CALLS") == "restart-nginx $A" ]]
+}
+
 t_status_and_bad_input() {
     setup
     LATEST=$B run check && run status && grep -q "Đang chạy:       $B" "$ROOT/out" &&
@@ -175,7 +204,7 @@ t_staging_uses_its_project_files_branch_and_port() {
 
 for t in t_production_defaults t_staging_uses_its_project_files_branch_and_port t_check_noop t_check_deploys_new t_unhealthy_rolls_back_and_skips t_compose_up_failure_rolls_back t_failed_rollback_reports_its_own_problem \
     t_pull_failure_changes_nothing t_missing_commit_changes_nothing t_api_failure_changes_nothing \
-    t_manual_rollback_twice t_rollback_to_sha_and_unskip t_keeps_latest_dumps t_status_and_bad_input; do
+    t_manual_rollback_twice t_rollback_to_sha_and_unskip t_keeps_latest_dumps t_prunes_images_outside_recent_deploys t_restarts_nginx_only_when_its_config_changed t_status_and_bad_input; do
     check "$t" "$t"
 done
 ((FAILURES == 0)) || {

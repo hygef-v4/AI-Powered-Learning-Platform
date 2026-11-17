@@ -115,7 +115,7 @@ class AssignmentAiRevisionTest {
         assertThat(proposal.path("validation").path("status").asText()).isEqualTo("VALID");
         AssignmentAiDraft ready = ready(a, proposal, snapshot.blockRefs());
 
-        AssignmentViews.Detail applied = f.aiDrafts.apply(f.teacher, a.id(), ready.id(),
+        AssignmentViews.Detail applied = f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(),
                 new AssignmentCommands.ApplyDraft(a.version(), true, true));
 
         assertThat(applied.title()).isEqualTo("Cemetery system");
@@ -142,7 +142,7 @@ class AssignmentAiRevisionTest {
         var snapshot = AssignmentDraftRevision.snapshot(a, f.rubricsOf(a.id()));
         ObjectNode proposal = AssignmentDraftRevision.normalize(snapshot.document(), true);
 
-        var built = AssignmentDraftRevision.build(proposal, snapshot.blockRefs(), a.skeleton(), a.title());
+        var built = AssignmentDraftRevision.buildRevision(proposal, snapshot.blockRefs(), a.skeleton(), a.title());
 
         assertThat(built.skeleton().blocks()).isEqualTo(a.skeleton().blocks());
     }
@@ -191,7 +191,7 @@ class AssignmentAiRevisionTest {
         ObjectNode proposal = AssignmentDraftRevision.normalize(read("""
                 {"title":"x","instructions":"","blocks":[{"ref":"b1","type":"LIST","text":"Plots\\n\\nSections\\nRows","ordered":true}]}
                 """), true);
-        var built = AssignmentDraftRevision.build(proposal, snapshot.blockRefs(), a.skeleton(), a.title());
+        var built = AssignmentDraftRevision.buildRevision(proposal, snapshot.blockRefs(), a.skeleton(), a.title());
 
         JsonNode items = built.skeleton().blocks().get(0).content().path("items");
         assertThat(built.skeleton().blocks().get(0).id()).isEqualTo(listId);
@@ -233,9 +233,9 @@ class AssignmentAiRevisionTest {
                 null, "r1", AssignmentAiDraft.Status.READY, proposal, JsonNodeFactory.instance.objectNode()
                 .put("mode", AssignmentDraftRevision.MODE), a.version() - 1, null, f.teacher.accountId(),
                 AssignmentFixtures.NOW, null);
-        when(f.drafts.find(stale.id())).thenReturn(Optional.of(stale));
+        when(f.drafts.findDraft(stale.id())).thenReturn(Optional.of(stale));
 
-        assertThatThrownBy(() -> f.aiDrafts.apply(f.teacher, a.id(), stale.id(),
+        assertThatThrownBy(() -> f.aiDrafts.applyDraft(f.teacher, a.id(), stale.id(),
                 new AssignmentCommands.ApplyDraft(a.version(), true, true)))
                 .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_DRAFT_STALE");
         assertThat(f.store.get(a.id()).skeleton()).isEqualTo(a.skeleton());
@@ -260,7 +260,7 @@ class AssignmentAiRevisionTest {
                 true);
         AssignmentAiDraft ready = ready(a, proposal, JsonNodeFactory.instance.objectNode());
 
-        assertThatThrownBy(() -> f.aiDrafts.apply(f.teacher, a.id(), ready.id(),
+        assertThatThrownBy(() -> f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(),
                 new AssignmentCommands.ApplyDraft(a.version(), true, true)))
                 .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_DRAFT_INVALID");
         assertThat(f.store.get(a.id()).skeleton()).isEqualTo(a.skeleton());
@@ -273,7 +273,7 @@ class AssignmentAiRevisionTest {
         AssignmentAiDraft ready = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.AI_TASK,
                 null, "r1", AssignmentAiDraft.Status.READY, proposal, provenance, a.version(), null,
                 f.teacher.accountId(), AssignmentFixtures.NOW, null);
-        when(f.drafts.find(ready.id())).thenReturn(Optional.of(ready));
+        when(f.drafts.findDraft(ready.id())).thenReturn(Optional.of(ready));
         when(f.drafts.markApplied(eq(ready.id()), any())).thenReturn(1);
         return ready;
     }

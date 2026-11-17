@@ -33,17 +33,17 @@ class EvaluationLifecycleServiceTest {
                 new ObjectMapper().findAndRegisterModules(), Clock.systemUTC(),
                 mock(edu.aiplatform.academics.contract.IClassAccess.class));
         service.onSubmitted(id);
-        verify(repo, never()).save(any());
+        verify(repo, never()).saveEvaluation(any());
         when(a.gradingMode()).thenReturn(GradingMode.GRADED);
         when(rubric.maxPoints(aid)).thenReturn(BigDecimal.TEN);
         when(rubric.listRubrics(aid)).thenReturn(List.of());
         when(repo.findForAssignmentAndClass(aid, cid)).thenReturn(List.of());
         service.onSubmitted(id);
-        verify(repo).save(argThat(e -> e.attemptId.equals(id) && e.state == EvaluationStatus.PENDING));
+        verify(repo).saveEvaluation(argThat(e -> e.attemptId.equals(id) && e.state == EvaluationStatus.PENDING));
         when(repo.findByAttemptId(id)).thenReturn(
                 Optional.of(Evaluation.createPendingEvaluation(id, aid, cid, sid, "hash", BigDecimal.TEN, "[]", Instant.now())));
         service.onSubmitted(id);
-        verify(repo, times(1)).save(any());
+        verify(repo, times(1)).saveEvaluation(any());
         for (var state : List.of(EvaluationStatus.FINALIZED, EvaluationStatus.PUBLISHED)) {
             clearInvocations(repo);
             var previous = Evaluation.createPendingEvaluation(UUID.randomUUID(), aid, cid, sid, "old", BigDecimal.TEN, "[]", Instant.now());
@@ -54,7 +54,7 @@ class EvaluationLifecycleServiceTest {
             when(repo.lockById(previous.id)).thenReturn(Optional.of(previous));
             service.onSubmitted(id);
             assertThat(previous.state).isEqualTo(EvaluationStatus.SUPERSEDED);
-            verify(repo).save(argThat(e -> !e.id.equals(previous.id) && e.attemptId.equals(id)
+            verify(repo).saveEvaluation(argThat(e -> !e.id.equals(previous.id) && e.attemptId.equals(id)
                     && e.state == EvaluationStatus.PENDING && e.score == null));
         }
     }

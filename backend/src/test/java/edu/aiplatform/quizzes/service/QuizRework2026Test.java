@@ -101,12 +101,12 @@ class QuizRework2026Test {
     }
 
     private static QuestionContent content(String stem, String... tags) {
-        return QuestionContent.of(QuestionType.MCQ_SINGLE, stem, List.of(new QuestionOption("1", "Đúng"),
+        return QuestionContent.createContent(QuestionType.MCQ_SINGLE, stem, List.of(new QuestionOption("1", "Đúng"),
                 new QuestionOption("2", "Sai")), List.of("1"), "Vì vậy", BigDecimal.ONE, Difficulty.EASY, List.of(tags));
     }
 
     private Question active(String stem, String... tags) {
-        Question q = Question.newBankDraft(subject, content(stem, tags), manager.accountId(), NOW).activate(NOW);
+        Question q = Question.createBankDraft(subject, content(stem, tags), manager.accountId(), NOW).activate(NOW);
         store.put(q);
         return q;
     }
@@ -138,7 +138,7 @@ class QuizRework2026Test {
         fill("t", 1);
         QuizDetail open = publication.publish(teacher, quiz.quiz().id(), quiz.quiz().version());
         assertThat(open.quiz().status()).isEqualTo(QuizStatus.OPEN);
-        assertThat(api(() -> publication.publish(teacher, quiz.quiz().id(), open.quiz().version())).code())
+        assertThat(api(() -> publication.publish(teacher, quiz.quiz().id(), open.quiz().version())).readCode())
                 .isEqualTo("QUIZ_NOT_DRAFT");
     }
 
@@ -189,8 +189,8 @@ class QuizRework2026Test {
         QuizDetail quiz = generatedQuiz(rule("t", 2));
         UUID id = quiz.quiz().id();
         var failed = (RuleViolationException) api(() -> publication.publish(teacher, id, quiz.quiz().version()));
-        assertThat(failed.code()).isEqualTo("QUIZ_PUBLISH_FAILED");
-        assertThat(failed.violations()).singleElement().satisfies(v -> {
+        assertThat(failed.readCode()).isEqualTo("QUIZ_PUBLISH_FAILED");
+        assertThat(failed.listViolations()).singleElement().satisfies(v -> {
             assertThat(v.code()).isEqualTo("POOL_INSUFFICIENT");
             assertThat(v.message()).contains("cần 2 câu").contains("cấp được 1");
         });
@@ -200,7 +200,7 @@ class QuizRework2026Test {
         assertThat(open.quiz().status()).isEqualTo(QuizStatus.OPEN);
         var retired = bank.retire(manager, last.id(), last.version());
         assertThat(retired.quizzesShortOfQuestions()).containsExactly("Sinh đề");
-        assertThat(api(() -> query.drawPaper(id, Set.of(), 1L)).code()).isEqualTo("QUIZ_POOL_INSUFFICIENT");
+        assertThat(api(() -> query.drawPaper(id, Set.of(), 1L)).readCode()).isEqualTo("QUIZ_POOL_INSUFFICIENT");
     }
 
     @Test
@@ -208,9 +208,9 @@ class QuizRework2026Test {
         QuizDetail quiz = authoring.createForClass(teacher, classId, "Sai");
         var invalid = (RuleViolationException) api(() -> papers.saveRules(teacher, quiz.quiz().id(), QuizPaperMode.GENERATED,
                 List.of(rule("t", 1), rule(" T ", 2), new RuleInput("x", null, 0, BigDecimal.ONE)), quiz.quiz().version()));
-        assertThat(invalid.violations()).extracting(v -> v.code()).contains("RULE_DUPLICATE", "COUNT_INVALID");
+        assertThat(invalid.listViolations()).extracting(v -> v.code()).contains("RULE_DUPLICATE", "COUNT_INVALID");
         fill("Thẻ A", 2);
-        assertThat(papers.bankTags(teacher, quiz.quiz().id())).singleElement().satisfies(t -> {
+        assertThat(papers.listBankTags(teacher, quiz.quiz().id())).singleElement().satisfies(t -> {
             assertThat(t.tag()).isEqualTo("Thẻ A");
             assertThat(t.activeCount()).isEqualTo(2);
             assertThat(t.byDifficulty()).containsOnly(Map.entry(Difficulty.EASY, 2));
@@ -227,9 +227,9 @@ class QuizRework2026Test {
     @Test
     void exactDuplicateIsRejectedAndNearDuplicateOnlyWarns() {
         active("Độ phức tạp của sắp xếp nổi bọt là gì?");
-        assertThat(api(() -> bank.create(manager, subject, content(" độ phức tạp của  SẮP XẾP nổi bọt là gì? "))).code())
+        assertThat(api(() -> bank.createQuestion(manager, subject, content(" độ phức tạp của  SẮP XẾP nổi bọt là gì? "))).readCode())
                 .isEqualTo("QUESTION_DUPLICATE");
-        var near = bank.create(manager, subject, content("Độ phức tạp của sắp xếp nổi bọt là bao nhiêu?"));
+        var near = bank.createQuestion(manager, subject, content("Độ phức tạp của sắp xếp nổi bọt là bao nhiêu?"));
         assertThat(near.similar()).singleElement().satisfies(s -> assertThat(s.percent()).isGreaterThanOrEqualTo(70));
     }
 
@@ -265,12 +265,12 @@ class QuizRework2026Test {
             assertThat(e.eventType()).isEqualTo(EventTypes.QUESTION_PROPOSED);
             assertThat(e.payload().get("recipientIds")).isEqualTo(List.of(manager.accountId().toString()));
         });
-        assertThat(store.questionRepository.activePool(subject)).as("chưa duyệt thì chưa vào kho").isEmpty();
+        assertThat(store.questionRepository.listActivePool(subject)).as("chưa duyệt thì chưa vào kho").isEmpty();
 
         UUID id = proposed.question().id();
-        assertThat(api(() -> bank.update(manager, id, content("Sửa lén"), proposed.question().version())).code())
+        assertThat(api(() -> bank.updateQuestion(manager, id, content("Sửa lén"), proposed.question().version())).readCode())
                 .isEqualTo("QUESTION_IS_PROPOSAL");
-        assertThat(api(() -> bank.reject(manager, id, "  ", proposed.question().version())).code())
+        assertThat(api(() -> bank.reject(manager, id, "  ", proposed.question().version())).readCode())
                 .isEqualTo("QUESTION_REASON_INVALID");
         var rejected = bank.reject(manager, id, "Đáp án chưa rõ", proposed.question().version());
         assertThat(rejected.question().status()).isEqualTo(QuestionStatus.REJECTED);
@@ -278,12 +278,12 @@ class QuizRework2026Test {
         assertThat(events.get(1).eventType()).isEqualTo(EventTypes.QUESTION_REVIEWED);
         assertThat(events.get(1).payload()).containsEntry("classId", classId.toString());
 
-        var again = proposals.resubmit(teacher, classId, id, content("Câu đã sửa rõ ràng", "t"), rejected.question().version());
+        var again = proposals.resubmitProposal(teacher, classId, id, content("Câu đã sửa rõ ràng", "t"), rejected.question().version());
         assertThat(again.question().status()).isEqualTo(QuestionStatus.PENDING);
         var approved = bank.approve(manager, id, again.question().version());
         assertThat(approved.question().status()).isEqualTo(QuestionStatus.ACTIVE);
-        assertThat(store.questionRepository.activePool(subject)).hasSize(1);
-        assertThat(api(() -> proposals.resubmit(teacher, classId, id, content("Sửa sau khi duyệt"), approved.question().version())).code())
+        assertThat(store.questionRepository.listActivePool(subject)).hasSize(1);
+        assertThat(api(() -> proposals.resubmitProposal(teacher, classId, id, content("Sửa sau khi duyệt"), approved.question().version())).readCode())
                 .isEqualTo("QUESTION_NOT_PENDING");
     }
 
@@ -291,18 +291,18 @@ class QuizRework2026Test {
     void proposalIsPrivateToItsAuthorAndCanBeWithdrawn() {
         var proposed = proposals.propose(teacher, classId, content("Câu của tôi"));
         UUID id = proposed.question().id();
-        assertThat(proposals.list(teacher, classId)).hasSize(1);
-        assertThat(proposals.list(otherTeacher, classId)).isEmpty();
-        assertThat(api(() -> proposals.withdraw(otherTeacher, classId, id, proposed.question().version())).code())
+        assertThat(proposals.listProposals(teacher, classId)).hasSize(1);
+        assertThat(proposals.listProposals(otherTeacher, classId)).isEmpty();
+        assertThat(api(() -> proposals.withdrawProposal(otherTeacher, classId, id, proposed.question().version())).readCode())
                 .isEqualTo("QUESTION_NOT_FOUND");
-        proposals.withdraw(teacher, classId, id, proposed.question().version());
-        assertThat(proposals.list(teacher, classId)).isEmpty();
+        proposals.withdrawProposal(teacher, classId, id, proposed.question().version());
+        assertThat(proposals.listProposals(teacher, classId)).isEmpty();
     }
 
     @Test
     void proposalCannotDuplicateTheBank() {
         active("Câu đã có");
-        assertThat(api(() -> proposals.propose(teacher, classId, content("CÂU ĐÃ CÓ"))).code()).isEqualTo("QUESTION_DUPLICATE");
+        assertThat(api(() -> proposals.propose(teacher, classId, content("CÂU ĐÃ CÓ"))).readCode()).isEqualTo("QUESTION_DUPLICATE");
     }
 
     @Test
@@ -316,7 +316,7 @@ class QuizRework2026Test {
         assertThat(result.items().get(1).code()).isEqualTo("QUESTION_VERSION_CONFLICT");
         assertThat(result.items().get(2).code()).isEqualTo("QUESTION_NOT_FOUND");
 
-        var draft = bank.create(manager, subject, content("Nháp nhập từ tệp"));
+        var draft = bank.createQuestion(manager, subject, content("Nháp nhập từ tệp"));
         var activated = bank.activateMany(manager, subject, List.of(new ReviewItem(draft.question().id(), draft.question().version())));
         assertThat(activated.succeeded()).isEqualTo(1);
     }
@@ -330,6 +330,6 @@ class QuizRework2026Test {
         var failed = (RuleViolationException) api(() -> authoring.saveItems(teacher, quiz.quiz().id(), List.of(
                 new QuizAuthoringService.ItemInput(v1.id(), null), new QuizAuthoringService.ItemInput(v2.question().id(), null)),
                 quiz.quiz().version()));
-        assertThat(failed.violations()).singleElement().satisfies(v -> assertThat(v.code()).isEqualTo("QUESTION_SAME_LINEAGE"));
+        assertThat(failed.listViolations()).singleElement().satisfies(v -> assertThat(v.code()).isEqualTo("QUESTION_SAME_LINEAGE"));
     }
 }

@@ -36,7 +36,7 @@ class AssignmentPublicationServiceTest {
         try {
             action.run();
         } catch (ApiException e) {
-            return e.code();
+            return e.readCode();
         }
         throw new AssertionError("Cần lỗi nghiệp vụ");
     }
@@ -56,10 +56,10 @@ class AssignmentPublicationServiceTest {
         Assignment draft = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), true);
         assertThat(code(() -> f.publication.publish(f.teacher, draft.id(), publish(draft.version(), later, end, null, 1))))
                 .as("phải hoàn tất bài rồi mới xếp lịch (yêu cầu 2026-11-11)").isEqualTo("ASSIGNMENT_NOT_FINALIZED");
-        assertThat(f.support.detail(f.teacher, draft, List.of()).permissions().canPublish()).isFalse();
+        assertThat(f.support.buildDetail(f.teacher, draft, List.of()).permissions().canPublish()).isFalse();
         Assignment finalized = f.authoring.review(f.teacher, draft.id(), draft.version()) == null ? null : f.store.get(draft.id());
         assertThat(finalized.status()).isEqualTo(AssignmentStatus.REVIEWED);
-        assertThat(f.support.detail(f.teacher, finalized, List.of()).permissions().canPublish()).isTrue();
+        assertThat(f.support.buildDetail(f.teacher, finalized, List.of()).permissions().canPublish()).isTrue();
         assertThat(f.publication.publish(f.teacher, finalized.id(), publish(finalized.version(), later, end, null, 1)).status())
                 .isEqualTo(AssignmentStatus.SCHEDULED);
         Assignment open = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of(heading("H1", "Mục"))), true);
@@ -87,11 +87,11 @@ class AssignmentPublicationServiceTest {
         Instant end = NOW.plus(Duration.ofDays(7));
         Assignment template = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT,
                 new DocumentModel(List.of(heading("H1", "Mục"))), true);
-        assertThat(f.authoring.detail(f.manager, template.id()).permissions().canPublish()).isFalse();
+        assertThat(f.authoring.loadAssignment(f.manager, template.id()).permissions().canPublish()).isFalse();
         assertThat(code(() -> f.publication.publish(f.manager, template.id(),
                 publish(template.version(), later, end, null, 1))))
                 .isEqualTo("SUBJECT_TEMPLATE_NOT_PUBLISHABLE");
-        assertThat(f.assignments.find(template.id()).orElseThrow().status()).isEqualTo(AssignmentStatus.DRAFT);
+        assertThat(f.assignments.findAssignment(template.id()).orElseThrow().status()).isEqualTo(AssignmentStatus.DRAFT);
     }
 
     @Test
@@ -102,7 +102,7 @@ class AssignmentPublicationServiceTest {
         assertThat(detail.status()).isEqualTo(AssignmentStatus.SCHEDULED);
         // Bài có chấm nộp không giới hạn khi còn hạn: số lượt gửi lên bị bỏ qua (yêu cầu 2026-11-10).
         assertThat(detail.maxAttempts()).isNull();
-        assertThat(f.rubricsOf(a.id())).allMatch(AssignmentRubric::locked);
+        assertThat(f.rubricsOf(a.id())).allMatch(AssignmentRubric::hasLocked);
         verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_PUBLISHED")));
         verify(f.listener, never()).onOpened(any());
     }
@@ -144,7 +144,7 @@ class AssignmentPublicationServiceTest {
     @Test
     void lateWindowCanStillBeExtended() {
         Assignment put = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
-        Assignment late = put.withSchedule(AssignmentStatus.OPEN, NOW.minus(Duration.ofDays(2)), NOW.minus(Duration.ofHours(1)),
+        Assignment late = put.applySchedule(AssignmentStatus.OPEN, NOW.minus(Duration.ofDays(2)), NOW.minus(Duration.ofHours(1)),
                 NOW.plus(Duration.ofDays(1)), 2, NOW);
         f.store.put(late.id(), late);
         AssignmentViews.Detail extended = f.publication.changeSchedule(f.teacher, late.id(), new AssignmentCommands.Schedule(
@@ -174,7 +174,7 @@ class AssignmentPublicationServiceTest {
     void scannerOpensDueAssignmentsOnceAndClosesExpired() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.REVIEWED, new DocumentModel(List.of()), true);
         Assignment scheduled = f.withStatus(a, AssignmentStatus.SCHEDULED, NOW.minusSeconds(30), NOW.plus(Duration.ofDays(1)));
-        when(f.assignments.dueToOpen(any(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(List.of(scheduled.id()));
+        when(f.assignments.listDueToOpen(any(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(List.of(scheduled.id()));
         PlatformTransactionManager transactions = f.transactions;
         AssignmentScheduleScanner scanner = new AssignmentScheduleScanner(f.assignments, f.lifecycle, transactions);
         scanner.scan(NOW);

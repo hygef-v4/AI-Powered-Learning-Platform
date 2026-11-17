@@ -39,7 +39,7 @@ it("shows subject info like the teacher class info and an overview of the subjec
 });
 it("hosts every teacher tab including info and gradebook",()=>{
  teacherClassTabs.register({key:"test-teacher",order:1,component:({tab})=><p>Extension {tab}</p>});
- render(<ReadOnlyClassPage audience="teacher" value={value} onBack={()=>{}}/>);
+ render(<ReadOnlyClassPage audience="teacher" value={value}/>);
  expect(screen.getByText("Extension info")).toBeInTheDocument(); fireEvent.click(screen.getByRole("tab",{name:"Chấm điểm"})); expect(screen.getByText("Extension gradebook")).toBeInTheDocument();
 });
 it("accepts empty authorized classes and never falls back on server failure",async()=>{

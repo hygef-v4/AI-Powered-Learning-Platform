@@ -47,46 +47,46 @@ public class MyGroupService {
     }
 
     @Transactional(readOnly = true)
-    public MyGroupView myGroup(Actor actor, UUID classId) {
+    public MyGroupView loadMyGroup(Actor actor, UUID classId) {
         var ref = access.requireStudent(actor, classId);
         Optional<ClassGroup> found = groups.findGroupOf(classId, actor.accountId());
         if (found.isEmpty()) {
             return new MyGroupView(classId, ref.status().name(), null, null, null, List.of(), List.of(), false, List.of(), false);
         }
         ClassGroup group = found.get();
-        List<Member> members = group.memberIds().stream().map(id -> member(id, group)).toList();
+        List<Member> members = group.memberIds().stream().map(id -> buildMember(id, group)).toList();
         Map<UUID, GroupDocument> docs = documents.listByGroup(group.id()).stream()
                 .collect(Collectors.toMap(GroupDocument::assignmentId, Function.identity(), (a, b) -> a));
         List<GroupWork> works = assignments.listForClass(classId).stream()
                 .filter(a -> a.submissionMode() == SubmissionMode.GROUP && a.status() != AssignmentStatus.DRAFT
                         && a.status() != AssignmentStatus.REVIEWED && a.status() != AssignmentStatus.SCHEDULED)
-                .map(a -> work(a, docs.get(a.assignmentId()))).toList();
-        List<RequestSummary> mine = groups.latestOf(group.id(), actor.accountId(), 2).stream()
-                .map(RequestSummary::of).toList();
+                .map(a -> buildGroupWork(a, docs.get(a.assignmentId()))).toList();
+        List<RequestSummary> mine = groups.listLatest(group.id(), actor.accountId(), 2).stream()
+                .map(RequestSummary::createRequestSummary).toList();
         return new MyGroupView(classId, ref.status().name(), group.id(), group.name(), group.leaderId(), members, works,
                 groups.findPending(group.id()).isPresent(), mine, actor.accountId().equals(group.leaderId()));
     }
 
     /** Nhóm của một sinh viên cho popup Student Detail của giảng viên. */
     @Transactional(readOnly = true)
-    public StudentGroup studentGroup(Actor actor, UUID classId, UUID studentId) {
+    public StudentGroup loadStudentGroup(Actor actor, UUID classId, UUID studentId) {
         access.requireTeacher(actor, classId);
         return groups.findGroupOf(classId, studentId)
                 .map(g -> new StudentGroup(g.id(), g.name(), studentId.equals(g.leaderId()), g.memberIds().size()))
                 .orElse(new StudentGroup(null, null, false, 0));
     }
 
-    private GroupWork work(AssignmentView a, GroupDocument d) {
+    private GroupWork buildGroupWork(AssignmentView a, GroupDocument d) {
         if (d == null) {
             return new GroupWork(a.assignmentId(), a.title(), a.closesAt(), null, 0, 0, false, null, false);
         }
         List<GroupSection> sections = documents.listSections(d.id());
         int done = (int) sections.stream().filter(s -> s.status() == GroupSection.Status.DONE).count();
-        return new GroupWork(a.assignmentId(), a.title(), a.closesAt(), d.id(), done, sections.size(), d.submitted(),
+        return new GroupWork(a.assignmentId(), a.title(), a.closesAt(), d.id(), done, sections.size(), d.hasSubmitted(),
                 d.submittedAt(), d.late());
     }
 
-    private Member member(UUID id, ClassGroup group) {
+    private Member buildMember(UUID id, ClassGroup group) {
         Optional<AccountContact> c;
         try {
             c = accounts.getContact(id);
@@ -113,7 +113,7 @@ public class MyGroupService {
     public record RequestSummary(UUID id, LeaderChangeRequest.Status status, UUID proposedLeaderId, String reason,
                                  String decisionReason, Instant createdAt, Instant decidedAt) {
 
-        static RequestSummary of(LeaderChangeRequest r) {
+        static RequestSummary createRequestSummary(LeaderChangeRequest r) {
             return new RequestSummary(r.id(), r.status(), r.proposedLeaderId(), r.reason(), r.decisionReason(),
                     r.createdAt(), r.decidedAt());
         }

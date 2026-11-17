@@ -31,15 +31,15 @@ public class AiTaskResultHandlerRegistry {
     }
 
     /** Dùng trong test với danh sách cố định. */
-    static AiTaskResultHandlerRegistry of(List<IAiTaskResultHandler> handlers) {
+    static AiTaskResultHandlerRegistry createRegistry(List<IAiTaskResultHandler> handlers) {
         return new AiTaskResultHandlerRegistry(() -> handlers);
     }
 
-    public Optional<IAiTaskResultHandler> find(String taskType) {
-        return Optional.ofNullable(handlers().get(taskType));
+    public Optional<IAiTaskResultHandler> findHandler(String taskType) {
+        return Optional.ofNullable(listHandlers().get(taskType));
     }
 
-    private Map<String, IAiTaskResultHandler> handlers() {
+    private Map<String, IAiTaskResultHandler> listHandlers() {
         Map<String, IAiTaskResultHandler> current = handlers;
         if (current == null) {
             synchronized (this) {

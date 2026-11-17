@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Alert, Button, Pill } from "@/shared/ui";
+import { Alert, Button, Card, Pill } from "@/shared/ui";
 import { getGroups, getStudentGroup } from "../api";
 import type { GroupSetView, StudentGroup } from "../model/types";
+import { msg } from "@/i18n/msg";
 
 /** Bộ nhóm của lớp; tải lại khi quay về cửa sổ (vd. sau khi sửa nhóm ở tab khác). */
 function useGroupSetState(classId: string) {
@@ -15,7 +16,7 @@ function useGroupSetState(classId: string) {
 
   useEffect(() => {
     let active = true;
-    const load = () =>
+    const loadGroups = () =>
       getGroups(classId).then(
         (loaded) => {
           if (active) setState({ classId, set: loaded, error: false });
@@ -30,11 +31,11 @@ function useGroupSetState(classId: string) {
           }
         },
       );
-    void load();
-    window.addEventListener("focus", load);
+    void loadGroups();
+    window.addEventListener("focus", loadGroups);
     return () => {
       active = false;
-      window.removeEventListener("focus", load);
+      window.removeEventListener("focus", loadGroups);
     };
   }, [classId]);
 
@@ -66,15 +67,15 @@ export function StudentGroupInfo({ classId, studentId }: { classId: string; stud
   if (!group) return null;
   return (
     <div className="flex items-center gap-2 text-[13px]">
-      <span className="text-muted">Nhóm:</span>
+      <span className="text-muted">{msg("groups.components.TeacherGroupWidgets.groups")}</span>
       {group.groupId ? (
         <>
           <span className="font-semibold text-ink">{group.name}</span>
-          <span className="text-xs text-muted">{group.memberCount} thành viên</span>
-          {group.leader && <Pill tone="warning">Trưởng nhóm</Pill>}
+          <span className="text-xs text-muted">{group.memberCount} {msg("groups.components.TeacherGroupWidgets.members")}</span>
+          {group.leader && <Pill tone="warning">{msg("groups.components.TeacherGroupWidgets.groupLeader")}</Pill>}
         </>
       ) : (
-        <span className="text-muted">Chưa có nhóm</span>
+        <span className="text-muted">{msg("groups.components.TeacherGroupWidgets.noGroup")}</span>
       )}
     </div>
   );
@@ -85,14 +86,14 @@ export function GroupAssignmentPanel({ classId }: { classId: string }) {
   const set = useGroupSet(classId);
   if (!set) return null;
   const errors: string[] = [];
-  if (set.groups.length === 0) errors.push("Lớp chưa có nhóm.");
-  if (set.groups.some((g) => !g.leaderId)) errors.push("Có nhóm chưa có trưởng nhóm.");
-  if (set.groups.some((g) => !g.members.some((m) => m.active))) errors.push("Có nhóm không có thành viên đang học.");
+  if (set.groups.length === 0) errors.push(msg("groups.components.TeacherGroupWidgets.theClassHasNoGroups"));
+  if (set.groups.some((g) => !g.leaderId)) errors.push(msg("groups.components.TeacherGroupWidgets.someGroupsHaveNoLeader"));
+  if (set.groups.some((g) => !g.members.some((m) => m.active))) errors.push(msg("groups.components.TeacherGroupWidgets.someGroupsHaveNoActive"));
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-4">
-      <p className="text-[13px] font-bold text-ink">Kiểm tra sẵn sàng · {set.groups.length} nhóm</p>
+    <Card className="flex flex-col gap-2">
+      <p className="text-[13px] font-bold text-ink">{msg("groups.components.TeacherGroupWidgets.readinessCheck")}{set.groups.length} {msg("groups.components.TeacherGroupWidgets.groups2")}</p>
       {errors.length > 0 && (
-        <Alert tone="danger" title="Chưa phát hành được">
+        <Alert tone="danger" title={msg("groups.components.TeacherGroupWidgets.cannotBePublishedYet")}>
           <ul className="list-disc pl-4">
             {errors.map((e) => (
               <li key={e}>{e}</li>
@@ -101,15 +102,14 @@ export function GroupAssignmentPanel({ classId }: { classId: string }) {
         </Alert>
       )}
       {set.ungrouped.length > 0 && (
-        <Alert tone="warning">{set.ungrouped.length} sinh viên chưa có nhóm; xác nhận khi phát hành nếu vẫn muốn giao bài.</Alert>
+        <Alert tone="warning">{set.ungrouped.length} {msg("groups.components.TeacherGroupWidgets.studentsHaveNoGroupConfirm")}</Alert>
       )}
-      {errors.length === 0 && set.ungrouped.length === 0 && <Alert tone="success">Lớp đã sẵn sàng cho bài nhóm.</Alert>}
+      {errors.length === 0 && set.ungrouped.length === 0 && <Alert tone="success">{msg("groups.components.TeacherGroupWidgets.theClassIsReadyFor")}</Alert>}
       <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" icon="groups" onClick={() => window.open(`/teaching/classes/${classId}?tab=students`, "_blank", "noopener")}>
-          Mở tab Sinh viên
-        </Button>
-        <span className="text-xs text-muted">Sửa nhóm ở tab mới; quay lại đây hộp này tự cập nhật.</span>
+          {msg("groups.components.TeacherGroupWidgets.openTheStudentsTab")}</Button>
+        <span className="text-xs text-muted">{msg("groups.components.TeacherGroupWidgets.editGroupsInTheNew")}</span>
       </div>
-    </div>
+    </Card>
   );
 }

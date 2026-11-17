@@ -3,14 +3,15 @@
 import { useId, useState, type FormEvent } from "react";
 import { ApiError } from "@/shared/api/client";
 import { Button } from "@/shared/ui/Button";
-import { Field } from "@/shared/ui/inputs";
+import { Field } from "@/shared/ui/Inputs";
 import { Section } from "@/shared/ui/Section";
 import { changePassword } from "../../api";
 import { PasswordChecklist } from "../../components/PasswordChecklist";
 import { SecretInput } from "../../components/SecretInput";
-import { PASSWORD_VIOLATION_MESSAGES, passwordAcceptable } from "../../model/passwordRules";
+import { PASSWORD_VIOLATION_MESSAGES, isPasswordAcceptable } from "../../model/passwordRules";
+import { msg } from "@/i18n/msg";
 
-export const PASSWORD_CHANGED_MESSAGE = "Đã đổi mật khẩu";
+export const PASSWORD_CHANGED_MESSAGE = msg("identity.profile.components.PasswordChangeForm.passwordChanged");
 
 /**
  * Khối Đổi mật khẩu nằm ngay trên trang Hồ sơ (UC 05, design `c06`): mật khẩu hiện tại, mật khẩu mới và nhập lại
@@ -25,20 +26,20 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const acceptable = passwordAcceptable(password);
+  const acceptable = isPasswordAcceptable(password);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (current.length === 0) {
-      setError("Nhập mật khẩu hiện tại.");
+      setError(msg("identity.profile.components.PasswordChangeForm.enterYourCurrentPassword"));
       return;
     }
     if (!acceptable) {
-      setError("Mật khẩu mới cần ít nhất 8 ký tự, có cả chữ và số.");
+      setError(msg("identity.profile.components.PasswordChangeForm.theNewPasswordNeedsAt"));
       return;
     }
     if (password !== confirm) {
-      setError("Hai mật khẩu mới chưa khớp.");
+      setError(msg("identity.profile.components.PasswordChangeForm.theTwoNewPasswordsDo"));
       return;
     }
     setBusy(true);
@@ -56,15 +57,15 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
         violations?: string[];
       };
       if (problem.code === "CURRENT_PASSWORD_INVALID") {
-        setError("Mật khẩu hiện tại không đúng.");
+        setError(msg("identity.profile.components.PasswordChangeForm.theCurrentPasswordIsIncorrect"));
         setCurrent("");
       } else if (problem.code === "TOO_MANY_ATTEMPTS") {
-        setError("Nhập sai mật khẩu hiện tại quá nhiều lần, hãy thử lại sau ít phút.");
+        setError(msg("identity.profile.components.PasswordChangeForm.tooManyWrongAttemptsFor"));
         setCurrent("");
       } else if (problem.code === "PASSWORD_POLICY") {
         setError((problem.violations ?? []).map((v) => PASSWORD_VIOLATION_MESSAGES[v] ?? v).join(" "));
       } else {
-        setError("Hệ thống tạm bận, vui lòng thử lại sau.");
+        setError(msg("identity.profile.components.PasswordChangeForm.theSystemIsBusyPlease"));
       }
     } finally {
       setBusy(false);
@@ -73,13 +74,13 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
 
   return (
     <Section
-      title="Đổi mật khẩu"
+      title={msg("identity.profile.components.PasswordChangeForm.changePassword")}
       icon="lock_reset"
-      description="Các thiết bị khác sẽ bị đăng xuất. Phiên hiện tại được giữ lại."
+      description={msg("identity.profile.components.PasswordChangeForm.otherDevicesWillBeSigned")}
     >
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Mật khẩu hiện tại" htmlFor={currentId}>
+          <Field label={msg("identity.profile.components.PasswordChangeForm.currentPassword")} htmlFor={currentId}>
             <SecretInput
               id={currentId}
               autoComplete="current-password"
@@ -89,7 +90,7 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
           </Field>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Mật khẩu mới" htmlFor={newId}>
+          <Field label={msg("identity.profile.components.PasswordChangeForm.newPassword")} htmlFor={newId}>
             <SecretInput
               id={newId}
               autoComplete="new-password"
@@ -97,7 +98,7 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
               onChange={(e) => setPassword(e.target.value)}
             />
           </Field>
-          <Field label="Nhập lại mật khẩu mới" htmlFor={confirmId}>
+          <Field label={msg("identity.profile.components.PasswordChangeForm.reEnterNewPassword")} htmlFor={confirmId}>
             <SecretInput
               id={confirmId}
               autoComplete="new-password"
@@ -114,8 +115,7 @@ export function PasswordChangeForm({ onChanged }: { onChanged: () => void }) {
         )}
         <div className="flex justify-end border-t border-line pt-5">
           <Button type="submit" icon="key" disabled={busy}>
-            Đổi mật khẩu
-          </Button>
+            {msg("identity.profile.components.PasswordChangeForm.changePassword")}</Button>
         </div>
       </form>
     </Section>

@@ -45,7 +45,7 @@ public class FigureCropper {
             if (source == null) {
                 return Optional.empty();
             }
-            int[] area = pixelArea(box, source.getWidth(), source.getHeight());
+            int[] area = calculatePixelArea(box, source.getWidth(), source.getHeight());
             BufferedImage cropped = source.getSubimage(area[0], area[1], area[2], area[3]);
             byte[] png = encode(cropped, "png");
             byte[] bytes = png.length <= MAX_PNG_BYTES ? png : ImportPageNormalizer.encodeJpeg(cropped);
@@ -60,7 +60,7 @@ public class FigureCropper {
     }
 
     /** Kẹp vùng vào [0, 1], mỗi chiều tối thiểu 2%, nới 1% mỗi phía; trả {x, y, rộng, cao} theo pixel. */
-    static int[] pixelArea(Box box, int width, int height) {
+    static int[] calculatePixelArea(Box box, int width, int height) {
         double w = Math.max(MIN_SIDE, clamp(box.w()));
         double h = Math.max(MIN_SIDE, clamp(box.h()));
         double left = clamp(Math.min(clamp(box.x()), 1 - w) - PADDING);

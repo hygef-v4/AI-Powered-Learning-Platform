@@ -69,8 +69,8 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     private final IProviderGateway gateway;
     private final KeyCipher cipher;
     private final JsonSchemaChecker schemas;
-    private final QuotaReservationService quota;
-    private final AiUsageService usage;
+    private final QuotaReservationService quotaReservationService;
+    private final AiUsageService aiUsageService;
     private final AiTaskDelivery delivery;
     private final AiProperties properties;
     private final ProviderCatalog catalog;
@@ -79,19 +79,19 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     private final Clock clock;
     /** API chung: tối đa 2 lời gọi đồng thời mỗi provider trong một worker (NFR-U06-03). */
     private final Map<AiProvider, Semaphore> sharedSlots = new EnumMap<>(AiProvider.class);
-    private AiImageSourceRegistry imageSources = AiImageSourceRegistry.of(List.of());
+    private AiImageSourceRegistry imageSources = AiImageSourceRegistry.createRegistry(List.of());
 
     public AiTaskJobHandler(AiTaskRepository tasks, AiConnectionRepository connections, IProviderGateway gateway,
-                            KeyCipher cipher, JsonSchemaChecker schemas, QuotaReservationService quota,
-                            AiUsageService usage, AiTaskDelivery delivery, AiProperties properties, ObjectMapper json,
+                            KeyCipher cipher, JsonSchemaChecker schemas, QuotaReservationService quotaReservationService,
+                            AiUsageService aiUsageService, AiTaskDelivery delivery, AiProperties properties, ObjectMapper json,
                             PlatformTransactionManager transactionManager, Clock clock) {
         this.tasks = tasks;
         this.connections = connections;
         this.gateway = gateway;
         this.cipher = cipher;
         this.schemas = schemas;
-        this.quota = quota;
-        this.usage = usage;
+        this.quotaReservationService = quotaReservationService;
+        this.aiUsageService = aiUsageService;
         this.delivery = delivery;
         this.properties = properties;
         this.catalog = new ProviderCatalog(properties);
@@ -150,7 +150,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     public void handle(JobMessage message) {
         UUID taskId = UUID.fromString(String.valueOf(message.payload().get("taskId")));
         // Lấy chỗ trước mốc gửi: hết chỗ thì U03 thử lại sau, task vẫn QUEUED nên không bị coi là đã gọi (P2).
-        Semaphore slot = sharedSlot(taskId);
+        Semaphore slot = acquireSharedSlot(taskId);
         if (slot != null && !slot.tryAcquire()) {
             throw new RetryableJobException("API chung của nhà cung cấp đang đủ lời gọi đồng thời");
         }
@@ -172,7 +172,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                 Outcome outcome = callProvider(dispatch);
                 // Quá tải hoặc vượt tần suất (429, 503, 529) thường chỉ thoáng qua: đợi rồi gọi lại cùng khóa vài lần
                 // trước khi chuyển khóa (lỗi 2026-11-05: Gemini 503 dù kiểm tra khóa đạt).
-                for (int retry = 0; retry < transientWaits.length && transientFailure(outcome); retry++) {
+                for (int retry = 0; retry < transientWaits.length && isTransientFailure(outcome); retry++) {
                     pause(transientWaits[retry]);
                     outcome = callProvider(dispatch);
                 }
@@ -180,7 +180,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                 Dispatch current = dispatch;
                 Outcome result = outcome;
                 dispatch = transactions.execute(status -> finish(taskId, result));
-                String outcomeKind = result.error() == null ? "READY" : result.error().kind().name() + "/" + result.error().status();
+                String outcomeKind = result.error() == null ? "READY" : result.error().readKind().name() + "/" + result.error().readStatus();
                 log.info("AI task provider finished taskId={} requestRef={} taskType={} targetRef={} provider={} outcome={} "
                                 + "durationMs={} fallback={}", current.task().id(), current.task().requestRef(),
                         current.task().taskType(), current.task().targetRef(), current.connection().provider(), outcomeKind,
@@ -195,7 +195,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     }
 
     /** Semaphore của provider khi task dùng API chung và còn chờ gọi; task cá nhân hay đã xong thì không giới hạn. */
-    private Semaphore sharedSlot(UUID taskId) {
+    private Semaphore acquireSharedSlot(UUID taskId) {
         try {
             return tasks.findById(taskId)
                     .filter(t -> t.source() == AiSource.SHARED && t.state() == AiTaskState.QUEUED)
@@ -218,7 +218,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     /** Khóa task; trả dữ liệu để gọi provider khi vừa chuyển {@code RUNNING}, rỗng khi không cần gọi. */
     private Dispatch start(UUID taskId) {
         AiTask task = tasks.lock(taskId).orElse(null);
-        if (task == null || task.finished()) {
+        if (task == null || task.hasFinished()) {
             return null;
         }
         Instant now = clock.instant();
@@ -228,7 +228,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             if (task.dispatchedAt() != null && !task.dispatchedAt().plus(callWindow()).isBefore(now)) {
                 return null;
             }
-            unknown(task, "Không rõ kết quả của lần gọi trước");
+            markUnknown(task, "Không rõ kết quả của lần gọi trước");
             return null;
         }
         AiConnection connection = task.connectionId() == null ? null
@@ -237,14 +237,14 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         if (connection == null || connection.status() != Status.ACTIVE) {
             // Khóa đã tắt hoặc thu hồi sau khi gửi: dùng khóa kế tiếp nếu còn.
             if (running.reservedTokens() != null) {
-                quota.release(running.actorId(), running.quotaDay(), running.reservedTokens());
+                quotaReservationService.release(running.actorId(), running.quotaDay(), running.reservedTokens());
             }
-            Dispatch next = next(running.retryWith(running.source(), running.connectionId(), running.provider(),
+            Dispatch next = chooseNextDispatch(running.retryWith(running.source(), running.connectionId(), running.provider(),
                     running.model(), running.maxOutputTokens(), null, null, now));
             if (next == null) {
-                save(running.retryWith(running.source(), running.connectionId(), running.provider(), running.model(),
+                saveTask(running.retryWith(running.source(), running.connectionId(), running.provider(), running.model(),
                         running.maxOutputTokens(), null, null, now).moveTo(AiTaskState.FAILED, now)
-                        .withError("Kết nối AI đã bị tắt hoặc thu hồi"));
+                        .failWithError("Kết nối AI đã bị tắt hoặc thu hồi"));
             }
             return next;
         }
@@ -254,14 +254,14 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             fail(task, MISSING_IMAGES, false);
             return null;
         }
-        save(running);
+        saveTask(running);
         return dispatch(running, connection, images);
     }
 
     private Dispatch dispatch(AiTask task, AiConnection connection, List<AiImage> images) {
         String key = cipher.decryptConnectionKey(connection);
         JsonNode prompt = readPrompt(task.inputPayload());
-        return new Dispatch(task, connection, new Request(task.model(), key, text(prompt, "system"), text(prompt, "user"),
+        return new Dispatch(task, connection, new Request(task.model(), key, readText(prompt, "system"), readText(prompt, "user"),
                 task.outputSchema(), task.maxOutputTokens(), properties.requestTimeout(), images));
     }
 
@@ -269,7 +269,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     private List<AiImage> loadImages(JsonNode prompt) {
         List<AiImage> images = new ArrayList<>();
         for (JsonNode ref : prompt.path("images")) {
-            Optional<AiImage> image = imageSources.find(ref.path("source").asText(""))
+            Optional<AiImage> image = imageSources.findSource(ref.path("source").asText(""))
                     .flatMap(source -> source.load(ref.path("ref").asText("")));
             if (image.isEmpty() || image.get().bytes() == null || image.get().bytes().length == 0) {
                 return null;
@@ -283,13 +283,13 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
      * Khóa kế tiếp sau khóa của task (đã quyết toán quota lần trước): API chung theo thứ tự rồi API cá nhân của người
      * gửi; khóa chung mà hết hạn mức thì bỏ qua. Lưu task với khóa mới; hết khóa thì trả rỗng, task chưa đổi.
      */
-    private Dispatch next(AiTask task) {
+    private Dispatch chooseNextDispatch(AiTask task) {
         if (Thread.currentThread().isInterrupted()) return null;
         List<AiConnection> order = new ArrayList<>();
         if (task.source() == AiSource.SHARED) {
-            order.addAll(ConnectionOrder.active(connections.listInstitutional(), catalog));
+            order.addAll(ConnectionOrder.filterActive(connections.listInstitutional(), catalog));
         }
-        order.addAll(ConnectionOrder.active(connections.listPersonal(task.actorId()), catalog));
+        order.addAll(ConnectionOrder.filterActive(connections.listPersonal(task.actorId()), catalog));
         int at = -1;
         for (int i = 0; i < order.size(); i++) {
             if (order.get(i).id().equals(task.connectionId())) {
@@ -298,12 +298,12 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         }
         if (at < 0 && task.source() == AiSource.PERSONAL) {
             // Khóa cá nhân đang dùng đã tắt: thử các khóa cá nhân xếp sau nó theo nhà cung cấp.
-            int rank = ConnectionOrder.providerRank(task.provider());
-            order.removeIf(c -> ConnectionOrder.providerRank(c.provider()) <= rank);
+            int rank = ConnectionOrder.rankProvider(task.provider());
+            order.removeIf(c -> ConnectionOrder.rankProvider(c.provider()) <= rank);
         }
         JsonNode prompt = readPrompt(task.inputPayload());
         int imageCount = prompt.path("images").size();
-        int promptChars = text(prompt, "system").length() + text(prompt, "user").length()
+        int promptChars = readText(prompt, "system").length() + readText(prompt, "user").length()
                 + imageCount * AiTokenEstimate.IMAGE_PROMPT_CHARS;
         List<AiImage> images = imageCount == 0 ? List.of() : loadImages(prompt);
         if (images == null) {
@@ -317,13 +317,13 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             if (imageCount > 0 && !catalog.supportsImages(candidate.provider(), candidate.model())) {
                 continue;
             }
-            int max = Math.min(task.maxOutputTokens(), catalog.maxOutputTokens(candidate.provider()));
+            int max = Math.min(task.maxOutputTokens(), catalog.readMaxOutputTokens(candidate.provider()));
             Long reserved = null;
             LocalDate day = null;
             AiSource source = candidate.scope() == AiConnection.Scope.INSTITUTIONAL ? AiSource.SHARED : AiSource.PERSONAL;
             if (source == AiSource.SHARED) {
                 try {
-                    QuotaReservationService.Reservation reservation = quota.reserve(task.actorId(),
+                    QuotaReservationService.Reservation reservation = quotaReservationService.reserve(task.actorId(),
                             QuotaReservationService.estimate(promptChars, max));
                     reserved = reservation.tokens();
                     day = reservation.day();
@@ -333,7 +333,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             }
             AiTask moved = task.retryWith(source, candidate.id(), candidate.provider(), candidate.model(), max, reserved,
                     day, clock.instant());
-            save(moved);
+            saveTask(moved);
             return dispatch(tasks.findById(moved.id()).orElse(moved), candidate, images);
         }
         return null;
@@ -342,10 +342,10 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     /** Thời gian đợi trước mỗi lần gọi lại khi nhà cung cấp quá tải; test đặt rỗng để không đợi. */
     Duration[] transientWaits = {Duration.ofSeconds(2), Duration.ofSeconds(5)};
 
-    private static boolean transientFailure(Outcome outcome) {
+    private static boolean isTransientFailure(Outcome outcome) {
         ProviderException e = outcome.error();
-        return e != null && e.kind() == FailureKind.REJECTED
-                && (e.status() == 429 || e.status() == 503 || e.status() == 529);
+        return e != null && e.readKind() == FailureKind.REJECTED
+                && (e.readStatus() == 429 || e.readStatus() == 503 || e.readStatus() == 529);
     }
 
     private static void pause(Duration wait) {
@@ -376,68 +376,68 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         if (outcome.error() == null) {
             Response response = outcome.response();
             Optional<String> invalid = response.output().length() > MAX_RESULT_CHARS ? Optional.of("quá dài")
-                    : schemas.check(task.outputSchema(), response.output());
+                    : schemas.validateValue(task.outputSchema(), response.output());
             settle(task, response.usage(), invalid.isEmpty() ? "READY" : "INVALID_OUTPUT");
             if (invalid.isPresent()) {
                 // Chỉ ghi vị trí lệch schema để chẩn đoán, không ghi nội dung kết quả.
                 log.warn("AI task output rejected taskId={} taskType={} reason={}", task.id(), task.taskType(),
-                        invalid.get().length() > 300 ? invalid.get().substring(0, 300) : invalid.get());                save(task.moveTo(AiTaskState.FAILED, clock.instant()).withResult(null, response.requestId())
-                        .withError("Kết quả AI không đúng định dạng yêu cầu"));
+                        invalid.get().length() > 300 ? invalid.get().substring(0, 300) : invalid.get());                saveTask(task.moveTo(AiTaskState.FAILED, clock.instant()).completeWithResult(null, response.requestId())
+                        .failWithError("Kết quả AI không đúng định dạng yêu cầu"));
             } else {
-                save(task.withResult(response.output(), response.requestId()).moveTo(AiTaskState.READY, clock.instant()));
+                saveTask(task.completeWithResult(response.output(), response.requestId()).moveTo(AiTaskState.READY, clock.instant()));
             }
             return null;
         }
         ProviderException e = outcome.error();
         // Quyết toán lần gọi lỗi như trước, rồi thử khóa kế tiếp; hết khóa mới kết thúc task.
-        switch (e.kind()) {
+        switch (e.readKind()) {
             case REJECTED -> {
                 if (task.reservedTokens() != null) {
-                    quota.release(task.actorId(), task.quotaDay(), task.reservedTokens());
+                    quotaReservationService.release(task.actorId(), task.quotaDay(), task.reservedTokens());
                 }
-                usage.recordProvider(task.actorId(), source(task), task.id(), task.provider(), task.model(), task.taskType(),
+                aiUsageService.recordProvider(task.actorId(), resolveSource(task), task.id(), task.provider(), task.model(), task.taskType(),
                         "REJECTED", null, null);
             }
-            case CHARGED -> settle(task, e.usage(), "FAILED");
+            case CHARGED -> settle(task, e.readUsage(), "FAILED");
             case UNKNOWN -> {
                 if (task.reservedTokens() != null) {
-                    quota.chargeReserved(task.actorId(), task.quotaDay(), task.reservedTokens());
+                    quotaReservationService.chargeReserved(task.actorId(), task.quotaDay(), task.reservedTokens());
                 }
-                usage.recordProvider(task.actorId(), source(task), task.id(), task.provider(), task.model(), task.taskType(),
+                aiUsageService.recordProvider(task.actorId(), resolveSource(task), task.id(), task.provider(), task.model(), task.taskType(),
                         "UNKNOWN", null, task.reservedTokens());
             }
         }
         AiTask settled = task.retryWith(task.source(), task.connectionId(), task.provider(), task.model(),
                 task.maxOutputTokens(), null, null, task.dispatchedAt());
-        Dispatch next = next(settled);
+        Dispatch next = chooseNextDispatch(settled);
         if (next != null) {
             return next;
         }
-        AiTaskState end = e.kind() == FailureKind.UNKNOWN ? AiTaskState.UNKNOWN : AiTaskState.FAILED;
-        save(settled.moveTo(end, clock.instant()).withError(e.getMessage()));
+        AiTaskState end = e.readKind() == FailureKind.UNKNOWN ? AiTaskState.UNKNOWN : AiTaskState.FAILED;
+        saveTask(settled.moveTo(end, clock.instant()).failWithError(e.getMessage()));
         return null;
     }
 
     /** Thất bại không tính token: giải phóng giữ chỗ (BR-U06-14). */
     private void fail(AiTask task, String error, boolean recordUsage) {
         if (task.reservedTokens() != null) {
-            quota.release(task.actorId(), task.quotaDay(), task.reservedTokens());
+            quotaReservationService.release(task.actorId(), task.quotaDay(), task.reservedTokens());
         }
         if (recordUsage) {
-            usage.recordProvider(task.actorId(), source(task), task.id(), task.provider(), task.model(), task.taskType(),
+            aiUsageService.recordProvider(task.actorId(), resolveSource(task), task.id(), task.provider(), task.model(), task.taskType(),
                     "REJECTED", null, null);
         }
-        save(task.moveTo(AiTaskState.FAILED, clock.instant()).withError(error));
+        saveTask(task.moveTo(AiTaskState.FAILED, clock.instant()).failWithError(error));
     }
 
     /** Không rõ kết quả: tính phần giữ chỗ là đã dùng với nhãn {@code ESTIMATED} (BR-U06-14). */
-    private void unknown(AiTask task, String error) {
+    private void markUnknown(AiTask task, String error) {
         if (task.reservedTokens() != null) {
-            quota.chargeReserved(task.actorId(), task.quotaDay(), task.reservedTokens());
+            quotaReservationService.chargeReserved(task.actorId(), task.quotaDay(), task.reservedTokens());
         }
-        usage.recordProvider(task.actorId(), source(task), task.id(), task.provider(), task.model(), task.taskType(),
+        aiUsageService.recordProvider(task.actorId(), resolveSource(task), task.id(), task.provider(), task.model(), task.taskType(),
                 "UNKNOWN", null, task.reservedTokens());
-        save(task.moveTo(AiTaskState.UNKNOWN, clock.instant()).withError(error));
+        saveTask(task.moveTo(AiTaskState.UNKNOWN, clock.instant()).failWithError(error));
     }
 
     private void settle(AiTask task, Usage measured, String outcome) {
@@ -446,12 +446,12 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                         + (measured.outputTokens() == null ? 0 : measured.outputTokens());
         if (task.reservedTokens() != null) {
             if (actual == null) {
-                quota.chargeReserved(task.actorId(), task.quotaDay(), task.reservedTokens());
+                quotaReservationService.chargeReserved(task.actorId(), task.quotaDay(), task.reservedTokens());
             } else {
-                quota.settle(task.actorId(), task.quotaDay(), task.reservedTokens(), actual);
+                quotaReservationService.settle(task.actorId(), task.quotaDay(), task.reservedTokens(), actual);
             }
         }
-        usage.recordProvider(task.actorId(), source(task), task.id(), task.provider(), task.model(), task.taskType(),
+        aiUsageService.recordProvider(task.actorId(), resolveSource(task), task.id(), task.provider(), task.model(), task.taskType(),
                 outcome, measured, actual == null ? task.reservedTokens() : null);
     }
 
@@ -492,27 +492,27 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             transactions.executeWithoutResult(status -> tasks.lock(queued.id())
                     .filter(t -> t.state() == AiTaskState.QUEUED).ifPresent(t -> {
                         if (t.reservedTokens() != null) {
-                            quota.release(t.actorId(), t.quotaDay(), t.reservedTokens());
+                            quotaReservationService.release(t.actorId(), t.quotaDay(), t.reservedTokens());
                         }
-                        save(t.moveTo(AiTaskState.CANCELLED, clock.instant()).withError("Chờ quá 30 phút, đã hủy"));
+                        saveTask(t.moveTo(AiTaskState.CANCELLED, clock.instant()).failWithError("Chờ quá 30 phút, đã hủy"));
                     }));
-            quietDeliver(queued.id());
+            deliverQuietly(queued.id());
         }
         Instant runningDeadline = now.minus(callWindow()).minus(Duration.ofMinutes(1));
         for (AiTask running : tasks.listByStateBefore(AiTaskState.RUNNING, runningDeadline)) {
             transactions.executeWithoutResult(status -> tasks.lock(running.id())
                     .filter(t -> t.state() == AiTaskState.RUNNING && t.dispatchedAt() != null
                             && t.dispatchedAt().isBefore(runningDeadline))
-                    .ifPresent(t -> unknown(t, "Nhà cung cấp AI không trả lời kịp")));
-            quietDeliver(running.id());
+                    .ifPresent(t -> markUnknown(t, "Nhà cung cấp AI không trả lời kịp")));
+            deliverQuietly(running.id());
         }
         for (AiTask finished : tasks.listUnhandled(now.minus(Duration.ofMinutes(1)))) {
-            quietDeliver(finished.id());
+            deliverQuietly(finished.id());
         }
     }
 
     /** Handler lỗi thì thử lại ở lượt quét sau, không chặn các task khác. */
-    private void quietDeliver(UUID taskId) {
+    private void deliverQuietly(UUID taskId) {
         long startNanos = System.nanoTime();
         try {
             log.info("AI task scanner recovery started taskId={}", taskId);
@@ -527,13 +527,13 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
 
     // ---- tiện ích ---------------------------------------------------------------------------------------------
 
-    private void save(AiTask task) {
-        if (!tasks.update(task)) {
+    private void saveTask(AiTask task) {
+        if (!tasks.updateTask(task)) {
             throw new IllegalStateException("Task " + task.id() + " vừa bị thay đổi");
         }
     }
 
-    private static Source source(AiTask task) {
+    private static Source resolveSource(AiTask task) {
         return task.source() == AiSource.SHARED ? Source.SHARED : Source.PERSONAL;
     }
 
@@ -545,7 +545,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         }
     }
 
-    private static String text(JsonNode node, String field) {
+    private static String readText(JsonNode node, String field) {
         JsonNode value = node.path(field);
         return value.isTextual() ? value.asText() : null;
     }

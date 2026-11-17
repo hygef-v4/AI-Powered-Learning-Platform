@@ -48,7 +48,7 @@ class McpCredentialServiceTest {
     void createShowsTokenOnceAndStoresOnlyItsHash() {
         when(authorization.authorize(eq(staff), any(), any())).thenReturn(AuthorizationDecision.allow());
 
-        var created = service.create(staff, "  Claude Desktop ", Access.READ_ONLY, null);
+        var created = service.createCredential(staff, "  Claude Desktop ", Access.READ_ONLY, null);
 
         ArgumentCaptor<McpCredential> saved = ArgumentCaptor.forClass(McpCredential.class);
         verify(repository).insert(saved.capture());
@@ -68,7 +68,7 @@ class McpCredentialServiceTest {
     @Test
     void ownerRevealsEncryptedTokenAndEditsLabelAndAccess() {
         when(authorization.authorize(eq(staff), any(), any())).thenReturn(AuthorizationDecision.allow());
-        var created = service.create(staff, "Claude Desktop", Access.READ_ONLY, 7);
+        var created = service.createCredential(staff, "Claude Desktop", Access.READ_ONLY, 7);
         ArgumentCaptor<McpCredential> saved = ArgumentCaptor.forClass(McpCredential.class);
         verify(repository).insert(saved.capture());
         ArgumentCaptor<edu.aiplatform.ai.model.AiConnection.EncryptedKey> secret =
@@ -83,8 +83,8 @@ class McpCredentialServiceTest {
         when(repository.findSecret(id)).thenReturn(java.util.Optional.of(secret.getValue()));
 
         assertThat(service.reveal(staff, id)).isEqualTo(created.token());
-        var edited = service.update(staff, id, " Cursor ", Access.READ_WRITE);
-        verify(repository).update(id, "Cursor", Access.READ_WRITE);
+        var edited = service.updateCredential(staff, id, " Cursor ", Access.READ_WRITE);
+        verify(repository).updateCredential(id, "Cursor", Access.READ_WRITE);
         assertThat(edited.label()).isEqualTo("Cursor");
         assertThat(edited.access()).isEqualTo(Access.READ_WRITE);
         ArgumentCaptor<AuditEvent> events = ArgumentCaptor.forClass(AuditEvent.class);
@@ -97,13 +97,13 @@ class McpCredentialServiceTest {
     @Test
     void createRejectsBadInputAndSixthActiveCredential() {
         when(authorization.authorize(eq(staff), any(), any())).thenReturn(AuthorizationDecision.allow());
-        assertThatThrownBy(() -> service.create(staff, "x", Access.READ_ONLY, 14))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("MCP_EXPIRY_INVALID"));
-        assertThatThrownBy(() -> service.create(staff, " ", Access.READ_ONLY, 7))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("MCP_LABEL_INVALID"));
+        assertThatThrownBy(() -> service.createCredential(staff, "x", Access.READ_ONLY, 14))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("MCP_EXPIRY_INVALID"));
+        assertThatThrownBy(() -> service.createCredential(staff, " ", Access.READ_ONLY, 7))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("MCP_LABEL_INVALID"));
         when(repository.countActive(staff.accountId(), NOW)).thenReturn(5);
-        assertThatThrownBy(() -> service.create(staff, "x", Access.READ_WRITE, 90))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo("MCP_LIMIT_REACHED"));
+        assertThatThrownBy(() -> service.createCredential(staff, "x", Access.READ_WRITE, 90))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("MCP_LIMIT_REACHED"));
         verify(repository, never()).insert(any());
     }
 
@@ -112,7 +112,7 @@ class McpCredentialServiceTest {
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         when(authorization.authorize(eq(admin), any(), any())).thenReturn(AuthorizationDecision.deny("ROLE"));
 
-        assertThatThrownBy(() -> service.create(admin, "x", Access.READ_ONLY, 7)).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> service.createCredential(admin, "x", Access.READ_ONLY, 7)).isInstanceOf(ApiException.class);
         verify(repository, never()).insert(any());
     }
 
@@ -167,7 +167,7 @@ class McpCredentialServiceTest {
         UUID other = UUID.randomUUID();
         when(repository.findOwn(staff.accountId(), other)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.revoke(staff, other))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.code()).isEqualTo(AiAccess.NOT_FOUND));
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo(AiAccess.NOT_FOUND));
     }
 
     @Test

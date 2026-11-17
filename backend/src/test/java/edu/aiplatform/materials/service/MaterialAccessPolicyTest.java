@@ -202,7 +202,7 @@ class MaterialAccessPolicyTest {
         materialAccessPolicy.requireReadAccess(actor, m, classId);
         assertThatThrownBy(() -> materialAccessPolicy.requireWriteAccess(actor, m))
                 .isInstanceOfSatisfying(
-                        ApiException.class, e -> assertThat(e.status().value()).isEqualTo(409));
+                        ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(409));
     }
 
     @Test
@@ -214,12 +214,12 @@ class MaterialAccessPolicyTest {
         materialAccessPolicy.requireReadAccess(new Actor(account, Role.TEACHER), active, classId);
         assertThatThrownBy(() -> materialAccessPolicy.requireWriteAccess(manager, active))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.status().value()).isEqualTo(409);
-                    assertThat(e.code()).isEqualTo("MATERIAL_SCOPE_READ_ONLY");
+                    assertThat(e.readStatus().value()).isEqualTo(409);
+                    assertThat(e.readCode()).isEqualTo("MATERIAL_SCOPE_READ_ONLY");
                 });
         assertThatThrownBy(() -> materialAccessPolicy.requireModuleManagement(manager, subject))
                 .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.code()).isEqualTo("MATERIAL_SCOPE_READ_ONLY"));
+                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_SCOPE_READ_ONLY"));
         verifyNoInteractions(audit);
     }
 
@@ -231,7 +231,7 @@ class MaterialAccessPolicyTest {
                 () -> materialAccessPolicy.requireSubjectListAccess(
                         new Actor(account, Role.SUBJECT_MANAGER), subject))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.status().value()).isEqualTo(503);
+                    assertThat(e.readStatus().value()).isEqualTo(503);
                     assertThat(e.getMessage()).doesNotContain("private-subject");
                 });
         when(classAccess.getClassRef(classId))
@@ -240,7 +240,7 @@ class MaterialAccessPolicyTest {
                 () -> materialAccessPolicy.requireClassListAccess(
                         new Actor(account, Role.TEACHER), classId, false))
                 .isInstanceOfSatisfying(ApiException.class, e -> {
-                    assertThat(e.status().value()).isEqualTo(503);
+                    assertThat(e.readStatus().value()).isEqualTo(503);
                     assertThat(e.getMessage()).doesNotContain("private-class");
                 });
     }
@@ -281,7 +281,7 @@ class MaterialAccessPolicyTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> {
-                            assertThat(e.status().value()).isEqualTo(503);
+                            assertThat(e.readStatus().value()).isEqualTo(503);
                             assertThat(e.getMessage()).doesNotContain("private data");
                         });
     }
@@ -320,7 +320,7 @@ class MaterialAccessPolicyTest {
     void denied(Runnable call) {
         assertThatThrownBy(call::run)
                 .isInstanceOfSatisfying(
-                        ApiException.class, e -> assertThat(e.status().value()).isEqualTo(404));
+                        ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(404));
         verify(audit)
                 .record(
                         argThat(

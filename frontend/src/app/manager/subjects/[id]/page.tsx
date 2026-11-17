@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { ManagerRoute } from "@/features/academics/pages/ClassRoutes";
+import { translateOnServer } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Thông tin môn" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: await translateOnServer("app.manager.subjects.id.page.subjectInformation") };
+}
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return <ManagerRoute view="subjects" id={id} />;

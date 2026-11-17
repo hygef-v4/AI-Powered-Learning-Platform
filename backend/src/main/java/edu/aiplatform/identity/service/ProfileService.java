@@ -58,22 +58,22 @@ public class ProfileService {
         }
     }
 
-    public ProfileView get(Actor actor) {
+    public ProfileView loadProfile(Actor actor) {
         requireOwn(actor, Actions.PROFILE_VIEW);
-        return view(load(actor));
+        return view(loadAccount(actor));
     }
 
-    public ProfileView update(Actor actor, String rawDisplayName, String rawPhoneNumber) {
+    public ProfileView updateProfile(Actor actor, String rawDisplayName, String rawPhoneNumber) {
         requireOwn(actor, Actions.PROFILE_UPDATE);
         String displayName = ProfilePolicy.normalizeDisplayName(rawDisplayName);
         String phoneNumber = ProfilePolicy.normalizePhone(rawPhoneNumber);
         ProfilePolicy.checkDisplayName(displayName).or(() -> ProfilePolicy.checkPhone(phoneNumber))
                 .ifPresent(code -> {
-                    throw ApiException.badRequest(code, code.equals("INVALID_PHONE_NUMBER")
+                    throw ApiException.createBadRequest(code, code.equals("INVALID_PHONE_NUMBER")
                             ? "Số điện thoại gồm 8–15 chữ số, có thể có dấu + ở đầu"
                             : "Họ và tên cần từ 1 đến 150 ký tự");
                 });
-        Account before = load(actor);
+        Account before = loadAccount(actor);
         List<String> changed = new ArrayList<>();
         if (!before.displayName().equals(displayName)) {
             changed.add("displayName");
@@ -91,7 +91,7 @@ public class ProfileService {
             audit.record(new AuditEvent(UUID.randomUUID(), before.id(), "PROFILE_UPDATED", "ACCOUNT",
                     before.id().toString(), AuditResult.SUCCESS, null, Map.of("fields", changed), now));
         });
-        return view(load(actor));
+        return view(loadAccount(actor));
     }
 
     private void requireOwn(Actor actor, String action) {
@@ -99,16 +99,16 @@ public class ProfileService {
                 : authorization.authorize(actor, action, ResourceRef.account(actor.accountId()));
         AuthorizationService.throwIfUnavailable(decision);
         if (!decision.allowed()) {
-            throw ApiException.forbidden("PROFILE_FORBIDDEN");
+            throw ApiException.createForbidden("PROFILE_FORBIDDEN");
         }
     }
 
-    private Account load(Actor actor) {
-        return accounts.findById(actor.accountId()).orElseThrow(() -> ApiException.notFound("ACCOUNT_NOT_FOUND"));
+    private Account loadAccount(Actor actor) {
+        return accounts.findById(actor.accountId()).orElseThrow(() -> ApiException.createNotFound("ACCOUNT_NOT_FOUND"));
     }
 
     private static ProfileView view(Account account) {
         return new ProfileView(account.id(), account.schoolEmail(), account.displayName(), account.phoneNumber(),
-                account.role(), account.status(), HomePaths.of(account.role()), account.studentCode());
+                account.role(), account.status(), HomePaths.resolveHomePath(account.role()), account.studentCode());
     }
 }

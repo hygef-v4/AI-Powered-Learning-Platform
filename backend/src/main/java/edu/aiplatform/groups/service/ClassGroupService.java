@@ -51,7 +51,7 @@ public class ClassGroupService {
 
     private final GroupRepository groups;
     private final GroupDocumentRepository documents;
-    private final GroupDocumentService groupDocuments;
+    private final GroupDocumentService groupDocumentService;
     private final IGroupDocStreams streams;
     private final GroupAccess access;
     private final IClassAccess classes;
@@ -63,22 +63,22 @@ public class ClassGroupService {
     private final GroupProposalCleanup groupProposalCleanup;
 
     @Autowired
-    public ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocuments,
+    public ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocumentService,
                              IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts,
                              IAudit audit, IEventPublisher events, Clock clock,
                              GroupProposalCleanup groupProposalCleanup) {
-        this(groups, documents, groupDocuments, streams, access, classes, accounts, audit, events, clock, new SecureRandom(),
+        this(groups, documents, groupDocumentService, streams, access, classes, accounts, audit, events, clock, new SecureRandom(),
                 groupProposalCleanup);
     }
 
-    ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocuments,
+    ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocumentService,
                       IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts,
                       IAudit audit, IEventPublisher events, Clock clock, RandomGenerator random,
                       GroupProposalCleanup groupProposalCleanup) {
         this.groupProposalCleanup = groupProposalCleanup;
         this.groups = groups;
         this.documents = documents;
-        this.groupDocuments = groupDocuments;
+        this.groupDocumentService = groupDocumentService;
         this.streams = streams;
         this.access = access;
         this.classes = classes;
@@ -94,7 +94,7 @@ public class ClassGroupService {
     @Transactional(readOnly = true)
     public GroupSetView view(Actor actor, UUID classId) {
         ClassRef ref = access.requireTeacher(actor, classId);
-        Set<UUID> active = new LinkedHashSet<>(activeStudents(classId));
+        Set<UUID> active = new LinkedHashSet<>(listActiveStudents(classId));
         List<ClassGroup> current = groups.listGroups(classId);
         People people = new People();
         Set<UUID> grouped = new HashSet<>();
@@ -102,12 +102,12 @@ public class ClassGroupService {
         for (ClassGroup g : current) {
             grouped.addAll(g.memberIds());
             List<MemberView> members = g.memberIds().stream()
-                    .map(id -> people.member(id, active.contains(id), id.equals(g.leaderId()))).toList();
+                    .map(id -> people.buildMember(id, active.contains(id), id.equals(g.leaderId()))).toList();
             boolean leaderActive = g.leaderId() != null && active.contains(g.leaderId());
             views.add(new GroupView(g.id(), g.name(), leaderActive ? g.leaderId() : null, members,
                     documents.groupHasContent(g.id())));
         }
-        List<PersonView> ungrouped = active.stream().filter(id -> !grouped.contains(id)).map(people::person).toList();
+        List<PersonView> ungrouped = active.stream().filter(id -> !grouped.contains(id)).map(people::buildPerson).toList();
         List<RequestView> pending = groups.listPendingOfClass(classId).stream()
                 .map(r -> requestView(r, current, people)).toList();
         return new GroupSetView(classId, ref.status().name(), groups.setVersion(classId), views, ungrouped, pending);
@@ -117,13 +117,13 @@ public class ClassGroupService {
 
     /** Bản xem trước: nhóm hiện có giữ nguyên, thêm nhóm mới cho sinh viên chưa có nhóm (F2). */
     @Transactional(readOnly = true)
-    public List<DraftView> randomPreview(Actor actor, UUID classId, Integer maxSize) {
+    public List<DraftView> previewRandomGroups(Actor actor, UUID classId, Integer maxSize) {
         ClassRef ref = access.requireTeacher(actor, classId);
         GroupAccess.requireEditable(ref);
         if (maxSize == null || maxSize < RandomGroupSplitter.MIN_SIZE || maxSize > RandomGroupSplitter.MAX_SIZE) {
-            throw ApiException.badRequest("GROUP_SIZE_INVALID", "Sĩ số tối đa từ 2 đến 20");
+            throw ApiException.createBadRequest("GROUP_SIZE_INVALID", "Sĩ số tối đa từ 2 đến 20");
         }
-        Set<UUID> active = new LinkedHashSet<>(activeStudents(classId));
+        Set<UUID> active = new LinkedHashSet<>(listActiveStudents(classId));
         List<ClassGroup> current = groups.listGroups(classId);
         Set<String> names = new HashSet<>();
         List<DraftView> preview = new ArrayList<>();
@@ -149,17 +149,17 @@ public class ClassGroupService {
     // ---- lưu cả bộ --------------------------------------------------------------------------------------------------
 
     @Transactional
-    public GroupSetView save(Actor actor, UUID classId, SaveCommand command) {
+    public GroupSetView saveGroups(Actor actor, UUID classId, SaveCommand command) {
         ClassRef ref = access.requireTeacher(actor, classId);
         GroupAccess.requireEditable(ref);
         if (command == null || command.version() == null || command.groups() == null) {
-            throw ApiException.badRequest("GROUP_SET_REQUIRED", "Cần gửi cả bộ nhóm kèm version");
+            throw ApiException.createBadRequest("GROUP_SET_REQUIRED", "Cần gửi cả bộ nhóm kèm version");
         }
         long version = groups.setVersion(classId);
         if (version != command.version()) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
-        Set<UUID> active = new HashSet<>(activeStudents(classId));
+        Set<UUID> active = new HashSet<>(listActiveStudents(classId));
         List<ClassGroup> current = groups.listGroups(classId);
         Map<UUID, ClassGroup> byId = new LinkedHashMap<>();
         Set<UUID> formerMembers = new HashSet<>();
@@ -198,9 +198,9 @@ public class ClassGroupService {
         }
         Instant now = clock.instant();
         if (!groups.bumpSetVersion(classId, version, now)) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
-        ApplyResult result = apply(actor, classId, current, byId, drafts, deleted, now, null);
+        ApplyResult result = applyDrafts(actor, classId, current, byId, drafts, deleted, now, null);
         // Người vừa có nhóm chính thức rời đề xuất của họ (BR-U12-88, F23).
         groupProposalCleanup.releasePlacedStudents(classId, result.placed(), now);
         return view(actor, classId);
@@ -215,7 +215,7 @@ public class ClassGroupService {
     public Map<String, UUID> addApprovedGroups(Actor actor, UUID classId, long expectedVersion, List<Draft> newGroups) {
         Instant now = clock.instant();
         if (!groups.bumpSetVersion(classId, expectedVersion, now)) {
-            throw versionConflict();
+            throw createVersionConflictError();
         }
         List<ClassGroup> current = groups.listGroups(classId);
         Map<UUID, ClassGroup> byId = new LinkedHashMap<>();
@@ -225,7 +225,7 @@ public class ClassGroupService {
             drafts.add(new Draft(g.id().toString(), g.id(), g.name(), g.leaderId(), g.memberIds()));
         }
         drafts.addAll(newGroups);
-        ApplyResult result = apply(actor, classId, current, byId, drafts, List.of(), now, PROPOSAL_APPROVED);
+        ApplyResult result = applyDrafts(actor, classId, current, byId, drafts, List.of(), now, PROPOSAL_APPROVED);
         Map<String, UUID> created = new LinkedHashMap<>();
         newGroups.forEach(d -> created.put(d.key(), result.ids().get(d.key())));
         return created;
@@ -237,7 +237,7 @@ public class ClassGroupService {
     private record ApplyResult(Map<String, UUID> ids, Set<UUID> placed) {
     }
 
-    private ApplyResult apply(Actor actor, UUID classId, List<ClassGroup> current, Map<UUID, ClassGroup> byId,
+    private ApplyResult applyDrafts(Actor actor, UUID classId, List<ClassGroup> current, Map<UUID, ClassGroup> byId,
                               List<Draft> drafts, List<ClassGroup> deleted, Instant now, String membershipReason) {
         Map<UUID, UUID> before = new HashMap<>();
         current.forEach(g -> g.memberIds().forEach(m -> before.put(m, g.id())));
@@ -280,7 +280,7 @@ public class ClassGroupService {
             if (d.id() == null) {
                 createdGroups.add(id);
                 groups.insertGroup(new ClassGroup(id, classId, d.name(), d.leaderId(), actor.accountId(), now, now, List.of()));
-                record(actor, "GROUP_CREATED", id, details(classId, d));
+                record(actor, "GROUP_CREATED", id, collectDetails(classId, d));
             } else {
                 ClassGroup old = byId.get(d.id());
                 boolean renamed = !old.name().equals(d.name());
@@ -302,7 +302,7 @@ public class ClassGroupService {
                     cancelOrphanedRequest(id, d.memberIds(), actor, now);
                 }
                 if (renamed || membersChanged) {
-                    record(actor, "GROUP_UPDATED", id, details(classId, d));
+                    record(actor, "GROUP_UPDATED", id, collectDetails(classId, d));
                 }
             }
         }
@@ -315,7 +315,7 @@ public class ClassGroupService {
             }
         }
         // Nhóm mới khi lớp có bài nhóm đang mở: tạo tài liệu ngay (F7 bước 4, F14 bước 2).
-        groupDocuments.ensureForGroups(classId, createdGroups);
+        groupDocumentService.ensureForGroups(classId, createdGroups);
         // Mỗi nhóm một sự kiện có groupId (U14 bắt buộc): người vào nhóm theo nhóm mới, người bị gỡ theo nhóm đã rời.
         Map<UUID, List<UUID>> movedByGroup = new LinkedHashMap<>();
         for (UUID member : moved) {
@@ -349,7 +349,7 @@ public class ClassGroupService {
     /** Người rời nhóm: nhả mục đang giữ, bỏ bản nháp chưa Xong; nội dung đã Xong giữ tác giả (BR-U12-05, F14). */
     private void releaseHeldSections(UUID groupId, UUID member, Actor actor, Instant now) {
         for (GroupSection section : documents.lockSectionsHeldBy(groupId, member)) {
-            if (documents.updateSection(section.released())) {
+            if (documents.updateSection(section.markReleased())) {
                 documents.touch(section.documentId(), now);
                 Map<String, Object> details = new LinkedHashMap<>();
                 details.put("documentId", section.documentId().toString());
@@ -362,15 +362,15 @@ public class ClassGroupService {
 
     // ---- tiện ích -----------------------------------------------------------------------------------------------
 
-    private List<UUID> activeStudents(UUID classId) {
+    private List<UUID> listActiveStudents(UUID classId) {
         try {
             return classes.listActiveStudents(classId);
         } catch (RuntimeException e) {
-            throw ApiException.unavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
+            throw ApiException.createUnavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
         }
     }
 
-    private static Map<String, Object> details(UUID classId, Draft d) {
+    private static Map<String, Object> collectDetails(UUID classId, Draft d) {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("classId", classId.toString());
         details.put("name", d.name());
@@ -401,22 +401,22 @@ public class ClassGroupService {
         events.publish(new DomainEvent(1, UUID.randomUUID(), type, "U12", clock.instant(), null, payload));
     }
 
-    private static ApiException versionConflict() {
-        return ApiException.conflict("GROUP_SET_VERSION_CONFLICT", "Bộ nhóm vừa được thay đổi, hãy tải lại");
+    private static ApiException createVersionConflictError() {
+        return ApiException.createConflict("GROUP_SET_VERSION_CONFLICT", "Bộ nhóm vừa được thay đổi, hãy tải lại");
     }
 
     private RequestView requestView(LeaderChangeRequest r, List<ClassGroup> current, People people) {
         String groupName = current.stream().filter(g -> g.id().equals(r.groupId())).map(ClassGroup::name).findFirst()
                 .orElse("");
-        return new RequestView(r.id(), r.groupId(), groupName, people.person(r.requestedBy()),
-                r.proposedLeaderId() == null ? null : people.person(r.proposedLeaderId()), r.reason(), r.createdAt());
+        return new RequestView(r.id(), r.groupId(), groupName, people.buildPerson(r.requestedBy()),
+                r.proposedLeaderId() == null ? null : people.buildPerson(r.proposedLeaderId()), r.reason(), r.createdAt());
     }
 
     /** Tra tên, email một lần cho mỗi người trong một lần đọc. */
     private final class People {
         private final Map<UUID, Optional<AccountContact>> cache = new HashMap<>();
 
-        PersonView person(UUID id) {
+        PersonView buildPerson(UUID id) {
             Optional<AccountContact> c = cache.computeIfAbsent(id, key -> {
                 try {
                     return accounts.getContact(key);
@@ -428,8 +428,8 @@ public class ClassGroupService {
                     c.map(AccountContact::email).orElse(null), c.map(AccountContact::studentCode).orElse(null));
         }
 
-        MemberView member(UUID id, boolean active, boolean leader) {
-            PersonView p = person(id);
+        MemberView buildMember(UUID id, boolean active, boolean leader) {
+            PersonView p = buildPerson(id);
             return new MemberView(id, p.name(), p.email(), active, leader, p.studentCode());
         }
     }

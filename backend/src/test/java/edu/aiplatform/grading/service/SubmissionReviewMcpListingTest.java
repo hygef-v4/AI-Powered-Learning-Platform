@@ -59,7 +59,7 @@ class SubmissionReviewMcpListingTest {
         verify(repo, never()).findForAssignmentAndClass(any(), any());
         verify(classes).listActiveStudents(classId);
         verify(accounts).getContacts(students);
-        doThrow(edu.aiplatform.shared.error.ApiException.notFound("CLASS_NOT_FOUND"))
+        doThrow(edu.aiplatform.shared.error.ApiException.createNotFound("CLASS_NOT_FOUND"))
                 .when(access).requireTeacher(actor,classId,Actions.GRADING_REVIEW);
         assertThatThrownBy(() -> service.listRows(actor,classId,assignmentId,"ALL",null))
                 .isInstanceOf(edu.aiplatform.shared.error.ApiException.class);
