@@ -1,12 +1,12 @@
 # Một image cho cả backend và worker (worker chạy với SPRING_PROFILES_ACTIVE=worker).
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9-eclipse-temurin-17@sha256:1a352420f7aba21f5ad08df31bab55f74c013fb491f1ae8ab1dd7ff9ed698584 AS build
 WORKDIR /src
 COPY pom.xml .
 RUN mvn -B -q dependency:go-offline
 COPY src ./src
 RUN mvn -B -q -DskipTests package
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-alpine@sha256:e2ba4e947bd5e236a9866fbdda03e4936036cb9e9d16ea0d84d103d6634a5c21
 # postgresql16-client cho pg_dump của worker (backup U03).
 # Tạo sẵn thư mục mount volume tệp, sao lưu (local) thuộc app: volume mới nhận quyền này, app ghi được.
 RUN addgroup -S app && adduser -S app -G app \

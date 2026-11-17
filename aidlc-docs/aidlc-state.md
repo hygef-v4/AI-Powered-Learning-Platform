@@ -12,6 +12,21 @@ Phát hiện khi đưa PR 101 lên staging: `platform-deploy` không tạo lại
 
 Sau khi bản này lên VPS phải cài lại `/usr/local/bin/platform-deploy` và `/usr/local/bin/platform-staging-deploy` một lần nữa. Security/Resiliency trong phạm vi đã duyệt; PBT tắt.
 
+## Khắc phục báo cáo phi chức năng — 2026-11-17
+
+Người dùng yêu cầu kiểm tra NFR, sau đó “sửa toàn bộ cho tôi” và “tiếp tục”. [Báo cáo gốc](construction/build-and-test/2026-11-16-non-functional-review.md), [kế hoạch](construction/plans/code-generation-plan/2026-11-16-nfr-remediation.md), [kết quả kiểm chứng](construction/build-and-test/2026-11-17-nfr-remediation-results.md).
+
+- [x] Workspace/Requirements/Planning: brownfield, dùng lại yêu cầu và thiết kế; phạm vi F01–F08 được người dùng yêu cầu thực hiện. Không thêm use case/API/schema.
+- [x] Code Generation: 9/9 bước kế hoạch hoàn tất; health Drive không chặn, DB timeout, giảm tranh khóa Quiz, giới hạn worker, restore deadline/cleanup, image digest pins và đồng bộ tài liệu key/RPO.
+- [x] Build and Test: backend 2.570 tests, 0 failures/errors, 1 skip AI evaluation; guard 7 suite PostgreSQL và 58 ca truy vết qua; frontend liên quan 66/66; deploy harness 15/15; restore harness 4/4; ShellCheck/image pins/Compose config qua. Build Dockerfile backend và restore fixture bằng image đó trên PostgreSQL thật qua.
+- [x] Review: giữ nguyên công việc performance/security đồng thời; kiểm diff và tài liệu. Security/Resiliency tuân thủ trong phạm vi đã duyệt, PBT tắt.
+
+Đóng 8/8 lỗi đã báo ở mã nguồn/cấu hình/tài liệu. Chưa nghiệm thu p95 tại tải mục tiêu, RPO/RTO dữ liệu production, accessibility toàn hành trình hoặc soak/chaos dài hạn. Chưa deploy/commit/push phần NFR trong lượt này; không truy cập hay thay dữ liệu production.
+
+Kiểm tiếp theo yêu cầu đưa lên staging: [readiness 17/11](construction/build-and-test/2026-11-17-nfr-staging-readiness.md). Có thể chuẩn bị PR; local chậm staging 4 commit, mô phỏng gộp có hai xung đột tài liệu state/audit, mã nguồn không xung đột. CI staging `706e46f1` xanh cả 4 job; deploy harness mới 16/16 qua; frontend Docker build và smoke 384 MiB/0,5 CPU qua. Cần đồng bộ tài liệu, commit và CI PR trước merge; chưa thao tác phát hành.
+
+Người dùng đã yêu cầu đồng bộ, commit, mở PR và chờ CI ngày 17/11. Đã tạo nhánh `codex/nfr-remediation` trên staging `706e46f1`, gộp đủ nội dung state/audit, giữ mã NFR đã kiểm thử. Đang thực hiện commit/PR và theo dõi CI theo [kế hoạch](construction/plans/code-generation-plan/2026-11-16-nfr-remediation.md); chưa được yêu cầu merge/deploy.
+
 ## Sửa các điểm trong báo cáo hiệu năng production — 2026-11-16
 
 Người dùng yêu cầu kiểm tra hiệu năng production, rồi yêu cầu "sửa toàn bộ". [Báo cáo](construction/build-and-test/2026-11-16-performance-report.md); [kế hoạch](construction/plans/code-generation-plan/2026-11-16-performance-fixes.md).

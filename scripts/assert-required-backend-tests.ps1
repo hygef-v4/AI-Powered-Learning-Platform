@@ -4,6 +4,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $requiredSuites = @{
+    'edu.aiplatform.shared.config.DatabaseTimeoutIntegrationTest' = 1
+    'edu.aiplatform.quizpractice.repository.JdbcQuizAttemptRepositoryIntegrationTest' = 9
     'edu.aiplatform.subjects.repository.SubjectRepositoryIntegrationTest' = 31
     'edu.aiplatform.notifications.integration.NotificationDeliveryIntegrationTest' = 2
     'edu.aiplatform.grading.repository.EvaluationVersionIntegrationTest' = 10

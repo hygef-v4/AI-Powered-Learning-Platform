@@ -56,7 +56,7 @@ x-backend-env: &backend-env
 
 services:
   nginx:
-    image: nginx:1.28-alpine
+    image: nginx:1.28-alpine@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236
     depends_on:
       frontend: { condition: service_healthy }
       backend: { condition: service_healthy }
@@ -82,7 +82,7 @@ services:
     restart: unless-stopped
 
   certbot:
-    image: certbot/certbot:v4.1.1
+    image: certbot/certbot:v4.1.1@sha256:263fe7ee9dde6440bf8baa957c0a8eb0118fc05ef86cf743c4cc84ca84303a21
     volumes:
       - letsencrypt:/etc/letsencrypt
       - certbot-www:/var/www/certbot
@@ -136,7 +136,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e
     environment:
       POSTGRES_DB: platform
       POSTGRES_USER: postgres
@@ -172,7 +172,7 @@ services:
   # maxmemory thấp hơn giới hạn container (staging 128M) để đầy thì Redis từ chối ghi thay vì bị OOM kill;
   # noeviction vì dữ liệu là phiên và OTP, không phải cache.
   redis:
-    image: redis:7.4-alpine
+    image: redis:7.4-alpine@sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?}", "--appendonly", "no", "--save", "", "--maxmemory", "96mb", "--maxmemory-policy", "noeviction"]
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:?}
@@ -189,7 +189,7 @@ services:
 
   # User mặc định là app nên RabbitMQ không tạo guest.
   rabbitmq:
-    image: rabbitmq:4.1-management-alpine
+    image: rabbitmq:4.1-management-alpine@sha256:42c6214e0e2093caa2484718faacb733631cc9ddc869b3298397613237dbea4a
     environment:
       RABBITMQ_DEFAULT_USER: app
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?}
