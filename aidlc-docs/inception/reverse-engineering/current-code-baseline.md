@@ -1,6 +1,6 @@
 # Current code baseline — staging 2026-11-15
 
-**Source:** `staging@7e0e8375`, 2026-11-15. Các bảng controller và migration đã đối chiếu với 50 controller và 43 tệp SQL. Danh mục test và frontend bên dưới giữ phạm vi từng đợt cập nhật. 66 use case và 15 unit. Java 17/Spring Boot modular monolith và worker, Next.js/React/TypeScript frontend.
+**Source:** `staging@7e0e8375`, 2026-11-15. Các bảng controller và migration đã đối chiếu với 50 controller và 43 tệp SQL; xem delta 2026-11-17 bên dưới. Danh mục test và frontend bên dưới giữ phạm vi từng đợt cập nhật. 66 use case và 15 unit. Java 17/Spring Boot modular monolith và worker, Next.js/React/TypeScript frontend.
 
 **Persistence:** [Spring JDBC policy](../../construction/persistence-conventions.md). U05/U09 use JDBC; U04/U13/U14 still use JPA during migration. [U09 current mapping](../../construction/u09-assignment-grading/code/jdbc-persistence.md).
 
@@ -9,6 +9,8 @@
 **Evidence:** [Kết quả build/test theo phạm vi và phiên bản](../../construction/build-and-test/build-and-test-summary.md). Frontend test và fixture nằm ở [frontend/tests](../../../frontend/tests). Styles nằm ở shared/styles hoặc feature sở hữu.
 
 **Delta 2026-11-10 (`staging@062a43f5`):** danh sách controller, test và migration bên dưới đã đối chiếu lại với source: thêm 15 mục còn thiếu, bỏ 2 liên kết tới file đã xóa. Frontend có thêm `shared/layout/NavTree.tsx` (cây môn/lớp trong sidebar), `app/opengraph-image.tsx` và `shared/siteMetadata.ts` (metadata Open Graph/Twitter, ảnh 1200×630; `/opengraph-image` nằm ngoài `proxy.ts`), `features/assignments/components/AiReviseChat.tsx`; đã xóa `features/assignmentwork/pages/ReceiptPage.tsx` và route `/attempts/[attemptId]/receipt`. Sau khi merge tới `staging@1e77eb79` thêm 4 migration (assignments, grading, quizpractice) và 2 test class; frontend có thêm `shared/document/SectionNumber.tsx`, bỏ `features/assignments/model/templateStore.ts`. Fixture/helper test không liệt kê. [Báo cáo đối chiếu](../../construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md); không chạy lại test.
+
+**Delta 2026-11-17 (`staging@706e46f1`):** đối chiếu lại bằng script: 50 controller, 347 mapping và 46 tệp SQL khớp với source. Thêm migration `V20261113_1000__scope_quiz_attempts_to_class.sql` (U11) và 21 lớp test còn thiếu vào mục của từng unit; các lớp fixture và hỗ trợ test không liệt kê.
 
 **Delta 2026-11-16 (`staging@d8ac7d21`):** ghi nhận các thay đổi của staging chưa có trong tài liệu; không đối chiếu lại toàn bộ bảng controller, test và migration.
 
@@ -70,6 +72,7 @@ Primary UC 01–12; FR-001, FR-002, FR-015.
 - [PasswordCompletionTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/PasswordCompletionTest.java)
 - [ProfileAndPasswordChangeTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/ProfileAndPasswordChangeTest.java)
 - [SessionAuthorityTest.java](../../../backend/src/test/java/edu/aiplatform/identity/service/SessionAuthorityTest.java)
+- [StudentCodePolicyTest.java](../../../backend/src/test/java/edu/aiplatform/identity/model/StudentCodePolicyTest.java)
 
 ### Migrations
 
@@ -182,6 +185,7 @@ Primary UC 14–15; FR-013, FR-033, FR-038.
 - [SettingsSectionRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/settings/service/SettingsSectionRegistryTest.java)
 - [SettingsServiceTest.java](../../../backend/src/test/java/edu/aiplatform/settings/service/SettingsServiceTest.java)
 - [DownloadGrantExpiryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/files/service/DownloadGrantExpiryIntegrationTest.java)
+- [FilesPropertiesTest.java](../../../backend/src/test/java/edu/aiplatform/files/config/FilesPropertiesTest.java)
 
 ### Migrations
 
@@ -270,6 +274,8 @@ Primary UC 20–30; FR-003, FR-005, FR-024.
 - [AcademicsMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsMcpToolsTest.java)
 - [AcademicsServiceTest.java](../../../backend/src/test/java/edu/aiplatform/academics/service/AcademicsServiceTest.java)
 - [ClassTermMigrationIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/academics/integration/ClassTermMigrationIntegrationTest.java)
+- [ClassTermPolicyTest.java](../../../backend/src/test/java/edu/aiplatform/academics/model/ClassTermPolicyTest.java)
+- [ClassStartDateMigrationIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/academics/integration/ClassStartDateMigrationIntegrationTest.java)
 
 ### Migrations
 
@@ -330,6 +336,10 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 - [McpStaffCatalogTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpStaffCatalogTest.java)
 - [McpWriteRequestIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/McpWriteRequestIntegrationTest.java)
 - [QuotaServicesTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/QuotaServicesTest.java)
+- [UntrustedPromptTest.java](../../../backend/src/test/java/edu/aiplatform/ai/contract/UntrustedPromptTest.java)
+- [AiImageSourceRegistryTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiImageSourceRegistryTest.java)
+- [ConnectionKeyUpgradeTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/ConnectionKeyUpgradeTest.java)
+- [PromptGuardrailServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/PromptGuardrailServiceTest.java)
 
 ### Migrations
 
@@ -388,6 +398,10 @@ Primary UC 34–36; FR-006, FR-007, FR-016, FR-017, FR-027, FR-028.
 - [DocxRoundTripTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/DocxRoundTripTest.java)
 - [AssignmentAiRevisionTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentAiRevisionTest.java)
 - [SectionNumberingTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/model/SectionNumberingTest.java)
+- [AssignmentRequestsTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/controller/AssignmentRequestsTest.java)
+- [AiDraftFormattingTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AiDraftFormattingTest.java)
+- [AssignmentClosingIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentClosingIntegrationTest.java)
+- [AssignmentSourceImageSourceTest.java](../../../backend/src/test/java/edu/aiplatform/assignments/service/AssignmentSourceImageSourceTest.java)
 
 ### Migrations
 
@@ -501,6 +515,12 @@ Primary UC 42–45; FR-008, FR-009, FR-020, FR-024.
 - [SubmissionReviewMcpListingTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/SubmissionReviewMcpListingTest.java)
 - [SubmissionReviewNavigationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/SubmissionReviewNavigationTest.java)
 - [GradingPromptBuilderTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingPromptBuilderTest.java)
+- [EditableGradeTest.java](../../../backend/src/test/java/edu/aiplatform/grading/model/EditableGradeTest.java)
+- [GradingManualFeedbackTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingManualFeedbackTest.java)
+- [GradingProposalErrorTest.java](../../../backend/src/test/java/edu/aiplatform/grading/service/GradingProposalErrorTest.java)
+- [GradingEvalHarnessTest.java](../../../backend/src/test/java/edu/aiplatform/grading/eval/GradingEvalHarnessTest.java)
+- [GradingAiEvaluationTest.java](../../../backend/src/test/java/edu/aiplatform/grading/eval/GradingAiEvaluationTest.java)
+- [GradingDiagramIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/regression/GradingDiagramIntegrationTest.java)
 
 ### Migrations
 
@@ -598,6 +618,7 @@ Primary UC 49–52; FR-017, FR-018, FR-039.
 - [V20260925_1700__create_quiz_attempts.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql)
 - [V20261101_1210__quiz_attempt_activity_penalty.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20261101_1210__quiz_attempt_activity_penalty.sql)
 - [V20261110_1010__widen_quiz_attempts_score_columns.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20261110_1010__widen_quiz_attempts_score_columns.sql)
+- [V20261113_1000__scope_quiz_attempts_to_class.sql](../../../backend/src/main/resources/db/migration/quizpractice/V20261113_1000__scope_quiz_attempts_to_class.sql) — lượt làm Quiz tính theo lớp (2026-11-13)
 
 ### Frontend
 
@@ -763,6 +784,7 @@ Primary UC 63–65; FR-011, FR-019, FR-023.
 - [NotificationEventServiceTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/NotificationEventServiceTest.java)
 - [NotificationServiceTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/NotificationServiceTest.java)
 - [RecipientResolverTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/RecipientResolverTest.java)
+- [GroupProposalNotificationTest.java](../../../backend/src/test/java/edu/aiplatform/notifications/service/GroupProposalNotificationTest.java)
 
 ### Migrations
 
@@ -819,6 +841,8 @@ Primary UC 66; FR-024, FR-038.
 - [PlatformWorkflowIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/requirements/PlatformWorkflowIntegrationTest.java)
 - [RequirementsCoverageIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java)
 - [FormattedTextTest.java](../../../backend/src/test/java/edu/aiplatform/shared/content/FormattedTextTest.java)
+- [CrossUnitFlowIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/requirements/CrossUnitFlowIntegrationTest.java)
+- [DriveStorageIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/requirements/DriveStorageIntegrationTest.java)
 
 ## Delta 2026-11-01: làm lại Quiz
 

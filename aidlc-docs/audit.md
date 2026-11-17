@@ -15609,3 +15609,35 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Số PR ghi trên GitHub và trong phản hồi cuối.
 
 ---
+## Kiểm tra đồng bộ tài liệu AI-DLC và mã nguồn
+**Timestamp**: 2026-11-17T14:49:08Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check lại tính đồng bộ doc aidlc và src code hiện tại"
+**AI Response**: "Đối chiếu tự động trên staging@706e46f1: (1) api-inventory khớp 347/347 mapping của 50 controller; (2) đường dẫn trong tài liệu hiện hành (as-built-baseline, code-summary, current-code-baseline, api-inventory, traceability) còn tồn tại, chỉ báo cáo cũ có ngày và bản tóm tắt remediation U04/U13/U14 trỏ tới tệp đã xóa; (3) migration mới nhất v20261116.1010 đã ghi. Lệch: current-code-baseline thiếu V20261113_1000__scope_quiz_attempts_to_class.sql và 39 tệp test backend; U11 domain-entities ghi attemptNo duy nhất theo (quizId, accountId) trong khi DB ràng buộc theo (quizId, accountId, classId); code-summary U02/U03/U08/U12 còn liệt kê component đã xóa (AuditDetailDialog, SettingGroupTable, DelegatedSectionCard, ReceiptPage, ClassAssignmentsCard, GroupCountCard, GroupProgressView); U03 nfr-design vẫn mô tả backup luôn mã hóa; comment LocaleGate.tsx còn ghi máy chủ dựng tiếng Việt; tài liệu U14 chưa nêu chuông thông báo chỉ poll khi SSE mất; aidlc-state chưa ghi PR 102 đã merge và còn ô chưa đánh dấu đã làm xong (commit/PR tài liệu vận hành 2026-11-16)."
+**Context**: Kiểm tra chỉ đọc; không sửa tài liệu hay mã, không commit. Chờ người dùng quyết định có sửa các điểm lệch không.
+
+---
+## Đồng bộ tài liệu AI-DLC với mã nguồn — sửa tài liệu
+**Timestamp**: 2026-11-17T14:53:16Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa tài liệu"
+**AI Response**: "Sửa các điểm lệch đã báo: U11 (attemptNo, số lượt, lượt IN_PROGRESS theo lớp; domain-entities, BR-U11-10, code-summary); current-code-baseline (migration V20261113_1000 và 21 lớp test, delta 2026-11-17); code-summary U02, U03, U08, U12 (bỏ component đã xóa, ghi component hiện có); U03 P16, P17, logical-components, BR-U03-93 (khóa backup tùy chọn); U14 frontend-components và business-logic-model (poll số chưa đọc chỉ khi mất SSE); aidlc-state (mục mới, PR 102 đã merge, đánh dấu commit tài liệu vận hành d19f0329 đã có trên staging). Không sửa LocaleGate.tsx (mã nguồn) và tài liệu lịch sử có ngày."
+**Context**: Chỉ sửa Markdown; không đổi mã, test, schema hay cấu hình; chưa commit. Chờ người dùng duyệt.
+
+---
+## Đồng bộ tài liệu AI-DLC với mã nguồn — commit
+**Timestamp**: 2026-11-17T15:14:25Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo commit, chưa push"
+**AI Response**: "Tạo nhánh docs/aidlc-code-sync-2026-11-17 từ staging@706e46f1 và commit cục bộ 15 tệp tài liệu đã sửa. Không push."
+**Context**: Người dùng duyệt tài liệu bằng yêu cầu commit. Chưa push, chưa mở PR.
+
+---
+## Đồng bộ tài liệu AI-DLC với mã nguồn — commit trên staging
+**Timestamp**: 2026-11-17T15:15:15Z
+**Requested by:** Quang Hung
+**User Input**: "k cần tạo branch mới"
+**AI Response**: "Đưa commit lên thẳng nhánh staging cục bộ (fast-forward), xóa nhánh docs/aidlc-code-sync-2026-11-17, ghi mục này rồi amend vào cùng commit. Không push."
+**Context**: Commit cục bộ trên staging, chưa push.
+
+---

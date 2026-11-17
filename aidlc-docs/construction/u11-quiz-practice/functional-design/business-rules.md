@@ -21,7 +21,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U11-10 | Bấm Làm Quiz tạo lượt và tính vào số lượt; hết lượt thì từ chối. Mỗi người tối đa một lượt `IN_PROGRESS` mỗi Quiz; bấm lại thì mở lượt đó. Lượt ghi `classId` là lớp người học làm Quiz. | FR-007 |
+| BR-U11-10 | Bấm Làm Quiz tạo lượt và tính vào số lượt; hết lượt thì từ chối. Số lượt và giới hạn lượt tính riêng trong từng lớp. Mỗi người tối đa một lượt `IN_PROGRESS` mỗi (Quiz, lớp); bấm lại thì mở lượt đó. Lượt ghi `classId` là lớp người học làm Quiz. | FR-007 |
 | BR-U11-11 | Lượt chụp version Quiz, cài đặt, chính sách theo dõi và seed trộn; thứ tự câu và đáp án theo seed khi Quiz bật trộn. Quiz sinh đề: lượt bốc đề riêng qua `drawPaper` và lưu đúng các câu, điểm từng câu (`questionPoints`); đề, chấm và kết quả của lượt đọc theo danh sách này. `deadlineAt` là giờ bắt đầu cộng giới hạn giờ, trống nếu Quiz không giới hạn. Sửa Quiz sau đó không ảnh hưởng lượt đã có. | FR-018, BR-U10-17 |
 | BR-U11-12 | Đề lấy qua `getStudentView` của U10, không có đáp án. Xem đề, lưu, nộp và ghi hoạt động của một lượt đang làm cần người học vẫn đang ghi danh lớp `OPEN` (kiểm lại lớp mỗi lần, không chỉ lúc bắt đầu); đã rời lớp thì bị từ chối như ngoài phạm vi. Tự lưu câu trả lời 2 giây sau lần chọn cuối và khi rời trang, kèm `answerVersion`; lệch thì `409`. Lưu sau `deadlineAt` bị từ chối, trừ lần lưu cuối trong 30 giây ân hạn. | FR-018 |
 | BR-U11-13 | Nộp tay: lượt của mình, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây; câu chưa trả lời được tính sai. Nộp lặp trả cùng kết quả. | UC 51 |

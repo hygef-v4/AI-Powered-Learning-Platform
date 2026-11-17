@@ -1,5 +1,19 @@
 # AI-DLC State Tracking
 
+## Đồng bộ tài liệu AI-DLC với mã nguồn — 2026-11-17
+
+Người dùng yêu cầu kiểm tra đồng bộ tài liệu AI-DLC với mã trên `staging@706e46f1`, rồi yêu cầu sửa tài liệu. Chỉ sửa Markdown; không đổi mã, test, schema hay cấu hình; chưa commit.
+
+- [x] Kiểm tra bằng script: api-inventory khớp 347/347 mapping của 50 controller; đường dẫn trong tài liệu hiện hành còn tồn tại; migration mới nhất `v20261116.1010` đã ghi.
+- [x] U11: `attemptNo`, số lượt và lượt `IN_PROGRESS` tính theo (Quiz, người học, lớp) như migration `V20261113_1000__scope_quiz_attempts_to_class.sql` (domain-entities, BR-U11-10, code-summary).
+- [x] current-code-baseline: thêm migration trên và 21 lớp test còn thiếu, delta 2026-11-17.
+- [x] code-summary U02, U03, U08, U12: bỏ component đã xóa (`AuditDetailDialog`, `SettingGroupTable`, `DelegatedSectionCard`, `ReceiptPage`, `ClassAssignmentsCard`, `ClassCardAssignments`, `GroupEditor`, `GroupProgressView`, `GroupCountCard`, `SectionEditorDialog`), ghi component hiện có.
+- [x] U03: P16, P17, logical-components và BR-U03-93 nêu khóa backup tùy chọn.
+- [x] U14: chuông thông báo chỉ hỏi lại số chưa đọc khi mất SSE và tab đang hiện.
+- [ ] Người dùng duyệt tài liệu và quyết định commit.
+
+Không sửa: chú thích `frontend/src/i18n/LocaleGate.tsx` (mã nguồn); các báo cáo, kế hoạch có ngày và bản tóm tắt remediation U04/U13/U14 trỏ tới tệp đã xóa (tài liệu lịch sử). Kiểm tra dựa trên tên, đường dẫn và endpoint; chưa đọc lại toàn bộ business rule của 15 unit.
+
 ## Script deploy tự khởi động lại nginx khi cấu hình nginx đổi — 2026-11-16
 
 Phát hiện khi đưa PR 101 lên staging: `platform-deploy` không tạo lại container nginx, nên thay đổi trong `infra/nginx` không được nạp và `nginx -t` trên container cũ báo `unknown log format "timed"`; phải restart tay. Người dùng đồng ý sửa ("Có, sửa đi"). Nhánh `fix/deploy-restart-nginx` từ `origin/staging@e2014177`, worktree riêng.
@@ -9,6 +23,7 @@ Phát hiện khi đưa PR 101 lên staging: `platform-deploy` không tạo lại
 - [x] Build and Test: `test-platform-deploy.sh` 16/16 (chạy trong thư mục tạm trên VPS vì máy phát triển không có `jq`, `flock`). Chưa chạy với Docker và nginx thật.
 - [x] Người dùng yêu cầu commit cục bộ (2026-11-16).
 - [x] Người dùng yêu cầu push và mở PR vào staging (2026-11-16). Không tự merge.
+- [x] PR 102 đã merge vào staging (`706e46f1`, 2026-11-17).
 
 Sau khi bản này lên VPS phải cài lại `/usr/local/bin/platform-deploy` và `/usr/local/bin/platform-staging-deploy` một lần nữa. Security/Resiliency trong phạm vi đã duyệt; PBT tắt.
 
@@ -34,9 +49,9 @@ Người dùng yêu cầu kiểm tra `staging@d8ac7d21` trước khi đưa lên 
 - [x] Kiểm tra: CI của `d8ac7d21` qua cả bốn job; staging trên VPS chạy `abca8520` (khác HEAD ở hai script e2e và audit.md), mọi dịch vụ khỏe, 6 giờ không có dòng ERROR ở backend. Không chạy lại test ở máy.
 - [x] Tài liệu: runbook deploy-vps mục 6 (Drive cá nhân qua OAuth, thứ tự chọn nơi lưu, khóa backup tùy chọn), restore-isolated (archive không mã hóa, thư mục backup của Drive cá nhân), deploy-staging, README, requirements (FR-006, FR-013, FR-038, NFR-002), code-summary của U03, current-code-baseline (delta 2026-11-16).
 - [ ] Trước khi gộp vào main, người vận hành kiểm `.env` production: mã mới dùng Drive khi có biến `GOOGLE_DRIVE_OAUTH_*`, kể cả khi `U03_REQUIRE_DRIVE=false`; tệp production đang ở đĩa VPS không tự chuyển sang Drive; production và staging cần `GOOGLE_DRIVE_FOLDER_NAME` khác nhau. Phiên này không đọc được `.env` production nên chưa xác nhận.
-- [ ] Người dùng duyệt tài liệu và quyết định commit, push, mở PR vào staging.
+- [x] Người dùng duyệt tài liệu và quyết định commit, push, mở PR vào staging: commit `d19f0329`, đã có trên staging.
 
-Chưa cập nhật: `nfr-design-patterns.md` và `logical-components.md` của U03 vẫn mô tả archive luôn mã hóa (đã ghi là khác thiết kế trong code-summary); chú thích trong `frontend/src/i18n/LocaleGate.tsx` còn ghi máy chủ dựng chữ bằng tiếng Việt trong khi mặc định là tiếng Anh (mã nguồn, ngoài phạm vi lượt này).
+`nfr-design-patterns.md` và `logical-components.md` của U03 đã sửa ngày 2026-11-17. Chưa cập nhật: chú thích trong `frontend/src/i18n/LocaleGate.tsx` còn ghi máy chủ dựng chữ bằng tiếng Việt trong khi mặc định là tiếng Anh (mã nguồn, ngoài phạm vi lượt này).
 
 ## Sửa các điểm rà soát toàn dự án trên nền staging — 2026-11-16
 

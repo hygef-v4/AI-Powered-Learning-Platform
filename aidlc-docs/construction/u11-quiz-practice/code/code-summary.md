@@ -41,6 +41,8 @@ Mã lỗi: `QUIZ_NOT_FOUND`, `QUIZ_ATTEMPT_NOT_FOUND`, `QUIZ_NOT_OPEN`, `NO_ATTE
 
 `db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql`: `quiz_attempts` với unique `(quiz_id, account_id, attempt_no)`, unique riêng phần một lượt `IN_PROGRESS` mỗi (Quiz, người học), check trạng thái/nộp, index `(status, deadline_at)`, `(quiz_id, class_id)`, `(account_id, submitted_at)`, FK `quizzes`, `course_classes`, `accounts`; `app` không có `DELETE`.
 
+`V20261113_1000__scope_quiz_attempts_to_class.sql`: hai ràng buộc trên thêm `class_id`, thành unique `(quiz_id, account_id, class_id, attempt_no)` và một lượt `IN_PROGRESS` mỗi (Quiz, người học, lớp). `QuizAttemptService.start` đếm lượt, tìm lượt đang làm và đánh số trong lớp đang làm.
+
 ## Frontend
 
 - Route (layout chỉ Student): `app/quiz-practice` (#42), `app/quiz-practice/[quizId]?classId=` (#43), `app/quiz-attempts/[attemptId]` (#44), `app/quiz-attempts/[attemptId]/result` (#45).
