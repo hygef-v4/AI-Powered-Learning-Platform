@@ -15803,3 +15803,35 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Workflow U04/U13/U14 JPA → JDBC hoàn tất trên nhánh refactor/jdbc-u04-u13-u14 (chỉ commit cục bộ).
 
 ---
+## U04/U13/U14 chuyển JPA sang JDBC — E2E và PR vào staging
+**Timestamp**: 2026-11-18T14:48:55Z
+**Requested by:** Hải Nam
+**User Input**: "chạy e2e sau đó mở pr vào staging"
+**AI Response**: "Dựng stack cô lập mới jdbc1118 (cổng nginx 39188, Mailpit 39125, Postgres 35534) với image backend build từ nhánh refactor/jdbc-u04-u13-u14; không đụng stack platform và conv041314. Chạy scripts/e2e/u04-u13-u14.mjs, ghi kết quả, rồi push nhánh và mở PR vào staging."
+**Context**: Sau Operations; người dùng cho phép push nhánh và tạo PR vào staging. Không merge, không deploy.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — E2E bị chặn bởi lỗi RabbitMQ trên staging
+**Timestamp**: 2026-11-18T15:07:19Z
+**Requested by:** Hải Nam
+**User Input**: "(không có input mới; tiếp tục yêu cầu chạy e2e rồi mở PR)"
+**AI Response**: "Stack cô lập jdbc1118 build từ nhánh lên đủ 8 service. E2E u04-u13-u14 dừng ở bước dựng fixture (0 pass, 1 fail): OTP kích hoạt admin không tới Mailpit. Worker báo 'The class edu.aiplatform.jobs.contract.JobMessage is not in the trusted packages: [java.util, java.lang]'. Nguyên nhân: commit staging 3ed52391 (nâng Spring Boot 3.5.6 → 3.5.16, spring-rabbit 3.2.12) khiến Jackson2JsonMessageConverter trong jobs/config/AmqpMessageConfig.java chỉ tin java.util/java.lang; mọi job qua RabbitMQ (OTP, email, AI, Drive, backup) không deserialize được. Không do thay đổi JDBC. Stack platform/conv041314 dùng image cũ nên không gặp. Chưa sửa (ngoài phạm vi ba unit), chưa mở PR; hỏi người dùng cách xử lý."
+**Context**: E2E bị chặn; chờ người dùng quyết định.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — hỏi về build lại Docker
+**Timestamp**: 2026-11-18T15:13:30Z
+**Requested by:** Hải Nam
+**User Input**: "build lại docker có thể giúp loại bỏ lỗi này không"
+**AI Response**: "Không. Image platform-backend:jdbc1118 vừa build mới từ mã hiện tại (2026-11-18T15:00Z) và chứa spring-boot 3.5.16, spring-amqp/spring-rabbit 3.2.12; build lại sẽ ra cùng jar. Image cũ platform-backend:local (2026-11-15) chứa spring-boot 3.5.6, spring-amqp 3.2.7 nên chạy được, nhưng không chứa code JDBC. Chỉ hết lỗi khi sửa converter (thêm trusted package) hoặc hạ phiên bản trong pom.xml; cả hai đều ngoài phạm vi ba unit. Vẫn chờ người dùng chọn."
+**Context**: Trả lời câu hỏi; không sửa mã, chưa mở PR.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — chọn vá tạm, E2E đạt
+**Timestamp**: 2026-11-18T15:26:13Z
+**Requested by:** Hải Nam
+**User Input**: "Temporary local patch"
+**AI Response**: "Sửa tạm jobs/config/AmqpMessageConfig.java thành new Jackson2JsonMessageConverter(objectMapper, \"edu.aiplatform.jobs.contract\"), build lại image platform-backend:jdbc1118, tạo lại backend và worker. E2E u04-u13-u14: 40/40 pass, exit 0; log backend/worker không có ERROR hay lỗi trusted packages. Hoàn tác bản vá ngay sau đó (git checkout), backend không còn thay đổi. Ghi kết quả vào 2026-11-18-u04-u13-u14-jdbc-results.md, build-and-test-summary.md, aidlc-state.md; commit tài liệu, push nhánh và mở PR vào staging. Lỗi RabbitMQ của staging cần sửa riêng."
+**Context**: E2E hoàn tất; chuẩn bị PR.
+
+---
