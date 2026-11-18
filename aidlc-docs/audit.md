@@ -15851,3 +15851,11 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Refactor tên/định dạng theo code-conventions; không đổi API HTTP, JSON, schema DB hay tên MCP tool.
 
 ---
+## PR #105 — CI backend lỗi bước kiểm suite bắt buộc
+**Timestamp**: 2026-11-18T17:05:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check lỗi pr105"
+**AI Response**: "CI run 44351291168: mvn -B verify thành công; lỗi ở scripts/assert-required-backend-tests.ps1 vì manifest 2026-11-08-integration-test-cases.json còn tên suite cũ JdbcQuizAttemptRepositoryIntegrationTest (cùng JdbcQuestion/JdbcQuiz). Đổi 8 chỗ sang tên mới trong manifest trên worktree audit-staging; method trace giữ nguyên. Chưa commit, chưa push."
+**Context**: Sửa manifest truy vết cho PR #105; chờ người dùng cho phép commit/push.
+
+---
