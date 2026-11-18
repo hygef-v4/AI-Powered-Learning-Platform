@@ -8,8 +8,8 @@ Người dùng yêu cầu tạo nhánh mới từ staging để chuyển U04, U1
 - [x] Requirements Analysis (Standard): [câu hỏi](inception/requirements/2026-11-18-u04-u13-u14-jdbc-questions.md) đã trả lời (Q1 chỉ sửa ba unit, giữ hạ tầng JPA chung; Q2–Q4 theo khuyến nghị); [yêu cầu JD-01…JD-09](inception/requirements/2026-11-18-u04-u13-u14-jdbc.md). Đã duyệt 2026-11-18.
 - [x] Workflow Planning: chỉ Code Generation và Build and Test; thứ tự U13 → U14 → U04. Đã duyệt 2026-11-18.
 - [x] Code Generation Part 1: [kế hoạch 6 bước](construction/plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md). Đã duyệt 2026-11-18.
-- [x] Code Generation Part 2: U13 module, U14, U04; giữ hạ tầng JPA chung. Cập nhật tài liệu unit và [persistence-conventions](construction/persistence-conventions.md). Chờ duyệt Code Generation.
-- [x] Build and Test: `mvn -B verify` 2572 test, 0 fail, 0 error, 1 skipped. [Kết quả](construction/build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).
+- [x] Code Generation Part 2: U13 module, U14, U04; giữ hạ tầng JPA chung. Cập nhật tài liệu unit và [persistence-conventions](construction/persistence-conventions.md). Người dùng duyệt .
+- [x] Build and Test: `mvn -B verify` 2572 test, 0 fail, 0 error, 1 skipped. [Kết quả](construction/build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md). Thêm dòng vào [build-and-test-summary](construction/build-and-test/build-and-test-summary.md), sửa ghi chú JPA trong integration-test-instructions. Chờ duyệt chuyển sang Operations.
 
 ## Sửa ký pháp class diagram theo UML — 2026-11-18
 

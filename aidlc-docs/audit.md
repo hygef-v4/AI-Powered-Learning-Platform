@@ -15779,3 +15779,19 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Code Generation Part 2 và Build and Test hoàn tất; chờ duyệt. Chưa push.
 
 ---
+## Thêm lại thuộc tính nghiệp vụ cho các bảng
+**Timestamp**: 2026-11-18T14:42:04Z
+**Requested by:** Hải Nam
+**User Input**: "tôi đã quyết định giữ bản trước khi dùng elkjs vì đã dễ nhìn hơn rồi. Nhưng giờ tôi lại thấy các thuộc tính của các bảng hơi sơ sài quá"
+**AI Response**: "Xác nhận erd.drawio là bản trước ELK do người dùng lưu lại, có chỉnh vị trí bảng ở db_1_account_admin. Viết E:\skill\drawio-add-attributes.js: thêm lại 2–5 thuộc tính nghiệp vụ vào mọi bảng vàng của database_design_new và 6 tab db_* (vẫn không có cột kiểu dữ liệu), giữ nguyên vị trí ngang, chỉ đẩy xuống bảng nằm ngay dưới bảng dài thêm. Kết quả: 301 dòng ở tab tổng, 39–60 dòng mỗi tab module; không bảng nào chồng nhau; đường nối, bảng xám và các tab khác không đổi. Sao lưu: erd.backup-2026-11-18-keys-only.drawio. Chưa kiểm tra bằng hình."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — duyệt Code Generation
+**Timestamp**: 2026-11-18T14:44:22Z
+**Requested by:** Hải Nam
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Ghi nhận duyệt Code Generation. Build and Test: dùng kết quả mvn -B verify (2572 test, 0 fail, 0 error, 1 skipped) đã chạy trên a4bd6934; thêm phần cách chạy lại vào 2026-11-18-u04-u13-u14-jdbc-results.md, thêm dòng vào build-and-test-summary.md, sửa ghi chú 'JPA validates the remaining U04/U13/U14 mappings' trong integration-test-instructions.md. Commit tài liệu cục bộ, không push. Hỏi: Build and test instructions complete. Ready to proceed to Operations stage?"
+**Context**: Code Generation đã duyệt; Build and Test hoàn tất, chờ duyệt chuyển Operations (placeholder).
+
+---
