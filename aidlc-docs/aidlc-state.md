@@ -24,8 +24,23 @@ Người dùng gửi trang hướng dẫn UML class diagram của draw.io, yêu 
 - [x] Đối chiếu tên 154 mục phương thức trên 6 trang với khai báo Java hiện tại. 120 trùng tên, 34 mục lệch ở 21 lớp Java. Số mục lệch theo trang là Authentication 5, Authoring 10, Workspace 9, Grading 2, AI API 5 và MCP 3. Bảng tên thay thế có dẫn dòng mã trong audit.md. Chưa sửa sơ đồ hay mã nguồn.
 - [x] Cập nhật đủ 34 tên phương thức trên 6 trang và bổ sung pwdStamp vào SessionStore.createSession. Đối chiếu lại 154/154 tên với Java. Chỉ thay nội dung ô phương thức, xuống dòng ba chỗ cần chỗ trống. Đã xem 6 ảnh xuất và xác nhận kích thước, vị trí hộp và đường nối giữ nguyên.
 - [ ] Quyết định bỏ lifeline `RequestThrottle` trong sequence Login cho khớp class diagram.
-- [ ] Xuất lại 6 hình class diagram vào Report 4.
-- [ ] Xuất lại 6 hình class diagram trong file Word Report 4.
+- [x] Xuất 6 ảnh class diagram và 1 ảnh kiến trúc từ draw.io. Thay đúng 7 hình trong bản Word hiện tại, kiểm 47 trang bằng Word và đối chiếu bản tải lại từ Drive khớp byte với bản đã kiểm. Giữ nguyên file ID và link.
+- [x] Cập nhật quy ước sơ đồ lớp trong skill comet-uml-drawio của Codex và Claude. Hai bản đồng nhất và qua quick_validate.py.
+
+## Đồng bộ sequence diagram với mã nguồn — 2026-11-18
+
+- [x] Rà 15 trang theo Java. Sửa các lời gọi chính của Authentication, Authoring, Workspace và Grading. Bổ sung `attachTask`, `insertRevision` và `prepareProposal`. Ghi `release` ở phần luồng thay thế của bài nhóm vì thao tác này xóa bản nháp. Luồng kích hoạt và đặt lại mật khẩu chỉ lấy vé sau khi mật khẩu đạt yêu cầu.
+- [x] Bỏ 14 lifeline Database và 39 cặp gọi/trả SQL khỏi draw.io. Repo hoặc store kết thúc luồng lưu trữ. Giữ Redis ở Login và Logout. Đồng bộ JSON và README.
+- [x] Kiểm lớp đích, tên và số tham số của 153 lời gọi Java. Bộ kiểm UML báo 0 lỗi, 0 cảnh báo. Đã xem ảnh xuất draw.io của 15 trang.
+- [x] Xuất 15 ảnh PNG từ sequence-diagrams.drawio, thay hình trong bản Word Report 4 trên Drive và giữ link hiện có. Hình chấm điểm MCP cùng trang với tiêu đề, báo cáo còn 46 trang và số trang trong mục lục đã đồng bộ. Bản tải lại khớp SHA-256.
+
+- [x] Thêm 234 thanh kích hoạt nền trắng viền đen trên 15 sequence diagram. Đầu mũi tên chạm cạnh thanh, các nhãn và thứ tự message giữ nguyên. Nới một số cột để nhãn không chạm thanh. Đã kiểm đủ 15 ảnh xuất draw.io.
+
+- [x] Sửa 4 điểm ký pháp và luồng Java trên 7 sequence diagram. Login chỉ tra email khi IP được phép. Ba trang AI API vẽ job RabbitMQ nhận bất đồng bộ, External MCP sửa guard tiếp tục lặp, hai trang OTP đổi ref sang ghi chú. Giữ thanh kích hoạt trắng viền đen, đồng bộ JSON và kiểm 7 ảnh xuất.
+
+- [x] Hiện lifeline RabbitMQ trên ba trang AI API. Nối trực tiếp thông điệp bất đồng bộ AI_TASK vào thanh kích hoạt của AiTaskJobHandler. Đồng bộ JSON, giữ thanh nền trắng và kiểm ba ảnh xuất.
+
+- [x] Xuất lại 15 ảnh sequence có thanh kích hoạt trắng, gồm ba luồng RabbitMQ chỉ vẽ thông điệp AI_TASK. Thay vào bản Word Report 4 trên Drive, giữ cùng ID và link. Đối chiếu 46 trang, 31 trang ngoài phạm vi khớp từng pixel và bản tải lại khớp SHA-256.
 
 ## Soát Report 4 và viết lại mô tả kiến trúc — 2026-11-18
 
@@ -35,7 +50,8 @@ Người dùng yêu cầu kiểm toàn bộ Report 4 (file Word trên Drive), vi
 - [x] `docs/report4-diagram-specs/report4-revisions-2026-11-18.md`: văn bản mới cho I.1 (đoạn mô tả và bảng thành phần theo sơ đồ đã vẽ lại); bảng chỗ cần sửa ở III/IV kèm câu thay và bằng chứng.
 - [x] `docs/report4-diagram-specs/report4-sections-III-IV-2026-11-18.md`: nội dung III và IV viết lại ngắn gọn, giữ đúng tiêu đề và cột bảng của report, đã sửa các chỗ lệch mã.
 - [x] Áp III/IV vào file Word và thêm dòng Change Log 18/11/26; tải lên Drive làm phiên bản mới cùng link (2026-11-18 07:06Z, 4.683.131 byte, khớp bản local).
-- [ ] Người dùng dán nội dung vào file Word và xuất lại ảnh sơ đồ kiến trúc.
+- [ ] Dán phần mô tả I.1 được đề xuất vào Word khi được yêu cầu.
+- [x] Thay hình kiến trúc trong Report 4 bằng bản draw.io hiện tại.
 - [ ] Viết lại I.3 Database Design từ migration (12/24 bảng không tồn tại, các bảng còn lại sai cột).
 - [ ] Kiểm hình class/sequence trong Word (bản xuất chữ không có ảnh).
 
