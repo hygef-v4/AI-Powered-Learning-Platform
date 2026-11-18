@@ -27,8 +27,6 @@ import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.model.Subject;
 import edu.aiplatform.subjects.model.SubjectCode;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.time.Instant;
@@ -58,16 +56,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.NestedExceptionUtils;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -102,7 +97,6 @@ class SubjectRepositoryIntegrationTest {
     @Autowired private ISubjectRepository subjectRepository;
     @Autowired private DataSource dataSource;
     @Autowired private PlatformTransactionManager transactionManager;
-    @Autowired private EntityManager entityManager;
     @Autowired private ISubjectQuery subjectQuery;
     @Autowired private ISubjectScope subjectScope;
     @Autowired private SubjectCommandService subjectCommandService;
@@ -114,7 +108,6 @@ class SubjectRepositoryIntegrationTest {
 
     @TestConfiguration
     @EnableTransactionManagement
-    @EnableJpaRepositories(basePackageClasses = ISubjectJpaRepository.class)
     @Import({
         SubjectRepositoryAdapter.class,
         SubjectQueryService.class,
@@ -185,31 +178,13 @@ class SubjectRepositoryIntegrationTest {
         }
 
         @Bean
-        LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource source) {
-            LocalContainerEntityManagerFactoryBean factory =
-                    new LocalContainerEntityManagerFactoryBean();
-            factory.setDataSource(source);
-            factory.setPackagesToScan(SubjectJpaEntity.class.getPackageName());
-            factory.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
-            factory.setJpaPropertyMap(
-                    Map.of(
-                            "hibernate.hbm2ddl.auto",
-                            "validate",
-                            "hibernate.jdbc.time_zone",
-                            "UTC",
-                            "jakarta.persistence.query.timeout",
-                            "5000"));
-            return factory;
+        JdbcClient jdbcClient(DataSource source) {
+            return JdbcClient.create(source);
         }
 
         @Bean
-        PlatformTransactionManager transactionManager(EntityManagerFactory factory) {
-            return new JpaTransactionManager(factory);
-        }
-
-        @Bean
-        static PersistenceExceptionTranslationPostProcessor exceptionTranslation() {
-            return new PersistenceExceptionTranslationPostProcessor();
+        PlatformTransactionManager transactionManager(DataSource source) {
+            return new DataSourceTransactionManager(source);
         }
     }
 
@@ -346,9 +321,13 @@ class SubjectRepositoryIntegrationTest {
                         2);
         assertThat(subjectRepository.updateSubject(changedCode, 1)).isFalse();
         assertThat(subjectRepository.findById(original.id())).contains(original);
+        // Production còn EntityManagerFactory nên @Repository bọc lỗi thành
+        // InvalidDataAccessApiUsageException; test này không dựng JPA nên nhận lỗi gốc.
         assertThatThrownBy(() -> subjectRepository.updateSubject(original, 1))
-                .isInstanceOf(InvalidDataAccessApiUsageException.class)
-                .hasRootCauseInstanceOf(IllegalArgumentException.class);
+                .satisfies(
+                        failure ->
+                                assertThat(NestedExceptionUtils.getMostSpecificCause(failure))
+                                        .isInstanceOf(IllegalArgumentException.class));
         Subject alteredCreation =
                 new Subject(
                         original.id(),
@@ -551,7 +530,7 @@ class SubjectRepositoryIntegrationTest {
     }
 
     @Test
-    void bulkUpdateDoesNotDetachOtherManagedEntitiesInTheCallersTransaction() {
+    void updateInCallersTransactionChangesOnlyTargetRowAndLaterReadsSeeIt() {
         Subject a = subject("AAA", "A", null);
         Subject b = subject("BBB", "B", null);
         subjectRepository.insertSubject(a);
@@ -559,12 +538,11 @@ class SubjectRepositoryIntegrationTest {
         new TransactionTemplate(transactionManager)
                 .executeWithoutResult(
                         ignored -> {
-                            SubjectJpaEntity unrelated =
-                                    entityManager.find(SubjectJpaEntity.class, b.id());
-                            assertThat(entityManager.contains(unrelated)).isTrue();
-                            assertThat(
-                                    subjectRepository.updateSubject(a.archive(LATER), 1)).isTrue();
-                            assertThat(entityManager.contains(unrelated)).isTrue();
+                            assertThat(subjectRepository.findById(b.id())).contains(b);
+                            Subject archived = a.archive(LATER);
+                            assertThat(subjectRepository.updateSubject(archived, 1)).isTrue();
+                            assertThat(subjectRepository.findById(a.id())).contains(archived);
+                            assertThat(subjectRepository.findById(b.id())).contains(b);
                         });
     }
 
@@ -758,7 +736,7 @@ class SubjectRepositoryIntegrationTest {
     }
 
     @Test
-    void subjectLockRequiresCallerTransactionAndSurvivesEntityDetach() {
+    void subjectLockRequiresCallerTransactionAndHoldsUntilItEnds() {
         Subject original = subject("LOCKED", "Name", null);
         subjectRepository.insertSubject(original);
         assertThatThrownBy(() -> subjectRepository.findByIdForUpdate(original.id()))
@@ -769,7 +747,7 @@ class SubjectRepositoryIntegrationTest {
                         status -> {
                             assertThat(subjectRepository.findByIdForUpdate(original.id()))
                                     .contains(original);
-                            // Kết nối độc lập: row đã detach nhưng khóa PostgreSQL phải còn đến hết
+                            // Kết nối độc lập: khóa PostgreSQL phải còn đến hết
                             // transaction caller.
                             try (Connection contender = dataSource.getConnection();
                                     Statement sql = contender.createStatement()) {
@@ -925,6 +903,56 @@ class SubjectRepositoryIntegrationTest {
                         error ->
                                 assertThat(error.readCode())
                                         .isEqualTo("SUBJECT_ISOLATION_UNSUPPORTED"));
+    }
+
+    private boolean tryLockFromOtherConnection(UUID subjectId, String lockClause) {
+        try (Connection contender = dataSource.getConnection();
+                java.sql.PreparedStatement sql =
+                        contender.prepareStatement(
+                                "select id from subjects where id = ? " + lockClause + " nowait")) {
+            contender.setAutoCommit(false);
+            sql.setObject(1, subjectId);
+            sql.executeQuery().close();
+            contender.rollback();
+            return true;
+        } catch (java.sql.SQLException failure) {
+            if ("55P03".equals(failure.getSQLState())) {
+                return false;
+            }
+            throw new IllegalStateException(failure);
+        }
+    }
+
+    @Test
+    void subjectRowLockAllowsKeyShareButBlocksOtherWriters() {
+        Subject original = subject("KEYSHARE", "Name", null);
+        subjectRepository.insertSubject(original);
+        new TransactionTemplate(transactionManager)
+                .executeWithoutResult(
+                        status -> {
+                            assertThat(subjectRepository.findByIdForUpdate(original.id()))
+                                    .contains(original);
+                            assertThat(tryLockFromOtherConnection(original.id(), "for key share"))
+                                    .isTrue();
+                            assertThat(
+                                            tryLockFromOtherConnection(
+                                                    original.id(), "for no key update"))
+                                    .isFalse();
+                        });
+        new TransactionTemplate(transactionManager)
+                .executeWithoutResult(
+                        status -> {
+                            assertThat(
+                                            subjectRepository.findByIdForUpdate(
+                                                    original.id(), Duration.ofMillis(500)))
+                                    .contains(original);
+                            assertThat(tryLockFromOtherConnection(original.id(), "for key share"))
+                                    .isTrue();
+                            assertThat(
+                                            tryLockFromOtherConnection(
+                                                    original.id(), "for no key update"))
+                                    .isFalse();
+                        });
     }
 
     @Test
