@@ -58,9 +58,9 @@ import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-/** SQL viết tay của {@link JdbcQuizAttemptRepository} và migration U11 trên PostgreSQL 16. */
+/** SQL viết tay của {@link QuizAttemptRepository} và migration U11 trên PostgreSQL 16. */
 @Testcontainers(disabledWithoutDocker = true)
-class JdbcQuizAttemptRepositoryIntegrationTest {
+class QuizAttemptRepositoryIntegrationTest {
 
     // Sinh mỗi lần chạy: container chỉ sống trong test, không để chuỗi mật khẩu cố định trong mã.
     private static final String APP_PASSWORD = UUID.randomUUID().toString();
@@ -76,7 +76,7 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
     private static HikariDataSource appDataSource;
     private static HikariDataSource adminDataSource;
     private static JdbcClient admin;
-    private static JdbcQuizAttemptRepository repository;
+    private static QuizAttemptRepository repository;
     private static TransactionTemplate tx;
 
     private UUID student;
@@ -90,7 +90,7 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
         appDataSource = dataSource("app", APP_PASSWORD);
         adminDataSource = dataSource(POSTGRES.getUsername(), POSTGRES.getPassword());
         admin = JdbcClient.create(adminDataSource);
-        repository = new JdbcQuizAttemptRepository(JdbcClient.create(appDataSource), new ObjectMapper());
+        repository = new QuizAttemptRepository(JdbcClient.create(appDataSource), new ObjectMapper());
         tx = new TransactionTemplate(new DataSourceTransactionManager(appDataSource));
     }
 
@@ -153,8 +153,8 @@ class JdbcQuizAttemptRepositoryIntegrationTest {
     void firstAttemptWaitsForQuestionEditAndUsesItsCommittedPaperAndKey() throws Exception {
         JdbcClient app = JdbcClient.create(appDataSource);
         ObjectMapper json = new ObjectMapper().findAndRegisterModules();
-        var quizzes = new JdbcQuizRepository(app, json);
-        var questions = new JdbcQuestionRepository(app, json);
+        var quizzes = new QuizRepository(app, json);
+        var questions = new QuestionRepository(app, json);
         var quiz = quizzes.findQuiz(quizId).orElseThrow();
         questions.insert(Question.createInline(quizId, quiz.subjectId(), createQuestionContent("Old paper", "1"), student, NOW));
         UUID questionId = questions.listInline(quizId).get(0).id();

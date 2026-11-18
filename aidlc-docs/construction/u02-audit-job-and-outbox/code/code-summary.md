@@ -27,7 +27,7 @@ Code viết ngày 2026-10-18 theo [plan](../../plans/code-generation-plan/u02-au
 ## Frontend
 
 - `app/admin/audit` (màn #14 Audit Log, artboard `a13`, `a13b`, `a13c`), bọc `Suspense` vì đọc tham số URL.
-- `features/audit`: `AuditLogPage` (mặc định 7 ngày theo giờ Việt Nam; mở từ Account Detail với `?objectType=&objectId=` thì lọc sẵn), `AuditFilters`, `AuditTable` ("Hệ thống" khi actor rỗng, nhãn kết quả, trạng thái rỗng), `AuditDetailDialog` (chỉ đọc, JSON `details`), `labels.ts` (nhãn tiếng Việt cho kết quả, hành động, loại đối tượng; mã lạ hiện nguyên mã), `api.ts`. Lỗi 403 và lỗi tải có thông báo riêng. Phần tử tương tác có `data-testid` dạng `audit-<thành phần>-<vai trò>`.
+- `features/audit`: `AuditLogPage` (mặc định 7 ngày theo giờ Việt Nam; mở từ Account Detail với `?objectType=&objectId=` thì lọc sẵn), `AuditFilters`, `AuditTable` (cột STT, thời gian, người thực hiện, hành động, đối tượng, kết quả, lý do; "Hệ thống" khi actor rỗng, trạng thái rỗng; popup `AuditDetailDialog` xem JSON `details` đã bỏ), `labels.ts` (nhãn tiếng Việt cho kết quả, hành động, loại đối tượng; mã lạ hiện nguyên mã), `api.ts`. Lỗi 403 và lỗi tải có thông báo riêng. Phần tử tương tác có `data-testid` dạng `audit-<thành phần>-<vai trò>`.
 - `shared/ui`: thêm `Pagination` ("Hiển thị a–b trong N …", số trang rút gọn bằng "…") và 5 icon `calendar_month`, `chevron_left`, `filter_alt_off`, `receipt_long`, `search` lấy từ `@material-symbols/svg-400` 0.48.0 như các icon sẵn có.
 - Mục menu "Nhật ký audit" đã có sẵn trong `features/audit/register.ts`.
 

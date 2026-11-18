@@ -265,7 +265,7 @@ public class QuizAiDraftService {
         }
         Optional<AiTaskView> task;
         try {
-            task = ai.get(draft.taskId());
+            task = ai.loadTask(draft.taskId());
         } catch (RuntimeException unavailable) {
             return draft;
         }

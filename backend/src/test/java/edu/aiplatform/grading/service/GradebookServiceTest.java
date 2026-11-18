@@ -212,7 +212,7 @@ class GradebookServiceTest {
         when(a.gradingMode()).thenReturn(GradingMode.GRADED);
         when(a.status()).thenReturn(edu.aiplatform.assignments.contract.AssignmentStatus.OPEN);
         when(a.submissionMode()).thenReturn(SubmissionMode.GROUP);
-        when(assignments.get(aid)).thenReturn(Optional.of(a));
+        when(assignments.loadAssignment(aid)).thenReturn(Optional.of(a));
         when(assignments.listForClass(cid)).thenReturn(List.of(a));
         when(rubric.maxPoints(aid)).thenReturn(BigDecimal.TEN);
         when(classes.getClassRef(cid))

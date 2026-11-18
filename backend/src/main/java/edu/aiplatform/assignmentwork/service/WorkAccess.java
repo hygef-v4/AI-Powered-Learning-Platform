@@ -61,7 +61,7 @@ class WorkAccess {
 
     /** Bài thuộc lớp hoặc môn chứa lớp; người học thấy OPEN, CLOSED, RETIRED khi đã có lượt nộp (BR-U07-37). */
     AssignmentView requireVisible(Actor actor, ClassRef ref, UUID assignmentId, String action) {
-        AssignmentView view = call(() -> assignments.get(assignmentId)).orElse(null);
+        AssignmentView view = call(() -> assignments.loadAssignment(assignmentId)).orElse(null);
         if (view == null || !belongsToClass(view, ref) || !isVisible(view, actor.accountId())) {
             throw deny(actor, action, WorkAudit.OBJECT_ASSIGNMENT, assignmentId, "ASSIGNMENT_NOT_VISIBLE");
         }

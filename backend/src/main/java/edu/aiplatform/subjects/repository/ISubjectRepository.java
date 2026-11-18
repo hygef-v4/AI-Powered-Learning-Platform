@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/** Boundary nội bộ U04; adapter JPA nằm trong package infrastructure, không được unit khác dùng trực tiếp. */
+/** Boundary nội bộ U04; adapter JDBC nằm trong package repository, không được unit khác dùng trực tiếp. */
 public interface ISubjectRepository {
 
     Optional<Subject> findById(UUID subjectId);
@@ -42,7 +42,7 @@ public interface ISubjectRepository {
     /**
      * Ghi snapshot đã thay đổi với điều kiện id/version hiện tại khớp expectedVersion.
      * Snapshot mới có public version = expectedVersion + 1; false nghĩa là mất cập nhật đồng thời.
-     * Adapter B05 chuyển đổi public version và storage @Version, không tăng version hai lần.
+     * Adapter chuyển đổi public version và cột version (public − 1), không tăng version hai lần.
      */
     boolean updateSubject(Subject subject, long expectedVersion);
 }

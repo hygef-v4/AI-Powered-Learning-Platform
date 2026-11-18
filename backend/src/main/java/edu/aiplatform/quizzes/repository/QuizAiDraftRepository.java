@@ -21,7 +21,7 @@ import org.springframework.stereotype.Repository;
 
 /** {@code quiz_ai_drafts}: đề xuất và provenance lưu {@code jsonb}; đổi trạng thái có điều kiện (P4). */
 @Repository
-public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
+public class QuizAiDraftRepository implements IQuizAiDraftRepository {
 
     private static final String COLUMNS = """
             id, target, quiz_id, subject_id, origin, task_id, status, proposal, provenance, base_version, created_by,
@@ -33,7 +33,7 @@ public class JdbcQuizAiDraftRepository implements IQuizAiDraftRepository {
     private final JdbcClient jdbc;
     private final ObjectMapper json;
 
-    public JdbcQuizAiDraftRepository(JdbcClient jdbc, ObjectMapper json) {
+    public QuizAiDraftRepository(JdbcClient jdbc, ObjectMapper json) {
         this.jdbc = jdbc;
         this.json = json;
     }

@@ -9,7 +9,7 @@ import java.util.UUID;
 /** Đọc bài, lịch, nội dung đã khóa; biết còn nhận bài không; nhắc hạn. Dùng bởi U08, U09, U12, U14. */
 public interface IAssignmentQuery {
 
-    Optional<AssignmentView> get(UUID assignmentId);
+    Optional<AssignmentView> loadAssignment(UUID assignmentId);
 
     /** Holds a shared assignment lock until the caller's write transaction ends. */
     void lockSubmission(UUID assignmentId);

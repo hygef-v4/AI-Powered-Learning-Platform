@@ -77,7 +77,7 @@ class EmailDeliveryServiceTest {
                         false,
                         null,
                         List.of());
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(source));
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(source));
         for (String prefix : List.of("/my-assignments/", "/assignments/")) {
             var e = pending();
             e.type = "DEADLINE_REMINDER";
@@ -130,7 +130,7 @@ class EmailDeliveryServiceTest {
         UUID assignmentId = UUID.randomUUID();
         notificationRepository.findNotification(e.notificationId).orElseThrow().link =
                 "/my-assignments/" + assignmentId + "?classId=" + UUID.randomUUID();
-        when(assignmentQuery.get(assignmentId))
+        when(assignmentQuery.loadAssignment(assignmentId))
                 .thenThrow(new IllegalStateException("private provider error"));
         assertThatThrownBy(() -> emailDeliveryService.sendEmail(e.id))
                 .isInstanceOf(RetryableJobException.class)

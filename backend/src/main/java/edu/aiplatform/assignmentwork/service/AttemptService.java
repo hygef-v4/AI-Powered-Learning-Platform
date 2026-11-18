@@ -129,7 +129,7 @@ public class AttemptService {
     @Transactional(readOnly = true)
     public WorkViews.Attempt loadAttempt(Actor actor, UUID attemptId) {
         AssignmentAttempt attempt = access.requireOwnAttempt(actor, attemptId, "ATTEMPT_VIEW");
-        AssignmentView view = WorkAccess.call(() -> assignments.get(attempt.assignmentId()))
+        AssignmentView view = WorkAccess.call(() -> assignments.loadAssignment(attempt.assignmentId()))
                 .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         return attemptView(attempt, view);
     }
@@ -160,7 +160,7 @@ public class AttemptService {
             return buildReceipt(current);
         }
         Instant now = clock.instant();
-        AssignmentView view = WorkAccess.call(() -> assignments.get(current.assignmentId()))
+        AssignmentView view = WorkAccess.call(() -> assignments.loadAssignment(current.assignmentId()))
                 .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         if (!WorkAccess.openForStudents(view)) {
             throw reject(actor, current.assignmentId(), "SUBMISSION_CLOSED", "Bài đã đóng nhận bài");
@@ -305,7 +305,7 @@ public class AttemptService {
         if (!attempt.hasInProgressStatus()) {
             throw ApiException.createConflict("ATTEMPT_SUBMITTED", "Lượt đã nộp, không sửa được");
         }
-        AssignmentView view = WorkAccess.call(() -> assignments.get(attempt.assignmentId()))
+        AssignmentView view = WorkAccess.call(() -> assignments.loadAssignment(attempt.assignmentId()))
                 .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         Instant deadline = calculateEffectiveDeadline(attempt, view);
         if (!WorkAccess.openForStudents(view)) {

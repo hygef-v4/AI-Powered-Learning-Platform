@@ -62,7 +62,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 1. Scanner tạo `backup_runs` với `scheduled_for` duy nhất rồi gửi `BACKUP_RUN`.
 2. Handler chuyển `CREATED` → `RUNNING` bằng cập nhật có điều kiện.
 3. `pg_dump --format=custom` bằng role `backup_reader` ra volume tạm.
-4. Mã hóa dump (P17), upload vào `backup/{runId}`, kiểm kích thước và checksum; không chép tệp Drive.
+4. Mã hóa dump khi có khóa công khai (P17), upload vào `backup/{runId}`, kiểm kích thước và checksum; không chép tệp Drive.
 5. Ghi `SUCCESS`, audit, rồi chạy retention (P18).
 6. Lỗi: thử lại theo P9; hết lượt thì `FAILED`, dọn thư mục của lần chạy qua `DRIVE_CLEANUP`, phát `backup.failed`.
 
@@ -70,6 +70,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 - Sinh khóa AES-256 và nonce ngẫu nhiên cho mỗi lần chạy; mã hóa luồng bằng AES-GCM.
 - Bọc khóa AES bằng public key RSA-OAEP-256 lấy từ `U03_BACKUP_PUBLIC_KEY`; ghi khóa đã bọc vào đầu archive.
 - Giải mã chỉ làm được với private key của người vận hành, giữ ngoài VPS.
+- `U03_BACKUP_PUBLIC_KEY` là tùy chọn (từ 2026-11-16): để trống thì `BackupJobHandler` ghi cảnh báo và lưu dump không mã hóa; `BackupDecryptTool` nhận ra archive không mã hóa và chép nguyên trạng. Vận hành production nên đặt khóa.
 
 ## P18 - Giữ bản trong 7 ngày
 - Chọn các lần `SUCCESS` có `snapshot_at` cũ hơn 7 ngày, trừ lần thành công mới nhất; xóa thư mục `backup/{runId}` của các lần đó, ghi `purged_at`.

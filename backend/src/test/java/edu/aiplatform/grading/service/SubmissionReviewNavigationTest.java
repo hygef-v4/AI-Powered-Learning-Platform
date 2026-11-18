@@ -39,7 +39,7 @@ class SubmissionReviewNavigationTest {
         when(assignment.classId()).thenReturn(classId);
         when(assignment.submissionMode()).thenReturn(SubmissionMode.INDIVIDUAL);
         when(assignment.status()).thenReturn(AssignmentStatus.CLOSED);
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(assignment));
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment));
         when(classAccess.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId, UUID.randomUUID(),
                 "C", "Class", ClassStatus.OPEN, actor.accountId(), false)));
         var values = new ArrayList<Evaluation>();
@@ -66,7 +66,7 @@ class SubmissionReviewNavigationTest {
     @org.junit.jupiter.params.provider.EnumSource(AssignmentStatus.class)
     void assignmentStatusControlsPreviewAndBatchMetadata(AssignmentStatus status) {
         var values = fixture();
-        var assignment = assignmentQuery.get(assignmentId).orElseThrow();
+        var assignment = assignmentQuery.loadAssignment(assignmentId).orElseThrow();
         when(assignment.assignmentId()).thenReturn(assignmentId);
         when(assignment.status()).thenReturn(status);
         when(assignmentQuery.listForClass(classId)).thenReturn(List.of(assignment));
@@ -129,7 +129,7 @@ class SubmissionReviewNavigationTest {
 
     @Test void groupNavigationIncludesOnlyFilteredRootsAndNeverMembers() {
         var values = fixture();
-        var assignment = assignmentQuery.get(assignmentId).orElseThrow();
+        var assignment = assignmentQuery.loadAssignment(assignmentId).orElseThrow();
         when(assignment.submissionMode()).thenReturn(SubmissionMode.GROUP);
         when(groupSubmissionSourceProvider.getIfAvailable()).thenReturn(groupSource);
         var root = values.get(0);

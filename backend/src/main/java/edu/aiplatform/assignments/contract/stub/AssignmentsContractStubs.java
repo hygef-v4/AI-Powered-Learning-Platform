@@ -69,7 +69,7 @@ public class AssignmentsContractStubs {
             }
 
             @Override
-            public Optional<AssignmentView> get(UUID assignmentId) {
+            public Optional<AssignmentView> loadAssignment(UUID assignmentId) {
                 return Optional.of(sampleAssignment(assignmentId));
             }
 

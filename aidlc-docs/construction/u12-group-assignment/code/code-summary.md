@@ -60,8 +60,8 @@ Lỗi là Problem Detail kèm `code`; bộ nhóm mâu thuẫn trả `issues` the
 
 ## Frontend
 
-- `features/groups`: `ClassGroupsPanel` (tab Sinh viên: thẻ nhóm, người đã rời lớp, `GroupEditor`, `RandomSplitDialog`, `LeaderRequestList`, `GroupProgressView` kèm nhả mục), `GroupCountCard` (tab Thông tin lớp), `StudentGroupInfo` (popup Student Detail), `GroupAssignmentPanel` (Assignment Form bài nhóm), `MyGroupCard`, `MyGroupPage` (`app/classes/[id]/group`), `LeaderChangeRequestDialog`.
-- `features/groupdocs`: `GroupWorkspacePage` (`app/group-docs/[id]`, layout cho Student, Teacher, Subject Manager), `SectionEditorDialog` (che kín trang, tự lưu 10 giây), `AssignSectionDialog`, `SubmitGroupDialog`, thẻ Bản nộp, lớp phủ "Đang nộp…", `useGroupDocStream` (EventSource, tải lại khi kết nối lại), `OpenGroupWorkButton` (slot `GroupWorkEntry`).
+- `features/groups`: `ClassGroupsPanel` (tab nhóm của giảng viên: thẻ nhóm, người đã rời lớp, `GroupFormDialog`, `RandomSplitDialog`, `LeaderRequestList`, `GroupProgressTable`, `SelfGroupingSettingsDialog`, `ProposalReviewList`), `StudentGroupInfo` (popup Student Detail), `GroupAssignmentPanel` (Assignment Form bài nhóm), `MyGroupCard`, `MyGroupPage` (`app/classes/[id]/group`), `LeaderChangeRequestDialog`, `GroupProposalSection` cùng `ProposalNameDialog`, `InviteMembersDialog` (sinh viên tự chia nhóm). `GroupEditor`, `GroupProgressView` và `GroupCountCard` đã bỏ.
+- `features/groupdocs`: `GroupWorkspacePage` (`app/group-docs/[id]`, layout cho Student, Teacher, Subject Manager), `GroupSectionEditorPage` (`app/group-docs/[id]/edit`, trang soạn mục riêng thay `SectionEditorDialog`, tự lưu 10 giây), `AssignSectionDialog`, `SubmitGroupDialog`, `SectionHistoryDialog`, `GroupProgressCard` (slot `groupProgressSections`), mục lục tài liệu trên sidebar (`groupDocNav`), thẻ Bản nộp, lớp phủ "Đang nộp…", `useGroupDocStream` (EventSource, tải lại khi kết nối lại), `OpenGroupWorkButton` (slot `GroupWorkEntry`).
 - Đăng ký slot trong `features/groups/register.ts`, `features/groupdocs/register.ts`.
 
 ## Kiểm tra

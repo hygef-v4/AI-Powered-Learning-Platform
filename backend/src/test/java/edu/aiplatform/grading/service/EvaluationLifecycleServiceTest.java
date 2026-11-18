@@ -28,7 +28,7 @@ class EvaluationLifecycleServiceTest {
         var a = mock(AssignmentView.class);
         when(a.assignmentId()).thenReturn(aid);
         when(a.gradingMode()).thenReturn(GradingMode.PRACTICE);
-        when(assignments.get(aid)).thenReturn(Optional.of(a));
+        when(assignments.loadAssignment(aid)).thenReturn(Optional.of(a));
         var service = new EvaluationLifecycleService(repo, sub, assignments, rubric,
                 new ObjectMapper().findAndRegisterModules(), Clock.systemUTC(),
                 mock(edu.aiplatform.academics.contract.IClassAccess.class));

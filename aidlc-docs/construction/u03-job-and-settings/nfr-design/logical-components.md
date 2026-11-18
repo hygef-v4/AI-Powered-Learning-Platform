@@ -44,7 +44,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 | `U03_REQUIRE_DRIVE` | Production bắt buộc có Drive |
 | `U03_JOB_HANDLER_TIMEOUT` | Timeout mặc định của handler |
 | `U03_SETTINGS_CACHE_TTL` | 30 giây |
-| `U03_BACKUP_PUBLIC_KEY` | Public key RSA bọc khóa archive |
+| `U03_BACKUP_PUBLIC_KEY` | Public key RSA bọc khóa archive; tùy chọn, để trống thì archive không mã hóa |
 | `BACKUP_DB_PASSWORD` | Mật khẩu role `backup_reader` |
 
 ## Design assessment scope — 2026-10-30

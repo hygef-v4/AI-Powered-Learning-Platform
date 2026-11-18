@@ -299,7 +299,7 @@ class QuizServicesTest {
         publication.retire(teacher, published.quiz().id(), null, published.quiz().version());
         var projection = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
                 .disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .valueToTree(query.get(published.quiz().id()).orElseThrow());
+                .valueToTree(query.loadQuiz(published.quiz().id()).orElseThrow());
         assertThat(projection.path("publishedAt").asText()).isEqualTo(NOW.toString());
     }
 

@@ -1,5 +1,7 @@
 # U14 — Implementation handoff
 
+**Persistence 2026-11-18:** repository của unit chuyển từ JPA sang `JdbcClient`; các đoạn nhắc JPA/EntityManager/Hibernate bên dưới là lịch sử. [Kết quả](../../build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).
+
 **Chốt chính sách 2026-11-08:** D-U14-09 thay default-off trong ghi chú02/11 bằng mặc định bật khi chưa lưu tùy chọn; không ghi đè lựa chọn đã lưu. Xem [quyết định](../../../inception/requirements/2026-11-07-u04-u13-u14-reconciliation-questions.md). Đoạn ghi ngày02/11 và số test cũ giữ làm lịch sử.
 
 Sửa lỗi 2026-11-02: mọi role có phần cài đặt email, API trả loại phù hợp role; Teacher/Subject Manager có email tùy chọn cho sự kiện họ đã nhận trong app (mặc định tắt), Admin thấy cảnh báo backup bắt buộc. Student giữ năm loại và mặc định cũ. [Kế hoạch và kiểm chứng](../../plans/code-generation-plan/2026-11-02-u04-u13-u14.md). Các số test/fixture cũ bên dưới là lịch sử.

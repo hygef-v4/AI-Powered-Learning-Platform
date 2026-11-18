@@ -34,7 +34,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F2 - Chi tiết Quiz (UC 50)
 1. Frontend gọi `GET /api/v1/me/quizzes/{quizId}` kèm `classId`.
 2. Kiểm R5 với lớp và Quiz (BR-U11-01); không đạt thì "không tìm thấy".
-3. Trả thông tin theo BR-U11-03 (`IQuizQuery.get`) và các lượt của mình.
+3. Trả thông tin theo BR-U11-03 (`IQuizQuery.loadQuiz`) và các lượt của mình.
 4. Nút Làm Quiz hoặc Tiếp tục khi Quiz `OPEN` và còn lượt; không thì nêu lý do (đã ngưng, hết lượt).
 
 ## 3. Làm Quiz

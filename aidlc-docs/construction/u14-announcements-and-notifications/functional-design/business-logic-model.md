@@ -54,7 +54,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 Refinement B2 được duyệt 2026-10-25: `ASSIGNMENT_OPENED` phân giải thành các nhóm theo lớp `OPEN`, giữ tài khoản sinh viên `ACTIVE` và ghi danh hiện hành. Mỗi nhóm dùng `/my-assignments/{assignmentId}?classId={classId}`; bài của môn giữ ngữ cảnh từng lớp. Xử lý lớp theo classId ổn định và loại người nhận trùng trong cùng sự kiện, giữ sourceEventId gốc và unique key hiện có.
 
 ### F5 - Xem, đánh dấu đã đọc (UC 65)
-1. `NotificationBell` trên thanh điều hướng (U14 gắn qua slot `HeaderWidget` của U01) gọi `GET /api/v1/me/notifications/unread-count` và mở kênh `GET /api/v1/me/notifications/events`.
+1. `NotificationBell` trên thanh điều hướng (U14 gắn qua slot `HeaderWidget` của U01) gọi `GET /api/v1/me/notifications/unread-count` và mở kênh `GET /api/v1/me/notifications/events`. Khi kênh SSE còn mở thì không hỏi định kỳ; chỉ lúc mất kết nối và tab đang hiện mới hỏi lại `unread-count` mỗi 30 giây (từ 2026-11-16).
 2. Mở popup: `GET /api/v1/me/notifications` (phân trang, mới nhất trước).
 3. Bấm một thông báo: `POST /api/v1/me/notifications/{id}:read` rồi mở đường dẫn; màn đích kiểm quyền hiện hành (BR-U14-12).
 4. "Đánh dấu tất cả đã đọc": `POST /api/v1/me/notifications:read-all`.

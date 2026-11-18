@@ -25,7 +25,7 @@ U11 không sở hữu: Quiz, câu, đáp án (U10), dữ liệu hoạt động (
 |---|---|---|
 | `id` | UUID | Khóa |
 | `quizId`, `classId`, `accountId` | UUID | Quiz (một version), lớp người học làm, người học |
-| `attemptNo` | số | Duy nhất theo (`quizId`, `accountId`) |
+| `attemptNo` | số | Duy nhất theo (`quizId`, `accountId`, `classId`); đánh từ 1 trong từng lớp, nên học lại môn ở lớp mới vẫn giữ lượt của lớp cũ |
 | `snapshot` | JSON | `versionNo`, cài đặt, chính sách theo dõi, seed, thứ tự câu và đáp án |
 | `answers` | JSON | Câu → danh sách lựa chọn |
 | `answerVersion` | số | Tăng mỗi lần lưu |

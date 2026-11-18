@@ -50,7 +50,7 @@ public class AiContractStubs {
             }
 
             @Override
-            public Optional<AiTaskView> get(UUID taskId) {
+            public Optional<AiTaskView> loadTask(UUID taskId) {
                 return Optional.empty();
             }
 

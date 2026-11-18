@@ -58,7 +58,7 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
         // Step 1: Fetch submission and assignment details, ensuring assignment is graded and individual
         var submission = submissionQuery.getSubmission(attemptId).orElseThrow(() -> ApiException
                 .createUnavailable("SUBMISSION_UNAVAILABLE", "Submitted snapshot unavailable"));
-        var assignment = assignmentQuery.get(submission.assignmentId()).orElseThrow(
+        var assignment = assignmentQuery.loadAssignment(submission.assignmentId()).orElseThrow(
                 () -> ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
         if (assignment.gradingMode() != GradingMode.GRADED)
             return;
@@ -98,7 +98,7 @@ public class EvaluationLifecycleService implements ISubmissionListener, IGroupEv
     public void onGroupSubmitted(UUID documentId, String hash, UUID assignmentId, UUID classId,
             List<UUID> members) {
         // Step 1: Validate group assignment, class reference, and members list
-        var assignment = assignmentQuery.get(assignmentId).orElseThrow(
+        var assignment = assignmentQuery.loadAssignment(assignmentId).orElseThrow(
                 () -> ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
         if (assignment.gradingMode() != GradingMode.GRADED
                 || assignment.submissionMode() != SubmissionMode.GROUP)

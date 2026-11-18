@@ -151,7 +151,7 @@ public class AiTaskService implements IAiTask {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<AiTaskView> get(UUID taskId) {
+    public Optional<AiTaskView> loadTask(UUID taskId) {
         return tasks.findById(taskId).map(this::view);
     }
 

@@ -1,6 +1,6 @@
 package edu.aiplatform.quizzes.integration;
 
-import edu.aiplatform.quizzes.repository.JdbcQuizRepository;
+import edu.aiplatform.quizzes.repository.QuizRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,7 +44,7 @@ class QuizPublicationMigrationIntegrationTest {
             jdbc.sql("insert into subjects (id,code,name,status,manager_id,created_at,updated_at) "
                             + "values (:id,'CS101','Computing','ACTIVE',:manager,:now,:now)")
                     .param("id", subject).param("manager", author).param("now", java.sql.Timestamp.from(NOW)).update();
-            JdbcQuizRepository quizzes = new JdbcQuizRepository(jdbc, new ObjectMapper());
+            QuizRepository quizzes = new QuizRepository(jdbc, new ObjectMapper());
             Quiz noProof = legacy(subject, author), proven = legacy(subject, author),
                     denied = legacy(subject, author), wrongType = legacy(subject, author);
             List.of(noProof, proven, denied, wrongType).forEach(q -> insertLegacy(jdbc, q, "RETIRED"));

@@ -80,7 +80,7 @@ class AssignmentImportServiceTest {
                 .thenReturn(List.of(new AiSourceChoice(AiSource.PERSONAL, AiProvider.OPENAI)));
         when(f.aiTasks.submit(any())).thenAnswer(i -> new AiTaskView(UUID.randomUUID(), AiTaskState.QUEUED,
                 AiSource.PERSONAL, AiProvider.OPENAI, "gpt-4.1-mini", null, null, null));
-        when(f.aiTasks.get(any())).thenReturn(Optional.empty());
+        when(f.aiTasks.loadTask(any())).thenReturn(Optional.empty());
         when(f.artifacts.store(any(), eq(ArtifactPurpose.DOCUMENT_IMAGE), any())).thenReturn(new FileRef("fig-ref"));
         when(f.artifacts.attach(any(), any(), eq(ArtifactPurpose.DOCUMENT_IMAGE))).thenAnswer(i ->
                 new StoredFileInfo("fig-file", f.teacher.accountId(), ArtifactPurpose.DOCUMENT_IMAGE, "h.png",

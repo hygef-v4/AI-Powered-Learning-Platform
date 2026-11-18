@@ -10,12 +10,12 @@ announcements/notifications có CRUD, recipients, preference, in-app/SSE/email/r
 |---|---|
 | [announcements/controller](../../../../backend/src/main/java/edu/aiplatform/announcements/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [announcements/service](../../../../backend/src/main/java/edu/aiplatform/announcements/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [announcements/repository](../../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [announcements/repository](../../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, SQL JDBC (`JdbcClient`) và row mapping. |
 | [announcements/model](../../../../backend/src/main/java/edu/aiplatform/announcements/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [announcements/dto](../../../../backend/src/main/java/edu/aiplatform/announcements/dto) | Kiểu dữ liệu request/response riêng. |
 | [notifications/controller](../../../../backend/src/main/java/edu/aiplatform/notifications/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [notifications/service](../../../../backend/src/main/java/edu/aiplatform/notifications/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [notifications/repository](../../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [notifications/repository](../../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, SQL JDBC (`JdbcClient`) và row mapping. |
 | [notifications/model](../../../../backend/src/main/java/edu/aiplatform/notifications/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [notifications/integration](../../../../backend/src/main/java/edu/aiplatform/notifications/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [notifications/config](../../../../backend/src/main/java/edu/aiplatform/notifications/config) | Properties, cấu hình bean và topology. |
@@ -37,3 +37,7 @@ Kiểm tra của đợt refactor được ghi trong [refactor results](../../bui
 
 - [aidlc-docs/construction/build-and-test/u14-build-and-test-plan.md](../../build-and-test/u14-build-and-test-plan.md)
 - [aidlc-docs/construction/build-and-test/u14-verification.md](../../build-and-test/u14-verification.md)
+
+## Delta 2026-11-18 — chuyển JPA sang JDBC
+
+Repository của unit dùng `JdbcClient`, giữ SQL, khóa, version/CAS, thứ tự và API như trước; entity/repository JPA đã xóa. [Kết quả kiểm chứng](../../build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).

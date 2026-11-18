@@ -47,7 +47,7 @@ public class QuizzesContractStubs {
             }
 
             @Override
-            public Optional<QuizView> get(UUID quizId) {
+            public Optional<QuizView> loadQuiz(UUID quizId) {
                 return Optional.of(sampleQuiz(quizId));
             }
         });
