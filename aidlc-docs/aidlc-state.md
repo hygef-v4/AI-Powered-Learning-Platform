@@ -1,5 +1,55 @@
 # AI-DLC State Tracking
 
+## Sửa ký pháp class diagram theo UML — 2026-11-18
+
+Người dùng gửi trang hướng dẫn UML class diagram của draw.io, yêu cầu review rồi sửa `docs/class-diagrams.drawio`. Chỉ sửa sơ đồ và README; không đổi mã; chưa commit.
+
+- [x] Review: 106 dependency, 12 realization, 3 association, 2 composition; interface gắn nhầm «service»; thiếu `IJobHandler`.
+- [x] Sửa bằng script đối chiếu field Java (chỉ field cấp lớp): 83 dependency thành association có hướng, 2 thành aggregation (`AiTaskResultHandlerRegistry`, `McpToolRegistry`) có `1`/`0..*`; 21 giữ dependency (repository → entity, registry → tool cụ thể, `JobDispatcher` → `OtpMailHandler`); bỏ dependency trùng `Evaluation` → `EvaluationHistory`; `GroupDocument` ◆ `GroupSection` thành composition; 4 interface đổi sang «interface»; thêm `IJobHandler` và realization từ `OtpMailHandler`, `AiTaskJobHandler`. Giữ nguyên vị trí hộp và điểm gấp đường.
+- [x] Nối lại đường cho gọn: định tuyến vuông góc ưu tiên đường thẳng rồi 1–2 lần gập, không đi xuyên hộp, giữ vị trí hộp; tổng số điểm gập giảm từ 404 xuống 72. Bỏ 6 dependency "dispatches" từ `McpToolRegistry` tới tool cụ thể vì mã chỉ gọi qua `IMcpToolProvider`. Trang Authentication còn 30 chỗ cắt nhau do 5 service dùng chung nhiều store.
+- [x] Render 6 trang bằng draw.io CLI để kiểm; README ghi quy ước mới.
+- [x] Làm thử bố cục theo cột trên trang Grading: hộp rộng cố định, chữ ký phương thức xuống dòng sau tham số, 3 cột Evaluation/Proposal/Practice; 10 điểm gập, 2 chỗ cắt.
+- [x] Trang Grading đổi sang đường thẳng (nối chéo như ảnh mẫu): 26/26 đường là một đoạn thẳng, cách hộp khác ít nhất 12px, 3 chỗ cắt; dịch `IGradingProposalRepository`, `GradingProposalRepository`, `GradingProposal` sang phải để không bị `GradingProposalTransactions` chắn.
+- [x] Trang Grading chỉ giữ class chính: bỏ `IEvaluationRepository`, `IGradingProposalRepository` (service nối thẳng repository), `IAiTask` thay bằng `AiTaskService`, bỏ `GradingBatchService`, `AttemptRepository`; còn 15 class, 19 đường thẳng, 3 chỗ cắt.
+- [x] Trang Grading xếp theo tầng như ảnh mẫu: hàng controller, hàng service, hàng repository, hàng entity; 19 đường thẳng, 1 chỗ cắt; nhãn hai đầu đặt trên đường ngang, tên quan hệ ở giữa.
+- [x] Trang Grading đổi sang nối vuông góc kiểu ảnh mẫu: hộp thẳng hàng nối thẳng; nhiều class cùng nối vào một class gộp chung thanh ngang rồi một đường vào đích (`EvaluationRepository`, `GradingProposalRepository`); `EvaluationController` tách nhánh từ một thân; 1 chỗ cắt.
+- [x] Gỡ rối đoạn service → repository trang Grading: `EvaluationRepository` dưới `GradingService`/`GradingProposalTransactions` (gộp một thanh), `GradingProposalRepository` dưới `GradingProposalService` (đường thẳng), hai đường chéo cột là nét chéo thẳng vào cạnh bên repository (theo yêu cầu người dùng), 1 chỗ cắt.
+- [x] Áp cho 5 trang còn lại: bỏ interface và lớp phụ, mỗi tầng một hàng, nối vuông góc gộp thanh. Authoring 1 chỗ cắt, Workspace 0, AI API 3, MCP 0, Authentication 19 (4 service dùng chung 5 store); Authentication giữ class có trong sequence diagram cộng `OtpService`.
+- [x] Cắt gọn cả 6 trang theo tiêu chí chỉ giữ class có trong sequence của phần đó cộng entity chính: Authentication 10 class (4 chỗ cắt), Authoring 8 (0), Workspace 10 (0), Grading 13 (0), AI API 11 (3), MCP 9 (0).
+- [x] Rà độ dễ đọc các đường nối trên ảnh draw.io của 6 trang. Authentication có 4 điểm giao ở các bus service → store, AI API có 2 vị trí giao giữa các bus vào registry và repository. Nhãn bội số sát khung ở Authoring và Workspace. Grading và MCP không có chỗ nối cần ưu tiên. Chỉ ghi nhận kết quả review, chưa chỉnh sơ đồ.
+- [x] Chỉnh đường nối trang Authentication theo review: đưa bus SessionStore xuống dưới, căn thẳng các nhánh vào SessionStore và AccountRepository, đánh dấu ba nút nhập bus bằng chấm đen. Điểm giao giảm 4 → 3, cả ba có dấu nhảy rõ trên ảnh xuất draw.io. Đã kiểm tra đủ 10 class, 13 quan hệ và nội dung năm trang còn lại khớp nguyên văn.
+- [x] Đối chiếu UML 2.5.1, hướng dẫn draw.io và mã Java cho trang Authentication. Xác nhận 12 association có hướng từ field được giữ và 1 dependency AccountRepository → Account. Thêm 13 nhãn động từ, bội số 0..* ở đầu lớp tham chiếu và 1 ở đầu đối tượng được giữ; hiện bội số một lần ở mỗi đầu bus dùng chung. Đã kiểm ảnh xuất, tuyến nối và năm trang còn lại giữ nguyên.
+- [x] Rà 56 quan hệ của 5 trang còn lại theo Java, Spring và migration. Thêm nhãn và bội số ở hai đầu association, aggregation và composition. Authoring: Assignment → AssignmentRubric đổi sang composition 1 → 0..*, dời nhãn khỏi viền. Workspace: GroupDocument → GroupSection sửa bội số 1..* thành 0..* và dời nhãn. Grading: giữ Evaluation–GradingProposal 1 → 0..*, giãn khoảng nối Practice Feedback. AI API: đổi hai đầu xuất phát của AiTaskService, giảm 2 → 1 điểm giao nhìn thấy và tăng dấu nhảy. Hai registry dùng aggregation tới các bean cụ thể. Đã kiểm đủ 5 ảnh render và xác nhận Authentication khớp nguyên văn.
+- [x] Căn 69 nhãn quan hệ theo mẫu trên cả 6 trang. 40 nhãn nằm giữa nét dọc, 29 nhãn đặt phía trên đoạn ngang. Đã kiểm bằng ảnh draw.io và đối chiếu xác nhận chỉ đổi vị trí nhãn quan hệ.
+- [x] Đối chiếu tên 154 mục phương thức trên 6 trang với khai báo Java hiện tại. 120 trùng tên, 34 mục lệch ở 21 lớp Java. Số mục lệch theo trang là Authentication 5, Authoring 10, Workspace 9, Grading 2, AI API 5 và MCP 3. Bảng tên thay thế có dẫn dòng mã trong audit.md. Chưa sửa sơ đồ hay mã nguồn.
+- [x] Cập nhật đủ 34 tên phương thức trên 6 trang và bổ sung pwdStamp vào SessionStore.createSession. Đối chiếu lại 154/154 tên với Java. Chỉ thay nội dung ô phương thức, xuống dòng ba chỗ cần chỗ trống. Đã xem 6 ảnh xuất và xác nhận kích thước, vị trí hộp và đường nối giữ nguyên.
+- [ ] Quyết định bỏ lifeline `RequestThrottle` trong sequence Login cho khớp class diagram.
+- [ ] Xuất lại 6 hình class diagram vào Report 4.
+- [ ] Xuất lại 6 hình class diagram trong file Word Report 4.
+
+## Soát Report 4 và viết lại mô tả kiến trúc — 2026-11-18
+
+Người dùng yêu cầu kiểm toàn bộ Report 4 (file Word trên Drive), viết lại mô tả Software Architecture, rồi kiểm thêm phần III và IV. Chỉ thêm tài liệu đề xuất; không sửa mã, không sửa file Word; chưa commit.
+
+- [x] Đọc phần chữ của Report 4 và đối chiếu với mã, migration Flyway, `application.yml`.
+- [x] `docs/report4-diagram-specs/report4-revisions-2026-11-18.md`: văn bản mới cho I.1 (đoạn mô tả và bảng thành phần theo sơ đồ đã vẽ lại); bảng chỗ cần sửa ở III/IV kèm câu thay và bằng chứng.
+- [x] `docs/report4-diagram-specs/report4-sections-III-IV-2026-11-18.md`: nội dung III và IV viết lại ngắn gọn, giữ đúng tiêu đề và cột bảng của report, đã sửa các chỗ lệch mã.
+- [x] Áp III/IV vào file Word và thêm dòng Change Log 18/11/26; tải lên Drive làm phiên bản mới cùng link (2026-11-18 07:06Z, 4.683.131 byte, khớp bản local).
+- [ ] Người dùng dán nội dung vào file Word và xuất lại ảnh sơ đồ kiến trúc.
+- [ ] Viết lại I.3 Database Design từ migration (12/24 bảng không tồn tại, các bảng còn lại sai cột).
+- [ ] Kiểm hình class/sequence trong Word (bản xuất chữ không có ảnh).
+
+## Vẽ lại sơ đồ kiến trúc tổng thể theo mã nguồn — 2026-11-17
+
+Người dùng yêu cầu kiểm `docs/high-level-software-architecture.drawio` so với mã: thiếu đường trả về (quy ước nét liền là request, nét đứt là response), API Client dùng thư viện gì, vì sao Worker trỏ thẳng Repository. Chỉ sửa sơ đồ và tài liệu; không đổi mã; chưa commit.
+
+- [x] Đối chiếu mã: API Client là wrapper `fetch` (`frontend/src/shared/api/client.ts`, CSRF, refresh 401) cùng `EventSource` cho SSE, không dùng axios; Worker (`JobListener`, profile `worker`) gọi `*JobHandler` nằm ở tầng service, handler mới gọi repository và adapter; chuỗi bảo mật `/mcp` riêng, Bearer kiểm trong `McpController`; Drive, mail, AI, Redis, RabbitMQ đi qua các gói `integration`.
+- [x] Vẽ lại: mỗi lời gọi đồng bộ có cặp request/response; thêm Integration Adapters, Worker đi qua Service Layer; publish sau commit và RabbitMQ giao job là thông điệp một chiều; thêm chú giải; render kiểm bằng draw.io CLI, không có nhãn đè đường.
+- [x] `docs/report4-diagram-specs/README.md`: ghi quy ước và bố cục mới.
+- [x] Thêm message ngắn cạnh mọi đường nối (theo `JobListener`: xong thì ack, lỗi thì nack và đưa lại hàng đợi); khung External Services rộng thêm để nhãn không đè viền; generator tự kiểm nhãn không đè đường, không đè nhau.
+- [ ] Xuất lại ảnh sơ đồ trong tệp Word Report 4 (ngoài repo).
+- [ ] Người dùng duyệt sơ đồ và quyết định commit.
+
 ## Đồng bộ tài liệu AI-DLC với mã nguồn — 2026-11-17
 
 Người dùng yêu cầu kiểm tra đồng bộ tài liệu AI-DLC với mã trên `staging@706e46f1`, rồi yêu cầu sửa tài liệu. Chỉ sửa Markdown; không đổi mã, test, schema hay cấu hình; chưa commit.
