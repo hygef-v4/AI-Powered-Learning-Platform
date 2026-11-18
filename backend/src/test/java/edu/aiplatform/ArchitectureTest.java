@@ -31,11 +31,12 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule migrated_units_use_jdbc = classes().that()
             .resideInAnyPackage("edu.aiplatform.academics..", "edu.aiplatform.grading..",
-                    "edu.aiplatform.materials..").should()
+                    "edu.aiplatform.materials..", "edu.aiplatform.announcements..",
+                    "edu.aiplatform.notifications..").should()
             .onlyDependOnClassesThat()
             .resideOutsideOfPackages("jakarta.persistence..", "org.springframework.data.jpa..",
                     "org.hibernate..")
-            .because("U05/U09/U13 persist through Spring JDBC under the project-wide JDBC decision");
+            .because("U05/U09/U13/U14 persist through Spring JDBC under the project-wide JDBC decision");
 
     @ArchTest
     static final ArchRule interfaces_are_named_with_I_prefix = classes().that().areInterfaces()

@@ -26,7 +26,6 @@ import edu.aiplatform.materials.controller.*;
 import edu.aiplatform.materials.repository.*;
 import edu.aiplatform.materials.service.*;
 import edu.aiplatform.notifications.controller.*;
-import edu.aiplatform.notifications.model.Notification;
 import edu.aiplatform.notifications.repository.NotificationRepositoryAdapter;
 import edu.aiplatform.notifications.service.*;
 import edu.aiplatform.quizzes.contract.IQuizQuery;
@@ -110,8 +109,7 @@ class OwnerRequirementsTestConfig {
     LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource source) {
         var factory = new LocalContainerEntityManagerFactoryBean();
         factory.setDataSource(source);
-        factory.setPackagesToScan("edu.aiplatform.subjects.repository", "edu.aiplatform.materials.repository",
-                Notification.class.getPackageName(), edu.aiplatform.announcements.model.Announcement.class.getPackageName());
+        factory.setPackagesToScan("edu.aiplatform.subjects.repository");
         factory.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         factory.setJpaPropertyMap(Map.of("hibernate.hbm2ddl.auto", "validate", "hibernate.jdbc.time_zone", "UTC",
                 "hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy"));
