@@ -15795,3 +15795,11 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Code Generation đã duyệt; Build and Test hoàn tất, chờ duyệt chuyển Operations (placeholder).
 
 ---
+## U04/U13/U14 chuyển JPA sang JDBC — duyệt Build and Test, Operations
+**Timestamp**: 2026-11-18T14:45:06Z
+**Requested by:** Hải Nam
+**User Input**: "Proceed to Operations"
+**AI Response**: "Ghi nhận duyệt Build and Test. Operations là placeholder: không có bước triển khai; không push, không tạo PR, không deploy. Đánh dấu workflow U04/U13/U14 JDBC hoàn tất trong aidlc-state.md và commit cục bộ."
+**Context**: Workflow U04/U13/U14 JPA → JDBC hoàn tất trên nhánh refactor/jdbc-u04-u13-u14 (chỉ commit cục bộ).
+
+---
