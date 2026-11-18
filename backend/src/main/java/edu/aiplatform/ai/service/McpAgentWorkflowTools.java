@@ -37,12 +37,12 @@ public class McpAgentWorkflowTools implements IMcpToolProvider {
      */
     @Override public McpToolResult call(Actor actor,String name,Map<String,Object> args) {
         // Step 1: Verify that caller holds an active teaching role (TEACHER or SUBJECT_MANAGER)
-        McpInput.teaching(actor);
-        if(!"read_agent_workflow".equals(name))throw McpInput.invalid();
+        McpInput.requireTeaching(actor);
+        if(!"read_agent_workflow".equals(name))throw McpInput.createInvalidArguments();
 
         // Step 2: Extract requested workflow name and lookup pre-loaded instructions
-        var workflow=workflows.get(new McpInput(args).text("workflow",""));
-        if(workflow==null)throw McpInput.invalid();
+        var workflow=workflows.get(new McpInput(args).readText("workflow",""));
+        if(workflow==null)throw McpInput.createInvalidArguments();
 
         // Step 3: Return workflow instruction content, hash version, and workflow identifier
         return new McpToolResult(false,workflow);

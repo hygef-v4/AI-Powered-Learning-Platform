@@ -21,7 +21,7 @@ class SubmissionReviewMcpListingTest {
         UUID classId=UUID.randomUUID(),assignmentId=UUID.randomUUID(),subjectId=UUID.randomUUID();
         var repo=mock(IEvaluationRepository.class);var access=mock(GradingAccess.class);
         var assignments=mock(IAssignmentQuery.class);var assignment=mock(AssignmentView.class);
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment));
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment));
         when(assignment.gradingMode()).thenReturn(GradingMode.GRADED);
         when(assignment.scope()).thenReturn(AssignmentScope.SUBJECT);
         when(assignment.subjectId()).thenReturn(subjectId);

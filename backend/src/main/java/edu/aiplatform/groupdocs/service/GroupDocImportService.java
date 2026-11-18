@@ -53,7 +53,7 @@ public class GroupDocImportService {
         if (SectionRules.canEdit(section, actor.accountId()) != null) {
             throw ApiException.createConflict("SECTION_NOT_HELD", "Bạn không giữ mục này");
         }
-        boolean diagramEnabled = assignments.get(ctx.document().assignmentId())
+        boolean diagramEnabled = assignments.loadAssignment(ctx.document().assignmentId())
                 .map(AssignmentView::diagramEnabled).orElse(false);
         DocxImportPreview preview = docx.importPreview(actor, file, BlockOrigin.STUDENT, diagramEnabled,
                 ref -> Optional.empty());

@@ -46,9 +46,9 @@ import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-/** SQL viết tay của {@link JdbcQuizRepository} và phần chọn câu của {@link JdbcQuestionRepository} trên PostgreSQL 16. */
+/** SQL viết tay của {@link QuizRepository} và phần chọn câu của {@link QuestionRepository} trên PostgreSQL 16. */
 @Testcontainers(disabledWithoutDocker = true)
-class JdbcQuizRepositoryIntegrationTest {
+class QuizRepositoryIntegrationTest {
 
     // Sinh mỗi lần chạy: container chỉ sống trong test, không để chuỗi mật khẩu cố định trong mã.
     private static final String APP_PASSWORD = UUID.randomUUID().toString();
@@ -64,9 +64,9 @@ class JdbcQuizRepositoryIntegrationTest {
     private static HikariDataSource appDataSource;
     private static HikariDataSource adminDataSource;
     private static JdbcClient admin;
-    private static JdbcQuizRepository quizzes;
-    private static JdbcQuestionRepository questions;
-    private static JdbcQuizAiDraftRepository drafts;
+    private static QuizRepository quizzes;
+    private static QuestionRepository questions;
+    private static QuizAiDraftRepository drafts;
 
     private UUID subject;
     private UUID author;
@@ -79,9 +79,9 @@ class JdbcQuizRepositoryIntegrationTest {
         adminDataSource = dataSource(POSTGRES.getUsername(), POSTGRES.getPassword());
         admin = JdbcClient.create(adminDataSource);
         JdbcClient app = JdbcClient.create(appDataSource);
-        quizzes = new JdbcQuizRepository(app, new ObjectMapper());
-        questions = new JdbcQuestionRepository(app, new ObjectMapper());
-        drafts = new JdbcQuizAiDraftRepository(app, new ObjectMapper());
+        quizzes = new QuizRepository(app, new ObjectMapper());
+        questions = new QuestionRepository(app, new ObjectMapper());
+        drafts = new QuizAiDraftRepository(app, new ObjectMapper());
     }
 
     @AfterAll
@@ -325,7 +325,7 @@ class JdbcQuizRepositoryIntegrationTest {
         try (var first = appDataSource.getConnection(); var second = appDataSource.getConnection()) {
             first.setAutoCommit(false);
             second.setAutoCommit(false);
-            var lockedRepository = new JdbcQuizAiDraftRepository(JdbcClient.create(
+            var lockedRepository = new QuizAiDraftRepository(JdbcClient.create(
                     new org.springframework.jdbc.datasource.SingleConnectionDataSource(first, true)), new ObjectMapper());
             assertThat(lockedRepository.findForUpdate(pending.id())).isPresent();
             try (var timeout = second.createStatement()) { timeout.execute("set local lock_timeout='100ms'"); }

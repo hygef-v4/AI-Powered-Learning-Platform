@@ -88,7 +88,7 @@ class DeadlineReminderScannerTest {
 
     void source(AssignmentView a) {
         when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(a));
-        when(assignmentQuery.get(id)).thenReturn(Optional.of(a));
+        when(assignmentQuery.loadAssignment(id)).thenReturn(Optional.of(a));
     }
 
     @Test
@@ -102,7 +102,7 @@ class DeadlineReminderScannerTest {
         var byId = candidates.stream().collect(java.util.stream.Collectors.toMap(AssignmentView::assignmentId,
                 java.util.function.Function.identity()));
         when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(candidates);
-        when(assignmentQuery.get(any()))
+        when(assignmentQuery.loadAssignment(any()))
                 .thenAnswer(call -> Optional.ofNullable(byId.get(call.getArgument(0))));
         deadlineReminderScanner.scan(now);
         verify(notificationRepository)
@@ -174,7 +174,7 @@ class DeadlineReminderScannerTest {
                         List.of());
         source(a);
         when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(a, next));
-        when(assignmentQuery.get(next.assignmentId())).thenReturn(Optional.of(next));
+        when(assignmentQuery.loadAssignment(next.assignmentId())).thenReturn(Optional.of(next));
         when(classAccess.listOpenClassesOfSubject(subject))
                 .thenReturn(List.of(course(classId), course(secondClass)));
         when(classAccess.getClassRef(secondClass)).thenReturn(Optional.of(course(secondClass)));
@@ -220,7 +220,7 @@ class DeadlineReminderScannerTest {
                         List.of());
         source(a);
         when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(broken, a));
-        when(assignmentQuery.get(broken.assignmentId()))
+        when(assignmentQuery.loadAssignment(broken.assignmentId()))
                 .thenThrow(new IllegalStateException("lookup unavailable"));
         deadlineReminderScanner.scan(now);
         verify(notificationService)
@@ -234,7 +234,7 @@ class DeadlineReminderScannerTest {
                         anyString(),
                         any());
         clearInvocations(notificationService);
-        doReturn(Optional.of(broken)).when(assignmentQuery).get(broken.assignmentId());
+        doReturn(Optional.of(broken)).when(assignmentQuery).loadAssignment(broken.assignmentId());
         when(classAccess.listOpenClassesOfSubject(subject))
                 .thenThrow(new IllegalStateException("classes unavailable"));
         deadlineReminderScanner.scan(now);
@@ -354,7 +354,7 @@ class DeadlineReminderScannerTest {
         var old = assignment(now.minusSeconds(1000), now.plus(Duration.ofHours(24)), classId);
         var changed = assignment(old.opensAt(), old.closesAt().plus(Duration.ofDays(2)), classId);
         source(old);
-        when(assignmentQuery.get(id)).thenReturn(Optional.of(changed));
+        when(assignmentQuery.loadAssignment(id)).thenReturn(Optional.of(changed));
         deadlineReminderScanner.scan(now);
         verifyNoInteractions(notificationService);
         verifyNoInteractions(notificationRepository);
@@ -399,7 +399,7 @@ class DeadlineReminderScannerTest {
                         false,
                         null,
                         List.of());
-        when(assignmentQuery.get(id)).thenReturn(Optional.of(a), Optional.of(stopped));
+        when(assignmentQuery.loadAssignment(id)).thenReturn(Optional.of(a), Optional.of(stopped));
         deadlineReminderScanner.scan(now);
         verifyNoInteractions(notificationService);
         verifyNoInteractions(notificationRepository);

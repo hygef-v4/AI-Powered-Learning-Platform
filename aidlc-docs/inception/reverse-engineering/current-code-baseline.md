@@ -562,8 +562,8 @@ Primary UC 46–48; FR-006, FR-007, FR-016, FR-017, FR-028.
 - [QuestionRulesTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionRulesTest.java)
 - [QuestionTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuestionTest.java)
 - [QuizTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/model/QuizTest.java)
-- [JdbcQuestionRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/repository/JdbcQuestionRepositoryIntegrationTest.java)
-- [JdbcQuizRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/repository/JdbcQuizRepositoryIntegrationTest.java)
+- [QuestionRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/repository/QuestionRepositoryIntegrationTest.java)
+- [QuizRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/repository/QuizRepositoryIntegrationTest.java)
 - [QuestionBankMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuestionBankMcpToolsTest.java)
 - [QuestionBankServiceTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuestionBankServiceTest.java)
 - [QuestionImporterTest.java](../../../backend/src/test/java/edu/aiplatform/quizzes/service/QuestionImporterTest.java)
@@ -609,7 +609,7 @@ Primary UC 49–52; FR-017, FR-018, FR-039.
 
 - [QuizPracticeControllerTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/controller/QuizPracticeControllerTest.java)
 - [QuizAttemptTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/model/QuizAttemptTest.java)
-- [JdbcQuizAttemptRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/repository/JdbcQuizAttemptRepositoryIntegrationTest.java)
+- [QuizAttemptRepositoryIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/repository/QuizAttemptRepositoryIntegrationTest.java)
 - [AttemptActivityAssessorTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/service/AttemptActivityAssessorTest.java)
 - [QuizPracticeServicesTest.java](../../../backend/src/test/java/edu/aiplatform/quizpractice/service/QuizPracticeServicesTest.java)
 

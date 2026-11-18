@@ -285,17 +285,17 @@
     {
       "id": "IT-U10-001",
       "requirements": "BR-U10-04",
-      "suite": "edu.aiplatform.quizzes.repository.JdbcQuestionRepositoryIntegrationTest",
+      "suite": "edu.aiplatform.quizzes.repository.QuestionRepositoryIntegrationTest",
       "method": "lineageKeepsAtMostOneDraftAndVersionsInOrder",
-      "source": "backend/src/test/java/edu/aiplatform/quizzes/repository/JdbcQuestionRepositoryIntegrationTest.java",
+      "source": "backend/src/test/java/edu/aiplatform/quizzes/repository/QuestionRepositoryIntegrationTest.java",
       "boundary": "Production question repository and actual PostgreSQL constraints."
     },
     {
       "id": "IT-U10-002",
       "requirements": "BR-U10-23",
-      "suite": "edu.aiplatform.quizzes.repository.JdbcQuizRepositoryIntegrationTest",
+      "suite": "edu.aiplatform.quizzes.repository.QuizRepositoryIntegrationTest",
       "method": "retiringUnpublishedQuizKeepsPublicationNullAndReopensAsDeletableDraft",
-      "source": "backend/src/test/java/edu/aiplatform/quizzes/repository/JdbcQuizRepositoryIntegrationTest.java",
+      "source": "backend/src/test/java/edu/aiplatform/quizzes/repository/QuizRepositoryIntegrationTest.java",
       "boundary": "Actual PostgreSQL and production quiz persistence/domain transitions."
     },
     {
@@ -317,17 +317,17 @@
     {
       "id": "IT-U11-002",
       "requirements": "BR-U11-10",
-      "suite": "edu.aiplatform.quizpractice.repository.JdbcQuizAttemptRepositoryIntegrationTest",
+      "suite": "edu.aiplatform.quizpractice.repository.QuizAttemptRepositoryIntegrationTest",
       "method": "onlyOneAttemptInProgressPerQuizAndStudent",
-      "source": "backend/src/test/java/edu/aiplatform/quizpractice/repository/JdbcQuizAttemptRepositoryIntegrationTest.java",
+      "source": "backend/src/test/java/edu/aiplatform/quizpractice/repository/QuizAttemptRepositoryIntegrationTest.java",
       "boundary": "Actual PostgreSQL and production quiz-attempt repository."
     },
     {
       "id": "IT-U11-003",
       "requirements": "BR-U11-33",
-      "suite": "edu.aiplatform.quizpractice.repository.JdbcQuizAttemptRepositoryIntegrationTest",
+      "suite": "edu.aiplatform.quizpractice.repository.QuizAttemptRepositoryIntegrationTest",
       "method": "penaltyDecisionChangesScoreAndCanBeRevised",
-      "source": "backend/src/test/java/edu/aiplatform/quizpractice/repository/JdbcQuizAttemptRepositoryIntegrationTest.java",
+      "source": "backend/src/test/java/edu/aiplatform/quizpractice/repository/QuizAttemptRepositoryIntegrationTest.java",
       "boundary": "Actual PostgreSQL and production attempt repository. Teacher authorization and browser activity capture are outside this persistence case."
     },
     {

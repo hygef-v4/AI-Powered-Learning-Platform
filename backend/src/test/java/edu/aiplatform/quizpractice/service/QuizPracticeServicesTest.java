@@ -120,7 +120,7 @@ class QuizPracticeServicesTest {
         when(classes.getClassRef(classB)).thenReturn(Optional.of(classRef(classB, ClassStatus.OPEN)));
         when(classes.listOpenClassesOf(student.accountId())).thenReturn(List.of(classRef(classA, ClassStatus.OPEN)));
         when(classes.listActiveStudents(classA)).thenReturn(List.of(student.accountId(), other.accountId()));
-        when(quizzes.get(quizId)).thenAnswer(call -> Optional.of(quiz()));
+        when(quizzes.loadQuiz(quizId)).thenAnswer(call -> Optional.of(quiz()));
         when(quizzes.getStudentView(quizId)).thenAnswer(call -> Optional.of(new QuizStudentView(quiz(), "Đọc kỹ", List.of(
                 question(q1, QuestionType.MCQ_SINGLE), question(q2, QuestionType.MCQ_MULTI)))));
         when(quizzes.listForClass(classA)).thenAnswer(call -> quizStatus == QuizStatus.OPEN ? List.of(quiz()) : List.of());
@@ -407,7 +407,7 @@ class QuizPracticeServicesTest {
         } else if (failure.equals("CLASS_THROW")) {
             when(classes.getClassRef(classA)).thenThrow(new IllegalStateException("private provider detail"));
         } else if (failure.equals("QUIZ_THROW")) {
-            when(quizzes.get(quizId)).thenThrow(new IllegalStateException("private provider detail"));
+            when(quizzes.loadQuiz(quizId)).thenThrow(new IllegalStateException("private provider detail"));
         }
         List<AuditEvent> guardAudits = new ArrayList<>();
         PracticeAccess access = new PracticeAccess(provider, guardAudits::add, clock);

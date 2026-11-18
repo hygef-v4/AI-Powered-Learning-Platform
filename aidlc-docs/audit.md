@@ -15835,3 +15835,27 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: E2E hoàn tất; chuẩn bị PR.
 
 ---
+## Rà soát quy ước mã nguồn 15 unit
+**Timestamp**: 2026-11-18T16:05:00Z
+**Requested by:** Quang Hung
+**User Input**: "check lại toàn bộ 15 unit xem đã viết code chuẩn theo coding convention chưa"
+**AI Response**: "Đối chiếu backend/frontend của 15 unit với construction/code-conventions.md bằng script quét và đọc tay từng điểm nghi vấn. Đạt: không còn JPA, interface đều có tiền tố I, dependency service đều có hậu tố Service, tên file khớp type, test đúng hậu tố. Vi phạm rõ: repository tiền tố Jdbc (U10, U11); code viết dồn nhiều lệnh/dòng ở các lớp MCP (U06, U07, U10); method chỉ là danh từ trong McpInput; get cho đọc nghiệp vụ (IAiTask, IAssignmentQuery, IQuizQuery). Chưa sửa mã."
+**Context**: Rà soát chỉ đọc; hỏi người dùng có sửa nhóm vi phạm rõ không.
+
+---
+## Áp dụng quy ước mã nguồn cho U06/U07/U10/U11
+**Timestamp**: 2026-11-18T16:39:49Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa nhóm rõ ràng"
+**AI Response**: "Đổi tên JdbcQuestionRepository, JdbcQuizRepository, JdbcQuizAiDraftRepository, JdbcQuizAttemptRepository và 3 integration test thành tên không tiền tố. McpInput: get/text/uuid/integer/version/choice/page/size thành readValue/readText/readUuid/readInteger/readVersion/readChoice/readPage/readSize; page(list) thành paginateItems; teaching/admin thành requireTeaching/requireAdmin; invalid thành createInvalidArguments. Contract Java: IAiTask.get thành loadTask, IAssignmentQuery.get thành loadAssignment, IQuizQuery.get thành loadQuiz, cập nhật mọi caller, stub và test. Xuống dòng/tách method cho McpInput, McpFingerprint, McpWriteRequestService, AdminAiMcpTools, McpAuthoringRequirementsTools, AssignmentMcpAuthoringService, AssignmentMcpQueryTools, QuizMcpAuthoringService, QuizMcpQueryTools, QuestionBankMcpTools; giữ nguyên tên MCP tool, schema, chuỗi và JSON. Build: test-compile thành công; 593 test liên quan (gồm ArchitectureTest và 3 integration test repository) 0 lỗi. Chưa chạy mvn verify toàn bộ, chưa commit."
+**Context**: Refactor tên/định dạng theo code-conventions; không đổi API HTTP, JSON, schema DB hay tên MCP tool.
+
+---
+## PR #105 — CI backend lỗi bước kiểm suite bắt buộc
+**Timestamp**: 2026-11-18T17:05:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check lỗi pr105"
+**AI Response**: "CI run 44351291168: mvn -B verify thành công; lỗi ở scripts/assert-required-backend-tests.ps1 vì manifest 2026-11-08-integration-test-cases.json còn tên suite cũ JdbcQuizAttemptRepositoryIntegrationTest (cùng JdbcQuestion/JdbcQuiz). Đổi 8 chỗ sang tên mới trong manifest trên worktree audit-staging; method trace giữ nguyên. Chưa commit, chưa push."
+**Context**: Sửa manifest truy vết cho PR #105; chờ người dùng cho phép commit/push.
+
+---

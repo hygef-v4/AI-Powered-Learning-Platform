@@ -74,7 +74,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
     @Transactional(isolation = Isolation.REPEATABLE_READ, timeout = 20)
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
         // Step 1: Verify teacher credentials and parse MCP arguments
-        McpInput.teaching(actor);
+        McpInput.requireTeaching(actor);
         var in = new McpInput(args);
 
         // Step 2: Route request to the appropriate read tool handler
@@ -82,7 +82,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         case "read_grading_context" -> loadGradingContext(actor, args);
         case "list_submissions" -> listSubmissions(actor, in);
         case "list_grading_proposals" -> {
-            UUID id = in.uuid("evaluationId");
+            UUID id = in.readUuid("evaluationId");
             submissionReviewService.loadEvaluation(actor, id);
             var rows = gradingProposalService.listProposals(actor, id).stream().map(p -> {
                 Map<String, Object> row = new LinkedHashMap<>();
@@ -95,22 +95,22 @@ public class GradingMcpQueryService implements IMcpToolProvider {
                 row.put("reviewUrl", GradingMcpTools.buildReviewUrl(id, p.id));
                 return row;
             }).toList();
-            yield McpInput.page(rows, in.page(), in.size());
+            yield McpInput.paginateItems(rows, in.readPage(), in.readSize());
         }
         case "read_grade_distribution" ->
-            Map.of("classId", in.uuid("classId"), "assignmentId", in.uuid("assignmentId"), "source",
+            Map.of("classId", in.readUuid("classId"), "assignmentId", in.readUuid("assignmentId"), "source",
                     "PUBLISHED_GRADES", "calculatedAt", Instant.now(), "status", "AVAILABLE",
-                    "buckets", gradebookService.loadDistribution(actor, in.uuid("classId"),
-                            in.uuid("assignmentId"), false));
+                    "buckets", gradebookService.loadDistribution(actor, in.readUuid("classId"),
+                            in.readUuid("assignmentId"), false));
         case "read_class_learning_summary" -> {
-            var classId = in.uuid("classId");
+            var classId = in.readUuid("classId");
             var out = new LinkedHashMap<String, Object>();
             out.put("classId", classId);
             out.put("calculatedAt", Instant.now());
             out.put("status", "AVAILABLE");
             out.put("source", "CURRENT_SUBMISSION_AND_GRADING_STATE");
             if (in.has("assignmentId")) {
-                out.putAll(buildAssignmentSummary(actor, classId, in.uuid("assignmentId"), 100));
+                out.putAll(buildAssignmentSummary(actor, classId, in.readUuid("assignmentId"), 100));
             } else {
                 var page = gradebookService.listGrades(actor, classId, null, 1, 1);
                 out.put("studentCount", page.total());
@@ -126,7 +126,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
             }
             yield out;
         }
-        default -> throw McpInput.invalid();
+        default -> throw McpInput.createInvalidArguments();
         });
     }
 
@@ -144,10 +144,10 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         var detail = snapshot.detail();
         var e = detail.evaluation();
         UUID id = e.id;
-        int offset = new McpInput(args).integer("offset", 0, 0, Integer.MAX_VALUE);
+        int offset = new McpInput(args).readInteger("offset", 0, 0, Integer.MAX_VALUE);
         var blocks = detail.document().blocks();
         if (offset > blocks.size())
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
         var reference = Map.of("kind", e.kind.name(), "id",
                 (e.kind == EvaluationKind.ATTEMPT ? e.attemptId : e.groupDocumentId).toString(),
                 "classId", e.classId.toString(), "assignmentId", e.assignmentId.toString());
@@ -224,13 +224,13 @@ public class GradingMcpQueryService implements IMcpToolProvider {
 
     /** Loads the evaluation details and fingerprinted snapshot used by grading context reads. */
     private Snapshot loadSnapshot(Actor actor, Map<String, Object> args) {
-        McpInput.teaching(actor);
+        McpInput.requireTeaching(actor);
         var in = new McpInput(args);
-        UUID id = in.uuid("evaluationId");
-        int offset = in.integer("offset", 0, 0, Integer.MAX_VALUE);
+        UUID id = in.readUuid("evaluationId");
+        int offset = in.readInteger("offset", 0, 0, Integer.MAX_VALUE);
         if (offset > 0 && (!in.has("expectedVersion") || !in.has("submissionHash")
                 || !in.has("snapshotFingerprint")))
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
         var detail = submissionReviewService.loadEvaluation(actor, id);
         var e = detail.evaluation();
         if (e.kind == EvaluationKind.MEMBER)
@@ -238,9 +238,9 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         if (!detail.current())
             throw ApiException.createConflict("SUBMISSION_CHANGED", "Snapshot is no longer current");
         if (in.has("expectedVersion"))
-            e.checkVersion(in.version("expectedVersion"));
+            e.checkVersion(in.readVersion("expectedVersion"));
         if (in.has("submissionHash")
-                && !Objects.equals(e.submissionHash, in.text("submissionHash", null)))
+                && !Objects.equals(e.submissionHash, in.readText("submissionHash", null)))
             throw ApiException.createConflict("SUBMISSION_CHANGED", "Snapshot changed");
         var assignment = assignmentQuery.getContent(e.assignmentId).orElseThrow(() -> ApiException
                 .createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment context unavailable"));
@@ -259,7 +259,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
                         "document", detail.document(), "assignment", assignmentContext, "policy",
                         policy));
         if (in.has("snapshotFingerprint")
-                && !fingerprint.equals(in.text("snapshotFingerprint", null)))
+                && !fingerprint.equals(in.readText("snapshotFingerprint", null)))
             throw ApiException.createConflict("SUBMISSION_CHANGED",
                     "Snapshot or rubric changed; restart reading");
         return new Snapshot(detail, assignmentContext, policy, fingerprint);
@@ -267,10 +267,10 @@ public class GradingMcpQueryService implements IMcpToolProvider {
 
     /** Lists submission review rows using the supplied MCP filters and pagination. */
     private Map<String, Object> listSubmissions(Actor actor, McpInput in) {
-        UUID classId = in.uuid("classId"), assignmentId = in.uuid("assignmentId");
-        int page = in.page(), size = in.size();
-        String state = in.text("state", "ALL");
-        Boolean late = in.get("late") == null ? null : readBoolean(in.get("late"));
+        UUID classId = in.readUuid("classId"), assignmentId = in.readUuid("assignmentId");
+        int page = in.readPage(), size = in.readSize();
+        String state = in.readText("state", "ALL");
+        Boolean late = in.readValue("late") == null ? null : readBoolean(in.readValue("late"));
         // Filtering precedes pagination, so totals never describe a different scope or filter.
         var listing = submissionReviewService.listRows(actor, classId, assignmentId, state, late);
         if (listing.rows().size() > 10000)
@@ -278,9 +278,9 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         var byId = new HashMap<UUID, edu.aiplatform.grading.model.Evaluation>();
         listing.evaluations().forEach(e -> byId.put(e.id, e));
         List<Map<String, Object>> rows = new ArrayList<>();
-        String type = in.text("type", null), proposalState = in.text("proposalStatus", null);
+        String type = in.readText("type", null), proposalState = in.readText("proposalStatus", null);
         if (type != null && !Set.of("ATTEMPT", "GROUP_DOCUMENT").contains(type))
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
         var matchingProposalIds = proposalState == null ? Set.<UUID>of()
                 : gradingProposalService.listStoredProposals(new ArrayList<>(byId.keySet())).stream()
                         .filter(p -> {
@@ -317,7 +317,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
                 continue;
             rows.add(mapped);
         }
-        var out = new LinkedHashMap<>(McpInput.page(rows, page, size));
+        var out = new LinkedHashMap<>(McpInput.paginateItems(rows, page, size));
         out.put("summary", listing.summary());
         out.put("editable", listing.editable());
         out.put("readOnlyReason", listing.readOnlyReason());
@@ -385,7 +385,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
     /** Parses supported boolean input values and rejects values with other types. */
     private static boolean readBoolean(Object value) {
         if (!(value instanceof Boolean b))
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
         return b;
     }
 

@@ -363,7 +363,7 @@ class NotificationDeliveryIntegrationTest {
                         null,
                         List.of());
         when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(a));
-        when(assignmentQuery.get(assignment)).thenReturn(Optional.of(a));
+        when(assignmentQuery.loadAssignment(assignment)).thenReturn(Optional.of(a));
         when(classAccess.listOpenClassesOfSubject(subject))
                 .thenReturn(List.of(course(first, subject), course(second, subject)));
         for (UUID classId : List.of(first, second)) {

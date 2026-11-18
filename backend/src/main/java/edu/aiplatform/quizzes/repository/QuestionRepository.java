@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
 
 /** {@code questions} bằng SQL viết tay; lựa chọn, đáp án, tag lưu {@code jsonb} (D1 của plan giai đoạn 1). */
 @Repository
-public class JdbcQuestionRepository implements IQuestionRepository {
+public class QuestionRepository implements IQuestionRepository {
     private static final String COLUMNS = "id, lineage_id, version_no, scope, subject_id, quiz_id, type, stem, explanation,"
             + " options, correct_option_ids, default_points, difficulty, tags, status, activated_at, created_by, created_at, updated_at, version";
     private static final String LINEAGE_RANK = "row_number() over (partition by lineage_id"
@@ -26,7 +26,7 @@ public class JdbcQuestionRepository implements IQuestionRepository {
     private final JdbcClient jdbc;
     private final ObjectMapper json;
 
-    public JdbcQuestionRepository(JdbcClient jdbc, ObjectMapper json) {
+    public QuestionRepository(JdbcClient jdbc, ObjectMapper json) {
         this.jdbc = jdbc;
         this.json = json;
     }

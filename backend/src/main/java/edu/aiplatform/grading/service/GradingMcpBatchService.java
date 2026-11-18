@@ -53,13 +53,13 @@ public class GradingMcpBatchService implements IMcpToolProvider {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
         // Step 1: Validate teacher authentication and MCP batch tool name
-        McpInput.teaching(actor);
+        McpInput.requireTeaching(actor);
         boolean write = "record_grading_proposals_batch".equals(name);
         if (!write && !"read_grading_batch".equals(name))
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
         if (args == null || !(args.get("items") instanceof List<?> items) || items.isEmpty()
                 || items.size() > 20)
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
 
         // Step 2: Iterate and process each batch item independently (max 20 items)
         List<Map<String, Object>> results = new ArrayList<>();
@@ -69,7 +69,7 @@ public class GradingMcpBatchService implements IMcpToolProvider {
             outcome.put("index", n);
             try {
                 if (!(items.get(n) instanceof Map<?, ?> raw))
-                    throw McpInput.invalid();
+                    throw McpInput.createInvalidArguments();
                 var input = objectMapper.convertValue(raw,
                         new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
                         });

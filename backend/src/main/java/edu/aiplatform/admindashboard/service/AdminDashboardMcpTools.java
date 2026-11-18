@@ -25,9 +25,9 @@ public class AdminDashboardMcpTools implements IMcpToolProvider {
     /** Checks the caller and tool name before loading the dashboard summary. */
     @Override
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
-        McpInput.admin(actor);
+        McpInput.requireAdmin(actor);
         if (!"read_platform_health_summary".equals(name))
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
         return new McpToolResult(false, adminDashboardService.loadDashboard(actor));
     }
 }

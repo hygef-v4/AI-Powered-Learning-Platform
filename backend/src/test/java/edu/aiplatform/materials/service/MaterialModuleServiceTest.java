@@ -171,7 +171,7 @@ class MaterialModuleServiceTest {
     @Test
     void detachChecksCurrentQuizPermissionAndExactLinkBeforeSuccessAudit() {
         UUID quizId = UUID.randomUUID();
-        when(quizQuery.get(quizId)).thenReturn(Optional.of(
+        when(quizQuery.loadQuiz(quizId)).thenReturn(Optional.of(
                 quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
         when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(false);
         assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
@@ -196,7 +196,7 @@ class MaterialModuleServiceTest {
     @Test
     void attachToSameModuleIsIdempotentButForeignDetachCannotWrite() {
         UUID quizId = UUID.randomUUID();
-        when(quizQuery.get(quizId)).thenReturn(Optional.of(
+        when(quizQuery.loadQuiz(quizId)).thenReturn(Optional.of(
                 quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
         when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(true);
         when(materialModuleRepository.findQuizLink(quizId))
@@ -205,7 +205,7 @@ class MaterialModuleServiceTest {
         verify(materialModuleRepository, never()).linkQuiz(any());
         verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
         verifyNoInteractions(audit);
-        when(quizQuery.get(quizId)).thenReturn(Optional.of(
+        when(quizQuery.loadQuiz(quizId)).thenReturn(Optional.of(
                 quiz(quizId, QuizScope.SUBJECT, UUID.randomUUID(), null, QuizStatus.DRAFT)));
         assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(ApiException.class,
@@ -242,7 +242,7 @@ class MaterialModuleServiceTest {
     @Test
     void attachRejectsQuizOfAnotherSubject() {
         UUID quizId = UUID.randomUUID(), foreignSubject = UUID.randomUUID();
-        when(quizQuery.get(quizId))
+        when(quizQuery.loadQuiz(quizId))
                 .thenReturn(
                         Optional.of(
                                 quiz(
@@ -267,7 +267,7 @@ class MaterialModuleServiceTest {
     @Test
     void attachMovesQuizFromItsPreviousModule() {
         UUID quizId = UUID.randomUUID();
-        when(quizQuery.get(quizId))
+        when(quizQuery.loadQuiz(quizId))
                 .thenReturn(
                         Optional.of(
                                 quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
@@ -292,10 +292,10 @@ class MaterialModuleServiceTest {
                         List.of(
                                 new MaterialModule.QuizLink(moduleId, open, 0),
                                 new MaterialModule.QuizLink(moduleId, draft, 1)));
-        when(quizQuery.get(open))
+        when(quizQuery.loadQuiz(open))
                 .thenReturn(
                         Optional.of(quiz(open, QuizScope.SUBJECT, subject, null, QuizStatus.OPEN)));
-        when(quizQuery.get(draft))
+        when(quizQuery.loadQuiz(draft))
                 .thenReturn(
                         Optional.of(
                                 quiz(draft, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
@@ -339,7 +339,7 @@ class MaterialModuleServiceTest {
                                 false));
         when(materialModuleRepository.listQuizLinks(subject))
                 .thenReturn(List.of(new MaterialModule.QuizLink(moduleId, quizId, 0)));
-        when(quizQuery.get(quizId)).thenReturn(Optional.of(unpublished));
+        when(quizQuery.loadQuiz(quizId)).thenReturn(Optional.of(unpublished));
         assertThat(materialModuleService.listClassModules(teacher, classId, false).get(0).quizzes())
                 .isEmpty();
     }
@@ -501,7 +501,7 @@ class MaterialModuleServiceTest {
                         rows.stream()
                                 .map(q -> new MaterialModule.QuizLink(moduleId, q.quizId(), 0))
                                 .toList());
-        rows.forEach(q -> when(quizQuery.get(q.quizId())).thenReturn(Optional.of(q)));
+        rows.forEach(q -> when(quizQuery.loadQuiz(q.quizId())).thenReturn(Optional.of(q)));
         when(materialAccessPolicy.canManageModules(manager, subject)).thenReturn(true);
         when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(true);
 

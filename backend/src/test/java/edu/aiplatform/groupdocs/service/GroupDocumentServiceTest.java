@@ -55,7 +55,7 @@ class GroupDocumentServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(view(SubmissionMode.GROUP, AssignmentStatus.OPEN)));
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(view(SubmissionMode.GROUP, AssignmentStatus.OPEN)));
         UUID heading = UUID.randomUUID();
         when(assignments.getContent(assignmentId)).thenReturn(Optional.of(new AssignmentContent(assignmentId, 1, "Đề",
                 new DocumentModel(List.of()), List.of(new DocumentPart("p1", heading, List.of(), "1. Sơ đồ lớp"),
@@ -95,9 +95,9 @@ class GroupDocumentServiceTest {
 
     @Test
     void individualOrClosedAssignmentGetsNoDocument() {
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(view(SubmissionMode.INDIVIDUAL, AssignmentStatus.OPEN)));
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(view(SubmissionMode.INDIVIDUAL, AssignmentStatus.OPEN)));
         assertThat(service.ensureDocuments(assignmentId)).isZero();
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(view(SubmissionMode.GROUP, AssignmentStatus.CLOSED)));
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(view(SubmissionMode.GROUP, AssignmentStatus.CLOSED)));
         assertThat(service.ensureDocuments(assignmentId)).isZero();
         verify(documents, never()).insertIfAbsent(any());
     }
