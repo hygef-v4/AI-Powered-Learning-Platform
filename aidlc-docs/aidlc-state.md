@@ -1,5 +1,13 @@
 # AI-DLC State Tracking
 
+## U03 — RabbitMQ không đọc được JobMessage sau Spring Boot 3.5.16 — 2026-11-19
+
+Nhánh `fix/amqp-trusted-packages` từ `staging@2433c57b`. Chưa commit.
+
+- [x] Nguyên nhân: spring-amqp 3.2.12 chỉ tin `java.util`/`java.lang`; `Jackson2JsonMessageConverter` trong `jobs/config/AmqpMessageConfig.java` từ chối `edu.aiplatform.jobs.contract.JobMessage`, nên mọi job qua RabbitMQ (OTP, email, AI, Drive, backup) hỏng.
+- [x] Sửa: khai báo trusted package `edu.aiplatform.jobs.contract` (chứa `JobMessage`, `DomainEvent`); không tin toàn bộ (`*`).
+- [x] Test: `AmqpMessageConfigTest` (round-trip `JobMessage`, chặn lớp ngoài package); test này lỗi đúng thông báo production khi bỏ bản sửa. 116 test jobs/notifications liên quan pass.
+
 ## U06/U07/U10/U11 — áp dụng quy ước mã nguồn — 2026-11-18
 
 Rà soát 15 unit theo [code-conventions](construction/code-conventions.md), sau đó sửa nhóm vi phạm rõ trên nhánh `staging`. Chưa commit.
