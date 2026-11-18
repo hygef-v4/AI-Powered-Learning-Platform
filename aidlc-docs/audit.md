@@ -15859,3 +15859,11 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Sửa manifest truy vết cho PR #105; chờ người dùng cho phép commit/push.
 
 ---
+## U03 — sửa RabbitMQ trusted packages
+**Timestamp**: 2026-11-18T17:12:00Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa lỗi RabbitMQ"
+**AI Response**: "Tạo nhánh fix/amqp-trusted-packages từ staging@2433c57b. AmqpMessageConfig dùng new Jackson2JsonMessageConverter(objectMapper, \"edu.aiplatform.jobs.contract\"), gói chứa JobMessage và DomainEvent. Thêm AmqpMessageConfigTest; khi bỏ bản sửa test báo đúng lỗi 'JobMessage is not in the trusted packages'. 116 test jobs/notifications pass. Chưa commit, chưa push."
+**Context**: Sửa lỗi ghi trong PR #106 trước khi deploy.
+
+---
