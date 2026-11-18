@@ -1,5 +1,17 @@
 # AI-DLC State Tracking
 
+## U04/U13/U14 — chuyển JPA sang JDBC — 2026-11-18
+
+Người dùng yêu cầu tạo nhánh mới từ staging để chuyển U04, U13 (module học liệu) và U14 từ JPA sang Spring JDBC. Nhánh `refactor/jdbc-u04-u13-u14` từ `staging@2e179598`. Ba commit mã cục bộ (`418a42ae` U13, `503cf463` U14, `a4bd6934` U04) và một commit tài liệu; chưa push.
+
+- [x] Workspace Detection: brownfield, tiếp tục từ state hiện hành; tạo nhánh.
+- [x] Requirements Analysis (Standard): [câu hỏi](inception/requirements/2026-11-18-u04-u13-u14-jdbc-questions.md) đã trả lời (Q1 chỉ sửa ba unit, giữ hạ tầng JPA chung; Q2–Q4 theo khuyến nghị); [yêu cầu JD-01…JD-09](inception/requirements/2026-11-18-u04-u13-u14-jdbc.md). Đã duyệt 2026-11-18.
+- [x] Workflow Planning: chỉ Code Generation và Build and Test; thứ tự U13 → U14 → U04. Đã duyệt 2026-11-18.
+- [x] Code Generation Part 1: [kế hoạch 6 bước](construction/plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md). Đã duyệt 2026-11-18.
+- [x] Code Generation Part 2: U13 module, U14, U04; giữ hạ tầng JPA chung. Cập nhật tài liệu unit và [persistence-conventions](construction/persistence-conventions.md). Người dùng duyệt 2026-11-18T14:44:22Z.
+- [x] Build and Test: `mvn -B verify` 2572 test, 0 fail, 0 error, 1 skipped. [Kết quả](construction/build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md). Thêm dòng vào [build-and-test-summary](construction/build-and-test/build-and-test-summary.md), sửa ghi chú JPA trong integration-test-instructions. Người dùng duyệt 2026-11-18T14:45:06Z.
+- [x] Operations: placeholder, không có bước triển khai. Sau đó người dùng yêu cầu E2E và PR: E2E `u04-u13-u14` 40/40 trên stack `jdbc1118` với bản vá tạm cho lỗi RabbitMQ của staging `3ed52391` (không commit); mở PR vào staging, không merge, không deploy.
+
 ## Sửa ký pháp class diagram theo UML — 2026-11-18
 
 Người dùng gửi trang hướng dẫn UML class diagram của draw.io, yêu cầu review rồi sửa `docs/class-diagrams.drawio`. Chỉ sửa sơ đồ và README; không đổi mã; chưa commit.

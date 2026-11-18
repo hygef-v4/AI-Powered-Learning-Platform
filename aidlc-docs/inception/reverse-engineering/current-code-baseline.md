@@ -2,7 +2,7 @@
 
 **Source:** `staging@7e0e8375`, 2026-11-15. Các bảng controller và migration đã đối chiếu với 50 controller và 43 tệp SQL; xem delta 2026-11-17 bên dưới. Danh mục test và frontend bên dưới giữ phạm vi từng đợt cập nhật. 66 use case và 15 unit. Java 17/Spring Boot modular monolith và worker, Next.js/React/TypeScript frontend.
 
-**Persistence:** [Spring JDBC policy](../../construction/persistence-conventions.md). U05/U09 use JDBC; U04/U13/U14 still use JPA during migration. [U09 current mapping](../../construction/u09-assignment-grading/code/jdbc-persistence.md).
+**Persistence:** [Spring JDBC policy](../../construction/persistence-conventions.md). All owner repositories use JDBC; U04/U13/U14 moved on 2026-11-18 ([results](../../construction/build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md)). The JPA starter, `spring.jpa` and `JpaTransactionManager` remain as shared infrastructure. [U09 current mapping](../../construction/u09-assignment-grading/code/jdbc-persistence.md).
 
 **Mail/deploy:** U01 supports SMTP (default, Mailpit locally) or Brevo HTTPS API via MAIL_TRANSPORT. VPS pulls successful main CI builds; [runbook](../../../docs/runbooks/deploy-vps.md). Source/config presence is not live provider/VPS verification.
 
@@ -207,7 +207,7 @@ Primary UC 16–19; FR-003.
 |---|---|
 | [subjects/controller](../../../backend/src/main/java/edu/aiplatform/subjects/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [subjects/service](../../../backend/src/main/java/edu/aiplatform/subjects/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [subjects/repository](../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
+| [subjects/repository](../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, JDBC (`JdbcClient`) từ 2026-11-18. |
 | [subjects/model](../../../backend/src/main/java/edu/aiplatform/subjects/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [subjects/dto](../../../backend/src/main/java/edu/aiplatform/subjects/dto) | Kiểu dữ liệu request/response riêng. |
 | [subjects/contract](../../../backend/src/main/java/edu/aiplatform/subjects/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -704,7 +704,7 @@ Primary UC 58–62; FR-004, FR-005.
 |---|---|
 | [materials/controller](../../../backend/src/main/java/edu/aiplatform/materials/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [materials/service](../../../backend/src/main/java/edu/aiplatform/materials/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [materials/repository](../../../backend/src/main/java/edu/aiplatform/materials/repository) | MaterialRepositoryAdapter dùng JDBC cho material/version từ 2026-11-09; module adapter còn JPA và cần chuyển riêng. |
+| [materials/repository](../../../backend/src/main/java/edu/aiplatform/materials/repository) | MaterialRepositoryAdapter dùng JDBC cho material/version từ 2026-11-09; module adapter chuyển JDBC ngày 2026-11-18. |
 | [materials/model](../../../backend/src/main/java/edu/aiplatform/materials/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [materials/integration](../../../backend/src/main/java/edu/aiplatform/materials/integration) | Adapter hạ tầng/provider, listener và sender. |
 
@@ -753,12 +753,12 @@ Primary UC 63–65; FR-011, FR-019, FR-023.
 |---|---|
 | [announcements/controller](../../../backend/src/main/java/edu/aiplatform/announcements/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [announcements/service](../../../backend/src/main/java/edu/aiplatform/announcements/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [announcements/repository](../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
+| [announcements/repository](../../../backend/src/main/java/edu/aiplatform/announcements/repository) | Repository interface/implementation, JDBC (`JdbcClient`) từ 2026-11-18. |
 | [announcements/model](../../../backend/src/main/java/edu/aiplatform/announcements/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [announcements/dto](../../../backend/src/main/java/edu/aiplatform/announcements/dto) | Kiểu dữ liệu request/response riêng. |
 | [notifications/controller](../../../backend/src/main/java/edu/aiplatform/notifications/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [notifications/service](../../../backend/src/main/java/edu/aiplatform/notifications/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [notifications/repository](../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, JPA hiện tại; cần chuyển JDBC theo quyết định chung. |
+| [notifications/repository](../../../backend/src/main/java/edu/aiplatform/notifications/repository) | Repository interface/implementation, JDBC (`JdbcClient`) từ 2026-11-18. |
 | [notifications/model](../../../backend/src/main/java/edu/aiplatform/notifications/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [notifications/integration](../../../backend/src/main/java/edu/aiplatform/notifications/integration) | Adapter hạ tầng/provider, listener và sender. |
 | [notifications/config](../../../backend/src/main/java/edu/aiplatform/notifications/config) | Properties, cấu hình bean và topology. |

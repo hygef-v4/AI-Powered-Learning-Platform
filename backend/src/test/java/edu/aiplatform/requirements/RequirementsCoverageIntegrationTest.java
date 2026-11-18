@@ -933,4 +933,74 @@ class RequirementsCoverageIntegrationTest {
         jdbc.update("update accounts set status='DISABLED' where id=?", accountIds.get(Role.ADMIN));
         mvc.perform(signedRequest(get("/api/v1/me/notifications"), Role.ADMIN)).andExpect(status().isUnauthorized());
     }
+
+    private boolean isTrueInTransaction(java.util.function.BooleanSupplier action) {
+        return Boolean.TRUE.equals(transaction.execute(tx -> action.getAsBoolean()));
+    }
+
+    @Test
+    void materialModuleRepositoryKeepsOrderVersionChecksCountsAndQuizLinks() {
+        UUID manager = accountIds.get(Role.SUBJECT_MANAGER);
+        Instant created = Instant.parse("2026-11-08T04:00:00.123456Z");
+        var later = new MaterialModule(UUID.randomUUID(), subjectId, "Later", 2, manager, created,
+                created, 0);
+        var tied = new MaterialModule(UUID.randomUUID(), subjectId, "Tied", 0, manager, created,
+                created.plusSeconds(1), 0);
+        transaction.executeWithoutResult(tx -> {
+            materialModuleRepository.insertModule(later);
+            materialModuleRepository.insertModule(tied);
+        });
+        assertThat(materialModuleRepository.findModule(later.id())).contains(later);
+        assertThat(materialModuleRepository.findModule(UUID.randomUUID())).isEmpty();
+        List<UUID> expectedOrder = new ArrayList<>(List.of(moduleId, tied.id()));
+        // PostgreSQL so sánh uuid theo byte không dấu, tức thứ tự chuỗi hex; UUID.compareTo thì khác.
+        expectedOrder.sort(Comparator.comparing(UUID::toString));
+        expectedOrder.add(later.id());
+        assertThat(materialModuleRepository.listModules(subjectId))
+                .extracting(MaterialModule::id).containsExactlyElementsOf(expectedOrder);
+        assertThat(materialModuleRepository.listModules(foreignSubjectId)).isEmpty();
+
+        var revised = later.reviseModule("Revised", 3, created.plusSeconds(5));
+        assertThat(isTrueInTransaction(() -> materialModuleRepository.updateModule(revised, 1)))
+                .isFalse();
+        assertThat(isTrueInTransaction(() -> materialModuleRepository.updateModule(revised, 0)))
+                .isTrue();
+        assertThat(materialModuleRepository.findModule(later.id())).contains(revised);
+        assertThat(isTrueInTransaction(() -> materialModuleRepository.deleteModule(later.id(), 0)))
+                .isFalse();
+
+        seedMaterial(subjectId, classId, later.id(), "Archived one", Material.Status.ARCHIVED);
+        seedMaterial(subjectId, null, later.id(), "Archived two", Material.Status.ARCHIVED);
+        seedMaterial(subjectId, null, later.id(), "Active", Material.Status.ACTIVE);
+        assertThat(materialModuleRepository.countActiveMaterials(later.id())).isEqualTo(1);
+        assertThat(materialModuleRepository.countArchivedMaterials(later.id())).isEqualTo(2);
+        transaction.executeWithoutResult(
+                tx -> materialModuleRepository.moveArchivedMaterials(later.id(), tied.id()));
+        assertThat(materialModuleRepository.countArchivedMaterials(later.id())).isZero();
+        assertThat(materialModuleRepository.countArchivedMaterials(tied.id())).isEqualTo(2);
+        assertThat(materialModuleRepository.countActiveMaterials(later.id())).isEqualTo(1);
+
+        UUID firstQuiz = UUID.randomUUID(), secondQuiz = UUID.randomUUID();
+        for (UUID quiz : List.of(firstQuiz, secondQuiz)) {
+            jdbc.update("""
+                    insert into quizzes(id,scope,subject_id,title,settings,created_by,created_at,updated_at)
+                    values (?,'SUBJECT',?,'Quiz','{}'::jsonb,?,?,?)
+                    """, quiz, subjectId, manager, at(NOW), at(NOW));
+        }
+        transaction.executeWithoutResult(tx -> {
+            materialModuleRepository.linkQuiz(new MaterialModule.QuizLink(tied.id(), secondQuiz, 4));
+            materialModuleRepository.linkQuiz(new MaterialModule.QuizLink(later.id(), firstQuiz, 1));
+        });
+        assertThat(materialModuleRepository.listQuizLinks(subjectId)).containsExactly(
+                new MaterialModule.QuizLink(later.id(), firstQuiz, 1),
+                new MaterialModule.QuizLink(tied.id(), secondQuiz, 4));
+        assertThat(materialModuleRepository.findQuizLink(secondQuiz))
+                .contains(new MaterialModule.QuizLink(tied.id(), secondQuiz, 4));
+        assertThat(isTrueInTransaction(
+                () -> materialModuleRepository.unlinkModuleQuiz(later.id(), secondQuiz))).isFalse();
+        assertThat(isTrueInTransaction(
+                () -> materialModuleRepository.unlinkModuleQuiz(tied.id(), secondQuiz))).isTrue();
+        transaction.executeWithoutResult(tx -> materialModuleRepository.unlinkQuiz(firstQuiz));
+        assertThat(materialModuleRepository.listQuizLinks(subjectId)).isEmpty();
+    }
 }

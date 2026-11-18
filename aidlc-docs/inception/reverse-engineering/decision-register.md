@@ -6,6 +6,10 @@ Người dùng hủy hướng chuyển U05/U09 sang JPA và xác nhận: “Chuy
 
 U05 đã JDBC; U09 chuyển hai adapter evaluation/proposal, giữ visibility JDBC. U04/U13/U14 hiện còn JPA, cần migration riêng; giữ hạ tầng JPA chung cho các owner đó trong giai đoạn chuyển tiếp, không tuyên bố toàn bộ code đã JDBC. Giữ schema/API/JSONB, locks/CAS/version, transaction/audit và public contracts. Các decision/evidence có ngày cũ bên dưới là lịch sử; không viết lại kết quả test cũ thành kết quả mới. [Kế hoạch và phạm vi](../../construction/plans/code-generation-plan/2026-11-06-u05-u09-jdbc.md), [bằng chứng mới](../../construction/build-and-test/2026-11-06-u05-u09-jdbc-results.md).
 
+## U04/U13/U14 sang JDBC — 2026-11-18
+
+Người dùng yêu cầu chuyển cả ba unit từ JPA sang JDBC và chỉ sửa U04, U13, U14, không ảnh hưởng unit khác. Repository của ba unit dùng `JdbcClient`; giữ `spring-boot-starter-data-jpa`, `spring.jpa` và `JpaTransactionManager` chung. Code production không còn entity hay repository JPA. [Kế hoạch](../../construction/plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md), [kết quả](../../construction/build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).
+
 ## Baseline lịch sử 2026-10-30
 
 Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`. User approved documentation execution: “Giúp tôi triển khai theo plan”. Source-observed behavior is documented without approving new application behavior.

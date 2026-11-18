@@ -12,7 +12,7 @@ subjects có quản trị danh sách/chi tiết/create/update, manager assignmen
 |---|---|
 | [subjects/controller](../../../../backend/src/main/java/edu/aiplatform/subjects/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [subjects/service](../../../../backend/src/main/java/edu/aiplatform/subjects/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [subjects/repository](../../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [subjects/repository](../../../../backend/src/main/java/edu/aiplatform/subjects/repository) | Repository interface/implementation, SQL JDBC (`JdbcClient`) và row mapping. |
 | [subjects/model](../../../../backend/src/main/java/edu/aiplatform/subjects/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [subjects/dto](../../../../backend/src/main/java/edu/aiplatform/subjects/dto) | Kiểu dữ liệu request/response riêng. |
 | [subjects/contract](../../../../backend/src/main/java/edu/aiplatform/subjects/contract) | Public interface/DTO xuyên unit; giữ nguyên. |
@@ -32,3 +32,7 @@ Kiểm tra của đợt refactor được ghi trong [refactor results](../../bui
 ### Ghi nhận kiểm thử trước baseline
 
 - [aidlc-docs/construction/build-and-test/2026-10-25-b2-b8-u04-results.md](../../build-and-test/2026-10-25-b2-b8-u04-results.md)
+
+## Delta 2026-11-18 — chuyển JPA sang JDBC
+
+Repository của unit dùng `JdbcClient`, giữ SQL, khóa, version/CAS, thứ tự và API như trước; entity/repository JPA đã xóa. [Kết quả kiểm chứng](../../build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).

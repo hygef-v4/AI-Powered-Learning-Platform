@@ -29,12 +29,14 @@ class ArchitectureTest {
             Map.entry("notifications", 14), Map.entry("admindashboard", 15));
 
     @ArchTest
-    static final ArchRule academics_and_grading_use_jdbc = classes().that()
-            .resideInAnyPackage("edu.aiplatform.academics..", "edu.aiplatform.grading..").should()
+    static final ArchRule migrated_units_use_jdbc = classes().that()
+            .resideInAnyPackage("edu.aiplatform.academics..", "edu.aiplatform.grading..",
+                    "edu.aiplatform.materials..", "edu.aiplatform.announcements..",
+                    "edu.aiplatform.notifications..", "edu.aiplatform.subjects..").should()
             .onlyDependOnClassesThat()
             .resideOutsideOfPackages("jakarta.persistence..", "org.springframework.data.jpa..",
                     "org.hibernate..")
-            .because("U05/U09 persist through Spring JDBC under the project-wide JDBC decision");
+            .because("U04/U05/U09/U13/U14 persist through Spring JDBC under the project-wide JDBC decision");
 
     @ArchTest
     static final ArchRule interfaces_are_named_with_I_prefix = classes().that().areInterfaces()

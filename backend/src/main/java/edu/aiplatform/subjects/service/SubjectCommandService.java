@@ -70,12 +70,9 @@ public class SubjectCommandService {
         try {
             subjectRepository.insertSubject(subject);
         } catch (DataIntegrityViolationException failure) {
-            for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
-                if (cause instanceof org.hibernate.exception.ConstraintViolationException constraint
-                        && "uk_subjects_code".equals(constraint.getConstraintName())) {
-                    throw ApiException.createConflict(
-                            "SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
-                }
+            if (isDuplicateCode(failure)) {
+                throw ApiException.createConflict(
+                        "SUBJECT_CODE_DUPLICATE", "Mã môn đã tồn tại, hãy dùng mã khác");
             }
             throw failure;
         }
@@ -193,5 +190,20 @@ public class SubjectCommandService {
             throw ApiException.createBadRequest(
                     "SUBJECT_COMMAND_REQUIRED", "Cần dữ liệu thao tác môn học");
         }
+    }
+
+    /**
+     * Unique violation (SQLState 23505) của đúng constraint mã môn. PostgreSQL ghi tên constraint
+     * trong message dạng {@code constraint "uk_subjects_code"}; Hibernate cũng đọc theo cách này.
+     */
+    private static boolean isDuplicateCode(DataIntegrityViolationException failure) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof java.sql.SQLException sqlFailure
+                    && "23505".equals(sqlFailure.getSQLState())
+                    && String.valueOf(sqlFailure.getMessage()).contains("\"uk_subjects_code\"")) {
+                return true;
+            }
+        }
+        return false;
     }
 }

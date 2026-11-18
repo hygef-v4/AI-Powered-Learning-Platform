@@ -26,7 +26,6 @@ import edu.aiplatform.materials.controller.*;
 import edu.aiplatform.materials.repository.*;
 import edu.aiplatform.materials.service.*;
 import edu.aiplatform.notifications.controller.*;
-import edu.aiplatform.notifications.model.Notification;
 import edu.aiplatform.notifications.repository.NotificationRepositoryAdapter;
 import edu.aiplatform.notifications.service.*;
 import edu.aiplatform.quizzes.contract.IQuizQuery;
@@ -37,20 +36,15 @@ import edu.aiplatform.subjects.service.*;
 import edu.aiplatform.shared.config.SecurityConfig;
 import edu.aiplatform.shared.error.GlobalExceptionHandler;
 import edu.aiplatform.identity.contract.IMail;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import java.time.*;
-import java.util.Map;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.springframework.context.annotation.*;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.orm.jpa.*;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.transaction.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -62,7 +56,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @EnableWebMvc
 @EnableWebSecurity
 @EnableTransactionManagement
-@EnableJpaRepositories(basePackageClasses = ISubjectJpaRepository.class)
 @Import({SecurityConfig.class, IdentityHttpSecurity.class, GlobalExceptionHandler.class,
         SubjectAdminController.class, SubjectAdminService.class, SubjectCommandService.class,
         SubjectStatusService.class, SubjectAuditRecorder.class, SubjectClassesReader.class,
@@ -107,26 +100,8 @@ class OwnerRequirementsTestConfig {
     }
 
     @Bean
-    LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource source) {
-        var factory = new LocalContainerEntityManagerFactoryBean();
-        factory.setDataSource(source);
-        factory.setPackagesToScan("edu.aiplatform.subjects.repository", "edu.aiplatform.materials.repository",
-                Notification.class.getPackageName(), edu.aiplatform.announcements.model.Announcement.class.getPackageName());
-        factory.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
-        factory.setJpaPropertyMap(Map.of("hibernate.hbm2ddl.auto", "validate", "hibernate.jdbc.time_zone", "UTC",
-                "hibernate.physical_naming_strategy", "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy"));
-        return factory;
-    }
-
-    @Bean
-    @Primary
-    EntityManager entityManager(EntityManagerFactory factory) {
-        return SharedEntityManagerCreator.createSharedEntityManager(factory);
-    }
-
-    @Bean
-    PlatformTransactionManager transactionManager(EntityManagerFactory factory) {
-        return new JpaTransactionManager(factory);
+    PlatformTransactionManager transactionManager(DataSource source) {
+        return new DataSourceTransactionManager(source);
     }
 
     @Bean

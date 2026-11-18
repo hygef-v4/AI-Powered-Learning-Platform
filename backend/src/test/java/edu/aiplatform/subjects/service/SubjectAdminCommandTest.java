@@ -139,8 +139,9 @@ class SubjectAdminCommandTest {
     @Test
     void onlyNamedUniqueConstraintIsTranslatedForConcurrentInsert() {
         var unique =
-                new org.hibernate.exception.ConstraintViolationException(
-                        "duplicate", new java.sql.SQLException(), "uk_subjects_code");
+                new java.sql.SQLException(
+                        "ERROR: duplicate key value violates unique constraint \"uk_subjects_code\"",
+                        "23505");
         doThrow(new DataIntegrityViolationException("duplicate", unique))
                 .when(subjectRepository)
                 .insertSubject(any());
@@ -150,8 +151,10 @@ class SubjectAdminCommandTest {
         var foreign =
                 new DataIntegrityViolationException(
                         "FK",
-                        new org.hibernate.exception.ConstraintViolationException(
-                                "FK", new java.sql.SQLException(), "fk_subjects_manager"));
+                        new java.sql.SQLException(
+                                "ERROR: insert or update on table \"subjects\" violates foreign key "
+                                        + "constraint \"fk_subjects_manager\"",
+                                "23503"));
         doThrow(foreign).when(subjectRepository).insertSubject(any());
         assertThatThrownBy(
                 () -> subjectCommandService.createSubject(admin, create(null))).isSameAs(foreign);
