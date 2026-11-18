@@ -15641,3 +15641,141 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Commit cục bộ trên staging, chưa push.
 
 ---
+## Kiểm tra JPA trong U04/U13/U14
+**Timestamp**: 2026-11-18T13:05:08Z
+**Requested by:** Hải Nam
+**User Input**: "kiểm tra lại giúp tôi các chức năng của u04, u13, u14 có đang dùng jpa không?"
+**AI Response**: "Xác nhận trên staging@2e179598: vẫn dùng JPA. U04: ISubjectJpaRepository (Spring Data JPA, @Lock PESSIMISTIC_WRITE, @Modifying/@Query), SubjectJpaEntity (@Entity, @Version), SubjectRepositoryAdapter (EntityManager persist, createNativeQuery), SubjectCommandService bắt org.hibernate ConstraintViolationException. U13: MaterialModuleRepositoryAdapter dùng EntityManager.createNativeQuery; MaterialRepositoryAdapter đã JDBC. U14: Announcement/Notification/NotificationPreference/EmailDelivery/DeadlineReminder là @Entity; AnnouncementRepositoryAdapter và NotificationRepositoryAdapter dùng EntityManager (JPQL, native, persist, lock.timeout); NotificationExceptionHandler import PersistenceException. Hạ tầng: pom.xml còn spring-boot-starter-data-jpa, application.yml còn spring.jpa (ddl-auto validate). Test còn dựng EntityManagerFactory/JpaTransactionManager: SubjectRepositoryIntegrationTest, NotificationDeliveryIntegrationTest, OwnerRequirementsTestConfig, EvaluationVersionIntegrationTest (U09); SubjectAdminCommandTest dùng lớp exception Hibernate. Khớp bảng persistence-conventions.md."
+**Context**: Kiểm tra chỉ đọc; không sửa mã, không commit.
+
+---
+## Kiểm tra ERD conceptual (tab erd-class-diagram-new)
+**Timestamp**: 2026-11-18T13:11:56Z
+**Requested by:** Hải Nam
+**User Input**: "@\"E:\FPTUni\sem9_fa26\diagram\erd.drawio\"
+không sửa code hay file drawio, kiểm tra giúp tôi xem diagram ở tab erd-class-diagram-new đã khớp với dự án chưa trong trong trường họp tôi muốn erd ở mức conceptual chỉ gồm các thực thể, thuộc tính và quan hệ chính để BA và khách hàng dễ dàng nắm bắt yêu cầu nghiệp vụ"
+**AI Response**: "Đối chiếu 20 thực thể và 32 quan hệ trong tab với migration Flyway (staging@2e179598). Phần lớn khớp. Sai lệch cần sửa: Quiz–Quiz Attempt phải 1–0..N; Assignment–Rubric phải 1–0..N (rubric theo từng phần bài); AI Assistance nối với AI Connection (0..N–0..1), không nối MCP Credential; Account–AI Connection phía Account là 0..1 (khóa institutional không có chủ); Subject–Assignment phía Subject là bắt buộc 1; Group Document–Evaluation là 1–0..N (điểm nhóm + điểm từng thành viên). Thiếu quan hệ Course Class–Quiz và Course Class–Reference Material (0..1–0..N). Gợi ý thuộc tính: Announcement thêm Title, Rubric bỏ Title thay bằng Assignment Part, Student Group bỏ Members/Group Leader (thể hiện bằng quan hệ), Account có thể thêm Student Code. Gợi ý cân nhắc thêm Material Module, Group Proposal; System Setting/Audit Record/MCP Credential mang tính kỹ thuật có thể bỏ khỏi ERD cho BA."
+**Context**: Kiểm tra chỉ đọc; không sửa mã, không sửa file drawio, không commit.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — tạo nhánh và câu hỏi yêu cầu
+**Timestamp**: 2026-11-18T13:12:24Z
+**Requested by:** Hải Nam
+**User Input**: "giúp tôi tạo branch mới từ staging để sửa lại từ jpa sang sử dụng jdbc cho cả 3 unit"
+**AI Response**: "Tạo nhánh refactor/jdbc-u04-u13-u14 từ staging@2e179598 (khớp origin/staging). Đọc code JPA của U04, U13 module, U14 và quy định persistence. Phát hiện EmailDeliveryService dựa vào dirty checking JPA để ghi trạng thái email (sendEmail, markEmailFailed, releaseDeferredEmails, cả attempts++ khi lỗi mail và flush trước khi đếm hạn mức). Tạo aidlc-docs/inception/requirements/2026-11-18-u04-u13-u14-jdbc-questions.md với 4 câu hỏi: phạm vi gỡ hạ tầng JPA, cách chuyển model U14, mức kiểm chứng, cách commit. Thêm mục mới trong aidlc-state.md."
+**Context**: Requirements Analysis (Standard). Chưa sửa mã, chưa commit. Chờ người dùng trả lời câu hỏi.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — câu trả lời Requirements Analysis
+**Timestamp**: 2026-11-18T13:17:51Z
+**Requested by:** Hải Nam
+**User Input**: "với câu 1 tôi chỉ muốn sửa 3 unit 04, 13, 14 mà không làm ảnh hưởng đến các unit khác. Các câu 2-4 theo khuyến nghị"
+**AI Response**: "Ghi câu trả lời vào file câu hỏi (Q1: chỉ sửa ba unit, giữ dependency, cấu hình và JpaTransactionManager chung; Q2–Q4: A). Tạo aidlc-docs/inception/requirements/2026-11-18-u04-u13-u14-jdbc.md gồm yêu cầu JD-01…JD-09, ràng buộc không ảnh hưởng unit khác (ngoại lệ test dùng chung OwnerRequirementsTestConfig, ArchitectureTest; U09 EvaluationVersionIntegrationTest chỉ sửa nếu bắt buộc và báo trước) và Workflow Planning (chỉ Code Generation, Build and Test; U13 → U14 → U04)."
+**Context**: Requirements Analysis và Workflow Planning.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — yêu cầu duyệt Requirements và Workflow Planning
+**Timestamp**: 2026-11-18T13:17:51Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — chờ người dùng duyệt)"
+**AI Response**: "Trình tài liệu yêu cầu và kế hoạch workflow, chờ người dùng chọn Request Changes hoặc Approve & Continue sang Code Generation Part 1."
+**Context**: Approval prompt — Requirements Analysis và Workflow Planning.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — duyệt Requirements và Workflow Planning
+**Timestamp**: 2026-11-18T13:20:02Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt, tiếp tục"
+**AI Response**: "Ghi nhận duyệt; vào Code Generation Part 1 (lập kế hoạch)."
+**Context**: Requirements Analysis và Workflow Planning đã duyệt; vào Code Generation Part 1.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — Code Generation Part 1, yêu cầu duyệt kế hoạch
+**Timestamp**: 2026-11-18T13:22:07Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — chờ người dùng duyệt)"
+**AI Response**: "Tạo aidlc-docs/construction/plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md gồm 6 bước: (1) baseline và test characterization trên PostgreSQL khi code còn JPA; (2) U13 module; (3) U14 announcement, notification, email (ghi tường minh EmailDelivery ở mọi nhánh); (4) U04 (khóa for no key update, version, trùng mã qua PSQLException); (5) mvn verify toàn backend, dừng và báo nếu unit khác lỗi; (6) tài liệu. Mỗi unit một commit cục bộ, không push. Xác nhận Hibernate 6.6 PostgreSQL sinh for no key update cho PESSIMISTIC_WRITE (PostgreSQLSqlAstTranslator); Docker 29.7.2 có sẵn cho Testcontainers."
+**Context**: Code Generation Part 1 — approval prompt.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — duyệt kế hoạch Code Generation
+**Timestamp**: 2026-11-18T13:25:06Z
+**Requested by:** Hải Nam
+**User Input**: "hiện các unit khác có dùng hibernate không, nếu không thì duyệt kế hoạch"
+**AI Response**: "Grep toàn backend: production của các unit khác không dùng org.hibernate, jakarta.persistence, Spring Data JPA, org.springframework.orm hay EntityManager. Còn lại hạ tầng chung (pom.xml spring-boot-starter-data-jpa, application.yml spring.jpa) và ba file test: ArchitectureTest (chuỗi package trong rule), EvaluationVersionIntegrationTest của U09 (tự dựng EntityManagerFactory quét subjects.repository), OwnerRequirementsTestConfig (cấu hình test của U04/U13/U14). Điều kiện của người dùng thỏa, coi kế hoạch đã duyệt; vào Code Generation Part 2."
+**Context**: Code Generation Part 1 đã duyệt; vào Part 2.
+
+---
+## Kiểm tra lại ERD conceptual sau khi sửa
+**Timestamp**: 2026-11-18T13:30:59Z
+**Requested by:** Hải Nam
+**User Input**: "tôi sửa xong rồi, kiểm tra lại giúp tôi"
+**AI Response**: "Đã sửa đúng: Quiz–Quiz Attempt 1–0..N, Assignment–Rubric 1–0..N, Subject–Assignment bắt buộc 1, Account–AI Connection 0..1, Group Document–Evaluation 1–0..N, bỏ MCP Credential và quan hệ sai với AI Assistance, thuộc tính Announcement/Rubric/Student Group/Account/Course Class, thêm quan hệ trưởng nhóm. Còn lại: thiếu AI Assistance–AI Connection (0..N–0..1), thiếu Course Class–Quiz và Course Class–Reference Material (0..1–0..N), Assignment Attempt–Evaluation nên 1–0..1, quan hệ trưởng nhóm phía Account nên 0..1 (leader_id cho phép null), các đường quan hệ chưa có tên (Account–Course Class và Account–Student Group mỗi cặp có 2 đường)."
+**Context**: Kiểm tra chỉ đọc; không sửa mã, không sửa file drawio, không commit.
+
+---
+## Sửa bảng 3.3 Data Business Rules
+**Timestamp**: 2026-11-18T13:42:40Z
+**Requested by:** Hải Nam
+**User Input**: "[Người dùng dán bảng '3.3 Data Business Rules' gồm 38 dòng Rule / Description / Enforced On, từ 'Unique school identity' tới 'One backup per day']
+giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự án"
+**AI Response**: "Đối chiếu với migration và functional-design/business-rules.md của U01–U14. Trả bảng đã sửa trong chat. Sửa chính: mã lớp duy nhất theo (môn, học kỳ); MSSV chỉ cho Student; nhóm có đúng một trưởng nhóm là thành viên, bắt buộc trước khi phát hành bài nhóm; từ chối đổi trưởng nhóm không bắt buộc lý do; tài liệu luôn thuộc môn và một module của môn, lớp là tùy chọn, module có thể gắn nhiều quiz, mỗi quiz tối đa một module; số lượt quiz tính theo từng lớp; chỉ bài GRADED có Evaluation, nộp lại làm đánh giá cũ SUPERSEDED; điểm mặc định câu hỏi > 0, 2–6 lựa chọn; thông báo lớp do giảng viên chính của lớp OPEN đăng; Student chỉ dùng AI cho Quiz Practice, không dùng cho bài nhóm; gộp 2 dòng MCP; backup giữ bản SUCCESS 7 ngày."
+**Context**: Chỉ trả nội dung trong chat; không sửa mã, không sửa file drawio, không commit.
+
+---
+## Xác nhận nguồn cho bảng Data Business Rules
+**Timestamp**: 2026-11-18T13:43:01Z
+**Requested by:** Hải Nam
+**User Input**: "không dựa vào folder docs mà phải dựa vào aidlc-docs thì mới đúng được"
+**AI Response**: "Xác nhận bảng được đối chiếu với aidlc-docs (construction/u01–u14 functional-design/business-rules.md, inception/requirements/requirements.md) và migration Flyway; không dùng thư mục docs/. Sửa lại một ý ở mục trước: D01 nghĩa là Quiz chỉ để luyện tập, không vào sổ điểm; D03 là Student không có AI cho bài nhóm. Mục trước ghi nhầm 'Student chỉ dùng AI cho Quiz Practice'."
+**Context**: Chỉ trả nội dung trong chat; không sửa mã, không sửa file drawio, không commit.
+
+---
+## Rà thư mục docs/ cho nguồn business rules
+**Timestamp**: 2026-11-18T13:46:55Z
+**Requested by:** Hải Nam
+**User Input**: "trong folder docs có những gì có thể ảnh hưởng đến việc bạn lấy business rules không?"
+**AI Response**: "Liệt kê 24 tệp trong docs/. Bảng rules không lấy từ docs/. Tệp có thể ảnh hưởng: report3-conceptual-data-model.drawio (mô hình dữ liệu conceptual có thêm Enrollment, Module, Assignment Part, AI Usage Record, Leader Change Request, Backup Run, MCP Credential), usecase_table.md (bản 2026-10-14), guides/*.md, runbooks/restore-isolated.md, contracts/openapi/*.yaml. Đây là tài liệu dẫn xuất, không phải nguồn business rule; nếu khác aidlc-docs thì theo aidlc-docs."
+**Context**: Kiểm tra chỉ đọc; không sửa mã, không commit.
+
+---
+## Dựng lại tab database_design_new theo database dự án
+**Timestamp**: 2026-11-18T13:58:47Z
+**Requested by:** Hải Nam
+**User Input**: "giờ hãy giúp tôi sửa lại database design ở tab database_design_new để khớp với database của dự án với yêu cầu giữ style và màu sắc của các bảng, các thuộc tính chỉ gồm các khóa và 1 vài thuộc tính quan trọng cho nghiệp vụ thôi"
+**AI Response**: "Lấy schema từ Postgres local (conv041314-postgres-1, Flyway 20261114.1100; 3 migration chưa áp chỉ đổi ràng buộc hoặc xóa bảng group_peer_reviews). Dựng lại tab database_design_new trong E:\FPTUni\sem9_fa26\diagram\erd.drawio: 53 bảng, 301 dòng (PK, FK, UK và vài cột nghiệp vụ, kiểu lấy từ DB), 100 đường nối, giữ nguyên style bảng/dòng/đường cũ (#fff8cc, #29a8df). Nullable FK dùng ERzeroToOne; 8 tham chiếu logic không có ràng buộc DB vẽ nét đứt; khóa tự tham chiếu chỉ giữ dòng FK. Hai tab erd và erd-class-diagram-new giữ nguyên từng byte. Sao lưu bản gốc: erd.backup-2026-11-18.drawio. Chưa kiểm tra được bằng hình vì trình duyệt không mở được tệp cục bộ."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## Thu gọn database design và tách theo module
+**Timestamp**: 2026-11-18T14:08:38Z
+**Requested by:** Hải Nam
+**User Input**: "Làm cả 1, 2, 4"
+**AI Response**: "Trong E:\FPTUni\sem9_fa26\diagram\erd.drawio: tab database_design_new chỉ còn cột khóa (PK/FK/UK), bỏ cột kiểu dữ liệu; 53 bảng, 168 dòng, 100 đường nối, xếp cột theo tầng cha bên trái, con bên phải. Thêm 6 tab module ngay sau: db_1_account_admin, db_2_class_material, db_3_assignment_grading, db_4_group, db_5_quiz, db_6_ai_mcp; mỗi tab có tiêu đề, bảng của module (nền #fff8cc) và bảng tham chiếu từ module khác dạng thu gọn nền xám #eeeeee chỉ có id. Giữ style dòng, viền, đường nối cũ. Tab erd và erd-class-diagram-new không đổi. Sao lưu bản trước: erd.backup-2026-11-18-full-columns.drawio. Chưa kiểm tra bằng hình."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## Bố cục 6 tab module bằng ELK
+**Timestamp**: 2026-11-18T14:28:57Z
+**Requested by:** Hải Nam
+**User Input**: "có, cài elkjs vào folder E:\skill và chạy cho 6 tab module"
+**AI Response**: "Cài elkjs@0.9.3 (bản pin, --ignore-scripts) vào E:\skill; viết E:\skill\drawio-elk-modules.js (dữ liệu bảng ở E:\skill\data). Script bố cục layered, đường vuông góc, nối từ dòng FK sang dòng PK, thử 144 cấu hình mỗi tab (hướng, cách đặt bảng, seed, nhân bản bảng xám) và chọn bản ít đường cắt nhất. Kết quả số chỗ cắt: db_1 0, db_2 4, db_3 4 (nhân bản mọi bảng xám), db_4 9 (nhân bản mọi bảng xám, 17 bảng xám), db_5 8 (chỉ nhân bản accounts), db_6 0. Các tab khác giữ nguyên. Sao lưu: erd.backup-2026-11-18-before-elk.drawio. Chưa kiểm tra bằng hình."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## Gộp bảng xám trong 6 tab module
+**Timestamp**: 2026-11-18T14:32:16Z
+**Requested by:** Hải Nam
+**User Input**: "Gộp bảng xám"
+**AI Response**: "Sửa E:\skill\drawio-elk-modules.js để mặc định mỗi bảng tham chiếu xám chỉ có một ô (bật lại nhân bản bằng biến DUP_MODES). Chạy lại ELK cho 6 tab: db_1 0 chỗ cắt, db_2 4, db_3 12, db_4 40, db_5 17, db_6 0; bảng xám 2/2/4/3/3/1. Các tab khác giữ nguyên. Sao lưu bản có bảng xám nhân bản: erd.backup-2026-11-18-elk-duplicated-stubs.drawio. Chưa kiểm tra bằng hình."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — Code Generation hoàn tất, yêu cầu duyệt
+**Timestamp**: 2026-11-18T14:34:21Z
+**Requested by:** Hải Nam
+**User Input**: "(không có input mới; tiếp tục thực hiện kế hoạch đã duyệt)"
+**AI Response**: "Ba commit mã cục bộ: 418a42ae (U13 module), 503cf463 (U14), a4bd6934 (U04). mvn -B verify toàn backend: BUILD SUCCESS, 2572 test, 0 fail, 0 error, 1 skipped; EvaluationVersionIntegrationTest U09 không sửa vẫn đạt. Không còn JPA/Hibernate/EntityManager trong code production của subjects, materials, announcements, notifications; không đổi URL, JSON, schema, migration, contract, pom.xml. Khác kế hoạch: bỏ handler PersistenceException thay vì đổi sang 503 (JD-08) để không đổi phản hồi API; dò trùng mã môn qua SQLState 23505 + tên constraint thay PSQLException (driver scope runtime). Cập nhật persistence-conventions, tài liệu hiện hành của U04/U13/U14, current-code-baseline, decision-register và tạo kết quả 2026-11-18-u04-u13-u14-jdbc-results.md. Hỏi người dùng: Request Changes hoặc Continue to Next Stage."
+**Context**: Code Generation Part 2 và Build and Test hoàn tất; chờ duyệt. Chưa push.
+
+---

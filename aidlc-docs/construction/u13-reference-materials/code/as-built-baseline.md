@@ -10,7 +10,7 @@ Module cơ bản của môn đã triển khai. Học liệu môn/lớp bắt bu�
 |---|---|
 | [materials/controller](../../../../backend/src/main/java/edu/aiplatform/materials/controller) | HTTP endpoints, request/response và lỗi HTTP. |
 | [materials/service](../../../../backend/src/main/java/edu/aiplatform/materials/service) | Use case, phân quyền, transaction/audit và contract implementation. |
-| [materials/repository](../../../../backend/src/main/java/edu/aiplatform/materials/repository) | Repository interface/implementation, SQL/JPA và persistence mapping. |
+| [materials/repository](../../../../backend/src/main/java/edu/aiplatform/materials/repository) | Repository interface/implementation, SQL JDBC (`JdbcClient`) và row mapping. |
 | [materials/model](../../../../backend/src/main/java/edu/aiplatform/materials/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [materials/integration](../../../../backend/src/main/java/edu/aiplatform/materials/integration) | Adapter hạ tầng/provider, listener và sender. |
 
@@ -35,3 +35,7 @@ Kiểm tra của đợt refactor được ghi trong [refactor results](../../bui
 Thêm enabled độc lập status, descriptionDocument và kiểm lại quyền đổi token tải; sinh viên/nguồn AI bị chặn khi tắt. Material/version adapter đã JDBC, module adapter còn JPA. Hai row JPA của material/version đã xóa. UI nhãn Bật/Tắt, rich description và sửa gutter bullet/số.
 
 Delta này bổ sung snapshot commit có ngày phía trên, chưa tạo commit mới và không sửa lại evidence lịch sử. [Kết quả và giới hạn](../../build-and-test/2026-11-09-material-quiz-ui-results.md); [đối chiếu tài liệu](../../build-and-test/2026-11-09-aidlc-doc-sync.md).
+
+## Delta 2026-11-18 — chuyển JPA sang JDBC
+
+Repository của unit dùng `JdbcClient`, giữ SQL, khóa, version/CAS, thứ tự và API như trước; entity/repository JPA đã xóa. [Kết quả kiểm chứng](../../build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).
