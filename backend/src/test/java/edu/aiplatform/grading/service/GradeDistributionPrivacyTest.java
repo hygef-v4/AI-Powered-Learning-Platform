@@ -48,7 +48,7 @@ class GradeDistributionPrivacyTest {
             when(classes.listActiveStudents(id)).thenReturn(students);
         }
         when(classes.isActiveStudent(actor.accountId(), otherClass)).thenReturn(true);
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId,
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId,
                 AssignmentScope.SUBJECT, null, subjectId, 1, "Task", SubmissionMode.INDIVIDUAL, GradingMode.GRADED,
                 false, AssignmentStatus.OPEN, null, null, null, 1, false, null, List.of())));
         when(evaluations.findForAssignmentAndClass(assignmentId, classId)).thenReturn(values);

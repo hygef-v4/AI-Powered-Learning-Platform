@@ -49,7 +49,7 @@ class AttemptSubmitter {
     /** Nộp lượt đã khóa dòng; trả {@code false} nếu lượt đã nộp trước đó. */
     boolean submit(AssignmentAttempt attempt, SubmitMode mode, UUID actorId, Instant now, Instant closesAt,
                    List<ValidationIssue> warnings) {
-        Instant lateUntil = assignments.get(attempt.assignmentId())
+        Instant lateUntil = assignments.loadAssignment(attempt.assignmentId())
                 .map(AssignmentView::lateUntil)
                 .orElse(attempt.snapshot().lateUntil());
         Instant effective = mode == SubmitMode.MANUAL ? now
@@ -80,7 +80,7 @@ class AttemptSubmitter {
         if (attempt == null || !attempt.hasInProgressStatus()) {
             return false;
         }
-        AssignmentView view = assignments.get(attempt.assignmentId()).orElse(null);
+        AssignmentView view = assignments.loadAssignment(attempt.assignmentId()).orElse(null);
         Instant closesAt = view == null ? attempt.snapshot().closesAt() : view.closesAt();
         if (mode == SubmitMode.AUTO_DEADLINE && view != null
                 && view.status() == edu.aiplatform.assignments.contract.AssignmentStatus.OPEN) {

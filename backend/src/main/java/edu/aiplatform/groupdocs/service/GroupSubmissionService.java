@@ -89,7 +89,7 @@ public class GroupSubmissionService {
         if (version == null || version != document.version()) {
             throw ApiException.createConflict("GROUP_DOC_VERSION_CONFLICT", "Tài liệu vừa được thay đổi, hãy tải lại");
         }
-        AssignmentView assignment = assignments.get(document.assignmentId()).orElseThrow(GroupAccess::createNotFoundError);
+        AssignmentView assignment = assignments.loadAssignment(document.assignmentId()).orElseThrow(GroupAccess::createNotFoundError);
         GroupSnapshot.Result snapshot = GroupSnapshot.buildSnapshot(document.sharedBlocks(), documents.listSections(documentId));
         ValidationResult result = validate(document, snapshot.document());
         if (!result.ok()) {
@@ -124,7 +124,7 @@ public class GroupSubmissionService {
         }
         SubmitMode mode = document.autoSubmitReason() != null ? document.autoSubmitReason() : SubmitMode.AUTO_DEADLINE;
         ClassGroup group = groups.findGroup(document.groupId()).orElse(null);
-        AssignmentView assignment = assignments.get(document.assignmentId()).orElse(null);
+        AssignmentView assignment = assignments.loadAssignment(document.assignmentId()).orElse(null);
         if (group == null || assignment == null) {
             documents.updateDocument(document.markClosed());
             return Optional.empty();
@@ -169,7 +169,7 @@ public class GroupSubmissionService {
         } else {
             model = GroupSnapshot.buildSnapshot(document.sharedBlocks(), documents.listSections(documentId)).document();
         }
-        String title = assignments.get(document.assignmentId()).map(AssignmentView::title).orElse("Bai nhom") + " - "
+        String title = assignments.loadAssignment(document.assignmentId()).map(AssignmentView::title).orElse("Bai nhom") + " - "
                 + ctx.group().name();
         return new Export(title, docx.export(model, title, blockId -> null));
     }

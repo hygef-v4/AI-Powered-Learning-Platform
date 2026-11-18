@@ -48,7 +48,7 @@ public class SubmissionQueryService implements ISubmissionQuery {
     @Override
     @Transactional(readOnly = true)
     public List<StudentSubmissionStatus> listSubmissions(UUID assignmentId, UUID classId) {
-        GradingMode mode = assignments.get(assignmentId).map(AssignmentView::gradingMode).orElse(GradingMode.GRADED);
+        GradingMode mode = assignments.loadAssignment(assignmentId).map(AssignmentView::gradingMode).orElse(GradingMode.GRADED);
         Map<UUID, List<AssignmentAttempt>> byStudent = attempts.listOfClass(assignmentId, classId).stream()
                 .collect(Collectors.groupingBy(AssignmentAttempt::accountId));
         Set<UUID> students = new LinkedHashSet<>(classes.listActiveStudents(classId));
@@ -81,7 +81,7 @@ public class SubmissionQueryService implements ISubmissionQuery {
     @Override
     @Transactional(readOnly = true)
     public List<UUID> listStudentsWithoutSubmission(UUID assignmentId, UUID classId) {
-        Optional<AssignmentView> view = assignments.get(assignmentId);
+        Optional<AssignmentView> view = assignments.loadAssignment(assignmentId);
         List<UUID> students = classes.listActiveStudents(classId);
         if (view.isPresent() && view.get().submissionMode() == SubmissionMode.GROUP) {
             List<UUID> missing = new ArrayList<>();

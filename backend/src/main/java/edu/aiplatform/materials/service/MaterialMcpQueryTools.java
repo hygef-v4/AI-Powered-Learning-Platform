@@ -28,17 +28,17 @@ public class MaterialMcpQueryTools implements IMcpToolProvider {
 
     @Override
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
-        McpInput.teaching(actor);
-        if (!"list_materials".equals(name)) throw McpInput.invalid();
+        McpInput.requireTeaching(actor);
+        if (!"list_materials".equals(name)) throw McpInput.createInvalidArguments();
         var in = new McpInput(args);
-        int page = in.page(), size = in.size();
-        if (in.has("classId") == in.has("subjectId")) throw McpInput.invalid();
-        String query = in.text("query", "").toLowerCase(Locale.ROOT);
+        int page = in.readPage(), size = in.readSize();
+        if (in.has("classId") == in.has("subjectId")) throw McpInput.createInvalidArguments();
+        String query = in.readText("query", "").toLowerCase(Locale.ROOT);
         var rows =
                 in.has("classId")
                         ? materialQueryService.listClassMaterials(
-                                actor, in.uuid("classId"), false, null)
-                        : materialQueryService.listSubjectMaterials(actor, in.uuid("subjectId"));
+                                actor, in.readUuid("classId"), false, null)
+                        : materialQueryService.listSubjectMaterials(actor, in.readUuid("subjectId"));
         var items =
                 rows.stream()
                         .filter(m -> m.title().toLowerCase(Locale.ROOT).contains(query))
@@ -58,6 +58,6 @@ public class MaterialMcpQueryTools implements IMcpToolProvider {
                                                 "textStatus",
                                                 m.current().textStatus()))
                         .toList();
-        return new McpToolResult(false, McpInput.page(items, page, size));
+        return new McpToolResult(false, McpInput.paginateItems(items, page, size));
     }
 }

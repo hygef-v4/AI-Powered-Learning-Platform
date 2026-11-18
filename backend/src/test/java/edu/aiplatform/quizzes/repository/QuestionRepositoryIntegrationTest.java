@@ -36,11 +36,11 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
- * SQL viết tay của {@link JdbcQuestionRepository} và migration U10 chạy trên PostgreSQL 16 thật, với role
+ * SQL viết tay của {@link QuestionRepository} và migration U10 chạy trên PostgreSQL 16 thật, với role
  * {@code migrator}/{@code app} như khi triển khai.
  */
 @Testcontainers(disabledWithoutDocker = true)
-class JdbcQuestionRepositoryIntegrationTest {
+class QuestionRepositoryIntegrationTest {
 
     // Sinh mỗi lần chạy: container chỉ sống trong test, không để chuỗi mật khẩu cố định trong mã.
     private static final String APP_PASSWORD = UUID.randomUUID().toString();
@@ -57,7 +57,7 @@ class JdbcQuestionRepositoryIntegrationTest {
     private static HikariDataSource appDataSource;
     private static HikariDataSource adminDataSource;
     private static JdbcClient admin;
-    private static JdbcQuestionRepository repository;
+    private static QuestionRepository repository;
 
     private UUID subject;
     private UUID author;
@@ -69,7 +69,7 @@ class JdbcQuestionRepositoryIntegrationTest {
         appDataSource = dataSource("app", APP_PASSWORD);
         adminDataSource = dataSource(POSTGRES.getUsername(), POSTGRES.getPassword());
         admin = JdbcClient.create(adminDataSource);
-        repository = new JdbcQuestionRepository(JdbcClient.create(appDataSource), new ObjectMapper());
+        repository = new QuestionRepository(JdbcClient.create(appDataSource), new ObjectMapper());
     }
 
     @AfterAll

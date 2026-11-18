@@ -71,7 +71,7 @@ public class QuizPracticeQueryService {
             if (ref == null || entries.containsKey(buildKey(done.getKey(), ref.classId()))) {
                 continue;
             }
-            PracticeSupport.call(() -> quizzes.get(done.getKey()))
+            PracticeSupport.call(() -> quizzes.loadQuiz(done.getKey()))
                     .ifPresent(quiz -> entries.put(buildKey(quiz.quizId(), ref.classId()), new Entry(quiz, ref)));
         }
         List<UUID> quizIds = entries.values().stream().map(e -> e.quiz.quizId()).distinct().toList();

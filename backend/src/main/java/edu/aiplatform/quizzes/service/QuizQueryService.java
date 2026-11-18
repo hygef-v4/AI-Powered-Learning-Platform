@@ -119,7 +119,7 @@ public class QuizQueryService implements IQuizQuery {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<QuizView> get(UUID quizId) {
+    public Optional<QuizView> loadQuiz(UUID quizId) {
         return quizzes.findQuiz(quizId).map(quiz -> view(quiz, quiz.wasGenerated()
                 ? QuizSupport.sumMaxScore(quizzes.drawRules(quizId))
                 : quizzes.listItems(quizId).stream().map(QuizItem::points).reduce(BigDecimal.ZERO, BigDecimal::add)));

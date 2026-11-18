@@ -78,7 +78,7 @@ class PracticeSupport {
 
     /** Quiz thuộc lớp: Quiz của lớp đó, hoặc Quiz của môn chứa lớp (BR-U11-01, BR-U10-25). Không có thì 404. */
     QuizView loadQuizInClass(UUID quizId, ClassRef ref) {
-        QuizView quiz = call(() -> quizzes.get(quizId)).orElseThrow(() -> ApiException.createNotFound(QUIZ_NOT_FOUND));
+        QuizView quiz = call(() -> quizzes.loadQuiz(quizId)).orElseThrow(() -> ApiException.createNotFound(QUIZ_NOT_FOUND));
         boolean belongs = quiz.scope() == QuizScope.CLASS
                 ? ref.classId().equals(quiz.classId())
                 : ref.subjectId().equals(quiz.subjectId());

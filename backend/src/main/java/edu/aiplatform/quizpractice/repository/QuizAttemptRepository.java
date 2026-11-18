@@ -27,7 +27,7 @@ import org.springframework.stereotype.Repository;
 
 /** {@code quiz_attempts} bằng SQL viết tay; snapshot, câu trả lời, kết quả lưu {@code jsonb}. */
 @Repository
-public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
+public class QuizAttemptRepository implements IQuizAttemptRepository {
 
     private static final String COLUMNS = """
             id, quiz_id, class_id, account_id, attempt_no, snapshot, answers, answer_version, status, submit_mode,
@@ -40,7 +40,7 @@ public class JdbcQuizAttemptRepository implements IQuizAttemptRepository {
     private final JdbcClient jdbc;
     private final ObjectMapper json;
 
-    public JdbcQuizAttemptRepository(JdbcClient jdbc, ObjectMapper json) {
+    public QuizAttemptRepository(JdbcClient jdbc, ObjectMapper json) {
         this.jdbc = jdbc;
         this.json = json;
     }

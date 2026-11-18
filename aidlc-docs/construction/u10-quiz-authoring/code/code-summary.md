@@ -15,7 +15,7 @@ Code viết ngày 2026-10-20 trên nhánh `quiz-authoring` (tách từ `staging`
 | F3 Nhập tệp | `QuestionImporter` (`.xlsx` qua Apache POI, `.csv` UTF-8 qua Commons CSV; nhận loại theo nội dung; ≤ 5 MB, ≤ 500 dòng; ô công thức giữ là văn bản; `dryRun` chỉ kiểm) |
 | Quyền, audit | `QuizAccess` (R2 qua `IAuthorization`, ngoài phạm vi `404` + `ACCESS_DENIED`, U01 lỗi → `503`), `ActiveSubjects` (môn lưu trữ chỉ xem, U04 lỗi → `503`), `QuizAudit` (chỉ id, số đếm; không nội dung câu) |
 
-Domain: `Question` (phiên bản, chuyển trạng thái), `QuestionContent` (chuẩn hóa), `QuestionRules` (BR-U10-02, 03), `QuestionOption`, `Violation`, enum `QuestionStatus`, `QuestionScope`, `Difficulty`; `IQuestionRepository`. Hạ tầng: `JdbcQuestionRepository` (`JdbcClient`, `jsonb` cho lựa chọn, đáp án, thẻ).
+Domain: `Question` (phiên bản, chuyển trạng thái), `QuestionContent` (chuẩn hóa), `QuestionRules` (BR-U10-02, 03), `QuestionOption`, `Violation`, enum `QuestionStatus`, `QuestionScope`, `Difficulty`; `IQuestionRepository`. Hạ tầng: `QuestionRepository` (`JdbcClient`, `jsonb` cho lựa chọn, đáp án, thẻ).
 
 ## API
 
@@ -71,7 +71,7 @@ Mã lỗi khác: `QUESTION_NOT_FOUND`, `SUBJECT_NOT_FOUND`, `SUBJECT_NOT_ACTIVE`
 | BR-U10-03 ≤ 20.000 ký tự, điểm > 0 tối đa 2 chữ số thập phân, độ khó, ≤ 10 thẻ | `QuestionRules`, `QuestionContent.of` | `QuestionRulesTest`, `questionForm.test.ts` |
 | BR-U10-04 bản đã kích hoạt bất biến, sửa mở nháp mới, một nháp mỗi lineage | `Question.nextDraft`, `QuestionBankService.openDraft`, unique riêng phần | `QuestionTest`, `QuestionBankServiceTest`, `lineageKeepsAtMostOneDraftAndVersionsInOrder` |
 | BR-U10-05 kích hoạt khi hợp lệ, ngưng, xóa chỉ nháp | `activate`, `retire`, `delete` | `QuestionBankServiceTest` |
-| BR-U10-06 mỗi lineage một dòng + cờ nháp, lọc, lịch sử | `JdbcQuestionRepository.searchBank`, `QuestionVersionPanel` | `bankListShowsOneRowPerLineageWithDraftFlagAndFilters`, `QuestionScreens.test.tsx` |
+| BR-U10-06 mỗi lineage một dòng + cờ nháp, lọc, lịch sử | `QuestionRepository.searchBank`, `QuestionVersionPanel` | `bankListShowsOneRowPerLineageWithDraftFlagAndFilters`, `QuestionScreens.test.tsx` |
 | BR-U10-07 nhập `.xlsx`/`.csv`, ≤ 500 dòng, ≤ 5 MB, kết quả từng dòng | `QuestionImporter`, `QuestionImportDialog` | `QuestionImporterTest`, `QuestionScreens.test.tsx` |
 | BR-U10-50 ngoài phạm vi `404` + audit, `version` lệch `409` | `QuizAccess`, `QuestionBankService` | `QuestionBankServiceTest`, `QuestionControllerTest` |
 | BR-U10-51 audit `QUESTION_*`, `QUESTIONS_IMPORTED` | `QuizAudit` | `QuestionBankServiceTest`, `QuestionImporterTest` |
@@ -97,7 +97,7 @@ Code viết ngày 2026-10-20 trên `quiz-authoring` sau commit giai đoạn 1 `5
 | F14 Interface | `QuizQueryService` (cài `IQuizQuery`, đề cho người học không có đáp án), `QuizScorer` (cài `IQuizScoring`, đúng đủ tập đáp án mới có điểm) |
 | Dùng chung | `QuizSupport` (tải, quyền sửa/xem, lớp/môn còn hoạt động, dựng Quiz Detail, lưu có version), `QuizAccess.requireClass`, `.allows`, `RuleViolationException` |
 
-Domain: `Quiz`, `QuizItem`, `QuizOrigin`, `QuizRules`, `IQuizRepository`; `Question.newInline`, `.copyInline`; `IQuestionRepository` thêm câu riêng và chọn/bốc câu `ACTIVE`. Hạ tầng: `JdbcQuizRepository` (cài đặt, học liệu dạng `jsonb`; chuỗi version bằng truy vấn đệ quy).
+Domain: `Quiz`, `QuizItem`, `QuizOrigin`, `QuizRules`, `IQuizRepository`; `Question.newInline`, `.copyInline`; `IQuestionRepository` thêm câu riêng và chọn/bốc câu `ACTIVE`. Hạ tầng: `QuizRepository` (cài đặt, học liệu dạng `jsonb`; chuỗi version bằng truy vấn đệ quy).
 
 ## API (giai đoạn 2)
 
@@ -151,7 +151,7 @@ Mã lỗi mới: `QUIZ_NOT_FOUND`, `QUIZ_INVALID`, `QUIZ_PUBLISH_FAILED` (kèm `
 | BR-U10-21 điều kiện duyệt theo câu | `QuizRules.validateForReview` | `reviewListsProblemsPerQuestion…` |
 | BR-U10-22 phát hành, version cũ ngưng, `quiz.published` | `QuizPublicationService.publish` | `publishNeedsOpenClassThenOpensAndAnnounces`, `publishingNewVersionRetires…` |
 | BR-U10-23 ngưng có lý do, listener trong transaction | `retire` | `retireNeedsReasonAndNotifiesListeners` |
-| BR-U10-24 xóa Quiz chưa phát hành kèm câu riêng | `delete`, `JdbcQuizRepository.delete` | `deletingDraftRemovesItsInlineQuestions`, `deleteRemovesUnpublishedQuiz…` |
+| BR-U10-24 xóa Quiz chưa phát hành kèm câu riêng | `delete`, `QuizRepository.delete` | `deletingDraftRemovesItsInlineQuestions`, `deleteRemovesUnpublishedQuiz…` |
 | BR-U10-25 người học thấy Quiz `OPEN` của lớp và của môn | `QuizQueryService.listForClass` | `studentsSeeOpenClassAndSubjectQuizzesOnly` |
 | BR-U10-30, 31 nhân bản, version mới, copy | `QuizCopyService` | `cloneKeepsPinnedBankVersions…`, `copyBetweenClasses…`, `versionChainFindsOpenSibling…` |
 | BR-U10-50 ngoài phạm vi `404` + audit, `409` khi lệch version | `QuizAccess`, `QuizSupport` | `QuizServicesTest`, `QuizControllersTest` |
@@ -192,7 +192,7 @@ Nhánh `quiz-ai-mcp` tách từ `staging` `08a6134`, theo plan giai đoạn 4 (H
 | F13 MCP (H7) | `QuizMcpTools` (cài `IMcpToolProvider`): `read_quiz_context` (`READ`) trả Quiz Detail kèm đáp án; `save_quiz_draft` (`WRITE`) cần Quiz `DRAFT` và `expectedVersion` khớp, lưu đề xuất `READY` nguồn `MCP`. Role `TEACHER`, `SUBJECT_MANAGER`; người học `403 MCP_TOOL_FORBIDDEN`; ngoài phạm vi `404` |
 | Tài liệu (H8) | `QuizReferenceMaterials`: danh sách chọn được theo lớp hoặc môn của Quiz; `updateDetails` chỉ kiểm id mới gắn (U13 lỗi mà không gắn thêm thì vẫn lưu được) |
 
-Domain: `QuizAiDraft`, `DraftQuestion`, `DraftTarget`, `DraftOrigin`, `DraftStatus`, `IQuizAiDraftRepository`. Hạ tầng: `JdbcQuizAiDraftRepository` (đổi trạng thái có điều kiện; tìm `requestRef` trong `provenance`). Không thêm migration: bảng `quiz_ai_drafts` đã có từ giai đoạn 1; mã lỗi của đề xuất lưu trong `provenance` (`failureCode`, `failureMessage`) vì bảng không có cột riêng.
+Domain: `QuizAiDraft`, `DraftQuestion`, `DraftTarget`, `DraftOrigin`, `DraftStatus`, `IQuizAiDraftRepository`. Hạ tầng: `QuizAiDraftRepository` (đổi trạng thái có điều kiện; tìm `requestRef` trong `provenance`). Không thêm migration: bảng `quiz_ai_drafts` đã có từ giai đoạn 1; mã lỗi của đề xuất lưu trong `provenance` (`failureCode`, `failureMessage`) vì bảng không có cột riêng.
 
 ### API
 

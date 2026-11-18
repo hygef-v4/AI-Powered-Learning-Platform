@@ -83,7 +83,7 @@ class GroupDocImportServiceTest {
         when(documents.findById(document.id())).thenReturn(Optional.of(document));
         when(groups.findGroup(group.id())).thenReturn(Optional.of(group));
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.ON_TIME);
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, AssignmentScope.CLASS,
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, AssignmentScope.CLASS,
                 classId, UUID.randomUUID(), 1, "Bài nhóm", SubmissionMode.GROUP, GradingMode.GRADED, true,
                 AssignmentStatus.OPEN, NOW.minus(Duration.ofDays(10)), NOW.plus(Duration.ofDays(1)), null, null, false,
                 null, List.of())));

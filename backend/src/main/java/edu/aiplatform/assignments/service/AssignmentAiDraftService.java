@@ -593,7 +593,7 @@ public class AssignmentAiDraftService {
                     : AssignmentDraftValidator.validate(raw, assignment.gradingMode(),
                     buildValidationOptions(draft.provenance())));
             ObjectNode provenance = draft.provenance().deepCopy();
-            aiTasks.get(result.taskId()).ifPresent(task -> {
+            aiTasks.loadTask(result.taskId()).ifPresent(task -> {
                 if (task.model() != null) {
                     provenance.put("model", task.model());
                 }

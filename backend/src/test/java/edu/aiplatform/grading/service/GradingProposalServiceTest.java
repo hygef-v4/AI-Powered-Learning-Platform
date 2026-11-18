@@ -202,10 +202,10 @@ class GradingProposalServiceTest {
         pendingReadyUnapplied.taskId = UUID.randomUUID();
 
         when(proposals.findForEvaluation(e.id)).thenReturn(List.of(pendingRunning, pendingReadyUnapplied));
-        when(ai.get(pendingRunning.taskId)).thenReturn(Optional.of(new AiTaskView(
+        when(ai.loadTask(pendingRunning.taskId)).thenReturn(Optional.of(new AiTaskView(
                 pendingRunning.taskId, AiTaskState.RUNNING, AiSource.PERSONAL, AiProvider.GEMINI,
                 "gemini-2.5-flash", null, null, null)));
-        when(ai.get(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(new AiTaskView(
+        when(ai.loadTask(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(new AiTaskView(
                 pendingReadyUnapplied.taskId, AiTaskState.READY, AiSource.PERSONAL, AiProvider.GEMINI,
                 "gemini-2.5-flash", null, null, null)));
 
@@ -220,7 +220,7 @@ class GradingProposalServiceTest {
         var rejectedTask = new AiTaskView(
                 pendingReadyUnapplied.taskId, AiTaskState.READY, AiSource.PERSONAL, AiProvider.GEMINI,
                 "gemini-2.5-flash", ApplyOutcome.REJECTED, "Tài khoản yêu cầu không còn hiệu lực", null);
-        when(ai.get(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(rejectedTask));
+        when(ai.loadTask(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(rejectedTask));
         service.listProposals(actor, e.id);
         verify(tx).recordDispatch(pendingReadyUnapplied.id, rejectedTask, null);
     }

@@ -549,7 +549,7 @@ class RequirementsCoverageIntegrationTest {
                 edu.aiplatform.assignments.contract.AssignmentStatus.OPEN, NOW.minusSeconds(60),
                 NOW.plusSeconds(86400), null, null, false, null, List.of());
         when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(assignment));
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(assignment));
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment));
         when(groupWorkStatus.statusFor(accountIds.get(Role.STUDENT), List.of(assignmentId)))
                 .thenThrow(new IllegalStateException("PRIVATE_GROUP_FAILURE"))
                 .thenReturn(Map.of(assignmentId, new edu.aiplatform.assignmentwork.contract.GroupWorkStatus(
@@ -902,7 +902,7 @@ class RequirementsCoverageIntegrationTest {
                 insert into quizzes(id,scope,subject_id,title,settings,created_by,created_at,updated_at)
                 values (?,'SUBJECT',?,'Quiz','{}'::jsonb,?,?,?)
                 """, routeQuiz, subjectId, accountIds.get(Role.SUBJECT_MANAGER), at(NOW), at(NOW));
-        when(quizQuery.get(routeQuiz)).thenReturn(Optional.of(new edu.aiplatform.quizzes.contract.QuizView(
+        when(quizQuery.loadQuiz(routeQuiz)).thenReturn(Optional.of(new edu.aiplatform.quizzes.contract.QuizView(
                 routeQuiz, edu.aiplatform.quizzes.contract.QuizScope.SUBJECT, null, subjectId, 1,
                 "Quiz", edu.aiplatform.quizzes.contract.QuizStatus.DRAFT, null, false, null, java.math.BigDecimal.TEN, null)));
         if (endpoint.method().equals("DELETE") && endpoint.path().contains("/quizzes/")) {

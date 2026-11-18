@@ -137,7 +137,7 @@ public class EmailDeliveryService {
             }
             AssignmentView assignment;
             try {
-                assignment = assignmentQuery.get(assignmentId).orElse(null);
+                assignment = assignmentQuery.loadAssignment(assignmentId).orElse(null);
             } catch (RuntimeException unavailable) {
                 throw new RetryableJobException("NOTIFICATION_ASSIGNMENT_UNAVAILABLE");
             }

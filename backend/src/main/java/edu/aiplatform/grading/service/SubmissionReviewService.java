@@ -134,7 +134,7 @@ public class SubmissionReviewService {
         gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
         var courseClass = classAccess.getClassRef(classId)
                 .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
-        var assignment = assignmentQuery.get(assignmentId)
+        var assignment = assignmentQuery.loadAssignment(assignmentId)
                 .orElseThrow(() -> ApiException.createNotFound("ASSIGNMENT_NOT_FOUND"));
         requireAssignment(assignment, courseClass);
         var evals = evaluationRepository.findForAssignmentAndClass(assignmentId, classId);
@@ -259,7 +259,7 @@ public class SubmissionReviewService {
         var evaluation = evaluationRepository.findById(id)
                 .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
         gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_REVIEW);
-        var assignment = assignmentQuery.get(evaluation.assignmentId).orElseThrow(
+        var assignment = assignmentQuery.loadAssignment(evaluation.assignmentId).orElseThrow(
                 () -> ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
         var courseClass = classAccess.getClassRef(evaluation.classId)
                 .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));

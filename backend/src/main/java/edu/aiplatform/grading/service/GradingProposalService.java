@@ -104,7 +104,7 @@ public class GradingProposalService {
                     || GradingProposalTransactions.isLegacyFailure(proposal))
                     && proposal.taskId != null) {
                 // Poll background AI task state to handle completed, failed, or cancelled tasks
-                Optional<AiTaskView> maybeTask = Optional.ofNullable(aiTask.get(proposal.taskId))
+                Optional<AiTaskView> maybeTask = Optional.ofNullable(aiTask.loadTask(proposal.taskId))
                         .flatMap(o -> o);
                 if (maybeTask.isPresent()) {
                     var task = maybeTask.get();
@@ -130,7 +130,7 @@ public class GradingProposalService {
         if (reconciled) {
             for (var proposal : listed) {
                 if ("PENDING".equals(proposal.status) && proposal.taskId != null) {
-                    Optional.ofNullable(aiTask.get(proposal.taskId)).flatMap(o -> o)
+                    Optional.ofNullable(aiTask.loadTask(proposal.taskId)).flatMap(o -> o)
                             .ifPresent(task -> proposal.taskState = task.state().name());
                 }
             }

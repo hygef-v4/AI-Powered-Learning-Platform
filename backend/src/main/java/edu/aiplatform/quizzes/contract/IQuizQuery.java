@@ -34,5 +34,5 @@ public interface IQuizQuery {
         return getStudentView(quizId);
     }
 
-    Optional<QuizView> get(UUID quizId);
+    Optional<QuizView> loadQuiz(UUID quizId);
 }

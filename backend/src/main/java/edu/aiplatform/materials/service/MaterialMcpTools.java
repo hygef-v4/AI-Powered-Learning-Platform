@@ -48,17 +48,17 @@ public class MaterialMcpTools implements IMcpToolProvider {
                     || !Set.of("materialId", "offset", "limit", "expectedVersion")
                             .containsAll(args.keySet())) throw new IllegalArgumentException();
             var input = new McpInput(args);
-            UUID id = input.uuid("materialId");
-            int offset = input.integer("offset", 0, 0, Integer.MAX_VALUE),
-                    limit = input.integer("limit", 32000, 2, 32000);
+            UUID id = input.readUuid("materialId");
+            int offset = input.readInteger("offset", 0, 0, Integer.MAX_VALUE),
+                    limit = input.readInteger("limit", 32000, 2, 32000);
             // Reading an existing reference differs from selecting ACTIVE sources for a new AI
             // task.
             var material = materialQueryService.loadAuthorizedMaterial(actor, id, null);
             if (input.has("expectedVersion")
-                    && input.version("expectedVersion") != material.currentVersionNo())
+                    && input.readVersion("expectedVersion") != material.currentVersionNo())
                 throw ApiException.createConflict(
                         "MATERIAL_VERSION_CONFLICT", "Học liệu đã thay đổi, hãy đọc lại từ đầu");
-            if (offset > 0 && !input.has("expectedVersion")) throw McpInput.invalid();
+            if (offset > 0 && !input.has("expectedVersion")) throw McpInput.createInvalidArguments();
             var version =
                     materialRepository
                             .findVersion(id, material.currentVersionNo())
@@ -77,7 +77,7 @@ public class MaterialMcpTools implements IMcpToolProvider {
                     || (offset > 0
                             && offset < text.length()
                             && Character.isLowSurrogate(text.charAt(offset))))
-                throw McpInput.invalid();
+                throw McpInput.createInvalidArguments();
             int end = (int) Math.min((long) offset + limit, text.length());
             if (end < text.length()
                     && end > offset

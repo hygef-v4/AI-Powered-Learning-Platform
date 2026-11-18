@@ -103,7 +103,7 @@ class GroupSubmissionServiceTest {
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(document));
         when(groups.findGroup(group.id())).thenReturn(Optional.of(group));
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.ON_TIME);
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, AssignmentScope.CLASS,
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, AssignmentScope.CLASS,
                 classId, UUID.randomUUID(), 1, "Sơ đồ lớp", SubmissionMode.GROUP, GradingMode.GRADED, true,
                 AssignmentStatus.OPEN, NOW.minusSeconds(86400), NOW.plusSeconds(3600), null, null, false, null, List.of())));
         when(assignments.getContent(assignmentId)).thenReturn(Optional.empty());
@@ -168,7 +168,7 @@ class GroupSubmissionServiceTest {
     @Test
     void autoSubmitAfterTheDeadlineIsOnTimeWhenTheLastEditWasBeforeIt() {
         Instant closesAt = NOW.minusSeconds(120);
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, AssignmentScope.CLASS,
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, AssignmentScope.CLASS,
                 classId, UUID.randomUUID(), 1, "Sơ đồ lớp", SubmissionMode.GROUP, GradingMode.GRADED, true,
                 AssignmentStatus.CLOSED, NOW.minusSeconds(86400), closesAt, null, null, false, null, List.of())));
         DocumentBlock draft = block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp");

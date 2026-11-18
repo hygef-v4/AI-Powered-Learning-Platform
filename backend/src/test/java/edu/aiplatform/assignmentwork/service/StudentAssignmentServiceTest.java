@@ -120,7 +120,7 @@ class StudentAssignmentServiceTest {
                 f.classId, f.subjectId, 1, "Group task", SubmissionMode.GROUP,
                 GradingMode.GRADED, false, AssignmentStatus.OPEN, NOW.minusSeconds(60),
                 NOW.plusSeconds(86400), null, null, false, null, List.of());
-        when(f.assignments.get(f.assignmentId)).thenReturn(java.util.Optional.of(groupAssignment));
+        when(f.assignments.loadAssignment(f.assignmentId)).thenReturn(java.util.Optional.of(groupAssignment));
         when(f.classes.listActiveStudents(f.classId)).thenReturn(List.of(f.student.accountId()));
         var failure = new IllegalStateException("Group submission dependency unavailable");
         when(f.groupWork.statusFor(f.student.accountId(), List.of(f.assignmentId))).thenThrow(failure);

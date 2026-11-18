@@ -99,18 +99,18 @@ class GroupWorkspaceServiceTest {
 
     @Test
     void workspaceCarriesDiagramFlagFromTheAssignment() {
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(true)));
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment(true)));
         var view = service.loadWorkspace(member, document.id());
         assertThat(view.diagramEnabled()).isTrue();
         assertThat(view.activityMonitoring()).isTrue();
 
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(false)));
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment(false)));
         assertThat(service.loadWorkspace(member, document.id()).diagramEnabled()).isFalse();
     }
 
     @Test
     void lastSubmissionCarriesSectionAuthorsCapturedAtSubmit() {
-        when(assignments.get(assignmentId)).thenReturn(Optional.of(assignment(false)));
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment(false)));
         assertThat(service.loadWorkspace(member, document.id()).lastSubmission()).isNull();
 
         List<SectionAuthor> authors = List.of(new SectionAuthor("p1", "Mục 1", member.accountId(), true),

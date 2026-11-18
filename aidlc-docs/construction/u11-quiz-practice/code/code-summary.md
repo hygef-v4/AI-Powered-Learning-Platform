@@ -21,7 +21,7 @@ Code viết ngày 2026-10-20 trên nhánh `quiz-practice` (tách từ `quiz-auth
 | F9 Giảng viên | `TeacherQuizAttemptService` (giảng viên của lớp; tóm tắt theo sinh viên, chi tiết lượt chỉ đọc kèm `IActivityQuery.summary`) |
 | Quyền, audit | `PracticeAccess` (ngoài phạm vi `404` + `ACCESS_DENIED`, U01 lỗi `503`), `PracticeSupport.ownAttempt` (lượt người khác `404`) |
 
-Domain: `QuizAttempt` (hạn, ân hạn 30 giây, lưu, nộp), `AttemptSnapshot` (version, cài đặt, theo dõi, seed, thứ tự câu và lựa chọn), `QuestionResult`, enum `AttemptStatus`, `SubmitMode`; `IQuizAttemptRepository`. Hạ tầng: `JdbcQuizAttemptRepository` (`jsonb`; advisory lock khi bắt đầu; `for update skip locked` cho scanner).
+Domain: `QuizAttempt` (hạn, ân hạn 30 giây, lưu, nộp), `AttemptSnapshot` (version, cài đặt, theo dõi, seed, thứ tự câu và lựa chọn), `QuestionResult`, enum `AttemptStatus`, `SubmitMode`; `IQuizAttemptRepository`. Hạ tầng: `QuizAttemptRepository` (`jsonb`; advisory lock khi bắt đầu; `for update skip locked` cho scanner).
 
 ## API
 

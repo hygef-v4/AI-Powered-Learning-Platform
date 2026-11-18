@@ -58,8 +58,8 @@ class GradebookAssemblyTest {
         when(second.status()).thenReturn(AssignmentStatus.OPEN);
         when(second.submissionMode()).thenReturn(SubmissionMode.INDIVIDUAL);
         when(rubric.maxPoints(secondId)).thenReturn(new BigDecimal("20"));
-        var first = assignmentQuery.get(assignmentId).orElseThrow();
-        when(assignmentQuery.get(secondId)).thenReturn(Optional.of(second));
+        var first = assignmentQuery.loadAssignment(assignmentId).orElseThrow();
+        when(assignmentQuery.loadAssignment(secondId)).thenReturn(Optional.of(second));
         when(assignmentQuery.listForClass(classId)).thenReturn(List.of(first, second));
         var rows = gradebookService.buildExportRows(actor, classId, null, "xlsx");
         assertThat(rows).hasSize(3);
@@ -111,7 +111,7 @@ class GradebookAssemblyTest {
         when(assignment.status()).thenReturn(AssignmentStatus.OPEN);
         when(assignment.submissionMode()).thenReturn(SubmissionMode.INDIVIDUAL);
         when(assignmentQuery.listForClass(classId)).thenReturn(List.of(assignment));
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(assignment));
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment));
         when(classAccess.getClassRef(classId)).thenReturn(Optional.of(new ClassRef(classId, UUID.randomUUID(),
                 "C", "Class", ClassStatus.OPEN, actor.accountId(), false)));
         when(rubric.maxPoints(assignmentId)).thenReturn(BigDecimal.TEN);
@@ -204,7 +204,7 @@ class GradebookAssemblyTest {
         member.kind = EvaluationKind.MEMBER;
         member.groupDocumentId = UUID.randomUUID();
         member.score = new BigDecimal("8.25");
-        when(assignmentQuery.get(assignmentId).orElseThrow().submissionMode()).thenReturn(SubmissionMode.GROUP);
+        when(assignmentQuery.loadAssignment(assignmentId).orElseThrow().submissionMode()).thenReturn(SubmissionMode.GROUP);
         var source = mock(edu.aiplatform.grading.contract.IGroupSubmissionSource.class);
         when(groupSubmissionSourceProvider.getIfAvailable()).thenReturn(source);
         when(source.listGroupSubmissions(assignmentId, classId)).thenReturn(List.of(

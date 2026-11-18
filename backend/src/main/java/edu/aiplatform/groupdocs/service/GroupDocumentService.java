@@ -76,7 +76,7 @@ public class GroupDocumentService {
         }
         for (AssignmentView view : assignments.listForClass(classId)) {
             assignments.lockSubmission(view.assignmentId());
-            if (!isOpenGroup(view) || assignments.get(view.assignmentId())
+            if (!isOpenGroup(view) || assignments.loadAssignment(view.assignmentId())
                     .filter(GroupDocumentService::isOpenGroup).isEmpty()) {
                 continue;
             }
@@ -127,7 +127,7 @@ public class GroupDocumentService {
     }
 
     private Optional<AssignmentView> openGroupAssignment(UUID assignmentId) {
-        return assignments.get(assignmentId).filter(GroupDocumentService::isOpenGroup);
+        return assignments.loadAssignment(assignmentId).filter(GroupDocumentService::isOpenGroup);
     }
 
     static boolean isOpenGroup(AssignmentView view) {

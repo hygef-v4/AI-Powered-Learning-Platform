@@ -1,5 +1,17 @@
 # AI-DLC State Tracking
 
+## U06/U07/U10/U11 — áp dụng quy ước mã nguồn — 2026-11-18
+
+Rà soát 15 unit theo [code-conventions](construction/code-conventions.md), sau đó sửa nhóm vi phạm rõ trên nhánh `staging`. Chưa commit.
+
+- [x] Rà soát: không còn JPA; interface, dependency service, tên file và test đạt ở cả 15 unit.
+- [x] U10/U11: bỏ tiền tố `Jdbc` của 4 repository và 3 integration test.
+- [x] U06: `McpInput` dùng tên động từ (`readText`, `readUuid`, `requireTeaching`, `createInvalidArguments`…); xuống dòng các lớp MCP.
+- [x] Contract: `IAiTask.loadTask`, `IAssignmentQuery.loadAssignment`, `IQuizQuery.loadQuiz` thay cho `get`; cập nhật caller, stub, test.
+- [x] U07/U10: xuống dòng, tách method trong các lớp MCP; giữ tên tool, schema, chuỗi.
+- [x] Build and Test: test-compile đạt; 593 test liên quan 0 lỗi. Chưa chạy `mvn verify` toàn bộ.
+- [ ] Còn lại (vi phạm nhẹ, chưa sửa): method chỉ là danh từ ở U03/U07/U08/U10/U11, biến `data`/`temp` ở U03/U09, `SessionProvider.tsx` nằm trong `hooks/` (U01).
+
 ## U04/U13/U14 — chuyển JPA sang JDBC — 2026-11-18
 
 Người dùng yêu cầu tạo nhánh mới từ staging để chuyển U04, U13 (module học liệu) và U14 từ JPA sang Spring JDBC. Nhánh `refactor/jdbc-u04-u13-u14` từ `staging@2e179598`. Ba commit mã cục bộ (`418a42ae` U13, `503cf463` U14, `a4bd6934` U04) và một commit tài liệu; chưa push.
