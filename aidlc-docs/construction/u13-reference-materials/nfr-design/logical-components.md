@@ -1,6 +1,6 @@
 # U13 Reference Materials — logical-components — chuẩn JDBC
 
-> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code còn JPA được ghi là khoảng cách migration.
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code unit này đã chuyển JDBC ngày 2026-11-18 ([kết quả](../../build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md)).
 
 > Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
@@ -26,4 +26,4 @@ Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evid
 
 ## Persistence thực tế — 2026-11-09
 
-MaterialRepositoryAdapter dùng JdbcTemplate cho materials/material_versions, giữ transaction/CAS và mapping JSONB. MaterialRow/MaterialVersionRow đã bỏ; MaterialModuleRepositoryAdapter còn JPA ngoài phạm vi. Không coi toàn U13 hoặc toàn backend đã chuyển JDBC. Quyền tải hiện hành được kiểm qua MaterialDownloadPolicy do U03 gọi trước khi mở bytes. [Chi tiết backend và evidence](../code/2026-11-09-presentation-backend.md).
+MaterialRepositoryAdapter dùng JdbcTemplate cho materials/material_versions, giữ transaction/CAS và mapping JSONB. MaterialRow/MaterialVersionRow đã bỏ; MaterialModuleRepositoryAdapter chuyển `JdbcClient` ngày 2026-11-18, giữ SQL, thứ tự `order_no,id` và CAS version. Quyền tải hiện hành được kiểm qua MaterialDownloadPolicy do U03 gọi trước khi mở bytes. [Chi tiết backend và evidence](../code/2026-11-09-presentation-backend.md).
