@@ -69,6 +69,18 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U09-34 | Chấm hàng loạt bằng AI: chọn nhiều bài `PENDING` hoặc `DRAFT` trong Submission Detail và một nguồn; mỗi bài một task; trả kết quả từng mục (đã gửi, hết quota, ngoài quyền, không chấm được). Giảng viên xác nhận từng bài trong Grading Workspace. | UC 43 |
 | BR-U09-35 | AI lỗi hoặc đề xuất sai thì bài nộp không mất, không có điểm giả; giảng viên chấm tay hoặc thử lại. | US-GRD-002 S2 |
 
+Theo BR-U09-31 và BR-U09-32, mỗi mục chỉ được đề xuất điểm tối đa khi có bằng chứng cho mọi điều kiện bắt buộc. Nếu rubric quy định một thành phần tùy chọn, AI áp dụng cách tính điểm mà rubric nêu khi thành phần vắng. Nếu cách tính chưa rõ, AI đánh dấu mục cần giảng viên xem.
+
+Kết quả từ provider có thể để `null` hoặc bỏ trống minh chứng, gợi ý, vị trí minh chứng hoặc lý do cần xem. Backend giữ điểm đã đề xuất và đánh dấu mục thiếu minh chứng là cần giảng viên xem. Nếu AI đã đánh dấu mà thiếu lý do, backend nêu rõ phần lý do còn thiếu. Validator kiểm điểm, kiểu dữ liệu và mã rubric trước khi lưu. MCP dùng schema đầy đủ tại bước nhận đề xuất.
+
+Khi đề xuất từ provider hoặc MCP dẫn mã bằng chứng thuộc một phần đã biết khác với phần của rubric, backend giữ điểm đề xuất và đánh dấu mục cần giảng viên xem. Quy tắc này áp dụng cho rubric gắn với một phần. Rubric toàn bài vẫn có thể dẫn bằng chứng từ mọi phần.
+
+Với tiêu chí chữ yêu cầu ghi đúng danh sách actor phụ cụ thể, backend đối chiếu danh sách với ô actor phụ trong bảng đặc tả cùng phần. Nếu ô này thiếu tên bắt buộc mà AI cho tối đa, backend giữ đề xuất và yêu cầu giảng viên xem trước khi công bố. Prompt yêu cầu xét từng actor bắt buộc theo vai trò và dùng cách chia điểm hoặc tên tương đương được đề hay rubric chấp nhận.
+
+Nếu yêu cầu tạo đề xuất AI bị gián đoạn khi đề xuất còn `PENDING` và chưa gắn tác vụ, giảng viên gửi lại cùng `requestRef` để tiếp tục đề xuất đó. Server kiểm người gửi, đánh giá, bản nộp, rubric đã khóa và nguồn AI trước khi dùng lại. Với tác vụ mới, U06 ghi task, giữ quota và U09 gắn task trong cùng transaction. Tác vụ được gửi qua RabbitMQ sau commit.
+
+Trong cùng màn hình, sau lỗi mạng hoặc HTTP 5xx, giao diện chấm lẻ và chấm theo lô dùng lại mã cho lần gửi lại cùng yêu cầu. Mã được thay khi nhận kết quả xác định, đổi phiên đăng nhập, đổi nguồn AI hoặc đổi phạm vi chấm.
+
 ## 5. Công bố và sửa điểm (UC 44, 45)
 
 | Mã | Rule | Nguồn |

@@ -1257,6 +1257,27 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 
 Đã gọi Gemini thật bằng key của người dùng (khoảng 80 lời gọi, bản ghi trong backend/target/ai-eval, không vào git). Không commit/push/deploy.
 
+### U09 — rà soát actor phụ trong đề xuất AI (2026-11-21)
+
+- [x] Sửa prompt để đối chiếu actor theo vai trò, xử lý điểm thành phần theo rubric và đánh dấu trường hợp mơ hồ.
+- [x] Backend kiểm tra mục chữ ghi rõ tên actor phụ bắt buộc với bảng đặc tả cùng phần. Đề xuất tối đa khi thiếu tên được đánh dấu cần giảng viên xem ở cả provider và MCP.
+- [x] Test hồi quy tái hiện lỗi. Trên mã cuối, 96 ca grading đạt. Phát lại 10 phản hồi Gemini hợp lệ theo hai rubric, cả 5 lượt đề xuất tối đa sai actor phụ được đánh dấu. Prompt mới chưa được gọi lại qua Gemini.
+- [x] Chạy toàn backend trước bước bổ sung xử lý rubric có ví dụ: 2.583 đạt, một bỏ qua và ca đo `U04_SCOPE` vượt p95 (23,80 ms so với 20 ms). Chạy lại ca đo cùng 96 ca grading trên mã cuối, tất cả đạt. `U04_SCOPE` đạt 3,65 ms khi chạy lại.
+
+### U09 — phục hồi yêu cầu chấm AI (2026-11-21)
+
+- [x] Kế hoạch thực hiện grading trước theo [kế hoạch U09](construction/plans/code-generation-plan/2026-11-21-u09-proposal-recovery.md). QA Orca độc lập xác nhận hai cửa sổ gián đoạn và rà soát bản sửa backend.
+- [x] Gửi lại cùng mã và snapshot khôi phục đề xuất còn chờ. Gắn tác vụ trong transaction tạo tác vụ và giữ quota, theo khóa đánh giá. Báo snapshot hết hiệu lực và từ chối bản MCP gửi lại sai định dạng trước khi xác nhận replay.
+- [x] Backend 157 test đạt qua hai nhóm. Ca đồng thời với PostgreSQL và RabbitMQ ghi nhận một đề xuất, một tác vụ, một khoản giữ quota và một message. Xác nhận hoàn tác task/quota khi transaction gián đoạn. Hồ sơ trong `backend/target/grading-proposal-recovery-verified.log` và `backend/target/grading-proposal-transaction-guards.log`.
+- [x] Frontend giữ mã khi gửi lại chấm lẻ và theo lô trong cùng màn hình. Kiểm tra trực tiếp 223 test grading, TypeScript và ESLint các file đổi đạt. Worker Orca tái hiện 6 ca sai mã trước sửa và chạy lại 1.171 test frontend thành công với 4 worker.
+- [ ] Chạy hành trình trình duyệt qua stack cô lập và gọi lại provider thật.
+
+### U09 — xử lý phản hồi AI thiếu trường nhận xét (2026-11-21)
+
+- [x] Năm ca thiếu trường nullable bị từ chối trước sửa, đều đạt sau khi sửa schema provider và chuẩn hóa. Bằng chứng thiếu cần giảng viên xem. Sai kiểu dữ liệu vẫn bị từ chối.
+- [x] 255 test grading, gateway và MCP đạt. Phát lại 24 bản ghi Gemini, 17 hợp lệ về định dạng và 7 lỗi provider đã ghi. Kết quả trong `backend/target/grading-format-verified.log` và `backend/target/grading-format-replay`.
+- [ ] Gọi provider thật trên bản sửa và khởi động lại backend Orca.
+
 ## Bỏ tiếng Nhật — 2026-11-21
 
 - [x] Bỏ locale `ja` (locales.ts, msg.ts, xóa `messages/ja.json`); cookie cũ `ja` quay về tiếng Anh. Lựa chọn ngôn ngữ đề AI chỉ còn VI/EN/AUTO (frontend dựng từ LOCALES; backend `normalizeOptions` từ chối `JA`, prompt bỏ nhánh Japanese).
@@ -1264,3 +1285,10 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 - [x] Test: frontend 157 tệp, 1.161 test đạt; backend assignments + ArchitectureTest 166 đạt.
 - [x] Theo yêu cầu, thay dữ liệu mẫu tiếng Trung trong `AssignmentAiRevisionTest` bằng tiếng Việt cùng nghĩa (`vietnameseSkeleton`).
 - [x] Theo yêu cầu, xóa con dấu trang trí chữ Hán (`HankoMark`) khỏi `Logo.tsx` và màn đăng nhập (`AuthLayout`); còn giấy nhớ và bút chì. Frontend identity + shared 202 test đạt, eslint không lỗi. Chưa xem trên trình duyệt.
+
+## Độ tin cậy của rubric và bằng chứng chấm AI
+
+- [x] U09 ưu tiên điều kiện bắt buộc và tùy chọn của rubric khi đề xuất điểm. Khi cách tính điểm chưa rõ, prompt yêu cầu giảng viên xem lại.
+- [x] Đề xuất qua provider và MCP được đánh dấu cần xem khi dẫn bằng chứng sang phần khác đã xác định. Điểm đề xuất giữ nguyên. Test kiểm tra gửi lại cùng mã, đề xuất khác nội dung và dữ liệu lịch sử.
+- [x] Ba ca hồi quy thất bại trước bản sửa và đạt sau bản sửa. Backend Java 17 đạt 2.581/2.582 test, test backup còn lại đạt khi chạy riêng với UTF-8. 71 test giao diện duyệt điểm đạt.
+- [x] Replay 24 phản hồi giữ nguyên kết quả điểm. Phép đo prompt mới qua Gemini đang chờ khóa trong phiên cục bộ. Cơ chế xác thực, phân quyền, ghi nhận và phục hồi nền hiện có được giữ cho phạm vi U09. Không bổ sung triển khai hoặc thay đổi cấu hình.

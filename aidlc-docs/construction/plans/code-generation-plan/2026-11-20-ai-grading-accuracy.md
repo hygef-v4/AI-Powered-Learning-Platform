@@ -180,3 +180,20 @@ Theo [quy ước mã nguồn](../../code-conventions.md): giữ tên method và 
 - [x] Thử G6 và G5 bước 1 bằng prompt (2026-11-21): cả hai chưa đạt khi đo (G6 do câu chữ rubric mơ hồ; G5 vẫn 1/5 bị cắt). Mục 8 file kết quả. Chờ người dùng chọn bước tiếp.
 - [x] Theo đề xuất (2026-11-21): giữ chỉ dẫn G6, bỏ hướng dẫn độ dài G5; bộ đánh giá lưu phần chữ khi bị cắt; 5.2 một phần — `RubricEditor` gợi ý khi tiêu chí chỉ nêu trường hợp bị trừ. Test backend 496, frontend 149 đạt. Mục 9 file kết quả.
 - [ ] G5: chưa bắt được lần bị cắt để chẩn đoán (lần đo gặp 503). Rubric mẫu cho môn chờ app chạy.
+
+### Kiểm tra điểm tối đa khi actor phụ không khớp (2026-11-21)
+
+Kết quả Gemini bài 08 theo hai rubric cho thấy 5/10 lượt nhận tối đa ở mục gộp tên use case, actor chính và actor phụ dù bảng ghi sai actor phụ. Rubric mẫu không quy định điểm cho từng thành phần. Bước kiểm tra bổ sung dùng tiêu chí đã khóa và bảng cùng phần để chuyển điểm tối đa có mâu thuẫn cho giảng viên duyệt. Prompt xử lý theo cách tính điểm hoặc tên tương đương mà đề và rubric cho phép.
+
+- [x] Bổ sung ca cho điểm tối đa khi actor sai, điểm thành phần khi actor sai và điểm tối đa khi actor đúng.
+- [x] Xác nhận ca sai actor có thể lọt qua bản hiện tại.
+- [x] Sửa prompt chung và kiểm tra đề xuất provider, MCP cùng pipeline đánh giá.
+- [x] Chạy bộ test backend và phát lại bộ phản hồi Gemini đã lưu. Bộ test grading cuối đạt 96/96. Cả 5 lượt tối đa nhầm được đánh dấu. Ca p95 `U04_SCOPE` trượt trong lượt chạy toàn bộ và đạt khi chạy lại.
+
+### Thiếu trường nhận xét trong phản hồi provider (2026-11-21)
+
+- [x] Tái hiện 5 phản hồi bị từ chối trước khi vào bước chuẩn hóa. Các ca gồm minh chứng hoặc lý do duyệt `null` hay bỏ qua và gợi ý hoặc vị trí minh chứng tùy chọn bị bỏ qua.
+- [x] Kiểm kiểu tại bước nhận kết quả, dùng validator grading kiểm yêu cầu minh chứng sau khi xác định cờ và lý do cần xem. Giữ schema MCP đầy đủ.
+- [x] 255 test grading, gateway và MCP đạt. Phát lại 24 lần ghi của Gemini, 17 phản hồi qua kiểm định dạng và 7 lần gọi lỗi đã có trong bản ghi.
+- [x] Chạy lại trên cùng rubric và bài tổng hợp 01-complete. Bản trước sửa thất bại 5/6 ca, bản hiện tại đạt 6/6. Nhóm backend grading, gateway, MCP và luồng tích hợp đạt 359 ca. Frontend grading đạt 223 ca.
+- [x] Gọi Gemini thật với 01-complete ba lần. Một lượt hợp lệ đạt 4,00/4,00 với đủ 13 mục. Hai lượt trả HTTP 503.

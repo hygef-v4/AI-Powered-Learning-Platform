@@ -16213,3 +16213,111 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Giao nhận local trên audit-staging.
 
 ---
+
+## Ưu tiên rubric và kiểm bằng chứng khi chấm AI
+**Timestamp**: 2026-11-21T07:43:57Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa heo đề xuất tốt nhất để đảm bảo độ chính xác ai tin cậy nhất"
+**AI Response**: "Tiếp tục kế hoạch độ chính xác U09. Cập nhật prompt cho điểm tối đa theo điều kiện bắt buộc, tôn trọng điều kiện tùy chọn và chuyển cách tính điểm mơ hồ cho giảng viên xem. Đánh dấu bằng chứng dẫn sai phần trong đề xuất provider và MCP, giữ điểm đề xuất và hỗ trợ gửi lại cùng mã yêu cầu. Bổ sung ca hồi quy và chạy lại bộ đánh giá."
+**Context**: Tiếp nối audit U09 tại 97be9a3f và phép đo Gemini theo hai rubric. Phạm vi gồm prompt, xử lý đề xuất và kiểm thử.
+
+---
+
+## Ưu tiên rubric và kiểm bằng chứng khi chấm AI — kiểm chứng
+**Timestamp**: 2026-11-21T07:48:04Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa heo đề xuất tốt nhất để đảm bảo độ chính xác ai tin cậy nhất"
+**AI Response**: "Đã cập nhật code và quy tắc BR-U09-31/32. Ba ca hồi quy qua sau sửa. Toàn bộ backend chạy 2.582 test, 2.581 đạt và một test backup lỗi mã hóa ký tự mặc định trên Windows. Chạy riêng backup với UTF-8 đạt 11/11. Giao diện duyệt điểm đạt 71/71. Replay 24 phản hồi giữ nguyên kết quả điểm."
+**Context**: Backend Java 17, PostgreSQL cục bộ. Lượt Java 21 đầu bị giới hạn bộ nhớ phân trang. Phiên Gemini kiểm chứng prompt mới đang chờ khóa.
+
+---
+
+## Rà soát actor phụ trong đề xuất AI
+**Timestamp**: 2026-11-21T08:12:25Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi giải quyết nối cái actor phụ"
+**AI Response**: "Tiếp tục kế hoạch độ chính xác U09. Làm rõ quy tắc actor phụ trong prompt và đối chiếu tiêu chí có danh sách actor bắt buộc với bảng đặc tả. Nếu AI đề xuất tối đa dù danh sách thiếu, yêu cầu giảng viên xem trước khi chốt. Xác minh bằng ca hồi quy và phản hồi Gemini đã lưu."
+**Context**: Nhánh audit-staging, tiếp nối so sánh Gemini trên bài 08. Security và Resiliency giữ phạm vi hiện hành. Property-Based Testing tắt.
+
+---
+
+## Rà soát actor phụ trong đề xuất AI — kiểm chứng
+**Timestamp**: 2026-11-21T08:26:10Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi giải quyết nối cái actor phụ"
+**AI Response**: "Đã sửa prompt và kiểm tra danh sách bắt buộc trong rubric với bảng đặc tả cho provider và MCP. Phát lại 10 phản hồi Gemini hợp lệ, gắn cờ cả 5 lượt đề xuất điểm tối đa sai actor phụ. 96 ca grading đạt trên mã cuối. Bộ test toàn backend trước tinh chỉnh rubric ví dụ có 2.583 ca đạt, một bỏ qua và một ca p95 U04_SCOPE trượt, ca đó đạt khi chạy lại cùng nhóm grading."
+**Context**: Bản ghi Gemini thuộc phép đo trước. Chưa đo prompt mới qua API, chưa khởi động lại backend Orca. Security và Resiliency giữ phạm vi hiện hành, Property-Based Testing tắt.
+
+---
+
+## U09 — sửa phục hồi yêu cầu chấm AI
+**Timestamp**: 2026-11-21T08:56:05Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi fix grading trước"
+**AI Response**: "Triển khai phần grading của kế hoạch SEP490. Tái hiện đề xuất không gắn tác vụ, sửa phục hồi cùng requestRef và giữ mã yêu cầu khi trình duyệt mất phản hồi. Dùng Orca cho frontend và QA độc lập. Tiếp tục nghiệp vụ quyền, duyệt điểm, API và MCP hiện hành."
+**Context**: audit-staging có thay đổi U09 từ lượt trước. Môi trường kiểm thử dùng dữ liệu tổng hợp. Security và Resiliency giữ phạm vi hiện hành, Property-Based Testing tắt.
+
+---
+
+## U09 — phục hồi yêu cầu chấm AI — kiểm chứng
+**Timestamp**: 2026-11-21T09:12:37Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi fix grading trước"
+**AI Response**: "Gửi lại cùng mã khôi phục đề xuất PENDING chưa gắn task. Hai lượt đồng thời trên PostgreSQL/RabbitMQ dùng một proposal, một task, một khoản giữ quota và một message. Kiểm chứng rollback, snapshot hết hiệu lực và từ chối payload MCP sai định dạng. Giao diện chấm lẻ và theo lô giữ mã trong cùng màn hình sau lỗi mạng hoặc 5xx. Backend 157 test, frontend grading 223 test, TypeScript và ESLint đạt. Worker Orca báo 1.171 test frontend đạt khi chạy toàn bộ với 4 worker."
+**Context**: QA Orca độc lập rà soát trước và sau sửa. Ca tái hiện service, QA và frontend thất bại đúng hành vi trước sửa. Test dùng dữ liệu tổng hợp. Chưa chạy trình duyệt trên stack cô lập, gọi provider thật, commit hay deploy.
+
+---
+
+## U09 — lỗi định dạng phản hồi grading
+**Timestamp**: 2026-11-21T09:20:31Z
+**Requested by:** Quang Hung
+**User Input**: "sửa lỗi dữ liệu sai định dạng"
+**AI Response**: "Tái hiện lỗi schema provider chặn minh chứng hoặc lý do duyệt null và một số trường nullable bị bỏ qua. Điều chỉnh cửa kiểm tra để chuẩn hóa đúng metadata thiếu, đưa mục cần giảng viên xem, giữ kiểm kiểu và validator điểm, rubric, MCP hiện có."
+**Context**: Test tổng hợp dùng pipeline grading thật. Tiếp nối thay đổi U09 đang có trong audit-staging.
+
+---
+
+## U09 — lỗi định dạng phản hồi grading — kiểm chứng
+**Timestamp**: 2026-11-21T09:21:41Z
+**Requested by:** Quang Hung
+**User Input**: "sửa lỗi dữ liệu sai định dạng"
+**AI Response**: "Năm ca hồi quy thiếu trường nhận xét thất bại trước sửa và đạt sau sửa. Ca minh chứng sai kiểu vẫn bị từ chối. Có 255 test liên quan đạt và một test replay tùy chọn chạy riêng đạt. 17 phản hồi Gemini từ 24 lượt ghi qua kiểm định dạng, sáu lượt 503 và một lượt CHARGED_200 trong bản ghi."
+**Context**: Bản ghi cũ, chưa gọi provider thật hoặc khởi động lại backend Orca.
+
+---
+
+## U09 — chạy lại hồi quy định dạng chấm AI
+**Timestamp**: 2026-11-21T09:55:19Z
+**Requested by:** Quang Hung
+**User Input**: "$poteto-mode Kiểm tra luồng chấm điểm AI. Với rubric và bài nộp mẫu cố định, tái hiện lỗi trước khi sửa và chạy test hồi quy để xác nhận lỗi đã hết"
+**AI Response**: "Dùng rubric 13 mục và bài tổng hợp 01-complete. Chạy sáu ca giống nhau trên hai bản sao chỉ khác schema đầu ra provider và chuẩn hóa nhận xét. Trước sửa, năm ca báo INVALID_OUTPUT vì trường thiếu hoặc null. Bản hiện tại đạt sáu ca, gồm ca từ chối minh chứng sai kiểu. Backend đạt 359 ca, frontend grading đạt 223 ca. Phát lại 24 lần ghi Gemini, 17 phản hồi qua kiểm định dạng và 7 lỗi provider có sẵn trong bản ghi."
+**Context**: Xác minh bản sửa đã có trong audit-staging. PostgreSQL, Redis và RabbitMQ chạy bằng Testcontainers với dữ liệu tổng hợp. Đã thêm script tạo role PostgreSQL của repo vào bản sao sau khi test báo thiếu. Chưa gọi Gemini mới hoặc chạy trình duyệt. Security và Resiliency giữ phạm vi đã duyệt. Property-Based Testing tắt.
+
+---
+
+## U09 — chạy lại chấm Gemini trực tiếp
+**Timestamp**: 2026-11-21T10:00:17Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi chạy lại luồng gemini"
+**AI Response**: "Chuẩn bị chạy HttpProviderGateway của backend đang kiểm chứng với Gemini 3.5 Flash Lite trên bài tổng hợp 01-complete, rubric 13 mục, ba lần. Orca hiển thị ô nhập khóa thử nghiệm ẩn ký tự."
+**Context**: Đối chiếu dữ liệu mẫu của ca hồi quy định dạng. Dùng bản sao có nội dung backend và pom.xml khớp với audit-staging.
+
+---
+
+## U09 — kết quả chấm Gemini trực tiếp
+**Timestamp**: 2026-11-21T10:03:59Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi chạy lại luồng gemini"
+**AI Response**: "Gemini 3.5 Flash Lite nhận ba lượt chấm bài tổng hợp 01-complete. Lượt 1 và 2 trả HTTP 503. Lượt 3 chấm 4,00/4,00, qua kiểm tra định dạng, có đủ 13 mục và không có mục cần giảng viên kiểm tra."
+**Context**: Đọc kết quả từng lượt từ results.json. Bằng chứng phiên này nằm dưới backend/target/gemini-rerun-1795255085378. Chạy trực tiếp qua pipeline backend cô lập. Chưa xác minh trên trình duyệt hoặc đo được độ ổn định của điểm giữa nhiều phản hồi hợp lệ.
+
+---
+
+## U09 — tách commit grading
+**Timestamp**: 2026-11-21T10:06:57Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi commit chưa push"
+**AI Response**: "Tách thay đổi xử lý phản hồi AI, khôi phục yêu cầu chấm bị gián đoạn và hồ sơ AI-DLC thành các commit cục bộ."
+**Context**: Chi nhánh audit-staging. Không push.
+
+---
