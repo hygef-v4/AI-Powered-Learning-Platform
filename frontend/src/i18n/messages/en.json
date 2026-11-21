@@ -1391,7 +1391,8 @@
         "pointsCanHaveAtMost": "Points can have at most 2 decimal places",
         "deleteCriterion": "Delete criterion {value}",
         "delete": "Delete",
-        "addCriterion": "Add criterion"
+        "addCriterion": "Add criterion",
+        "penaltyOnlyHint": "This criterion only states when points are lost. Say what the work must contain to earn them, for example “Has at least one include/extend relationship drawn dashed”; otherwise AI may award points when that part is missing."
       },
       "ScheduleForm": {
         "date": "{label} (date)",
