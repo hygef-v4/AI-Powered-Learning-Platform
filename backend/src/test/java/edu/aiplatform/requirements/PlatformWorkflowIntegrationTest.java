@@ -10,6 +10,9 @@ import edu.aiplatform.academics.service.AcademicsService;
 import edu.aiplatform.academics.model.EnrollmentStatus;
 import edu.aiplatform.admindashboard.service.AdminDashboardService;
 import edu.aiplatform.ai.contract.AiProvider;
+import edu.aiplatform.ai.contract.AiSource;
+import edu.aiplatform.ai.contract.AiTaskRequest;
+import edu.aiplatform.ai.contract.IAiTask;
 import edu.aiplatform.ai.service.AiConnectionService;
 import edu.aiplatform.audit.contract.*;
 import edu.aiplatform.identity.contract.*;
@@ -44,6 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import edu.aiplatform.ai.service.QuotaPolicyService;
 import edu.aiplatform.ai.service.QuotaReservationService;
+import edu.aiplatform.grading.model.GradingProposal;
 import edu.aiplatform.grading.service.*;
 import edu.aiplatform.grading.repository.IEvaluationRepository;
 import edu.aiplatform.groupdocs.service.*;
@@ -54,6 +58,8 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -211,6 +217,9 @@ class PlatformWorkflowIntegrationTest {
     @Autowired edu.aiplatform.quizzes.service.QuizDraftResultHandler quizDraftResults;
     @Autowired ClassGroupService classGroupService;
     @Autowired GradingService gradingService;
+    @Autowired GradingProposalService gradingProposalService;
+    @Autowired GradingProposalTransactions gradingProposalTransactions;
+    @Autowired IAiTask aiTask;
     @Autowired GradebookService gradebookService;
     @Autowired IEvaluationRepository evaluationRepository;
     @Autowired GroupWorkspaceService groupWorkspaceService;
@@ -672,6 +681,85 @@ class PlatformWorkflowIntegrationTest {
         assertThatThrownBy(() -> attemptService.start(actor(Role.STUDENT), assignment.id(), classId))
                 .isInstanceOf(ApiException.class);
         assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='GRADE_PUBLISHED'", Long.class)).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void retriesInterruptedAiGradingWithOneProposalTaskAndReservation(boolean taskAlreadySubmitted)
+            throws Exception {
+        while (rabbitTemplate.receive("jobs.ai") != null) {
+            // Discard messages from earlier tests in this suite's isolated broker.
+        }
+        var teacher = actor(Role.TEACHER);
+        var assignment = publishAssignment(GradingMode.GRADED);
+        var attemptId = submitIndividual(assignment);
+        var evaluation = evaluationRepository.findByAttemptId(attemptId).orElseThrow();
+        assignmentPublicationService.closeAssignment(teacher, assignment.id(), assignment.version());
+        configureQuota(100_000, 200_000);
+        aiConnectionService.addInstitutional(actor(Role.ADMIN), AiProvider.OPENAI,
+                new AiConnectionService.SaveCommand("integration-only-key-never-sent", "gpt-6.1-sol", null));
+        var request = new GradingCommands.AiRequest(AiSource.SHARED, null, UUID.randomUUID().toString());
+        var prepared = gradingProposalTransactions.prepareProposal(teacher, evaluation.id, request);
+        var taskRequest = new AiTaskRequest(
+                teacher, request.source(), request.provider(), "GRADING_PROPOSAL",
+                "evaluation:" + evaluation.id, prepared.proposal().versionNo, request.requestRef(),
+                prepared.prompt(), prepared.outputSchema(), prepared.maxOutputTokens());
+        UUID priorTaskId = taskAlreadySubmitted ? aiTask.submit(taskRequest).taskId() : null;
+        assertThat(prepared.proposal().taskId).isNull();
+        if (!taskAlreadySubmitted) {
+            assertThatThrownBy(() -> gradingProposalTransactions.dispatchPreparedProposal(
+                    prepared.proposal().id, () -> {
+                        aiTask.submit(taskRequest);
+                        throw new IllegalStateException("Integration fixture interrupted before attachment");
+                    })).isInstanceOf(IllegalStateException.class).hasMessageContaining("interrupted");
+            assertThat(count("ai_tasks")).isZero();
+            assertThat(quotaCounter(teacher.accountId().toString(), "reserved_tokens")).isZero();
+        }
+
+        var workers = Executors.newFixedThreadPool(2);
+        var start = new CountDownLatch(1);
+        try {
+            Callable<GradingProposal> retry = () -> {
+                assertThat(start.await(5, TimeUnit.SECONDS)).isTrue();
+                return gradingProposalService.requestProposal(teacher, evaluation.id, request);
+            };
+            var first = workers.submit(retry);
+            var second = workers.submit(retry);
+            start.countDown();
+            var recovered = first.get(10, TimeUnit.SECONDS);
+            var replayed = second.get(10, TimeUnit.SECONDS);
+            assertThat(recovered.id).isEqualTo(prepared.proposal().id);
+            assertThat(recovered.taskId).isNotNull();
+            assertThat(replayed.id).isEqualTo(recovered.id);
+            assertThat(replayed.taskId).isEqualTo(recovered.taskId);
+            if (priorTaskId != null) {
+                assertThat(recovered.taskId).isEqualTo(priorTaskId);
+            }
+            var changedSource = new GradingCommands.AiRequest(AiSource.PERSONAL, AiProvider.OPENAI,
+                    request.requestRef());
+            assertThatThrownBy(() -> gradingProposalService.requestProposal(teacher, evaluation.id,
+                    changedSource)).isInstanceOfSatisfying(ApiException.class,
+                            ex -> assertThat(ex.readCode()).isEqualTo("REQUEST_REF_CONFLICT"));
+            assertThat(count("grading_proposals")).isEqualTo(1);
+            assertThat(count("ai_tasks")).isEqualTo(1);
+            long reserved = jdbc.queryForObject(
+                    "select reserved_tokens from ai_tasks where id=?", Long.class, recovered.taskId);
+            assertThat(reserved).isPositive();
+            assertThat(quotaCounter(teacher.accountId().toString(), "reserved_tokens")).isEqualTo(reserved);
+            assertThat(quotaCounter("GLOBAL", "reserved_tokens")).isEqualTo(reserved);
+            assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
+            assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='AI_GRADING_REQUESTED'",
+                    Long.class)).isEqualTo(1);
+            var queued = rabbitTemplate.receive("jobs.ai", 5_000);
+            assertThat(queued).isNotNull();
+            assertThat(json.readTree(queued.getBody()).path("idempotencyKey").asText())
+                    .isEqualTo(recovered.taskId.toString());
+            assertThat(rabbitTemplate.receive("jobs.ai", 200)).isNull();
+        } finally {
+            start.countDown();
+            workers.shutdownNow();
+            assertThat(workers.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+        }
     }
 
     void rejectEvaluationInsert(String kind) {

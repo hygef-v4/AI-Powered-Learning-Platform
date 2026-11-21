@@ -130,6 +130,11 @@ class HttpProviderGatewayTest {
                     assertThat(e).isInstanceOf(edu.aiplatform.ai.service.IProviderGateway.OutputLimitException.class);
                     assertThat(e.readUsage().outputTokens()).isEqualTo(500);
                     assertThat(e.getMessage()).contains("giới hạn token", "phản hồi").doesNotContain("hạn mức");
+                    if (provider != AiProvider.CLAUDE) {
+                        // Phần chữ đã nhận chỉ để chẩn đoán, không nằm trong thông báo lỗi.
+                        assertThat(((edu.aiplatform.ai.service.IProviderGateway.OutputLimitException) e)
+                                .readPartialOutput()).isEqualTo("{}");
+                    }
                 });
     }
 
@@ -218,17 +223,42 @@ class HttpProviderGatewayTest {
     }
 
     @Test
-    void geminiCapsThinkingSoTheAnswerKeepsThreeQuartersOfTheOutputBudget() throws Exception {
+    void geminiSendsThinkingLevelFromVersionThreeAndTokenBudgetForVersionTwo() throws Exception {
         reply = "{\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"{}\"}]}}]}";
-        gateway.call(AiProvider.GEMINI, new Request("model-x", "secret-key", "Hệ thống", "Câu hỏi", SCHEMA, 6956,
-                Duration.ofSeconds(2)));
+        gateway.call(AiProvider.GEMINI, reasoningRequest("gemini-3.5-flash-lite", "low"));
         JsonNode config = json.readTree(lastBody.get()).path("generationConfig");
-        assertThat(config.path("maxOutputTokens").asInt()).isEqualTo(6956);
-        assertThat(config.at("/thinkingConfig/thinkingBudget").asInt()).isEqualTo(1739);
+        assertThat(config.path("maxOutputTokens").asInt()).isEqualTo(11052);
+        assertThat(config.at("/thinkingConfig/thinkingLevel").asText()).isEqualTo("low");
+        assertThat(config.at("/thinkingConfig").has("thinkingBudget")).isFalse();
 
+        gateway.call(AiProvider.GEMINI, reasoningRequest("gemini-2.5-flash", "low"));
+        config = json.readTree(lastBody.get()).path("generationConfig");
+        assertThat(config.at("/thinkingConfig/thinkingBudget").asInt()).isEqualTo(4096);
+        assertThat(config.at("/thinkingConfig").has("thinkingLevel")).isFalse();
+
+        gateway.call(AiProvider.GEMINI, reasoningRequest("gemini-3.5-flash-lite", null));
+        assertThat(json.readTree(lastBody.get()).path("generationConfig").has("thinkingConfig"))
+                .as("effort rỗng: chỉ chừa token, không gửi tham số").isFalse();
         gateway.call(AiProvider.GEMINI, request(SCHEMA));
         assertThat(json.readTree(lastBody.get()).path("generationConfig").has("thinkingConfig"))
-                .as("lời gọi nhỏ như thử kết nối giữ mặc định của model").isFalse();
+                .as("lời gọi thử kết nối không gửi tham số suy nghĩ").isFalse();
+    }
+
+    @Test
+    void openAiSendsReasoningEffortOnlyWhenConfigured() throws Exception {
+        reply = "{\"choices\":[{\"message\":{\"content\":\"{}\"},\"finish_reason\":\"stop\"}]}";
+        gateway.call(AiProvider.OPENAI, reasoningRequest("gpt-5-mini", "medium"));
+        JsonNode body = json.readTree(lastBody.get());
+        assertThat(body.path("reasoning_effort").asText()).isEqualTo("medium");
+        assertThat(body.path("max_completion_tokens").asInt()).isEqualTo(11052);
+
+        gateway.call(AiProvider.OPENAI, reasoningRequest("gpt-4.1-mini", null));
+        assertThat(json.readTree(lastBody.get()).has("reasoning_effort")).as("model cũ tránh HTTP 400").isFalse();
+    }
+
+    private static Request reasoningRequest(String model, String effort) {
+        return new Request(model, "secret-key", "Hệ thống", "Câu hỏi", SCHEMA, 11052, Duration.ofSeconds(2), List.of(),
+                effort, 4096);
     }
 
     @Test

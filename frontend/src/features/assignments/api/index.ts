@@ -94,7 +94,7 @@ export const assignmentsApi = {
     return fetchApi<ImportPreview>(`${base}/assignments/${enc(id)}/skeleton:import-docx`, { method: "POST", body: form });
   },
   requestAiDraft: (id: string, input: { request: string; materialIds: string[]; sourceFileRefs: string[];
-    options: { profile: "AUTO" | "GENERAL" | "SWR" | "SWD"; language: "VI" | "EN" | "JA" | "AUTO"; questionCount?: number; targetPoints?: number };
+    options: { profile: "AUTO" | "GENERAL" | "SWR" | "SWD"; language: "VI" | "EN" | "AUTO"; questionCount?: number; targetPoints?: number };
     /** Bỏ trống: hệ thống tự chọn nguồn; PERSONAL không kèm provider: chỉ API cá nhân. */
     source?: "SHARED" | "PERSONAL"; provider?: string; requestRef: string; formatText?: string;
     templateAssignmentId?: string }) =>

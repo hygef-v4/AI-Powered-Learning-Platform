@@ -25,8 +25,8 @@ class KeyCipherAndCatalogTest {
 
     static AiProperties properties(String v1, String v2) {
         return new AiProperties(v1, v2, Duration.ofSeconds(120), Duration.ofSeconds(20), Map.of(
-                "gemini", new AiProperties.Provider(List.of("gemini-2.5-flash", " gemini-2.5-pro "), 8192, List.of()),
-                "openai", new AiProperties.Provider(List.of("gpt-4.1-mini"), 4096, List.of())));
+                "gemini", new AiProperties.Provider(List.of("gemini-2.5-flash", " gemini-2.5-pro "), 8192, List.of(), List.of(), "", 0),
+                "openai", new AiProperties.Provider(List.of("gpt-4.1-mini"), 4096, List.of(), List.of(), "", 0)));
     }
 
     @Test
@@ -126,8 +126,55 @@ class KeyCipherAndCatalogTest {
 
         ProviderCatalog narrowed = new ProviderCatalog(new AiProperties(KEY_V1, null, Duration.ofSeconds(120),
                 Duration.ofSeconds(20), Map.of("gemini", new AiProperties.Provider(
-                        List.of("gemini-2.5-flash", "gemini-2.5-pro"), 8192, List.of(" gemini-2.5-pro ", "")))));
+                        List.of("gemini-2.5-flash", "gemini-2.5-pro"), 8192, List.of(" gemini-2.5-pro ", ""), List.of(), "", 0))));
         assertThat(narrowed.supportsImages(AiProvider.GEMINI, "gemini-2.5-pro")).isTrue();
         assertThat(narrowed.supportsImages(AiProvider.GEMINI, "gemini-2.5-flash")).isFalse();
+    }
+
+    @Test
+    void springBindsReasoningSettingsIncludingBlankAndMissingValues() {
+        var source = new org.springframework.boot.context.properties.source.MapConfigurationPropertySource(Map.of(
+                "platform.ai.providers.gemini.models", "gemini-3.5-flash-lite",
+                "platform.ai.providers.gemini.max-output-tokens", "16384",
+                "platform.ai.providers.gemini.reasoning-models", "gemini-3.5-flash-lite",
+                "platform.ai.providers.gemini.reasoning-effort", "low",
+                "platform.ai.providers.gemini.reasoning-reserve-tokens", "4096",
+                "platform.ai.providers.claude.models", "claude-haiku-5-5",
+                "platform.ai.providers.claude.reasoning-models", ""));
+        AiProperties bound = new org.springframework.boot.context.properties.bind.Binder(source)
+                .bind("platform.ai", AiProperties.class).get();
+
+        assertThat(bound.providers().get("gemini").reasoningModels()).containsExactly("gemini-3.5-flash-lite");
+        assertThat(bound.providers().get("gemini").reasoningEffort()).isEqualTo("low");
+        assertThat(bound.providers().get("claude").reasoningModels()).isEmpty();
+        assertThat(bound.providers().get("claude").reasoningEffort()).isEmpty();
+        assertThat(bound.providers().get("claude").reasoningReserveTokens()).isEqualTo(4096);
+    }
+
+    @Test
+    void reasoningModelsGetReservedThinkingTokensAndOnlyValidEffortsAreSent() {
+        // Thiết kế G3 2026-11-20: trần = trả lời + phần chừa, không quá trần provider; effort sai/rỗng thì không gửi.
+        ProviderCatalog catalog = new ProviderCatalog(new AiProperties(KEY_V1, null, Duration.ofSeconds(120),
+                Duration.ofSeconds(20), Map.of(
+                "gemini", new AiProperties.Provider(List.of("gemini-3.5-flash-lite", "gemini-old"), 16384, List.of(),
+                        List.of(" gemini-3.5-flash-lite "), " LOW ", 4096),
+                "openai", new AiProperties.Provider(List.of("gpt-5-mini"), 16384, List.of(),
+                        List.of("gpt-5-mini"), "", 0),
+                "claude", new AiProperties.Provider(List.of("claude-haiku-5-5"), 8192, List.of(),
+                        List.of("claude-haiku-5-5"), "extreme", 2000))));
+
+        assertThat(catalog.resolveOutputCap(AiProvider.GEMINI, "gemini-3.5-flash-lite", 6956)).isEqualTo(11052);
+        assertThat(catalog.resolveOutputCap(AiProvider.GEMINI, "gemini-3.5-flash-lite", 14000)).isEqualTo(16384);
+        assertThat(catalog.resolveOutputCap(AiProvider.GEMINI, "gemini-old", 6956)).as("model không suy nghĩ")
+                .isEqualTo(6956);
+        assertThat(catalog.readReasoningEffort(AiProvider.GEMINI, "gemini-3.5-flash-lite")).isEqualTo("low");
+        assertThat(catalog.readReasoningEffort(AiProvider.GEMINI, "gemini-old")).isNull();
+        assertThat(catalog.readReasoningReserveTokens(AiProvider.GEMINI, "gemini-old")).isZero();
+
+        assertThat(catalog.readReasoningEffort(AiProvider.OPENAI, "gpt-5-mini")).as("chỉ chừa token").isNull();
+        assertThat(catalog.resolveOutputCap(AiProvider.OPENAI, "gpt-5-mini", 6956))
+                .as("không đặt phần chừa thì dùng mặc định 4096").isEqualTo(11052);
+        assertThat(catalog.readReasoningEffort(AiProvider.CLAUDE, "claude-haiku-5-5")).as("effort lạ").isNull();
+        assertThat(catalog.resolveOutputCap(AiProvider.CLAUDE, "claude-haiku-5-5", 6956)).isEqualTo(8192);
     }
 }

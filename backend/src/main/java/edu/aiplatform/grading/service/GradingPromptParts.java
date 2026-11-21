@@ -98,7 +98,7 @@ final class GradingPromptParts {
         return documentModel.computeParts(doc);
     }
 
-    private static Map<String, List<DocumentBlock>> groupBlocksByPart(DocumentModel document,
+    static Map<String, List<DocumentBlock>> groupBlocksByPart(DocumentModel document,
             List<DocumentPart> parts) {
         Map<String, List<DocumentBlock>> blocksByPart = new LinkedHashMap<>();
         for (var part : parts) {
@@ -251,7 +251,7 @@ final class GradingPromptParts {
         return text == null || text.isBlank();
     }
 
-    private static String joinRunText(JsonNode runs) {
+    static String joinRunText(JsonNode runs) {
         if (runs == null || !runs.isArray()) {
             return "";
         }

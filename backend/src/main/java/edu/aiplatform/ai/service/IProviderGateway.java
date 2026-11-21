@@ -15,13 +15,20 @@ public interface IProviderGateway {
 
     /**
      * {@code outputSchema} rỗng thì không ép JSON (dùng cho kiểm tra kết nối). {@code images} gửi trước phần chữ của lượt
-     * user; rỗng thì body giống hệt khi chưa có ảnh (BR-U06-59).
+     * user; rỗng thì body giống hệt khi chưa có ảnh (BR-U06-59). {@code reasoningEffort} ({@code low}/{@code medium}/
+     * {@code high}) rỗng thì không gửi tham số suy nghĩ; {@code reasoningTokens} là phần trần dành cho suy nghĩ, chỉ
+     * dùng khi provider giới hạn suy nghĩ bằng số token. {@code maxOutputTokens} đã gồm phần này.
      */
     record Request(String model, String apiKey, String system, String user, String outputSchema, int maxOutputTokens,
-                   Duration timeout, List<AiImage> images) {
+                   Duration timeout, List<AiImage> images, String reasoningEffort, int reasoningTokens) {
 
         public Request {
             images = images == null ? List.of() : List.copyOf(images);
+        }
+
+        public Request(String model, String apiKey, String system, String user, String outputSchema,
+                       int maxOutputTokens, Duration timeout, List<AiImage> images) {
+            this(model, apiKey, system, user, outputSchema, maxOutputTokens, timeout, images, null, 0);
         }
 
         public Request(String model, String apiKey, String system, String user, String outputSchema,
@@ -31,7 +38,8 @@ public interface IProviderGateway {
 
         @Override
         public String toString() {
-            return "Request[model=" + model + ", maxOutputTokens=" + maxOutputTokens + ", images=" + images.size() + "]";
+            return "Request[model=" + model + ", maxOutputTokens=" + maxOutputTokens + ", images=" + images.size()
+                    + ", reasoningEffort=" + reasoningEffort + "]";
         }
     }
 
@@ -80,11 +88,22 @@ public interface IProviderGateway {
 
     /** Provider đã nhận key/model, nhưng nội dung chưa hoàn chỉnh để dùng cho tác vụ. */
     class OutputLimitException extends ProviderException {
+        private final transient String partialOutput;
 
         public OutputLimitException(Usage usage) {
+            this(usage, null);
+        }
+
+        /** {@code partialOutput}: phần chữ đã nhận, chỉ để chẩn đoán (bộ đánh giá); là dữ liệu không tin cậy, không ghi log. */
+        public OutputLimitException(Usage usage, String partialOutput) {
             super(FailureKind.CHARGED, 200,
                     "AI đã đạt giới hạn token của lần gọi nên phản hồi chưa hoàn chỉnh. Hãy thử lại với bài nhỏ hơn hoặc cấu hình giới hạn đầu ra cao hơn.",
                     usage);
+            this.partialOutput = partialOutput;
+        }
+
+        public String readPartialOutput() {
+            return partialOutput;
         }
     }
 }

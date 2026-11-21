@@ -59,6 +59,6 @@ docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml --e
 - Ứng dụng ở <http://localhost:8088> (Nginx), backend trực tiếp ở cổng 8080 (`/health`), Mailpit ở <http://localhost:8025>.
 - Không điền cấu hình Drive (service account với Shared Drive, hoặc ba biến `GOOGLE_DRIVE_OAUTH_*` của Drive cá nhân) thì tệp lưu ở volume `files-local`, backup database ở `backups-local`. Production đặt `U03_REQUIRE_DRIVE=true`: thiếu Drive thì upload, tải và backup báo tạm thời không khả dụng. Cách cấu hình: [runbook deploy](docs/runbooks/deploy-vps.md) mục 6.
 - Backup cần `BACKUP_DB_PASSWORD`. `U03_BACKUP_PUBLIC_KEY` là tùy chọn: có thì archive được mã hóa, bỏ trống thì lưu bản dump thường. Tạo khóa và khôi phục theo [runbook](docs/runbooks/restore-isolated.md).
-- Giao diện có tiếng Anh (mặc định), tiếng Việt và tiếng Nhật; chuỗi nằm trong `frontend/src/i18n/messages/`.
+- Giao diện có tiếng Anh (mặc định) và tiếng Việt; chuỗi nằm trong `frontend/src/i18n/messages/`.
 - Test: `mvn test` trong `backend/`; `npm run lint`, `npm run typecheck`, `npm test` trong `frontend/`.
 - Staging dùng chung cho nhóm kiểm thử trên VPS: [docs/runbooks/deploy-staging.md](docs/runbooks/deploy-staging.md).

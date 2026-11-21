@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor, cleanup, act, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { GradingWorkspacePage } from "@/features/grading/pages/GradingWorkspacePage";
+import { activateGradingAiTracking } from "@/features/grading/model/gradingAiTasks";
 import { ApiError } from "@/shared/api/client";
 import { Toaster } from "@/shared/ui";
 import type { Detail } from "@/features/grading/model/types";
@@ -1039,5 +1040,71 @@ describe("AI grading request lifecycle", () => {
     });
     expect(screen.queryByRole("alertdialog", { name: "Đang chấm bằng AI" })).not.toBeInTheDocument();
     expect(screen.getAllByText(/Dịch vụ AI tạm thời không khả dụng/).length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    new TypeError("Response lost"),
+    new ApiError({ status: 503, detail: "Gateway unavailable" }),
+  ])("reuses the grading request after %s until a proposal arrives", async (failure) => {
+    mocks.requestProposal.mockRejectedValueOnce(failure).mockResolvedValue({ ...pending, status: "READY" });
+    render(<GradingWorkspacePage evaluationId="e" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Chấm bằng AI" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(failure.message);
+    const firstRequest = mocks.requestProposal.mock.calls[0]?.[1];
+    expect(firstRequest.requestRef).toEqual(expect.any(String));
+
+    openAi();
+    fireEvent.click(screen.getByRole("button", { name: "Yêu cầu đề xuất mới" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Chấm bằng AI" })).toBeEnabled());
+    expect(mocks.requestProposal).toHaveBeenNthCalledWith(2, "e", firstRequest);
+
+    openAi();
+    fireEvent.click(screen.getByRole("button", { name: "Yêu cầu đề xuất mới" }));
+    await waitFor(() => expect(mocks.requestProposal).toHaveBeenCalledTimes(3));
+    expect(mocks.requestProposal).not.toHaveBeenNthCalledWith(3, "e", firstRequest);
+  });
+
+  it("starts a fresh grading request after a definitive retry response", async () => {
+    mocks.requestProposal.mockRejectedValueOnce(new TypeError("Response lost"))
+      .mockRejectedValueOnce(new ApiError({ status: 409, detail: "Request rejected" }))
+      .mockResolvedValue({ ...pending, status: "READY" });
+    render(<GradingWorkspacePage evaluationId="e" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Chấm bằng AI" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Response lost");
+    const firstRequest = mocks.requestProposal.mock.calls[0]?.[1];
+
+    fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Request rejected");
+    expect(mocks.requestProposal).toHaveBeenNthCalledWith(2, "e", firstRequest);
+
+    fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Chấm bằng AI" })).toBeEnabled());
+    expect(mocks.requestProposal).toHaveBeenCalledTimes(3);
+    expect(mocks.requestProposal).not.toHaveBeenNthCalledWith(3, "e", firstRequest);
+  });
+
+  it("starts a fresh request when the authenticated grading session changes", async () => {
+    const releaseFirstSession = activateGradingAiTracking("teacher-one");
+    let releaseCurrentSession = releaseFirstSession;
+    try {
+      mocks.requestProposal.mockRejectedValueOnce(new TypeError("Response lost"))
+        .mockResolvedValue({ ...pending, status: "READY" });
+      render(<GradingWorkspacePage evaluationId="e" />);
+
+      fireEvent.click(await screen.findByRole("button", { name: "Chấm bằng AI" }));
+      expect(await screen.findByRole("alert")).toHaveTextContent("Response lost");
+      const firstRequest = mocks.requestProposal.mock.calls[0]?.[1];
+
+      releaseFirstSession();
+      releaseCurrentSession = activateGradingAiTracking("teacher-one");
+      fireEvent.click(screen.getByRole("button", { name: "Chấm bằng AI" }));
+      await waitFor(() => expect(screen.getByRole("button", { name: "Chấm bằng AI" })).toBeEnabled());
+      expect(mocks.requestProposal).toHaveBeenCalledTimes(2);
+      expect(mocks.requestProposal).not.toHaveBeenNthCalledWith(2, "e", firstRequest);
+    } finally {
+      releaseCurrentSession();
+    }
   });
 });

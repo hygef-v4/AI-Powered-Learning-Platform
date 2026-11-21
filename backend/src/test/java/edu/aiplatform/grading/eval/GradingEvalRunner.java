@@ -45,11 +45,13 @@ final class GradingEvalRunner {
 
     /** Gọi provider thật bằng key của người chạy và ghi lại output (kể cả lỗi) để replay. */
     static GradingEvalPipeline.ProviderCall createLiveCall(ObjectMapper json, AiProvider provider, String model,
-            String apiKey, GradingEvalRecordings recordings) {
+            String apiKey, GradingEvalRecordings recordings, String reasoningEffort, int reasoningReserve) {
         var gateway = new HttpProviderGateway(json);
+        String effort = reasoningEffort == null || reasoningEffort.isBlank() ? null : reasoningEffort.trim();
         return (caseKey, runIndex, request) -> {
             var withCredentials = new IProviderGateway.Request(model, apiKey, request.system(), request.user(),
-                    request.outputSchema(), request.maxOutputTokens(), request.timeout(), request.images());
+                    request.outputSchema(), request.maxOutputTokens() + Math.max(0, reasoningReserve), request.timeout(),
+                    request.images(), effort, Math.max(0, reasoningReserve));
             try {
                 var response = gateway.call(provider, withCredentials);
                 recordings.saveRecording(new GradingEvalRecordings.Recording(caseKey, runIndex, provider.name(),
@@ -58,6 +60,9 @@ final class GradingEvalRunner {
             } catch (IProviderGateway.ProviderException ex) {
                 recordings.saveRecording(new GradingEvalRecordings.Recording(caseKey, runIndex, provider.name(),
                         model, null, ex.readKind().name(), ex.readStatus(), ex.getMessage(), ex.readUsage()));
+                if (ex instanceof IProviderGateway.OutputLimitException limit) {
+                    recordings.savePartialOutput(caseKey, runIndex, limit.readPartialOutput());
+                }
                 throw ex;
             }
         };

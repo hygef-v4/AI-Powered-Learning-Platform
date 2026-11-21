@@ -1391,7 +1391,8 @@
         "pointsCanHaveAtMost": "Điểm tối đa 2 chữ số thập phân",
         "deleteCriterion": "Xóa mục chấm {value}",
         "delete": "Xóa",
-        "addCriterion": "Thêm mục chấm"
+        "addCriterion": "Thêm mục chấm",
+        "penaltyOnlyHint": "Tiêu chí chỉ nêu trường hợp bị trừ. Hãy ghi rõ bài phải có gì để được điểm, ví dụ “Có ít nhất một quan hệ include/extend, vẽ nét đứt”; nếu không, AI có thể cho điểm cả khi bài không có phần này."
       },
       "ScheduleForm": {
         "date": "{label} (ngày)",

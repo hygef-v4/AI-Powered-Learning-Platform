@@ -3,7 +3,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { useGradingWorkspace } from "@/features/grading/hooks/useGradingWorkspace";
 import type { Detail, StructuredFeedback } from "@/features/grading/model/types";
 
-const mocks = vi.hoisted(() => ({ saveEvaluation: vi.fn(), push: vi.fn() }));
+const mocks = vi.hoisted(() => ({ saveEvaluation: vi.fn(), requestProposal: vi.fn(), push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
 vi.mock("@/features/grading/hooks/useGradingProposals", () => ({ useGradingProposals: () => ({ proposals: [], addProposal: vi.fn(), resumePolling: vi.fn() }) }));
@@ -43,7 +43,55 @@ const feedback: StructuredFeedback = { schemaVersion: 1, summary: { strengths: [
   items: [{ rubricId: "r", itemId: "i", evidence: null, reason: "Review diagram", suggestion: null,
     evidenceBlockId: null, requiresReview: true, reviewReason: "Unreadable diagram" }] };
 
-beforeEach(() => { vi.clearAllMocks(); mocks.saveEvaluation.mockResolvedValue({ ...initial.evaluation, version: 3 }); });
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.requestProposal.mockReset();
+  mocks.saveEvaluation.mockResolvedValue({ ...initial.evaluation, version: 3 });
+});
+
+it("reuses a proposal request after saving manual edits to the same submission and rubric", async () => {
+  mocks.requestProposal.mockRejectedValueOnce(new TypeError("Response lost"))
+    .mockResolvedValueOnce(undefined);
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => initial));
+  await act(() => result.current.requestProposal({ requestRef: "original" }));
+  act(() => result.current.updateForm({ feedback: "Manual edit" }));
+  await act(() => result.current.save());
+  expect(result.current.evaluation.version).toBe(3);
+
+  await act(() => result.current.requestProposal({ requestRef: "retry" }));
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(2, "e", { requestRef: "original" });
+});
+
+it.each([
+  { ...initial, evaluation: { ...initial.evaluation, submissionHash: "new-submission" } },
+  { ...initial, rubrics: initial.rubrics.map((rubric) => ({ ...rubric, rubricId: "new-rubric" })) },
+])("starts a fresh proposal request after reloading a changed grading snapshot %#", async (refreshed) => {
+  mocks.requestProposal.mockRejectedValueOnce(new TypeError("Response lost"))
+    .mockResolvedValueOnce(undefined);
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => refreshed));
+  await act(() => result.current.requestProposal({ requestRef: "original" }));
+  await act(() => result.current.reload());
+  await act(() => result.current.requestProposal({ requestRef: "changed-snapshot" }));
+
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(2, "e", { requestRef: "changed-snapshot" });
+});
+
+it("discards a proposal retry reference when its source or provider changes", async () => {
+  mocks.requestProposal.mockRejectedValue(new TypeError("Response lost"));
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => initial));
+  await act(() => result.current.requestProposal({ requestRef: "auto" }));
+  const personal = { source: "PERSONAL", provider: "GEMINI", requestRef: "gemini" } as const;
+  await act(() => result.current.requestProposal(personal));
+  await act(() => result.current.requestProposal({ ...personal, requestRef: "gemini-retry" }));
+  const changedProvider = { ...personal, provider: "OPENAI", requestRef: "openai" } as const;
+  await act(() => result.current.requestProposal(changedProvider));
+  await act(() => result.current.requestProposal({ ...personal, requestRef: "gemini-again" }));
+
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(2, "e", personal);
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(3, "e", personal);
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(4, "e", changedProvider);
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(5, "e", { ...personal, requestRef: "gemini-again" });
+});
 
 it("preserves edits made during background saving and uses the returned version for the next save", async () => {
   let finish!: (value: Detail["evaluation"]) => void;

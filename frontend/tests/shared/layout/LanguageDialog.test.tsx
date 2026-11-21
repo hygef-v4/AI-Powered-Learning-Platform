@@ -11,10 +11,10 @@ import { LanguageDialog } from "@/shared/layout/LanguageDialog";
 describe("LanguageDialog", () => {
   afterEach(() => { vi.useRealTimers(); chooseLocale.mockReset(); });
 
-  it("hiện ba ngôn ngữ dạng radio, ngôn ngữ đang dùng được chọn sẵn", () => {
+  it("hiện hai ngôn ngữ dạng radio (bỏ tiếng Nhật 2026-11-21), ngôn ngữ đang dùng được chọn sẵn", () => {
     render(<LanguageDialog open onClose={vi.fn()} />);
     const radios = screen.getAllByRole("radio");
-    expect(radios.map((radio) => radio.closest("label")?.textContent)).toEqual(["English", "Tiếng Việt", "日本語"]);
+    expect(radios.map((radio) => radio.closest("label")?.textContent)).toEqual(["English", "Tiếng Việt"]);
     expect(screen.getByRole("radio", { name: "Tiếng Việt" })).toBeChecked();
   });
 
