@@ -15859,6 +15859,14 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Sửa manifest truy vết cho PR #105; chờ người dùng cho phép commit/push.
 
 ---
+## U03 — sửa RabbitMQ trusted packages
+**Timestamp**: 2026-11-18T17:12:00Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa lỗi RabbitMQ"
+**AI Response**: "Tạo nhánh fix/amqp-trusted-packages từ staging@2433c57b. AmqpMessageConfig dùng new Jackson2JsonMessageConverter(objectMapper, \"edu.aiplatform.jobs.contract\"), gói chứa JobMessage và DomainEvent. Thêm AmqpMessageConfigTest; khi bỏ bản sửa test báo đúng lỗi 'JobMessage is not in the trusted packages'. 116 test jobs/notifications pass. Chưa commit, chưa push."
+**Context**: Sửa lỗi ghi trong PR #106 trước khi deploy.
+
+---
 ## Rà soát dự án theo góp ý của giảng viên (SWR/SWD, MCP)
 **Timestamp**: 2026-11-20T02:39:23Z
 **Requested by:** Quang Hung
@@ -16319,5 +16327,14 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **User Input**: "Giúp tôi commit chưa push"
 **AI Response**: "Tách thay đổi xử lý phản hồi AI, khôi phục yêu cầu chấm bị gián đoạn và hồ sơ AI-DLC thành các commit cục bộ."
 **Context**: Chi nhánh audit-staging. Không push.
+
+---
+
+## U09 — chuẩn bị PR vào staging
+**Timestamp**: 2026-11-21T10:11:07Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi push và tạo pr lên staging"
+**AI Response**: "Nhập staging vào audit-staging để giữ bản sửa RabbitMQ đã có ở nhánh đích. Giải quyết phần nhật ký bằng cách giữ các mục riêng từ hai nhánh. Chuẩn bị push audit-staging và mở PR vào staging."
+**Context**: Giao nhận thay đổi grading và các commit đang chờ trên audit-staging.
 
 ---
