@@ -33,7 +33,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 | BR-U03-04 | `MATERIAL`: Teacher hoặc Subject Manager, U13 kiểm thêm phân công môn/lớp. `DOCUMENT_IMAGE`: Student, Teacher hoặc Subject Manager đang được sửa tài liệu đó; U07, U08, U12 kiểm thêm quyền sửa. Admin không upload. U03 chỉ kiểm role và `purpose`; unit sở hữu kiểm phạm vi. U01 báo `DEPENDENCY_UNAVAILABLE` (không kiểm được quyền) thì trả 503 `UPLOAD_AUTHORIZATION_UNAVAILABLE`, không ghi audit từ chối. | FR-002, SEC-002 |
 | BR-U03-05 | Tính SHA-256 khi nhận và lưu vào thuộc tính tệp trên Drive. | Thiết kế |
 | BR-U03-06 | Chỉ khi tệp và thuộc tính đã lên Drive mới trả `FileRef`. Lỗi ở bất kỳ bước nào thì xóa tệp Drive nếu đã tạo; xóa lỗi thì gửi việc `DRIVE_CLEANUP`. | REL-003 |
-| BR-U03-07 | Upload thành công được ghi vào danh sách tệp chưa gắn trên Redis (`file:unattached`, hạn dọn là lúc `FileRef` hết hạn cộng 10 phút). `attach` lần đầu bỏ tệp khỏi danh sách; Redis lỗi lúc gắn thì 503, không gắn để tránh dọn nhầm. `UnattachedFileScanner` chạy mỗi phút trong worker, xóa khỏi kho các tệp quá hạn mà chưa từng gắn (hủy upload, đóng trang, xem trước DOCX rồi bỏ). | Thiết kế |
+| BR-U03-07 | Upload thành công được ghi vào bảng `unattached_files` trong PostgreSQL. Hạn dọn là lúc `FileRef` hết hạn cộng 10 phút. Nếu chưa ghi được lịch, upload báo không khả dụng và dùng luồng dọn tệp dở dang. `attach` bỏ tệp khỏi lịch. Lỗi gỡ lịch trả 503 để tránh dọn nhầm. Scanner vẫn xử lý tệp cũ còn trong Redis `file:unattached`. Worker quét mỗi phút và xóa tệp chưa từng gắn khi đến hạn. | Thiết kế |
 | BR-U03-08 | Tên tệp gốc được làm sạch: bỏ đường dẫn, ký tự điều khiển, cắt còn 255 ký tự. | SEC-003 |
 
 ## 2. Ảnh SVG và Draw.io

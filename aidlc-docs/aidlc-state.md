@@ -1300,3 +1300,13 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 - [x] Đề xuất qua provider và MCP được đánh dấu cần xem khi dẫn bằng chứng sang phần khác đã xác định. Điểm đề xuất giữ nguyên. Test kiểm tra gửi lại cùng mã, đề xuất khác nội dung và dữ liệu lịch sử.
 - [x] Ba ca hồi quy thất bại trước bản sửa và đạt sau bản sửa. Backend Java 17 đạt 2.581/2.582 test, test backup còn lại đạt khi chạy riêng với UTF-8. 71 test giao diện duyệt điểm đạt.
 - [x] Replay 24 phản hồi giữ nguyên kết quả điểm. Phép đo prompt mới qua Gemini đang chờ khóa trong phiên cục bộ. Cơ chế xác thực, phân quyền, ghi nhận và phục hồi nền hiện có được giữ cho phạm vi U09. Không bổ sung triển khai hoặc thay đổi cấu hình.
+
+## Sửa 19 phát hiện audit mã nguồn (2026-11-21)
+
+- [x] Tái hiện, sửa và kiểm lại 19 mục theo [kế hoạch](construction/plans/code-generation-plan/2026-11-21-audit-remediation.md).
+- [x] Kiểm bản ghép với 249 test backend được chọn, 1.186 test frontend, TypeScript, ESLint và 20 ca deploy/restore giả lập. Dữ liệu kiểm thử tổng hợp.
+- [ ] Nghiệm thu browser, AI provider trực tiếp và triển khai. Chưa commit, push hoặc deploy lượt này.
+
+### Kiểm tra Gemini trực tiếp sau đợt sửa audit
+
+- [x] Gemini 3.5 Flash Lite trả 6/6 phản hồi hợp lệ trên 01-complete và 08-wrong-actors. Bài đầy đủ đạt 4,00 trong cả ba lượt. Bài actor sai đạt 2,25 đến 2,50 trên 4,00, kỳ vọng 2,80 từ bộ tổng hợp. Mục actor dao động 0,00 đến 0,12 và không có cờ cần kiểm tra.
