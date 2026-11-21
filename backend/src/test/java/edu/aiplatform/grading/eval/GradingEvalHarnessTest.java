@@ -83,7 +83,12 @@ class GradingEvalHarnessTest {
         String solid = runner.pipeline().buildProviderRequest(requireCase("04-solid-include")).user();
         assertThat(dashed).contains("nối uc-book -> uc-pay (nét đứt): <<include>>",
                 "nối uc-cancel -> uc-pay (nét đứt): <<extend>>");
-        assertThat(solid).contains("nối uc-book -> uc-pay: <<include>>").doesNotContain("uc-pay (nét đứt)");
+        assertThat(solid).contains("nối uc-book -> uc-pay (nét liền): <<include>>").doesNotContain("uc-pay (nét đứt)");
+        // Kế hoạch 2026-11-20: AI thấy khung system boundary, mã block, và sơ đồ chỉ được gửi một lần.
+        assertThat(dashed).contains("hình sys (chữ nhật): Hệ thống đặt sân cầu lông",
+                "hình uc-book (ellipse) trong sys: Đặt sân", "[block ");
+        assertThat(dashed).doesNotContain("actor-customer (umlActor) trong");
+        assertThat(dashed.split("nối uc-book -> uc-pay", -1)).hasSize(2);
     }
 
     @Test

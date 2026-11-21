@@ -233,6 +233,15 @@ public class DocumentModelService implements IDocumentModel {
 
     @Override
     public String toPlainText(DocumentModel document) {
+        return renderPlainText(document, false);
+    }
+
+    @Override
+    public String toPlainTextWithBlockIds(DocumentModel document) {
+        return renderPlainText(document, true);
+    }
+
+    private String renderPlainText(DocumentModel document, boolean withBlockIds) {
         if (document == null || document.blocks() == null) {
             return "";
         }
@@ -245,6 +254,9 @@ public class DocumentModelService implements IDocumentModel {
             }
             if (mixed && block.origin() == BlockOrigin.TEACHER && block.type() != BlockType.HEADING) {
                 text = "> " + text.replace("\n", "\n> ");
+            }
+            if (withBlockIds && block.id() != null) {
+                text = "[block " + block.id() + "]\n" + text;
             }
             out.append(text).append("\n\n");
         }
