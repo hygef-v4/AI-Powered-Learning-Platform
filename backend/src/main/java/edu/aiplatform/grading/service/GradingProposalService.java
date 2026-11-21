@@ -50,35 +50,43 @@ public class GradingProposalService {
     /** Prepares and dispatches an AI grading proposal for an evaluation. */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public GradingProposal requestProposal(Actor actor, UUID evaluationId, AiRequest input) {
-        // Step 1: Validate evaluation state, prepare prompt and output schema, and persist PENDING proposal
         var prepared = gradingProposalTransactions.prepareProposal(actor, evaluationId, input);
         var proposal = prepared.proposal();
 
-        // Step 2: Check idempotency - return existing proposal if already dispatched or pending
         if (!prepared.dispatch()) {
             if (proposal.safeError != null)
                 proposal.safeError = GradingProposalCallbackSupport.formatTaskError(proposal.safeError);
             return proposal;
         }
 
-        // Step 3: Submit asynchronous task to background AI engine (U06)
-        AiTaskView task;
+        var taskRequest = new AiTaskRequest(actor, input.source(), input.provider(),
+                "GRADING_PROPOSAL", "evaluation:" + evaluationId, proposal.versionNo,
+                input.requestRef(), prepared.prompt(), prepared.outputSchema(), prepared.maxOutputTokens());
         try {
-            task = aiTask.submit(new AiTaskRequest(actor, input.source(), input.provider(),
-                    "GRADING_PROPOSAL", "evaluation:" + evaluationId, proposal.versionNo,
-                    input.requestRef(), prepared.prompt(), prepared.outputSchema(),
-                    prepared.maxOutputTokens()));
-        } catch (ApiException ex) {
-            // Record failure in database if AI task submission failed with domain error
-            return gradingProposalTransactions.recordDispatch(proposal.id, null, ex.readCode());
-        } catch (RuntimeException ex) {
-            // Record failure in database if AI service is unreachable or network timed out
-            return gradingProposalTransactions.recordDispatch(proposal.id, null,
-                    "AI_SERVICE_UNAVAILABLE");
+            return gradingProposalTransactions.dispatchPreparedProposal(proposal.id,
+                    () -> submitProposalTask(taskRequest));
+        } catch (ProposalDispatchFailure ex) {
+            return gradingProposalTransactions.recordDispatch(proposal.id, null, ex.code);
         }
+    }
 
-        // Step 4: Record dispatched task ID, keep PENDING status, and return proposal to caller
-        return gradingProposalTransactions.recordDispatch(proposal.id, task, null);
+    private AiTaskView submitProposalTask(AiTaskRequest taskRequest) {
+        try {
+            return aiTask.submit(taskRequest);
+        } catch (ApiException ex) {
+            throw new ProposalDispatchFailure(ex.readCode(), ex);
+        } catch (RuntimeException ex) {
+            throw new ProposalDispatchFailure("AI_SERVICE_UNAVAILABLE", ex);
+        }
+    }
+
+    private static final class ProposalDispatchFailure extends RuntimeException {
+        private final String code;
+
+        private ProposalDispatchFailure(String code, RuntimeException cause) {
+            super(cause);
+            this.code = code;
+        }
     }
 
     List<GradingProposal> listStoredProposals(List<UUID> authorizedEvaluationIds) {

@@ -5,8 +5,9 @@ import { useConfirmDialog } from "@/shared/ui/ConfirmDialog";
 import { gradingApi } from "../api";
 import { hasPartialPoints, hasInvalidItemScores } from "../model/rubricScores";
 import { formatErrorMessage } from "../model/format";
+import { useGradingAiRequest } from "./useGradingAiRequest";
 import { useGradingProposals } from "./useGradingProposals";
-import { readGradingAiAccount } from "../model/gradingAiTasks";
+import { readGradingAiSessionRevision } from "../model/gradingAiTasks";
 import { buildEvaluationHref, type NavigationFilters } from "../model/navigation";
 import {
   buildItemScorePatch,
@@ -47,6 +48,9 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   const [dirty, setDirty] = useState(false);
   const [aiAutoApplied, setAiAutoApplied] = useState(false);
   const evaluation = detail.evaluation;
+  const submitAiRequest = useGradingAiRequest(
+    JSON.stringify([evaluation.id, evaluation.submissionHash, detail.rubrics]),
+  );
   const official = evaluation.state === "FINALIZED" || evaluation.state === "PUBLISHED";
   const disabled = busy || !detail.current || detail.editable === false || evaluation.state === "SUPERSEDED";
   const dirtyRef = useRef(dirty);
@@ -242,15 +246,16 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   async function requestProposal(input: AiRequest): Promise<Proposal | null> {
     if (disabled || savingRef.current || requestingRef.current) return null;
     requestingRef.current = true;
-    const account = readGradingAiAccount();
+    const sessionRevision = readGradingAiSessionRevision();
     setError("");
     try {
-      const created = await gradingApi.requestProposal(evaluation.id, input);
-      if (account !== readGradingAiAccount()) return null;
+      const created = await submitAiRequest(input, (request) =>
+        gradingApi.requestProposal(evaluation.id, request));
+      if (sessionRevision !== readGradingAiSessionRevision()) return null;
       if (created) addProposal(created);
       return created ?? null;
     } catch (error) {
-      setError(formatErrorMessage(error));
+      if (sessionRevision === readGradingAiSessionRevision()) setError(formatErrorMessage(error));
       return null;
     } finally {
       requestingRef.current = false;
