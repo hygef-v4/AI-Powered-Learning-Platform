@@ -80,6 +80,7 @@ public class McpCredentialService {
         if (!DAYS.contains(validity)) {
             throw ApiException.createBadRequest("MCP_EXPIRY_INVALID", "Hạn dùng là 7, 30 hoặc 90 ngày");
         }
+        repository.lockCredentialAccount(actor.accountId());
         Instant now = clock.instant();
         if (repository.countActive(actor.accountId(), now) >= MAX_ACTIVE) {
             throw ApiException.createConflict("MCP_LIMIT_REACHED", "Bạn đã có 5 agent còn hiệu lực; hãy thu hồi bớt");

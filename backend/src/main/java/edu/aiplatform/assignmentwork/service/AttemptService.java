@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.assignments.contract.AssignmentContent;
+import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentView;
 import edu.aiplatform.assignments.contract.BlockOrigin;
 import edu.aiplatform.assignments.contract.BlockType;
@@ -90,7 +91,11 @@ public class AttemptService {
         attempts.lockStart(assignmentId, actor.accountId());
         Optional<AssignmentAttempt> existing = attempts.findInProgress(assignmentId, actor.accountId());
         if (existing.isPresent()) {
-            return new Started(attemptView(existing.get(), view), false);
+            AssignmentAttempt draft = existing.get();
+            if (!draft.classId().equals(ref.classId())) {
+                draft = resumeDraftInClass(actor, view, ref.classId(), draft.id());
+            }
+            return new Started(attemptView(draft, view), false);
         }
         if (view.submissionMode() == SubmissionMode.GROUP) {
             throw ApiException.createConflict("GROUP_ASSIGNMENT", "Bài nhóm làm trong tài liệu nhóm");
@@ -124,6 +129,27 @@ public class AttemptService {
                 0, AttemptStatus.IN_PROGRESS, null, false, now, deadline, null, null, null, List.of());
         attempts.insert(attempt);
         return new Started(attemptView(attempt, view), true);
+    }
+
+    private AssignmentAttempt resumeDraftInClass(Actor actor, AssignmentView view, UUID classId, UUID attemptId) {
+        AssignmentAttempt draft = attempts.findForUpdate(attemptId)
+                .orElseThrow(() -> ApiException.createNotFound("ATTEMPT_NOT_FOUND"));
+        if (!draft.hasInProgressStatus()) {
+            throw ApiException.createConflict("ATTEMPT_SUBMITTED", "Lượt đã nộp, không sửa được");
+        }
+        if (view.scope() != AssignmentScope.SUBJECT || view.submissionMode() != SubmissionMode.INDIVIDUAL) {
+            throw access.deny(actor, "ATTEMPT_STARTED", WorkAudit.OBJECT_ATTEMPT, attemptId, "DRAFT_TRANSFER_SCOPE");
+        }
+        if (access.isActiveStudent(actor.accountId(), draft.classId())) {
+            access.requireStudentOfClass(actor, draft.classId(), "ATTEMPT_STARTED");
+            return draft;
+        }
+        access.requireUniqueDraftDestination(actor, classId, view.subjectId());
+        if (WorkAccess.call(() -> assignments.submissionWindow(view.assignmentId(), clock.instant())) == SubmissionWindow.CLOSED) {
+            throw reject(actor, view.assignmentId(), "SUBMISSION_CLOSED", "Bài đã hết hạn nhận bài");
+        }
+        return attempts.transferDraft(attemptId, draft.classId(), classId)
+                .orElseThrow(AttemptService::createVersionConflictError);
     }
 
     @Transactional(readOnly = true)

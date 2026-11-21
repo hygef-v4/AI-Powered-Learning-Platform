@@ -16,6 +16,7 @@ import {
   buildStructuredSummaryPatch,
   buildToggleAcknowledgePatch,
   createInitialForm,
+  rebaseGradingForm,
 } from "../components/GradingForm";
 import type {
   AiRequest,
@@ -42,9 +43,11 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
+  const reloadingRef = useRef(false);
   const requestingRef = useRef(false);
   const editRevision = useRef(0);
   const [error, setError] = useState("");
+  const [conflict, setConflict] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [aiAutoApplied, setAiAutoApplied] = useState(false);
   const evaluation = detail.evaluation;
@@ -52,7 +55,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     JSON.stringify([evaluation.id, evaluation.submissionHash, detail.rubrics]),
   );
   const official = evaluation.state === "FINALIZED" || evaluation.state === "PUBLISHED";
-  const disabled = busy || !detail.current || detail.editable === false || evaluation.state === "SUPERSEDED";
+  const disabled = busy || conflict || !detail.current || detail.editable === false || evaluation.state === "SUPERSEDED";
   const dirtyRef = useRef(dirty);
   const additionalDirtyRef = useRef(additionalDirty);
   const { proposals, proposalsLoaded, pollExhausted, addProposal, resumePolling } = useGradingProposals(evaluation.id, busy, setError);
@@ -73,7 +76,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   }, []);
 
   function updateForm(patch: Partial<GradingFormValues>) {
-    if (disabled) return;
+    if (disabled || reloadingRef.current) return;
     editRevision.current += 1;
     setError("");
     setForm((current) => ({ ...current, ...patch }));
@@ -119,20 +122,46 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   }
 
   async function reloadEvaluation() {
+    if (savingRef.current || reloadingRef.current) return;
+    reloadingRef.current = true;
+    setBusy(true);
     try {
       const refreshed = await refresh();
-      setDetail(refreshed);
-      setError("");
       const receiptChanged = refreshed.evaluation.submissionHash !== evaluation.submissionHash;
-      if (receiptChanged || refreshed.editable === false || refreshed.evaluation.state === "SUPERSEDED") {
-        setForm(createInitialForm(refreshed.evaluation, refreshed.rubrics));
-        setDirty(false);
-        setAiAutoApplied(false);
-        dirtyRef.current = false;
+      const reset = receiptChanged || !refreshed.current || refreshed.editable === false
+        || refreshed.evaluation.state === "SUPERSEDED";
+      if (!reset && refreshed.evaluation.version < evaluation.version) return;
+      if (!reset && refreshed.evaluation.version === evaluation.version) {
+        setDetail(refreshed);
+        setError("");
+        return;
       }
-      if (receiptChanged) resumePolling();
+      const serverForm = createInitialForm(refreshed.evaluation, refreshed.rubrics);
+      const rebased = reset || !dirtyRef.current
+        ? { form: serverForm, dirty: false, conflict: false }
+        : rebaseGradingForm(createInitialForm(evaluation, detail.rubrics), form, serverForm, refreshed.rubrics);
+      const apply = () => {
+        setDetail(refreshed);
+        setForm(rebased.form);
+        setDirty(rebased.dirty);
+        dirtyRef.current = rebased.dirty;
+        setAiAutoApplied(aiAutoApplied && rebased.form.usedProposalId !== null);
+        setConflict(false);
+        setError("");
+        if (receiptChanged) resumePolling();
+      };
+      if (rebased.conflict) {
+        setConflict(true);
+        requestConfirm(msg("grading.hooks.useGradingWorkspace.resolveOverlappingEdits"), apply,
+          msg("grading.hooks.useGradingWorkspace.useServerEdits"));
+      } else {
+        apply();
+      }
     } catch (error) {
       setError(formatErrorMessage(error));
+    } finally {
+      reloadingRef.current = false;
+      setBusy(false);
     }
   }
 
@@ -144,7 +173,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
 
   async function saveEvaluation(advance = false,
     options: { background?: boolean } = {}): Promise<Evaluation | null> {
-    if (disabled || savingRef.current) return null;
+    if (disabled || savingRef.current || reloadingRef.current) return null;
     const currentIndex = detail.navigationIds.indexOf(evaluation.id);
     const next = currentIndex >= 0 ? detail.navigationIds[currentIndex + 1] : undefined;
     const savedRevision = editRevision.current;
@@ -203,10 +232,12 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         if (saved.kind === "GROUP_DOCUMENT") {
           try {
             const refreshed = await refresh();
-            setDetail(refreshed);
             if (refreshed.evaluation.submissionHash !== saved.submissionHash
                 || refreshed.editable === false || refreshed.evaluation.state === "SUPERSEDED") {
+              setDetail(refreshed);
               replacementForm = createInitialForm(refreshed.evaluation, refreshed.rubrics);
+            } else {
+              setDetail({ ...refreshed, evaluation: saved });
             }
           } catch {
             setDetail((current) => ({ ...current, evaluation: saved, editable: false }));
@@ -244,7 +275,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   }
 
   async function requestProposal(input: AiRequest): Promise<Proposal | null> {
-    if (disabled || savingRef.current || requestingRef.current) return null;
+    if (disabled || savingRef.current || reloadingRef.current || requestingRef.current) return null;
     requestingRef.current = true;
     const sessionRevision = readGradingAiSessionRevision();
     setError("");
@@ -269,7 +300,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     itemScores: ItemScores = {},
     structuredFeedback?: StructuredFeedback | null,
   ) {
-    if (disabled) return;
+    if (disabled || reloadingRef.current) return;
     editRevision.current += 1;
     const patch = buildProposalDraftPatch(
       detail.rubrics,
@@ -292,7 +323,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     form,
     busy,
     saving,
-    error,
+    error: conflict ? msg("grading.hooks.useGradingWorkspace.overlappingEditsRequireReview") : error,
     dirty,
     aiAutoApplied,
     proposals,

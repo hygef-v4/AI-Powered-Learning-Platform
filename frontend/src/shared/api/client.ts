@@ -145,3 +145,18 @@ export async function downloadApiFile(path: string): Promise<{ blob: Blob; filen
   }
   return { blob: await response.blob(), filename };
 }
+
+export async function downloadApiFileToDisk(path: string, fallbackName: string): Promise<void> {
+  const { blob, filename } = await downloadApiFile(path);
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename ?? fallbackName;
+  document.body.appendChild(link);
+  try {
+    link.click();
+  } finally {
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+}

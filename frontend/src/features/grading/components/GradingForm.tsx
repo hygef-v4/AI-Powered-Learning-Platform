@@ -37,6 +37,73 @@ export function createInitialForm(evaluation: Evaluation, rubrics: Rubric[]): Gr
   };
 }
 
+const REVIEW_FIELDS = ["structuredFeedback", "clearStructuredFeedback", "acknowledgedReviewItems",
+  "reviewedItemScores", "usedProposalId"] as const;
+const RUBRIC_FIELDS = ["checks", "itemScores", ...REVIEW_FIELDS] as const;
+const DRAFT_FIELD_GROUPS = [
+  ["feedback"],
+  ["adjustment", "changeReason"],
+  RUBRIC_FIELDS,
+] as const satisfies readonly (readonly (keyof GradingFormValues)[])[];
+
+function readDraftFields(form: GradingFormValues, keys: readonly (keyof GradingFormValues)[]) {
+  return JSON.stringify(keys.map((key) => form[key]));
+}
+
+function comparableScore(value: string | number | undefined) {
+  return value !== undefined && /^\d+(?:\.\d+)?$/.test(String(value)) ? Number(value) : value;
+}
+
+export function rebaseGradingForm(
+  base: GradingFormValues,
+  draft: GradingFormValues,
+  server: GradingFormValues,
+  rubrics: Rubric[],
+) {
+  const form = { ...server };
+  let dirty = false;
+  let conflict = false;
+
+  function keepField<Key extends keyof GradingFormValues>(key: Key) {
+    form[key] = draft[key];
+  }
+
+  for (const keys of DRAFT_FIELD_GROUPS) {
+    const original = readDraftFields(base, keys);
+    const local = readDraftFields(draft, keys);
+    const remote = readDraftFields(server, keys);
+    if (local === original || local === remote) continue;
+    if (remote === original) {
+      keys.forEach(keepField);
+      dirty = true;
+    } else if (keys === RUBRIC_FIELDS
+        && readDraftFields(base, REVIEW_FIELDS) === readDraftFields(draft, REVIEW_FIELDS)
+        && readDraftFields(base, REVIEW_FIELDS) === readDraftFields(server, REVIEW_FIELDS)) {
+      const mergedScores: ItemScores = {};
+      for (const [rubricId, scores] of Object.entries(server.itemScores ?? {})) {
+        const merged = { ...scores };
+        for (const [itemId, remoteScore] of Object.entries(scores)) {
+          const originalScore = comparableScore(base.itemScores?.[rubricId]?.[itemId]);
+          const localScore = draft.itemScores?.[rubricId]?.[itemId];
+          if (localScore === undefined || comparableScore(localScore) === originalScore
+              || comparableScore(localScore) === comparableScore(remoteScore)) continue;
+          if (comparableScore(remoteScore) !== originalScore) {
+            conflict = true;
+          } else {
+            merged[itemId] = localScore;
+            dirty = true;
+          }
+        }
+        mergedScores[rubricId] = merged;
+      }
+      Object.assign(form, buildRubricValues(rubrics, server.checks, mergedScores));
+    } else {
+      conflict = true;
+    }
+  }
+  return { form, dirty, conflict };
+}
+
 function findItemMaxPoints(rubrics: Rubric[], rubricId: string, itemId: string): number {
   return Number(
     rubrics

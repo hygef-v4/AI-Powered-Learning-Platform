@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { useGradingWorkspace } from "@/features/grading/hooks/useGradingWorkspace";
 import type { Detail, StructuredFeedback } from "@/features/grading/model/types";
@@ -153,6 +153,53 @@ it("preserves explicit partial points and adjustments on a feedback-only save", 
   await act(async () => { await result.current.save(); });
   expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({ itemScoresByRubric: { r: { i: "0.50" } },
     adjustment: "-0.25", adjustmentReason: "Late", feedback: "Updated feedback" }));
+});
+
+it("preserves a newer rubric score when reloading a separate local feedback edit", async () => {
+  const refreshed: Detail = { ...initial, evaluation: { ...initial.evaluation, version: 3,
+    rubricItemScores: { r: { i: "0.75" } }, score: 0.5 } };
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => refreshed));
+  act(() => result.current.setFeedback("Local feedback"));
+  await act(() => result.current.reload());
+  await act(() => result.current.save());
+  expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({
+    version: 3, feedback: "Local feedback", itemScoresByRubric: { r: { i: "0.75" } },
+  }));
+});
+
+it("preserves scores changed on different rubric items in two versions", async () => {
+  const original: Detail = {
+    ...initial,
+    evaluation: { ...initial.evaluation, rubricItemScores: { r: { i: "0.50", j: "0.25" } }, maxScore: 2 },
+    rubrics: [{ rubricId: "r", partId: "part", maxPoints: 2, criteria: [{ criterionId: "criterion", title: "Design",
+      items: [{ itemId: "i", text: "Correct design", points: 1 }, { itemId: "j", text: "Second item", points: 1 }],
+    }] }],
+  };
+  const refreshed: Detail = { ...original, evaluation: { ...original.evaluation, version: 3,
+    rubricItemScores: { r: { i: "0.50", j: "0.50" } } } };
+  const { result } = renderHook(() => useGradingWorkspace(original, async () => refreshed));
+  act(() => result.current.setItemScore("r", "i", 0.75));
+  await act(() => result.current.reload());
+  await act(() => result.current.save());
+  expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({
+    version: 3, itemScoresByRubric: { r: { i: 0.75, j: "0.50" } },
+  }));
+});
+
+it("requires confirmation before discarding an overlapping feedback edit", async () => {
+  const refreshed: Detail = { ...initial, evaluation: { ...initial.evaluation, version: 3, feedback: "Remote feedback" } };
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => refreshed));
+  act(() => result.current.updateForm({ feedback: "Local feedback", adjustment: "-0.10" }));
+  await act(() => result.current.reload());
+  expect(result.current.evaluation.version).toBe(2);
+  expect(result.current.form.feedback).toBe("Local feedback");
+  await act(() => result.current.save());
+  expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+
+  render(result.current.confirmDialog);
+  fireEvent.click(screen.getByTestId("confirm-dialog-accept"));
+  expect(result.current.evaluation.version).toBe(3);
+  expect(result.current.form).toMatchObject({ feedback: "Remote feedback", adjustment: "-0.10" });
 });
 
 it("retains AI partial points, feedback and flags while resetting previous review acknowledgements", async () => {

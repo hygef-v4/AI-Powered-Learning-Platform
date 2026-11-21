@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,6 +43,7 @@ class RunnersTest {
         PendingJob pending = new PendingJob("k", Map.of("runId", "r"));
         when(sweeper.jobType()).thenReturn("BACKUP_RUN");
         when(sweeper.findStalePending(any())).thenReturn(List.of(pending));
+        when(publisher.resend("BACKUP_RUN", pending)).thenReturn(true);
         Instant[] at = {now};
         Clock moving = new Clock() {
             @Override
@@ -64,11 +66,29 @@ class RunnersTest {
         runner.runOnce();
         at[0] = now.plusSeconds(60);
         runner.runOnce();
-        verify(publisher, org.mockito.Mockito.times(1)).resend("BACKUP_RUN", pending);
+        verify(publisher, times(1)).resend("BACKUP_RUN", pending);
 
         at[0] = now.plus(PendingSweepRunner.RESEND_INTERVAL);
         runner.runOnce();
-        verify(publisher, org.mockito.Mockito.times(2)).resend("BACKUP_RUN", pending);
+        verify(publisher, times(2)).resend("BACKUP_RUN", pending);
+    }
+
+    @Test
+    void sweeperRetriesAfterBrokerFailureAndThrottlesAfterRecovery() {
+        IPendingSweeper sweeper = mock(IPendingSweeper.class);
+        IMessageSender sender = mock(IMessageSender.class);
+        JobPublisher publisher = new JobPublisher(sender, new AfterCommitExecutor(Runnable::run));
+        PendingJob pending = new PendingJob("k", Map.of("runId", "r"));
+        when(sweeper.jobType()).thenReturn("BACKUP_RUN");
+        when(sweeper.findStalePending(any())).thenReturn(List.of(pending));
+        doThrow(new RuntimeException("broker down")).doNothing().when(sender).sendJob(any());
+        PendingSweepRunner runner = new PendingSweepRunner(List.of(sweeper), publisher, clock);
+
+        runner.runOnce();
+        runner.runOnce();
+        runner.runOnce();
+
+        verify(sender, times(2)).sendJob(any());
     }
 
     @Test

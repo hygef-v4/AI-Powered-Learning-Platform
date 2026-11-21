@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,11 +15,14 @@ import static org.mockito.Mockito.when;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
+import edu.aiplatform.assignments.contract.DocumentModel;
+import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.service.GroupDocumentService;
 import edu.aiplatform.groupdocs.service.IGroupDocStreams;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
+import edu.aiplatform.groupdocs.model.GroupDocument;
 import edu.aiplatform.groupdocs.model.GroupSection;
 import edu.aiplatform.groups.service.ClassGroupService.SaveCommand;
 import edu.aiplatform.groups.model.ClassGroup;
@@ -52,13 +56,15 @@ class ClassGroupServiceTest {
     private final Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
     private final GroupRepository groups = mock(GroupRepository.class);
     private final GroupDocumentRepository documents = mock(GroupDocumentRepository.class);
-    private final GroupDocumentService groupDocuments = mock(GroupDocumentService.class);
+    private final IAssignmentQuery assignments = mock(IAssignmentQuery.class);
     private final IGroupDocStreams streams = mock(IGroupDocStreams.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
     private final IAudit audit = mock(IAudit.class);
     private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
+    private final GroupDocumentService groupDocuments = new GroupDocumentService(documents, groups, assignments,
+            classes, clock);
     private final GroupProposalCleanup proposalCleanup = mock(GroupProposalCleanup.class);
     private final ClassGroupService service = new ClassGroupService(groups, documents, groupDocuments, streams,
             new GroupAccess(authorization, classes, audit, clock), classes, mock(IAccountLookup.class), audit, events, clock,
@@ -114,15 +120,25 @@ class ClassGroupServiceTest {
         ClassGroup a = group("Nhóm A", students.get(0), students.get(0), students.get(1));
         ClassGroup b = group("Nhóm B", students.get(2), students.get(2), students.get(3));
         when(groups.listGroups(classId)).thenReturn(List.of(a, b));
-        GroupSection held = new GroupSection(UUID.randomUUID(), UUID.randomUUID(), "p1", null, List.of(), 1, "Mục 1",
+        UUID assignmentId = UUID.randomUUID();
+        GroupDocument groupDocument = GroupDocument.createDocument(UUID.randomUUID(), a.id(), assignmentId, classId,
+                new DocumentModel(List.of()), false, NOW);
+        when(documents.listByGroup(a.id())).thenReturn(List.of(groupDocument));
+        when(documents.lockDocument(groupDocument.id())).thenReturn(Optional.of(groupDocument));
+        GroupSection held = new GroupSection(UUID.randomUUID(), groupDocument.id(), "p1", null, List.of(), 1, "Mục 1",
                 GroupSection.Status.CLAIMED, students.get(1), NOW, null, null, List.of(), NOW, null, 4);
-        when(documents.lockSectionsHeldBy(a.id(), students.get(1))).thenReturn(List.of(held));
+        when(documents.lockSectionsHeldBy(List.of(groupDocument.id()), students.get(1))).thenReturn(List.of(held));
         when(documents.updateSection(any())).thenReturn(true);
 
         // Học sinh 1 chuyển từ A sang B; trưởng nhóm B đổi sang học sinh 3.
         service.saveGroups(teacher, classId, new SaveCommand(3L, List.of(
                 new Draft(null, a.id(), "Nhóm A", students.get(0), List.of(students.get(0))),
                 new Draft(null, b.id(), "Nhóm B", students.get(3), List.of(students.get(2), students.get(3), students.get(1))))));
+
+        var locks = inOrder(assignments, documents);
+        locks.verify(assignments).lockSubmission(assignmentId);
+        locks.verify(documents).lockDocument(groupDocument.id());
+        locks.verify(documents).lockSectionsHeldBy(List.of(groupDocument.id()), students.get(1));
 
         ArgumentCaptor<GroupSection> released = ArgumentCaptor.forClass(GroupSection.class);
         verify(documents).updateSection(released.capture());
@@ -202,7 +218,7 @@ class ClassGroupServiceTest {
         verify(groups, never()).insertGroup(any());
         verify(groups, never()).removeMembers(any(), any());
         verify(groups, never()).deleteGroup(any());
-        verifyNoInteractions(documents, groupDocuments, streams, events, audit);
+        verifyNoInteractions(documents, assignments, streams, events, audit);
     }
 
     @Test

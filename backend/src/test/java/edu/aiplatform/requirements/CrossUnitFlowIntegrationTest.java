@@ -1,9 +1,24 @@
 package edu.aiplatform.requirements;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.materials.repository.MaterialModuleRepositoryAdapter;
+import edu.aiplatform.materials.service.MaterialAccessPolicy;
+import edu.aiplatform.materials.service.MaterialModuleService;
+import edu.aiplatform.quizzes.contract.IQuizQuery;
+import edu.aiplatform.subjects.contract.SubjectRef;
+import edu.aiplatform.subjects.contract.SubjectStatus;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.model.EnrollmentStatus;
 import edu.aiplatform.academics.service.AcademicsService;
@@ -80,7 +95,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
@@ -580,10 +594,10 @@ class CrossUnitFlowIntegrationTest {
                 new FileUpload("kept.png", png.length, new ByteArrayInputStream(png)));
         artifactService.store(student, ArtifactPurpose.DOCUMENT_IMAGE,
                 new FileUpload("abandoned.png", png.length, new ByteArrayInputStream(png)));
-        assertThat(redisTemplate.opsForZSet().size(UNATTACHED_KEY)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("select count(*) from unattached_files", Long.class)).isEqualTo(2);
 
         var kept = artifactService.attach(keptRef, student, ArtifactPurpose.DOCUMENT_IMAGE);
-        Set<String> waiting = redisTemplate.opsForZSet().range(UNATTACHED_KEY, 0, -1);
+        var waiting = jdbc.queryForList("select file_id from unattached_files", String.class);
         assertThat(waiting).hasSize(1).doesNotContain(kept.fileId());
         String abandonedId = waiting.iterator().next();
         assertThat(storage.loadMetadata(abandonedId)).isPresent();
@@ -591,9 +605,10 @@ class CrossUnitFlowIntegrationTest {
         unattachedFileScanner.scan(Instant.now());
         assertThat(storage.loadMetadata(abandonedId)).isPresent();
 
+        redisTemplate.delete(UNATTACHED_KEY);
         unattachedFileScanner.scan(Instant.now().plus(Duration.ofDays(2)));
         assertThat(storage.loadMetadata(abandonedId)).isEmpty();
-        assertThat(redisTemplate.opsForZSet().size(UNATTACHED_KEY)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from unattached_files", Long.class)).isZero();
         assertThat(storage.loadMetadata(kept.fileId())).isPresent();
         try (var content = storage.open(kept.fileId())) {
             assertThat(content.readAllBytes()).isEqualTo(png);
@@ -633,4 +648,45 @@ class CrossUnitFlowIntegrationTest {
                 .andExpect(header().doesNotExist("Content-Security-Policy"))
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"));
     }
+
+
+    @Test
+    void concurrentFirstOpenCreatesOnlyOneDefaultModule() throws Exception {
+        jdbc.update("delete from material_modules where subject_id = ?", subjectId);
+        var manager = actor(Role.SUBJECT_MANAGER);
+        var policy = mock(MaterialAccessPolicy.class);
+        when(policy.canManageModules(manager, subjectId)).thenReturn(true);
+        when(policy.requireSubject(subjectId)).thenReturn(
+                new SubjectRef(subjectId, "TEST", "Synthetic subject",
+                        SubjectStatus.ACTIVE, manager.accountId()));
+        var repository = spy(new MaterialModuleRepositoryAdapter(
+                JdbcClient.create(jdbc.getDataSource())));
+        var firstReads = new CountDownLatch(2);
+        var reads = new AtomicInteger();
+        doAnswer(call -> {
+            Object modules = call.callRealMethod();
+            if (reads.getAndIncrement() < 2) {
+                firstReads.countDown();
+                assertThat(firstReads.await(10, TimeUnit.SECONDS)).isTrue();
+            }
+            return modules;
+        }).when(repository).listModules(subjectId);
+        var moduleService = new MaterialModuleService(
+                repository, policy, mock(IQuizQuery.class),
+                mock(IAudit.class), java.time.Clock.systemUTC());
+        var transaction = new TransactionTemplate(
+                new DataSourceTransactionManager(jdbc.getDataSource()));
+        var pool = Executors.newFixedThreadPool(2);
+        try {
+            var first = pool.submit(() -> transaction.execute(status -> moduleService.listSubjectModules(manager, subjectId)));
+            var second = pool.submit(() -> transaction.execute(status -> moduleService.listSubjectModules(manager, subjectId)));
+            first.get(15, TimeUnit.SECONDS);
+            second.get(15, TimeUnit.SECONDS);
+        } finally {
+            pool.shutdownNow();
+        }
+        assertThat(jdbc.queryForList("select title from material_modules where subject_id = ?", String.class, subjectId))
+                .containsExactly("Module 1");
+    }
+
 }

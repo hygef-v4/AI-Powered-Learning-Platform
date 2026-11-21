@@ -76,6 +76,12 @@ public class QuizRepository implements IQuizRepository {
     }
 
     @Override
+    public void lockVersionChain(UUID id) {
+        jdbc.sql(VERSION_CHAIN + "select q.id from quizzes q join root r on r.id = q.id for update of q")
+                .param("id", id).query(UUID.class).optional();
+    }
+
+    @Override
     public void insert(Quiz q) {
         jdbc.sql("""
                         insert into quizzes (id, scope, class_id, subject_id, source_quiz_id, origin, version_no, title,

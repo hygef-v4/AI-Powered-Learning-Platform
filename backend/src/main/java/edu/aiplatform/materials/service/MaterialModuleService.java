@@ -75,6 +75,8 @@ public class MaterialModuleService {
      * "Module 1" khi người soạn mở trang, để giảng viên của lớp thêm được học liệu.
      */
     private void ensureDefaultModule(Actor actor, UUID subjectId) {
+        if (!materialModuleRepository.listModules(subjectId).isEmpty()) return;
+        materialModuleRepository.lockModuleCreation(subjectId);
         if (!materialModuleRepository.listModules(subjectId).isEmpty()
                 || materialAccessPolicy.requireSubject(subjectId).status()
                         != edu.aiplatform.subjects.contract.SubjectStatus.ACTIVE) return;
@@ -96,6 +98,7 @@ public class MaterialModuleService {
     public MaterialViews.Module createModule(
             Actor actor, UUID subjectId, MaterialCommands.ModuleInput input) {
         materialAccessPolicy.requireModuleManagement(actor, subjectId);
+        materialModuleRepository.lockModuleCreation(subjectId);
         var now = clock.instant();
         var module =
                 new MaterialModule(
