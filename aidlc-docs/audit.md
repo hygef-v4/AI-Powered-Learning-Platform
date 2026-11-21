@@ -16392,3 +16392,17 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Cập nhật nhánh của PR 109. Thay đổi giới hạn ở test và hồ sơ kiểm chứng.
 
 ---
+
+## U09 CLI judge evaluation
+**Timestamp**: 2026-11-21T14:05:52Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm theo plan"
+**AI Response**: "Implemented and validated a QA-only DeepEval runner over saved Gemini artifacts. Codex completed the three-metric smoke on synthetic data. The runner exports JSON, CSV, Excel and Markdown with baseline comparisons."
+**Context**: Approved continuation of the universal judge analysis. Only the QA tool and documentation changed. Security and Resiliency retain their existing scope. PBT stays disabled.
+
+## U09 unified evaluation verification
+**Timestamp**: 2026-11-21T14:25:18Z
+**Requested by:** Quang Hung
+**User Input**: "# TASK: Unify Existing AI Grading Tests + DeepEval into ONE Evaluation Framework"
+**AI Response**: "Unified Java and Vitest tests, Java replay/live evidence and DeepEval behind one PowerShell runner and shared report. Verified full, offline, replay, report and legacy import against local synthetic artifacts."
+**Context**: The requested single entry point and report now cover existing test engines. Production code, fixtures and CI are unchanged. No Gemini Live request was made.
