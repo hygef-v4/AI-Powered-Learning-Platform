@@ -16383,3 +16383,12 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Nhánh nguồn và nhánh đích cùng ở 91d593be khi kiểm tra. Dùng bằng chứng kiểm thử tích hợp và Gemini trên dữ liệu tổng hợp.
 
 ---
+
+## PR 109 — sửa ca kiểm thử restore trong CI
+**Timestamp**: 2026-11-21T12:04:19Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit và pr lên staging"
+**AI Response**: "ShellCheck SC2251 chỉ ra điều kiện phủ định độc lập có thể bị bỏ qua. Sửa test để xóa nhầm container sau restore thành công gây exit 1. Ba ca chuẩn đạt. Fixture giả lập xóa nhầm chuyển từ exit 0 sang exit 1."
+**Context**: Cập nhật nhánh của PR 109. Thay đổi giới hạn ở test và hồ sơ kiểm chứng.
+
+---

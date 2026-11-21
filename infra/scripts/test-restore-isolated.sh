@@ -68,6 +68,9 @@ echo 'restore readiness timeout cleanup: passed'
 DATABASE_READY=yes RESTORE_READY_TIMEOUT_SECONDS=1 TMPDIR="$TEST_WORK/tmp" PATH="$TEST_WORK/bin:$PATH" \
     sh "$SCRIPT" archive.alapbk key.pem backend:test > output 2>&1
 grep -qx restored "$MOCK_CALLS"
-! grep -qx removed "$MOCK_CALLS"
+if grep -qx removed "$MOCK_CALLS"; then
+    echo 'Successful restore unexpectedly removed its database container.' >&2
+    exit 1
+fi
 test -z "$(find "$TEST_WORK/tmp" -type f -print)"
 echo 'successful restore keeps the database: passed'
