@@ -286,11 +286,23 @@ public class GradingProposalTransactions {
             gradingAccess.requireTeacher(result.actor(), evaluation.classId, Actions.GRADING_WRITE);
             gradingService.requireCurrent(result.actor(), evaluation.id, evaluation.version);
             var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
-            var validBlockIds = resolveValidBlockIds(result.actor(), evaluation, rubrics);
+            var document = loadProposalDocument(result.actor(), evaluation);
+            var validBlockIds = GradingFeedbackValidator.listValidBlockIds(rubrics, document);
+            var content = assignmentQuery.getContent(evaluation.assignmentId).orElse(null);
             var payload = gradingProposalValidator.parseProposal(result.output());
-            payload = mergeEmptyRubricsIfNeeded(result.actor(), evaluation, rubrics, payload);
+            if (content != null && gradingPromptBuilder != null) {
+                var emptyRubrics = gradingPromptBuilder.findEmptyRubrics(document, content.skeleton(), rubrics);
+                if (emptyRubrics != null && !emptyRubrics.isEmpty()) {
+                    payload = GradingPromptBuilder.mergeProposalWithEmptyRubrics(
+                            payload, rubrics, emptyRubrics, objectMapper);
+                }
+            }
             payload = GradingPromptBuilder.sanitizeAndNormalizeProposal(
                     payload, rubrics, validBlockIds, objectMapper);
+            if (content != null) {
+                payload = gradingProposalValidator.flagProposalEvidenceForReview(
+                        payload, rubrics, document, content.parts());
+            }
             gradingProposalValidator.validateProposal(payload, rubrics, validBlockIds);
             proposal.proposal = payload;
             proposal.status = "READY";
@@ -310,32 +322,12 @@ public class GradingProposalTransactions {
         }
     }
 
-    private JsonNode mergeEmptyRubricsIfNeeded(Actor actor, Evaluation evaluation,
-            List<RubricView> rubrics, JsonNode payload) {
-        var contentOpt = assignmentQuery.getContent(evaluation.assignmentId);
-        if (contentOpt.isEmpty() || gradingPromptBuilder == null) {
-            return payload;
-        }
-        var content = contentOpt.get();
-        var detail = submissionReviewService.loadEvaluation(actor, evaluation.id);
-        DocumentModel document = detail == null ? null : detail.document();
-        List<RubricView> emptyRubrics = gradingPromptBuilder.findEmptyRubrics(
-                document, content.skeleton(), rubrics);
-        if (emptyRubrics != null && !emptyRubrics.isEmpty()) {
-            return GradingPromptBuilder.mergeProposalWithEmptyRubrics(
-                    payload, rubrics, emptyRubrics, objectMapper);
-        }
-        return payload;
-    }
-
-    private Set<String> resolveValidBlockIds(Actor actor, Evaluation evaluation,
-            List<RubricView> rubrics) {
+    private DocumentModel loadProposalDocument(Actor actor, Evaluation evaluation) {
         if (submissionReviewService == null) {
-            return GradingFeedbackValidator.listValidBlockIds(rubrics, null);
+            return null;
         }
         var detail = submissionReviewService.loadEvaluation(actor, evaluation.id);
-        DocumentModel doc = detail == null ? null : detail.document();
-        return GradingFeedbackValidator.listValidBlockIds(rubrics, doc);
+        return detail == null ? null : detail.document();
     }
 
     /** Marks proposals stale when their evaluation snapshot has changed. */
@@ -402,32 +394,50 @@ public class GradingProposalTransactions {
             throw ApiException.createConflict("STALE_PROPOSAL", "Submission changed");
         }
         requireGradableTarget(evaluation, "AI proposals require a pending or draft grade");
-        var existing = gradingProposalRepository.findByRequestRef(requestRef);
-        if (existing.isPresent()) {
-            return validateExistingMcpProposal(actor, evaluationId, hash, payload, evaluation,
-                    existing.get());
+        var existing = gradingProposalRepository.findByRequestRef(requestRef).orElse(null);
+        if (existing != null) {
+            requireSameMcpProposalTarget(actor, evaluation, existing);
+            if (Objects.equals(existing.proposal, payload)) {
+                return existing;
+            }
         }
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
-        var validBlockIds = resolveValidBlockIds(actor, evaluation, rubrics);
-        gradingProposalValidator.validateProposal(payload, rubrics, validBlockIds);
-        var proposal = buildMcpProposal(actor, evaluationId, hash, requestRef, payload,
+        var document = loadProposalDocument(actor, evaluation);
+        var validBlockIds = GradingFeedbackValidator.listValidBlockIds(rubrics, document);
+        if (existing == null) {
+            gradingProposalValidator.validateProposal(payload, rubrics, validBlockIds);
+        }
+        var content = assignmentQuery == null || document == null ? null
+                : assignmentQuery.getContent(evaluation.assignmentId).orElse(null);
+        var reviewed = content == null ? payload
+                : gradingProposalValidator.flagProposalEvidenceForReview(
+                        payload, rubrics, document, content.parts());
+        if (existing != null) {
+            if (!Objects.equals(existing.proposal, reviewed)) {
+                throw ApiException.createConflict("REQUEST_REF_CONFLICT", "Request reference already used");
+            }
+            try {
+                gradingProposalValidator.validateProposal(payload, rubrics, validBlockIds);
+            } catch (ApiException ex) {
+                throw ApiException.createConflict("REQUEST_REF_CONFLICT", "Request reference already used");
+            }
+            return existing;
+        }
+        var proposal = buildMcpProposal(actor, evaluationId, hash, requestRef, reviewed,
                 agentLabel, evaluation);
         gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
         return gradingProposalRepository.saveProposal(proposal);
     }
 
-    private GradingProposal validateExistingMcpProposal(Actor actor, UUID evaluationId,
-            String hash, JsonNode payload, Evaluation evaluation, GradingProposal proposal) {
+    private void requireSameMcpProposalTarget(Actor actor, Evaluation evaluation, GradingProposal proposal) {
         if (!Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot)) {
             throw ApiException.createConflict("STALE_PROPOSAL", "Rubric snapshot changed");
         }
-        if (!evaluationId.equals(proposal.evaluationId)
+        if (!evaluation.id.equals(proposal.evaluationId)
                 || !proposal.requesterId.equals(actor.accountId())
-                || !Objects.equals(proposal.submissionHash, hash)
-                || !Objects.equals(proposal.proposal, payload)) {
+                || !Objects.equals(proposal.submissionHash, evaluation.submissionHash)) {
             throw ApiException.createConflict("REQUEST_REF_CONFLICT", "Request reference already used");
         }
-        return proposal;
     }
 
     private GradingProposal buildMcpProposal(Actor actor, UUID evaluationId, String hash,

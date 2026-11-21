@@ -22,6 +22,8 @@ final class GradingProposalNormalizer {
             "suggestion", "evidenceBlockId", "reviewReason");
     static final String MISSING_EVIDENCE_REVIEW_REASON =
             "AI không nêu bằng chứng cho mục này; giảng viên cần kiểm tra lại.";
+    private static final String MISSING_REVIEW_REASON =
+            "AI đánh dấu mục này cần kiểm tra nhưng chưa nêu lý do.";
 
     private GradingProposalNormalizer() {
     }
@@ -292,7 +294,7 @@ final class GradingProposalNormalizer {
                         trimTextField(itemObj, field);
                     }
                     dropUnknownEvidenceBlock(itemObj, validBlockIds);
-                    flagItemWithoutEvidence(itemObj);
+                    completeReviewFeedback(itemObj);
                 }
             }
         }
@@ -307,16 +309,24 @@ final class GradingProposalNormalizer {
         }
     }
 
-    /** AI để trống bằng chứng mà không tự đánh dấu: đánh dấu cần giảng viên xem, không bịa bằng chứng. */
-    private static void flagItemWithoutEvidence(ObjectNode itemObj) {
-        JsonNode evidence = itemObj.get("evidence");
-        boolean hasEvidence = evidence != null && evidence.isTextual() && !evidence.asText().isBlank();
-        if (hasEvidence || itemObj.path("requiresReview").asBoolean(false)) {
+    /** Adds a review flag or reason when AI leaves review information incomplete. */
+    private static void completeReviewFeedback(ObjectNode itemObj) {
+        JsonNode review = itemObj.path("requiresReview");
+        if (!review.isBoolean()) {
             return;
         }
-        itemObj.putNull("evidence");
-        itemObj.put("requiresReview", true);
-        itemObj.put("reviewReason", MISSING_EVIDENCE_REVIEW_REASON);
+        boolean missingEvidence = isMissingText(itemObj.path("evidence"));
+        if (missingEvidence) {
+            itemObj.putNull("evidence");
+            itemObj.put("requiresReview", true);
+        }
+        if ((missingEvidence || review.booleanValue()) && isMissingText(itemObj.path("reviewReason"))) {
+            itemObj.put("reviewReason", missingEvidence ? MISSING_EVIDENCE_REVIEW_REASON : MISSING_REVIEW_REASON);
+        }
+    }
+
+    private static boolean isMissingText(JsonNode value) {
+        return value.isMissingNode() || value.isNull() || (value.isTextual() && value.asText().isBlank());
     }
 
     private static void trimTextField(ObjectNode node, String fieldName) {

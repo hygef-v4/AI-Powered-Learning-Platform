@@ -203,7 +203,9 @@ class GradingPromptBuilderTest {
                         "Never paste '[block <id>]' lines or raw diagram-summary lines as evidence",
                         "names, actors and elements match what the instructions require",
                         "a solid <<include>> or <<extend>> edge does not satisfy a dashed-line requirement",
-                        "earns zero when the submission has no such element");
+                        "Full credit requires evidence for every mandatory condition",
+                        "If the rubric makes an element optional or conditional",
+                        "If absence or partial credit is ambiguous, set requiresReview=true");
     }
 
     @Test
