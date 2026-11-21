@@ -18,6 +18,7 @@ type Entry = {
 const entries = new Map<string, Entry>();
 let trackingAccount: string | null = null;
 let trackingActive = false;
+let sessionRevision = 0;
 
 function findEntry(evaluationId: string): Entry {
   let entry = entries.get(evaluationId);
@@ -140,14 +141,22 @@ export function setGradingAiLabel(evaluationId: string, label: string) {
 export function readGradingAiAccount() {
   return trackingAccount;
 }
+export function readGradingAiSessionRevision() {
+  return sessionRevision;
+}
 export function activateGradingAiTracking(accountId: string) {
-  if (trackingAccount !== accountId) { entries.forEach(stopPolling); entries.clear(); }
+  if (trackingAccount !== accountId) {
+    sessionRevision += 1;
+    entries.forEach(stopPolling);
+    entries.clear();
+  }
   trackingAccount = accountId;
   trackingActive = true;
   return () => {
     if (trackingAccount !== accountId) return;
     trackingActive = false;
     trackingAccount = null;
+    sessionRevision += 1;
     entries.forEach((entry, id) => {
       if (!entry.listeners.size) { stopPolling(entry); entries.delete(id); }
     });

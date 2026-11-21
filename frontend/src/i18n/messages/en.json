@@ -1391,7 +1391,8 @@
         "pointsCanHaveAtMost": "Points can have at most 2 decimal places",
         "deleteCriterion": "Delete criterion {value}",
         "delete": "Delete",
-        "addCriterion": "Add criterion"
+        "addCriterion": "Add criterion",
+        "penaltyOnlyHint": "This criterion only states when points are lost. Say what the work must contain to earn them, for example “Has at least one include/extend relationship drawn dashed”; otherwise AI may award points when that part is missing."
       },
       "ScheduleForm": {
         "date": "{label} (date)",
@@ -2343,6 +2344,9 @@
     },
     "hooks": {
       "useGradingWorkspace": {
+        "overlappingEditsRequireReview": "Some fields changed in another session. Reload the version to resolve the conflict.",
+        "resolveOverlappingEdits": "Use the server version for overlapping edits and keep your other changes?",
+        "useServerEdits": "Use server edits for overlapping fields",
         "youHaveUnsavedChangesLeave": "You have unsaved changes. Leave this submission?",
         "discardChanges": "Discard changes",
         "checkEachItemsPointsFrom": "Check each item''s points: from 0 to the item''s maximum, with at most 2 decimal places.",
@@ -3490,7 +3494,7 @@
         "quizNotFoundOrYou": "Quiz not found or you are not in this class.",
         "attemptNotFound": "Attempt not found.",
         "theQuizWasWithdrawnOr": "The quiz was withdrawn or the class is no longer open.",
-        "answersWereJustSavedFrom": "Answers were just saved from elsewhere. The latest data has been reloaded.",
+        "answersWereJustSavedFrom": "Answers changed elsewhere. Try saving again.",
         "timeIsUp": "Time is up.",
         "thisAttemptHasBeenSubmitted": "This attempt has been submitted.",
         "onlyStudentsTakeQuizPractice": "Only students take Quiz Practice.",
@@ -3582,6 +3586,9 @@
         "notSaved": "Not saved…",
         "saving": "Saving…",
         "couldNotSave": "Could not save",
+        "conflictingQuestions": "Answers changed in two places for questions {questions}. Choose which answers to keep for these questions.",
+        "keepMyChoices": "Keep my choices",
+        "useSavedChoices": "Use saved choices",
         "thisQuizMonitorsActivityWhile": "This quiz monitors activity while you work",
         "submit": "Submit?",
         "keepWorking": "Keep working",

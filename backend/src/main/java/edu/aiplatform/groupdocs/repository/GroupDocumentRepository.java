@@ -199,14 +199,15 @@ public class GroupDocumentRepository {
                 .param("id", sectionId).param("documentId", documentId).query(this::mapSection).optional();
     }
 
-    /** Mục đang do một người giữ trong các tài liệu của nhóm (để nhả khi người đó rời nhóm). */
-    public List<GroupSection> lockSectionsHeldBy(UUID groupId, UUID accountId) {
-        return jdbc.sql("select s.id, s.group_document_id, s.part_id, s.heading_block_id, s.ancestor_heading_ids::text as ancestors, "
-                        + "s.order_no, s.title, s.status, s.claimed_by, s.claimed_at, s.assigned_by, "
-                        + "s.published_blocks::text as published, s.draft_blocks::text as draft, s.draft_saved_at, "
-                        + "s.last_author_id, s.version from group_document_sections s join group_documents d "
-                        + "on d.id = s.group_document_id where d.group_id = :groupId and s.claimed_by = :accountId for update of s")
-                .param("groupId", groupId).param("accountId", accountId).query(this::mapSection).list();
+    /** Mục một thành viên đang giữ trong các tài liệu đã khóa (để nhả khi rời nhóm). */
+    public List<GroupSection> lockSectionsHeldBy(Collection<UUID> documentIds, UUID accountId) {
+        if (documentIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql("select " + SECTION_COLUMNS + " from group_document_sections "
+                        + "where group_document_id in (:documentIds) and claimed_by = :accountId "
+                        + "order by group_document_id, order_no for update")
+                .param("documentIds", documentIds).param("accountId", accountId).query(this::mapSection).list();
     }
 
     /** Ghi khi {@code version} khớp, tăng {@code version}; lệch trả {@code false}. */

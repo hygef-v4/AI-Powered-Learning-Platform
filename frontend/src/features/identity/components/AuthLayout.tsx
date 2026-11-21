@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { useTheme } from "@/shared/theme";
 import { Icon } from "@/shared/ui/Icon";
-import { HankoMark, Logo } from "@/shared/ui/Logo";
+import { Logo } from "@/shared/ui/Logo";
 import { msg } from "@/i18n/msg";
 import { LanguageDialog } from "@/shared/layout/LanguageDialog";
 
@@ -12,7 +12,7 @@ type Variant = "login" | "flow";
 
 /**
  * Khung các màn chưa đăng nhập: nền giấy ô li phủ cả màn, form nằm trong một thẻ cùng màu nền ở giữa, quanh thẻ là vài đồ dùng học
- * tập vẽ phẳng để lệch nhau (dấu 学, giấy nhớ, bút chì). Đồ trang trí chỉ hiện từ `sm`. `variant`, `aside` và
+ * tập vẽ phẳng để lệch nhau (giấy nhớ, bút chì; con dấu chữ Hán đã bỏ 2026-11-21). Đồ trang trí chỉ hiện từ `sm`. `variant`, `aside` và
  * `tagline` giữ để tương thích.
  */
 export function AuthLayout({
@@ -78,12 +78,7 @@ export function AuthLayout({
 function Decorations() {
   return (
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 hidden sm:block">
-      {/* Ba món để bừa như trên bàn học: lệch vị trí, nghiêng mỗi cái một kiểu, có món chui một phần dưới thẻ. */}
-      {/* Dấu 学 đóng lệch, chạm mép phải phía trên */}
-      <div className="absolute -top-9 -right-10 rotate-[14deg] lg:-right-16">
-        <HankoMark size={76} />
-      </div>
-
+      {/* Hai món để bừa như trên bàn học: lệch vị trí, nghiêng mỗi cái một kiểu, có món chui một phần dưới thẻ. */}
       {/* Giấy nhớ dán chéo bên trái, cao hơn giữa thẻ */}
       <svg viewBox="0 0 96 96" className="absolute top-[18%] -left-20 size-24 -rotate-[17deg] lg:-left-36 lg:size-28">
         <path d="M8 8 H88 V68 L68 88 H8 Z" className="fill-primary-soft stroke-line-strong" strokeWidth="1.5" />

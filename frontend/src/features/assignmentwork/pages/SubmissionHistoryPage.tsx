@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { DocumentEditor, ToolbarButton, buildOutline, publishOutline, type DocumentComment } from "@/shared/document";
-import { Alert, Card, Menu, MenuItem, ScoreMeter, TotalScoreCard } from "@/shared/ui";
+import { Alert, Card, Menu, MenuItem, ScoreMeter, TotalScoreCard, showErrorToast } from "@/shared/ui";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
-import { attemptImageUrl, exportUrl, workApi } from "../api";
+import { attemptImageUrl, downloadAttemptDocx, workApi } from "../api";
 import { formatPoints, groupResultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
 import { describeError, formatDateTime, canOpenHistory, listHistoryVersions } from "../model/format";
 import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
@@ -133,7 +133,10 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
     <WorkspaceTopBar barRef={headerRef} title={detail.title} setViewSlot={setViewSlot}
       actions={current && (
         <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.SubmissionHistoryPage.moreActions")} align="right">
-          <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(current.attemptId); }}>{msg("assignmentwork.pages.SubmissionHistoryPage.downloadDocx")}</MenuItem>
+          <MenuItem icon="download" onClick={() => {
+            void downloadAttemptDocx(current.attemptId)
+              .catch((error: unknown) => showErrorToast(describeError(error)));
+          }}>{msg("assignmentwork.pages.SubmissionHistoryPage.downloadDocx")}</MenuItem>
         </Menu>
       )} />
   );

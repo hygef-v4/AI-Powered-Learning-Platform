@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -186,15 +187,14 @@ public class UploadService {
         }
     }
 
-    /** Ghi tệp vào danh sách chờ gắn để tệp không ai gắn được dọn; Redis lỗi thì chỉ mất việc dọn, upload vẫn xong. */
     private void trackUnattached(String fileId, Instant expiresAt) {
         if (unattached == null) {
             return;
         }
         try {
             unattached.addFile(fileId, expiresAt);
-        } catch (RuntimeException e) {
-            log.warn("Chưa ghi được tệp chờ gắn: {}", e.getClass().getSimpleName());
+        } catch (DataAccessException e) {
+            throw ApiException.createUnavailable("STORAGE_UNAVAILABLE", "Chưa theo dõi được tệp tải lên, vui lòng thử lại");
         }
     }
 

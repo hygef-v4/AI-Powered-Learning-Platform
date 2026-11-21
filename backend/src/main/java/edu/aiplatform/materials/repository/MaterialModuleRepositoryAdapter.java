@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
@@ -40,6 +41,15 @@ public class MaterialModuleRepositoryAdapter implements IMaterialModuleRepositor
                 .param("subjectId", subjectId)
                 .query(MaterialModuleRepositoryAdapter::mapModule)
                 .list();
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void lockModuleCreation(UUID subjectId) {
+        jdbcClient.sql("select 1 from (select pg_advisory_xact_lock(hashtextextended(:key, 0))) locked")
+                .param("key", "materials:module-creation:" + subjectId)
+                .query(Integer.class)
+                .single();
     }
 
     @Override

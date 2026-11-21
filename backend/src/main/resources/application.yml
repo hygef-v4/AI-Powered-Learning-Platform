@@ -109,21 +109,35 @@ platform:
     key-encryption-key-v2: ${U06_AI_KEY_ENCRYPTION_KEY_V2:}
     request-timeout: ${U06_AI_REQUEST_TIMEOUT:120s}
     test-timeout: ${U06_AI_TEST_TIMEOUT:20s}
+    # reasoning-models: model có suy nghĩ tính chung trần đầu ra; trần gửi đi = phần trả lời + reasoning-reserve-tokens
+    # (không quá max-output-tokens). reasoning-effort low/medium/high thì gửi thêm tham số suy nghĩ gốc của provider;
+    # để trống là chỉ chừa token (dùng cho provider chưa kiểm bằng lời gọi thật). Thiết kế G3, 2026-11-20.
     providers:
       gemini:
         models: ${U06_GEMINI_MODELS:gemini-4-argon,gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite}
-        max-output-tokens: ${U06_GEMINI_MAX_OUTPUT:8192}
+        max-output-tokens: ${U06_GEMINI_MAX_OUTPUT:16384}
         # Model đọc được ảnh (nhập đề từ ảnh/PDF); để trống là mọi model ở trên.
         vision-models: ${U06_GEMINI_VISION_MODELS:}
+        reasoning-models: ${U06_GEMINI_REASONING_MODELS:gemini-4-argon,gemini-3.8-flash,gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite}
+        # Đo 2026-11-20 (gemini-3.5-flash-lite): không gửi tham số thì model không suy nghĩ và không bị cắt; gửi
+        # thinkingBudget lại bật suy nghĩ (3.000+ token) gây MAX_TOKENS. Đặt low/medium/high nếu model mới cần giới hạn.
+        reasoning-effort: ${U06_GEMINI_REASONING_EFFORT:}
+        reasoning-reserve-tokens: ${U06_GEMINI_REASONING_RESERVE:4096}
       # Danh sách mô hình xếp từ tốt tới kém: thứ tự thử khóa dùng thứ tự này (yêu cầu 2026-11-05).
       openai:
         models: ${U06_OPENAI_MODELS:gpt-6.1-sol,gpt-6-luna,gpt-5.4-mini,gpt-5-mini,gpt-4.1-mini}
-        max-output-tokens: ${U06_OPENAI_MAX_OUTPUT:8192}
+        max-output-tokens: ${U06_OPENAI_MAX_OUTPUT:16384}
         vision-models: ${U06_OPENAI_VISION_MODELS:}
+        # Chưa kiểm reasoning_effort bằng lời gọi thật: mặc định chỉ chừa token.
+        reasoning-models: ${U06_OPENAI_REASONING_MODELS:gpt-6.1-sol,gpt-6-luna,gpt-5.4-mini,gpt-5-mini}
+        reasoning-effort: ${U06_OPENAI_REASONING_EFFORT:}
+        reasoning-reserve-tokens: ${U06_OPENAI_REASONING_RESERVE:4096}
       claude:
         models: ${U06_CLAUDE_MODELS:claude-opus-5-5,claude-sonnet-5-5,claude-opus-4-6,claude-sonnet-4-6,claude-haiku-5-5}
         max-output-tokens: ${U06_CLAUDE_MAX_OUTPUT:8192}
         vision-models: ${U06_CLAUDE_VISION_MODELS:}
+        # App không bật suy nghĩ cho Claude nên không chừa token.
+        reasoning-models: ${U06_CLAUDE_REASONING_MODELS:}
   # U03 Job and Settings
   files:
     fileref-secret: ${U03_FILEREF_SECRET:}

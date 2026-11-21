@@ -49,7 +49,7 @@ export function AiDraftDialog({
   onApplied,
 }: Props) {
   const [request, setRequest] = useState("");
-  const [language, setLanguage] = useState<"VI" | "EN" | "JA">("EN");
+  const [language, setLanguage] = useState<"VI" | "EN">("EN");
   const [questionCount, setQuestionCount] = useState("");
   const [targetPoints, setTargetPoints] = useState(DEFAULT_TARGET_POINTS);
   const [materials, setMaterials] = useState<Material[]>([]);

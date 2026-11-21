@@ -176,6 +176,68 @@ describe("QuizTakingPage (UC 51)", () => {
     await waitFor(() => expect(getAttempt).toHaveBeenCalledTimes(2));
   });
 
+  it("saves a new selection after recovering a save whose response was lost", async () => {
+    vi.mocked(getAttempt).mockReset()
+      .mockResolvedValueOnce(TAKING)
+      .mockResolvedValueOnce({ ...TAKING, answerVersion: 1, answers: { q1: ["1"] } });
+    vi.mocked(saveAnswers).mockReset()
+      .mockRejectedValueOnce(new Error("Save response lost"))
+      .mockRejectedValueOnce(new ApiError({ status: 409, code: "ANSWER_VERSION_CONFLICT" }))
+      .mockResolvedValueOnce({ answerVersion: 2, savedAt: TAKING.serverTime });
+    render(<QuizTakingPage attemptId="a1" />);
+    fireEvent.click(await screen.findByRole("radio", { name: "Hà Nội" }));
+    fireEvent(window, new Event("pagehide"));
+    expect(await screen.findByText("Chưa lưu được")).toBeInTheDocument();
+
+    try {
+      fireEvent.click(screen.getByTestId("quiz-taking-next"));
+      fireEvent.click(screen.getByRole("checkbox", { name: "2" }));
+      fireEvent(window, new Event("pagehide"));
+
+      expect(await screen.findByText("Đã tự động lưu")).toBeInTheDocument();
+      expect(screen.getByRole("checkbox", { name: "2" })).toBeChecked();
+      expect(saveAnswers).toHaveBeenNthCalledWith(3, "a1", { q1: ["1"], q2: ["1"] }, 1, true);
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
+  });
+
+  it.each([false, true])("asks which answer to keep for the same question (use saved: %s)", async (useSaved) => {
+    const initial = { ...TAKING, answerVersion: 1, answers: { q2: ["1"] } };
+    vi.mocked(getAttempt).mockReset()
+      .mockResolvedValueOnce(initial)
+      .mockResolvedValueOnce({ ...initial, answerVersion: 2, answers: { q1: ["2"], q2: ["1"] } });
+    vi.mocked(saveAnswers).mockReset()
+      .mockRejectedValueOnce(new ApiError({ status: 409, code: "ANSWER_VERSION_CONFLICT" }))
+      .mockResolvedValueOnce({ answerVersion: 3, savedAt: TAKING.serverTime });
+    render(<QuizTakingPage attemptId="a1" />);
+    fireEvent.click(await screen.findByRole("radio", { name: "Hà Nội" }));
+    try {
+      fireEvent.click(screen.getByTestId("quiz-taking-next"));
+      fireEvent.click(screen.getByRole("checkbox", { name: "2" }));
+      fireEvent.click(screen.getByTestId("quiz-taking-prev"));
+      fireEvent(window, new Event("pagehide"));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent("Câu có xung đột: 1");
+      expect(screen.getByRole("radio", { name: "Hà Nội" })).toBeChecked();
+      fireEvent.click(screen.getByTestId("quiz-taking-submit"));
+      fireEvent.click(screen.getByTestId("quiz-taking-confirm-submit"));
+      await act(async () => {});
+      expect(submitAttempt).not.toHaveBeenCalled();
+      expect(saveAnswers).toHaveBeenCalledTimes(1);
+
+      fireEvent.click(screen.getByRole("button", {
+        name: useSaved ? "Dùng lựa chọn đã lưu" : "Giữ lựa chọn của tôi",
+      }));
+
+      expect(await screen.findByText("Đã tự động lưu")).toBeInTheDocument();
+      expect(screen.getByRole("radio", { name: useSaved ? "Huế" : "Hà Nội" })).toBeChecked();
+      expect(saveAnswers).toHaveBeenLastCalledWith("a1", { q1: [useSaved ? "2" : "1"], q2: [] }, 2, false);
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
+  });
+
   it("popup nộp đếm câu chưa trả lời rồi nộp và chuyển sang kết quả", async () => {
     vi.mocked(saveAnswers).mockResolvedValue({ answerVersion: 1, savedAt: "2026-10-20T08:01:00Z" });
     vi.mocked(submitAttempt).mockResolvedValue({ ...RESULT, showScore: true });

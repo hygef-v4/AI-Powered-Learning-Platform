@@ -722,13 +722,13 @@ public class AssignmentAiDraftService {
         return List.copyOf(new LinkedHashSet<>(requested));
     }
 
-    private static AssignmentCommands.DraftOptions normalizeOptions(AssignmentCommands.DraftOptions requested) {
+    static AssignmentCommands.DraftOptions normalizeOptions(AssignmentCommands.DraftOptions requested) {
         AssignmentCommands.DraftOptions options = requested == null
                 ? new AssignmentCommands.DraftOptions("AUTO", "EN", null, null) : requested;
         String profile = options.profile() == null ? "AUTO" : options.profile().strip().toUpperCase(Locale.ROOT);
         String language = options.language() == null ? "EN" : options.language().strip().toUpperCase(Locale.ROOT);
-        // AUTO: theo mẫu đề (yêu cầu 2026-11-05).
-        if (!Set.of("AUTO", "GENERAL", "SWR", "SWD").contains(profile) || !Set.of("VI", "EN", "JA", "AUTO").contains(language)
+        // AUTO: theo mẫu đề (yêu cầu 2026-11-05). Tiếng Nhật đã bỏ khỏi hệ thống (2026-11-21).
+        if (!Set.of("AUTO", "GENERAL", "SWR", "SWD").contains(profile) || !Set.of("VI", "EN", "AUTO").contains(language)
                 || (options.questionCount() != null && (options.questionCount() < 1 || options.questionCount() > 10))
                 || (options.targetPoints() != null && !isValidTarget(options.targetPoints()))) {
             throw ApiException.createBadRequest("AI_OPTIONS_INVALID", "Kiểm tra profile, ngôn ngữ, số câu và tổng điểm");

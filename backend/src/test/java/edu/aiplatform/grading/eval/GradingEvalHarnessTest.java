@@ -22,10 +22,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 /** Kiểm harness đánh giá AI chấm không cần provider thật: dữ liệu hợp lệ, chỉ số bắt được AI tốt/xấu. */
 class GradingEvalHarnessTest {
@@ -83,7 +86,12 @@ class GradingEvalHarnessTest {
         String solid = runner.pipeline().buildProviderRequest(requireCase("04-solid-include")).user();
         assertThat(dashed).contains("nối uc-book -> uc-pay (nét đứt): <<include>>",
                 "nối uc-cancel -> uc-pay (nét đứt): <<extend>>");
-        assertThat(solid).contains("nối uc-book -> uc-pay: <<include>>").doesNotContain("uc-pay (nét đứt)");
+        assertThat(solid).contains("nối uc-book -> uc-pay (nét liền): <<include>>").doesNotContain("uc-pay (nét đứt)");
+        // Kế hoạch 2026-11-20: AI thấy khung system boundary, mã block, và sơ đồ chỉ được gửi một lần.
+        assertThat(dashed).contains("hình sys (chữ nhật): Hệ thống đặt sân cầu lông",
+                "hình uc-book (ellipse) trong sys: Đặt sân", "[block ");
+        assertThat(dashed).doesNotContain("actor-customer (umlActor) trong");
+        assertThat(dashed.split("nối uc-book -> uc-pay", -1)).hasSize(2);
     }
 
     @Test
@@ -91,6 +99,8 @@ class GradingEvalHarnessTest {
         var runs = runner.runCases(createOracleCall(false), 2, Set.of());
 
         assertThat(runs).hasSize(16).allMatch(run -> run.status() == RunStatus.VALID);
+        assertThat(runs.stream().flatMap(run -> run.items().stream()))
+                .noneMatch(GradingEvalPipeline.ItemOutcome::requiresReview);
         var summary = GradingEvalMetrics.calculateSummary(runs);
         assertThat(summary.isAllPassed()).isTrue();
         assertThat(summary.compositeScore()).isEqualTo(10.0);
@@ -105,6 +115,93 @@ class GradingEvalHarnessTest {
         assertThat(summary.requireMetric("score_stability").value()).isZero();
     }
 
+    @ParameterizedTest
+    @CsvSource({"evidence, false, false", "evidence, true, false",
+            "reviewReason, false, true", "reviewReason, true, true"})
+    void providerFeedbackWithMissingEvidenceOrReviewReasonIsFlaggedWithoutChangingPoints(
+            String field, boolean omitted, boolean providerMarkedForReview) {
+        var result = gradeWithEditedProviderFeedback(feedback -> {
+            if (omitted) {
+                feedback.remove(field);
+            } else {
+                feedback.putNull(field);
+            }
+            feedback.put("requiresReview", providerMarkedForReview);
+        });
+
+        assertThat(result.status()).as("provider diagnostic: %s", result.errorDetail())
+                .isEqualTo(RunStatus.VALID);
+        assertThat(result.items()).filteredOn(GradingEvalPipeline.ItemOutcome::requiresReview)
+                .singleElement().satisfies(item -> {
+                    assertThat(item.reviewReason()).isNotBlank();
+                    assertThat(item.awarded()).isEqualByComparingTo(item.expected());
+                    if (!providerMarkedForReview) {
+                        assertThat(item.evidence()).isNull();
+                    }
+                });
+    }
+
+    @Test
+    void providerMayOmitOptionalSuggestionAndEvidenceBlock() {
+        var result = gradeWithEditedProviderFeedback(feedback ->
+                feedback.remove(List.of("suggestion", "evidenceBlockId")));
+
+        assertThat(result.status()).as("provider diagnostic: %s", result.errorDetail())
+                .isEqualTo(RunStatus.VALID);
+        assertThat(result.items()).noneMatch(GradingEvalPipeline.ItemOutcome::requiresReview);
+    }
+
+    @Test
+    void providerFeedbackOfTheWrongTypeStillFailsSchemaValidation() {
+        var result = gradeWithEditedProviderFeedback(feedback ->
+                feedback.putObject("evidence").put("text", "Invalid type"));
+
+        assertThat(result.status()).isEqualTo(RunStatus.INVALID_OUTPUT);
+        assertThat(result.errorCode()).isEqualTo("SCHEMA_MISMATCH");
+    }
+
+    private CaseRun gradeWithEditedProviderFeedback(Consumer<ObjectNode> editFeedback) {
+        EvalCase evalCase = requireCase("01-complete");
+        return runner.pipeline().gradeCase(evalCase, 1, (key, runIndex, request) -> {
+            var output = createOracleOutput(evalCase, readPromptRubrics(request.user()), false);
+            editFeedback.accept((ObjectNode) output.at("/structuredFeedback/items/0"));
+            return new IProviderGateway.Response(output.toString(), null, null);
+        });
+    }
+
+    @ParameterizedTest
+    @CsvSource({"08-wrong-actors, 0.25, true", "08-wrong-actors, 0.10, false", "01-complete, 0.25, false"})
+    void flagsFullCreditWhenSecondaryActorsInTheSpecificationDoNotMatch(
+            String caseKey, BigDecimal awarded, boolean requiresReview) {
+        EvalCase evalCase = requireCase(caseKey);
+        UUID itemId = GradingEvalDataset.createStableId(dataset.assignment().assignmentKey(), "s-name-actors");
+        var actorItem = dataset.assignment().itemsById().get(itemId);
+        var result = runner.pipeline().gradeCase(evalCase, 1, (key, runIndex, request) -> {
+            var output = createOracleOutput(evalCase, readPromptRubrics(request.user()), false);
+            ((ObjectNode) output.path("itemScoresByRubric").path(actorItem.rubricId().toString()))
+                    .put(itemId.toString(), awarded);
+            return new IProviderGateway.Response(output.toString(), null, null);
+        });
+
+        assertThat(result.status()).isEqualTo(RunStatus.VALID);
+        assertThat(result.items()).filteredOn(item -> item.itemId().equals(itemId)).singleElement()
+                .satisfies(item -> {
+                    assertThat(item.awarded()).isEqualByComparingTo(awarded);
+                    assertThat(item.requiresReview()).isEqualTo(requiresReview);
+                    if (requiresReview) {
+                        assertThat(item.reviewReason()).contains("actor phụ");
+                    }
+                });
+    }
+
+    private JsonNode readPromptRubrics(String prompt) {
+        try {
+            return json.readTree(prompt).path("rubrics");
+        } catch (java.io.IOException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+
     @Test
     void fabricatingProviderIsCaughtByHallucinationOffTopicAndInjectionMetrics() {
         var runs = runner.runCases(createOracleCall(true), 1, Set.of());
@@ -115,6 +212,9 @@ class GradingEvalHarnessTest {
         assertThat(summary.requireMetric("fabricated_credit").value()).isEqualTo(1.0);
         assertThat(summary.requireMetric("ungrounded_quotes").value()).isEqualTo(1.0);
         assertThat(summary.requireMetric("wrong_location").value()).isEqualTo(1.0);
+        assertThat(runs.stream().flatMap(run -> run.items().stream())
+                .filter(item -> item.evidencePartId() != null && !item.partId().equals(item.evidencePartId())))
+                .isNotEmpty().allMatch(item -> item.requiresReview() && !item.reviewReason().isBlank());
         assertThat(runs.stream().filter(run -> run.caseKey().equals("07-empty-diagram"))
                 .flatMap(run -> run.items().stream()).filter(item -> !item.gradedByAi()))
                 .as("empty diagram part is zeroed by the app, not by AI").hasSize(6)

@@ -81,6 +81,13 @@ public class AttemptRepository {
                 .param("assignmentId", assignmentId).param("accountId", accountId).query(this::map).optional();
     }
 
+    public Optional<AssignmentAttempt> transferDraft(UUID id, UUID sourceClassId, UUID destinationClassId) {
+        return jdbc.sql("update assignment_attempts set class_id = :destinationClass where id = :id "
+                        + "and class_id = :sourceClass and status = 'IN_PROGRESS' returning " + COLUMNS)
+                .param("id", id).param("sourceClass", sourceClassId).param("destinationClass", destinationClassId)
+                .query(this::map).optional();
+    }
+
     public int findMaxAttemptNo(UUID assignmentId, UUID accountId) {
         return jdbc.sql("select coalesce(max(attempt_no), 0) from assignment_attempts where assignment_id = :assignmentId "
                         + "and account_id = :accountId")

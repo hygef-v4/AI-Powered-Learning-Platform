@@ -8,12 +8,28 @@ if [ "$#" -ne 3 ]; then
     exit 2
 fi
 
+READY_TIMEOUT=${RESTORE_READY_TIMEOUT_SECONDS:-60}
+case "$READY_TIMEOUT" in
+    ''|*[!0-9]*|0*) echo "RESTORE_READY_TIMEOUT_SECONDS phải là số giây dương." >&2; exit 2 ;;
+esac
+
 ARCHIVE=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 KEY=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
 IMAGE=$3
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 WORK=$(mktemp -d)
-trap 'rm -f "$WORK/private-key.pem" "$WORK/dump.pgc" "$WORK/archive.alapbk"' EXIT
+CONTAINER_ID=
+cleanup() {
+    status=$?
+    trap - EXIT
+    if [ "$status" -ne 0 ] && [ -n "$CONTAINER_ID" ]; then
+        docker rm -f "$CONTAINER_ID" >/dev/null 2>&1 ||
+            echo "Không dọn được container tạm $CONTAINER_ID" >&2
+    fi
+    rm -f "$WORK/private-key.pem" "$WORK/dump.pgc" "$WORK/archive.alapbk"
+    exit "$status"
+}
+trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
 NAME="platform-restore-$STAMP"
 EVIDENCE="restore-evidence-$STAMP.txt"
@@ -35,9 +51,16 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$WORK:/work" --entrypoint java "$
 rm -f "$WORK/private-key.pem"
 
 echo "2. Tạo PostgreSQL 16 tạm: $NAME"
-docker run -d --name "$NAME" -e POSTGRES_PASSWORD="$PASSWORD" -e POSTGRES_DB=platform \
-    -v "$WORK:/work" -p 127.0.0.1::5432 postgres:16-alpine > /dev/null
-until docker exec "$NAME" pg_isready -U postgres -d platform > /dev/null 2>&1; do sleep 1; done
+CONTAINER_ID=$(docker run -d --name "$NAME" -e POSTGRES_PASSWORD="$PASSWORD" -e POSTGRES_DB=platform \
+    -v "$WORK:/work" -p 127.0.0.1::5432 postgres:16-alpine)
+ready_deadline=$(( $(date -u +%s) + READY_TIMEOUT ))
+until docker exec "$CONTAINER_ID" pg_isready -t 1 -U postgres -d platform >/dev/null 2>&1; do
+    if [ "$(date -u +%s)" -ge "$ready_deadline" ]; then
+        echo "PostgreSQL không sẵn sàng trong $READY_TIMEOUT giây." >&2
+        exit 1
+    fi
+    sleep 1
+done
 
 echo "3. pg_restore"
 docker exec "$NAME" pg_restore --no-owner --no-privileges -U postgres -d platform /work/dump.pgc

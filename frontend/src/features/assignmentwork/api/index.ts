@@ -1,4 +1,4 @@
-import { fetchApi } from "@/shared/api/client";
+import { downloadApiFileToDisk, fetchApi } from "@/shared/api/client";
 import type { ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import type { DocumentModel } from "@/shared/document";
 import type { Attempt, AttemptDiagram, AttemptSummary, Feedback, ImportPreview, Receipt, Saved, StudentDetail, StudentRow } from "../model/types";
@@ -40,6 +40,6 @@ export function attemptImageUrl(attemptId: string) {
   return (blockId: string) => `${base}/attempts/${enc(attemptId)}/blocks/${enc(blockId)}/image`;
 }
 
-export function exportUrl(attemptId: string) {
-  return `${base}/attempts/${enc(attemptId)}/export.docx`;
+export function downloadAttemptDocx(attemptId: string) {
+  return downloadApiFileToDisk(`${base}/attempts/${enc(attemptId)}/export.docx`, "bai-lam.docx");
 }

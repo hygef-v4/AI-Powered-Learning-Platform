@@ -21,13 +21,23 @@ public record AiProperties(String keyEncryptionKey, String keyEncryptionKeyV2, D
 
     /**
      * {@code visionModels}: model đọc được ảnh; rỗng thì mọi model trong {@code models} (BR-U06-57).
+     * {@code reasoningModels}: model có suy nghĩ tính chung trần đầu ra; với các model này trần gửi đi được cộng
+     * {@code reasoningReserveTokens} và, nếu {@code reasoningEffort} là low/medium/high, gửi tham số suy nghĩ gốc của
+     * provider. Effort rỗng thì chỉ cộng phần chừa (an toàn với provider chưa kiểm tham số).
      * Chỉ giữ constructor chuẩn: thêm constructor khác thì Spring không bind được record này.
      */
-    public record Provider(List<String> models, int maxOutputTokens, List<String> visionModels) {
+    public record Provider(List<String> models, int maxOutputTokens, List<String> visionModels,
+                           List<String> reasoningModels, String reasoningEffort, int reasoningReserveTokens) {
+
+        static final int DEFAULT_REASONING_RESERVE_TOKENS = 4096;
 
         public Provider {
             models = clean(models);
             visionModels = clean(visionModels);
+            reasoningModels = clean(reasoningModels);
+            reasoningEffort = reasoningEffort == null ? "" : reasoningEffort.trim().toLowerCase(java.util.Locale.ROOT);
+            reasoningReserveTokens = reasoningReserveTokens <= 0 ? DEFAULT_REASONING_RESERVE_TOKENS
+                    : reasoningReserveTokens;
         }
 
         private static List<String> clean(List<String> names) {

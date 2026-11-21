@@ -9,7 +9,7 @@ import { WHOLE_PART, filterCardIssues, hasWholePart, listRestoredCriteria, merge
 import { CreateAssignmentDialog } from "@/features/assignments/components/CreateAssignmentDialog";
 import { clearPendingImport, peekPendingImport } from "@/features/assignments/model/pendingImports";
 import { fromLocalInput, toLocalInput } from "@/features/assignments/model/format";
-import { RubricEditor, cleanCriteria, isRubricPointsMalformed } from "@/features/assignments/components/RubricEditor";
+import { RubricEditor, cleanCriteria, isPenaltyOnlyCriterion, isRubricPointsMalformed } from "@/features/assignments/components/RubricEditor";
 import { ScheduleForm } from "@/features/assignments/components/ScheduleForm";
 import { statusLabels, type AssignmentDetail } from "@/features/assignments/model/types";
 
@@ -66,6 +66,20 @@ describe("RubricEditor", () => {
     expect(sumRubricTotal(wrong)).toBe(0);
     expect(isRubricComplete(wrong)).toBe(false);
     expect(isRubricComplete([{ ...criteria[0]!, items: [{ itemId: "i", text: "Đủ ý", points: 1.25 }] }])).toBe(true);
+  });
+
+  it("tiêu chí chỉ nêu trường hợp bị trừ thì hiện gợi ý ghi rõ điều kiện được điểm, không chặn lưu (G6)", () => {
+    const penaltyOnly: RubricCriterion[] = [{ ...criteria[0]!, items: [
+      { itemId: "p", text: "Quan hệ include/extend vẽ bằng nét đứt; vẽ nét liền không được điểm", points: 0.25 },
+      { itemId: "q", text: "Có ít nhất một quan hệ include/extend, vẽ nét liền không được điểm", points: 0.25 },
+    ] }];
+    render(<RubricEditor criteria={penaltyOnly} onChange={vi.fn()} />);
+    const notes = screen.getAllByRole("note");
+    expect(notes).toHaveLength(1);
+    expect(notes[0]).toHaveTextContent("Tiêu chí chỉ nêu trường hợp bị trừ");
+    expect(isPenaltyOnlyCriterion("Đủ ý")).toBe(false);
+    expect(isPenaltyOnlyCriterion("Thiếu actor thì bị trừ")).toBe(true);
+    expect(isRubricPointsMalformed(penaltyOnly)).toBe(false);
   });
 
   it("Enter ở ô điểm cũng thêm mục ngay dưới", () => {

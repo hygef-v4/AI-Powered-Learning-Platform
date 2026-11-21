@@ -10,7 +10,12 @@ import edu.aiplatform.academics.service.AcademicsService;
 import edu.aiplatform.academics.model.EnrollmentStatus;
 import edu.aiplatform.admindashboard.service.AdminDashboardService;
 import edu.aiplatform.ai.contract.AiProvider;
+import edu.aiplatform.ai.contract.AiSource;
+import edu.aiplatform.ai.contract.AiTaskRequest;
+import edu.aiplatform.ai.contract.IAiTask;
+import edu.aiplatform.ai.model.McpCredential.Access;
 import edu.aiplatform.ai.service.AiConnectionService;
+import edu.aiplatform.ai.service.McpCredentialService;
 import edu.aiplatform.audit.contract.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.identity.integration.JwtService;
@@ -27,6 +32,7 @@ import edu.aiplatform.assignmentwork.service.AttemptService;
 import edu.aiplatform.groups.service.ClassGroupService;
 import edu.aiplatform.groups.model.GroupSetRules.Draft;
 import edu.aiplatform.quizzes.service.QuizAuthoringService;
+import edu.aiplatform.quizzes.service.QuizCopyService;
 import edu.aiplatform.quizzes.service.QuizPublicationService;
 import edu.aiplatform.quizzes.model.*;
 import edu.aiplatform.quizzes.contract.QuestionType;
@@ -44,6 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import edu.aiplatform.ai.service.QuotaPolicyService;
 import edu.aiplatform.ai.service.QuotaReservationService;
+import edu.aiplatform.grading.model.GradingProposal;
 import edu.aiplatform.grading.service.*;
 import edu.aiplatform.grading.repository.IEvaluationRepository;
 import edu.aiplatform.groupdocs.service.*;
@@ -54,6 +61,8 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -64,11 +73,13 @@ import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServic
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -199,18 +210,23 @@ class PlatformWorkflowIntegrationTest {
     @Autowired RabbitTemplate rabbitTemplate;
     @Autowired edu.aiplatform.jobs.service.JobDispatcher jobDispatcher;
     @Autowired AiConnectionService aiConnectionService;
+    @Autowired McpCredentialService mcpCredentialService;
     @Autowired AdminDashboardService adminDashboardService;
     @Autowired ISettings settings;
     @Autowired AssignmentAuthoringService assignmentAuthoringService;
     @Autowired AssignmentPublicationService assignmentPublicationService;
     @Autowired AttemptService attemptService;
     @Autowired QuizAuthoringService quizAuthoringService;
+    @Autowired QuizCopyService quizCopyService;
     @Autowired QuizPublicationService quizPublicationService;
     @Autowired QuizAttemptService quizAttemptService;
     @Autowired edu.aiplatform.quizzes.service.QuizAiDraftService quizDrafts;
     @Autowired edu.aiplatform.quizzes.service.QuizDraftResultHandler quizDraftResults;
     @Autowired ClassGroupService classGroupService;
     @Autowired GradingService gradingService;
+    @Autowired GradingProposalService gradingProposalService;
+    @Autowired GradingProposalTransactions gradingProposalTransactions;
+    @Autowired IAiTask aiTask;
     @Autowired GradebookService gradebookService;
     @Autowired IEvaluationRepository evaluationRepository;
     @Autowired GroupWorkspaceService groupWorkspaceService;
@@ -364,6 +380,44 @@ class PlatformWorkflowIntegrationTest {
     }
 
     @Test
+    void concurrentCredentialCreationOnlyFillsOneRemainingSlot() throws Exception {
+        var teacher = actor(Role.TEACHER);
+        for (int i = 0; i < 4; i++) {
+            mcpCredentialService.createCredential(teacher, "Synthetic agent " + i, Access.READ_ONLY, 7);
+        }
+        Callable<String> create = () -> {
+            try {
+                mcpCredentialService.createCredential(teacher, "Concurrent agent", Access.READ_ONLY, 7);
+                return "CREATED";
+            } catch (ApiException error) {
+                return error.readCode();
+            }
+        };
+        var executor = Executors.newFixedThreadPool(2);
+        try {
+            var pending = transaction.execute(status -> {
+                // Hold both requests before either INSERT can commit.
+                jdbc.execute("lock table mcp_credentials in share mode");
+                var requests = List.of(executor.submit(create), executor.submit(create));
+                org.awaitility.Awaitility.await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
+                        assertThat(jdbc.queryForObject("""
+                                select count(*) from pg_locks where not granted
+                                and (relation = 'mcp_credentials'::regclass or locktype = 'advisory')
+                                """, Long.class)).isEqualTo(2));
+                return requests;
+            });
+
+            assertThat(List.of(pending.get(0).get(10, TimeUnit.SECONDS),
+                    pending.get(1).get(10, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder("CREATED", "MCP_LIMIT_REACHED");
+            assertThat(mcpCredentialService.listCredentials(teacher)).hasSize(5);
+        } finally {
+            executor.shutdownNow();
+            assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+        }
+    }
+
+    @Test
     void sourceMismatchCommitsEmptyDraftThenQueuesOneSourceOnlyRetry() {
         aiConnectionService.addPersonal(actor(Role.TEACHER), AiProvider.OPENAI,
                 new AiConnectionService.SaveCommand("integration-key-never-sent", "gpt-6.1-sol", null));
@@ -513,6 +567,56 @@ class PlatformWorkflowIntegrationTest {
         return new DocumentModel(blocks);
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void legacySubjectDraftTransfersOnlyToTheUniqueEligibleClass(boolean ambiguous) throws Exception {
+        var assignment = publishAssignment(GradingMode.GRADED);
+        // Legacy data from when whole-subject assignments could be published.
+        jdbc.update("update assignments set scope = 'SUBJECT', class_id = null where id = ?", assignment.id());
+        var student = actor(Role.STUDENT);
+        var manager = actor(Role.SUBJECT_MANAGER);
+        UUID previousSubmission = submitIndividual(assignment);
+        var previousReceipt = attemptService.loadReceipt(student, previousSubmission);
+        var draft = attemptService.start(student, assignment.id(), classId).attempt();
+        var saved = attemptService.saveAttempt(student, draft.attemptId(), draft.contentVersion(), answer(draft.content()));
+
+        var destination = academicsService.createClass(manager, subjectId, "TRANSFER", "Transfer class", null,
+                LocalDate.of(2026, 11, 14), actor(Role.TEACHER).accountId());
+        academicsService.changeClassStatus(manager, destination.id(), ClassStatus.OPEN, destination.version());
+        assertThatThrownBy(() -> attemptService.start(student, assignment.id(), destination.id()))
+                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.readCode()).isEqualTo("NOT_FOUND"));
+        academicsService.changeEnrollmentStatus(manager, classId, student.accountId(), EnrollmentStatus.REMOVED);
+        academicsService.enrollStudent(manager, destination.id(), student.accountId());
+
+        if (ambiguous) {
+            var other = academicsService.createClass(manager, subjectId, "AMBIGUOUS", "Other class", null,
+                    LocalDate.of(2026, 11, 14), actor(Role.TEACHER).accountId());
+            academicsService.changeClassStatus(manager, other.id(), ClassStatus.OPEN, other.version());
+            jdbc.update("insert into enrollments(class_id, account_id, status, source, enrolled_at) "
+                    + "values (?, ?, 'ACTIVE', 'MANUAL', now())", other.id(), student.accountId());
+            assertThatThrownBy(() -> attemptService.start(student, assignment.id(), destination.id()))
+                    .isInstanceOfSatisfying(ApiException.class,
+                            failure -> assertThat(failure.readCode()).isEqualTo("NOT_FOUND"));
+            assertThat(jdbc.queryForObject("select class_id from assignment_attempts where id = ?", UUID.class,
+                    draft.attemptId())).isEqualTo(classId);
+        } else {
+            var resumed = attemptService.start(student, assignment.id(), destination.id());
+            assertThat(resumed.created()).isFalse();
+            assertThat(resumed.attempt().attemptId()).isEqualTo(draft.attemptId());
+            assertThat(resumed.attempt().classId()).isEqualTo(destination.id());
+            assertThat(resumed.attempt().content()).isEqualTo(saved.content());
+            assertThat(resumed.attempt().contentVersion()).isEqualTo(saved.contentVersion());
+            assertThat(attemptService.loadAttempt(student, draft.attemptId())).usingRecursiveComparison()
+                    .ignoringFields("serverTime").isEqualTo(resumed.attempt());
+            assertThat(attemptService.start(student, assignment.id(), destination.id()).attempt().attemptId())
+                    .isEqualTo(draft.attemptId());
+        }
+        assertThat(jdbc.queryForMap("select class_id, receipt_hash from assignment_attempts where id = ?",
+                previousSubmission)).containsEntry("class_id", classId).containsEntry("receipt_hash", previousReceipt.receiptHash());
+        assertThatThrownBy(() -> attemptService.loadReceipt(student, previousSubmission))
+                .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.readCode()).isEqualTo("NOT_FOUND"));
+    }
+
     @Test
     void gradedAssignmentPublicationSubmissionAndEvaluationUseRealContracts() throws Exception {
         var published = publishAssignment(GradingMode.GRADED);
@@ -580,6 +684,39 @@ class PlatformWorkflowIntegrationTest {
                 taking.attemptId())).isEqualByComparingTo(BigDecimal.TEN);
         assertThat(count("evaluations")).isZero();
         assertThatThrownBy(() -> quizAttemptService.loadResult(teacher, taking.attemptId())).isInstanceOf(ApiException.class);
+    }
+
+    @Test
+    void simultaneousReopensSerializeEvenWhenNoVersionIsOpen() {
+        var teacher = actor(Role.TEACHER);
+        var created = quizAuthoringService.createForClass(teacher, classId, "Concurrent quiz");
+        var content = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Which option is correct?",
+                List.of(new QuestionOption("A", "Correct"), new QuestionOption("B", "Incorrect")),
+                List.of("A"), "Explanation", BigDecimal.TEN, Difficulty.EASY, List.of());
+        var prepared = quizAuthoringService.addInline(teacher, created.quiz().id(), content, created.quiz().version());
+        var first = quizPublicationService.publish(teacher, prepared.quiz().id(), prepared.quiz().version()).quiz();
+        var nextDraft = quizCopyService.createNewVersion(teacher, first.id()).quiz();
+        var next = quizPublicationService.publish(teacher, nextDraft.id(), nextDraft.version()).quiz();
+        var retiredNext = quizPublicationService.retire(teacher, next.id(), "Pause", next.version()).quiz();
+        var retiredFirst = quizAuthoringService.loadQuiz(teacher, first.id(), null).quiz();
+        var competing = new TransactionTemplate(transaction.getTransactionManager());
+        competing.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
+        transaction.executeWithoutResult(status -> {
+            quizPublicationService.reopen(teacher, retiredNext.id(), retiredNext.version());
+            assertThatThrownBy(() -> competing.executeWithoutResult(other -> {
+                jdbc.execute("set local lock_timeout = '200ms'");
+                quizPublicationService.reopen(teacher, retiredFirst.id(), retiredFirst.version());
+            })).isInstanceOfSatisfying(DataAccessException.class, conflict -> assertThat(
+                    conflict.getMostSpecificCause()).isInstanceOfSatisfying(java.sql.SQLException.class,
+                    failure -> assertThat(failure.getSQLState()).isEqualTo("55P03")));
+        });
+
+        assertThatThrownBy(() -> quizPublicationService.reopen(teacher, retiredFirst.id(), retiredFirst.version()))
+                .isInstanceOfSatisfying(ApiException.class,
+                        conflict -> assertThat(conflict.readCode()).isEqualTo("QUIZ_OTHER_VERSION_OPEN"));
+        assertThat(jdbc.queryForList("select id from quizzes where id in (?, ?) and status = 'OPEN'", UUID.class,
+                retiredFirst.id(), retiredNext.id())).containsExactly(retiredNext.id());
     }
 
     @Test
@@ -674,6 +811,124 @@ class PlatformWorkflowIntegrationTest {
         assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='GRADE_PUBLISHED'", Long.class)).isEqualTo(1);
     }
 
+    @Test
+    void batchProposalRejectsGradeVersionChangedBeforeTheEvaluationLock() throws Exception {
+        var teacher = actor(Role.TEACHER);
+        var assignment = publishAssignment(GradingMode.GRADED);
+        var evaluation = evaluationRepository.findByAttemptId(submitIndividual(assignment)).orElseThrow();
+        assignmentPublicationService.closeAssignment(teacher, assignment.id(), assignment.version());
+        configureQuota(100_000, 200_000);
+        aiConnectionService.addInstitutional(actor(Role.ADMIN), AiProvider.OPENAI,
+                new AiConnectionService.SaveCommand("integration-only-key-never-sent", "gpt-6.1-sol", null));
+        var input = new GradingCommands.AiBatch(
+                List.of(new GradingCommands.ItemVersion(evaluation.id, evaluation.version)),
+                new GradingCommands.AiRequest(AiSource.SHARED, null, UUID.randomUUID().toString()));
+        var executor = Executors.newSingleThreadExecutor();
+        try {
+            var pending = transaction.execute(status -> {
+                gradingService.saveEvaluation(teacher, evaluation.id, new GradingCommands.Save(
+                        evaluation.version, Map.of(), BigDecimal.ZERO, null, "Concurrent feedback", null, null));
+                var response = executor.submit(() -> gradingProposalService.requestProposals(teacher, input));
+                org.awaitility.Awaitility.await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
+                        assertThat(jdbc.queryForObject("""
+                                select count(*) from pg_stat_activity
+                                where wait_event_type = 'Lock' and query like '%from evaluations%for update'
+                                """, Long.class)).isEqualTo(1));
+                return response;
+            });
+
+            assertThat(pending.get(10, TimeUnit.SECONDS).items()).singleElement().satisfies(item -> {
+                assertThat(item.outcome()).isEqualTo("FAILED");
+                assertThat(item.code()).isEqualTo("GRADE_VERSION_CONFLICT");
+            });
+            assertThat(count("grading_proposals")).isZero();
+            assertThat(count("ai_tasks")).isZero();
+            assertThat(quotaCounter(teacher.accountId().toString(), "reserved_tokens")).isZero();
+        } finally {
+            executor.shutdownNow();
+            assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void retriesInterruptedAiGradingWithOneProposalTaskAndReservation(boolean taskAlreadySubmitted)
+            throws Exception {
+        while (rabbitTemplate.receive("jobs.ai") != null) {
+            // Discard messages from earlier tests in this suite's isolated broker.
+        }
+        var teacher = actor(Role.TEACHER);
+        var assignment = publishAssignment(GradingMode.GRADED);
+        var attemptId = submitIndividual(assignment);
+        var evaluation = evaluationRepository.findByAttemptId(attemptId).orElseThrow();
+        assignmentPublicationService.closeAssignment(teacher, assignment.id(), assignment.version());
+        configureQuota(100_000, 200_000);
+        aiConnectionService.addInstitutional(actor(Role.ADMIN), AiProvider.OPENAI,
+                new AiConnectionService.SaveCommand("integration-only-key-never-sent", "gpt-6.1-sol", null));
+        var request = new GradingCommands.AiRequest(AiSource.SHARED, null, UUID.randomUUID().toString());
+        var prepared = gradingProposalTransactions.prepareProposal(teacher, evaluation.id, request);
+        var taskRequest = new AiTaskRequest(
+                teacher, request.source(), request.provider(), "GRADING_PROPOSAL",
+                "evaluation:" + evaluation.id, prepared.proposal().versionNo, request.requestRef(),
+                prepared.prompt(), prepared.outputSchema(), prepared.maxOutputTokens());
+        UUID priorTaskId = taskAlreadySubmitted ? aiTask.submit(taskRequest).taskId() : null;
+        assertThat(prepared.proposal().taskId).isNull();
+        if (!taskAlreadySubmitted) {
+            assertThatThrownBy(() -> gradingProposalTransactions.dispatchPreparedProposal(
+                    prepared.proposal().id, () -> {
+                        aiTask.submit(taskRequest);
+                        throw new IllegalStateException("Integration fixture interrupted before attachment");
+                    })).isInstanceOf(IllegalStateException.class).hasMessageContaining("interrupted");
+            assertThat(count("ai_tasks")).isZero();
+            assertThat(quotaCounter(teacher.accountId().toString(), "reserved_tokens")).isZero();
+        }
+
+        var workers = Executors.newFixedThreadPool(2);
+        var start = new CountDownLatch(1);
+        try {
+            Callable<GradingProposal> retry = () -> {
+                assertThat(start.await(5, TimeUnit.SECONDS)).isTrue();
+                return gradingProposalService.requestProposal(teacher, evaluation.id, request);
+            };
+            var first = workers.submit(retry);
+            var second = workers.submit(retry);
+            start.countDown();
+            var recovered = first.get(10, TimeUnit.SECONDS);
+            var replayed = second.get(10, TimeUnit.SECONDS);
+            assertThat(recovered.id).isEqualTo(prepared.proposal().id);
+            assertThat(recovered.taskId).isNotNull();
+            assertThat(replayed.id).isEqualTo(recovered.id);
+            assertThat(replayed.taskId).isEqualTo(recovered.taskId);
+            if (priorTaskId != null) {
+                assertThat(recovered.taskId).isEqualTo(priorTaskId);
+            }
+            var changedSource = new GradingCommands.AiRequest(AiSource.PERSONAL, AiProvider.OPENAI,
+                    request.requestRef());
+            assertThatThrownBy(() -> gradingProposalService.requestProposal(teacher, evaluation.id,
+                    changedSource)).isInstanceOfSatisfying(ApiException.class,
+                            ex -> assertThat(ex.readCode()).isEqualTo("REQUEST_REF_CONFLICT"));
+            assertThat(count("grading_proposals")).isEqualTo(1);
+            assertThat(count("ai_tasks")).isEqualTo(1);
+            long reserved = jdbc.queryForObject(
+                    "select reserved_tokens from ai_tasks where id=?", Long.class, recovered.taskId);
+            assertThat(reserved).isPositive();
+            assertThat(quotaCounter(teacher.accountId().toString(), "reserved_tokens")).isEqualTo(reserved);
+            assertThat(quotaCounter("GLOBAL", "reserved_tokens")).isEqualTo(reserved);
+            assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
+            assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='AI_GRADING_REQUESTED'",
+                    Long.class)).isEqualTo(1);
+            var queued = rabbitTemplate.receive("jobs.ai", 5_000);
+            assertThat(queued).isNotNull();
+            assertThat(json.readTree(queued.getBody()).path("idempotencyKey").asText())
+                    .isEqualTo(recovered.taskId.toString());
+            assertThat(rabbitTemplate.receive("jobs.ai", 200)).isNull();
+        } finally {
+            start.countDown();
+            workers.shutdownNow();
+            assertThat(workers.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+        }
+    }
+
     void rejectEvaluationInsert(String kind) {
         assertThat(Set.of("ATTEMPT", "MEMBER")).contains(kind);
         jdbc.execute("create function integration_reject_evaluation() returns trigger language plpgsql as $$ "
@@ -761,6 +1016,44 @@ class PlatformWorkflowIntegrationTest {
         groupSectionService.saveDraft(actor(Role.STUDENT), workspace.documentId(), sectionId, claimed.version(), content);
         groupSectionService.markSectionDone(actor(Role.STUDENT), workspace.documentId(), sectionId);
         return groupWorkspaceService.loadWorkspace(actor(Role.STUDENT), workspace.documentId());
+    }
+
+    @Test
+    void draftWaitingForTheGroupDocumentCannotWriteAfterClosure() throws Exception {
+        addGroupMember();
+        var assignment = publishAssignment(GradingMode.GRADED, SubmissionMode.GROUP);
+        var student = actor(Role.STUDENT);
+        var workspace = groupWorkspaceService.loadMyGroupDocument(student, assignment.id());
+        UUID documentId = workspace.documentId();
+        UUID sectionId = workspace.sections().get(0).id();
+        var claimed = groupSectionService.claim(student, documentId, sectionId);
+        var worker = Executors.newSingleThreadExecutor();
+        var draftConnection = new CompletableFuture<Integer>();
+        try {
+            var pending = transaction.execute(status -> {
+                jdbc.queryForObject("select id from assignments where id = ? for share", UUID.class, assignment.id());
+                jdbc.queryForObject("select id from group_documents where id = ? for update", UUID.class, documentId);
+                var draft = worker.submit(() -> catchThrowable(() -> transaction.executeWithoutResult(save -> {
+                    draftConnection.complete(jdbc.queryForObject("select pg_backend_pid()", Integer.class));
+                    groupSectionService.saveDraft(student, documentId, sectionId, claimed.version(), List.of());
+                })));
+                int backend = draftConnection.orTimeout(5, TimeUnit.SECONDS).join();
+                org.awaitility.Awaitility.await().atMost(Duration.ofSeconds(5)).until(() -> Boolean.TRUE.equals(
+                        jdbc.queryForObject("select cardinality(pg_blocking_pids(?)) > 0", Boolean.class, backend)));
+                jdbc.execute("set local lock_timeout = '5s'");
+                jdbc.queryForList("select id from group_document_sections where group_document_id = ? for update",
+                        UUID.class, documentId);
+                jdbc.update("update group_documents set status = 'CLOSED' where id = ?", documentId);
+                return draft;
+            });
+
+            assertThat(pending.get(5, TimeUnit.SECONDS)).isInstanceOfSatisfying(ApiException.class,
+                    failure -> assertThat(failure.readCode()).isEqualTo("GROUP_DOC_CLOSED"));
+            assertThat(jdbc.queryForObject("select version from group_document_sections where id = ?",
+                    Long.class, sectionId)).isEqualTo(claimed.version());
+        } finally {
+            worker.shutdownNow();
+        }
     }
 
     @Test

@@ -1,9 +1,9 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { useGradingWorkspace } from "@/features/grading/hooks/useGradingWorkspace";
 import type { Detail, StructuredFeedback } from "@/features/grading/model/types";
 
-const mocks = vi.hoisted(() => ({ saveEvaluation: vi.fn(), push: vi.fn() }));
+const mocks = vi.hoisted(() => ({ saveEvaluation: vi.fn(), requestProposal: vi.fn(), push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("@/features/grading/api", () => ({ gradingApi: mocks }));
 vi.mock("@/features/grading/hooks/useGradingProposals", () => ({ useGradingProposals: () => ({ proposals: [], addProposal: vi.fn(), resumePolling: vi.fn() }) }));
@@ -43,7 +43,55 @@ const feedback: StructuredFeedback = { schemaVersion: 1, summary: { strengths: [
   items: [{ rubricId: "r", itemId: "i", evidence: null, reason: "Review diagram", suggestion: null,
     evidenceBlockId: null, requiresReview: true, reviewReason: "Unreadable diagram" }] };
 
-beforeEach(() => { vi.clearAllMocks(); mocks.saveEvaluation.mockResolvedValue({ ...initial.evaluation, version: 3 }); });
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.requestProposal.mockReset();
+  mocks.saveEvaluation.mockResolvedValue({ ...initial.evaluation, version: 3 });
+});
+
+it("reuses a proposal request after saving manual edits to the same submission and rubric", async () => {
+  mocks.requestProposal.mockRejectedValueOnce(new TypeError("Response lost"))
+    .mockResolvedValueOnce(undefined);
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => initial));
+  await act(() => result.current.requestProposal({ requestRef: "original" }));
+  act(() => result.current.updateForm({ feedback: "Manual edit" }));
+  await act(() => result.current.save());
+  expect(result.current.evaluation.version).toBe(3);
+
+  await act(() => result.current.requestProposal({ requestRef: "retry" }));
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(2, "e", { requestRef: "original" });
+});
+
+it.each([
+  { ...initial, evaluation: { ...initial.evaluation, submissionHash: "new-submission" } },
+  { ...initial, rubrics: initial.rubrics.map((rubric) => ({ ...rubric, rubricId: "new-rubric" })) },
+])("starts a fresh proposal request after reloading a changed grading snapshot %#", async (refreshed) => {
+  mocks.requestProposal.mockRejectedValueOnce(new TypeError("Response lost"))
+    .mockResolvedValueOnce(undefined);
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => refreshed));
+  await act(() => result.current.requestProposal({ requestRef: "original" }));
+  await act(() => result.current.reload());
+  await act(() => result.current.requestProposal({ requestRef: "changed-snapshot" }));
+
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(2, "e", { requestRef: "changed-snapshot" });
+});
+
+it("discards a proposal retry reference when its source or provider changes", async () => {
+  mocks.requestProposal.mockRejectedValue(new TypeError("Response lost"));
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => initial));
+  await act(() => result.current.requestProposal({ requestRef: "auto" }));
+  const personal = { source: "PERSONAL", provider: "GEMINI", requestRef: "gemini" } as const;
+  await act(() => result.current.requestProposal(personal));
+  await act(() => result.current.requestProposal({ ...personal, requestRef: "gemini-retry" }));
+  const changedProvider = { ...personal, provider: "OPENAI", requestRef: "openai" } as const;
+  await act(() => result.current.requestProposal(changedProvider));
+  await act(() => result.current.requestProposal({ ...personal, requestRef: "gemini-again" }));
+
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(2, "e", personal);
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(3, "e", personal);
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(4, "e", changedProvider);
+  expect(mocks.requestProposal).toHaveBeenNthCalledWith(5, "e", { ...personal, requestRef: "gemini-again" });
+});
 
 it("preserves edits made during background saving and uses the returned version for the next save", async () => {
   let finish!: (value: Detail["evaluation"]) => void;
@@ -105,6 +153,53 @@ it("preserves explicit partial points and adjustments on a feedback-only save", 
   await act(async () => { await result.current.save(); });
   expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({ itemScoresByRubric: { r: { i: "0.50" } },
     adjustment: "-0.25", adjustmentReason: "Late", feedback: "Updated feedback" }));
+});
+
+it("preserves a newer rubric score when reloading a separate local feedback edit", async () => {
+  const refreshed: Detail = { ...initial, evaluation: { ...initial.evaluation, version: 3,
+    rubricItemScores: { r: { i: "0.75" } }, score: 0.5 } };
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => refreshed));
+  act(() => result.current.setFeedback("Local feedback"));
+  await act(() => result.current.reload());
+  await act(() => result.current.save());
+  expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({
+    version: 3, feedback: "Local feedback", itemScoresByRubric: { r: { i: "0.75" } },
+  }));
+});
+
+it("preserves scores changed on different rubric items in two versions", async () => {
+  const original: Detail = {
+    ...initial,
+    evaluation: { ...initial.evaluation, rubricItemScores: { r: { i: "0.50", j: "0.25" } }, maxScore: 2 },
+    rubrics: [{ rubricId: "r", partId: "part", maxPoints: 2, criteria: [{ criterionId: "criterion", title: "Design",
+      items: [{ itemId: "i", text: "Correct design", points: 1 }, { itemId: "j", text: "Second item", points: 1 }],
+    }] }],
+  };
+  const refreshed: Detail = { ...original, evaluation: { ...original.evaluation, version: 3,
+    rubricItemScores: { r: { i: "0.50", j: "0.50" } } } };
+  const { result } = renderHook(() => useGradingWorkspace(original, async () => refreshed));
+  act(() => result.current.setItemScore("r", "i", 0.75));
+  await act(() => result.current.reload());
+  await act(() => result.current.save());
+  expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({
+    version: 3, itemScoresByRubric: { r: { i: 0.75, j: "0.50" } },
+  }));
+});
+
+it("requires confirmation before discarding an overlapping feedback edit", async () => {
+  const refreshed: Detail = { ...initial, evaluation: { ...initial.evaluation, version: 3, feedback: "Remote feedback" } };
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => refreshed));
+  act(() => result.current.updateForm({ feedback: "Local feedback", adjustment: "-0.10" }));
+  await act(() => result.current.reload());
+  expect(result.current.evaluation.version).toBe(2);
+  expect(result.current.form.feedback).toBe("Local feedback");
+  await act(() => result.current.save());
+  expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+
+  render(result.current.confirmDialog);
+  fireEvent.click(screen.getByTestId("confirm-dialog-accept"));
+  expect(result.current.evaluation.version).toBe(3);
+  expect(result.current.form).toMatchObject({ feedback: "Remote feedback", adjustment: "-0.10" });
 });
 
 it("retains AI partial points, feedback and flags while resetting previous review acknowledgements", async () => {

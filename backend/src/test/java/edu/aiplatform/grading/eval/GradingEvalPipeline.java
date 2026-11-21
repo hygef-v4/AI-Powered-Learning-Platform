@@ -127,6 +127,8 @@ final class GradingEvalPipeline {
             var validBlockIds = GradingFeedbackValidator.listValidBlockIds(rubrics, document);
             var normalized = GradingPromptBuilder.sanitizeAndNormalizeProposal(payload, rubrics, validBlockIds,
                     json);
+            normalized = gradingProposalValidator.flagProposalEvidenceForReview(
+                    normalized, rubrics, document, assignment.content().parts());
             var validated = gradingProposalValidator.validateProposal(normalized, rubrics, validBlockIds);
             Set<UUID> aiRubricIds = new HashSet<>();
             if (request != null) {

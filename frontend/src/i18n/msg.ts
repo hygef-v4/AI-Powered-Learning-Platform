@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { createTranslator, type AbstractIntlMessages } from "next-intl";
 import en from "./messages/en.json";
-import ja from "./messages/ja.json";
 import vi from "./messages/vi.json";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, parseLocale, type Locale } from "./locales";
 
@@ -9,7 +8,7 @@ import { DEFAULT_LOCALE, LOCALE_COOKIE, parseLocale, type Locale } from "./local
  * Chuỗi giao diện nằm trong `src/i18n/messages/<mã ngôn ngữ>.json`, viết theo cú pháp ICU của next-intl, cùng khóa ở mọi
  * ngôn ngữ. Khóa thiếu ở một ngôn ngữ thì dùng câu tiếng Anh (ngôn ngữ mặc định).
  */
-const MESSAGES = { en, vi, ja } as unknown as Record<Locale, AbstractIntlMessages>;
+const MESSAGES = { en, vi } as unknown as Record<Locale, AbstractIntlMessages>;
 
 type Values = Record<string, string>;
 type Translate = (key: string, values?: Values) => string;

@@ -37,6 +37,18 @@ export function isRubricPointsMalformed(criteria: RubricCriterion[]): boolean {
   return criteria.some((criterion) => criterion.items.some((item) => isPointsMalformed(item.points)));
 }
 
+const PENALTY_PHRASES = ["không được điểm", "không có điểm", "bị trừ", "trừ điểm", "no points", "deduct"];
+const PRESENCE_PHRASES = ["ít nhất", "tối thiểu", "phải có", "at least", "must have"];
+
+/**
+ * Tiêu chí chỉ nêu trường hợp bị trừ (ví dụ "…vẽ nét liền không được điểm") mà không nói bài phải có gì để được điểm.
+ * AI chấm hiểu theo nghĩa đen và cho điểm khi bài không có thành phần đó (G6, đo 2026-11-21). Chỉ là gợi ý, không chặn lưu.
+ */
+export function isPenaltyOnlyCriterion(text: string): boolean {
+  const lower = text.toLowerCase();
+  return PENALTY_PHRASES.some((p) => lower.includes(p)) && !PRESENCE_PHRASES.some((p) => lower.includes(p));
+}
+
 function parsePoints(value: string): number | null {
   return value === "" ? null : Number(value);
 }
@@ -75,7 +87,8 @@ export function RubricEditor({ criteria, onChange }: {
   return (
     <div ref={root} className="flex flex-col" data-testid="rubric-editor">
       {items.map((item, i) => (
-        <div key={item.itemId ?? i} className="group/row flex items-start gap-0.5">
+        <div key={item.itemId ?? i}>
+        <div className="group/row flex items-start gap-0.5">
           <span aria-hidden className="w-3 pt-1 text-center text-xs text-muted">☐</span>
           {/* Ô nhiều dòng, tự cao theo chữ: lúc sửa thấy đủ nội dung mục, không bị cắt (yêu cầu 2026-11-05). */}
           <AutoTextarea data-atomic-text aria-label={msg("assignments.components.RubricEditor.criterion", { value: String(i + 1) })} value={item.text} maxLength={1000}
@@ -104,6 +117,12 @@ export function RubricEditor({ criteria, onChange }: {
             className="inline-flex size-5 shrink-0 items-center justify-center rounded text-xs text-muted opacity-0 group-hover/row:opacity-100 hover:bg-danger-soft hover:text-danger focus:opacity-100">
             ✕
           </button>
+        </div>
+        {isPenaltyOnlyCriterion(item.text) && (
+          <p role="note" className="ml-3.5 mt-0.5 rounded bg-warning-soft px-1.5 py-1 text-[11px] leading-snug text-warning">
+            {msg("assignments.components.RubricEditor.penaltyOnlyHint")}
+          </p>
+        )}
         </div>
       ))}
       {items.length < LIMIT && (

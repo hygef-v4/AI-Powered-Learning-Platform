@@ -33,6 +33,7 @@ pull*) [[ -n $FAIL_PULL && $* == *"$FAIL_PULL"* ]] && exit 1; echo "pull ${*: -1
 images*) for t in $IMAGE_TAGS; do echo "${*: -1}:$t"; done ;;
 rmi*) echo "rmi ${*: -1}" >>"$CALLS.rmi" ;;
 inspect*)
+    if [[ " $BAD_TAGS " == *" inspect:$tag "* ]]; then exit 42; fi
     echo "/certbot running none"
     if [[ " $BAD_TAGS " == *" $tag "* ]]; then echo "/backend running unhealthy"; else echo "/backend running healthy"; fi ;;
 *) echo "docker giả không hiểu: $*" >&2; exit 2 ;;
@@ -100,6 +101,13 @@ t_unhealthy_rolls_back_and_skips() {
     # Lần hỏi sau không deploy lại bản lỗi.
     : >"$CALLS"
     LATEST=$B run check && [[ ! -s $CALLS ]]
+}
+
+t_inspect_failure_is_not_healthy() {
+    setup
+    BAD_TAGS="inspect:$B" run deploy "$B" && return 1
+    [[ $(tag) == "$A" ]] && grep -qxF "$B" "$STATE_DIR/skip" &&
+        grep -q 'docker inspect' "$ROOT/out"
 }
 
 t_compose_up_failure_rolls_back() {
@@ -202,7 +210,7 @@ t_staging_uses_its_project_files_branch_and_port() {
         grep -q -- "--resolve example.test:8443:127.0.0.1 https://example.test:8443/" "$CALLS.curl"
 }
 
-for t in t_production_defaults t_staging_uses_its_project_files_branch_and_port t_check_noop t_check_deploys_new t_unhealthy_rolls_back_and_skips t_compose_up_failure_rolls_back t_failed_rollback_reports_its_own_problem \
+for t in t_production_defaults t_staging_uses_its_project_files_branch_and_port t_check_noop t_check_deploys_new t_unhealthy_rolls_back_and_skips t_inspect_failure_is_not_healthy t_compose_up_failure_rolls_back t_failed_rollback_reports_its_own_problem \
     t_pull_failure_changes_nothing t_missing_commit_changes_nothing t_api_failure_changes_nothing \
     t_manual_rollback_twice t_rollback_to_sha_and_unskip t_keeps_latest_dumps t_prunes_images_outside_recent_deploys t_restarts_nginx_only_when_its_config_changed t_status_and_bad_input; do
     check "$t" "$t"

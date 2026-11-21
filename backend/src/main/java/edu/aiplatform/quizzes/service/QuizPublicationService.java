@@ -60,6 +60,7 @@ public class QuizPublicationService {
      */
     @Transactional
     public QuizDetail publish(Actor actor, UUID id, long version) {
+        quizzes.lockVersionChain(id);
         Quiz quiz = support.loadManaged(actor, id);
         if (quiz.status() != QuizStatus.DRAFT) {
             throw ApiException.createConflict("QUIZ_NOT_DRAFT", "Chỉ phát hành được quiz đang nháp");
@@ -107,6 +108,7 @@ public class QuizPublicationService {
     /** Mở lại Quiz đã lưu trữ (Quiz đã phát hành mở lại, Quiz lưu trữ khi còn nháp về nháp). */
     @Transactional
     public QuizDetail reopen(Actor actor, UUID id, long version) {
+        quizzes.lockVersionChain(id);
         Quiz quiz = support.loadManaged(actor, id);
         if (quiz.status() != QuizStatus.RETIRED) {
             throw ApiException.createConflict("QUIZ_NOT_RETIRED", "Quiz chưa lưu trữ");

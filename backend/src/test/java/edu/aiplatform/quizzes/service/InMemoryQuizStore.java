@@ -55,6 +55,10 @@ class InMemoryQuizStore {
         }
 
         @Override
+        public void lockVersionChain(UUID id) {
+        }
+
+        @Override
         public Optional<Quiz> findQuiz(UUID id) {
             return Optional.ofNullable(quizzes.get(id));
         }

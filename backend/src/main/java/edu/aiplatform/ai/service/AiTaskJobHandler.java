@@ -62,6 +62,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     static final Duration STALE_PENDING = Duration.ofMinutes(5);
     static final int MAX_RESULT_CHARS = 1_000_000;
     static final int SHARED_CONCURRENCY = 2;
+    private static final String SHARED_PROVIDER_BUSY = "API chung của nhà cung cấp đang đủ lời gọi đồng thời";
     static final String MISSING_IMAGES = "Ảnh gửi AI không còn";
 
     private final AiTaskRepository tasks;
@@ -149,15 +150,11 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     @Override
     public void handle(JobMessage message) {
         UUID taskId = UUID.fromString(String.valueOf(message.payload().get("taskId")));
-        // Lấy chỗ trước mốc gửi: hết chỗ thì U03 thử lại sau, task vẫn QUEUED nên không bị coi là đã gọi (P2).
-        Semaphore slot = acquireSharedSlot(taskId);
-        if (slot != null && !slot.tryAcquire()) {
-            throw new RetryableJobException("API chung của nhà cung cấp đang đủ lời gọi đồng thời");
-        }
+        ProviderPermit permit = new ProviderPermit();
         try {
             Dispatch dispatch;
             try {
-                dispatch = transactions.execute(status -> start(taskId));
+                dispatch = transactions.execute(status -> start(taskId, permit));
             } catch (DataAccessException e) {
                 // Lỗi trước mốc gửi (database tạm lỗi): cho U03 thử lại (P2).
                 throw new RetryableJobException("Không bắt đầu được task AI", e);
@@ -165,6 +162,9 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             // Khóa lỗi thì finish trả lượt gọi bằng khóa kế tiếp (hệ thống rồi cá nhân; Claude, GPT, Gemini; mô hình tốt
             // trước), gọi tiếp ngay tới khi có kết quả hoặc hết khóa.
             while (dispatch != null) {
+                if (dispatch.task().state() == AiTaskState.QUEUED) {
+                    throw new RetryableJobException(SHARED_PROVIDER_BUSY);
+                }
                 if (Thread.currentThread().isInterrupted()) {
                     throw new RetryableJobException("AI task interrupted before provider call");
                 }
@@ -176,10 +176,11 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                     pause(transientWaits[retry]);
                     outcome = callProvider(dispatch);
                 }
+                permit.releaseSlot();
                 long callDurationMs = Duration.ofNanos(System.nanoTime() - callStartNanos).toMillis();
                 Dispatch current = dispatch;
                 Outcome result = outcome;
-                dispatch = transactions.execute(status -> finish(taskId, result));
+                dispatch = transactions.execute(status -> finish(taskId, result, permit));
                 String outcomeKind = result.error() == null ? "READY" : result.error().readKind().name() + "/" + result.error().readStatus();
                 log.info("AI task provider finished taskId={} requestRef={} taskType={} targetRef={} provider={} outcome={} "
                                 + "durationMs={} fallback={}", current.task().id(), current.task().requestRef(),
@@ -187,23 +188,31 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                         callDurationMs, dispatch != null);
             }
         } finally {
-            if (slot != null) {
-                slot.release();
-            }
+            permit.releaseSlot();
         }
         deliverOrRetry(taskId);
     }
 
-    /** Semaphore của provider khi task dùng API chung và còn chờ gọi; task cá nhân hay đã xong thì không giới hạn. */
-    private Semaphore acquireSharedSlot(UUID taskId) {
-        try {
-            return tasks.findById(taskId)
-                    .filter(t -> t.source() == AiSource.SHARED && t.state() == AiTaskState.QUEUED)
-                    .flatMap(t -> t.provider() != null ? Optional.of(t.provider())
-                            : Optional.ofNullable(t.connectionId()).flatMap(connections::findById).map(AiConnection::provider))
-                    .map(sharedSlots::get).orElse(null);
-        } catch (DataAccessException e) {
-            throw new RetryableJobException("Không đọc được task AI", e);
+    private final class ProviderPermit {
+        private Semaphore slot;
+
+        boolean tryAcquireSlot(AiConnection connection) {
+            if (connection.scope() != AiConnection.Scope.INSTITUTIONAL) {
+                return true;
+            }
+            Semaphore providerSlot = sharedSlots.get(connection.provider());
+            if (!providerSlot.tryAcquire()) {
+                return false;
+            }
+            slot = providerSlot;
+            return true;
+        }
+
+        void releaseSlot() {
+            if (slot != null) {
+                slot.release();
+                slot = null;
+            }
         }
     }
 
@@ -215,8 +224,8 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         delivery.deliver(taskId);
     }
 
-    /** Khóa task; trả dữ liệu để gọi provider khi vừa chuyển {@code RUNNING}, rỗng khi không cần gọi. */
-    private Dispatch start(UUID taskId) {
+    /** Khóa task; trả lượt gọi hoặc lượt chờ suất, rỗng khi không cần gọi. */
+    private Dispatch start(UUID taskId, ProviderPermit permit) {
         AiTask task = tasks.lock(taskId).orElse(null);
         if (task == null || task.hasFinished()) {
             return null;
@@ -233,17 +242,16 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         }
         AiConnection connection = task.connectionId() == null ? null
                 : connections.findById(task.connectionId()).orElse(null);
-        AiTask running = task.moveTo(AiTaskState.RUNNING, now);
         if (connection == null || connection.status() != Status.ACTIVE) {
             // Khóa đã tắt hoặc thu hồi sau khi gửi: dùng khóa kế tiếp nếu còn.
-            if (running.reservedTokens() != null) {
-                quotaReservationService.release(running.actorId(), running.quotaDay(), running.reservedTokens());
+            if (task.reservedTokens() != null) {
+                quotaReservationService.release(task.actorId(), task.quotaDay(), task.reservedTokens());
             }
-            Dispatch next = chooseNextDispatch(running.retryWith(running.source(), running.connectionId(), running.provider(),
-                    running.model(), running.maxOutputTokens(), null, null, now));
+            AiTask released = task.retryWith(task.source(), task.connectionId(), task.provider(), task.model(),
+                    task.maxOutputTokens(), null, null, null);
+            Dispatch next = chooseNextDispatch(released, permit);
             if (next == null) {
-                saveTask(running.retryWith(running.source(), running.connectionId(), running.provider(), running.model(),
-                        running.maxOutputTokens(), null, null, now).moveTo(AiTaskState.FAILED, now)
+                saveTask(released.moveTo(AiTaskState.FAILED, now)
                         .failWithError("Kết nối AI đã bị tắt hoặc thu hồi"));
             }
             return next;
@@ -254,6 +262,10 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             fail(task, MISSING_IMAGES, false);
             return null;
         }
+        if (!permit.tryAcquireSlot(connection)) {
+            return new Dispatch(task, connection, null);
+        }
+        AiTask running = task.moveTo(AiTaskState.RUNNING, now);
         saveTask(running);
         return dispatch(running, connection, images);
     }
@@ -261,8 +273,11 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     private Dispatch dispatch(AiTask task, AiConnection connection, List<AiImage> images) {
         String key = cipher.decryptConnectionKey(connection);
         JsonNode prompt = readPrompt(task.inputPayload());
+        // task.maxOutputTokens là phần cho câu trả lời; phần chừa cho suy nghĩ tính lại theo model của kết nối đang dùng.
         return new Dispatch(task, connection, new Request(task.model(), key, readText(prompt, "system"), readText(prompt, "user"),
-                task.outputSchema(), task.maxOutputTokens(), properties.requestTimeout(), images));
+                task.outputSchema(), catalog.resolveOutputCap(connection.provider(), task.model(), task.maxOutputTokens()),
+                properties.requestTimeout(), images, catalog.readReasoningEffort(connection.provider(), task.model()),
+                catalog.readReasoningReserveTokens(connection.provider(), task.model())));
     }
 
     /** Nạp bytes ảnh theo tham chiếu trong prompt; thiếu ảnh nào thì trả {@code null} (BR-U06-55). */
@@ -281,9 +296,9 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
 
     /**
      * Khóa kế tiếp sau khóa của task (đã quyết toán quota lần trước): API chung theo thứ tự rồi API cá nhân của người
-     * gửi; khóa chung mà hết hạn mức thì bỏ qua. Lưu task với khóa mới; hết khóa thì trả rỗng, task chưa đổi.
+     * gửi; khóa chung mà hết hạn mức thì bỏ qua. Nếu hết suất gọi, lưu khóa mới ở trạng thái chờ.
      */
-    private Dispatch chooseNextDispatch(AiTask task) {
+    private Dispatch chooseNextDispatch(AiTask task, ProviderPermit permit) {
         if (Thread.currentThread().isInterrupted()) return null;
         List<AiConnection> order = new ArrayList<>();
         if (task.source() == AiSource.SHARED) {
@@ -324,17 +339,25 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             if (source == AiSource.SHARED) {
                 try {
                     QuotaReservationService.Reservation reservation = quotaReservationService.reserve(task.actorId(),
-                            QuotaReservationService.estimate(promptChars, max));
+                            QuotaReservationService.estimate(promptChars,
+                                    catalog.resolveOutputCap(candidate.provider(), candidate.model(), max)));
                     reserved = reservation.tokens();
                     day = reservation.day();
                 } catch (QuotaUnavailableException e) {
                     continue;
                 }
             }
-            AiTask moved = task.retryWith(source, candidate.id(), candidate.provider(), candidate.model(), max, reserved,
-                    day, clock.instant());
-            saveTask(moved);
-            return dispatch(tasks.findById(moved.id()).orElse(moved), candidate, images);
+            Instant now = clock.instant();
+            boolean canDispatch = permit.tryAcquireSlot(candidate);
+            AiTask selected = task.retryWith(source, candidate.id(), candidate.provider(), candidate.model(), max,
+                    reserved, day, canDispatch ? now : null);
+            AiTaskState next = canDispatch ? AiTaskState.RUNNING : AiTaskState.QUEUED;
+            if (selected.state() != next) {
+                selected = selected.moveTo(next, now);
+            }
+            saveTask(selected);
+            return canDispatch ? dispatch(tasks.findById(selected.id()).orElse(selected), candidate, images)
+                    : new Dispatch(selected, candidate, null);
         }
         return null;
     }
@@ -368,7 +391,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         }
     }
 
-    private Dispatch finish(UUID taskId, Outcome outcome) {
+    private Dispatch finish(UUID taskId, Outcome outcome, ProviderPermit permit) {
         AiTask task = tasks.lock(taskId).orElse(null);
         if (task == null || task.state() != AiTaskState.RUNNING) {
             return null;
@@ -409,7 +432,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         }
         AiTask settled = task.retryWith(task.source(), task.connectionId(), task.provider(), task.model(),
                 task.maxOutputTokens(), null, null, task.dispatchedAt());
-        Dispatch next = chooseNextDispatch(settled);
+        Dispatch next = chooseNextDispatch(settled, permit);
         if (next != null) {
             return next;
         }

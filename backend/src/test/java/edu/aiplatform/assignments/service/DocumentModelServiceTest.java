@@ -349,7 +349,7 @@ class DocumentModelServiceTest {
                 + "<mxCell id=\"e\" value=\"has\" edge=\"1\" source=\"a\" target=\"b\" parent=\"1\"/></root></mxGraphModel>";
         String packed = "<mxfile><diagram id=\"p\" name=\"Lớp\">" + deflate(model) + "</diagram></mxfile>";
         String compact = service.compactDiagramXml(packed);
-        assertThat(compact).contains("Trang 1 \"Lớp\"", "hình a: Order", "nối a -> b: has");
+        assertThat(compact).contains("Trang 1 \"Lớp\"", "hình a (chữ nhật): Order", "nối a -> b: has");
         assertThat(DiagramXml.countCells(packed)).isEqualTo(3);
     }
 
@@ -386,8 +386,31 @@ class DocumentModelServiceTest {
                 + " style=\"endArrow=open;html=1;\" edge=\"1\" source=\"c\" target=\"b\" parent=\"1\"/>"
                 + "</root></mxGraphModel>";
         String compact = service.compactDiagramXml(model);
-        assertThat(compact).contains("nối a -> b (nét đứt): <<include>>", "nối c -> b: <<extend>>");
+        assertThat(compact).contains("nối a -> b (nét đứt): <<include>>", "nối c -> b (nét liền): <<extend>>");
         assertThat(DiagramXml.clean("<b>Đặt</b> sân<br/>&lt;i&gt;")).isEqualTo("Đặt sân <i>");
+    }
+
+    @Test
+    void compactDiagramXmlShowsWhichShapesLieInsideTheSystemBoundary() {
+        // Khung system boundary thường chỉ nằm đè lên use case (cùng parent="1"), nên phải xét theo tọa độ.
+        String model = "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/>"
+                + "<mxCell id=\"sys\" value=\"Hệ thống\" style=\"rounded=0;html=1;\" vertex=\"1\" parent=\"1\">"
+                + "<mxGeometry x=\"200\" y=\"20\" width=\"400\" height=\"400\" as=\"geometry\"/></mxCell>"
+                + "<mxCell id=\"uc\" value=\"Đặt sân\" style=\"ellipse;html=1;\" vertex=\"1\" parent=\"1\">"
+                + "<mxGeometry x=\"300\" y=\"100\" width=\"140\" height=\"60\" as=\"geometry\"/></mxCell>"
+                + "<mxCell id=\"actor\" value=\"Khách\" style=\"shape=umlActor;html=1;\" vertex=\"1\" parent=\"1\">"
+                + "<mxGeometry x=\"60\" y=\"100\" width=\"30\" height=\"60\" as=\"geometry\"/></mxCell>"
+                + "<mxCell id=\"cls\" value=\"Order\" style=\"swimlane;childLayout=stackLayout;\" vertex=\"1\" parent=\"1\">"
+                + "<mxGeometry x=\"700\" y=\"20\" width=\"160\" height=\"80\" as=\"geometry\"/></mxCell>"
+                + "<mxCell id=\"attr\" value=\"+ id: UUID\" style=\"text;html=1;\" vertex=\"1\" parent=\"cls\">"
+                + "<mxGeometry y=\"26\" width=\"160\" height=\"26\" as=\"geometry\"/></mxCell>"
+                + "</root></mxGraphModel>";
+
+        String compact = service.compactDiagramXml(model);
+
+        assertThat(compact).contains("hình sys (chữ nhật): Hệ thống", "hình uc (ellipse) trong sys: Đặt sân",
+                "hình actor (umlActor): Khách", "hình attr (text) trong cls: + id: UUID");
+        assertThat(compact).doesNotContain("actor (umlActor) trong", "sys (chữ nhật) trong");
     }
 
     @Test
@@ -395,6 +418,16 @@ class DocumentModelServiceTest {
         DocumentModel document = new DocumentModel(new ArrayList<>(List.of(paragraph(BlockOrigin.TEACHER, "Đề"),
                 paragraph(BlockOrigin.STUDENT, "Bài làm"))));
         assertThat(service.toPlainText(document)).isEqualTo("> Đề\n\nBài làm");
+    }
+
+    @Test
+    void plainTextWithBlockIdsLabelsEveryBlockAndKeepsTeacherMarks() {
+        DocumentBlock teacher = paragraph(BlockOrigin.TEACHER, "Đề");
+        DocumentBlock student = paragraph(BlockOrigin.STUDENT, "Bài làm");
+        DocumentModel document = new DocumentModel(new ArrayList<>(List.of(teacher, student)));
+        assertThat(service.toPlainTextWithBlockIds(document)).isEqualTo(
+                "[block " + teacher.id() + "]\n> Đề\n\n[block " + student.id() + "]\nBài làm");
+        assertThat(service.toPlainText(document)).doesNotContain("[block ");
     }
 
     private static String deflate(String text) {

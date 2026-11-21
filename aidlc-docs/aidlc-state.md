@@ -1241,3 +1241,72 @@ Plan: construction/plans/code-generation-plan/2026-11-13-group-grading-side-pane
 - [x] HEAD matches freshly fetched origin/staging at d8ac7d21; no merge conflicts found. Exact-SHA CI backend/frontend/deploy-script/images succeeded.
 - [x] Report: construction/build-and-test/2026-11-16-staging-readiness.md. Local frontend dependency installation incomplete and Docker engine stopped; no live deployment verification, push or deploy.
 
+
+## Góp ý giảng viên và Syllabus SWR302/SWD392 — 2026-11-20
+
+- [x] Rà soát chỉ đọc theo góp ý giảng viên và Syllabus FLM SWD392 (ID 14179), SWR302 (ID 14176). Kết quả: inception/requirements/2026-11-20-lecturer-feedback-syllabus.md.
+- [x] Người dùng chọn mục 2, 3, 4, 5, 8. Đã cập nhật tài liệu: định vị không áp quy trình riêng, AS-IS theo Syllabus, giữ D01, MCP/AI không cần GPU và công thức chi phí (requirements.md §1, §2.3, §2.4, REL-005), trạng thái 2026-11-20 trong gap analysis 2026-11-12.
+- [ ] Mục 8 (loại sơ đồ Context/DFD/Communication): Requirements Analysis nháp và câu hỏi Q1–Q4 tại inception/requirements/2026-11-20-diagram-types*.md. Chờ người dùng trả lời và GVHD duyệt; chưa sửa code.
+- [ ] Report 1 trên Drive chưa sửa; dùng mục 2 của tài liệu 2026-11-20 để cập nhật.
+
+Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security/Resiliency giữ nguyên, PBT tắt.
+
+## Cải thiện độ chính xác AI chấm bài — kế hoạch 2026-11-20
+
+- [x] Lập kế hoạch theo yêu cầu "lập plan hoàn chỉnh để cải thiện độ chính xác AI chấm bài hiện tại": construction/plans/code-generation-plan/2026-11-20-ai-grading-accuracy.md. Dựa trên kết quả đánh giá 2026-11-13/15 và đọc code tĩnh; tìm 9 nguyên nhân gốc R1–R9 (mã block không gửi kèm nội dung, sơ đồ gửi hai lần, mã block sai làm hỏng cả đề xuất, thiếu system boundary…).
+- [x] Người dùng duyệt làm giai đoạn 1–3 trước. Đã làm: mã block trong prompt chấm, mã block sai không còn làm hỏng đề xuất, bỏ gửi sơ đồ lần hai, tóm tắt sơ đồ có hình chữ nhật và quan hệ "trong", chỉ dẫn loại sơ đồ/chuẩn ký pháp/rubric mơ hồ/sơ đồ bị cắt/lạc đề. Test liên quan 86/86, unit test các unit bị ảnh hưởng 755 đạt, 8 bỏ qua.
+- [x] Đo live 2026-11-20 (gemini-3.5-flash-lite, badminton-booking, cũ 7d51a16f và mới): không cải thiện, bài 08 tụt khi có mã block (G1); bài 04 sai ở cả hai bản (G2). Kết quả: construction/build-and-test/2026-11-20-ai-grading-accuracy-results.md.
+- [x] Sửa G1 (bằng chứng phải đối chiếu) và G3 (cấu hình suy nghĩ theo provider; Gemini mặc định không gửi tham số, 0 lần bị cắt khi đo). 926 unit test đạt. Kết quả mục 4–5 file kết quả 2026-11-20.
+- [x] G4 (làm tròn điểm) và G2 (nét liền) đã sửa 2026-11-21; 928 unit test đạt, live bài 04 đúng 3,75, replay xác nhận G4.
+- [x] Chạy lại cả bộ 2026-11-21: 9,46/10, sai số điểm 2,3%, kappa 0,84; G5, G6 mới phát hiện.
+- [x] 2026-11-21: giữ chỉ dẫn G6, bỏ chỉ dẫn độ dài G5, bộ đánh giá lưu phần chữ bị cắt, RubricEditor gợi ý tiêu chí chỉ nêu trường hợp bị trừ (vi/en/ja). Backend 496, frontend 149 test đạt.
+- [x] Commit local 2026-11-21 theo yêu cầu (chưa push): d8f69175, 43857601, 3aa94c57, fc8ec0cf và commit tài liệu.
+- [ ] Còn: chẩn đoán G5 (chưa bắt được lần bị cắt), rubric mẫu cho môn (cần app chạy), giai đoạn 0 (bộ SWR302/COMET), 4.1–4.2, kiểm OpenAI/Claude khi có key, integration test (Docker tắt). Chưa commit.
+
+Đã gọi Gemini thật bằng key của người dùng (khoảng 80 lời gọi, bản ghi trong backend/target/ai-eval, không vào git). Không commit/push/deploy.
+
+### U09 — rà soát actor phụ trong đề xuất AI (2026-11-21)
+
+- [x] Sửa prompt để đối chiếu actor theo vai trò, xử lý điểm thành phần theo rubric và đánh dấu trường hợp mơ hồ.
+- [x] Backend kiểm tra mục chữ ghi rõ tên actor phụ bắt buộc với bảng đặc tả cùng phần. Đề xuất tối đa khi thiếu tên được đánh dấu cần giảng viên xem ở cả provider và MCP.
+- [x] Test hồi quy tái hiện lỗi. Trên mã cuối, 96 ca grading đạt. Phát lại 10 phản hồi Gemini hợp lệ theo hai rubric, cả 5 lượt đề xuất tối đa sai actor phụ được đánh dấu. Prompt mới chưa được gọi lại qua Gemini.
+- [x] Chạy toàn backend trước bước bổ sung xử lý rubric có ví dụ: 2.583 đạt, một bỏ qua và ca đo `U04_SCOPE` vượt p95 (23,80 ms so với 20 ms). Chạy lại ca đo cùng 96 ca grading trên mã cuối, tất cả đạt. `U04_SCOPE` đạt 3,65 ms khi chạy lại.
+
+### U09 — phục hồi yêu cầu chấm AI (2026-11-21)
+
+- [x] Kế hoạch thực hiện grading trước theo [kế hoạch U09](construction/plans/code-generation-plan/2026-11-21-u09-proposal-recovery.md). QA Orca độc lập xác nhận hai cửa sổ gián đoạn và rà soát bản sửa backend.
+- [x] Gửi lại cùng mã và snapshot khôi phục đề xuất còn chờ. Gắn tác vụ trong transaction tạo tác vụ và giữ quota, theo khóa đánh giá. Báo snapshot hết hiệu lực và từ chối bản MCP gửi lại sai định dạng trước khi xác nhận replay.
+- [x] Backend 157 test đạt qua hai nhóm. Ca đồng thời với PostgreSQL và RabbitMQ ghi nhận một đề xuất, một tác vụ, một khoản giữ quota và một message. Xác nhận hoàn tác task/quota khi transaction gián đoạn. Hồ sơ trong `backend/target/grading-proposal-recovery-verified.log` và `backend/target/grading-proposal-transaction-guards.log`.
+- [x] Frontend giữ mã khi gửi lại chấm lẻ và theo lô trong cùng màn hình. Kiểm tra trực tiếp 223 test grading, TypeScript và ESLint các file đổi đạt. Worker Orca tái hiện 6 ca sai mã trước sửa và chạy lại 1.171 test frontend thành công với 4 worker.
+- [ ] Chạy hành trình trình duyệt qua stack cô lập và gọi lại provider thật.
+
+### U09 — xử lý phản hồi AI thiếu trường nhận xét (2026-11-21)
+
+- [x] Năm ca thiếu trường nullable bị từ chối trước sửa, đều đạt sau khi sửa schema provider và chuẩn hóa. Bằng chứng thiếu cần giảng viên xem. Sai kiểu dữ liệu vẫn bị từ chối.
+- [x] 255 test grading, gateway và MCP đạt. Phát lại 24 bản ghi Gemini, 17 hợp lệ về định dạng và 7 lỗi provider đã ghi. Kết quả trong `backend/target/grading-format-verified.log` và `backend/target/grading-format-replay`.
+- [ ] Gọi provider thật trên bản sửa và khởi động lại backend Orca.
+
+## Bỏ tiếng Nhật — 2026-11-21
+
+- [x] Bỏ locale `ja` (locales.ts, msg.ts, xóa `messages/ja.json`); cookie cũ `ja` quay về tiếng Anh. Lựa chọn ngôn ngữ đề AI chỉ còn VI/EN/AUTO (frontend dựng từ LOCALES; backend `normalizeOptions` từ chối `JA`, prompt bỏ nhánh Japanese).
+- [x] Cập nhật README, requirements (§FR-006, NFR-002), current-code-baseline; báo cáo lịch sử giữ nguyên.
+- [x] Test: frontend 157 tệp, 1.161 test đạt; backend assignments + ArchitectureTest 166 đạt.
+- [x] Theo yêu cầu, thay dữ liệu mẫu tiếng Trung trong `AssignmentAiRevisionTest` bằng tiếng Việt cùng nghĩa (`vietnameseSkeleton`).
+- [x] Theo yêu cầu, xóa con dấu trang trí chữ Hán (`HankoMark`) khỏi `Logo.tsx` và màn đăng nhập (`AuthLayout`); còn giấy nhớ và bút chì. Frontend identity + shared 202 test đạt, eslint không lỗi. Chưa xem trên trình duyệt.
+
+## Độ tin cậy của rubric và bằng chứng chấm AI
+
+- [x] U09 ưu tiên điều kiện bắt buộc và tùy chọn của rubric khi đề xuất điểm. Khi cách tính điểm chưa rõ, prompt yêu cầu giảng viên xem lại.
+- [x] Đề xuất qua provider và MCP được đánh dấu cần xem khi dẫn bằng chứng sang phần khác đã xác định. Điểm đề xuất giữ nguyên. Test kiểm tra gửi lại cùng mã, đề xuất khác nội dung và dữ liệu lịch sử.
+- [x] Ba ca hồi quy thất bại trước bản sửa và đạt sau bản sửa. Backend Java 17 đạt 2.581/2.582 test, test backup còn lại đạt khi chạy riêng với UTF-8. 71 test giao diện duyệt điểm đạt.
+- [x] Replay 24 phản hồi giữ nguyên kết quả điểm. Phép đo prompt mới qua Gemini đang chờ khóa trong phiên cục bộ. Cơ chế xác thực, phân quyền, ghi nhận và phục hồi nền hiện có được giữ cho phạm vi U09. Không bổ sung triển khai hoặc thay đổi cấu hình.
+
+## Sửa 19 phát hiện audit mã nguồn (2026-11-21)
+
+- [x] Tái hiện, sửa và kiểm lại 19 mục theo [kế hoạch](construction/plans/code-generation-plan/2026-11-21-audit-remediation.md).
+- [x] Kiểm bản ghép với 249 test backend được chọn, 1.186 test frontend, TypeScript, ESLint và 20 ca deploy/restore giả lập. Dữ liệu kiểm thử tổng hợp.
+- [ ] Nghiệm thu browser, AI provider trực tiếp và triển khai. Chưa commit, push hoặc deploy lượt này.
+
+### Kiểm tra Gemini trực tiếp sau đợt sửa audit
+
+- [x] Gemini 3.5 Flash Lite trả 6/6 phản hồi hợp lệ trên 01-complete và 08-wrong-actors. Bài đầy đủ đạt 4,00 trong cả ba lượt. Bài actor sai đạt 2,25 đến 2,50 trên 4,00, kỳ vọng 2,80 từ bộ tổng hợp. Mục actor dao động 0,00 đến 0,12 và không có cờ cần kiểm tra.

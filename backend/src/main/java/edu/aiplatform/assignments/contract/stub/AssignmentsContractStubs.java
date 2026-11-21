@@ -148,6 +148,11 @@ public class AssignmentsContractStubs {
             }
 
             @Override
+            public String toPlainTextWithBlockIds(DocumentModel document) {
+                return "";
+            }
+
+            @Override
             public String compactDiagramXml(String xml) {
                 return xml;
             }

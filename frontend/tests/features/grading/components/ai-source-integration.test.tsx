@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AiProposalPanel } from "@/features/grading/components/AiProposalPanel";
 import { Toaster } from "@/shared/ui";
 import { BatchActionDialog } from "@/features/grading/components/BatchActionDialog";
+import { ApiError } from "@/shared/api/client";
 
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), requestBatch: vi.fn(), estimateBatch: vi.fn() }));
 vi.mock("@/shared/api/client", async (importOriginal) => ({
@@ -53,5 +54,40 @@ describe("U09 AI requests choose their source automatically", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
     await waitFor(() => expect(mocks.requestBatch).toHaveBeenCalledExactlyOnceWith(items, { requestRef: expect.any(String) }));
     expect(await screen.findByText(/Đã gửi yêu cầu AI/)).toBeInTheDocument();
+  });
+
+  it("reuses the batch request after a lost response for the same selection", async () => {
+    mocks.requestBatch.mockRejectedValueOnce(new ApiError({ status: 502, detail: "Response lost" }))
+      .mockResolvedValue({ items: [{ evaluationId: "e", outcome: "READY" }] });
+    const props = { action: "ai" as const, onClose: vi.fn(), onDone: vi.fn() };
+    const { rerender } = render(<BatchActionDialog {...props} items={items} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Response lost");
+    const firstRequest = mocks.requestBatch.mock.calls[0]?.[1];
+    expect(firstRequest.requestRef).toEqual(expect.any(String));
+
+    rerender(<BatchActionDialog {...props} items={items.map((item) => ({ ...item }))} />);
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
+    await screen.findByRole("button", { name: "Đóng" });
+    expect(mocks.requestBatch).toHaveBeenNthCalledWith(2, items, firstRequest);
+  });
+
+  it("discards the batch retry reference when the selected versions change", async () => {
+    mocks.requestBatch.mockRejectedValueOnce(new TypeError("Response lost"))
+      .mockResolvedValue({ items: [{ evaluationId: "e", outcome: "READY" }] });
+    const props = { action: "ai" as const, onClose: vi.fn(), onDone: vi.fn() };
+    const { rerender } = render(<BatchActionDialog {...props} items={items} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Response lost");
+    const firstRequest = mocks.requestBatch.mock.calls[0]?.[1];
+
+    rerender(<BatchActionDialog {...props} items={[{ evaluationId: "e", version: 8 }]} />);
+    rerender(<BatchActionDialog {...props} items={items} />);
+    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
+    await screen.findByRole("button", { name: "Đóng" });
+    expect(mocks.requestBatch).toHaveBeenCalledTimes(2);
+    expect(mocks.requestBatch).not.toHaveBeenNthCalledWith(2, items, firstRequest);
   });
 });

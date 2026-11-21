@@ -17,6 +17,7 @@ import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.shared.error.ApiException;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -82,6 +83,17 @@ class WorkAccess {
         };
     }
 
+    void requireUniqueDraftDestination(Actor actor, UUID classId, UUID subjectId) {
+        ClassRef target = requireStudentOfClass(actor, classId, "ATTEMPT_STARTED");
+        List<UUID> eligible = call(() -> classes.listOpenClassesOf(actor.accountId())).stream()
+                .filter(ref -> ref.status() == ClassStatus.OPEN && subjectId.equals(ref.subjectId()))
+                .filter(ref -> isActiveStudent(actor.accountId(), ref.classId()))
+                .map(ClassRef::classId).distinct().limit(2).toList();
+        if (!subjectId.equals(target.subjectId()) || !eligible.equals(List.of(classId))) {
+            throw deny(actor, "ATTEMPT_STARTED", "COURSE_CLASS", classId, "DRAFT_TRANSFER_DESTINATION");
+        }
+    }
+
     /** Chủ lượt còn ghi danh lớp OPEN của lượt. */
     AssignmentAttempt requireOwnAttempt(Actor actor, UUID attemptId, String action) {
         requireSignedIn(actor);
@@ -99,7 +111,12 @@ class WorkAccess {
             assignments.lockSubmission(attempt.assignmentId());
             return null;
         });
-        return attempts.findForUpdate(attempt.id()).orElseThrow(() -> ApiException.createNotFound("ATTEMPT_NOT_FOUND"));
+        AssignmentAttempt locked = attempts.findForUpdate(attempt.id())
+                .orElseThrow(() -> ApiException.createNotFound("ATTEMPT_NOT_FOUND"));
+        if (!locked.classId().equals(attempt.classId())) {
+            requireStudentOfClass(actor, locked.classId(), action);
+        }
+        return locked;
     }
 
     /** Chủ lượt, hoặc giảng viên chính của lớp ghi trên lượt với lượt đã nộp (F5 xuất, F10 bước 4). */
