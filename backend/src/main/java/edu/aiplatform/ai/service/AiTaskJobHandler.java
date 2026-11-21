@@ -261,8 +261,11 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     private Dispatch dispatch(AiTask task, AiConnection connection, List<AiImage> images) {
         String key = cipher.decryptConnectionKey(connection);
         JsonNode prompt = readPrompt(task.inputPayload());
+        // task.maxOutputTokens là phần cho câu trả lời; phần chừa cho suy nghĩ tính lại theo model của kết nối đang dùng.
         return new Dispatch(task, connection, new Request(task.model(), key, readText(prompt, "system"), readText(prompt, "user"),
-                task.outputSchema(), task.maxOutputTokens(), properties.requestTimeout(), images));
+                task.outputSchema(), catalog.resolveOutputCap(connection.provider(), task.model(), task.maxOutputTokens()),
+                properties.requestTimeout(), images, catalog.readReasoningEffort(connection.provider(), task.model()),
+                catalog.readReasoningReserveTokens(connection.provider(), task.model())));
     }
 
     /** Nạp bytes ảnh theo tham chiếu trong prompt; thiếu ảnh nào thì trả {@code null} (BR-U06-55). */
@@ -324,7 +327,8 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             if (source == AiSource.SHARED) {
                 try {
                     QuotaReservationService.Reservation reservation = quotaReservationService.reserve(task.actorId(),
-                            QuotaReservationService.estimate(promptChars, max));
+                            QuotaReservationService.estimate(promptChars,
+                                    catalog.resolveOutputCap(candidate.provider(), candidate.model(), max)));
                     reserved = reservation.tokens();
                     day = reservation.day();
                 } catch (QuotaUnavailableException e) {

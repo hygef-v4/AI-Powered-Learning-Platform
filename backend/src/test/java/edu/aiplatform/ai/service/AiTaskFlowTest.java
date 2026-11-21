@@ -695,8 +695,8 @@ class AiTaskFlowTest {
     void imagePromptsOnlyUseConnectionsWhoseModelReadsImages() {
         AiProperties visionLimited = new AiProperties(KeyCipherAndCatalogTest.KEY_V1, null, Duration.ofSeconds(120),
                 Duration.ofSeconds(20), Map.of(
-                "gemini", new AiProperties.Provider(List.of("gemini-2.5-flash"), 8192, List.of("gemini-2.5-pro")),
-                "openai", new AiProperties.Provider(List.of("gpt-4.1-mini"), 4096, List.of())));
+                "gemini", new AiProperties.Provider(List.of("gemini-2.5-flash"), 8192, List.of("gemini-2.5-pro"), List.of(), "", 0),
+                "openai", new AiProperties.Provider(List.of("gpt-4.1-mini"), 4096, List.of(), List.of(), "", 0)));
         AiTaskResultHandlerRegistry registry = AiTaskResultHandlerRegistry.createRegistry(List.of(handler));
         AiAccess access = new AiAccess(authorization, mock(IAudit.class), clock);
         AiTaskService limited = new AiTaskService(tasks, connections, usageRepository, registry, quota,

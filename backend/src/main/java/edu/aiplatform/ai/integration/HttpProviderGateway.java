@@ -41,8 +41,6 @@ public class HttpProviderGateway implements IProviderGateway {
             AiProvider.CLAUDE, "https://api.anthropic.com");
     static final String RESULT_TOOL = "return_result";
     static final String IMAGES_NOT_SUPPORTED = "Model đang dùng không đọc được ảnh; hãy chọn model khác";
-    /** Dưới mức này không đặt ngân sách suy nghĩ (ví dụ lời gọi thử kết nối). */
-    static final int MIN_TOKENS_FOR_THINKING_BUDGET = 2048;
     static final String EMPTY_OUTPUT = "Nhà cung cấp AI không trả nội dung";
     /** Lý do dừng bình thường: không phải chặn, chữ rỗng thì báo chung {@link #EMPTY_OUTPUT}. */
     private static final Set<String> NORMAL_STOPS = Set.of("", "STOP", "stop", "end_turn", "tool_use", "tool_calls",
@@ -86,9 +84,15 @@ public class HttpProviderGateway implements IProviderGateway {
         parts.addObject().put("text", r.user());
         ObjectNode config = body.putObject("generationConfig");
         config.put("maxOutputTokens", r.maxOutputTokens());
-        int thinkingBudget = calculateGeminiThinkingBudget(r.maxOutputTokens());
-        if (thinkingBudget > 0) {
-            config.putObject("thinkingConfig").put("thinkingBudget", thinkingBudget);
+        if (r.reasoningEffort() != null) {
+            // Gemini tính token suy nghĩ chung trần đầu ra. Gemini 2.x giới hạn bằng số token; từ Gemini 3 dùng mức
+            // suy nghĩ (đo 2026-11-20: gemini-3.5 bỏ qua thinkingBudget).
+            ObjectNode thinking = config.putObject("thinkingConfig");
+            if (r.model() != null && r.model().startsWith("gemini-2")) {
+                thinking.put("thinkingBudget", r.reasoningTokens());
+            } else {
+                thinking.put("thinkingLevel", r.reasoningEffort());
+            }
         }
         if (r.outputSchema() != null) {
             config.put("responseMimeType", "application/json");
@@ -122,18 +126,6 @@ public class HttpProviderGateway implements IProviderGateway {
                 !blockReason.isEmpty() && !NORMAL_STOPS.contains(blockReason));
     }
 
-    /**
-     * Gemini trừ token suy nghĩ vào cùng {@code maxOutputTokens}; để mặc định, model có thể suy nghĩ tới hết trần và
-     * trả {@code MAX_TOKENS} trước khi viết xong JSON (đánh giá AI chấm 2026-11-13). Giới hạn suy nghĩ ở 1/4 trần để
-     * phần trả lời luôn còn ít nhất 3/4. Trả 0 khi không đặt.
-     */
-    static int calculateGeminiThinkingBudget(int maxOutputTokens) {
-        if (maxOutputTokens < MIN_TOKENS_FOR_THINKING_BUDGET) {
-            return 0;
-        }
-        return maxOutputTokens / 4;
-    }
-
     private Response openAi(Request r) {
         ObjectNode body = json.createObjectNode();
         body.put("model", r.model());
@@ -152,6 +144,9 @@ public class HttpProviderGateway implements IProviderGateway {
             content.addObject().put("type", "text").put("text", r.user());
         }
         body.put("max_completion_tokens", r.maxOutputTokens());
+        if (r.reasoningEffort() != null) {
+            body.put("reasoning_effort", r.reasoningEffort());
+        }
         if (r.outputSchema() != null) {
             ObjectNode format = body.putObject("response_format");
             format.put("type", "json_schema");
@@ -292,9 +287,9 @@ public class HttpProviderGateway implements IProviderGateway {
         return buildSafeMessage(status);
     }
 
-    private static void requireCompleteOutput(String reason, Usage usage) {
+    private static void requireCompleteOutput(String reason, Usage usage, String output) {
         if ("MAX_TOKENS".equals(reason) || "length".equals(reason) || "max_tokens".equals(reason)) {
-            throw new OutputLimitException(usage);
+            throw new OutputLimitException(usage, output);
         }
     }
 
@@ -316,7 +311,7 @@ public class HttpProviderGateway implements IProviderGateway {
     private Response buildResponse(AiProvider provider, String model, String output, String requestId, Usage usage,
                               String reason, boolean promptBlocked) {
         if (!promptBlocked) {
-            requireCompleteOutput(reason, usage);
+            requireCompleteOutput(reason, usage, output);
         }
         if (promptBlocked || !NORMAL_STOPS.contains(reason) || output == null || output.isBlank()) {
             log.warn("AI provider returned unusable output provider={} model={} requestId={} reason={} promptBlocked={}",

@@ -132,7 +132,8 @@ public class AiTaskService implements IAiTask {
         LocalDate day = null;
         if (request.source() == AiSource.SHARED) {
             QuotaReservationService.Reservation reservation = quotaReservationService.reserve(actor.accountId(),
-                    QuotaReservationService.estimate(promptChars(request.prompt()), max));
+                    QuotaReservationService.estimate(promptChars(request.prompt()),
+                            catalog.resolveOutputCap(connection.provider(), connection.model(), max)));
             reserved = reservation.tokens();
             day = reservation.day();
         }
