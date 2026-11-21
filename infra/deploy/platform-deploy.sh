@@ -170,9 +170,12 @@ containers_ok() {
         return 1
     fi
     # shellcheck disable=SC2086 # tách id theo dòng là chủ ý
-    LAST_PROBLEM=$(docker inspect --format \
+    if ! LAST_PROBLEM=$(docker inspect --format \
         '{{.Name}} {{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' $ids |
-        awk '$2 != "running" || ($3 != "healthy" && $3 != "none") { printf "%s%s %s/%s", sep, substr($1, 2), $2, $3; sep = ", " }')
+        awk '$2 != "running" || ($3 != "healthy" && $3 != "none") { printf "%s%s %s/%s", sep, substr($1, 2), $2, $3; sep = ", " }'); then
+        LAST_PROBLEM="docker inspect không đọc được trạng thái container"
+        return 1
+    fi
     [[ -z $LAST_PROBLEM ]]
 }
 

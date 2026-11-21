@@ -16338,3 +16338,57 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Giao nhận thay đổi grading và các commit đang chờ trên audit-staging.
 
 ---
+
+## Sửa tuần tự phát hiện audit mã nguồn
+**Timestamp**: 2026-11-21T11:14:39Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp rôi sửa và test lần luợt các lỗi"
+**AI Response**: "Thực hiện theo thứ tự báo cáo audit đã duyệt. Mỗi lỗi được tái hiện và kiểm lại trước khi đánh dấu hoàn tất."
+**Context**: audit-staging tại 91d593be. Kế hoạch 2026-11-21-audit-remediation.md. Security và Resiliency giữ phạm vi hiện hành. Property-Based Testing tắt.
+
+---
+
+## Sửa tuần tự phát hiện audit mã nguồn — kiểm chứng
+**Timestamp**: 2026-11-21T11:47:42Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp rôi sửa và test lần luợt các lỗi"
+**AI Response**: "Đã ghép và kiểm 19 mục. Mỗi mục có tái hiện trước sửa và kiểm lại. Bản ghép đạt 249 test backend được chọn, 1.186 test frontend, ESLint, TypeScript, 17 ca deploy và 3 ca restore giả lập."
+**Context**: Dữ liệu tổng hợp. Test tích hợp chạy PostgreSQL, Redis và RabbitMQ cô lập. Nháp toàn môn chỉ chuyển khi đích hợp lệ duy nhất và giữ nguyên biên nhận cũ. Có migration Flyway cho lịch dọn tệp, vẫn đọc lịch Redis cũ. Chưa commit, push, deploy, gọi provider thật hoặc chạy E2E trình duyệt.
+
+---
+
+## U09 — kiểm tra Gemini sau sửa audit
+**Timestamp**: 2026-11-21T11:54:04Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi test gemini"
+**AI Response**: "Chuẩn bị gọi Gemini 3.5 Flash Lite qua pipeline backend đã ghép 19 bản sửa. Dùng dữ liệu tổng hợp 01-complete và 08-wrong-actors, mỗi bài ba lượt."
+**Context**: Bản sao đã qua test tích hợp khớp với mã backend hiện tại. Orca hiển thị ô nhập khóa thử nghiệm ẩn ký tự.
+
+---
+
+## U09 — kết quả Gemini sau sửa audit
+**Timestamp**: 2026-11-21T11:58:15Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi test gemini"
+**AI Response**: "Gemini 3.5 Flash Lite trả đủ sáu phản hồi hợp lệ trên hai bài tổng hợp. 01-complete đạt 4,00/4,00 ở cả ba lượt. 08-wrong-actors đạt 2,50, 2,37 và 2,25 trên 4,00 so với 2,80 kỳ vọng. Mục actor lần lượt đạt 0,00, 0,12 và 0,00 so với 0,10 kỳ vọng. Không lượt nào yêu cầu giảng viên kiểm tra."
+**Context**: Chạy GradingAiEvaluationTest ở chế độ live trên bản backend đã ghép. Điểm kỳ vọng do nhóm soạn. Xem báo cáo trong backend/target/gemini-after-repair-1795261996874. Chưa chạy màn hình thật.
+
+---
+
+## Sửa lỗi audit — chuẩn bị PR vào staging
+**Timestamp**: 2026-11-21T11:59:58Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit và pr lên staging"
+**AI Response**: "Chuẩn bị commit mã và test của đợt sửa 19 lỗi, tách script vận hành và tài liệu AI-DLC. Push audit-staging và mở PR vào staging."
+**Context**: Nhánh nguồn và nhánh đích cùng ở 91d593be khi kiểm tra. Dùng bằng chứng kiểm thử tích hợp và Gemini trên dữ liệu tổng hợp.
+
+---
+
+## PR 109 — sửa ca kiểm thử restore trong CI
+**Timestamp**: 2026-11-21T12:04:19Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit và pr lên staging"
+**AI Response**: "ShellCheck SC2251 chỉ ra điều kiện phủ định độc lập có thể bị bỏ qua. Sửa test để xóa nhầm container sau restore thành công gây exit 1. Ba ca chuẩn đạt. Fixture giả lập xóa nhầm chuyển từ exit 0 sang exit 1."
+**Context**: Cập nhật nhánh của PR 109. Thay đổi giới hạn ở test và hồ sơ kiểm chứng.
+
+---

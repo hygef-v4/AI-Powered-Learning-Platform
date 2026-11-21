@@ -148,7 +148,7 @@ class GradingProposalServiceTest {
         var evaluations = mock(IEvaluationRepository.class);
         var proposal = new GradingProposal();
         proposal.status = "READY";
-        when(transactions.prepareProposal(any(), any(), any())).thenReturn(
+        when(transactions.prepareProposal(any(), any(), any(), anyLong())).thenReturn(
                 new GradingProposalTransactions.Prepared(proposal, null, false, null));
         when(transactions.estimateTokens(any(), any(), anyLong())).thenReturn(5L);
         var items = java.util.stream.IntStream.range(0, size).mapToObj(index -> {
@@ -170,7 +170,7 @@ class GradingProposalServiceTest {
                 .allSatisfy(item -> assertThat(item.outcome()).isEqualTo("READY"));
         assertThat(estimate.items()).isEqualTo(size);
         assertThat(estimate.estimatedTokens()).isEqualTo(size * 5L);
-        verify(transactions, times(size)).prepareProposal(eq(actor), any(), any());
+        verify(transactions, times(size)).prepareProposal(eq(actor), any(), any(), eq(0L));
         verify(transactions, times(size)).estimateTokens(eq(actor), any(), eq(0L));
         verifyNoInteractions(aiTask);
     }
@@ -188,7 +188,7 @@ class GradingProposalServiceTest {
         when(evaluations.findById(e.id)).thenReturn(Optional.of(e));
         var p = new GradingProposal();
         p.status = "READY";
-        when(tx.prepareProposal(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
+        when(tx.prepareProposal(any(), any(), any(), anyLong())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
         var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
         var input = new AiBatch(List.of(new ItemVersion(e.id, 0)),
                 new AiRequest(AiSource.SHARED, null, "r".repeat(200)));
@@ -196,7 +196,7 @@ class GradingProposalServiceTest {
         service.requestProposals(actor, input);
         service.requestProposals(actor, input);
         var captor = ArgumentCaptor.forClass(AiRequest.class);
-        verify(tx, times(2)).prepareProposal(eq(actor), eq(e.id), captor.capture());
+        verify(tx, times(2)).prepareProposal(eq(actor), eq(e.id), captor.capture(), eq(0L));
         assertThat(captor.getAllValues().get(0).requestRef()).hasSizeLessThanOrEqualTo(200)
                 .isEqualTo(captor.getAllValues().get(1).requestRef());
         verifyNoInteractions(ai);
@@ -210,7 +210,7 @@ class GradingProposalServiceTest {
         var p = new GradingProposal();
         p.status = "FAILED";
         p.safeError = "QUOTA_EXHAUSTED";
-        when(tx.prepareProposal(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
+        when(tx.prepareProposal(any(), any(), any(), anyLong())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
         var e = new Evaluation();
         e.id = UUID.randomUUID();
         e.classId = UUID.randomUUID();

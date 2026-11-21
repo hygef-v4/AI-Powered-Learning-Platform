@@ -18,6 +18,7 @@ import edu.aiplatform.grading.repository.IGradingProposalRepository;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -50,7 +51,13 @@ public class GradingProposalService {
     /** Prepares and dispatches an AI grading proposal for an evaluation. */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public GradingProposal requestProposal(Actor actor, UUID evaluationId, AiRequest input) {
-        var prepared = gradingProposalTransactions.prepareProposal(actor, evaluationId, input);
+        return requestProposal(actor, evaluationId, input, null);
+    }
+
+    private GradingProposal requestProposal(Actor actor, UUID evaluationId, AiRequest input,
+            Long expectedVersion) {
+        var prepared = gradingProposalTransactions.prepareProposal(actor, evaluationId, input,
+                expectedVersion);
         var proposal = prepared.proposal();
 
         if (!prepared.dispatch()) {
@@ -181,11 +188,10 @@ public class GradingProposalService {
 
                 // Generate a deterministic per-item requestRef to ensure idempotency across retries
                 var request = batch.request();
-                var proposal = requestProposal(actor, evaluation.id, new AiRequest(request.source(),
-                        request.provider(),
-                        "u09-batch:" + UUID
-                                .nameUUIDFromBytes((request.requestRef() + ":" + evaluation.id)
-                                        .getBytes(java.nio.charset.StandardCharsets.UTF_8))));
+                String requestRef = "u09-batch:" + UUID.nameUUIDFromBytes(
+                        (request.requestRef() + ":" + evaluation.id).getBytes(StandardCharsets.UTF_8));
+                var proposal = requestProposal(actor, evaluation.id,
+                        new AiRequest(request.source(), request.provider(), requestRef), item.version());
                 outcomes.add(
                         new ItemResult(evaluation.id, proposal.status, proposal.safeError, null));
                 if ("FAILED".equals(proposal.status))

@@ -16,8 +16,8 @@ import {
   type DocumentPart,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Menu, MenuItem, Pill } from "@/shared/ui";
-import { attemptImageUrl, exportUrl, workApi } from "../api";
+import { Alert, Button, Dialog, Menu, MenuItem, Pill, showErrorToast } from "@/shared/ui";
+import { attemptImageUrl, downloadAttemptDocx, workApi } from "../api";
 import { readErrorCode, describeError, formatDateTime, formatTime, readProblemIssues, describeRemaining } from "../model/format";
 
 import type { Attempt } from "../model/types";
@@ -91,7 +91,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
     headerObserver.current = observer;
   }, []);
   const [activePart, setActivePart] = useState<string | null>(null);
-  const [retry, setRetry] = useState(0);
+  const [autosaveCycle, setAutosaveCycle] = useState(0);
   const version = useRef(0);
   const edits = useRef(0);
   const halt = useRef<Halt>(null);
@@ -178,6 +178,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
           const merged = mergeSaved(latest.current.content, saved.content);
           latest.current = { content: merged, dirty: true };
           setContent(merged);
+          setAutosaveCycle((cycle) => cycle + 1);
         }
         persistDraft(true);
         halt.current = null;
@@ -196,9 +197,10 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
           setBanner({ tone: "danger", text: describeError(error) });
         } else if (transient) {
           setBanner({ tone: "warning", text: msg("assignmentwork.pages.AssignmentWorkspacePage.connectionLostNotSaved") });
-          setRetry((value) => value + 1);
+          setAutosaveCycle((value) => value + 1);
         } else {
-          halt.current = "invalid";
+          halt.current = edits.current === startEdits ? "invalid" : null;
+          if (!halt.current) setAutosaveCycle((cycle) => cycle + 1);
           setIssues(readProblemIssues(error));
           setBanner({ tone: "danger", text: msg("assignmentwork.pages.AssignmentWorkspacePage.notSaved", { value: String(describeError(error)) }) });
         }
@@ -218,9 +220,11 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   // Đếm từ lần sửa đầu tiên chưa lưu, không dời theo từng lần gõ: gõ liên tục vẫn lưu đều mỗi 5 phút.
   useEffect(() => {
     if (!dirty || halt.current) return;
-    const timer = setTimeout(() => void save(), AUTOSAVE_MS);
+    const timer = setTimeout(() => {
+      if (!halt.current) void save();
+    }, AUTOSAVE_MS);
     return () => clearTimeout(timer);
-  }, [dirty, retry, save]);
+  }, [dirty, autosaveCycle, save]);
 
   useEffect(() => {
     const leave = () => {
@@ -255,7 +259,10 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   function edit(next: DocumentModel) {
     edits.current += 1;
     latest.current = { content: next, dirty: true };
-    if (halt.current === "invalid") halt.current = null;
+    if (halt.current === "invalid") {
+      halt.current = null;
+      setAutosaveCycle((cycle) => cycle + 1);
+    }
     setContent(next);
     setDirty(true);
   }
@@ -291,7 +298,10 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         </>}
         actions={<>
           <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.AssignmentWorkspacePage.moreActions")} align="right">
-            <MenuItem icon="download" onClick={() => { window.location.href = exportUrl(attempt.attemptId); }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.downloadDocx")}</MenuItem>
+            <MenuItem icon="download" onClick={() => {
+              void downloadAttemptDocx(attempt.attemptId)
+                .catch((error: unknown) => showErrorToast(describeError(error)));
+            }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.downloadDocx")}</MenuItem>
             {editable && <MenuItem icon="upload_file" onClick={() => setDialog("docx")}>{msg("assignmentwork.pages.AssignmentWorkspacePage.importDocx")}</MenuItem>}
           </Menu>
           {editable && (

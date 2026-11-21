@@ -1,44 +1,59 @@
 package edu.aiplatform.files.integration;
 
+import edu.aiplatform.files.repository.UnattachedFileRepository;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-/**
- * Tệp đã tải lên mà chưa được gắn vào đâu (sorted set {@code file:unattached}, điểm là thời điểm được dọn). FileRef hết
- * hạn sau 1 giờ thì không gắn được nữa, nên quá hạn cộng {@link #GRACE} mà chưa gắn là tệp mồ côi: người dùng hủy, đóng
- * trang, xem trước DOCX rồi bỏ. Gắn một lần là bỏ khỏi danh sách, không bao giờ bị dọn.
- */
 @Component
 public class UnattachedFiles {
 
-    static final String KEY = "file:unattached";
-    static final Duration GRACE = Duration.ofMinutes(10);
+    private static final Logger log = LoggerFactory.getLogger(UnattachedFiles.class);
+    private static final String LEGACY_KEY = "file:unattached";
+    private static final Duration GRACE = Duration.ofMinutes(10);
 
+    private final UnattachedFileRepository repository;
     private final StringRedisTemplate redis;
 
-    public UnattachedFiles(StringRedisTemplate redis) {
+    public UnattachedFiles(UnattachedFileRepository repository, StringRedisTemplate redis) {
+        this.repository = repository;
         this.redis = redis;
     }
 
     public void addFile(String fileId, Instant refExpiresAt) {
-        redis.opsForZSet().add(KEY, fileId, refExpiresAt.plus(GRACE).getEpochSecond());
+        repository.saveFile(fileId, refExpiresAt.plus(GRACE));
     }
 
     public void markAttached(String fileId) {
-        redis.opsForZSet().remove(KEY, fileId);
+        if (!repository.removeFile(fileId)) {
+            redis.opsForZSet().remove(LEGACY_KEY, fileId);
+        }
     }
 
-    /** Tệp tới hạn dọn, sớm trước. */
     public List<String> listDue(Instant now, int limit) {
-        Set<String> ids = redis.opsForZSet().rangeByScore(KEY, Double.NEGATIVE_INFINITY, now.getEpochSecond(), 0, limit);
-        return ids == null ? List.of() : List.copyOf(ids);
+        var due = new LinkedHashSet<>(repository.listDueFiles(now, limit));
+        if (due.size() < limit) {
+            // Old uploads remain tracked until their original expiry or attachment.
+            try {
+                var legacy = redis.opsForZSet().rangeByScore(
+                        LEGACY_KEY, Double.NEGATIVE_INFINITY, now.getEpochSecond(), 0, limit - due.size());
+                if (legacy != null) {
+                    due.addAll(legacy);
+                }
+            } catch (DataAccessException e) {
+                log.warn("Chưa đọc được danh sách dọn tệp cũ trong Redis");
+            }
+        }
+        return List.copyOf(due);
     }
 
     public void forgetFile(String fileId) {
-        redis.opsForZSet().remove(KEY, fileId);
+        markAttached(fileId);
     }
 }

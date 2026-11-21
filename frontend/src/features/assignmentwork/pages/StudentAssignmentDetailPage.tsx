@@ -145,12 +145,16 @@ export function StudentAssignmentDetailPage({ assignmentId }: { assignmentId: st
           )}
           {detail.submissionMode === "GROUP" ? (
             <SlotOutlet slot={groupWorkEntries} props={{ assignmentId, classId }} />
-          ) : detail.inProgressAttemptId ? (
+          ) : detail.inProgressAttemptId && detail.scope === "CLASS" ? (
             <ButtonLink variant="primary" href={`/attempts/${encodeURIComponent(detail.inProgressAttemptId)}`}>{msg("assignmentwork.pages.StudentAssignmentDetailPage.continueWorking")}</ButtonLink>
-          ) : detail.canStart ? (
+          ) : detail.inProgressAttemptId || detail.canStart ? (
             // Còn hạn nộp (hoặc hạn nộp trễ); bài luyện tập còn lượt. Bài cá nhân đã nộp thì sửa bài đã nộp rồi nộp lại (ghi đè).
             <Button variant="primary" onClick={() => void start()} disabled={starting} data-testid="start-attempt">
-              {!practice && detail.attemptsUsed > 0 ? msg("assignmentwork.pages.StudentAssignmentDetailPage.editAndResubmit") : msg("assignmentwork.pages.StudentAssignmentDetailPage.startWorking")}
+              {detail.inProgressAttemptId
+                ? msg("assignmentwork.pages.StudentAssignmentDetailPage.continueWorking")
+                : !practice && detail.attemptsUsed > 0
+                  ? msg("assignmentwork.pages.StudentAssignmentDetailPage.editAndResubmit")
+                  : msg("assignmentwork.pages.StudentAssignmentDetailPage.startWorking")}
             </Button>
           ) : null}
           {/* Bài cá nhân, nhóm: lịch sử chỉ có khi đã nộp và qua hạn nộp đúng giờ (yêu cầu 2026-11-10). */}

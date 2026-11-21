@@ -82,10 +82,17 @@ public class GradingProposalTransactions {
     /** Creates or reuses a proposal and prepares its AI prompt for dispatch. */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Prepared prepareProposal(Actor actor, UUID evaluationId, AiRequest request) {
+        return prepareProposal(actor, evaluationId, request, null);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Prepared prepareProposal(Actor actor, UUID evaluationId, AiRequest request,
+            Long expectedVersion) {
         requireAiSource(request);
         var evaluation = evaluationRepository.lockById(evaluationId)
                 .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
-        gradingService.requireCurrent(actor, evaluation.id, evaluation.version);
+        gradingService.requireCurrent(actor, evaluation.id,
+                expectedVersion == null ? evaluation.version : expectedVersion);
         requireGradableTarget(evaluation, "AI requests require a pending or draft grade");
         var existing = gradingProposalRepository.findByRequestRef(request.requestRef()).orElse(null);
         if (existing != null) {

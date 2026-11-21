@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.times;
@@ -42,6 +43,7 @@ import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groupdocs.model.GroupSection;
 import edu.aiplatform.groupdocs.model.GroupSection.Status;
 import edu.aiplatform.groupdocs.model.SectionRevision;
+import edu.aiplatform.groupdocs.model.SectionRules;
 import edu.aiplatform.groups.service.GroupAccess;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
@@ -103,9 +105,7 @@ class GroupSubmissionServiceTest {
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(document));
         when(groups.findGroup(group.id())).thenReturn(Optional.of(group));
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.ON_TIME);
-        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, AssignmentScope.CLASS,
-                classId, UUID.randomUUID(), 1, "Sơ đồ lớp", SubmissionMode.GROUP, GradingMode.GRADED, true,
-                AssignmentStatus.OPEN, NOW.minusSeconds(86400), NOW.plusSeconds(3600), null, null, false, null, List.of())));
+        stubSchedule(AssignmentStatus.OPEN, NOW.plusSeconds(3600), null);
         when(assignments.getContent(assignmentId)).thenReturn(Optional.empty());
         when(documentModel.validateForSubmit(any(), any(), any())).thenReturn(new ValidationResult(List.of(), List.of()));
         when(documents.updateDocument(any())).thenReturn(true);
@@ -147,7 +147,34 @@ class GroupSubmissionServiceTest {
     }
 
     @Test
+    void staleScannerCandidateCannotCloseAfterTeacherExtendsTheLateDeadline() {
+        stubSchedule(AssignmentStatus.OPEN, NOW.minusSeconds(120), NOW.plusSeconds(60));
+
+        assertThat(service.submitAutomatically(document.id())).isEmpty();
+
+        var locked = inOrder(assignments, documents);
+        locked.verify(assignments).lockSubmission(assignmentId);
+        locked.verify(documents).lockDocument(document.id());
+        locked.verify(assignments).loadAssignment(assignmentId);
+        verify(documents, never()).lockSections(any());
+        verify(documents, never()).updateDocument(any());
+        verifyNoInteractions(evaluation, events, audit, sse);
+    }
+
+    @Test
+    void autoSubmitLeavesTheDocumentOpenAtTheExactGraceBoundary() {
+        stubSchedule(AssignmentStatus.OPEN, NOW.minusSeconds(120),
+                NOW.minus(SectionRules.GRACE));
+
+        assertThat(service.submitAutomatically(document.id())).isEmpty();
+
+        verify(documents, never()).lockSections(any());
+        verify(documents, never()).updateDocument(any());
+    }
+
+    @Test
     void autoSubmitFinalizesHeldDraftAndClosesTheDocument() {
+        stubSchedule(AssignmentStatus.CLOSED, NOW.plusSeconds(60), null);
         DocumentBlock draft = block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp chưa Xong");
         GroupSection held = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
                 .replaceDraft(List.of(draft), NOW.minusSeconds(40));
@@ -168,9 +195,7 @@ class GroupSubmissionServiceTest {
     @Test
     void autoSubmitAfterTheDeadlineIsOnTimeWhenTheLastEditWasBeforeIt() {
         Instant closesAt = NOW.minusSeconds(120);
-        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, AssignmentScope.CLASS,
-                classId, UUID.randomUUID(), 1, "Sơ đồ lớp", SubmissionMode.GROUP, GradingMode.GRADED, true,
-                AssignmentStatus.CLOSED, NOW.minusSeconds(86400), closesAt, null, null, false, null, List.of())));
+        stubSchedule(AssignmentStatus.OPEN, closesAt, closesAt.plusSeconds(60));
         DocumentBlock draft = block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp");
         GroupSection held = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
                 .replaceDraft(List.of(draft), closesAt.minusSeconds(60));
@@ -190,6 +215,7 @@ class GroupSubmissionServiceTest {
 
     @Test
     void retiredAssignmentUsesRetiredMode() {
+        stubSchedule(AssignmentStatus.RETIRED, NOW.plusSeconds(60), null);
         DocumentBlock draft = block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp");
         GroupSection held = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
                 .replaceDraft(List.of(draft), NOW.minusSeconds(30));
@@ -203,6 +229,7 @@ class GroupSubmissionServiceTest {
 
     @Test
     void autoSubmitOnUntouchedDocumentSimplyClosesWithoutCreatingSubmission() {
+        stubSchedule(AssignmentStatus.CLOSED, NOW.plusSeconds(60), null);
         when(documents.lockSections(document.id())).thenReturn(List.of(
                 section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)));
         assertThat(service.submitAutomatically(document.id())).isEmpty();
@@ -227,6 +254,7 @@ class GroupSubmissionServiceTest {
                 submitted.receiptHash(), submitted.warnings(), NOW.plusSeconds(120), 1, submitted.createdAt());
         GroupSection heldWithDraft = section("p1", heading1, 1, Status.CLAIMED, member.accountId(), null, null)
                 .replaceDraft(List.of(block(UUID.randomUUID(), BlockType.PARAGRAPH, "nháp sau nộp")), NOW.plusSeconds(120));
+        stubSchedule(AssignmentStatus.CLOSED, NOW.plusSeconds(60), null);
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(touchedLater));
         when(documents.lockSections(document.id())).thenReturn(List.of(heldWithDraft));
         clearInvocations(documents, evaluation, events, audit, sse);
@@ -302,6 +330,7 @@ class GroupSubmissionServiceTest {
         ArgumentCaptor<GroupDocument> saved = ArgumentCaptor.forClass(GroupDocument.class);
         verify(documents).updateDocument(saved.capture());
         GroupDocument submitted = saved.getValue();
+        stubSchedule(AssignmentStatus.CLOSED, NOW.plusSeconds(60), null);
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(submitted));
         when(documents.lockSections(document.id())).thenReturn(List.of());
         clearInvocations(documents, evaluation, events, audit, sse);
@@ -320,6 +349,7 @@ class GroupSubmissionServiceTest {
 
     @Test
     void lostCasWhileClosingUnchangedSubmissionHasNoDeliverySideEffects() {
+        stubSchedule(AssignmentStatus.CLOSED, NOW.plusSeconds(60), null);
         GroupDocument submitted = document.recordSubmission(skeleton, List.of(), leader.accountId(),
                 GroupDocument.SubmitMode.MANUAL, NOW, false, "existing-receipt", List.of(),
                 GroupDocument.Status.IN_PROGRESS);
@@ -330,6 +360,13 @@ class GroupSubmissionServiceTest {
         assertThat(service.submitAutomatically(document.id())).isEmpty();
 
         verifyNoInteractions(evaluation, events, audit, sse);
+    }
+
+    private void stubSchedule(AssignmentStatus status, Instant closesAt, Instant lateUntil) {
+        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId,
+                AssignmentScope.CLASS, classId, UUID.randomUUID(), 1, "Sơ đồ lớp", SubmissionMode.GROUP,
+                GradingMode.GRADED, true, status, NOW.minusSeconds(86400), closesAt, lateUntil, null, false, null,
+                List.of())));
     }
 
     private GroupSection section(String partId, UUID heading, int order, Status status, UUID holder,
@@ -348,5 +385,22 @@ class GroupSubmissionServiceTest {
                 d.activityMonitoring(), d.autoSubmitReason(), d.submittedDocument(), d.sectionAuthors(), d.submittedBy(),
                 d.submitMode(), d.submittedAt(), d.late(), d.receiptHash(), d.warnings(), d.lastChangedAt(), version,
                 d.createdAt());
+    }
+
+    @Test
+    void preservesThePublishedAuthorWhenANewHolderSavesNothingBeforeClosure() {
+        stubSchedule(AssignmentStatus.CLOSED, NOW.plusSeconds(60), null);
+        DocumentBlock answer = block(UUID.randomUUID(), BlockType.PARAGRAPH, "Published section");
+        GroupSection published = section("p1", heading1, 1, Status.DONE, null,
+                List.of(answer), leader.accountId());
+        GroupSection held = published.markClaimed(member.accountId(), leader.accountId(), NOW.minusSeconds(10));
+        when(documents.lockSections(document.id())).thenReturn(List.of(held));
+
+        service.submitAutomatically(document.id());
+
+        ArgumentCaptor<GroupSection> saved = ArgumentCaptor.forClass(GroupSection.class);
+        verify(documents).updateSection(saved.capture());
+        assertThat(saved.getValue().lastAuthorId()).isEqualTo(leader.accountId());
+        verify(documents, never()).insertRevision(any());
     }
 }

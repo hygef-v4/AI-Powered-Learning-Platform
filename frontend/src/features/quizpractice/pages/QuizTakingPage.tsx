@@ -15,9 +15,13 @@ import { msg } from "@/i18n/msg";
 export const AUTOSAVE_DELAY_MS = 2000;
 /** Không để việc gửi nốt sự kiện rời trang giữ chân lần nộp bài. */
 const ACTIVITY_DRAIN_LIMIT_MS = 2000;
-type SaveState = "saved" | "dirty" | "saving" | "error";
+type SaveState = "saved" | "dirty" | "saving" | "error" | "conflict";
 /** `time-up`: máy chủ không nhận lưu vì đã quá hạn cộng ân hạn; `failed`: còn câu trả lời chưa lưu được. */
 type SaveOutcome = "saved" | "time-up" | "failed";
+
+function hasSameOptions(options: string[] = [], other: string[] = []): boolean {
+  return options.length === other.length && options.every((option) => other.includes(option));
+}
 
 function calculateRemainingSeconds(view: TakingView, skewMs: number): number | null {
   if (!view.deadlineAt) return null;
@@ -54,8 +58,10 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   const [confirming, setConfirming] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [finishing, setFinishing] = useState<"manual" | "timeup" | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const [conflictQuestions, setConflictQuestions] = useState<string[]>([]);
   const answersRef = useRef(answers);
+  const baseAnswersRef = useRef<TakingView["answers"]>({});
+  const conflictQuestionsRef = useRef<string[]>([]);
   const versionRef = useRef(0);
   const dirtyRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,6 +84,9 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
         skewRef.current = new Date(next.serverTime).getTime() - Date.now();
         versionRef.current = next.answerVersion;
         answersRef.current = next.answers;
+        baseAnswersRef.current = next.answers;
+        conflictQuestionsRef.current = [];
+        setConflictQuestions([]);
         dirtyRef.current = false;
         setView(next);
         setAnswers(next.answers);
@@ -92,7 +101,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
     return () => {
       active = false;
     };
-  }, [attemptId, reloadKey, toResult]);
+  }, [attemptId, toResult]);
 
   // G3 (K5): gửi sự kiện rời trang khi lượt bật ghi nhận hoạt động; lỗi gửi không chặn làm bài.
   const sendActivity = useCallback((events: ActivityEventInput[], { keepalive }: { keepalive: boolean }) =>
@@ -101,20 +110,56 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
 
   /** Một lần lưu câu trả lời đang chờ kèm `answerVersion` hiện có. */
   const saveOnce = useCallback(async (keepalive: boolean): Promise<SaveOutcome> => {
-    dirtyRef.current = false;
     setSaveState("saving");
     try {
-      const saved = await saveAnswers(attemptId, answersRef.current, versionRef.current, keepalive);
-      versionRef.current = saved.answerVersion;
-      setSaveState(dirtyRef.current ? "dirty" : "saved");
-      return "saved";
+      for (let canRebase = true; ; canRebase = false) {
+        const sentAnswers = answersRef.current;
+        dirtyRef.current = false;
+        try {
+          const saved = await saveAnswers(attemptId, sentAnswers, versionRef.current, keepalive);
+          versionRef.current = saved.answerVersion;
+          baseAnswersRef.current = sentAnswers;
+          setSaveState(dirtyRef.current ? "dirty" : "saved");
+          setError(null);
+          return "saved";
+        } catch (failure) {
+          if (!canRebase || readErrorCode(failure) !== "ANSWER_VERSION_CONFLICT") throw failure;
+        }
+
+        const latest = await getAttempt(attemptId);
+        const merged = { ...latest.answers };
+        const conflicts: string[] = [];
+        dirtyRef.current = false;
+        for (const { questionId } of latest.questions) {
+          const local = answersRef.current[questionId] ?? [];
+          const base = baseAnswersRef.current[questionId];
+          const remote = latest.answers[questionId];
+          if (hasSameOptions(local, base) || hasSameOptions(local, remote)) continue;
+          merged[questionId] = local;
+          dirtyRef.current = true;
+          if (!hasSameOptions(remote, base)) conflicts.push(questionId);
+        }
+        versionRef.current = latest.answerVersion;
+        baseAnswersRef.current = latest.answers;
+        answersRef.current = merged;
+        setAnswers(merged);
+        setError(null);
+
+        if (conflicts.length > 0) {
+          conflictQuestionsRef.current = conflicts;
+          setConflictQuestions(conflicts);
+          setSaveState("conflict");
+          return "failed";
+        }
+        if (!dirtyRef.current) {
+          setSaveState("saved");
+          return "saved";
+        }
+      }
     } catch (failure) {
       const code = readErrorCode(failure);
       if (code === "ATTEMPT_TIME_UP") return "time-up";
-      if (code === "ANSWER_VERSION_CONFLICT") {
-        setError(describeError(failure));
-        setReloadKey((k) => k + 1);
-      } else if (code === "ATTEMPT_SUBMITTED") {
+      if (code === "ATTEMPT_SUBMITTED") {
         toResult();
       } else {
         dirtyRef.current = true;
@@ -142,6 +187,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
         if (outcome !== "saved") return outcome;
         continue;
       }
+      if (conflictQuestionsRef.current.length > 0) return "failed";
       if (!dirtyRef.current) return "saved";
       const run = saveOnce(keepalive).finally(() => {
         savingRef.current = null;
@@ -212,10 +258,28 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
     answersRef.current = updated;
     dirtyRef.current = true;
     setAnswers(updated);
+    if (conflictQuestionsRef.current.length > 0) return;
     setSaveState("dirty");
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => void flush(), AUTOSAVE_DELAY_MS);
   };
+
+  function resolveAnswerConflicts(useSaved: boolean) {
+    if (useSaved) {
+      const updated = { ...answersRef.current };
+      for (const questionId of conflictQuestionsRef.current) {
+        updated[questionId] = baseAnswersRef.current[questionId] ?? [];
+      }
+      answersRef.current = updated;
+      setAnswers(updated);
+    }
+    conflictQuestionsRef.current = [];
+    setConflictQuestions([]);
+    dirtyRef.current = Object.entries(answersRef.current).some(([id, options]) =>
+      !hasSameOptions(options, baseAnswersRef.current[id]));
+    setSaveState(dirtyRef.current ? "dirty" : "saved");
+    void flush();
+  }
 
   if (!view) {
     return error ? <PageLoadError>{error}</PageLoadError> : <PageLoading label={msg("quizpractice.pages.QuizTakingPage.loadingQuestions")} />;
@@ -225,7 +289,16 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
   const question = view.questions[index];
   const isAnswered = (id: string) => (answers[id]?.length ?? 0) > 0;
   const unanswered = view.questions.map((q, i) => (isAnswered(q.questionId) ? null : i + 1)).filter((n): n is number => n !== null);
-  const saveLabel = { saved: msg("quizpractice.pages.QuizTakingPage.savedAutomatically"), dirty: msg("quizpractice.pages.QuizTakingPage.notSaved"), saving: msg("quizpractice.pages.QuizTakingPage.saving"), error: msg("quizpractice.pages.QuizTakingPage.couldNotSave") }[saveState];
+  const saveLabel = {
+    saved: msg("quizpractice.pages.QuizTakingPage.savedAutomatically"),
+    dirty: msg("quizpractice.pages.QuizTakingPage.notSaved"),
+    saving: msg("quizpractice.pages.QuizTakingPage.saving"),
+    error: msg("quizpractice.pages.QuizTakingPage.couldNotSave"),
+    conflict: msg("quizpractice.pages.QuizTakingPage.couldNotSave"),
+  }[saveState];
+  const conflictNumbers = view.questions
+    .flatMap((q, i) => conflictQuestions.includes(q.questionId) ? [i + 1] : [])
+    .join(", ");
   const exit = () => void flush().then((outcome) => {
     if (outcome === "saved") router.push("/quiz-practice");
     else setLeaving(false);
@@ -237,6 +310,21 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
         busy={finishing !== null} onExit={() => (remaining === null ? exit() : setLeaving(true))}
         onRetrySave={() => void flush()} onSubmit={() => setConfirming(true)} />
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
+      {conflictQuestions.length > 0 && (
+        <Alert tone="warning" role="alert">
+          <p>{msg("quizpractice.pages.QuizTakingPage.conflictingQuestions", {
+            questions: conflictNumbers,
+          })}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button size="sm" disabled={finishing !== null} onClick={() => resolveAnswerConflicts(false)}>
+              {msg("quizpractice.pages.QuizTakingPage.keepMyChoices")}
+            </Button>
+            <Button size="sm" disabled={finishing !== null} onClick={() => resolveAnswerConflicts(true)}>
+              {msg("quizpractice.pages.QuizTakingPage.useSavedChoices")}
+            </Button>
+          </div>
+        </Alert>
+      )}
       {view.activityMonitoringEnabled && (
         <div data-testid="quiz-taking-activity-notice">
           <Alert tone="info">

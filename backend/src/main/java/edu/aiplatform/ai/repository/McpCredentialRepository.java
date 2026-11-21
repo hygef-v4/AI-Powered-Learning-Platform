@@ -45,6 +45,11 @@ public class McpCredentialRepository {
                 .param("id", accountId).query(McpCredentialRepository::map).list();
     }
 
+    public void lockCredentialAccount(UUID accountId) {
+        jdbc.sql("select 1 from (select pg_advisory_xact_lock(hashtextextended(:key, 0))) locked")
+                .param("key", "mcp-credential-create:" + accountId).query(Integer.class).single();
+    }
+
     public int countActive(UUID accountId, Instant now) {
         return jdbc.sql("select count(*) from mcp_credentials where account_id = :id and revoked_at is null "
                         + "and expires_at > :now")

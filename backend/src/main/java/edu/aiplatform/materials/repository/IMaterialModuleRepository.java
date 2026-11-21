@@ -11,6 +11,8 @@ public interface IMaterialModuleRepository {
 
     List<MaterialModule> listModules(UUID subjectId);
 
+    void lockModuleCreation(UUID subjectId);
+
     void insertModule(MaterialModule module);
 
     boolean updateModule(MaterialModule module, long expectedVersion);

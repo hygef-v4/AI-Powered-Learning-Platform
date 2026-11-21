@@ -33,8 +33,8 @@ public class JobPublisher implements IJob {
     }
 
     /** Gửi lại ngay việc còn chờ do {@code IPendingSweeper} trả (J3). */
-    public void resend(String jobType, PendingJob pending) {
-        sendMessage(buildMessage(jobType, pending.payload(), pending.idempotencyKey()));
+    public boolean resend(String jobType, PendingJob pending) {
+        return sendMessage(buildMessage(jobType, pending.payload(), pending.idempotencyKey()));
     }
 
     static JobMessage buildMessage(String jobType, Map<String, Object> payload, String idempotencyKey) {
@@ -46,11 +46,13 @@ public class JobPublisher implements IJob {
         return new JobMessage(SCHEMA_VERSION, jobType, idempotencyKey, safePayload, 0, UUID.randomUUID().toString());
     }
 
-    private void sendMessage(JobMessage message) {
+    private boolean sendMessage(JobMessage message) {
         try {
             sender.sendJob(message);
+            return true;
         } catch (RuntimeException e) {
             recordLost(message, "gửi RabbitMQ lỗi");
+            return false;
         }
     }
 

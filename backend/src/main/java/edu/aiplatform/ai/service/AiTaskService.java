@@ -245,10 +245,12 @@ public class AiTaskService implements IAiTask {
             Optional<AiConnection> shared = filterUsable(connections.listInstitutional(), prompt.hasImages()).stream()
                     .findFirst();
             if (shared.isPresent()) {
-                int max = Math.min(maxOutputTokens, catalog.readMaxOutputTokens(shared.get().provider()));
+                AiConnection connection = shared.get();
+                int max = Math.min(maxOutputTokens, catalog.readMaxOutputTokens(connection.provider()));
+                int outputCap = catalog.resolveOutputCap(connection.provider(), connection.model(), max);
                 QuotaReservationService.Remaining left = quotaReservationService.calculateRemaining(actor.accountId());
                 if (left != null && left.limit() > 0
-                        && left.left() >= QuotaReservationService.estimate(promptChars(prompt), max)) {
+                        && left.left() >= QuotaReservationService.estimate(promptChars(prompt), outputCap)) {
                     order.add(new AiSourceChoice(AiSource.SHARED, null));
                 }
             }

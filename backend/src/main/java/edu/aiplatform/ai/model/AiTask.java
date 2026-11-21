@@ -25,7 +25,7 @@ public record AiTask(UUID id, String requestRef, String fingerprint, UUID actorI
     /** Chuyển trạng thái hợp lệ (BR-U06-22). */
     private static final Map<AiTaskState, Set<AiTaskState>> NEXT = Map.of(
             AiTaskState.QUEUED, EnumSet.of(AiTaskState.RUNNING, AiTaskState.CANCELLED, AiTaskState.FAILED),
-            AiTaskState.RUNNING, EnumSet.of(AiTaskState.READY, AiTaskState.FAILED, AiTaskState.UNKNOWN),
+            AiTaskState.RUNNING, EnumSet.of(AiTaskState.READY, AiTaskState.FAILED, AiTaskState.UNKNOWN, AiTaskState.QUEUED),
             AiTaskState.READY, EnumSet.noneOf(AiTaskState.class),
             AiTaskState.FAILED, EnumSet.noneOf(AiTaskState.class),
             AiTaskState.UNKNOWN, EnumSet.noneOf(AiTaskState.class),
@@ -48,9 +48,14 @@ public record AiTask(UUID id, String requestRef, String fingerprint, UUID actorI
             throw new IllegalStateException("Task " + state + " không chuyển được sang " + next);
         }
         boolean done = NEXT.get(next).isEmpty();
+        Instant nextDispatch = switch (next) {
+            case RUNNING -> now;
+            case QUEUED -> null;
+            default -> dispatchedAt;
+        };
         return new AiTask(id, requestRef, fingerprint, actorId, source, connectionId, provider, model, taskType, targetRef,
                 inputVersion, next, inputPayload, outputSchema, resultPayload, maxOutputTokens, reservedTokens, quotaDay,
-                next == AiTaskState.RUNNING ? now : dispatchedAt, providerRequestId, applyResult, handlerDone, safeError,
+                nextDispatch, providerRequestId, applyResult, handlerDone, safeError,
                 createdAt, done ? now : finishedAt, version);
     }
 
@@ -68,8 +73,7 @@ public record AiTask(UUID id, String requestRef, String fingerprint, UUID actorI
     }
 
     /**
-     * Khóa vừa dùng lỗi: thử tiếp bằng khóa kế tiếp ngay trong lần chạy (yêu cầu 2026-11-05), task vẫn RUNNING với mốc
-     * gửi mới; giữ chỗ quota của lần trước đã quyết toán, {@code reserved} là giữ chỗ của khóa mới (API chung).
+     * Đổi kết nối và quota cho lượt thử tiếp theo; mốc gửi có thể trống nếu lượt này phải chờ.
      */
     public AiTask retryWith(AiSource nextSource, UUID nextConnection, AiProvider nextProvider, String nextModel,
                             int nextMaxOutput, Long reserved, LocalDate day, Instant now) {

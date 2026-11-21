@@ -19,6 +19,8 @@ public interface IQuizRepository {
     /** Serialize paper edits, retirement and attempt starts until transaction commit. */
     void lockQuiz(UUID id);
 
+    void lockVersionChain(UUID id);
+
     void insert(Quiz quiz);
 
     /** Cập nhật khi {@code version} trong DB còn bằng {@code quiz.version()}; tăng version. */

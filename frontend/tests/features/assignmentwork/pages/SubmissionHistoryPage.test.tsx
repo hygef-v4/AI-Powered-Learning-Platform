@@ -1,6 +1,7 @@
 import { attemptResultSources } from "@/features/assignmentwork/slots";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { Toaster } from "@/shared/ui";
 import { workApi } from "@/features/assignmentwork/api";
 import { groupResultByPart } from "@/features/assignmentwork/model/attemptResult";
 import { SubmissionHistoryPage } from "@/features/assignmentwork/pages/SubmissionHistoryPage";
@@ -58,6 +59,25 @@ describe("SubmissionHistoryPage (yêu cầu 2026-11-10)", () => {
     expect(within(toolbar).queryByText("Tải DOCX")).toBeNull();
     expect(within(toolbar).queryByLabelText("Tải DOCX")).toBeNull();
     expect(screen.queryByRole("region", { name: "Góp ý AI" })).not.toBeInTheDocument();
+  });
+
+  it("shows a DOCX download failure without replacing the selected submission", async () => {
+    vi.spyOn(workApi, "detail").mockResolvedValue(pastDeadline);
+    vi.spyOn(workApi, "history").mockResolvedValue([summary({ attemptId: "submitted" })]);
+    vi.spyOn(workApi, "attempt").mockResolvedValue(attempt("submitted"));
+    const fetchFile = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      detail: "Không thể tạo tệp DOCX",
+    }), { status: 403 }));
+    vi.stubGlobal("fetch", fetchFile);
+    render(<><Toaster /><SubmissionHistoryPage assignmentId="x" /></>);
+    await screen.findByTestId("document-editor");
+    fireEvent.click(screen.getByLabelText("Thao tác khác"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Tải DOCX" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Không thể tạo tệp DOCX");
+    expect(fetchFile).toHaveBeenCalledWith("/api/v1/attempts/submitted/export.docx",
+      expect.objectContaining({ credentials: "include" }));
+    expect(screen.getByTestId("document-editor")).toBeInTheDocument();
   });
 
   it.each([true, false])("hiện góp ý Practice đúng lượt và chỉ gửi khi bấm (màn rộng: %s)", async (wide) => {

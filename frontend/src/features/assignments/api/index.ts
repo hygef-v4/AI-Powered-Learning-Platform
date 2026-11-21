@@ -1,4 +1,4 @@
-import { downloadApiFile, fetchApi } from "@/shared/api/client";
+import { downloadApiFileToDisk, fetchApi } from "@/shared/api/client";
 import type { DocumentModel, RubricCriterion } from "@/shared/document";
 import type {
   AiDraft,
@@ -146,14 +146,6 @@ export function buildDocxUrl(assignmentId: string, what: "skeleton" | "rubric") 
  * Tải tệp DOCX của đề hoặc rubric về máy (yêu cầu 2026-11-12): gọi qua apiFetch nên phiên hết hạn được làm mới, lỗi trả về
  * dạng ApiError để trang báo, không còn chuyển cả trang sang địa chỉ tệp (lỗi là mất trang soạn).
  */
-export async function downloadDocx(assignmentId: string, what: "skeleton" | "rubric", fallbackName: string) {
-  const { blob, filename } = await downloadApiFile(buildDocxUrl(assignmentId, what));
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename ?? fallbackName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+export function downloadDocx(assignmentId: string, what: "skeleton" | "rubric", fallbackName: string) {
+  return downloadApiFileToDisk(buildDocxUrl(assignmentId, what), fallbackName);
 }
