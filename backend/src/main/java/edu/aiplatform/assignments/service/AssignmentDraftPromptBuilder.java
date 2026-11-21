@@ -22,10 +22,9 @@ final class AssignmentDraftPromptBuilder {
                           AssignmentCommands.DraftOptions requestedOptions) {
         AssignmentCommands.DraftOptions options = requestedOptions == null
                 ? new AssignmentCommands.DraftOptions("AUTO", "EN", null, null) : requestedOptions;
-        // Ngôn ngữ của đề AI (2026-11-16: thêm tiếng Nhật, mặc định tiếng Anh); AUTO theo mẫu đề.
+        // Ngôn ngữ của đề AI: tiếng Việt hoặc tiếng Anh (mặc định); AUTO theo mẫu đề. Đã bỏ tiếng Nhật 2026-11-21.
         String language = switch (options.language() == null ? "EN" : options.language()) {
             case "VI" -> "Vietnamese";
-            case "JA" -> "Japanese";
             case "AUTO" -> "the same language as the instructor's format template";
             default -> "English";
         };
