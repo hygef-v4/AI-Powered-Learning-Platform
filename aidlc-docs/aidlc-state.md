@@ -1233,3 +1233,34 @@ Plan: construction/plans/code-generation-plan/2026-11-13-group-grading-side-pane
 - [x] HEAD matches freshly fetched origin/staging at d8ac7d21; no merge conflicts found. Exact-SHA CI backend/frontend/deploy-script/images succeeded.
 - [x] Report: construction/build-and-test/2026-11-16-staging-readiness.md. Local frontend dependency installation incomplete and Docker engine stopped; no live deployment verification, push or deploy.
 
+
+## Góp ý giảng viên và Syllabus SWR302/SWD392 — 2026-11-20
+
+- [x] Rà soát chỉ đọc theo góp ý giảng viên và Syllabus FLM SWD392 (ID 14179), SWR302 (ID 14176). Kết quả: inception/requirements/2026-11-20-lecturer-feedback-syllabus.md.
+- [x] Người dùng chọn mục 2, 3, 4, 5, 8. Đã cập nhật tài liệu: định vị không áp quy trình riêng, AS-IS theo Syllabus, giữ D01, MCP/AI không cần GPU và công thức chi phí (requirements.md §1, §2.3, §2.4, REL-005), trạng thái 2026-11-20 trong gap analysis 2026-11-12.
+- [ ] Mục 8 (loại sơ đồ Context/DFD/Communication): Requirements Analysis nháp và câu hỏi Q1–Q4 tại inception/requirements/2026-11-20-diagram-types*.md. Chờ người dùng trả lời và GVHD duyệt; chưa sửa code.
+- [ ] Report 1 trên Drive chưa sửa; dùng mục 2 của tài liệu 2026-11-20 để cập nhật.
+
+Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security/Resiliency giữ nguyên, PBT tắt.
+
+## Cải thiện độ chính xác AI chấm bài — kế hoạch 2026-11-20
+
+- [x] Lập kế hoạch theo yêu cầu "lập plan hoàn chỉnh để cải thiện độ chính xác AI chấm bài hiện tại": construction/plans/code-generation-plan/2026-11-20-ai-grading-accuracy.md. Dựa trên kết quả đánh giá 2026-11-13/15 và đọc code tĩnh; tìm 9 nguyên nhân gốc R1–R9 (mã block không gửi kèm nội dung, sơ đồ gửi hai lần, mã block sai làm hỏng cả đề xuất, thiếu system boundary…).
+- [x] Người dùng duyệt làm giai đoạn 1–3 trước. Đã làm: mã block trong prompt chấm, mã block sai không còn làm hỏng đề xuất, bỏ gửi sơ đồ lần hai, tóm tắt sơ đồ có hình chữ nhật và quan hệ "trong", chỉ dẫn loại sơ đồ/chuẩn ký pháp/rubric mơ hồ/sơ đồ bị cắt/lạc đề. Test liên quan 86/86, unit test các unit bị ảnh hưởng 755 đạt, 8 bỏ qua.
+- [x] Đo live 2026-11-20 (gemini-3.5-flash-lite, badminton-booking, cũ 7d51a16f và mới): không cải thiện, bài 08 tụt khi có mã block (G1); bài 04 sai ở cả hai bản (G2). Kết quả: construction/build-and-test/2026-11-20-ai-grading-accuracy-results.md.
+- [x] Sửa G1 (bằng chứng phải đối chiếu) và G3 (cấu hình suy nghĩ theo provider; Gemini mặc định không gửi tham số, 0 lần bị cắt khi đo). 926 unit test đạt. Kết quả mục 4–5 file kết quả 2026-11-20.
+- [x] G4 (làm tròn điểm) và G2 (nét liền) đã sửa 2026-11-21; 928 unit test đạt, live bài 04 đúng 3,75, replay xác nhận G4.
+- [x] Chạy lại cả bộ 2026-11-21: 9,46/10, sai số điểm 2,3%, kappa 0,84; G5, G6 mới phát hiện.
+- [x] 2026-11-21: giữ chỉ dẫn G6, bỏ chỉ dẫn độ dài G5, bộ đánh giá lưu phần chữ bị cắt, RubricEditor gợi ý tiêu chí chỉ nêu trường hợp bị trừ (vi/en/ja). Backend 496, frontend 149 test đạt.
+- [x] Commit local 2026-11-21 theo yêu cầu (chưa push): d8f69175, 43857601, 3aa94c57, fc8ec0cf và commit tài liệu.
+- [ ] Còn: chẩn đoán G5 (chưa bắt được lần bị cắt), rubric mẫu cho môn (cần app chạy), giai đoạn 0 (bộ SWR302/COMET), 4.1–4.2, kiểm OpenAI/Claude khi có key, integration test (Docker tắt). Chưa commit.
+
+Đã gọi Gemini thật bằng key của người dùng (khoảng 80 lời gọi, bản ghi trong backend/target/ai-eval, không vào git). Không commit/push/deploy.
+
+## Bỏ tiếng Nhật — 2026-11-21
+
+- [x] Bỏ locale `ja` (locales.ts, msg.ts, xóa `messages/ja.json`); cookie cũ `ja` quay về tiếng Anh. Lựa chọn ngôn ngữ đề AI chỉ còn VI/EN/AUTO (frontend dựng từ LOCALES; backend `normalizeOptions` từ chối `JA`, prompt bỏ nhánh Japanese).
+- [x] Cập nhật README, requirements (§FR-006, NFR-002), current-code-baseline; báo cáo lịch sử giữ nguyên.
+- [x] Test: frontend 157 tệp, 1.161 test đạt; backend assignments + ArchitectureTest 166 đạt.
+- [x] Theo yêu cầu, thay dữ liệu mẫu tiếng Trung trong `AssignmentAiRevisionTest` bằng tiếng Việt cùng nghĩa (`vietnameseSkeleton`).
+- [x] Theo yêu cầu, xóa con dấu trang trí chữ Hán (`HankoMark`) khỏi `Logo.tsx` và màn đăng nhập (`AuthLayout`); còn giấy nhớ và bút chì. Frontend identity + shared 202 test đạt, eslint không lỗi. Chưa xem trên trình duyệt.

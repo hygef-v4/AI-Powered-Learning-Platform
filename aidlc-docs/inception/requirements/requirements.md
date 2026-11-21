@@ -8,6 +8,7 @@
 
 - Yêu cầu: sửa Inception theo các quyết định trong cuộc trao đổi, không sửa code/Construction hoặc tài liệu Google.
 - Phạm vi: web desktop-first cho một tổ chức, focus Assignment tài liệu SWR/SWD; Quiz bổ trợ, Lesson mở rộng.
+- Định vị (2026-11-20): ALAP không áp quy trình giảng dạy riêng. Khung chung là Syllabus FLM; giảng viên tự cấu hình bài, khung bài, rubric và hạn nộp theo lớp, đúng Option 2 "Follow lecturer's proposal" của Syllabus SWR302/SWD392. Hệ thống không mô hình hóa CLO, slot hay trọng số đầu điểm. Chi tiết: [2026-11-20-lecturer-feedback-syllabus.md](2026-11-20-lecturer-feedback-syllabus.md).
 - Đây là scope revision toàn hệ thống ở cấp tài liệu; approvals/checkpoints 09/10 là lịch sử, không phê duyệt thiết kế mới hoặc xác nhận runtime.
 - Catalog hiện hành: [use-cases.md](use-cases.md). Bảng tiếng Anh docs/usecase_table.md đã đồng bộ catalog current. Bảng 73 UC cũ không còn trong repo; không dùng Page-2 G21_Diagrams.drawio làm nguồn current, đó là baseline lịch sử.
 
@@ -26,12 +27,14 @@ API chung của tổ chức chỉ giảng viên được cấp quota; API cá nh
 - Lesson processing nâng cao, tóm tắt học liệu và RAG chỉ mở rộng; module cơ bản đã có code; link video YouTube dạy học thuộc MVP; không chặn luồng Assignment/Quiz.
 - Loại khỏi scope: Code Lab, Judge0, test runner, mua credit/token, ví, payment/PayOS.
 - Giữ exclusions trước: mobile native, multi-tenancy, LMS/SSO, mã mời, comments, Simulation/proctored Exam, grade appeal, gia hạn cá nhân và similarity checking chưa được chốt.
-- Không tuyên bố AS-IS đã khảo sát. Thu thập/validate quy trình của giảng viên và sinh viên SWR/SWD rồi cập nhật Report 1; không dựng bằng chứng giả.
+- AS-IS (cập nhật 2026-11-20): đã có bằng chứng từ phỏng vấn giảng viên 2026-11-12, góp ý bằng văn bản của giảng viên và Syllabus FLM SWR302/SWD392 ([mục 2](2026-11-20-lecturer-feedback-syllabus.md)). Chưa quan sát trực tiếp lớp học hay khảo sát sinh viên. Report 1 cập nhật theo các nguồn này; không dựng bằng chứng giả.
 - Đã bổ sung backup Google Drive, ghi nhận activity khi làm Assignment/Quiz, email sự kiện quan trọng và minh bạch AI theo D05. Chi tiết: [council-features-2026-10-13.md](council-features-2026-10-13.md); không ghi đã triển khai.
 
 ### 2.4 Quyết định đã chốt
 
 Người dùng chốt ngày 2026-10-15: D01 Quiz chỉ Practice; D02 bài nhóm chỉ Graded; D03 bỏ, bài nhóm không có tính năng AI cho Student; D04 quota API chung mỗi giảng viên theo ngày cộng trần ngày toàn hệ thống, số cụ thể do Admin đặt.
+
+2026-11-20: Syllabus SWR302/SWD392 cho thấy progress test chính thức chạy trên LMS hoặc tại lớp, nên giữ D01. Đề xuất Quiz GRADED (M1/M2 trong gap analysis 2026-11-12) rút khỏi danh sách ưu tiên.
 
 ## 3. Stakeholders
 
@@ -100,7 +103,7 @@ Người soạn có quyền lựa chọn nguồn AI chung hoặc cá nhân; agen
 - Người soạn sửa/duyệt trước phát hành. Không AI tự publish, không thêm bài Code.
 - Không có AI hoặc hết quota vẫn soạn thủ công được; không tự đổi sang kết nối cá nhân.
 - Không mặc định mọi agent hỗ trợ MCP; hướng dẫn và compatibility phải được thử cho từng client.
-- Khi soạn Assignment bằng AI, người soạn chọn ngôn ngữ bản nháp: tiếng Việt, tiếng Anh hoặc tiếng Nhật; yêu cầu không gửi ngôn ngữ thì bản nháp bằng tiếng Anh (as-built 2026-11-16).
+- Khi soạn Assignment bằng AI, người soạn chọn ngôn ngữ bản nháp: tiếng Việt hoặc tiếng Anh; yêu cầu không gửi ngôn ngữ thì bản nháp bằng tiếng Anh (as-built 2026-11-16; bỏ tiếng Nhật 2026-11-21).
 
 ### FR-007 - Assignment và Quiz; phát hành và giao bài
 
@@ -380,7 +383,7 @@ Giảng viên tùy chọn activityMonitoringEnabled cho Assignment/Quiz, mặc �
 - Giao diện người học phải desktop-first và tối ưu cho trình duyệt máy tính, đặc biệt canvas Draw.io và các luồng làm bài; tablet/mobile vẫn phải responsive cho đăng nhập, đọc nội dung, thông báo và xem kết quả nhưng không phải mục tiêu chính cho thao tác vẽ/làm bài phức tạp.
 - Các luồng cốt lõi phải dùng được bằng bàn phím và có nhãn hỗ trợ công nghệ trợ năng.
 - Thông báo lỗi phải nêu hành động khắc phục mà không lộ chi tiết nội bộ.
-- Giao diện có ba ngôn ngữ: tiếng Anh (mặc định), tiếng Việt và tiếng Nhật. Người dùng đổi ngôn ngữ ở màn đăng nhập hoặc menu tài khoản; lựa chọn lưu trong cookie `locale` một năm. Câu chưa dịch ở một ngôn ngữ thì hiện bằng tiếng Anh (as-built 2026-11-16).
+- Giao diện có hai ngôn ngữ: tiếng Anh (mặc định) và tiếng Việt (bỏ tiếng Nhật 2026-11-21; cookie cũ `ja` quay về tiếng Anh). Người dùng đổi ngôn ngữ ở màn đăng nhập hoặc menu tài khoản; lựa chọn lưu trong cookie `locale` một năm. Câu chưa dịch ở một ngôn ngữ thì hiện bằng tiếng Anh (as-built 2026-11-16).
 - Trang `/privacy` xem được khi chưa đăng nhập, nêu phạm vi truy cập Google Drive và dữ liệu hệ thống lưu (as-built 2026-11-16).
 
 ### NFR-003 - Quy mô và hiệu năng
@@ -458,6 +461,8 @@ Backup tối thiểu và kiểm thử restore thuộc FR-038; cảnh báo backup
 Mọi thành phần bảo mật và vận hành phải miễn phí: thư viện mã nguồn mở, Let's Encrypt, GitHub Actions và GHCR với repository public, Mailpit khi phát triển, Brevo SMTP hoặc Brevo HTTPS API khi demo/production (trong hạn mức gói miễn phí); chọn bằng MAIL_TRANSPORT, SMTP là mặc định và HTTPS dùng khi mạng chặn SMTP.
 
 AI API chung do đơn vị vận hành cung cấp/tài trợ có quota và kill-switch; personal API/agent theo tài khoản người dùng. Không mặc định API miễn phí hoặc ngân sách trường đã có. Embedding/RAG chỉ extension với nguồn chi phí riêng.
+
+ALAP không chạy model và không cần GPU; model local nằm ngoài phạm vi. Công thức và số token đo được khi chấm: [2026-11-20-lecturer-feedback-syllabus.md](2026-11-20-lecturer-feedback-syllabus.md) mục 4.
 
 
 ## 10. Security/resiliency và downstream
