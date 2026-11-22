@@ -16469,3 +16469,12 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Maven xác nhận 57 test backend đạt. Pytest xác nhận 18 test QA đạt. Lệnh lập danh sách không gọi model.
 
 ---
+
+## KAN-211 — tự nộp lượt Quiz quá hạn khi nộp hoặc xem kết quả
+**Timestamp**: 2026-11-22T08:52:06Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa KAN-211"
+**AI Response**: "Trên nhánh fix/kan-211-overdue-quiz-attempt (từ origin/staging 210b0550): QuizAttemptService.submit tự nộp lượt đã quá hạn cộng 30 giây với AUTO_TIME_LIMIT thay vì trả 409 ATTEMPT_TIME_UP; loadResult tự nộp lượt quá hạn trước khi trả kết quả (lượt còn hạn vẫn 409 ATTEMPT_IN_PROGRESS). Thêm 2 test, cập nhật BR-U11-13/14, code-summary U11 và comment QuizTakingPage. Test quizpractice + quizzes trong container Maven: 247 ca đạt."
+**Context**: Bug fix U11, phạm vi nhỏ trong service hiện có; chưa commit/push/PR.
+
+---

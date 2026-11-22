@@ -31,7 +31,7 @@ Domain: `QuizAttempt` (hạn, ân hạn 30 giây, lưu, nộp), `AttemptSnapshot
 | `GET /api/v1/me/quizzes/{quizId}?classId=` | 50 | |
 | `POST /api/v1/quizzes/{quizId}/attempts` | 51 | Body `{classId}`; trả đề của lượt (mới hoặc đang làm) |
 | `GET /api/v1/quiz-attempts/{id}`, `PUT .../answers`, `POST .../submit` | 51 | `answers` là object câu → danh sách lựa chọn, kèm `answerVersion` |
-| `GET /api/v1/quiz-attempts/{id}/result` | 52 | |
+| `GET /api/v1/quiz-attempts/{id}/result` | 52 | Lượt đang làm đã quá hạn cộng 30 giây thì tự nộp rồi trả kết quả; còn hạn thì `409 ATTEMPT_IN_PROGRESS` |
 | `POST /api/v1/quiz-attempts/{id}/activity` | — | G3 |
 | `GET /api/v1/classes/{classId}/quizzes/{quizId}/attempts`, `GET /api/v1/classes/{classId}/quiz-attempts/{id}` | 42 | Giảng viên của lớp |
 

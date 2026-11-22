@@ -213,7 +213,7 @@ export function QuizTakingPage({ attemptId }: { attemptId: string }) {
       await submitAttempt(attemptId);
       toResult();
     } catch (failure) {
-      // Hết giờ quá ân hạn: máy chủ tự nộp trong vòng 1 phút, vẫn chuyển sang kết quả.
+      // Hết giờ: máy chủ tự nộp lượt quá hạn khi nộp hoặc mở kết quả (KAN-211), vẫn chuyển sang kết quả.
       if (mode === "timeup" || readErrorCode(failure) === "ATTEMPT_SUBMITTED") {
         toResult();
         return;
