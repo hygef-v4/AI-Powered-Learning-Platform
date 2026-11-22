@@ -31,7 +31,7 @@ class OtpStoresTest {
 
         String key = OtpChallengeStore.buildKey(accountId, OtpPurpose.ACTIVATION);
         assertThat(redis.hashes.get(key)).doesNotContainValue("048213").containsEntry("attemptsLeft", "5");
-        org.mockito.Mockito.verify(redis.template).expire(key, Duration.ofMinutes(10));
+        assertThat(redis.ttls).as("mã và thời hạn ghi cùng một lệnh").containsEntry(key, Duration.ofMinutes(10));
     }
 
     @Test
