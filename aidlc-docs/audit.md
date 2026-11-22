@@ -16543,3 +16543,12 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Chạy local: check-image-pins đạt (13 tham chiếu), test-restore-isolated.sh 4/4 đạt. Không chạy được mvn (máy không có Maven), shellcheck, và test-platform-deploy.sh (Git Bash thiếu flock); để CI kiểm. Không đổi mã Java.
 
 ---
+
+## PR #103 — fix required-suite count
+**Timestamp**: 2026-11-22T00:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem merge được chưa"
+**AI Response**: "PR #103 không còn xung đột, nhưng CI backend lỗi ở bước kiểm test bắt buộc: QuizAttemptRepositoryIntegrationTest có 9 test, trong khi lần gộp trước ghi 10 (đếm nhầm dòng @Testcontainers). Sửa lại thành 9. mvn verify ở lần CI đó đã qua."
+**Context**: Chỉ đổi một số trong scripts/assert-required-backend-tests.ps1; không đổi mã ứng dụng hay test.
+
+---
