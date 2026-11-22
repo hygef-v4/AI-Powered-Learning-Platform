@@ -2,9 +2,7 @@ package edu.aiplatform.identity.integration;
 
 import edu.aiplatform.identity.config.IdentityProperties;
 import edu.aiplatform.identity.model.OtpPurpose;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -67,16 +65,22 @@ public class OtpChallengeStore {
         return jobKey.equals(redis.opsForHash().get(buildKey(accountId, purpose), JOB)) ? Issue.RESEND : Issue.STALE;
     }
 
+    /**
+     * Thay mã cũ bằng mã mới cùng số lượt và thời hạn trong một lệnh Redis: lỗi giữa chừng không để lại mã không hết hạn
+     * (BR-U01-20, KAN-213), và request xác minh song song không thấy lúc mã cũ đã xóa mà mã mới chưa ghi.
+     */
+    static final RedisScript<Long> WRITE = new DefaultRedisScript<>("""
+            redis.call('DEL', KEYS[1])
+            redis.call('HSET', KEYS[1], 'codeHash', ARGV[1], 'attemptsLeft', ARGV[2])
+            if ARGV[4] ~= '' then redis.call('HSET', KEYS[1], 'job', ARGV[4]) end
+            redis.call('PEXPIRE', KEYS[1], ARGV[3])
+            return 1
+            """, Long.class);
+
     private void writeChallenge(UUID accountId, OtpPurpose purpose, String code, String jobKey) {
-        String key = buildKey(accountId, purpose);
-        redis.delete(key);
-        Map<String, String> fields = new HashMap<>(Map.of(CODE_HASH, hash(accountId, purpose, code),
-                ATTEMPTS_LEFT, String.valueOf(properties.otpMaxAttempts())));
-        if (jobKey != null) {
-            fields.put(JOB, jobKey);
-        }
-        redis.opsForHash().putAll(key, fields);
-        redis.expire(key, properties.otpTtl());
+        redis.execute(WRITE, List.of(buildKey(accountId, purpose)), hash(accountId, purpose, code),
+                String.valueOf(properties.otpMaxAttempts()), String.valueOf(properties.otpTtl().toMillis()),
+                jobKey == null ? "" : jobKey);
     }
 
     /**

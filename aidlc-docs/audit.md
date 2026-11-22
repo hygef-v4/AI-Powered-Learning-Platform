@@ -16552,3 +16552,12 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Chỉ đổi một số trong scripts/assert-required-backend-tests.ps1; không đổi mã ứng dụng hay test.
 
 ---
+
+## KAN-212, KAN-213, KAN-214 — sửa ba bug còn lại từ rà soát U01/U10/U11
+**Timestamp**: 2026-11-22T09:08:15Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa nốt 3 bug còn lại"
+**AI Response**: "Trên nhánh fix/kan-212-213-214 (từ origin/staging fd9d42bb): KAN-212 — QuizAttemptService.start kiểm lớp/Quiz OPEN trước khi mở lại lượt đang làm, tự nộp lượt quá hạn (AUTO_TIME_LIMIT) và bỏ lần tải Quiz thứ hai. KAN-213 — OtpChallengeStore ghi mã băm, số lượt, job và PEXPIRE trong một Lua script (kiểm trên Redis 7 thật). KAN-214 — lý do ngưng Quiz quá dài báo TOO_LONG 'Lý do ngưng quiz quá dài', sửa Javadoc theo BR-U10-23. Thêm test, cập nhật BR-U11-10 và BR-U01-20."
+**Context**: Bug fix trong service hiện có của U01/U10/U11; commit/PR theo yêu cầu sau khi test đạt.
+
+---
