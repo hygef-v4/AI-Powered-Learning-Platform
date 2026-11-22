@@ -1310,3 +1310,11 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 ### Kiểm tra Gemini trực tiếp sau đợt sửa audit
 
 - [x] Gemini 3.5 Flash Lite trả 6/6 phản hồi hợp lệ trên 01-complete và 08-wrong-actors. Bài đầy đủ đạt 4,00 trong cả ba lượt. Bài actor sai đạt 2,25 đến 2,50 trên 4,00, kỳ vọng 2,80 từ bộ tổng hợp. Mục actor dao động 0,00 đến 0,12 và không có cờ cần kiểm tra.
+
+## U10 — audit và sửa tạo câu hỏi bằng AI (2026-11-22)
+
+- [x] Chỉ tạo lại theo tài liệu khi câu hỏi lệch nguồn. Yêu cầu lệch tài liệu giữ câu đã tạo kèm cảnh báo, không gọi AI lần hai.
+- [x] Lượt tạo lại theo nguồn không đòi version quiz khớp; quiz còn soạn được là đủ, như lượt đầu.
+- [x] Schema kết quả ép loại câu và độ khó người soạn đã chọn.
+- [x] 190 test của package `quizzes` và 35 test `PlatformWorkflowIntegrationTest` (Postgres Testcontainers) đạt.
+- [ ] Đo 50 câu bằng lời gọi provider thật, nhất là Claude với trần 8.192 token và timeout 120 giây. Mẫu Codex gpt-6-luna cho cận dưới 6.134 token o200k.

@@ -55,7 +55,12 @@ public class QuizSourceRetry {
                 if (!draft.needsSourceRetry() || actor == null || !draft.createdBy().equals(actor.accountId())) return draft;
                 ResourceRef scope;
                 if (draft.target() == DraftTarget.QUIZ) {
-                    var quiz = support.loadEditable(actor, draft.quizId(), draft.baseVersion());
+                    // Như lượt đầu: quiz còn soạn được là đủ; sửa quiz lúc chờ AI không làm hỏng lượt tạo lại.
+                    var quiz = support.loadManaged(actor, draft.quizId());
+                    if (!quiz.isEditable()) {
+                        throw ApiException.createConflict("QUIZ_NOT_EDITABLE", "Quiz đã lưu trữ không sửa được");
+                    }
+                    support.requireContainerActive(quiz);
                     support.requireNoAttemptsWhenOpen(quiz);
                     scope = QuizReferenceMaterials.resolveScope(quiz);
                 } else {
@@ -81,7 +86,7 @@ public class QuizSourceRetry {
                 var task = ai.submit(new AiTaskRequest(actor, request.source(), request.provider(), QuizDraftPrompt.TASK_TYPE,
                         QuizAiDraftService.TARGET_PREFIX + draft.id(), draft.baseVersion() == null ? 0 : draft.baseVersion(),
                         request.requestRef(), QuizDraftPrompt.prompt("quiz theo tài liệu nguồn", request, texts),
-                        QuizDraftPrompt.buildSchema(count), QuizDraftPrompt.calculateMaxOutputTokens(count),
+                        QuizDraftPrompt.buildSchema(request),QuizDraftPrompt.calculateMaxOutputTokens(count),
                         QuizDraftPrompt.buildUserInput(actor, request)));
                 if (task.taskId() == null || task.state() == AiTaskState.FAILED || task.state() == AiTaskState.CANCELLED) {
                     throw ApiException.createUnavailable("AI_SOURCE_RETRY_FAILED", "Không gửi được lượt tạo lại theo tài liệu.");

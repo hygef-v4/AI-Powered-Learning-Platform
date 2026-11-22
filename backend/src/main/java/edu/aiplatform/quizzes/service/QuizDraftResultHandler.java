@@ -84,23 +84,23 @@ public class QuizDraftResultHandler implements IAiTaskResultHandler {
             fail(draft, "AI_OUTPUT_INVALID", "Kết quả AI không đúng định dạng câu hỏi");
             return ApplyOutcome.REJECTED;
         }
-        if ((!output.requestMatchesSources() || !output.questionsMatchSources())
-                && draft.provenance().get(AiDraftViews.MATERIALS) instanceof List<?> materials
-                && !materials.isEmpty()) {
+        boolean hasMaterials = draft.provenance().get(AiDraftViews.MATERIALS) instanceof List<?> materials
+                && !materials.isEmpty();
+        // Prompt đã buộc tạo câu theo tài liệu khi yêu cầu lệch nguồn, nên chỉ câu lệch nguồn mới cần tạo lại.
+        if (hasMaterials && !output.questionsMatchSources()) {
             if (draft.hasSourceRetryAttempt()) {
                 fail(draft, "AI_SOURCE_MISMATCH", "AI vẫn tạo câu hỏi không bám tài liệu. Đề xuất đã bị chặn; hãy kiểm tra tài liệu hoặc gửi yêu cầu mới.");
                 return ApplyOutcome.REJECTED;
             }
-            List<String> warnings = new ArrayList<>();
-            if (draft.provenance().get("sourceWarnings") instanceof List<?> existing) {
-                existing.stream().filter(String.class::isInstance).map(String.class::cast).forEach(warnings::add);
-            }
-            warnings.add("Yêu cầu hoặc câu hỏi AI tạo có thể không liên quan đến tài liệu đã chọn. Hệ thống bỏ prompt bổ sung và tạo lại một lần chỉ theo tài liệu nguồn.");
+            List<String> warnings = listWarnings(draft, "Câu hỏi AI tạo có thể không bám tài liệu đã chọn. Hệ thống bỏ prompt bổ sung và tạo lại một lần chỉ theo tài liệu nguồn.");
             if (!drafts.transitionDraft(draft.retryFromSources(warnings), DraftStatus.PENDING)) return ApplyOutcome.STALE;
             retryAfterCommit(result.actor(), draft.id());
             return ApplyOutcome.APPLIED;
         }
-        if (!drafts.transitionDraft(draft.markReady(output.questions(), Map.of()), DraftStatus.PENDING)) {
+        Map<String, Object> extra = hasMaterials && !output.requestMatchesSources()
+                ? Map.of("sourceWarnings", listWarnings(draft, "Yêu cầu của bạn có thể không liên quan đến tài liệu đã chọn; câu hỏi được tạo theo tài liệu nguồn."))
+                : Map.of();
+        if (!drafts.transitionDraft(draft.markReady(output.questions(), extra), DraftStatus.PENDING)) {
             return ApplyOutcome.STALE;
         }
         if (result.taskId() != null) {
@@ -115,6 +115,15 @@ public class QuizDraftResultHandler implements IAiTaskResultHandler {
                 .filter(d -> d.status() == DraftStatus.PENDING)
                 .filter(d -> !d.hasSourceRetryAttempt() || java.util.Objects.equals(d.taskId(), failure.taskId()))
                 .ifPresent(d -> fail(d, QuizAiDraftService.resolveFailureCode(failure.state()), failure.safeError()));
+    }
+
+    private static List<String> listWarnings(QuizAiDraft draft, String added) {
+        List<String> warnings = new ArrayList<>();
+        if (draft.provenance().get("sourceWarnings") instanceof List<?> existing) {
+            existing.stream().filter(String.class::isInstance).map(String.class::cast).forEach(warnings::add);
+        }
+        warnings.add(added);
+        return warnings;
     }
 
     private void retryAfterCommit(Actor actor, UUID draftId) {

@@ -460,7 +460,7 @@ class PlatformWorkflowIntegrationTest {
         aiConnectionService.setPersonalEnabled(actor(Role.TEACHER), connection.id(), false, connection.version());
         transaction.executeWithoutResult(status -> quizDraftResults.onReady(new edu.aiplatform.ai.contract.AiTaskResult(
                 pending.taskId(), "QUIZ_QUESTION_DRAFT", actor(Role.TEACHER), "quiz-ai-draft:" + pending.id(), quiz.quiz().version(), """
-                {"requestMatchesSources":false,"questions":[{"type":"MCQ_SINGLE","stem":"x","options":["A","B"],"correct":[1]}]}
+                {"questionsMatchSources":false,"questions":[{"type":"MCQ_SINGLE","stem":"x","options":["A","B"],"correct":[1]}]}
                 """)));
         var failed = quizDrafts.getForQuiz(actor(Role.TEACHER), quiz.quiz().id(), pending.id());
         assertThat(failed.status()).isEqualTo(DraftStatus.FAILED);

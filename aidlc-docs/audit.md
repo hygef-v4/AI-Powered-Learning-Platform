@@ -16406,3 +16406,28 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **User Input**: "# TASK: Unify Existing AI Grading Tests + DeepEval into ONE Evaluation Framework"
 **AI Response**: "Unified Java and Vitest tests, Java replay/live evidence and DeepEval behind one PowerShell runner and shared report. Verified full, offline, replay, report and legacy import against local synthetic artifacts."
 **Context**: The requested single entry point and report now cover existing test engines. Production code, fixtures and CI are unchanged. No Gemini Live request was made.
+
+## U10 AI question generation audit
+**Timestamp**: 2026-11-22T05:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "audit phần tạo đề, tạo bằng AI xem có vấn đề gì ko"
+**AI Response**: "Audit chỉ đọc luồng đề xuất câu AI của U10. Nêu 6 vấn đề: trần token khi xin nhiều câu, tạo lại thừa khi yêu cầu lệch tài liệu, lượt tạo lại hỏng khi quiz đổi version, đánh giá bám nguồn do model tự khai, loại câu và độ khó không được ép, requestRef không có unique index."
+**Context**: Investigation, không đổi code.
+
+## U10 AI question generation fixes
+**Timestamp**: 2026-11-22T05:22:01Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa , b có thể gọi model gpt 6 luna medium qua orca cli để test lại"
+**AI Response**: "Sửa QuizDraftResultHandler (chỉ tạo lại khi questionsMatchSources=false, cảnh báo khi requestMatchesSources=false), QuizSourceRetry (bỏ ràng buộc version), QuizDraftPrompt.buildSchema (ép type và difficulty). 38 test đạt. Codex gpt-6-luna medium qua Orca đo mẫu 50 câu: 6.134 token o200k, cận dưới vì mẫu có lựa chọn giữ chỗ. Provider đã báo rõ khi output bị cắt; trần token chưa đổi vì chưa có phép đo thật."
+**Context**: Code generation nhỏ trong unit U10. Không commit, push hay đổi cấu hình.
+
+---
+
+## U10 AI question generation test rerun
+**Timestamp**: 2026-11-22T05:29:01Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi chạy lại test"
+**AI Response**: "Chạy lại: 190 test package quizzes và 35 test PlatformWorkflowIntegrationTest đạt, BUILD SUCCESS."
+**Context**: Kiểm chứng bản sửa U10, không đổi code.
+
+---
