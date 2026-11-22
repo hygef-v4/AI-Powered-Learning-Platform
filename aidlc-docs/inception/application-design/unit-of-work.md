@@ -11,15 +11,15 @@
 | 1 | U03 | Job and Settings | 14, 15 | 3 | Người 3 |
 | 1 | U04 | Subject Administration | 16, 17, 18, 19 | 2 | Người 4 |
 | 1 | U05 | Class & Enrollment | 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30 | 4 | Người 5 |
-| 2 | U06 | AI Connections | 31, 32, 33 | 4 | Người 5 |
-| 2 | U07 | Assignment Authoring | 34, 35, 36 | 5 | Người 4 |
+| 2 | U06 | AI Connections | 31, 32, 33 | 4 | Người 2 |
+| 2 | U07 | Assignment Authoring | 34, 35, 36 | 5 | Người 3 |
 | 2 | U08 | Assignment Work | 37, 38, 39, 40, 41 | 4 | Người 3 |
-| 2 | U09 | Assignment Grading | 42, 43, 44, 45 | 3 | Người 2 |
+| 2 | U09 | Assignment Grading | 42, 43, 44, 45 | 3 | Người 5 |
 | 2 | U10 | Quiz Authoring | 46, 47, 48 | 3 | Người 1 |
 | 3 | U11 | Quiz Practice | 49, 50, 51, 52 | 2 | Người 1 |
 | 3 | U12 | Group Assignment | 53, 54, 55, 56, 57 | 5 | Người 2 |
 | 3 | U13 | Reference Materials | 58, 59, 60, 61, 62 | 2 | Người 4 |
-| 3 | U14 | Announcements & Notifications | 63, 64, 65 | 2 | Người 3 |
+| 3 | U14 | Announcements & Notifications | 63, 64, 65 | 2 | Người 4 |
 | 3 | U15 | Admin Dashboard | 66 | 1 | Người 5 |
 
 ## Iteration
@@ -64,15 +64,17 @@ Iteration là lịch phân công lịch sử, không là ràng buộc chiều ph
 
 ## Phân công code
 
-Mỗi người code một unit mỗi iteration. LOC là ước lượng code production (backend và frontend, chưa tính test), dùng để cân tải; cần đối chiếu LOC thực tế sau iter 1.
+Kế hoạch ban đầu là mỗi người code một unit mỗi iteration; theo Jira, Người 3 code hai unit ở iter 2 và Người 4 hai unit ở iter 3. LOC là ước lượng code production (backend và frontend, chưa tính test), dùng để cân tải; cần đối chiếu LOC thực tế sau iter 1.
 
 | Người | Iter 1 | Iter 2 | Iter 3 | LOC (nghìn) |
 |---|---|---|---|---|
 | Người 1 | U01 Account & Access | U10 Quiz Authoring | U11 Quiz Practice | 9 |
-| Người 2 | U02 Audit | U09 Assignment Grading | U12 Group Assignment | 9 |
-| Người 3 | U03 Job and Settings | U08 Assignment Work | U14 Announcements & Notifications | 9 |
-| Người 4 | U04 Subject Administration | U07 Assignment Authoring | U13 Reference Materials | 9 |
-| Người 5 | U05 Class & Enrollment | U06 AI Connections | U15 Admin Dashboard | 9 |
+| Người 2 | U02 Audit | U06 AI Connections | U12 Group Assignment | 10 |
+| Người 3 | U03 Job and Settings | U07 Assignment Authoring, U08 Assignment Work | — | 12 |
+| Người 4 | U04 Subject Administration | — | U13 Reference Materials, U14 Announcements & Notifications | 6 |
+| Người 5 | U05 Class & Enrollment | U09 Assignment Grading | U15 Admin Dashboard | 8 |
+
+Người 1 = Đào Chí Cường, Người 2 = Võ Minh Tài, Người 3 = Võ Chiến Thắng, Người 4 = Vũ Hải Nam, Người 5 = Khuất Quang Hưng, theo bảng Jira code assignee của Report 2 v1.6 (KAN-18…32). Sửa 22/11/2026: đổi U06 ↔ U09 giữa Người 2 và Người 5 cho khớp Report 2 và lịch sử commit (module `ai` chủ yếu do Võ Minh Tài, `grading` chủ yếu do Khuất Quang Hưng), đã xác nhận trên Jira KAN-29/KAN-31. Cùng ngày, theo Jira, chuyển U07 (KAN-26) sang Người 3 và U14 (KAN-30) sang Người 4; tài khoản Jira "hai vo" được hiểu là Võ Chiến Thắng. Kế hoạch cũ ghi "Người N" giữ nguyên làm lịch sử.
 
 Theo quy ước nhóm, mỗi unit có ba người khác nhau viết requirement, viết test case và code để review chéo; phân công requirement/test chưa ghi trong tài liệu này.
 
