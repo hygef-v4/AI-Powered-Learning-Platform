@@ -1,5 +1,16 @@
 # AI-DLC State Tracking
 
+## SEO cho alapedu.online — 2026-11-22
+
+Người dùng: "tôi muốn làm seo cho trang web"; chọn nền tảng kỹ thuật + landing page, đã có Search Console, nhánh mới từ staging. [Kế hoạch](construction/plans/code-generation-plan/2026-11-22-seo.md), [kết quả](construction/build-and-test/2026-11-22-seo-results.md). Nhánh `feat/seo` từ `origin/staging@47837e52`, worktree `.claude/worktrees/seo`.
+
+- [x] Requirements Analysis (Standard) và Workflow Planning: SEO-FR1–FR9; chỉ Code Generation và Build and Test.
+- [x] Người dùng duyệt kế hoạch (2026-11-22).
+- [x] Code Generation: 11/11 bước. Landing `/` dựng phía máy chủ, robots/sitemap động, noindex khu vực đăng nhập, canonical, JSON-LD, meta Search Console, staging `X-Robots-Tag` và `SEO_INDEXABLE=false`.
+- [x] Build and Test: ESLint, tsc đạt; Vitest 1.203/1.203; dev server kiểm robots, sitemap, meta, giao diện desktop/375 px. `next build` dừng ở cảnh báo lỗ hổng của Next.js 16.4.3 sau khi biên dịch — chờ người dùng quyết định.
+
+Người dùng yêu cầu commit cục bộ (2026-11-22). Chưa push/deploy.
+
 ## Đồng bộ AI-DLC và năm luồng nghiệp vụ · 2026-11-22
 
 - [x] Đối chiếu baseline `8afa00b4`, cập nhật nội dung hiện hành về học liệu, Quiz, tạo đề, phản hồi luyện tập, chấm và công bố điểm. Bảng hoạt động, năm tệp Draw.io, bản gộp và năm PNG nằm trong [Main Business Flows](inception/main-business-flows/README.md).

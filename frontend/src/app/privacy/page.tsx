@@ -3,7 +3,7 @@ import Link from "next/link";
 import { translateOnServer, loadServerRichTranslator, loadServerTranslator } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.privacy.page.privacyPolicy") };
+  return { title: await translateOnServer("app.privacy.page.privacyPolicy"), alternates: { canonical: "/privacy" } };
 }
 
 /** Trang công khai, không cần đăng nhập: chính sách quyền riêng tư (Google yêu cầu khi publish OAuth app). */

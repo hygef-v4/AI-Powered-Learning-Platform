@@ -8,7 +8,7 @@ import { ApiError } from "@/shared/api/client";
 import { getProfile } from "../api";
 import { msg } from "@/i18n/msg";
 
-/** Post-Login (F15): đã đăng nhập thì tới dashboard theo role, chưa thì về User Login. Dùng cho / và /post-login. */
+/** Post-Login (F15): đã đăng nhập thì tới dashboard theo role, chưa thì về User Login. Dùng cho /post-login (trang / là landing, xem features/landing). */
 export function PostLoginRedirect() {
   const router = useRouter();
   const [unavailable, setUnavailable] = useState(false);

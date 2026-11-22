@@ -16796,3 +16796,35 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Đối chiếu lại 70 nhãn hoạt động và kiểm ảnh xuất. Phạm vi chỉ gồm tài liệu.
 
 ---
+## SEO cho alapedu.online — Requirements Analysis và Workflow Planning
+**Timestamp**: 2026-11-22T15:02:31Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn làm seo cho trang web" — trả lời câu hỏi: "Nền tảng + landing page (Recommended)", Search Console: "Có rồi", nhánh: "Nhánh mới từ staging (Recommended)"
+**AI Response**: "Khảo sát hiện trạng: / chỉ là client redirect, không có robots.txt/sitemap/noindex/canonical/JSON-LD, staging không có X-Robots-Tag; cookie phiên có path /api nên / không biết trạng thái đăng nhập phía máy chủ. Tạo worktree .claude/worktrees/seo, nhánh feat/seo từ origin/staging@47837e52 (--no-track). Viết yêu cầu SEO-FR1–FR9 và kế hoạch 11 bước: aidlc-docs/construction/plans/code-generation-plan/2026-11-22-seo.md. Chờ duyệt."
+**Context**: Requirements (Standard) + Workflow Planning; chỉ Code Generation và Build and Test. Chưa sửa code.
+
+---
+## SEO — duyệt kế hoạch Code Generation
+**Timestamp**: 2026-11-22T15:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, làm đi"
+**AI Response**: "Bắt đầu thực hiện 11 bước trong aidlc-docs/construction/plans/code-generation-plan/2026-11-22-seo.md trên nhánh feat/seo."
+**Context**: Code Generation được duyệt.
+
+---
+## SEO — Code Generation và Build and Test
+**Timestamp**: 2026-11-22T15:20:08Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, làm đi"
+**AI Response**: "Hoàn tất 11/11 bước kế hoạch SEO trên feat/seo: landing / dựng phía máy chủ (en/vi) với SignedInRedirect, robots.ts và sitemap.ts động theo SEO_INDEXABLE, noindex cho 15 layout đăng nhập và activate/reset-password/post-login, canonical /, /login, /privacy, JSON-LD có nonce, meta GOOGLE_SITE_VERIFICATION, compose production mặc định SEO_INDEXABLE=true, staging ép false và nginx X-Robots-Tag noindex. Điều chỉnh: robots.txt không chặn trang đăng nhập để bot đọc được noindex. ESLint, tsc đạt; Vitest 1.203/1.203; dev server kiểm robots/sitemap/meta và giao diện desktop/375 px. next build biên dịch xong rồi dừng ở SecurityFatalError của Next.js 16.4.3 (đề nghị nâng cấp) — không chạy lại/nâng cấp, báo người dùng. Kết quả: aidlc-docs/construction/build-and-test/2026-11-22-seo-results.md."
+**Context**: Code Generation + Build and Test. Chưa commit/push/deploy.
+
+---
+## SEO — commit cục bộ
+**Timestamp**: 2026-11-22T15:25:53Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit đi"
+**AI Response**: "Commit toàn bộ thay đổi SEO (mã, test, infra, tài liệu AIDLC) trên nhánh feat/seo. Không push, không deploy."
+**Context**: Commit theo yêu cầu người dùng.
+
+---
