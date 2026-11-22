@@ -2,7 +2,7 @@
 
 ## Nhập đề từ ảnh/PDF — 2026-11-11
 
-Thiết kế, chưa có mã. [Yêu cầu](../../../inception/requirements/2026-11-11-exam-image-import.md) FR-IMP-01…08. [Kế hoạch và quyết định thiết kế](../../plans/functional-design-plan/2026-11-11-u07-exam-image-import-functional-design-plan.md): A cho cả 6 câu. Nhập DOCX (mục 7) giữ nguyên.
+Đã triển khai theo [yêu cầu FR-IMP-01…08](../../../inception/requirements/2026-11-11-exam-image-import.md). [Kế hoạch và quyết định thiết kế](../../plans/functional-design-plan/2026-11-11-u07-exam-image-import-functional-design-plan.md) ghi lựa chọn ban đầu. Các điều chỉnh khi triển khai nằm dưới bảng. Nhập DOCX dùng luồng riêng ở mục 7.
 
 | Mã | Quy tắc |
 |---|---|
@@ -42,6 +42,8 @@ Nguồn: `bad8df16`, `16f2c8ce`, `cdaf0f46` (PR #60). Các rule dưới đây th
 | BR-U07-84 | Danh sách tài liệu tham khảo đọc được trước khi có bài: `GET /classes/{classId}/assignment-materials` (giảng viên của lớp) và `GET /subjects/{subjectId}/assignments/materials` (Chủ nhiệm môn); `GET /assignments/{id}/ai-drafts/templates` liệt kê đề mẫu chọn được. | Mới |
 | BR-U07-85 | Chỉ bài `PRACTICE` có `maxAttempts` (1–10). Bài `GRADED` cá nhân và nhóm không lưu số lượt (gửi gì cũng thành `null`), nộp lại không giới hạn khi còn hạn nộp hoặc hạn nộp muộn; đổi lịch bài `OPEN` chỉ so `maxAttempts` với bài `PRACTICE`. Ràng buộc `ck_assignments_published` chỉ đòi `max_attempts` cho bài `PRACTICE` đã lên lịch; số lượt cũ của bài có chấm giữ trong DB nhưng không dùng. | `maxAttempts` 1–10 cho mọi bài trong BR-U07-33, 35 |
 | BR-U07-86 | Câu hỏi đánh số bốn tầng `I.`, `I.1.`, `I.1.a.`, `I.1.a.aa.` (`SectionNumbering`: La Mã, số, chữ thường, chữ thường gấp đôi). Tên phần của câu hỏi chưa đặt tên và DOCX xuất ra dùng số này; nhập DOCX đọc lại đúng cây câu hỏi. | Cách đánh số cũ trong tên phần và DOCX |
+
+**Tạo từ AI theo BR-U07-83 (2026-11-22).** `options.questionCount` nhận 1–10 câu chính và có thể bỏ trống. Với đề có chấm, `options.questionPoints` xác định điểm từng câu, số câu và tổng. `preserveTemplateQuestionPoints` lấy thang điểm từ đề mẫu đã lưu. Cấu hình xác nhận được ưu tiên hơn yêu cầu tự do. Backend kiểm ràng buộc trước khi ghi đề, kể cả khi model không nhận ra mâu thuẫn trong lời nhắc. Đề dùng mẫu hoặc mang cảnh báo nguồn hay `QUESTION_COUNT_CONFLICT` mở xem trước để giảng viên xác nhận. Xem [F6](business-logic-model.md#f6---ai-soạn-bản-nháp-uc-35) và [kết quả kiểm thử](../../build-and-test/2026-11-22-u07-pe-assignment-evaluation.md).
 
 ## Server-managed authoring workflow — 2026-11-01
 

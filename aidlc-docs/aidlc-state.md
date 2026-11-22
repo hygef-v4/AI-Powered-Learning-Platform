@@ -1,5 +1,10 @@
 # AI-DLC State Tracking
 
+## Đồng bộ AI-DLC và năm luồng nghiệp vụ · 2026-11-22
+
+- [x] Đối chiếu baseline `8afa00b4`, cập nhật nội dung hiện hành về học liệu, Quiz, tạo đề, phản hồi luyện tập, chấm và công bố điểm. Bảng hoạt động, năm tệp Draw.io, bản gộp và năm PNG nằm trong [Main Business Flows](inception/main-business-flows/README.md).
+- [x] Cập nhật [luồng tạo và phát hành U07](construction/u07-assignment-authoring/functional-design/business-logic-model.md), [quy tắc U09](construction/u09-assignment-grading/functional-design/business-rules.md) và [hướng dẫn kiểm thử CI](construction/build-and-test/build-instructions.md). Giữ các báo cáo lịch sử theo đúng phạm vi và thời điểm đã kiểm thử.
+
 ## U07: Tạo đề AI theo cấu trúc PE · 2026-11-22
 
 - [x] Đối chiếu 14 đề SWR302 và 6 đề SWD392 với prompt và luồng tạo đề hiện tại. 22 test backend tạo đề đạt ở lượt audit.

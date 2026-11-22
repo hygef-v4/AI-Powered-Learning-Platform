@@ -16778,3 +16778,21 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Commit tài liệu theo yêu cầu; chưa push hay mở PR.
 
 ---
+
+## Đồng bộ AI-DLC và sơ đồ BF theo mã hiện hành
+**Timestamp**: 2026-11-22T13:47:41Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại doc aidlc và bf diagram"
+**AI Response**: "Chỉnh tài liệu U06, U07, U09 và hướng dẫn CI. Sửa BF-01 đến BF-05, bản Draw.io gộp và năm PNG. Đối chiếu 70 hoạt động giữa bảng và hai dạng Draw.io, kiểm cấu trúc và soát ảnh xuất."
+**Context**: Đối chiếu với mã nguồn trên audit-staging. Các thay đổi nằm trong tài liệu hiện hành; báo cáo lịch sử giữ phạm vi ban đầu. Validator không báo lỗi, các cảnh báo bố cục đã có từ bản gốc được giữ.
+
+---
+
+## Ghi nhận bản cập nhật AI-DLC và sơ đồ BF
+**Timestamp**: 2026-11-22T13:54:17Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Gom tài liệu AI-DLC, năm sơ đồ BF, bản Draw.io gộp và năm PNG vào cùng một thay đổi để review."
+**Context**: Đối chiếu lại 70 nhãn hoạt động và kiểm ảnh xuất. Phạm vi chỉ gồm tài liệu.
+
+---

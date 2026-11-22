@@ -2,7 +2,7 @@
 
 ## Nhập đề từ ảnh/PDF — 2026-11-11
 
-Thiết kế, chưa có mã. Quy tắc: BR-U07-87…101.
+Luồng hiện có theo BR-U07-87…101. Xem [điều chỉnh khi triển khai](../code/2026-11-11-exam-image-import-summary.md).
 
 ```text
 assignment_ai_drafts (đã có)

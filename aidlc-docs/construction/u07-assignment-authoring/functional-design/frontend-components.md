@@ -2,7 +2,7 @@
 
 ## Nhập đề từ ảnh/PDF — 2026-11-11
 
-Thiết kế, chưa có mã. Quy tắc: BR-U07-87…101.
+Luồng hiện có theo BR-U07-87…101. Xem [điều chỉnh khi triển khai](../code/2026-11-11-exam-image-import-summary.md).
 
 ### `ExamImportDialog` (mới, `features/assignments/components`)
 
@@ -71,7 +71,7 @@ Theo design G21, đổi theo các yêu cầu 2026-10-21, 2026-10-22: Assignment 
 | # | Màn | Component | UC | Role |
 |---|---|---|---|---|
 | 25 | Assignment List | `SubjectAssignmentListPage` | 34, 35 | Subject Manager |
-| 26 | Assignment Form: trang soạn kiểu Google Docs, xem trước, popup Xếp lịch, Cài đặt bài, Soạn bằng AI | `AssignmentFormPage` | 35, 36 | Người có quyền với bài; giảng viên lớp chỉ xem bài của môn |
+| 26 | Assignment Form: trang soạn kiểu Google Docs, xem trước, popup Xếp lịch, Cài đặt bài, chat Sửa đề bằng AI | `AssignmentFormPage` | 35, 36 | Người có quyền với bài; giảng viên lớp chỉ xem bài của môn |
 | 32 | Teacher Class Detail tab Đánh giá, phần Bài tập; popup Tạo bài tập | `ClassAssignmentsSection`, `CreateAssignmentDialog` | 34, 35 | Teacher, Subject Manager được giao dạy |
 | 17, 18 | Số bài tập của môn trên Manager Dashboard, My Subject | `AssignmentSummary` | 34 | Subject Manager |
 
@@ -83,7 +83,8 @@ U07 đăng ký `NavEntry` "Bài tập" (Subject Manager) mở Assignment List.
 (TeacherClassTab "evals" của U05)
   ClassAssignmentsSection                     bảng bài của lớp và của môn, lọc, nút Tạo bài tập
     AssignmentFilters, AssignmentTable
-    CreateAssignmentDialog                    ô tệp DOCX, Hình thức, Chế độ (Choice); nút Copy từ lớp khác
+    CreateAssignmentDialog                    Đề mới, Đề có sẵn hoặc Tạo từ AI
+      QuestionCountField, QuestionPointsField   ràng buộc tùy chọn khi tạo bằng AI
     (vùng AssignmentRowAction cho U09)
 (SubjectSummarySection của U05)
   AssignmentSummary                           số bài tập của môn theo trạng thái
@@ -95,7 +96,7 @@ app/assignments/[id]/     AssignmentFormPage          #26 Assignment Form
     DiagramEditor                             Draw.io ở cột phải
   AssignmentSettingsPanel (popup Cài đặt)     Hình thức, Chế độ (Choice), nút gạt Ghi nhận hoạt động
   ScheduleForm (popup Xếp lịch, Đổi lịch)
-  AiDraftDialog                               AiSourcePicker (U06), AiTaskStatus (U06), xem trước đề xuất
+  AiDraftDialog, AiDraftPreview               xem trước và xác nhận đề xuất
   AiReviseChat                                khung chat "Sửa đề bằng AI" trên thẻ rubric Toàn bài (bài DRAFT sửa được)
   RetireDialog, popup Xóa bản nháp
   (vùng AssignmentFormSection cho U12: kiểm tra sẵn sàng của bài nhóm)
@@ -115,15 +116,15 @@ shared/ui/PageHeader                          màn hẹp thì hàng nút xuống
 | `SubjectAssignmentListPage` | `GET /api/v1/subjects/{subjectId}/assignments` | "Bài tập của môn"; chọn môn, Tạo bài tập; tab Tất cả, Graded, Practice; lọc trạng thái (Nháp, Đã lên lịch, Đang mở, Đã đóng, Ngưng giao; Nháp gồm cả bài `REVIEWED` cũ); ô "Hiện bài Đã đóng / Ngưng giao"; ô tìm; bảng `AssignmentTable` |
 | `ClassAssignmentsSection` | `GET /api/v1/classes/{classId}/assignments` | Trong tab Đánh giá: nút Tạo bài tập, lọc, bảng `AssignmentTable`; bài của môn chỉ xem; mặc định ẩn bài Đã đóng, Ngưng giao |
 | `AssignmentTable` | - | Cột Bài tập (tên; version > 1, nguồn copy hoặc version mới; bài nhân bản không ghi nhãn), Hình thức, Chế độ (hai cột riêng), Phạm vi, Trạng thái, Hạn nộp, Bài nộp (U09) |
-| `CreateAssignmentDialog` | `POST .../assignments`, `POST .../skeleton:import-docx`, `PUT .../skeleton`, `GET .../assignment-copy-sources`, `POST .../assignments:copy` | Ô tệp DOCX tùy chọn (chọn xong chỉ hiện tên tệp, ✕ bỏ tệp); thẻ chọn Hình thức (Cá nhân, Nhóm khi U12 có), Chế độ (Graded, Practice; nhóm khóa Graded); nút nhỏ "Copy từ lớp khác" (bài của lớp) đổi sang danh sách bài để copy; Hủy, Tạo. Có tệp thì tạo bài rồi nhập luôn làm khung; lỗi thì "Đã tạo bài, chưa nhập tệp", nút Thử lại (chỉ nhập lại tệp), Mở bài. Không có dòng hướng dẫn |
+| `CreateAssignmentDialog` | `POST .../assignments`, `POST .../assignments:copy`, `POST .../skeleton:import-docx`, `POST .../ai-drafts`, `GET .../ai-drafts/{draftId}`, `:apply` | Nhập tên, chọn loại Cá nhân, Nhóm hoặc Luyện tập và cách tạo. **Tạo từ AI** có ngôn ngữ, mẫu, nguồn tham khảo và yêu cầu. Có thể để AI tự chọn số câu, nhập số câu hoặc dùng điểm từng câu cho bài có chấm. Dãy điểm sẽ xác định số câu và tổng điểm. Khi giữ điểm từ đề mẫu đã lưu, cấu hình lấy theo mẫu. Xem [F6](business-logic-model.md#f6---ai-soạn-bản-nháp-uc-35). |
 | `AssignmentFormPage` | `GET`, `PATCH /api/v1/assignments/{id}`, `PUT .../skeleton` | Đầu trang: tên, nhãn trạng thái, "Đã lưu lúc hh:mm"; nút Khác (Xuất DOCX, Xuất rubric, Nhân bản, Tạo version mới, Ngưng giao, Xóa bản nháp), Xem trước hoặc Quay lại, Xếp lịch (bài nháp) hoặc Đổi lịch (xanh). Trang giấy: tên bài (chữ gợi ý "Tên bài tập"), hướng dẫn chung, nhãn hình thức, chế độ, tổng điểm, rồi khung. Tự lưu 1,5 giây, Ctrl+S lưu ngay; `409` báo "Bài đã thay đổi ở nơi khác, bản đang sửa chưa lưu" kèm Tải lại. Thông báo chỉ ghi trạng thái ("Bài còn chỗ chưa đủ", "Chưa lưu: …", "Đã phát hành", "Đã lên lịch", "Đã lưu lịch", "Đã ngưng giao"); chỗ thiếu tô đỏ ngay trong bài |
-| `DocumentEditor` (người soạn) | - | Thanh công cụ dính: hoàn tác, làm lại, kiểu đoạn (Văn bản thường, Tiêu đề 1–4), B, I, U, S, màu chữ, màu nền (bôi đen thì chỉ đổi phần bôi đen), căn lề, danh sách chấm, số, thụt lề, chèn bảng (lưới 10 × 8 ô 18px), chèn ảnh, chèn sơ đồ (một nút, mở Draw.io ngay); Soạn bằng AI, Cài đặt bài. Cây phần: cùng tầng cùng màu, lá khung màu ruột trắng; không có chữ gợi ý ở dòng trống. Sơ đồ, ảnh có ✕ ở góc trên trái. Bảng: "+ −" nổi trên đầu cột và bên trái hàng, ✕ ở góc cùng hàng với nút của cột; "−" khi còn một hàng hoặc một cột là xóa bảng |
+| `DocumentEditor` (người soạn) | - | Thanh công cụ dính: hoàn tác, làm lại, kiểu đoạn (Văn bản thường, Tiêu đề 1–4), B, I, U, S, màu chữ, màu nền (bôi đen thì chỉ đổi phần bôi đen), căn lề, danh sách chấm, số, thụt lề, chèn bảng (lưới 10 × 8 ô 18px), chèn ảnh, chèn sơ đồ và Cài đặt bài. Cây phần: cùng tầng cùng màu, lá khung màu ruột trắng; không có chữ gợi ý ở dòng trống. Sơ đồ, ảnh có ✕ ở góc trên trái. Bảng: "+ −" nổi trên đầu cột và bên trái hàng, ✕ ở góc cùng hàng với nút của cột; "−" khi còn một hàng hoặc một cột là xóa bảng |
 | `RubricNote`, `RubricEditor`, `CommentRail` | `GET`, `PUT .../parts/{partId}/rubric` | Thẻ rubric của phần bắt đầu ngang tiêu đề phần, dính khi cuộn qua đầu phần; tên phần, tổng điểm; mỗi dòng một mục chấm (nội dung, điểm), ✕ xóa; dấu "+" ở giữa dòng cuối thêm mục, Enter thêm mục dưới; bài đã phát hành chỉ xem (Đã khóa) |
 | `DiagramEditor` | - | Draw.io từ `embed.diagrams.net` trong cột phải kéo giãn được (mặc định 60% bề ngang), đẩy trang sang trái, thu menu bên trái của ứng dụng, ẩn thẻ rubric; kiểm origin và iframe của message; lưu XML và SVG (`xmlsvg`) |
 | `AssignmentSettingsPanel` (popup Cài đặt) | `PATCH /api/v1/assignments/{id}` | Thẻ chọn Hình thức (chỉ xem), Chế độ (Graded, Practice; nhóm khóa Graded); nút gạt Ghi nhận hoạt động (chưa có thời hạn giữ dữ liệu thì khóa) kèm Lời báo cho sinh viên; bài nhóm có phần của U12. Không còn mục sơ đồ bắt buộc, học liệu gắn kèm |
-| `ScheduleForm` | `POST .../publish`, `PATCH .../schedule` | Một trang: tích "Hẹn giờ mở" mới chọn ngày, giờ mở (không tích là mở ngay); Hạn nộp (ngày, giờ; mặc định 23:59); tích "Cho nộp muộn" mới chọn hạn nộp muộn (≤ 30 ngày sau hạn); Số lượt nộp 1–10; nút Phát hành ngay, Xếp lịch hoặc Lưu lịch. Bài đang mở không hiện ngày mở, không đổi số lượt. Lỗi: "Thiếu hạn nộp", "Hạn nộp không sau lúc mở", "Hạn nộp muộn quá 30 ngày sau hạn nộp", "Số lượt ngoài 1–10"; cảnh báo nhóm của U12 kèm ô "Vẫn phát hành" |
+| `ScheduleForm` | `POST .../publish`, `PATCH .../schedule` | Có thể mở ngay hoặc chọn ngày giờ mở, hạn nộp và hạn nộp muộn (tối đa 30 ngày sau hạn). Số lượt 1–10 chỉ hiện với bài Luyện tập. Bài đang mở ẩn ngày mở và khóa ô số lượt. Hiện lỗi lịch hoặc cảnh báo còn sinh viên chưa có nhóm trước khi phát hành. |
 | Xem trước | `GET /api/v1/assignments/{id}` | Đề như người học thấy khi làm bài, chỉ đọc, không có rubric; Quay lại, Xếp lịch |
-| `AiDraftDialog` | `POST .../ai-drafts`, `GET .../ai-drafts/{draftId}`, `:apply`, `:discard` | Yêu cầu*, tài liệu tham khảo, nguồn AI (`AiSourcePicker`); đề xuất các mục kèm rubric gợi ý; Bỏ, Áp dụng |
+| `AiDraftDialog`, `AiDraftPreview` | `GET .../ai-drafts/{draftId}`, `:apply`, `:discard`, `POST .../ai-drafts` khi tạo lại | Mở theo `proposalId` để xem đề từ mẫu, đề có cảnh báo hoặc đề từ MCP. Hiện kiểm tra, rubric và cảnh báo. Người soạn có thể bỏ, sửa yêu cầu và tạo lại, hoặc áp dụng bản nháp hợp lệ. |
 | `AiReviseChat` | `POST .../ai-drafts` (`mode: REVISE`), `GET .../ai-drafts/{draftId}`, `:apply`, `:discard` | Ô "Yêu cầu sửa đề" (≤ 4.000 ký tự, Enter gửi, Shift+Enter xuống dòng); lưu thay đổi đang chờ, hỏi kết quả mỗi 2 giây, tối đa 3 phút; tự áp dụng rồi tải lại đề, Ctrl+Z quay lại khung đề trước; hiện tối đa 3 lưu ý; báo khi AI không đổi gì, bản sửa không hợp lệ hoặc đề đã đổi (`AI_DRAFT_STALE`), khi đó đề không đổi |
 | `RetireDialog`, Xóa bản nháp | `/retire`, `DELETE` | Ngưng giao bắt buộc lý do; Xóa chỉ với bản nháp |
 | `AssignmentSummary` | `GET /api/v1/subjects/{subjectId}/assignments` | Số bài tập của môn (đang mở, nháp gồm cả bài `REVIEWED` cũ) |
