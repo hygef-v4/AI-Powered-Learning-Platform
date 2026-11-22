@@ -131,24 +131,30 @@ public class QuizAttemptService {
         return new SaveResult(saved.answerVersion(), now);
     }
 
-    /** Nộp tay (BR-U11-13): nộp lặp trả kết quả cũ; quá hạn cộng 30 giây thì từ chối, scanner sẽ tự nộp. */
+    /**
+     * Nộp tay (BR-U11-13): nộp lặp trả kết quả cũ. Lượt đã quá hạn cộng 30 giây thì tự nộp ngay bằng câu trả lời đã lưu
+     * ({@code AUTO_TIME_LIMIT}, BR-U11-14) thay vì chờ scanner, để người học xem được kết quả ngay.
+     */
     @Transactional
     public ResultView submit(Actor actor, UUID attemptId) {
         QuizAttempt attempt = support.loadOwnActiveAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
         if (attempt.hasInProgressStatus()) {
-            if (!attempt.acceptsAnswersAt(clock.instant())) {
-                access.recordRejected(actor, "QUIZ_SUBMIT_REJECTED", attemptId, "ATTEMPT_TIME_UP");
-                throw ApiException.createConflict("ATTEMPT_TIME_UP", "Đã hết thời gian làm bài; lượt sẽ được tự nộp");
-            }
-            attempt = support.submit(actor, attempt, SubmitMode.MANUAL);
+            SubmitMode mode = attempt.isOverdueAt(clock.instant()) ? SubmitMode.AUTO_TIME_LIMIT : SubmitMode.MANUAL;
+            attempt = support.submit(actor, attempt, mode);
         }
         return support.buildResult(attempt, false, canRetry(actor, attempt));
     }
 
-    /** Kết quả lượt đã nộp của mình (UC 52, BR-U11-20). */
-    @Transactional(readOnly = true)
+    /**
+     * Kết quả lượt của mình (UC 52, BR-U11-20). Lượt đang làm đã quá hạn cộng 30 giây thì tự nộp trước (BR-U11-14);
+     * lượt còn trong hạn thì {@code 409 ATTEMPT_IN_PROGRESS}.
+     */
+    @Transactional
     public ResultView loadResult(Actor actor, UUID attemptId) {
         QuizAttempt attempt = support.loadOwnAttempt(actor, attemptId, Actions.QUIZ_PRACTICE);
+        if (attempt.isOverdueAt(clock.instant())) {
+            attempt = support.submit(actor, attempt, SubmitMode.AUTO_TIME_LIMIT);
+        }
         if (attempt.hasInProgressStatus()) {
             throw ApiException.createConflict("ATTEMPT_IN_PROGRESS", "Lượt này chưa nộp");
         }
