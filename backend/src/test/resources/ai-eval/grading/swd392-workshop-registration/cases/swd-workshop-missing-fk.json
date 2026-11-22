@@ -1,0 +1,56 @@
+{
+  "caseKey": "swd-workshop-missing-fk",
+  "description": "Cột session_id có trong REGISTRATION nhưng thiếu khai báo khóa ngoại đến WORKSHOP_SESSION.",
+  "labelSource": "SYNTHETIC_TEAM",
+  "tags": [
+    "missing-content",
+    "logical-erd",
+    "foreign-key"
+  ],
+  "offTopic": false,
+  "injection": false,
+  "expectedBehavior": "Chấm 0 riêng cho l-session-fk. Cột session_id, đường quan hệ và bội số không thay thế khai báo khóa ngoại. Giữ điểm các mục còn lại, gồm FK đến MEMBER và UNIQUE.",
+  "blocks": [
+    {
+      "heading": "h-conceptual"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "ER",
+      "file": "diagrams/conceptual-erd.xml"
+    },
+    {
+      "heading": "h-logical"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "ER",
+      "file": "diagrams/logical-erd-session-field.xml"
+    },
+    {
+      "heading": "h-sequence"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "SEQUENCE",
+      "file": "diagrams/registration-sequence.xml"
+    }
+  ],
+  "expected": {
+    "c-entities": 0.75,
+    "c-cardinalities": 0.75,
+    "c-abstraction": 0.5,
+    "l-tables": 0.75,
+    "l-keys": 0.75,
+    "l-member-fk": 0.75,
+    "l-session-fk": 0,
+    "l-unique": 0.5,
+    "s-request": 1,
+    "s-authorization": 1.5,
+    "s-persist": 1,
+    "s-created": 1
+  },
+  "absentItems": [
+    "l-session-fk"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "caseKey": "swr-room-vague-nfr",
+  "description": "Yêu cầu hiệu năng nhận diện đúng thao tác nhưng chỉ mô tả tốc độ định tính.",
+  "labelSource": "SYNTHETIC_TEAM",
+  "expectedBehavior": "Cho đủ điểm nfr-target vì yêu cầu nói đến thời gian phản hồi tra cứu phòng trống dưới tải cao điểm. Cho 0 điểm ở nfr-measurement vì câu trả lời thiếu ngưỡng, tỷ lệ đạt, mức tải và mốc đo. Giữ nguyên điểm sơ đồ và đặc tả.",
+  "tags": [
+    "vague-nfr",
+    "nfr-measurement",
+    "context-diagram",
+    "exception-flow"
+  ],
+  "offTopic": false,
+  "injection": false,
+  "blocks": [
+    {
+      "heading": "h-context"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "OTHER",
+      "file": "diagrams/room-scheduling-context.xml"
+    },
+    {
+      "heading": "h-spec"
+    },
+    {
+      "type": "TABLE",
+      "rows": [
+        [
+          "Mục",
+          "Nội dung"
+        ],
+        [
+          "Tên ca sử dụng",
+          "Đặt phòng học bù"
+        ],
+        [
+          "Tác nhân chính",
+          "Giảng viên"
+        ],
+        [
+          "Điều kiện trước",
+          "Giảng viên đã đăng nhập và có quyền đặt phòng học bù."
+        ],
+        [
+          "Kích hoạt",
+          "Giảng viên mở chức năng Đặt phòng học bù."
+        ],
+        [
+          "Điều kiện sau khi thành công",
+          "Dịch vụ lịch phòng đã giữ chỗ. Hệ thống lưu lịch đặt đã xác nhận và cấp mã đặt cho Giảng viên."
+        ],
+        [
+          "Luồng chính",
+          "1. Giảng viên nhập ngày, khung giờ và số người. 2. Hệ thống truy vấn Dịch vụ lịch phòng và hiển thị danh sách phòng trống đáp ứng các tiêu chí. 3. Giảng viên chọn một phòng và xác nhận đặt. 4. Hệ thống yêu cầu Dịch vụ lịch phòng giữ phòng trong khung giờ đã chọn và nhận xác nhận giữ chỗ. 5. Hệ thống lưu lịch đặt và hiển thị mã đặt cho Giảng viên."
+        ],
+        [
+          "Ngoại lệ",
+          "4a. Dịch vụ lịch phòng báo phòng vừa được người khác giữ. Hệ thống không lưu lịch đặt cho phòng này, báo phòng đã bận và tải lại danh sách theo tiêu chí ban đầu. Giảng viên có thể chọn phòng khác ở bước 3 hoặc thoát."
+        ]
+      ]
+    },
+    {
+      "heading": "h-nfr"
+    },
+    {
+      "type": "PARAGRAPH",
+      "text": "Tra cứu phòng trống cần phản hồi nhanh ngay cả vào giờ cao điểm."
+    }
+  ],
+  "expected": {
+    "d-context-boundary": 1,
+    "d-context-entities": 1,
+    "d-context-flows": 1.5,
+    "s-identity": 0.5,
+    "s-conditions": 1,
+    "s-normal": 1.5,
+    "s-exception": 1.5,
+    "nfr-target": 0.5,
+    "nfr-measurement": 0
+  },
+  "absentItems": []
+}

@@ -1,0 +1,138 @@
+{
+  "assignmentKey": "swd392-internship-portal",
+  "title": "SWD392 — Cổng thực tập của một cơ sở đào tạo",
+  "labelSource": "SYNTHETIC_TEAM",
+  "labelNote": "Tình huống, rubric, bài làm và điểm tham chiếu do nhóm tạo để thử quy trình chấm SWD392.",
+  "instructions": "Một cơ sở đào tạo nhận khoảng 300 hồ sơ thực tập mỗi tuần và có hai người vận hành phần mềm. Mỗi hồ sơ thuộc đúng một sinh viên và một vị trí, còn một sinh viên hay vị trí có thể có nhiều hồ sơ hoặc chưa có hồ sơ. Hồ sơ bắt đầu ở Draft. Sinh viên chỉ được nộp khi đã đính kèm bảng điểm. Sau khi nộp, hồ sơ ở Submitted. Người hướng dẫn duyệt sang Accepted hoặc từ chối sang Rejected. Cổng cần gửi thông báo cho người hướng dẫn sau khi nhận hồ sơ. Thao tác nộp không chờ email, và hệ thống phải gửi lại khi gửi thất bại. Vị trí ngắn hạn yêu cầu 60 tín chỉ, vị trí dài hạn yêu cầu 90 tín chỉ. 1) Vẽ sơ đồ lớp với Student, InternshipOpening và Application, gồm trạng thái và thao tác nộp, duyệt. 2) Vẽ sơ đồ trạng thái hồ sơ, ghi rõ sự kiện và guard trên luồng nộp. 3) Một phương án đang được cân nhắc là tách dịch vụ theo chức năng. Chọn phương án này hoặc một kiến trúc khác, phân trách nhiệm, giải thích sự phù hợp với tải và nhân sự, và nêu một đánh đổi kèm cách giảm tác động. 4) Đề xuất và mô tả cơ chế của một mẫu xử lý thông báo bền vững và một mẫu chọn quy tắc xét hồ sơ theo loại kỳ thực tập.",
+  "skeleton": [
+    {
+      "key": "h-class",
+      "style": "H1",
+      "text": "1. Sơ đồ lớp hồ sơ thực tập"
+    },
+    {
+      "key": "h-state",
+      "style": "H1",
+      "text": "2. Sơ đồ trạng thái hồ sơ"
+    },
+    {
+      "key": "h-architecture",
+      "style": "H1",
+      "text": "3. Quyết định kiến trúc"
+    },
+    {
+      "key": "h-patterns",
+      "style": "H1",
+      "text": "4. Cơ chế của các mẫu thiết kế"
+    }
+  ],
+  "rubrics": [
+    {
+      "key": "r-class",
+      "partHeading": "h-class",
+      "criteria": [
+        {
+          "key": "c-class",
+          "title": "Lớp, thành viên và liên kết",
+          "kind": "DIAGRAM",
+          "items": [
+            {
+              "key": "cl-classes",
+              "text": "Cho 1 khi sơ đồ có ba lớp Student, InternshipOpening và Application hoặc tên tương đương. Thiếu một lớp thì mục này được 0.",
+              "points": 1
+            },
+            {
+              "key": "cl-members",
+              "text": "Cho 1 khi Application có thuộc tính trạng thái và hai thao tác tương đương submit() và approve(). Thiếu bất kỳ thành viên nào thì mục này được 0.",
+              "points": 1
+            },
+            {
+              "key": "cl-associations",
+              "text": "Cho 1 khi Application liên kết đúng một Student và đúng một InternshipOpening, còn mỗi Student hoặc InternshipOpening có 0..* Application. Thiếu liên kết hoặc sai bội số thì mục này được 0.",
+              "points": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r-state",
+      "partHeading": "h-state",
+      "criteria": [
+        {
+          "key": "c-state",
+          "title": "Vòng đời hồ sơ",
+          "kind": "DIAGRAM",
+          "items": [
+            {
+              "key": "st-paths",
+              "text": "Cho 1,25 khi trạng thái đầu dẫn đến Draft, có luồng submit đến Submitted, và từ Submitted có approve đến Accepted và decline đến Rejected. Chấm đích và sự kiện độc lập với guard. Thiếu hoặc sai một bước thì mục này được 0.",
+              "points": 1.25
+            },
+            {
+              "key": "st-guard",
+              "text": "Cho 1,75 khi guard trên Draft → Submitted chỉ cho submit nếu hồ sơ đã đính kèm bảng điểm, ví dụ [transcriptAttached]. Guard phủ định điều kiện hoặc nằm ở chuyển tiếp khác được 0.",
+              "points": 1.75
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r-architecture",
+      "partHeading": "h-architecture",
+      "criteria": [
+        {
+          "key": "c-architecture",
+          "title": "Kiến trúc và đánh đổi",
+          "kind": "TEXT",
+          "items": [
+            {
+              "key": "a-fit",
+              "text": "Cho 1,25 khi nêu kiến trúc cụ thể, phân công trách nhiệm cho ít nhất hai thành phần và giải thích lựa chọn bằng cả quy mô 300 hồ sơ/tuần và đội hai người. Kiến trúc khác đề xuất tách dịch vụ được điểm khi đáp ứng các điều kiện trên. Thiếu bất kỳ điều kiện nào thì mục này được 0.",
+              "points": 1.25
+            },
+            {
+              "key": "a-tradeoff",
+              "text": "Cho 0,75 khi chỉ ra một bất lợi cụ thể của kiến trúc đã chọn và cách giảm tác động phù hợp với cổng thực tập. Chỉ liệt kê lợi ích hoặc nêu bất lợi chung chung thì mục này được 0.",
+              "points": 0.75
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r-patterns",
+      "partHeading": "h-patterns",
+      "criteria": [
+        {
+          "key": "c-patterns",
+          "title": "Thông báo bền vững và quy tắc xét hồ sơ",
+          "kind": "TEXT",
+          "items": [
+            {
+              "key": "p-notification-name",
+              "text": "Cho 0,25 khi nêu tên một mẫu phù hợp để gửi thông báo bền vững, chẳng hạn Transactional Outbox. Chấm tên mẫu độc lập với cơ chế. Tên không phù hợp hoặc không nêu tên thì mục này được 0.",
+              "points": 0.25
+            },
+            {
+              "key": "p-notification",
+              "text": "Cho 0,75 khi mô tả cả cách lưu bền vững sự kiện cùng với cập nhật trạng thái và cách cơ chế nền gửi lại khi thất bại. Thiếu một trong hai cơ chế trong bằng chứng đọc được thì mục này được 0. Đánh dấu cần giảng viên kiểm tra nếu phần mô tả bị cắt.",
+              "points": 0.75
+            },
+            {
+              "key": "p-eligibility",
+              "text": "Cho 1 khi nêu mẫu cho quy tắc xét điều kiện, mô tả ít nhất hai triển khai cụ thể và cách hệ thống chọn triển khai theo loại kỳ thực tập. Chỉ nêu tên mẫu hoặc thiếu cách chọn thì mục này được 0.",
+              "points": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "cases": [
+    "cases/swd-internship-valid-alternative.json",
+    "cases/swd-internship-wrong-guard.json",
+    "cases/swd-internship-pattern-name-only.json"
+  ]
+}
