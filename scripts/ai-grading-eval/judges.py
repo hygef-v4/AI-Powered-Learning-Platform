@@ -42,6 +42,12 @@ class JudgeInfo:
     version: str | None = None
     executable: str | None = None
 
+    @property
+    def reasoning_effort(self) -> str | None:
+        if self.provider == "codex" and self.model == "gpt-6.2-sol":
+            return "high"
+        return None
+
 
 class Judge(Protocol):
     def generate(self, prompt: str, schema: type[BaseModel] | None = None): ...
@@ -270,6 +276,8 @@ class CodexJudge(CliJudge):
             "--disable", "plugins", "-c", 'web_search="disabled"', "-c", "mcp_servers={}",
             "--model", self.info.model, "--json", "--output-last-message", "answer.txt",
         ]
+        if self.info.reasoning_effort:
+            args += ["-c", f'model_reasoning_effort="{self.info.reasoning_effort}"']
         if schema is not None:
             (cwd / "schema.json").write_text(json.dumps(codex_schema(schema)), encoding="utf-8")
             args += ["--output-schema", "schema.json"]

@@ -105,7 +105,8 @@ def add_semantic_results(args, rows, thresholds, metadata):
         for row in candidates:
             row.evaluation_status = "JUDGE_ERROR"
         return {"status": "JUDGE_ERROR", "detail": str(error)}
-    print(f"Selected judge: {info.provider} / {info.model} ({info.detail})", flush=True)
+    effort = f" / {info.reasoning_effort}" if info.reasoning_effort else ""
+    print(f"Selected judge: {info.provider} / {info.model}{effort} ({info.detail})", flush=True)
     judge = create_judge(info, timeout=args.timeout, max_calls=args.max_calls)
     try:
         evaluate_rows(candidates, thresholds, make_geval(deepeval_model(judge), thresholds))
@@ -115,6 +116,7 @@ def add_semantic_results(args, rows, thresholds, metadata):
         return {"status": "JUDGE_ERROR", "detail": str(error)}
     metadata.update(
         judge_provider=info.provider, judge_model=info.model, judge_cli_or_model_version=info.version,
+        judge_reasoning_effort=info.reasoning_effort,
         judge_model_versions=sorted(judge.reported_models), judge_authentication=info.detail,
         judge_calls=judge.call_count, deepeval_version=version("deepeval"),
     )
@@ -231,7 +233,8 @@ def main(argv=None) -> int:
                 raise ValueError("--model requires a named judge")
             for provider in (args.judge,) if args.judge != "auto" else PROVIDERS:
                 info = probe_judge(provider, args.model)
-                print(f"{provider}: {'ready' if info.ready else 'unavailable'} | {info.model or '-'} | {info.detail}")
+                effort = f" ({info.reasoning_effort})" if info.reasoning_effort else ""
+                print(f"{provider}: {'ready' if info.ready else 'unavailable'} | {info.model or '-'}{effort} | {info.detail}")
             return 0
         if args.output.exists():
             raise ValueError("Output directory already exists. Choose a new directory to keep previous reports.")
