@@ -1,5 +1,29 @@
 # AI-DLC State Tracking
 
+## U09: Siết cách chấm từng mục rubric · 2026-11-22
+
+- [x] Tái hiện mất 1,50 điểm phân quyền ở cả ba lượt ca thiếu FK với prompt cũ dù bằng chứng sequence giữ nguyên.
+- [x] Prompt đọc đúng phạm vi mục, nhánh sequence, mức điểm một phần và kiểm nhất quán giữa điểm với lý do. 57 test backend liên quan đạt.
+- [x] Prompt chốt cho ca thiếu FK 9,25/10 và ca thực sự thiếu phân quyền 8,50/10. Ca lạc đề vẫn lệch 0,25 ở trigger.
+- [x] Báo cáo cục bộ đổi tên thành `test-ai-grading-test.md`. Có cột riêng và lệnh đánh giá cùng bản ghi cho Opus 5.5.
+- [ ] Chạy Opus 5.5 và kiểm độ ổn định rộng hơn với prompt chốt.
+
+## U09: Luna chấm và Sol đánh giá · 2026-11-22
+
+- [x] Codex judge GPT-6.2 Sol dùng reasoning effort `high`. Ghi cấu hình vào metadata. Kiểm thử Python có 18 ca đạt.
+- [x] GPT-6 Luna `medium` trả 20 phản hồi hợp lệ. Sol `high` đánh giá đủ ba metric trên cả 20, với 15 ca đạt cả ba ngưỡng 0,80.
+- [x] Gộp kết quả vào `U09-Luna-Sol-Report.md` trong thư mục chạy cục bộ. Bộ dữ liệu có nhãn tổng hợp của nhóm.
+- [ ] Đánh giá có điểm giảng viên và đo độ ổn định nhiều lượt.
+
+## U09: Bộ đề PE cho bảo vệ · 2026-11-22
+
+- [x] Tạo 12 ca đối chứng SWR302 và SWD392 theo schema fixture hiện có. Giữ 8 ca badminton-booking.
+- [x] Soạn 4 đề độc lập và phiếu trống cho 20 bài. Điểm giảng viên chờ thu.
+- [x] Adapter Python đọc được cả 20 ca hồi quy. Java harness có 24 test đạt, Python có 17 test đạt. PowerShell replay đúng đề đạt và từ chối kết quả của đề khác.
+- [ ] Chạy model trên các đề PE mới sau khi chốt dữ liệu. Chưa gọi nhà cung cấp trong đợt này.
+
+[Dataset và hướng dẫn kiểm thử](construction/build-and-test/u09-pe-defense-dataset.md)
+
 ## U03 — RabbitMQ không đọc được JobMessage sau Spring Boot 3.5.16 — 2026-11-19
 
 Nhánh `fix/amqp-trusted-packages` từ `staging@2433c57b`. Chưa commit.
@@ -1310,3 +1334,11 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 ### Kiểm tra Gemini trực tiếp sau đợt sửa audit
 
 - [x] Gemini 3.5 Flash Lite trả 6/6 phản hồi hợp lệ trên 01-complete và 08-wrong-actors. Bài đầy đủ đạt 4,00 trong cả ba lượt. Bài actor sai đạt 2,25 đến 2,50 trên 4,00, kỳ vọng 2,80 từ bộ tổng hợp. Mục actor dao động 0,00 đến 0,12 và không có cờ cần kiểm tra.
+
+## U09 — hồi quy prompt cho điểm từng luồng và trigger (2026-11-22)
+
+- [x] Prompt kiểm tra trigger có khởi tạo đúng use case. Điểm từng phần có phân bổ rõ được cộng vào `itemScoresByRubric` theo bằng chứng của từng luồng, đồng nhất với lý do.
+- [x] Hai kiểm tra prompt thất bại trên bản trước khi sửa. Lượt cuối đạt 57/57 test backend, gồm tạo prompt, schema, harness và validator. Phạm vi security và resiliency đã phê duyệt được giữ. PBT đã tắt.
+- [x] Luna medium cho bài lạc đề 0,50/4 và giữ 4,00/4 ở bài đầy đủ. Cả hai đạt ngưỡng theo Sol high trên cùng dữ liệu và schema của lượt trước.
+- [x] Chạy đủ 20 ca với prompt hiện tại. Luna trả 20 kết quả hợp lệ, 15/20 khớp điểm tổng của nhóm và Sol đạt ngưỡng cả ba chỉ số ở 18/20 ca.
+- [ ] Lượt 3 chờ Opus đánh giá 20 bản ghi đã lưu. Luna vẫn cho 0 thay vì 0,25 ở mục một luồng. Lượt đầy đủ cũng ghi nhận lệch bội số và kiểm tra quyền ở hai ca workshop.

@@ -1,21 +1,26 @@
 # Hướng dẫn đánh giá chất lượng AI chấm bài
 
-**Cập nhật:** 2026-11-21
+**Cập nhật:** 2026-11-22
 **Code:** [backend/src/test/java/edu/aiplatform/grading/eval](../../../backend/src/test/java/edu/aiplatform/grading/eval)
 **Dữ liệu:** [backend/src/test/resources/ai-eval/grading](../../../backend/src/test/resources/ai-eval/grading)
 **Kế hoạch:** [2026-11-12-ai-grading-evaluation-plan.md](../plans/2026-11-12-ai-grading-evaluation-plan.md)
 
 ## 1. Mục đích
 
-QA vận hành cả bốn lớp qua `scripts/ai-grading-eval/run-evaluation.ps1`. Lệnh điều phối các bộ test tự động, replay Java, Gemini Live khi được cho phép và DeepEval GEval. Excel, JSON và Markdown dùng chung kết quả theo bài và lượt. Các lệnh Java bên dưới tiếp tục dùng độc lập và tạo bằng chứng trung gian. [Hướng dẫn QA trên Windows](../../../scripts/ai-grading-eval/README.md)
+QA kiểm tra ba điểm: đề xuất có qua quy tắc của backend, điểm từng mục có khớp mốc tham chiếu, và phản hồi có bám rubric, có căn cứ, hữu ích. Mỗi phép đo có kết quả riêng.
 
-Giảng viên yêu cầu khi phỏng vấn (mục J): muốn biết AI chấm có đáng tin không thì phải so với **dữ liệu chuẩn** và đo bằng 6–7 tiêu chí như độ chính xác, có bịa không, có lạc đề không, có trích nguồn không. Bộ đánh giá này làm việc đó:
+### Bốn lớp kiểm thử
 
-1. Đưa từng bài mẫu qua **đúng pipeline chấm AI của app**: chọn rubric có bài làm, `GradingPromptBuilder` dựng prompt và schema, `JsonSchemaChecker` kiểm output, gộp điểm 0 cho phần trống, `GradingProposalValidator` chuẩn hóa và validate.
-2. So điểm AI từng mục rubric với điểm tham chiếu. Nhãn dữ liệu cho biết điểm do nhóm soạn hay đã được giảng viên xác nhận.
-3. Lưu `report.md` và `results.json` làm bằng chứng Java. Runner QA tổng hợp vào `ai-grading-evaluation.xlsx`, `.json` và `.md`.
+| Lớp | Làm gì | Kiểm tra được gì |
+|---|---|---|
+| **1. Test tự động** | Chạy bộ test Java và frontend với dữ liệu kiểm soát. | Dựng prompt, kiểm JSON, giới hạn điểm, kiểm tra bằng chứng và cách UI hiển thị kết quả. |
+| **2. Replay** | Nạp lại phản hồi đã lưu vào pipeline Java mà không gọi model chấm. | So sánh trạng thái, điểm tổng, điểm từng mục và cờ cần giảng viên xem lại với bản lưu. |
+| **3. Chấm mới** | Giữ cố định đề, bài nộp và rubric. Dùng `GradingPromptBuilder` dựng prompt và schema rồi gọi model chấm. Lưu phản hồi gốc để Java kiểm schema, chuẩn hóa và chạy `GradingProposalValidator`. | Đo kết quả của phiên bản prompt đang thử và đối chiếu điểm từng mục với mốc tham chiếu. |
+| **4. DeepEval** | Cho judge đọc đề, rubric, bài nộp và phản hồi gốc của case đã qua validator. | GEval chấm riêng ba tiêu chí bám rubric, có căn cứ và hữu ích. Mỗi tiêu chí có điểm và lý do. |
 
-Bộ đánh giá Java chạy trên fixture độc lập với điểm lưu trong app. Gemini Live dùng API key thử nghiệm của người chạy. Codex và Claude trong chế độ offline dùng phiên đăng nhập CLI để đánh giá phản hồi đã lưu.
+Khi chạy chấm mới, model tạo phản hồi trước, Java kiểm tra phản hồi, rồi DeepEval mới đánh giá. Khi kiểm tra hồi quy từ bản ghi, chế độ `offline` chạy replay trước DeepEval. Điểm tham chiếu và kết quả judge trước đó chỉ dùng để lập báo cáo. Bộ đánh giá dùng bài mẫu và không ghi điểm vào lớp học.
+
+Runner `scripts/ai-grading-eval/run-evaluation.ps1` điều phối các lớp trên cho dữ liệu Gemini. Java tạo `report.md`, `results.json` và `recordings/` làm bằng chứng trung gian. Runner tổng hợp Excel, JSON và Markdown theo bài và lượt. [Hướng dẫn QA trên Windows](../../../scripts/ai-grading-eval/README.md)
 
 ## 2. Chỉ số và ngưỡng của Java
 
@@ -42,6 +47,8 @@ Các mục thuộc phần sinh viên bỏ trống do app tự cho 0 mà không g
 Báo cáo hợp nhất còn có điểm GEval cho bám rubric, bám bằng chứng và chất lượng nhận xét. Ba ngưỡng mặc định là 0,8. Đọc điểm GEval cùng lý do của judge. MAE trong báo cáo hợp nhất tính bằng điểm tuyệt đối theo từng nguồn tham chiếu. Tỷ lệ có kết quả provider, tỷ lệ kiểm định hợp lệ và tỷ lệ đạt GEval dùng mẫu số riêng.
 
 ## 3. Bộ dữ liệu
+
+Bộ hiện có 20 ca hồi quy trong 6 thư mục đề, gồm 8 ca `badminton-booking` và 12 ca PE. Xem danh sách và hướng dẫn thu bài có điểm giảng viên. [Bộ PE SWR302 và SWD392](u09-pe-defense-dataset.md)
 
 Mỗi bộ là một thư mục `ai-eval/grading/<dataset>/`:
 
@@ -78,7 +85,7 @@ Chạy ở thư mục gốc của repo. Đặt `$source` thành đường dẫn 
 $qa = '.\scripts\ai-grading-eval\run-evaluation.ps1'
 $source = '.\backend\target\ai-eval\badminton-booking-live-20261121-043944\results.json'
 & $qa -Mode replay -Results $source -Case 08-wrong-actors -Run 1
-& $qa -Mode offline -Results $source -Case 08-wrong-actors -Run 1 -Judge codex -AllowHosted codex
+& $qa -Mode offline -Results $source -Case 08-wrong-actors -Run 1 -Judge codex -AllowHosted codex -Model gpt-6.2-sol
 ```
 
 Với bản lưu trong ví dụ, replay trả mã `2` vì validator hiện tại bật cờ xem lại mục `s-name-actors`. Điểm giữ nguyên. Mở `Replay Results` để kiểm tra thay đổi.
@@ -90,9 +97,28 @@ Với bản lưu trong ví dụ, replay trả mã `2` vì validator hiện tại
 & $qa -Mode offline -Results $source -Case 08-wrong-actors -Run 1 -Judge claude -AllowHosted claude -MaxCalls 6
 ```
 
-Codex đã trả đủ ba điểm GEval trong runner hợp nhất. Claude đã qua kiểm tra đăng nhập thuê bao. Smoke trước ghi lỗi judge, trong đó có lỗi quota hoặc billing. Xem `DeepEval Semantic Metrics` để xác nhận ba điểm và lý do. Khi có lỗi, xem `Provider & Judge Errors` và kiểm tra kết quả `Replay Results` riêng.
+`doctor` kiểm tra CLI và đăng nhập. Xem `DeepEval Semantic Metrics` để xác nhận judge đã trả ba điểm và lý do. Xem `Provider & Judge Errors` khi gặp lỗi dịch vụ hoặc hạn mức. Kết quả Java nằm riêng trong `Replay Results`.
 
 Đường dẫn báo cáo xuất hiện sau dòng `Reports:`. Mở Excel, lọc `test_case_id` và `run_index` trong `Test Cases`, rồi dùng `evidence_paths` để mở bản ghi gốc. Xem `Score Comparison` để đối chiếu điểm tổng và điểm từng mục. [Các chế độ, so sánh baseline và chia sẻ báo cáo](../../../scripts/ai-grading-eval/README.md)
+
+### Đối chiếu Luna, Sol và Opus trong đợt kiểm thử prompt
+
+Đợt kiểm thử 20 ca dùng Luna `medium` qua Codex CLI để tạo đề xuất. Bộ chạy QA cục bộ đưa phản hồi qua cùng pipeline Java rồi dùng Sol `high` và Opus 5.5 `high` đánh giá các bản ghi đã lưu. Đây là luồng cục bộ phục vụ so sánh prompt. Lệnh `-Mode offline -Results` ở trên nhận hồ sơ Gemini Live.
+
+- Khi cần so sánh Sol và Opus, cho hai judge đọc đúng cùng bài, rubric và phản hồi Luna. Đạt GEval khi cả ba chỉ số của một judge từ 0,80 trở lên. Báo cáo riêng số case đã đánh giá và số case đạt của từng judge.
+- Lượt 3 đã có 20 bản ghi Luna hợp lệ và kết quả Sol trên cả 20. Khi chạy Opus, dùng lại 20 bản ghi Luna của lượt 3 và ghi kết quả vào cột Opus. Nếu đổi prompt, lưu thành lượt mới để giữ lịch sử đối chiếu.
+- `test-ai-grading-test.md` là báo cáo đối chiếu cục bộ của đợt này. Báo cáo gồm mục đích, bốn lớp kiểm thử, kết quả lượt mới nhất, bảng so sánh ba lượt và phụ lục có bản ghi theo mã case. Báo cáo và bản ghi chạy nằm trong thư mục QA cục bộ. Khi chia sẻ, giữ các hồ sơ đi kèm để mở được liên kết tương đối.
+
+Trên máy QA có hồ sơ Luna đã lưu, chạy từ thư mục gốc của repo. Lệnh có `--plan` liệt kê các case cần chạy. Bỏ `--plan` sau khi kiểm tra đăng nhập Claude, hạn mức và cài đặt usage credits. Dùng lệnh cuối để cập nhật báo cáo từ kết quả đã lưu.
+
+```powershell
+$reportDir = (Get-Content .tmp/u09-luna-sol-latest.txt).Trim()
+$retestDir = (Get-Content .tmp/u09-grading-retest-latest.txt).Trim()
+$python = '.\scripts\ai-grading-eval\.venv\Scripts\python.exe'
+$run = Join-Path $retestDir 'prompt-followup-full'
+& $python (Join-Path $reportDir 'judge-saved.py') --judge opus --run-dir $run --retry-judge-errors --plan
+& $python (Join-Path $reportDir 'build-readable-report.py') --retest-dir $retestDir
+```
 
 ### Chạy trực tiếp bộ Java
 
