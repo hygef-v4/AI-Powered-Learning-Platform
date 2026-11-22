@@ -1,12 +1,25 @@
 # AI-DLC State Tracking
 
+## U07: Tạo đề AI theo cấu trúc PE · 2026-11-22
+
+- [x] Đối chiếu 14 đề SWR302 và 6 đề SWD392 với prompt và luồng tạo đề hiện tại. 22 test backend tạo đề đạt ở lượt audit.
+- [x] Lập [kế hoạch code generation](construction/plans/code-generation-plan/2026-11-22-u07-pe-assignment-generation.md) cho prompt AUTO, điểm từng câu, xem trước cảnh báo và hồi quy trước/sau.
+- [x] Theo kế hoạch đã duyệt, bổ sung hướng dẫn AUTO, giữ điểm từng câu từ rubric mẫu và yêu cầu xác nhận trên UI khi có cảnh báo nguồn.
+- [x] Kiểm 159 test backend, 35 test tích hợp, 92 test frontend và hai ca trên Chrome local với API mock. Đối chiếu Luna medium trên sáu brief. Prompt cuối sinh sáu kết quả đủ điểm, gồm một đề cần xem do mâu thuẫn mẫu. [Báo cáo U07](construction/build-and-test/2026-11-22-u07-pe-assignment-evaluation.md)
+- [x] Đo Luna medium trên 3 lượt cùng 6 đề. 18/18 đúng schema, 15/18 đúng tổng, 2/3 lượt phát hiện mâu thuẫn. 15 đề đúng điểm giữ nguyên giới hạn rubric khi dựng prompt U09. Ba bài nộp đối chứng đạt 4/4, 3/4 và 3/4 đúng mục cần đổi điểm.
+- [x] Thêm tên hai đầu cạnh cho U09, xem trước bắt buộc với đề tạo từ mẫu và cấu hình điểm từng câu. 229 test backend và 94 test frontend đạt. Luna giữ đúng điểm ở 17/17 phản hồi đọc được khi chốt điểm, một phản hồi có dữ liệu dư sau JSON. Ba đối chứng U09 giữ ID cũ và đạt điểm kỳ vọng.
+- [x] Đo Luna medium khi để trống điểm từng câu. 14/18 đúng tổng và số câu theo brief, 2 sai tổng bị chặn và 2 phản hồi lỗi JSON. 12 test backend và 3 test frontend liên quan đạt.
+- [x] Thêm số câu tùy chọn và xem trước khi model phát hiện mâu thuẫn với lời nhắc. 32 test backend, 96 test frontend và luồng Chrome với API giả lập đạt. Luna medium báo đúng cả hai ca 4/5 câu. Một ca đối chứng sai tổng bị chặn.
+- [ ] Kiểm tra Gemini live qua gateway U06.
+
 ## U09: Siết cách chấm từng mục rubric · 2026-11-22
 
 - [x] Tái hiện mất 1,50 điểm phân quyền ở cả ba lượt ca thiếu FK với prompt cũ dù bằng chứng sequence giữ nguyên.
 - [x] Prompt đọc đúng phạm vi mục, nhánh sequence, mức điểm một phần và kiểm nhất quán giữa điểm với lý do. 57 test backend liên quan đạt.
 - [x] Prompt chốt cho ca thiếu FK 9,25/10 và ca thực sự thiếu phân quyền 8,50/10. Ca lạc đề vẫn lệch 0,25 ở trigger.
 - [x] Báo cáo cục bộ đổi tên thành `test-ai-grading-test.md`. Có cột riêng và lệnh đánh giá cùng bản ghi cho Opus 5.5.
-- [ ] Chạy Opus 5.5 và kiểm độ ổn định rộng hơn với prompt chốt.
+- [x] Chạy Opus 5.5 trên 20 ca lượt 3 (15/20 đạt).
+- [ ] Kiểm độ ổn định rộng hơn với prompt chốt.
 
 ## U09: Luna chấm và Sol đánh giá · 2026-11-22
 
@@ -1349,4 +1362,5 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 - [x] Hai kiểm tra prompt thất bại trên bản trước khi sửa. Lượt cuối đạt 57/57 test backend, gồm tạo prompt, schema, harness và validator. Phạm vi security và resiliency đã phê duyệt được giữ. PBT đã tắt.
 - [x] Luna medium cho bài lạc đề 0,50/4 và giữ 4,00/4 ở bài đầy đủ. Cả hai đạt ngưỡng theo Sol high trên cùng dữ liệu và schema của lượt trước.
 - [x] Chạy đủ 20 ca với prompt hiện tại. Luna trả 20 kết quả hợp lệ, 15/20 khớp điểm tổng của nhóm và Sol đạt ngưỡng cả ba chỉ số ở 18/20 ca.
-- [ ] Lượt 3 chờ Opus đánh giá 20 bản ghi đã lưu. Luna vẫn cho 0 thay vì 0,25 ở mục một luồng. Lượt đầy đủ cũng ghi nhận lệch bội số và kiểm tra quyền ở hai ca workshop.
+- [x] Opus 5.5 `high` đánh giá đủ 20 bản ghi Luna của lượt 3: 15/20 đạt cả ba chỉ số. Hai judge cùng đạt 15 ca, chỉ Sol đạt 3 ca (`01-complete`, `03-one-normal-flow`, `05-off-topic`, Opus cho chỉ số hữu ích 0,70), cùng dưới ngưỡng 2 ca workshop.
+- [ ] Luna vẫn cho 0 thay vì 0,25 ở mục một luồng. Lượt đầy đủ cũng ghi nhận lệch bội số và kiểm tra quyền ở hai ca workshop. Lượt 2 còn 17 ca chưa có Opus.

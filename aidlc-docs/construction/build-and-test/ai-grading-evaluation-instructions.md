@@ -106,7 +106,7 @@ Với bản lưu trong ví dụ, replay trả mã `2` vì validator hiện tại
 Đợt kiểm thử 20 ca dùng Luna `medium` qua Codex CLI để tạo đề xuất. Bộ chạy QA cục bộ đưa phản hồi qua cùng pipeline Java rồi dùng Sol `high` và Opus 5.5 `high` đánh giá các bản ghi đã lưu. Đây là luồng cục bộ phục vụ so sánh prompt. Lệnh `-Mode offline -Results` ở trên nhận hồ sơ Gemini Live.
 
 - Khi cần so sánh Sol và Opus, cho hai judge đọc đúng cùng bài, rubric và phản hồi Luna. Đạt GEval khi cả ba chỉ số của một judge từ 0,80 trở lên. Báo cáo riêng số case đã đánh giá và số case đạt của từng judge.
-- Lượt 3 đã có 20 bản ghi Luna hợp lệ và kết quả Sol trên cả 20. Khi chạy Opus, dùng lại 20 bản ghi Luna của lượt 3 và ghi kết quả vào cột Opus. Nếu đổi prompt, lưu thành lượt mới để giữ lịch sử đối chiếu.
+- Lượt 3 có 20 bản ghi Luna hợp lệ, cùng kết quả Sol và Opus trên cả 20 (Sol đạt 18/20, Opus đạt 15/20). Lượt 2 mới có Opus ở 3/20 ca. Muốn bổ sung thì truyền thêm `--run-dir` của thư mục `confirmation-remaining`. Nếu đổi prompt, lưu thành lượt mới để giữ lịch sử đối chiếu.
 - `test-ai-grading-test.md` là báo cáo đối chiếu cục bộ của đợt này. Báo cáo gồm mục đích, bốn lớp kiểm thử, kết quả lượt mới nhất, bảng so sánh ba lượt và phụ lục có bản ghi theo mã case. Báo cáo và bản ghi chạy nằm trong thư mục QA cục bộ. Khi chia sẻ, giữ các hồ sơ đi kèm để mở được liên kết tương đối.
 
 Trên máy QA có hồ sơ Luna đã lưu, chạy từ thư mục gốc của repo. Lệnh có `--plan` liệt kê các case cần chạy. Bỏ `--plan` sau khi kiểm tra đăng nhập Claude, hạn mức và cài đặt usage credits. Dùng lệnh cuối để cập nhật báo cáo từ kết quả đã lưu.
