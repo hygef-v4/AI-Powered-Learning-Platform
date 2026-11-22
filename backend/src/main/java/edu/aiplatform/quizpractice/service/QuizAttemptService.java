@@ -51,7 +51,9 @@ public class QuizAttemptService {
     }
 
     /**
-     * Bắt đầu lượt mới, hoặc mở lại lượt đang làm (BR-U11-10). Lớp phải đang mở, Quiz đang mở trong lớp, còn lượt.
+     * Bắt đầu lượt mới, hoặc mở lại lượt đang làm (BR-U11-10). Lớp phải đang mở, Quiz đang mở trong lớp, kể cả khi mở
+     * lại lượt đang làm. Lượt đang làm đã quá hạn cộng 30 giây thì tự nộp ({@code AUTO_TIME_LIMIT}) và trả lại lượt đó:
+     * trang làm bài nhận {@code ATTEMPT_SUBMITTED} và chuyển sang kết quả (KAN-212). Còn lượt mới tạo lượt mới.
      * Khóa Quiz trước khi đọc đề, rồi (Quiz, người học), tới commit (NFR-U11-11).
      */
     @Transactional
@@ -60,14 +62,17 @@ public class QuizAttemptService {
         ClassRef ref = support.loadClassRef(classId);
         attempts.lockStart(quizId, actor.accountId());
         QuizView quiz = support.loadQuizInClass(quizId, ref);
-        var existing = attempts.findInProgress(quizId, actor.accountId(), classId);
-        if (existing.isPresent()) {
-            return buildTakingView(existing.get());
-        }
-        quiz = support.loadQuizInClass(quizId, ref);
         if (ref.status() != ClassStatus.OPEN || quiz.status() != QuizStatus.OPEN) {
             access.recordRejected(actor, "QUIZ_SUBMIT_REJECTED", null, "QUIZ_NOT_OPEN");
             throw ApiException.createConflict("QUIZ_NOT_OPEN", "Quiz đã ngưng hoặc lớp không còn mở");
+        }
+        var existing = attempts.findInProgress(quizId, actor.accountId(), classId);
+        if (existing.isPresent()) {
+            QuizAttempt attempt = existing.get();
+            if (attempt.isOverdueAt(clock.instant())) {
+                attempt = support.submit(actor, attempt, SubmitMode.AUTO_TIME_LIMIT);
+            }
+            return buildTakingView(attempt);
         }
         int used = attempts.countAttempts(quizId, actor.accountId(), classId);
         Integer max = quiz.settings().maxAttempts();

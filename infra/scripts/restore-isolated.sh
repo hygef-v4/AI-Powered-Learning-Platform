@@ -18,20 +18,19 @@ KEY=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
 IMAGE=$3
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 WORK=$(mktemp -d)
-CONTAINER_ID=
+CREATED=0
+SUCCEEDED=0
 cleanup() {
     status=$?
-    trap - EXIT
-    if [ "$status" -ne 0 ] && [ -n "$CONTAINER_ID" ]; then
-        docker rm -f "$CONTAINER_ID" >/dev/null 2>&1 ||
-            echo "Không dọn được container tạm $CONTAINER_ID" >&2
-    fi
     rm -f "$WORK/private-key.pem" "$WORK/dump.pgc" "$WORK/archive.alapbk"
-    exit "$status"
+    if [ "$CREATED" -eq 1 ] && [ "$SUCCEEDED" -eq 0 ]; then
+        docker rm -fv "$NAME" >/dev/null 2>&1 || true
+        echo "Khôi phục thất bại (exit $status); đã dọn container tạm $NAME" >&2
+    fi
 }
 trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
-NAME="platform-restore-$STAMP"
+NAME="platform-restore-$STAMP-$$"
 EVIDENCE="restore-evidence-$STAMP.txt"
 PASSWORD=$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')
 START=$(date -u +%s)
@@ -51,12 +50,18 @@ docker run --rm --user "$(id -u):$(id -g)" -v "$WORK:/work" --entrypoint java "$
 rm -f "$WORK/private-key.pem"
 
 echo "2. Tạo PostgreSQL 16 tạm: $NAME"
-CONTAINER_ID=$(docker run -d --name "$NAME" -e POSTGRES_PASSWORD="$PASSWORD" -e POSTGRES_DB=platform \
-    -v "$WORK:/work" -p 127.0.0.1::5432 postgres:16-alpine)
-ready_deadline=$(( $(date -u +%s) + READY_TIMEOUT ))
-until docker exec "$CONTAINER_ID" pg_isready -t 1 -U postgres -d platform >/dev/null 2>&1; do
-    if [ "$(date -u +%s)" -ge "$ready_deadline" ]; then
-        echo "PostgreSQL không sẵn sàng trong $READY_TIMEOUT giây." >&2
+CREATED=1
+docker run -d --name "$NAME" -e POSTGRES_PASSWORD="$PASSWORD" -e POSTGRES_DB=platform \
+    -v "$WORK:/work" -p 127.0.0.1::5432 postgres:16-alpine@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e > /dev/null
+READY_DEADLINE=$(($(date -u +%s) + READY_TIMEOUT))
+until docker exec "$NAME" pg_isready -t 1 -U postgres -d platform > /dev/null 2>&1; do
+    state=$(docker inspect --format '{{.State.Status}}' "$NAME") || exit 1
+    case "$state" in
+        running|created|restarting) ;;
+        *) echo "PostgreSQL tạm đã dừng: $state" >&2; exit 1 ;;
+    esac
+    if [ "$(date -u +%s)" -ge "$READY_DEADLINE" ]; then
+        echo "PostgreSQL tạm chưa sẵn sàng sau $READY_TIMEOUT giây" >&2
         exit 1
     fi
     sleep 1
@@ -76,7 +81,8 @@ rm -f "$WORK/dump.pgc" "$WORK/archive.alapbk"
 END=$(date -u +%s)
 echo "Kết thúc: $(date -u), thời gian khôi phục $((END - START)) giây" | tee -a "$EVIDENCE"
 PORT=$(docker port "$NAME" 5432 | head -n 1 | sed 's/.*://')
+SUCCEEDED=1
 echo
 echo "Database tạm: psql postgresql://postgres:$PASSWORD@127.0.0.1:$PORT/platform"
 echo "Kiểm theo danh sách trong runbook, ghi kết quả vào $EVIDENCE."
-echo "Xong thì xóa: docker rm -f $NAME && rm -rf $WORK"
+echo "Xong thì xóa: docker rm -fv $NAME && rmdir $WORK"

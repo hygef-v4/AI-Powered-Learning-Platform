@@ -247,6 +247,38 @@ class QuizAttemptRepositoryIntegrationTest {
     }
 
     @Test
+    void differentStudentsCanLockTheSameQuizWhileSameStudentAndEditsWait() throws Exception {
+        var acquired = new CountDownLatch(1);
+        var release = new CountDownLatch(1);
+        var workers = Executors.newFixedThreadPool(3);
+        try {
+            var first = workers.submit(() -> tx.executeWithoutResult(status -> {
+                repository.lockStart(quizId, student);
+                acquired.countDown();
+                awaitLatch(release);
+            }));
+            assertThat(acquired.await(5, TimeUnit.SECONDS)).isTrue();
+            var otherStudent = workers.submit(() -> tx.executeWithoutResult(status ->
+                    repository.lockStart(quizId, UUID.randomUUID())));
+            otherStudent.get(2, TimeUnit.SECONDS);
+            var sameStudent = workers.submit(() -> tx.executeWithoutResult(status ->
+                    repository.lockStart(quizId, student)));
+            var edit = workers.submit(() -> tx.executeWithoutResult(status ->
+                    JdbcClient.create(appDataSource).sql("select id from quizzes where id = :id for update")
+                            .param("id", quizId).query(UUID.class).single()));
+            assertThatThrownBy(() -> sameStudent.get(200, TimeUnit.MILLISECONDS)).isInstanceOf(TimeoutException.class);
+            assertThatThrownBy(() -> edit.get(200, TimeUnit.MILLISECONDS)).isInstanceOf(TimeoutException.class);
+            release.countDown();
+            first.get(5, TimeUnit.SECONDS);
+            sameStudent.get(5, TimeUnit.SECONDS);
+            edit.get(5, TimeUnit.SECONDS);
+        } finally {
+            release.countDown();
+            workers.shutdownNow();
+        }
+    }
+
+    @Test
     void attemptRoundTripsWithSnapshotAnswersAndResult() {
         QuizAttempt attempt = attempt(1, 15);
         tx.executeWithoutResult(s -> {

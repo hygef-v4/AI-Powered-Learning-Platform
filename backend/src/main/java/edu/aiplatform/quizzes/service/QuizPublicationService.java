@@ -88,7 +88,10 @@ public class QuizPublicationService {
         return support.buildDetail(published, true);
     }
 
-    /** Ngưng Quiz đang mở, lý do bắt buộc (BR-U10-23); lượt đang làm được U11 tự nộp trong cùng transaction. */
+    /**
+     * Lưu trữ Quiz chưa lưu trữ (BR-U10-23): lý do tùy chọn, trống thì mặc định "Lưu trữ", tối đa 1.000 ký tự; lượt đang
+     * làm được U11 tự nộp trong cùng transaction.
+     */
     @Transactional
     public QuizDetail retire(Actor actor, UUID id, String reason, long version) {
         quizzes.lockQuiz(id);
@@ -98,8 +101,8 @@ public class QuizPublicationService {
         }
         String cleanReason = reason == null || reason.isBlank() ? "Lưu trữ" : reason.strip();
         if (cleanReason.codePointCount(0, cleanReason.length()) > QuizRules.MAX_REASON) {
-            throw new RuleViolationException(HttpStatus.BAD_REQUEST, "QUIZ_INVALID", "Cần lý do ngưng quiz",
-                    List.of(new Violation("reason", "REQUIRED", "Lý do ngưng bắt buộc, tối đa 1.000 ký tự")));
+            throw new RuleViolationException(HttpStatus.BAD_REQUEST, "QUIZ_INVALID", "Lý do ngưng quiz quá dài",
+                    List.of(new Violation("reason", "TOO_LONG", "Lý do ngưng tối đa 1.000 ký tự")));
         }
         QuizSupport.requireVersion(quiz, version);
         return support.buildDetail(retire(actor, quiz, cleanReason, clock.instant()), true);
