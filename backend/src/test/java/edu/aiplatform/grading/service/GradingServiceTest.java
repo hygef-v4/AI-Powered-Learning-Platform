@@ -62,7 +62,7 @@ class GradingServiceTest {
                         AttemptStatus.SUBMITTED, Instant.now(), false)));
         gradingService = new GradingService(evaluationRepository, new GradingAccess(auth, classAccess, audit, Clock.systemUTC()), audit, eventPublisher,
                 submissionQuery, assignmentQuery, objectMapper, Clock.systemUTC(), groupProvider);
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(assignmentView(AssignmentStatus.CLOSED)));
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(assignmentView(AssignmentStatus.CLOSED)));
         when(groupProvider.getIfAvailable()).thenReturn(groupSource);
         when(groupSource.getGroupSubmission(any())).thenAnswer(inv -> Optional.of(
                 new edu.aiplatform.grading.contract.GroupSubmissionView(evaluation.groupDocumentId, UUID.randomUUID(),
@@ -112,7 +112,7 @@ class GradingServiceTest {
 
     @Test
     void cannotGradeOrPublishWhileTheAssignmentStillReceivesSubmissions() {
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(new AssignmentView(
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(
                 assignmentId, AssignmentScope.CLASS, classId, UUID.randomUUID(), 1, "Assignment",
                 SubmissionMode.INDIVIDUAL, GradingMode.GRADED, false, AssignmentStatus.OPEN,
                 Instant.now().minusSeconds(60), Instant.now().plusSeconds(3600), null,
@@ -131,7 +131,7 @@ class GradingServiceTest {
     @org.junit.jupiter.params.provider.EnumSource(value = AssignmentStatus.class,
             names = {"DRAFT", "REVIEWED", "SCHEDULED", "OPEN"})
     void everyGradingWriteRequiresATerminalAssignment(AssignmentStatus status) {
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(assignmentView(status)));
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(assignmentView(status)));
         List<Runnable> writes = List.of(
                 () -> gradingService.requireCurrent(teacher, evaluation.id, 0),
                 () -> gradingService.saveEvaluation(teacher, evaluation.id, command(0)),
@@ -152,7 +152,7 @@ class GradingServiceTest {
     @org.junit.jupiter.params.provider.EnumSource(value = AssignmentStatus.class,
             names = {"CLOSED", "RETIRED"})
     void terminalAssignmentsCanBeGradedBeforeTheirOriginalDeadline(AssignmentStatus status) {
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(assignmentView(status)));
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(assignmentView(status)));
 
         assertThat(gradingService.saveEvaluation(teacher, evaluation.id, command(0)).score)
                 .isEqualByComparingTo("4");
@@ -162,7 +162,7 @@ class GradingServiceTest {
     @org.junit.jupiter.params.provider.CsvSource({"-3600,3600", "-30,0", "-31,0", "-3600,-1800"})
     void elapsedDeadlineOrGraceCannotBypassPendingClosure(long deadlineOffset, long lateOffset) {
         Instant now = Instant.now();
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(new AssignmentView(
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(
                 assignmentId, AssignmentScope.CLASS, classId, UUID.randomUUID(), 1, "Assignment",
                 SubmissionMode.INDIVIDUAL, GradingMode.GRADED, false, AssignmentStatus.OPEN,
                 now.minusSeconds(7200), now.plusSeconds(deadlineOffset),
@@ -176,11 +176,11 @@ class GradingServiceTest {
 
     @Test
     void missingOrUnavailableAssignmentNeverPermitsGrading() {
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.empty());
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> gradingService.requireCurrent(teacher, evaluation.id, 0))
                 .isInstanceOfSatisfying(ApiException.class,
                         error -> assertThat(error.readCode()).isEqualTo("ASSIGNMENT_UNAVAILABLE"));
-        when(assignmentQuery.get(assignmentId)).thenThrow(new IllegalStateException("unavailable"));
+        when(assignmentQuery.loadAssignment(assignmentId)).thenThrow(new IllegalStateException("unavailable"));
         assertThatThrownBy(() -> gradingService.saveEvaluation(teacher, evaluation.id, command(0)))
                 .isInstanceOfSatisfying(ApiException.class,
                         error -> assertThat(error.readCode()).isEqualTo("GRADING_DEPENDENCY_UNAVAILABLE"));
@@ -190,7 +190,7 @@ class GradingServiceTest {
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
     void batchCannotPublishOrFinalizeAnOpenAssignment(boolean publish) {
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(assignmentView(AssignmentStatus.OPEN)));
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(assignmentView(AssignmentStatus.OPEN)));
         var transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
         when(transactions.getTransaction(any())).thenReturn(
                 new org.springframework.transaction.support.SimpleTransactionStatus());

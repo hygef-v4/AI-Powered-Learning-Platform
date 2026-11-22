@@ -106,7 +106,7 @@ public class GradingService {
     private void requireClosedAssignment(UUID assignmentId) {
         final AssignmentView assignment;
         try {
-            assignment = assignmentQuery.get(assignmentId).orElseThrow(() ->
+            assignment = assignmentQuery.loadAssignment(assignmentId).orElseThrow(() ->
                     ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE", "Assignment unavailable"));
         } catch (ApiException ex) {
             throw ex;

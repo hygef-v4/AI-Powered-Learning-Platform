@@ -34,7 +34,7 @@ public class AssignmentQueryService implements IAssignmentQuery {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<AssignmentView> get(UUID assignmentId) {
+    public Optional<AssignmentView> loadAssignment(UUID assignmentId) {
         return assignments.findAssignment(assignmentId).map(Assignment::view);
     }
 

@@ -23,7 +23,7 @@ class AiDomainTest {
 
     @ParameterizedTest
     @CsvSource({"QUEUED,RUNNING,true", "QUEUED,CANCELLED,true", "QUEUED,FAILED,true", "QUEUED,READY,false",
-            "RUNNING,READY,true", "RUNNING,FAILED,true", "RUNNING,UNKNOWN,true", "RUNNING,CANCELLED,false",
+            "RUNNING,QUEUED,true", "RUNNING,READY,true", "RUNNING,FAILED,true", "RUNNING,UNKNOWN,true", "RUNNING,CANCELLED,false",
             "READY,FAILED,false", "UNKNOWN,RUNNING,false"})
     void taskTransitionsFollowTheStateDiagram(AiTaskState from, AiTaskState to, boolean allowed) {
         assertThat(AiTask.canMove(from, to)).isEqualTo(allowed);

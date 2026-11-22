@@ -25,7 +25,7 @@ public interface IAiTask {
         return List.of();
     }
 
-    Optional<AiTaskView> get(UUID taskId);
+    Optional<AiTaskView> loadTask(UUID taskId);
 
     void cancel(Actor actor, UUID taskId);
 }

@@ -7,46 +7,124 @@ import java.util.*;
 
 /** Shared bounded MCP input parsing; resource authorization remains with each domain. */
 public final class McpInput {
-    private final Map<String,Object> values;
-    public McpInput(Map<String,Object> values) { this.values=values==null?Map.of():values; }
-    public Object get(String key) { return values.get(key); }
-    public boolean has(String key) { return values.containsKey(key); }
-    public String text(String key,String fallback) {
-        Object value=values.get(key);
-        if(value==null)return fallback;
-        if(!(value instanceof String s) || s.length()>10000)throw invalid();
-        return s;
+    private static final int MAX_TEXT_LENGTH = 10000;
+    private static final String UUID_PATTERN =
+            "[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}";
+
+    private final Map<String, Object> values;
+
+    public McpInput(Map<String, Object> values) {
+        this.values = values == null ? Map.of() : values;
     }
-    public UUID uuid(String key) {
-        try { String s=text(key,null); if(s==null || !s.matches("[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"))throw invalid(); return UUID.fromString(s); }
-        catch(IllegalArgumentException e){throw invalid();}
+
+    public Object readValue(String key) {
+        return values.get(key);
     }
-    public int integer(String key,int fallback,int min,int max) {
-        Object value=values.get(key); if(value==null)return fallback;
-        if(!(value instanceof Number))throw invalid();
-        try {int number=new BigDecimal(value.toString()).intValueExact();if(number<min||number>max)throw invalid();return number;}
-        catch(ArithmeticException|NumberFormatException e){throw invalid();}
+
+    public boolean has(String key) {
+        return values.containsKey(key);
     }
-    public long version(String key) {
-        Object value=values.get(key); if(!(value instanceof Number))throw invalid();
-        try {long number=new BigDecimal(value.toString()).longValueExact();if(number<0)throw invalid();return number;}
-        catch(ArithmeticException|NumberFormatException e){throw invalid();}
+
+    public String readText(String key, String fallback) {
+        Object value = values.get(key);
+        if (value == null) {
+            return fallback;
+        }
+        if (!(value instanceof String text) || text.length() > MAX_TEXT_LENGTH) {
+            throw createInvalidArguments();
+        }
+        return text;
     }
-    public <E extends Enum<E>> E choice(String key,Class<E> type,E fallback) {
-        String value=text(key,null);if(value==null)return fallback;
-        try{return Enum.valueOf(type,value);}catch(IllegalArgumentException e){throw invalid();}
+
+    public UUID readUuid(String key) {
+        try {
+            String text = readText(key, null);
+            if (text == null || !text.matches(UUID_PATTERN)) {
+                throw createInvalidArguments();
+            }
+            return UUID.fromString(text);
+        } catch (IllegalArgumentException e) {
+            throw createInvalidArguments();
+        }
     }
-    public int page(){return integer("page",0,0,1_000_000);}
-    public int size(){return integer("size",20,1,100);}
-    public static <T> Map<String,Object> page(List<T> items,int page,int size) {
-        long start=(long)page*size;int from=(int)Math.min(start,items.size());
-        return Map.of("items",items.subList(from,Math.min(from+size,items.size())),"total",items.size(),"page",page,"size",size);
+
+    public int readInteger(String key, int fallback, int min, int max) {
+        Object value = values.get(key);
+        if (value == null) {
+            return fallback;
+        }
+        if (!(value instanceof Number)) {
+            throw createInvalidArguments();
+        }
+        try {
+            int number = new BigDecimal(value.toString()).intValueExact();
+            if (number < min || number > max) {
+                throw createInvalidArguments();
+            }
+            return number;
+        } catch (ArithmeticException | NumberFormatException e) {
+            throw createInvalidArguments();
+        }
     }
-    public static void teaching(Actor actor) {
-        if(actor==null || (actor.role()!=Role.TEACHER && actor.role()!=Role.SUBJECT_MANAGER))throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
+
+    public long readVersion(String key) {
+        Object value = values.get(key);
+        if (!(value instanceof Number)) {
+            throw createInvalidArguments();
+        }
+        try {
+            long number = new BigDecimal(value.toString()).longValueExact();
+            if (number < 0) {
+                throw createInvalidArguments();
+            }
+            return number;
+        } catch (ArithmeticException | NumberFormatException e) {
+            throw createInvalidArguments();
+        }
     }
-    public static void admin(Actor actor) {
-        if(actor==null || actor.role()!=Role.ADMIN)throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
+
+    public <E extends Enum<E>> E readChoice(String key, Class<E> type, E fallback) {
+        String value = readText(key, null);
+        if (value == null) {
+            return fallback;
+        }
+        try {
+            return Enum.valueOf(type, value);
+        } catch (IllegalArgumentException e) {
+            throw createInvalidArguments();
+        }
     }
-    public static ApiException invalid(){return ApiException.createBadRequest("INVALID_MCP_ARGUMENTS","Tham số MCP không hợp lệ");}
+
+    public int readPage() {
+        return readInteger("page", 0, 0, 1_000_000);
+    }
+
+    public int readSize() {
+        return readInteger("size", 20, 1, 100);
+    }
+
+    public static <T> Map<String, Object> paginateItems(List<T> items, int page, int size) {
+        long start = (long) page * size;
+        int from = (int) Math.min(start, items.size());
+        int to = Math.min(from + size, items.size());
+        return Map.of("items", items.subList(from, to), "total", items.size(),
+                "page", page, "size", size);
+    }
+
+    public static void requireTeaching(Actor actor) {
+        if (actor == null
+                || (actor.role() != Role.TEACHER && actor.role() != Role.SUBJECT_MANAGER)) {
+            throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
+        }
+    }
+
+    public static void requireAdmin(Actor actor) {
+        if (actor == null || actor.role() != Role.ADMIN) {
+            throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
+        }
+    }
+
+    public static ApiException createInvalidArguments() {
+        return ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", "Tham số MCP không hợp lệ");
+    }
 }

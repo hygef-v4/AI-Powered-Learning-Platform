@@ -1,37 +1,29 @@
 package edu.aiplatform.announcements.model;
 
 import edu.aiplatform.shared.error.ApiException;
-import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.safety.Safelist;
 
-@Entity
-@Table(name = "announcements")
 public class Announcement {
     public enum Status {
         ACTIVE,
         DELETED
     }
 
-    @Id public UUID id;
+    public UUID id;
 
-    @Column(nullable = false)
     public UUID classId;
 
-    @Column(nullable = false, length = 200)
     public String title;
 
-    @Column(nullable = false, length = 5000)
     public String body;
 
     public boolean important;
     public boolean sendEmail;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 16)
     public Status status;
 
     public UUID createdBy;

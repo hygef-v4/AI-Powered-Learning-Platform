@@ -60,10 +60,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -168,6 +171,28 @@ class AiTaskFlowTest {
         assertThat(service.sourceOrder(teacher, prompt, 500)).containsExactly(
                 new edu.aiplatform.ai.contract.AiSourceChoice(AiSource.PERSONAL, AiProvider.OPENAI));
         assertThat(service.sourceOrder(student, prompt, 500)).isEmpty();
+    }
+
+    @Test
+    void automaticSourceUsesPersonalWhenSharedQuotaCannotCoverReasoning() {
+        AiProperties reasoningProperties = new AiProperties(KeyCipherAndCatalogTest.KEY_V1, null,
+                properties.requestTimeout(), properties.testTimeout(), Map.of("gemini", new AiProperties.Provider(
+                        List.of("gemini-2.5-flash"), 4096, List.of(), List.of("gemini-2.5-flash"), "low", 1000)));
+        AiTaskResultHandlerRegistry registry = AiTaskResultHandlerRegistry.createRegistry(List.of(handler));
+        AiTaskService reasoningService = new AiTaskService(tasks, connections, usageRepository, registry, quota,
+                new ProviderCatalog(reasoningProperties), new JsonSchemaChecker(json),
+                new AiAccess(authorization, mock(IAudit.class), clock), new PromptGuardrailService(),
+                mock(AiTaskDelivery.class), jobs, json, tx, clock);
+        when(quota.calculateRemaining(teacher.accountId()))
+                .thenReturn(new QuotaReservationService.Remaining(0, 800, 800, null));
+        when(quota.reserve(eq(teacher.accountId()), anyLong()))
+                .thenThrow(new QuotaUnavailableException("AI_QUOTA_EXCEEDED", "synthetic quota rejection"));
+
+        AiTaskView task = reasoningService.submit(request(teacher, null, null, "reasoning-quota"));
+
+        assertThat(task.source()).isEqualTo(AiSource.PERSONAL);
+        assertThat(task.provider()).isEqualTo(AiProvider.OPENAI);
+        verify(quota, never()).reserve(any(), anyLong());
     }
 
     @Test
@@ -372,6 +397,60 @@ class AiTaskFlowTest {
         b.join(5000);
         worker.handle(message(third.taskId()));
         assertThat(tasks.rows.get(third.taskId()).state()).isEqualTo(AiTaskState.READY);
+    }
+
+    @Test
+    void sharedFallbackWaitsForTheNextProviderAndDoesNotReplayThePreviousCall() throws Exception {
+        AiTaskView first = service.submit(request(teacher, AiSource.SHARED, null, "busy-1"));
+        AiTaskView second = service.submit(request(teacher, AiSource.SHARED, null, "busy-2"));
+        UUID initialId = UUID.randomUUID();
+        AiConnection initial = AiConnection.createConnection(initialId, AiConnection.Scope.INSTITUTIONAL, null,
+                AiProvider.OPENAI, "gpt-4.1-mini", cipher.encryptConnectionKey(initialId,
+                        AiConnection.Scope.INSTITUTIONAL, null, AiProvider.OPENAI, "synthetic-initial-key"), "test", NOW);
+        when(connections.listInstitutional()).thenReturn(List.of(initial, shared));
+        when(connections.findById(initialId)).thenReturn(Optional.of(initial));
+        AiTaskView fallback = service.submit(request(teacher, AiSource.SHARED, null, "fallback"));
+        CountDownLatch inside = new CountDownLatch(2);
+        CountDownLatch release = new CountDownLatch(1);
+        Response response = new Response("{\"score\":8}", "req", new Usage(10L, 5L, null, null));
+        doAnswer(call -> {
+            if (inside.getCount() > 0) {
+                inside.countDown();
+                assertThat(release.await(5, TimeUnit.SECONDS)).isTrue();
+            }
+            return response;
+        }).when(gateway).call(eq(AiProvider.GEMINI), any());
+        when(gateway.call(eq(AiProvider.OPENAI), any()))
+                .thenThrow(new ProviderException(FailureKind.REJECTED, 401, "key rejected", null));
+
+        List<Throwable> errors = new CopyOnWriteArrayList<>();
+        Thread a = new Thread(() -> run(first.taskId(), errors));
+        Thread b = new Thread(() -> run(second.taskId(), errors));
+        a.start();
+        b.start();
+        try {
+            assertThat(inside.await(5, TimeUnit.SECONDS)).isTrue();
+
+            assertThatThrownBy(() -> worker.handle(message(fallback.taskId())))
+                    .isInstanceOf(RetryableJobException.class);
+
+            AiTask queued = tasks.rows.get(fallback.taskId());
+            assertThat(queued.state()).isEqualTo(AiTaskState.QUEUED);
+            assertThat(queued.connectionId()).isEqualTo(shared.id());
+            assertThat(queued.dispatchedAt()).isNull();
+            verify(gateway, times(2)).call(eq(AiProvider.GEMINI), any());
+        } finally {
+            release.countDown();
+            a.join(5000);
+            b.join(5000);
+        }
+
+        assertThat(errors).isEmpty();
+        worker.handle(message(fallback.taskId()));
+
+        assertThat(tasks.rows.get(fallback.taskId()).state()).isEqualTo(AiTaskState.READY);
+        verify(gateway).call(eq(AiProvider.OPENAI), any());
+        verify(gateway, times(3)).call(eq(AiProvider.GEMINI), any());
     }
 
     private void run(UUID taskId, List<Throwable> errors) {
@@ -695,8 +774,8 @@ class AiTaskFlowTest {
     void imagePromptsOnlyUseConnectionsWhoseModelReadsImages() {
         AiProperties visionLimited = new AiProperties(KeyCipherAndCatalogTest.KEY_V1, null, Duration.ofSeconds(120),
                 Duration.ofSeconds(20), Map.of(
-                "gemini", new AiProperties.Provider(List.of("gemini-2.5-flash"), 8192, List.of("gemini-2.5-pro")),
-                "openai", new AiProperties.Provider(List.of("gpt-4.1-mini"), 4096, List.of())));
+                "gemini", new AiProperties.Provider(List.of("gemini-2.5-flash"), 8192, List.of("gemini-2.5-pro"), List.of(), "", 0),
+                "openai", new AiProperties.Provider(List.of("gpt-4.1-mini"), 4096, List.of(), List.of(), "", 0)));
         AiTaskResultHandlerRegistry registry = AiTaskResultHandlerRegistry.createRegistry(List.of(handler));
         AiAccess access = new AiAccess(authorization, mock(IAudit.class), clock);
         AiTaskService limited = new AiTaskService(tasks, connections, usageRepository, registry, quota,

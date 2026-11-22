@@ -53,7 +53,7 @@ public class GroupWorkspaceService {
     /** Sinh viên mở bài nhóm từ Assignment Detail: tìm nhóm của mình trong lớp của bài. */
     @Transactional
     public WorkspaceView loadMyGroupDocument(Actor actor, UUID assignmentId) {
-        AssignmentView assignment = assignments.get(assignmentId).filter(a -> a.classId() != null)
+        AssignmentView assignment = assignments.loadAssignment(assignmentId).filter(a -> a.classId() != null)
                 .orElseThrow(GroupAccess::createNotFoundError);
         access.requireStudent(actor, assignment.classId());
         ClassGroup group = groups.findGroupOf(assignment.classId(), actor.accountId())
@@ -65,7 +65,7 @@ public class GroupWorkspaceService {
     @Transactional(readOnly = true)
     public WorkspaceView loadWorkspace(Actor actor, UUID documentId) {
         GroupDocContext ctx = docAccess.loadContext(actor, documentId);
-        AssignmentView assignment = assignments.get(ctx.document().assignmentId()).orElse(null);
+        AssignmentView assignment = assignments.loadAssignment(ctx.document().assignmentId()).orElse(null);
         return view(ctx, assignment);
     }
 

@@ -38,18 +38,18 @@ public class AcademicsMcpTools implements IMcpToolProvider {
     @Override
     @Transactional(readOnly = true)
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
-        McpInput.teaching(actor);
+        McpInput.requireTeaching(actor);
         var in = new McpInput(args);
-        int page = in.page(), size = in.size();
-        String query = in.text("query", "").trim().toLowerCase(Locale.ROOT);
+        int page = in.readPage(), size = in.readSize();
+        String query = in.readText("query", "").trim().toLowerCase(Locale.ROOT);
         if (query.length() > 200)
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
         var taught = academicsReadRepository.listTaught(actor.accountId()).stream()
                 .filter(c -> actor.accountId().equals(c.teacherId())).toList();
         if ("list_my_classes".equals(name)) {
-            var status = in.choice("status", edu.aiplatform.academics.contract.ClassStatus.class,
+            var status = in.readChoice("status", edu.aiplatform.academics.contract.ClassStatus.class,
                     null);
-            String term = parseTermFilter(in.text("term", ""));
+            String term = parseTermFilter(in.readText("term", ""));
             var rows = taught.stream().filter(c -> status == null || c.status() == status)
                     .filter(c -> term == null || term.equals(c.deriveTerm())).filter(
                     c -> (c.code() + " " + c.name()).toLowerCase(Locale.ROOT).contains(query))
@@ -57,10 +57,10 @@ public class AcademicsMcpTools implements IMcpToolProvider {
                             c.code(), "term", c.deriveTerm(), "title", c.name(), "status", c.status(),
                             "version", c.version()))
                     .toList();
-            return new McpToolResult(false, McpInput.page(rows, page, size));
+            return new McpToolResult(false, McpInput.paginateItems(rows, page, size));
         }
         if (!"list_my_subjects".equals(name))
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
         Map<UUID, SubjectRef> found = new LinkedHashMap<>();
         for (var c : taught)
             subjectQuery.getSubject(c.subjectId()).ifPresent(s -> found.put(s.subjectId(), s));
@@ -74,7 +74,7 @@ public class AcademicsMcpTools implements IMcpToolProvider {
                         "status", s.status(), "canManageSubject",
                         actor.accountId().equals(s.managerId())))
                 .toList();
-        return new McpToolResult(false, McpInput.page(rows, page, size));
+        return new McpToolResult(false, McpInput.paginateItems(rows, page, size));
     }
 
     /** Validates the optional term filter like the class list API; malformed values are invalid input. */
@@ -82,7 +82,7 @@ public class AcademicsMcpTools implements IMcpToolProvider {
         try {
             return ClassTermPolicy.parseFilter(term);
         } catch (AcademicRuleException invalid) {
-            throw McpInput.invalid();
+            throw McpInput.createInvalidArguments();
         }
     }
 }

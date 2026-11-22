@@ -3,13 +3,18 @@ package edu.aiplatform.grading.service;
 import edu.aiplatform.grading.model.RubricScoring;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import edu.aiplatform.assignments.contract.DocumentModel;
+import edu.aiplatform.assignments.contract.DocumentPart;
 import edu.aiplatform.assignments.contract.RubricView;
 import edu.aiplatform.grading.model.GradingFeedback;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +27,11 @@ public class GradingProposalValidator {
     private static final Logger log = LoggerFactory.getLogger(GradingProposalValidator.class);
     private static final int MAX_FEEDBACK_LENGTH = 10000;
     private static final int MAX_PAYLOAD_LENGTH = 262144;
+    private static final String OTHER_PART_REVIEW_REASON =
+            "Bằng chứng nằm ở phần khác với phần được chấm theo rubric.";
+    private static final String SECONDARY_ACTOR_REVIEW_REASON =
+            "Mục được đề xuất điểm tối đa dù ô actor phụ trong bảng đặc tả chưa khớp tên actor rubric yêu cầu. "
+                    + "Cần rà soát tên tương đương và điểm thành phần.";
     private static final Set<String> PROPOSAL_FIELDS = Set.of("checks", "score", "feedback",
             "sections", "itemScoresByRubric", "structuredFeedback");
     private final ObjectMapper objectMapper;
@@ -75,6 +85,61 @@ public class GradingProposalValidator {
     /** Validates a proposal against its rubric and derives checklist scores. */
     public Validated validateProposal(JsonNode payload, List<RubricView> rubrics) {
         return validateProposal(payload, rubrics, null);
+    }
+
+    /** Flags evidence mismatches for review while retaining the proposed scores and anchors. */
+    public JsonNode flagProposalEvidenceForReview(JsonNode payload, List<RubricView> rubrics,
+            DocumentModel document, List<DocumentPart> parts) {
+        if (payload == null || document == null || parts == null || parts.isEmpty()) {
+            return payload;
+        }
+        var partByBlock = new HashMap<String, String>();
+        var blocksByPart = GradingPromptParts.groupBlocksByPart(document, parts);
+        blocksByPart.forEach((partId, blocks) -> {
+            partByBlock.put(partId, partId);
+            for (var block : blocks) {
+                if (block.id() != null) {
+                    partByBlock.put(block.id().toString(), partId);
+                }
+            }
+        });
+        var partByRubric = new HashMap<String, String>();
+        var actorMismatchesByRubric = new HashMap<String, Set<String>>();
+        var checkedItemsByRubric = new HashMap<String, JsonNode>();
+        payload.path("checks").fields().forEachRemaining(entry ->
+                checkedItemsByRubric.put(entry.getKey().toLowerCase(Locale.ROOT), entry.getValue()));
+        for (var rubric : rubrics) {
+            String rubricId = rubric.rubricId().toString();
+            if (blocksByPart.containsKey(rubric.partId())) {
+                partByRubric.put(rubricId, rubric.partId());
+                if (checkedItemsByRubric.containsKey(rubricId)) {
+                    var mismatches = GradingSecondaryActorCheck.findMismatchedItems(rubric,
+                            blocksByPart.get(rubric.partId()), checkedItemsByRubric.get(rubricId));
+                    actorMismatchesByRubric.put(rubricId, mismatches);
+                }
+            }
+        }
+        JsonNode reviewed = payload.deepCopy();
+        for (var item : reviewed.path("structuredFeedback").path("items")) {
+            if (item instanceof ObjectNode feedback && feedback.path("requiresReview").isBoolean()
+                    && !feedback.path("requiresReview").booleanValue()) {
+                String rubricId = feedback.path("rubricId").asText().toLowerCase(Locale.ROOT);
+                String itemId = feedback.path("itemId").asText().toLowerCase(Locale.ROOT);
+                String rubricPart = partByRubric.get(rubricId);
+                String evidencePart = partByBlock.get(feedback.path("evidenceBlockId").asText());
+                String reviewReason = null;
+                if (rubricPart != null && evidencePart != null && !rubricPart.equals(evidencePart)) {
+                    reviewReason = OTHER_PART_REVIEW_REASON;
+                } else if (actorMismatchesByRubric.getOrDefault(rubricId, Set.of()).contains(itemId)) {
+                    reviewReason = SECONDARY_ACTOR_REVIEW_REASON;
+                }
+                if (reviewReason != null) {
+                    feedback.put("requiresReview", true);
+                    feedback.put("reviewReason", reviewReason);
+                }
+            }
+        }
+        return reviewed;
     }
 
     /** Validates a proposal against its rubric, submission blocks, and structured feedback. */

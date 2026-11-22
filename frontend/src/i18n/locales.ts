@@ -1,5 +1,5 @@
 /** Các ngôn ngữ của giao diện; mỗi mã có một tệp `messages/<mã>.json` cùng khóa. */
-export const LOCALES = ["en", "vi", "ja"] as const;
+export const LOCALES = ["en", "vi"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 /** Chưa chọn ngôn ngữ (hoặc cookie lạ) thì dùng tiếng Anh. */
@@ -8,10 +8,10 @@ export const DEFAULT_LOCALE: Locale = "en";
 export const LOCALE_COOKIE = "locale";
 
 /** Tên ngôn ngữ viết bằng chính ngôn ngữ đó, để ai cũng nhận ra trong menu chọn. */
-export const LOCALE_NAMES: Record<Locale, string> = { en: "English", vi: "Tiếng Việt", ja: "日本語" };
+export const LOCALE_NAMES: Record<Locale, string> = { en: "English", vi: "Tiếng Việt" };
 
 /** Mã vùng cho Open Graph. */
-export const OG_LOCALES: Record<Locale, string> = { en: "en_US", vi: "vi_VN", ja: "ja_JP" };
+export const OG_LOCALES: Record<Locale, string> = { en: "en_US", vi: "vi_VN" };
 
 export function parseLocale(value: string | null | undefined): Locale {
   return LOCALES.includes(value as Locale) ? (value as Locale) : DEFAULT_LOCALE;

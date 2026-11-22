@@ -47,8 +47,11 @@ class GradingAiEvaluationTest {
             String model = requireSetting("ai.eval.model", "AI_EVAL_MODEL");
             repeats = Integer.parseInt(readSetting("ai.eval.runs", "AI_EVAL_RUNS", "3"));
             var recordings = new GradingEvalRecordings(json, outputDirectory.resolve("recordings"));
+            // Như ProviderCatalog của app: trần = phần trả lời + phần chừa suy nghĩ; effort rỗng thì không gửi tham số.
             providerCall = GradingEvalRunner.createLiveCall(json, provider, model,
-                    requireSetting("ai.eval.apiKey", "AI_EVAL_API_KEY"), recordings);
+                    requireSetting("ai.eval.apiKey", "AI_EVAL_API_KEY"), recordings,
+                    readSetting("ai.eval.reasoningEffort", "AI_EVAL_REASONING_EFFORT", ""),
+                    Integer.parseInt(readSetting("ai.eval.reasoningReserve", "AI_EVAL_REASONING_RESERVE", "0")));
             info = new GradingEvalReport.RunInfo(mode, provider.name(), model, repeats, startedAt);
         } else {
             Path replayDirectory = Path.of(requireSetting("ai.eval.replayDir", "AI_EVAL_REPLAY_DIR"));

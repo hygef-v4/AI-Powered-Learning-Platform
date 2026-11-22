@@ -57,7 +57,7 @@ public class GradingMcpTools implements IMcpToolProvider {
     /** Validates the submission reference and records its grading proposal. */
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
         // Step 1: Verify caller holds active teacher or subject manager permission
-        edu.aiplatform.ai.contract.McpInput.teaching(actor);
+        edu.aiplatform.ai.contract.McpInput.requireTeaching(actor);
         if (!"record_grading_proposal".equals(name))
             throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
         try {

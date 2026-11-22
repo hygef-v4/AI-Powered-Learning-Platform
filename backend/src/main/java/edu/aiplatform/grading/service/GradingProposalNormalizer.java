@@ -22,6 +22,8 @@ final class GradingProposalNormalizer {
             "suggestion", "evidenceBlockId", "reviewReason");
     static final String MISSING_EVIDENCE_REVIEW_REASON =
             "AI không nêu bằng chứng cho mục này; giảng viên cần kiểm tra lại.";
+    private static final String MISSING_REVIEW_REASON =
+            "AI đánh dấu mục này cần kiểm tra nhưng chưa nêu lý do.";
 
     private GradingProposalNormalizer() {
     }
@@ -166,7 +168,7 @@ final class GradingProposalNormalizer {
         normalizeTopLevelScore(merged, rubrics);
         trimTextField(merged, "feedback");
         trimSections(merged);
-        trimStructuredFeedback(merged);
+        trimStructuredFeedback(merged, validBlockIds);
         return merged;
     }
 
@@ -184,12 +186,33 @@ final class GradingProposalNormalizer {
             if (!(scores.get(rId) instanceof ObjectNode rubricScores)) {
                 continue;
             }
+            roundItemScores(rubric, rubricScores);
             boolean checksOmitted = checks == null || !checks.has(rId) || checks.get(rId).isNull();
             if (checksOmitted) {
                 if (checks == null) {
                     checks = merged.putObject("checks");
                 }
                 syncOmittedRubricChecks(rubric, rubricScores, checks.putArray(rId));
+            }
+        }
+    }
+
+    /**
+     * Điểm mục có hơn 2 chữ số thập phân (ví dụ 0.125 là nửa của 0.25, hay 0.05000000000000001 do số thực) được làm
+     * tròn HALF_UP khi kết quả vẫn trong [0, tối đa]; ngoài khoảng thì giữ nguyên để validator từ chối (G4, 2026-11-20).
+     */
+    private static void roundItemScores(RubricView rubric, ObjectNode rubricScores) {
+        for (var criterion : rubric.criteria()) {
+            for (var item : criterion.items()) {
+                String iId = item.itemId().toString();
+                JsonNode scoreNode = rubricScores.get(iId);
+                if (scoreNode == null || !scoreNode.isNumber() || item.points() == null) {
+                    continue;
+                }
+                BigDecimal rounded = scoreNode.decimalValue().setScale(2, RoundingMode.HALF_UP);
+                if (rounded.signum() >= 0 && rounded.compareTo(item.points()) <= 0) {
+                    rubricScores.put(iId, rounded);
+                }
             }
         }
     }
@@ -253,7 +276,7 @@ final class GradingProposalNormalizer {
         }
     }
 
-    private static void trimStructuredFeedback(ObjectNode merged) {
+    private static void trimStructuredFeedback(ObjectNode merged, Set<String> validBlockIds) {
         if (!(merged.get("structuredFeedback") instanceof ObjectNode structured)) {
             return;
         }
@@ -270,22 +293,40 @@ final class GradingProposalNormalizer {
                     for (String field : ITEM_STRING_FIELDS) {
                         trimTextField(itemObj, field);
                     }
-                    flagItemWithoutEvidence(itemObj);
+                    dropUnknownEvidenceBlock(itemObj, validBlockIds);
+                    completeReviewFeedback(itemObj);
                 }
             }
         }
     }
 
-    /** AI để trống bằng chứng mà không tự đánh dấu: đánh dấu cần giảng viên xem, không bịa bằng chứng. */
-    private static void flagItemWithoutEvidence(ObjectNode itemObj) {
-        JsonNode evidence = itemObj.get("evidence");
-        boolean hasEvidence = evidence != null && evidence.isTextual() && !evidence.asText().isBlank();
-        if (hasEvidence || itemObj.path("requiresReview").asBoolean(false)) {
+    /** Mã block AI chỉ sai hoặc rỗng thì bỏ vị trí đó, giữ lời giải thích, thay vì để cả đề xuất bị từ chối. */
+    private static void dropUnknownEvidenceBlock(ObjectNode itemObj, Set<String> validBlockIds) {
+        JsonNode blockId = itemObj.get("evidenceBlockId");
+        if (blockId != null && blockId.isTextual() && validBlockIds != null
+                && (blockId.asText().isBlank() || !validBlockIds.contains(blockId.asText()))) {
+            itemObj.putNull("evidenceBlockId");
+        }
+    }
+
+    /** Adds a review flag or reason when AI leaves review information incomplete. */
+    private static void completeReviewFeedback(ObjectNode itemObj) {
+        JsonNode review = itemObj.path("requiresReview");
+        if (!review.isBoolean()) {
             return;
         }
-        itemObj.putNull("evidence");
-        itemObj.put("requiresReview", true);
-        itemObj.put("reviewReason", MISSING_EVIDENCE_REVIEW_REASON);
+        boolean missingEvidence = isMissingText(itemObj.path("evidence"));
+        if (missingEvidence) {
+            itemObj.putNull("evidence");
+            itemObj.put("requiresReview", true);
+        }
+        if ((missingEvidence || review.booleanValue()) && isMissingText(itemObj.path("reviewReason"))) {
+            itemObj.put("reviewReason", missingEvidence ? MISSING_EVIDENCE_REVIEW_REASON : MISSING_REVIEW_REASON);
+        }
+    }
+
+    private static boolean isMissingText(JsonNode value) {
+        return value.isMissingNode() || value.isNull() || (value.isTextual() && value.asText().isBlank());
     }
 
     private static void trimTextField(ObjectNode node, String fieldName) {

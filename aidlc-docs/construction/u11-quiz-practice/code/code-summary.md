@@ -21,7 +21,7 @@ Code viết ngày 2026-10-20 trên nhánh `quiz-practice` (tách từ `quiz-auth
 | F9 Giảng viên | `TeacherQuizAttemptService` (giảng viên của lớp; tóm tắt theo sinh viên, chi tiết lượt chỉ đọc kèm `IActivityQuery.summary`) |
 | Quyền, audit | `PracticeAccess` (ngoài phạm vi `404` + `ACCESS_DENIED`, U01 lỗi `503`), `PracticeSupport.ownAttempt` (lượt người khác `404`) |
 
-Domain: `QuizAttempt` (hạn, ân hạn 30 giây, lưu, nộp), `AttemptSnapshot` (version, cài đặt, theo dõi, seed, thứ tự câu và lựa chọn), `QuestionResult`, enum `AttemptStatus`, `SubmitMode`; `IQuizAttemptRepository`. Hạ tầng: `JdbcQuizAttemptRepository` (`jsonb`; advisory lock khi bắt đầu; `for update skip locked` cho scanner).
+Domain: `QuizAttempt` (hạn, ân hạn 30 giây, lưu, nộp), `AttemptSnapshot` (version, cài đặt, theo dõi, seed, thứ tự câu và lựa chọn), `QuestionResult`, enum `AttemptStatus`, `SubmitMode`; `IQuizAttemptRepository`. Hạ tầng: `QuizAttemptRepository` (`jsonb`; advisory lock khi bắt đầu; `for update skip locked` cho scanner).
 
 ## API
 
@@ -31,7 +31,7 @@ Domain: `QuizAttempt` (hạn, ân hạn 30 giây, lưu, nộp), `AttemptSnapshot
 | `GET /api/v1/me/quizzes/{quizId}?classId=` | 50 | |
 | `POST /api/v1/quizzes/{quizId}/attempts` | 51 | Body `{classId}`; trả đề của lượt (mới hoặc đang làm) |
 | `GET /api/v1/quiz-attempts/{id}`, `PUT .../answers`, `POST .../submit` | 51 | `answers` là object câu → danh sách lựa chọn, kèm `answerVersion` |
-| `GET /api/v1/quiz-attempts/{id}/result` | 52 | |
+| `GET /api/v1/quiz-attempts/{id}/result` | 52 | Lượt đang làm đã quá hạn cộng 30 giây thì tự nộp rồi trả kết quả; còn hạn thì `409 ATTEMPT_IN_PROGRESS` |
 | `POST /api/v1/quiz-attempts/{id}/activity` | — | G3 |
 | `GET /api/v1/classes/{classId}/quizzes/{quizId}/attempts`, `GET /api/v1/classes/{classId}/quiz-attempts/{id}` | 42 | Giảng viên của lớp |
 
@@ -40,6 +40,8 @@ Mã lỗi: `QUIZ_NOT_FOUND`, `QUIZ_ATTEMPT_NOT_FOUND`, `QUIZ_NOT_OPEN`, `NO_ATTE
 ## Migration
 
 `db/migration/quizpractice/V20260925_1700__create_quiz_attempts.sql`: `quiz_attempts` với unique `(quiz_id, account_id, attempt_no)`, unique riêng phần một lượt `IN_PROGRESS` mỗi (Quiz, người học), check trạng thái/nộp, index `(status, deadline_at)`, `(quiz_id, class_id)`, `(account_id, submitted_at)`, FK `quizzes`, `course_classes`, `accounts`; `app` không có `DELETE`.
+
+`V20261113_1000__scope_quiz_attempts_to_class.sql`: hai ràng buộc trên thêm `class_id`, thành unique `(quiz_id, account_id, class_id, attempt_no)` và một lượt `IN_PROGRESS` mỗi (Quiz, người học, lớp). `QuizAttemptService.start` đếm lượt, tìm lượt đang làm và đánh số trong lớp đang làm.
 
 ## Frontend
 

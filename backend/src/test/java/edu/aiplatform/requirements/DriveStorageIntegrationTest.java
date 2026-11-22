@@ -285,7 +285,7 @@ class DriveStorageIntegrationTest {
         assertThat(DRIVE.items()).filteredOn(item -> item.name().equals("retried.png")).hasSize(1);
 
         DRIVE.resetRequestsAndFaults();
-        redisTemplate.delete(UNATTACHED_KEY);
+        jdbc.update("delete from unattached_files");
         DRIVE.failNext("POST /upload/drive/v3/files", 403, "insufficientFilePermissions", 1);
         byte[] png = createPng(Color.RED);
         assertThatThrownBy(() -> artifactService.store(student, ArtifactPurpose.DOCUMENT_IMAGE,
@@ -293,7 +293,7 @@ class DriveStorageIntegrationTest {
                 .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.readCode()).isEqualTo("STORAGE_UNAVAILABLE"));
         assertThat(DRIVE.requests()).filteredOn(request -> request.startsWith("POST /upload/drive/v3/files")).hasSize(1);
         assertThat(DRIVE.items()).noneMatch(item -> item.name().equals("denied.png"));
-        assertThat(redisTemplate.opsForZSet().size(UNATTACHED_KEY)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from unattached_files", Long.class)).isZero();
     }
 
     @Test
@@ -317,17 +317,17 @@ class DriveStorageIntegrationTest {
         byte[] png = createPng(Color.CYAN);
         artifactService.store(student, ArtifactPurpose.DOCUMENT_IMAGE,
                 new FileUpload("abandoned.png", png.length, new ByteArrayInputStream(png)));
-        String fileId = redisTemplate.opsForZSet().range(UNATTACHED_KEY, 0, -1).iterator().next();
+        String fileId = jdbc.queryForObject("select file_id from unattached_files", String.class);
         assertThat(DRIVE.item(fileId)).isPresent();
 
         DRIVE.failNext("DELETE /drive/v3/files/" + fileId, 403, "insufficientFilePermissions", 1);
         unattachedFileScanner.scan(Instant.now().plus(Duration.ofDays(2)));
         assertThat(DRIVE.item(fileId)).isPresent();
-        assertThat(redisTemplate.opsForZSet().size(UNATTACHED_KEY)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from unattached_files", Long.class)).isEqualTo(1);
 
         unattachedFileScanner.scan(Instant.now().plus(Duration.ofDays(2)));
         assertThat(DRIVE.item(fileId)).isEmpty();
-        assertThat(redisTemplate.opsForZSet().size(UNATTACHED_KEY)).isZero();
+        assertThat(jdbc.queryForObject("select count(*) from unattached_files", Long.class)).isZero();
         assertThat(DRIVE.requests()).filteredOn(request -> request.equals("DELETE /drive/v3/files/" + fileId)).hasSize(2);
     }
 

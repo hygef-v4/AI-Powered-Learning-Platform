@@ -1,0 +1,33 @@
+<mxGraphModel grid="1" gridSize="10" page="1" pageWidth="1100" pageHeight="850">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="start" value="" style="shape=startState;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="48" y="188" width="20" height="20" />
+    </mxCell>
+    <mxCell id="draft" value="Draft" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="105" y="168" width="120" height="60" />
+    </mxCell>
+    <mxCell id="submitted" value="Submitted" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="350" y="168" width="120" height="60" />
+    </mxCell>
+    <mxCell id="accepted" value="Accepted" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="640" y="96" width="120" height="60" />
+    </mxCell>
+    <mxCell id="rejected" value="Rejected" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="640" y="240" width="120" height="60" />
+    </mxCell>
+    <mxCell id="begin" value="" style="html=1;endArrow=open;endFill=0;" edge="1" parent="1" source="start" target="draft">
+      <mxGeometry as="geometry" relative="1" y="0" />
+    </mxCell>
+    <mxCell id="submit" value="submit [transcriptAttached]" style="html=1;endArrow=open;endFill=0;" edge="1" parent="1" source="draft" target="submitted">
+      <mxGeometry as="geometry" relative="1" y="-8" />
+    </mxCell>
+    <mxCell id="approve" value="approve" style="html=1;endArrow=open;endFill=0;" edge="1" parent="1" source="submitted" target="accepted">
+      <mxGeometry as="geometry" relative="1" y="-8" />
+    </mxCell>
+    <mxCell id="decline" value="decline" style="html=1;endArrow=open;endFill=0;" edge="1" parent="1" source="submitted" target="rejected">
+      <mxGeometry as="geometry" relative="1" y="-8" />
+    </mxCell>
+  </root>
+</mxGraphModel>

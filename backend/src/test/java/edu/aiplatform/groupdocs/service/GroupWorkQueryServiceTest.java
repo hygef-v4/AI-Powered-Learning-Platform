@@ -126,7 +126,7 @@ class GroupWorkQueryServiceTest {
         when(classes.listActiveStudents(classId)).thenReturn(
                 List.of(member.accountId(), workingMember, workingPeer));
         var assignmentQuery = mock(IAssignmentQuery.class);
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(
                 new edu.aiplatform.assignments.contract.AssignmentView(assignmentId,
                         edu.aiplatform.assignments.contract.AssignmentScope.CLASS, classId,
                         UUID.randomUUID(), 1, "Group task",

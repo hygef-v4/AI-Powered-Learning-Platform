@@ -180,7 +180,7 @@ class GroupRepositoriesIntegrationTest {
                 JsonNodeFactory.instance.objectNode().put("text", "Xin chào")));
         GroupSection claimed = documents.lockSection(doc.id(), section.id()).orElseThrow();
         assertThat(documents.updateSection(claimed.replaceDraft(blocks, NOW))).isTrue();
-        assertThat(documents.lockSectionsHeldBy(groupId, studentA)).hasSize(1);
+        assertThat(documents.lockSectionsHeldBy(List.of(doc.id()), studentA)).hasSize(1);
         GroupSection drafted = documents.lockSection(doc.id(), section.id()).orElseThrow();
         assertThat(drafted.draftBlocks()).isEqualTo(blocks);
         assertThat(documents.updateSection(drafted.markDone(NOW))).isTrue();

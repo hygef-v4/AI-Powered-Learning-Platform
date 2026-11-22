@@ -23,6 +23,7 @@ import { msg } from "@/i18n/msg";
 export const AUTOSAVE_MS = 10_000;
 
 type Drafts = Record<string, DocumentBlock[]>;
+type HeldSection = Pick<SectionView, "title" | "version" | "claimedAt">;
 
 function describeProblem(e: unknown, fallback: string): string {
   if (e instanceof ApiError) {
@@ -78,8 +79,8 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   useEffect(() => () => headerObserver?.disconnect(), [headerObserver]);
 
   // Bản mới nhất cho các lần lưu chạy nền (hẹn giờ, rời trang).
-  const latest = useRef<{ drafts: Drafts; dirty: string[]; versions: Record<string, number> }>({ drafts: {}, dirty: [], versions: {} });
-  const held = useRef(new Map<string, string>());
+  const latest = useRef<{ drafts: Drafts; dirty: string[] }>({ drafts: {}, dirty: [] });
+  const held = useRef(new Map<string, HeldSection>());
   const finished = useRef(new Set<string>());
   useEffect(() => {
     latest.current.drafts = drafts;
@@ -90,11 +91,23 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   const applyView = useCallback((loaded: WorkspaceView) => {
     const mine = listHeldSections(loaded);
     const ids = new Set(mine.map((s) => s.id));
-    const lost = [...held.current].filter(([id]) => !ids.has(id) && !finished.current.has(id)).map(([, title]) => `“${title}”`);
-    held.current = new Map(mine.map((s) => [s.id, s.title]));
-    for (const s of mine) latest.current.versions[s.id] ??= s.version;
-    setDrafts((prev) => Object.fromEntries(mine.map((s) => [s.id, prev[s.id] ?? s.draftBlocks ?? s.publishedBlocks ?? []])));
-    setDirty((prev) => prev.filter((id) => ids.has(id)));
+    const lost = [...held.current]
+      .filter(([id]) => !ids.has(id) && !finished.current.has(id))
+      .map(([, { title }]) => `“${title}”`);
+    const retained = new Set<string>();
+    held.current = new Map(mine.map(({ id, title, version, claimedAt }) => {
+      const previous = held.current.get(id);
+      if (!previous || previous.claimedAt !== claimedAt) return [id, { title, version, claimedAt }];
+      retained.add(id);
+      previous.title = title;
+      return [id, previous];
+    }));
+    setDrafts((prev) => Object.fromEntries(mine.map((section) => [
+      section.id,
+      (retained.has(section.id) ? prev[section.id] : undefined)
+        ?? section.draftBlocks ?? section.publishedBlocks ?? [],
+    ])));
+    setDirty((prev) => prev.filter((id) => retained.has(id)));
     if (lost.length > 0) {
       setNotice(msg("groupdocs.pages.GroupSectionEditorPage.youNoLongerHoldSection", { value: String(lost.join(", ")) }));
     }
@@ -123,15 +136,24 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   /** Lưu các mục có thay đổi (hoặc chỉ một mục); mục nào lưu xong mà không sửa thêm thì hết "chưa lưu". */
   const save = useCallback(async (only?: string) => {
     const ids = latest.current.dirty.filter((id) => !only || id === only);
+    const claims = held.current;
     if (ids.length === 0) return true;
     setSaving(true);
     let ok = true;
     for (const id of ids) {
       const blocks = latest.current.drafts[id];
-      if (!blocks) continue;
+      const claim = claims.get(id);
+      if (!blocks || !claim || held.current.get(id) !== claim) {
+        ok = false;
+        continue;
+      }
       try {
-        const saved = await saveDraft(documentId, id, latest.current.versions[id] ?? 0, blocks);
-        latest.current.versions[id] = saved.version;
+        const saved = await saveDraft(documentId, id, claim.version, blocks);
+        if (held.current.get(id) !== claim) {
+          ok = false;
+          continue;
+        }
+        claim.version = saved.version;
         const current = latest.current.drafts[id];
         const unchanged = current === blocks;
         if (current) {
@@ -143,8 +165,9 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
         setDirty((prev) => (unchanged ? prev.filter((d) => d !== id) : prev));
         setError(null);
       } catch (e) {
-        setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.couldNotSaveTheDraft")));
         ok = false;
+        if (held.current.get(id) !== claim) continue;
+        setError(describeProblem(e, msg("groupdocs.pages.GroupSectionEditorPage.couldNotSaveTheDraft")));
       }
     }
     setSaving(false);

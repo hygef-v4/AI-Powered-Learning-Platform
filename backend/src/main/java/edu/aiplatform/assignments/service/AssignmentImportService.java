@@ -243,7 +243,7 @@ public class AssignmentImportService {
             return rejectDraft(draftId, "AI trả nội dung không đọc được, hãy thử lại");
         }
         ObjectNode provenance = draft.provenance().deepCopy();
-        aiTasks.get(result.taskId()).ifPresent(task -> {
+        aiTasks.loadTask(result.taskId()).ifPresent(task -> {
             if (task.model() != null) {
                 provenance.put("model", task.model());
             }

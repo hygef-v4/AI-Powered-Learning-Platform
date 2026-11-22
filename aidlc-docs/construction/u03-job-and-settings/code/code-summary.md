@@ -36,7 +36,7 @@ Code viết ngày 2026-10-16 theo [plan](../../plans/code-generation-plan/u03-jo
 ## Frontend
 
 - `app/admin/settings` (Setting List), `app/admin/settings/[key]` (Setting Detail), `app/admin/settings/sections/[sectionKey]` (panel ủy quyền).
-- `features/settings`: `SettingGroupTable`, `DelegatedSectionCard`, `SettingValueForm` (kiểm sơ bộ, 400, 409), `SettingsSectionHost`.
+- `features/settings`: `SettingListPage` (danh sách `SettingRow`; mục AI mở trang section riêng), `SettingDetailPage`, `SettingValueForm` (kiểm sơ bộ, 400, 409), `SettingsSectionHost`. `SettingGroupTable` và `DelegatedSectionCard` đã bỏ.
 - `features/files`: `FileUploader` (kéo thả, tiến trình, Hủy), `useFileUpload`, `FileLink`, `purposes`.
 - `shared/status`: `StatusBadge`, `usePollStatus` (3 giây, dừng ở trạng thái cuối hoặc lỗi 4xx; mất mạng, 5xx, 429 thì poll tiếp).
 - Giao diện theo design G21 (17/10): `shared/ui` (màu, nút, thẻ, bảng, ô nhập, nhãn, popup, icon Material Symbols dạng SVG tự host) và `shared/layout/AppShell` (thanh trên cùng, menu bên theo vai trò, popup Đăng xuất), gắn cho mọi màn `/admin/*` qua `app/admin/layout.tsx`. Menu bên lấy từ `NavEntry` (slot của U01); mỗi unit đăng ký mục của mình trong `features/<package>/register.ts` (đã đăng ký sẵn đủ mục theo design). Unit khác dùng lại, không tự vẽ khung.
@@ -72,5 +72,5 @@ User approved additive IBackupDashboardStatus plus metadata/summary records. Bac
 ## Thay đổi 2026-11-16
 
 - Thư mục gốc của Drive cá nhân cấu hình được: `GOOGLE_DRIVE_FOLDER_NAME` (tên, mặc định `AI Learning Platform`) hoặc `GOOGLE_DRIVE_FOLDER_ID` (thư mục do ứng dụng tạo từ trước; không truy cập được thì quay về theo tên).
-- `U03_BACKUP_PUBLIC_KEY` là tùy chọn: để trống thì `BackupJobHandler` ghi cảnh báo và lưu bản dump không mã hóa; `BackupDecryptTool` nhận ra archive không mã hóa và chép nguyên trạng. Khác thiết kế: `nfr-design-patterns.md` và `logical-components.md` của U03 mô tả archive luôn được bọc khóa RSA.
+- `U03_BACKUP_PUBLIC_KEY` là tùy chọn: để trống thì `BackupJobHandler` ghi cảnh báo và lưu bản dump không mã hóa; `BackupDecryptTool` nhận ra archive không mã hóa và chép nguyên trạng. `nfr-design-patterns.md` (P16, P17), `logical-components.md` và BR-U03-93 đã cập nhật theo hành vi này (2026-11-17).
 - `StorageConfig` dùng Drive mỗi khi có cấu hình Drive, không xét `U03_REQUIRE_DRIVE`; biến này chỉ quyết định hành vi khi không có Drive. Cấu hình vận hành: [deploy-vps.md](../../../../docs/runbooks/deploy-vps.md) mục 6.

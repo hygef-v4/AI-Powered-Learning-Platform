@@ -25,6 +25,8 @@ openssl pkey -in private-key.pem -pubout -out public-key.pem
    infra/scripts/restore-isolated.sh archive.alapbk private-key.pem ghcr.io/max2min/platform-backend:<tag>
    ```
 
+   Script đợi PostgreSQL tối đa 60 giây. Đặt `RESTORE_READY_TIMEOUT_SECONDS` thành số giây dương để đổi hạn chờ. Nếu lần chạy thất bại, script dọn container tạm mà nó đã tạo.
+
    Archive không mã hóa: script vẫn đòi đủ ba tham số và tham số thứ hai phải là một tệp có thật, nhưng nội dung tệp không được đọc. Truyền một tệp bất kỳ; công cụ in `Archive không mã hóa, đã chép nguyên trạng` rồi chạy tiếp.
 
 4. Kiểm theo danh sách dưới đây trên database tạm (script in lệnh `psql` để kết nối).

@@ -14,8 +14,6 @@ import edu.aiplatform.jobs.contract.*;
 import edu.aiplatform.notifications.service.*;
 import edu.aiplatform.notifications.model.*;
 import edu.aiplatform.notifications.repository.*;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import java.time.*;
 import java.util.*;
 import javax.sql.DataSource;
@@ -27,9 +25,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.orm.jpa.*;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.*;
@@ -49,7 +47,6 @@ class NotificationDeliveryIntegrationTest {
 
     static final Instant NOW = Instant.parse("2026-10-25T08:00:00Z");
     @Autowired DataSource dataSource;
-    @Autowired EntityManager entityManager;
     @Autowired IAssignmentQuery assignmentQuery;
     @Autowired IClassAccess classAccess;
     @Autowired ISubmissionQuery submissionQuery;
@@ -62,6 +59,8 @@ class NotificationDeliveryIntegrationTest {
     @Autowired PlatformTransactionManager transactionManager;
     @Autowired NotificationService notificationService;
     @Autowired edu.aiplatform.announcements.repository.IAnnouncementRepository announcementRepository;
+    @Autowired IMail mail;
+    @Autowired EmailDeliveryService emailDeliveryService;
 
     @TestConfiguration
     @EnableTransactionManagement
@@ -94,31 +93,13 @@ class NotificationDeliveryIntegrationTest {
         }
 
         @Bean
-        LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource source) {
-            var factory = new LocalContainerEntityManagerFactoryBean();
-            factory.setDataSource(source);
-            factory.setPackagesToScan(Notification.class.getPackageName(),
-                    edu.aiplatform.announcements.model.Announcement.class.getPackageName());
-            factory.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
-            factory.setJpaPropertyMap(
-                    Map.of(
-                            "hibernate.hbm2ddl.auto",
-                            "validate",
-                            "hibernate.jdbc.time_zone",
-                            "UTC",
-                            "hibernate.physical_naming_strategy",
-                            "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy"));
-            return factory;
+        JdbcClient jdbcClient(DataSource source) {
+            return JdbcClient.create(source);
         }
 
         @Bean
-        EntityManager entityManager(EntityManagerFactory factory) {
-            return SharedEntityManagerCreator.createSharedEntityManager(factory);
-        }
-
-        @Bean
-        PlatformTransactionManager transactionManager(EntityManagerFactory factory) {
-            return new JpaTransactionManager(factory);
+        PlatformTransactionManager transactionManager(DataSource source) {
+            return new DataSourceTransactionManager(source);
         }
 
         @Bean
@@ -174,7 +155,7 @@ class NotificationDeliveryIntegrationTest {
 
     @BeforeEach
     void clean() {
-        reset(assignmentQuery, classAccess, submissionQuery, job, accountLookup, sseHub);
+        reset(assignmentQuery, classAccess, submissionQuery, job, accountLookup, sseHub, mail);
         new JdbcTemplate(dataSource)
                 .execute("truncate notifications, email_deliveries, deadline_reminders, notification_preferences, announcements");
     }
@@ -382,7 +363,7 @@ class NotificationDeliveryIntegrationTest {
                         null,
                         List.of());
         when(assignmentQuery.listClosingBetween(any(), any())).thenReturn(List.of(a));
-        when(assignmentQuery.get(assignment)).thenReturn(Optional.of(a));
+        when(assignmentQuery.loadAssignment(assignment)).thenReturn(Optional.of(a));
         when(classAccess.listOpenClassesOfSubject(subject))
                 .thenReturn(List.of(course(first, subject), course(second, subject)));
         for (UUID classId : List.of(first, second)) {
@@ -394,7 +375,6 @@ class NotificationDeliveryIntegrationTest {
         }
         doAnswer(
                         call -> {
-                            entityManager.flush();
                             assertThat(
                                             new JdbcTemplate(dataSource)
                                                     .queryForObject(
@@ -480,5 +460,277 @@ class NotificationDeliveryIntegrationTest {
                 .isEqualTo(2);
         verify(job, times(2)).enqueue(anyString(), anyMap(), anyString());
         verify(sseHub, times(2)).publish(anyString(), anyMap());
+    }
+
+    private org.springframework.transaction.support.TransactionTemplate createTransaction() {
+        return new org.springframework.transaction.support.TransactionTemplate(transactionManager);
+    }
+
+    private EmailDelivery insertDelivery(
+            String type, EmailDelivery.Status status, Instant scheduledFor, Instant expiresAt) {
+        var notice = createNotice(UUID.randomUUID(), NOW);
+        var delivery = createDelivery(notice, type, status);
+        delivery.scheduledFor = scheduledFor;
+        delivery.expiresAt = expiresAt;
+        createTransaction().executeWithoutResult(tx -> {
+            notificationRepository.insertNotification(notice);
+            notificationRepository.insertEmailDelivery(delivery);
+        });
+        when(accountLookup.getContact(notice.recipientId))
+                .thenReturn(Optional.of(new AccountContact(notice.recipientId,
+                        "fixture@example.test", "Student", Role.STUDENT, AccountStatus.ACTIVE)));
+        return delivery;
+    }
+
+    private Map<String, Object> readDelivery(UUID id) {
+        return new JdbcTemplate(dataSource).queryForMap(
+                "select status,attempts,last_error,sent_at,scheduled_for from email_deliveries where id=?",
+                id);
+    }
+
+    private static Instant readInstant(Map<String, Object> row, String column) {
+        return row.get(column) == null ? null : ((java.sql.Timestamp) row.get(column)).toInstant();
+    }
+
+    private boolean tryLockFromOtherConnection(UUID id, String lockClause) {
+        try (var connection = dataSource.getConnection();
+                var statement = connection.prepareStatement(
+                        "select id from email_deliveries where id=? " + lockClause + " nowait")) {
+            connection.setAutoCommit(false);
+            statement.setObject(1, id);
+            statement.executeQuery().close();
+            connection.rollback();
+            return true;
+        } catch (java.sql.SQLException failure) {
+            if ("55P03".equals(failure.getSQLState())) return false;
+            throw new IllegalStateException(failure);
+        }
+    }
+
+    @Test
+    void announcementRepositoryRoundTripsAndUpdatesOnlyActiveRowWithExpectedVersion() {
+        UUID classId = UUID.randomUUID(), teacher = UUID.randomUUID();
+        new JdbcTemplate(dataSource).update("insert into course_classes(id) values (?)", classId);
+        var original = edu.aiplatform.announcements.model.Announcement.createAnnouncement(
+                classId, teacher, "Title", "Body", true, true, NOW);
+        createTransaction().executeWithoutResult(
+                tx -> announcementRepository.insertAnnouncement(original));
+        var stored = createTransaction().execute(
+                tx -> announcementRepository.findAnnouncement(original.id).orElseThrow());
+        assertThat(stored).usingRecursiveComparison().isEqualTo(original);
+        assertThat(stored.version).isZero();
+        assertThat(announcementRepository.findAnnouncement(UUID.randomUUID())).isEmpty();
+
+        stored.edit("Changed", "New body", teacher, NOW.plusSeconds(5));
+        assertThat(isTrueInTransaction(
+                () -> announcementRepository.updateAnnouncement(stored, 1))).isFalse();
+        assertThat(isTrueInTransaction(
+                () -> announcementRepository.updateAnnouncement(stored, 0))).isTrue();
+        assertThat(stored.version).isEqualTo(1);
+        var edited = createTransaction().execute(
+                tx -> announcementRepository.findAnnouncement(original.id).orElseThrow());
+        assertThat(edited).usingRecursiveComparison().isEqualTo(stored);
+
+        edited.markDeleted(teacher, NOW.plusSeconds(9));
+        assertThat(isTrueInTransaction(
+                () -> announcementRepository.updateAnnouncement(edited, 1))).isTrue();
+        var deleted = createTransaction().execute(
+                tx -> announcementRepository.findAnnouncement(original.id).orElseThrow());
+        assertThat(deleted.status)
+                .isEqualTo(edu.aiplatform.announcements.model.Announcement.Status.DELETED);
+        assertThat(deleted.deletedAt).isEqualTo(NOW.plusSeconds(9));
+        assertThat(deleted.version).isEqualTo(2);
+        assertThat(isTrueInTransaction(
+                () -> announcementRepository.updateAnnouncement(deleted, 2))).isFalse();
+        List<edu.aiplatform.announcements.model.Announcement> noClassFeed =
+                announcementRepository.listAnnouncements(List.of(), 1, 20);
+        assertThat(noClassFeed).isEmpty();
+    }
+
+    private boolean isTrueInTransaction(java.util.function.BooleanSupplier action) {
+        return Boolean.TRUE.equals(createTransaction().execute(tx -> action.getAsBoolean()));
+    }
+
+    @Test
+    void notificationReadsPageCountAndRoundTripOnlyRecipientRows() {
+        UUID recipient = UUID.randomUUID();
+        var oldest = createNotice(recipient, NOW.minusSeconds(2));
+        var middle = createNotice(recipient, NOW.minusSeconds(1));
+        var newest = createNotice(recipient, NOW);
+        var foreign = createNotice(UUID.randomUUID(), NOW.plusSeconds(1));
+        createTransaction().executeWithoutResult(tx -> List.of(oldest, middle, newest, foreign)
+                .forEach(notificationRepository::insertNotification));
+        assertThat(isTrueInTransaction(
+                () -> notificationRepository.insertNotification(newest))).isFalse();
+        var transaction = createTransaction();
+        List<Notification> firstPage = transaction.execute(
+                tx -> notificationRepository.listNotifications(recipient, false, 1, 2));
+        assertThat(firstPage).extracting(notice -> notice.id)
+                .containsExactly(newest.id, middle.id);
+        List<Notification> secondPage = transaction.execute(
+                tx -> notificationRepository.listNotifications(recipient, false, 2, 2));
+        assertThat(secondPage).extracting(notice -> notice.id).containsExactly(oldest.id);
+        assertThat(isTrueInTransaction(
+                () -> notificationRepository.markRead(middle.id, recipient, NOW))).isTrue();
+        assertThat(isTrueInTransaction(
+                () -> notificationRepository.markRead(UUID.randomUUID(), recipient, NOW))).isFalse();
+        List<Notification> unreadPage = transaction.execute(
+                tx -> notificationRepository.listNotifications(recipient, true, 1, 10));
+        assertThat(unreadPage).extracting(notice -> notice.id)
+                .containsExactly(newest.id, oldest.id);
+        Long unreadCount = transaction.execute(tx -> notificationRepository.countUnread(recipient));
+        assertThat(unreadCount).isEqualTo(2);
+        var stored = transaction.execute(
+                tx -> notificationRepository.findNotification(middle.id).orElseThrow());
+        middle.readAt = NOW;
+        assertThat(stored).usingRecursiveComparison().isEqualTo(middle);
+    }
+
+    @Test
+    void preferenceUpsertKeepsOneRowPerAccountAndType() {
+        UUID account = UUID.randomUUID();
+        var transaction = createTransaction();
+        transaction.executeWithoutResult(tx -> {
+            notificationRepository.savePreference(account, "ENROLLED", false);
+            notificationRepository.savePreference(account, "ENROLLED", true);
+            notificationRepository.savePreference(account, "GRADE_PUBLISHED", false);
+        });
+        Map<String, Boolean> saved =
+                transaction.execute(tx -> notificationRepository.findPreferences(account));
+        assertThat(saved).containsExactlyInAnyOrderEntriesOf(
+                Map.of("ENROLLED", true, "GRADE_PUBLISHED", false));
+        Map<String, Boolean> unknown = transaction.execute(
+                tx -> notificationRepository.findPreferences(UUID.randomUUID()));
+        assertThat(unknown).isEmpty();
+    }
+
+    @Test
+    void sentEmailPersistsSentStateAttemptAndTime() {
+        var delivery = insertDelivery("ENROLLED", EmailDelivery.Status.PENDING, NOW, null);
+        emailDeliveryService.sendEmail(delivery.id);
+        var row = readDelivery(delivery.id);
+        assertThat(row.get("status")).isEqualTo("SENT");
+        assertThat(row.get("attempts")).isEqualTo(1);
+        assertThat(row.get("last_error")).isNull();
+        assertThat(readInstant(row, "sent_at")).isEqualTo(NOW);
+        verify(mail).send(any());
+    }
+
+    @Test
+    void mailFailureKeepsEmailPendingButPersistsTheAttempt() {
+        var delivery = insertDelivery("ENROLLED", EmailDelivery.Status.PENDING, NOW, null);
+        doThrow(new IllegalStateException("smtp down")).when(mail).send(any());
+        assertThatThrownBy(() -> emailDeliveryService.sendEmail(delivery.id))
+                .isInstanceOf(RetryableJobException.class);
+        var row = readDelivery(delivery.id);
+        assertThat(row.get("status")).isEqualTo("PENDING");
+        assertThat(row.get("attempts")).isEqualTo(1);
+        assertThat(readInstant(row, "sent_at")).isNull();
+    }
+
+    @Test
+    void expiredOrIneligibleEmailIsSkippedWithoutSending() {
+        var expired = insertDelivery("ENROLLED", EmailDelivery.Status.PENDING, NOW, NOW);
+        var invalidLink = insertDelivery("DEADLINE_REMINDER", EmailDelivery.Status.PENDING, NOW,
+                NOW.plusSeconds(60));
+        emailDeliveryService.sendEmail(expired.id);
+        emailDeliveryService.sendEmail(invalidLink.id);
+        assertThat(readDelivery(expired.id).get("status")).isEqualTo("SKIPPED");
+        assertThat(readDelivery(invalidLink.id))
+                .containsEntry("status", "SKIPPED")
+                .containsEntry("last_error", "INVALID_ASSIGNMENT_LINK")
+                .containsEntry("attempts", 0);
+        verify(mail, never()).send(any());
+    }
+
+    @Test
+    void pendingEmailFromAnotherDayIsDeferredWhenTodayHasNoCapacity() {
+        var delivery = insertDelivery("ENROLLED", EmailDelivery.Status.PENDING,
+                NOW.minus(Duration.ofDays(1)), null);
+        var noCapacityService = new EmailDeliveryService(notificationRepository,
+                new EmailCapPolicy(notificationRepository, 0), job, accountLookup, mail,
+                Clock.fixed(NOW, ZoneOffset.UTC), assignmentQuery, "https://learning.example.test");
+        createTransaction().executeWithoutResult(tx -> noCapacityService.sendEmail(delivery.id));
+        var row = readDelivery(delivery.id);
+        assertThat(row.get("status")).isEqualTo("DEFERRED");
+        assertThat(readInstant(row, "scheduled_for"))
+                .isEqualTo(new EmailCapPolicy(notificationRepository, 0).calculateNextDay(NOW));
+        verify(mail, never()).send(any());
+    }
+
+    @Test
+    void exhaustedRetriesMarkOnlyPendingEmailFailed() {
+        var pending = insertDelivery("ENROLLED", EmailDelivery.Status.PENDING, NOW, null);
+        var sent = insertDelivery("ENROLLED", EmailDelivery.Status.SENT, NOW, null);
+        emailDeliveryService.markEmailFailed(pending.id);
+        emailDeliveryService.markEmailFailed(sent.id);
+        assertThat(readDelivery(pending.id))
+                .containsEntry("status", "FAILED")
+                .containsEntry("attempts", 5)
+                .containsEntry("last_error", "MAIL_RETRIES_EXHAUSTED");
+        assertThat(readDelivery(sent.id)).containsEntry("status", "SENT").containsEntry("attempts", 0);
+    }
+
+    @Test
+    void deferredReleaseCountsEmailsReleasedEarlierInTheSameRun() {
+        Instant due = NOW.minus(Duration.ofHours(1));
+        var backup = insertDelivery("BACKUP_FAILED", EmailDelivery.Status.DEFERRED, due, null);
+        var reminder = insertDelivery("DEADLINE_REMINDER", EmailDelivery.Status.DEFERRED, due, null);
+        var expired = insertDelivery("ANNOUNCEMENT_IMPORTANT", EmailDelivery.Status.DEFERRED, due,
+                NOW.minusSeconds(1));
+        var enrolled = insertDelivery("ENROLLED", EmailDelivery.Status.DEFERRED, due, null);
+        var capTwoService = new EmailDeliveryService(notificationRepository,
+                new EmailCapPolicy(notificationRepository, 2), job, accountLookup, mail,
+                Clock.fixed(NOW, ZoneOffset.UTC), assignmentQuery, "https://learning.example.test");
+        createTransaction().executeWithoutResult(tx -> capTwoService.releaseDeferredEmails(NOW));
+        for (var released : List.of(backup, reminder)) {
+            var row = readDelivery(released.id);
+            assertThat(row.get("status")).isEqualTo("PENDING");
+            assertThat(readInstant(row, "scheduled_for")).isEqualTo(NOW);
+        }
+        assertThat(readDelivery(expired.id).get("status")).isEqualTo("SKIPPED");
+        assertThat(readDelivery(enrolled.id).get("status")).isEqualTo("DEFERRED");
+        verify(job, times(2)).enqueue(anyString(), anyMap(), anyString());
+    }
+
+    /**
+     * Hibernate 6.6 trên PostgreSQL bỏ qua hint lock.timeout=2000 của em.find: khi caller chưa đặt
+     * lock_timeout (markEmailFailed không lấy budget lock), lệnh khóa chờ tới khi hàng được nhả.
+     */
+    @Test
+    void emailRowLockAllowsKeyShareAndWaitsForTheHolderWithoutOwnTimeout() throws Exception {
+        var delivery = insertDelivery("ENROLLED", EmailDelivery.Status.PENDING, NOW, null);
+        createTransaction().executeWithoutResult(tx -> {
+            assertThat(notificationRepository.lockEmailDelivery(delivery.id)).isPresent();
+            assertThat(tryLockFromOtherConnection(delivery.id, "for key share")).isTrue();
+            assertThat(tryLockFromOtherConnection(delivery.id, "for no key update")).isFalse();
+        });
+        var locked = new java.util.concurrent.CountDownLatch(1);
+        var executor = java.util.concurrent.Executors.newSingleThreadExecutor();
+        try {
+            var holder = executor.submit(() -> {
+                try (var connection = dataSource.getConnection();
+                        var statement = connection.prepareStatement(
+                                "select id from email_deliveries where id=? for update")) {
+                    connection.setAutoCommit(false);
+                    statement.setObject(1, delivery.id);
+                    statement.executeQuery().close();
+                    locked.countDown();
+                    Thread.sleep(4000);
+                    connection.rollback();
+                }
+                return null;
+            });
+            assertThat(locked.await(5, java.util.concurrent.TimeUnit.SECONDS)).isTrue();
+            long started = System.nanoTime();
+            Optional<EmailDelivery> lockedDelivery = createTransaction().execute(
+                    tx -> notificationRepository.lockEmailDelivery(delivery.id));
+            long elapsedMillis = Duration.ofNanos(System.nanoTime() - started).toMillis();
+            assertThat(lockedDelivery).isPresent();
+            assertThat(elapsedMillis).isGreaterThanOrEqualTo(3500);
+            holder.get(15, java.util.concurrent.TimeUnit.SECONDS);
+        } finally {
+            executor.shutdownNow();
+        }
     }
 }

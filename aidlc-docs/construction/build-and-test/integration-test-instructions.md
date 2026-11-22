@@ -4,7 +4,7 @@ Source snapshot `f68a6ec5`, 2026-11-07. The [current source manifest](../../ince
 
 ## Isolated prerequisites
 
-Use isolated PostgreSQL/Redis/RabbitMQ and authorized local configuration. Flyway scans db/migration recursively (out-of-order enabled); JPA validates the remaining U04/U13/U14 mappings while Spring JDBC is the project persistence policy. Never point test JDBC variables at live data. Check conditional fallback beans instead of assuming all providers are stubs. Local SMTP testing uses Mailpit; Brevo HTTPS API (`MAIL_TRANSPORT=brevo-api`) and SMTP/Drive/AI require separate provider configuration and acceptance. Do not put secret values in reports.
+Use isolated PostgreSQL/Redis/RabbitMQ and authorized local configuration. Flyway scans db/migration recursively (out-of-order enabled); All owner repositories use Spring JDBC (U04/U13/U14 since 2026-11-18). The shared JPA starter and `JpaTransactionManager` are kept, so Hibernate still starts but has no entity mappings to validate. Never point test JDBC variables at live data. Check conditional fallback beans instead of assuming all providers are stubs. Local SMTP testing uses Mailpit; Brevo HTTPS API (`MAIL_TRANSPORT=brevo-api`) and SMTP/Drive/AI require separate provider configuration and acceptance. Do not put secret values in reports.
 
 ## Current schema deltas
 

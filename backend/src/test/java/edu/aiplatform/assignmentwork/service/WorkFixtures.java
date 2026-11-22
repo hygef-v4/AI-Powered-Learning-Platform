@@ -123,7 +123,7 @@ final class WorkFixtures {
         when(classes.isActiveStudent(any(), any())).thenReturn(true);
         when(classes.listOpenClassesOf(any())).thenReturn(List.of(classRef(ClassStatus.OPEN)));
         when(classes.listActiveStudents(classId)).thenReturn(List.of(student.accountId()));
-        when(assignments.get(any())).thenAnswer(i -> i.getArgument(0).equals(view.assignmentId())
+        when(assignments.loadAssignment(any())).thenAnswer(i -> i.getArgument(0).equals(view.assignmentId())
                 ? Optional.of(view) : Optional.empty());
         when(assignments.getContent(any())).thenAnswer(i -> Optional.of(new AssignmentContent(view.assignmentId(), 1,
                 "Hướng dẫn", skeleton, List.of(new DocumentPart("DOCUMENT", null, List.of(), "Toàn bài")),

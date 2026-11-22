@@ -4,11 +4,15 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.ai.contract.*;
+import edu.aiplatform.assignments.contract.*;
 import edu.aiplatform.grading.service.GradingCommands.*;
 import edu.aiplatform.grading.model.*;
 import edu.aiplatform.grading.repository.*;
 import edu.aiplatform.identity.contract.*;
+import java.math.BigDecimal;
+import java.time.Clock;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,6 +21,73 @@ import edu.aiplatform.shared.error.ApiException;
 import org.mockito.ArgumentCaptor;
 
 class GradingProposalServiceTest {
+    @Test
+    void replaysTheExistingPendingProposalWhenDispatchWasInterrupted() {
+        var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
+        var evaluations = mock(IEvaluationRepository.class);
+        var proposals = mock(IGradingProposalRepository.class);
+        var assignments = mock(IAssignmentQuery.class);
+        var promptBuilder = mock(GradingPromptBuilder.class);
+        var json = new ObjectMapper().findAndRegisterModules();
+        var evaluation = new Evaluation();
+        evaluation.id = UUID.randomUUID();
+        evaluation.assignmentId = UUID.randomUUID();
+        evaluation.submissionHash = "submitted";
+        var rubrics = List.of(new RubricView(UUID.randomUUID(), evaluation.assignmentId, "DOCUMENT",
+                List.of(new RubricCriterion(UUID.randomUUID(), "Answer", "", CriterionKind.TEXT,
+                        List.of(new RubricItem(UUID.randomUUID(), "Answer", BigDecimal.ONE)))), BigDecimal.ONE));
+        evaluation.rubricSnapshot = GradingJson.writeSnapshot(json, rubrics);
+        when(evaluations.lockById(evaluation.id)).thenReturn(Optional.of(evaluation));
+        when(assignments.getContent(evaluation.assignmentId)).thenReturn(Optional.of(new AssignmentContent(
+                evaluation.assignmentId, 1, "", null, List.of(), Map.of(), rubrics)));
+        when(promptBuilder.findActiveRubrics(null, null, rubrics)).thenReturn(rubrics);
+
+        var proposal = new GradingProposal();
+        proposal.id = UUID.randomUUID();
+        proposal.evaluationId = evaluation.id;
+        proposal.requesterId = actor.accountId();
+        proposal.submissionHash = evaluation.submissionHash;
+        proposal.rubricFingerprint = evaluation.rubricSnapshot;
+        proposal.source = "SHARED";
+        var request = new AiRequest(AiSource.SHARED, null, UUID.randomUUID().toString());
+        when(proposals.findByRequestRef(request.requestRef())).thenReturn(Optional.of(proposal));
+        var transactions = new GradingProposalTransactions(evaluations, proposals, mock(GradingService.class),
+                mock(GradingAccess.class), mock(SubmissionReviewService.class), assignments, promptBuilder,
+                new GradingProposalValidator(json), json, Clock.systemUTC());
+
+        var prepared = transactions.prepareProposal(actor, evaluation.id, request);
+
+        assertThat(prepared.proposal()).isSameAs(proposal);
+        assertThat(prepared.dispatch()).isTrue();
+        verify(proposals, never()).saveProposal(any());
+    }
+
+    @Test
+    void delayedDispatchFailureMarksAChangedSnapshotStale() {
+        var evaluations = mock(IEvaluationRepository.class);
+        var proposals = mock(IGradingProposalRepository.class);
+        var evaluation = new Evaluation();
+        evaluation.id = UUID.randomUUID();
+        evaluation.submissionHash = "updated";
+        evaluation.rubricSnapshot = "rubric";
+        var proposal = new GradingProposal();
+        proposal.id = UUID.randomUUID();
+        proposal.evaluationId = evaluation.id;
+        proposal.submissionHash = "original";
+        proposal.rubricFingerprint = evaluation.rubricSnapshot;
+        when(proposals.findEvaluationId(proposal.id)).thenReturn(Optional.of(evaluation.id));
+        when(evaluations.lockById(evaluation.id)).thenReturn(Optional.of(evaluation));
+        when(proposals.findById(proposal.id)).thenReturn(Optional.of(proposal));
+        when(proposals.saveProposal(proposal)).thenReturn(proposal);
+        var transactions = new GradingProposalTransactions(evaluations, proposals, null, null, null,
+                null, null, null, new ObjectMapper(), Clock.systemUTC());
+
+        var result = transactions.recordDispatch(proposal.id, null, "AI_SERVICE_UNAVAILABLE");
+
+        assertThat(result.status).isEqualTo("STALE");
+        assertThat(result.safeError).isNull();
+    }
+
     @Test
     void oldRejectedProposalsGetReadableMessagesWithoutRewritingStoredHistory() {
         var transactions = mock(GradingProposalTransactions.class);
@@ -77,7 +148,7 @@ class GradingProposalServiceTest {
         var evaluations = mock(IEvaluationRepository.class);
         var proposal = new GradingProposal();
         proposal.status = "READY";
-        when(transactions.prepareProposal(any(), any(), any())).thenReturn(
+        when(transactions.prepareProposal(any(), any(), any(), anyLong())).thenReturn(
                 new GradingProposalTransactions.Prepared(proposal, null, false, null));
         when(transactions.estimateTokens(any(), any(), anyLong())).thenReturn(5L);
         var items = java.util.stream.IntStream.range(0, size).mapToObj(index -> {
@@ -99,7 +170,7 @@ class GradingProposalServiceTest {
                 .allSatisfy(item -> assertThat(item.outcome()).isEqualTo("READY"));
         assertThat(estimate.items()).isEqualTo(size);
         assertThat(estimate.estimatedTokens()).isEqualTo(size * 5L);
-        verify(transactions, times(size)).prepareProposal(eq(actor), any(), any());
+        verify(transactions, times(size)).prepareProposal(eq(actor), any(), any(), eq(0L));
         verify(transactions, times(size)).estimateTokens(eq(actor), any(), eq(0L));
         verifyNoInteractions(aiTask);
     }
@@ -117,7 +188,7 @@ class GradingProposalServiceTest {
         when(evaluations.findById(e.id)).thenReturn(Optional.of(e));
         var p = new GradingProposal();
         p.status = "READY";
-        when(tx.prepareProposal(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
+        when(tx.prepareProposal(any(), any(), any(), anyLong())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
         var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
         var input = new AiBatch(List.of(new ItemVersion(e.id, 0)),
                 new AiRequest(AiSource.SHARED, null, "r".repeat(200)));
@@ -125,7 +196,7 @@ class GradingProposalServiceTest {
         service.requestProposals(actor, input);
         service.requestProposals(actor, input);
         var captor = ArgumentCaptor.forClass(AiRequest.class);
-        verify(tx, times(2)).prepareProposal(eq(actor), eq(e.id), captor.capture());
+        verify(tx, times(2)).prepareProposal(eq(actor), eq(e.id), captor.capture(), eq(0L));
         assertThat(captor.getAllValues().get(0).requestRef()).hasSizeLessThanOrEqualTo(200)
                 .isEqualTo(captor.getAllValues().get(1).requestRef());
         verifyNoInteractions(ai);
@@ -139,7 +210,7 @@ class GradingProposalServiceTest {
         var p = new GradingProposal();
         p.status = "FAILED";
         p.safeError = "QUOTA_EXHAUSTED";
-        when(tx.prepareProposal(any(), any(), any())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
+        when(tx.prepareProposal(any(), any(), any(), anyLong())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
         var e = new Evaluation();
         e.id = UUID.randomUUID();
         e.classId = UUID.randomUUID();
@@ -202,10 +273,10 @@ class GradingProposalServiceTest {
         pendingReadyUnapplied.taskId = UUID.randomUUID();
 
         when(proposals.findForEvaluation(e.id)).thenReturn(List.of(pendingRunning, pendingReadyUnapplied));
-        when(ai.get(pendingRunning.taskId)).thenReturn(Optional.of(new AiTaskView(
+        when(ai.loadTask(pendingRunning.taskId)).thenReturn(Optional.of(new AiTaskView(
                 pendingRunning.taskId, AiTaskState.RUNNING, AiSource.PERSONAL, AiProvider.GEMINI,
                 "gemini-2.5-flash", null, null, null)));
-        when(ai.get(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(new AiTaskView(
+        when(ai.loadTask(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(new AiTaskView(
                 pendingReadyUnapplied.taskId, AiTaskState.READY, AiSource.PERSONAL, AiProvider.GEMINI,
                 "gemini-2.5-flash", null, null, null)));
 
@@ -220,7 +291,7 @@ class GradingProposalServiceTest {
         var rejectedTask = new AiTaskView(
                 pendingReadyUnapplied.taskId, AiTaskState.READY, AiSource.PERSONAL, AiProvider.GEMINI,
                 "gemini-2.5-flash", ApplyOutcome.REJECTED, "Tài khoản yêu cầu không còn hiệu lực", null);
-        when(ai.get(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(rejectedTask));
+        when(ai.loadTask(pendingReadyUnapplied.taskId)).thenReturn(Optional.of(rejectedTask));
         service.listProposals(actor, e.id);
         verify(tx).recordDispatch(pendingReadyUnapplied.id, rejectedTask, null);
     }

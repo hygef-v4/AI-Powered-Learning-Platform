@@ -34,7 +34,7 @@ public class GroupAssignmentLifecycle implements IAssignmentLifecycleListener {
 
     @Override
     public void onOpened(UUID assignmentId) {
-        Optional<AssignmentView> view = assignments.get(assignmentId);
+        Optional<AssignmentView> view = assignments.loadAssignment(assignmentId);
         if (view.isPresent() && view.get().submissionMode() == SubmissionMode.GROUP) {
             jobs.enqueue(JobTypes.GROUP_DOC_CREATE, Map.of("assignmentId", assignmentId.toString()),
                     "group-doc-create:" + assignmentId);

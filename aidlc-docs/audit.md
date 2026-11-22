@@ -15665,3 +15665,881 @@ Làm cho tôi
 **Context**: Người dùng cho phép commit/push và tạo PR trong lượt này. Giữ riêng báo cáo readiness chưa theo dõi của công việc khác. Tên GitHub display name được xác minh từ /user qua credential hiện có; không sửa attribution lịch sử.
 
 ---
+## Kiểm tra đồng bộ tài liệu AI-DLC và mã nguồn
+**Timestamp**: 2026-11-17T14:49:08Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check lại tính đồng bộ doc aidlc và src code hiện tại"
+**AI Response**: "Đối chiếu tự động trên staging@706e46f1: (1) api-inventory khớp 347/347 mapping của 50 controller; (2) đường dẫn trong tài liệu hiện hành (as-built-baseline, code-summary, current-code-baseline, api-inventory, traceability) còn tồn tại, chỉ báo cáo cũ có ngày và bản tóm tắt remediation U04/U13/U14 trỏ tới tệp đã xóa; (3) migration mới nhất v20261116.1010 đã ghi. Lệch: current-code-baseline thiếu V20261113_1000__scope_quiz_attempts_to_class.sql và 39 tệp test backend; U11 domain-entities ghi attemptNo duy nhất theo (quizId, accountId) trong khi DB ràng buộc theo (quizId, accountId, classId); code-summary U02/U03/U08/U12 còn liệt kê component đã xóa (AuditDetailDialog, SettingGroupTable, DelegatedSectionCard, ReceiptPage, ClassAssignmentsCard, GroupCountCard, GroupProgressView); U03 nfr-design vẫn mô tả backup luôn mã hóa; comment LocaleGate.tsx còn ghi máy chủ dựng tiếng Việt; tài liệu U14 chưa nêu chuông thông báo chỉ poll khi SSE mất; aidlc-state chưa ghi PR 102 đã merge và còn ô chưa đánh dấu đã làm xong (commit/PR tài liệu vận hành 2026-11-16)."
+**Context**: Kiểm tra chỉ đọc; không sửa tài liệu hay mã, không commit. Chờ người dùng quyết định có sửa các điểm lệch không.
+
+---
+## Đồng bộ tài liệu AI-DLC với mã nguồn — sửa tài liệu
+**Timestamp**: 2026-11-17T14:53:16Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa tài liệu"
+**AI Response**: "Sửa các điểm lệch đã báo: U11 (attemptNo, số lượt, lượt IN_PROGRESS theo lớp; domain-entities, BR-U11-10, code-summary); current-code-baseline (migration V20261113_1000 và 21 lớp test, delta 2026-11-17); code-summary U02, U03, U08, U12 (bỏ component đã xóa, ghi component hiện có); U03 P16, P17, logical-components, BR-U03-93 (khóa backup tùy chọn); U14 frontend-components và business-logic-model (poll số chưa đọc chỉ khi mất SSE); aidlc-state (mục mới, PR 102 đã merge, đánh dấu commit tài liệu vận hành d19f0329 đã có trên staging). Không sửa LocaleGate.tsx (mã nguồn) và tài liệu lịch sử có ngày."
+**Context**: Chỉ sửa Markdown; không đổi mã, test, schema hay cấu hình; chưa commit. Chờ người dùng duyệt.
+
+---
+## Đồng bộ tài liệu AI-DLC với mã nguồn — commit
+**Timestamp**: 2026-11-17T15:14:25Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi tạo commit, chưa push"
+**AI Response**: "Tạo nhánh docs/aidlc-code-sync-2026-11-17 từ staging@706e46f1 và commit cục bộ 15 tệp tài liệu đã sửa. Không push."
+**Context**: Người dùng duyệt tài liệu bằng yêu cầu commit. Chưa push, chưa mở PR.
+
+---
+## Đồng bộ tài liệu AI-DLC với mã nguồn — commit trên staging
+**Timestamp**: 2026-11-17T15:15:15Z
+**Requested by:** Quang Hung
+**User Input**: "k cần tạo branch mới"
+**AI Response**: "Đưa commit lên thẳng nhánh staging cục bộ (fast-forward), xóa nhánh docs/aidlc-code-sync-2026-11-17, ghi mục này rồi amend vào cùng commit. Không push."
+**Context**: Commit cục bộ trên staging, chưa push.
+
+---
+## Kiểm tra JPA trong U04/U13/U14
+**Timestamp**: 2026-11-18T13:05:08Z
+**Requested by:** Hải Nam
+**User Input**: "kiểm tra lại giúp tôi các chức năng của u04, u13, u14 có đang dùng jpa không?"
+**AI Response**: "Xác nhận trên staging@2e179598: vẫn dùng JPA. U04: ISubjectJpaRepository (Spring Data JPA, @Lock PESSIMISTIC_WRITE, @Modifying/@Query), SubjectJpaEntity (@Entity, @Version), SubjectRepositoryAdapter (EntityManager persist, createNativeQuery), SubjectCommandService bắt org.hibernate ConstraintViolationException. U13: MaterialModuleRepositoryAdapter dùng EntityManager.createNativeQuery; MaterialRepositoryAdapter đã JDBC. U14: Announcement/Notification/NotificationPreference/EmailDelivery/DeadlineReminder là @Entity; AnnouncementRepositoryAdapter và NotificationRepositoryAdapter dùng EntityManager (JPQL, native, persist, lock.timeout); NotificationExceptionHandler import PersistenceException. Hạ tầng: pom.xml còn spring-boot-starter-data-jpa, application.yml còn spring.jpa (ddl-auto validate). Test còn dựng EntityManagerFactory/JpaTransactionManager: SubjectRepositoryIntegrationTest, NotificationDeliveryIntegrationTest, OwnerRequirementsTestConfig, EvaluationVersionIntegrationTest (U09); SubjectAdminCommandTest dùng lớp exception Hibernate. Khớp bảng persistence-conventions.md."
+**Context**: Kiểm tra chỉ đọc; không sửa mã, không commit.
+
+---
+## Kiểm tra ERD conceptual (tab erd-class-diagram-new)
+**Timestamp**: 2026-11-18T13:11:56Z
+**Requested by:** Hải Nam
+**User Input**: "@\"E:\FPTUni\sem9_fa26\diagram\erd.drawio\"
+không sửa code hay file drawio, kiểm tra giúp tôi xem diagram ở tab erd-class-diagram-new đã khớp với dự án chưa trong trong trường họp tôi muốn erd ở mức conceptual chỉ gồm các thực thể, thuộc tính và quan hệ chính để BA và khách hàng dễ dàng nắm bắt yêu cầu nghiệp vụ"
+**AI Response**: "Đối chiếu 20 thực thể và 32 quan hệ trong tab với migration Flyway (staging@2e179598). Phần lớn khớp. Sai lệch cần sửa: Quiz–Quiz Attempt phải 1–0..N; Assignment–Rubric phải 1–0..N (rubric theo từng phần bài); AI Assistance nối với AI Connection (0..N–0..1), không nối MCP Credential; Account–AI Connection phía Account là 0..1 (khóa institutional không có chủ); Subject–Assignment phía Subject là bắt buộc 1; Group Document–Evaluation là 1–0..N (điểm nhóm + điểm từng thành viên). Thiếu quan hệ Course Class–Quiz và Course Class–Reference Material (0..1–0..N). Gợi ý thuộc tính: Announcement thêm Title, Rubric bỏ Title thay bằng Assignment Part, Student Group bỏ Members/Group Leader (thể hiện bằng quan hệ), Account có thể thêm Student Code. Gợi ý cân nhắc thêm Material Module, Group Proposal; System Setting/Audit Record/MCP Credential mang tính kỹ thuật có thể bỏ khỏi ERD cho BA."
+**Context**: Kiểm tra chỉ đọc; không sửa mã, không sửa file drawio, không commit.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — tạo nhánh và câu hỏi yêu cầu
+**Timestamp**: 2026-11-18T13:12:24Z
+**Requested by:** Hải Nam
+**User Input**: "giúp tôi tạo branch mới từ staging để sửa lại từ jpa sang sử dụng jdbc cho cả 3 unit"
+**AI Response**: "Tạo nhánh refactor/jdbc-u04-u13-u14 từ staging@2e179598 (khớp origin/staging). Đọc code JPA của U04, U13 module, U14 và quy định persistence. Phát hiện EmailDeliveryService dựa vào dirty checking JPA để ghi trạng thái email (sendEmail, markEmailFailed, releaseDeferredEmails, cả attempts++ khi lỗi mail và flush trước khi đếm hạn mức). Tạo aidlc-docs/inception/requirements/2026-11-18-u04-u13-u14-jdbc-questions.md với 4 câu hỏi: phạm vi gỡ hạ tầng JPA, cách chuyển model U14, mức kiểm chứng, cách commit. Thêm mục mới trong aidlc-state.md."
+**Context**: Requirements Analysis (Standard). Chưa sửa mã, chưa commit. Chờ người dùng trả lời câu hỏi.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — câu trả lời Requirements Analysis
+**Timestamp**: 2026-11-18T13:17:51Z
+**Requested by:** Hải Nam
+**User Input**: "với câu 1 tôi chỉ muốn sửa 3 unit 04, 13, 14 mà không làm ảnh hưởng đến các unit khác. Các câu 2-4 theo khuyến nghị"
+**AI Response**: "Ghi câu trả lời vào file câu hỏi (Q1: chỉ sửa ba unit, giữ dependency, cấu hình và JpaTransactionManager chung; Q2–Q4: A). Tạo aidlc-docs/inception/requirements/2026-11-18-u04-u13-u14-jdbc.md gồm yêu cầu JD-01…JD-09, ràng buộc không ảnh hưởng unit khác (ngoại lệ test dùng chung OwnerRequirementsTestConfig, ArchitectureTest; U09 EvaluationVersionIntegrationTest chỉ sửa nếu bắt buộc và báo trước) và Workflow Planning (chỉ Code Generation, Build and Test; U13 → U14 → U04)."
+**Context**: Requirements Analysis và Workflow Planning.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — yêu cầu duyệt Requirements và Workflow Planning
+**Timestamp**: 2026-11-18T13:17:51Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — chờ người dùng duyệt)"
+**AI Response**: "Trình tài liệu yêu cầu và kế hoạch workflow, chờ người dùng chọn Request Changes hoặc Approve & Continue sang Code Generation Part 1."
+**Context**: Approval prompt — Requirements Analysis và Workflow Planning.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — duyệt Requirements và Workflow Planning
+**Timestamp**: 2026-11-18T13:20:02Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt, tiếp tục"
+**AI Response**: "Ghi nhận duyệt; vào Code Generation Part 1 (lập kế hoạch)."
+**Context**: Requirements Analysis và Workflow Planning đã duyệt; vào Code Generation Part 1.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — Code Generation Part 1, yêu cầu duyệt kế hoạch
+**Timestamp**: 2026-11-18T13:22:07Z
+**Requested by:** Hải Nam
+**User Input**: "(chưa có — chờ người dùng duyệt)"
+**AI Response**: "Tạo aidlc-docs/construction/plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md gồm 6 bước: (1) baseline và test characterization trên PostgreSQL khi code còn JPA; (2) U13 module; (3) U14 announcement, notification, email (ghi tường minh EmailDelivery ở mọi nhánh); (4) U04 (khóa for no key update, version, trùng mã qua PSQLException); (5) mvn verify toàn backend, dừng và báo nếu unit khác lỗi; (6) tài liệu. Mỗi unit một commit cục bộ, không push. Xác nhận Hibernate 6.6 PostgreSQL sinh for no key update cho PESSIMISTIC_WRITE (PostgreSQLSqlAstTranslator); Docker 29.7.2 có sẵn cho Testcontainers."
+**Context**: Code Generation Part 1 — approval prompt.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — duyệt kế hoạch Code Generation
+**Timestamp**: 2026-11-18T13:25:06Z
+**Requested by:** Hải Nam
+**User Input**: "hiện các unit khác có dùng hibernate không, nếu không thì duyệt kế hoạch"
+**AI Response**: "Grep toàn backend: production của các unit khác không dùng org.hibernate, jakarta.persistence, Spring Data JPA, org.springframework.orm hay EntityManager. Còn lại hạ tầng chung (pom.xml spring-boot-starter-data-jpa, application.yml spring.jpa) và ba file test: ArchitectureTest (chuỗi package trong rule), EvaluationVersionIntegrationTest của U09 (tự dựng EntityManagerFactory quét subjects.repository), OwnerRequirementsTestConfig (cấu hình test của U04/U13/U14). Điều kiện của người dùng thỏa, coi kế hoạch đã duyệt; vào Code Generation Part 2."
+**Context**: Code Generation Part 1 đã duyệt; vào Part 2.
+
+---
+## Kiểm tra lại ERD conceptual sau khi sửa
+**Timestamp**: 2026-11-18T13:30:59Z
+**Requested by:** Hải Nam
+**User Input**: "tôi sửa xong rồi, kiểm tra lại giúp tôi"
+**AI Response**: "Đã sửa đúng: Quiz–Quiz Attempt 1–0..N, Assignment–Rubric 1–0..N, Subject–Assignment bắt buộc 1, Account–AI Connection 0..1, Group Document–Evaluation 1–0..N, bỏ MCP Credential và quan hệ sai với AI Assistance, thuộc tính Announcement/Rubric/Student Group/Account/Course Class, thêm quan hệ trưởng nhóm. Còn lại: thiếu AI Assistance–AI Connection (0..N–0..1), thiếu Course Class–Quiz và Course Class–Reference Material (0..1–0..N), Assignment Attempt–Evaluation nên 1–0..1, quan hệ trưởng nhóm phía Account nên 0..1 (leader_id cho phép null), các đường quan hệ chưa có tên (Account–Course Class và Account–Student Group mỗi cặp có 2 đường)."
+**Context**: Kiểm tra chỉ đọc; không sửa mã, không sửa file drawio, không commit.
+
+---
+## Sửa bảng 3.3 Data Business Rules
+**Timestamp**: 2026-11-18T13:42:40Z
+**Requested by:** Hải Nam
+**User Input**: "[Người dùng dán bảng '3.3 Data Business Rules' gồm 38 dòng Rule / Description / Enforced On, từ 'Unique school identity' tới 'One backup per day']
+giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự án"
+**AI Response**: "Đối chiếu với migration và functional-design/business-rules.md của U01–U14. Trả bảng đã sửa trong chat. Sửa chính: mã lớp duy nhất theo (môn, học kỳ); MSSV chỉ cho Student; nhóm có đúng một trưởng nhóm là thành viên, bắt buộc trước khi phát hành bài nhóm; từ chối đổi trưởng nhóm không bắt buộc lý do; tài liệu luôn thuộc môn và một module của môn, lớp là tùy chọn, module có thể gắn nhiều quiz, mỗi quiz tối đa một module; số lượt quiz tính theo từng lớp; chỉ bài GRADED có Evaluation, nộp lại làm đánh giá cũ SUPERSEDED; điểm mặc định câu hỏi > 0, 2–6 lựa chọn; thông báo lớp do giảng viên chính của lớp OPEN đăng; Student chỉ dùng AI cho Quiz Practice, không dùng cho bài nhóm; gộp 2 dòng MCP; backup giữ bản SUCCESS 7 ngày."
+**Context**: Chỉ trả nội dung trong chat; không sửa mã, không sửa file drawio, không commit.
+
+---
+## Xác nhận nguồn cho bảng Data Business Rules
+**Timestamp**: 2026-11-18T13:43:01Z
+**Requested by:** Hải Nam
+**User Input**: "không dựa vào folder docs mà phải dựa vào aidlc-docs thì mới đúng được"
+**AI Response**: "Xác nhận bảng được đối chiếu với aidlc-docs (construction/u01–u14 functional-design/business-rules.md, inception/requirements/requirements.md) và migration Flyway; không dùng thư mục docs/. Sửa lại một ý ở mục trước: D01 nghĩa là Quiz chỉ để luyện tập, không vào sổ điểm; D03 là Student không có AI cho bài nhóm. Mục trước ghi nhầm 'Student chỉ dùng AI cho Quiz Practice'."
+**Context**: Chỉ trả nội dung trong chat; không sửa mã, không sửa file drawio, không commit.
+
+---
+## Rà thư mục docs/ cho nguồn business rules
+**Timestamp**: 2026-11-18T13:46:55Z
+**Requested by:** Hải Nam
+**User Input**: "trong folder docs có những gì có thể ảnh hưởng đến việc bạn lấy business rules không?"
+**AI Response**: "Liệt kê 24 tệp trong docs/. Bảng rules không lấy từ docs/. Tệp có thể ảnh hưởng: report3-conceptual-data-model.drawio (mô hình dữ liệu conceptual có thêm Enrollment, Module, Assignment Part, AI Usage Record, Leader Change Request, Backup Run, MCP Credential), usecase_table.md (bản 2026-10-14), guides/*.md, runbooks/restore-isolated.md, contracts/openapi/*.yaml. Đây là tài liệu dẫn xuất, không phải nguồn business rule; nếu khác aidlc-docs thì theo aidlc-docs."
+**Context**: Kiểm tra chỉ đọc; không sửa mã, không commit.
+
+---
+## Dựng lại tab database_design_new theo database dự án
+**Timestamp**: 2026-11-18T13:58:47Z
+**Requested by:** Hải Nam
+**User Input**: "giờ hãy giúp tôi sửa lại database design ở tab database_design_new để khớp với database của dự án với yêu cầu giữ style và màu sắc của các bảng, các thuộc tính chỉ gồm các khóa và 1 vài thuộc tính quan trọng cho nghiệp vụ thôi"
+**AI Response**: "Lấy schema từ Postgres local (conv041314-postgres-1, Flyway 20261114.1100; 3 migration chưa áp chỉ đổi ràng buộc hoặc xóa bảng group_peer_reviews). Dựng lại tab database_design_new trong E:\FPTUni\sem9_fa26\diagram\erd.drawio: 53 bảng, 301 dòng (PK, FK, UK và vài cột nghiệp vụ, kiểu lấy từ DB), 100 đường nối, giữ nguyên style bảng/dòng/đường cũ (#fff8cc, #29a8df). Nullable FK dùng ERzeroToOne; 8 tham chiếu logic không có ràng buộc DB vẽ nét đứt; khóa tự tham chiếu chỉ giữ dòng FK. Hai tab erd và erd-class-diagram-new giữ nguyên từng byte. Sao lưu bản gốc: erd.backup-2026-11-18.drawio. Chưa kiểm tra được bằng hình vì trình duyệt không mở được tệp cục bộ."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## Thu gọn database design và tách theo module
+**Timestamp**: 2026-11-18T14:08:38Z
+**Requested by:** Hải Nam
+**User Input**: "Làm cả 1, 2, 4"
+**AI Response**: "Trong E:\FPTUni\sem9_fa26\diagram\erd.drawio: tab database_design_new chỉ còn cột khóa (PK/FK/UK), bỏ cột kiểu dữ liệu; 53 bảng, 168 dòng, 100 đường nối, xếp cột theo tầng cha bên trái, con bên phải. Thêm 6 tab module ngay sau: db_1_account_admin, db_2_class_material, db_3_assignment_grading, db_4_group, db_5_quiz, db_6_ai_mcp; mỗi tab có tiêu đề, bảng của module (nền #fff8cc) và bảng tham chiếu từ module khác dạng thu gọn nền xám #eeeeee chỉ có id. Giữ style dòng, viền, đường nối cũ. Tab erd và erd-class-diagram-new không đổi. Sao lưu bản trước: erd.backup-2026-11-18-full-columns.drawio. Chưa kiểm tra bằng hình."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## Bố cục 6 tab module bằng ELK
+**Timestamp**: 2026-11-18T14:28:57Z
+**Requested by:** Hải Nam
+**User Input**: "có, cài elkjs vào folder E:\skill và chạy cho 6 tab module"
+**AI Response**: "Cài elkjs@0.9.3 (bản pin, --ignore-scripts) vào E:\skill; viết E:\skill\drawio-elk-modules.js (dữ liệu bảng ở E:\skill\data). Script bố cục layered, đường vuông góc, nối từ dòng FK sang dòng PK, thử 144 cấu hình mỗi tab (hướng, cách đặt bảng, seed, nhân bản bảng xám) và chọn bản ít đường cắt nhất. Kết quả số chỗ cắt: db_1 0, db_2 4, db_3 4 (nhân bản mọi bảng xám), db_4 9 (nhân bản mọi bảng xám, 17 bảng xám), db_5 8 (chỉ nhân bản accounts), db_6 0. Các tab khác giữ nguyên. Sao lưu: erd.backup-2026-11-18-before-elk.drawio. Chưa kiểm tra bằng hình."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## Gộp bảng xám trong 6 tab module
+**Timestamp**: 2026-11-18T14:32:16Z
+**Requested by:** Hải Nam
+**User Input**: "Gộp bảng xám"
+**AI Response**: "Sửa E:\skill\drawio-elk-modules.js để mặc định mỗi bảng tham chiếu xám chỉ có một ô (bật lại nhân bản bằng biến DUP_MODES). Chạy lại ELK cho 6 tab: db_1 0 chỗ cắt, db_2 4, db_3 12, db_4 40, db_5 17, db_6 0; bảng xám 2/2/4/3/3/1. Các tab khác giữ nguyên. Sao lưu bản có bảng xám nhân bản: erd.backup-2026-11-18-elk-duplicated-stubs.drawio. Chưa kiểm tra bằng hình."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — Code Generation hoàn tất, yêu cầu duyệt
+**Timestamp**: 2026-11-18T14:34:21Z
+**Requested by:** Hải Nam
+**User Input**: "(không có input mới; tiếp tục thực hiện kế hoạch đã duyệt)"
+**AI Response**: "Ba commit mã cục bộ: 418a42ae (U13 module), 503cf463 (U14), a4bd6934 (U04). mvn -B verify toàn backend: BUILD SUCCESS, 2572 test, 0 fail, 0 error, 1 skipped; EvaluationVersionIntegrationTest U09 không sửa vẫn đạt. Không còn JPA/Hibernate/EntityManager trong code production của subjects, materials, announcements, notifications; không đổi URL, JSON, schema, migration, contract, pom.xml. Khác kế hoạch: bỏ handler PersistenceException thay vì đổi sang 503 (JD-08) để không đổi phản hồi API; dò trùng mã môn qua SQLState 23505 + tên constraint thay PSQLException (driver scope runtime). Cập nhật persistence-conventions, tài liệu hiện hành của U04/U13/U14, current-code-baseline, decision-register và tạo kết quả 2026-11-18-u04-u13-u14-jdbc-results.md. Hỏi người dùng: Request Changes hoặc Continue to Next Stage."
+**Context**: Code Generation Part 2 và Build and Test hoàn tất; chờ duyệt. Chưa push.
+
+---
+## Thêm lại thuộc tính nghiệp vụ cho các bảng
+**Timestamp**: 2026-11-18T14:42:04Z
+**Requested by:** Hải Nam
+**User Input**: "tôi đã quyết định giữ bản trước khi dùng elkjs vì đã dễ nhìn hơn rồi. Nhưng giờ tôi lại thấy các thuộc tính của các bảng hơi sơ sài quá"
+**AI Response**: "Xác nhận erd.drawio là bản trước ELK do người dùng lưu lại, có chỉnh vị trí bảng ở db_1_account_admin. Viết E:\skill\drawio-add-attributes.js: thêm lại 2–5 thuộc tính nghiệp vụ vào mọi bảng vàng của database_design_new và 6 tab db_* (vẫn không có cột kiểu dữ liệu), giữ nguyên vị trí ngang, chỉ đẩy xuống bảng nằm ngay dưới bảng dài thêm. Kết quả: 301 dòng ở tab tổng, 39–60 dòng mỗi tab module; không bảng nào chồng nhau; đường nối, bảng xám và các tab khác không đổi. Sao lưu: erd.backup-2026-11-18-keys-only.drawio. Chưa kiểm tra bằng hình."
+**Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — duyệt Code Generation
+**Timestamp**: 2026-11-18T14:44:22Z
+**Requested by:** Hải Nam
+**User Input**: "Continue to Next Stage"
+**AI Response**: "Ghi nhận duyệt Code Generation. Build and Test: dùng kết quả mvn -B verify (2572 test, 0 fail, 0 error, 1 skipped) đã chạy trên a4bd6934; thêm phần cách chạy lại vào 2026-11-18-u04-u13-u14-jdbc-results.md, thêm dòng vào build-and-test-summary.md, sửa ghi chú 'JPA validates the remaining U04/U13/U14 mappings' trong integration-test-instructions.md. Commit tài liệu cục bộ, không push. Hỏi: Build and test instructions complete. Ready to proceed to Operations stage?"
+**Context**: Code Generation đã duyệt; Build and Test hoàn tất, chờ duyệt chuyển Operations (placeholder).
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — duyệt Build and Test, Operations
+**Timestamp**: 2026-11-18T14:45:06Z
+**Requested by:** Hải Nam
+**User Input**: "Proceed to Operations"
+**AI Response**: "Ghi nhận duyệt Build and Test. Operations là placeholder: không có bước triển khai; không push, không tạo PR, không deploy. Đánh dấu workflow U04/U13/U14 JDBC hoàn tất trong aidlc-state.md và commit cục bộ."
+**Context**: Workflow U04/U13/U14 JPA → JDBC hoàn tất trên nhánh refactor/jdbc-u04-u13-u14 (chỉ commit cục bộ).
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — E2E và PR vào staging
+**Timestamp**: 2026-11-18T14:48:55Z
+**Requested by:** Hải Nam
+**User Input**: "chạy e2e sau đó mở pr vào staging"
+**AI Response**: "Dựng stack cô lập mới jdbc1118 (cổng nginx 39188, Mailpit 39125, Postgres 35534) với image backend build từ nhánh refactor/jdbc-u04-u13-u14; không đụng stack platform và conv041314. Chạy scripts/e2e/u04-u13-u14.mjs, ghi kết quả, rồi push nhánh và mở PR vào staging."
+**Context**: Sau Operations; người dùng cho phép push nhánh và tạo PR vào staging. Không merge, không deploy.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — E2E bị chặn bởi lỗi RabbitMQ trên staging
+**Timestamp**: 2026-11-18T15:07:19Z
+**Requested by:** Hải Nam
+**User Input**: "(không có input mới; tiếp tục yêu cầu chạy e2e rồi mở PR)"
+**AI Response**: "Stack cô lập jdbc1118 build từ nhánh lên đủ 8 service. E2E u04-u13-u14 dừng ở bước dựng fixture (0 pass, 1 fail): OTP kích hoạt admin không tới Mailpit. Worker báo 'The class edu.aiplatform.jobs.contract.JobMessage is not in the trusted packages: [java.util, java.lang]'. Nguyên nhân: commit staging 3ed52391 (nâng Spring Boot 3.5.6 → 3.5.16, spring-rabbit 3.2.12) khiến Jackson2JsonMessageConverter trong jobs/config/AmqpMessageConfig.java chỉ tin java.util/java.lang; mọi job qua RabbitMQ (OTP, email, AI, Drive, backup) không deserialize được. Không do thay đổi JDBC. Stack platform/conv041314 dùng image cũ nên không gặp. Chưa sửa (ngoài phạm vi ba unit), chưa mở PR; hỏi người dùng cách xử lý."
+**Context**: E2E bị chặn; chờ người dùng quyết định.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — hỏi về build lại Docker
+**Timestamp**: 2026-11-18T15:13:30Z
+**Requested by:** Hải Nam
+**User Input**: "build lại docker có thể giúp loại bỏ lỗi này không"
+**AI Response**: "Không. Image platform-backend:jdbc1118 vừa build mới từ mã hiện tại (2026-11-18T15:00Z) và chứa spring-boot 3.5.16, spring-amqp/spring-rabbit 3.2.12; build lại sẽ ra cùng jar. Image cũ platform-backend:local (2026-11-15) chứa spring-boot 3.5.6, spring-amqp 3.2.7 nên chạy được, nhưng không chứa code JDBC. Chỉ hết lỗi khi sửa converter (thêm trusted package) hoặc hạ phiên bản trong pom.xml; cả hai đều ngoài phạm vi ba unit. Vẫn chờ người dùng chọn."
+**Context**: Trả lời câu hỏi; không sửa mã, chưa mở PR.
+
+---
+## U04/U13/U14 chuyển JPA sang JDBC — chọn vá tạm, E2E đạt
+**Timestamp**: 2026-11-18T15:26:13Z
+**Requested by:** Hải Nam
+**User Input**: "Temporary local patch"
+**AI Response**: "Sửa tạm jobs/config/AmqpMessageConfig.java thành new Jackson2JsonMessageConverter(objectMapper, \"edu.aiplatform.jobs.contract\"), build lại image platform-backend:jdbc1118, tạo lại backend và worker. E2E u04-u13-u14: 40/40 pass, exit 0; log backend/worker không có ERROR hay lỗi trusted packages. Hoàn tác bản vá ngay sau đó (git checkout), backend không còn thay đổi. Ghi kết quả vào 2026-11-18-u04-u13-u14-jdbc-results.md, build-and-test-summary.md, aidlc-state.md; commit tài liệu, push nhánh và mở PR vào staging. Lỗi RabbitMQ của staging cần sửa riêng."
+**Context**: E2E hoàn tất; chuẩn bị PR.
+
+---
+## Rà soát quy ước mã nguồn 15 unit
+**Timestamp**: 2026-11-18T16:05:00Z
+**Requested by:** Quang Hung
+**User Input**: "check lại toàn bộ 15 unit xem đã viết code chuẩn theo coding convention chưa"
+**AI Response**: "Đối chiếu backend/frontend của 15 unit với construction/code-conventions.md bằng script quét và đọc tay từng điểm nghi vấn. Đạt: không còn JPA, interface đều có tiền tố I, dependency service đều có hậu tố Service, tên file khớp type, test đúng hậu tố. Vi phạm rõ: repository tiền tố Jdbc (U10, U11); code viết dồn nhiều lệnh/dòng ở các lớp MCP (U06, U07, U10); method chỉ là danh từ trong McpInput; get cho đọc nghiệp vụ (IAiTask, IAssignmentQuery, IQuizQuery). Chưa sửa mã."
+**Context**: Rà soát chỉ đọc; hỏi người dùng có sửa nhóm vi phạm rõ không.
+
+---
+## Áp dụng quy ước mã nguồn cho U06/U07/U10/U11
+**Timestamp**: 2026-11-18T16:39:49Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa nhóm rõ ràng"
+**AI Response**: "Đổi tên JdbcQuestionRepository, JdbcQuizRepository, JdbcQuizAiDraftRepository, JdbcQuizAttemptRepository và 3 integration test thành tên không tiền tố. McpInput: get/text/uuid/integer/version/choice/page/size thành readValue/readText/readUuid/readInteger/readVersion/readChoice/readPage/readSize; page(list) thành paginateItems; teaching/admin thành requireTeaching/requireAdmin; invalid thành createInvalidArguments. Contract Java: IAiTask.get thành loadTask, IAssignmentQuery.get thành loadAssignment, IQuizQuery.get thành loadQuiz, cập nhật mọi caller, stub và test. Xuống dòng/tách method cho McpInput, McpFingerprint, McpWriteRequestService, AdminAiMcpTools, McpAuthoringRequirementsTools, AssignmentMcpAuthoringService, AssignmentMcpQueryTools, QuizMcpAuthoringService, QuizMcpQueryTools, QuestionBankMcpTools; giữ nguyên tên MCP tool, schema, chuỗi và JSON. Build: test-compile thành công; 593 test liên quan (gồm ArchitectureTest và 3 integration test repository) 0 lỗi. Chưa chạy mvn verify toàn bộ, chưa commit."
+**Context**: Refactor tên/định dạng theo code-conventions; không đổi API HTTP, JSON, schema DB hay tên MCP tool.
+
+---
+## PR #105 — CI backend lỗi bước kiểm suite bắt buộc
+**Timestamp**: 2026-11-18T17:05:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check lỗi pr105"
+**AI Response**: "CI run 44351291168: mvn -B verify thành công; lỗi ở scripts/assert-required-backend-tests.ps1 vì manifest 2026-11-08-integration-test-cases.json còn tên suite cũ JdbcQuizAttemptRepositoryIntegrationTest (cùng JdbcQuestion/JdbcQuiz). Đổi 8 chỗ sang tên mới trong manifest trên worktree audit-staging; method trace giữ nguyên. Chưa commit, chưa push."
+**Context**: Sửa manifest truy vết cho PR #105; chờ người dùng cho phép commit/push.
+
+---
+## U03 — sửa RabbitMQ trusted packages
+**Timestamp**: 2026-11-18T17:12:00Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa lỗi RabbitMQ"
+**AI Response**: "Tạo nhánh fix/amqp-trusted-packages từ staging@2433c57b. AmqpMessageConfig dùng new Jackson2JsonMessageConverter(objectMapper, \"edu.aiplatform.jobs.contract\"), gói chứa JobMessage và DomainEvent. Thêm AmqpMessageConfigTest; khi bỏ bản sửa test báo đúng lỗi 'JobMessage is not in the trusted packages'. 116 test jobs/notifications pass. Chưa commit, chưa push."
+**Context**: Sửa lỗi ghi trong PR #106 trước khi deploy.
+
+---
+## Rà soát dự án theo góp ý của giảng viên (SWR/SWD, MCP)
+**Timestamp**: 2026-11-20T02:39:23Z
+**Requested by:** Quang Hung
+**User Input**: "<pasted_content>
+      2. Một số nôi dung 
+- Quy trình giảng viên giao bài tập, theo dõi tiến độ và đánh giá bài làm của sinh viên.   -> Khung chung là Syllabus trên flm của trường, có thể từng thầy/cô sẽ có phong cách giảng dạy để làm sao đảm bảo sinh viên hiểu được nội dung môn học. Với thầy thì thường xuyên sinh viên phải làm bài tập thực hành về nhà lên lớp trao đổi.
+- Các yêu cầu, tiêu chuẩn đối với tài liệu và sơ đồ trong các môn học SWR, SWD.  --> Chuẩn UML phương pháp thiết kế COMET (SWD392), môn SWR302 (Data flow diagram và UML)
+- Tiêu chí chấm điểm, nhận xét và phản hồi bài làm của sinh viên --> Cái này theo Syllabus tùy từng thầy/cô
+- Tính khả thi và mức độ phù hợp của hệ thống đối với quy trình giảng dạy thực tế. ? Hệ thống nào thầy chưa rõ em đang đề cập
+
+3. về tính năng MCP (Model Context Protocol) cái này khá đơn giản đề cấu hình, hiện nay do có sự hỗ trợ của AI việc hướng dẫn khá chi tiết, việc build một MCP không khó, vướng mắc là vấn đề là hạ tầng GPU local cho nó như thế nào?  Với đồ án thì hướng Cloud để PoC, giả sử chạy thật được thì vướng rất nhiều rào cản về chi phí và bảo trì...
+</pasted_content>
+
+ giúp tôi rà soát lại dự án theo góp ý"
+**AI Response**: "Rà soát chỉ đọc, không sửa code/tài liệu. Đối chiếu requirements.md, 2026-11-12-lecturer-interview-gap-analysis.md, DiagramType/DiagramXml, GradingPromptBuilder, AiProvider, FR-012/034/035, REL-005, docker-compose. Kết quả: (1) quy trình giao/theo dõi/chấm khớp tinh thần 'giáo viên giao bài tùy ý', không có liên kết Syllabus/FLM; (2) DiagramType chưa có DFD/communication/context, DFD rơi vào OTHER; chuẩn COMET mới chỉ nằm ở bộ sơ đồ báo cáo, chưa có trong app/rubric mẫu; (3) tiêu chí chấm do giảng viên đặt theo rubric, khớp góp ý; (4) chưa có mô tả hệ thống ngắn cho người ngoài; (5) MCP/AI chỉ gọi API cloud (GEMINI/OPENAI/CLAUDE), không có GPU local; rủi ro thật là chi phí token API chung và chưa có bảng ước tính chi phí."
+**Context**: Rà soát chỉ đọc; chưa có thay đổi nào cần duyệt. Đề xuất việc tiếp theo chờ người dùng/GVHD chọn.
+
+---
+## Đối chiếu Syllabus SWD392 và SWR302 với hệ thống
+**Timestamp**: 2026-11-20T02:46:23Z
+**Requested by:** Quang Hung
+**User Input**: "[Lược nội dung — người dùng dán toàn văn hai Syllabus FLM: SWD392 Software Architecture and Design (Syllabus ID 14179) và SWR302 Software Requirement (Syllabus ID 14176), gồm CLO, 60 session, assessment; không kèm câu lệnh riêng. Không chép nguyên văn vào audit vì dài.]"
+**AI Response**: "Rà soát chỉ đọc. Kết luận: Syllabus ủng hộ giữ D01 (progress test chính thức chạy trên LMS/in class); LAB SWR302 cần Context/Swimlane/State, DFD, nhưng DiagramXml.detectType gán Context/DFD thành OTHER và OTHER được tính bù cho loại còn thiếu (DocumentModelService:204-216); SWD392 yêu cầu khai báo AI và rubric AI 4 tiêu chí, làm được bằng skeleton + rubric, không cần code; vấn đáp/present cá nhân vẫn chưa có chỗ ghi; điểm danh ≥80% chưa có. Gap analysis 2026-11-12 lỗi thời một phần."
+**Context**: Rà soát chỉ đọc, không sửa code hay tài liệu khác; chờ người dùng chọn việc tiếp theo.
+
+---
+## Tổng hợp việc cần làm sau rà soát góp ý giảng viên và Syllabus
+**Timestamp**: 2026-11-20T02:48:44Z
+**Requested by:** Quang Hung
+**User Input**: "tóm lại từ đầu đến h trao đổi những việc cần làm là gì, để xuất"
+**AI Response**: "Tổng hợp danh sách việc theo 3 nhóm: tài liệu/trình bày (làm ngay), cấu hình không code (rubric mẫu, khai báo AI), chức năng cần GVHD duyệt (loại sơ đồ Context/DFD/Communication, ghi vấn đáp/present, thư viện mẫu rubric); đề xuất thứ tự thực hiện."
+**Context**: Tổng hợp chỉ đọc, không sửa code; chờ người dùng chọn việc.
+
+---
+## Cập nhật tài liệu theo góp ý giảng viên (mục 2, 3, 4, 5) và phân tích mục 8
+**Timestamp**: 2026-11-20T02:59:00Z
+**Requested by:** Quang Hung
+**User Input**: "2,3,4,5,8 giúp tôi cập nhật với cho tôi hỏi nếu sửa mục 8 thì có ảnh hưởng gì đến chức năng hành vi hiện tại ko"
+**AI Response**: "Tạo inception/requirements/2026-11-20-lecturer-feedback-syllabus.md (định vị, AS-IS theo Syllabus, giữ D01, MCP/AI/chi phí); sửa requirements.md §1, §2.3, §2.4, REL-005; thêm mục 0 trạng thái 2026-11-20 vào gap analysis 2026-11-12. Mục 8: tạo 2026-11-20-diagram-types.md (hành vi hiện tại, phương án A/B, ảnh hưởng) và 2026-11-20-diagram-types-questions.md (Q1–Q4). Ảnh hưởng chính: không migration; nhãn sơ đồ cũ có thể đổi (phương án A); đếm requiredDiagrams có thể đổi nhưng giao diện/MCP không đặt được giá trị này; frontend phải triển khai cùng backend; không rollback đơn giản sau khi đã lưu loại mới; quyết định 2026-10-22 bị đảo nếu chọn phương án B."
+**Context**: Requirements Analysis mục 8 đang chờ câu trả lời Q1–Q4 và GVHD duyệt; chưa sửa code. Cập nhật aidlc-state.md.
+
+---
+## Mục 8 loại sơ đồ — làm rõ phương án B
+**Timestamp**: 2026-11-20T03:04:05Z
+**Requested by:** Quang Hung
+**User Input**: "phương án b là người dùng k cần chọn loại diagram đko, hệ thống nhận diện theo cấu hình"
+**AI Response**: "Làm rõ: tự nhận diện không cho sửa là phương án A. Phương án B được viết lại thành: tự nhận diện như A, không bắt buộc chọn, có ô sửa tùy chọn khi đoán sai, loại đã sửa tay được giữ. B không còn đảo phần 'chèn không bắt buộc chọn loại' của quyết định 2026-10-22. Đã sửa 2026-11-20-diagram-types.md (bảng phương án, ảnh hưởng mục 1) và Q1 trong file câu hỏi."
+**Context**: Requirements Analysis mục 8, chờ trả lời Q1–Q4; chưa sửa code.
+
+---
+## Mục 8 loại sơ đồ — hỏi hướng hiện tại
+**Timestamp**: 2026-11-20T03:05:53Z
+**Requested by:** Quang Hung
+**User Input**: "hiện tại hệ thống đangl mà theo hướng nào"
+**AI Response**: "Hiện tại theo phương án A (chỉ tự nhận diện): frontend luôn chèn sơ đồ loại OTHER (types.ts:185), không có ô chọn/sửa loại; backend đoán loại mỗi lần lưu (DocumentModelService:665-674, quyết định 2026-10-22), không đoán được thì giữ OTHER."
+**Context**: Trả lời câu hỏi; không sửa code hay tài liệu khác.
+
+---
+## Mục 8 loại sơ đồ — liên quan chấm bài
+**Timestamp**: 2026-11-20T03:07:38Z
+**Requested by:** Quang Hung
+**User Input**: "phần này liên quan đến chám bài dko"
+**AI Response**: "Có liên quan gián tiếp: điểm tính theo rubric, không theo loại sơ đồ; loại sơ đồ chỉ là nhãn '[Sơ đồ <loại>]' đi kèm nội dung sơ đồ trong prompt AI chấm, phản hồi Practice và MCP, và là điều kiện đếm requiredDiagrams khi nộp. Phát hiện phụ: GradingPromptBuilder gửi XML sơ đồ rút gọn hai lần (toPlainText đã kèm compactDiagramXml, sau đó thêm lần nữa ở dòng 253-256)."
+**Context**: Trả lời câu hỏi; không sửa code.
+
+---
+## Mục 8 loại sơ đồ — AI tự nhận loại theo đề khi chấm
+**Timestamp**: 2026-11-20T03:10:54Z
+**Requested by:** Quang Hung
+**User Input**: "có cách nào cấu hình ai chấm theo từng loại bài chuẩn ko mà k thay đổi giao đề hiện tại ko, kiểu cái other diagram ai sẽ tự nhận diện đc theo như đề bài ấy"
+**AI Response**: "Có. Prompt chấm đã gửi đề (instructions), khung bài (skeleton), rubric và nội dung sơ đồ, nhưng chưa có subject code hay học liệu. Đề xuất: (1) thêm chỉ dẫn vào GradingPromptBuilder.buildGradingInstructions và prompt phản hồi Practice: nhãn loại là tự đoán, có thể OTHER hoặc sai; AI tự xác định loại sơ đồ từ đề, tiêu đề phần và rubric rồi áp ký pháp tương ứng; (2) chuẩn ký pháp theo môn (COMET/Wiegers) ghi trong rubric hoặc đề, không cần code; (3) thêm chỉ dẫn tương tự vào agent-skills/grade-with-rubric/SKILL.md cho kênh MCP; (4) sửa luôn lỗi gửi XML sơ đồ hai lần; (5) thêm bài mẫu DFD/Context vào bộ đánh giá để đo. Chưa sửa code; chờ người dùng đồng ý."
+**Context**: Requirements Analysis mục 8, phương án bổ sung không đổi giao diện giao đề.
+
+---
+## Kế hoạch cải thiện độ chính xác AI chấm bài
+**Timestamp**: 2026-11-20T03:15:30Z
+**Requested by:** Quang Hung
+**User Input**: "lập plan hoàn chỉnh để cải thiện độ chính xác AI chấm bài hiện tại"
+**AI Response**: "Tạo construction/plans/code-generation-plan/2026-11-20-ai-grading-accuracy.md: hiện trạng theo lần đánh giá 2026-11-15 (kappa 0,89; trích dẫn 14%; tự báo cần xem 0%; lạc đề chưa đo lại), nguyên nhân gốc R1–R9, 6 giai đoạn (0 mở rộng bộ đánh giá SWR302/SWD392 và đo mốc; 1 sửa dữ liệu gửi AI; 2 sửa chỉ dẫn chấm; 3 quy tắc báo cần xem phía server; 4 áp dụng cho Practice/MCP và đo lại 2 provider; 5 tùy chọn đổi giao diện), tiêu chí hoàn thành, rủi ro, chi phí và file dự kiến. Cập nhật aidlc-state.md."
+**Context**: Construction — Code Generation Part 1 (Planning) cho U09; chờ người dùng duyệt, chưa sửa code.
+
+---
+## Kế hoạch AI chấm — hỏi về key Gemini
+**Timestamp**: 2026-11-20T03:18:32Z
+**Requested by:** Quang Hung
+**User Input**: "Có cần tôi đưa api gemịn để chạy test ai ko"
+**AI Response**: "Chưa cần. Giai đoạn 1–3 chỉ cần test tự động và harness không gọi AI. Key chỉ cần cho các lần chạy live (0.4 đo mốc, 4.3–4.4 đo lại); đề xuất chạy mốc trên commit cũ và đo bản mới cùng một ngày. Không dán key vào chat; đặt vào file env ngoài repo hoặc biến môi trường AI_EVAL_API_KEY."
+**Context**: Trả lời câu hỏi; kế hoạch vẫn chờ duyệt.
+
+---
+## Kế hoạch AI chấm — duyệt làm giai đoạn 1–3
+**Timestamp**: 2026-11-20T03:19:38Z
+**Requested by:** Quang Hung
+**User Input**: "Ok vậy giúp tôi làm theo kế hoạch đề xúât"
+**AI Response**: "Bắt đầu Code Generation Part 2 cho giai đoạn 1–3 của 2026-11-20-ai-grading-accuracy.md (không cần key, không gọi AI). Giai đoạn 0, 4, 5 chưa làm."
+**Context**: Construction — U09 Code Generation, người dùng duyệt phương án làm giai đoạn 1–3 trước.
+
+---
+## Kế hoạch AI chấm — hoàn thành giai đoạn 1–3
+**Timestamp**: 2026-11-20T03:27:26Z
+**Requested by:** Quang Hung
+**User Input**: "Ok vậy giúp tôi làm theo kế hoạch đề xúât"
+**AI Response**: "Sửa DocumentModelService/IDocumentModel (toPlainTextWithBlockIds), AssignmentsContractStubs, GradingPromptBuilder (văn bản có mã block, bỏ gửi sơ đồ lần hai, chỉ dẫn mới), GradingProposalNormalizer (mã block sai thành null), DiagramXml (hình chữ nhật, quan hệ 'trong' theo cha và tọa độ). Test: 86/86 liên quan, 755 unit test của assignments/assignmentwork/grading/groupdocs/ai đạt, 8 bỏ qua. 3.1 đổi sang chỉ dẫn prompt thay cho quy tắc server. Chưa chạy integration test (Docker tắt) và chưa gọi AI thật."
+**Context**: Construction — U09 Code Generation Part 2, giai đoạn 1–3; giai đoạn 0, 4, 5 chưa làm. Chưa commit.
+
+---
+## Kế hoạch AI chấm — hỏi chỗ đặt key
+**Timestamp**: 2026-11-20T04:57:36Z
+**Requested by:** Quang Hung
+**User Input**: "để vào chỗ nào trong env"
+**AI Response**: "Hướng dẫn tạo file C:\Users\Quang Hung\.ai-eval.env ngoài repo với AI_EVAL_PROVIDER, AI_EVAL_MODEL, AI_EVAL_API_KEY, AI_EVAL_RUNS; không dán key vào chat."
+**Context**: Trả lời câu hỏi; chưa chạy đánh giá.
+
+---
+## Kế hoạch AI chấm — tạo file env mẫu
+**Timestamp**: 2026-11-20T04:58:24Z
+**Requested by:** Quang Hung
+**User Input**: "b tạo sẵn cho tôi đău tôi đg dẫn để tôi cho vào"
+**AI Response**: "Tạo C:\Users\Quang Hung\.ai-eval.env (ngoài repo) với giá trị giữ chỗ DAN_KEY_GEMINI_VAO_DAY; người dùng tự thay key."
+**Context**: Chuẩn bị chạy đánh giá AI thật; chưa chạy.
+
+---
+## Kế hoạch AI chấm — đổi model đánh giá
+**Timestamp**: 2026-11-20T04:59:06Z
+**Requested by:** Quang Hung
+**User Input**: "đổi thành model 3.5 flash lite được k"
+**AI Response**: "Đổi dòng AI_EVAL_MODEL trong ~/.ai-eval.env thành gemini-3.5-flash-lite bằng sed, không đọc các dòng khác (key). Lưu ý: số liệu cũ đo bằng gemini-2.5-flash nên phải đo mốc lại bằng cùng model; thinkingBudget với Gemini 3.5 chưa kiểm."
+**Context**: Chuẩn bị chạy đánh giá; chưa chạy.
+
+---
+## Kế hoạch AI chấm — chạy đánh giá AI thật
+**Timestamp**: 2026-11-20T05:00:55Z
+**Requested by:** Quang Hung
+**User Input**: "tôi điền rồi, giúp tôi chạy test AI"
+**AI Response**: "Chạy GradingAiEvaluationTest live với key trong ~/.ai-eval.env (không đọc/in key): thử 1 bài trước, sau đó đo bản mới và bản cũ 7d51a16f cùng model gemini-3.5-flash-lite."
+**Context**: Construction — U09, giai đoạn 4.3 (đo lại) và mốc 0.4 trên bộ badminton-booking.
+
+---
+## Kế hoạch AI chấm — kết quả đo live
+**Timestamp**: 2026-11-20T05:12:51Z
+**Requested by:** Quang Hung
+**User Input**: "xomg chưa"
+**AI Response**: "Đo live gemini-3.5-flash-lite, badminton-booking 8×3, bản cũ 7d51a16f và bản mới. Cũ 9,48 (22/24 hợp lệ, kappa 0,84); mới 9,35 (19/24, kappa 0,80). Trích dẫn và lạc đề 100% ở cả hai. Bài 08 tụt ở bản mới (AI chép dòng [block …] làm bằng chứng và cho đủ điểm); bài 04 sai ở cả hai. Ghi kết quả vào construction/build-and-test/2026-11-20-ai-grading-accuracy-results.md; đề xuất sửa G1 và chạy lại 3 bài."
+**Context**: Construction — U09 giai đoạn 4.3 (một phần). Chờ người dùng chọn.
+
+---
+## Kế hoạch AI chấm — sửa G1 và chạy lại
+**Timestamp**: 2026-11-20T05:58:04Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi sửa lại"
+**AI Response**: "Sửa G1 trong GradingPromptBuilder: bằng chứng phải là nhận xét đối chiếu với đề/rubric, không chép dòng [block …] hay dòng tóm tắt sơ đồ. Chạy lại bài 04, 06, 08 cho bản cũ và bản mới."
+**Context**: Construction — U09, sửa sau đo live.
+
+---
+## Kế hoạch AI chấm — kết quả chạy lại sau G1
+**Timestamp**: 2026-11-20T06:04:33Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi sửa lại"
+**AI Response**: "Chạy lại 04/06/08 × 3 cho hai bản. Bài 08 bản mới về 2,75 (đúng như bản cũ) ở lần hợp lệ; 04 sai ở cả hai. Phát hiện G3: Gemini 3.5 dùng 3.054–3.291 token suy nghĩ dù thinkingBudget 1.739, chạm trần 6.956 → MAX_TOKENS (CHARGED_200) 3/9 ở bản mới. Ghi vào 2026-11-20-ai-grading-accuracy-results.md mục 4; đề xuất cách sửa G3 chờ duyệt."
+**Context**: Construction — U09; chờ người dùng chọn cách sửa G3.
+
+---
+## Kế hoạch AI chấm — thiết kế dùng nhiều model linh hoạt
+**Timestamp**: 2026-11-20T07:13:24Z
+**Requested by:** Quang Hung
+**User Input**: "nhỡ tôi đổi model khác như dùng claude hay chat gpt thì sao, tôi muốn b thiết kế tnao mà dùng model khác nhau linh hoạt được"
+**AI Response**: "Đối chiếu HttpProviderGateway: Gemini và OpenAI tính token suy nghĩ chung trần đầu ra (OpenAI chưa gửi mức suy nghĩ), Claude không bật suy nghĩ. Ghi thiết kế G3 vào mục 8 của plan: cấu hình reasoning-models/reasoning-effort/reasoning-reserve-tokens theo provider, adapter dịch sang tham số gốc, trần = câu trả lời + reserve, quota theo trần thực, kiểm bằng lời gọi thử từng provider. Chờ duyệt."
+**Context**: Construction — U06/U09 thiết kế; chưa sửa code.
+
+---
+## Kế hoạch AI chấm — chỉ có key Gemini
+**Timestamp**: 2026-11-20T07:17:32Z
+**Requested by:** Quang Hung
+**User Input**: "nma hiện tại tôi chỉ có api cho gemini thôi"
+**AI Response**: "Vẫn làm thiết kế chung; chỉ Gemini được kiểm bằng gọi thật. OpenAI/Claude kiểm bằng unit test hình dạng request; mặc định an toàn cho provider chưa kiểm: chỉ cộng reasoning-reserve-tokens, không gửi tham số suy nghĩ gốc cho đến khi có key để thử. Chờ duyệt."
+**Context**: Construction — thiết kế G3 (mục 8 plan).
+
+---
+## Kế hoạch AI chấm — vì sao gửi tham số suy nghĩ cho Gemini
+**Timestamp**: 2026-11-20T07:19:59Z
+**Requested by:** Quang Hung
+**User Input**: "tại sao gemini lại cần gửi tham số suy nghĩ"
+**AI Response**: "Giải thích: Gemini có suy nghĩ tự quyết lượng suy nghĩ, tính chung trần đầu ra và tính tiền; tham số giúp giới hạn để không chạm trần và bớt chi phí. Không bắt buộc: có thể chỉ chừa token, đổi lại tốn hơn và không có trần chắc chắn. Đề xuất đo cả hai cách bằng bài 04/06/08."
+**Context**: Trả lời câu hỏi; thiết kế G3 chờ duyệt.
+
+---
+## Kế hoạch AI chấm — duyệt làm G3
+**Timestamp**: 2026-11-20T09:36:24Z
+**Requested by:** Quang Hung
+**User Input**: "ok làm theo kế hoạch"
+**AI Response**: "Làm mục 8 (G3): cấu hình reasoning theo provider, trần = trả lời + reserve, tham số gốc theo hãng; đo trên Gemini hai cách (chỉ reserve / reserve + low) bằng bài 04/06/08."
+**Context**: Construction — U06/U09 Code Generation.
+
+---
+## Kế hoạch AI chấm — G3 đã cài, đang đo
+**Timestamp**: 2026-11-20T09:41:54Z
+**Requested by:** Quang Hung
+**User Input**: "ok làm theo kế hoạch"
+**AI Response**: "Cài G3 theo mục 8 plan (cấu hình reasoning theo provider, trần qua ProviderCatalog.resolveOutputCap, tham số gốc theo hãng, yml). 926 unit test đạt. Gemini 3.5 nhận thinkingLevel=low. Đang đo A/B trên 04/06/08."
+**Context**: Construction — U06/U09 Code Generation G3.
+
+---
+## Kế hoạch AI chấm — kết quả đo G3
+**Timestamp**: 2026-11-20T09:45:50Z
+**Requested by:** Quang Hung
+**User Input**: "ok làm theo kế hoạch"
+**AI Response**: "Đo A (chỉ chừa) và B (chừa + low) trên 04/06/08 × 3 với gemini-3.5-flash-lite: không có token suy nghĩ ở cả hai; A 0 lần bị cắt, B 1 lần. Quy tắc cũ gửi thinkingBudget đã bật suy nghĩ gây MAX_TOKENS. Đặt mặc định U06_GEMINI_REASONING_EFFORT trống. Phát hiện G4 (điểm >2 chữ số thập phân làm hỏng đề xuất). Ghi mục 5 file kết quả."
+**Context**: Construction — U06/U09 G3 hoàn thành phần Gemini.
+
+---
+## Kế hoạch AI chấm — làm G4, G2
+**Timestamp**: 2026-11-21T04:17:35Z
+**Requested by:** Quang Hung
+**User Input**: "làm tiếp g4, g2"
+**AI Response**: "Bắt đầu G4 (làm tròn điểm mục trong khoảng hợp lệ) và G2 (phân biệt nét liền/nét đứt cho cạnh có stereotype)."
+**Context**: Construction — U07/U09.
+
+---
+## Kế hoạch AI chấm — G4, G2 hoàn thành
+**Timestamp**: 2026-11-21T04:26:52Z
+**Requested by:** Quang Hung
+**User Input**: "làm tiếp g4, g2"
+**AI Response**: "G4: làm tròn điểm mục trong 0..max (GradingProposalNormalizer), cập nhật BR-U09-32, sửa test cũ. G2: '(nét liền)' cho cạnh stereotype không nét đứt + chỉ dẫn. 928 unit test đạt. Live 04/06 × 3: bài 04 về 3,75 (trước 4,00), 06 không lỗi định dạng; replay 06 từ bản ghi cũ: hết INVALID_AI_PROPOSAL. Ghi mục 6 file kết quả."
+**Context**: Construction — U07/U09. Chưa commit.
+
+---
+## Kế hoạch AI chấm — chạy lại cả bộ
+**Timestamp**: 2026-11-21T04:39:37Z
+**Requested by:** Quang Hung
+**User Input**: "ok"
+**AI Response**: "Hiểu là đồng ý chạy lại cả bộ 8 bài × 3 với cấu hình mặc định mới (Gemini không gửi tham số suy nghĩ, chừa 4.096). Chưa commit."
+**Context**: Construction — U09 giai đoạn 4.3.
+
+---
+## Kế hoạch AI chấm — kết quả cả bộ sau G1–G4
+**Timestamp**: 2026-11-21T04:43:23Z
+**Requested by:** Quang Hung
+**User Input**: "ok"
+**AI Response**: "Cả bộ 8×3: 17/24 hợp lệ (6 lỗi 503, 1 bị cắt), 9,46/10, sai số điểm 2,3% (cũ 4,1%), bài lệch ≤10% 88,2%, kappa 0,84; bài 04 về đúng 3,75. Phát hiện G5 (bài chèn lệnh sinh 11.034 token bị cắt) và G6 (cho điểm nét đứt khi không có include/extend). Ghi mục 7 file kết quả."
+**Context**: Construction — U09 giai đoạn 4.3 (badminton-booking). Chưa commit.
+
+---
+## Kế hoạch AI chấm — xin đề xuất sửa G5, G6
+**Timestamp**: 2026-11-21T04:46:23Z
+**Requested by:** Quang Hung
+**User Input**: "đưa tôi đề xuất sửa"
+**AI Response**: "Đưa đề xuất sửa G5 (viết lan man bị cắt) và G6 (cho điểm tính chất của thành phần vắng); chưa sửa code."
+**Context**: Construction — U09; chờ duyệt.
+
+---
+## Kế hoạch AI chấm — sửa G6 và G5 bước 1
+**Timestamp**: 2026-11-21T05:03:28Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa"
+**AI Response**: "Sửa G6 (mục về tính chất của thành phần vắng được 0) và G5 bước 1 (hướng dẫn độ dài trong prompt); kiểm 08/06 × 3 và 06 × 5."
+**Context**: Construction — U09.
+
+---
+## Kế hoạch AI chấm — kết quả thử G6, G5
+**Timestamp**: 2026-11-21T05:07:11Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa"
+**AI Response**: "Thêm hai chỉ dẫn prompt (G6, G5 bước 1), 251 test U09 đạt. Live: bài 08 đúng (1 lần hợp lệ); bài 06 vẫn cho d-dashed 0,25 cả 4 lần (rubric ghi 'vẽ nét liền không được điểm' nên AI hiểu bài không vẽ nét liền thì không trừ) và 1/5 lần vẫn bị cắt 11.036 token. Không sửa bộ dữ liệu. Ghi mục 8 file kết quả; đề xuất bước tiếp chờ duyệt."
+**Context**: Construction — U09.
+
+---
+## Kế hoạch AI chấm — duyệt đề xuất sau G5/G6
+**Timestamp**: 2026-11-21T05:08:58Z
+**Requested by:** Quang Hung
+**User Input**: "ok tôi duyệt đề xuất"
+**AI Response**: "Làm: giữ câu G6, bỏ câu độ dài G5; bộ đánh giá lưu phần chữ khi bị cắt để chẩn đoán G5; cảnh báo khi soạn rubric (tiêu chí chỉ nêu trường hợp bị trừ). Rubric mẫu cho môn cần app đang chạy (Docker tắt) nên để lại."
+**Context**: Construction — U07/U09.
+
+---
+## Kế hoạch AI chấm — làm theo đề xuất sau G5/G6
+**Timestamp**: 2026-11-21T05:14:11Z
+**Requested by:** Quang Hung
+**User Input**: "ok tôi duyệt đề xuất"
+**AI Response**: "Giữ chỉ dẫn G6, bỏ chỉ dẫn độ dài G5. OutputLimitException mang phần chữ đã nhận; bộ đánh giá lưu run-N.partial.txt. RubricEditor hiện gợi ý (role=note) khi tiêu chí chỉ nêu trường hợp bị trừ, i18n vi/en/ja. Backend 496, frontend 149 test đạt, eslint không lỗi. Live 06 × 5: 3 lỗi 503, 2 lần 1,00, không bị cắt nên chưa chẩn đoán được G5. Rubric mẫu chưa làm (cần app chạy)."
+**Context**: Construction — U06/U07/U09. Chưa commit.
+
+---
+## Bỏ tiếng Nhật khỏi hệ thống
+**Timestamp**: 2026-11-21T05:18:38Z
+**Requested by:** Quang Hung
+**User Input**: "mà khoan giúp tôi bỏ tiếng nhật ra khỏi hệ thống"
+**AI Response**: "Tạm dừng commit; khảo sát mọi chỗ dùng locale ja trước khi sửa."
+**Context**: Yêu cầu mới (frontend i18n), chen trước việc commit.
+
+---
+## Bỏ tiếng Nhật — xác nhận phạm vi
+**Timestamp**: 2026-11-21T05:22:46Z
+**Requested by:** Quang Hung
+**User Input**: "bỏ cả ngôn ngữ giao diện lẫn tạo bài bằng tiếng nhật , chỗ nào có tieensg nhật thì bỏ"
+**AI Response**: "Bỏ locale ja (locales.ts, msg.ts, ja.json, test) và lựa chọn JA khi AI soạn đề (validation, prompt, kiểu frontend, test); quét toàn repo tìm chỗ còn sót, giữ nguyên tài liệu lịch sử."
+**Context**: Yêu cầu bỏ tiếng Nhật.
+
+---
+## Bỏ tiếng Nhật — hoàn thành
+**Timestamp**: 2026-11-21T05:23:43Z
+**Requested by:** Quang Hung
+**User Input**: "bỏ cả ngôn ngữ giao diện lẫn tạo bài bằng tiếng nhật , chỗ nào có tieensg nhật thì bỏ"
+**AI Response**: "Bỏ locale ja và ja.json, lựa chọn JA khi AI soạn đề (frontend, backend validation và prompt), sửa test; cập nhật README, requirements, current-code-baseline. Frontend 1.161 test, backend assignments 166 test đạt. Giữ chữ tiếng Trung trong test dịch. Hỏi về con dấu 学 (HankoMark)."
+**Context**: Thay đổi frontend i18n và U07; chưa commit.
+
+---
+## Bỏ tiếng Trung trong test
+**Timestamp**: 2026-11-21T06:12:34Z
+**Requested by:** Quang Hung
+**User Input**: "Sao lại có tiếng trung bỏ đi"
+**AI Response**: "Giải thích chữ Hán chỉ là dữ liệu mẫu trong AssignmentAiRevisionTest; thay bằng dữ liệu tiếng Việt, giữ nguyên ý nghĩa test."
+**Context**: Dọn dữ liệu test; tiếp nối yêu cầu bỏ tiếng Nhật.
+
+---
+## Bỏ tiếng Trung trong test — hoàn thành
+**Timestamp**: 2026-11-21T06:13:14Z
+**Requested by:** Quang Hung
+**User Input**: "Sao lại có tiếng trung bỏ đi"
+**AI Response**: "Thay chữ Hán trong AssignmentAiRevisionTest bằng câu tiếng Việt cùng nghĩa, đổi chineseSkeleton thành vietnameseSkeleton. Quét lại repo: chỉ còn chữ 学 của con dấu HankoMark (chờ quyết)."
+**Context**: Dọn dữ liệu test; chưa commit.
+
+---
+## Bỏ con dấu 学 (HankoMark)
+**Timestamp**: 2026-11-21T06:14:11Z
+**Requested by:** Quang Hung
+**User Input**: "Bỏ luôn đi"
+**AI Response**: "Xóa HankoMark khỏi Logo.tsx và màn đăng nhập AuthLayout, chỉnh chú thích, chạy test."
+**Context**: Tiếp nối bỏ tiếng Nhật/Trung.
+
+---
+## Bỏ con dấu 学 — hoàn thành
+**Timestamp**: 2026-11-21T06:14:53Z
+**Requested by:** Quang Hung
+**User Input**: "Bỏ luôn đi"
+**AI Response**: "Xóa HankoMark trong Logo.tsx và khối trang trí trong AuthLayout, sửa chú thích. Quét repo: không còn chữ Nhật/Hán trong mã và tài liệu hiện hành. 202 test frontend identity/shared đạt, eslint không lỗi. Chưa xem trên trình duyệt."
+**Context**: Frontend U01; chưa commit.
+
+---
+## Commit theo nhóm, chưa push
+**Timestamp**: 2026-11-21T06:17:13Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi chia commit rõ ràng chưa push"
+**AI Response**: "Tách 5 commit trên audit-staging: (1) AI chấm: prompt, tóm tắt sơ đồ, chuẩn hóa đề xuất; (2) cấu hình suy nghĩ theo provider và bộ đánh giá; (3) gợi ý rubric chỉ nêu trường hợp bị trừ; (4) bỏ tiếng Nhật và tiếng Trung; (5) tài liệu AI-DLC. Không push, không thêm Co-Authored-By."
+**Context**: Giao nhận local.
+
+---
+## Commit theo nhóm — kết quả
+**Timestamp**: 2026-11-21T06:17:45Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi chia commit rõ ràng chưa push"
+**AI Response**: "Đã tạo d8f69175 (grading), 43857601 (ai reasoning), 3aa94c57 (rubric hint), fc8ec0cf (bỏ tiếng Nhật/Trung); commit tài liệu AI-DLC là commit cuối. Không push."
+**Context**: Giao nhận local trên audit-staging.
+
+---
+
+## Ưu tiên rubric và kiểm bằng chứng khi chấm AI
+**Timestamp**: 2026-11-21T07:43:57Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa heo đề xuất tốt nhất để đảm bảo độ chính xác ai tin cậy nhất"
+**AI Response**: "Tiếp tục kế hoạch độ chính xác U09. Cập nhật prompt cho điểm tối đa theo điều kiện bắt buộc, tôn trọng điều kiện tùy chọn và chuyển cách tính điểm mơ hồ cho giảng viên xem. Đánh dấu bằng chứng dẫn sai phần trong đề xuất provider và MCP, giữ điểm đề xuất và hỗ trợ gửi lại cùng mã yêu cầu. Bổ sung ca hồi quy và chạy lại bộ đánh giá."
+**Context**: Tiếp nối audit U09 tại 97be9a3f và phép đo Gemini theo hai rubric. Phạm vi gồm prompt, xử lý đề xuất và kiểm thử.
+
+---
+
+## Ưu tiên rubric và kiểm bằng chứng khi chấm AI — kiểm chứng
+**Timestamp**: 2026-11-21T07:48:04Z
+**Requested by:** Quang Hung
+**User Input**: "Sửa heo đề xuất tốt nhất để đảm bảo độ chính xác ai tin cậy nhất"
+**AI Response**: "Đã cập nhật code và quy tắc BR-U09-31/32. Ba ca hồi quy qua sau sửa. Toàn bộ backend chạy 2.582 test, 2.581 đạt và một test backup lỗi mã hóa ký tự mặc định trên Windows. Chạy riêng backup với UTF-8 đạt 11/11. Giao diện duyệt điểm đạt 71/71. Replay 24 phản hồi giữ nguyên kết quả điểm."
+**Context**: Backend Java 17, PostgreSQL cục bộ. Lượt Java 21 đầu bị giới hạn bộ nhớ phân trang. Phiên Gemini kiểm chứng prompt mới đang chờ khóa.
+
+---
+
+## Rà soát actor phụ trong đề xuất AI
+**Timestamp**: 2026-11-21T08:12:25Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi giải quyết nối cái actor phụ"
+**AI Response**: "Tiếp tục kế hoạch độ chính xác U09. Làm rõ quy tắc actor phụ trong prompt và đối chiếu tiêu chí có danh sách actor bắt buộc với bảng đặc tả. Nếu AI đề xuất tối đa dù danh sách thiếu, yêu cầu giảng viên xem trước khi chốt. Xác minh bằng ca hồi quy và phản hồi Gemini đã lưu."
+**Context**: Nhánh audit-staging, tiếp nối so sánh Gemini trên bài 08. Security và Resiliency giữ phạm vi hiện hành. Property-Based Testing tắt.
+
+---
+
+## Rà soát actor phụ trong đề xuất AI — kiểm chứng
+**Timestamp**: 2026-11-21T08:26:10Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi giải quyết nối cái actor phụ"
+**AI Response**: "Đã sửa prompt và kiểm tra danh sách bắt buộc trong rubric với bảng đặc tả cho provider và MCP. Phát lại 10 phản hồi Gemini hợp lệ, gắn cờ cả 5 lượt đề xuất điểm tối đa sai actor phụ. 96 ca grading đạt trên mã cuối. Bộ test toàn backend trước tinh chỉnh rubric ví dụ có 2.583 ca đạt, một bỏ qua và một ca p95 U04_SCOPE trượt, ca đó đạt khi chạy lại cùng nhóm grading."
+**Context**: Bản ghi Gemini thuộc phép đo trước. Chưa đo prompt mới qua API, chưa khởi động lại backend Orca. Security và Resiliency giữ phạm vi hiện hành, Property-Based Testing tắt.
+
+---
+
+## U09 — sửa phục hồi yêu cầu chấm AI
+**Timestamp**: 2026-11-21T08:56:05Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi fix grading trước"
+**AI Response**: "Triển khai phần grading của kế hoạch SEP490. Tái hiện đề xuất không gắn tác vụ, sửa phục hồi cùng requestRef và giữ mã yêu cầu khi trình duyệt mất phản hồi. Dùng Orca cho frontend và QA độc lập. Tiếp tục nghiệp vụ quyền, duyệt điểm, API và MCP hiện hành."
+**Context**: audit-staging có thay đổi U09 từ lượt trước. Môi trường kiểm thử dùng dữ liệu tổng hợp. Security và Resiliency giữ phạm vi hiện hành, Property-Based Testing tắt.
+
+---
+
+## U09 — phục hồi yêu cầu chấm AI — kiểm chứng
+**Timestamp**: 2026-11-21T09:12:37Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi fix grading trước"
+**AI Response**: "Gửi lại cùng mã khôi phục đề xuất PENDING chưa gắn task. Hai lượt đồng thời trên PostgreSQL/RabbitMQ dùng một proposal, một task, một khoản giữ quota và một message. Kiểm chứng rollback, snapshot hết hiệu lực và từ chối payload MCP sai định dạng. Giao diện chấm lẻ và theo lô giữ mã trong cùng màn hình sau lỗi mạng hoặc 5xx. Backend 157 test, frontend grading 223 test, TypeScript và ESLint đạt. Worker Orca báo 1.171 test frontend đạt khi chạy toàn bộ với 4 worker."
+**Context**: QA Orca độc lập rà soát trước và sau sửa. Ca tái hiện service, QA và frontend thất bại đúng hành vi trước sửa. Test dùng dữ liệu tổng hợp. Chưa chạy trình duyệt trên stack cô lập, gọi provider thật, commit hay deploy.
+
+---
+
+## U09 — lỗi định dạng phản hồi grading
+**Timestamp**: 2026-11-21T09:20:31Z
+**Requested by:** Quang Hung
+**User Input**: "sửa lỗi dữ liệu sai định dạng"
+**AI Response**: "Tái hiện lỗi schema provider chặn minh chứng hoặc lý do duyệt null và một số trường nullable bị bỏ qua. Điều chỉnh cửa kiểm tra để chuẩn hóa đúng metadata thiếu, đưa mục cần giảng viên xem, giữ kiểm kiểu và validator điểm, rubric, MCP hiện có."
+**Context**: Test tổng hợp dùng pipeline grading thật. Tiếp nối thay đổi U09 đang có trong audit-staging.
+
+---
+
+## U09 — lỗi định dạng phản hồi grading — kiểm chứng
+**Timestamp**: 2026-11-21T09:21:41Z
+**Requested by:** Quang Hung
+**User Input**: "sửa lỗi dữ liệu sai định dạng"
+**AI Response**: "Năm ca hồi quy thiếu trường nhận xét thất bại trước sửa và đạt sau sửa. Ca minh chứng sai kiểu vẫn bị từ chối. Có 255 test liên quan đạt và một test replay tùy chọn chạy riêng đạt. 17 phản hồi Gemini từ 24 lượt ghi qua kiểm định dạng, sáu lượt 503 và một lượt CHARGED_200 trong bản ghi."
+**Context**: Bản ghi cũ, chưa gọi provider thật hoặc khởi động lại backend Orca.
+
+---
+
+## U09 — chạy lại hồi quy định dạng chấm AI
+**Timestamp**: 2026-11-21T09:55:19Z
+**Requested by:** Quang Hung
+**User Input**: "$poteto-mode Kiểm tra luồng chấm điểm AI. Với rubric và bài nộp mẫu cố định, tái hiện lỗi trước khi sửa và chạy test hồi quy để xác nhận lỗi đã hết"
+**AI Response**: "Dùng rubric 13 mục và bài tổng hợp 01-complete. Chạy sáu ca giống nhau trên hai bản sao chỉ khác schema đầu ra provider và chuẩn hóa nhận xét. Trước sửa, năm ca báo INVALID_OUTPUT vì trường thiếu hoặc null. Bản hiện tại đạt sáu ca, gồm ca từ chối minh chứng sai kiểu. Backend đạt 359 ca, frontend grading đạt 223 ca. Phát lại 24 lần ghi Gemini, 17 phản hồi qua kiểm định dạng và 7 lỗi provider có sẵn trong bản ghi."
+**Context**: Xác minh bản sửa đã có trong audit-staging. PostgreSQL, Redis và RabbitMQ chạy bằng Testcontainers với dữ liệu tổng hợp. Đã thêm script tạo role PostgreSQL của repo vào bản sao sau khi test báo thiếu. Chưa gọi Gemini mới hoặc chạy trình duyệt. Security và Resiliency giữ phạm vi đã duyệt. Property-Based Testing tắt.
+
+---
+
+## U09 — chạy lại chấm Gemini trực tiếp
+**Timestamp**: 2026-11-21T10:00:17Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi chạy lại luồng gemini"
+**AI Response**: "Chuẩn bị chạy HttpProviderGateway của backend đang kiểm chứng với Gemini 3.5 Flash Lite trên bài tổng hợp 01-complete, rubric 13 mục, ba lần. Orca hiển thị ô nhập khóa thử nghiệm ẩn ký tự."
+**Context**: Đối chiếu dữ liệu mẫu của ca hồi quy định dạng. Dùng bản sao có nội dung backend và pom.xml khớp với audit-staging.
+
+---
+
+## U09 — kết quả chấm Gemini trực tiếp
+**Timestamp**: 2026-11-21T10:03:59Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi chạy lại luồng gemini"
+**AI Response**: "Gemini 3.5 Flash Lite nhận ba lượt chấm bài tổng hợp 01-complete. Lượt 1 và 2 trả HTTP 503. Lượt 3 chấm 4,00/4,00, qua kiểm tra định dạng, có đủ 13 mục và không có mục cần giảng viên kiểm tra."
+**Context**: Đọc kết quả từng lượt từ results.json. Bằng chứng phiên này nằm dưới backend/target/gemini-rerun-1795255085378. Chạy trực tiếp qua pipeline backend cô lập. Chưa xác minh trên trình duyệt hoặc đo được độ ổn định của điểm giữa nhiều phản hồi hợp lệ.
+
+---
+
+## U09 — tách commit grading
+**Timestamp**: 2026-11-21T10:06:57Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi commit chưa push"
+**AI Response**: "Tách thay đổi xử lý phản hồi AI, khôi phục yêu cầu chấm bị gián đoạn và hồ sơ AI-DLC thành các commit cục bộ."
+**Context**: Chi nhánh audit-staging. Không push.
+
+---
+
+## U09 — chuẩn bị PR vào staging
+**Timestamp**: 2026-11-21T10:11:07Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi push và tạo pr lên staging"
+**AI Response**: "Nhập staging vào audit-staging để giữ bản sửa RabbitMQ đã có ở nhánh đích. Giải quyết phần nhật ký bằng cách giữ các mục riêng từ hai nhánh. Chuẩn bị push audit-staging và mở PR vào staging."
+**Context**: Giao nhận thay đổi grading và các commit đang chờ trên audit-staging.
+
+---
+
+## Sửa tuần tự phát hiện audit mã nguồn
+**Timestamp**: 2026-11-21T11:14:39Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp rôi sửa và test lần luợt các lỗi"
+**AI Response**: "Thực hiện theo thứ tự báo cáo audit đã duyệt. Mỗi lỗi được tái hiện và kiểm lại trước khi đánh dấu hoàn tất."
+**Context**: audit-staging tại 91d593be. Kế hoạch 2026-11-21-audit-remediation.md. Security và Resiliency giữ phạm vi hiện hành. Property-Based Testing tắt.
+
+---
+
+## Sửa tuần tự phát hiện audit mã nguồn — kiểm chứng
+**Timestamp**: 2026-11-21T11:47:42Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp rôi sửa và test lần luợt các lỗi"
+**AI Response**: "Đã ghép và kiểm 19 mục. Mỗi mục có tái hiện trước sửa và kiểm lại. Bản ghép đạt 249 test backend được chọn, 1.186 test frontend, ESLint, TypeScript, 17 ca deploy và 3 ca restore giả lập."
+**Context**: Dữ liệu tổng hợp. Test tích hợp chạy PostgreSQL, Redis và RabbitMQ cô lập. Nháp toàn môn chỉ chuyển khi đích hợp lệ duy nhất và giữ nguyên biên nhận cũ. Có migration Flyway cho lịch dọn tệp, vẫn đọc lịch Redis cũ. Chưa commit, push, deploy, gọi provider thật hoặc chạy E2E trình duyệt.
+
+---
+
+## U09 — kiểm tra Gemini sau sửa audit
+**Timestamp**: 2026-11-21T11:54:04Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi test gemini"
+**AI Response**: "Chuẩn bị gọi Gemini 3.5 Flash Lite qua pipeline backend đã ghép 19 bản sửa. Dùng dữ liệu tổng hợp 01-complete và 08-wrong-actors, mỗi bài ba lượt."
+**Context**: Bản sao đã qua test tích hợp khớp với mã backend hiện tại. Orca hiển thị ô nhập khóa thử nghiệm ẩn ký tự.
+
+---
+
+## U09 — kết quả Gemini sau sửa audit
+**Timestamp**: 2026-11-21T11:58:15Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi test gemini"
+**AI Response**: "Gemini 3.5 Flash Lite trả đủ sáu phản hồi hợp lệ trên hai bài tổng hợp. 01-complete đạt 4,00/4,00 ở cả ba lượt. 08-wrong-actors đạt 2,50, 2,37 và 2,25 trên 4,00 so với 2,80 kỳ vọng. Mục actor lần lượt đạt 0,00, 0,12 và 0,00 so với 0,10 kỳ vọng. Không lượt nào yêu cầu giảng viên kiểm tra."
+**Context**: Chạy GradingAiEvaluationTest ở chế độ live trên bản backend đã ghép. Điểm kỳ vọng do nhóm soạn. Xem báo cáo trong backend/target/gemini-after-repair-1795261996874. Chưa chạy màn hình thật.
+
+---
+
+## Sửa lỗi audit — chuẩn bị PR vào staging
+**Timestamp**: 2026-11-21T11:59:58Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit và pr lên staging"
+**AI Response**: "Chuẩn bị commit mã và test của đợt sửa 19 lỗi, tách script vận hành và tài liệu AI-DLC. Push audit-staging và mở PR vào staging."
+**Context**: Nhánh nguồn và nhánh đích cùng ở 91d593be khi kiểm tra. Dùng bằng chứng kiểm thử tích hợp và Gemini trên dữ liệu tổng hợp.
+
+---
+
+## PR 109 — sửa ca kiểm thử restore trong CI
+**Timestamp**: 2026-11-21T12:04:19Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit và pr lên staging"
+**AI Response**: "ShellCheck SC2251 chỉ ra điều kiện phủ định độc lập có thể bị bỏ qua. Sửa test để xóa nhầm container sau restore thành công gây exit 1. Ba ca chuẩn đạt. Fixture giả lập xóa nhầm chuyển từ exit 0 sang exit 1."
+**Context**: Cập nhật nhánh của PR 109. Thay đổi giới hạn ở test và hồ sơ kiểm chứng.
+
+---
+
+## U09 CLI judge evaluation
+**Timestamp**: 2026-11-21T14:05:52Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm theo plan"
+**AI Response**: "Implemented and validated a QA-only DeepEval runner over saved Gemini artifacts. Codex completed the three-metric smoke on synthetic data. The runner exports JSON, CSV, Excel and Markdown with baseline comparisons."
+**Context**: Approved continuation of the universal judge analysis. Only the QA tool and documentation changed. Security and Resiliency retain their existing scope. PBT stays disabled.
+
+## U09 unified evaluation verification
+**Timestamp**: 2026-11-21T14:25:18Z
+**Requested by:** Quang Hung
+**User Input**: "# TASK: Unify Existing AI Grading Tests + DeepEval into ONE Evaluation Framework"
+**AI Response**: "Unified Java and Vitest tests, Java replay/live evidence and DeepEval behind one PowerShell runner and shared report. Verified full, offline, replay, report and legacy import against local synthetic artifacts."
+**Context**: The requested single entry point and report now cover existing test engines. Production code, fixtures and CI are unchanged. No Gemini Live request was made.
+
+## U09 PE defense dataset
+**Timestamp**: 2026-11-22T05:18:58Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi xây dựng bộ đề $poteto-mode"
+**AI Response**: "Đã tạo 12 ca đối chứng SWR302 và SWD392, 4 đề độc lập và 20 chỗ nhập điểm. Java và Python đã kiểm tra fixture; PowerShell replay bằng bản ghi cũ. Không gọi AI mới."
+**Context**: Thay đổi chỉ áp dụng cho dữ liệu QA, test, script chạy test và tài liệu. Chưa có điểm giảng viên. Phạm vi bảo mật và phục hồi đã duyệt giữ nguyên; property-based testing vẫn tắt.
+
+---
+
+## U09 Sol judge selection
+**Timestamp**: 2026-11-22T05:34:44Z
+**Requested by:** Quang Hung
+**User Input**: "tôi chọn gpt 6.2 sol high làm judge"
+**AI Response**: "Cấu hình Codex judge GPT-6.2 Sol với reasoning effort high."
+**Context**: Thay đổi trong công cụ QA. Lưu reasoning effort cho đối chiếu các bài đánh giá.
+
+---
+
+## U09 full dataset evaluation
+**Timestamp**: 2026-11-22T05:34:44Z
+**Requested by:** Quang Hung
+**User Input**: "h toi muốn test toàn bộ dataset bằng gpt 6 luna medium sau chạy judge bằng gpt 6.2 sol high"
+**AI Response**: "Luna medium chấm 20 ca tổng hợp qua Codex CLI. Backend xác thực đủ 20 phản hồi. Sol high đánh giá đủ 60 điểm GEval, 15 ca đạt cả ba ngưỡng."
+**Context**: Bỏ ngoài phạm vi 20 chỗ holdout chưa có bài nộp. Phiên chạy dùng xác thực ChatGPT và không đổi luồng grading production.
+
+---
+
+## U09 consolidated report
+**Timestamp**: 2026-11-22T05:34:44Z
+**Requested by:** Quang Hung
+**User Input**: "sau khi chạy xong thì tổng hợp vào 1 file report"
+**AI Response**: "Xuất một báo cáo Markdown gồm điểm từng ca, lý do GEval, chênh lệch với điểm mẫu và năm ca dưới ngưỡng."
+**Context**: Báo cáo cục bộ, không gửi ra ngoài. Nhãn nhóm và mức chất lượng theo judge được ghi riêng.
+
+---
+
+## U09 grading prompt and readable report
+**Timestamp**: 2026-11-22T05:54:49Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại, với giúp tôi viết cấu trúc test report đấy dễ đọc 1 chút , đổi tên file md thành test ai grading test đi, tôi muốn sau tôi thêm 1 judge là opus 5.5 để test thêm"
+**AI Response**: "Sửa prompt theo bằng chứng riêng của từng mục, thứ tự và nhánh sequence, điểm một phần, và kiểm tra điểm với lý do. 57 test backend đạt. Ca thiếu FK và ca thiếu phân quyền khớp mốc ở prompt chốt. Báo cáo đổi tên và có cột Opus riêng."
+**Context**: Ca lạc đề còn lệch 0,25 điểm ở trigger. Không sửa fixture hoặc schema. Xác nhận Claude Code có đăng nhập thuê bao, chưa gọi Opus.
+
+---
+
+## U09 điều chỉnh prompt về trigger và điểm từng luồng
+**Timestamp**: 2026-11-22T06:41:36Z
+**Requested by:** Quang Hung
+**User Input**: "ok sửa prompt trước"
+**AI Response**: "Ràng buộc trigger với use case đích và hướng dẫn cộng điểm từng luồng vào điểm số JSON. Hai kiểm tra prompt thất bại trước sửa, 57 test backend đạt sau sửa. Luna và Sol chạy lại ba ca qua Codex CLI. Bài lạc đề về 0,50/4 và bài đầy đủ giữ 4,00/4. Sol đánh giá đạt ở hai ca này. Ca chỉ có một luồng vẫn 3,50/4 so với mốc nhóm 3,75/4."
+**Context**: Kiểm thử hồi quy có chọn lọc trên dữ liệu tổng hợp đã lưu. Giữ đầu vào, rubric và schema qua các lượt. Bảng đủ 20 ca thuộc phiên bản prompt cũ hơn. PBT đã tắt theo quyết định dự án.
+
+---
+
+## U09 cập nhật hướng dẫn kiểm thử
+**Timestamp**: 2026-11-22T07:20:18Z
+**Requested by:** Quang Hung
+**User Input**: "À mà sửa instructionn trc đã"
+**AI Response**: "Cập nhật hướng dẫn theo bốn lớp, làm rõ đường đi của bản ghi Luna và cách đối chiếu Sol với Opus. Kiểm tra lệnh lập danh sách 20 ca cho Opus và dựng lại báo cáo từ dữ liệu lưu."
+**Context**: Maven xác nhận 57 test backend đạt. Pytest xác nhận 18 test QA đạt. Lệnh lập danh sách không gọi model.
+
+---
+
+## KAN-211 — tự nộp lượt Quiz quá hạn khi nộp hoặc xem kết quả
+**Timestamp**: 2026-11-22T08:52:06Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa KAN-211"
+**AI Response**: "Trên nhánh fix/kan-211-overdue-quiz-attempt (từ origin/staging 210b0550): QuizAttemptService.submit tự nộp lượt đã quá hạn cộng 30 giây với AUTO_TIME_LIMIT thay vì trả 409 ATTEMPT_TIME_UP; loadResult tự nộp lượt quá hạn trước khi trả kết quả (lượt còn hạn vẫn 409 ATTEMPT_IN_PROGRESS). Thêm 2 test, cập nhật BR-U11-13/14, code-summary U11 và comment QuizTakingPage. Test quizpractice + quizzes trong container Maven: 247 ca đạt."
+**Context**: Bug fix U11, phạm vi nhỏ trong service hiện có; chưa commit/push/PR.
+
+---
+
+## PR #103 review and staging sync
+**Timestamp**: 2026-11-22T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra pr103"; sau đó: "Sửa ở đây"
+**AI Response**: "Rà PR #103 (chỉ đọc): CI xanh trên nền cũ nhưng xung đột với staging ở audit.md, restore-isolated.sh, test-restore-isolated.sh; scripts/assert-required-backend-tests.ps1 còn tên lớp test cũ JdbcQuizAttemptRepositoryIntegrationTest đã đổi thành QuizAttemptRepositoryIntegrationTest trên staging. Sau đó gộp origin/staging vào codex/nfr-remediation trong worktree riêng: restore-isolated.sh giữ bản của PR (image ghim digest, phát hiện container đã dừng, dọn cả volume) cộng phần kiểm RESTORE_READY_TIMEOUT_SECONDS chặt hơn và pg_isready -t 1 của staging; test-restore-isolated.sh giữ bản của PR cộng hai kiểm của staging (khóa có mặt khi giải mã, thông báo lỗi nêu PostgreSQL); audit.md giữ mục của cả hai bên; sửa mục test bắt buộc thành QuizAttemptRepositoryIntegrationTest = 10."
+**Context**: Chạy local: check-image-pins đạt (13 tham chiếu), test-restore-isolated.sh 4/4 đạt. Không chạy được mvn (máy không có Maven), shellcheck, và test-platform-deploy.sh (Git Bash thiếu flock); để CI kiểm. Không đổi mã Java.
+
+---

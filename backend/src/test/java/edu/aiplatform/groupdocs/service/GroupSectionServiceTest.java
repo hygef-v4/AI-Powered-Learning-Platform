@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -89,6 +90,7 @@ class GroupSectionServiceTest {
         when(classes.getClassRef(classId)).thenReturn(Optional.of(
                 new ClassRef(classId, UUID.randomUUID(), "SE1801", "SWP391", ClassStatus.OPEN, teacher.accountId(), true)));
         when(documents.findById(document.id())).thenReturn(Optional.of(document));
+        when(documents.lockDocument(document.id())).thenReturn(Optional.of(document));
         when(groups.findGroup(group.id())).thenReturn(Optional.of(group));
         when(assignments.submissionWindow(eq(assignmentId), any())).thenReturn(SubmissionWindow.ON_TIME);
         when(documents.updateSection(any())).thenReturn(true);
@@ -145,6 +147,30 @@ class GroupSectionServiceTest {
 
         section(Status.CLAIMED, member.accountId(), null, 3);
         assertThat(service.release(member, document.id(), sectionId).status()).isEqualTo(Status.OPEN);
+    }
+
+    @Test
+    void saveLocksTheAssignmentAndDocumentBeforeTheSection() {
+        section(Status.CLAIMED, member.accountId(), null, 5);
+
+        service.saveDraft(member, document.id(), sectionId, 5L, List.of(block()));
+
+        var locks = inOrder(assignments, documents);
+        locks.verify(assignments).lockSubmission(assignmentId);
+        locks.verify(documents).lockDocument(document.id());
+        locks.verify(documents).lockSection(document.id(), sectionId);
+    }
+
+    @Test
+    void saveCannotUseTheEarlierOpenDocumentAfterItCloses() {
+        section(Status.CLAIMED, member.accountId(), null, 5);
+        when(documents.lockDocument(document.id())).thenReturn(Optional.of(document.markClosed()));
+
+        assertThatThrownBy(() -> service.saveDraft(member, document.id(), sectionId, 5L, List.of(block())))
+                .isInstanceOfSatisfying(ApiException.class,
+                        error -> assertThat(error.readCode()).isEqualTo("GROUP_DOC_CLOSED"));
+        verify(documents, never()).lockSection(any(), any());
+        verify(documents, never()).updateSection(any());
     }
 
     @Test

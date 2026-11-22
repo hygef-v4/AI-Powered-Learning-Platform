@@ -12,6 +12,7 @@ export const PROVIDER_CONSOLE: Record<AiProvider, string> = {
 /** Mô hình chọn sẵn khi thêm khóa; không có trong danh sách thì lấy mô hình đầu tiên. */
 const PROVIDER_DEFAULT_MODEL: Partial<Record<AiProvider, string>> = {
   GEMINI: "gemini-3.1-flash-lite",
+  OPENAI: "gpt-6-luna",
 };
 
 export function defaultModel(provider: AiProvider, models: string[]): string {

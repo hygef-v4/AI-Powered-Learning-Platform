@@ -43,6 +43,7 @@ case "$1" in
                 for argument do
                     case "$argument" in *:/work) work=${argument%:/work} ;; esac
                 done
+                test -f "$work/private-key.pem"
                 printf dump > "$work/dump.pgc"
                 ;;
         esac
@@ -75,6 +76,7 @@ for SCENARIO in exited timeout success; do
         if grep -q '^rm -fv platform-restore-' "$TEST_WORK/docker-calls"; then exit 1; fi
     else
         test "$status" -eq 1
+        grep -q 'PostgreSQL' output
         grep -q '^rm -fv platform-restore-' "$TEST_WORK/docker-calls"
         if grep -q pg_restore "$TEST_WORK/docker-calls"; then exit 1; fi
     fi

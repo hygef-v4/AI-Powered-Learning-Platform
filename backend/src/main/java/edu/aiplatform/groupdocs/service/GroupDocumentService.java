@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -68,24 +70,33 @@ public class GroupDocumentService {
         return created;
     }
 
-    /** Nhóm mới tạo khi lớp có bài nhóm đang mở cũng có tài liệu (F7 bước 4, F14). */
-    @Transactional
-    public void ensureForGroups(UUID classId, Collection<UUID> groupIds) {
+    @Transactional(propagation = Propagation.MANDATORY)
+    public List<UUID> lockGroupChanges(UUID classId, List<GroupDocument> affectedDocuments, boolean createsGroups) {
+        List<UUID> openAssignments = createsGroups ? assignments.listForClass(classId).stream()
+                .filter(GroupDocumentService::isOpenGroup).map(AssignmentView::assignmentId).toList() : List.of();
+        Stream.concat(openAssignments.stream(), affectedDocuments.stream().map(GroupDocument::assignmentId))
+                .distinct().sorted().forEach(assignments::lockSubmission);
+        affectedDocuments.stream().map(GroupDocument::id).distinct().sorted().forEach(documents::lockDocument);
+        return openAssignments;
+    }
+
+    /** Tạo tài liệu cho nhóm mới trên các bài đã khóa (F7 bước 4, F14). */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void ensureForGroups(List<UUID> assignmentIds, Collection<UUID> groupIds) {
         if (groupIds.isEmpty()) {
             return;
         }
-        for (AssignmentView view : assignments.listForClass(classId)) {
-            assignments.lockSubmission(view.assignmentId());
-            if (!isOpenGroup(view) || assignments.get(view.assignmentId())
-                    .filter(GroupDocumentService::isOpenGroup).isEmpty()) {
+        for (UUID assignmentId : assignmentIds) {
+            Optional<AssignmentView> view = openGroupAssignment(assignmentId);
+            if (view.isEmpty()) {
                 continue;
             }
-            Optional<AssignmentContent> content = assignments.getContent(view.assignmentId());
+            Optional<AssignmentContent> content = assignments.getContent(assignmentId);
             if (content.isEmpty()) {
                 continue;
             }
             for (UUID groupId : groupIds) {
-                groups.findGroup(groupId).ifPresent(group -> createDocument(group, view, content.get()));
+                groups.findGroup(groupId).ifPresent(group -> createDocument(group, view.get(), content.get()));
             }
         }
     }
@@ -127,7 +138,7 @@ public class GroupDocumentService {
     }
 
     private Optional<AssignmentView> openGroupAssignment(UUID assignmentId) {
-        return assignments.get(assignmentId).filter(GroupDocumentService::isOpenGroup);
+        return assignments.loadAssignment(assignmentId).filter(GroupDocumentService::isOpenGroup);
     }
 
     static boolean isOpenGroup(AssignmentView view) {

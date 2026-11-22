@@ -1391,7 +1391,8 @@
         "pointsCanHaveAtMost": "Điểm tối đa 2 chữ số thập phân",
         "deleteCriterion": "Xóa mục chấm {value}",
         "delete": "Xóa",
-        "addCriterion": "Thêm mục chấm"
+        "addCriterion": "Thêm mục chấm",
+        "penaltyOnlyHint": "Tiêu chí chỉ nêu trường hợp bị trừ. Hãy ghi rõ bài phải có gì để được điểm, ví dụ “Có ít nhất một quan hệ include/extend, vẽ nét đứt”; nếu không, AI có thể cho điểm cả khi bài không có phần này."
       },
       "ScheduleForm": {
         "date": "{label} (ngày)",
@@ -2343,6 +2344,9 @@
     },
     "hooks": {
       "useGradingWorkspace": {
+        "overlappingEditsRequireReview": "Một số mục đã được sửa ở phiên khác. Tải version mới để xử lý xung đột.",
+        "resolveOverlappingEdits": "Dùng bản trên máy chủ cho các mục sửa trùng và giữ các thay đổi riêng của bạn?",
+        "useServerEdits": "Dùng bản máy chủ cho mục trùng",
         "youHaveUnsavedChangesLeave": "Bạn có thay đổi chưa lưu. Rời bài này?",
         "discardChanges": "Bỏ thay đổi",
         "checkEachItemsPointsFrom": "Kiểm tra điểm từng mục: từ 0 đến điểm tối đa, với tối đa 2 chữ số thập phân.",
@@ -3490,7 +3494,7 @@
         "quizNotFoundOrYou": "Không tìm thấy quiz hoặc bạn không học lớp này.",
         "attemptNotFound": "Không tìm thấy lượt làm.",
         "theQuizWasWithdrawnOr": "Quiz đã ngưng hoặc lớp không còn mở.",
-        "answersWereJustSavedFrom": "Câu trả lời vừa được lưu từ nơi khác. Dữ liệu mới nhất đã được tải lại.",
+        "answersWereJustSavedFrom": "Câu trả lời đã thay đổi ở nơi khác. Hãy thử lưu lại.",
         "timeIsUp": "Đã hết thời gian làm bài.",
         "thisAttemptHasBeenSubmitted": "Lượt này đã nộp.",
         "onlyStudentsTakeQuizPractice": "Chỉ sinh viên làm Quiz Practice.",
@@ -3582,6 +3586,9 @@
         "notSaved": "Chưa lưu…",
         "saving": "Đang lưu…",
         "couldNotSave": "Chưa lưu được",
+        "conflictingQuestions": "Câu có xung đột: {questions}. Hãy chọn câu trả lời sẽ lưu cho các câu này.",
+        "keepMyChoices": "Giữ lựa chọn của tôi",
+        "useSavedChoices": "Dùng lựa chọn đã lưu",
         "thisQuizMonitorsActivityWhile": "Quiz này ghi nhận hoạt động khi làm bài",
         "submit": "Nộp bài?",
         "keepWorking": "Làm tiếp",

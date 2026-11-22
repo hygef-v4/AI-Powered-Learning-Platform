@@ -1,0 +1,21 @@
+<mxGraphModel grid="1" gridSize="10" page="1" pageWidth="1100" pageHeight="850">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="member" value="Thành viên" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="50" y="150" width="155" height="55" />
+    </mxCell>
+    <mxCell id="registration" value="Đăng ký" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="360" y="150" width="155" height="55" />
+    </mxCell>
+    <mxCell id="session" value="Buổi workshop" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="680" y="150" width="170" height="55" />
+    </mxCell>
+    <mxCell id="member-registrations" value="đăng ký (1 : 0..*)" style="html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;" edge="1" parent="1" source="member" target="registration">
+      <mxGeometry as="geometry" relative="1" y="-8" />
+    </mxCell>
+    <mxCell id="session-registrations" value="nhận đăng ký (1 : 0..*)" style="html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;" edge="1" parent="1" source="session" target="registration">
+      <mxGeometry as="geometry" relative="1" y="-8" />
+    </mxCell>
+  </root>
+</mxGraphModel>

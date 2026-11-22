@@ -49,7 +49,14 @@ public class PendingSweepRunner {
                 for (PendingJob pending : sweeper.findStalePending(olderThan)) {
                     String key = sweeper.jobType() + ":" + pending.idempotencyKey();
                     if (lastResent.putIfAbsent(key, now) == null) {
-                        publisher.resend(sweeper.jobType(), pending);
+                        boolean sent = false;
+                        try {
+                            sent = publisher.resend(sweeper.jobType(), pending);
+                        } finally {
+                            if (!sent) {
+                                lastResent.remove(key, now);
+                            }
+                        }
                     }
                 }
             } catch (RuntimeException e) {

@@ -8,13 +8,14 @@ if [ "$#" -ne 3 ]; then
     exit 2
 fi
 
+READY_TIMEOUT=${RESTORE_READY_TIMEOUT_SECONDS:-60}
+case "$READY_TIMEOUT" in
+    ''|*[!0-9]*|0*) echo "RESTORE_READY_TIMEOUT_SECONDS phải là số giây dương." >&2; exit 2 ;;
+esac
+
 ARCHIVE=$(cd "$(dirname "$1")" && pwd)/$(basename "$1")
 KEY=$(cd "$(dirname "$2")" && pwd)/$(basename "$2")
 IMAGE=$3
-READY_TIMEOUT=${RESTORE_READY_TIMEOUT_SECONDS:-60}
-case "$READY_TIMEOUT" in
-    ''|*[!0-9]*|0) echo 'RESTORE_READY_TIMEOUT_SECONDS phải là số nguyên dương' >&2; exit 2 ;;
-esac
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 WORK=$(mktemp -d)
 CREATED=0
@@ -53,7 +54,7 @@ CREATED=1
 docker run -d --name "$NAME" -e POSTGRES_PASSWORD="$PASSWORD" -e POSTGRES_DB=platform \
     -v "$WORK:/work" -p 127.0.0.1::5432 postgres:16-alpine@sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e > /dev/null
 READY_DEADLINE=$(($(date -u +%s) + READY_TIMEOUT))
-until docker exec "$NAME" pg_isready -U postgres -d platform > /dev/null 2>&1; do
+until docker exec "$NAME" pg_isready -t 1 -U postgres -d platform > /dev/null 2>&1; do
     state=$(docker inspect --format '{{.State.Status}}' "$NAME") || exit 1
     case "$state" in
         running|created|restarting) ;;

@@ -232,7 +232,7 @@ it("số thứ tự của mục giữ như trang tài liệu nhóm, dù mục c�
   expect(await screen.findByTestId("number-s3")).toHaveTextContent("III.");
 });
 
-it("mục bị giao cho người khác thì rời trang soạn và báo", async () => {
+function stubGroupDocEvents() {
   let source: { onmessage: ((m: { data: string }) => void) | null } | null = null;
   vi.stubGlobal("EventSource", class {
     onmessage: ((m: { data: string }) => void) | null = null;
@@ -244,15 +244,102 @@ it("mục bị giao cho người khác thì rời trang soạn và báo", async 
     }
     close() {}
   });
+  return async (type: string, sectionId: string) => {
+    await waitFor(() => expect(source?.onmessage).toBeTypeOf("function"));
+    await act(async () => source!.onmessage!({ data: JSON.stringify({ type, sectionId }) }));
+  };
+}
+
+it("mục bị giao cho người khác thì rời trang soạn và báo", async () => {
+  const sendEvent = stubGroupDocEvents();
   const views = { current: workspace() };
   backend(views);
   render(<GroupSectionEditorPage documentId="doc1" focusPart="s2" />);
   await screen.findByRole("group", { name: "Mục s2" });
-  await waitFor(() => expect(source?.onmessage).toBeTypeOf("function"));
 
   views.current = workspace({ sections: [section("s2", OTHER, { version: 4 }), section("s3", OTHER)] });
-  act(() => source!.onmessage!({ data: JSON.stringify({ type: "section.assigned", sectionId: "s2" }) }));
+  await sendEvent("section.assigned", "s2");
 
   expect(await screen.findByText(/Bạn không còn giữ mục “Mục s2”/)).toBeInTheDocument();
   expect(screen.getByText("Bạn chưa giữ mục nào để soạn.")).toBeInTheDocument();
+});
+
+it.each(["release", "late save", "missed release"])("saves with the new version after reclaiming a section (%s)", async (scenario) => {
+  const lateSave = scenario === "late save";
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  const sendEvent = stubGroupDocEvents();
+  const initial = section("s2", ME, {
+    claimedAt: "2026-11-21T08:00:00Z", draftBlocks: [paragraph("d1", "Original draft", "STUDENT")],
+  });
+  const retained = section("s3", ME, { draftBlocks: [paragraph("d2", "Other draft", "STUDENT")] });
+  let view = workspace({ sections: [initial, retained] });
+  let finishOldSave!: (response: Response) => void;
+  const versions: { url: string; version: number }[] = [];
+  const finished: string[] = [];
+  vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    if (url.endsWith(":done")) {
+      finished.push(url);
+      return json(view.sections[0]);
+    }
+    if (!url.endsWith("/draft")) return json(view);
+
+    const { version }: { version: number } = JSON.parse(String(init?.body));
+    versions.push({ url, version });
+    const latest = view.sections.find((candidate) => url.endsWith(`/${candidate.id}/draft`));
+    if (!latest) throw new Error("Unexpected section save");
+    if (lateSave && versions.length === 1) {
+      return new Promise<Response>((resolve) => { finishOldSave = resolve; });
+    }
+    if (version !== latest.version) {
+      return json({ status: 409, detail: "Version changed" }, 409);
+    }
+    return json({ ...latest, version: version + 1 });
+  }));
+  const nav = groupDocContext({ pathname: "/group-docs/doc1/edit", search: new URLSearchParams() })!;
+  render(<>{nav.header}<GroupSectionEditorPage documentId="doc1" focusPart="s2" /></>);
+  const outline = await screen.findByTestId("assignment-outline");
+  const original = await screen.findByLabelText("Đoạn văn");
+  if (lateSave) {
+    original.textContent = "Previous claim edit";
+    fireEvent.input(original);
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(versions.map(({ version }) => version)).toEqual([2]);
+  }
+
+  if (scenario !== "missed release") {
+    view = workspace({ sections: [section("s2", OTHER, { version: 4 }), retained] });
+    await sendEvent("section.released", "s2");
+    expect(await screen.findByText(/Bạn không còn giữ mục “Mục s2”/)).toBeInTheDocument();
+  }
+  const reclaimed = section("s2", ME, {
+    version: 5, claimedAt: "2026-11-21T08:10:00Z",
+    draftBlocks: [paragraph("d1", "Reclaimed draft", "STUDENT")],
+  });
+  view = workspace({ sections: [reclaimed, { ...retained, version: 8 }] });
+  await sendEvent("section.claimed", "s2");
+  fireEvent.click(await within(outline).findByRole("button", { name: /Mục s3/ }));
+  const other = await screen.findByLabelText("Đoạn văn");
+  expect(other).toHaveTextContent("Other draft");
+  other.textContent = "Continuously held section edit";
+  fireEvent.input(other);
+
+  fireEvent.click(within(outline).getByRole("button", { name: /Mục s2/ }));
+  const current = await screen.findByLabelText("Đoạn văn");
+  expect(current).toHaveTextContent("Reclaimed draft");
+  if (lateSave) {
+    await act(async () => {
+      finishOldSave(await json({ ...initial, version: 3 }));
+    });
+  }
+  current.textContent = "Reclaimed section edit";
+  fireEvent.input(current);
+  fireEvent.click(within(screen.getByRole("group", { name: "Mục s2" })).getByRole("button", { name: "Xong" }));
+
+  await waitFor(() => expect(versions.at(-1)).toEqual({
+    url: "/api/v1/group-docs/doc1/sections/s2/draft", version: 5,
+  }));
+  await waitFor(() => expect(finished).toContain("/api/v1/group-docs/doc1/sections/s2:done"));
+  await act(() => vi.advanceTimersByTimeAsync(10_000));
+  expect(versions.at(-1)).toEqual({ url: "/api/v1/group-docs/doc1/sections/s3/draft", version: 2 });
 });

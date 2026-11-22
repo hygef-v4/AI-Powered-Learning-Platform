@@ -132,7 +132,8 @@ public class AiTaskService implements IAiTask {
         LocalDate day = null;
         if (request.source() == AiSource.SHARED) {
             QuotaReservationService.Reservation reservation = quotaReservationService.reserve(actor.accountId(),
-                    QuotaReservationService.estimate(promptChars(request.prompt()), max));
+                    QuotaReservationService.estimate(promptChars(request.prompt()),
+                            catalog.resolveOutputCap(connection.provider(), connection.model(), max)));
             reserved = reservation.tokens();
             day = reservation.day();
         }
@@ -151,7 +152,7 @@ public class AiTaskService implements IAiTask {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<AiTaskView> get(UUID taskId) {
+    public Optional<AiTaskView> loadTask(UUID taskId) {
         return tasks.findById(taskId).map(this::view);
     }
 
@@ -244,10 +245,12 @@ public class AiTaskService implements IAiTask {
             Optional<AiConnection> shared = filterUsable(connections.listInstitutional(), prompt.hasImages()).stream()
                     .findFirst();
             if (shared.isPresent()) {
-                int max = Math.min(maxOutputTokens, catalog.readMaxOutputTokens(shared.get().provider()));
+                AiConnection connection = shared.get();
+                int max = Math.min(maxOutputTokens, catalog.readMaxOutputTokens(connection.provider()));
+                int outputCap = catalog.resolveOutputCap(connection.provider(), connection.model(), max);
                 QuotaReservationService.Remaining left = quotaReservationService.calculateRemaining(actor.accountId());
                 if (left != null && left.limit() > 0
-                        && left.left() >= QuotaReservationService.estimate(promptChars(prompt), max)) {
+                        && left.left() >= QuotaReservationService.estimate(promptChars(prompt), outputCap)) {
                     order.add(new AiSourceChoice(AiSource.SHARED, null));
                 }
             }

@@ -82,6 +82,17 @@ public class EmailDeliveryService {
         notificationRepository.lockEmailBudget();
         var delivery = notificationRepository.lockEmailDelivery(id).orElse(null);
         if (delivery == null || delivery.status != EmailDelivery.Status.PENDING) return;
+        try {
+            deliverPendingEmail(delivery);
+        } catch (RetryableJobException retry) {
+            // Transaction vẫn commit (noRollbackFor): giữ lịch và số lần thử đã đổi trước lỗi.
+            notificationRepository.updateEmailDelivery(delivery);
+            throw retry;
+        }
+        notificationRepository.updateEmailDelivery(delivery);
+    }
+
+    private void deliverPendingEmail(EmailDelivery delivery) {
         Instant now = clock.instant();
         if (isExpired(delivery, now)) {
             delivery.status = EmailDelivery.Status.SKIPPED;
@@ -126,7 +137,7 @@ public class EmailDeliveryService {
             }
             AssignmentView assignment;
             try {
-                assignment = assignmentQuery.get(assignmentId).orElse(null);
+                assignment = assignmentQuery.loadAssignment(assignmentId).orElse(null);
             } catch (RuntimeException unavailable) {
                 throw new RetryableJobException("NOTIFICATION_ASSIGNMENT_UNAVAILABLE");
             }
@@ -166,6 +177,7 @@ public class EmailDeliveryService {
                             e.status = EmailDelivery.Status.FAILED;
                             e.attempts = Math.max(e.attempts, 5);
                             e.lastError = "MAIL_RETRIES_EXHAUSTED";
+                            notificationRepository.updateEmailDelivery(e);
                         });
     }
 
@@ -180,11 +192,14 @@ public class EmailDeliveryService {
             if (delivery == null || delivery.status != EmailDelivery.Status.DEFERRED) continue;
             if (isExpired(delivery, now)) {
                 delivery.status = EmailDelivery.Status.SKIPPED;
+                notificationRepository.updateEmailDelivery(delivery);
                 continue;
             }
             if (!emailCapPolicy.hasCapacity(now)) break;
             delivery.status = EmailDelivery.Status.PENDING;
             delivery.scheduledFor = now;
+            // Ghi trước lần đếm hạn mức kế tiếp để email này được tính vào ngân sách trong ngày.
+            notificationRepository.updateEmailDelivery(delivery);
             enqueueEmail(delivery);
         }
     }

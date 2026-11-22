@@ -39,7 +39,7 @@ class GradeDistributionVisibilityServiceTest {
     }
 
     void assignment(AssignmentScope scope, AssignmentStatus status, UUID ownerClassId, GradingMode mode) {
-        when(assignmentQuery.get(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, scope,
+        when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(new AssignmentView(assignmentId, scope,
                 ownerClassId, subjectId, 1, "Task", SubmissionMode.INDIVIDUAL, mode, false, status,
                 null, null, null, 1, false, null, List.of())));
     }

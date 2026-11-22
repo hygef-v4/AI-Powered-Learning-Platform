@@ -17,6 +17,9 @@ public interface IDocumentModel {
 
     String toPlainText(DocumentModel document);
 
+    /** Như {@link #toPlainText}, mỗi block có dòng {@code [block <id>]} đứng trước để AI chỉ đúng nơi lấy bằng chứng. */
+    String toPlainTextWithBlockIds(DocumentModel document);
+
     String compactDiagramXml(String xml);
 
     /** Whether a valid Draw.io document has shapes or connectors, including compressed pages. */

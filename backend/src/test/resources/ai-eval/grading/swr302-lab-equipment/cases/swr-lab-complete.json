@@ -1,0 +1,90 @@
+{
+  "caseKey": "swr-lab-complete",
+  "description": "Sơ đồ và đặc tả đầy đủ, có đủ hai mũi tên nét đứt.",
+  "labelSource": "SYNTHETIC_TEAM",
+  "expectedBehavior": "Cho điểm tối đa cho sơ đồ và đặc tả. Hai quan hệ đúng nhãn, hướng và kiểu nét. Ô Secondary actor nêu đúng cả hai tác nhân phụ.",
+  "tags": [
+    "baseline",
+    "use-case-diagram",
+    "use-case-specification"
+  ],
+  "offTopic": false,
+  "injection": false,
+  "blocks": [
+    {
+      "heading": "h-diagram"
+    },
+    {
+      "type": "DIAGRAM",
+      "file": "diagrams/equipment-use-cases.xml"
+    },
+    {
+      "heading": "h-spec"
+    },
+    {
+      "type": "TABLE",
+      "rows": [
+        [
+          "Mục",
+          "Nội dung"
+        ],
+        [
+          "Tên ca sử dụng",
+          "Gửi yêu cầu mượn"
+        ],
+        [
+          "Primary actor",
+          "Sinh viên"
+        ],
+        [
+          "Secondary actor",
+          "Dịch vụ quyền mượn, Kỹ thuật viên phòng lab"
+        ],
+        [
+          "Điều kiện trước",
+          "Sinh viên đã đăng nhập. Danh mục phòng lab có thiết bị cần mượn."
+        ],
+        [
+          "Kích hoạt",
+          "Sinh viên bấm Mượn thiết bị để mở biểu mẫu."
+        ],
+        [
+          "Điều kiện sau khi thành công",
+          "Hệ thống lưu lượt mượn đã xác nhận, giữ thiết bị trong khung giờ đã chọn và cấp mã mượn cho Sinh viên."
+        ],
+        [
+          "Luồng chính",
+          "1. Sinh viên chọn một thiết bị, giờ nhận và giờ trả, rồi gửi yêu cầu. 2. Hệ thống gửi mã Sinh viên cho Dịch vụ quyền mượn và nhận kết quả đủ điều kiện. 3. Hệ thống xác nhận thiết bị còn trống trong khung giờ đã chọn. 4. Hệ thống so giờ trả với giờ đóng cửa và xác nhận giờ trả không muộn hơn giờ đóng cửa. 5. Hệ thống lưu lượt mượn, giữ thiết bị trong khung giờ đã chọn và hiển thị mã mượn."
+        ],
+        [
+          "Luồng thay thế",
+          "4a. Nếu giờ trả muộn hơn giờ đóng cửa, hệ thống chuyển yêu cầu cho Kỹ thuật viên phòng lab duyệt mượn qua đêm. Nếu duyệt, hệ thống tiếp tục bước 5. Nếu từ chối, hệ thống báo cho Sinh viên và kết thúc mà không giữ thiết bị."
+        ],
+        [
+          "Ngoại lệ",
+          "2a. Dịch vụ quyền mượn không phản hồi. Hệ thống báo tạm thời không kiểm tra được quyền mượn và kết thúc yêu cầu. Hệ thống không tạo lượt mượn và không giữ thiết bị."
+        ],
+        [
+          "Quy tắc nghiệp vụ",
+          "BR1. Mỗi yêu cầu chỉ gồm một thiết bị. BR2. Chỉ Kỹ thuật viên phòng lab có quyền duyệt trả thiết bị sau giờ đóng cửa."
+        ]
+      ]
+    }
+  ],
+  "expected": {
+    "d-boundary": 0.5,
+    "d-actors": 1,
+    "d-usecases": 0.5,
+    "d-relationships": 1,
+    "d-notation": 0.5,
+    "s-name-primary": 0.5,
+    "s-secondary-eligibility": 0.5,
+    "s-secondary-technician": 0.5,
+    "s-conditions": 1,
+    "s-normal": 1.5,
+    "s-alternative": 0.5,
+    "s-exception": 1,
+    "s-rule": 1
+  },
+  "absentItems": []
+}

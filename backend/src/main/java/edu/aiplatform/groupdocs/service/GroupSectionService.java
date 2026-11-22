@@ -66,9 +66,9 @@ public class GroupSectionService {
     /** Thành viên nhận mục {@code OPEN} hoặc {@code DONE} và soạn ngay (BR-U12-33). */
     @Transactional
     public SectionView claim(Actor actor, UUID documentId, UUID sectionId) {
-        GroupDocContext ctx = access.loadContext(actor, documentId);
+        GroupDocContext ctx = access.lock(actor, documentId);
         GroupDocAccess.requireMember(ctx);
-        access.requireWritable(ctx, false);
+        access.requireEditable(ctx, false);
         GroupSection section = lockSection(documentId, sectionId);
         if (actor.accountId().equals(section.claimedBy())) {
             return SectionView.createSectionView(section, actor.accountId());
@@ -87,9 +87,9 @@ public class GroupSectionService {
      */
     @Transactional
     public SectionView assign(Actor actor, UUID documentId, UUID sectionId, UUID assigneeId, boolean replaceHolder) {
-        GroupDocContext ctx = access.loadContext(actor, documentId);
+        GroupDocContext ctx = access.lock(actor, documentId);
         requireLeader(ctx);
-        access.requireWritable(ctx, false);
+        access.requireEditable(ctx, false);
         if (assigneeId == null || !ctx.group().isMember(assigneeId)) {
             throw ApiException.createBadRequest("SECTION_ASSIGNEE_INVALID", "Chỉ giao được cho thành viên của nhóm");
         }
@@ -116,8 +116,8 @@ public class GroupSectionService {
     /** Người giữ, trưởng nhóm hoặc giảng viên nhả mục; bản nháp bị bỏ (BR-U12-36). */
     @Transactional
     public SectionView release(Actor actor, UUID documentId, UUID sectionId) {
-        GroupDocContext ctx = access.loadContext(actor, documentId);
-        access.requireWritable(ctx, false);
+        GroupDocContext ctx = access.lock(actor, documentId);
+        access.requireEditable(ctx, false);
         GroupSection section = lockSection(documentId, sectionId);
         refuseAction(SectionRules.canRelease(section, actor.accountId(), ctx.leader(), ctx.teacher()));
         UUID holder = section.claimedBy();
@@ -135,9 +135,9 @@ public class GroupSectionService {
     /** Tự lưu bản nháp của người giữ kèm {@code version} của mục; lệch thì {@code 409} (BR-U12-34). */
     @Transactional
     public SectionView saveDraft(Actor actor, UUID documentId, UUID sectionId, Long version, List<DocumentBlock> blocks) {
-        GroupDocContext ctx = access.loadContext(actor, documentId);
+        GroupDocContext ctx = access.lock(actor, documentId);
         GroupDocAccess.requireMember(ctx);
-        access.requireWritable(ctx, true);
+        access.requireEditable(ctx, true);
         GroupSection section = lockSection(documentId, sectionId);
         refuseAction(SectionRules.canEdit(section, actor.accountId()));
         if (version == null || version != section.version()) {
@@ -154,9 +154,9 @@ public class GroupSectionService {
     /** Xong: kiểm block, nháp thành nội dung đã đăng, thêm lịch sử, bỏ khóa (BR-U12-35). */
     @Transactional
     public SectionView markSectionDone(Actor actor, UUID documentId, UUID sectionId) {
-        GroupDocContext ctx = access.loadContext(actor, documentId);
+        GroupDocContext ctx = access.lock(actor, documentId);
         GroupDocAccess.requireMember(ctx);
-        access.requireWritable(ctx, false);
+        access.requireEditable(ctx, false);
         GroupSection section = lockSection(documentId, sectionId);
         refuseAction(SectionRules.canEdit(section, actor.accountId()));
         List<DocumentBlock> content = section.draftBlocks() != null ? section.draftBlocks()

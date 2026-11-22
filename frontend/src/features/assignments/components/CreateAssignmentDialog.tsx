@@ -83,7 +83,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const [sourcePolicy, setSourcePolicy] = useState<PurposePolicy | null>(null);
   const [request, setRequest] = useState("");
   /** Ngôn ngữ của đề AI, ưu tiên hơn ngôn ngữ ghi trong yêu cầu, mẫu đề hay tài liệu (yêu cầu 2026-11-10). */
-  const [language, setLanguage] = useState<"VI" | "EN" | "JA">("EN");
+  const [language, setLanguage] = useState<"VI" | "EN">("EN");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const loadingSources = useRef(false);
@@ -367,7 +367,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
               <div className="grid gap-3 sm:grid-cols-[9rem_minmax(0,1fr)]">
                 <Field label={msg("assignments.components.CreateAssignmentDialog.language")} htmlFor="ai-language">
                   <Select id="ai-language" aria-label={msg("assignments.components.CreateAssignmentDialog.language")} value={language} disabled={busy}
-                    onChange={(e) => setLanguage(e.target.value as "VI" | "EN" | "JA")}>
+                    onChange={(e) => setLanguage(e.target.value as "VI" | "EN")}>
                     {LOCALES.map((code) => <option key={code} value={code.toUpperCase()} lang={code}>{LOCALE_NAMES[code]}</option>)}
                   </Select>
                 </Field>

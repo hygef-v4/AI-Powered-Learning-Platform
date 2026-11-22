@@ -53,7 +53,7 @@ public class DeadlineReminderScanner implements IScheduledScanner {
         for (var candidate :
                 assignmentQuery.listClosingBetween(now, now.plus(Duration.ofHours(24)))) {
             try {
-                var current = assignmentQuery.get(candidate.assignmentId()).orElse(null);
+                var current = assignmentQuery.loadAssignment(candidate.assignmentId()).orElse(null);
                 if (current == null || !isEligible(current, now)) continue;
                 List<ClassRef> targets =
                         current.classId() == null
@@ -100,7 +100,7 @@ public class DeadlineReminderScanner implements IScheduledScanner {
     }
 
     private void remindStudents(AssignmentView candidate, ClassRef courseClass, Instant now) {
-        var assignment = assignmentQuery.get(candidate.assignmentId()).orElse(null);
+        var assignment = assignmentQuery.loadAssignment(candidate.assignmentId()).orElse(null);
         var currentClass = classAccess.getClassRef(courseClass.classId()).orElse(null);
         if (assignment == null
                 || !Objects.equals(assignment.closesAt(), candidate.closesAt())

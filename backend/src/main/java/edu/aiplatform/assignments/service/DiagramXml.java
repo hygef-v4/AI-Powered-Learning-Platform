@@ -6,8 +6,10 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.zip.DataFormatException;
@@ -27,6 +29,7 @@ final class DiagramXml {
     private static final int MAX_INFLATED_BYTES = 10 * 1024 * 1024;
     private static final int MAX_PAGES = 100;
     private static final int MAX_LABEL = 200;
+    private static final int MAX_CONTAINMENT_SHAPES = 500;
 
     private DiagramXml() {
     }
@@ -143,16 +146,24 @@ final class DiagramXml {
                     out.append(" \"").append(clean(page)).append('"');
                 }
                 out.append(":\n");
-                for (Cell cell : listCells(models.get(i))) {
+                List<Cell> cells = listCells(models.get(i));
+                Map<String, String> containers = mapContainers(cells);
+                for (Cell cell : cells) {
                     if (cell.edge()) {
                         out.append("- nối ").append(cell.source()).append(" -> ").append(cell.target());
                         if (cell.dashed()) {
                             out.append(" (nét đứt)");
+                        } else if (cell.label().contains("<<")) {
+                            // Stereotype như <<include>>/<<extend>> phải vẽ nét đứt: ghi rõ nét liền để AI không mặc định là đúng (G2).
+                            out.append(" (nét liền)");
                         }
                     } else {
-                        out.append("- hình ").append(cell.id());
-                        if (!cell.shape().isEmpty()) {
-                            out.append(" (").append(cell.shape()).append(')');
+                        // Hình không có shape trong style là hình chữ nhật mặc định của Draw.io (thường là system boundary).
+                        out.append("- hình ").append(cell.id())
+                                .append(" (").append(cell.shape().isEmpty() ? "chữ nhật" : cell.shape()).append(')');
+                        String container = containers.get(cell.id());
+                        if (container != null) {
+                            out.append(" trong ").append(container);
                         }
                     }
                     if (!cell.label().isEmpty()) {
@@ -272,9 +283,73 @@ final class DiagramXml {
             }
             String style = element.getAttribute("style");
             cells.add(new Cell(id, edge, element.getAttribute("source"), element.getAttribute("target"),
-                    clean(label), resolveShape(style), style.contains("dashed=1")));
+                    clean(label), resolveShape(style), style.contains("dashed=1"), element.getAttribute("parent"),
+                    vertex ? readBounds(element) : null));
         }
         return cells;
+    }
+
+    /**
+     * Hình chứa mỗi hình: cha trong XML nếu cha là một hình; nếu không thì hình nhỏ nhất bao trọn nó theo tọa độ,
+     * vì khung system boundary thường chỉ nằm đè lên use case chứ không làm cha.
+     */
+    private static Map<String, String> mapContainers(List<Cell> cells) {
+        Map<String, Cell> vertices = new HashMap<>();
+        cells.stream().filter(c -> !c.edge()).forEach(c -> vertices.put(c.id(), c));
+        List<Cell> topLevel = vertices.values().stream()
+                .filter(c -> !vertices.containsKey(c.parent()) && c.bounds() != null).toList();
+        Map<String, String> containers = new HashMap<>();
+        for (Cell cell : vertices.values()) {
+            if (vertices.containsKey(cell.parent())) {
+                containers.put(cell.id(), cell.parent());
+                continue;
+            }
+            // shortcut: so từng cặp O(n²); sơ đồ quá MAX_CONTAINMENT_SHAPES hình thì bỏ qua, nâng cấp nếu gặp sơ đồ lớn hơn.
+            if (cell.bounds() == null || topLevel.size() > MAX_CONTAINMENT_SHAPES) {
+                continue;
+            }
+            Cell best = null;
+            for (Cell other : topLevel) {
+                if (other != cell && isInside(cell.bounds(), other.bounds())
+                        && (best == null || area(other.bounds()) < area(best.bounds()))) {
+                    best = other;
+                }
+            }
+            if (best != null) {
+                containers.put(cell.id(), best.id());
+            }
+        }
+        return containers;
+    }
+
+    private static boolean isInside(double[] inner, double[] outer) {
+        return inner[0] >= outer[0] && inner[1] >= outer[1] && inner[0] + inner[2] <= outer[0] + outer[2]
+                && inner[1] + inner[3] <= outer[1] + outer[3] && area(inner) < area(outer);
+    }
+
+    private static double area(double[] bounds) {
+        return bounds[2] * bounds[3];
+    }
+
+    /** {x, y, rộng, cao} từ mxGeometry; thiếu rộng/cao hoặc không đọc được thì null. */
+    private static double[] readBounds(Element cell) {
+        for (Element geometry : listChildren(cell, "mxGeometry")) {
+            try {
+                double width = Double.parseDouble(geometry.getAttribute("width"));
+                double height = Double.parseDouble(geometry.getAttribute("height"));
+                return width > 0 && height > 0
+                        ? new double[] {readCoordinate(geometry, "x"), readCoordinate(geometry, "y"), width, height}
+                        : null;
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static double readCoordinate(Element geometry, String name) {
+        String value = geometry.getAttribute(name);
+        return value.isBlank() ? 0 : Double.parseDouble(value);
     }
 
     private static String resolveShape(String style) {
@@ -320,6 +395,6 @@ final class DiagramXml {
     }
 
     private record Cell(String id, boolean edge, String source, String target, String label, String shape,
-                        boolean dashed) {
+                boolean dashed, String parent, double[] bounds) {
     }
 }

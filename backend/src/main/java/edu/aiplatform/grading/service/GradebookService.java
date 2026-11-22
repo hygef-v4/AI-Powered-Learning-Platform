@@ -377,7 +377,7 @@ public class GradebookService {
         // Step 2: Validate class and assignment scope
         var courseClass = classAccess.getClassRef(classId)
                 .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
-        var assignment = assignmentQuery.get(assignmentId)
+        var assignment = assignmentQuery.loadAssignment(assignmentId)
                 .orElseThrow(() -> ApiException.createNotFound("ASSIGNMENT_NOT_FOUND"));
         SubmissionReviewService.requireAssignment(assignment, courseClass);
         if (assignment.scope() == AssignmentScope.SUBJECT

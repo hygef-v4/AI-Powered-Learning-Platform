@@ -18,6 +18,7 @@ import edu.aiplatform.grading.repository.IGradingProposalRepository;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -50,35 +51,49 @@ public class GradingProposalService {
     /** Prepares and dispatches an AI grading proposal for an evaluation. */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public GradingProposal requestProposal(Actor actor, UUID evaluationId, AiRequest input) {
-        // Step 1: Validate evaluation state, prepare prompt and output schema, and persist PENDING proposal
-        var prepared = gradingProposalTransactions.prepareProposal(actor, evaluationId, input);
+        return requestProposal(actor, evaluationId, input, null);
+    }
+
+    private GradingProposal requestProposal(Actor actor, UUID evaluationId, AiRequest input,
+            Long expectedVersion) {
+        var prepared = gradingProposalTransactions.prepareProposal(actor, evaluationId, input,
+                expectedVersion);
         var proposal = prepared.proposal();
 
-        // Step 2: Check idempotency - return existing proposal if already dispatched or pending
         if (!prepared.dispatch()) {
             if (proposal.safeError != null)
                 proposal.safeError = GradingProposalCallbackSupport.formatTaskError(proposal.safeError);
             return proposal;
         }
 
-        // Step 3: Submit asynchronous task to background AI engine (U06)
-        AiTaskView task;
+        var taskRequest = new AiTaskRequest(actor, input.source(), input.provider(),
+                "GRADING_PROPOSAL", "evaluation:" + evaluationId, proposal.versionNo,
+                input.requestRef(), prepared.prompt(), prepared.outputSchema(), prepared.maxOutputTokens());
         try {
-            task = aiTask.submit(new AiTaskRequest(actor, input.source(), input.provider(),
-                    "GRADING_PROPOSAL", "evaluation:" + evaluationId, proposal.versionNo,
-                    input.requestRef(), prepared.prompt(), prepared.outputSchema(),
-                    prepared.maxOutputTokens()));
-        } catch (ApiException ex) {
-            // Record failure in database if AI task submission failed with domain error
-            return gradingProposalTransactions.recordDispatch(proposal.id, null, ex.readCode());
-        } catch (RuntimeException ex) {
-            // Record failure in database if AI service is unreachable or network timed out
-            return gradingProposalTransactions.recordDispatch(proposal.id, null,
-                    "AI_SERVICE_UNAVAILABLE");
+            return gradingProposalTransactions.dispatchPreparedProposal(proposal.id,
+                    () -> submitProposalTask(taskRequest));
+        } catch (ProposalDispatchFailure ex) {
+            return gradingProposalTransactions.recordDispatch(proposal.id, null, ex.code);
         }
+    }
 
-        // Step 4: Record dispatched task ID, keep PENDING status, and return proposal to caller
-        return gradingProposalTransactions.recordDispatch(proposal.id, task, null);
+    private AiTaskView submitProposalTask(AiTaskRequest taskRequest) {
+        try {
+            return aiTask.submit(taskRequest);
+        } catch (ApiException ex) {
+            throw new ProposalDispatchFailure(ex.readCode(), ex);
+        } catch (RuntimeException ex) {
+            throw new ProposalDispatchFailure("AI_SERVICE_UNAVAILABLE", ex);
+        }
+    }
+
+    private static final class ProposalDispatchFailure extends RuntimeException {
+        private final String code;
+
+        private ProposalDispatchFailure(String code, RuntimeException cause) {
+            super(cause);
+            this.code = code;
+        }
     }
 
     List<GradingProposal> listStoredProposals(List<UUID> authorizedEvaluationIds) {
@@ -104,7 +119,7 @@ public class GradingProposalService {
                     || GradingProposalTransactions.isLegacyFailure(proposal))
                     && proposal.taskId != null) {
                 // Poll background AI task state to handle completed, failed, or cancelled tasks
-                Optional<AiTaskView> maybeTask = Optional.ofNullable(aiTask.get(proposal.taskId))
+                Optional<AiTaskView> maybeTask = Optional.ofNullable(aiTask.loadTask(proposal.taskId))
                         .flatMap(o -> o);
                 if (maybeTask.isPresent()) {
                     var task = maybeTask.get();
@@ -130,7 +145,7 @@ public class GradingProposalService {
         if (reconciled) {
             for (var proposal : listed) {
                 if ("PENDING".equals(proposal.status) && proposal.taskId != null) {
-                    Optional.ofNullable(aiTask.get(proposal.taskId)).flatMap(o -> o)
+                    Optional.ofNullable(aiTask.loadTask(proposal.taskId)).flatMap(o -> o)
                             .ifPresent(task -> proposal.taskState = task.state().name());
                 }
             }
@@ -173,11 +188,10 @@ public class GradingProposalService {
 
                 // Generate a deterministic per-item requestRef to ensure idempotency across retries
                 var request = batch.request();
-                var proposal = requestProposal(actor, evaluation.id, new AiRequest(request.source(),
-                        request.provider(),
-                        "u09-batch:" + UUID
-                                .nameUUIDFromBytes((request.requestRef() + ":" + evaluation.id)
-                                        .getBytes(java.nio.charset.StandardCharsets.UTF_8))));
+                String requestRef = "u09-batch:" + UUID.nameUUIDFromBytes(
+                        (request.requestRef() + ":" + evaluation.id).getBytes(StandardCharsets.UTF_8));
+                var proposal = requestProposal(actor, evaluation.id,
+                        new AiRequest(request.source(), request.provider(), requestRef), item.version());
                 outcomes.add(
                         new ItemResult(evaluation.id, proposal.status, proposal.safeError, null));
                 if ("FAILED".equals(proposal.status))

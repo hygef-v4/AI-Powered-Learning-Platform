@@ -45,6 +45,21 @@ final class GradingEvalRecordings {
         }
     }
 
+    /** Phần chữ đã nhận khi provider bị cắt, ghi riêng {@code run-N.partial.txt} để chẩn đoán; replay không đọc file này. */
+    void savePartialOutput(String caseKey, int runIndex, String partialOutput) {
+        if (partialOutput == null || partialOutput.isEmpty()) {
+            return;
+        }
+        Path file = resolveFile(caseKey, runIndex);
+        Path partial = file.resolveSibling(file.getFileName().toString().replace(".json", ".partial.txt"));
+        try {
+            Files.createDirectories(partial.getParent());
+            Files.writeString(partial, partialOutput);
+        } catch (IOException ex) {
+            throw new UncheckedIOException("Cannot write partial output " + partial, ex);
+        }
+    }
+
     boolean hasRecording(String caseKey, int runIndex) {
         return Files.isRegularFile(resolveFile(caseKey, runIndex));
     }

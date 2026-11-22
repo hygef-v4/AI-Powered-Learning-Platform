@@ -337,7 +337,7 @@ class QuizAiDraftServiceTest {
             }
 
             @Override
-            public Optional<AiTaskView> get(UUID taskId) {
+            public Optional<AiTaskView> loadTask(UUID taskId) {
                 return Optional.ofNullable(tasks.get(taskId));
             }
 

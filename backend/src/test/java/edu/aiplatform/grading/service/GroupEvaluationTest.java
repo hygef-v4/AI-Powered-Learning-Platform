@@ -31,7 +31,7 @@ class GroupEvaluationTest {
         when(a.subjectId()).thenReturn(subjectId);
         when(classes.getClassRef(cid)).thenReturn(Optional
                 .of(new edu.aiplatform.academics.contract.ClassRef(cid, subjectId, "C", "Class", null, null, false)));
-        when(assignments.get(aid)).thenReturn(Optional.of(a));
+        when(assignments.loadAssignment(aid)).thenReturn(Optional.of(a));
         when(rubric.maxPoints(aid)).thenReturn(BigDecimal.TEN);
         when(rubric.listRubrics(aid)).thenReturn(List.of());
         var root = Evaluation.createPendingEvaluation(null, aid, cid, null, "old", BigDecimal.TEN, "[]", Instant.now());

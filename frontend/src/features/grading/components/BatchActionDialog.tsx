@@ -4,7 +4,8 @@ import { Alert, Button, Dialog, showToast } from "@/shared/ui";
 import { buildAiRequest } from "./AiProposalPanel";
 import type { SourceChoice } from "@/shared/ai";
 import { gradingApi } from "../api";
-import { readGradingAiAccount, resumeGradingPolling } from "../model/gradingAiTasks";
+import { useGradingAiRequest } from "../hooks/useGradingAiRequest";
+import { readGradingAiAccount, readGradingAiSessionRevision, resumeGradingPolling } from "../model/gradingAiTasks";
 import { formatErrorMessage } from "../model/format";
 import type { BatchResult, ItemVersion } from "../model/types";
 import { msg } from "@/i18n/msg";
@@ -48,32 +49,35 @@ export function BatchActionDialog({
     key: "",
     state: "failed",
   });
+  const itemsKey = JSON.stringify(items);
+  const submitAiRequest = useGradingAiRequest(`${action}:${itemsKey}`);
   useEffect(() => {
     if (action !== "ai" || items.length === 0) return;
     let active = true;
-    const key = JSON.stringify(items);
     void gradingApi.estimateProposalTokens(items).then(
       (value) => {
-        if (active) setEstimate({ key, state: "ready", tokens: value.estimatedTokens });
+        if (active) setEstimate({ key: itemsKey, state: "ready", tokens: value.estimatedTokens });
       },
       () => {
-        if (active) setEstimate({ key, state: "failed" });
+        if (active) setEstimate({ key: itemsKey, state: "failed" });
       },
     );
     return () => {
       active = false;
     };
-  }, [action, items]);
+  }, [action, items, itemsKey]);
   async function runBatch(choice?: SourceChoice) {
     if (busy || items.length === 0) return;
     setBusy(true);
     setError("");
-    const account = readGradingAiAccount();
+    const sessionRevision = readGradingAiSessionRevision();
     try {
       let completed: BatchResult;
       if (action === "ai") {
-        completed = await gradingApi.requestProposals(items, buildAiRequest(choice));
-        if (account && account === readGradingAiAccount()) {
+        completed = await submitAiRequest(buildAiRequest(choice), (request) =>
+          gradingApi.requestProposals(items, request));
+        if (sessionRevision !== readGradingAiSessionRevision()) return;
+        if (readGradingAiAccount()) {
           completed.items.filter((item) => item.outcome === "PENDING" || item.outcome === "QUEUED")
             .forEach((item) => resumeGradingPolling(item.evaluationId));
         }
@@ -108,7 +112,9 @@ export function BatchActionDialog({
       }
       onDone();
     } catch (e) {
-      setError(formatErrorMessage(e));
+      if (action !== "ai" || sessionRevision === readGradingAiSessionRevision()) {
+        setError(formatErrorMessage(e));
+      }
     } finally {
       setBusy(false);
     }
@@ -119,7 +125,7 @@ export function BatchActionDialog({
       : action === "finalize"
         ? msg("grading.components.BatchActionDialog.finalizeGrades")
         : msg("grading.components.BatchActionDialog.batchAiProposals");
-  const estimateIsCurrent = estimate.key === JSON.stringify(items);
+  const estimateIsCurrent = estimate.key === itemsKey;
   const estimateState = estimateIsCurrent ? estimate.state : "loading";
   if (completed) return null;
   return (

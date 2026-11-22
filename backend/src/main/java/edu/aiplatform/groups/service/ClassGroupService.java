@@ -248,15 +248,27 @@ public class ClassGroupService {
         Map<UUID, UUID> after = new HashMap<>();
         drafts.forEach(d -> d.memberIds().forEach(m -> after.put(m, ids.get(d.key()))));
 
+        var departures = before.entrySet().stream()
+                .filter(entry -> !entry.getValue().equals(after.get(entry.getKey()))).toList();
+        Set<UUID> affectedGroups = new HashSet<>();
+        departures.forEach(entry -> affectedGroups.add(entry.getValue()));
+        deleted.forEach(group -> affectedGroups.add(group.id()));
+        Map<UUID, List<GroupDocument>> documentsByGroup = new HashMap<>();
+        affectedGroups.forEach(groupId -> documentsByGroup.put(groupId, documents.listByGroup(groupId)));
+        List<UUID> openAssignments = groupDocumentService.lockGroupChanges(classId,
+                documentsByGroup.values().stream().flatMap(List::stream).toList(),
+                drafts.stream().anyMatch(draft -> draft.id() == null));
+
         Set<UUID> moved = new LinkedHashSet<>();
-        before.forEach((member, group) -> {
-            if (!group.equals(after.get(member))) {
-                moved.add(member);
-                releaseHeldSections(group, member, actor, now);
-                // Đóng kênh SSE của người rời nhóm với tài liệu cũ (sau commit, F14 bước 1).
-                streams.closeFor(member, documents.listByGroup(group).stream().map(GroupDocument::id).toList());
-            }
-        });
+        for (var departure : departures) {
+            UUID member = departure.getKey();
+            List<UUID> documentIds = documentsByGroup.get(departure.getValue()).stream()
+                    .map(GroupDocument::id).toList();
+            moved.add(member);
+            releaseHeldSections(documentIds, member, actor, now);
+            // Đóng kênh SSE của người rời nhóm với tài liệu cũ (sau commit, F14 bước 1).
+            streams.closeFor(member, documentIds);
+        }
         after.forEach((member, group) -> {
             if (!group.equals(before.get(member))) {
                 moved.add(member);
@@ -315,7 +327,7 @@ public class ClassGroupService {
             }
         }
         // Nhóm mới khi lớp có bài nhóm đang mở: tạo tài liệu ngay (F7 bước 4, F14 bước 2).
-        groupDocumentService.ensureForGroups(classId, createdGroups);
+        groupDocumentService.ensureForGroups(openAssignments, createdGroups);
         // Mỗi nhóm một sự kiện có groupId (U14 bắt buộc): người vào nhóm theo nhóm mới, người bị gỡ theo nhóm đã rời.
         Map<UUID, List<UUID>> movedByGroup = new LinkedHashMap<>();
         for (UUID member : moved) {
@@ -347,8 +359,8 @@ public class ClassGroupService {
     }
 
     /** Người rời nhóm: nhả mục đang giữ, bỏ bản nháp chưa Xong; nội dung đã Xong giữ tác giả (BR-U12-05, F14). */
-    private void releaseHeldSections(UUID groupId, UUID member, Actor actor, Instant now) {
-        for (GroupSection section : documents.lockSectionsHeldBy(groupId, member)) {
+    private void releaseHeldSections(List<UUID> documentIds, UUID member, Actor actor, Instant now) {
+        for (GroupSection section : documents.lockSectionsHeldBy(documentIds, member)) {
             if (documents.updateSection(section.markReleased())) {
                 documents.touch(section.documentId(), now);
                 Map<String, Object> details = new LinkedHashMap<>();

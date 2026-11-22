@@ -2,6 +2,7 @@ package edu.aiplatform.groupdocs.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.assignments.contract.AssignmentContent;
+import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.AssignmentView;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
@@ -19,6 +20,7 @@ import edu.aiplatform.groupdocs.model.GroupDocument.SubmitMode;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groupdocs.model.GroupSection;
 import edu.aiplatform.groupdocs.model.SectionRevision;
+import edu.aiplatform.groupdocs.model.SectionRules;
 import edu.aiplatform.groups.service.GroupAccess;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
@@ -89,7 +91,7 @@ public class GroupSubmissionService {
         if (version == null || version != document.version()) {
             throw ApiException.createConflict("GROUP_DOC_VERSION_CONFLICT", "Tài liệu vừa được thay đổi, hãy tải lại");
         }
-        AssignmentView assignment = assignments.get(document.assignmentId()).orElseThrow(GroupAccess::createNotFoundError);
+        AssignmentView assignment = assignments.loadAssignment(document.assignmentId()).orElseThrow(GroupAccess::createNotFoundError);
         GroupSnapshot.Result snapshot = GroupSnapshot.buildSnapshot(document.sharedBlocks(), documents.listSections(documentId));
         ValidationResult result = validate(document, snapshot.document());
         if (!result.ok()) {
@@ -114,7 +116,11 @@ public class GroupSubmissionService {
         if (document == null || document.status() != GroupDocument.Status.IN_PROGRESS) {
             return Optional.empty();
         }
+        AssignmentView assignment = assignments.loadAssignment(document.assignmentId()).orElse(null);
         Instant now = clock.instant();
+        if (assignment == null || !isReadyForAutoSubmit(assignment, now)) {
+            return Optional.empty();
+        }
         boolean finalized = closeSections(documentId, now);
         if (document.hasSubmitted() || (!finalized && !document.hasChangedSinceSubmit())) {
             if (documents.updateDocument(document.markClosed())) {
@@ -124,8 +130,7 @@ public class GroupSubmissionService {
         }
         SubmitMode mode = document.autoSubmitReason() != null ? document.autoSubmitReason() : SubmitMode.AUTO_DEADLINE;
         ClassGroup group = groups.findGroup(document.groupId()).orElse(null);
-        AssignmentView assignment = assignments.get(document.assignmentId()).orElse(null);
-        if (group == null || assignment == null) {
+        if (group == null) {
             documents.updateDocument(document.markClosed());
             return Optional.empty();
         }
@@ -135,10 +140,20 @@ public class GroupSubmissionService {
                 collectWarnings(snapshot, result)));
     }
 
+    private static boolean isReadyForAutoSubmit(AssignmentView assignment, Instant now) {
+        if (assignment.status() == AssignmentStatus.CLOSED || assignment.status() == AssignmentStatus.RETIRED) {
+            return true;
+        }
+        Instant deadline = assignment.lateUntil() != null ? assignment.lateUntil() : assignment.closesAt();
+        return assignment.status() == AssignmentStatus.OPEN && deadline != null
+                && now.isAfter(deadline.plus(SectionRules.GRACE));
+    }
+
     private boolean closeSections(UUID documentId, Instant now) {
         boolean finalized = false;
         for (GroupSection section : documents.lockSections(documentId)) {
-            if (section.status() == GroupSection.Status.CLAIMED && section.draftBlocks() != null) {
+            if (section.status() == GroupSection.Status.CLAIMED && section.draftSavedAt() != null
+                    && section.draftBlocks() != null) {
                 GroupSection done = section.markDone(now);
                 if (documents.updateSection(done)) {
                     documents.insertRevision(new SectionRevision(UUID.randomUUID(), section.id(), section.claimedBy(),
@@ -169,7 +184,7 @@ public class GroupSubmissionService {
         } else {
             model = GroupSnapshot.buildSnapshot(document.sharedBlocks(), documents.listSections(documentId)).document();
         }
-        String title = assignments.get(document.assignmentId()).map(AssignmentView::title).orElse("Bai nhom") + " - "
+        String title = assignments.loadAssignment(document.assignmentId()).map(AssignmentView::title).orElse("Bai nhom") + " - "
                 + ctx.group().name();
         return new Export(title, docx.export(model, title, blockId -> null));
     }

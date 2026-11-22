@@ -9,10 +9,35 @@ import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class GradingProposalValidatorTest {
     final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
     final UUID rid = UUID.randomUUID(), iid = UUID.randomUUID();
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+        "Actor phụ (Chủ sân, Cổng thanh toán) ghi đúng | true",
+        "Actor phụ (ví dụ Chủ sân, Cổng thanh toán) ghi đúng | false",
+        "Actor phụ (Chủ sân hoặc Admin) ghi đúng | false",
+        "Actor phụ (Chủ sân) ghi đúng nếu có | false"
+    })
+    void onlyHoldsFullCreditForExplicitActorLists(String itemText, boolean requiresReview) throws Exception {
+        var rubric = new RubricView(rid, UUID.randomUUID(), "DOCUMENT",
+                List.of(new RubricCriterion(UUID.randomUUID(), "Đặc tả", "", CriterionKind.TEXT,
+                        List.of(new RubricItem(iid, itemText, BigDecimal.ONE)))), BigDecimal.ONE);
+        var document = new DocumentModel(List.of(new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT,
+                BlockType.TABLE, objectMapper.readTree("""
+                        {"rows":[[{"runs":[{"text":"Tác nhân phụ"}]},{"runs":[{"text":"Admin"}]}]]}
+                        """))));
+        ObjectNode payload = complete(objectMapper.valueToTree(Map.of(
+                "checks", Map.of(rid, List.of(iid)), "score", "1")));
+        var reviewed = new GradingProposalValidator(objectMapper).flagProposalEvidenceForReview(
+                payload, List.of(rubric), document, List.of(new DocumentPart("DOCUMENT", null, List.of(), "")));
+        assertThat(reviewed.at("/structuredFeedback/items/0/requiresReview").asBoolean())
+                .isEqualTo(requiresReview);
+    }
 
     @Test
     void newProposalsRequireExplicitScoresAndEvidenceForEveryItem() {

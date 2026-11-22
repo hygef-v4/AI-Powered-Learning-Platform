@@ -90,7 +90,7 @@ public class GradeDistributionVisibilityService {
             throw ApiException.createNotFound("GRADE_NOT_FOUND");
 
         // Step 2: Verify assignment belongs to class/subject and is published
-        var assignment = assignmentQuery.get(assignmentId)
+        var assignment = assignmentQuery.loadAssignment(assignmentId)
                 .orElseThrow(() -> ApiException.createNotFound("ASSIGNMENT_NOT_FOUND"));
         SubmissionReviewService.requireAssignment(assignment, courseClass);
         if (assignment.scope() == AssignmentScope.SUBJECT

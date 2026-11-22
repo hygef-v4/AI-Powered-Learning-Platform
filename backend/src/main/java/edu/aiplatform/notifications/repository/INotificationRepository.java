@@ -24,6 +24,9 @@ public interface INotificationRepository {
 
     void insertEmailDelivery(EmailDelivery delivery);
 
+    /** Ghi trạng thái gửi (status, lịch, số lần thử, lỗi, thời điểm gửi) của email đã khóa. */
+    void updateEmailDelivery(EmailDelivery delivery);
+
     Optional<EmailDelivery> lockEmailDelivery(UUID id);
 
     List<EmailDelivery> listPendingEmails(Instant olderThan);
