@@ -16407,6 +16407,15 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **AI Response**: "Unified Java and Vitest tests, Java replay/live evidence and DeepEval behind one PowerShell runner and shared report. Verified full, offline, replay, report and legacy import against local synthetic artifacts."
 **Context**: The requested single entry point and report now cover existing test engines. Production code, fixtures and CI are unchanged. No Gemini Live request was made.
 
+## U09 PE defense dataset
+**Timestamp**: 2026-11-22T05:18:58Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi xây dựng bộ đề $poteto-mode"
+**AI Response**: "Đã tạo 12 ca đối chứng SWR302 và SWD392, 4 đề độc lập và 20 chỗ nhập điểm. Java và Python đã kiểm tra fixture; PowerShell replay bằng bản ghi cũ. Không gọi AI mới."
+**Context**: Thay đổi chỉ áp dụng cho dữ liệu QA, test, script chạy test và tài liệu. Chưa có điểm giảng viên. Phạm vi bảo mật và phục hồi đã duyệt giữ nguyên; property-based testing vẫn tắt.
+
+---
+
 ## U10 AI question generation audit
 **Timestamp**: 2026-11-22T05:00:00Z
 **Requested by:** Quang Hung
@@ -16429,5 +16438,59 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **User Input**: "giúp tôi chạy lại test"
 **AI Response**: "Chạy lại: 190 test package quizzes và 35 test PlatformWorkflowIntegrationTest đạt, BUILD SUCCESS."
 **Context**: Kiểm chứng bản sửa U10, không đổi code.
+
+---
+
+## U09 Sol judge selection
+**Timestamp**: 2026-11-22T05:34:44Z
+**Requested by:** Quang Hung
+**User Input**: "tôi chọn gpt 6.2 sol high làm judge"
+**AI Response**: "Cấu hình Codex judge GPT-6.2 Sol với reasoning effort high."
+**Context**: Thay đổi trong công cụ QA. Lưu reasoning effort cho đối chiếu các bài đánh giá.
+
+---
+
+## U09 full dataset evaluation
+**Timestamp**: 2026-11-22T05:34:44Z
+**Requested by:** Quang Hung
+**User Input**: "h toi muốn test toàn bộ dataset bằng gpt 6 luna medium sau chạy judge bằng gpt 6.2 sol high"
+**AI Response**: "Luna medium chấm 20 ca tổng hợp qua Codex CLI. Backend xác thực đủ 20 phản hồi. Sol high đánh giá đủ 60 điểm GEval, 15 ca đạt cả ba ngưỡng."
+**Context**: Bỏ ngoài phạm vi 20 chỗ holdout chưa có bài nộp. Phiên chạy dùng xác thực ChatGPT và không đổi luồng grading production.
+
+---
+
+## U09 consolidated report
+**Timestamp**: 2026-11-22T05:34:44Z
+**Requested by:** Quang Hung
+**User Input**: "sau khi chạy xong thì tổng hợp vào 1 file report"
+**AI Response**: "Xuất một báo cáo Markdown gồm điểm từng ca, lý do GEval, chênh lệch với điểm mẫu và năm ca dưới ngưỡng."
+**Context**: Báo cáo cục bộ, không gửi ra ngoài. Nhãn nhóm và mức chất lượng theo judge được ghi riêng.
+
+---
+
+## U09 grading prompt and readable report
+**Timestamp**: 2026-11-22T05:54:49Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại, với giúp tôi viết cấu trúc test report đấy dễ đọc 1 chút , đổi tên file md thành test ai grading test đi, tôi muốn sau tôi thêm 1 judge là opus 5.5 để test thêm"
+**AI Response**: "Sửa prompt theo bằng chứng riêng của từng mục, thứ tự và nhánh sequence, điểm một phần, và kiểm tra điểm với lý do. 57 test backend đạt. Ca thiếu FK và ca thiếu phân quyền khớp mốc ở prompt chốt. Báo cáo đổi tên và có cột Opus riêng."
+**Context**: Ca lạc đề còn lệch 0,25 điểm ở trigger. Không sửa fixture hoặc schema. Xác nhận Claude Code có đăng nhập thuê bao, chưa gọi Opus.
+
+---
+
+## U09 điều chỉnh prompt về trigger và điểm từng luồng
+**Timestamp**: 2026-11-22T06:41:36Z
+**Requested by:** Quang Hung
+**User Input**: "ok sửa prompt trước"
+**AI Response**: "Ràng buộc trigger với use case đích và hướng dẫn cộng điểm từng luồng vào điểm số JSON. Hai kiểm tra prompt thất bại trước sửa, 57 test backend đạt sau sửa. Luna và Sol chạy lại ba ca qua Codex CLI. Bài lạc đề về 0,50/4 và bài đầy đủ giữ 4,00/4. Sol đánh giá đạt ở hai ca này. Ca chỉ có một luồng vẫn 3,50/4 so với mốc nhóm 3,75/4."
+**Context**: Kiểm thử hồi quy có chọn lọc trên dữ liệu tổng hợp đã lưu. Giữ đầu vào, rubric và schema qua các lượt. Bảng đủ 20 ca thuộc phiên bản prompt cũ hơn. PBT đã tắt theo quyết định dự án.
+
+---
+
+## U09 cập nhật hướng dẫn kiểm thử
+**Timestamp**: 2026-11-22T07:20:18Z
+**Requested by:** Quang Hung
+**User Input**: "À mà sửa instructionn trc đã"
+**AI Response**: "Cập nhật hướng dẫn theo bốn lớp, làm rõ đường đi của bản ghi Luna và cách đối chiếu Sol với Opus. Kiểm tra lệnh lập danh sách 20 ca cho Opus và dựng lại báo cáo từ dữ liệu lưu."
+**Context**: Maven xác nhận 57 test backend đạt. Pytest xác nhận 18 test QA đạt. Lệnh lập danh sách không gọi model.
 
 ---
