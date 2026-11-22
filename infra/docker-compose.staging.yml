@@ -24,7 +24,7 @@ services:
 
   # Cổng 80 thuộc production và VPS chặn kết nối quốc tế đi vào: cấp và gia hạn bằng DNS-01 qua Cloudflare.
   certbot:
-    image: certbot/dns-cloudflare:v4.1.1
+    image: certbot/dns-cloudflare:v4.1.1@sha256:bf87c2e3588f08c7fd520cc2fd155a954850c68d92105d693b26cd12dc3fca28
     volumes: !override
       - letsencrypt:/etc/letsencrypt
       - ./cloudflare.ini:/run/secrets/cloudflare.ini:ro
@@ -74,7 +74,7 @@ services:
 
   # Nhận mọi email của staging; không gửi ra ngoài. Giao diện chỉ mở qua Nginx ở /mailpit/.
   mailpit:
-    image: axllent/mailpit:v1.27
+    image: axllent/mailpit:v1.27@sha256:e22dce5b36f93c77082e204a3942fb6b283b7896e057458400a4c88344c3df68
     environment:
       MP_WEBROOT: /mailpit/
       MP_MAX_MESSAGES: "2000"

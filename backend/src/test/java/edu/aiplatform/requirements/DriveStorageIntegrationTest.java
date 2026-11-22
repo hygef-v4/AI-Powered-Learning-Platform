@@ -389,11 +389,21 @@ class DriveStorageIntegrationTest {
 
         var properties = withFolder("Lab's \\ files", namedRoot);
         var folders = new DriveFolders(driveClientFactory, properties);
-        assertThat(new DriveHealthIndicator(properties, driveClientFactory, folders, Clock.systemUTC()).health()
-                .getDetails()).containsEntry("drive", "UP");
+        var healthy = new DriveHealthIndicator(properties, driveClientFactory, folders, Clock.systemUTC());
+        try {
+            Awaitility.await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
+                    assertThat(healthy.health().getDetails()).containsEntry("drive", "UP"));
+        } finally {
+            healthy.closeProbe();
+        }
         DRIVE.failNext("GET /drive/v3/files/" + namedRoot, 403, "insufficientFilePermissions", 2);
-        assertThat(new DriveHealthIndicator(properties, driveClientFactory, folders, Clock.systemUTC()).health()
-                .getDetails()).containsEntry("drive", "DEGRADED");
+        var degraded = new DriveHealthIndicator(properties, driveClientFactory, folders, Clock.systemUTC());
+        try {
+            Awaitility.await().atMost(Duration.ofSeconds(5)).untilAsserted(() ->
+                    assertThat(degraded.health().getDetails()).containsEntry("drive", "DEGRADED"));
+        } finally {
+            degraded.closeProbe();
+        }
     }
 
     FilesProperties withFolder(String folderName, String folderId) {
