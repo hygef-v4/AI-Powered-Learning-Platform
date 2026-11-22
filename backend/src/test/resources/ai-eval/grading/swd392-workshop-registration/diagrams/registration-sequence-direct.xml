@@ -1,0 +1,27 @@
+<mxGraphModel grid="1" gridSize="10" page="1" pageWidth="1100" pageHeight="850">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="app" value="Ứng dụng thành viên" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;size=35;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="45" y="35" width="130" height="425" />
+    </mxCell>
+    <mxCell id="api" value="Registration API" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;size=35;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="310" y="35" width="130" height="425" />
+    </mxCell>
+    <mxCell id="repository" value="Registration Repository" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;size=35;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="855" y="35" width="130" height="425" />
+    </mxCell>
+    <mxCell id="post" value="POST /workshop-sessions/{sessionId}/registrations" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;exitX=0.5;exitY=0.2;exitPerimeter=0;entryX=0.5;entryY=0.2;entryPerimeter=0;" edge="1" parent="1" source="app" target="api">
+      <mxGeometry as="geometry" relative="1" y="0" />
+    </mxCell>
+    <mxCell id="persist" value="insertRegistration(sessionId, memberId)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;exitX=0.5;exitY=0.67;exitPerimeter=0;entryX=0.5;entryY=0.67;entryPerimeter=0;" edge="1" parent="1" source="api" target="repository">
+      <mxGeometry as="geometry" relative="1" y="0" />
+    </mxCell>
+    <mxCell id="registration-id" value="registrationId" style="html=1;verticalAlign=bottom;dashed=1;endArrow=open;endFill=0;exitX=0.5;exitY=0.74;exitPerimeter=0;entryX=0.5;entryY=0.74;entryPerimeter=0;" edge="1" parent="1" source="repository" target="api">
+      <mxGeometry as="geometry" relative="1" y="0" />
+    </mxCell>
+    <mxCell id="created" value="&lt;b&gt;201 Created&lt;/b&gt;&lt;br&gt;Location: /workshop-sessions/{sessionId}/registrations/{registrationId}" style="html=1;verticalAlign=bottom;dashed=1;endArrow=open;endFill=0;exitX=0.5;exitY=0.88;exitPerimeter=0;entryX=0.5;entryY=0.88;entryPerimeter=0;" edge="1" parent="1" source="api" target="app">
+      <mxGeometry as="geometry" relative="1" y="0" />
+    </mxCell>
+  </root>
+</mxGraphModel>

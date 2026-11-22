@@ -24,7 +24,8 @@ param(
     [switch] $All,
     [switch] $CollectOnly,
     [switch] $MavenOnline,
-    [switch] $Share
+    [switch] $Share,
+    [string] $Dataset
 )
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
@@ -34,7 +35,7 @@ $evaluationArgs = @('--mode', $Mode, '--judge', $Judge)
 $valueArgs = @{
     Results='--results'; Case='--case'; Run='--run'; Model='--model'; GeminiModel='--gemini-model'
     Repeats='--repeats'; MaxCalls='--max-calls'; Output='--output'; InputReport='--input'
-    Baseline='--baseline'; JavaHome='--java-home'; Maven='--maven'; BackendXml='--backend-xml'
+    Baseline='--baseline'; Dataset='--dataset'; JavaHome='--java-home'; Maven='--maven'; BackendXml='--backend-xml'
     FrontendJson='--frontend-json'
 }
 foreach ($key in $valueArgs.Keys) {

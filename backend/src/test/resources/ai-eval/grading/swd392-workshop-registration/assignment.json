@@ -1,0 +1,130 @@
+{
+  "assignmentKey": "swd392-workshop-registration",
+  "title": "SWD392 — Đăng ký workshop cho thành viên câu lạc bộ",
+  "labelSource": "SYNTHETIC_TEAM",
+  "labelNote": "Tình huống, rubric, bài làm và điểm tham chiếu do nhóm tạo để thử quy trình chấm SWD392.",
+  "instructions": "Câu lạc bộ cho thành viên đăng ký các buổi workshop. Một thành viên có thể chưa đăng ký hoặc đăng ký nhiều buổi. Một buổi có thể chưa có hoặc có nhiều đăng ký. Mỗi đăng ký phải thuộc đúng một thành viên và một buổi. Mỗi cặp thành viên và buổi chỉ được có một đăng ký. 1) Vẽ ERD khái niệm với ba thực thể, các quan hệ và bội số. 2) Vẽ ERD logic với các bảng MEMBER, WORKSHOP_SESSION và REGISTRATION, dùng PK lần lượt là member_id, session_id và registration_id. Chỉ rõ hai FK trong REGISTRATION và ràng buộc chống trùng. 3) Vẽ sơ đồ tuần tự REST cho POST /workshop-sessions/{sessionId}/registrations. Giả định phiên hợp lệ và API đã có memberId. Chỉ thành viên có quyền workshop:register được ghi đăng ký. Khi thiếu quyền, API trả 403 và dừng. Khi ghi thành công, API trả 201 và Location của đăng ký vừa tạo.",
+  "skeleton": [
+    {
+      "key": "h-conceptual",
+      "style": "H1",
+      "text": "1. ERD khái niệm"
+    },
+    {
+      "key": "h-logical",
+      "style": "H1",
+      "text": "2. ERD logic"
+    },
+    {
+      "key": "h-sequence",
+      "style": "H1",
+      "text": "3. Sơ đồ tuần tự REST"
+    }
+  ],
+  "rubrics": [
+    {
+      "key": "r-conceptual",
+      "partHeading": "h-conceptual",
+      "criteria": [
+        {
+          "key": "c-conceptual",
+          "title": "Mô hình khái niệm",
+          "kind": "DIAGRAM",
+          "items": [
+            {
+              "key": "c-entities",
+              "text": "Cho 0,75 khi có đủ ba thực thể nghiệp vụ Thành viên, Buổi workshop và Đăng ký. Thiếu thực thể nào thì mục này được 0.",
+              "points": 0.75
+            },
+            {
+              "key": "c-cardinalities",
+              "text": "Cho 0,75 khi có đủ hai quan hệ với bội số: mỗi Đăng ký thuộc đúng một Thành viên và đúng một Buổi workshop, mỗi Thành viên hoặc Buổi workshop có 0..* Đăng ký. Sai hoặc thiếu một đầu thì mục này được 0.",
+              "points": 0.75
+            },
+            {
+              "key": "c-abstraction",
+              "text": "Cho 0,5 nếu ba thực thể ở mức khái niệm, không đưa cột lưu trữ, kiểu dữ liệu SQL hay dấu PK/FK vào sơ đồ. Có bất kỳ chi tiết vật lý nào nêu trên thì mục này được 0.",
+              "points": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r-logical",
+      "partHeading": "h-logical",
+      "criteria": [
+        {
+          "key": "c-logical",
+          "title": "Lược đồ quan hệ",
+          "kind": "DIAGRAM",
+          "items": [
+            {
+              "key": "l-tables",
+              "text": "Cho 0,75 khi có đủ bảng MEMBER, WORKSHOP_SESSION và REGISTRATION. Thiếu bảng nào thì mục này được 0.",
+              "points": 0.75
+            },
+            {
+              "key": "l-keys",
+              "text": "Cho 0,75 khi cả ba bảng khai báo PK: MEMBER.member_id, WORKSHOP_SESSION.session_id và REGISTRATION.registration_id. Thiếu một khai báo thì mục này được 0.",
+              "points": 0.75
+            },
+            {
+              "key": "l-member-fk",
+              "text": "Cho 0,75 khi REGISTRATION.member_id được đánh dấu FK và đích là MEMBER.member_id, hoặc dùng ký hiệu tương đương nêu rõ đây là tham chiếu khóa. Cột đứng riêng và đường nối bội số chung không đủ. Thiếu khai báo thì mục này được 0.",
+              "points": 0.75
+            },
+            {
+              "key": "l-session-fk",
+              "text": "Cho 0,75 khi REGISTRATION.session_id được đánh dấu FK và đích là WORKSHOP_SESSION.session_id, hoặc dùng ký hiệu tương đương nêu rõ đây là tham chiếu khóa. Cột đứng riêng và đường nối bội số chung không đủ. Thiếu khai báo thì mục này được 0.",
+              "points": 0.75
+            },
+            {
+              "key": "l-unique",
+              "text": "Cho 0,5 khi REGISTRATION có UNIQUE trên cặp (member_id, session_id) hoặc ràng buộc tương đương. Hai ràng buộc UNIQUE độc lập trên từng cột được 0.",
+              "points": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r-sequence",
+      "partHeading": "h-sequence",
+      "criteria": [
+        {
+          "key": "c-sequence",
+          "title": "Luồng gọi API đăng ký",
+          "kind": "DIAGRAM",
+          "items": [
+            {
+              "key": "s-request",
+              "text": "Cho 1 khi ứng dụng gửi POST /workshop-sessions/{sessionId}/registrations đến Registration API. Sai phương thức, tài nguyên, hoặc chiều gọi thì mục này được 0.",
+              "points": 1
+            },
+            {
+              "key": "s-authorization",
+              "text": "Cho 1,5 khi API kiểm tra quyền workshop:register trước lần gọi ghi dữ liệu và trả 403, kết thúc luồng khi bị từ chối. Điều kiện đăng nhập hoặc mã 403 đứng riêng không đủ. Thiếu bất kỳ yêu cầu nào thì mục này được 0.",
+              "points": 1.5
+            },
+            {
+              "key": "s-persist",
+              "text": "Cho 1 khi luồng thành công có API gọi kho lưu đăng ký với cả sessionId và memberId, rồi nhận registrationId. Chấm bước ghi độc lập với mục kiểm tra quyền. Thiếu một thông tin hoặc sai chiều gọi thì mục này được 0.",
+              "points": 1
+            },
+            {
+              "key": "s-created",
+              "text": "Cho 1 khi API trả 201 Created sau bước ghi thành công và nêu Location của bản ghi mới chứa sessionId và registrationId. Thiếu mã hoặc Location thì mục này được 0.",
+              "points": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "cases": [
+    "cases/swd-workshop-complete.json",
+    "cases/swd-workshop-missing-fk.json",
+    "cases/swd-workshop-no-authorization.json"
+  ]
+}

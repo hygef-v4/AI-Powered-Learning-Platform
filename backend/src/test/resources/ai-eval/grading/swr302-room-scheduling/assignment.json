@@ -1,0 +1,114 @@
+{
+  "assignmentKey": "swr302-room-scheduling",
+  "title": "Xếp lịch phòng học bù",
+  "labelSource": "SYNTHETIC_TEAM",
+  "labelNote": "Đề, bài làm và điểm kỳ vọng do nhóm tự soạn để kiểm tra chấm AI. Điểm chưa được giảng viên xác nhận.",
+  "instructions": "Một khoa cần hệ thống xếp lịch phòng học cho các buổi học bù. Giảng viên tìm phòng theo ngày, khung giờ và sức chứa rồi chọn phòng để đặt. Dịch vụ lịch phòng là hệ thống có sẵn, cung cấp danh sách phòng trống và xử lý giữ chỗ. Nếu phòng vừa được người khác giữ, dịch vụ báo xung đột. Hãy (1) vẽ sơ đồ ngữ cảnh với một tiến trình trung tâm hình tròn, các tác nhân ngoài và tên dữ liệu trên từng mũi tên có hướng, (2) đặc tả ca Đặt phòng học bù với tên, tác nhân chính, kích hoạt, điều kiện trước và sau, luồng chính, ngoại lệ xung đột và (3) viết một yêu cầu phi chức năng có thể đo về thời gian phản hồi khi tra cứu phòng trống dưới tải cao điểm.",
+  "skeleton": [
+    {
+      "key": "h-context",
+      "style": "H1",
+      "text": "1. Sơ đồ ngữ cảnh"
+    },
+    {
+      "key": "h-spec",
+      "style": "H1",
+      "text": "2. Đặc tả ca Đặt phòng học bù"
+    },
+    {
+      "key": "h-nfr",
+      "style": "H1",
+      "text": "3. Yêu cầu phi chức năng"
+    }
+  ],
+  "rubrics": [
+    {
+      "key": "r-context",
+      "partHeading": "h-context",
+      "criteria": [
+        {
+          "key": "c-context-diagram",
+          "title": "Phạm vi và trao đổi dữ liệu",
+          "kind": "DIAGRAM",
+          "items": [
+            {
+              "key": "d-context-boundary",
+              "text": "Có đúng một tiến trình trung tâm hình tròn mang tên Hệ thống xếp lịch phòng học. Các tác nhân nằm ngoài hình tròn. Không có tiến trình con hay kho dữ liệu nội bộ.",
+              "points": 1
+            },
+            {
+              "key": "d-context-entities",
+              "text": "Có đủ hai tác nhân ngoài tên Giảng viên và Dịch vụ lịch phòng.",
+              "points": 1
+            },
+            {
+              "key": "d-context-flows",
+              "text": "Cho 0,75 điểm cho mỗi cặp luồng đúng hướng và có tên dữ liệu. Giảng viên gửi tiêu chí tìm phòng và yêu cầu đặt, hệ thống trả danh sách phòng trống và kết quả đặt. Hệ thống gửi truy vấn phòng trống và lệnh giữ chỗ tới Dịch vụ lịch phòng, dịch vụ trả khung giờ trống và kết quả giữ chỗ.",
+              "points": 1.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r-spec",
+      "partHeading": "h-spec",
+      "criteria": [
+        {
+          "key": "c-spec",
+          "title": "Đặc tả ca sử dụng",
+          "kind": "TEXT",
+          "items": [
+            {
+              "key": "s-identity",
+              "text": "Ghi đúng tên ca Đặt phòng học bù và tác nhân chính Giảng viên.",
+              "points": 0.5
+            },
+            {
+              "key": "s-conditions",
+              "text": "Nêu điều kiện trước khi đặt phòng, thao tác mở chức năng và trạng thái thành công của lịch đặt.",
+              "points": 1
+            },
+            {
+              "key": "s-normal",
+              "text": "Luồng chính nêu tiêu chí tìm phòng, trao đổi với Dịch vụ lịch phòng để lấy kết quả và giữ phòng đã chọn, lưu lịch đặt sau khi giữ thành công, rồi báo mã đặt cho Giảng viên.",
+              "points": 1.5
+            },
+            {
+              "key": "s-exception",
+              "text": "Nêu bước phát sinh xung đột khi phòng vừa được giữ. Hệ thống không lưu lịch đặt cho phòng bị tranh chấp, báo phòng đã bận và tải lại danh sách để Giảng viên chọn lại.",
+              "points": 1.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r-nfr",
+      "partHeading": "h-nfr",
+      "criteria": [
+        {
+          "key": "c-performance",
+          "title": "Thời gian phản hồi khi tra cứu phòng trống",
+          "kind": "TEXT",
+          "items": [
+            {
+              "key": "nfr-target",
+              "text": "Yêu cầu nhắm đến thời gian phản hồi của chức năng tra cứu phòng trống dưới tải cao điểm. Mục này cho điểm khi nêu đúng mục tiêu, kể cả khi diễn đạt định tính.",
+              "points": 0.5
+            },
+            {
+              "key": "nfr-measurement",
+              "text": "Yêu cầu ghi rõ ngưỡng thời gian, tỷ lệ lượt tra cứu cần đạt ngưỡng, tải đồng thời và thời điểm bắt đầu, kết thúc phép đo. Cho 1,5 điểm khi đủ cả bốn thành phần và 0 điểm khi thiếu thành phần.",
+              "points": 1.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "cases": [
+    "cases/swr-room-complete.json",
+    "cases/swr-room-vague-nfr.json"
+  ]
+}

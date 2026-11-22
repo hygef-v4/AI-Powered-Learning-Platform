@@ -1,0 +1,21 @@
+<mxGraphModel grid="1" gridSize="10" page="1" pageWidth="1100" pageHeight="850">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="member" value="&lt;b&gt;MEMBER&lt;/b&gt;&lt;br&gt;PK member_id: BIGINT&lt;br&gt;display_name: VARCHAR" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="35" y="135" width="200" height="94" />
+    </mxCell>
+    <mxCell id="registration" value="&lt;b&gt;REGISTRATION&lt;/b&gt;&lt;br&gt;PK registration_id: BIGINT&lt;br&gt;FK member_id: BIGINT REFERENCES MEMBER(member_id)&lt;br&gt;session_id: BIGINT&lt;br&gt;UNIQUE (member_id, session_id)" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="355" y="92" width="365" height="180" />
+    </mxCell>
+    <mxCell id="session" value="&lt;b&gt;WORKSHOP_SESSION&lt;/b&gt;&lt;br&gt;PK session_id: BIGINT&lt;br&gt;starts_at: TIMESTAMP" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="840" y="135" width="215" height="94" />
+    </mxCell>
+    <mxCell id="member-registrations" value="1 : 0..*" style="html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;" edge="1" parent="1" source="member" target="registration">
+      <mxGeometry as="geometry" relative="1" y="-8" />
+    </mxCell>
+    <mxCell id="session-registrations" value="1 : 0..*" style="html=1;endArrow=ERzeroToMany;startArrow=ERmandOne;startFill=0;endFill=0;" edge="1" parent="1" source="session" target="registration">
+      <mxGeometry as="geometry" relative="1" y="-8" />
+    </mxCell>
+  </root>
+</mxGraphModel>

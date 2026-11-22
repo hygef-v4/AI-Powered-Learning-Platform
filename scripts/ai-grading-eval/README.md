@@ -35,7 +35,7 @@ Use PowerShell 7, Python 3.14 x64 and uv. From the repository root:
 
 | Judge | How it is selected |
 |---|---|
-| `codex` | Requires a supported native Codex CLI and a ChatGPT login. Defaults to `gpt-6.2-sol`. Uses a temporary directory, read-only mode, disabled shell, plugins, collaboration and web search, and a strict output schema. |
+| `codex` | Requires a supported native Codex CLI and a ChatGPT login. Defaults to `gpt-6.2-sol` with `high` reasoning. Uses a temporary directory, read-only mode, disabled shell, plugins, collaboration and web search, and a strict output schema. |
 | `claude` | Requires a native CLI and a first-party Claude subscription login in `claude auth status`. Defaults to `sonnet`. Uses an empty MCP configuration, disabled built-in tools, hooks and connectors, and no transcript persistence. Check compatibility with your CLI before using it for a long run. |
 | `ollama` | Requires an already installed local model at `http://127.0.0.1:11434`. Defaults to the 2.5 GB `qwen3:4b-instruct-2507-q4_K_M`. Requests use Ollama's native structured output schema. |
 | `gemini` | Requires the official Windows npm CLI, configured Google personal OAuth, and an explicit `--model`. The runner denies all tools and disables hooks, MCP and extensions in a temporary profile. The JSON envelope parser is regression-tested. A live run depends on OAuth access to the requested model. |
