@@ -36,6 +36,37 @@ describe("AiDraftDialog", () => {
     expect(generate).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { code: "TEMPLATE_CONFLICT", message: "Question 1 names both Order and Dish." },
+    { code: "QUESTION_COUNT_CONFLICT", message: "The request says 5 questions; the setting says 4." },
+    null,
+  ])("requires explicit confirmation for a conflict or template: %j", async (warning) => {
+    vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);
+    vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([]);
+    vi.spyOn(filesApi, "getPolicies").mockResolvedValue([]);
+    vi.spyOn(assignmentsApi, "aiDraft").mockResolvedValue({
+      draftId: "d1", assignmentId: "a1", origin: "AI_TASK", status: "READY", taskId: null,
+      proposal: { title: "Order exam", businessContext: "QA system", instructions: "Read the requirements.",
+        sections: [{ level: 1, title: "Statechart", guidance: "Draw the lifecycle", rubric: [] }],
+        validation: { status: warning ? "NEEDS_REVIEW" : "VALID", questionCount: 1, rubricLeafCount: 1, totalPoints: 11.25,
+          issues: warning ? [{ ...warning, severity: "WARNING", path: "authoringWarnings[0]" }] : [] } },
+      provenance: { templateReviewRequired: !warning }, safeError: null, baseVersion: 1, createdAt: "now", decidedAt: null,
+    });
+    const apply = vi.spyOn(assignmentsApi, "applyAiDraft").mockResolvedValue({} as never);
+    const onApplied = vi.fn();
+    render(<AiDraftDialog assignmentId="a1" initialDraftId="d1" version={1} currentPartCount={0}
+      currentTitle="Original title" currentInstructions="" gradingMode="GRADED" onClose={vi.fn()} onApplied={onApplied} />);
+
+    expect(await screen.findByText("Order exam")).toBeInTheDocument();
+    if (warning) expect(screen.getByText(warning.message)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sửa yêu cầu và tạo lại" })).toBeInTheDocument();
+    expect(screen.getByText("11.25 điểm")).toBeInTheDocument();
+    expect(apply).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Áp dụng đề xuất" }));
+    await waitFor(() => expect(onApplied).toHaveBeenCalledTimes(1));
+    expect(apply).toHaveBeenCalledWith("a1", "d1", 1, true, false);
+  });
+
   it("nothing is required: an empty form still sends, English by default, and the AI decides the rest", async () => {
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue(MATERIAL);
     const requestAiDraft = vi.spyOn(assignmentsApi, "requestAiDraft").mockResolvedValue({

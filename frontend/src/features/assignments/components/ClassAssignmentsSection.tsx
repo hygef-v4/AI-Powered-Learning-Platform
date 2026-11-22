@@ -36,7 +36,13 @@ function ClassAssignments({ classId, headerActions }: { classId: string; headerA
       {creating && page.data && (
         <CreateAssignmentDialog target={{ kind: "class", classId, groupSupported: page.data.groupSupported }}
           onClose={() => setCreating(false)}
-          onCreated={(created) => { setCreating(false); rememberAssignmentsPage(); router.push(`/assignments/${encodeURIComponent(created.id)}?classId=${encodeURIComponent(classId)}`); }} />
+          onCreated={(created, proposalId) => {
+            setCreating(false);
+            rememberAssignmentsPage();
+            const query = new URLSearchParams({ classId });
+            if (proposalId) query.set("proposalId", proposalId);
+            router.push(`/assignments/${encodeURIComponent(created.id)}?${query}`);
+          }} />
       )}
     </div>
   );

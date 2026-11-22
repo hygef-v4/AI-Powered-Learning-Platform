@@ -16472,6 +16472,31 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 
 ---
 
+## U10 AI question generation audit
+**Timestamp**: 2026-11-22T05:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "audit phần tạo đề, tạo bằng AI xem có vấn đề gì ko"
+**AI Response**: "Audit chỉ đọc luồng đề xuất câu AI của U10. Nêu 6 vấn đề: trần token khi xin nhiều câu, tạo lại thừa khi yêu cầu lệch tài liệu, lượt tạo lại hỏng khi quiz đổi version, đánh giá bám nguồn do model tự khai, loại câu và độ khó không được ép, requestRef không có unique index."
+**Context**: Investigation, không đổi code.
+
+## U10 AI question generation fixes
+**Timestamp**: 2026-11-22T05:22:01Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa , b có thể gọi model gpt 6 luna medium qua orca cli để test lại"
+**AI Response**: "Sửa QuizDraftResultHandler (chỉ tạo lại khi questionsMatchSources=false, cảnh báo khi requestMatchesSources=false), QuizSourceRetry (bỏ ràng buộc version), QuizDraftPrompt.buildSchema (ép type và difficulty). 38 test đạt. Codex gpt-6-luna medium qua Orca đo mẫu 50 câu: 6.134 token o200k, cận dưới vì mẫu có lựa chọn giữ chỗ. Provider đã báo rõ khi output bị cắt; trần token chưa đổi vì chưa có phép đo thật."
+**Context**: Code generation nhỏ trong unit U10. Không commit, push hay đổi cấu hình.
+
+---
+
+## U10 AI question generation test rerun
+**Timestamp**: 2026-11-22T05:29:01Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi chạy lại test"
+**AI Response**: "Chạy lại: 190 test package quizzes và 35 test PlatformWorkflowIntegrationTest đạt, BUILD SUCCESS."
+**Context**: Kiểm chứng bản sửa U10, không đổi code.
+
+---
+
 ## U09 Sol judge selection
 **Timestamp**: 2026-11-22T05:34:44Z
 **Requested by:** Quang Hung
@@ -16526,6 +16551,123 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 
 ---
 
+## U07 lập kế hoạch cải thiện tạo đề theo PE
+**Timestamp**: 2026-11-22T07:47:40Z
+**Requested by:** Quang Hung
+**User Input**: "lập plan sửa"
+**AI Response**: "Lập kế hoạch chỉnh prompt AUTO theo 20 đề đã đối chiếu, kiểm điểm từng câu khi giữ thang mẫu và đưa mâu thuẫn ra màn hình xem trước. Xác định sáu brief tổng hợp để so trước/sau."
+**Context**: Code Generation Part 1. [Kế hoạch U07](construction/plans/code-generation-plan/2026-11-22-u07-pe-assignment-generation.md) chờ duyệt theo CLAUDE.md trước khi triển khai.
+
+---
+
+## U07 triển khai tạo đề theo mẫu PE
+**Timestamp**: 2026-11-22T08:13:30Z
+**Requested by:** Quang Hung
+**User Input**: "$ponytail:ponytail giúp tôi thực hiện theo plan"
+**AI Response**: "Thực hiện kế hoạch đã duyệt. Cải thiện AUTO và rubric, kiểm điểm từng câu theo mẫu đã chọn, mở xem trước khi có mâu thuẫn. Qua 159 test backend, 35 test tích hợp, 92 test frontend và hai luồng Chrome local. Luna medium trả 6/6 phản hồi hợp schema ở lượt cuối."
+**Context**: Code Generation Part 2 và kiểm thử. [Báo cáo U07](construction/build-and-test/2026-11-22-u07-pe-assignment-evaluation.md) tách bằng chứng mock, kiểm schema và kết quả sinh thật. PBT tắt theo cấu hình đã duyệt.
+
+---
+
+## U07 đo độ ổn định Luna và kiểm tương thích U09
+**Timestamp**: 2026-11-22T08:23:50Z
+**Requested by:** Quang Hung
+**User Input**: "dùng 6 luna test độ ổn định đi, với lại tạo đề như này vẫn đúng so với grading prompt như nãy đkdo"
+**AI Response**: "Lặp ba lượt trên cùng sáu đề với GPT-6 Luna medium. Có 18/18 phản hồi hợp schema, 15/18 hợp tổng điểm và 2/3 cảnh báo trên đề mâu thuẫn. Kiểm tra giữ nguyên rubric trong prompt U09 và chạy đối chứng nét đứt, nét liền, sai actor phụ."
+**Context**: Kiểm thử với dữ liệu tổng hợp. Ghi kết quả và khác biệt Java 17/21 trong [báo cáo U07](construction/build-and-test/2026-11-22-u07-pe-assignment-evaluation.md). Mã ứng dụng của lượt đo giữ nguyên.
+
+---
+
+## U07 và U09 sửa các lỗi sau kiểm thử Luna
+**Timestamp**: 2026-11-22T08:44:37Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại và test lại"
+**AI Response**: "Thêm tên hai đầu cạnh trong dữ liệu chấm U09, mở xem trước cho đề sinh từ mẫu, hỗ trợ chốt điểm từng câu. Chạy 229 test backend, 94 test frontend, Chrome với API giả lập và Luna medium trên 18 lượt tạo đề cùng ba ca chấm đối chứng."
+**Context**: User đã chấp thuận ba thay đổi đã đề xuất. Bằng chứng và giới hạn trong [báo cáo U07](construction/build-and-test/2026-11-22-u07-pe-assignment-evaluation.md). Không chạy provider qua gateway trên dữ liệu thật.
+
+---
+
+## U09 bổ sung kết quả Opus 5.5 cho lượt 3
+**Timestamp**: 2026-11-22T09:30:00Z
+**Requested by:** Quang Hung
+**User Input**: "đọc ai grading instruciton với ai grading test report hiện tại đang thiếu dự liệu test của opus 5.5" / trả lời câu hỏi chọn phạm vi: "test lượt 3 trước, đừng chạy subagent , b tự test"
+**AI Response**: "Chạy `judge-saved.py --judge opus` (claude-opus-5-5, effort high, 1 worker) trên 20 bản ghi Luna của lượt 3, không dùng subagent. 20/20 EVALUATED, 15/20 đạt cả ba chỉ số. Dựng lại `test-ai-grading-test.md`. Cập nhật hướng dẫn và aidlc-state."
+**Context**: Build and Test, DeepEval với dữ liệu `SYNTHETIC_TEAM`. Không đổi code ứng dụng. Lượt 2 còn 17 ca chưa có Opus.
+
+---
+
+## U09 lưu báo cáo kiểm thử AI chấm bài vào aidlc-docs
+**Timestamp**: 2026-11-22T09:45:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi copy vào doc construction đi"
+**AI Response**: "Copy `test-ai-grading-test.md` từ `.tmp/` vào `construction/build-and-test/2026-11-22-u09-ai-grading-test/`, kèm 337 file bằng chứng trong `evidence/`. Viết lại 338 liên kết tương đối, liên kết README trỏ về `scripts/ai-grading-eval/README.md`. Kiểm tra: 0 liên kết hỏng. Cập nhật hướng dẫn đánh giá và aidlc-state. Không commit."
+**Context**: Build and Test, lưu tài liệu. Dữ liệu `SYNTHETIC_TEAM`, không có code ứng dụng thay đổi.
+
+---
+
+## U09 gộp báo cáo kiểm thử AI chấm bài thành một file
+**Timestamp**: 2026-11-22T09:55:00Z
+**Requested by:** Quang Hung
+**User Input**: "ý là để vào thành 1 cái report chung ở ngoài  ấy , b xem nên để ở đâu để ở đây cx đc aidlc-docs\construction\build-and-test\"
+**AI Response**: "Tạo `construction/build-and-test/2026-11-22-u09-ai-grading-test-report.md` từ báo cáo trong `.tmp/`, bỏ cột và link bằng chứng, ghi vị trí bản ghi gốc cục bộ. Xóa thư mục `2026-11-22-u09-ai-grading-test/` (337 file) vừa tạo. Hai link còn lại đều mở được. Cập nhật hướng dẫn và aidlc-state. Không commit."
+**Context**: Build and Test, lưu tài liệu. Không đổi code ứng dụng.
+
+---
+
+## U09 lưu bằng chứng lượt 3 cho báo cáo kiểm thử AI chấm bài
+**Timestamp**: 2026-11-22T10:10:00Z
+**Requested by:** Quang Hung
+**User Input**: "có nên lưu bằng chứng k" / "ok giúp tôi lưu lượt 3 thôi"
+**AI Response**: "Khuyên lưu riêng lượt 3. Copy 83 file (prompt, phản hồi Luna, kết quả Sol, Opus của 20 case, log test backend, đối chiếu đầu vào, lệnh chạy lại) vào `construction/build-and-test/2026-11-22-u09-ai-grading-test-evidence/`. Dựng lại báo cáo: bảng lượt 3, ví dụ `05-off-topic` và đoạn judge bất đồng có link, các lượt trước không có link. 92 link, 0 hỏng. Không thấy key, token, email hay đường dẫn máy. Không commit."
+**Context**: Build and Test, lưu tài liệu với dữ liệu `SYNTHETIC_TEAM`. Không đổi code ứng dụng.
+
+---
+
+## U09 bỏ ngày khỏi tên báo cáo kiểm thử AI chấm bài
+**Timestamp**: 2026-11-22T10:20:00Z
+**Requested by:** Quang Hung
+**User Input**: "tôi vừa undo commit tôi nghĩ  cái file ai grading test report bỏ ngày đi bởi vì nó là file tổng hợp"
+**AI Response**: "Đổi tên `2026-11-22-u09-ai-grading-test-report.md` thành `construction/build-and-test/ai-grading-test-report.md`. Cập nhật liên kết trong hướng dẫn đánh giá và aidlc-state. Thư mục bằng chứng lượt 3 giữ tên có ngày. Chưa commit lại."
+**Context**: Build and Test, lưu tài liệu. Không đổi code ứng dụng.
+
+---
+
+## U07 kiểm thử chế độ AI tự chia điểm
+**Timestamp**: 2026-11-22T08:50:31Z
+**Requested by:** Quang Hung
+**User Input**: "kiểm tra lại chế độ ai tự chia điểm dùng 6 luna"
+**AI Response**: "Chạy 6 brief × 3 với GPT-6 Luna medium, để trống điểm từng câu. Có 14 bản đúng tổng và số câu, 2 bản bị chặn vì sai tổng và 2 phản hồi có dữ liệu thừa sau JSON. 12 test backend và 3 test frontend đạt."
+**Context**: QA với dữ liệu tổng hợp qua Codex CLI. Ghi kết quả từng lượt trong [báo cáo U07](construction/build-and-test/2026-11-22-u07-pe-assignment-evaluation.md). Chưa chạy Gemini qua gateway.
+
+---
+
+## U07 đề xuất sửa chế độ AI tự chia điểm
+**Timestamp**: 2026-11-22T08:52:27Z
+**Requested by:** Quang Hung
+**User Input**: "đề xuát sửa"
+**AI Response**: "Đề xuất cho giảng viên chốt số câu riêng, giữ kiểm tổng khi tạo và áp dụng, dùng lỗi validator để hướng dẫn chạy lại. Thử cấu hình output schema ở Codex CLI và đo riêng lỗi định dạng. Sau đó chạy lại cùng 18 lượt và giữ nguyên kiểm hồi quy nhập điểm từng câu."
+**Context**: Rà code và hai phản hồi Codex lỗi định dạng của lượt đo U07. Phạm vi yêu cầu là đề xuất, chưa triển khai thay đổi ứng dụng.
+
+---
+
+## U07 triển khai số câu tùy chọn và cảnh báo mâu thuẫn
+**Timestamp**: 2026-11-22T09:04:21Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi trienerk khai"
+**AI Response**: "Thêm ô số câu tùy chọn, suy ra số câu và tổng khi nhập dãy điểm, mở xem trước khi AI phát hiện số câu trong lời nhắc khác cấu hình. Kiểm 32 test backend, 96 test frontend và Chrome với API giả lập. Cả hai ca 4/5 câu với Luna medium sinh 4 câu, đủ 10 điểm và hiện cảnh báo. Một ca đối chứng 4/4 bị chặn do tổng 7,50."
+**Context**: Triển khai theo đề xuất đã được duyệt trong cuộc trao đổi, bổ sung Step 6 vào kế hoạch U07. Dùng AI với dữ liệu tổng hợp qua Codex CLI, chưa chạy Gemini qua gateway.
+
+---
+
+## Nhóm thay đổi U07 và U09 để review
+**Timestamp**: 2026-11-22T09:07:07Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Rà phạm vi và tách ba nhóm: cách đọc cạnh sơ đồ khi chấm U09, cấu hình tạo đề U07 cùng bằng chứng QA, và hướng dẫn kiểm thử với kết quả Sol/Opus."
+**Context**: Giữ riêng dữ liệu chạy cục bộ. Rà diff và xác minh các test hồi quy liên quan.
+
+---
+
 ## KAN-211 — tự nộp lượt Quiz quá hạn khi nộp hoặc xem kết quả
 **Timestamp**: 2026-11-22T08:52:06Z
 **Requested by:** Đào Chí Cường
@@ -16559,5 +16701,14 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **User Input**: "sửa nốt 3 bug còn lại"
 **AI Response**: "Trên nhánh fix/kan-212-213-214 (từ origin/staging fd9d42bb): KAN-212 — QuizAttemptService.start kiểm lớp/Quiz OPEN trước khi mở lại lượt đang làm, tự nộp lượt quá hạn (AUTO_TIME_LIMIT) và bỏ lần tải Quiz thứ hai. KAN-213 — OtpChallengeStore ghi mã băm, số lượt, job và PEXPIRE trong một Lua script (kiểm trên Redis 7 thật). KAN-214 — lý do ngưng Quiz quá dài báo TOO_LONG 'Lý do ngưng quiz quá dài', sửa Javadoc theo BR-U10-23. Thêm test, cập nhật BR-U11-10 và BR-U01-20."
 **Context**: Bug fix trong service hiện có của U01/U10/U11; commit/PR theo yêu cầu sau khi test đạt.
+
+---
+
+## Merge staging vào audit-staging và mở PR lên main
+**Timestamp**: 2026-11-22T10:40:00Z
+**Requested by:** Quang Hung
+**User Input**: "merge staging vào nhánh  này rồi resolve conflict sau đó tạo pr lên main"
+**AI Response**: "Hoàn tất merge `staging` (210b0550) đang dở: giữ phía nhánh này ở 7 hunk của aidlc-state, audit và hướng dẫn đánh giá vì staging là bản cũ hoặc rỗng. Merge tiếp `origin/staging` (fd9d42bb, KAN-211): audit.md giữ cả hai phía theo thứ tự. Push nhánh và mở PR `audit-staging` → `main`."
+**Context**: Tích hợp nhánh. Không sửa code ứng dụng khi resolve; code KAN-211 lấy nguyên từ staging.
 
 ---

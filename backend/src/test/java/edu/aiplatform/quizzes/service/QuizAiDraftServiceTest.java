@@ -106,7 +106,7 @@ class QuizAiDraftServiceTest {
     }
 
     @Test
-    void persistsRelevanceWarningAlongsideExistingSourceWarnings() {
+    void unrelatedRequestKeepsSourceGroundedQuestionsWithWarningAndNoSecondCall() {
         QuizDetail quiz = classQuiz();
         UUID source = u13.add(ResourceRef.courseClass(classA), "Tài liệu dài", true);
         u13.truncate = true;
@@ -117,13 +117,26 @@ class QuizAiDraftServiceTest {
         assertThat(handler.onReady(new AiTaskResult(UUID.randomUUID(), sent.taskType(), teacher, sent.targetRef(),
                 sent.inputVersion(), unrelated))).isEqualTo(ApplyOutcome.APPLIED);
         var reopened = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
-        assertThat(reopened.status()).isEqualTo(DraftStatus.PENDING);
-        assertThat(reopened.questions()).isEmpty();
+        assertThat(reopened.status()).isEqualTo(DraftStatus.READY);
+        assertThat(reopened.questions()).hasSize(2);
         assertThat(reopened.sourceWarnings()).hasSize(2).anyMatch(message -> message.contains("không liên quan"))
                 .anyMatch(message -> message.contains("cắt"));
+        assertThat(submitted).hasSize(1);
+    }
+
+    @Test
+    void sourceOnlyRetryStillRunsAfterTheTeacherEditsTheQuizMeanwhile() {
+        QuizDetail quiz = classQuiz();
+        UUID source = u13.add(ResourceRef.courseClass(classA), "Lịch sử", true);
+        AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("edited-meanwhile", List.of(source)),
+                quiz.quiz().version());
+        assertThat(store.quizRepository.updateQuiz(store.quizzes.get(quiz.quiz().id()).markEdited(NOW))).isTrue();
+        String mismatch = OUTPUT.replace("{\"questions\":", "{\"questionsMatchSources\":false,\"questions\":");
+        AiTaskRequest first = submitted.get(0);
+        handler.onReady(new AiTaskResult(pending.taskId(), first.taskType(), teacher, first.targetRef(), 0, mismatch));
+        AiDraftView retry = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(retry.status()).isEqualTo(DraftStatus.PENDING);
         assertThat(submitted).hasSize(2);
-        assertThat(submitted.get(1).prompt().user()).contains("Tạo quiz theo nội dung tài liệu đã chọn.")
-                .doesNotContain("Ôn tập chương 1");
     }
 
     @Test
@@ -134,7 +147,7 @@ class QuizAiDraftServiceTest {
                 new DraftRequest("Tạo câu hỏi Liên Quân", 2, QuestionType.MCQ_SINGLE, Difficulty.HARD,
                         List.of(source), AiSource.PERSONAL, AiProvider.GEMINI, "wrong-topic"), quiz.quiz().version());
         AiTaskRequest original = submitted.get(0);
-        String mismatch = OUTPUT.replace("{\"questions\":", "{\"requestMatchesSources\":false,\"questions\":");
+        String mismatch = OUTPUT.replace("{\"questions\":", "{\"questionsMatchSources\":false,\"questions\":");
         handler.onReady(new AiTaskResult(pending.taskId(), original.taskType(), teacher, original.targetRef(), 0, mismatch));
         AiDraftView retry = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
         assertThat(retry.status()).isEqualTo(DraftStatus.PENDING);
@@ -182,7 +195,7 @@ class QuizAiDraftServiceTest {
         UUID source = u13.add(ResourceRef.courseClass(classA), "Nguồn", true);
         AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("after-commit", List.of(source)), quiz.quiz().version());
         AiTaskRequest sent = submitted.get(0);
-        String mismatch = OUTPUT.replace("{\"questions\":", "{\"requestMatchesSources\":false,\"questions\":");
+        String mismatch = OUTPUT.replace("{\"questions\":", "{\"questionsMatchSources\":false,\"questions\":");
         org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
         List<org.springframework.transaction.support.TransactionSynchronization> callbacks;
         try {

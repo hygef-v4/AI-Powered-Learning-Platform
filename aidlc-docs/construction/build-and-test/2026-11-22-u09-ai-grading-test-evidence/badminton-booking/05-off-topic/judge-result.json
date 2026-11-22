@@ -1,0 +1,34 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "05-off-topic",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:50:12.902549+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader covers all 13 applicable items, correctly credits the rectangular boundary and oval use cases, and explains why the cinema submission lacks the required badminton actors, use cases, and hourly and weekly booking flows. The include/extend deduction adds a requirement to draw those relationships. The rubric specifies dashed lines and labels when such relationships are drawn.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The feedback matches the Draw.io XML. The cinema diagram has a rectangular boundary, actors outside it, and oval use cases, with no dashed or labeled include/extend edges. It also correctly identifies the table’s Đặt vé xem phim use case, its Khán giả primary actor and Nhân viên rạp secondary actor, and the absence of both required badminton booking flows.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback explains why the cinema-ticket submission earns credit for the system boundary and ovals while losing credit for badminton-specific content. It gives concrete fixes, including adding the required actors and four use cases and documenting separate hourly and recurring weekly booking flows. The summary leaves nextSteps empty, and the include/extend suggestion gives the notation without showing where it could apply.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 27.5
+}

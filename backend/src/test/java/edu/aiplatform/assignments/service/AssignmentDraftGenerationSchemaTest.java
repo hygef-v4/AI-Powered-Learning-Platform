@@ -31,6 +31,14 @@ class AssignmentDraftGenerationSchemaTest {
                  "guidance":"Draw a class diagram.","rubric":[{"title":"Coverage","items":[{"text":"Domain relationships","points":10}]}]}]}
                 """);
         assertThat(checker.validateValue(schema, proposal)).isEmpty();
+        var warning = proposal.putArray("authoringWarnings").addObject()
+                .put("code", "TEMPLATE_CONFLICT").put("message", "Conflicting entities in question 1.");
+        assertThat(checker.validateValue(schema, proposal)).isEmpty();
+        warning.put("code", "QUESTION_COUNT_CONFLICT").put("message", "The request says 2; the setting says 1.");
+        assertThat(checker.validateValue(schema, proposal)).isEmpty();
+        warning.put("code", "OTHER");
+        assertThat(checker.validateValue(schema, proposal)).isPresent();
+        proposal.remove("authoringWarnings");
         assertThat(json.readTree(schema).path("properties").fieldNames().next()).isEqualTo("sections");
         ObjectNode section = (ObjectNode) proposal.path("sections").get(0);
         var rubric = section.remove("rubric");

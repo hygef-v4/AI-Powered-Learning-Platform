@@ -1,0 +1,36 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "01-complete",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_FAIL",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:50:23.655681+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader scored all 13 applicable items and gave full marks. The submission supports each mark. In the diagram, the boundary rectangle \"Hệ thống đặt sân cầu lông\" spans x 200–620, and the actors sit outside it at x=60 and x=720. All use cases are ellipses. The include edge (Đặt sân→Thanh toán) and the extend edge (Hủy đặt sân→Thanh toán) are both dashed and labelled. Khách hàng connects to Xem lịch sân trống, Đặt sân and Hủy đặt sân. Chủ sân and Cổng thanh toán are both present, and all four required use cases appear. In the specification, the name and actors are correct. The precondition and postcondition are clear, and the trigger is present. Both normal flows are there (hourly booking and weekly fixed booking, 0.25 each, as the rubric specifies). The alternative flow covers a full time slot, the exception flow covers a failed payment and the 10-minute hold expiring, and the business rules are concrete (10-minute hold, refund rule for cancelling 24 hours ahead, minimum of 4 weeks). The evidence and reasons for each item match the student's content. The grader added no requirements beyond the rubric, and its full marks contradict no criterion. Minor gaps: it did not mention that the direction of the extend relationship is semantically odd, and Khách hàng has no direct link to Thanh toán. Neither is a rubric requirement, but improvements and nextSteps are left empty, so the student gets no constructive guidance.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "Every material claim in the grading checks out against the submission. Diagram: the 'sys' rectangle labelled 'Hệ thống đặt sân cầu lông' spans x=200–620. Khách hàng sits at x=60 and Chủ sân and Cổng thanh toán at x=720, so all three actors are outside the boundary, as claimed. All five use cases (Xem lịch sân trống, Đặt sân, Hủy đặt sân, Thanh toán, Xác nhận lịch đặt) use the ellipse style. Edges e4 (<<include>> Đặt sân→Thanh toán) and e5 (<<extend>> Hủy đặt sân→Thanh toán) both have dashed=1 and the matching labels. The customer connects to view, book and cancel through e1–e3. The owner connects to Xác nhận lịch đặt and Đặt sân through e7 and e8, and the gateway connects to Thanh toán through e6. All of these match the grader's evidence. Specification: the grader's evidence correctly reflects the table rows. Name and actors match. Precondition is logged in plus a free slot, and postcondition is 'Chờ xác nhận' plus an email. Trigger, both normal flows (hourly and weekly) and alternative flow 2a (slot full) are accurate. Exception flows 3a and 3b (payment failure, 10-minute timeout) are accurate. Business rules BR1–BR3 (10-minute hold, 24-hour refund, 4-week minimum) are accurate. Full marks on every item are supported. There are a few small gaps. The grader doesn't mention that Khách hàng has no direct link to Thanh toán, which it reaches only through include. It doesn't flag the semantically questionable extend direction from Hủy đặt sân to Thanh toán, though the rubric checks only the dashed line and label. It also leaves the improvements list empty. None of these contradict the evidence.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.7,
+      "threshold": 0.8,
+      "reason": "The full-marks grading matches the submission. The diagram puts 'Hệ thống đặt sân cầu lông' inside the boundary rectangle, with all three actors outside it (x=60 and x=720, while the boundary spans x=200–620). All use cases are ellipses. Both the include and extend edges are dashed and labelled. All four required use cases and both secondary actors are present. The specification table covers every required field: two normal flows (hourly and weekly), the 2a alternative flow, the 3a/3b exceptions and the BR1–BR3 rules. Each item has concrete evidence, a reason that matches its points, and the right block ID, so an instructor can check it quickly. There were no deductions, so there were none to explain. The weakness is that 'improvements' and 'nextSteps' are empty. The grader missed useful observations: 'Hủy đặt sân' <<extend>> 'Thanh toán' has questionable meaning and direction. Khách hàng is not linked directly to Thanh toán. The precondition 'sân còn khung giờ trống' conflicts somewhat with alternative flow 2a ('khung giờ đã kín'). The weekly flow has no case for when only some sessions are free. The summary feedback is also a bit generic and circular, mostly repeating the rubric criteria. The feedback is accurate and clear but offers no prioritized or forward-looking advice.",
+      "status": "QUALITY_FAIL"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 40.9
+}

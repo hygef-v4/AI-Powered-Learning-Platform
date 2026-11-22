@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swr302-lab-equipment",
+  "case_id": "swr-lab-solid-required",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T09:00:27.399826+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader scored all 13 applicable items and its scores match the evidence. Diagram: the 'Hệ thống mượn thiết bị phòng lab' boundary is at x 190–750. Sinh viên (x=50) and the two right-side actors (x=855) sit outside it, and all four actor links are correct. All four ellipses have the exact required names, so full marks there are right. The <<include>> runs from Gửi yêu cầu mượn to Kiểm tra quyền mượn and the <<extend>> from Duyệt mượn qua đêm to Gửi yêu cầu mượn. Both directions and labels are correct, so the full 1 point is right. Both edges have dashed=0, so giving 0 for notation follows the rubric's rule that solid arrows earn nothing, and the feedback explains this. Spec: the name, the primary actor and both secondary actors (Dịch vụ quyền mượn, Kỹ thuật viên phòng lab) are present. Preconditions, trigger and success postcondition are complete. The main flow covers choosing the device and time, the eligibility and availability checks, recording, holding the device and confirming with a code. Alternative flow 4a shows the branch and how it continues to step 5. Exception 2a reports the error and ends without creating a loan or holding the device. BR1 and BR2 cover the one-device rule and technician approval after closing. The grader did not invent requirements, skip criteria or contradict the rubric, and its feedback is specific and accurate.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading response's claims all match the submission. In the diagram, the 'Hệ thống mượn thiết bị phòng lab' boundary spans x=190–750. The three umlActor shapes sit at x=50 and x=855, outside the boundary, and the four ellipse-styled use cases carry the correct names. The association edges connect Sinh viên to both Tra cứu thiết bị and Gửi yêu cầu mượn, Dịch vụ quyền mượn to Kiểm tra quyền mượn, and Kỹ thuật viên phòng lab to Duyệt mượn qua đêm, as the grader says. The include edge (request→check-eligibility) and the extend edge (approve-overnight→request) have the correct labels and directions, so the full 1 point for relationships is justified. Both edges have dashed=0, so the grader correctly finds them solid and correctly awards 0 for the dashed-notation item. For the specification table, the grader's evidence matches the role fields. Primary actor is Sinh viên, and Secondary actor lists both Dịch vụ quyền mượn and Kỹ thuật viên phòng lab. The table has preconditions, a trigger, postconditions (save the booking, hold the device, issue a booking code), main-flow steps 1–5, the 4a branch that continues to step 5, the 2a exception with no booking and no hold, and rules BR1 and BR2. Full marks on these items are supported. One minor weakness: the section partIds do not match the rubric IDs, and some evidence is paraphrased loosely, for example calling showing the booking code the confirmation. No claim contradicts the submission.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The only deduction, 0.5 points on d-notation, is correct. Both the <<include>> and <<extend>> edges have 'dashed=0' in their style, so both arrows are solid. The feedback says this in the overall summary, the diagram section, the improvements list and the item entry. It also gives a specific, doable fix: change both arrows to dashed to recover the 0.25 for each. Full credit on the other items is justified by the submission. The frame 'Hệ thống mượn thiết bị phòng lab' contains the four ovals and the actors sit outside it. Each actor is linked to the right use case. The include goes from Gửi yêu cầu mượn to Kiểm tra quyền mượn and the extend goes from Duyệt mượn qua đêm to Gửi yêu cầu mượn, both in the right direction. The spec table covers both secondary actors, preconditions, trigger, postconditions, the 5-step main flow, the 4a branch with how it continues, the 2a exception with no booking or hold, and BR1/BR2. The evidence and reasons are clear and point to the right blocks. The feedback is well prioritised, and an instructor can follow it. Minor weaknesses: the dashed-line evidence says 'được ghi là nét liền' without citing the 'dashed=0' attribute, the suggestion is very short, and nextSteps is empty. The advice is never vague or contradictory.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 38.9
+}

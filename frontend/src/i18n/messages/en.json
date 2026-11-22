@@ -1149,6 +1149,7 @@
         "references3Files2Mb": "References: 3 files, 2 MB each. Template: 1 DOCX, 20 MB."
       },
       "AiDraftDialog": {
+        "reviewTemplateDraft": "This draft uses a template. Check the questions and rubric before applying.",
         "theAiReturnedNoResult": "The AI returned no result.",
         "youCanStillWriteIt": "{value} You can still write it manually.",
         "waitForUploadsToFinish": "Wait for uploads to finish or remove failed files before creating the assignment.",
@@ -1158,6 +1159,7 @@
         "draftWithAi": "Draft with AI",
         "discardProposal": "Discard proposal",
         "editRequestAndRegenerate": "Edit request and regenerate",
+        "applyProposal": "Apply proposal",
         "createAssignment": "Create assignment",
         "describeTheAssignmentYouNeed": "Describe the assignment you need; the AI writes questions with a grading rubric and puts them straight on the page. Press Ctrl+Z to undo. All fields below are optional.",
         "template": "Template",
@@ -1309,10 +1311,19 @@
       "ClassAssignmentsSection": {
         "createAssignment": "Create assignment"
       },
+      "QuestionCountField": {
+        "help": "Leave blank for AI to decide. This setting takes priority if the request below specifies a different count."
+      },
+      "QuestionPointsField": {
+        "label": "Points per question (optional)",
+        "help": "Enter the points in question order, separated by spaces. For example, 0.50 2.50 4 3.",
+        "invalid": "Enter up to 10 positive amounts with at most two decimal places and a total of at most 1,000.",
+        "summary": "{count} questions · {total} points"
+      },
       "CreateAssignmentDialog": {
         "writeFromScratchYouCan": "Write from scratch; you can upload an old assignment as DOCX, images or PDF as the outline.",
         "copyAnExistingAssignmentAnd": "Copy an existing assignment and keep editing.",
-        "theAiWritesTheAssignment": "The AI writes the assignment with a rubric, 10 points in total.",
+        "theAiWritesTheAssignment": "AI drafts the assignment and rubric. The default is 10 points.",
         "eachStudentSubmitsTheirOwn": "Each student submits their own work.",
         "eachGroupSubmitsOneShared": "Each group submits one shared work.",
         "selfPracticeNotGraded": "Self-practice, not graded.",
@@ -1350,6 +1361,7 @@
         "language": "Language",
         "vietnamese": "Vietnamese",
         "chooseATemplateOrUpload": "Choose a template or upload a DOCX",
+        "preserveTemplatePoints": "Keep the template’s points per question",
         "theSubjectHasNoTemplates": "The subject has no templates yet.",
         "removeTemplate": "Remove template",
         "uploadATemplate": "Upload a template",

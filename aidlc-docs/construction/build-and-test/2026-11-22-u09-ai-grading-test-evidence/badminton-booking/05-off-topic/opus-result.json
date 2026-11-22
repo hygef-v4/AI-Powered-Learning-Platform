@@ -1,0 +1,36 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "05-off-topic",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_FAIL",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:53:05.852577+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader scored all 13 applicable items, and each score has evidence and a reason that match the rubric. For the notation items it gave full marks for the boundary and the ovals. This is correct: the XML shows a rectangle labeled 'Hệ thống đặt vé xem phim' (x 200–620), actors 'Khán giả' and 'Nhân viên rạp' outside it (x=60 and x=720), and use cases styled as ellipses. These items test notation, not topic, so the off-topic content did not count against them. The include/extend item got 0 because there are no dashed, labeled <<include>>/<<extend>> relationships. That is defensible, since the item only awards credit for that notation when it is shown, though some graders might treat this as ambiguous. Every content item got 0, and that is consistent with the rubric. The diagram uses Khán giả instead of Khách hàng, has no Chủ sân or Cổng thanh toán, and has none of the four required use cases. The specification describes 'Đặt vé xem phim', so the name, actors, conditions, trigger, both required normal flows (theo giờ and cố định theo tuần), the alternative flow (ghế instead of sân kín), the exception flow and the business rule (8 vé/suất) all miss the Đặt sân requirements. The two normal flows are broken down as 0/0.25 each, as the rubric requires. The grader invented no extra requirements and its deductions don't contradict the criteria. Its summary and per-section feedback match the scores. One small weakness: the grader gave zero to elements that are present but off-topic, such as the trigger and the payment-failure exception, without much discussion of partial credit. That is still a defensible choice.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading's claims match the submission. In the diagram XML, the rectangle 'sys' is labeled 'Hệ thống đặt vé xem phim' and spans x=200–620. The actors 'Khán giả' (x=60) and 'Nhân viên rạp' (x=720) sit outside it, so full credit for the boundary item is supported. All three use cases have the 'ellipse' style, so the oval credit is correct. Edges e1–e4 are solid lines with no dashed=1 and no <<include>>/<<extend>> labels, so zero for that item is correct. The grading correctly finds no Khách hàng, Chủ sân or Cổng thanh toán, and none of the four required use cases (Đặt sân, Hủy đặt sân, Thanh toán, Xem lịch sân trống). The specification claims quote the table rows accurately: name 'Đặt vé xem phim', actors Khán giả and Nhân viên rạp, precondition, postcondition, trigger 'Khán giả chọn suất chiếu', a single movie-ticket normal flow, the seat alternative flow, 'Thanh toán lỗi: hủy giao dịch', and the 8-tickets rule. Giving zero for off-topic content is consistent with the assignment. Small weaknesses: the section partIds do not match the rubric ids or headings given, and the zero for the include/extend item mixes 'absent' with 'drawn wrong' without saying the rubric is unclear on that point. No claim contradicts the evidence.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.7,
+      "threshold": 0.8,
+      "reason": "The feedback explains each deduction clearly and is grounded in the submission. Every item cites concrete evidence, such as the actor \"Khán giả\" instead of \"Khách hàng\", \"Nhân viên rạp\" instead of \"Chủ sân\"/\"Cổng thanh toán\", the movie use cases, and the rule \"tối đa 8 vé một suất\". It correctly finds the main problem: both the diagram and the specification describe a movie-ticket system, not the badminton-court booking system. The notation credit for the boundary rectangle and the ovals is justified and kept separate from the content failures, which helps the instructor. Most suggestions are specific and doable, such as adding the four required use cases, writing separate flows for hourly and weekly fixed booking, and adding hold-time and cancellation/refund rules. Flagging the off-topic items with requiresReview also helps the instructor. Shortcomings: nextSteps is empty, and the summary does not rank the fixes or say plainly that the whole submission needs redoing for the right system. The include/extend suggestion is conditional (\"Nếu có quan hệ include hoặc extend…\") and does not say which relationships would fit (e.g., Đặt sân <<include>> Thanh toán). Giving 0 for the payment-failure exception, which is close to a valid example, is explained but could have been more nuanced. The overall feedback text is brief.",
+      "status": "QUALITY_FAIL"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 38.2
+}

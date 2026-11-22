@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swr302-lab-equipment",
+  "case_id": "swr-lab-wrong-secondary",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:55:52.235404+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader covers all 13 applicable items, correctly credits the actor links and both dashed include and extend arrows, and awards credit for the overnight approval flow and service timeout exception. It correctly credits Dịch vụ quyền mượn separately and gives zero for the technician entry because the Secondary actor field lists Nhân viên thư viện in its place. The review flag is unnecessary because the rubric scores the two secondary actors independently.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading matches the Draw.io XML: all four use cases use ellipse styles, the actor links are correct, and both correctly directed include and extend arrows have dashed=1. It also correctly credits Dịch vụ quyền mượn in the Secondary actor row and deducts for listing Nhân viên thư viện in place of Kỹ thuật viên phòng lab, who appears correctly in the overnight flow. The review flag is unnecessary because the rubric clearly resolves the missing technician entry.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback clearly explains the sole 0.5-point deduction and gives a feasible fix: replace “Nhân viên thư viện” with “Kỹ thuật viên phòng lab” in the Secondary actor field. It correctly credits the dashed include and extend arrows and the overnight approval flow. The review flag adds unnecessary uncertainty because the rubric explicitly requires the technician in that field.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 28.5
+}

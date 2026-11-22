@@ -5,7 +5,9 @@ import { BusyOverlay, Button, Dialog, Field, Icon, IconButton, Pill, Select, sho
 import { assignmentsApi } from "../api";
 import { AiDraftPreview } from "./AiDraftPreview";
 import { SearchPicker } from "./SearchPicker";
-import { describeError, requestRef } from "../model/format";
+import { describeError, parseQuestionCount, parseQuestionPoints, requestRef, requiresAiDraftReview } from "../model/format";
+import { QuestionCountField } from "./QuestionCountField";
+import { QuestionPointsField } from "./QuestionPointsField";
 import { MAX_SOURCE_FILES, readTemplateFile, useSourceUploads, type SourceUpload, type TemplateFile } from "./sourceUploads";
 import type { AiDraft, GradingMode, Material } from "../model/types";
 
@@ -35,7 +37,7 @@ const DEFAULT_TARGET_POINTS = "10";
 /**
  * t13b Tạo nháp bằng AI (F6; BR-U07-50, 51). Yêu cầu 2026-11-05: không chọn nguồn AI (hệ thống dùng API chung nếu hạn mức
  * còn đủ cho lượt này, không thì API cá nhân; API chung lỗi thì tự chuyển sang API cá nhân), tệp nguồn, tài liệu tham khảo
- * và định dạng đề trên một dòng; đề hợp lệ được ghi thẳng lên trang (Ctrl+Z quay lại), đề lỗi mới hiện xem trước.
+ * và định dạng đề trên một dòng. Đề có mẫu hoặc cảnh báo nguồn cần được xem trước khi áp dụng.
  */
 export function AiDraftDialog({
   assignmentId,
@@ -44,6 +46,7 @@ export function AiDraftDialog({
   currentPartCount,
   currentTitle,
   currentInstructions,
+  gradingMode,
   prepareApply,
   onClose,
   onApplied,
@@ -52,6 +55,7 @@ export function AiDraftDialog({
   const [language, setLanguage] = useState<"VI" | "EN">("EN");
   const [questionCount, setQuestionCount] = useState("");
   const [targetPoints, setTargetPoints] = useState(DEFAULT_TARGET_POINTS);
+  const [questionPointsText, setQuestionPointsText] = useState("");
   const [materials, setMaterials] = useState<Material[]>([]);
   const [chosen, setChosen] = useState<string[]>([]);
   const [template, setTemplate] = useState<Template | null>(null);
@@ -129,6 +133,8 @@ export function AiDraftDialog({
   const proposal = draft?.status === "READY" ? draft.proposal : null;
   const validation = proposal?.validation;
   const invalid = proposal !== null && (!validation || validation.status === "INVALID" || proposal.sections.length === 0);
+  const requiresReview = requiresAiDraftReview(draft);
+  const canAutoApply = proposal !== null && !invalid && !requiresReview;
 
   /** Đọc mẫu đề bằng bộ nhập DOCX; số câu hỏi là số mục ngoài cùng của mẫu. */
   async function readTemplate(file: File) {
@@ -151,11 +157,10 @@ export function AiDraftDialog({
 
   // Không trường nào bắt buộc (yêu cầu 2026-11-09): bỏ trống thì AI tự quyết; nút Tạo đề không bị khóa.
   async function sendRequest() {
-    if (countError || pointsError) {
-      setError(countError ?? pointsError ?? null);
+    if (countError || pointsError || questionPoints === null) {
+      setError(countError ?? pointsError ?? msg("assignments.components.QuestionPointsField.invalid"));
       return;
     }
-    const count = countValid ? countNumber : undefined;
     if (uploading) {
       setError(msg("assignments.components.AiDraftDialog.waitForUploadsToFinish"));
       return;
@@ -168,14 +173,18 @@ export function AiDraftDialog({
       formatText: templateReady ? template.text : undefined,
       templateAssignmentId: template ? undefined : templateId || undefined,
       // Ngôn ngữ theo ô Ngôn ngữ, ưu tiên hơn ngôn ngữ ghi trong yêu cầu hay đề mẫu.
-      options: { profile: "AUTO" as const, language, questionCount: count, targetPoints: pointsValid ? pointsNumber : undefined },
+      options: { profile: "AUTO" as const, language,
+        questionCount: count ?? undefined,
+        targetPoints: !hasQuestionPoints && pointsValid ? pointsNumber : undefined,
+        ...(questionPoints.length ? { questionPoints } : {}) },
       requestRef: ref.current,
     };
     await submit(input);
   }
 
   async function applyDraft() {
-    if (!draft) return;
+    if (!draft || invalid || applied.current) return;
+    applied.current = true;
     setPhase("applying");
     try {
       const latestVersion = prepareApply ? await prepareApply() : version;
@@ -199,13 +208,12 @@ export function AiDraftDialog({
     }
   }
 
-  // Đề hợp lệ: ghi thẳng lên trang.
   useEffect(() => {
-    if (!proposal || invalid || applied.current) return;
-    applied.current = true;
-    void applyDraft();
+    if (!canAutoApply) return;
+    const timer = setTimeout(() => void applyDraft(), 0);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proposal, invalid]);
+  }, [proposal, canAutoApply]);
 
   async function revise() {
     if (!draft) return;
@@ -229,17 +237,20 @@ export function AiDraftDialog({
     onClose();
   }
 
-  const showPreview = proposal !== null && invalid;
-  const countNumber = Number(questionCount);
-  const countValid = questionCount.trim() !== "" && Number.isInteger(countNumber) && countNumber >= 1 && countNumber <= 10;
+  const showPreview = proposal !== null && !canAutoApply;
+  const questionPoints = gradingMode === "GRADED" ? parseQuestionPoints(questionPointsText) : [];
+  const hasQuestionPoints = Boolean(questionPoints?.length);
+  const count = hasQuestionPoints ? undefined : parseQuestionCount(questionCount);
   // Số câu hỏi sai hiện đỏ ngay dưới ô; ô trống thì AI tự quyết.
-  const countError = questionCount.trim() !== "" && !countValid ? msg("assignments.components.AiDraftDialog.theNumberOfQuestionsMust") : undefined;
+  const countError = count === null
+    ? msg("assignments.components.AiDraftDialog.theNumberOfQuestionsMust") : undefined;
   // Tổng điểm như luật của server: lớn hơn 0, tối đa 1.000, không quá 2 chữ số thập phân; ô trống thì AI tự chia điểm.
   const pointsNumber = Number(targetPoints);
   const pointsValid = targetPoints.trim() !== "" && Number.isFinite(pointsNumber) && pointsNumber > 0 && pointsNumber <= 1000
     && Math.round(pointsNumber * 100) === pointsNumber * 100;
-  const pointsError = targetPoints.trim() !== "" && !pointsValid ? msg("assignments.components.AiDraftDialog.totalPointsMustBeGreater") : undefined;
-  const working = phase !== "idle" || draft?.status === "PENDING" || (busy && !draft) || (proposal !== null && !invalid);
+  const pointsError = !hasQuestionPoints && targetPoints.trim() !== "" && !pointsValid
+    ? msg("assignments.components.AiDraftDialog.totalPointsMustBeGreater") : undefined;
+  const working = phase !== "idle" || draft?.status === "PENDING" || (busy && !draft) || canAutoApply;
   // Popup chờ riêng: popup soạn vẫn giữ nguyên trạng thái để quay về khi lỗi.
   if (working) return <AiProgress />;
   return (
@@ -254,7 +265,9 @@ export function AiDraftDialog({
         showPreview ? (
           <>
             <Button onClick={() => void discard()} disabled={busy}>{msg("assignments.components.AiDraftDialog.discardProposal")}</Button>
-            <Button variant="primary" onClick={() => void revise()} disabled={busy}>{msg("assignments.components.AiDraftDialog.editRequestAndRegenerate")}</Button>
+            <Button variant={invalid ? "primary" : "secondary"} onClick={() => void revise()} disabled={busy}>{msg("assignments.components.AiDraftDialog.editRequestAndRegenerate")}</Button>
+            {!invalid && <Button variant="primary" onClick={() => void applyDraft()} disabled={busy}
+              data-testid="ai-apply-proposal">{msg("assignments.components.AiDraftDialog.applyProposal")}</Button>}
           </>
         ) : (
           <Button
@@ -313,16 +326,12 @@ export function AiDraftDialog({
                 {LOCALES.map((code) => <option key={code} value={code.toUpperCase()} lang={code}>{LOCALE_NAMES[code]}</option>)}
               </Select>
             </Field>
-            <Field label={msg("assignments.components.AiDraftDialog.numberOfQuestions")} htmlFor="ai-count" error={countError}>
-              <input id="ai-count" aria-label={msg("assignments.components.AiDraftDialog.numberOfQuestions")} type="number" min={1} max={10} step={1} value={questionCount}
-                placeholder={msg("assignments.components.AiDraftDialog.aiDecides")} disabled={awaiting} onChange={(e) => setQuestionCount(e.target.value)}
-                aria-invalid={countError ? true : undefined}
-                className={`w-full rounded-lg border px-3 py-2 text-[13px] disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted ${
-                  countError ? "border-danger" : "border-line-strong"}`} />
-            </Field>
+            <QuestionCountField id="ai-count" value={questionPoints?.length ? String(questionPoints.length) : questionCount}
+              onChange={setQuestionCount} disabled={awaiting || hasQuestionPoints} invalid={count === null} />
             <Field label={msg("assignments.components.AiDraftDialog.totalPoints")} htmlFor="ai-points" error={pointsError}>
-              <input id="ai-points" aria-label={msg("assignments.components.AiDraftDialog.totalPoints")} type="number" min={0.01} max={1000} step={0.5} value={targetPoints}
-                placeholder={msg("assignments.components.AiDraftDialog.aiDistributes")} disabled={awaiting} onChange={(e) => setTargetPoints(e.target.value)}
+              <input id="ai-points" aria-label={msg("assignments.components.AiDraftDialog.totalPoints")} type="number" min={0.01} max={1000} step={0.5}
+                value={questionPoints?.length ? questionPoints.reduce((cents, point) => cents + Math.round(point * 100), 0) / 100 : targetPoints}
+                placeholder={msg("assignments.components.AiDraftDialog.aiDistributes")} disabled={awaiting || hasQuestionPoints} onChange={(e) => setTargetPoints(e.target.value)}
                 aria-invalid={pointsError ? true : undefined} data-testid="ai-points"
                 className={`w-full rounded-lg border px-3 py-2 text-[13px] disabled:cursor-not-allowed disabled:bg-sunken disabled:text-muted ${
                   pointsError ? "border-danger" : "border-line-strong"}`} />
@@ -335,6 +344,10 @@ export function AiDraftDialog({
               onUnchoose={(id) => setChosen((c) => c.filter((item) => item !== id))}
               onUpload={sources.add} onRemoveUpload={sources.remove} onRetryUpload={sources.retry} />
           </Field>
+          {gradingMode === "GRADED" && (
+            <QuestionPointsField id="review-ai-question-points" value={questionPointsText}
+              onChange={setQuestionPointsText} points={questionPoints} disabled={awaiting} />
+          )}
           <Field label={msg("assignments.components.AiDraftDialog.request")} htmlFor="ai-request">
             <Textarea id="ai-request" rows={4} maxLength={4000} value={request} disabled={awaiting}
               placeholder={msg("assignments.components.AiDraftDialog.exampleAnAnalysisAndDesign")}
@@ -345,7 +358,11 @@ export function AiDraftDialog({
       {showPreview && proposal && (
         <div className="flex flex-col gap-4" data-testid="ai-proposal">
           {currentPartCount > 0 && <p className="text-xs text-muted">{msg("assignments.components.AiDraftDialog.theAssignmentHasNotBeen")}</p>}
-          <AiDraftPreview proposal={proposal} targetPoints={pointsValid ? pointsNumber : undefined} />
+          {draft?.provenance.templateReviewRequired === true && (
+            <p className="text-sm text-muted">{msg("assignments.components.AiDraftDialog.reviewTemplateDraft")}</p>
+          )}
+          <AiDraftPreview proposal={proposal}
+            targetPoints={!initialDraftId && !hasQuestionPoints && pointsValid ? pointsNumber : undefined} />
         </div>
       )}
     </Dialog>

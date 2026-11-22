@@ -1,0 +1,36 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "08-wrong-actors",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:55:07.484025+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "Most item scores match the rubric. Boundary scores 0 because there is no system-boundary rectangle. Oval scores 0.25 because both use cases are ellipses. Secondary actors score 0 because only 'Admin' appears and neither 'Chủ sân' nor 'Cổng thanh toán' is present. The use-case item scores 0 because only 'Đặt sân' and 'Xem sân' appear, and 'Hủy đặt sân' and 'Thanh toán' are missing. All spec items for pre/postcondition, trigger, the two normal flows (0.25 each), alternative flow, exception flow (payment failure and 10-minute hold timeout) and business rules get full marks, which the submission supports. For the mixed s-name-actors case, where the name and primary actor are right but the secondary actor 'Admin' is wrong, the grader gave 0 without inventing a point split and flagged it for review. That follows the 'do not assume a point split' rule. Shortcomings: the include/extend item gets 0 even though the diagram has no such relationships and the assignment does not require them. The rubric only says that solid lines earn no points, so treating it as a mandatory requirement is debatable. The grader's own suggestion ('Nếu sơ đồ có quan hệ...') reads it as conditional yet still gives 0. Scoring the primary actor 0 for 'Người dùng' instead of 'Khách hàng' is defensible but strict. The feedback is specific, consistent with the scores and grounded in the submission, with no invented requirements.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading response matches the submission closely. In the diagram XML, the two use cases 'Đặt sân' and 'Xem sân' use an ellipse style, so the oval item correctly gets credit. There is no rectangle around the system name 'Đặt sân cầu lông', so the boundary item correctly gets none. The three edges (e1, e2, e3) are solid actor links with no include/extend relationships, and the response describes them accurately. The actors are 'Người dùng' and 'Admin', so the response is right that 'Khách hàng', 'Chủ sân' and 'Cổng thanh toán' are missing. It is also right that 'Hủy đặt sân' and 'Thanh toán' are absent. For the specification table, it correctly reads the role fields: the primary actor is 'Khách hàng' and the secondary actor is 'Admin'. Giving zero for that item and flagging it for review is justified. The claims about the precondition, postcondition, trigger, both normal flows (by the hour and weekly fixed booking), alternative flow 2a, exception flows 3a/3b and business rules BR1–BR3 all match the table text. One small inconsistency: the use-case item says two of the four main use cases are present, but also says 'Xem sân' does not match the required name 'Xem lịch sân trống', which blurs the count. Also, the section partIds do not match the rubric ids, though this does not affect any claim about the evidence. No claim contradicts the submission.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "Each material deduction has an evidence-based explanation. The diagram feedback correctly names the missing system boundary, the 'Người dùng' actor used in place of Khách hàng, the 'Admin' actor used in place of the required Chủ sân and Cổng thanh toán, and the two missing use cases (Hủy đặt sân, Thanh toán). It also notes that 'Xem sân' does not match the required name 'Xem lịch sân trống'. The fixes it suggests are concrete and doable, such as renaming actors, adding both secondary actors and adding the missing use cases. The spec item where the use case name and primary actor are right but the secondary actor ('Admin') is wrong is flagged for review with a clear reason, which helps the instructor. The summary puts the diagram problems first, and it does not contradict the item scores. Weaknesses: the include/extend suggestion only says what to do 'if' such relationships exist, instead of proposing one, such as Đặt sân <<include>> Thanh toán. Several of the 'không trừ điểm' suggestions are generic or repeat existing content; for example, the trigger note restates the login precondition. The feedback does not mention that the normal flows already refer to Chủ sân and Cổng thanh toán, which would help explain the actor mismatch. nextSteps is empty, and the section partIds do not clearly match the rubric parts.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 48.8
+}

@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swr302-lab-equipment",
+  "case_id": "swr-lab-solid-required",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:55:39.874546+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader covers all 13 applicable items and correctly credits the actor links, both secondary actors, and the include and extend labels and directions. Both arrows are solid (`dashed=0`), so the deduction applies only to notation. The specification supports full credit because the overnight branch requires technician approval before confirmation and the timeout ends the request without recording a loan or reserving equipment.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grading matches the submission. The Draw.io XML contains four named ellipses, the required actor links, and correctly labeled and directed include and extend arrows. Both arrows have dashed=0, so the notation deduction is justified. The table lists Sinh viên as the primary actor and both Dịch vụ quyền mượn and Kỹ thuật viên phòng lab as secondary actors. The feedback also accurately credits the overnight approval branch and the timeout exception, which ends without recording a loan or reserving equipment.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback explains the sole deduction of 0.25 points per solid «include» and «extend» arrow and gives a feasible fix: make both arrows dashed. It credits the correct labels and directions and cites specific evidence for the overnight approval branch and eligibility-service timeout. The summary repeats the notation issue and leaves nextSteps empty, so the instructor has to find the explicit fix in the item-level feedback.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 24.3
+}

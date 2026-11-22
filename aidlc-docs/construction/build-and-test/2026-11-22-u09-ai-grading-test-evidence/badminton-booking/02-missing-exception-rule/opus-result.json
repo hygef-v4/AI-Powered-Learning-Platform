@@ -1,0 +1,36 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "02-missing-exception-rule",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:51:01.239446+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "All 13 applicable item IDs were scored, and each score matches the rubric and the evidence. Diagram: the boundary rectangle 'Hệ thống đặt sân cầu lông' spans x=200–620. Khách hàng (x=60), Chủ sân and Cổng thanh toán (x=720) all sit outside it. Every use case uses the ellipse style. Edges e4 and e5 are dashed and labeled <<include>> and <<extend>>. Khách hàng connects to Xem lịch sân trống, Đặt sân and Hủy đặt sân. Both secondary actors and all four required use cases are present. Full marks on these items are justified, and the grader did not add a requirement to check whether the extend direction makes sense. Spec: the name, primary actor and secondary actors are correct. The precondition, postcondition and trigger are clear and fit the booking function. Both normal flows (hourly and fixed weekly) earned the stated 0.25 each for 0.5. The alternative flow (khung giờ đã kín) is reasonable. The table has no exception flow or business rule, so 0 for each is correct and follows the rubric's examples. The feedback and suggestions are grounded in the submission and invent no requirements. One small point: Khách hàng has no direct line to Thanh toán, only the include link through Đặt sân. The grader accepted this without comment, which is defensible.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The material claims in the grading match the submission. In the diagram XML, the system name 'Hệ thống đặt sân cầu lông' is a plain rectangle spanning x=200–620. The actors sit outside it: Khách hàng at x=60, and Chủ sân and Cổng thanh toán at x=720. All five use cases, including the four required ones, use the 'ellipse' style and lie inside the boundary. Edges e4 (<<include>>, Đặt sân→Thanh toán) and e5 (<<extend>>, Hủy đặt sân→Thanh toán) both have dashed=1 and the required labels. Khách hàng connects to Xem lịch sân trống, Đặt sân and Hủy đặt sân. Full credit on all six diagram items is supported. In the spec table, the name, primary actor and secondary actors (Chủ sân, Cổng thanh toán), precondition, postcondition, trigger, both normal flows (hourly and weekly fixed) and alternative flow 2a are all present. The awards for these are accurate. The table really does end after the Alternative flow, with no exception flow or business rule rows. So the zero scores and the 'missing' claims are correct, and the suggestions are relevant. Two minor issues: the section partIds (c2757c0c…, 562c49a3…) do not match any rubric or heading id in the input. The grading also does not mention that Khách hàng links to Thanh toán only through the include, not directly, though that does not affect the score. No claims contradict the evidence.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The feedback explains the two material deductions clearly and correctly. Exception flow (0/0.5) and business rule (0/0.5) are both missing from the spec table, which ends after the Alternative flow, and the evidence for each points to that block. Each deduction comes with a feasible suggestion that matches the rubric: add a payment-failure or hold-timeout exception flow and say how the system handles it, and add a business rule with concrete conditions such as how long a slot is held or the cancellation and refund terms. Every full-credit item cites accurate evidence from the diagram XML and the table. This covers the system boundary, the ellipses, the dashed <<include>>/<<extend>> edges with labels, all three actors, the four use cases and both normal flows. That gives the instructor clear reasons for each score. The summary, section notes and per-item comments agree with each other and put the missing spec parts first. Shortcomings: the suggestions mostly repeat the rubric's own examples and give no sample wording, such as a 10-minute hold or a refund cutoff. The nextSteps field is empty. The feedback also misses a questionable modeling choice: an <<extend>> edge from Hủy đặt sân to Thanh toán. This did not affect the score but would be useful for the instructor to know.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 37.6
+}

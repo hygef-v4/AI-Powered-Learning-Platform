@@ -1,0 +1,34 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "01-complete",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:50:11.248042+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader correctly awards full credit on all 13 applicable items and grounds each award in the submission. The diagram shows the required actors and four use cases, with dashed, labeled include and extend links. The booking specification names both secondary actors and earns the stated 0.25 for each hourly and weekly flow. The alternative, exceptions, and concrete business rules support the remaining awards.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "All 13 rubric scores are supported by the submission. The XML shows a rectangular boundary with actors outside, ellipse use cases, and labeled include and extend edges with dashed=1. The Đặt sân table confirms Khách hàng as primary and Chủ sân and Cổng thanh toán as secondary, and documents both booking flows, the alternative, the exceptions, and the business rules.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The feedback supports full credit with specific evidence for all 13 rubric items, including the dashed, labeled UML relationships and both hourly and weekly booking flows. With no deductions, there are no lost points to explain. The empty improvement section still misses a concrete fix: after the customer picks a replacement slot in step 2a, return to step 2 to verify and hold it before payment.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 25.9
+}

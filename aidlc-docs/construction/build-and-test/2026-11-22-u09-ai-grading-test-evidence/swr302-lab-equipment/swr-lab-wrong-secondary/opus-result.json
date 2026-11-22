@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swr302-lab-equipment",
+  "case_id": "swr-lab-wrong-secondary",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T09:01:05.428340+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader scored all 13 applicable items, and each score matches the rubric. Diagram: the 'Hệ thống mượn thiết bị phòng lab' frame contains the four ellipses by geometry, and the actors (x=50 and x=855) sit outside it. Actor links are correct. The include arrow runs from Gửi yêu cầu mượn to Kiểm tra quyền mượn, and the extend arrow runs from Duyệt mượn qua đêm to Gửi yêu cầu mượn. Both have correct labels and dashed=1, so full marks are justified. Spec: the Secondary actor field lists 'Dịch vụ quyền mượn, Nhân viên thư viện'. The grader correctly gave 0.5 for the eligibility service and 0 for the missing Kỹ thuật viên phòng lab, without inventing any extra penalty. Full marks are justified for: preconditions, trigger and postconditions; the main flow (choosing the device and times, the eligibility and availability checks, recording, holding and the loan code); alternative flow 4a, which rejoins at step 5; exception 2a, which reports an error and ends without creating a loan or holding the device; and business rules BR1 and BR2. The feedback is consistent and specific. Minor flaws: the boundary evidence says the ellipses are 'nằm trong system', which is true only by geometry, since their parent is '1'. The requiresReview flag on the technician item is also unnecessary, because the rubric rule for that item is unambiguous.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading claims match the submission closely. Diagram: the system rectangle 'Hệ thống mượn thiết bị phòng lab' spans x=190–750. All three umlActor shapes sit outside it, at x=50 and x=855. All four use cases are ellipse-styled ovals with the required names. Each actor association links to the right use case. The <<include>> edge runs request→check-eligibility and the <<extend>> edge runs approve-overnight→request, and both have dashed=1. So the full marks for the boundary, actors, use cases, relationships and notation are supported. Spec: the feedback correctly finds that the Secondary actor field reads 'Dịch vụ quyền mượn, Nhân viên thư viện' and omits 'Kỹ thuật viên phòng lab'. Giving s-secondary-technician 0 and flagging it for review is justified. The claims about the preconditions, trigger, postconditions, main-flow steps 1–5, alternative flow 4a with its approve/reject branches, exception 2a (no booking created, no device held) and BR1/BR2 all match the table text. One minor inaccuracy: the evidence says the ellipses are 'được ghi là nằm trong system', but in the XML they have parent=\"1\", not the system cell. They are only inside the box by geometry, so this slightly overstates the evidence, though the conclusion is still valid.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The feedback explains the only material deduction: 0 of 0.5 for the Kỹ thuật viên phòng lab secondary-actor item. It cites the evidence that the Secondary actor field reads \"Dịch vụ quyền mượn, Nhân viên thư viện\" and gives a specific, feasible fix: replace it with \"Kỹ thuật viên phòng lab\". The full-credit items are justified with concrete evidence. Examples include the dashed include and extend arrows with correct direction, the conditional label on extend, exception 2a not creating a booking or holding the device, and rules BR1 and BR2. These explanations are clear and useful to an instructor. The summary puts strengths and the single improvement in sensible order. Weaknesses: - The review reason (\"cần xác nhận cách xử lý điểm khi trường có thêm tác nhân sai\") is slightly confusing. It frames the problem as an extra wrong actor, when the real issue is that the required actor is missing. - The feedback does not point out the useful inconsistency that flow 4a and BR2 both correctly name Kỹ thuật viên phòng lab while the actor field does not. - nextSteps is left empty. These are minor gaps in otherwise clear, consistent and specific feedback.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 38.0
+}
