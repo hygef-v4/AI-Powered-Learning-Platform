@@ -150,16 +150,19 @@ class GradingEvalHarnessTest {
     @Test
     void diagramSummarySentToAiShowsIncludeLabelAndLineStyle() throws Exception {
         // F2 (2026-11-13): trước đây nhãn <<include>> bị xóa và nét đứt, nét liền trông giống hệt nhau.
-        String dashed = runner.pipeline().buildProviderRequest(requireCase("01-complete")).user();
-        String solid = runner.pipeline().buildProviderRequest(requireCase("04-solid-include")).user();
-        assertThat(dashed).contains("nối uc-book -> uc-pay (nét đứt): <<include>>",
-                "nối uc-cancel -> uc-pay (nét đứt): <<extend>>");
-        assertThat(solid).contains("nối uc-book -> uc-pay (nét liền): <<include>>").doesNotContain("uc-pay (nét đứt)");
+        String dashed = json.readTree(runner.pipeline().buildProviderRequest(requireCase("01-complete")).user())
+                .path("submission").get(0).asText();
+        String solid = json.readTree(runner.pipeline().buildProviderRequest(requireCase("04-solid-include")).user())
+                .path("submission").get(0).asText();
+        String include = "nối \"Đặt sân\" [uc-book] -> \"Thanh toán\" [uc-pay]";
+        assertThat(dashed).contains(include + " (nét đứt): <<include>>",
+                "nối \"Hủy đặt sân\" [uc-cancel] -> \"Thanh toán\" [uc-pay] (nét đứt): <<extend>>");
+        assertThat(solid).contains(include + " (nét liền): <<include>>").doesNotContain(include + " (nét đứt)");
         // Kế hoạch 2026-11-20: AI thấy khung system boundary, mã block, và sơ đồ chỉ được gửi một lần.
         assertThat(dashed).contains("hình sys (chữ nhật): Hệ thống đặt sân cầu lông",
                 "hình uc-book (ellipse) trong sys: Đặt sân", "[block ");
         assertThat(dashed).doesNotContain("actor-customer (umlActor) trong");
-        assertThat(dashed.split("nối uc-book -> uc-pay", -1)).hasSize(2);
+        assertThat(dashed.split(java.util.regex.Pattern.quote(include), -1)).hasSize(2);
     }
 
     @Test
