@@ -188,7 +188,13 @@ class GradingPromptBuilderTest {
     void gradingInstructionsRequireWorkToMatchTheAssignment() {
         assertThat(new GradingPromptBuilder(json).buildGradingInstructions())
                 .contains("compare the submission with the assignment instructions",
-                        "different system or topic earns zero");
+                        "A different system or topic earns zero for topic-dependent items",
+                        "A trigger, flow, or business rule about another system does not satisfy this assignment",
+                        "For those items set the numeric score to 0",
+                        "A trigger must start the specific use case requested by the rubric and assignment",
+                        "A populated Trigger field for a different use case earns zero",
+                        "Apply topic-independent rubric items as written",
+                        "Absent notation earns no credit unless the rubric says it is optional");
     }
 
     @Test
@@ -198,7 +204,7 @@ class GradingPromptBuilderTest {
                 .contains("TYPE is guessed by the system from shapes and may be OTHER or wrong",
                         "COMET/UML or Wiegers", "never add notation criteria the rubric does not state",
                         "'hình X trong Y' means shape X lies inside shape Y", "'…(đã cắt)' it is incomplete",
-                        "narrowest interpretation", "a diagram about a different system earns zero",
+                        "narrowest interpretation",
                         "'[block <id>]' line directly above the cited text",
                         "Never paste '[block <id>]' lines or raw diagram-summary lines as evidence",
                         "names, actors and elements match what the instructions require",
@@ -206,6 +212,24 @@ class GradingPromptBuilderTest {
                         "Full credit requires evidence for every mandatory condition",
                         "If the rubric makes an element optional or conditional",
                         "If absence or partial credit is ambiguous, set requiresReview=true");
+    }
+
+    @Test
+    void gradingInstructionsTieEachDeductionToItsOwnRubricItemAndEvidence() {
+        assertThat(new GradingPromptBuilder(json).buildGradingInstructions())
+                .contains("Read evidence from that item's rubric part",
+                        "Do not carry a defect into another item unless it violates that item's own requirement",
+                        "A reason that denies all credit must have numeric score 0",
+                        "Award full points when the cited evidence satisfies all stated requirements",
+                        "Award each explicitly allocated partial score independently",
+                        "Recognize equivalent behavior even without the exact label",
+                        "Add the earned points for the separately scored parts",
+                        "Write that sum as the item score in itemScoresByRubric",
+                        "Use zero for a split item only when none of its parts earn points",
+                        "a required count of flows defines full credit",
+                        "selecting one date and time slot and completing that booking demonstrates a one-time flow",
+                        "A rule mentioning recurrence is not a recurring flow",
+                        "A guarded break stops only its own branch");
     }
 
     @Test
