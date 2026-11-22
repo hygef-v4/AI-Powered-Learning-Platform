@@ -1,0 +1,34 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "08-wrong-actors",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:54:45.392533+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The grader covers all 13 applicable items and correctly credits the ovals and both booking flows, hourly and weekly. It correctly identifies the missing boundary, incomplete use case list, and incorrect actor labels. The zero for include/extend invents a requirement to draw those relationships, although the rubric only governs their notation when present. The zero for the specification’s actor item is justified because it lists Admin in place of Chủ sân and Cổng thanh toán, so the review flag is unnecessary.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading correctly credits both ellipses, identifies the missing system boundary and dashed include/extend relationships, and distinguishes the diagram’s «Người dùng» from the table’s correct «Khách hàng». It also catches that the table lists «Admin» as the secondary actor and credits both booking flows. The main overstatement is counting «Xem sân» as one of the four required use cases when the XML gives no evidence that it shows available time slots.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback grounds the main deductions in the submission and gives concrete fixes for the missing system boundary, incorrect actor names, and missing cancellation and payment use cases. It credits both the hourly and weekly booking flows and flags the combined actor criterion for instructor review because the rubric gives no partial-credit guidance. The include/extend deduction is less actionable because the advice explains the notation without showing where a relationship would fit or clarifying whether one is required.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 30.9
+}

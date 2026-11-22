@@ -107,7 +107,7 @@ Với bản lưu trong ví dụ, replay trả mã `2` vì validator hiện tại
 
 - Khi cần so sánh Sol và Opus, cho hai judge đọc đúng cùng bài, rubric và phản hồi Luna. Đạt GEval khi cả ba chỉ số của một judge từ 0,80 trở lên. Báo cáo riêng số case đã đánh giá và số case đạt của từng judge.
 - Lượt 3 có 20 bản ghi Luna hợp lệ, cùng kết quả Sol và Opus trên cả 20 (Sol đạt 18/20, Opus đạt 15/20). Lượt 2 mới có Opus ở 3/20 ca. Muốn bổ sung thì truyền thêm `--run-dir` của thư mục `confirmation-remaining`. Nếu đổi prompt, lưu thành lượt mới để giữ lịch sử đối chiếu.
-- `test-ai-grading-test.md` là báo cáo đối chiếu cục bộ của đợt này. Báo cáo gồm mục đích, bốn lớp kiểm thử, kết quả lượt mới nhất, bảng so sánh ba lượt và phụ lục có bản ghi theo mã case. Báo cáo và bản ghi chạy nằm trong thư mục QA cục bộ. Khi chia sẻ, giữ các hồ sơ đi kèm để mở được liên kết tương đối.
+- `test-ai-grading-test.md` là báo cáo đối chiếu của đợt này. Báo cáo gồm mục đích, bốn lớp kiểm thử, kết quả lượt mới nhất, bảng so sánh ba lượt và phụ lục có bản ghi theo mã case. Bản lưu trong repo là [ai-grading-test-report.md](ai-grading-test-report.md), kèm bằng chứng lượt 3 (prompt, phản hồi Luna, kết quả Sol và Opus của 20 case, log test, đối chiếu đầu vào) trong `2026-11-22-u09-ai-grading-test-evidence/`. Bản ghi các lượt trước và script dựng báo cáo nằm trong thư mục QA cục bộ `.tmp/`. Sau khi dựng lại, cập nhật lại bản lưu này.
 
 Trên máy QA có hồ sơ Luna đã lưu, chạy từ thư mục gốc của repo. Lệnh có `--plan` liệt kê các case cần chạy. Bỏ `--plan` sau khi kiểm tra đăng nhập Claude, hạn mức và cài đặt usage credits. Dùng lệnh cuối để cập nhật báo cáo từ kết quả đã lưu.
 

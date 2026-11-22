@@ -16540,6 +16540,42 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 
 ---
 
+## U09 lưu báo cáo kiểm thử AI chấm bài vào aidlc-docs
+**Timestamp**: 2026-11-22T09:45:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi copy vào doc construction đi"
+**AI Response**: "Copy `test-ai-grading-test.md` từ `.tmp/` vào `construction/build-and-test/2026-11-22-u09-ai-grading-test/`, kèm 337 file bằng chứng trong `evidence/`. Viết lại 338 liên kết tương đối, liên kết README trỏ về `scripts/ai-grading-eval/README.md`. Kiểm tra: 0 liên kết hỏng. Cập nhật hướng dẫn đánh giá và aidlc-state. Không commit."
+**Context**: Build and Test, lưu tài liệu. Dữ liệu `SYNTHETIC_TEAM`, không có code ứng dụng thay đổi.
+
+---
+
+## U09 gộp báo cáo kiểm thử AI chấm bài thành một file
+**Timestamp**: 2026-11-22T09:55:00Z
+**Requested by:** Quang Hung
+**User Input**: "ý là để vào thành 1 cái report chung ở ngoài  ấy , b xem nên để ở đâu để ở đây cx đc aidlc-docs\construction\build-and-test\"
+**AI Response**: "Tạo `construction/build-and-test/2026-11-22-u09-ai-grading-test-report.md` từ báo cáo trong `.tmp/`, bỏ cột và link bằng chứng, ghi vị trí bản ghi gốc cục bộ. Xóa thư mục `2026-11-22-u09-ai-grading-test/` (337 file) vừa tạo. Hai link còn lại đều mở được. Cập nhật hướng dẫn và aidlc-state. Không commit."
+**Context**: Build and Test, lưu tài liệu. Không đổi code ứng dụng.
+
+---
+
+## U09 lưu bằng chứng lượt 3 cho báo cáo kiểm thử AI chấm bài
+**Timestamp**: 2026-11-22T10:10:00Z
+**Requested by:** Quang Hung
+**User Input**: "có nên lưu bằng chứng k" / "ok giúp tôi lưu lượt 3 thôi"
+**AI Response**: "Khuyên lưu riêng lượt 3. Copy 83 file (prompt, phản hồi Luna, kết quả Sol, Opus của 20 case, log test backend, đối chiếu đầu vào, lệnh chạy lại) vào `construction/build-and-test/2026-11-22-u09-ai-grading-test-evidence/`. Dựng lại báo cáo: bảng lượt 3, ví dụ `05-off-topic` và đoạn judge bất đồng có link, các lượt trước không có link. 92 link, 0 hỏng. Không thấy key, token, email hay đường dẫn máy. Không commit."
+**Context**: Build and Test, lưu tài liệu với dữ liệu `SYNTHETIC_TEAM`. Không đổi code ứng dụng.
+
+---
+
+## U09 bỏ ngày khỏi tên báo cáo kiểm thử AI chấm bài
+**Timestamp**: 2026-11-22T10:20:00Z
+**Requested by:** Quang Hung
+**User Input**: "tôi vừa undo commit tôi nghĩ  cái file ai grading test report bỏ ngày đi bởi vì nó là file tổng hợp"
+**AI Response**: "Đổi tên `2026-11-22-u09-ai-grading-test-report.md` thành `construction/build-and-test/ai-grading-test-report.md`. Cập nhật liên kết trong hướng dẫn đánh giá và aidlc-state. Thư mục bằng chứng lượt 3 giữ tên có ngày. Chưa commit lại."
+**Context**: Build and Test, lưu tài liệu. Không đổi code ứng dụng.
+
+---
+
 ## U07 kiểm thử chế độ AI tự chia điểm
 **Timestamp**: 2026-11-22T08:50:31Z
 **Requested by:** Quang Hung

@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swd392-internship-portal",
+  "case_id": "swd-internship-wrong-guard",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:55:00.678255+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader applied all ten criteria correctly. The class diagram has the required members and multiplicities. The state paths earn full credit independently of the reversed `[!transcriptAttached]` guard, which correctly earns zero. The modular monolith rationale addresses 300 applications per week and two operators, with a concrete mitigation for database contention. The feedback also credits the outbox’s atomic write and background retries, plus the Strategy mapping for the 60- and 90-credit rules.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "All ten rubric decisions are grounded in the submission. The class XML supports the members and multiplicities, and the state XML supports full transition credit and zero guard credit because [!transcriptAttached] reverses the requirement. The written evidence supports the modular monolith for 300 applications per week and two operators, the database contention mitigation, the outbox retry mechanism, and the Strategy selection for the 60- and 90-credit rules.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The feedback clearly explains the sole deduction: `submit [!transcriptAttached]` allows submission when the transcript is missing. It gives the exact fix, `[transcriptAttached]` on Draft → Submitted, and correctly credits the transition events separately. The item-level evidence also supports the full-credit decisions, including the modular monolith for 300 applications per week and two operators, durable outbox retries, and the 60- and 90-credit strategies.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 20.9
+}

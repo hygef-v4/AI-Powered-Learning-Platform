@@ -1,0 +1,34 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "02-missing-exception-rule",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:50:11.224040+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader covers all 13 applicable items. Full diagram credit matches the boundary, ovals, required actors and use cases, and dashed, labeled include and extend links. The specification earns 0.25 for each of the hourly and weekly booking flows and credit for the alternative flow. The missing exception flow and concrete business rule each correctly receive zero.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The feedback matches the Draw.io XML, which shows all four required use cases as ellipses inside the boundary, three actors outside it, and labeled include and extend edges with dashed=1. It correctly identifies Khách hàng as the primary actor and Chủ sân and Cổng thanh toán as secondary actors in the table. The table contains both hourly and weekly booking flows and a full-slot alternative, and the deductions for the missing exception flow and concrete business rule are supported.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback clearly explains both half-point deductions: the Đặt sân specification ends after the alternative flow, leaving out an exception flow and a concrete business rule. It gives feasible examples involving failed payments, expired holds, and cancellation or refund conditions. The advice would be more actionable if it tied payment failure to the payment step and specified what happens to the held slot.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 25.9
+}

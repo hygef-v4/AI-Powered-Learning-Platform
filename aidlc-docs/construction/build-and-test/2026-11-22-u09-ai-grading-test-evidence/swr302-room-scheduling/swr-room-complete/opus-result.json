@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swr302-room-scheduling",
+  "case_id": "swr-room-complete",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T09:02:29.606535+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader scored all nine applicable items and gave each one full marks. Every award matches the evidence in the submission. Diagram: there is one central process named 'Hệ thống xếp lịch phòng học', drawn as a 200x200 ellipse, which makes it a circle. The two external actors 'Giảng viên' and 'Dịch vụ lịch phòng' are named correctly and sit outside it, and there are no subprocesses or data stores. All four flows point the right way and are labelled exactly as the rubric requires, so both 0.75-point pairs were correctly awarded. Use-case spec: it gives the case name and primary actor, a precondition (logged in and authorised), a trigger (opening the function) and a success state (hold confirmed, booking saved, booking code issued). The main flow covers the search criteria, the query and the hold through the room service, saving only after the hold succeeds, and returning the booking code. Exception 4a covers the conflict: the booking is not saved, the room is reported busy, and the list reloads so the lecturer can choose again. NFR: it targets response time for room-availability search under peak load. All four measurement parts are present: a 2-second limit, 95% of searches, 100 concurrent lecturers, and timing from sending the query to the list appearing. That correctly earns the all-or-nothing 1.5 points. The grader invented no extra requirements and made no contradictory deductions, and the summary and section feedback match the item scores.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "Every material claim in the grading output is backed by the submission. Diagram: the XML has one process styled as an ellipse, named 'Hệ thống xếp lịch phòng học'. Its width and height are both 200, so it is a circle. 'Giảng viên' and 'Dịch vụ lịch phòng' are rectangles placed outside it, and there are no subprocesses or internal data stores. The four labeled edges all point the right way: lecturer→system 'Tiêu chí tìm phòng và yêu cầu đặt', system→lecturer 'Danh sách phòng trống và kết quả đặt', system→service 'Truy vấn phòng trống và lệnh giữ chỗ', service→system 'Khung giờ trống và kết quả giữ chỗ'. The grader's description of these flows is accurate. Use-case table: the evidence matches the role fields for name, primary actor, precondition, trigger, postcondition, main flow steps 1–5 and the 4a conflict exception. The exception does not save the booking, reports the room as busy and reloads the list. NFR: the claimed threshold (2 s), percentage (95%), concurrency (100 lecturers), 15-minute test and start/end of measurement (from sending the query to the list displaying) all appear in the paragraph. Full marks on every item fits the evidence, and no claim about missing or wrong content contradicts the submission. One small gap: the circle claim rests on the ellipse style without stating that width equals height, but this holds in the XML.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The submission meets every rubric item, and the grader correctly gives full marks. The diagram has one central process, 'Hệ thống xếp lịch phòng học', drawn as an ellipse with equal width and height of 200, so it is a circle. The two actors, 'Giảng viên' and 'Dịch vụ lịch phòng', sit outside it. All four flows point the right way and carry data names. The use case has a name, primary actor, precondition, trigger and success postcondition. Its main flow covers the search criteria, the query to the service, the hold, saving the booking and returning the booking code. Exception 4a does not save the contested booking, reports the room as busy and reloads the list. The non-functional requirement states a 2-second threshold, a 95% share of lookups, 100 concurrent users, and a start and end point for the measurement. Since there are no deductions, it is consistent that suggestion fields are null and improvements are empty. Each item gives specific evidence and a clear reason with the point breakdown, such as 0.75 + 0.75 for the flows, which helps the instructor check the grading. Shortcomings: improvements and nextSteps are empty, with no optional advice. For example, the grader could have suggested defining what peak load means or adding a timeout case to the exception flow. The summary feedback is somewhat generic. The section partIds do not obviously map to the rubric part headings. The grader also calls the shape an ellipse without noting that its equal dimensions make it a circle.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 40.8
+}

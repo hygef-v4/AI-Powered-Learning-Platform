@@ -19,6 +19,7 @@
 - [x] Prompt chốt cho ca thiếu FK 9,25/10 và ca thực sự thiếu phân quyền 8,50/10. Ca lạc đề vẫn lệch 0,25 ở trigger.
 - [x] Báo cáo cục bộ đổi tên thành `test-ai-grading-test.md`. Có cột riêng và lệnh đánh giá cùng bản ghi cho Opus 5.5.
 - [x] Chạy Opus 5.5 trên 20 ca lượt 3 (15/20 đạt).
+- [x] Lưu báo cáo kiểm thử thành một file [ai-grading-test-report.md](construction/build-and-test/ai-grading-test-report.md). Lưu 83 file bằng chứng lượt 3 trong `2026-11-22-u09-ai-grading-test-evidence/`. Bản ghi các lượt trước giữ trong `.tmp/` cục bộ.
 - [ ] Kiểm độ ổn định rộng hơn với prompt chốt.
 
 ## U09: Luna chấm và Sol đánh giá · 2026-11-22

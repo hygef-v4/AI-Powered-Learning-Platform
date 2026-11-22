@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swr302-room-scheduling",
+  "case_id": "swr-room-vague-nfr",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T09:03:03.300737+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader scored all nine applicable items, and every score matches the rubric. Diagram: there is one ellipse named 'Hệ thống xếp lịch phòng học', the actors 'Giảng viên' and 'Dịch vụ lịch phòng' sit outside it, and there are no subprocesses or data stores, so 1/1 for the boundary item and 1/1 for the actors item. All four flows point the right way and carry data names matching the rubric, so each pair earns 0.75, for 1.5/1.5. Use-case spec: the name and primary actor are correct (0.5). The precondition, trigger and success postcondition are all present (1). The main flow covers the search criteria, the service query, the hold, saving after the hold succeeds and the booking code (1.5). Exception 4a covers the conflict, not saving, the busy notice and the reload for reselection (1.5). NFR: 'phản hồi nhanh ngay cả vào giờ cao điểm' gets 0.5 for the target, which the rubric allows for qualitative wording. It gets 0/1.5 for measurement because all four components are missing, which follows the all-or-nothing rule. The grader added no requirements of its own and contradicted no criteria. Its feedback is specific and gives a useful suggestion for the NFR.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "Every material claim in the grading matches the submission. Diagram: the XML has one ellipse, 200x200 (a circle), labelled 'Hệ thống xếp lịch phòng học'. 'Giảng viên' and 'Dịch vụ lịch phòng' are separate rectangles outside the circle, and there are no sub-processes or data stores. All four edges have endArrow=classic, correct source and target, and correct data labels: 'Tiêu chí tìm phòng và yêu cầu đặt', 'Danh sách phòng trống và kết quả đặt', 'Truy vấn phòng trống và lệnh giữ chỗ' and 'Khung giờ trống và kết quả giữ chỗ'. This justifies full marks for the boundary, actor and flow items (1.5). Use case spec: the table's role fields support every awarded point. These are the use case name and primary actor, the precondition (logged in, has permission), the trigger (opens the function) and the success postcondition (hold placed, booking saved, booking code issued). The main flow searches by date, time slot and number of people, queries the service, holds the room, saves only after confirmation and shows the booking code. Exception 4a does not save the booking, reports the room is busy and reloads the list. NFR: the paragraph 'phản hồi nhanh ngay cả vào giờ cao điểm' is correctly given 0.5 for the target and 0 for measurement, because it has none of the four required components. That follows the rubric's all-or-nothing rule. The suggestions and summaries are consistent with the evidence. One small issue: the section partIds don't map clearly to the rubric's part headings. This doesn't change the substance of the grading.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The feedback explains the only material deduction (nfr-measurement, 0/1.5) clearly. It names all four missing parts from the rubric: time threshold, share of queries that must meet it, concurrent load, and when measurement starts and ends. It also ties the zero score to the all-or-nothing rule. The full marks for the diagram flows and the use-case spec match the evidence: the ellipse 'Hệ thống xếp lịch phòng học', both actors, four named directional flows, and exception 4a with no save, a busy notice and a reloaded list. The per-item reasons are short, consistent and useful to an instructor, and the summary correctly makes the qualitative NFR the main weakness. Shortcomings: the improvement suggestion only repeats the list of missing parts. It gives no concrete example, such as '95% of queries within 2 s at 200 concurrent users, measured from sending the request to the list appearing', which would make the fix easier to act on. 'nextSteps' is empty, and the summary's improvement point is general.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 33.7
+}

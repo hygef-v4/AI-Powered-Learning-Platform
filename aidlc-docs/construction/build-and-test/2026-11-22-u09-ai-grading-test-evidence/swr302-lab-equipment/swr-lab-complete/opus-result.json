@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swr302-lab-equipment",
+  "case_id": "swr-lab-complete",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:59:48.536966+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader gave full marks on all 13 applicable items, and the submission supports each one. Diagram: the 'Hệ thống mượn thiết bị phòng lab' boundary spans x=190–750 and holds all four ellipses, while the actors sit outside it at x=50 and x=855. Sinh viên connects to Tra cứu thiết bị and Gửi yêu cầu mượn, Dịch vụ quyền mượn connects to Kiểm tra quyền mượn, and Kỹ thuật viên connects to Duyệt mượn qua đêm. The <<include>> runs from request to check-eligibility and the <<extend>> runs from approve-overnight to request. Both have the correct direction and dashed=1, which justifies 1/1 and 0.5/0.5. Spec: the table has the correct name, primary actor and both secondary actors. It also has a precondition, a trigger and a success postcondition. The main flow covers choosing the device and times, the eligibility and availability checks, saving the booking, holding the device and showing a booking code. Branch 4a continues to step 5 after approval. Exception 2a reports an error and ends without creating a booking or holding the device. BR1 and BR2 match the two required rules. The grader added no extra requirements and made no deductions that contradict the criteria. Its evidence and reasons are specific and tied to the correct blocks. One small weakness: the improvements and next steps lists are empty, which is acceptable for a full-score submission.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The submission backs up every material claim in the feedback. Diagram: the system rectangle 'Hệ thống mượn thiết bị phòng lab' spans x=190–750. Sinh viên (x=50) and both actors at x=855 sit outside it, and all four ellipse use cases sit inside. The four actor edges match the rubric: student-browse, student-request, service-check and technician-approve. The include-check edge runs from request to check-eligibility, and the extend-overnight edge runs from approve-overnight to request with the condition [giờ trả sau giờ đóng cửa]. Both edges have dashed=1, so full marks for direction and dashed lines are justified. Spec table: the use case name, Primary actor Sinh viên, and both secondary actors in the Secondary actor field are correct. Preconditions, trigger and postcondition are all present. The main flow covers choosing the device and times, the eligibility check, the availability check, saving, holding the device and showing the loan code. Flow 4a continues to step 5 after approval. Exception 2a explicitly creates no loan and holds no device. BR1 and BR2 cover the single-device and after-hours approval rules. One small nuance: BR2 is worded as an authority restriction ('Chỉ Kỹ thuật viên… có quyền duyệt') rather than saying approval is required, yet the grader treated it as fully correct without comment. Even so, no claim contradicts the evidence, and no unsupported claims were found.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "Full marks are justified. The diagram has the 'Hệ thống mượn thiết bị phòng lab' boundary, and the actors sit outside it (x=50 and x=855, while the frame spans 190–750). All four ellipses are present, and each actor is linked to the right use case. The include arrow points from request to check-eligibility, the extend arrow points from approve-overnight to request, and both are dashed=1. The specification covers both secondary actors, the preconditions, the trigger, the postconditions, main flow steps 1–5, alternative flow 4a with continuation to step 5, exception 2a with no booking created or device held, and rules BR1 and BR2. Since nothing was deducted, an empty improvements list is consistent and not contradictory. Each item comes with specific evidence and a point-by-point reason, including the 0.25-per-arrow logic for notation, which makes it clear and useful to an instructor. Weaknesses: the overall feedback summary is generic. The section partIds don't match the rubric IDs, which hurts traceability. There are no optional next steps, such as listing more alternative flows or wording BR2 more precisely.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 39.0
+}

@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swr302-room-scheduling",
+  "case_id": "swr-room-complete",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:56:07.446173+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader correctly awards full credit on all nine applicable items. The diagram has one circular process, both required external actors, and two correctly directed, labeled flow pairs worth 0.75 each. The use case covers the required conditions, booking sequence, and conflict handling, including skipping the save and refreshing the list. The peak-load requirement specifies 95% of lookups within 2 seconds with 100 concurrent lecturers, measured from query submission to list display, satisfying all four measurement components.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "All nine rubric judgments match the submission. The XML shows a circular 200×200 ellipse, two external actors, and four correctly directed, labeled flows. The table names Giảng viên as the primary actor and specifies that a conflict triggers a notice and a refreshed list without saving the booking. The performance requirement specifies 95% within 2 seconds for 100 concurrent lecturers in a 15-minute test, measured from query submission to list display.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The item-level feedback justifies full credit across the rubric. It identifies both correctly directed and labeled flow pairs, explains that the conflict path skips saving and refreshes the room list, and verifies the two-second threshold for 95% of searches with 100 concurrent lecturers, measured from query submission to list display. The evidence is specific enough for the instructor to verify each award, and no deductions or corrective suggestions were warranted.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 27.6
+}

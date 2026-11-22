@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swd392-workshop-registration",
+  "case_id": "swd-workshop-no-authorization",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:59:09.533039+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader scored all 12 applicable items, and every score matches the rubric. Conceptual ERD: it gave full marks for the three entities (Thành viên, Buổi workshop, Đăng ký) and for the two 1 : 0..* relationships, which use ERmandOne at the member and session ends and ERzeroToMany at Đăng ký. It also gave full marks for abstraction, since the diagram shows names only, with no columns, SQL types or PK/FK markers. Logical ERD: it correctly gave full marks for the three tables, the three PKs, the two FKs (both explicitly REFERENCES MEMBER(member_id) and WORKSHOP_SESSION(session_id)) and the composite UNIQUE (member_id, session_id). Sequence diagram: it gave full marks for the POST from the app to Registration API. It rightly gave 0 for authorization, because there is no workshop:register check and no 403 branch. It followed the rubric's rule to score the persist step separately and gave it full marks for insertRegistration(sessionId, memberId) returning registrationId. It also gave full marks for 201 Created with a Location containing both sessionId and registrationId. The grader invented no extra requirements and made no deductions that contradict the rubric. The feedback is consistent and gives a useful fix for the missing authorization step. Minor flaws: the evidence text calls the call \"repository.insertRegistration\", but the diagram label is just \"insertRegistration\"; nextSteps is empty; and the section partIds don't match the rubric IDs.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading claims match the submission. Conceptual ERD: the three rectangles 'Thành viên', 'Đăng ký' and 'Buổi workshop' are there. Both edges use ERmandOne at the member/session end and ERzeroToMany at the registration end, labeled 1 : 0..*. No columns, SQL types or PK/FK marks appear, so full marks on c-entities, c-cardinalities and c-abstraction are correct. Logical ERD: MEMBER, WORKSHOP_SESSION and REGISTRATION are present. Each table has the required PK. REGISTRATION has 'FK member_id ... REFERENCES MEMBER(member_id)', 'FK session_id ... REFERENCES WORKSHOP_SESSION(session_id)' and 'UNIQUE (member_id, session_id)', so the full logical scores are supported. Sequence diagram: the POST goes from 'Ứng dụng thành viên' to 'Registration API'. The API calls insertRegistration(sessionId, memberId) on the Repository, which returns registrationId on a dashed edge. A dashed 201 Created with Location /workshop-sessions/{sessionId}/registrations/{registrationId} follows. The diagram has no workshop:register check and no 403 branch, so giving 0 for s-authorization while scoring s-persist on its own is correct and follows the rubric. Small issues: the evidence text says 'repository.insertRegistration' when the label has no 'repository.' prefix. The section partIds do not match any rubric or heading id in the input, so they cannot be confirmed. Neither issue changes a score.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback handles the only material deduction well. It gives 0 for the authorization item (937f8b9e) and points to evidence: right after the POST, the sequence diagram goes straight to insertRegistration(sessionId, memberId), with no workshop:register check and no 403 branch. The suggestion is specific and feasible: add a permission check before the insert, and on denial return 403 to the app and end the flow without calling the repository. The persist item is scored separately, as the rubric requires, and the reason says so. Full marks elsewhere are backed by concrete evidence: three entities, 1 : 0..* links using ERmandOne/ERzeroToMany, no physical details in the conceptual ERD, FK ... REFERENCES statements, UNIQUE (member_id, session_id), and a 201 response with a Location containing sessionId and registrationId. The summary, section feedback and item feedback agree with each other and put the one gap first, which is useful for the instructor. Minor weaknesses: nextSteps is empty, there is a trailing space in the improvements text, and the evidence says \"repository.insertRegistration\" instead of naming the Registration Repository lifeline exactly.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 31.5
+}

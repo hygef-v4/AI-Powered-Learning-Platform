@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swr302-lab-equipment-relations",
+  "case_id": "swr-lab-solid-semantic",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T09:01:48.826905+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader scored all 13 applicable items, and each full-mark award matches the evidence. Diagram: the boundary 'Hệ thống mượn thiết bị phòng lab' holds the four oval use cases with the correct names, and the actors sit outside it. Sinh viên, Dịch vụ quyền mượn and Kỹ thuật viên phòng lab connect to the right use cases. The <<include>> runs from Gửi yêu cầu mượn to Kiểm tra quyền mượn, and the <<extend>> runs from Duyệt mượn qua đêm to Gửi yêu cầu mượn, so both relationships have the correct label and direction. The extend condition '[giờ trả sau giờ đóng cửa]' is present. The grader correctly did not penalize the non-dashed lines, which the rubric says do not affect the score. Specification: the name, primary actor and both secondary actors are correct. The precondition, trigger and success postcondition are all there. The main flow covers choosing the device and time, checking eligibility and availability, recording the loan, holding the device and showing a loan code. Branch 4a explains how the flow continues to step 5 after approval. Exception 2a reports the error and ends without creating a loan or holding the device. BR1 and BR2 are stated. The grader invented no extra requirements and made no deductions that contradict a criterion. One small point: BR2 says 'only the technician may approve' rather than 'approval is required'. The grader accepted this without comment, which is reasonable but a little lenient. The feedback is accurate but brief, and the improvements list is empty.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading's claims match the submission. In the diagram XML, the 'Hệ thống mượn thiết bị phòng lab' boundary spans x 190–750, and the three umlActor shapes sit outside it at x=50 and x=855. The four use cases use the ellipse style and have the correct names. The association edges link Sinh viên to Tra cứu thiết bị and Gửi yêu cầu mượn, Dịch vụ quyền mượn to Kiểm tra quyền mượn, and Kỹ thuật viên phòng lab to Duyệt mượn qua đêm. The <<include>> edge runs from request to check-eligibility, and the <<extend>> edge runs from approve-overnight to request with the condition '[giờ trả sau giờ đóng cửa]'. Both edges have dashed=0, but the rubric says line style does not affect the score, and the feedback never claims they are dashed. In the spec table, the name, primary actor and both secondary actors in the Secondary actor field are correct. The precondition, trigger and success postcondition are all there. The main flow covers device and time selection, the eligibility check, the availability check, recording the loan, holding the device and showing a loan code. Alternative flow 4a branches and goes back to step 5. Exception 2a reports the error and ends without creating a loan or holding the device. BR1 and BR2 cover both required rules. Every item gets full marks, and that fits the evidence. There are no contradictions or unsupported claims. Minor issues: the section partIds don't match the rubric part IDs, and the feedback says nothing about the solid (non-dashed) include and extend edges.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The full-mark scores are accurate. The diagram puts the actors (x=50 and x=855) outside the system boundary (x=190–750). It has four ellipse use cases, a correct <<include>> from Gửi yêu cầu mượn to Kiểm tra quyền mượn, a correct <<extend>> from Duyệt mượn qua đêm to Gửi yêu cầu mượn, and the condition [giờ trả sau giờ đóng cửa]. The spec covers both secondary actors, the pre/post conditions, the trigger, main-flow steps 1–5, alternative flow 4a, exception 2a without reservation, and rules BR1/BR2. Because nothing was deducted, there are no deductions to explain. Each item gives concrete evidence and a short reason, which helps the instructor, and nothing contradicts. There are small weaknesses. The evidence for BR2 drops the word 'Chỉ' and does not check whether 'có quyền duyệt' really says that approval is required, so a review flag would have been reasonable. The improvements and nextSteps lists are empty, missing easy optional suggestions such as using dashed lines for include/extend by UML convention or naming the extension point. The summary feedback is generic and mostly restates the rubric.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 43.4
+}

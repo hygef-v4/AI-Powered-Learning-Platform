@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swd392-internship-portal",
+  "case_id": "swd-internship-valid-alternative",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:54:41.632025+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader scored all ten applicable items at their prescribed values and grounded the feedback in the submission. The diagrams show the required classes, members, multiplicities, lifecycle transitions, and transcript guard. The modular monolith addresses 300 applications per week and a two-person team, with a concrete mitigation for database contention. The grader correctly scored the Transactional Outbox name separately from its atomic write and background retry mechanism, and credited the Strategy mapping to the 60- and 90-credit rules.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "All rubric awards are supported. The class XML shows the three required classes, Application’s state and operations, and both 1-to-0..* associations. The state XML confirms the full lifecycle and the [transcriptAttached] guard on submit. The modular monolith rationale addresses 300 applications per week and two operators, with separate connection pools and a concurrency limit to reduce contention. The submission also describes an atomic Outbox write with background retries and Strategy selection by internship type for the 60- and 90-credit rules.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The feedback makes full credit easy for the instructor to verify. It cites the correct association multiplicities and transcript guard, ties the modular monolith to 300 applications per week and a two-person team, and explains the Outbox retry mechanism and Strategy selection for the 60- and 90-credit rules. The submission meets every rubric item, so leaving improvement suggestions empty is appropriate.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 27.1
+}

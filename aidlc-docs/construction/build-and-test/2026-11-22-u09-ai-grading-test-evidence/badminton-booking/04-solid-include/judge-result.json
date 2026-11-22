@@ -1,0 +1,34 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "04-solid-include",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:50:11.810954+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader addresses all 13 applicable criteria and correctly denies credit for the two labeled include/extend links because both are solid. The remaining awards match the evidence, including all required actors and four main use cases, both booking flows at 0.25 each, and the concrete exception flows and business rules.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grading matches the submission. The Draw.io XML uses ellipse styles for all four required use cases, places the actors outside the system boundary, and labels both include/extend edges. Both edges lack dashed=1, so the deduction is justified. The specification table confirms Khách hàng as primary and Chủ sân and Cổng thanh toán as secondary, and supports the feedback on both booking flows, the alternative and exception flows, and the business rules.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback clearly explains the sole 0.25-point deduction: the labeled «include» and «extend» connectors are solid, and the rubric requires dashed lines. The item-level fix is specific and feasible: make both connectors dashed and retain their labels. It also credits both the hourly and weekly booking flows. The summary repeats the issue but leaves the next-steps field empty, making the fix less prominent.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 26.4
+}
