@@ -16712,3 +16712,69 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Tích hợp nhánh. Không sửa code ứng dụng khi resolve; code KAN-211 lấy nguyên từ staging.
 
 ---
+
+## Main Business Flows — vẽ lại thành 5 luồng chính (Jira KAN-204)
+**Timestamp**: 2026-11-22T07:45:53Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi cần vẽ lại toàn bộ BF, chỉ vẽ 5 luồng chính, có thể như gợi ý trong ảnh hoặc khác (bạn hãy gửi lại list BF bạn đề xuất)." [ảnh: "2. Main Business Flow — Lesson-Based Learning, Quiz-Based Learning, Assignment Practice, Individual-Graded Assignment, Group-Graded Assignment"] — sau đó: "được, làm đi"
+**AI Response**: "Đề xuất và được duyệt 5 luồng: BF-01 Material-Based Learning (thay Lesson-Based Learning vì hệ thống không có Lesson), BF-02 Quiz-Based Learning, BF-03 Assignment Practice, BF-04 Individual-Graded Assignment, BF-05 Group-Graded Assignment. Vẽ lại 5 file draw.io theo quy ước làn/đánh số hiện có, xuất PNG, chuyển 12 BF cũ vào thư mục lưu trữ và cập nhật README."
+**Context**: Inception documentation — main business flows cho Report 3 (SRS). Chỉ sửa tài liệu trong aidlc-docs/inception/main-business-flows; không đổi mã nguồn, không commit/push. BF-09 (backup Google Drive) không còn là luồng chính; ghi chú rủi ro góp ý hội đồng trong README.
+
+---
+## Main Business Flows — hoàn tất vẽ lại 5 luồng
+**Timestamp**: 2026-11-22T07:54:03Z
+**Requested by:** Đào Chí Cường
+**User Input**: "được, làm đi"
+**AI Response**: "Đã tạo 5 file draw.io (BF-01 Material-Based Learning, BF-02 Quiz-Based Learning, BF-03 Assignment Practice, BF-04 Individual-Graded Assignment, BF-05 Group-Graded Assignment), file gộp 5 trang và PNG 2x trong exports/. README mới có quy ước, bảng tổng quan, đối chiếu góp ý hội đồng và bảng hoạt động. 12 BF cũ chuyển nguyên trạng vào superseded-2026-10-30/ (sửa đường dẫn tương đối, thêm ghi chú superseded). XML draw.io đã parse hợp lệ; PNG render bằng draw.io viewer và kiểm tra bằng mắt."
+**Context**: Chỉ thay đổi tài liệu trong aidlc-docs/inception/main-business-flows; chưa commit/push, chưa cập nhật Jira KAN-204. BF-09 (backup Google Drive) không còn là luồng chính — đã ghi chú trong README.
+
+---
+## Report 3 — cập nhật mục I.2 Main Business Flow
+**Timestamp**: 2026-11-22T08:12:35Z
+**Requested by:** Đào Chí Cường
+**User Input**: "@\"D:\Download\Report-3_Software Requirement Specification (9).docx\"
+sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nhật jirra"
+**AI Response**: "Tạo bản mới D:\Download\Report-3_Software Requirement Specification (BF updated).docx (bản (9) giữ nguyên): thay mục I.2 bằng đoạn giới thiệu và 5 tiểu mục 2.1–2.5 (Trigger, End condition, ảnh BF-01..BF-05); bỏ 12 BF cũ và các dòng dàn ý (Lesson-Based Learning … User Authentication); cập nhật mục lục (5 mục mới, số trang dịch theo chênh lệch phân trang -3 trang); thêm dòng Change Log 22/11/26 CuongDC. Validate docx đạt; xuất PDF bằng Word và kiểm tra trang 2, 7, 10, 11."
+**Context**: Chỉnh tài liệu báo cáo ngoài repo; chưa tải lên Drive, chưa cập nhật Jira KAN-204. Số trang mục lục là ước tính theo Word, cần xem lại khi mở bằng Google Docs.
+
+---
+## Jira KAN-204 — cập nhật sau khi tải báo cáo lên Drive
+**Timestamp**: 2026-11-22T08:20:39Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Đã up, cập nhật Jira"
+**AI Response**: "Xác nhận file Report-3_Software Requirement Specification.docx trên Drive (17.080.503 byte, khớp bản đã sửa). Thêm bình luận KAN-204 (comment 10034) kèm link Drive và tóm tắt thay đổi; chuyển KAN-204 sang In Review."
+**Context**: Cập nhật Jira theo yêu cầu người dùng; không commit/push.
+
+---
+## Rà soát các unit Cường phụ trách (U01, U10, U11)
+**Timestamp**: 2026-11-22T08:34:41Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra lại toàn bộ các phần tôi phụ trách xem còn lỗi nào không, sau đó gửi tôi báo cáo"
+**AI Response**: "Rà soát U01/U10/U11 trên origin/staging 210b0550 (worktree .claude/worktrees/review-owned-units): CI staging đạt (backend 2.625 ca, identity 263, quizzes 188, quizpractice 57; frontend 157 file), Jira không còn Bug mở. Code review tìm 1 lỗi nên sửa (lượt Quiz quá hạn chuyển qua lại giữa trang làm bài và kết quả), 2 lỗi nhỏ (start trả lượt cũ không kiểm OPEN/hạn; ghi OTP Redis không nguyên tử) và 2 điểm vặt. Báo cáo: aidlc-docs/construction/build-and-test/2026-11-22-cuong-owned-units-review.md."
+**Context**: Review-only; không sửa code, không commit/push, không đổi Jira. Chưa chạy test local (không có Maven, Docker tắt) — dùng kết quả CI của đúng commit.
+
+---
+## Tạo bug Jira từ báo cáo rà soát U01/U10/U11
+**Timestamp**: 2026-11-22T08:36:33Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tạo bug Jira trước"
+**AI Response**: "Tạo 4 bug giao cho Đào Chí Cường: KAN-211 (U11, Medium, lượt quá hạn chuyển qua lại giữa trang làm bài và kết quả), KAN-212 (U11, Low, Continue mở lại lượt không kiểm OPEN/hạn; gộp cả việc tải Quiz hai lần), KAN-213 (U01, Low, ghi OTP Redis không nguyên tử), KAN-214 (U10, Low, thông báo lỗi lý do ngưng Quiz). Mỗi bug gắn vào Epic của unit và trỏ tới báo cáo 2026-11-22-cuong-owned-units-review.md."
+**Context**: Thao tác Jira theo yêu cầu; chưa sửa code.
+
+---
+## Report 5.1 — Round 2 và 6 ca mới cho U01/U10/U11 (KAN-188)
+**Timestamp**: 2026-11-22T10:29:27Z
+**Requested by:** Đào Chí Cường
+**User Input**: "cập nhật KAN-188 với kết quả test mới" — chọn "Sửa cả Report 5.1" — sau đó gửi file @"D:\Download\Report-5.1_Unit Test.xlsx"
+**AI Response**: "Tạo D:\Download\Report-5.1_Unit Test (v1.6).xlsx (bản gốc giữ nguyên): Round 2 Passed 22/11/2026 cho 52 ca cũ; thêm U01-UTC019 (KAN-213), U10-UTC019 (KAN-214), U11-UTC017–020 (KAN-211/212) vào nhóm phương thức sẵn có, đổi tên nhóm OtpChallengeStore.replace / verify và QuizPublicationService.retire / reopen; cập nhật công thức và link Test Statistics, Grand total = tổng các subtotal (294), Test Cases, ghi chú, Cover v1.6 và change log. Giữ nguyên XML biểu đồ gốc; Excel tính lại không lỗi; các tab unit khác không đổi."
+**Context**: Chỉnh tài liệu báo cáo ngoài repo; chưa tải lên Drive, chưa bình luận KAN-188.
+
+---
+## Main Business Flows — commit lên nhánh mới
+**Timestamp**: 2026-11-22T11:02:32Z
+**Requested by:** Đào Chí Cường
+**User Input**: "commit thay đổi BF lên nhánh mới"
+**AI Response**: "Tạo nhánh docs/kan-204-main-business-flows từ origin/staging 4beacb89 (worktree riêng), chép thư mục aidlc-docs/inception/main-business-flows từ bản làm việc (5 BF mới, README, exports, 12 BF cũ trong superseded-2026-10-30/) cùng các mục audit của phiên, rồi commit."
+**Context**: Commit tài liệu theo yêu cầu; chưa push hay mở PR.
+
+---
