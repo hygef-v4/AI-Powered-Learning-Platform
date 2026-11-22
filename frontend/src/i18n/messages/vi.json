@@ -1149,6 +1149,7 @@
         "references3Files2Mb": "Tham khảo: 3 tệp, 2 MB/tệp. Mẫu đề: 1 DOCX, 20 MB."
       },
       "AiDraftDialog": {
+        "reviewTemplateDraft": "Đề được tạo từ mẫu. Kiểm tra câu hỏi và rubric trước khi áp dụng.",
         "theAiReturnedNoResult": "AI không trả kết quả.",
         "youCanStillWriteIt": "{value} Bạn vẫn soạn thủ công được.",
         "waitForUploadsToFinish": "Hãy đợi tải xong hoặc gỡ các tệp bị lỗi trước khi tạo đề.",
@@ -1158,6 +1159,7 @@
         "draftWithAi": "Tạo nháp bằng AI",
         "discardProposal": "Bỏ đề xuất",
         "editRequestAndRegenerate": "Sửa yêu cầu và tạo lại",
+        "applyProposal": "Áp dụng đề xuất",
         "createAssignment": "Tạo đề",
         "describeTheAssignmentYouNeed": "Mô tả đề bạn cần, AI soạn câu hỏi kèm rubric chấm điểm rồi ghi thẳng lên trang; nhấn Ctrl+Z để hoàn tác. Các ô dưới đây đều không bắt buộc.",
         "template": "Mẫu đề",
@@ -1309,10 +1311,19 @@
       "ClassAssignmentsSection": {
         "createAssignment": "Tạo bài tập"
       },
+      "QuestionCountField": {
+        "help": "Để trống để AI tự chọn. Số câu ở đây được ưu tiên nếu khác yêu cầu bên dưới."
+      },
+      "QuestionPointsField": {
+        "label": "Điểm từng câu (tùy chọn)",
+        "help": "Nhập theo thứ tự câu, cách nhau bằng dấu cách. Ví dụ 0,50 2,50 4 3.",
+        "invalid": "Nhập tối đa 10 số điểm dương, mỗi số tối đa hai chữ số thập phân và tổng tối đa 1.000.",
+        "summary": "{count} câu · {total} điểm"
+      },
       "CreateAssignmentDialog": {
         "writeFromScratchYouCan": "Soạn từ đầu, có thể tải DOCX, ảnh hoặc PDF đề cũ làm khung.",
         "copyAnExistingAssignmentAnd": "Copy một đề có sẵn rồi sửa tiếp.",
-        "theAiWritesTheAssignment": "AI soạn đề kèm rubric, tổng 10 điểm.",
+        "theAiWritesTheAssignment": "AI soạn đề kèm rubric, mặc định 10 điểm.",
         "eachStudentSubmitsTheirOwn": "Mỗi sinh viên nộp một bài.",
         "eachGroupSubmitsOneShared": "Mỗi nhóm nộp chung một bài.",
         "selfPracticeNotGraded": "Tự luyện, không tính điểm.",
@@ -1350,6 +1361,7 @@
         "language": "Ngôn ngữ",
         "vietnamese": "Tiếng Việt",
         "chooseATemplateOrUpload": "Chọn đề mẫu hoặc tải DOCX",
+        "preserveTemplatePoints": "Giữ điểm từng câu của đề mẫu",
         "theSubjectHasNoTemplates": "Môn chưa có đề mẫu.",
         "removeTemplate": "Bỏ mẫu đề",
         "uploadATemplate": "Tải đề mẫu lên",

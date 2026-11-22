@@ -268,7 +268,14 @@ describe("CreateAssignmentDialog", () => {
     vi.restoreAllMocks();
   });
 
-  it("Tạo từ AI ngay trong popup tạo: Ngôn ngữ, Mẫu đề, Tài liệu tham khảo, Yêu cầu; tổng 10 điểm", async () => {
+  it.each([
+    { useTemplate: false, preservePoints: false, manualPoints: false, countConflict: false },
+    { useTemplate: true, preservePoints: false, manualPoints: true, countConflict: false },
+    { useTemplate: true, preservePoints: true, manualPoints: false, countConflict: false },
+    { useTemplate: false, preservePoints: false, manualPoints: false, countConflict: true },
+  ])("Tạo từ AI và xem trước khi cần: $useTemplate / $preservePoints / $countConflict", async (
+    { useTemplate, preservePoints, manualPoints, countConflict },
+  ) => {
     const created = { id: "a8", version: 0, title: "Lab AI", gradingMode: "GRADED" } as AssignmentDetail;
     const applied = { id: "a8", version: 1 } as AssignmentDetail;
     const create = vi.spyOn(assignmentsApi, "createForClass").mockResolvedValue(created);
@@ -280,45 +287,75 @@ describe("CreateAssignmentDialog", () => {
     vi.spyOn(filesApi, "getPolicies").mockResolvedValue([]);
     const requestAiDraft = vi.spyOn(assignmentsApi, "requestAiDraft").mockResolvedValue({
       draftId: "d1", assignmentId: "a8", origin: "AI_TASK", status: "READY", taskId: null, provenance: {}, safeError: null,
-      baseVersion: 0, createdAt: "now", decidedAt: null, proposal: { title: "T", businessContext: "", instructions: "", sections: [
-        { level: 1, title: "Câu 1", guidance: "", rubric: [] }] as never,
-      validation: { status: "VALID", questionCount: 1, rubricLeafCount: 1, totalPoints: 10, issues: [] } },
+      baseVersion: 0, createdAt: "now", decidedAt: null, proposal: { title: "T", businessContext: "", instructions: "",
+      sections: Array.from({ length: countConflict ? 4 : 1 }, (_, index) => (
+        { level: 1, title: `Câu ${index + 1}`, guidance: "", rubric: [] }
+      )),
+      validation: { status: preservePoints || countConflict ? "NEEDS_REVIEW" : "VALID",
+        questionCount: countConflict ? 4 : 1, rubricLeafCount: countConflict ? 4 : 1,
+        totalPoints: 10, issues: preservePoints ? [{ code: "TEMPLATE_CONFLICT", severity: "WARNING",
+          path: "authoringWarnings[0]", message: "Question 1 names Order and Dish." }] : countConflict ? [{
+          code: "QUESTION_COUNT_CONFLICT", severity: "WARNING", path: "authoringWarnings[0]",
+          message: "Yêu cầu ghi 5 câu. Bản nháp dùng 4 câu theo cấu hình.",
+        }] : [] } },
     });
     const apply = vi.spyOn(assignmentsApi, "applyAiDraft").mockResolvedValue(applied);
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: true }} onClose={vi.fn()} onCreated={onCreated} />);
     fireEvent.click(screen.getByRole("radio", { name: "Tạo từ AI" }));
-    expect(screen.getByText("AI soạn đề kèm rubric, tổng 10 điểm.")).toBeInTheDocument();
+    expect(screen.getByText("AI soạn đề kèm rubric, mặc định 10 điểm.")).toBeInTheDocument();
     expect(screen.queryByTestId("create-docx")).toBeNull();
-    // Ngôn ngữ cạnh Mẫu đề, mặc định English; không có Số câu hỏi, Tổng điểm: popup gọn.
     expect(screen.getByLabelText("Ngôn ngữ")).toHaveValue("EN");
     fireEvent.change(screen.getByLabelText("Ngôn ngữ"), { target: { value: "VI" } });
-    expect(screen.queryByLabelText("Số câu hỏi")).toBeNull();
+    const questionCount = screen.getByLabelText("Số câu hỏi");
+    expect(questionCount).toHaveValue(null);
+    if (countConflict) {
+      fireEvent.change(questionCount, { target: { value: "4" } });
+    }
     expect(classMaterials).toHaveBeenCalledWith("c1");
     // Mẫu đề như ô copy cũ: tìm đề mẫu của môn (không có bài của lớp khác), dòng cuối là tải DOCX lên.
     const template = screen.getByRole("combobox", { name: "Mẫu đề" });
     fireEvent.focus(template);
     await screen.findByRole("option", { name: "Đề mẫu cuối kỳ" });
     expect(within(screen.getByRole("listbox")).getAllByRole("option").map((option) => option.textContent)).toEqual(["Đề mẫu cuối kỳ", "Tải đề mẫu lên"]);
-    fireEvent.mouseDown(screen.getByRole("option", { name: "Đề mẫu cuối kỳ" }));
-    // Đã chọn thì tên hiện ngay trong ô như dropdown, không ghi xuống dưới.
-    expect(template).toHaveAttribute("placeholder", "Đề mẫu cuối kỳ");
-    expect(screen.getByRole("button", { name: "Bỏ mẫu đề" })).toBeInTheDocument();
+    if (useTemplate) {
+      fireEvent.mouseDown(screen.getByRole("option", { name: "Đề mẫu cuối kỳ" }));
+      expect(template).toHaveAttribute("placeholder", "Đề mẫu cuối kỳ");
+      expect(screen.getByRole("button", { name: "Bỏ mẫu đề" })).toBeInTheDocument();
+    }
     fireEvent.blur(template);
+    if (preservePoints) {
+      fireEvent.change(questionCount, { target: { value: "7" } });
+      fireEvent.click(screen.getByRole("checkbox", { name: "Giữ điểm từng câu của đề mẫu" }));
+      expect(screen.queryByLabelText("Số câu hỏi")).toBeNull();
+    }
+    if (manualPoints) {
+      fireEvent.change(questionCount, { target: { value: "7" } });
+      fireEvent.change(screen.getByLabelText("Điểm từng câu (tùy chọn)"), { target: { value: "0,50 9.50" } });
+      expect(questionCount).toBeDisabled();
+      expect(questionCount).toHaveValue(2);
+      expect(screen.getByText("2 câu · 10 điểm")).toBeInTheDocument();
+    }
     const reference = screen.getByRole("combobox", { name: "Tài liệu tham khảo" });
     fireEvent.focus(reference);
     fireEvent.mouseDown(await screen.findByRole("option", { name: /UML basics/ }));
-    fireEvent.change(screen.getByLabelText("Yêu cầu"), { target: { value: "Thiết kế CSDL thư viện" } });
+    const request = countConflict ? "Tạo đề thiết kế CSDL thư viện gồm 5 câu." : "Thiết kế CSDL thư viện";
+    fireEvent.change(screen.getByLabelText("Yêu cầu"), { target: { value: request } });
     fireEvent.click(screen.getByRole("radio", { name: "Nhóm" }));
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Lab AI" } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
-    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(applied));
+    await waitFor(() => useTemplate || countConflict ? expect(onCreated).toHaveBeenCalledWith(created, "d1")
+      : expect(onCreated).toHaveBeenCalledWith(applied));
     expect(create.mock.calls[0]![1]).toMatchObject({ title: "Lab AI", submissionMode: "GROUP", gradingMode: "GRADED" });
     expect(requestAiDraft).toHaveBeenCalledWith("a8", expect.objectContaining({
-      request: "Thiết kế CSDL thư viện", materialIds: ["m1"], templateAssignmentId: "t1",
-      options: { profile: "AUTO", language: "VI", targetPoints: 10 },
+      request, materialIds: ["m1"], templateAssignmentId: useTemplate ? "t1" : undefined,
+      ...(preservePoints ? { preserveTemplateQuestionPoints: true } : {}),
+      options: { profile: "AUTO", language: "VI", targetPoints: preservePoints || manualPoints ? undefined : 10,
+        ...(countConflict ? { questionCount: 4 } : {}),
+        ...(manualPoints ? { questionPoints: [0.5, 9.5] } : {}) },
     }));
-    expect(apply).toHaveBeenCalledWith("a8", "d1", 0, true, false);
+    if (useTemplate || countConflict) expect(apply).not.toHaveBeenCalled();
+    else expect(apply).toHaveBeenCalledWith("a8", "d1", 0, true, false);
     vi.restoreAllMocks();
   });
 

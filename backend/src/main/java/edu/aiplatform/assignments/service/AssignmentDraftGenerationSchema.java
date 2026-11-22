@@ -4,10 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.assignments.contract.GradingMode;
+import java.util.List;
 
 /** Generation is deliberately flat: each requested question owns its rubric, before the longer shared text. */
 final class AssignmentDraftGenerationSchema {
     private static final ObjectMapper JSON = new ObjectMapper();
+    static final int MAX_AUTHORING_WARNINGS = 5;
+    static final int MAX_AUTHORING_WARNING_MESSAGE = 300;
+    static final List<String> AUTHORING_WARNING_CODES = List.of(
+            "TEMPLATE_CONFLICT", "MISSING_REQUIRED_REFERENCE", "QUESTION_COUNT_CONFLICT");
 
     private AssignmentDraftGenerationSchema() {
     }
@@ -48,6 +53,15 @@ final class AssignmentDraftGenerationSchema {
             ObjectNode item = (ObjectNode) items.path("items").path("properties");
             addBoundedText(item, "text", 1, 1000);
             ((ObjectNode) item.path("points")).put("exclusiveMinimum", 0).put("maximum", 1000);
+            ObjectNode warning = properties.putObject("authoringWarnings").put("type", "array")
+                    .put("maxItems", MAX_AUTHORING_WARNINGS).putObject("items")
+                    .put("type", "object").put("additionalProperties", false);
+            warning.putArray("required").add("code").add("message");
+            var warningFields = warning.putObject("properties");
+            var codes = warningFields.putObject("code").put("type", "string").putArray("enum");
+            AUTHORING_WARNING_CODES.forEach(codes::add);
+            warningFields.putObject("message").put("type", "string").put("minLength", 1)
+                    .put("maxLength", MAX_AUTHORING_WARNING_MESSAGE);
             return schema.toString();
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("Không đọc được schema tạo đề", e);
