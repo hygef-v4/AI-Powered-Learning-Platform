@@ -242,6 +242,33 @@ class QuizPracticeServicesTest {
     }
 
     @Test
+    void continuingAnAttemptInAClassThatIsNoLongerOpenIsRejected() {
+        var taking = attemptsService.start(student, quizId, classA);
+        when(classes.getClassRef(classA)).thenReturn(Optional.of(classRef(classA, ClassStatus.ARCHIVED)));
+
+        assertThat(api(() -> attemptsService.start(student, quizId, classA)).readCode()).isEqualTo("QUIZ_NOT_OPEN");
+        assertThat(store.byId.get(taking.attemptId()).hasInProgressStatus()).isTrue();
+    }
+
+    @Test
+    void continuingAnOverdueAttemptAutoSubmitsItInsteadOfReopeningTheTakingPage() {
+        var taking = attemptsService.start(student, quizId, classA);
+        attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1")), 0);
+        clock.advance(Duration.ofMinutes(10).plusSeconds(20));
+        assertThat(attemptsService.start(student, quizId, classA).attemptId())
+                .as("trong 30 giây ân hạn vẫn tiếp tục lượt cũ").isEqualTo(taking.attemptId());
+        assertThat(store.byId.get(taking.attemptId()).hasInProgressStatus()).isTrue();
+
+        clock.advance(Duration.ofSeconds(15));
+        var reopened = attemptsService.start(student, quizId, classA);
+
+        assertThat(reopened.attemptId()).isEqualTo(taking.attemptId());
+        assertThat(store.byId.get(taking.attemptId()).submitMode()).isEqualTo(SubmitMode.AUTO_TIME_LIMIT);
+        assertThat(api(() -> attemptsService.loadAttempt(student, taking.attemptId())).readCode())
+                .isEqualTo("ATTEMPT_SUBMITTED");
+    }
+
+    @Test
     void submittingAfterTheGraceAutoSubmitsTheSavedAnswersInsteadOfRejecting() {
         var taking = attemptsService.start(student, quizId, classA);
         attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1")), 0);
