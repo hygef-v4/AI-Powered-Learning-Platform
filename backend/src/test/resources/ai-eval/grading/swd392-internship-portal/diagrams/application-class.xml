@@ -1,0 +1,45 @@
+<mxGraphModel grid="1" gridSize="10" page="1" pageWidth="1100" pageHeight="850">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+    <mxCell id="student" value="Student" style="swimlane;childLayout=stackLayout;startSize=34;html=1;collapsible=0;resizeParent=0;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="45" y="120" width="205" height="86" />
+    </mxCell>
+    <mxCell id="student-attributes" value="- studentNumber: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;whiteSpace=wrap;html=1;" vertex="1" parent="student">
+      <mxGeometry as="geometry" x="0" y="34" width="205" height="52" />
+    </mxCell>
+    <mxCell id="application" value="Application" style="swimlane;childLayout=stackLayout;startSize=34;html=1;collapsible=0;resizeParent=0;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="365" y="120" width="245" height="136" />
+    </mxCell>
+    <mxCell id="application-attributes" value="- applicationNumber: String&lt;br&gt;- state: ApplicationState" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;whiteSpace=wrap;html=1;" vertex="1" parent="application">
+      <mxGeometry as="geometry" x="0" y="34" width="245" height="52" />
+    </mxCell>
+    <mxCell id="application-operations" value="+ submit(): void&lt;br&gt;+ approve(): void" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;whiteSpace=wrap;html=1;strokeColor=inherit;" vertex="1" parent="application">
+      <mxGeometry as="geometry" x="0" y="86" width="245" height="50" />
+    </mxCell>
+    <mxCell id="opening" value="InternshipOpening" style="swimlane;childLayout=stackLayout;startSize=34;html=1;collapsible=0;resizeParent=0;" vertex="1" parent="1">
+      <mxGeometry as="geometry" x="730" y="120" width="220" height="86" />
+    </mxCell>
+    <mxCell id="opening-attributes" value="- openingCode: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;whiteSpace=wrap;html=1;" vertex="1" parent="opening">
+      <mxGeometry as="geometry" x="0" y="34" width="220" height="52" />
+    </mxCell>
+    <mxCell id="student-applications" value="nộp" style="html=1;endArrow=none;startArrow=none;exitX=1;exitY=0.30;entryX=0;entryY=0.19;" edge="1" parent="1" source="student" target="application">
+      <mxGeometry as="geometry" relative="1" y="-10" />
+    </mxCell>
+    <mxCell id="student-applications-source" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;" vertex="1" connectable="0" parent="student-applications">
+      <mxGeometry as="geometry" x="-0.8" y="13" relative="1" />
+    </mxCell>
+    <mxCell id="student-applications-target" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;" vertex="1" connectable="0" parent="student-applications">
+      <mxGeometry as="geometry" x="0.8" y="13" relative="1" />
+    </mxCell>
+    <mxCell id="opening-applications" value="nhận" style="html=1;endArrow=none;startArrow=none;exitX=1;exitY=0.30;entryX=0;entryY=0.19;exitX=0;entryX=1;" edge="1" parent="1" source="opening" target="application">
+      <mxGeometry as="geometry" relative="1" y="-10" />
+    </mxCell>
+    <mxCell id="opening-applications-source" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;" vertex="1" connectable="0" parent="opening-applications">
+      <mxGeometry as="geometry" x="-0.8" y="13" relative="1" />
+    </mxCell>
+    <mxCell id="opening-applications-target" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;" vertex="1" connectable="0" parent="opening-applications">
+      <mxGeometry as="geometry" x="0.8" y="13" relative="1" />
+    </mxCell>
+  </root>
+</mxGraphModel>

@@ -1,0 +1,56 @@
+{
+  "caseKey": "swd-workshop-no-authorization",
+  "description": "API ghi đăng ký trực tiếp trong phiên đã xác thực.",
+  "labelSource": "SYNTHETIC_TEAM",
+  "tags": [
+    "missing-content",
+    "rest-sequence",
+    "authorization"
+  ],
+  "offTopic": false,
+  "injection": false,
+  "expectedBehavior": "Chấm 0 riêng cho s-authorization vì không có kiểm tra quyền và nhánh từ chối. Các bước POST, ghi dữ liệu, nhận mã đăng ký và trả 201 với Location vẫn đủ bằng chứng.",
+  "blocks": [
+    {
+      "heading": "h-conceptual"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "ER",
+      "file": "diagrams/conceptual-erd.xml"
+    },
+    {
+      "heading": "h-logical"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "ER",
+      "file": "diagrams/logical-erd.xml"
+    },
+    {
+      "heading": "h-sequence"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "SEQUENCE",
+      "file": "diagrams/registration-sequence-direct.xml"
+    }
+  ],
+  "expected": {
+    "c-entities": 0.75,
+    "c-cardinalities": 0.75,
+    "c-abstraction": 0.5,
+    "l-tables": 0.75,
+    "l-keys": 0.75,
+    "l-member-fk": 0.75,
+    "l-session-fk": 0.75,
+    "l-unique": 0.5,
+    "s-request": 1,
+    "s-authorization": 0,
+    "s-persist": 1,
+    "s-created": 1
+  },
+  "absentItems": [
+    "s-authorization"
+  ]
+}

@@ -61,6 +61,74 @@ class GradingEvalHarnessTest {
         }
     }
 
+    @ParameterizedTest
+    @CsvSource({
+        "swr302-lab-equipment, 3",
+        "swr302-lab-equipment-relations, 1",
+        "swr302-room-scheduling, 2",
+        "swd392-workshop-registration, 3",
+        "swd392-internship-portal, 3"
+    })
+    void peFixturesBuildGradingRequestsWithCompleteSyntheticReferences(String datasetKey, int caseCount)
+            throws Exception {
+        var peDataset = GradingEvalDataset.loadDataset(json, datasetKey);
+        var assignment = peDataset.assignment();
+        assertThat(assignment.assignmentKey()).isEqualTo(datasetKey);
+        assertThat(assignment.labelSource()).isEqualTo("SYNTHETIC_TEAM");
+        assertThat(assignment.maxScore()).isPositive();
+        assertThat(peDataset.cases()).hasSize(caseCount).extracting(EvalCase::caseKey).doesNotHaveDuplicates();
+        var pipeline = new GradingEvalRunner(json, peDataset).pipeline();
+        var documents = new DocumentModelService(json);
+        for (var fixture : peDataset.cases()) {
+            var validation = documents.validateForSave(assignment.content().skeleton(), fixture.document());
+            assertThat(validation.errors()).as(fixture.caseKey()).isEmpty();
+            assertThat(fixture.labelSource()).isEqualTo("SYNTHETIC_TEAM");
+            assertThat(fixture.expectedScores()).containsOnlyKeys(assignment.itemsById().keySet());
+            fixture.expectedScores().forEach((itemId, expected) -> {
+                var rubricItem = assignment.itemsById().get(itemId);
+                assertThat(expected).as(fixture.caseKey() + " " + rubricItem.itemKey())
+                        .isBetween(BigDecimal.ZERO, rubricItem.maxPoints());
+            });
+            for (var itemId : fixture.absentItemIds()) {
+                assertThat(fixture.expectedScores().get(itemId)).as(fixture.caseKey() + " absent item").isZero();
+            }
+            var request = pipeline.buildProviderRequest(fixture);
+            assertThat(request).as(fixture.caseKey()).isNotNull();
+            var input = json.readTree(request.user());
+            assertThat(input.path("rubrics").isEmpty()).isFalse();
+            assertThat(input.has("expected")).isFalse();
+            assertThat(input.has("expectedBehavior")).isFalse();
+            assertThat(request.outputSchema()).contains("itemScoresByRubric");
+        }
+    }
+
+    @Test
+    void peNotationComparisonUsesSameSubmissionAndChangesOnlyTheStyleCriterion() {
+        var required = GradingEvalDataset.loadDataset(json, "swr302-lab-equipment");
+        var semantic = GradingEvalDataset.loadDataset(json, "swr302-lab-equipment-relations");
+        var withStyle = required.cases().stream().filter(fixture -> fixture.caseKey().equals("swr-lab-solid-required"))
+                .findFirst().orElseThrow();
+        var withoutStyle = semantic.cases().get(0);
+        assertThat(withoutStyle.caseKey()).isEqualTo("swr-lab-solid-semantic");
+        assertThat(required.assignment().maxScore()).isEqualByComparingTo(semantic.assignment().maxScore());
+        assertThat(required.assignment().content().instructions()).isEqualTo(semantic.assignment().content().instructions());
+        assertThat(withStyle.document().blocks()).extracting(DocumentBlock::content)
+                .containsExactlyElementsOf(withoutStyle.document().blocks().stream().map(DocumentBlock::content).toList());
+
+        var requiredScores = collectReferenceScores(required, withStyle);
+        var semanticScores = collectReferenceScores(semantic, withoutStyle);
+        assertThat(requiredScores.remove("d-notation")).isZero();
+        assertThat(semanticScores.remove("d-extension-condition")).isEqualByComparingTo("0.50");
+        assertThat(requiredScores).isEqualTo(semanticScores);
+        assertThat(new GradingEvalRunner(json, required).pipeline().buildProviderRequest(withStyle).user())
+                .contains("(nét liền): <<include>>");
+    }
+
+    private static Map<String, BigDecimal> collectReferenceScores(GradingEvalDataset dataset, EvalCase fixture) {
+        return fixture.expectedScores().entrySet().stream().collect(Collectors.toMap(
+                entry -> dataset.assignment().itemsById().get(entry.getKey()).itemKey(), Map.Entry::getValue));
+    }
+
     @Test
     void providerRequestUsesAppPromptAndOnlyRubricsOfNonEmptyParts() throws Exception {
         var complete = requireCase("01-complete");

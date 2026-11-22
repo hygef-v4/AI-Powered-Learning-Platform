@@ -1,0 +1,62 @@
+{
+  "caseKey": "swd-internship-wrong-guard",
+  "description": "Chuyển tiếp submit áp dụng điều kiện ngược về bảng điểm.",
+  "labelSource": "SYNTHETIC_TEAM",
+  "tags": [
+    "incorrect-content",
+    "state-diagram",
+    "guard"
+  ],
+  "offTopic": false,
+  "injection": false,
+  "expectedBehavior": "Chấm 0 riêng cho st-guard vì guard chỉ cho chuyển trạng thái khi thiếu bảng điểm. Guard hiện diện nên không đánh dấu là vắng mặt. Giữ điểm hướng đi và sự kiện chuyển tiếp.",
+  "blocks": [
+    {
+      "heading": "h-class"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "CLASS",
+      "file": "diagrams/application-class.xml"
+    },
+    {
+      "heading": "h-state"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "STATE",
+      "file": "diagrams/application-state-inverted.xml"
+    },
+    {
+      "heading": "h-architecture"
+    },
+    {
+      "type": "PARAGRAPH",
+      "text": "Tôi chọn modular monolith gồm Hồ sơ, Danh mục vị trí và Thông báo. Hồ sơ quản lý trạng thái và quyết định duyệt. Danh mục vị trí quản lý các đợt thực tập. Thông báo gửi email cho người hướng dẫn từ tác vụ nền để thao tác nộp hồ sơ trả về nhanh. Ở mức 300 hồ sơ mỗi tuần, các phần có thể dùng chung một bản triển khai. Đội hai người chỉ vận hành một bản phát hành và một cơ sở dữ liệu. Khi email gửi chậm, tác vụ nền có thể tranh kết nối cơ sở dữ liệu với API nộp hồ sơ. Tôi tách pool kết nối và giới hạn đồng thời của tác vụ gửi để chừa tài nguyên cho API."
+    },
+    {
+      "heading": "h-patterns"
+    },
+    {
+      "type": "PARAGRAPH",
+      "text": "Thông báo dùng Transactional Outbox. Giao dịch đổi hồ sơ sang Submitted cũng ghi một dòng ApplicationSubmitted vào bảng outbox. Sau commit, tác vụ nền lấy dòng chưa gửi, gửi cho người hướng dẫn và đánh dấu đã gửi sau khi cổng email chấp nhận. Khi gửi thất bại, dòng vẫn được lưu, tác vụ hẹn lần gửi tiếp theo với khoảng chờ tăng dần."
+    },
+    {
+      "type": "PARAGRAPH",
+      "text": "Xét điều kiện dùng Strategy. ShortTermEligibility kiểm tra đủ 60 tín chỉ, LongTermEligibility kiểm tra đủ 90 tín chỉ. ApplicationService lấy loại kỳ thực tập từ InternshipOpening, chọn triển khai tương ứng trong bảng ánh xạ theo loại, rồi gọi chung eligibility.check(student) trước khi xét hồ sơ."
+    }
+  ],
+  "expected": {
+    "cl-classes": 1,
+    "cl-members": 1,
+    "cl-associations": 1,
+    "st-paths": 1.25,
+    "st-guard": 0,
+    "a-fit": 1.25,
+    "a-tradeoff": 0.75,
+    "p-notification-name": 0.25,
+    "p-notification": 0.75,
+    "p-eligibility": 1
+  },
+  "absentItems": []
+}
