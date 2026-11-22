@@ -1,0 +1,34 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "03-one-normal-flow",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:50:16.614332+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader covers all 13 applicable items and correctly credits both secondary actors and the dashed, labeled include and extend links. It misapplies the explicit 0.25-per-flow rule. Selecting one date and time slot, holding it, paying, and saving the booking describes the one-time hourly flow. Only the fixed weekly flow is missing, so the feedback should ask for that flow and award 0.25 of 0.5.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading correctly identifies the four required use cases as ellipses, the labeled include and extend edges as dashed, and the table’s actor roles as correct. It correctly flags the missing weekly recurring flow, but the existing flow selects one date and time slot, then holds, pays for, and saves the booking. That describes a one-off hourly booking and earns 0.25 under the per-flow rubric.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The feedback focuses on the two required booking flows and gives a concrete revision for each. The main problem is the zero credit for normal flow. The existing sequence selects one date and time slot, holds it, takes payment, and saves the booking, which supports the rubric’s 0.25 credit for hourly booking. The advice should tell the student to label that existing flow and add a weekly flow that applies the stated four-week minimum.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 31.2
+}

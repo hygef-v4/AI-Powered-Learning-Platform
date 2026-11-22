@@ -56,6 +56,17 @@ public final class FakeRedis {
             RedisScript<?> script = i.getArgument(0);
             List<String> keys = i.getArgument(1);
             String key = keys.get(0);
+            if (script == OtpChallengeStore.WRITE) {
+                Map<Object, Object> hash = new HashMap<>();
+                hash.put(OtpChallengeStore.CODE_HASH, i.getArgument(2));
+                hash.put(OtpChallengeStore.ATTEMPTS_LEFT, i.getArgument(3));
+                if (!"".equals(i.getArgument(5))) {
+                    hash.put(OtpChallengeStore.JOB, i.getArgument(5));
+                }
+                hashes.put(key, hash);
+                ttls.put(key, Duration.ofMillis(Long.parseLong(i.getArgument(4))));
+                return 1L;
+            }
             if (i.getArgument(0) == OtpChallengeStore.VERIFY) {
                 // OtpChallengeStore.VERIFY: trừ lượt trước rồi so mã, một bước.
                 Map<Object, Object> hash = hashes.get(key);

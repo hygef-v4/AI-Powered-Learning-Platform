@@ -72,6 +72,10 @@ final class AssignmentDraftValidator {
                 JsonNode section = sections.get(index);
                 boolean leaf = index + 1 == sections.size() || levels.get(index + 1) <= levels.get(index);
                 JsonNode rubric = section.path("rubric");
+                if (!options.questionPoints().isEmpty() && (levels.get(index) != 1 || !leaf)) {
+                    issue(issues, "ERROR", "QUESTION_POINTS_MISMATCH", "sections[" + index + "]",
+                            "Mỗi câu giữ điểm mẫu phải là một mục cấp 1 có rubric riêng.");
+                }
                 if (!leaf) {
                     if (rubric.isArray() && !rubric.isEmpty()) {
                         issue(issues, "ERROR", "RUBRIC_ON_NON_LEAF", "sections[" + index + "].rubric",
@@ -90,6 +94,7 @@ final class AssignmentDraftValidator {
                     }
                     continue;
                 }
+                BigDecimal sectionPoints = BigDecimal.ZERO;
                 for (int criterionIndex = 0; criterionIndex < rubric.size(); criterionIndex++) {
                     JsonNode criterion = rubric.get(criterionIndex);
                     JsonNode items = criterion.path("items");
@@ -115,15 +120,24 @@ final class AssignmentDraftValidator {
                                     "Điểm phải lớn hơn 0, tối đa 1.000 và có không quá 2 chữ số thập phân.");
                             continue;
                         }
-                        total = total.add(value).setScale(2);
+                        sectionPoints = sectionPoints.add(value);
                         itemCount++;
+                    }
+                }
+                total = total.add(sectionPoints).setScale(2);
+                if (index < options.questionPoints().size()) {
+                    BigDecimal expectedPoints = options.questionPoints().get(index);
+                    if (sectionPoints.compareTo(expectedPoints) != 0) {
+                        issue(issues, "ERROR", "QUESTION_POINTS_MISMATCH", "sections[" + index + "].rubric",
+                                "Câu " + (index + 1) + " có " + sectionPoints.toPlainString() + " điểm, đề mẫu yêu cầu "
+                                        + expectedPoints.toPlainString() + " điểm.");
                     }
                 }
             }
 
             if (options.questionCount() != null && questionCount != options.questionCount()) {
                 issue(issues, "ERROR", "QUESTION_COUNT_MISMATCH", "sections",
-                        "Số câu cấp 1 không khớp với số câu đã chọn.");
+                        "AI tạo " + questionCount + " câu chính, cấu hình yêu cầu " + options.questionCount() + " câu.");
             }
             if (options.targetPoints() != null && total.compareTo(options.targetPoints()) != 0) {
                 issue(issues, "ERROR", "TOTAL_POINTS_MISMATCH", "sections.rubric",
@@ -153,6 +167,37 @@ final class AssignmentDraftValidator {
         return result;
     }
 
+    static ObjectNode validateGenerated(JsonNode proposal, GradingMode gradingMode, Options options) {
+        ObjectNode validation = validate(proposal, gradingMode, options);
+        JsonNode warnings = proposal.path("authoringWarnings");
+        if (warnings.isMissingNode()) {
+            return validation;
+        }
+        ArrayNode issues = (ArrayNode) validation.path("issues");
+        if (!warnings.isArray() || warnings.size() > AssignmentDraftGenerationSchema.MAX_AUTHORING_WARNINGS) {
+            issue(issues, "ERROR", "AUTHORING_WARNINGS_INVALID", "authoringWarnings", "Cảnh báo AI không đúng định dạng.");
+            validation.put("status", "INVALID");
+            return validation;
+        }
+        for (int index = 0; index < warnings.size(); index++) {
+            JsonNode warning = warnings.get(index);
+            String code = warning.path("code").asText("");
+            String message = warning.path("message").isTextual() ? warning.path("message").asText() : "";
+            String path = "authoringWarnings[" + index + "]";
+            if (!AssignmentDraftGenerationSchema.AUTHORING_WARNING_CODES.contains(code) || warning.size() != 2
+                    || message.isBlank() || message.length() > AssignmentDraftGenerationSchema.MAX_AUTHORING_WARNING_MESSAGE) {
+                issue(issues, "ERROR", "AUTHORING_WARNINGS_INVALID", path, "Cảnh báo AI không đúng định dạng.");
+                validation.put("status", "INVALID");
+            } else {
+                issue(issues, "WARNING", code, path, message.strip());
+                if ("VALID".equals(validation.path("status").asText())) {
+                    validation.put("status", "NEEDS_REVIEW");
+                }
+            }
+        }
+        return validation;
+    }
+
     private static void issue(ArrayNode issues, String severity, String code, String path, String message) {
         ObjectNode issue = issues.addObject();
         issue.put("severity", severity);
@@ -162,7 +207,11 @@ final class AssignmentDraftValidator {
     }
 
     record Options(String profile, String language, Integer questionCount, BigDecimal targetPoints,
-                   boolean requireTitle) {
+                   boolean requireTitle, List<BigDecimal> questionPoints) {
+        Options(String profile, String language, Integer questionCount, BigDecimal targetPoints, boolean requireTitle) {
+            this(profile, language, questionCount, targetPoints, requireTitle, List.of());
+        }
+
         static Options createLegacyOptions() {
             return new Options("GENERAL", "VI", null, null, false);
         }

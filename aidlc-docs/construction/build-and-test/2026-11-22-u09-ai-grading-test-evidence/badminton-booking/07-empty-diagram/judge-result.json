@@ -1,0 +1,34 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "07-empty-diagram",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:54:39.786022+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader correctly awards full credit on all seven applicable Đặt sân specification criteria and leaves the blank diagram section for the app to handle. The feedback cites the required actors, clear preconditions and postconditions, the trigger, both hourly and weekly booking flows at 0.25 each, the alternate-slot flow, the payment failure and timeout exceptions, and concrete business rules. It adds no unsupported requirements or deductions.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The response correctly scores all seven applicable Đặt sân specification criteria. The table supports the actor roles, precondition, postcondition, trigger, hourly and weekly booking flows, alternative slot selection, payment failure and timeout handling, and the stated business rules. The diagram appears only as a heading, and the response makes no claims about its notation or content.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback supports full credit on all seven applicable specification criteria with concrete evidence, including both booking flows, the payment failure and timeout responses, and the refund rule. The diagram was outside the scored scope, so there were no deductions to explain. One useful improvement would be to add the customer confirmation email promised in the postcondition to both normal flows, which currently mention only notifying the court owner.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 25.3
+}

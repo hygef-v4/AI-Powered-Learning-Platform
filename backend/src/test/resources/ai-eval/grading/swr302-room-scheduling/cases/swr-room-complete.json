@@ -1,0 +1,83 @@
+{
+  "caseKey": "swr-room-complete",
+  "description": "Sơ đồ ngữ cảnh, đặc tả ca và yêu cầu thời gian phản hồi đều đầy đủ.",
+  "labelSource": "SYNTHETIC_TEAM",
+  "expectedBehavior": "Cho điểm tối đa. Xác nhận sơ đồ có một tiến trình và các luồng dữ liệu đúng hướng. Đặc tả xử lý được xung đột khi giữ chỗ. Yêu cầu hiệu năng ấn định ngưỡng, tỷ lệ đạt, tải đồng thời và mốc đo.",
+  "tags": [
+    "baseline",
+    "context-diagram",
+    "exception-flow",
+    "measurable-nfr"
+  ],
+  "offTopic": false,
+  "injection": false,
+  "blocks": [
+    {
+      "heading": "h-context"
+    },
+    {
+      "type": "DIAGRAM",
+      "diagramType": "OTHER",
+      "file": "diagrams/room-scheduling-context.xml"
+    },
+    {
+      "heading": "h-spec"
+    },
+    {
+      "type": "TABLE",
+      "rows": [
+        [
+          "Mục",
+          "Nội dung"
+        ],
+        [
+          "Tên ca sử dụng",
+          "Đặt phòng học bù"
+        ],
+        [
+          "Tác nhân chính",
+          "Giảng viên"
+        ],
+        [
+          "Điều kiện trước",
+          "Giảng viên đã đăng nhập và có quyền đặt phòng học bù."
+        ],
+        [
+          "Kích hoạt",
+          "Giảng viên mở chức năng Đặt phòng học bù."
+        ],
+        [
+          "Điều kiện sau khi thành công",
+          "Dịch vụ lịch phòng đã giữ chỗ. Hệ thống lưu lịch đặt đã xác nhận và cấp mã đặt cho Giảng viên."
+        ],
+        [
+          "Luồng chính",
+          "1. Giảng viên nhập ngày, khung giờ và số người. 2. Hệ thống truy vấn Dịch vụ lịch phòng và hiển thị danh sách phòng trống đáp ứng các tiêu chí. 3. Giảng viên chọn một phòng và xác nhận đặt. 4. Hệ thống yêu cầu Dịch vụ lịch phòng giữ phòng trong khung giờ đã chọn và nhận xác nhận giữ chỗ. 5. Hệ thống lưu lịch đặt và hiển thị mã đặt cho Giảng viên."
+        ],
+        [
+          "Ngoại lệ",
+          "4a. Dịch vụ lịch phòng báo phòng vừa được người khác giữ. Hệ thống không lưu lịch đặt cho phòng này, báo phòng đã bận và tải lại danh sách theo tiêu chí ban đầu. Giảng viên có thể chọn phòng khác ở bước 3 hoặc thoát."
+        ]
+      ]
+    },
+    {
+      "heading": "h-nfr"
+    },
+    {
+      "type": "PARAGRAPH",
+      "text": "Trong 15 phút thử tải với 100 giảng viên đồng thời, ít nhất 95% lượt tra cứu phòng trống phải phản hồi trong tối đa 2 giây. Đo thời gian từ lúc giảng viên gửi truy vấn đến lúc danh sách phòng hiển thị."
+    }
+  ],
+  "expected": {
+    "d-context-boundary": 1,
+    "d-context-entities": 1,
+    "d-context-flows": 1.5,
+    "s-identity": 0.5,
+    "s-conditions": 1,
+    "s-normal": 1.5,
+    "s-exception": 1.5,
+    "nfr-target": 0.5,
+    "nfr-measurement": 1.5
+  },
+  "absentItems": []
+}

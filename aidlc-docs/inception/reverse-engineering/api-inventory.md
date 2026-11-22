@@ -125,6 +125,8 @@ kiểm quyền giảng viên/lớp OPEN/version và chốt bài đã lưu trong 
 
 ## [assignments/controller/AssignmentAiDraftController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentAiDraftController.java)
 
+Yêu cầu tạo bằng AI nhận `options.questionCount`, `options.targetPoints`, `options.questionPoints` và `preserveTemplateQuestionPoints` tùy chọn. Cách xác định số câu và tổng điểm, kiểm khi apply và xem trước cảnh báo được mô tả trong [luồng F6](../../construction/u07-assignment-authoring/functional-design/business-logic-model.md#f6---ai-soạn-bản-nháp-uc-35).
+
 ```java
 @RequestMapping("/api/v1/assignments/{id}/ai-drafts")
 @PostMapping(consumes = "application/json")
@@ -160,7 +162,7 @@ kiểm quyền giảng viên/lớp OPEN/version và chốt bài đã lưu trong 
 
 ## [assignments/controller/AssignmentImportController.java](../../../backend/src/main/java/edu/aiplatform/assignments/controller/AssignmentImportController.java)
 
-Thêm 2026-11-11 trên nhánh `feat/exam-image-import`, chưa có ở staging. Nhập đề từ ảnh/PDF (BR-U07-87). Ghi đề qua `POST /ai-drafts/{draftId}:apply`, body thêm `placement` (`REPLACE` hoặc `APPEND`). `GET /ai-drafts/{draftId}` của bản nhập đề READY trả thêm `proposal.previews` (id khối ảnh → link tải 5 phút của hình đã cắt, cấp mỗi lần đọc, không lưu).
+Nhập đề từ ảnh/PDF (BR-U07-87) đã có trong mã nguồn được kiểm ở `8afa00b4`. Ghi đề qua `POST /ai-drafts/{draftId}:apply`, body nhận `placement` (`REPLACE` hoặc `APPEND`). `GET /ai-drafts/{draftId}` của bản nhập đề READY trả thêm `proposal.previews` (id khối ảnh → link tải 5 phút của hình đã cắt, cấp mỗi lần đọc).
 
 ```java
 @RequestMapping("/api/v1/assignments/{id}/imports")

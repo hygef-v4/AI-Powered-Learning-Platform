@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swd392-workshop-registration",
+  "case_id": "swd-workshop-complete",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_FAIL",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:57:45.064884+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.6,
+      "threshold": 0.8,
+      "reason": "The grader scored 11 of the 12 applicable items correctly but got the cardinality item (3465418b) wrong. Its scores for the three entities, the conceptual-level abstraction (no columns, SQL types or PK/FK marks), the three tables, the three PKs, both FKs with correct REFERENCES targets, the composite UNIQUE(member_id, session_id), the POST endpoint direction, the workshop:register check before insertRegistration with a 403 break, the persist call with sessionId and memberId returning registrationId, and the 201 with a Location containing sessionId and registrationId all match the rubric. The error is on cardinality. In the conceptual ERD, both edges have ERmandOne at the Thành viên/Buổi workshop end and ERzeroToMany at the Đăng ký end, labelled '1 : 0..*'. In crow's-foot notation this means each Đăng ký belongs to exactly one Thành viên and exactly one Buổi workshop, and each of those has 0..* Đăng ký. That is exactly what the criterion asks for. The grader still gave 0/0.75, saying the multiplicity was drawn in the reverse direction and the 'exactly one' side was missing. That deduction contradicts the criterion and the diagram, and the same wrong claim appears in the overall feedback, the section feedback and the improvements list. Students would get misleading guidance as well as lose points.",
+      "status": "QUALITY_FAIL"
+    },
+    "feedback_groundedness": {
+      "score": 0.4,
+      "threshold": 0.8,
+      "reason": "Most of the grading matches the submission. The logical ERD does contain MEMBER, WORKSHOP_SESSION and REGISTRATION. It declares the three PKs, marks REGISTRATION.member_id and REGISTRATION.session_id as FKs with REFERENCES to the correct target columns, and has UNIQUE (member_id, session_id). In the sequence diagram, the POST goes from the app to Registration API. canRegister(memberId, workshop:register) runs before insertRegistration. The 403 return sits inside the break [quyền bị từ chối] frame and is labeled 'dừng'. The repository is called with insertRegistration(sessionId, memberId) and returns registrationId, then the API returns 201 Created with a Location containing sessionId and registrationId. The conceptual ERD has the three named entities and no physical details. The major error is the cardinality item (3465418b), which was scored 0. The grader says the multiplicities are reversed and that the 'exactly one' on the Đăng ký side is missing. That contradicts the XML. Both edges use startArrow=ERmandOne at the Thành viên / Buổi workshop end and endArrow=ERzeroToMany at the Đăng ký end, and are labeled '1 : 0..*'. In crow's-foot notation this means each registration belongs to exactly one member and exactly one session, and each member or session has 0..* registrations, which is exactly what the rubric asks for. So 0.75 points were wrongly withheld. The same false claim also appears in the overall feedback, the section feedback, the improvements list and the item evidence.",
+      "status": "QUALITY_FAIL"
+    },
+    "feedback_quality": {
+      "score": 0.3,
+      "threshold": 0.8,
+      "reason": "The only material deduction is wrong. In the conceptual ERD, each edge has ERmandOne at the Thành viên/Buổi workshop end and ERzeroToMany at the Đăng ký end, and is labelled '1 : 0..*'. In standard crow's-foot notation this means each Đăng ký belongs to exactly one Thành viên and exactly one Buổi workshop, and each parent has 0..* registrations. That is exactly what c-cardinalities asks for. Even so, the grader gave 0/0.75 and said the multiplicities run 'theo chiều ngược' (backwards), without explaining why the notation would be reversed. The suggestion just asks the student to show '1 Thành viên, 1 Buổi workshop, 0..*', which the diagram already shows, so it is circular and gives no concrete, feasible fix. It also contradicts itself: the logical ERD uses the identical '1 : 0..*' ERmandOne/ERzeroToMany edges and draws no criticism. The other eleven items are scored correctly with clear, specific evidence: PK/FK REFERENCES, UNIQUE(member_id, session_id), the canRegister check before insertRegistration, the 403 break, and 201 with a Location containing sessionId and registrationId. The summary, section comments and structured items are well organised and prioritise sensibly. But the one deduction that matters is unjustified and could mislead the instructor, which seriously undermines the feedback's usefulness.",
+      "status": "QUALITY_FAIL"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 39.1
+}

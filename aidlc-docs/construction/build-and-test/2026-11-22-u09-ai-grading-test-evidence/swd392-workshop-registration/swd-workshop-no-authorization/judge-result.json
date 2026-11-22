@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swd392-workshop-registration",
+  "case_id": "swd-workshop-no-authorization",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:55:23.769467+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader scores all 12 applicable items correctly. Both ERDs earn full credit for the three conceptual entities, the two 1-to-0..* relationships, the absence of storage details in the conceptual diagram, and the logical schema’s three primary keys, two explicit foreign keys, and composite UNIQUE constraint. The sequence earns credit for the correct POST, the repository call with both IDs and return of registrationId, and the 201 response with a Location containing both required IDs. The sole deduction correctly applies to the missing pre-write workshop:register check and terminating 403 branch.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "All item scores and material feedback match the Draw.io XML. The conceptual ERD shows three named entities and both 1-to-0..* relationships without storage details. The logical ERD declares all three primary keys, both foreign keys with their targets, and the composite UNIQUE constraint. The sequence shows the correct POST, an insert with both IDs, and dashed returns for registrationId and 201 Created with the required Location. The grader correctly identifies the missing workshop:register check and terminating 403 branch.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The feedback explains the sole deduction and gives a concrete fix: check workshop:register before inserting, then return 403 and stop without calling the repository if permission is missing. It correctly gives independent credit for persistence and the 201 response with Location, and grounds full credit for both ERDs in the cardinalities, keys, and composite UNIQUE constraint.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 23.1
+}

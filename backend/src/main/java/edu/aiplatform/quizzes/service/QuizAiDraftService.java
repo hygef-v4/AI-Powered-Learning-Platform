@@ -191,7 +191,7 @@ public class QuizAiDraftService {
             task = ai.submit(new AiTaskRequest(actor, request.source(), request.provider(), QuizDraftPrompt.TASK_TYPE,
                     TARGET_PREFIX + draft.id(), draft.baseVersion() == null ? 0 : draft.baseVersion(),
                     request.requestRef(), QuizDraftPrompt.prompt(prepared.target(), request, texts),
-                    QuizDraftPrompt.buildSchema(request.count()), QuizDraftPrompt.calculateMaxOutputTokens(request.count()),
+                    QuizDraftPrompt.buildSchema(request),QuizDraftPrompt.calculateMaxOutputTokens(request.count()),
                     QuizDraftPrompt.buildUserInput(actor, request)));
         } catch (ApiException failure) {
             return fail(draft, failure.readCode(), failure.getMessage());

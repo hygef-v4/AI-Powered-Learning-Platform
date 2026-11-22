@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-11-16",
+  "registry": "https://registry-1.docker.io",
+  "images": [
+    {
+      "reference": "maven:3.9-eclipse-temurin-17",
+      "digest": "sha256:1a352420f7aba21f5ad08df31bab55f74c013fb491f1ae8ab1dd7ff9ed698584"
+    },
+    {
+      "reference": "eclipse-temurin:17-jre-alpine",
+      "digest": "sha256:e2ba4e947bd5e236a9866fbdda03e4936036cb9e9d16ea0d84d103d6634a5c21"
+    },
+    {
+      "reference": "node:22-alpine",
+      "digest": "sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a"
+    },
+    {
+      "reference": "postgres:16-alpine",
+      "digest": "sha256:81e77a4833487b8132fe4b00bedd39dc3f74b8641e387f19312a48f7de218c2e"
+    },
+    {
+      "reference": "redis:7.4-alpine",
+      "digest": "sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe"
+    },
+    {
+      "reference": "nginx:1.28-alpine",
+      "digest": "sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236"
+    },
+    {
+      "reference": "rabbitmq:4.1-management-alpine",
+      "digest": "sha256:42c6214e0e2093caa2484718faacb733631cc9ddc869b3298397613237dbea4a"
+    },
+    {
+      "reference": "certbot/certbot:v4.1.1",
+      "digest": "sha256:263fe7ee9dde6440bf8baa957c0a8eb0118fc05ef86cf743c4cc84ca84303a21"
+    },
+    {
+      "reference": "certbot/dns-cloudflare:v4.1.1",
+      "digest": "sha256:bf87c2e3588f08c7fd520cc2fd155a954850c68d92105d693b26cd12dc3fca28"
+    },
+    {
+      "reference": "axllent/mailpit:v1.27",
+      "digest": "sha256:e22dce5b36f93c77082e204a3942fb6b283b7896e057458400a4c88344c3df68"
+    }
+  ]
+}

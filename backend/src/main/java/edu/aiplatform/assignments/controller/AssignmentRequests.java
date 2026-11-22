@@ -87,10 +87,11 @@ final class AssignmentRequests {
 
     record AiDraft(String request, List<UUID> materialIds, List<String> sourceFileRefs,
                    AssignmentCommands.DraftOptions options, AiSource source, AiProvider provider, String requestRef,
-                   String formatText, UUID templateAssignmentId, String mode) {
+                   String formatText, UUID templateAssignmentId, String mode, Boolean preserveTemplateQuestionPoints) {
         AssignmentCommands.AiDraftRequest buildCommand() {
             return new AssignmentCommands.AiDraftRequest(request, materialIds, sourceFileRefs, source, provider,
-                    requestRef, options, formatText, templateAssignmentId, mode);
+                    requestRef, options, formatText, templateAssignmentId, mode,
+                    Boolean.TRUE.equals(preserveTemplateQuestionPoints));
         }
     }
 

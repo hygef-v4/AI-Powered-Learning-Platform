@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swd392-internship-portal",
+  "case_id": "swd-internship-wrong-guard",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:56:25.413940+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader scored all ten applicable items, and each score matches the rubric. Class diagram: Student, InternshipOpening and Application are all present. Application has state: ApplicationState, submit() and approve(). Both associations show 1 at the Student or InternshipOpening end and 0..* at the Application end, so all three items correctly get full marks. State diagram: start → Draft, submit → Submitted, approve → Accepted and decline → Rejected are all present, so st-paths correctly gets 1.25. The guard on Draft → Submitted is [!transcriptAttached], which negates the condition, and st-guard correctly gets 0, as the rubric requires. Architecture: the modular monolith names three modules with responsibilities and justifies the choice with both the 300 applications per week and the two-person team, so a-fit is earned. The tradeoff is specific: background email jobs compete with the submit API for database connections. The mitigation is also specific: separate connection pools and a concurrency limit. So a-tradeoff is earned. Patterns: Transactional Outbox is named; the outbox row is written in the same transaction as the state change; the background worker resends with increasing backoff. Strategy has two concrete implementations (60 and 90 credits) and picks one through a mapping table keyed on the opening type. All three items are correctly given full marks. The grader invented no requirements, made no deductions that contradict a criterion, and added no point splits. The feedback and suggestions are accurate, and the requested fix ([transcriptAttached]) is the right one.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "Every material claim in the grading output matches the submission. Class diagram: the XML has the Student, InternshipOpening and Application swimlanes. Application has 'state: ApplicationState', 'submit(): void' and 'approve(): void'. Both association edges carry a '1' label at the Student/InternshipOpening end (x=-0.8) and '0..*' at the Application end, so the multiplicities are right and full marks there are justified. State diagram: start→Draft, submit→Submitted, approve→Accepted and decline→Rejected are all present, so 1.25 is correct. The guard reads 'submit [!transcriptAttached]', which negates the required condition, so giving 0 follows the rubric and the suggested fix is accurate. Architecture: the modular monolith with three components and their responsibilities is described correctly. The explanation cites both the 300 applications/week load and the two-person team, and the trade-off (connection contention) and its mitigation (a separate connection pool and a concurrency limit) are reported accurately. Patterns: the evidence for Transactional Outbox is accurate (same-transaction outbox write, background send, retry with growing backoff). So is the evidence for Strategy (ShortTermEligibility 60 credits, LongTermEligibility 90 credits, implementation chosen from a mapping by internship type). No claim contradicts the submission. One minor issue: the section partIds are opaque IDs that cannot be checked against the rubric headings, but this does not affect any evidence claim.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grading has one material deduction, the st-guard item (1.75 points). The feedback explains it clearly and correctly: the Draft → Submitted transition is labeled 'submit [!transcriptAttached]', which negates the required condition. The rubric says a negated guard earns nothing. The fix it suggests is specific and doable: change the guard to [transcriptAttached]. The summary puts this as the one improvement, which is good prioritization. The full-credit items each cite real evidence from the submission: - the class diagram: state: ApplicationState, submit()/approve(), and 1 / 0..* multiplicities on both associations - the modular monolith, tied to 300 applications per week and a two-person team - the connection-pool contention tradeoff and how to reduce it - Outbox written in the same transaction, with backoff retries - Strategy with ShortTerm/LongTerm implementations chosen through a type mapping The path item is scored separately from the guard, as the rubric requires. The advice is not vague or contradictory. Minor weaknesses: nextSteps is empty, the section-level comments are brief, and the section partIds don't obviously match the rubric's part headings. This could make mapping slightly harder for the instructor.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 35.4
+}

@@ -35,17 +35,28 @@ class QuizDraftPromptTest {
         var prompt = QuizDraftPrompt.prompt("quiz", request,
                 List.of(new edu.aiplatform.ai.contract.MaterialText(java.util.UUID.randomUUID(), "Toán", "Đạo hàm", false, 1)));
         assertThat(prompt.system()).contains("requestMatchesSources", "ưu tiên tài liệu", "không liên quan");
-        assertThat(json.readTree(QuizDraftPrompt.buildSchema(5)).at("/properties/requestMatchesSources/type").asText())
+        assertThat(json.readTree(QuizDraftPrompt.buildSchema(request)).at("/properties/requestMatchesSources/type").asText())
                 .isEqualTo("boolean");
     }
 
     @Test
     void schemaIsJsonAndCapsQuestionCount() throws Exception {
-        JsonNode schema = json.readTree(QuizDraftPrompt.buildSchema(7));
+        JsonNode schema = json.readTree(QuizDraftPrompt.buildSchema(
+                new QuizAiDraftService.DraftRequest("x", 7, null, null, List.of(), null, null, "r")));
 
         assertThat(schema.at("/properties/questions/maxItems").asInt()).isEqualTo(7);
+        assertThat(schema.at("/properties/questions/items/properties/type/enum").size()).isEqualTo(2);
         assertThat(schema.at("/properties/questions/items/properties/options/maxItems").asInt()).isEqualTo(6);
         assertThat(QuizDraftPrompt.calculateMaxOutputTokens(50)).isEqualTo(16_000);
+    }
+
+    @Test
+    void schemaEnforcesTheRequestedTypeAndDifficulty() throws Exception {
+        JsonNode item = json.readTree(QuizDraftPrompt.buildSchema(new QuizAiDraftService.DraftRequest("x", 3,
+                QuestionType.MCQ_SINGLE, Difficulty.HARD, List.of(), null, null, "r"))).at("/properties/questions/items");
+
+        assertThat(item.at("/properties/type/enum").toString()).isEqualTo("[\"MCQ_SINGLE\"]");
+        assertThat(item.at("/properties/difficulty/enum").toString()).isEqualTo("[\"HARD\"]");
     }
 
     @Test

@@ -44,20 +44,24 @@ final class QuizDraftPrompt {
         return Math.min(16_000, 600 * count);
     }
 
-    static String buildSchema(int count) {
+    /** Loại câu và độ khó người soạn đã chọn được ép trong schema, không chỉ gợi ý trong prompt. */
+    static String buildSchema(QuizAiDraftService.DraftRequest request) {
+        String types = request.type() == null ? "\"MCQ_SINGLE\",\"MCQ_MULTI\"" : "\"" + request.type().name() + "\"";
+        String difficulties = request.difficulty() == null ? "\"EASY\",\"MEDIUM\",\"HARD\""
+                : "\"" + request.difficulty().name() + "\"";
         return """
                 {"type":"object","additionalProperties":false,"required":["questions","requestMatchesSources","questionsMatchSources"],\
                 "properties":{"requestMatchesSources":{"type":"boolean"},"questionsMatchSources":{"type":"boolean"},"questions":{\
                 "type":"array","minItems":1,"maxItems":%d,"items":{"type":"object","additionalProperties":false,\
                 "required":["type","stem","options","correct"],"properties":{\
-                "type":{"enum":["MCQ_SINGLE","MCQ_MULTI"]},\
+                "type":{"enum":[%s]},\
                 "stem":{"type":"string","minLength":1,"maxLength":5000},\
                 "options":{"type":"array","minItems":2,"maxItems":6,"items":{"type":"string","minLength":1,\
                 "maxLength":2000}},\
                 "correct":{"type":"array","minItems":1,"maxItems":6,"items":{"type":"integer","minimum":1,\
                 "maximum":6}},\
                 "explanation":{"type":"string","maxLength":5000},\
-                "difficulty":{"enum":["EASY","MEDIUM","HARD"]}}}}}}""".formatted(count);
+                "difficulty":{"enum":[%s]}}}}}}""".formatted(request.count(), types, difficulties);
     }
 
     static AiPrompt prompt(String target, QuizAiDraftService.DraftRequest request,

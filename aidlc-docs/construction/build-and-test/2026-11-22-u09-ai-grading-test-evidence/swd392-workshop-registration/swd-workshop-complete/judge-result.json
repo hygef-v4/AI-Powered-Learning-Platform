@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swd392-workshop-registration",
+  "case_id": "swd-workshop-complete",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_FAIL",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:55:15.595064+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The grader scored all 12 applicable items and correctly credited the logical ERD’s keys and composite UNIQUE constraint, along with the REST sequence’s permission check, terminating 403, persistence call, and 201 Location. The conceptual cardinality deduction was incorrect. Both connectors place ERmandOne at the member or workshop end and ERzeroToMany at the registration end. That means each registration belongs to exactly one member and one workshop, and each member or workshop can have zero or more registrations. The item should receive the full 0.75.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The grading correctly identifies the three conceptual entities, the logical ERD’s PKs, explicit FK targets and composite UNIQUE, and the REST flow’s permission check, 403 stop, repository call and 201 Location. Its only deduction contradicts the XML. Both conceptual edges place ERmandOne at the Member or Workshop Session end and ERzeroToMany at the Registration end, correctly expressing that each registration belongs to exactly one of each and each can have zero or more registrations.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.4,
+      "threshold": 0.8,
+      "reason": "The itemized feedback clearly explains the logical ERD’s foreign keys and composite UNIQUE constraint, as well as the API’s permission check and 403 and 201 responses. Its only deduction misreads both conceptual relationships. Each already marks exactly one at the Member or Workshop Session end and zero or more at the Registration end, so the suggested correction repeats what the diagram already shows.",
+      "status": "QUALITY_FAIL"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 30.2
+}

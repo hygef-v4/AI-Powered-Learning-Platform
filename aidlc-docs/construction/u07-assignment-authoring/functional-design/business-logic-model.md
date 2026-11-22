@@ -2,7 +2,7 @@
 
 ## Nhập đề từ ảnh/PDF — 2026-11-11
 
-Thiết kế, chưa có mã. Quy tắc: BR-U07-87…101. Dùng lại bản nháp AI (F6), thêm chế độ `IMPORT`.
+Luồng nhập đề hiện có dùng bản nháp chế độ `IMPORT`. Xem BR-U07-87…101 và [các điểm được điều chỉnh khi triển khai](../code/2026-11-11-exam-image-import-summary.md).
 
 ### F-IMP1 Gửi tệp
 
@@ -78,7 +78,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | F3 Tạo bài | UC 35 | Tab Evals, Assignment List |
 | F4 Soạn đề và khung | UC 35 | Assignment Form |
 | F5 Sửa rubric | UC 36 | Thẻ rubric bên lề Assignment Form |
-| F6 AI soạn bản nháp | UC 35 | Assignment Form, popup chọn nguồn AI |
+| F6 AI soạn bản nháp | UC 35 | Popup Tạo bài tập hoặc Đề mẫu mới, chọn Tạo từ AI |
 | F7 Xuất, nhập DOCX | UC 35 | Assignment Form |
 | F8 Xem trước (tùy chọn) | UC 35 | Assignment Form |
 | F9 Xếp lịch, phát hành | UC 35 | Assignment Form, popup Xếp lịch |
@@ -106,7 +106,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### Delta 2026-11-10 cho F3, F6, F9, F13 (PR #60)
 
-- **F3:** popup "Bài tập mới" (lớp) hoặc "Đề mẫu mới" (môn) bắt buộc tên bài và có ba cách tạo. *Đề mới*: chọn loại bài và tệp DOCX mẫu tùy chọn, như các bước F3 bên dưới. *Đề có sẵn*: chọn nguồn rồi copy theo F13 với tên vừa nhập. *Tạo từ AI*: chọn ngôn ngữ, đề mẫu của môn hoặc tệp mẫu, tài liệu tham khảo (đọc qua endpoint của lớp/môn vì bài chưa có) và yêu cầu; bấm Tạo thì tạo bài, gửi `POST .../ai-drafts` rồi áp dụng kết quả vào bài, tổng điểm cố định 10. AI lỗi thì bài đã tạo được dùng lại khi thử lại.
+- **F3:** popup "Bài tập mới" (lớp) hoặc "Đề mẫu mới" (môn) bắt buộc tên bài và có ba cách tạo. *Đề mới*: chọn loại bài và tệp DOCX mẫu tùy chọn. *Đề có sẵn*: chọn nguồn rồi copy theo F13 với tên đã nhập. *Tạo từ AI*: thực hiện F6. Nếu AI lỗi, lần thử lại dùng bài vừa tạo.
 - **F6:** nút "Soạn bằng AI" không còn trên thanh công cụ của Assignment Form; `AiDraftDialog` ở trang này chỉ còn mở để duyệt đề xuất (ví dụ từ MCP qua `proposalId`). F6b (sửa đề bằng AI) không đổi.
 - **F9:** bài của môn không phát hành (`409 SUBJECT_TEMPLATE_NOT_PUBLISHABLE`, BR-U07-80); bài có chấm không có số lượt (BR-U07-85).
 - **F13:** nguồn copy và `title` theo BR-U07-82.
@@ -120,7 +120,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F4 - Soạn đề và khung (UC 35)
 1. Assignment Form gọi `GET /api/v1/assignments/{id}`: thông tin, cài đặt, khung, danh sách phần kèm tổng điểm và trạng thái rubric. Trang là một trang giấy kiểu Google Docs: tên bài, hướng dẫn chung, rồi khung; thanh công cụ dính trên đầu; thẻ rubric ở lề phải.
-2. Đầu trang: nút Khác (Xuất DOCX, Xuất rubric, Nhân bản, Tạo version mới, Ngưng giao, Xóa bản nháp), Xem trước hoặc Quay lại, Xếp lịch (bài nháp) hoặc Đổi lịch (bài đã lên lịch, đang mở); màn hẹp thì hàng nút xuống dưới tên bài. Thanh công cụ có Soạn bằng AI (bài nháp) và Cài đặt bài.
+2. Đầu trang: nút Khác (Xuất DOCX, Xuất rubric, Nhân bản, Tạo version mới, Ngưng giao, Xóa bản nháp), Xem trước hoặc Quay lại, Xếp lịch (bài nháp) hoặc Đổi lịch (bài đã lên lịch, đang mở); màn hẹp thì hàng nút xuống dưới tên bài. Dùng Cài đặt bài để sửa tùy chọn. Dùng chat Sửa đề bằng AI theo F6b để sửa đề hiện có.
 3. Popup Cài đặt (`PATCH /api/v1/assignments/{id}` kèm `version`): thẻ chọn Hình thức (chỉ xem), Chế độ, nút gạt Ghi nhận hoạt động kèm lời báo (BR-U07-16).
 4. Sửa khung trên trang: thanh công cụ có hoàn tác, làm lại, kiểu đoạn, đậm, nghiêng, gạch chân, gạch ngang, màu chữ, màu nền, căn lề, danh sách chấm, số, thụt lề, chèn bảng (lưới chọn cỡ), chèn ảnh (tải qua U03 `DOCUMENT_IMAGE`), chèn sơ đồ (một nút, mở Draw.io ngay). Các phần hiện theo cây tiêu đề: cùng tầng cùng màu, tầng sâu đậm hơn; phần lá có khung màu của tầng, ruột trắng là chỗ viết. Không có chữ gợi ý ở dòng trống. Sơ đồ, ảnh, bảng có nút ✕ ở góc để xóa; bảng có nút "+ −" nổi trên đầu cột và bên trái hàng.
 5. Tự lưu 1,5 giây sau lần sửa cuối (Ctrl+S lưu ngay): `PUT /api/v1/assignments/{id}/skeleton` kèm `version`; kiểm cấu trúc, id block duy nhất, trần kích thước, XML sơ đồ an toàn, định dạng run (BR-U07-10, 12); server suy loại sơ đồ từ hình vẽ.
@@ -135,13 +135,12 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 5. Bài đã phát hành: thẻ chỉ xem, nhãn Đã khóa (BR-U07-23).
 
 ### F6 - AI soạn bản nháp (UC 35)
-1. Trên Assignment Form của bài `DRAFT`, bấm "Soạn bằng AI"; nhập yêu cầu (chủ đề, mức độ, số phần, gợi ý về rubric); chọn tài liệu tham khảo từ danh sách của U13 qua `IReferenceMaterial` (chưa có U13 thì bỏ qua bước này); chọn nguồn AI trong `AiSourcePicker` của U06.
-2. Frontend gọi `POST /api/v1/assignments/{id}/ai-drafts`; kiểm quyền và bài `DRAFT`.
-3. Lấy chữ của tài liệu đã chọn qua `IReferenceMaterial.extractText` (U13 kiểm quyền, cắt theo trần); dựng prompt gồm yêu cầu, cài đặt bài, chữ tài liệu và JSON schema của kết quả (BR-U07-52).
-4. Gọi `IAiTask.submit` (loại `ASSIGNMENT_DRAFT`, đích là bài, `inputVersion` là `version` hiện tại, `requestRef`); tạo đề xuất `PENDING` kèm provenance; trả `taskId` cho `AiTaskStatus`.
-5. U06 gọi `onReady`: bài còn `DRAFT` thì lưu đề xuất `READY` và trả `APPLIED`; bài đã xóa hoặc đã phát hành thì trả `REJECTED`. `onFailed` chuyển đề xuất sang `FAILED`.
-6. Người soạn xem đề xuất. Áp dụng: `POST .../ai-drafts/{draftId}:apply` kèm `version`; cảnh báo nếu khung đã có nội dung; thay khung (và hướng dẫn nếu chọn), tính lại phần như F4 bước 5, điền gợi ý rubric; đề xuất `APPLIED`; audit `ASSIGNMENT_AI_DRAFT_APPLIED`.
-7. Bỏ: đề xuất `DISCARDED`, bài không đổi.
+1. Mở popup tạo bài của lớp hoặc đề mẫu của môn và chọn **Tạo từ AI**. Chọn ngôn ngữ, nhập yêu cầu, chọn đề mẫu đã lưu hoặc tệp DOCX, tài liệu tham khảo và tệp nguồn nếu cần. U06 chọn nguồn API cho yêu cầu từ web.
+2. Có thể chốt 1–10 câu chính. Khi bỏ trống, AI chọn số câu theo yêu cầu hoặc mẫu. Với bài có chấm, nhập điểm từng câu để hệ thống suy ra số câu và tổng điểm, hoặc chọn **Giữ điểm từng câu của đề mẫu** để lấy thang từ mẫu đã lưu. Luồng tự chia đặt mục tiêu tổng 10.
+3. Sau khi tạo bài `DRAFT`, frontend gửi `POST /api/v1/assignments/{id}/ai-drafts` kèm `requestRef` và các tùy chọn. Backend kiểm quyền, đọc nguồn được phép, lưu cấu hình xác nhận trong provenance, dựng prompt và schema rồi gửi tác vụ `ASSIGNMENT_DRAFT` qua U06.
+4. Frontend đọc trạng thái bản nháp. Khi nhận phản hồi, backend kiểm số câu đã chốt, điểm rubric và tổng điểm. Nếu model phát hiện lời nhắc yêu cầu số câu chính khác cấu hình, bản nháp dùng số đã chốt và mang cảnh báo `QUESTION_COUNT_CONFLICT`.
+5. Đề dùng mẫu, đề có cảnh báo nguồn hoặc số câu, và đề từ MCP mở màn xem trước. Người soạn xem lý do rồi chọn áp dụng hoặc sửa yêu cầu để tạo lại. Với đề hợp lệ không cần xác nhận, giao diện gọi áp dụng sau khi nhận được bản nháp. Nếu bản nháp lỗi, giao diện báo lý do và cho thử lại.
+6. `POST .../ai-drafts/{draftId}:apply` kiểm version, quyền và validation trước khi ghi khung/rubric và đánh dấu bản đề xuất `APPLIED`. `:discard` bỏ đề xuất. Áp dụng chỉ ghi nội dung vào bản nháp, còn hoàn tất và phát hành thực hiện ở F9.
 
 ### F6b - Sửa đề đang có bằng AI (UC 35, 2026-11-09)
 1. Trên Assignment Form của bài `DRAFT` sửa được, khung chat "Sửa đề bằng AI" đứng trên thẻ rubric Toàn bài. Người soạn gõ yêu cầu (≤ 4.000 ký tự); trang lưu mọi thay đổi đang chờ rồi gọi `POST /api/v1/assignments/{id}/ai-drafts` với `mode = REVISE`, `request`, `requestRef`. Chế độ này bỏ qua tài liệu tham khảo, file nguồn và mô tả định dạng; nguồn AI tự chọn.
@@ -165,12 +164,12 @@ Nhập (khi tạo bài, F3 bước 4):
 
 ### F8 - Xem trước (UC 35)
 1. Bấm Xem trước (tùy chọn): trang lưu bản đang sửa rồi hiện đề như người học thấy khi làm bài (không có rubric, không sửa được); nút Quay lại về trang soạn, nút Xếp lịch vẫn dùng được.
-2. Không còn lệnh duyệt trên giao diện (BR-U07-32).
+2. Hoàn tất đề trước khi phát hành theo F9.
 
 ### F9 - Xếp lịch, phát hành (UC 35)
-1. Bài nháp, bấm Xếp lịch: trang lưu bản đang sửa, kiểm sơ bộ tên bài và rubric các phần; thiếu thì tô đỏ chỗ thiếu, báo "Bài còn chỗ chưa đủ", không mở lịch.
-2. Popup Xếp lịch: Hẹn giờ mở (tích mới chọn ngày, giờ), Hạn nộp, Cho nộp muộn (tích mới chọn hạn nộp muộn), Số lượt nộp; nút Phát hành ngay hoặc Xếp lịch. Frontend gọi `POST /api/v1/assignments/{id}/publish` kèm `version`, `openNow`.
-3. Kiểm quyền và bài còn nháp (`DRAFT` hoặc `REVIEWED` cũ); kiểm luật duyệt (BR-U07-32), thiếu thì `ASSIGNMENT_NOT_READY` (trang đóng popup, tô đỏ chỗ thiếu); bài của lớp cần lớp `OPEN` (`IClassAccess`), bài của môn cần môn `ACTIVE` (`ISubjectQuery`); kiểm lịch (BR-U07-33).
+1. Người soạn lưu và hoàn tất đề. Backend kiểm điều kiện sẵn sàng trước khi chuyển bản nháp sang `REVIEWED`.
+2. Trong popup Xếp lịch, chọn mở ngay hoặc hẹn giờ mở, hạn nộp và hạn nộp muộn nếu cần. Số lượt 1–10 chỉ áp dụng cho bài Luyện tập. Frontend gọi `POST /api/v1/assignments/{id}/publish` kèm `version`, `openNow` và lịch.
+3. Backend kiểm quyền, trạng thái `REVIEWED`, độ sẵn sàng, lớp `OPEN` và lịch. Đề mẫu của môn phải được sao chép về lớp trước khi phát hành.
 4. Bài `GROUP`: gọi `IGroupAssignmentSupport.checkReadiness(classId)`; lỗi thì từ chối; có sinh viên chưa có nhóm thì cần `confirmUngroupedStudents`.
 5. Một transaction: ghi lịch, kiểm lại rồi khóa mọi rubric, chuyển `SCHEDULED` (mở ngay thì mở luôn); audit `ASSIGNMENT_PUBLISHED`. Trang báo "Đã phát hành" hoặc "Đã lên lịch".
 6. Từ đây khung, rubric, cài đặt không sửa được; muốn đổi thì nhân bản hoặc tạo version mới.

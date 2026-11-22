@@ -1,0 +1,129 @@
+{
+  "assignmentKey": "swr302-lab-equipment-relations",
+  "title": "Mượn thiết bị phòng lab",
+  "labelSource": "SYNTHETIC_TEAM",
+  "labelNote": "Đề, bài làm và điểm kỳ vọng do nhóm tự soạn để kiểm tra chấm AI. Điểm chưa được giảng viên xác nhận.",
+  "instructions": "Trung tâm thực hành cho sinh viên tra cứu thiết bị và gửi yêu cầu mượn. Mỗi yêu cầu gồm một thiết bị. Hệ thống luôn hỏi Dịch vụ quyền mượn để kiểm tra điều kiện của sinh viên. Nếu giờ trả dự kiến muộn hơn giờ đóng cửa, Kỹ thuật viên phòng lab phải duyệt mượn qua đêm trước khi hệ thống xác nhận yêu cầu. Hãy vẽ sơ đồ ca sử dụng có phạm vi hệ thống, các tác nhân và bốn ca Tra cứu thiết bị, Gửi yêu cầu mượn, Kiểm tra quyền mượn, Duyệt mượn qua đêm. Thể hiện quan hệ bắt buộc và quan hệ có điều kiện giữa các ca. Đặc tả ca Gửi yêu cầu mượn với tên, tác nhân chính và phụ, điều kiện trước và sau, kích hoạt, luồng chính, luồng duyệt mượn qua đêm, ngoại lệ khi dịch vụ quyền mượn không phản hồi và quy tắc nghiệp vụ.",
+  "skeleton": [
+    {
+      "key": "h-diagram",
+      "style": "H1",
+      "text": "1. Sơ đồ ca sử dụng"
+    },
+    {
+      "key": "h-spec",
+      "style": "H1",
+      "text": "2. Đặc tả ca Gửi yêu cầu mượn"
+    }
+  ],
+  "rubrics": [
+    {
+      "key": "r-diagram",
+      "partHeading": "h-diagram",
+      "criteria": [
+        {
+          "key": "c-scope",
+          "title": "Phạm vi và tác nhân",
+          "kind": "DIAGRAM",
+          "items": [
+            {
+              "key": "d-boundary",
+              "text": "Có khung Hệ thống mượn thiết bị phòng lab chứa các ca sử dụng. Các tác nhân đứng ngoài khung.",
+              "points": 0.5
+            },
+            {
+              "key": "d-actors",
+              "text": "Sinh viên nối với Tra cứu thiết bị và Gửi yêu cầu mượn. Dịch vụ quyền mượn nối với Kiểm tra quyền mượn. Kỹ thuật viên phòng lab nối với Duyệt mượn qua đêm.",
+              "points": 1
+            },
+            {
+              "key": "d-usecases",
+              "text": "Có đủ bốn ca sử dụng hình oval. Tên ca là Tra cứu thiết bị, Gửi yêu cầu mượn, Kiểm tra quyền mượn và Duyệt mượn qua đêm.",
+              "points": 0.5
+            }
+          ]
+        },
+        {
+          "key": "c-relationships",
+          "title": "Quan hệ giữa các ca sử dụng",
+          "kind": "DIAGRAM",
+          "items": [
+            {
+              "key": "d-relationships",
+              "text": "Gửi yêu cầu mượn hướng đến Kiểm tra quyền mượn với nhãn <<include>>, vì mọi yêu cầu đều cần kiểm tra. Duyệt mượn qua đêm hướng đến Gửi yêu cầu mượn với nhãn <<extend>>, vì luồng duyệt chỉ xảy ra theo điều kiện. Cho 0,5 điểm cho mỗi quan hệ có đúng nhãn và hướng.",
+              "points": 1
+            },
+            {
+              "key": "d-extension-condition",
+              "text": "Điều kiện trên quan hệ mở rộng thể hiện Duyệt mượn qua đêm chỉ xảy ra khi giờ trả thiết bị dự kiến muộn hơn giờ đóng cửa phòng lab. Mục này đánh giá ý nghĩa điều kiện. Kiểu nét của mũi tên không ảnh hưởng đến điểm.",
+              "points": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "r-spec",
+      "partHeading": "h-spec",
+      "criteria": [
+        {
+          "key": "c-spec-identity",
+          "title": "Ca sử dụng và tác nhân",
+          "kind": "TEXT",
+          "items": [
+            {
+              "key": "s-name-primary",
+              "text": "Ghi đúng tên ca Gửi yêu cầu mượn và tác nhân chính Sinh viên.",
+              "points": 0.5
+            },
+            {
+              "key": "s-secondary-eligibility",
+              "text": "Secondary actor (Dịch vụ quyền mượn) ghi đúng.",
+              "points": 0.5
+            },
+            {
+              "key": "s-secondary-technician",
+              "text": "Secondary actor (Kỹ thuật viên phòng lab) ghi đúng.",
+              "points": 0.5
+            },
+            {
+              "key": "s-conditions",
+              "text": "Nêu điều kiện trước khi gửi yêu cầu, hành động kích hoạt và kết quả khi mượn thành công.",
+              "points": 1
+            }
+          ]
+        },
+        {
+          "key": "c-spec-flows",
+          "title": "Luồng xử lý và quy tắc",
+          "kind": "TEXT",
+          "items": [
+            {
+              "key": "s-normal",
+              "text": "Luồng chính nêu cách Sinh viên chọn thiết bị và thời gian mượn, hệ thống kiểm tra quyền mượn và thiết bị còn trống, ghi nhận yêu cầu, giữ thiết bị theo khung giờ và xác nhận với Sinh viên.",
+              "points": 1.5
+            },
+            {
+              "key": "s-alternative",
+              "text": "Luồng trả sau giờ đóng cửa chỉ xác nhận yêu cầu sau khi kỹ thuật viên duyệt mượn qua đêm. Nêu bước rẽ nhánh và cách tiếp tục.",
+              "points": 0.5
+            },
+            {
+              "key": "s-exception",
+              "text": "Ngoại lệ khi dịch vụ quyền mượn không phản hồi phải báo lỗi và kết thúc mà không ghi nhận lượt mượn hoặc giữ thiết bị.",
+              "points": 1
+            },
+            {
+              "key": "s-rule",
+              "text": "Nêu hai quy tắc nghiệp vụ. Một yêu cầu chỉ chứa một thiết bị. Trả sau giờ đóng cửa cần kỹ thuật viên phê duyệt.",
+              "points": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "cases": [
+    "cases/swr-lab-solid-semantic.json"
+  ]
+}

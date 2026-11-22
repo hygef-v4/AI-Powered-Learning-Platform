@@ -45,7 +45,11 @@ public final class AssignmentCommands {
     public record RubricUpdate(long version, List<RubricCriterion> criteria) {
     }
 
-    public record DraftOptions(String profile, String language, Integer questionCount, BigDecimal targetPoints) {
+    public record DraftOptions(String profile, String language, Integer questionCount, BigDecimal targetPoints,
+                               List<BigDecimal> questionPoints) {
+        public DraftOptions(String profile, String language, Integer questionCount, BigDecimal targetPoints) {
+            this(profile, language, questionCount, targetPoints, List.of());
+        }
     }
 
     /**
@@ -57,7 +61,15 @@ public final class AssignmentCommands {
      */
     public record AiDraftRequest(String request, List<UUID> materialIds, List<String> sourceFileRefs,
                                  AiSource source, AiProvider provider, String requestRef, DraftOptions options,
-                                 String formatText, UUID templateAssignmentId, String mode) {
+                                 String formatText, UUID templateAssignmentId, String mode,
+                                 boolean preserveTemplateQuestionPoints) {
+        public AiDraftRequest(String request, List<UUID> materialIds, List<String> sourceFileRefs, AiSource source,
+                              AiProvider provider, String requestRef, DraftOptions options, String formatText,
+                              UUID templateAssignmentId, String mode) {
+            this(request, materialIds, sourceFileRefs, source, provider, requestRef, options, formatText,
+                    templateAssignmentId, mode, false);
+        }
+
         public AiDraftRequest(String request, List<UUID> materialIds, List<String> sourceFileRefs, AiSource source,
                               AiProvider provider, String requestRef, DraftOptions options, String formatText) {
             this(request, materialIds, sourceFileRefs, source, provider, requestRef, options, formatText, null, null);

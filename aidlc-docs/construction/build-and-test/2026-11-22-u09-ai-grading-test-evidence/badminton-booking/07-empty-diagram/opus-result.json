@@ -1,0 +1,36 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "07-empty-diagram",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:54:18.631912+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader scored exactly the seven spec items listed in applicable_item_ids. It correctly left out the diagram items, since the Use Case Diagram section holds only a heading and the app handles blank sections separately. Each full score matches the submission's table: the use case name 'Đặt sân', primary actor Khách hàng and secondary actors Chủ sân and Cổng thanh toán are correct; the precondition (logged in, free slot) and postcondition (booking saved as Chờ xác nhận, email sent) fit the booking function; the trigger is stated; both normal flows (hourly booking and fixed weekly booking) are present, and the reason explicitly awards 0.25 for each; the alternative flow 2a (slot full, suggest another time) is reasonable; the exception flows 3a (payment failure) and 3b (no payment within 10 minutes) earn the full 0.5; and BR1 to BR3 (10-minute hold, 24-hour cancellation with refund, minimum 4 weeks) are concrete business rules. The grader added no requirements, made no deductions that contradict a criterion, and its evidence is grounded in the submission. Minor issue: the section partId '562c49a3...' does not match any identifier in the supplied input, so it cannot be traced back to the spec part.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "Every material claim in the grading output matches the submission table. The use case name 'Đặt sân', primary actor 'Khách hàng' and secondary actors 'Chủ sân, Cổng thanh toán' are reported correctly. The precondition (đăng nhập, sân còn khung giờ trống) and postcondition (trạng thái Chờ xác nhận, email xác nhận) are accurate. So is the trigger (chọn chức năng Đặt sân trên trang lịch sân). Both normal flows are described faithfully: hourly booking with sân/ngày/khung giờ, and weekly booking with thứ/khung giờ/số tuần and tổng tiền. The alternative flow 2a (khung giờ đã kín, gợi ý giờ trống gần nhất) matches. The exception flows 3a (thanh toán thất bại) and 3b (quá 10 phút) match. The business rules BR1–BR3 (10 phút, hoàn 100% trước 24 giờ, tối thiểu 4 tuần) match. Full marks on all seven applicable spec items are supported by the evidence. The output also makes no claims about the diagram, which fits the applicable_item_ids since diagram items were excluded. All evidenceBlockIds point to the correct table. One minor problem: the section partId '562c49a3-...' does not match any identifier in the input, so it cannot be verified.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The feedback is accurate and grounded in the submission. Every applicable spec item gets specific evidence from the table: actors, precondition/postcondition, trigger, both normal flows (0.25 each), alternative flow 2a, exception flows 3a/3b and business rules BR1–BR3. Full marks are justified and no material deductions are missing, so leaving deductions unexplained is acceptable. The per-item reasons are clear and not circular, and they would help an instructor. Shortcomings: 'improvements' and 'nextSteps' are empty, so there are no optional refinements. Easy ones were available: the alternative flow covers only the hourly flow and not the weekly flow when some sessions are already booked; normal flow 2 leaves out the slot-holding step; and the postcondition puts 'Chờ xác nhận' next to an email confirmation. The feedback also never notes for the instructor that the diagram section is empty, even though diagram items were not graded. The section's partId does not match any rubric or block ID shown, a small consistency problem.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 32.8
+}

@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swr302-room-scheduling",
+  "case_id": "swr-room-vague-nfr",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:56:15.520662+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grader covers all nine applicable items. It correctly credits the circular system boundary, both named external actors, and the two labeled flow pairs at 0.75 each. Full use-case credit is supported by the booking sequence and the conflict path, which skips saving and reloads the room list. The qualitative peak-load lookup target earns 0.5, and the all-or-nothing measurement item earns zero because it lacks a time threshold, attainment rate, concurrent load, and measurement endpoints.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "All nine rubric decisions match the submission. The 200 × 200 Draw.io ellipse forms a circle, and four labeled arrows connect it to Giảng viên and Dịch vụ lịch phòng in the required directions. The table identifies Giảng viên as the primary actor and documents the trigger, conditions, successful booking flow, and conflict recovery. The grading correctly credits the peak-hour response goal and withholds measurement credit because the requirement omits a time threshold, qualifying percentage, concurrent load, and measurement start and end points.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback grounds full credit in the diagram’s labeled, correctly directed flows and the use case’s conflict handling. It clearly explains why the peak-hour lookup requirement earns credit for its objective but loses all 1.5 measurement points, and identifies all four missing elements. A sample requirement with a latency threshold, target percentage, concurrent load, and explicit start and end events would make the revision easier to apply.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 23.3
+}

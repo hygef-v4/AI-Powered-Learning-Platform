@@ -92,6 +92,25 @@ class AssignmentDraftValidatorTest {
     }
 
     @Test
+    void blocksWrongQuestionCountEvenWhenTotalIsCorrectAndKeepsWarningForTheCorrectCount() throws Exception {
+        JsonNode proposal = json.readTree("""
+                {"title":"Booking exam","businessContext":"Patients can book appointments.","sections":[
+                  {"level":1,"title":"Question 1","rubric":[{"title":"Quality","kind":"TEXT","items":[{"text":"Clear","points":10}]}]}],
+                 "authoringWarnings":[{"code":"QUESTION_COUNT_CONFLICT","message":"The request asks for 5 questions."}]}
+                """);
+
+        JsonNode wrongCount = AssignmentDraftValidator.validateGenerated(proposal, GradingMode.GRADED,
+                new AssignmentDraftValidator.Options("AUTO", "EN", 2, BigDecimal.TEN, true));
+        assertThat(wrongCount.path("status").asText()).isEqualTo("INVALID");
+        assertThat(issueCodes(wrongCount)).contains("QUESTION_COUNT_MISMATCH").doesNotContain("TOTAL_POINTS_MISMATCH");
+
+        JsonNode matchingCount = AssignmentDraftValidator.validateGenerated(proposal, GradingMode.GRADED,
+                new AssignmentDraftValidator.Options("AUTO", "EN", 1, BigDecimal.TEN, true));
+        assertThat(matchingCount.path("status").asText()).isEqualTo("NEEDS_REVIEW");
+        assertThat(issueCodes(matchingCount)).containsExactly("QUESTION_COUNT_CONFLICT");
+    }
+
+    @Test
     void rejectsRunawayProseBeforeItCanBeApplied() throws Exception {
         var proposal = json.createObjectNode();
         proposal.put("businessContext", "x".repeat(4001));

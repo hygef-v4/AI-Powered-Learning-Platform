@@ -148,9 +148,16 @@ final class DiagramXml {
                 out.append(":\n");
                 List<Cell> cells = listCells(models.get(i));
                 Map<String, String> containers = mapContainers(cells);
+                Map<String, String> labels = new HashMap<>();
+                for (Cell cell : cells) {
+                    if (!cell.edge() && !cell.label().isBlank()) {
+                        labels.putIfAbsent(cell.id(), cell.label());
+                    }
+                }
                 for (Cell cell : cells) {
                     if (cell.edge()) {
-                        out.append("- nối ").append(cell.source()).append(" -> ").append(cell.target());
+                        out.append("- nối ").append(formatEndpoint(cell.source(), labels))
+                                .append(" -> ").append(formatEndpoint(cell.target(), labels));
                         if (cell.dashed()) {
                             out.append(" (nét đứt)");
                         } else if (cell.label().contains("<<")) {
@@ -180,6 +187,11 @@ final class DiagramXml {
             return "(sơ đồ không đọc được)";
         }
         return out.toString().strip();
+    }
+
+    private static String formatEndpoint(String id, Map<String, String> labels) {
+        String label = labels.get(id);
+        return label == null ? id : '"' + label.replace("\"", "\\\"") + "\" [" + id + "]";
     }
 
     /** Các {@code mxGraphModel}: gốc là model, hoặc mỗi {@code diagram} của {@code mxfile} (giải nén nếu cần). */

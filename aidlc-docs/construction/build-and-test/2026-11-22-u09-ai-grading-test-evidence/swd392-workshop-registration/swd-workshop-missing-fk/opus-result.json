@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swd392-workshop-registration",
+  "case_id": "swd-workshop-missing-fk",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_FAIL",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:58:38.053517+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.4,
+      "threshold": 0.8,
+      "reason": "Eleven of the twelve applicable items are scored correctly. The conceptual ERD items (three entities, 1 : 0..* multiplicities on both relationships, no physical details) are right. The logical items are also right: all three tables and PKs are present, REGISTRATION.member_id is marked FK with REFERENCES MEMBER(member_id), and UNIQUE (member_id, session_id) is declared. Session_id is correctly given 0 because it has no FK mark and no reference target. The request, persist (insertRegistration(sessionId, memberId) returning registrationId) and 201 Created with a Location containing sessionId and registrationId are also scored correctly. The grader is wrong on the authorization item (s-authorization), which got 0 when it should get the full 1.5. Using the diagram geometry, canRegister(memberId, workshop:register) comes before the write at about y=154. The '403 Forbidden [quyền bị từ chối] / dừng' return is at about y=264, inside a UML 'break [quyền bị từ chối]' frame (y 206–294). The insertRegistration call comes after the frame, at about y=320. A break fragment is the standard way to show a denial that returns 403 and ends the flow, so the check happens before the write and the flow stops on denial. Requiring an explicit guarded 'allowed' branch around the insert adds a requirement the rubric does not contain. The grader's claim that the insert has no guard ignores the break frame. This one error costs 1.5 points on the largest sequence item. It also makes the summary and section feedback misleading.",
+      "status": "QUALITY_FAIL"
+    },
+    "feedback_groundedness": {
+      "score": 0.5,
+      "threshold": 0.8,
+      "reason": "Most item judgments match the submission. In the conceptual ERD, the grader correctly found the three entities (Thành viên, Buổi workshop, Đăng ký), the 1 : 0..* edges with ERmandOne/ERzeroToMany ends, and no physical details. In the logical ERD, it correctly found all three tables and the PKs. It correctly accepted 'FK member_id ... REFERENCES MEMBER(member_id)' and UNIQUE (member_id, session_id). It also correctly gave 0 for session_id, which is a plain column, and the shared multiplicity line does not count. In the sequence diagram, it was right to give full marks for the POST, for insertRegistration(sessionId, memberId) with the registrationId return, and for 201 Created with a Location containing both IDs. However, the authorization item (1.5 points) was scored 0 on grounds the submission contradicts. The canRegister(memberId, workshop:register) call (exitY 0.28) comes before the write (0.67). The 403 'dừng' message (0.54, about y=264) sits inside a UML 'break [quyền bị từ chối]' frame (y 206–294), which is the standard way to show a denied branch ending the flow. The write comes after that frame, so it is effectively guarded. The grader never mentions the break frame and wrongly says there is no guarded branch. Its section feedback and improvement suggestions repeat this mistake. One major, evidence-contradicting error on a high-value item lowers the overall reliability.",
+      "status": "QUALITY_FAIL"
+    },
+    "feedback_quality": {
+      "score": 0.5,
+      "threshold": 0.8,
+      "reason": "The feedback is clear, well organised and in consistent Vietnamese. Each item has evidence, a reason and a suggestion. It correctly finds the one real gap in the logical ERD: REGISTRATION.session_id has no FK marker or REFERENCES WORKSHOP_SESSION(session_id). The suggested fix is concrete and easy to apply. It also correctly credits the conceptual ERD, the PKs, the member_id FK, UNIQUE (member_id, session_id), the POST request, insertRegistration(sessionId, memberId) and 201 with a Location containing sessionId and registrationId.\n\nThe biggest deduction (0/1.5 on authorization) is poorly supported and probably wrong. The diagram calls canRegister(memberId, workshop:register) before the write. It also has a UML 'break [quyền bị từ chối]' frame, and by its geometry that frame contains the '403 Forbidden ... / dừng' reply, while insertRegistration comes after the frame. Break semantics already end the flow on denial, so the write only runs on the allowed path. The feedback never mentions the break frame. It asks the student to add a guarded allowed/denied branch that is effectively already there, and the section text says the ordering is missing even though the order is correct. The item reason also contradicts itself: it says the permission check is correct but gives zero without saying exactly which rubric condition failed. Because the instructor gets misleading advice on the highest-weighted item, the feedback is much less useful.",
+      "status": "QUALITY_FAIL"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 53.0
+}

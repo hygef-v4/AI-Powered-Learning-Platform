@@ -1,0 +1,142 @@
+[
+  {
+    "dataset": "badminton-booking",
+    "case": "01-complete",
+    "schemaSha256": "C38585030971E2D5E95AD3633506EFCE208A07FDE76C9A7B6EFD4A6169E61926",
+    "promptSha256": "C9E04E21328B3EB6119EBF1C5ECD31B0AADB19926E605D6685F9AA3E74708A76",
+    "targetedCase": true
+  },
+  {
+    "dataset": "badminton-booking",
+    "case": "02-missing-exception-rule",
+    "schemaSha256": "C38585030971E2D5E95AD3633506EFCE208A07FDE76C9A7B6EFD4A6169E61926",
+    "promptSha256": "2428FBC9495AF71A504C51760D99F6CD0FF00E1A1276DADB28DB0F9E49238A90",
+    "targetedCase": false
+  },
+  {
+    "dataset": "badminton-booking",
+    "case": "03-one-normal-flow",
+    "schemaSha256": "C38585030971E2D5E95AD3633506EFCE208A07FDE76C9A7B6EFD4A6169E61926",
+    "promptSha256": "D9888790338209770E28116D0470E09093029215412041111B40F3E8D2FF858A",
+    "targetedCase": true
+  },
+  {
+    "dataset": "badminton-booking",
+    "case": "04-solid-include",
+    "schemaSha256": "C38585030971E2D5E95AD3633506EFCE208A07FDE76C9A7B6EFD4A6169E61926",
+    "promptSha256": "C668477C3481B8B9A33E32CB54C83704B5C9D06F77A5F361D3263757CE85610F",
+    "targetedCase": false
+  },
+  {
+    "dataset": "badminton-booking",
+    "case": "05-off-topic",
+    "schemaSha256": "C38585030971E2D5E95AD3633506EFCE208A07FDE76C9A7B6EFD4A6169E61926",
+    "promptSha256": "19AC991E533362D3D9E3F87DCE6D332B4A3F5B36AD6FD7A94B6CBFADD17841A6",
+    "targetedCase": true
+  },
+  {
+    "dataset": "badminton-booking",
+    "case": "06-prompt-injection",
+    "schemaSha256": "C38585030971E2D5E95AD3633506EFCE208A07FDE76C9A7B6EFD4A6169E61926",
+    "promptSha256": "3FABF1F74B09B8E55D7E9B726882CDF96E70B8DEF252720186F57210510AEE6A",
+    "targetedCase": false
+  },
+  {
+    "dataset": "badminton-booking",
+    "case": "07-empty-diagram",
+    "schemaSha256": "7FDB007084FB15099AD0C25E05697FD4672577E863373787073EE8CFCE1C9919",
+    "promptSha256": "558323E449C418CFBC2E676C03652776315681F784056F0848A72C5621D263F2",
+    "targetedCase": false
+  },
+  {
+    "dataset": "badminton-booking",
+    "case": "08-wrong-actors",
+    "schemaSha256": "C38585030971E2D5E95AD3633506EFCE208A07FDE76C9A7B6EFD4A6169E61926",
+    "promptSha256": "757B40CD0738284F9E6EA27F1E6AB7211FC4DE721AFFC05AFEF6793174A2AB11",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swd392-internship-portal",
+    "case": "swd-internship-valid-alternative",
+    "schemaSha256": "758F1D606ED45204F2B9F77078FE0EA53454E2B8F03116DFFD8BAF9F5DD2103F",
+    "promptSha256": "4C215E84C70F84205C608C6625829CC180EA692A4E3C9CD8CA96E0C9C8EFD843",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swd392-internship-portal",
+    "case": "swd-internship-wrong-guard",
+    "schemaSha256": "758F1D606ED45204F2B9F77078FE0EA53454E2B8F03116DFFD8BAF9F5DD2103F",
+    "promptSha256": "BF908CCEEC7D54A464F7C3BB3764387BEC351CCCE3AB7F9B1FEE46B295A35572",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swd392-internship-portal",
+    "case": "swd-internship-pattern-name-only",
+    "schemaSha256": "758F1D606ED45204F2B9F77078FE0EA53454E2B8F03116DFFD8BAF9F5DD2103F",
+    "promptSha256": "8E8E82D8E305B025F7C5F85D2DC77F8B4D4560482A941601A8F90158C5A7324F",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swd392-workshop-registration",
+    "case": "swd-workshop-complete",
+    "schemaSha256": "6C682B9F3F69A108863178054EA28A28F52E5659C393FB17DEB0AE09AA1A1D9B",
+    "promptSha256": "EA412EFD3BBD4ADEBAE8A3553D151FB00D80A26FEC1ABB490F57665A2EE17AE7",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swd392-workshop-registration",
+    "case": "swd-workshop-missing-fk",
+    "schemaSha256": "6C682B9F3F69A108863178054EA28A28F52E5659C393FB17DEB0AE09AA1A1D9B",
+    "promptSha256": "2EBA828495E05613EE58B784004ADA46524A4D2876701FF6E6AEE095F7EDC3AF",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swd392-workshop-registration",
+    "case": "swd-workshop-no-authorization",
+    "schemaSha256": "6C682B9F3F69A108863178054EA28A28F52E5659C393FB17DEB0AE09AA1A1D9B",
+    "promptSha256": "172C0C0EA0D4B0405709DB8FA23835681F307DF2F0C6C31D651A1036C80404FE",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swr302-lab-equipment-relations",
+    "case": "swr-lab-solid-semantic",
+    "schemaSha256": "FAEFFCCF8114B559AB5D48BFF936E2E0E37251ADBCCE6425A9FC39B1BA12DB02",
+    "promptSha256": "AE20507183CC75548A61A6D2EC7574721DA92AD35B06AB9996EB6EF4A8691D9D",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swr302-lab-equipment",
+    "case": "swr-lab-complete",
+    "schemaSha256": "21851D7E2796B92B7AF013499F386D0A73ADF613485143DD559BDB06207D160B",
+    "promptSha256": "ABE89EF1427912B9F1015A5ACC9082473C032752B13D2D9B090B073902E4BC42",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swr302-lab-equipment",
+    "case": "swr-lab-solid-required",
+    "schemaSha256": "21851D7E2796B92B7AF013499F386D0A73ADF613485143DD559BDB06207D160B",
+    "promptSha256": "B4DDA50661B287F74FCE4B0B9F41FE6BBB23881FC47A03600B9AF5F974F9F861",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swr302-lab-equipment",
+    "case": "swr-lab-wrong-secondary",
+    "schemaSha256": "21851D7E2796B92B7AF013499F386D0A73ADF613485143DD559BDB06207D160B",
+    "promptSha256": "AF267A105D9B5DBFA5777C8092C808B0BC2AFC83D55B6AF5183D708E79FC5A4C",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swr302-room-scheduling",
+    "case": "swr-room-complete",
+    "schemaSha256": "BD16B6C37D686197073F014F8E3BCB5241CF97C074A984C14EE90F39BFB45AE8",
+    "promptSha256": "D5DA06FDCDC4CAD1675B961F32BA1192486A20A6F154EB342C9AB662465BF189",
+    "targetedCase": false
+  },
+  {
+    "dataset": "swr302-room-scheduling",
+    "case": "swr-room-vague-nfr",
+    "schemaSha256": "BD16B6C37D686197073F014F8E3BCB5241CF97C074A984C14EE90F39BFB45AE8",
+    "promptSha256": "1758B558F84378A7BF890B2246CF5C73BFAE71ACCE71DE15D869B409FD7AEB62",
+    "targetedCase": false
+  }
+]

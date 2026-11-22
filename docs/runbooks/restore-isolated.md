@@ -31,7 +31,7 @@ openssl pkey -in private-key.pem -pubout -out public-key.pem
 
 4. Kiểm theo danh sách dưới đây trên database tạm (script in lệnh `psql` để kết nối).
 5. Lưu tệp bằng chứng `restore-evidence-<thời điểm>.txt` do script tạo, kèm kết quả kiểm tay.
-6. Xong thì xóa container tạm (`docker rm -f <tên>` theo lệnh script in ra) và xóa tệp dump đã giải mã.
+6. Xong thì xóa container tạm cùng anonymous volume chứa database (`docker rm -fv <tên>` theo lệnh script in ra) và thư mục tạm rỗng. Script đã xóa archive/dump/khóa sao chép, không xóa các tệp đầu vào của người vận hành.
 
 ## Danh sách kiểm sau khôi phục
 
@@ -45,8 +45,10 @@ openssl pkey -in private-key.pem -pubout -out public-key.pem
 
 ## RPO, RTO
 
-- RPO: khoảng cách giữa hai lần backup (tối đa 24 giờ với lịch hằng ngày) cộng thời gian từ lần backup cuối tới sự cố.
-- RTO: script ghi thời điểm bắt đầu và kết thúc; cộng thêm thời gian tải archive và kiểm tay. Ghi số đo thật vào bằng chứng, không cam kết trước.
+- Khoảng dữ liệu mất thực tế: thời điểm sự cố trừ `snapshotAt` của bản backup mới nhất đã xác minh có thể phục hồi. Không cộng thêm chu kỳ backup vào khoảng này. Lịch hằng ngày không bảo đảm mức mất tối đa 24 giờ nếu backup lỗi liên tiếp. Mục tiêu RPO được chốt riêng và so với số đo thực tế.
+- RTO thực tế: thời điểm dịch vụ được phục hồi và kiểm chứng sử dụng được trừ thời điểm bắt đầu sự cố. Script chỉ đo một phần (giải mã và khôi phục database); phải ghi thêm thời gian phát hiện/xử lý, tải archive, khởi động ứng dụng và kiểm quyền/bài nộp/điểm. Không gọi riêng thời gian `pg_restore` là RTO toàn hệ thống.
+
+Script chờ PostgreSQL sẵn sàng tối đa 60 giây (`RESTORE_READY_TIMEOUT_SECONDS` có thể đổi thành số nguyên dương). Container thoát sớm hoặc quá hạn làm script exit khác 0, dọn tệp nhạy cảm và container tạm của lần chạy. Chạy thành công giữ database tạm để kiểm theo checklist; người vận hành xóa sau khi kiểm xong.
 
 ## Khi cần khôi phục production
 

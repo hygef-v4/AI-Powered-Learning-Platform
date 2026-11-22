@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swr302-lab-equipment-relations",
+  "case_id": "swr-lab-solid-semantic",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:56:01.700374+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The grader covers all 13 applicable items and awards credit for the required actor links, the correct include and extend directions, and the after-hours condition despite the solid arrows. The business-rule feedback is slightly imprecise. BR2 identifies who can approve, while step 4a establishes that approval is required before confirmation and supports full credit.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The feedback matches the system boundary, actor links, four ellipse use cases, and correctly directed include and extend relationships. Both edges use dashed=0, and the rubric grades their labels, directions, and the after-hours condition. The table confirms Sinh viên as primary actor, both named secondary actors, technician approval before overnight confirmation, and no loan record or reservation when the eligibility service times out.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The item-level feedback supports full credit with concrete evidence, including the correct «include» and «extend» directions, technician approval before confirmation, and the timeout ending without a booking or equipment hold. No material deductions need explaining. The feedback could still suggest making BR2 explicit about requiring approval for every after-hours return, as the alternate flow already does.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 30.2
+}

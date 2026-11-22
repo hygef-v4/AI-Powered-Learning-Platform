@@ -1,0 +1,36 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "04-solid-include",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:52:27.653505+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "All 13 applicable items were scored, and each score matches the rubric and the submission. In the diagram, the system rectangle 'Hệ thống đặt sân cầu lông' spans x 200–620, and all three actors sit outside it (Khách hàng at x=60, Chủ sân and Cổng thanh toán at x=720). Every use case uses the ellipse style. Khách hàng connects to Xem lịch sân trống, Đặt sân and Hủy đặt sân. Both secondary actors and all four required use cases are present. The include/extend item correctly gets 0: the edges carry <<include>> and <<extend>> labels, but their style ('endArrow=open;html=1;') has no dashed setting, and the rubric says solid lines earn no points. In the spec, all items get full marks, which is justified. The name and actors are correct, and the precondition, postcondition and trigger are clear. Normal flows for both hourly and weekly booking appear (0.5 total). The alternative flow handles a full time slot. The exception flow covers a failed payment and the 10-minute hold expiring. The business rules cover hold time, cancellation and refund, and the minimum number of weeks. The grader added no requirements of its own and assumed no point split beyond the 0.25 per flow the rubric states. Evidence and reasons are specific and tied to the right blocks. One small flaw: the summary phrase 'nét liền thay vì nét đứt có nhãn' could be read as saying the labels are missing, though the section and item feedback make clear the labels are there.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "The grading claims match the submission. In the diagram, the 'sys' rectangle spans x=200–620, and all three actors (Khách hàng at x=60, Chủ sân and Cổng thanh toán at x=720) sit outside it. That supports full marks for the boundary item. All five use cases use the ellipse style, so the oval item is correctly awarded. The <<include>> edge (Đặt sân→Thanh toán) and <<extend>> edge (Hủy đặt sân→Thanh toán) are labelled, but their style is only 'endArrow=open;html=1;' with no dashed=1. They are therefore solid lines, and the 0 for the dashed-line item is correct. Khách hàng connects to Xem lịch sân trống, Đặt sân and Hủy đặt sân. Chủ sân connects to Xác nhận lịch đặt and Đặt sân, and Cổng thanh toán connects to Thanh toán. These links back the primary-actor, secondary-actor and four-use-case items. For the specification table, the feedback correctly reports the name and actors, the precondition (logged in, free slot) and postcondition (Chờ xác nhận plus email), and the trigger. It also correctly reports both normal flows (hourly and weekly), alternative flow 2a, exceptions 3a and 3b (payment failure and the 10-minute timeout), and business rules BR1–BR3. No claim about missing, present or incorrect evidence contradicts the submission. The overall and section feedback is consistent with the item scores. A minor weakness is the vague wording 'được mô tả là', which does not cite the actual style attributes.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The feedback explains its one real deduction clearly. It gives 0 for the d-dashed item because both relations (Đặt sân→Thanh toán <<include>> and Hủy đặt sân→Thanh toán <<extend>>) are drawn as solid lines. The diagram XML supports this: edges e4 and e5 use only 'endArrow=open;html=1;' with no dashed style. The suggestion, to switch these lines to dashed and keep the <<include>>/<<extend>> labels, is specific and easy to do. For the full-credit items, the evidence is tied to the submission and useful to an instructor: the 10-minute hold, the 24-hour refund rule, the 4-week minimum, and the two normal flows are each credited at 0.25. The general feedback, section feedback and per-item feedback agree with each other and with the scores, with nothing contradictory or circular. Weaknesses: nextSteps is empty. The evidence says the lines are 'described as' solid instead of pointing to the missing dashed style attribute. The feedback also misses optional advice, such as questioning the semantics of Hủy đặt sân <<extend>> Thanh toán, or noting that Chủ sân has no use case for managing the court schedule (quản lý lịch sân), which the assignment describes. Prioritization is fine but thin because there is only one deduction.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 40.9
+}

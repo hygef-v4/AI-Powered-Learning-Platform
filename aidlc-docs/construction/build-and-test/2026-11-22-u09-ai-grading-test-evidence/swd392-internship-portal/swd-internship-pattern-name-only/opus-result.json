@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swd392-internship-portal",
+  "case_id": "swd-internship-pattern-name-only",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:57:05.936470+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "Every applicable item was scored correctly against the rubric. The class diagram has Student, InternshipOpening and Application. Application has a state attribute plus submit() and approve(). Both associations have multiplicity 1 at the Student or InternshipOpening end and 0..* at the Application end, so the three class items are correctly given full marks. The state diagram has start→Draft, submit→Submitted, approve→Accepted and decline→Rejected. It also puts the positive guard [transcriptAttached] on the Draft→Submitted transition, which justifies 1.25 and 1.75. The architecture answer names a modular monolith and gives responsibilities to its components (Hồ sơ, Danh mục vị trí, Thông báo). It ties the choice to both 300 applications per week and the two-person team. It also gives a specific trade-off (background email work competing with the submit API for DB connections) with a matching fix (separate connection pools and a concurrency limit). Full marks for both items are therefore correct. Transactional Outbox gets the separate 0.25 for the name. The mechanism item correctly gets 0 because the text is cut off, and it is correctly flagged requiresReview, as the rubric requires for truncated text. The Strategy item correctly gets full marks: two implementations with the right 60/90 thresholds and selection through a type-to-implementation map. The grader added no extra requirements and made no deductions that contradict a criterion. The summary and section feedback match the item scores.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "All of the grader's material claims match the submission. Class diagram: Student, Application and InternshipOpening are present. Application has 'state: ApplicationState' plus submit() and approve(). In the edge XML, the '1' label sits at the Student/Opening source end (x=-0.8) and '0..*' at the Application target end (x=0.8), so the multiplicity claim is correct. State diagram: the XML confirms start→Draft, 'submit [transcriptAttached]' on Draft→Submitted, approve→Accepted and decline→Rejected, so full credit for paths and guard is justified. Architecture: the modular monolith with responsibilities for Hồ sơ/Danh mục/Thông báo, the reasoning from 300 applications/week and the two-person team, and the trade-off of database connection contention mitigated by a separate pool and a concurrency limit are all quoted faithfully. Patterns: Transactional Outbox is named, and its mechanism text is cut off right after the name ('[Bản đính kèm bị cắt từ đây.]'). The grader correctly gave 0 for the mechanism and flagged it for instructor review, as the rubric requires. Strategy credit is grounded in the ShortTermEligibility (60) and LongTermEligibility (90) implementations and the type-based mapping in ApplicationService. No contradictions or unsupported claims found.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "The feedback explains the only material deduction, p-notification at 0/0.75. It says the Transactional Outbox description is cut off right after the pattern name, so the readable evidence shows neither storing the event in the same transaction as the state update nor background resending after a failure. It gives a specific, feasible fix: write the event to the outbox in the same transaction that updates the application, then have a background job resend unsent events. As the rubric requires for truncated text, it sets requiresReview with a clear reason, which helps the instructor. The full-credit items are backed by concrete evidence: - **Class diagram:** 1 and 0..* multiplicities, plus state, submit() and approve(). - **State diagram:** the submit [transcriptAttached] guard on Draft → Submitted. - **Architecture:** a modular monolith tied to 300 applications/week and the two-person team. The tradeoff is the email job competing for DB connections, mitigated with a separate pool and a concurrency limit. - **Strategy:** ShortTermEligibility at 60 credits and LongTermEligibility at 90, chosen through a mapping by internship type. The summary is consistent across sections and is not vague or contradictory. Minor weaknesses: nextSteps is empty, the section-level comments are brief, and the feedback does not ask the student to resubmit the full attachment.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 40.5
+}

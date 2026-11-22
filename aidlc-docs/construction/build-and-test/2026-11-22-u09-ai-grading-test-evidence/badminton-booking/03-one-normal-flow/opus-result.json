@@ -1,0 +1,36 @@
+{
+  "assignment_id": "badminton-booking",
+  "case_id": "03-one-normal-flow",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_FAIL",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:51:46.742425+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.7,
+      "threshold": 0.8,
+      "reason": "The grader scored all 13 applicable items. Nearly every score matches the rubric and the evidence. Diagram items: all full marks are justified. The boundary rectangle 'Hệ thống đặt sân cầu lông' spans x 200–620 and the actors sit outside it at x 60 and x 720. The use cases use the ellipse style. Both include and extend edges are dashed=1 and carry «include»/«extend» labels. Khách hàng connects to Xem lịch sân trống, Đặt sân and Hủy đặt sân. Chủ sân and Cổng thanh toán are both present, and all four required use cases appear. The grader added no notation requirements of its own. Spec items: name/actors, pre/postcondition, trigger, alternative flow (2a, slot already full), exception flows (3a payment failure, 3b 10-minute hold timeout) and business rules (BR1–BR3) all get full marks, and the cited content supports this. The main weakness is the normal-flow item (ac8de433). The rubric says each of the two flows is worth 0.25. The submission's single flow is 'chọn sân, ngày và khung giờ → giữ chỗ → thanh toán → lưu lịch', which in substance describes a one-off hourly booking. A partial 0.25 for that flow is defensible, and only the weekly fixed-booking flow is clearly missing. The grader gave 0/0.5 and claimed that neither the hourly nor the weekly flow was described. That ignores the per-flow split the rubric itself states and is likely too harsh. The feedback is otherwise specific and consistent, with a clear suggestion for adding the missing flows.",
+      "status": "QUALITY_FAIL"
+    },
+    "feedback_groundedness": {
+      "score": 0.9,
+      "threshold": 0.8,
+      "reason": "Nearly every claim in the grading matches the submission. For the diagram, the sys rectangle (x=200–620) holds the name 'Hệ thống đặt sân cầu lông', and the actors at x=60 and x=720 sit outside it. All use cases use the ellipse style. Edges e4 <<include>> and e5 <<extend>> both have dashed=1 and the right labels. Khách hàng connects to Xem lịch sân trống, Đặt sân and Hủy đặt sân. Chủ sân and Cổng thanh toán are present, and all four required use cases appear. For the spec table, the claims about name and actors, precondition and postcondition, trigger, alternative flow 2a, exception flows 3a/3b and business rules BR1–BR3 all match the role fields. The grader is right that the normal flow is one generic process, with no separate hourly and weekly flows. Giving zero there is debatable: the generic flow (choose court, date and time slot) is in effect a single hourly booking and could justify partial credit for that flow. This is a small harshness issue. No feedback claim contradicts the evidence.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.7,
+      "threshold": 0.8,
+      "reason": "The feedback is clear and well organized. The summary, section notes, strengths and improvements all point to the one deduction, the missing two normal flows (s-normal), so it is well prioritized for the instructor. Each item cites concrete evidence from the diagram XML and the spec table, such as the boundary rectangle 'sys', the ellipse use cases, the dashed <<include>>/<<extend>> edges, the 10-minute hold and the 24-hour refund rule. The full-credit awards check out against the submission. The suggestion for s-normal is specific and doable: write one flow for a single hourly booking and a separate flow for a weekly recurring booking with a number of weeks. Shortcomings: 1) The zero for s-normal is explained as 'neither flow is described', but the generic flow (choose court, date and time slot, hold, pay) is in effect the hourly booking flow. Since the rubric gives 0.25 per flow, partial credit was defensible, and the stated reason is somewhat overstated against the cited evidence. 2) This borderline call is not marked requiresReview. 3) nextSteps is empty. 4) It does not mention the odd 'Hủy đặt sân <<extend>> Thanh toán' relationship. That would not cost points under the notation item, but the instructor would find it useful. Overall the feedback is useful and specific, but the main deduction's explanation is a little harsh.",
+      "status": "QUALITY_FAIL"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 45.5
+}

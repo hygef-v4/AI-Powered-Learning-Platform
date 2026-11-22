@@ -1,0 +1,36 @@
+{
+  "assignment_id": "swd392-internship-portal",
+  "case_id": "swd-internship-valid-alternative",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_PASS",
+  "judge_provider": "claude",
+  "judge_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "judge_version": "2.1.330 (Claude Code)",
+  "evaluated_at": "2026-11-22T08:55:49.997017+00:00",
+  "reported_models": [
+    "claude-opus-5-5"
+  ],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "All ten applicable items were scored, and every full-credit award is backed by the submission. Class diagram: Student, InternshipOpening and Application are all present. Application has state: ApplicationState plus submit() and approve(). Both associations put the '1' label next to Student or InternshipOpening and '0..*' next to Application, which matches the multiplicity rule. State diagram: the start node leads to Draft, then 'submit [transcriptAttached]' leads to Submitted, then approve leads to Accepted and decline leads to Rejected. That covers every path, and the guard is positive and on the correct transition. Architecture: modular monolith with responsibilities split across Hồ sơ, Danh mục vị trí and Thông báo. The choice is justified by both the 300 applications/week load and the two-person team. The trade-off is specific (the background email job competes with the submit API for database connections) and the fix fits the portal (separate connection pools, a concurrency limit on sending). Patterns: Transactional Outbox is named. The submission shows both the outbox write in the same transaction as the Submitted update and background retry with backoff. Strategy has two concrete implementations (60 and 90 credits) and selects one through a mapping on the opening type. The grader added no requirements and contradicted no criterion. Its feedback and evidence agree with the scores and cite the right blocks. One small gap: the improvements and nextSteps lists are empty, which is acceptable for a perfect submission.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 1.0,
+      "threshold": 0.8,
+      "reason": "Every feedback claim matches the submission. Class diagram: the XML has Student, Application and InternshipOpening. Application has 'state: ApplicationState' plus submit() and approve(). Both association edges put '1' near Student or InternshipOpening (x=-0.8, the source end) and '0..*' near Application (x=0.8, the target end), so the multiplicities are correct. State diagram: the XML shows startState → Draft, 'submit [transcriptAttached]' on Draft → Submitted, then 'approve' to Accepted and 'decline' to Rejected. That supports full marks for the paths and for the positive guard on the correct transition. Architecture: the modular monolith paragraph gives responsibilities for Hồ sơ, Danh mục vị trí and Thông báo, cites both the 300 applications per week and the two-person team, and names a concrete trade-off (background email jobs competing for DB connections) with a fitting mitigation (separate connection pools and a concurrency limit). Patterns: the Transactional Outbox is named, and the text covers writing the outbox row in the same transaction as the move to Submitted and retrying with increasing backoff. Strategy is described with ShortTermEligibility (60 credits) and LongTermEligibility (90 credits), and ApplicationService picks one through a mapping by internship type. The evidence text, scores and full-mark summary all match the submission, and no feedback claim contradicts or misstates it. The only minor issue is that the section partIds cannot be traced to the rubric's partHeadings, which does not affect the accuracy of the feedback.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The grading is accurate. The class diagram contains Student, InternshipOpening and Application. Application has state: ApplicationState, submit() and approve(). Both associations place 1 at the Student/Opening end and 0..* at the Application end. The state diagram has start→Draft, 'submit [transcriptAttached]', approve→Accepted and decline→Rejected. The architecture is a modular monolith with three modules, justified by the 300 applications/week and the two-person team. Its trade-off is connection-pool contention, mitigated by separate pools and a concurrency limit. The Outbox write happens in the same transaction, with retry and backoff. The Strategy pattern has ShortTerm (60 credits) and LongTerm (90 credits) implementations, chosen through a mapping table. Full marks are justified, so having no deductions to explain is consistent. Each item gives specific evidence tied to the right block ID and a clear reason, which makes the grade easy for the instructor to check. Shortcomings: the improvements and nextSteps lists are empty, with no optional enrichment suggested. For example, the feedback could have noted that no decline() operation appears in the class diagram, or that credit eligibility is not linked to the submit guard. The section partIds do not match the rubric IDs, which may confuse the mapping. The summary feedback is somewhat generic. There is no vague, circular or contradictory advice.",
+      "status": "QUALITY_PASS"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 42.5
+}

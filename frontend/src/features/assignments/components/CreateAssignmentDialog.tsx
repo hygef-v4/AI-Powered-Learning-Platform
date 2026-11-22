@@ -11,7 +11,9 @@ import { checkImportFiles, IMPORT_ACCEPT, importKindOf } from "../model/importFi
 import { savePendingImport } from "../model/pendingImports";
 import { assignmentsApi, type CreateInput } from "../api";
 import { Choice, ChoiceHint as Hint } from "./Choice";
-import { describeError, requestRef } from "../model/format";
+import { describeError, parseQuestionCount, parseQuestionPoints, requestRef, requiresAiDraftReview } from "../model/format";
+import { QuestionCountField } from "./QuestionCountField";
+import { QuestionPointsField } from "./QuestionPointsField";
 import { extractTemplateText } from "../model/templateText";
 import { type AiDraft, type AssignmentDetail, type CopySource, type Material } from "../model/types";
 import { msg } from "@/i18n/msg";
@@ -21,8 +23,7 @@ type Props = {
   /** Lớp đích (bài của lớp) hoặc môn (đề mẫu của môn). */
   target: { kind: "class"; classId: string; groupSupported: boolean } | { kind: "subject"; subjectId: string };
   onClose: () => void;
-  /** Bài đã tạo (đã nhập sẵn tệp DOCX, hoặc đã ghi đề AI lên trang). */
-  onCreated: (assignment: AssignmentDetail) => void;
+  onCreated: (assignment: AssignmentDetail, proposalId?: string) => void;
 };
 
 /** Cách tạo đề (yêu cầu 2026-11-10): đề mới, copy đề có sẵn, hoặc để AI soạn. */
@@ -32,7 +33,7 @@ type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
 const TITLE_MAX = 200;
 const POLL_MS = 2000;
 const MAX_SOURCE_FILES = 3;
-/** Đề AI luôn tổng 10 điểm (yêu cầu 2026-11-10); số câu để AI tự quyết cho popup gọn. */
+/** Tổng mặc định khi giảng viên dùng bố cục đề mẫu hoặc soạn đề mới. */
 const AI_TARGET_POINTS = 10;
 
 /** Một câu ngắn dưới mỗi lựa chọn (yêu cầu 2026-11-10). */
@@ -77,6 +78,9 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const [aiRunning, setAiRunning] = useState(false);
   const [aiTemplateId, setAiTemplateId] = useState("");
   const [aiTemplateFile, setAiTemplateFile] = useState<File | null>(null);
+  const [preserveTemplatePoints, setPreserveTemplatePoints] = useState(false);
+  const [questionCountText, setQuestionCountText] = useState("");
+  const [questionPointsText, setQuestionPointsText] = useState("");
   const [materials, setMaterials] = useState<Material[] | null>(null);
   const [chosen, setChosen] = useState<string[]>([]);
   const [uploads, setUploads] = useState<SourceUpload[]>([]);
@@ -104,6 +108,11 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const picked = candidates.find((item) => item.id === sourceId);
   const subjectTemplates = (sources ?? []).filter((source) => source.kind === "SUBJECT").flatMap((source) => source.assignments);
   const templateName = aiTemplateFile?.name ?? subjectTemplates.find((item) => item.id === aiTemplateId)?.title;
+  const canPreserveTemplatePoints = !!aiTemplateId && !aiTemplateFile && kind !== "PRACTICE";
+  const keepTemplatePoints = canPreserveTemplatePoints && preserveTemplatePoints;
+  const showQuestionPoints = kind !== "PRACTICE" && !keepTemplatePoints;
+  const questionPoints = showQuestionPoints ? parseQuestionPoints(questionPointsText) : [];
+  const questionCount = keepTemplatePoints || questionPoints?.length ? undefined : parseQuestionCount(questionCountText);
   const locked = busy || !!created;
   // Bài đã tạo cho AI: không đổi tiêu đề, cách tạo, loại nữa; vẫn sửa được mẫu đề, tài liệu, yêu cầu để thử lại.
   const setupLocked = locked || !!aiCreated;
@@ -203,7 +212,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   }
 
   /** AI soạn trên bài vừa tạo, chờ xong rồi ghi đề lên trang; đề lỗi thì bỏ bản nháp và báo lý do. */
-  async function draftWithAi(assignment: AssignmentDetail): Promise<AssignmentDetail> {
+  async function draftWithAi(assignment: AssignmentDetail): Promise<void> {
     let formatText: string | undefined;
     if (aiTemplateFile) {
       const imported = await assignmentsApi.importDocx(assignment.id, aiTemplateFile);
@@ -216,7 +225,11 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       sourceFileRefs: uploads.flatMap((item) => (item.fileRef ? [item.fileRef] : [])),
       formatText,
       templateAssignmentId: aiTemplateFile ? undefined : aiTemplateId || undefined,
-      options: { profile: "AUTO", language, targetPoints: AI_TARGET_POINTS },
+      preserveTemplateQuestionPoints: keepTemplatePoints || undefined,
+      options: { profile: "AUTO", language,
+        targetPoints: keepTemplatePoints || questionPoints?.length ? undefined : AI_TARGET_POINTS,
+        ...(questionCount ? { questionCount } : {}),
+        ...(questionPoints?.length ? { questionPoints } : {}) },
       requestRef: requestRef(),
     });
     while (draft.status === "PENDING") {
@@ -231,7 +244,11 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       const reason = validation?.issues.find((issue) => issue.severity === "ERROR")?.message;
       throw new Error(reason ? msg("assignments.components.CreateAssignmentDialog.theAiCouldNotProduce", { reason: String(reason) }) : msg("assignments.components.CreateAssignmentDialog.theAiCouldNotProduce2"));
     }
-    return assignmentsApi.applyAiDraft(assignment.id, draft.draftId, assignment.version, true, false);
+    if (aiTemplateId || formatText || requiresAiDraftReview(draft)) {
+      onCreated(assignment, draft.draftId);
+      return;
+    }
+    onCreated(await assignmentsApi.applyAiDraft(assignment.id, draft.draftId, assignment.version, true, false));
   }
 
   async function submit() {
@@ -246,6 +263,14 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     }
     if (ai && uploads.some((item) => item.status !== "READY")) {
       setError(msg("assignments.components.CreateAssignmentDialog.waitForUploadsToFinish"));
+      return;
+    }
+    if (ai && questionPoints === null) {
+      setError(msg("assignments.components.QuestionPointsField.invalid"));
+      return;
+    }
+    if (ai && questionCount === null) {
+      setError(msg("assignments.components.AiDraftDialog.theNumberOfQuestionsMust"));
       return;
     }
     if (method === "NEW" && file && importKindOf(file) !== "DOCX") {
@@ -275,7 +300,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
         setAiCreated(assignment);
         setAiRunning(true);
         try {
-          onCreated(await draftWithAi(assignment));
+          await draftWithAi(assignment);
         } finally {
           setAiRunning(false);
         }
@@ -376,9 +401,9 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
                   <SearchPicker id="ai-template" label={msg("assignments.components.CreateAssignmentDialog.template")} placeholder={msg("assignments.components.CreateAssignmentDialog.chooseATemplateOrUpload")} disabled={busy}
                     optionIcon="assignment" loading={sources === null} emptyText={msg("assignments.components.CreateAssignmentDialog.theSubjectHasNoTemplates")} onOpen={loadSources}
                     options={subjectTemplates.filter((item) => item.id !== aiTemplateId).map((item) => ({ id: item.id, label: item.title }))}
-                    onPick={(id) => { setAiTemplateFile(null); setAiTemplateId(id); }}
+                    onPick={(id) => { setAiTemplateFile(null); setAiTemplateId(id); setPreserveTemplatePoints(false); }}
                     selected={templateName ? { label: templateName, clearLabel: msg("assignments.components.CreateAssignmentDialog.removeTemplate"),
-                      onClear: () => { setAiTemplateId(""); setAiTemplateFile(null); } } : undefined}
+                      onClear: () => { setAiTemplateId(""); setAiTemplateFile(null); setPreserveTemplatePoints(false); } } : undefined}
                     footer={{ label: msg("assignments.components.CreateAssignmentDialog.uploadATemplate"), icon: "upload_file", onPick: () => templateInput.current?.click() }} />
                   <input ref={templateInput} type="file" accept=".docx" hidden aria-label={msg("assignments.components.CreateAssignmentDialog.uploadATemplate")} data-testid="ai-format"
                     onChange={(event) => {
@@ -387,9 +412,30 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
                       if (!templateFile) return;
                       setAiTemplateId("");
                       setAiTemplateFile(templateFile);
+                      setPreserveTemplatePoints(false);
                     }} />
                 </Field>
               </div>
+              {canPreserveTemplatePoints && (
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={keepTemplatePoints} disabled={busy}
+                    onChange={(event) => setPreserveTemplatePoints(event.target.checked)}
+                    data-testid="create-assignment-preserve-template-points" />
+                  {msg("assignments.components.CreateAssignmentDialog.preserveTemplatePoints")}
+                </label>
+              )}
+              {!keepTemplatePoints && (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <QuestionCountField id="create-ai-question-count"
+                    value={questionPoints?.length ? String(questionPoints.length) : questionCountText}
+                    onChange={setQuestionCountText} invalid={questionCount === null}
+                    disabled={busy || Boolean(questionPoints?.length)} />
+                  {showQuestionPoints && (
+                    <QuestionPointsField id="create-ai-question-points" value={questionPointsText}
+                      onChange={setQuestionPointsText} points={questionPoints} disabled={busy} />
+                  )}
+                </div>
+              )}
               <Field label={msg("assignments.components.CreateAssignmentDialog.references")} htmlFor="ai-reference">
                 <ReferencePicker materials={materials ?? []} chosen={chosen} uploads={uploads} disabled={busy}
                   canUpload={!!sourcePolicy && uploads.length < MAX_SOURCE_FILES}

@@ -1,0 +1,34 @@
+{
+  "assignment_id": "swd392-workshop-registration",
+  "case_id": "swd-workshop-missing-fk",
+  "status": "EVALUATED",
+  "quality_status": "QUALITY_FAIL",
+  "judge_provider": "codex",
+  "judge_model": "gpt-6.2-sol",
+  "reasoning_effort": "high",
+  "judge_version": "codex-cli 0.171.0",
+  "evaluated_at": "2026-11-22T06:54:02.516248+00:00",
+  "reported_models": [],
+  "metrics": {
+    "rubric_adherence": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The grader covers all 12 applicable criteria and correctly deducts for the missing REGISTRATION.session_id foreign key. The authorization deduction is incorrect. The API checks workshop:register before insertion, and the guarded break returns 403 and ends the denied flow. The rubric does not require a separate allowed branch.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_groundedness": {
+      "score": 0.8,
+      "threshold": 0.8,
+      "reason": "The grading correctly identifies the conceptual ERD, the declared member_id foreign key, the missing session_id foreign key, the composite UNIQUE constraint, and the REST success flow. It incorrectly denies authorization credit. The XML places the workshop:register check before insertRegistration and shows a dashed 403 response inside a guarded break frame, which ends the denied path before the write. The rubric does not require a separate allowed branch.",
+      "status": "QUALITY_PASS"
+    },
+    "feedback_quality": {
+      "score": 0.7,
+      "threshold": 0.8,
+      "reason": "The feedback correctly identifies the missing REGISTRATION.session_id foreign key and gives the exact reference to add. It also explains why the persistence call and 201 response earn credit independently. The largest deduction is poorly justified: the sequence already checks workshop:register before insertion and places the 403 response inside a guarded break labeled to stop the flow. An explicit success guard could improve readability, but the feedback does not explain why the existing break fails the rubric.",
+      "status": "QUALITY_FAIL"
+    }
+  },
+  "judge_calls": 3,
+  "seconds": 27.6
+}

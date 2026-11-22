@@ -349,7 +349,8 @@ class DocumentModelServiceTest {
                 + "<mxCell id=\"e\" value=\"has\" edge=\"1\" source=\"a\" target=\"b\" parent=\"1\"/></root></mxGraphModel>";
         String packed = "<mxfile><diagram id=\"p\" name=\"Lớp\">" + deflate(model) + "</diagram></mxfile>";
         String compact = service.compactDiagramXml(packed);
-        assertThat(compact).contains("Trang 1 \"Lớp\"", "hình a (chữ nhật): Order", "nối a -> b: has");
+        assertThat(compact).contains("Trang 1 \"Lớp\"", "hình a (chữ nhật): Order",
+                "nối \"Order\" [a] -> \"Item\" [b]: has");
         assertThat(DiagramXml.countCells(packed)).isEqualTo(3);
     }
 
@@ -386,7 +387,8 @@ class DocumentModelServiceTest {
                 + " style=\"endArrow=open;html=1;\" edge=\"1\" source=\"c\" target=\"b\" parent=\"1\"/>"
                 + "</root></mxGraphModel>";
         String compact = service.compactDiagramXml(model);
-        assertThat(compact).contains("nối a -> b (nét đứt): <<include>>", "nối c -> b (nét liền): <<extend>>");
+        assertThat(compact).contains("nối \"Book\" [a] -> \"Pay\" [b] (nét đứt): <<include>>",
+                "nối \"Cancel\" [c] -> \"Pay\" [b] (nét liền): <<extend>>");
         assertThat(DiagramXml.clean("<b>Đặt</b> sân<br/>&lt;i&gt;")).isEqualTo("Đặt sân <i>");
     }
 
