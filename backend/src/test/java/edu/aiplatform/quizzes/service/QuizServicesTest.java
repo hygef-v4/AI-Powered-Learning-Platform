@@ -32,6 +32,7 @@ import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuestionContent;
 import edu.aiplatform.quizzes.model.QuestionOption;
 import edu.aiplatform.quizzes.model.QuestionScope;
+import edu.aiplatform.quizzes.model.QuizRules;
 import edu.aiplatform.quizzes.model.Violation;
 import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.contract.ISubjectQuery;
@@ -566,6 +567,18 @@ class QuizServicesTest {
         assertThat(publication.retire(teacher, draft.quiz().id(), reason, draft.quiz().version()).quiz().retiredReason())
                 .isEqualTo("Lưu trữ");
         assertThat(audits.get(audits.size() - 1).details()).containsEntry("reason", "Lưu trữ");
+    }
+
+    @Test
+    void retireRejectsATooLongReasonAsTooLongNotAsMissing() {
+        QuizDetail draft = classQuizWith(bank(true));
+        RuleViolationException rejected = (RuleViolationException) api(() -> publication.retire(teacher,
+                draft.quiz().id(), "x".repeat(QuizRules.MAX_REASON + 1), draft.quiz().version()));
+
+        assertThat(rejected.getMessage()).isEqualTo("Lý do ngưng quiz quá dài");
+        assertThat(rejected.listViolations()).extracting(Violation::code).containsExactly("TOO_LONG");
+        assertThat(publication.retire(teacher, draft.quiz().id(), "x".repeat(QuizRules.MAX_REASON),
+                draft.quiz().version()).quiz().status()).isEqualTo(QuizStatus.RETIRED);
     }
 
     @Test
