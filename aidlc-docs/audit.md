@@ -16828,3 +16828,11 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Commit theo yêu cầu người dùng.
 
 ---
+## SEO — push và mở PR
+**Timestamp**: 2026-11-22T15:28:03Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Push và mở PR"
+**AI Response**: "Push nhánh feat/seo lên origin và mở PR vào staging. Không tự merge, không deploy."
+**Context**: Thao tác Git theo yêu cầu người dùng.
+
+---

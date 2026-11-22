@@ -9,7 +9,7 @@ Người dùng: "tôi muốn làm seo cho trang web"; chọn nền tảng kỹ t
 - [x] Code Generation: 11/11 bước. Landing `/` dựng phía máy chủ, robots/sitemap động, noindex khu vực đăng nhập, canonical, JSON-LD, meta Search Console, staging `X-Robots-Tag` và `SEO_INDEXABLE=false`.
 - [x] Build and Test: ESLint, tsc đạt; Vitest 1.203/1.203; dev server kiểm robots, sitemap, meta, giao diện desktop/375 px. `next build` dừng ở cảnh báo lỗ hổng của Next.js 16.4.3 sau khi biên dịch — chờ người dùng quyết định.
 
-Người dùng yêu cầu commit cục bộ (2026-11-22). Chưa push/deploy.
+Người dùng yêu cầu commit cục bộ, push và mở PR vào staging (2026-11-22). Không tự merge; chưa deploy.
 
 ## Đồng bộ AI-DLC và năm luồng nghiệp vụ · 2026-11-22
 
