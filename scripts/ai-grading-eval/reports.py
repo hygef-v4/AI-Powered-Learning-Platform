@@ -123,7 +123,8 @@ def compare_reports(current: dict, baseline: dict, drop_tolerance=0.05) -> list[
 
     left, right = index(baseline), index(current)
     old_meta, new_meta = baseline["metadata"], current["metadata"]
-    judge_keys = ("judge_provider", "judge_model", "judge_model_versions", "judge_cli_or_model_version")
+    judge_keys = ("judge_provider", "judge_model", "judge_model_versions", "judge_cli_or_model_version",
+                  "judge_reasoning_effort")
     same_judge = all(old_meta.get(key) == new_meta.get(key) for key in judge_keys)
     same_contract = current["thresholds"] == baseline["thresholds"] and all(
         old_meta.get(key) == new_meta.get(key) for key in ("metric_version", "dataset_hash")

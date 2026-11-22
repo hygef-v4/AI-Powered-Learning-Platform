@@ -101,7 +101,8 @@ def test_selector_never_substitutes_explicit_choice_and_skips_unapproved_cloud()
     assert select_judge("auto", order, {"claude"}, probe).provider == "claude"
 
 
-def test_codex_uses_stdin_and_stops_on_unexpected_tool_actions(monkeypatch, tmp_path):
+@pytest.mark.parametrize(("model", "effort"), [("gpt-6.2-sol", "high"), ("gpt-6-luna", None)])
+def test_codex_pins_sol_effort_and_keeps_cli_isolated(monkeypatch, tmp_path, model, effort):
     from subprocess import CompletedProcess
 
     from judges import CodexJudge, JudgeError, JudgeInfo
@@ -116,11 +117,14 @@ def test_codex_uses_stdin_and_stops_on_unexpected_tool_actions(monkeypatch, tmp_
         assert cwd != tmp_path and not (cwd / ".git").exists()
         assert args[args.index("--sandbox") + 1] == "read-only"
         assert "--ignore-user-config" in args
+        assert args[args.index("--model") + 1] == model
+        overrides = [arg for arg in args if arg.startswith("model_reasoning_effort=")]
+        assert overrides == ([f'model_reasoning_effort="{effort}"'] if effort else [])
         (cwd / "answer.txt").write_text("answer", encoding="utf-8")
         return CompletedProcess(args, 0, '{"item":{"type":"mcp_tool_call"}}', "")
 
     monkeypatch.setattr("judges.run_cli", fake)
-    judge = CodexJudge(JudgeInfo("codex", True, True, "ChatGPT login", "sol", executable="codex.exe"), 5, 6)
+    judge = CodexJudge(JudgeInfo("codex", True, True, "ChatGPT login", model, executable="codex.exe"), 5, 6)
     for _ in range(2):
         with pytest.raises(JudgeError, match="JUDGE_UNSAFE_TOOL"):
             judge.generate(sample)
@@ -255,3 +259,5 @@ def test_regression_distinguishes_other_judge_and_missing_case():
     assert compare_reports(dict(current, rows=[]), baseline)[0]["findings"] == ["MISSING_RUN"]
     other_judge = dict(current, metadata=dict(metadata, judge_provider="claude"))
     assert compare_reports(other_judge, baseline)[0]["findings"] == ["CROSS_JUDGE_COMPARISON"]
+    other_effort = dict(current, metadata=dict(metadata, judge_reasoning_effort="high"))
+    assert compare_reports(other_effort, baseline)[0]["findings"] == ["CROSS_JUDGE_COMPARISON"]
