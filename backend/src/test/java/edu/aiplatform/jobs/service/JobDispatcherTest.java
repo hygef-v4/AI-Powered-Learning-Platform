@@ -16,6 +16,9 @@ import edu.aiplatform.jobs.contract.RetryableJobException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.concurrent.RejectedExecutionException;
+import org.junit.jupiter.api.AfterEach;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +30,12 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class JobDispatcherTest {
 
     final IMessageSender sender = mock(IMessageSender.class);
+    final List<JobDispatcher> dispatchers = new ArrayList<>();
+
+    @AfterEach
+    void closeHandlers() {
+        dispatchers.forEach(JobDispatcher::closeHandlers);
+    }
 
     static class FakeHandler implements IJobHandler {
         final Consumer<JobMessage> body;
@@ -63,7 +72,9 @@ class JobDispatcherTest {
     }
 
     JobDispatcher dispatcher(FakeHandler handler) {
-        return new JobDispatcher(new JobHandlerRegistry(List.of(handler)), sender, Duration.ofSeconds(60));
+        JobDispatcher dispatcher = new JobDispatcher(new JobHandlerRegistry(List.of(handler)), sender, Duration.ofSeconds(60));
+        dispatchers.add(dispatcher);
+        return dispatcher;
     }
 
     static JobMessage message(int attempt) {
@@ -206,10 +217,56 @@ class JobDispatcherTest {
         assertThat(runs.get()).isEqualTo(1);
 
         release.countDown();
-        for (int i = 0; i < 50 && dispatcher.dispatch(message(0)) != JobDispatcher.Outcome.DONE; i++) {
-            Thread.sleep(20);
-        }
+        org.awaitility.Awaitility.await().atMost(Duration.ofSeconds(3))
+                .ignoreException(RejectedExecutionException.class).untilAsserted(() ->
+                        assertThat(dispatcher.dispatch(message(0))).isEqualTo(JobDispatcher.Outcome.DONE));
         assertThat(runs.get()).isGreaterThan(1);
+    }
+
+    @Test
+    void saturatedQueuePreservesUnstartedMessagesAndDoesNotBlockOtherQueues() {
+        var release = new java.util.concurrent.CountDownLatch(1);
+        var runs = new java.util.concurrent.atomic.AtomicInteger();
+        FakeHandler stuck = new FakeHandler(message -> {
+            runs.incrementAndGet();
+            while (release.getCount() > 0) {
+                try {
+                    release.await();
+                } catch (InterruptedException ignored) {
+                    // Simulate a timed-out handler that is still consuming capacity.
+                }
+            }
+        });
+        FakeHandler email = new FakeHandler(message -> { }) {
+            @Override
+            public String jobType() {
+                return JobTypes.EMAIL_SEND;
+            }
+
+            @Override
+            public JobQueue queue() {
+                return JobQueue.EMAIL;
+            }
+        };
+        var dispatcher = new JobDispatcher(new JobHandlerRegistry(List.of(stuck, email)), sender, Duration.ofSeconds(60));
+        dispatchers.add(dispatcher);
+        try {
+            assertThat(dispatcher.dispatch(message(0))).isEqualTo(JobDispatcher.Outcome.RETRIED);
+            for (int index = 0; index < 20; index++) {
+                var next = new JobMessage(1, JobTypes.DRIVE_CLEANUP, "different-" + index, Map.of(), 5, "c");
+                assertThatThrownBy(() -> dispatcher.dispatch(next)).isInstanceOf(RejectedExecutionException.class);
+            }
+            assertThat(runs.get()).isEqualTo(1);
+            assertThat(stuck.failedWith).isNull();
+            assertThat(dispatcher.dispatch(new JobMessage(1, JobTypes.EMAIL_SEND, "email", Map.of(), 0, "c")))
+                    .isEqualTo(JobDispatcher.Outcome.DONE);
+        } finally {
+            release.countDown();
+        }
+        org.awaitility.Awaitility.await().atMost(Duration.ofSeconds(3))
+                .ignoreException(RejectedExecutionException.class).untilAsserted(() ->
+                        assertThat(dispatcher.dispatch(new JobMessage(1, JobTypes.DRIVE_CLEANUP,
+                                "different-0", Map.of(), 0, "c"))).isEqualTo(JobDispatcher.Outcome.DONE));
     }
 
     @Test

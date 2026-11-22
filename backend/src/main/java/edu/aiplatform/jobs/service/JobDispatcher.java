@@ -2,14 +2,20 @@ package edu.aiplatform.jobs.service;
 
 import edu.aiplatform.jobs.contract.IJobHandler;
 import edu.aiplatform.jobs.contract.JobMessage;
+import edu.aiplatform.jobs.contract.JobQueue;
 import edu.aiplatform.jobs.contract.RetryableJobException;
 import edu.aiplatform.jobs.contract.SafeJobErrors;
 import java.time.Duration;
+import jakarta.annotation.PreDestroy;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -34,17 +40,26 @@ public class JobDispatcher {
     private final Duration defaultTimeout;
     /** Việc đang chạy theo {@code jobType:idempotencyKey}, gồm cả lần đã quá giờ mà handler chưa dừng. */
     private final Map<String, Object> running = new ConcurrentHashMap<>();
-    private final ExecutorService executorService = Executors.newCachedThreadPool(runnable -> {
-        Thread thread = new Thread(runnable, "job-handler");
-        thread.setDaemon(true);
-        return thread;
-    });
+    private final Map<JobQueue, ExecutorService> executors = new EnumMap<>(JobQueue.class);
 
     public JobDispatcher(JobHandlerRegistry registry, IMessageSender sender,
                          @Value("${platform.jobs.handler-timeout:60s}") Duration defaultTimeout) {
         this.registry = registry;
         this.sender = sender;
         this.defaultTimeout = defaultTimeout;
+        for (JobQueue queue : JobQueue.values()) {
+            int capacity = switch (queue) {
+                case TRIGGERED -> 2;
+                case AI -> 4;
+                default -> 1;
+            };
+            executors.put(queue, new ThreadPoolExecutor(capacity, capacity, 0, TimeUnit.MILLISECONDS,
+                    new SynchronousQueue<>(), runnable -> {
+                        Thread thread = new Thread(runnable, "job-handler-" + queue.name().toLowerCase(java.util.Locale.ROOT));
+                        thread.setDaemon(true);
+                        return thread;
+                    }, new ThreadPoolExecutor.AbortPolicy()));
+        }
     }
 
     public Outcome dispatch(JobMessage message) {
@@ -69,6 +84,13 @@ public class JobDispatcher {
                 return Outcome.RETRIED;
             }
             return fail(handler, message, "Hết lượt thử lại: " + describeSafely(e));
+        } catch (RejectedExecutionException e) {
+            // Capacity is infrastructure backpressure: listener requeues the original message without
+            // consuming a business retry or persisting a false terminal failure.
+            throw e;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Worker đang dừng", e);
         } catch (Exception e) {
             return fail(handler, message, describeSafely(e));
         }
@@ -85,8 +107,13 @@ public class JobDispatcher {
             throw new RetryableJobException("Lần chạy trước của việc này chưa dừng");
         }
         Future<?> future;
+        // 0 = waiting, 1 = entered handler, 2 = cancelled before entry.
+        AtomicInteger execution = new AtomicInteger();
         try {
-            future = executorService.submit(() -> {
+            future = executors.get(handler.queue()).submit(() -> {
+                if (!execution.compareAndSet(0, 1)) {
+                    return;
+                }
                 try {
                     handler.handle(message);
                 } finally {
@@ -99,8 +126,11 @@ public class JobDispatcher {
         }
         try {
             future.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
+        } catch (TimeoutException | InterruptedException e) {
             future.cancel(true);
+            if (execution.compareAndSet(0, 2)) {
+                running.remove(key, token);
+            }
             throw e;
         } catch (ExecutionException e) {
             Throwable cause = e.getCause();
@@ -109,6 +139,11 @@ public class JobDispatcher {
             }
             throw new IllegalStateException(cause);
         }
+    }
+
+    @PreDestroy
+    public void closeHandlers() {
+        executors.values().forEach(ExecutorService::shutdownNow);
     }
 
     private Outcome fail(IJobHandler handler, JobMessage message, String error) {
