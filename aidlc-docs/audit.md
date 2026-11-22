@@ -16611,3 +16611,21 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Giữ riêng dữ liệu chạy cục bộ. Rà diff và xác minh các test hồi quy liên quan.
 
 ---
+
+## KAN-211 — tự nộp lượt Quiz quá hạn khi nộp hoặc xem kết quả
+**Timestamp**: 2026-11-22T08:52:06Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa KAN-211"
+**AI Response**: "Trên nhánh fix/kan-211-overdue-quiz-attempt (từ origin/staging 210b0550): QuizAttemptService.submit tự nộp lượt đã quá hạn cộng 30 giây với AUTO_TIME_LIMIT thay vì trả 409 ATTEMPT_TIME_UP; loadResult tự nộp lượt quá hạn trước khi trả kết quả (lượt còn hạn vẫn 409 ATTEMPT_IN_PROGRESS). Thêm 2 test, cập nhật BR-U11-13/14, code-summary U11 và comment QuizTakingPage. Test quizpractice + quizzes trong container Maven: 247 ca đạt."
+**Context**: Bug fix U11, phạm vi nhỏ trong service hiện có; chưa commit/push/PR.
+
+---
+
+## Merge staging vào audit-staging và mở PR lên main
+**Timestamp**: 2026-11-22T10:40:00Z
+**Requested by:** Quang Hung
+**User Input**: "merge staging vào nhánh  này rồi resolve conflict sau đó tạo pr lên main"
+**AI Response**: "Hoàn tất merge `staging` (210b0550) đang dở: giữ phía nhánh này ở 7 hunk của aidlc-state, audit và hướng dẫn đánh giá vì staging là bản cũ hoặc rỗng. Merge tiếp `origin/staging` (fd9d42bb, KAN-211): audit.md giữ cả hai phía theo thứ tự. Push nhánh và mở PR `audit-staging` → `main`."
+**Context**: Tích hợp nhánh. Không sửa code ứng dụng khi resolve; code KAN-211 lấy nguyên từ staging.
+
+---

@@ -239,7 +239,38 @@ class QuizPracticeServicesTest {
         clock.advance(Duration.ofSeconds(15));
         assertThat(api(() -> attemptsService.saveAnswers(student, taking.attemptId(), Map.of(), 2)).readCode())
                 .isEqualTo("ATTEMPT_TIME_UP");
-        assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).readCode()).isEqualTo("ATTEMPT_TIME_UP");
+    }
+
+    @Test
+    void submittingAfterTheGraceAutoSubmitsTheSavedAnswersInsteadOfRejecting() {
+        var taking = attemptsService.start(student, quizId, classA);
+        attemptsService.saveAnswers(student, taking.attemptId(), Map.of(q1, List.of("1")), 0);
+        clock.advance(Duration.ofMinutes(10).plusSeconds(31));
+
+        var result = attemptsService.submit(student, taking.attemptId());
+
+        assertThat(result.submitMode()).isEqualTo(SubmitMode.AUTO_TIME_LIMIT);
+        assertThat(store.byId.get(taking.attemptId()).status()).isEqualTo(AttemptStatus.SUBMITTED);
+        assertThat(store.byId.get(taking.attemptId()).answers()).containsEntry(q1, List.of("1"));
+        assertThat(attemptsService.submit(student, taking.attemptId()).submitMode())
+                .as("nộp lặp trả kết quả cũ").isEqualTo(SubmitMode.AUTO_TIME_LIMIT);
+    }
+
+    @Test
+    void resultOfAnOverdueAttemptAutoSubmitsItWhileAnAttemptInTimeStaysInProgress() {
+        var taking = attemptsService.start(student, quizId, classA);
+        assertThat(api(() -> attemptsService.loadResult(student, taking.attemptId())).readCode())
+                .isEqualTo("ATTEMPT_IN_PROGRESS");
+
+        clock.advance(Duration.ofMinutes(10).plusSeconds(20));
+        assertThat(api(() -> attemptsService.loadResult(student, taking.attemptId())).readCode())
+                .as("trong 30 giây ân hạn vẫn đang làm").isEqualTo("ATTEMPT_IN_PROGRESS");
+
+        clock.advance(Duration.ofSeconds(15));
+        var result = attemptsService.loadResult(student, taking.attemptId());
+
+        assertThat(result.submitMode()).isEqualTo(SubmitMode.AUTO_TIME_LIMIT);
+        assertThat(store.byId.get(taking.attemptId()).status()).isEqualTo(AttemptStatus.SUBMITTED);
     }
 
     @Test
