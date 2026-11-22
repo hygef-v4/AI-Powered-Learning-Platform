@@ -29,6 +29,8 @@ server {
     error_page 497 =301 https://$host:8443$request_uri;
 
     include /etc/nginx/snippets/security-headers.conf;
+    # Staging trùng nội dung với production: không cho máy tìm kiếm index bất kỳ phản hồi nào.
+    add_header X-Robots-Tag "noindex, nofollow" always;
 
     # Hộp thư Mailpit (OTP, thông báo) cho nhóm kiểm thử; mật khẩu chung trong infra/staging-htpasswd.
     location /mailpit/ {

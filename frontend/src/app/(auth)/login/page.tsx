@@ -4,7 +4,7 @@ import { LoginPage } from "@/features/identity/pages/LoginPage";
 import { translateOnServer } from "@/i18n/server";
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await translateOnServer("app.auth.login.page.signIn") };
+  return { title: await translateOnServer("app.auth.login.page.signIn"), alternates: { canonical: "/login" } };
 }
 
 // LoginPage đọc ?reset=1 bằng useSearchParams nên cần Suspense để trang vẫn prerender được.
