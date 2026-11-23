@@ -17,7 +17,7 @@ Reload lấy lại version từ server, giữ quy tắc rebase/conflict và rese
 - [x] Chạy test grading cùng caller liên quan, TypeScript và ESLint.
 - [x] Tự review diff, ghi kết quả và state/audit; không commit/push/merge/deploy.
 
-Kết quả: [306 test qua, kiểm kiểu và giới hạn cache Next](../../build-and-test/2026-11-15-member-draft-refresh-fix.md).
+Kết quả: [306 test qua, kiểm kiểu và giới hạn cache Next](../../build-and-test/2026-11-15/2026-11-15-member-draft-refresh-fix.md).
 
 Security: giữ phân quyền/version phía server và khóa ghi khi dữ liệu chưa cập nhật.
 Resiliency: giữ draft qua lỗi tải tạm thời. PBT disabled theo cấu hình repo.

@@ -24,7 +24,7 @@
 Các file khi thực thi:
 
 - Plan này: checklist tổng và checklist ca.
-- `aidlc-docs/construction/build-and-test/2026-10-23-skipped-cases-results.md`: kết quả từng tiêu chí, thời gian, vai trò, fixture, đường dẫn bằng chứng, lỗi và lần chạy lại.
+- `aidlc-docs/construction/build-and-test/2026-10-23/2026-10-23-skipped-cases-results.md`: kết quả từng tiêu chí, thời gian, vai trò, fixture, đường dẫn bằng chứng, lỗi và lần chạy lại.
 - `.tmp/skipped-cases/`: fixture manifest, script seed SQL nếu cần, log đã lọc, ảnh và file tải về; kiểm tra ignore trước khi tạo. Không đưa khóa/password vào tài liệu hay commit.
 - `aidlc-docs/aidlc-state.md`, `aidlc-docs/audit.md`: cập nhật tiến độ cùng lượt thực hiện, audit append-only.
 - Source chỉ sửa khi tái hiện được lỗi và đã xác định nguyên nhân; đọc hướng dẫn tại thư mục tương ứng trước khi sửa. Không reset các thay đổi đang có trong working tree.
@@ -37,7 +37,7 @@ Các file khi thực thi:
 - [x] U13-04: worker đã trích 544 ký tự nhưng lần đầu danh sách UI không đổi tới khi tải lại. Đã sửa và kiểm thử lại trên UI: đổi “Đang xử lý” thành “Đã trích” khi vẫn ở trang.
 - [ ] Snapshot cũ của đợt thực thi ghi 46 ca Bỏ qua. Sau U09 continuation (2026-10-23T16:52:53Z), U09 còn 20 Bỏ qua và có 2 Lỗi; toàn artifact suy ra 42 Bỏ qua, 4 Lỗi, 67 Đạt, 241 Chưa test từ lần đọc toàn cục gần nhất. Còn U05-07/09/12/21/22/23, 20 ca U09, 11 ca U13, 4 ca U14 và U15-05. Teacher đã xác nhận đang đăng nhập; các lần BAD_PASSWORD cũ không còn là blocker hiện tại.
 - Student U05-A đã thấy bốn học liệu theo thứ tự, có loại PDF và dung lượng 1 KB; truy vấn chỉ đọc xác nhận cả bốn thuộc scope SUBJECT, nên chưa kiểm được nhãn học liệu CLASS. Mở chi tiết PDF có chữ được, nhưng iframe xem trước trắng trong in-app browser và nội dung download chưa đối chiếu bytes.
-- Kết quả và nguyên nhân chi tiết: `aidlc-docs/construction/build-and-test/2026-10-23-skipped-cases-results.md`.
+- Kết quả và nguyên nhân chi tiết: `aidlc-docs/construction/build-and-test/2026-10-23/2026-10-23-skipped-cases-results.md`.
 
 ### Cập nhật U09 — 2026-10-23T16:52:53Z
 

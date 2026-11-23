@@ -1,6 +1,6 @@
 # U07 — Cải thiện tạo đề AI theo mẫu PE SWR302 và SWD392
 
-**Trạng thái** · Được duyệt và triển khai ngày 2026-11-22. Xem kết quả tại [báo cáo U07](../../build-and-test/2026-11-22-u07-pe-assignment-evaluation.md).
+**Trạng thái** · Được duyệt và triển khai ngày 2026-11-22. Xem kết quả tại [báo cáo U07](../../build-and-test/2026-11-22/2026-11-22-u07-pe-assignment-evaluation.md).
 
 **Mục tiêu** · Đề sinh ra có đủ đầu ra cần nộp, rubric khớp câu hỏi và thang điểm đã chốt, đồng thời đưa các mâu thuẫn trong mẫu ra cho giảng viên xem trước.
 
@@ -81,7 +81,7 @@ git diff --check
 
 - [x] Thêm ô số câu tùy chọn trong `CreateAssignmentDialog.tsx`, dùng chung bộ nhập số câu với `AiDraftDialog.tsx`. Bỏ trống thì không gửi số câu. Khi nhập điểm từng câu, hiển thị số câu và tổng suy ra từ dãy điểm. Khi giữ thang điểm mẫu, lấy số câu từ mẫu.
 - [x] Trong `AssignmentDraftPromptBuilder.java` và `AssignmentDraftGenerationSchema.java`, ưu tiên số câu đã chốt và yêu cầu cảnh báo khi yêu cầu tự do ghi rõ con số khác. Dùng luồng xem trước và thao tác sửa yêu cầu hiện có. Giữ kiểm tra số câu và tổng điểm trước khi áp dụng.
-- [x] Kiểm bằng Maven, Vitest, typecheck và test đề cùng tổng nhưng sai số câu. Chạy Luna medium với ca 4 câu cấu hình và 5 câu trong lời nhắc, cùng ca đối chứng hai bên đều ghi 4. [Kết quả từng ca](../../build-and-test/2026-11-22-u07-pe-assignment-evaluation.md#khi-số-câu-trong-cấu-hình-và-lời-nhắc-khác-nhau)
+- [x] Kiểm bằng Maven, Vitest, typecheck và test đề cùng tổng nhưng sai số câu. Chạy Luna medium với ca 4 câu cấu hình và 5 câu trong lời nhắc, cùng ca đối chứng hai bên đều ghi 4. [Kết quả từng ca](../../build-and-test/2026-11-22/2026-11-22-u07-pe-assignment-evaluation.md#khi-số-câu-trong-cấu-hình-và-lời-nhắc-khác-nhau)
 
 ## Tuân thủ AI-DLC
 

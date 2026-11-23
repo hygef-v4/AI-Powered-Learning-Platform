@@ -9,4 +9,4 @@ Continue the grading UI follow-up in place without subagents. Preserve the exist
 
 Scope: grading feedback/header components, their hook save boundary and tests. No rich-text contract, automatic factual rewrite, backend change, migration, provider call, runtime restart, commit or push. Security/Resiliency retained; PBT disabled.
 
-[Results and acceptance](../../build-and-test/2026-11-10-grading-feedback-format.md).
+[Results and acceptance](../../build-and-test/2026-11-10/2026-11-10-grading-feedback-format.md).

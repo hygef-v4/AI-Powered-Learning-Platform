@@ -9,4 +9,4 @@ User explicitly requests checking logs and fixing the AI error. Continue in plac
 
 Scope: grading proposal parsing/normalization/validation and prompt/schema contracts as evidence requires. Do not persist raw failed output or log provider values. Keep safe operational diagnostics and the established output-clearing policy. Security/Resiliency retained; PBT disabled.
 
-[Results and evidence](../../build-and-test/2026-11-10-grading-ai-rejection-fix.md). Root cause: redundant provider-generated checks contradicted zero item scores. Provider requests now omit checks; the existing normalizer derives them. MCP's full proposal schema/validation remains intact. Two provider calls: one reproduction and one successful verification.
+[Results and evidence](../../build-and-test/2026-11-10/2026-11-10-grading-ai-rejection-fix.md). Root cause: redundant provider-generated checks contradicted zero item scores. Provider requests now omit checks; the existing normalizer derives them. MCP's full proposal schema/validation remains intact. Two provider calls: one reproduction and one successful verification.

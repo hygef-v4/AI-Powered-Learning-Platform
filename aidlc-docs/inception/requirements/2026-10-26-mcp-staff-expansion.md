@@ -6,7 +6,7 @@
 
 Yêu cầu triển khai: "giúp tôi sửa theo những gì đề xuất và đã chốt". Phạm vi sản phẩm dưới đây kế thừa trao đổi và quyết định loại Student khỏi MCP; kế hoạch kỹ thuật cần được duyệt trước Code Generation theo CLAUDE.md.
 
-Căn cứ hiện trạng: `../../construction/build-and-test/2026-10-26-mcp-role-capability-review.md`, policy và các MCP provider trong mã nguồn. Repo brownfield Java 17/Spring Boot 3.5.6, PostgreSQL/Flyway, Next.js/React/TypeScript. Có thay đổi chưa commit từ đợt MCP readiness; phải bảo toàn.
+Căn cứ hiện trạng: `../../construction/build-and-test/2026-10-26/2026-10-26-mcp-role-capability-review.md`, policy và các MCP provider trong mã nguồn. Repo brownfield Java 17/Spring Boot 3.5.6, PostgreSQL/Flyway, Next.js/React/TypeScript. Có thay đổi chưa commit từ đợt MCP readiness; phải bảo toàn.
 
 ## Phạm vi đã chốt
 

@@ -138,7 +138,7 @@
 
 **Modify:** docs/guides/mcp-clients.md, docs/guides/ai-api-keys.md and relevant API contracts; scripts/check-mcp.ps1 only if new discovery output requires compatibility work.
 
-**Create:** `aidlc-docs/construction/build-and-test/2026-10-26-mcp-staff-expansion-results.md` with build/check instructions and actual results.
+**Create:** `aidlc-docs/construction/build-and-test/2026-10-26/2026-10-26-mcp-staff-expansion-results.md` with build/check instructions and actual results.
 
 - [x] 7.1 Run focused backend tests per task; finish with `mvn -f backend/pom.xml verify` using the repo's available Java/Maven or documented Docker build route. Integration database must be a verified test database/container.
 - [x] 7.2 Run `npm --prefix frontend test --` with changed test paths, frontend typecheck/lint and production build through existing package scripts; expand failures only as needed.

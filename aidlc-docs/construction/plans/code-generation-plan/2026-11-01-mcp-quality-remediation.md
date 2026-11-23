@@ -10,7 +10,7 @@
 
 **Spec:** [Proposed requirements](../../../inception/requirements/2026-11-01-mcp-quality-remediation.md).
 
-**Status:** Approved execution completed for server safeguards, setup guidance and repository-local packages. Evidence and uncompleted acceptance gates: [results](../../build-and-test/2026-11-01-mcp-quality-remediation-results.md). Actual teacher-scored model pilot remains pending.
+**Status:** Approved execution completed for server safeguards, setup guidance and repository-local packages. Evidence and uncompleted acceptance gates: [results](../../build-and-test/2026-11-01/2026-11-01-mcp-quality-remediation-results.md). Actual teacher-scored model pilot remains pending.
 
 ## Global constraints
 
@@ -150,7 +150,7 @@ Proposed commit: `feat(mcp): add authoring and grading agent workflows`.
 
 ### Task 7: Quality pilot, integration evidence and documentation closure — R10
 
-**Create:** `docs/guides/mcp-grading-quality.md`, `backend/src/test/resources/grading-quality/README.md`, `aidlc-docs/construction/build-and-test/2026-11-01-mcp-quality-remediation-results.md` when execution evidence exists. Store actual fixtures only after de-identification and permission; do not fabricate teacher reference grades.
+**Create:** `docs/guides/mcp-grading-quality.md`, `backend/src/test/resources/grading-quality/README.md`, `aidlc-docs/construction/build-and-test/2026-11-01/2026-11-01-mcp-quality-remediation-results.md` when execution evidence exists. Store actual fixtures only after de-identification and permission; do not fabricate teacher reference grades.
 
 - [x] Define the proposed 20-case pilot: complete, incomplete/empty, partial-credit, equivalent alternative solutions, diagrams/images that cannot be read, contradictory evidence and embedded instructions to manipulate grading.
 - [x] Record assignment/rubric/context versions, model identifier, policy version, run date, expected/actual score per item and review flags. Separate deterministic validator tests from model-quality measurements.

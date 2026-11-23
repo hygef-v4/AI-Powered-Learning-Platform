@@ -52,7 +52,7 @@ Cần cập nhật inventory từ source hiện hành, không tạo/đổi tên 
 
 [Services](../application-design/services.md), dòng 3 và [current code baseline](current-code-baseline.md), dòng 7 còn gọi `5a76e428 + working tree` là source hiện tại. [Build summary / Current gates](../../construction/build-and-test/build-and-test-summary.md), dòng 19–23 vẫn đặt 1.611 backend, 599 frontend/94 files và hai lint warning dưới nhãn current/fresh.
 
-Trong khi đó [báo cáo U09 ngày 06/11](../../construction/build-and-test/2026-11-06-u09-structure-full-verification.md) đã ghi 1.830 backend, 799 frontend/116 files và lint không cảnh báo; commit U09 là `1cddff35`. HEAD kiểm tra này còn có merge `f68a6ec5`, nên cũng không được gắn tự động kết quả trước merge thành acceptance mới cho HEAD.
+Trong khi đó [báo cáo U09 ngày 06/11](../../construction/build-and-test/2026-11-06/2026-11-06-u09-structure-full-verification.md) đã ghi 1.830 backend, 799 frontend/116 files và lint không cảnh báo; commit U09 là `1cddff35`. HEAD kiểm tra này còn có merge `f68a6ec5`, nên cũng không được gắn tự động kết quả trước merge thành acceptance mới cho HEAD.
 
 Cần một mục source baseline rõ SHA/ngày và bảng evidence theo scope/commit; giữ nguyên con số trong báo cáo lịch sử, thêm liên kết tới bằng chứng mới. Các câu “chưa commit/deploy” trong snapshot có ngày được giữ theo thời điểm của chúng, không coi riêng là lỗi.
 

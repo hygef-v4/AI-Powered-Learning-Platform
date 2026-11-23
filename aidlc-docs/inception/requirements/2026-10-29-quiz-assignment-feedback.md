@@ -89,4 +89,4 @@ Checkbox hoàn thành ở đây chỉ nói source đã có đúng phần đượ
 
 ## Đối chiếu source — 2026-11-01
 
-7 mục Quiz ở trên đã có trong source trên nhánh `feat/quiz-rework-2026-11-01`: [đánh giá](2026-11-01-quiz-feedback-assessment.md), [roadmap](../../construction/plans/code-generation-plan/2026-11-01-quiz-rework.md), [kết quả và giới hạn](../../construction/build-and-test/2026-11-01-quiz-rework-results.md). Câu hỏi 1–3 ở mục "Câu hỏi cần chốt" được áp dụng theo phương án đề xuất, chưa do người dùng chọn. Các bảng ở trên ghi trạng thái lúc 30/10 và giữ làm lịch sử.
+7 mục Quiz ở trên đã có trong source trên nhánh `feat/quiz-rework-2026-11-01`: [đánh giá](2026-11-01-quiz-feedback-assessment.md), [roadmap](../../construction/plans/code-generation-plan/2026-11-01-quiz-rework.md), [kết quả và giới hạn](../../construction/build-and-test/2026-11-01/2026-11-01-quiz-rework-results.md). Câu hỏi 1–3 ở mục "Câu hỏi cần chốt" được áp dụng theo phương án đề xuất, chưa do người dùng chọn. Các bảng ở trên ghi trạng thái lúc 30/10 và giữ làm lịch sử.

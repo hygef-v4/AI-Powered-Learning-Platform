@@ -144,16 +144,16 @@ V20261030_1810 permits RETIRED with null publishedAt. Old equal-time retired row
 
 `instructionsDocument` là shared FormattedText (schema/giới hạn block và run như U13, plain text tối đa 5.000 ký tự), lưu JSONB nullable qua `quizzes/V20261109_2201__quiz_formatted_instructions.sql`. Giữ plain instructions cho client cũ; giữ document khi sửa cấu hình, clone/version/copy và vòng đời quiz. `QuizStudentView` và U11 `PracticeQuizDetail` truyền document để hiển thị, không thay đổi chấm điểm hoặc snapshot câu của lượt làm.
 
-HTTP draft quiz và ngân hàng nhận source thiếu/null để U06 tự chọn nguồn API; provider null hợp lệ trong chế độ tự chọn. MaterialIds là tài liệu tham khảo riêng, không thay cho source. Provenance lưu source AUTO khi tự chọn và sourceWarnings cho nguồn bị cắt/bỏ trống; đây không phải bằng chứng về provider thực tế đã chạy. Mọi nguồn chọn đều hết chữ: FAILED/MATERIAL_TEXT_UNAVAILABLE trước provider. [HTTP regression](../../build-and-test/2026-11-09-quiz-http-auto-source-fix.md).
+HTTP draft quiz và ngân hàng nhận source thiếu/null để U06 tự chọn nguồn API; provider null hợp lệ trong chế độ tự chọn. MaterialIds là tài liệu tham khảo riêng, không thay cho source. Provenance lưu source AUTO khi tự chọn và sourceWarnings cho nguồn bị cắt/bỏ trống; đây không phải bằng chứng về provider thực tế đã chạy. Mọi nguồn chọn đều hết chữ: FAILED/MATERIAL_TEXT_UNAVAILABLE trước provider. [HTTP regression](../../build-and-test/2026-11-09/2026-11-09-quiz-http-auto-source-fix.md).
 
 ## Draft request và metadata liên quan — 2026-11-09
 
 instructions thiếu/null/trống hợp lệ nếu materialIds không rỗng; DraftRequest chuẩn hóa thành “Tạo quiz theo nội dung tài liệu đã chọn.” Không có cả yêu cầu lẫn tài liệu vẫn bị từ chối. Không bỏ kiểm quyền/hasText/giới hạn nguồn.
 
-Schema kết quả cho task mới thêm requestMatchesSources boolean bắt buộc; parseOutput vẫn nhận task schema cũ thiếu field này. False cùng tài liệu đã chọn được ánh xạ thành sourceWarnings có nội dung cố định, giữ cảnh báo cắt nguồn và lưu trong provenance khi PENDING chuyển READY. Không thêm cột hoặc endpoint; task cũ không được đánh giá lại tự động. Chỉ là đánh giá model; người soạn kiểm nội dung trước khi chấp nhận. [Evidence](../../build-and-test/2026-11-09-ai-quiz-review-followup.md).
+Schema kết quả cho task mới thêm requestMatchesSources boolean bắt buộc; parseOutput vẫn nhận task schema cũ thiếu field này. False cùng tài liệu đã chọn được ánh xạ thành sourceWarnings có nội dung cố định, giữ cảnh báo cắt nguồn và lưu trong provenance khi PENDING chuyển READY. Không thêm cột hoặc endpoint; task cũ không được đánh giá lại tự động. Chỉ là đánh giá model; người soạn kiểm nội dung trước khi chấp nhận. [Evidence](../../build-and-test/2026-11-09/2026-11-09-ai-quiz-review-followup.md).
 
 ## Mismatch retry state — 2026-11-10
 
 provenance thêm requestedType/requestedDifficulty khi có, sourceRetryPending và sourceRetryAttempted; tái dùng requestedCount, materials, source/provider. Không lưu thêm prompt tùy chỉnh. Output task mới có questionsMatchSources cùng requestMatchesSources; legacy thiếu field vẫn đọc được. Nhánh lệch: PENDING (proposal rỗng, retryPending) → task tạo lại PENDING (retryAttempted) → READY hoặc FAILED; retry tối đa một lần. taskId đổi sang task tạo lại, kết quả/lỗi trễ của task trước bị bỏ qua. Không thêm migration.
 
-QuizSourceRetry tách transaction khỏi callback/read caller, khóa qua IQuizAiDraftRepository.findForUpdate; AiTask submit/job và retry metadata commit cùng nhau. Catch lỗi sau rollback để lưu FAILED độc lập. [Test transaction/lock](../../build-and-test/2026-11-10-ai-source-grounding-fix.md).
+QuizSourceRetry tách transaction khỏi callback/read caller, khóa qua IQuizAiDraftRepository.findForUpdate; AiTask submit/job và retry metadata commit cùng nhau. Catch lỗi sau rollback để lưu FAILED độc lập. [Test transaction/lock](../../build-and-test/2026-11-10/2026-11-10-ai-source-grounding-fix.md).

@@ -28,7 +28,7 @@ Shared UI phục vụ các unit hiện có; không đổi nghiệp vụ, API, DB
 - [x] 4. Chạy kiểm thử shared/caller liên quan: 332 test/51 file qua; TypeScript, ESLint qua; build exit 0 với cảnh báo font/tracing do môi trường.
 - [x] 5. Ghi kết quả và giới hạn xác minh; kiểm tra diff và trạng thái.
 
-Kết quả: [báo cáo](../../build-and-test/2026-11-11-three-ui-fixes.md).
+Kết quả: [báo cáo](../../build-and-test/2026-11-11/2026-11-11-three-ui-fixes.md).
 
 ## Extension
 

@@ -15,4 +15,4 @@ Spec: [requirements and clarification](../../../inception/requirements/2026-10-3
 
 Execution preference: the user subsequently requested direct execution without subagents. Existing workers were stopped; all remaining implementation, integration, self-review, documentation and verification are performed directly. Existing completed edits are preserved and checked.
 
-Final evidence: [remediation report](../../build-and-test/2026-10-30-remediation-student-mcp-results.md). Focused104pass; backend1611pass/0skip; frontend599pass/94files; required DBguard and frontend lint/typecheck/build pass. Broader acceptance gaps and migration/backup tradeoffs are explicit in the report.
+Final evidence: [remediation report](../../build-and-test/2026-10-30/2026-10-30-remediation-student-mcp-results.md). Focused104pass; backend1611pass/0skip; frontend599pass/94files; required DBguard and frontend lint/typecheck/build pass. Broader acceptance gaps and migration/backup tradeoffs are explicit in the report.

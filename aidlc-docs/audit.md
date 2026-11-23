@@ -17143,3 +17143,111 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Report-5.2 hoàn tất; không commit.
 
 ---
+
+## U09 — Judge có "unknown" và chi phí trên mỗi bài chấm hoàn tất
+**Timestamp**: 2026-11-23T08:25:15Z
+**Requested by:** Quang Hung
+**User Input**: "làm việc 1,2"
+**AI Response**: "Việc 1: thêm judge phán quyết correct/incorrect/unknown (evaluation.py: Verdict, make_verdict_grader; trạng thái QUALITY_UNKNOWN qua dataset.py, runner.py, reports.py, evaluate.py), thêm --judge-style verdict (tùy chọn), mặc định vẫn geval. Việc 2: summary.cost (token và USD trên mỗi ca hoàn tất) từ usage trong bản ghi Java, thêm --score-tolerance, --input-price, --output-price. Thêm 2 test pytest, cập nhật README."
+**Context**: Code Generation, scripts/ai-grading-eval. pytest 20/20; chưa chạy judge thật; chưa commit. Nhánh đang checkout: audit-staging (cùng commit cf8b0370 với staging; PR 121 staging vào main đang mở).
+
+---
+
+## U09 — Giữ GEval làm mặc định cho judge
+**Timestamp**: 2026-11-23T08:29:48Z
+**Requested by:** Quang Hung
+**User Input**: "tôi nghĩ giữ nguyên như hiện tại cũng đc r, b thấy sao"
+**AI Response**: "Đồng ý giữ nguyên: chưa có bằng chứng verdict tốt hơn trên dữ liệu của dự án. Đổi mặc định --judge-style về geval, verdict còn là tùy chọn; cập nhật README, aidlc-state. Phần chi phí trên mỗi ca hoàn tất không phụ thuộc kiểu judge nên giữ."
+**Context**: scripts/ai-grading-eval. Chưa commit.
+
+---
+
+## U09 — Hoàn lại phần judge verdict, giữ chi phí
+**Timestamp**: 2026-11-23T08:31:36Z
+**Requested by:** Quang Hung
+**User Input**: "revert changes" — "vabh recommend đi"
+**AI Response**: "Khuyến nghị và thực hiện: gỡ phần judge correct/incorrect/unknown (khôi phục evaluation.py, runner.py; bỏ --judge-style và trạng thái QUALITY_UNKNOWN khỏi dataset.py, evaluate.py, reports.py, README, test), giữ summary.cost cùng --score-tolerance, --input-price, --output-price. Đã lưu patch đầy đủ trước khi gỡ ở scratchpad (ai-eval-verdict-and-cost.patch) để áp lại khi có nhãn giảng viên."
+**Context**: scripts/ai-grading-eval. Chưa commit.
+
+---
+
+## U09 — Cập nhật báo cáo kiểm thử AI chấm điểm với token và thời gian
+**Timestamp**: 2026-11-23T08:33:34Z
+**Requested by:** Quang Hung
+**User Input**: "cái test report có thể cập nhật đc luôn k"
+**AI Response**: "Hiểu 'test report' là construction/build-and-test/ai-grading-test-report.md. Thêm vào mục 3 ba dòng và một đoạn giải thích: 416.997 token cho 20 ca lượt 3 (vào 361.876, ra 55.121), 27.800 token mỗi ca hoàn tất (15/20 khớp mốc nhóm), thời gian trung vị 56 giây (34 đến 68). Số liệu tính từ 20 provider-result.json trong thư mục bằng chứng đã commit; không quy ra tiền; lượt 1, 2 chưa tính vì bản ghi nằm ngoài repo."
+**Context**: Tài liệu, không đổi code. Chưa commit.
+
+---
+
+## U09 — Báo cáo kiểm thử AI chấm điểm: độ lệch điểm, theo đề, nguyên nhân ca lệch
+**Timestamp**: 2026-11-23T08:41:33Z
+**Requested by:** Quang Hung
+**User Input**: "đây là chỉ là chấm độ chính xác của ai thôi tôi nghĩ làm cái 1 trước"
+**AI Response**: "Thêm vào ai-grading-test-report.md: bảng độ lệch điểm theo lượt (MAE 0,148, 0,065, 0,165; sai lớn nhất 2,00, 0,50, 1,50; chiều lệch), kết quả lượt 3 theo từng đề, giải thích hai ca lệch còn lại (06-prompt-injection, 08-wrong-actors) từ điểm từng mục và lý do của Luna, nhóm nguyên nhân của năm ca lệch, mô tả mã băm prompt và schema. Nêu rõ lượt 3 lệch điểm lớn hơn lượt 2 và mỗi ca chỉ chấm một lần."
+**Context**: Tài liệu, không đổi code. Số liệu tính từ phụ lục và bằng chứng đã commit. Chưa commit.
+
+---
+
+## U09 — Báo cáo kiểm thử AI chấm điểm: phần A (kết luận, giới hạn, độ chính xác theo mục, cờ, môi trường, token ba lượt)
+**Timestamp**: 2026-11-23T08:48:21Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm phần a trước"
+**AI Response**: "Thêm vào ai-grading-test-report.md: độ chính xác theo mục (225/234 khớp, 9 mục lệch đều thấp hơn mốc), hiệu quả cờ cần xem lại (14 cờ, bắt 2/9 mục lệch, ba ca lệch không có cờ), token và thời gian ba lượt (lượt 1 và 2 tính từ bản ghi .tmp cục bộ, đã xác minh tổng điểm thô khớp bảng phụ lục 20/20 mỗi lượt), khối môi trường kiểm thử từ judge-result.json, backend-tests.log và requirements.lock, mục 5 giới hạn, mục 6 kết luận và khuyến nghị (bản nháp chờ nhóm xác nhận)."
+**Context**: Tài liệu, không đổi code, không chạy lại model hay judge. Chưa commit.
+
+---
+
+## U09 — Sửa nhận định lượt 3 so với lượt 2 trong báo cáo kiểm thử
+**Timestamp**: 2026-11-23T08:54:28Z
+**Requested by:** Quang Hung
+**User Input**: "Ủa sao tôi thấy so sánh mục 2-3 thấy điểm lệch của cái 9.5 -7 còn lệch nhiều hơn lần cũ"
+**AI Response**: "Xác nhận ca swd-workshop-missing-fk lệch 0,00 ở lượt 2 và 1,50 ở lượt 3 (swd-workshop-complete 0,00 và 0,75). Báo cáo trước đó viết lượt 3 cải thiện phản hồi theo hai judge, đúng so với lượt 1 nhưng không đúng so với lượt 2 (Sol 18/20 ở cả hai, Opus lượt 2 chỉ có 3 ca). Đã sửa mục 4, kết luận 4 và khuyến nghị, thêm bảng ca đổi điểm giữa lượt 2 và lượt 3 và ghi rằng các lần thử nhỏ trước lượt 3 không chạy đề workshop."
+**Context**: Tài liệu, không đổi code, không chạy lại model. Chưa commit.
+
+---
+
+## U09 — Chạy lặp swd-workshop-missing-fk với prompt lượt 2 và lượt 3
+**Timestamp**: 2026-11-23T09:03:01Z
+**Requested by:** Quang Hung
+**User Input**: "Ok giúp tôi chạy lại"
+**AI Response**: "Chạy Luna gpt-6-luna medium qua Codex CLI (cùng cách gọi grade-luna.py), 3 lần mỗi prompt xen kẽ, đầu vào là prompt.txt lượt 2 (.tmp, confirmation) và lượt 3 (đã chuẩn hóa về LF, khớp mã băm input-verification.json) cùng schema. Kết quả lượt 2: 7,75, 7,25, 9,25; lượt 3: 9,25, 7,00, 9,25 (mốc 9,25). Dao động đến từ mục s-authorization (1,50), không có cờ. Rút lại nhận định prompt lượt 3 làm ca xấu đi. Lưu prompt, kết quả và script vào 2026-11-23-u09-ai-grading-rerun-evidence. Tốn 124.866 token hạn mức Codex."
+**Context**: Chạy model thật (Codex, ChatGPT login), không đổi code ứng dụng. Chưa commit. Chưa chạy lặp swd-workshop-complete.
+
+---
+
+## U09 — Chạy lặp ba ca với prompt lượt 2 và lượt 3
+**Timestamp**: 2026-11-23T09:16:17Z
+**Requested by:** Quang Hung
+**User Input**: "ok" (đồng ý chạy lặp 03-one-normal-flow, 05-off-topic, swd-workshop-complete, 3 lần mỗi prompt)
+**AI Response**: "Chạy Luna gpt-6-luna medium qua Codex CLI, 18 lần, đầu vào prompt.txt lượt 2 (.tmp) và lượt 3 (LF) đã xác minh bằng mã băm trong input-verification.json. Kết quả: 05-off-topic lượt 3 đúng 3/3 (lượt 2 sai mục s-trigger 3/3, tổng đúng 2/3 do bù trừ); 03-one-normal-flow lượt 3 đúng 2/3, lượt 2 0/3; swd-workshop-complete hai prompt đều 2/3, mất 1,50 ở s-authorization 1/3 lần mỗi prompt. Sửa kết luận 4, khuyến nghị, giới hạn trong ai-grading-test-report.md. Tốn 374.382 token hạn mức Codex."
+**Context**: Chạy model thật (Codex, ChatGPT login), không đổi code ứng dụng. Chưa commit. 16 ca còn lại chưa chạy lặp.
+
+---
+
+## U09 — Thêm sơ đồ và biểu đồ vào báo cáo kiểm thử AI chấm điểm
+**Timestamp**: 2026-11-23T09:24:02Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi bổ sung diagram bar chart các thứ vào test report cho trông đẹp hơn"
+**AI Response**: "Thêm Hình 1 (sơ đồ quy trình Mermaid, kiểm tra cú pháp bằng cách render với mermaid-cli 11 và Chrome, kèm văn bản thay thế) và Hình 2 đến 7 (biểu đồ matplotlib vẽ bằng make_charts.py: kết quả theo đề, mục rubric và cờ, kết quả ba lượt, độ lệch điểm, chạy lặp, token và thời gian). Mỗi hình có alt text, chú thích và dẫn tới bảng số liệu làm văn bản thay thế. Số liệu chép từ các bảng của báo cáo, không tính lại."
+**Context**: Tài liệu và ảnh, không đổi code ứng dụng. Chưa commit.
+
+---
+
+## U09 — Viết lại báo cáo kiểm thử AI chấm điểm cho gọn và dễ hiểu
+**Timestamp**: 2026-11-23T09:34:41Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại" (sau khi nhận xét báo cáo quá dài và khó hiểu)
+**AI Response**: "Viết lại phần thân theo kế hoạch đã đề xuất: Tóm tắt và Thuật ngữ ở đầu; mục 1 gộp mục đích và quy trình; mục 2 kết quả chính (một bảng năm ca lệch); mục 3 so sánh ba prompt và chạy lặp; mục 4 chi phí; mục 5 giới hạn; mục 6 khuyến nghị; Phụ lục A chứa các bảng chuyển từ thân (copy nguyên từ bản cũ, không gõ lại số); Phụ lục B giữ nguyên bảng chi tiết từng ca. Bỏ câu rút lại nhận định và ngôi thứ nhất. Bản cũ lưu ở scratchpad (ai-grading-test-report.before-rewrite.md) vì chưa commit."
+**Context**: Tài liệu, không đổi số liệu hay code. Chưa commit.
+
+---
+
+## Gom báo cáo kiểm thử theo ngày trong build-and-test
+**Timestamp**: 2026-11-23T09:53:51Z
+**Requested by:** Quang Hung
+**User Input**: "nhóm lại các thư mục ngày tháng này trong build and test folder lại cho gọn" (kèm ảnh cây thư mục)
+**AI Response**: "Chuyển 123 mục có tiền tố ngày trong aidlc-docs/construction/build-and-test vào 24 thư mục YYYY-MM-DD/, giữ nguyên tên tệp. Giữ 2026-11-08-integration-test-cases.json ở gốc vì scripts/assert-required-backend-tests.ps1 (CI) đọc theo đường dẫn. Dùng script tính đường dẫn mới cho mọi liên kết tương đối (resolve theo vị trí cũ, map, relativize theo vị trí mới) và sửa 183 tệp (558 liên kết, 52 đường dẫn dạng chữ). Không sửa audit.md và history/ vì là bản ghi lịch sử; các đường dẫn cũ trong audit.md trỏ tới cấu trúc trước ngày 2026-11-23 (tên tệp có tiền tố ngày nay nằm trong thư mục cùng ngày). Kiểm tra: 224 tệp tracked không mất tệp nào, 0 liên kết hỏng trỏ vào build-and-test, tổng liên kết hỏng sẵn có không đổi."
+**Context**: Chỉ di chuyển và sửa liên kết, không đổi nội dung báo cáo hay code. Chưa commit.
+
+---

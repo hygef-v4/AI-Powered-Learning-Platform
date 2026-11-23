@@ -48,8 +48,8 @@
 - [x] Capture screenshot evidence for the current login-required blocker in `.tmp/u05-u15-audit/followup-login-required.png`.
 
 ### 4. Deliverables & State Recording
-- [x] Deliver `aidlc-docs/construction/build-and-test/2026-10-26-u05-u15-followup-report.md`.
-- [x] Update `aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-manual-test-guide.md` to verify the fixed menu and card styles; user result column remains `Chưa test`.
+- [x] Deliver `aidlc-docs/construction/build-and-test/2026-10-26/2026-10-26-u05-u15-followup-report.md`.
+- [x] Update `aidlc-docs/construction/build-and-test/2026-10-25/2026-10-25-u05-u15-manual-test-guide.md` to verify the fixed menu and card styles; user result column remains `Chưa test`.
 - [x] Append entries to `aidlc-docs/aidlc-state.md` and `aidlc-docs/audit.md`.
 - [x] Run `git diff --check`.
 - [x] Stop and report to user after documenting the live UI blocker; leave the host app available for user testing.

@@ -1,6 +1,6 @@
 # Khắc phục NFR ngày 16/11/2026
 
-Người dùng yêu cầu “sửa toàn bộ cho tôi” sau khi nhận [báo cáo và thứ tự xử lý](../../build-and-test/2026-11-16-non-functional-review.md). Đây là chấp thuận thực hiện F01–F08 và các kiểm chứng liên quan trong phạm vi local; không phải chấp thuận deploy, commit/push, thay dữ liệu production hoặc mở rộng scope MFA/PBT/HA. Giữ thay đổi performance đang có của lượt khác.
+Người dùng yêu cầu “sửa toàn bộ cho tôi” sau khi nhận [báo cáo và thứ tự xử lý](../../build-and-test/2026-11-16/2026-11-16-non-functional-review.md). Đây là chấp thuận thực hiện F01–F08 và các kiểm chứng liên quan trong phạm vi local; không phải chấp thuận deploy, commit/push, thay dữ liệu production hoặc mở rộng scope MFA/PBT/HA. Giữ thay đổi performance đang có của lượt khác.
 
 ## Quy trình và thiết kế
 
@@ -27,7 +27,7 @@ Brownfield, dùng lại requirements/reverse engineering. Requirements và hư�
 
 ## Kết quả
 
-Hoàn tất 17/11/2026. Xem [báo cáo khắc phục và kiểm chứng](../../build-and-test/2026-11-17-nfr-remediation-results.md). Đóng F01–F08; tải mục tiêu, RPO/RTO production và accessibility toàn hành trình vẫn chưa nghiệm thu. Không deploy/commit/push trong lượt này.
+Hoàn tất 17/11/2026. Xem [báo cáo khắc phục và kiểm chứng](../../build-and-test/2026-11-17/2026-11-17-nfr-remediation-results.md). Đóng F01–F08; tải mục tiêu, RPO/RTO production và accessibility toàn hành trình vẫn chưa nghiệm thu. Không deploy/commit/push trong lượt này.
 
 ## Đưa bản sửa lên PR staging — được yêu cầu ngày 17/11/2026
 

@@ -1,6 +1,6 @@
 # Kế hoạch sửa các điểm trong báo cáo hiệu năng 2026-11-16
 
-Nguồn: [báo cáo hiệu năng](../../build-and-test/2026-11-16-performance-report.md). Người dùng yêu cầu "sửa toàn bộ".
+Nguồn: [báo cáo hiệu năng](../../build-and-test/2026-11-16/2026-11-16-performance-report.md). Người dùng yêu cầu "sửa toàn bộ".
 
 ## Phạm vi và cách làm
 
@@ -36,7 +36,7 @@ Kiểm tra và tài liệu:
 - [x] 12. Frontend: ESLint, TypeScript, Vitest, production build. Infra: `nginx -t` trong container, `docker compose config`, test của script deploy.
 - [x] 13. Cập nhật runbook deploy, `aidlc-state.md`, kết quả kiểm tra.
 
-Người dùng chọn phương án A (2026-11-16). Khác kế hoạch ở hai điểm: bước 7 chỉ áp cho 502 và 503, giữ nguyên 504 vì đó là quá thời gian chờ chứ không phải dịch vụ chưa sẵn sàng; bước 10 đặt `maxmemory 96mb` thay cho 192 MB vì container Redis của staging chỉ có 128 MB. [Kết quả kiểm tra](../../build-and-test/2026-11-16-performance-fixes-results.md).
+Người dùng chọn phương án A (2026-11-16). Khác kế hoạch ở hai điểm: bước 7 chỉ áp cho 502 và 503, giữ nguyên 504 vì đó là quá thời gian chờ chứ không phải dịch vụ chưa sẵn sàng; bước 10 đặt `maxmemory 96mb` thay cho 192 MB vì container Redis của staging chỉ có 128 MB. [Kết quả kiểm tra](../../build-and-test/2026-11-16/2026-11-16-performance-fixes-results.md).
 
 ## Không làm trong lượt này
 

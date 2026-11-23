@@ -2,7 +2,7 @@
 
 Đối chiếu 7 góp ý với code trên nhánh `fix/review-bugs-2026-11-01` (`2f1ccdf4`). Tiếp nối [góp ý 29/10](2026-10-29-quiz-assignment-feedback.md). Các điểm cần chốt nằm ở [file câu hỏi](2026-11-01-quiz-rework-questions.md).
 
-**Cập nhật 02/11:** người dùng chốt hệ thống chỉ gợi ý mức trừ, giảng viên quyết định từng lượt, thay đề xuất tự trừ ở mục 6. **Cập nhật:** cả 7 mục đã được làm trên nhánh `feat/quiz-rework-2026-11-01`, xem [kết quả](../../construction/build-and-test/2026-11-01-quiz-rework-results.md). Báo cáo này giữ nguyên hiện trạng lúc đánh giá, trừ hai đính chính: khu vực lượt làm của giảng viên thực ra chưa từng hiện trên giao diện (mục 3); khi triển khai không dùng `pg_trgm` và không làm phần thoát toàn màn hình (xem [roadmap](../../construction/plans/code-generation-plan/2026-11-01-quiz-rework.md)).
+**Cập nhật 02/11:** người dùng chốt hệ thống chỉ gợi ý mức trừ, giảng viên quyết định từng lượt, thay đề xuất tự trừ ở mục 6. **Cập nhật:** cả 7 mục đã được làm trên nhánh `feat/quiz-rework-2026-11-01`, xem [kết quả](../../construction/build-and-test/2026-11-01/2026-11-01-quiz-rework-results.md). Báo cáo này giữ nguyên hiện trạng lúc đánh giá, trừ hai đính chính: khu vực lượt làm của giảng viên thực ra chưa từng hiện trên giao diện (mục 3); khi triển khai không dùng `pg_trgm` và không làm phần thoát toàn màn hình (xem [roadmap](../../construction/plans/code-generation-plan/2026-11-01-quiz-rework.md)).
 
 **Phạm vi kiểm tra:** chỉ đọc code, migration và tài liệu. Chưa chạy thử trên giao diện, chưa đọc dữ liệu thật, chưa sửa code. Công sức là ước lượng thô cho một người, chưa gồm kiểm thử trên staging.
 

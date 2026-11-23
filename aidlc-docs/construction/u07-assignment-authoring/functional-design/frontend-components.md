@@ -149,4 +149,4 @@ Menu cấp môn mang tên Đề mẫu; route và quyền giữ nguyên. ASSIGNME
 
 AiReviseChat: menu + gồm Chọn đề mẫu có sẵn / Chọn học liệu của môn / Tải từ máy. Tệp ngoài mặc định tham khảo; DOCX có thể đổi vai trò với xác nhận thay mẫu và giữ mẫu cũ nếu đọc thất bại. Hỗ trợ paste ảnh và kéo thả qua cùng hàng đợi upload, giữ plain text đi kèm; không đọc URL. Thẻ có vai trò, thumbnail, trạng thái, gỡ/thử lại. Ba tệp tham khảo 2 MB/tệp, một mẫu DOCX 20 MB; server vẫn kiểm lại.
 
-Lỗi trước khi task được nhận giữ input/tệp và dùng lại requestRef nếu retry cùng payload. Lỗi AI có nút Khôi phục yêu cầu, không tự gọi lại. Đóng chat giữ state; đổi assignment hủy callback cũ. Giữ apply/undo/version. Evidence: ../../build-and-test/2026-11-13-ai-chat-files.md.
+Lỗi trước khi task được nhận giữ input/tệp và dùng lại requestRef nếu retry cùng payload. Lỗi AI có nút Khôi phục yêu cầu, không tự gọi lại. Đóng chat giữ state; đổi assignment hủy callback cũ. Giữ apply/undo/version. Evidence: ../../build-and-test/2026-11-13/2026-11-13-ai-chat-files.md.

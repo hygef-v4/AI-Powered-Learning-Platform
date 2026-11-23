@@ -21,4 +21,4 @@ backend --> Redis (đếm lời gọi MCP)
 
 Code hiện tại thử lại lỗi từ chối tạm thời 429/503/529 sau 2 giây và 5 giây rồi chuyển kết nối kế tiếp đủ điều kiện nếu có. Kết nối test Đạt không bảo đảm mọi lần sinh quiz thành công; restart API không chạy lại draft FAILED. Nguồn/provider thực tế đọc từ AiTask, không suy ra từ provenance AUTO của QuizAiDraft.
 
-[Điều tra local](../../build-and-test/2026-11-09-ai-worker-runtime-diagnosis.md): worker Docker cũ đã được dừng, backend local,worker giữ chạy; task trước lưu Gemini503. Chưa gửi AI request mới để xác nhận phục hồi provider.
+[Điều tra local](../../build-and-test/2026-11-09/2026-11-09-ai-worker-runtime-diagnosis.md): worker Docker cũ đã được dừng, backend local,worker giữ chạy; task trước lưu Gemini503. Chưa gửi AI request mới để xác nhận phục hồi provider.

@@ -135,4 +135,4 @@ Security/Resiliency dùng phạm vi hiện hữu; phần URL mở thêm ranh gi�
 
 Đã giao phần tệp theo phạm vi mới; đọc link hoãn toàn bộ. Frontend 1038 test/150 file, full lint, isolated TypeScript/build qua. Lượt kiểm tra cuối chạy tuần tự, hai worker sau khi chạy song song bị hết virtual memory trên Windows; không đổi cấu hình sản phẩm. UI tải DOCX, đổi vai trò hai chiều và kéo thả TXT qua; paste PNG có thumbnail nhưng backend đang chạy vẫn chính sách cũ, cần reload bản sửa trước. Test paste/drop là browser event simulation, chưa physical clipboard. Một số clipboard regression cases không có RED độc lập; xem báo cáo thay vì suy ra toàn bộ case đều test-first. Không gọi model hoặc commit/push.
 
-Evidence: [2026-11-13-ai-chat-files](../../build-and-test/2026-11-13-ai-chat-files.md). Không đánh dấu task link/SSRF là đã triển khai.
+Evidence: [2026-11-13-ai-chat-files](../../build-and-test/2026-11-13/2026-11-13-ai-chat-files.md). Không đánh dấu task link/SSRF là đã triển khai.

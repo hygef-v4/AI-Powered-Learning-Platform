@@ -16,4 +16,4 @@
 - [x] Tích hợp, chạy kiểm phù hợp, rà phân quyền/concurrency/không mất bài và cập nhật
   business rules, state, kết quả, audit. Không commit/push/merge/deploy.
 
-Kết quả: [kiểm chứng và giới hạn](../../build-and-test/2026-11-15-date-ai-grading-window.md).
+Kết quả: [kiểm chứng và giới hạn](../../build-and-test/2026-11-15/2026-11-15-date-ai-grading-window.md).

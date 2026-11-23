@@ -17,4 +17,4 @@ Gọi `save` tường minh trên row đã có luôn tăng storage version một 
 
 Ứng dụng vẫn cần JpaTransactionManager/dependency JPA cho U04/U13/U14 chưa chuyển; đó không phải JPA persistence trong U09. Test dùng cả DataSourceTransactionManager và JpaTransactionManager với cùng DataSource để bảo vệ rollback trong giai đoạn chuyển tiếp.
 
-Không có migration dữ liệu/schema mới. Không tự chuyển unit khác, đổi frontend, restart/migrate live DB hoặc commit/push. [Kế hoạch](../../plans/code-generation-plan/2026-11-06-u05-u09-jdbc.md) và [bằng chứng/giới hạn](../../build-and-test/2026-11-06-u05-u09-jdbc-results.md) ghi kết quả kiểm chứng thực tế; các snapshot 2026-10-30 và báo cáo JPA cũ giữ giá trị lịch sử.
+Không có migration dữ liệu/schema mới. Không tự chuyển unit khác, đổi frontend, restart/migrate live DB hoặc commit/push. [Kế hoạch](../../plans/code-generation-plan/2026-11-06-u05-u09-jdbc.md) và [bằng chứng/giới hạn](../../build-and-test/2026-11-06/2026-11-06-u05-u09-jdbc-results.md) ghi kết quả kiểm chứng thực tế; các snapshot 2026-10-30 và báo cáo JPA cũ giữ giá trị lịch sử.

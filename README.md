@@ -47,7 +47,7 @@ Dự án đã có implementation của 15 unit theo quy trình AI-DLC. Backend v
 - Migration Flyway đặt trong `backend/src/main/resources/db/migration/<thư mục của unit>/` (danh sách trong `README.md` ở thư mục đó).
 - Người code viết unit test; integration test do tester viết.
 
-Đợt sắp xếp này chỉ chuyển file và cập nhật package/import/tham chiếu; giữ nguyên nội dung xử lý và các file gốc. [Kết quả kiểm tra](aidlc-docs/construction/build-and-test/2026-10-30-package-moves-only-results.md).
+Đợt sắp xếp này chỉ chuyển file và cập nhật package/import/tham chiếu; giữ nguyên nội dung xử lý và các file gốc. [Kết quả kiểm tra](aidlc-docs/construction/build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md).
 
 ## Chạy local
 
