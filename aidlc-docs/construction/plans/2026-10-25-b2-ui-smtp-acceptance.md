@@ -11,4 +11,4 @@ Người dùng yêu cầu “kiểm giúp tôi” sau khi thống nhất UI + Ma
 
 Mailpit nhận SMTP thật trong môi trường thử, không chứng nhận provider Internet/hộp thư ngoài. Không gửi thông tin hoặc thư tới người thật.
 
-Kết quả: tất cả ca trong phạm vi đạt; xem `construction/build-and-test/2026-10-25-b2-ui-smtp-acceptance-results.md`. Đã dừng cả 8 container QA, giữ container/volume/bằng chứng để có thể chạy lại. Stack platform vẫn đủ 7 container healthy; không thêm thay đổi application source trong lượt nghiệm thu.
+Kết quả: tất cả ca trong phạm vi đạt; xem `construction/build-and-test/2026-10-25/2026-10-25-b2-ui-smtp-acceptance-results.md`. Đã dừng cả 8 container QA, giữ container/volume/bằng chứng để có thể chạy lại. Stack platform vẫn đủ 7 container healthy; không thêm thay đổi application source trong lượt nghiệm thu.

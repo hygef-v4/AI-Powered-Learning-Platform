@@ -17,7 +17,18 @@ export type ChecklistProps = {
   validBlockIds?: Set<string> | string[];
   onChangeStructuredItem?: (rubricId: string, itemId: string, patch: Partial<StructuredFeedbackItem>) => void;
   onToggleAcknowledge?: (key: string) => void;
+  /** Khóa `rubricId:itemId` của mục AI đã điền và chưa bị sửa tay. */
+  aiFilledItems?: Set<string>;
 };
+
+export function AiFilledBadge() {
+  return (
+    <span title={msg("grading.components.AiDraftBanner.filledByAi")}
+      className="shrink-0 rounded bg-primary-soft px-1 text-[10px] font-semibold text-primary-ink">
+      <span aria-hidden="true">✨ </span>{msg("grading.components.AiDraftBanner.aiLabel")}
+    </span>
+  );
+}
 
 /**
  * Checkbox edits award full/zero points; number input allows partial points (0..max).
@@ -35,6 +46,7 @@ export function RubricChecklist({
   validBlockIds,
   onChangeStructuredItem,
   onToggleAcknowledge,
+  aiFilledItems,
 }: ChecklistProps & { rubric: Rubric }) {
   function awardItem(itemId: string, max: number, achieved: boolean) {
     const selected = new Set(checks[rubric.rubricId] ?? []);
@@ -88,6 +100,7 @@ export function RubricChecklist({
                 </span>
               </label>
               <div className="flex shrink-0 items-center gap-1.5 tabular-nums text-muted">
+                {aiFilledItems?.has(ackKey) && <AiFilledBadge />}
                 {!disabled && (
                   <input
                     type="number"

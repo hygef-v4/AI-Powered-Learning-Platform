@@ -28,4 +28,4 @@ User request: “chạy lại toàn bộ test/build”. Existing scoped evidence
 - [x] Frontend full tests, lint, production build and typecheck: 799 tests/116 files; lint, production build and typecheck exit 0. Full tests reran with two workers after four default-worker timeouts; no timeout or source edits.
 - [x] Review fresh reports/artifacts, record results and limits, update audit/state. No commit, deployment or application restart.
 
-[Full verification results and earlier environment failures](../../build-and-test/2026-11-06-u09-structure-full-verification.md). Final backend output uses the Maven `target/test-classes` convention for ArchUnit; scratch test JVM heap is 768 MB. No project configuration edits; temporary backend POM removed.
+[Full verification results and earlier environment failures](../../build-and-test/2026-11-06/2026-11-06-u09-structure-full-verification.md). Final backend output uses the Maven `target/test-classes` convention for ArchUnit; scratch test JVM heap is 768 MB. No project configuration edits; temporary backend POM removed.

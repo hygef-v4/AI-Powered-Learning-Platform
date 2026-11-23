@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 /**
  * Quy tắc theo {@code purpose}: role được tải lên (BR-U03-04), trần dung lượng lấy từ Settings (BR-U03-02, 87) và luôn
  * bị kẹp trong trần cứng 50 MB, 5 MB, 2 MB. Loại tệp cố định, không có trong Settings: học liệu PDF, DOCX, PPTX, XLSX; ảnh
- * trong tài liệu PNG, JPEG; tệp nguồn soạn bài bằng AI TXT, DOCX, PDF; tệp nhập đề PNG, JPEG, WEBP, PDF (trần 10 MB).
+ * trong tài liệu PNG, JPEG; tệp nguồn soạn bài bằng AI TXT, DOCX, PDF, PNG, JPEG, WEBP; tệp nhập đề PNG, JPEG, WEBP, PDF (trần 10 MB).
  */
 @Component
 public class PurposePolicy {
@@ -27,7 +27,8 @@ public class PurposePolicy {
     static final Map<ArtifactPurpose, Set<FileType>> SUPPORTED = Map.of(
             ArtifactPurpose.MATERIAL, EnumSet.of(FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.XLSX),
             ArtifactPurpose.DOCUMENT_IMAGE, EnumSet.of(FileType.PNG, FileType.JPEG),
-            ArtifactPurpose.ASSIGNMENT_SOURCE, EnumSet.of(FileType.TXT, FileType.DOCX, FileType.PDF, FileType.PNG, FileType.JPEG),
+            ArtifactPurpose.ASSIGNMENT_SOURCE,
+            EnumSet.of(FileType.TXT, FileType.DOCX, FileType.PDF, FileType.PNG, FileType.JPEG, FileType.WEBP),
             ArtifactPurpose.ASSIGNMENT_IMPORT, EnumSet.of(FileType.PNG, FileType.JPEG, FileType.WEBP, FileType.PDF));
     static final Map<ArtifactPurpose, Set<Role>> UPLOADERS = Map.of(
             ArtifactPurpose.MATERIAL, EnumSet.of(Role.TEACHER, Role.SUBJECT_MANAGER),

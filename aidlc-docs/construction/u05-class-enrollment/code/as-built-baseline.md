@@ -1,10 +1,10 @@
 # U05 Class & Enrollment — AS-BUILT source snapshot 2026-11-07
 
-**Convention delta 2026-11-05:** concrete actions use verb-object names (`loadClass`, `listStudents`, `createClass`, `enrollStudents`); dependency fields/constructor arguments identify their service/repository roles. `transactionTemplate` and `lineTransactionTemplate` remain separate; the latter retains per-line REQUIRES_NEW behavior. Frontend API actions use explicit names, component modules are `AcademicsUi.tsx`, `ClassNavContexts.tsx`, `ClassRoutes.tsx`, with all imports/mocks updated. Java wildcard imports retained per the user's follow-up preference; explicit imports are allowed where names collide. DTO/record fields, contract overrides, routes, parameter bindings and behavior remain unchanged. [Naming verification and exceptions](../../build-and-test/2026-11-05-u05-u09-u15-conventions-results.md).
+**Convention delta 2026-11-05:** concrete actions use verb-object names (`loadClass`, `listStudents`, `createClass`, `enrollStudents`); dependency fields/constructor arguments identify their service/repository roles. `transactionTemplate` and `lineTransactionTemplate` remain separate; the latter retains per-line REQUIRES_NEW behavior. Frontend API actions use explicit names, component modules are `AcademicsUi.tsx`, `ClassNavContexts.tsx`, `ClassRoutes.tsx`, with all imports/mocks updated. Java wildcard imports retained per the user's follow-up preference; explicit imports are allowed where names collide. DTO/record fields, contract overrides, routes, parameter bindings and behavior remain unchanged. [Naming verification and exceptions](../../build-and-test/2026-11-05/2026-11-05-u05-u09-u15-conventions-results.md).
 
-**Follow-up delta 2026-11-05:** moved `formatDate`/`operationError` from UI components to `model/format.ts`, updating callers. Vietnam dates, invalid-date fallback, conflict copy and suppression of unsafe API details remain unchanged. Removed one unused controller repository import; no authorization, lock, contract or schema change. [Current verification and limits](../../build-and-test/2026-11-05-u05-u09-u15-followup-results.md).
+**Follow-up delta 2026-11-05:** moved `formatDate`/`operationError` from UI components to `model/format.ts`, updating callers. Vietnam dates, invalid-date fallback, conflict copy and suppression of unsafe API details remain unchanged. Removed one unused controller repository import; no authorization, lock, contract or schema change. [Current verification and limits](../../build-and-test/2026-11-05/2026-11-05-u05-u09-u15-followup-results.md).
 
-**Cleanup delta 2026-11-04:** removed one consecutive duplicate manager-scope check in class creation. Checks before account locking and after subject locking remain; no authorization/transaction or schema change. [Evidence](../../build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md).
+**Cleanup delta 2026-11-04:** removed one consecutive duplicate manager-scope check in class creation. Checks before account locking and after subject locking remain; no authorization/transaction or schema change. [Evidence](../../build-and-test/2026-11-04/2026-11-04-u05-u09-u15-cleanup-results.md).
 
 Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
@@ -33,16 +33,16 @@ Tests: [academics](../../../../backend/src/test/java/edu/aiplatform/academics).
 
 ## Evidence và giới hạn
 
-Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
+Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
 
 ### Ghi nhận kiểm thử trước baseline
 
-- [aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-audit-report.md](../../build-and-test/2026-10-25-u05-u15-audit-report.md)
-- [aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-manual-test-guide.md](../../build-and-test/2026-10-25-u05-u15-manual-test-guide.md)
-- [aidlc-docs/construction/build-and-test/2026-10-26-u05-u15-followup-report.md](../../build-and-test/2026-10-26-u05-u15-followup-report.md)
+- [aidlc-docs/construction/build-and-test/2026-10-25/2026-10-25-u05-u15-audit-report.md](../../build-and-test/2026-10-25/2026-10-25-u05-u15-audit-report.md)
+- [aidlc-docs/construction/build-and-test/2026-10-25/2026-10-25-u05-u15-manual-test-guide.md](../../build-and-test/2026-10-25/2026-10-25-u05-u15-manual-test-guide.md)
+- [aidlc-docs/construction/build-and-test/2026-10-26/2026-10-26-u05-u15-followup-report.md](../../build-and-test/2026-10-26/2026-10-26-u05-u15-followup-report.md)
 
 ## Delta working tree — 2026-11-09
 
 EnrollmentPanel đọc Excel .xlsx một cột email qua enrollmentWorkbook, tối đa 100 KB/200 dòng, mẫu enrollment-import.xlsx. Vẫn cho dán email và dùng API danh sách text; server kiểm lại quyền và từng dòng.
 
-Delta này bổ sung snapshot commit có ngày phía trên, chưa tạo commit mới và không sửa lại evidence lịch sử. [Kết quả và giới hạn](../../build-and-test/2026-11-09-excel-import-results.md); [đối chiếu tài liệu](../../build-and-test/2026-11-09-aidlc-doc-sync.md).
+Delta này bổ sung snapshot commit có ngày phía trên, chưa tạo commit mới và không sửa lại evidence lịch sử. [Kết quả và giới hạn](../../build-and-test/2026-11-09/2026-11-09-excel-import-results.md); [đối chiếu tài liệu](../../build-and-test/2026-11-09/2026-11-09-aidlc-doc-sync.md).

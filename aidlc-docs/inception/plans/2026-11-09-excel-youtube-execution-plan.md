@@ -34,7 +34,7 @@ Luồng công việc: phát hiện workspace (xong) → yêu cầu (xong) → du
 - [x] 5. Kiểm tra mẫu YouTube trên localhost: iframe tải 200 và hiện player; không có video lỗi trong lớp hiện hữu. Người dùng hủy yêu cầu YouTube sau câu hỏi bổ sung; đóng tab kiểm tra riêng.
 - [x] 6. Hủy theo yêu cầu người dùng; không sửa YouTube/CSP.
 - [x] 7. Backend liên quan 39/0 skip, toàn bộ frontend 814/119 file, lint/typecheck/build qua. Test đọc lại ba mẫu và UI preview/xác nhận. YouTube đã hủy; không kiểm nhập thật qua trình duyệt.
-- [x] 8. Kiểm tra diff, đồng bộ tài liệu U01/U05/U10 và audit/state; [kết quả và giới hạn](../../construction/build-and-test/2026-11-09-excel-import-results.md). Không commit/push/deploy.
+- [x] 8. Kiểm tra diff, đồng bộ tài liệu U01/U05/U10 và audit/state; [kết quả và giới hạn](../../construction/build-and-test/2026-11-09/2026-11-09-excel-import-results.md). Không commit/push/deploy.
 
 ## Extension
 

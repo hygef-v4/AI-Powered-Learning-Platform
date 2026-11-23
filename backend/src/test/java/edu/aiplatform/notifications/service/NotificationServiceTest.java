@@ -13,7 +13,10 @@ import java.util.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import edu.aiplatform.groupdocs.integration.RabbitSseHub;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 class NotificationServiceTest {
     INotificationRepository notificationRepository;
@@ -68,10 +71,12 @@ class NotificationServiceTest {
     }
 
     @Test
-    void sseOnlyAfterCommitAndOneNoticePerRecipient() {
+    void sseReachesBrokerOnlyAfterCommitAndOneNoticePerRecipient() {
+        RabbitTemplate rabbit = mock(RabbitTemplate.class);
+        NotificationService service = createServiceWithRealHub(rabbit);
         when(notificationRepository.insertNotification(any())).thenReturn(true);
         TransactionSynchronizationManager.initSynchronization();
-        notificationService.createNotification(
+        service.createNotification(
                 UUID.randomUUID(),
                 NotificationType.ENROLLED,
                 List.of(account, account),
@@ -82,9 +87,40 @@ class NotificationServiceTest {
                 null);
         verify(notificationRepository, times(1)).insertNotification(any());
         verify(emailDeliveryService).scheduleEmail(any(), eq("ENROLLED"), isNull());
-        verifyNoInteractions(sseHub);
-        TransactionSynchronizationManager.getSynchronizations().forEach(sync -> sync.afterCommit());
-        verify(sseHub).publish(eq(NotificationService.buildChannel(account)), any());
+        verifyNoInteractions(rabbit);
+        // Same snapshot-based callback run as Spring's commit (IT-U14-M03 regression).
+        TransactionSynchronizationUtils.triggerAfterCommit();
+        verify(rabbit, times(1))
+                .convertAndSend(
+                        eq("platform.realtime"),
+                        eq(""),
+                        eq(
+                                Map.of(
+                                        "channel",
+                                        NotificationService.buildChannel(account),
+                                        "event",
+                                        Map.of("type", "notification-changed"))));
+    }
+
+    @Test
+    void markReadReachesBrokerAfterCommit() {
+        RabbitTemplate rabbit = mock(RabbitTemplate.class);
+        NotificationService service = createServiceWithRealHub(rabbit);
+        when(notificationRepository.markRead(any(), eq(account), any())).thenReturn(true);
+        TransactionSynchronizationManager.initSynchronization();
+        service.markRead(actor, UUID.randomUUID());
+        verifyNoInteractions(rabbit);
+        TransactionSynchronizationUtils.triggerAfterCommit();
+        verify(rabbit).convertAndSend(eq("platform.realtime"), eq(""), any(Object.class));
+    }
+
+    private NotificationService createServiceWithRealHub(RabbitTemplate rabbit) {
+        return new NotificationService(
+                notificationRepository,
+                notificationAccess,
+                emailDeliveryService,
+                new RabbitSseHub(rabbit),
+                clock);
     }
 
     @Test

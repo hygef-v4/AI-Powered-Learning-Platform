@@ -77,6 +77,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 3. Kiểm người gọi là Chủ nhiệm môn của môn và môn `ACTIVE` (BR-U05-10).
 4. Kiểm mã trong môn và học kỳ (BR-U05-11, từ 2026-11-14 xem F17); kiểm giảng viên nếu có (BR-U05-12).
 5. Tạo lớp `DRAFT`; ghi audit `CLASS_CREATED` (và `CLASS_TEACHER_CHANGED` nếu có giảng viên).
+6. Class List gọi ngay `DRAFT`→`OPEN` cho lớp vừa tạo (F14, BR-U05-14), nên lớp tạo từ giao diện ở `OPEN`; mở không được thì lớp ở lại `DRAFT`. Source-observed 2026-11-23.
 
 ### F8 - Chi tiết lớp của môn (UC 25)
 1. Bấm một lớp trên Class List; frontend gọi `GET /api/v1/manager/classes/{id}`.

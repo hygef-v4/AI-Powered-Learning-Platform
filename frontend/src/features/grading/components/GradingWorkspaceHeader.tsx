@@ -4,6 +4,7 @@ import { fetchApi } from "@/shared/api/client";
 import { AutoTextarea, type RubricCriterion } from "@/shared/document";
 import { Card, Icon, TotalScoreCard } from "@/shared/ui";
 import { GradingFeedbackSummary } from "./StructuredFeedbackSection";
+import { AiFilledBadge } from "./RubricChecklistPanel";
 import { matchesPersonQuery } from "@/shared/studentCode";
 import { PersonSubline } from "@/shared/ui/PersonSubline";
 import type {
@@ -207,7 +208,9 @@ export function GradingHeaderSection({
   setAdjustment,
   setChangeReason,
   updateStructuredSummary,
+  aiFilledFeedback = false,
 }: {
+  aiFilledFeedback?: boolean;
   assignmentKind: string;
   unanchoredAuthors: string[];
   form: GradingFormValues;
@@ -227,6 +230,7 @@ export function GradingHeaderSection({
       )}
       <section aria-label={msg("grading.components.GradingWorkspaceHeader.overallComments")} className="mt-1 text-sm leading-relaxed text-body">
         <label htmlFor="grading-general-feedback" className="text-sm font-semibold text-ink">{msg("grading.components.GradingWorkspaceHeader.overallComments")}</label>
+        {aiFilledFeedback && <> <AiFilledBadge /></>}
         <AutoTextarea
           id="grading-general-feedback"
           aria-label={msg("grading.components.GradingWorkspaceHeader.overallComments")}

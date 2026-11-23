@@ -65,4 +65,4 @@ Backend chạy bằng Maven trong Docker (`maven:3.9-eclipse-temurin-17`, `-o`),
 
 Chưa chạy: toàn bộ backend (`mvn verify`), toàn bộ Vitest, production build, trình duyệt, nhà cung cấp AI thật. Các việc này thuộc giai đoạn Build and Test.
 
-**Cập nhật Build and Test**: `mvn verify` phát hiện `AiProperties.Provider` có constructor phụ làm Spring không bind được danh sách model; đã bỏ constructor phụ. Sau đó backend 2197/2197, frontend 968/968. Xem [kết quả](../../build-and-test/2026-11-11-exam-image-import-verification.md).
+**Cập nhật Build and Test**: `mvn verify` phát hiện `AiProperties.Provider` có constructor phụ làm Spring không bind được danh sách model; đã bỏ constructor phụ. Sau đó backend 2197/2197, frontend 968/968. Xem [kết quả](../../build-and-test/2026-11-11/2026-11-11-exam-image-import-verification.md).

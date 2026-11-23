@@ -83,7 +83,7 @@ User story duy nhất: giảng viên ghi mức đóng góp có căn cứ và đi
 thành viên; sinh viên đọc đánh giá của mình sau công bố. Không cần tách unit hoặc
 thay kiến trúc. Security/Resiliency giữ phạm vi đã duyệt, PBT tắt; RBAC, validation,
 transaction/version là các kiểm chứng bắt buộc. Kết quả tại
-../../construction/build-and-test/2026-11-13-member-contribution-levels.md.
+../../construction/build-and-test/2026-11-13/2026-11-13-member-contribution-levels.md.
 
 ## Xác nhận phạm vi
 

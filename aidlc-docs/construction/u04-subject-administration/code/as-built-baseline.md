@@ -4,7 +4,7 @@ Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths
 
 subjects có quản trị danh sách/chi tiết/create/update, manager assignment, archive/reopen và version guards. UI tại admin/subjects; Subject Detail của Admin không cấp quyền chấm hoặc sửa lớp. Các handoff raw paths bị mất được thay bằng baseline này, không tạo lại nội dung approval giả.
 
-**Delta 2026-11-10 (`0df689df`):** `SubjectExceptionHandler` ghi log exception gốc khi yêu cầu Admin môn học lỗi ngoài dự kiến; response vẫn là `SUBJECT_INTERNAL_ERROR` chung, các ánh xạ lỗi quyền, lưu trữ và validation không đổi. [Chẩn đoán](../../build-and-test/2026-11-09-admin-subjects-runtime-diagnosis.md).
+**Delta 2026-11-10 (`0df689df`):** `SubjectExceptionHandler` ghi log exception gốc khi yêu cầu Admin môn học lỗi ngoài dự kiến; response vẫn là `SUBJECT_INTERNAL_ERROR` chung, các ánh xạ lỗi quyền, lưu trữ và validation không đổi. [Chẩn đoán](../../build-and-test/2026-11-09/2026-11-09-admin-subjects-runtime-diagnosis.md).
 
 ## Source và negative-test inventory
 
@@ -27,12 +27,12 @@ Tests: [subjects](../../../../backend/src/test/java/edu/aiplatform/subjects).
 
 ## Evidence và giới hạn
 
-Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
+Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
 
 ### Ghi nhận kiểm thử trước baseline
 
-- [aidlc-docs/construction/build-and-test/2026-10-25-b2-b8-u04-results.md](../../build-and-test/2026-10-25-b2-b8-u04-results.md)
+- [aidlc-docs/construction/build-and-test/2026-10-25/2026-10-25-b2-b8-u04-results.md](../../build-and-test/2026-10-25/2026-10-25-b2-b8-u04-results.md)
 
 ## Delta 2026-11-18 — chuyển JPA sang JDBC
 
-Repository của unit dùng `JdbcClient`, giữ SQL, khóa, version/CAS, thứ tự và API như trước; entity/repository JPA đã xóa. [Kết quả kiểm chứng](../../build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).
+Repository của unit dùng `JdbcClient`, giữ SQL, khóa, version/CAS, thứ tự và API như trước; entity/repository JPA đã xóa. [Kết quả kiểm chứng](../../build-and-test/2026-11-18/2026-11-18-u04-u13-u14-jdbc-results.md).

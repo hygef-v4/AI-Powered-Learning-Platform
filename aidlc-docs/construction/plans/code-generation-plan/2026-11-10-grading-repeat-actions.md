@@ -9,4 +9,4 @@ Continue the authorized UI bug fix without subagents. Preserve backend state/per
 
 Scope: shared batch dialog, gradebook/submission batch controls and tests. No backend change, idempotency/authorization weakening, live finalize/publish, restart, commit or push. Security/Resiliency retained; PBT disabled.
 
-[Results and limits](../../build-and-test/2026-11-10-grading-repeat-actions.md).
+[Results and limits](../../build-and-test/2026-11-10/2026-11-10-grading-repeat-actions.md).

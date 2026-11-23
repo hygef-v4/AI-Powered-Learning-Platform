@@ -74,7 +74,7 @@ Progress test chính thức của cả hai môn chạy trên LMS hoặc tại l�
 | Số liệu | Giá trị | Nguồn |
 |---|---|---|
 | Trần token đầu ra mỗi lần chấm | `min(8192, 4096 + 220 × số mục rubric)`, ví dụ rubric 13 mục là 6.956 token | `GradingPromptBuilder.calculateMaxOutputTokens` |
-| Token đầu ra đo thật, rubric 13 mục | 3.120–5.698 token, trong đó tối đa 1.739 token suy nghĩ | Đánh giá Gemini 2.5 Flash, [kết quả 2026-11-13](../../construction/build-and-test/2026-11-13-ai-grading-eval-gemini-results.md) |
+| Token đầu ra đo thật, rubric 13 mục | 3.120–5.698 token, trong đó tối đa 1.739 token suy nghĩ | Đánh giá Gemini 2.5 Flash, [kết quả 2026-11-13](../../construction/build-and-test/2026-11-13/2026-11-13-ai-grading-eval-gemini-results.md) |
 | Mức token giữ trước (reservation) | `ký tự prompt / 2 + trần đầu ra`; mỗi ảnh tính 3.200 ký tự | `AiTokenEstimate` (BR-U06-56) |
 | Token đầu vào thật | **Chưa có trong repo.** Đo bằng màn usage của chủ key (FR-036) trên vài bài thật | — |
 

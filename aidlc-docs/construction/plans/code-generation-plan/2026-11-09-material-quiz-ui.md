@@ -23,7 +23,7 @@
 - [x] 3. Shared compact editor/viewer and material/quiz descriptions, Enabled switch, legacy text and safe rendering; 58 scoped frontend tests passed before integration, server bounds mirrored.
 - [x] 4. Manual/bank/AI authoring within question section, existing-item edit, searchable multi-select/chips/10-limit/disabled reasons, persistent source warnings, empty-source rejection and retry. Review regressions added for version/format retention, pending saves and navigation protection; targeted frontend tests passed.
 - [x] 5. Backend clean533/0skip plus focused104/119/10 and required PostgreSQL guard passed, JAR packaged. Frontend836/124file, full lint, production build/typecheck passed; gutter correction82test/10file and build/typecheck passed; final copy-only labels55test/8file passed. User takes manual UI acceptance; no browser/mobile/provider success claimed.
-- [x] 6. Updated current contracts/U13/U10 docs, audit/state and [final results](../../build-and-test/2026-11-09-material-quiz-ui-results.md). Source/test/OpenAPI diff check passed; raw audit preserves original input spaces. No live migration/restart/commit/deploy.
+- [x] 6. Updated current contracts/U13/U10 docs, audit/state and [final results](../../build-and-test/2026-11-09/2026-11-09-material-quiz-ui-results.md). Source/test/OpenAPI diff check passed; raw audit preserves original input spaces. No live migration/restart/commit/deploy.
 
 ## Review focus
 

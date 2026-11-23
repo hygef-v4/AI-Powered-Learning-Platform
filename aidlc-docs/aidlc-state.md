@@ -1,8 +1,53 @@
 # AI-DLC State Tracking
 
+## Gom báo cáo kiểm thử theo ngày trong build-and-test · 2026-11-23
+
+Người dùng: "nhóm lại các thư mục ngày tháng này trong build and test folder lại cho gọn". Chỉ đổi vị trí tài liệu, không đổi nội dung báo cáo.
+
+- [x] 123 mục có tiền tố ngày (tệp và thư mục bằng chứng) chuyển vào 24 thư mục `YYYY-MM-DD/` ngay dưới `construction/build-and-test/`. Gốc thư mục từ 144 mục còn 45: 24 thư mục ngày, tài liệu hiện hành (hướng dẫn build và test, `build-and-test-summary.md`, báo cáo xác minh theo unit, `ai-grading-test-report.md` cùng thư mục hình) và `2026-11-08-integration-test-cases.json`.
+- [x] `2026-11-08-integration-test-cases.json` giữ ở gốc vì `scripts/assert-required-backend-tests.ps1` (chạy trong CI) đọc tệp này theo đường dẫn.
+- [x] Sửa 183 tệp: 558 liên kết và 52 đường dẫn dạng chữ, gồm `aidlc-state.md`, `README.md`, các `as-built-baseline.md`, kế hoạch và các báo cáo bị chuyển (liên kết tương đối thêm một cấp). Kiểm tra: 224 tệp đang được git theo dõi đều còn nguyên, không liên kết nào trỏ vào `build-and-test` bị hỏng, tổng số liên kết hỏng sẵn có không đổi (110 trước và sau).
+- [x] Không sửa `audit.md` và `history/` vì là bản ghi lịch sử: các đường dẫn cũ trong đó trỏ tới vị trí trước ngày 2026-11-23. Quy tắc tìm tệp: tên tệp bắt đầu bằng ngày nằm trong thư mục cùng tên ngày.
+- [ ] Chưa commit. Các nhánh khác đang sửa tài liệu trong `build-and-test` có thể xung đột đường dẫn khi merge.
+
+## U09: Chi phí trên mỗi bài chấm hoàn tất cho eval chấm AI · 2026-11-23
+
+Người dùng chọn hai việc từ khóa Introduction to evals ("làm việc 1,2"), sau đó giữ nguyên judge GEval và yêu cầu hoàn lại phần verdict. Chỉ đổi `scripts/ai-grading-eval`, không đổi backend hay API.
+
+- [x] Báo cáo thêm `summary.cost`: token và chi phí trên mỗi ca hoàn tất (tổng lệch trong `--score-tolerance` so với tham chiếu), chia toàn bộ usage đã ghi cho số ca hoàn tất. Đọc usage từ bản ghi Java; `--input-price` và `--output-price` (USD mỗi triệu token) cho ra số tiền.
+- [x] Cập nhật [báo cáo kiểm thử AI chấm điểm](construction/build-and-test/ai-grading-test-report.md) lượt 3 với token và thời gian: 416.997 token cho 20 ca, 27.800 token mỗi ca hoàn tất (15/20), trung vị 56 giây mỗi lần chấm. Tính từ `provider-result.json`, chưa quy ra tiền.
+- [x] Báo cáo kiểm thử AI chấm điểm thêm độ lệch điểm theo lượt (sai số trung bình 0,148 → 0,065 → 0,165), kết quả theo từng đề, nguyên nhân hai ca lệch còn lại ở lượt 3 (`06-prompt-injection`, `08-wrong-actors`) và nhóm nguyên nhân của năm ca lệch. Tính từ các bảng phụ lục và bằng chứng đã commit.
+- [x] Báo cáo kiểm thử AI chấm điểm thêm phần A: độ chính xác theo mục (225/234, 96,2%), hiệu quả cờ xem lại (2/9 mục lệch), token và thời gian ba lượt (lượt 1, 2 lấy từ `.tmp` cục bộ), môi trường kiểm thử, mục 5 giới hạn và mục 6 kết luận (bản nháp chờ nhóm xác nhận).
+- [x] Sửa nhận định trong báo cáo kiểm thử AI chấm điểm: lượt 3 không cho thấy cải thiện so với lượt 2 (Sol vẫn 18/20, Opus chưa so sánh được, điểm lệch lớn hơn, hai ca workshop xấu đi); chỉ tốt hơn lượt 1. Thêm bảng ca đổi điểm giữa lượt 2 và lượt 3.
+- [x] Chạy lặp `swd-workshop-missing-fk` (Luna `medium`, 3 lần mỗi prompt lượt 2 và lượt 3, 124.866 token): cùng một prompt ra 7,00 đến 9,25, trung bình 8,38 (lượt 2) và 8,31 (lượt 3). Rút lại nhận định prompt lượt 3 làm ca này xấu đi; cập nhật mục 4, 5, 6 và lưu bằng chứng ở [thư mục chạy lặp](construction/build-and-test/2026-11-23/2026-11-23-u09-ai-grading-rerun-evidence/). Chưa chạy lặp `swd-workshop-complete`.
+- [x] Chạy lặp thêm ba ca (`03-one-normal-flow`, `05-off-topic`, `swd-workshop-complete`; Luna `medium`, 3 lần mỗi prompt lượt 2 và lượt 3, 374.382 token): lượt 3 đúng hơn ở hai ca nhắm tới (`05` 3/3 so với trigger sai 3/3; `03` 2/3 so với 0/3), hai prompt dao động như nhau ở `swd-workshop-complete` (mất 1,50 ở `s-authorization`). Sửa kết luận 4, khuyến nghị và giới hạn trong báo cáo kiểm thử; bằng chứng ở thư mục chạy lặp. 16 ca còn lại chưa chạy lặp.
+- [x] Báo cáo kiểm thử AI chấm điểm thêm 7 hình: sơ đồ quy trình (Mermaid, đã render kiểm tra bằng mermaid-cli) và 6 biểu đồ matplotlib (kết quả theo đề, mục rubric và cờ, ba lượt, độ lệch điểm, chạy lặp, token và thời gian). Số liệu giữ nguyên như bảng; script vẽ và ảnh nằm ở `construction/build-and-test/ai-grading-test-report-charts/`.
+- [x] Viết lại báo cáo kiểm thử AI chấm điểm cho gọn và dễ hiểu: thêm Tóm tắt và khung Thuật ngữ, gộp mục 1 và 2, gộp hai bảng ca lệch thành một, chuyển các bảng chi tiết xuống Phụ lục A, đưa khuyến nghị về mục 6, bỏ ghi chú sửa nội bộ và giọng ngôi thứ nhất. Số liệu không đổi; thân báo cáo còn khoảng một nửa độ dài.
+- [x] Judge `correct/incorrect/unknown` đã làm rồi gỡ theo quyết định giữ GEval. Phán quyết có thể làm lại sau khi có nhãn của giảng viên để so hai kiểu.
+- [x] Pytest của bộ eval 19/19 (18 cũ, thêm 1 cho chi phí). Chưa chạy lại trên lượt ghi thật. Chưa commit.
+
+## U07/U03/U06: Tạo đề bằng AI nhận ảnh WebP · 2026-11-23
+
+Người dùng: "sửa phần tạo đề ai hỗ trợ up ảnh webp đi". Chỉ mở danh sách định dạng, không đổi API hay schema.
+
+- [x] Tệp nguồn soạn bài bằng AI (`ASSIGNMENT_SOURCE`) nhận thêm WEBP (`PurposePolicy`). Ảnh WebP được gửi thẳng cho model đọc ảnh qua `AssignmentAiDraftService.SOURCE_IMAGE_TYPES` (dùng chung với `AssignmentSourceImageSource`), `AiTaskService.IMAGE_TYPES` và ô tải tệp của `AiReviseChat`. Gemini, OpenAI và Anthropic đều nhận WebP, gateway chỉ truyền nguyên `mediaType`.
+- [x] Cập nhật BR-U06-54 và mô tả `ASSIGNMENT_SOURCE` của U07. Giữ báo cáo lịch sử nguyên văn.
+- [x] Kiểm thử backend: PurposePolicyTest 4, AssignmentSourceImageSourceTest 5 (có ca WebP cho tạo và sửa đề), AssignmentAiDraftServiceTest 16, AiTaskFlowTest 39, đều đạt.
+- [ ] Chưa thử tải ảnh WebP thật trên giao diện; backend đang chạy cần khởi động lại để nhận thay đổi.
+
+## U09: AI điền thẳng đề xuất vào form chấm điểm · 2026-11-23
+
+Người dùng: bấm chấm bằng AI xong thì điểm và nhận xét nên điền luôn vào form, có nút từ chối đề xuất, không phải kéo xuống lịch sử để bấm áp dụng. Chỉ frontend, không đổi API hay schema.
+
+- [x] Đề xuất READY do giáo viên vừa yêu cầu tự điền vào form (`useGradingWorkspace`). Form đang có chỉnh sửa chưa lưu thì không ghi đè, thanh trên form hỏi Áp dụng/Bỏ qua.
+- [x] Thanh `AiDraftBanner` trên form: Giữ đề xuất / Hoàn tác (khôi phục form trước khi AI điền) / Chi tiết. Bảng so sánh `AiProposalPanel` chuyển lên ngay dưới thanh. Autosave vẫn chặn khi nháp AI chưa được giữ.
+- [x] Hoàn tác hỏi xác nhận khi giáo viên đã sửa tay sau lúc AI điền (tránh mất chỉnh sửa). Ô điểm và nhận xét chung do AI điền có nhãn ✨ AI, mất khi sửa ô đó.
+- [x] Nút Chấm bằng AI kẹt "AI đang chấm…" khi task kẹt ở QUEUED: thêm nút **Hủy chấm AI** trên thanh công cụ, gọi API hủy sẵn có `POST /ai/tasks/{id}:cancel` rồi tải lại danh sách. Chỉ hủy được task QUEUED; task RUNNING đã gửi nhà cung cấp, backend tự đóng (UNKNOWN) khi hết hạn gọi.
+- [x] ESLint, tsc đạt; Vitest grading + i18n 234/234 (sửa 1 test cũ, thêm 4 test mới). Chưa kiểm tra trên trình duyệt thật. Làm trên nhánh `audit-staging`.
+
 ## SEO cho alapedu.online — 2026-11-22
 
-Người dùng: "tôi muốn làm seo cho trang web"; chọn nền tảng kỹ thuật + landing page, đã có Search Console, nhánh mới từ staging. [Kế hoạch](construction/plans/code-generation-plan/2026-11-22-seo.md), [kết quả](construction/build-and-test/2026-11-22-seo-results.md). Nhánh `feat/seo` từ `origin/staging@47837e52`, worktree `.claude/worktrees/seo`.
+Người dùng: "tôi muốn làm seo cho trang web"; chọn nền tảng kỹ thuật + landing page, đã có Search Console, nhánh mới từ staging. [Kế hoạch](construction/plans/code-generation-plan/2026-11-22-seo.md), [kết quả](construction/build-and-test/2026-11-22/2026-11-22-seo-results.md). Nhánh `feat/seo` từ `origin/staging@47837e52`, worktree `.claude/worktrees/seo`.
 
 - [x] Requirements Analysis (Standard) và Workflow Planning: SEO-FR1–FR9; chỉ Code Generation và Build and Test.
 - [x] Người dùng duyệt kế hoạch (2026-11-22).
@@ -21,7 +66,7 @@ Người dùng yêu cầu commit cục bộ, push và mở PR vào staging (2026
 - [x] Đối chiếu 14 đề SWR302 và 6 đề SWD392 với prompt và luồng tạo đề hiện tại. 22 test backend tạo đề đạt ở lượt audit.
 - [x] Lập [kế hoạch code generation](construction/plans/code-generation-plan/2026-11-22-u07-pe-assignment-generation.md) cho prompt AUTO, điểm từng câu, xem trước cảnh báo và hồi quy trước/sau.
 - [x] Theo kế hoạch đã duyệt, bổ sung hướng dẫn AUTO, giữ điểm từng câu từ rubric mẫu và yêu cầu xác nhận trên UI khi có cảnh báo nguồn.
-- [x] Kiểm 159 test backend, 35 test tích hợp, 92 test frontend và hai ca trên Chrome local với API mock. Đối chiếu Luna medium trên sáu brief. Prompt cuối sinh sáu kết quả đủ điểm, gồm một đề cần xem do mâu thuẫn mẫu. [Báo cáo U07](construction/build-and-test/2026-11-22-u07-pe-assignment-evaluation.md)
+- [x] Kiểm 159 test backend, 35 test tích hợp, 92 test frontend và hai ca trên Chrome local với API mock. Đối chiếu Luna medium trên sáu brief. Prompt cuối sinh sáu kết quả đủ điểm, gồm một đề cần xem do mâu thuẫn mẫu. [Báo cáo U07](construction/build-and-test/2026-11-22/2026-11-22-u07-pe-assignment-evaluation.md)
 - [x] Đo Luna medium trên 3 lượt cùng 6 đề. 18/18 đúng schema, 15/18 đúng tổng, 2/3 lượt phát hiện mâu thuẫn. 15 đề đúng điểm giữ nguyên giới hạn rubric khi dựng prompt U09. Ba bài nộp đối chứng đạt 4/4, 3/4 và 3/4 đúng mục cần đổi điểm.
 - [x] Thêm tên hai đầu cạnh cho U09, xem trước bắt buộc với đề tạo từ mẫu và cấu hình điểm từng câu. 229 test backend và 94 test frontend đạt. Luna giữ đúng điểm ở 17/17 phản hồi đọc được khi chốt điểm, một phản hồi có dữ liệu dư sau JSON. Ba đối chứng U09 giữ ID cũ và đạt điểm kỳ vọng.
 - [x] Đo Luna medium khi để trống điểm từng câu. 14/18 đúng tổng và số câu theo brief, 2 sai tổng bị chặn và 2 phản hồi lỗi JSON. 12 test backend và 3 test frontend liên quan đạt.
@@ -35,7 +80,7 @@ Người dùng yêu cầu commit cục bộ, push và mở PR vào staging (2026
 - [x] Prompt chốt cho ca thiếu FK 9,25/10 và ca thực sự thiếu phân quyền 8,50/10. Ca lạc đề vẫn lệch 0,25 ở trigger.
 - [x] Báo cáo cục bộ đổi tên thành `test-ai-grading-test.md`. Có cột riêng và lệnh đánh giá cùng bản ghi cho Opus 5.5.
 - [x] Chạy Opus 5.5 trên 20 ca lượt 3 (15/20 đạt).
-- [x] Lưu báo cáo kiểm thử thành một file [ai-grading-test-report.md](construction/build-and-test/ai-grading-test-report.md). Lưu 83 file bằng chứng lượt 3 trong `2026-11-22-u09-ai-grading-test-evidence/`. Bản ghi các lượt trước giữ trong `.tmp/` cục bộ.
+- [x] Lưu báo cáo kiểm thử thành một file [ai-grading-test-report.md](construction/build-and-test/ai-grading-test-report.md). Lưu 83 file bằng chứng lượt 3 trong `construction/build-and-test/2026-11-22/2026-11-22-u09-ai-grading-test-evidence/`. Bản ghi các lượt trước giữ trong `.tmp/` cục bộ.
 - [ ] Kiểm độ ổn định rộng hơn với prompt chốt.
 
 ## U09: Luna chấm và Sol đánh giá · 2026-11-22
@@ -83,7 +128,7 @@ Người dùng yêu cầu tạo nhánh mới từ staging để chuyển U04, U1
 - [x] Workflow Planning: chỉ Code Generation và Build and Test; thứ tự U13 → U14 → U04. Đã duyệt 2026-11-18.
 - [x] Code Generation Part 1: [kế hoạch 6 bước](construction/plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md). Đã duyệt 2026-11-18.
 - [x] Code Generation Part 2: U13 module, U14, U04; giữ hạ tầng JPA chung. Cập nhật tài liệu unit và [persistence-conventions](construction/persistence-conventions.md). Người dùng duyệt 2026-11-18T14:44:22Z.
-- [x] Build and Test: `mvn -B verify` 2572 test, 0 fail, 0 error, 1 skipped. [Kết quả](construction/build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md). Thêm dòng vào [build-and-test-summary](construction/build-and-test/build-and-test-summary.md), sửa ghi chú JPA trong integration-test-instructions. Người dùng duyệt 2026-11-18T14:45:06Z.
+- [x] Build and Test: `mvn -B verify` 2572 test, 0 fail, 0 error, 1 skipped. [Kết quả](construction/build-and-test/2026-11-18/2026-11-18-u04-u13-u14-jdbc-results.md). Thêm dòng vào [build-and-test-summary](construction/build-and-test/build-and-test-summary.md), sửa ghi chú JPA trong integration-test-instructions. Người dùng duyệt 2026-11-18T14:45:06Z.
 - [x] Operations: placeholder, không có bước triển khai. Sau đó người dùng yêu cầu E2E và PR: E2E `u04-u13-u14` 40/40 trên stack `jdbc1118` với bản vá tạm cho lỗi RabbitMQ của staging `3ed52391` (không commit); mở PR vào staging, không merge, không deploy.
 
 ## Sửa ký pháp class diagram theo UML — 2026-11-18
@@ -181,7 +226,7 @@ Sau khi bản này lên VPS phải cài lại `/usr/local/bin/platform-deploy` v
 
 ## Khắc phục báo cáo phi chức năng — 2026-11-17
 
-Người dùng yêu cầu kiểm tra NFR, sau đó “sửa toàn bộ cho tôi” và “tiếp tục”. [Báo cáo gốc](construction/build-and-test/2026-11-16-non-functional-review.md), [kế hoạch](construction/plans/code-generation-plan/2026-11-16-nfr-remediation.md), [kết quả kiểm chứng](construction/build-and-test/2026-11-17-nfr-remediation-results.md).
+Người dùng yêu cầu kiểm tra NFR, sau đó “sửa toàn bộ cho tôi” và “tiếp tục”. [Báo cáo gốc](construction/build-and-test/2026-11-16/2026-11-16-non-functional-review.md), [kế hoạch](construction/plans/code-generation-plan/2026-11-16-nfr-remediation.md), [kết quả kiểm chứng](construction/build-and-test/2026-11-17/2026-11-17-nfr-remediation-results.md).
 
 - [x] Workspace/Requirements/Planning: brownfield, dùng lại yêu cầu và thiết kế; phạm vi F01–F08 được người dùng yêu cầu thực hiện. Không thêm use case/API/schema.
 - [x] Code Generation: 9/9 bước kế hoạch hoàn tất; health Drive không chặn, DB timeout, giảm tranh khóa Quiz, giới hạn worker, restore deadline/cleanup, image digest pins và đồng bộ tài liệu key/RPO.
@@ -190,20 +235,20 @@ Người dùng yêu cầu kiểm tra NFR, sau đó “sửa toàn bộ cho tôi�
 
 Đóng 8/8 lỗi đã báo ở mã nguồn/cấu hình/tài liệu. Chưa nghiệm thu p95 tại tải mục tiêu, RPO/RTO dữ liệu production, accessibility toàn hành trình hoặc soak/chaos dài hạn. Chưa deploy/commit/push phần NFR trong lượt này; không truy cập hay thay dữ liệu production.
 
-Kiểm tiếp theo yêu cầu đưa lên staging: [readiness 17/11](construction/build-and-test/2026-11-17-nfr-staging-readiness.md). Có thể chuẩn bị PR; local chậm staging 4 commit, mô phỏng gộp có hai xung đột tài liệu state/audit, mã nguồn không xung đột. CI staging `706e46f1` xanh cả 4 job; deploy harness mới 16/16 qua; frontend Docker build và smoke 384 MiB/0,5 CPU qua. Cần đồng bộ tài liệu, commit và CI PR trước merge; chưa thao tác phát hành.
+Kiểm tiếp theo yêu cầu đưa lên staging: [readiness 17/11](construction/build-and-test/2026-11-17/2026-11-17-nfr-staging-readiness.md). Có thể chuẩn bị PR; local chậm staging 4 commit, mô phỏng gộp có hai xung đột tài liệu state/audit, mã nguồn không xung đột. CI staging `706e46f1` xanh cả 4 job; deploy harness mới 16/16 qua; frontend Docker build và smoke 384 MiB/0,5 CPU qua. Cần đồng bộ tài liệu, commit và CI PR trước merge; chưa thao tác phát hành.
 
 Người dùng đã yêu cầu đồng bộ, commit, mở PR và chờ CI ngày 17/11. Đã tạo nhánh `codex/nfr-remediation` trên staging `706e46f1`, gộp đủ nội dung state/audit, giữ mã NFR đã kiểm thử. Đang thực hiện commit/PR và theo dõi CI theo [kế hoạch](construction/plans/code-generation-plan/2026-11-16-nfr-remediation.md); chưa được yêu cầu merge/deploy.
 
 ## Sửa các điểm trong báo cáo hiệu năng production — 2026-11-16
 
-Người dùng yêu cầu kiểm tra hiệu năng production, rồi yêu cầu "sửa toàn bộ". [Báo cáo](construction/build-and-test/2026-11-16-performance-report.md); [kế hoạch](construction/plans/code-generation-plan/2026-11-16-performance-fixes.md).
+Người dùng yêu cầu kiểm tra hiệu năng production, rồi yêu cầu "sửa toàn bộ". [Báo cáo](construction/build-and-test/2026-11-16/2026-11-16-performance-report.md); [kế hoạch](construction/plans/code-generation-plan/2026-11-16-performance-fixes.md).
 
 - [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering.
 - [x] Requirements Analysis (Minimal): phạm vi là mục 6.1–6.5 của báo cáo.
 - [x] Workflow Planning: chỉ Code Generation và Build and Test; các giai đoạn khác bỏ qua vì không có thành phần, API hay schema mới.
 - [x] Người dùng duyệt kế hoạch, chọn phương án deploy A.
 - [x] Code Generation: 13/13 bước. Bước 7 chỉ áp cho 502/503; Redis `maxmemory` 96 MB (staging giới hạn 128 MB).
-- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-16-performance-fixes-results.md). Frontend ESLint, TypeScript, Vitest 1.160/1.160, production build qua; test script deploy 15/15; nginx, Postgres, Redis kiểm trong container tạm.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-16/2026-11-16-performance-fixes-results.md). Frontend ESLint, TypeScript, Vitest 1.160/1.160, production build qua; test script deploy 15/15; nginx, Postgres, Redis kiểm trong container tạm.
 - [x] Người dùng yêu cầu commit cục bộ (2026-11-16).
 - [x] Người dùng yêu cầu mở PR (2026-11-16): push nhánh, PR vào staging. Không tự merge.
 
@@ -222,7 +267,7 @@ Người dùng yêu cầu kiểm tra `staging@d8ac7d21` trước khi đưa lên 
 
 ## Sửa các điểm rà soát toàn dự án trên nền staging — 2026-11-16
 
-Người dùng yêu cầu rà soát toàn dự án (2026-11-15), rồi chọn phương án 1: chỉ mang lên staging những điểm staging còn thiếu. Nhánh `chi-cuongg/audit-project-bugs-docs` trên `origin/staging@f1c351dd`, đã gộp `origin/staging@5f9c0173`. [Kế hoạch và phạm vi](construction/plans/code-generation-plan/2026-11-16-review-fixes-on-staging.md); [kết quả và giới hạn](construction/build-and-test/2026-11-16-review-fixes-on-staging-results.md).
+Người dùng yêu cầu rà soát toàn dự án (2026-11-15), rồi chọn phương án 1: chỉ mang lên staging những điểm staging còn thiếu. Nhánh `chi-cuongg/audit-project-bugs-docs` trên `origin/staging@f1c351dd`, đã gộp `origin/staging@5f9c0173`. [Kế hoạch và phạm vi](construction/plans/code-generation-plan/2026-11-16-review-fixes-on-staging.md); [kết quả và giới hạn](construction/build-and-test/2026-11-16/2026-11-16-review-fixes-on-staging-results.md).
 
 - [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering.
 - [x] Requirements Analysis (Minimal): phạm vi là các điểm của báo cáo rà soát còn tồn tại trên staging.
@@ -240,7 +285,7 @@ Bản sửa đầu trên `3b86e57d` có thêm chặn nộp lại khi đã có đ
 - [x] Người dùng quyết định [duyệt phạm vi hay chỉ rà soát](inception/requirements/2026-11-16-student-code-ui-completeness-questions.md).
 - [x] Sau khi duyệt: lập kế hoạch Code Generation, sửa và kiểm thử.
 
-Người dùng chọn “Duyệt phạm vi, tiếp tục sửa và kiểm thử”. Đã sửa đủ 8 nhóm, thêm hai trường DTO nullable và nhãn dùng chung. [Kế hoạch/kết quả](construction/plans/code-generation-plan/2026-11-16-student-code-ui-completeness.md): frontend 338/338, backend groups/groupdocs 141/141; ESLint, TypeScript và diff check đạt; review độc lập không có finding. Backend đã restart, `/health` UP; frontend `/login` 200. Đã kiểm tra browser đăng nhập giảng viên/sinh viên rộng/hẹp: [kết quả UI](construction/build-and-test/2026-11-16-student-code-ui-browser-results.md). Lượt UI đầu MSSV local đều null, ca có mã dùng fixture GET đã gỡ. Theo yêu cầu tiếp theo, đã backfill 6 sinh viên seed local bằng HE190001–HE190006, kiểm tra SQL/unique/idempotence đạt; API và browser Nhóm của tôi hiển thị 5 mã thật của lớp, không có fixture. Giao mục, duyệt đề xuất/lời mời và chi tiết quiz còn thiếu dữ liệu/trạng thái phù hợp, không tính browser PASS. Có thông báo CSP inline style trên quiz chưa xác định nguồn. Chưa chạy production build/module ngoài phạm vi. Giữ nguyên ba báo cáo AUDIT chưa theo dõi; không commit/push. Security/Resiliency compliant trong phạm vi; PBT disabled.
+Người dùng chọn “Duyệt phạm vi, tiếp tục sửa và kiểm thử”. Đã sửa đủ 8 nhóm, thêm hai trường DTO nullable và nhãn dùng chung. [Kế hoạch/kết quả](construction/plans/code-generation-plan/2026-11-16-student-code-ui-completeness.md): frontend 338/338, backend groups/groupdocs 141/141; ESLint, TypeScript và diff check đạt; review độc lập không có finding. Backend đã restart, `/health` UP; frontend `/login` 200. Đã kiểm tra browser đăng nhập giảng viên/sinh viên rộng/hẹp: [kết quả UI](construction/build-and-test/2026-11-16/2026-11-16-student-code-ui-browser-results.md). Lượt UI đầu MSSV local đều null, ca có mã dùng fixture GET đã gỡ. Theo yêu cầu tiếp theo, đã backfill 6 sinh viên seed local bằng HE190001–HE190006, kiểm tra SQL/unique/idempotence đạt; API và browser Nhóm của tôi hiển thị 5 mã thật của lớp, không có fixture. Giao mục, duyệt đề xuất/lời mời và chi tiết quiz còn thiếu dữ liệu/trạng thái phù hợp, không tính browser PASS. Có thông báo CSP inline style trên quiz chưa xác định nguồn. Chưa chạy production build/module ngoài phạm vi. Giữ nguyên ba báo cáo AUDIT chưa theo dõi; không commit/push. Security/Resiliency compliant trong phạm vi; PBT disabled.
 
 
 Theo ảnh phản hồi tiếp theo, đã tách cột MSSV/Email và cân chữ/độ rộng trong bảng Sinh viên (ClassGroupsPanel). Groups 50/50 test, ESLint, TypeScript đạt; browser dữ liệu thật ở 1920/1440/390px xác minh 6 cột, tìm kiếm, empty colspan và link ID. Màn hẹp cuộn trong bảng, không tràn trang. Xem phần bổ sung cuối báo cáo browser. Không đổi backend/database/commit/push.
@@ -305,7 +350,7 @@ User duyệt đề xuất audit bằng “ok giúp tôi sửa theo đề xuất 
 Brownfield, nhánh `fix/date-ai-grading-window` từ staging@7d0905d4; giữ audit WIP trước đó.
 [Yêu cầu](inception/requirements/2026-11-15-date-ai-grading-window.md),
 [kế hoạch](construction/plans/code-generation-plan/2026-11-15-date-ai-grading-window.md),
-[kết quả](construction/build-and-test/2026-11-15-date-ai-grading-window.md).
+[kết quả](construction/build-and-test/2026-11-15/2026-11-15-date-ai-grading-window.md).
 
 - [x] DateInput dd/MM/yyyy chung; ISO/giờ Việt Nam giữ nguyên, không dependency mới.
 - [x] Probe AI đủ budget, typed output-limit không báo đỏ; giữ kiểm phản hồi tạo/chấm.
@@ -356,7 +401,7 @@ CI cần kiểm toàn bộ head PR. Không nghiệm thu key thật/browser hoặ
 Sửa P2 đã xác nhận trong review PR #87 theo yêu cầu người dùng, tiếp tục thiết kế
 chấm cá nhân cạnh bài nhóm đã duyệt. Nhánh `fix/grading-member-drafts`.
 [Kế hoạch](construction/plans/code-generation-plan/2026-11-15-member-draft-refresh-fix.md),
-[kết quả](construction/build-and-test/2026-11-15-member-draft-refresh-fix.md).
+[kết quả](construction/build-and-test/2026-11-15/2026-11-15-member-draft-refresh-fix.md).
 
 - [x] Phạm vi/diagnosis: form bị unmount do `members: []` sau save nhóm/refresh lỗi.
 - [x] Code Generation: test RED rồi giữ members và khóa `editable` trong hook.
@@ -376,7 +421,7 @@ Refactor đặt tên và trình bày theo [code-conventions.md](construction/cod
 - [x] User Stories: SKIP (không ảnh hưởng người dùng).
 - [x] Workflow Planning: [execution plan](inception/plans/2026-11-15-u04-u13-u14-conventions-execution-plan.md); chạy Code Generation (một kế hoạch gộp) và Build and Test, bỏ qua các stage khác. người dùng duyệt 2026-11-15T09:29:55Z.
 - [x] Code Generation: Part 1 [kế hoạch 12 bước](construction/plans/code-generation-plan/2026-11-15-u04-u13-u14-code-conventions-code-generation-plan.md) người dùng duyệt 2026-11-15T09:35:28Z; Part 2 xong 12/12 bước, tóm tắt [U04](construction/u04-subject-administration/code/2026-11-15-code-conventions-summary.md), [U13](construction/u13-reference-materials/code/2026-11-15-code-conventions-summary.md), [U14](construction/u14-announcements-and-notifications/code/2026-11-15-code-conventions-summary.md). Backend 493 test, 0 lỗi (40 bỏ qua do không có Docker); frontend tsc, ESLint sạch, Vitest bốn feature 178/178. Chưa commit; người dùng duyệt code 2026-11-15T11:23:27Z.
-- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-15-u04-u13-u14-code-conventions-results.md); dựng lại Docker stack `platform` theo yêu cầu (8 service healthy); `mvn -o -B clean verify` 2.426 test, 0 failure/error/skip, 5 suite PostgreSQL bắt buộc qua; frontend lint, tsc, build qua; Vitest 1.075/1.092, 17 test timeout do tải máy, chạy lại qua (3 file cần `--testTimeout=60000`). E2E `u04-u13-u14` trên stack cô lập `conv041314`: 40/40 qua (2026-11-15T12:19:55Z). Người dùng duyệt 2026-11-15T12:21:14Z.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-15/2026-11-15-u04-u13-u14-code-conventions-results.md); dựng lại Docker stack `platform` theo yêu cầu (8 service healthy); `mvn -o -B clean verify` 2.426 test, 0 failure/error/skip, 5 suite PostgreSQL bắt buộc qua; frontend lint, tsc, build qua; Vitest 1.075/1.092, 17 test timeout do tải máy, chạy lại qua (3 file cần `--testTimeout=60000`). E2E `u04-u13-u14` trên stack cô lập `conv041314`: 40/40 qua (2026-11-15T12:19:55Z). Người dùng duyệt 2026-11-15T12:21:14Z.
 - [x] Operations: giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào `staging` hiện có. Đã commit cục bộ thành 10 commit trên nhánh `fix/code-conventions-u04-u13-u14` (2026-11-15), chưa push.
 - Extension: Security và Resiliency giữ phạm vi đã duyệt, PBT tắt.
 
@@ -390,7 +435,7 @@ Lớp có Ngày bắt đầu bắt buộc; học kỳ (SP/SU/FA + 2 số năm, t
 - [x] Workflow Planning: [execution plan](inception/plans/2026-11-14-class-term-execution-plan.md), người dùng duyệt 2026-11-14T15:51:26Z. Chạy Functional Design U05 (kèm U04), Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
 - [x] Functional Design U05 (kèm U04): [kế hoạch 6 bước, 6 câu hỏi](construction/plans/functional-design-plan/2026-11-14-u05-class-term-functional-design-plan.md), A cả 6 câu (2026-11-14T15:54:26Z). Đã viết BR-U05-61…72 (sửa BR-U05-11/13), F17–F20, `ClassTermPolicy`, frontend học kỳ; phần U04 (`SubjectClassSummary.term`) và U07 (`CopySource.term`). Security/Resiliency tuân thủ. Người dùng duyệt 2026-11-14T16:00:54Z.
 - [x] Code Generation: Part 1 [kế hoạch 20 bước](construction/plans/code-generation-plan/2026-11-14-u05-class-term-code-generation-plan.md) người dùng duyệt 2026-11-14T16:05:52Z; Part 2 xong 20/20 bước (2026-11-15T02:21:55Z), [tóm tắt](construction/u05-class-enrollment/code/2026-11-14-class-term-summary.md). Backend 2426 test qua (gồm integration test có Docker), frontend tsc/eslint sạch, Vitest 540 test phần liên quan qua (timeout 60 giây). Chưa commit. Người dùng duyệt mã 2026-11-15T02:29:40Z.
-- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-15-class-term-results.md). Backend `mvn -o -B verify` 2.426 test qua (gồm PostgreSQL); frontend lint/tsc sạch, build qua, Vitest 1.082/1.092 khi chạy cả bộ lúc máy tải nặng (10 test timeout 5 giây, chạy lại riêng hoặc với timeout 60 giây thì qua). Stack riêng `classterm`: API 21/21 qua, thử trên trình duyệt với Chủ nhiệm môn, giảng viên, sinh viên. Chưa commit. Người dùng duyệt 2026-11-15T03:05:31Z. Kiểm bổ sung 2026-11-15: thêm Admin, popup thông báo, trang Bài tập sinh viên, Đề có sẵn; e2e `u04-u13-u14` 40/40, các bộ khác lỗi không liên quan học kỳ (`ASSIGNMENT_NOT_FINALIZED` ở script U12, cấu hình AI, thứ tự chạy). Đã sửa script U12 thêm bước Hoàn tất: `u12b` 36/36, `u12c` 20/20, `u12` 58/59 (dữ liệu lần chạy trước).
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-15/2026-11-15-class-term-results.md). Backend `mvn -o -B verify` 2.426 test qua (gồm PostgreSQL); frontend lint/tsc sạch, build qua, Vitest 1.082/1.092 khi chạy cả bộ lúc máy tải nặng (10 test timeout 5 giây, chạy lại riêng hoặc với timeout 60 giây thì qua). Stack riêng `classterm`: API 21/21 qua, thử trên trình duyệt với Chủ nhiệm môn, giảng viên, sinh viên. Chưa commit. Người dùng duyệt 2026-11-15T03:05:31Z. Kiểm bổ sung 2026-11-15: thêm Admin, popup thông báo, trang Bài tập sinh viên, Đề có sẵn; e2e `u04-u13-u14` 40/40, các bộ khác lỗi không liên quan học kỳ (`ASSIGNMENT_NOT_FINALIZED` ở script U12, cấu hình AI, thứ tự chạy). Đã sửa script U12 thêm bước Hoàn tất: `u12b` 36/36, `u12c` 20/20, `u12` 58/59 (dữ liệu lần chạy trước).
 - [x] Operations: giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào `staging` hiện có.
 - Extension: Security và Resiliency giữ phạm vi đã duyệt, PBT tắt.
 
@@ -406,7 +451,7 @@ Thêm MSSV (2 chữ cái in hoa + 6 chữ số) cho tài khoản `STUDENT`, ghi 
 - [x] Workflow Planning: [execution plan](inception/plans/2026-11-13-student-code-execution-plan.md), người dùng duyệt 2026-11-13 sau khi thu hẹp phạm vi. Chạy Functional Design U01 (kèm U05/U09/U11/U12), Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
 - [x] Functional Design U01 (kèm U05/U09/U11/U12): [kế hoạch 9 bước, 8 câu hỏi](construction/plans/functional-design-plan/2026-11-13-u01-student-code-functional-design-plan.md), A cả 8 câu. Đã viết BR-U01-100…115 (kèm F16 gán MSSV hàng loạt; chặn đổi role vào/ra STUDENT theo quyết định 15:50), BR-U05-56…60, BR-U09-73…75, BR-U11-42, BR-U12-97…98; Security/Resiliency tuân thủ. Người dùng duyệt 2026-11-13T15:53:39Z.
 - [x] Code Generation: Part 1 [kế hoạch 20 bước](construction/plans/code-generation-plan/2026-11-13-u01-student-code-code-generation-plan.md) người dùng duyệt 2026-11-13T15:56:03Z; Part 2 xong 20/20 bước (2026-11-13T16:50:20Z), [tóm tắt](construction/u01-account-and-access/code/2026-11-13-student-code-summary.md). Backend 805 test qua (2 lỗi integration vì thiếu Docker), frontend tsc/eslint sạch, Vitest 1043 test qua (5 test timeout khi chạy tải nặng, chạy lại riêng thì qua). Chưa commit. Người dùng duyệt mã 2026-11-13T16:52:38Z.
-- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-14-student-code-results.md). Backend mvn verify 2.366 test qua (gồm PostgreSQL); frontend lint/tsc sạch, Vitest 1042/1045 (3 timeout khi chạy cả bộ, chạy lại riêng qua), build qua; thử trên stack riêng `studentcode` với Admin, Chủ nhiệm môn, sinh viên. Đã thử bổ sung bảng điểm/xuất, chấm bài, quiz, nhóm, màn hẹp, chế độ tối; sửa 3 chỗ frontend (header chấm bài, dòng thành viên đề xuất, bảng điểm màn hẹp). Người dùng duyệt 2026-11-14T10:43:59Z. Đã commit, merge origin/staging, push; e2e u04-u13-u14 40/40; PR #84 vào staging (https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/84), chưa merge.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-14/2026-11-14-student-code-results.md). Backend mvn verify 2.366 test qua (gồm PostgreSQL); frontend lint/tsc sạch, Vitest 1042/1045 (3 timeout khi chạy cả bộ, chạy lại riêng qua), build qua; thử trên stack riêng `studentcode` với Admin, Chủ nhiệm môn, sinh viên. Đã thử bổ sung bảng điểm/xuất, chấm bài, quiz, nhóm, màn hẹp, chế độ tối; sửa 3 chỗ frontend (header chấm bài, dòng thành viên đề xuất, bảng điểm màn hẹp). Người dùng duyệt 2026-11-14T10:43:59Z. Đã commit, merge origin/staging, push; e2e u04-u13-u14 40/40; PR #84 vào staging (https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/84), chưa merge.
 - Extension: Security và Resiliency giữ phạm vi đã duyệt, PBT tắt.
 
 ## U06 — Guardrail hai tầng cho prompt AI, PR #77 vào staging, 2026-11-12
@@ -435,7 +480,7 @@ Mở rộng nhập DOCX của U07 sang ảnh và PDF scan, dùng AI đọc ảnh
 - [x] Functional Design U07 (kèm delta U06/U03): [kế hoạch](construction/plans/functional-design-plan/2026-11-11-u07-exam-image-import-functional-design-plan.md) (A cả 6 câu); BR-U07-87…101, BR-U06-54…60, BR-U03-99…100 trong functional-design của từng unit; người dùng duyệt.
 - [x] Code Generation Part 1: [kế hoạch 22 bước + nhánh](construction/plans/code-generation-plan/2026-11-11-u07-exam-image-import-code-generation-plan.md), người dùng duyệt.
 - [x] Code Generation Part 2: 22/22 bước xong trên nhánh `feat/exam-image-import` (worktree `.claude/worktrees/exam-image-import`, `--no-track` từ `origin/staging@e78ac7b9`), người dùng duyệt 2026-11-11T13:20:00Z. [Tóm tắt và điều chỉnh](construction/u07-assignment-authoring/code/2026-11-11-exam-image-import-summary.md). Test theo phạm vi: U03 25/25, U06 64/64, U07 79/79, ArchitectureTest 3/3, frontend tsc/eslint sạch, Vitest assignments 61/61. Chưa commit.
-- [x] Build and Test (người dùng duyệt 2026-11-11T16:35:00Z): test tự động và thử trên trình duyệt với Gemini thật đã xong, [kết quả](construction/build-and-test/2026-11-11-exam-image-import-verification.md). Đã sửa bind `AiProperties.Provider`, lỗi chọn tệp trong popup, schema để Gemini trả đủ nội dung, hình trong màn xem trước (BR-U03-101) và `placement` của `:apply`. Backend mvn verify 2201/2201, frontend Vitest 969/969, tsc, eslint sạch. Chưa commit.
+- [x] Build and Test (người dùng duyệt 2026-11-11T16:35:00Z): test tự động và thử trên trình duyệt với Gemini thật đã xong, [kết quả](construction/build-and-test/2026-11-11/2026-11-11-exam-image-import-verification.md). Đã sửa bind `AiProperties.Provider`, lỗi chọn tệp trong popup, schema để Gemini trả đủ nội dung, hình trong màn xem trước (BR-U03-101) và `placement` của `:apply`. Backend mvn verify 2201/2201, frontend Vitest 969/969, tsc, eslint sạch. Chưa commit.
 - [x] Operations: giai đoạn giữ chỗ, không có bước nào; triển khai theo quy trình merge vào `staging` hiện có.
 - Extension: Security và Resiliency bật trong phạm vi đã duyệt, PBT tắt (giữ bảng Extension Configuration).
 
@@ -443,13 +488,13 @@ Tạo worktree riêng vì thư mục chính có thay đổi chưa commit của p
 
 ## U05/U08/U14 — tổng quan lớp sinh viên, 2026-11-11
 
-Thay Thông báo gần đây và thẻ cần làm chia đôi bằng một thẻ Tổng quan bài tập đủ chiều rộng, đồng bộ giảng viên: số Chưa làm/Đang làm/Đã nộp mở đúng tab của lớp; giữ loại bài và hạn nộp, thẻ co theo nội dung. Bài nhóm đã nộp được loại khỏi helper upcoming dùng chung. Thông báo vẫn có trong menu, không thêm lịch/số buổi/điểm nháp. [Kế hoạch](construction/plans/code-generation-plan/2026-11-11-student-class-overview.md), [kiểm tra](construction/build-and-test/2026-11-11-student-class-overview.md).
+Thay Thông báo gần đây và thẻ cần làm chia đôi bằng một thẻ Tổng quan bài tập đủ chiều rộng, đồng bộ giảng viên: số Chưa làm/Đang làm/Đã nộp mở đúng tab của lớp; giữ loại bài và hạn nộp, thẻ co theo nội dung. Bài nhóm đã nộp được loại khỏi helper upcoming dùng chung. Thông báo vẫn có trong menu, không thêm lịch/số buổi/điểm nháp. [Kế hoạch](construction/plans/code-generation-plan/2026-11-11-student-class-overview.md), [kiểm tra](construction/build-and-test/2026-11-11/2026-11-11-student-class-overview.md).
 
 Full frontend972/972,138 tệp; kiểm cuối7/7, ESLint/TypeScript/build32 trang qua. UI local student2 trong profile tách riêng,1440/390 sáng/tối; số2/1/3 khớp tab Bài tập, menu thông báo còn, không tràn ngang. Không đổi backend/migration hay ghi bài nộp/điểm; chưa test VPS/thiết bị thật. Đã commit riêng `97ebab28` theo yêu cầu tiếp theo; giữ thay đổi bảng điểm trong commit riêng, chưa push/deploy. Security/Resiliency giữ phạm vi đã duyệt, PBT disabled.
 
 ## U09 — bảng điểm dạng ma trận, 2026-11-11
 
-Đã triển khai trên `fix/u05-u09-u15`: nút Bảng điểm ở trang Chấm điểm mở ma trận sinh viên × assignment, lọc một bài/toàn bộ, tìm kiếm/phân trang và xuất XLSX/CSV cùng cấu trúc. Điểm0 và điểm riêng thành viên nhóm được giữ, chưa chấm để trống; XLSX dùng ô số và cố định header/cột định danh. [Kế hoạch](construction/plans/code-generation-plan/2026-11-11-gradebook-matrix.md), [kiểm tra/giới hạn](construction/build-and-test/2026-11-11-gradebook-matrix.md).
+Đã triển khai trên `fix/u05-u09-u15`: nút Bảng điểm ở trang Chấm điểm mở ma trận sinh viên × assignment, lọc một bài/toàn bộ, tìm kiếm/phân trang và xuất XLSX/CSV cùng cấu trúc. Điểm0 và điểm riêng thành viên nhóm được giữ, chưa chấm để trống; XLSX dùng ô số và cố định header/cột định danh. [Kế hoạch](construction/plans/code-generation-plan/2026-11-11-gradebook-matrix.md), [kiểm tra/giới hạn](construction/build-and-test/2026-11-11/2026-11-11-gradebook-matrix.md).
 
 Frontend970/970, backend full verify2.153/2.153 và guard57 ca qua; test bổ sung cuối Assembly/Exporter/Controller19/19, giao diện cuối19/19; lint/TypeScript/build qua. UI local đã kiểm màn rộng/hẹp, sáng/tối, lọc/tìm và popup xuất. Writer mới tạo XLSX được đọc lại xác nhận kiểu số/freeze/filter; download live vẫn theo cấu trúc cũ vì backend hiện chạy chưa nạp mã mới. Không restart trái lệnh automatic approval review trước đó. Đã commit riêng `7466539b` theo yêu cầu tiếp theo, chưa push/deploy; không sửa điểm hay dữ liệu workbook mẫu. Trước commit chạy lại26 test frontend liên quan và19 test backend export/assembly/controller, đều qua. Security/Resiliency giữ phạm vi đã duyệt, PBT tắt.
 
@@ -463,7 +508,7 @@ Tính năng mới mở rộng U12: sinh viên tự lập đề xuất nhóm tron
 - [x] Workflow Planning: [kế hoạch thực hiện](inception/plans/2026-11-11-student-self-grouping-execution-plan.md), người dùng duyệt 2026-11-11. Chạy Functional Design U12, Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design.
 - [x] Functional Design U12: [kế hoạch](construction/plans/functional-design-plan/2026-11-11-u12-student-self-grouping-functional-design-plan.md) A cả 9 câu; BR-U12-70…96, F16–F24, người dùng duyệt 2026-11-11.
 - [x] Code Generation U12: [kế hoạch 19 bước](construction/plans/code-generation-plan/2026-11-11-u12-student-self-grouping-code-generation-plan.md) xong 19/19, người dùng duyệt 2026-11-11. Backend 54 test liên quan qua (gồm PostgreSQL); frontend 45 test nhóm, tsc, eslint qua. Chưa thử trên trình duyệt, chưa chạy toàn bộ suite.
-- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-11-student-self-grouping-results.md). Backend `mvn -B verify` 2.203 test qua; frontend lint, typecheck, 978/978 test, build qua; thử hai vai trò trên stack riêng `selfgroup`. Người dùng duyệt 2026-11-11; đã commit trên nhánh, chưa push.
+- [x] Build and Test: [kết quả](construction/build-and-test/2026-11-11/2026-11-11-student-self-grouping-results.md). Backend `mvn -B verify` 2.203 test qua; frontend lint, typecheck, 978/978 test, build qua; thử hai vai trò trên stack riêng `selfgroup`. Người dùng duyệt 2026-11-11; đã commit trên nhánh, chưa push.
 
 ## UI/UX đợt 2 — kiểm báo cáo ngày 2026-11-10, đã commit, chưa push, 2026-11-11
 
@@ -484,7 +529,7 @@ Kiểm tra: `tsc --noEmit`, `eslint` qua; Vitest 133 tệp, 950 test qua. Trình
 
 ## Sửa 22 điểm UI/UX — build và kiểm thử xong, đã commit, chưa push, 2026-11-10
 
-Người dùng yêu cầu sửa toàn bộ 22 điểm của đợt rà soát UI/UX, chọn phương án A cho cả 9 câu hỏi, duyệt kế hoạch 21 bước và duyệt mã. Nhánh `fix/ui-ux-remediation` tạo từ `staging` `062a43f5`. Chỉ sửa `frontend/` và `PRODUCT.md`; không đổi backend, API, schema. [Yêu cầu và quyết định](inception/requirements/2026-11-10-ui-ux-remediation-questions.md); [kế hoạch và điều chỉnh](construction/plans/code-generation-plan/2026-11-10-ui-ux-remediation.md); [tóm tắt thay đổi](construction/ui-ux-remediation/code/summary.md); [kết quả build và kiểm thử](construction/build-and-test/2026-11-10-ui-ux-remediation-results.md).
+Người dùng yêu cầu sửa toàn bộ 22 điểm của đợt rà soát UI/UX, chọn phương án A cho cả 9 câu hỏi, duyệt kế hoạch 21 bước và duyệt mã. Nhánh `fix/ui-ux-remediation` tạo từ `staging` `062a43f5`. Chỉ sửa `frontend/` và `PRODUCT.md`; không đổi backend, API, schema. [Yêu cầu và quyết định](inception/requirements/2026-11-10-ui-ux-remediation-questions.md); [kế hoạch và điều chỉnh](construction/plans/code-generation-plan/2026-11-10-ui-ux-remediation.md); [tóm tắt thay đổi](construction/ui-ux-remediation/code/summary.md); [kết quả build và kiểm thử](construction/build-and-test/2026-11-10/2026-11-10-ui-ux-remediation-results.md).
 
 - [x] Workspace Detection: brownfield, dùng lại tài liệu reverse engineering hiện có.
 - [x] Requirements Analysis: 22 yêu cầu, 9 quyết định (đều A).
@@ -496,7 +541,7 @@ Người dùng yêu cầu sửa toàn bộ 22 điểm của đợt rà soát UI/
 Chưa kiểm tra trên trình duyệt các màn sau đăng nhập (chỉ có kiểm thử tự động trong jsdom). Đã commit trên nhánh theo yêu cầu sau đó của người dùng; chưa push. Security và Resiliency tuân thủ trong phạm vi đã duyệt, các quy tắc khác N/A; PBT tắt.
 ## Đồng bộ tài liệu với code staging — 2026-11-10
 
-Đối chiếu `staging@062a43f5` với aidlc-docs và sửa các chỗ lệch do commit code chưa kèm tài liệu: U07 sửa đề bằng AI (`REVISE`, `AI_DRAFT_STALE`), U08 bỏ kiểm nộp và trang biên nhận, U09 phần bỏ trống 0 điểm và điều hướng bản nộp nhóm, U10 số câu theo độ khó, U06 model Gemini chọn sẵn, cây điều hướng môn/lớp (U05/U01), log lỗi Admin môn học (U04). Bảng kê source trong current-code-baseline được bổ sung 15 mục, bỏ 2 liên kết hỏng; API inventory khớp 239 mapping. [Báo cáo](construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md).
+Đối chiếu `staging@062a43f5` với aidlc-docs và sửa các chỗ lệch do commit code chưa kèm tài liệu: U07 sửa đề bằng AI (`REVISE`, `AI_DRAFT_STALE`), U08 bỏ kiểm nộp và trang biên nhận, U09 phần bỏ trống 0 điểm và điều hướng bản nộp nhóm, U10 số câu theo độ khó, U06 model Gemini chọn sẵn, cây điều hướng môn/lớp (U05/U01), log lỗi Admin môn học (U04). Bảng kê source trong current-code-baseline được bổ sung 15 mục, bỏ 2 liên kết hỏng; API inventory khớp 239 mapping. [Báo cáo](construction/build-and-test/2026-11-10/2026-11-10-aidlc-code-sync-gaps.md).
 
 - [x] Đối chiếu commit code sau các đợt sync 2026-11-07 và 2026-11-09
 - [x] Sửa functional-design và as-built của unit bị lệch
@@ -517,7 +562,7 @@ Chỉ sửa Markdown; không chạy application test, không đổi code/schema/
 
 Initial commits15400ac2/8d53a1c6 pushed normally. Staging fb20c6bc merged as a55f8426; later staging198b796f merged as65f86a6c. Complete first-merge checks: backend2,028/2,028 plus57-case guard; frontend build/lint/typecheck and800/800 tests. Latest U12 increment:95/95 backend, current frontend build/typecheck/scoped lint and15/15 tests. Keep those scopes separate; no summed or fresh-final-full-run claim.
 
-All168 actual API/proxy/SSE E2E assertions passed against `65f86a6c432c63e318737cef88195ad5ffd30ab1` with local Mailpit OTP/SMTP and isolated services. Only the task stack/frontend stopped; original7 platform container IDs preserved. [Delivery results](construction/build-and-test/2026-11-09-integration-test-delivery-results.md) and [evidence](construction/build-and-test/2026-11-09-integration-test-delivery-evidence.json) record exact snapshots, hashes and earlier resource-sensitive timeouts. No assertion/timeout or production behavior was changed to obtain a pass.
+All168 actual API/proxy/SSE E2E assertions passed against `65f86a6c432c63e318737cef88195ad5ffd30ab1` with local Mailpit OTP/SMTP and isolated services. Only the task stack/frontend stopped; original7 platform container IDs preserved. [Delivery results](construction/build-and-test/2026-11-09/2026-11-09-integration-test-delivery-results.md) and [evidence](construction/build-and-test/2026-11-09/2026-11-09-integration-test-delivery-evidence.json) record exact snapshots, hashes and earlier resource-sensitive timeouts. No assertion/timeout or production behavior was changed to obtain a pass.
 
 Final evidence is ready for commit/push, then the authorized PR to staging. PR/CI publication state is recorded externally on GitHub and in the final response; no PR merge or deployment is authorized. Existing security/resiliency retained; PBT disabled. The57-case workbook remains unchanged and separately delivered. Prior no-commit/no-push statements below are historical.
 
@@ -542,7 +587,7 @@ User selected scope B: representative automated integration coverage across all1
 - [x] Fresh full backend verification:2,020 passed, zero failures/errors/skips;49 traced report cases resolve to54 passing executions. Guard and four negative checks passed; independent review found no actionable findings.
 - [x] English report authored/recalculated/exported/reopened and all19 sheets visually reviewed;49 cases, accurate execution statistics, traceable methods/requirements and preserved template styling/native parts.
 
-Initial search found24 Testcontainers/composed-context candidates; classification inspected actual collaborators rather than filenames. New composed tests use production owners, disposable PostgreSQL/Redis/Rabbit and current Flyway. Existing focused suites are reused with explicit mocked/persistence-only boundaries. [Plan](construction/plans/code-generation-plan/2026-11-08-integration-test.md), [results/gaps](construction/build-and-test/2026-11-08-integration-test-results.md), [scenario manifest](construction/build-and-test/2026-11-08-integration-test-cases.json) and [source-hashed execution evidence](construction/build-and-test/2026-11-08-integration-test-evidence.json). Final Maven verify completed19:47:22+07 on2026-11-08. The early overlapping-compile baseline was invalidated and is not acceptance evidence. Existing Maven/CI entry point, public contracts, migrations, dependency versions and production persistence choices preserved. Final English workbook has19 sheets and49 Passed Round1 cases; later rounds remain Pending. It was reopened, visually reviewed and checked for formula reactivity, source/template SHA, style/native-part preservation and navigation. Existing security/resiliency scope retained; PBT disabled. Branch remains uncommitted/unpushed; no PR, deployment, live data/provider writes or full-requirements acceptance claim.
+Initial search found24 Testcontainers/composed-context candidates; classification inspected actual collaborators rather than filenames. New composed tests use production owners, disposable PostgreSQL/Redis/Rabbit and current Flyway. Existing focused suites are reused with explicit mocked/persistence-only boundaries. [Plan](construction/plans/code-generation-plan/2026-11-08-integration-test.md), [results/gaps](construction/build-and-test/2026-11-08/2026-11-08-integration-test-results.md), [scenario manifest](construction/build-and-test/2026-11-08-integration-test-cases.json) and [source-hashed execution evidence](construction/build-and-test/2026-11-08/2026-11-08-integration-test-evidence.json). Final Maven verify completed19:47:22+07 on2026-11-08. The early overlapping-compile baseline was invalidated and is not acceptance evidence. Existing Maven/CI entry point, public contracts, migrations, dependency versions and production persistence choices preserved. Final English workbook has19 sheets and49 Passed Round1 cases; later rounds remain Pending. It was reopened, visually reviewed and checked for formula reactivity, source/template SHA, style/native-part preservation and navigation. Existing security/resiliency scope retained; PBT disabled. Branch remains uncommitted/unpushed; no PR, deployment, live data/provider writes or full-requirements acceptance claim.
 
 ## fix/remove-term delivery and staging merge — 2026-11-08
 
@@ -572,7 +617,7 @@ Fresh backend Maven verify1,846 pass, zero failures/errors/skips; required Postg
 
 ## Current documentation/source index — 2026-11-07
 
-Source snapshot `f68a6ec5` on `fix/u05-u09-u15`; documentation synchronized by the user's request. [Source inventory](inception/reverse-engineering/current-code-baseline.md), [API mappings](inception/reverse-engineering/api-inventory.md), [services](inception/application-design/services.md), [contract types](inception/application-design/component-methods.md) and 15 as-built summaries reflect current file/type ownership. Mail/deploy/AI-key/source behavior and required-test guidance were updated from source; [results and verification limits](construction/build-and-test/2026-11-07-aidlc-code-sync-results.md).
+Source snapshot `f68a6ec5` on `fix/u05-u09-u15`; documentation synchronized by the user's request. [Source inventory](inception/reverse-engineering/current-code-baseline.md), [API mappings](inception/reverse-engineering/api-inventory.md), [services](inception/application-design/services.md), [contract types](inception/application-design/component-methods.md) and 15 as-built summaries reflect current file/type ownership. Mail/deploy/AI-key/source behavior and required-test guidance were updated from source; [results and verification limits](construction/build-and-test/2026-11-07/2026-11-07-aidlc-code-sync-results.md).
 
 No application/config/test changes or fresh application run during this sync. The earlier 1,830-backend/799-frontend evidence predates the staging merge and is not current-HEAD acceptance. Dated sections below are historical records of their original scope, including statements about commit/deployment status at that time. Existing security/resiliency configuration remains; PBT disabled. No commit, push or deployment.
 
@@ -602,11 +647,11 @@ User requested clear local commits for the verified JDBC work. Delivery grouping
 
 ## JDBC backend/frontend restarted and freshly tested — 2026-11-06
 
-At the user's explicit restart/test request, stopped only verified app PIDs, rebuilt the standard backend JAR and restarted backend :8080 (PID 50084, local,worker) plus frontend :3000 (listener 3184, launcher 43712). Fresh normal-target full Maven verify: 1,830 tests/236 suites, zero failures/errors/skips, executable repackage successful; the earlier thin-JAR limitation is resolved. Required PostgreSQL suites 31 + 2 + 10 + 1 passed. Frontend 799 tests/116 files, full lint/typecheck/production build and final post-restart typecheck passed. Backend health/liveness/readiness UP/200; frontend root/login 200; protected API via frontend and directly 401. Live Flyway validated 32 migrations with none pending. Restored next-env.d.ts/AGENTS.md generated changes; all 1,572 source/config hashes match the pre-operation snapshot, preserving pending JDBC changes. Existing Docker dependencies healthy, Mailpit restarted, old Docker worker retained stopped. Apps left running; no authenticated UI/provider/load acceptance, product-source/schema/dependency edit, commit or push. [Fresh results and limits](construction/build-and-test/2026-11-06-jdbc-restart-test-results.md). Security/resiliency scope retained; PBT disabled.
+At the user's explicit restart/test request, stopped only verified app PIDs, rebuilt the standard backend JAR and restarted backend :8080 (PID 50084, local,worker) plus frontend :3000 (listener 3184, launcher 43712). Fresh normal-target full Maven verify: 1,830 tests/236 suites, zero failures/errors/skips, executable repackage successful; the earlier thin-JAR limitation is resolved. Required PostgreSQL suites 31 + 2 + 10 + 1 passed. Frontend 799 tests/116 files, full lint/typecheck/production build and final post-restart typecheck passed. Backend health/liveness/readiness UP/200; frontend root/login 200; protected API via frontend and directly 401. Live Flyway validated 32 migrations with none pending. Restored next-env.d.ts/AGENTS.md generated changes; all 1,572 source/config hashes match the pre-operation snapshot, preserving pending JDBC changes. Existing Docker dependencies healthy, Mailpit restarted, old Docker worker retained stopped. Apps left running; no authenticated UI/provider/load acceptance, product-source/schema/dependency edit, commit or push. [Fresh results and limits](construction/build-and-test/2026-11-06/2026-11-06-jdbc-restart-test-results.md). Security/resiliency scope retained; PBT disabled.
 
 ## U05/U09 JDBC transition and project-wide persistence decision — 2026-11-06
 
-User discarded the previous JPA migration and explicitly chose U05/U09 JDBC-only code plus JDBC as the AI-DLC persistence standard for all units. Verified a clean checkout before this task; prior discarded changes were not restored. U05 remains JDBC; U09 evaluation/proposal adapters now use NamedParameterJdbcTemplate with plain JSON row mapping; visibility stays JdbcTemplate. Public interfaces/API/schema/Flyway unchanged; row/advisory locks, explicit version/CAS and caller rollback protected. New scoped architecture rule rejects production JPA/Hibernate in U05/U09. Baseline 209 behavior/other-rule cases passed with JDBC rule RED; the same 210 passed after migration; expanded focused run 446 passed including nine full-migration PostgreSQL cases and shared JpaTransactionManager rollback. Final isolated full Maven verify passed: 1,830 tests/236 suites, zero failures/errors/skips, executable JAR packaged; required PostgreSQL guard 31 + 2 + 10 + 1 passed. Independent review complete: U04 @Version documentation contradiction fixed and explicit no-op save/version characterization added. Standard repackage was blocked by the running JAR; executable artifact is under .tmp/jdbc-transition-20261106/target, and the normal backend/target JAR remains thin until rebuilt when unlocked. 1,008 source/config hashes matched final verification, no new broken documentation links. [Plan](construction/plans/code-generation-plan/2026-11-06-u05-u09-jdbc.md), [policy and remaining unit gaps](construction/persistence-conventions.md), [evidence](construction/build-and-test/2026-11-06-u05-u09-jdbc-results.md). U04/U13/U14 still JPA pending separate code migrations; global JPA infrastructure retained for them. No frontend/source changes outside this scope, commit/push or live restart/migration. Security/resiliency retained; PBT disabled.
+User discarded the previous JPA migration and explicitly chose U05/U09 JDBC-only code plus JDBC as the AI-DLC persistence standard for all units. Verified a clean checkout before this task; prior discarded changes were not restored. U05 remains JDBC; U09 evaluation/proposal adapters now use NamedParameterJdbcTemplate with plain JSON row mapping; visibility stays JdbcTemplate. Public interfaces/API/schema/Flyway unchanged; row/advisory locks, explicit version/CAS and caller rollback protected. New scoped architecture rule rejects production JPA/Hibernate in U05/U09. Baseline 209 behavior/other-rule cases passed with JDBC rule RED; the same 210 passed after migration; expanded focused run 446 passed including nine full-migration PostgreSQL cases and shared JpaTransactionManager rollback. Final isolated full Maven verify passed: 1,830 tests/236 suites, zero failures/errors/skips, executable JAR packaged; required PostgreSQL guard 31 + 2 + 10 + 1 passed. Independent review complete: U04 @Version documentation contradiction fixed and explicit no-op save/version characterization added. Standard repackage was blocked by the running JAR; executable artifact is under .tmp/jdbc-transition-20261106/target, and the normal backend/target JAR remains thin until rebuilt when unlocked. 1,008 source/config hashes matched final verification, no new broken documentation links. [Plan](construction/plans/code-generation-plan/2026-11-06-u05-u09-jdbc.md), [policy and remaining unit gaps](construction/persistence-conventions.md), [evidence](construction/build-and-test/2026-11-06/2026-11-06-u05-u09-jdbc-results.md). U04/U13/U14 still JPA pending separate code migrations; global JPA infrastructure retained for them. No frontend/source changes outside this scope, commit/push or live restart/migration. Security/resiliency retained; PBT disabled.
 
 ## Local commit delivery — 2026-11-06
 
@@ -614,11 +659,11 @@ User requested one local commit of the verified U05/U09/U15 formatting, behavior
 
 ## Local backend/frontend restart and tests — 2026-11-06
 
-At the user's request, reran backend verify: **1,822 passed, zero failures/errors/skips**, JAR packaged; required PostgreSQL guard **31 + 2 passed**. Frontend: **799 passed / 116 files**, full lint/typecheck/production build passed; generated config restored from snapshots and typechecked again. Started backend on :8080 with local,worker and frontend dev Webpack on :3000, restarted existing Mailpit and retained the stopped old Docker worker. HTTP health for both services UP/200, login 200 and unauthenticated protected API via frontend 401. Source/config hashes unchanged. [Evidence and limits](construction/build-and-test/2026-11-06-restart-test-results.md). Processes left running; no dependency/source edit, new live migration, authenticated UI mutation, commit/push or deployment. Existing security/resiliency scope retained; PBT disabled.
+At the user's request, reran backend verify: **1,822 passed, zero failures/errors/skips**, JAR packaged; required PostgreSQL guard **31 + 2 passed**. Frontend: **799 passed / 116 files**, full lint/typecheck/production build passed; generated config restored from snapshots and typechecked again. Started backend on :8080 with local,worker and frontend dev Webpack on :3000, restarted existing Mailpit and retained the stopped old Docker worker. HTTP health for both services UP/200, login 200 and unauthenticated protected API via frontend 401. Source/config hashes unchanged. [Evidence and limits](construction/build-and-test/2026-11-06/2026-11-06-restart-test-results.md). Processes left running; no dependency/source edit, new live migration, authenticated UI mutation, commit/push or deployment. Existing security/resiliency scope retained; PBT disabled.
 
 ## U05/U09/U15 simplification completed — 2026-11-06
 
-Implemented the approved [plan](construction/plans/code-generation-plan/2026-11-06-u05-u09-u15-simplification.md) on the existing formatted checkout: inline U05's single-use mutation helper, share U09's identical batch-size guards and consolidate U15 source-to-section mapping. Exactly seven production/three test files changed versus the pre-refactor snapshot; frontend, contracts and config unchanged. Added 18 characterization cases green before production edits; focused U05/U09/U15 runs pass before and after. Independent read-only review found no actionable findings. Final backend verify: **1,822 passed, zero failures/errors/skips**, executable JAR built; required real PostgreSQL guard **31 + 2 passed**. Initial full attempt failed because Docker Desktop was stopped; started it and reran successfully without source changes. [Evidence and limits](construction/build-and-test/2026-11-06-u05-u09-u15-simplification-results.md). No commit/push/PR, live migration, app restart or frontend/manual UI/provider rerun. Security/resiliency scope retained; PBT disabled.
+Implemented the approved [plan](construction/plans/code-generation-plan/2026-11-06-u05-u09-u15-simplification.md) on the existing formatted checkout: inline U05's single-use mutation helper, share U09's identical batch-size guards and consolidate U15 source-to-section mapping. Exactly seven production/three test files changed versus the pre-refactor snapshot; frontend, contracts and config unchanged. Added 18 characterization cases green before production edits; focused U05/U09/U15 runs pass before and after. Independent read-only review found no actionable findings. Final backend verify: **1,822 passed, zero failures/errors/skips**, executable JAR built; required real PostgreSQL guard **31 + 2 passed**. Initial full attempt failed because Docker Desktop was stopped; started it and reran successfully without source changes. [Evidence and limits](construction/build-and-test/2026-11-06/2026-11-06-u05-u09-u15-simplification-results.md). No commit/push/PR, live migration, app restart or frontend/manual UI/provider rerun. Security/resiliency scope retained; PBT disabled.
 
 ## U05/U09/U15 simplification plan — 2026-11-06
 
@@ -626,25 +671,25 @@ Created a [scoped refactor plan](construction/plans/code-generation-plan/2026-11
 
 ## U05/U09/U15 Java readability formatting — 2026-11-06
 
-Completed the requested formatting in `academics`, `grading`, `admindashboard`: 71 Java files changed, all 85 checked; inline returns 37 to zero. Preserved exact source tokens/comments/literals and existing wildcard imports, with CRLF/LF normalization only for Git baseline comparison. Formatter second run changes zero files, whitespace diff check passes, fresh isolated JDK 17 compilation succeeds for 720 main + 246 test source files. Shared conventions now explicitly separate method bodies from declarations and wrap long calls. [Plan](construction/plans/code-generation-plan/2026-11-06-u05-u09-u15-format.md), [evidence and memory limits](construction/build-and-test/2026-11-06-u05-u09-u15-format-results.md). Frontend/runtime tests not rerun; no behavior change, commit/push, restart or migration. Existing security/resiliency scope unchanged.
+Completed the requested formatting in `academics`, `grading`, `admindashboard`: 71 Java files changed, all 85 checked; inline returns 37 to zero. Preserved exact source tokens/comments/literals and existing wildcard imports, with CRLF/LF normalization only for Git baseline comparison. Formatter second run changes zero files, whitespace diff check passes, fresh isolated JDK 17 compilation succeeds for 720 main + 246 test source files. Shared conventions now explicitly separate method bodies from declarations and wrap long calls. [Plan](construction/plans/code-generation-plan/2026-11-06-u05-u09-u15-format.md), [evidence and memory limits](construction/build-and-test/2026-11-06/2026-11-06-u05-u09-u15-format-results.md). Frontend/runtime tests not rerun; no behavior change, commit/push, restart or migration. Existing security/resiliency scope unchanged.
 
 ## U05/U09/U15 staging PR and CI delivery — 2026-11-06
 
-User authorized publishing the current `fix/u05-u09-u15` branch as a PR into `staging` and checking CI before any PR merge. Initial remote head `b466400b` matches the clean local checkout; GitHub comparison is ahead by three commits, behind zero, and no open PR exists for this head/base. Reuse the unchanged source's [verified merge results](construction/build-and-test/2026-11-06-merge-staging-u05-u09-u15.md): backend 1,804 / frontend 799 passing, lint/typecheck/build passing and required real PostgreSQL guard passing. Commit only this delivery record before publishing; no new source changes or local test rerun needed. GitHub PR creation triggers the existing backend/frontend CI jobs; check the final PR head and report its live results. Images/deploy do not run on this PR. No PR merge, auto-merge or deployment authorized; existing security/resiliency scope retained and PBT disabled.
+User authorized publishing the current `fix/u05-u09-u15` branch as a PR into `staging` and checking CI before any PR merge. Initial remote head `b466400b` matches the clean local checkout; GitHub comparison is ahead by three commits, behind zero, and no open PR exists for this head/base. Reuse the unchanged source's [verified merge results](construction/build-and-test/2026-11-06/2026-11-06-merge-staging-u05-u09-u15.md): backend 1,804 / frontend 799 passing, lint/typecheck/build passing and required real PostgreSQL guard passing. Commit only this delivery record before publishing; no new source changes or local test rerun needed. GitHub PR creation triggers the existing backend/frontend CI jobs; check the final PR head and report its live results. Images/deploy do not run on this PR. No PR merge, auto-merge or deployment authorized; existing security/resiliency scope retained and PBT disabled.
 
 ## Merge staging into U05/U09/U15 — 2026-11-06
 
-Resolved the user's existing local merge of `staging` at `b91413ca` into `fix/u05-u09-u15` at `2440cbe4`. Six conflicts resolved by retaining staging behavior and the branch's convention names; all incoming staged changes preserved. Fixed the directly related inherited `@NotNull source` mismatch after reproducing HTTP 400 for single/batch automatic AI requests; added seven HTTP cases and synchronized grading OpenAPI. Independent reviews found no remaining introduced or follow-up issue. Final backend verify **1,804 passed, zero failures/errors/skips**, required PostgreSQL guard **31 + 2 passed**, JAR built. Frontend **799 passed / 116 files**, lint/typecheck/production build passed; generated configuration restored and typechecked again. Deliver through the authorized local merge commit; [plan, evidence and memory constraints](construction/build-and-test/2026-11-06-merge-staging-u05-u09-u15.md). No push, live migration, application restart or deployment; manual UI/provider acceptance not repeated. Existing security/resiliency scope retained; PBT disabled.
+Resolved the user's existing local merge of `staging` at `b91413ca` into `fix/u05-u09-u15` at `2440cbe4`. Six conflicts resolved by retaining staging behavior and the branch's convention names; all incoming staged changes preserved. Fixed the directly related inherited `@NotNull source` mismatch after reproducing HTTP 400 for single/batch automatic AI requests; added seven HTTP cases and synchronized grading OpenAPI. Independent reviews found no remaining introduced or follow-up issue. Final backend verify **1,804 passed, zero failures/errors/skips**, required PostgreSQL guard **31 + 2 passed**, JAR built. Frontend **799 passed / 116 files**, lint/typecheck/production build passed; generated configuration restored and typechecked again. Deliver through the authorized local merge commit; [plan, evidence and memory constraints](construction/build-and-test/2026-11-06/2026-11-06-merge-staging-u05-u09-u15.md). No push, live migration, application restart or deployment; manual UI/provider acceptance not repeated. Existing security/resiliency scope retained; PBT disabled.
 
 ## Wildcard import preference — 2026-11-05
 
 Delivery follow-up: user authorized a descriptive local commit of the convention refactor and compact-import follow-up on the current branch. No push requested; this supersedes the prior no-commit scope. Reuse the recorded full verification and subsequent import-only compilation; no further source changes.
 
-User requested compact imports after the convention refactor. The canonical convention now permits Java wildcard/static wildcard imports, including contract types; keep explicit imports when needed to disambiguate names. Restored original import blocks in 71 changed U05/U09/U15 Java files (883 fewer import statements), retaining all naming changes and all bytes outside those import blocks. Backend source and all 244 test source files compile successfully (`mvn -DskipTests test-compile`); full runtime suites were not repeated for this import-only follow-up. The earlier full test/build results below describe the preceding refactor state. [Follow-up evidence](construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md#wildcard-import-follow-up--2026-11-05). No behavior, public contract, frontend, schema, dependency, security/resiliency scope, commit or push change; PBT remains disabled.
+User requested compact imports after the convention refactor. The canonical convention now permits Java wildcard/static wildcard imports, including contract types; keep explicit imports when needed to disambiguate names. Restored original import blocks in 71 changed U05/U09/U15 Java files (883 fewer import statements), retaining all naming changes and all bytes outside those import blocks. Backend source and all 244 test source files compile successfully (`mvn -DskipTests test-compile`); full runtime suites were not repeated for this import-only follow-up. The earlier full test/build results below describe the preceding refactor state. [Follow-up evidence](construction/build-and-test/2026-11-05/2026-11-05-u05-u09-u15-conventions-results.md#wildcard-import-follow-up--2026-11-05). No behavior, public contract, frontend, schema, dependency, security/resiliency scope, commit or push change; PBT remains disabled.
 
 ## U05/U09/U15 shared convention refactor — 2026-11-05
 
-Implemented the [convention plan](construction/plans/code-generation-plan/2026-11-05-u05-u09-u15-conventions.md) from `3bfc2fb8` in the existing `fix/u05-u09-u15` checkout. Concrete dependencies identify their service/repository roles; internal actions use verb-object names, predicates/guards have appropriate names, fixed constants use UPPER_SNAKE_CASE, four React modules use descriptive PascalCase and scoped Java wildcard imports are expanded. All affected callers/imports/mocks updated. Preserve public contracts, HTTP/JSON/DB/event/MCP identifiers, hook return keys, authorization, transactions, grade locks/resubmission and rendering. JSON regression protects against new bean fields. Independent review: no Critical/Important defect; its minor naming correction applied. Final backend **1,783 passed, zero failures/errors/skips**, required PostgreSQL guard **31 + 2 passed**, JAR built; frontend **776 passed**, full lint/typecheck/production build passed. Generated configuration restored and typecheck passed again. [Evidence, compatibility exceptions and memory-constrained verification](construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md). No commit/push, migration, live grade write, restart or deployment; manual browser/provider acceptance not repeated. Existing security/resiliency scope retained; PBT disabled. Build/test stage complete; no operations change requested.
+Implemented the [convention plan](construction/plans/code-generation-plan/2026-11-05-u05-u09-u15-conventions.md) from `3bfc2fb8` in the existing `fix/u05-u09-u15` checkout. Concrete dependencies identify their service/repository roles; internal actions use verb-object names, predicates/guards have appropriate names, fixed constants use UPPER_SNAKE_CASE, four React modules use descriptive PascalCase and scoped Java wildcard imports are expanded. All affected callers/imports/mocks updated. Preserve public contracts, HTTP/JSON/DB/event/MCP identifiers, hook return keys, authorization, transactions, grade locks/resubmission and rendering. JSON regression protects against new bean fields. Independent review: no Critical/Important defect; its minor naming correction applied. Final backend **1,783 passed, zero failures/errors/skips**, required PostgreSQL guard **31 + 2 passed**, JAR built; frontend **776 passed**, full lint/typecheck/production build passed. Generated configuration restored and typecheck passed again. [Evidence, compatibility exceptions and memory-constrained verification](construction/build-and-test/2026-11-05/2026-11-05-u05-u09-u15-conventions-results.md). No commit/push, migration, live grade write, restart or deployment; manual browser/provider acceptance not repeated. Existing security/resiliency scope retained; PBT disabled. Build/test stage complete; no operations change requested.
 
 ## Shared code conventions — 2026-11-05
 
@@ -657,25 +702,25 @@ Implemented the [convention plan](construction/plans/code-generation-plan/2026-1
 
 Delivery follow-up: user requested an English commit, push of the existing feature branch and PR into `staging`, with CI verification. Current PR head and remote check results are tracked on GitHub and reported with delivery; no merge/deployment requested. This supersedes the implementation-only no-commit scope below.
 
-Implemented the [follow-up plan](construction/plans/code-generation-plan/2026-11-05-u05-u09-u15-followup.md) in existing `fix/u05-u09-u15`: independent/bounded U15 loading and cancellation, one-student gradebook lookup, typed submission adapter, rubric scoring in the model, and U05 presentation helper/import cleanup. Independent review found one stale-loading P2; regression reproduced and fixed, no other confirmed source finding. Fresh backend **1,782 passed/zero skipped**, required PostgreSQL guard passed; frontend **776 passed**, full lint/TypeScript/production build passed. [Evidence, environment setup and limits](construction/build-and-test/2026-11-05-u05-u09-u15-followup-results.md). Manual Orca browser acceptance deferred because `orca tab list` could not resolve the executable. Public contracts, grade locks/resubmission, authorization, unit folders and DB schema unchanged. No commit/push/deployment. Existing security/resiliency scope retained; PBT disabled.
+Implemented the [follow-up plan](construction/plans/code-generation-plan/2026-11-05-u05-u09-u15-followup.md) in existing `fix/u05-u09-u15`: independent/bounded U15 loading and cancellation, one-student gradebook lookup, typed submission adapter, rubric scoring in the model, and U05 presentation helper/import cleanup. Independent review found one stale-loading P2; regression reproduced and fixed, no other confirmed source finding. Fresh backend **1,782 passed/zero skipped**, required PostgreSQL guard passed; frontend **776 passed**, full lint/TypeScript/production build passed. [Evidence, environment setup and limits](construction/build-and-test/2026-11-05/2026-11-05-u05-u09-u15-followup-results.md). Manual Orca browser acceptance deferred because `orca tab list` could not resolve the executable. Public contracts, grade locks/resubmission, authorization, unit folders and DB schema unchanged. No commit/push/deployment. Existing security/resiliency scope retained; PBT disabled.
 
 ## U05/U09/U15 audit remediation — 2026-11-04
 
 Follow-up: on user request, started the existing Frontend :3000 and Backend :8080 Orca terminals; login returned HTTP 200 and backend health UP. Local backend includes its worker; the old Docker worker was stopped to avoid duplicate task consumers. User subsequently requested a descriptive local commit in English; no push/merge/deployment requested. Keep the verified cleanup as one atomic commit because navigation/scoring imports and workspace regression changes share files.
 
-Implemented the [cleanup plan](construction/plans/code-generation-plan/2026-11-04-u05-u09-u15-cleanup.md) on existing `fix/u05-u09-u15` from `45baad9b`: preserve grading navigation filters, guard save-next when the current evaluation leaves its queue, batch/index gradebook reads and load export sources once, explain conflicts by business code, move pure scoring helpers into the feature model, and remove one duplicated U05 permission check. U15 source unchanged; regression included. Full backend 1,771 passed/zero skipped with required PostgreSQL suites, frontend 760 passed, final lint/TypeScript/production build passed. Independent review rechecked its one corrected P2 and found no remaining actionable introduced finding. [Evidence and limits](construction/build-and-test/2026-11-04-u05-u09-u15-cleanup-results.md). No DB migration, live grade write, application restart, commit or push. Manual browser acceptance deferred because `orca` is unavailable; automated UI/export tests passed. Existing security/resiliency scope retained; PBT disabled.
+Implemented the [cleanup plan](construction/plans/code-generation-plan/2026-11-04-u05-u09-u15-cleanup.md) on existing `fix/u05-u09-u15` from `45baad9b`: preserve grading navigation filters, guard save-next when the current evaluation leaves its queue, batch/index gradebook reads and load export sources once, explain conflicts by business code, move pure scoring helpers into the feature model, and remove one duplicated U05 permission check. U15 source unchanged; regression included. Full backend 1,771 passed/zero skipped with required PostgreSQL suites, frontend 760 passed, final lint/TypeScript/production build passed. Independent review rechecked its one corrected P2 and found no remaining actionable introduced finding. [Evidence and limits](construction/build-and-test/2026-11-04/2026-11-04-u05-u09-u15-cleanup-results.md). No DB migration, live grade write, application restart, commit or push. Manual browser acceptance deferred because `orca` is unavailable; automated UI/export tests passed. Existing security/resiliency scope retained; PBT disabled.
 
 ## U04/U13/U14 fixes and formatting — 2026-11-02
 
-U13 accepts single-video YouTube links with playlist context and stores the canonical URL. U14 exposes role-specific settings for every role; new staff email is opt-in and the Admin backup alert remains required. U04/U13/U14 source/tests were formatted with syntax-equivalence checks, in separate commits from the fixes. The user subsequently authorized merging staging, verification, pushing the feature branch and creating [PR #44 into staging](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/44). Merge `1ef38be7` preserves staging's newer YouTube/UI behavior. Fresh local backend: 1,764 passed, zero skipped, including required PostgreSQL suites (31 + 2). Frontend: 743 passed, lint/typecheck/production build passed. Isolated API E2E: 40/40 passed after worker readiness; its Docker project and volumes were removed. The U04 mutation/readback test now awaits its async React updates. [Plan](construction/plans/code-generation-plan/2026-11-02-u04-u13-u14.md), [verification and limits](construction/build-and-test/2026-11-02-u04-u13-u14-results.md), [live PR checks](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/44/checks). CI is checked against the latest PR head before handoff. No PR merge or deployment. Existing security/resiliency scope retained; PBT disabled. Unrelated report DOCX retained outside the commits.
+U13 accepts single-video YouTube links with playlist context and stores the canonical URL. U14 exposes role-specific settings for every role; new staff email is opt-in and the Admin backup alert remains required. U04/U13/U14 source/tests were formatted with syntax-equivalence checks, in separate commits from the fixes. The user subsequently authorized merging staging, verification, pushing the feature branch and creating [PR #44 into staging](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/44). Merge `1ef38be7` preserves staging's newer YouTube/UI behavior. Fresh local backend: 1,764 passed, zero skipped, including required PostgreSQL suites (31 + 2). Frontend: 743 passed, lint/typecheck/production build passed. Isolated API E2E: 40/40 passed after worker readiness; its Docker project and volumes were removed. The U04 mutation/readback test now awaits its async React updates. [Plan](construction/plans/code-generation-plan/2026-11-02-u04-u13-u14.md), [verification and limits](construction/build-and-test/2026-11-02/2026-11-02-u04-u13-u14-results.md), [live PR checks](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/44/checks). CI is checked against the latest PR head before handoff. No PR merge or deployment. Existing security/resiliency scope retained; PBT disabled. Unrelated report DOCX retained outside the commits.
 
 ## Dedicated MCP documentation — 2026-11-02
 
-Implemented the requested /ai/mcp-guide and compact Agent MCP help link, available even on credential errors. Four client configurations/English copy prompt reused, SSR origin hydration fixed, 29 provider tool names covered with role/write effects, usage/review/apply/rubric limits and troubleshooting. U06 synced. Fresh AI/MCP tests 39 pass after fixing the single duplicate-copy failure in a full 727-case run (726 other cases passed); TypeScript/focused ESLint/final Next 16.4.3 production build passed. Desktop/mobile light/dark screenshots inspected with zero page overflow; independent review no Critical/Important findings. Synced existing lockfile dependencies and restarted frontend only; generated tsconfig/AGENTS changes restored. No backend/DB changes, live MCP business write, commit or push. [Plan](construction/plans/code-generation-plan/2026-11-02-mcp-documentation-page.md), [evidence and limits](construction/build-and-test/2026-11-02-mcp-documentation-results.md). Security/resiliency scope retained; PBT disabled.
+Implemented the requested /ai/mcp-guide and compact Agent MCP help link, available even on credential errors. Four client configurations/English copy prompt reused, SSR origin hydration fixed, 29 provider tool names covered with role/write effects, usage/review/apply/rubric limits and troubleshooting. U06 synced. Fresh AI/MCP tests 39 pass after fixing the single duplicate-copy failure in a full 727-case run (726 other cases passed); TypeScript/focused ESLint/final Next 16.4.3 production build passed. Desktop/mobile light/dark screenshots inspected with zero page overflow; independent review no Critical/Important findings. Synced existing lockfile dependencies and restarted frontend only; generated tsconfig/AGENTS changes restored. No backend/DB changes, live MCP business write, commit or push. [Plan](construction/plans/code-generation-plan/2026-11-02-mcp-documentation-page.md), [evidence and limits](construction/build-and-test/2026-11-02/2026-11-02-mcp-documentation-results.md). Security/resiliency scope retained; PBT disabled.
 
 ## Finalized grade lock — 2026-11-02
 
-Latest user decision: "tôi nghĩ để cái cũ đi nộp lại thì bỏ điểm cũ" supersedes retaining prior official grading rounds. Keep manual/AI/member editing locked after FINALIZED/PUBLISHED, but resubmission invalidates previous grades: individual SUPERSEDED, group reset existing root/member to PENDING. Removed the unexecuted group-round migration and snapshot/current-flag changes; no DB schema/index change. Changed-receipt reload resets old local marks/proposal selection. [Decision](inception/requirements/2026-11-02-locked-grades.md), [plan](construction/plans/code-generation-plan/2026-11-02-locked-grades.md), [results](construction/build-and-test/2026-11-02-locked-grades-results.md). Fresh full backend 1,741 pass/zero failures/errors/skips, required PostgreSQL suites pass; grading frontend 118 pass, TypeScript/scoped lint/production build pass. Reviewer rechecked receipt-reload fix: no remaining Critical/Important findings. Prior 1,743/710 evidence applies to the superseded implementation only. No live migration/restart/commit/push. Security/resiliency scope unchanged; PBT disabled.
+Latest user decision: "tôi nghĩ để cái cũ đi nộp lại thì bỏ điểm cũ" supersedes retaining prior official grading rounds. Keep manual/AI/member editing locked after FINALIZED/PUBLISHED, but resubmission invalidates previous grades: individual SUPERSEDED, group reset existing root/member to PENDING. Removed the unexecuted group-round migration and snapshot/current-flag changes; no DB schema/index change. Changed-receipt reload resets old local marks/proposal selection. [Decision](inception/requirements/2026-11-02-locked-grades.md), [plan](construction/plans/code-generation-plan/2026-11-02-locked-grades.md), [results](construction/build-and-test/2026-11-02/2026-11-02-locked-grades-results.md). Fresh full backend 1,741 pass/zero failures/errors/skips, required PostgreSQL suites pass; grading frontend 118 pass, TypeScript/scoped lint/production build pass. Reviewer rechecked receipt-reload fix: no remaining Critical/Important findings. Prior 1,743/710 evidence applies to the superseded implementation only. No live migration/restart/commit/push. Security/resiliency scope unchanged; PBT disabled.
 
 ## Staging check fixes — 2026-11-02
 
@@ -683,11 +728,11 @@ Findings of the `staging` check, logged as KAN-178 to KAN-182 and fixed on `fix/
 
 ## U05/U09/U15 defect remediation — 2026-11-02
 
-Implemented KAN-153–157 on `fix/u05-u09-u15` from clean staging `86b16d92`: preserve partial points/adjustments and AI feedback/review gates; lock manual/restore enrollment targets before subjects; support authorized SUBJECT grading context; restore backup operational metadata and inline paginated history. [Plan](construction/plans/code-generation-plan/2026-11-02-u05-u09-u15-defects.md), [verification and limits](construction/build-and-test/2026-11-02-u05-u09-u15-defects-results.md). Backend 411 distinct tests/zero skips with real PostgreSQL, frontend 189/189, typecheck/focused lint/final production build passed. Full lint has one unrelated existing warning. Fresh reviewer rechecked the corrected legacy metadata issue, no remaining Critical/Important findings. Actual admin dashboard checked; no live grade write, backend restart, broad role/mobile/load acceptance or full-project rerun. Security/resiliency scope retained; PBT disabled. User requested a local commit after verification; no push/merge/deployment.
+Implemented KAN-153–157 on `fix/u05-u09-u15` from clean staging `86b16d92`: preserve partial points/adjustments and AI feedback/review gates; lock manual/restore enrollment targets before subjects; support authorized SUBJECT grading context; restore backup operational metadata and inline paginated history. [Plan](construction/plans/code-generation-plan/2026-11-02-u05-u09-u15-defects.md), [verification and limits](construction/build-and-test/2026-11-02/2026-11-02-u05-u09-u15-defects-results.md). Backend 411 distinct tests/zero skips with real PostgreSQL, frontend 189/189, typecheck/focused lint/final production build passed. Full lint has one unrelated existing warning. Fresh reviewer rechecked the corrected legacy metadata issue, no remaining Critical/Important findings. Actual admin dashboard checked; no live grade write, backend restart, broad role/mobile/load acceptance or full-project rerun. Security/resiliency scope retained; PBT disabled. User requested a local commit after verification; no push/merge/deployment.
 
 ## Quiz rework — 2026-11-01
 
-User requested a roadmap and implementation of all seven Quiz items with documentation sync. Recommended options were first applied as defaults; on 2026-11-02 the user decided Question 2 option B and kept the other answers. Implemented on `feat/quiz-rework-2026-11-01`: removed Quiz REVIEWED and quiz material attachment; generated papers by tag rules; duplicate control; teacher proposals with Subject Manager approval; leave signal flags and a configurable suggested penalty that only the teacher applies or dismisses per attempt; one question per page in results. Also rendered the never-mounted attempts slot found during browser testing. [Roadmap](construction/plans/code-generation-plan/2026-11-01-quiz-rework.md), [results and limits](construction/build-and-test/2026-11-01-quiz-rework-results.md), [assessment](inception/requirements/2026-11-01-quiz-feedback-assessment.md), [questions](inception/requirements/2026-11-01-quiz-rework-questions.md). Backend clean verify 1,712 passed, zero skipped, required suites passed; frontend 677 passed, typecheck and build passed, lint zero errors. API end-to-end 56 checks and the penalty browser flow passed on an isolated, since removed Docker stack. BF-06 PNG not redrawn; real mobile and load not measured. Security/resiliency scope retained; PBT disabled. Merged into `staging` through PR #36; not deployed. End-to-end on the merged code passed, using a fake school AI key on the test database for U06.
+User requested a roadmap and implementation of all seven Quiz items with documentation sync. Recommended options were first applied as defaults; on 2026-11-02 the user decided Question 2 option B and kept the other answers. Implemented on `feat/quiz-rework-2026-11-01`: removed Quiz REVIEWED and quiz material attachment; generated papers by tag rules; duplicate control; teacher proposals with Subject Manager approval; leave signal flags and a configurable suggested penalty that only the teacher applies or dismisses per attempt; one question per page in results. Also rendered the never-mounted attempts slot found during browser testing. [Roadmap](construction/plans/code-generation-plan/2026-11-01-quiz-rework.md), [results and limits](construction/build-and-test/2026-11-01/2026-11-01-quiz-rework-results.md), [assessment](inception/requirements/2026-11-01-quiz-feedback-assessment.md), [questions](inception/requirements/2026-11-01-quiz-rework-questions.md). Backend clean verify 1,712 passed, zero skipped, required suites passed; frontend 677 passed, typecheck and build passed, lint zero errors. API end-to-end 56 checks and the penalty browser flow passed on an isolated, since removed Docker stack. BF-06 PNG not redrawn; real mobile and load not measured. Security/resiliency scope retained; PBT disabled. Merged into `staging` through PR #36; not deployed. End-to-end on the merged code passed, using a fake school AI key on the test database for U06.
 
 ## U06/U12 review feedback — 2026-11-02
 
@@ -695,11 +740,11 @@ Triage of the 2026-11-02 review feedback for the units Võ Minh Tài owns (U02, 
 
 ## Server-managed MCP workflows — 2026-11-01
 
-Implemented full workflow delivery via read_agent_workflow (AUTHOR_ASSIGNMENT/GRADE_WITH_RUBRIC), role-filtered READ access and deterministic content versions. Full source lives in backend classpath resources; local skills are optional wrappers, no user download required. Capabilities/requirements guide discovery; QUIZ/BANK remain separate. Current U06/U07/U09 rules and guides synchronized. [Requirements](inception/requirements/2026-11-01-server-agent-workflows.md), [plan](construction/plans/code-generation-plan/2026-11-01-server-agent-workflows.md), [evidence/limits](construction/build-and-test/2026-11-01-server-agent-workflows-results.md). Backend focused/architecture: 39 tests passed, zero skipped; hook checks 14 passed; package and required jar resource checks passed. Existing MCP capability call advertises new tool; direct authenticated RPC fetched both complete workflows without local skills. Backend reloaded; clients with stale tool metadata need refresh/new session. No provider call, assignment/grade write, private config installation, commit or push.
+Implemented full workflow delivery via read_agent_workflow (AUTHOR_ASSIGNMENT/GRADE_WITH_RUBRIC), role-filtered READ access and deterministic content versions. Full source lives in backend classpath resources; local skills are optional wrappers, no user download required. Capabilities/requirements guide discovery; QUIZ/BANK remain separate. Current U06/U07/U09 rules and guides synchronized. [Requirements](inception/requirements/2026-11-01-server-agent-workflows.md), [plan](construction/plans/code-generation-plan/2026-11-01-server-agent-workflows.md), [evidence/limits](construction/build-and-test/2026-11-01/2026-11-01-server-agent-workflows-results.md). Backend focused/architecture: 39 tests passed, zero skipped; hook checks 14 passed; package and required jar resource checks passed. Existing MCP capability call advertises new tool; direct authenticated RPC fetched both complete workflows without local skills. Backend reloaded; clients with stale tool metadata need refresh/new session. No provider call, assignment/grade write, private config installation, commit or push.
 
 ## External-agent workflow — 2026-11-01
 
-Implemented the approved agent-first flow: conversation/clarifications in the external agent, exact UI review links, contiguous current-context read enforcement in Redis before MCP grading writes, and optional skill guidance available through capabilities/requirements. No mandatory platform initiation form or session table. Current U06/U07/U09 business rules synchronized. [Requirements](inception/requirements/2026-11-01-external-agent-workflow.md), [plan](construction/plans/code-generation-plan/2026-11-01-external-agent-workflow.md), [results/limits](construction/build-and-test/2026-11-01-external-agent-workflow-results.md). Backend affected/architecture: 67 passed, zero skipped; frontend affected: 38 passed; build/typecheck passed; lint zero errors/two existing warnings. Real Redis script and existing older proposal link checked through Orca; backend restarted, health UP. No real model quality or all-client acceptance claim; no global install, commit or push.
+Implemented the approved agent-first flow: conversation/clarifications in the external agent, exact UI review links, contiguous current-context read enforcement in Redis before MCP grading writes, and optional skill guidance available through capabilities/requirements. No mandatory platform initiation form or session table. Current U06/U07/U09 business rules synchronized. [Requirements](inception/requirements/2026-11-01-external-agent-workflow.md), [plan](construction/plans/code-generation-plan/2026-11-01-external-agent-workflow.md), [results/limits](construction/build-and-test/2026-11-01/2026-11-01-external-agent-workflow-results.md). Backend affected/architecture: 67 passed, zero skipped; frontend affected: 38 passed; build/typecheck passed; lint zero errors/two existing warnings. Real Redis script and existing older proposal link checked through Orca; backend restarted, health UP. No real model quality or all-client acceptance claim; no global install, commit or push.
 
 ## MCP quality remediation — 2026-11-01
 
@@ -707,11 +752,11 @@ Latest setup scope: only Codex, Claude Code, OpenCode and Antigravity; user requ
 
 Setup follow-up: added copyable English agent setup prompt and preview in the shared guide/token dialog, preserving client selection and other servers. Token is included only in the explicit token dialog, with disclosure. Focused 18 tests, typecheck, targeted lint and production build passed; Orca guide checked. No real client setup or secret copy performed.
 
-Implemented strict complete AI proposal validation with legacy replay compatibility, shared API/MCP assignment context and policy, metadata-only discovery, server-sourced rubric limit warnings, four-client application/file-based setup and two repository-local skills with optional Gemini hook adapters. User requested no terminal setup instructions; guide follows that preference. [Plan](construction/plans/code-generation-plan/2026-11-01-mcp-quality-remediation.md), [results and limits](construction/build-and-test/2026-11-01-mcp-quality-remediation-results.md). Backend 1,630 runtime cases plus 2 separately rerun architecture cases passed; frontend full 644 plus final targeted setup regressions passed. No global installation, provider call, new token, commit or push. Actual teacher-scored quality, authenticated acceptance in all external clients and load latency remain unmeasured. Existing security/resiliency scope retained; PBT disabled.
+Implemented strict complete AI proposal validation with legacy replay compatibility, shared API/MCP assignment context and policy, metadata-only discovery, server-sourced rubric limit warnings, four-client application/file-based setup and two repository-local skills with optional Gemini hook adapters. User requested no terminal setup instructions; guide follows that preference. [Plan](construction/plans/code-generation-plan/2026-11-01-mcp-quality-remediation.md), [results and limits](construction/build-and-test/2026-11-01/2026-11-01-mcp-quality-remediation-results.md). Backend 1,630 runtime cases plus 2 separately rerun architecture cases passed; frontend full 644 plus final targeted setup regressions passed. No global installation, provider call, new token, commit or push. Actual teacher-scored quality, authenticated acceptance in all external clients and load latency remain unmeasured. Existing security/resiliency scope retained; PBT disabled.
 
 ## Back navigation and page selections — 2026-11-01
 
-Implemented the user's request for Back to restore the actual previous page/tab. Shared history-aware links retain fallback destinations and navigation guards; page tabs and relevant selections/filters live in URL parameters. Next native-history integration verified after correcting the internal-state bypass. Full frontend: 641 tests/96 files passed; build/typecheck passed; lint zero errors/two existing warnings. Orca verified grading → submissions → Back restores tab/student/filter, and same-page tab Back/Forward restores the visible tab. [Plan](construction/plans/code-generation-plan/2026-11-01-back-navigation-state.md), [results/limits](construction/build-and-test/2026-11-01-back-navigation-state-results.md). No backend/data changes, commit or push.
+Implemented the user's request for Back to restore the actual previous page/tab. Shared history-aware links retain fallback destinations and navigation guards; page tabs and relevant selections/filters live in URL parameters. Next native-history integration verified after correcting the internal-state bypass. Full frontend: 641 tests/96 files passed; build/typecheck passed; lint zero errors/two existing warnings. Orca verified grading → submissions → Back restores tab/student/filter, and same-page tab Back/Forward restores the visible tab. [Plan](construction/plans/code-generation-plan/2026-11-01-back-navigation-state.md), [results/limits](construction/build-and-test/2026-11-01/2026-11-01-back-navigation-state-results.md). No backend/data changes, commit or push.
 
 ## Neutral white palette follow-up — 2026-11-01
 
@@ -723,11 +768,11 @@ User requested trying Slate Blue after reporting discomfort with the warm theme.
 
 ## Gradebook and toolbar bug fixes — 2026-11-01
 
-Implemented: historical rubric object envelopes now read alongside current arrays without rewriting stored data; editor tools have visible enabled hover/focus feedback and pointer cursors; assignment header dropdown stacks above the toolbar. [Plan](construction/plans/code-generation-plan/2026-11-01-gradebook-toolbar-fixes.md) and [results/limits](construction/build-and-test/2026-11-01-gradebook-toolbar-fixes-results.md). Fresh backend assignment/grading: 175 passed/zero skipped; frontend focused: 77 passed; typecheck/targeted lint/build passed. Backend restarted; same gradebook API returns 200, and Orca confirmed grading/progress data and menu visibility. Existing pending changes preserved; no persisted data rewrite, commit or push.
+Implemented: historical rubric object envelopes now read alongside current arrays without rewriting stored data; editor tools have visible enabled hover/focus feedback and pointer cursors; assignment header dropdown stacks above the toolbar. [Plan](construction/plans/code-generation-plan/2026-11-01-gradebook-toolbar-fixes.md) and [results/limits](construction/build-and-test/2026-11-01/2026-11-01-gradebook-toolbar-fixes-results.md). Fresh backend assignment/grading: 175 passed/zero skipped; frontend focused: 77 passed; typecheck/targeted lint/build passed. Backend restarted; same gradebook API returns 200, and Orca confirmed grading/progress data and menu visibility. Existing pending changes preserved; no persisted data rewrite, commit or push.
 
 ## Assignment distribution visibility — 2026-11-01
 
-Implemented: anonymous grade-distribution visibility moved from class management to the assigned teacher's assignment settings, separately for each class. Defaults off; existing score publication and privacy guards remain. [Execution plan](construction/plans/code-generation-plan/2026-11-01-assignment-distribution-visibility.md) and [fresh verification/limits](construction/build-and-test/2026-11-01-assignment-distribution-visibility-results.md). Backend: 174 distinct focused tests passed, including actual PostgreSQL races and architecture. Frontend: 615 tests passed; build/typecheck passed; lint zero errors/two existing warnings. Local backend restarted with additive migration; Orca verified saving and persistence, leaving the test preference off. Pending scoped UI changes preserved. Security/resiliency scope retained; PBT disabled. No commit or push.
+Implemented: anonymous grade-distribution visibility moved from class management to the assigned teacher's assignment settings, separately for each class. Defaults off; existing score publication and privacy guards remain. [Execution plan](construction/plans/code-generation-plan/2026-11-01-assignment-distribution-visibility.md) and [fresh verification/limits](construction/build-and-test/2026-11-01/2026-11-01-assignment-distribution-visibility-results.md). Backend: 174 distinct focused tests passed, including actual PostgreSQL races and architecture. Frontend: 615 tests passed; build/typecheck passed; lint zero errors/two existing warnings. Local backend restarted with additive migration; Orca verified saving and persistence, leaving the test preference off. Pending scoped UI changes preserved. Security/resiliency scope retained; PBT disabled. No commit or push.
 
 ## Scoped workspace UI — 2026-11-01
 
@@ -802,7 +847,7 @@ Security scope: SECURITY-03/04/05/08/09/12/15. Resiliency scope: RESILIENCY-04/0
 - [x] Independent read-only review findings corrected; source application/config/DB unchanged.
 - [ ] Fresh application/runtime/provider/security/performance/restore acceptance remains pending; no such success claimed.
 
-[Sync report](construction/build-and-test/2026-10-30-documentation-sync-report.md).
+[Sync report](construction/build-and-test/2026-10-30/2026-10-30-documentation-sync-report.md).
 
 ## Rule/use-case/test audit — 2026-10-30
 
@@ -811,11 +856,11 @@ Security scope: SECURITY-03/04/05/08/09/12/15. Resiliency scope: RESILIENCY-04/0
 - [x] Subsequent remediation ran all backend cases: 1,611 passed/0 skipped; required PostgreSQL guard passed. The earlier 1,372/99 audit run remains historical.
 - [x] Approved U03 P1 fixes, false-positive fixtures, scoped missing assertions, current BR/UC drift and Student/Admin MCP correction implemented and verified. Broader acceptance gaps remain explicit in the remediation report.
 
-[Consolidated audit](construction/build-and-test/2026-10-30-unit-test-business-rule-audit.md). Passing suites do not certify full business-rule/UC acceptance.
+[Consolidated audit](construction/build-and-test/2026-10-30/2026-10-30-unit-test-business-rule-audit.md). Passing suites do not certify full business-rule/UC acceptance.
 
 ## Remediation closure — 2026-10-30
 
-[Results and practical limits](construction/build-and-test/2026-10-30-remediation-student-mcp-results.md). Backend 1,611 pass/0 skip; frontend 599 pass/94 files; required DB guard, lint/typecheck/build passed. BF-06/BF-08 exports inspected. Migration tested in disposable databases only. No commit/push/live migration/deploy.
+[Results and practical limits](construction/build-and-test/2026-10-30/2026-10-30-remediation-student-mcp-results.md). Backend 1,611 pass/0 skip; frontend 599 pass/94 files; required DB guard, lint/typecheck/build passed. BF-06/BF-08 exports inspected. Migration tested in disposable databases only. No commit/push/live migration/deploy.
 
 ## Code structure review and refactor proposal — 2026-10-30
 
@@ -832,7 +877,7 @@ This section records the superseded working-tree implementation. All non-move ed
 - All 15 backend units and 18 frontend features now follow the approved structure. Admin-only unreachable MCP implementations removed; architecture guard hardened; U05/document/editor/AI-draft responsibilities separated; U05 list lookups batched; frontend public imports stabilized.
 - Fresh final backend `mvn clean verify`: 1,614 passed, 0 failures/errors/skips; required PostgreSQL guard passed. Frontend: 601 passed/94 files; lint/typecheck/production build passed. Public unit contracts, dependency versions/lockfiles, migrations and infrastructure config unchanged.
 - Current source inventory, all 15 Construction as-built/logical-component documents, services and test guidance synchronized. Earlier reports remain dated evidence, not a fresh acceptance claim.
-- [Results and limits](construction/build-and-test/2026-10-30-code-structure-refactor-results.md); [execution ledger](construction/plans/code-generation-plan/2026-10-30-code-structure-refactor-progress.md). No commit, push, deployment or live migration. Browser/provider/load/security/restore acceptance remains unverified.
+- [Results and limits](construction/build-and-test/2026-10-30/2026-10-30-code-structure-refactor-results.md); [execution ledger](construction/plans/code-generation-plan/2026-10-30-code-structure-refactor-progress.md). No commit, push, deployment or live migration. Browser/provider/load/security/restore acceptance remains unverified.
 
 ## Current move-only result — 2026-10-30
 
@@ -840,7 +885,7 @@ User clarified that only moving files/packages is wanted. All original 1,501 sou
 
 Fresh backend clean verify: 1,611 passed/0 skipped, required PostgreSQL guard passed. Frontend: 599 passed/94 files; typecheck/build passed; lint exit 0 with two existing unused-import warnings. No staged changes, commit, push, history rewrite or deployment.
 
-[Current results and limits](construction/build-and-test/2026-10-30-package-moves-only-results.md). Security/resiliency scope unchanged; PBT remains disabled. Existing full runtime/provider/E2E acceptance gaps remain outside this move-only change.
+[Current results and limits](construction/build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md). Security/resiliency scope unchanged; PBT remains disabled. Existing full runtime/provider/E2E acceptance gaps remain outside this move-only change.
 
 ## Fresh verification after git mv — 2026-10-30 17:11 +07:00
 
@@ -852,7 +897,7 @@ User requested “giúp tôi commit”. Include the verified file/package reloca
 
 ## U09 scoped structure cleanup — 2026-11-06
 
-**Subsequent full verification requested and completed:** final isolated Maven verify passed 1,830 tests with zero failures/errors/skips and packaged the executable JAR; all four required PostgreSQL suites passed. Frontend 799 tests/116 files, full lint, production build and typecheck passed. [Fresh results, environment corrections and limits](construction/build-and-test/2026-11-06-u09-structure-full-verification.md). No application/config/dependency changes from verification; temporary backend POM removed. No commit, push, restart or deployment.
+**Subsequent full verification requested and completed:** final isolated Maven verify passed 1,830 tests with zero failures/errors/skips and packaged the executable JAR; all four required PostgreSQL suites passed. Frontend 799 tests/116 files, full lint, production build and typecheck passed. [Fresh results, environment corrections and limits](construction/build-and-test/2026-11-06/2026-11-06-u09-structure-full-verification.md). No application/config/dependency changes from verification; temporary backend POM removed. No commit, push, restart or deployment.
 
 - [x] User approved two concrete review recommendations with “ok giúp tôi sửa”; implemented directly without subagents.
 - [x] Moved frontend error formatter/test into model; updated all six external consumers. Renamed two concrete JDBC repositories without Adapter suffix; updated integration wiring and current documentation.
@@ -890,7 +935,7 @@ No YouTube/CSP changes, migration, dependency addition, commit, push or deployme
 
 - [x] Standalone typecheck passed after production build regenerated stale Next types.
 - [x] Final related backend 39/0 skipped; frontend 814/119 files; full lint and production build passed.
-- [x] Diff reviewed and documentation synchronized; [results and limits](construction/build-and-test/2026-11-09-excel-import-results.md).
+- [x] Diff reviewed and documentation synchronized; [results and limits](construction/build-and-test/2026-11-09/2026-11-09-excel-import-results.md).
 
 Approved Excel scope complete. Live browser import, full backend/DB/performance and deployment remain outside the completed verification. Backend not restarted; no commit/push/deploy. YouTube work canceled by user.
 
@@ -910,7 +955,7 @@ Current live quiz has three YouTube sources without text and no AI drafts; no pr
 - [x] Four Important edit-loss review fixes and list marker gutter follow-up corrected.
 - [x] Backend clean533/0skip plus overlapping focused104/119/10 and required guard passed; backend JAR packaged.
 - [x] Frontend836/124files, full lint/build/typecheck passed. Gutter final82/10files+build/typecheck; Vietnamese copy final55/8files passed.
-- [x] [Final results and applying migrations](construction/build-and-test/2026-11-09-material-quiz-ui-results.md), current contracts/docs and plan checks synchronized.
+- [x] [Final results and applying migrations](construction/build-and-test/2026-11-09/2026-11-09-material-quiz-ui-results.md), current contracts/docs and plan checks synchronized.
 
 Manual UI/mobile/provider acceptance remains with user by explicit request. No live migration, application restart, commit, push or deployment. Existing Excel diff retained. Security/Resiliency scope retained; PBT disabled. Backend update needs Flyway material2200/quiz2201 before testing full behavior on running app.
 
@@ -918,7 +963,7 @@ Manual UI/mobile/provider acceptance remains with user by explicit request. No l
 
 - [x] Fixed stale mandatory source validation in shared quiz/bank HTTP parser; absent/null source reaches existing automatic selection.
 - [x] Regression red reproduced; backend50/0skip and JAR packaging passed; frontend payload2 passed.
-- [x] [Fix evidence and limits](construction/build-and-test/2026-11-09-quiz-http-auto-source-fix.md).
+- [x] [Fix evidence and limits](construction/build-and-test/2026-11-09/2026-11-09-quiz-http-auto-source-fix.md).
 
 No additional migration. Restart backend using updated artifact for user acceptance. Live provider/UI acceptance remains unperformed. Previous changes and extension configuration retained.
 
@@ -926,7 +971,7 @@ No additional migration. Restart backend using updated artifact for user accepta
 
 - [x] Matched failed quiz task to personal Gemini model and persisted HTTP503; current connection probe passed later.
 - [x] Found duplicate older Docker worker and stopped only that container; current local,worker backend remains active with four AI consumers and empty queue.
-- [x] [Runtime evidence and remaining provider limit](construction/build-and-test/2026-11-09-ai-worker-runtime-diagnosis.md).
+- [x] [Runtime evidence and remaining provider limit](construction/build-and-test/2026-11-09/2026-11-09-ai-worker-runtime-diagnosis.md).
 
 No source/config/schema change or real AI retry submitted. Previous FAILED draft remains unchanged; user can submit a new request. Upstream provider availability remains unverified.
 
@@ -934,7 +979,7 @@ No source/config/schema change or real AI retry submitted. Previous FAILED draft
 
 - [x] Compared implementation with requirements/stories, U01/U05/U10/U13 current behavior and U03/U06/U11 cross-unit contracts.
 - [x] Synchronized19 Markdown files;22 added local links resolve and scoped diff whitespace passed. Historical evidence retained.
-- [x] [Document map and verification limits](construction/build-and-test/2026-11-09-aidlc-doc-sync.md).
+- [x] [Document map and verification limits](construction/build-and-test/2026-11-09/2026-11-09-aidlc-doc-sync.md).
 
 Documentation-only; no application test rerun or new code/schema/config/runtime change. Manual UI and successful real AI generation remain unverified. Material/version JDBC conversion does not include module persistence. Security/Resiliency scope retained; PBT disabled.
 
@@ -951,7 +996,7 @@ No backend restart/migration/provider call or manual UI test. Source selection b
 - [x] Optional prompt with selected source documents, server default instructions and same-call relevance warning persisted.
 - [x] Chấp nhận tất cả uses current edited/nondropped questions, validation, busy lock and existing versioned accept API.
 - [x] Frontend66/5files, scoped lint/typecheck; backend98/5suites0skip and JAR package passed; affected docs synchronized.
-- [x] [Evidence and applying](construction/build-and-test/2026-11-09-ai-quiz-review-followup.md).
+- [x] [Evidence and applying](construction/build-and-test/2026-11-09/2026-11-09-ai-quiz-review-followup.md).
 
 Restart current backend/worker for new behavior; no additional migration. No live provider/UI acceptance. Old drafts not reassessed; model semantic relevance can be wrong. Prior source-label fix and earlier changes retained.
 
@@ -960,7 +1005,7 @@ Restart current backend/worker for new behavior; no additional migration. No liv
 - [x] Read Frontend terminal in Orca as requested, checked backend/metadata and separated proxy/CSP/session evidence.
 - [x] Added server-only unexpected-U04 exception logging; existing error/API/auth behavior retained. Controller/service54 and isolated PostgreSQL31 passed; frontend27/3files passed.
 - [x] Restarted current local API/worker after zero-running-AI check; health200. User confirmed “Đã tải được môn học”.
-- [x] [Evidence and limits](construction/build-and-test/2026-11-09-admin-subjects-runtime-diagnosis.md).
+- [x] [Evidence and limits](construction/build-and-test/2026-11-09/2026-11-09-admin-subjects-runtime-diagnosis.md).
 
 No proven original500 root cause, CSP relaxation, data/migration/auth change or browser UI test. Runtime recovery is confirmed by user; diagnostic logging retained for recurrence. Security/Resiliency retained; PBT disabled.
 
@@ -969,7 +1014,7 @@ No proven original500 root cause, CSP relaxation, data/migration/auth change or 
 - [x] Mismatch output no longer becomes READY; empty/PENDING plus warning, one source-only retry, second mismatch fails closed.
 - [x] Current rights/version/source/text/quota, row lock, atomic job/task metadata, rollback-safe failure, after-commit and owner-only recovery verified.
 - [x] Final backend103/6suites0skip/package; frontend44/2files; scoped diff and29 added links passed.
-- [x] U10/current stories synchronized; [results and limits](construction/build-and-test/2026-11-10-ai-source-grounding-fix.md).
+- [x] U10/current stories synchronized; [results and limits](construction/build-and-test/2026-11-10/2026-11-10-ai-source-grounding-fix.md).
 - [x] Gracefully restarted current local API/worker after zero-running-task check; PID55012, health200.
 
 No additional migration or real provider/UI acceptance. Extra retry costs at most one additional task; AI semantic checks are fallible. Old incorrect READY proposals remain historical and must be discarded/recreated. No commit/push/deploy.
@@ -1001,7 +1046,7 @@ User explicitly requested resolving PR59 and merging into staging. Latest stagin
 - [x] Requirements/stories, affected unit docs, OpenAPI and the original/continuation plans synchronized.
 - [x] Final backend 2,095 tests with zero failures/errors/skips and executable JAR; required five-suite/57-case guard passed. Frontend 870 tests/127 files, full lint/typecheck/build passed. Source snapshot unchanged.
 
-[Results, evidence and applying migrations](construction/build-and-test/2026-11-10-grading-remediation-results.md). Original stash retained; changes unstaged, no commit/push/deploy. Existing browser was at login; no authenticated UI/mobile/provider acceptance or live grade write. No running API/worker restart or live migration. Update the local backend through the existing Flyway startup process to apply the two new migrations. Security/Resiliency retained; PBT disabled.
+[Results, evidence and applying migrations](construction/build-and-test/2026-11-10/2026-11-10-grading-remediation-results.md). Original stash retained; changes unstaged, no commit/push/deploy. Existing browser was at login; no authenticated UI/mobile/provider acceptance or live grade write. No running API/worker restart or live migration. Update the local backend through the existing Flyway startup process to apply the two new migrations. Security/Resiliency retained; PBT disabled.
 
 
 ## Grading UI screenshot follow-up — 2026-11-10
@@ -1009,7 +1054,7 @@ User explicitly requested resolving PR59 and merging into staging. Latest stagin
 - [x] Measured toolbar-relative score/comment offset, readable auto-growing feedback, clean evidence links, dated successful proposal cards; latest failure notice retained outside history. Internal diagnostics preserved.
 - [x] Full frontend873/127files, lint/typecheck/build; desktop/mobile real-component fixture inspected. No authenticated session/provider/live grade write or backend change/restart.
 
-[Results and acceptance](construction/build-and-test/2026-11-10-grading-ui-feedback-polish.md). Existing work retained, no subagents/commit/push. Security/Resiliency retained; PBT disabled.
+[Results and acceptance](construction/build-and-test/2026-11-10/2026-11-10-grading-ui-feedback-polish.md). Existing work retained, no subagents/commit/push. Security/Resiliency retained; PBT disabled.
 
 
 ## AI grading action and reported rejection — 2026-11-10
@@ -1017,7 +1062,7 @@ User explicitly requested resolving PR59 and merging into staging. Latest stagin
 - [x] Larger36px AI grading action with permanent label; narrow read-only toolbar wraps. Regression206/20files, scoped lint, typecheck/build and synthetic desktop/mobile fixture passed.
 - [x] Read-only runtime diagnosis: two Gemini tasks READY then grading REJECTED. Output deliberately cleared after handling; exact invalid field remains unproven. No backend fix or successful new provider run claimed.
 
-[Evidence and limits](construction/build-and-test/2026-11-10-grading-ai-button-and-error.md). No subagents/live grade/provider retry/application restart/commit/push. Security/Resiliency retained; PBT disabled.
+[Evidence and limits](construction/build-and-test/2026-11-10/2026-11-10-grading-ai-button-and-error.md). No subagents/live grade/provider retry/application restart/commit/push. Security/Resiliency retained; PBT disabled.
 
 
 ## AI grading rejection fixed — 2026-11-10
@@ -1026,7 +1071,7 @@ User explicitly requested resolving PR59 and merging into staging. Latest stagin
 - [x] Red/green regression, connected210/38classes0skip, final14 regression, Maven verify/JAR and live Gemini READY with16 feedback items passed. Local API/worker refreshed; grade fingerprint/version unchanged in final verification.
 - [x] Opened new proposal in a separate authenticated Chrome tab; original tab preserved. Two provider calls; no grade apply/save/finalize/publish, migration, commit/push or subagents.
 
-[Results and limits](construction/build-and-test/2026-11-10-grading-ai-rejection-fix.md). Other models were not tested live; whole-backend suite not repeated. Security/Resiliency retained; PBT disabled.
+[Results and limits](construction/build-and-test/2026-11-10/2026-11-10-grading-ai-rejection-fix.md). Other models were not tested live; whole-backend suite not repeated. Security/Resiliency retained; PBT disabled.
 
 
 ## Grading feedback formatting — 2026-11-10
@@ -1034,7 +1079,7 @@ User explicitly requested resolving PR59 and merging into staging. Latest stagin
 - [x] General paragraph action/readable type; strengths/improvements as separate editable bulleted ideas with retained newlines and add/remove/limit controls. Blank draft rows excluded only at save.
 - [x] Grading/document210/20files, final grading154/17files, scoped lint, typecheck/build and synthetic desktop/mobile inspection passed.
 
-[Evidence and acceptance](construction/build-and-test/2026-11-10-grading-feedback-format.md). No live grade save, provider call, backend/runtime change, commit/push or subagents. Security/Resiliency retained; PBT disabled.
+[Evidence and acceptance](construction/build-and-test/2026-11-10/2026-11-10-grading-feedback-format.md). No live grade save, provider call, backend/runtime change, commit/push or subagents. Security/Resiliency retained; PBT disabled.
 
 
 ## Repeated grade actions — 2026-11-10
@@ -1042,7 +1087,7 @@ User explicitly requested resolving PR59 and merging into staging. Latest stagin
 - [x] Shared state eligibility for both batch selectors; readable completed/race feedback and safe draft-only publish fallback. Backend guards retained.
 - [x] Grading167/18files, scoped lint, typecheck/build; authenticated gradebook shows published student with all batch actions disabled.
 
-[Results and limits](construction/build-and-test/2026-11-10-grading-repeat-actions.md). No live finalize/publish, backend/runtime change, migration, commit/push or subagents. Security/Resiliency retained; PBT disabled.
+[Results and limits](construction/build-and-test/2026-11-10/2026-11-10-grading-repeat-actions.md). No live finalize/publish, backend/runtime change, migration, commit/push or subagents. Security/Resiliency retained; PBT disabled.
 
 
 ## Grading local commit delivery — 2026-11-10
@@ -1051,7 +1096,7 @@ User explicitly requested resolving PR59 and merging into staging. Latest stagin
 - [x] Fresh full backend2096 tests0skip/JAR and five-suite/57-case guard; full frontend891/128files, lint/typecheck passed. Source unchanged during packaging.
 - [x] Source commits51428543,66af2cd5,27ec9f0a,8f0ac9ea; this final documentation commit completes the series. Original Antigravity stash retained.
 
-[Commit receipt and limits](construction/build-and-test/2026-11-10-grading-local-commits.md). No push, GitHub CI, deployment, runtime restart, provider call, live grade write or subagents in this turn. Security/Resiliency retained; PBT disabled.
+[Commit receipt and limits](construction/build-and-test/2026-11-10/2026-11-10-grading-local-commits.md). No push, GitHub CI, deployment, runtime restart, provider call, live grade write or subagents in this turn. Security/Resiliency retained; PBT disabled.
 
 
 ## Staging merge resolution — 2026-11-10
@@ -1070,7 +1115,7 @@ User authorized publishing a staging-to-main PR and merging after CI passes. App
 ## Gradebook export naming — 2026-11-10
 
 - [x] Scoped workspace/export review and requirements documented in inception/requirements/2026-11-10-gradebook-export.md.
-- [x] User approved implementation; safe assignment filenames shared by API and UI. Backend14 tests, frontend183 tests plus final35-case subset, typecheck/scoped lint passed. Evidence: construction/build-and-test/2026-11-10-gradebook-export.md. No live Excel/browser acceptance, full suite/build, restart, deployment or commit/push. Security/Resiliency retained; PBT disabled.
+- [x] User approved implementation; safe assignment filenames shared by API and UI. Backend14 tests, frontend183 tests plus final35-case subset, typecheck/scoped lint passed. Evidence: construction/build-and-test/2026-11-10/2026-11-10-gradebook-export.md. No live Excel/browser acceptance, full suite/build, restart, deployment or commit/push. Security/Resiliency retained; PBT disabled.
 - [x] Screenshot follow-up: Vietnamese headers/statuses/late flags/time/sheet, active-assignment export default, single-assignment title and ID-free aggregate filenames. Backend15/15, frontend35/35, typecheck/lint passed. Local API/worker refreshed; two pending staging migrations applied on startup. Real local browser downloads and XLSX XML assertions passed for assignment5rows and aggregate20rows/4assignments. User's original tab retained. No VPS release, grade write, commit/push or subagents; current evidence/limits in the same report.
 
 ## Diagram-only AI grading consistency — 2026-11-10
@@ -1078,7 +1123,7 @@ User authorized publishing a staging-to-main PR and merging after CI passes. App
 - [x] Reproduced erroneous empty detection for real compressed Draw.io pages; grading now reuses the shared bounded document parser. Live heading/rubric snapshot mapping matches2+4+4=10.
 - [x] Full backend2116 tests/253suites0fail0error0skip/JAR and required guard passed. One successful live Gemini retry gives READY8.50 with all3 sections recognized; persisted grade remains DRAFT0.00/version1 and submission hash unchanged.
 
-Evidence: construction/build-and-test/2026-11-10-grading-diagram-parity.md. No grade save/finalize/publish, assignment/submission edit, migration, VPS update, commit/push or subagents. Qualitative scoring still needs teacher review. Existing Security/Resiliency retained; PBT disabled.
+Evidence: construction/build-and-test/2026-11-10/2026-11-10-grading-diagram-parity.md. No grade save/finalize/publish, assignment/submission edit, migration, VPS update, commit/push or subagents. Qualitative scoring still needs teacher review. Existing Security/Resiliency retained; PBT disabled.
 
 ## Accurate Vietnamese AI errors — 2026-11-10
 
@@ -1086,7 +1131,7 @@ Evidence: construction/build-and-test/2026-11-10-grading-diagram-parity.md. No g
 - [x] Recognize explicit token-truncation metadata for3 providers with charged usage retained; distinguish known quota/rate errors without guessing from429 alone.
 - [x] Final343 connected tests0fail0error0skip and authenticated browser inspection pass. Local API/worker refreshed; original browser form retained and saved grade/version/hash unchanged. No paid model request, grade write, migration, commit/push or VPS update.
 
-Evidence and limits: construction/build-and-test/2026-11-10-grading-ai-errors.md. Existing diagram fix retained. Security/Resiliency retained; PBT disabled.
+Evidence and limits: construction/build-and-test/2026-11-10/2026-11-10-grading-ai-errors.md. Existing diagram fix retained. Security/Resiliency retained; PBT disabled.
 
 
 ## Deterministic AI grading totals — 2026-11-10
@@ -1094,7 +1139,7 @@ Evidence and limits: construction/build-and-test/2026-11-10-grading-ai-errors.md
 - [x] Provider schema/prompt delegate totals to existing backend calculation; complete MCP contract and strict item/check/evidence validation retained.
 - [x] Final349 connected tests0fail0error0skip; local API/worker refreshed, health200. One live proposal READY7.50 matches12 item scores and section totals2+3+2.5 in storage/UI. Saved grade/state/version/hash unchanged.
 
-Evidence: construction/build-and-test/2026-11-10-grading-derived-total.md. Original tab retained; separate test tab shows unsaved proposal. No official grade action, commit/push or VPS update. Other providers not tested live; full suite/JAR not repeated. Security/Resiliency retained; PBT disabled.
+Evidence: construction/build-and-test/2026-11-10/2026-11-10-grading-derived-total.md. Original tab retained; separate test tab shows unsaved proposal. No official grade action, commit/push or VPS update. Other providers not tested live; full suite/JAR not repeated. Security/Resiliency retained; PBT disabled.
 
 
 ## Compact optional manual grading feedback — 2026-11-10
@@ -1103,7 +1148,7 @@ Evidence: construction/build-and-test/2026-11-10-grading-derived-total.md. Origi
 - [x] Inline required adjustment reason and readable fallback; autosave pauses after errors and resumes on edits.
 - [x] Final173 frontend/204 backend tests, TypeScript/scoped lint and45 final-polish cases pass. Local API/worker refreshed and health200; DOM checks pass. Browser-test accidental local draft mutation restored to exact7.40 score/non-audit contents via normal saves; version/history correction retained, no finalize/publish.
 
-Evidence and limits: construction/build-and-test/2026-11-10-manual-feedback-parity.md. No commit/push, VPS release, migration, provider call or subagents. Full build/suites/mobile visual verification not repeated; screenshot follow-ups timed out. Security/Resiliency retained; PBT disabled.
+Evidence and limits: construction/build-and-test/2026-11-10/2026-11-10-manual-feedback-parity.md. No commit/push, VPS release, migration, provider call or subagents. Full build/suites/mobile visual verification not repeated; screenshot follow-ups timed out. Security/Resiliency retained; PBT disabled.
 
 
 ## Student assignment context columns — 2026-11-10
@@ -1111,7 +1156,7 @@ Evidence and limits: construction/build-and-test/2026-11-10-manual-feedback-pari
 - [x] Class and subject codes shown across3 tabs; fixed widths/overflow and correct empty/loading spans. Existing filtering/navigation retained.
 - [x] Assignment-work23 tests plus final4 page cases, TypeScript/scoped lint and whitespace pass. No API/data change, account switch, commit/push or deployment. Prior grading work preserved.
 
-Evidence: construction/build-and-test/2026-11-10-student-assignment-context.md. Live student/mobile visual acceptance and full build not repeated. Security/Resiliency retained; PBT disabled.
+Evidence: construction/build-and-test/2026-11-10/2026-11-10-student-assignment-context.md. Live student/mobile visual acceptance and full build not repeated. Security/Resiliency retained; PBT disabled.
 
 
 ## Quiet30-second grading autosave and one optional note — 2026-11-10
@@ -1120,14 +1165,14 @@ Evidence: construction/build-and-test/2026-11-10-student-assignment-context.md. 
 - [x] Single-flight/revision/version handling preserves newer edits; explicit Save/Ctrl+S, error pause and group/stale/locked-grade guards retained. One optional change note replaces required adjustment reason, with user-authorized domain rule update and legacy-note preservation.
 - [x] Final176 frontend/206 backend cases, final13 hook cases, TypeScript/scoped lint/whitespace pass. Local API/worker refreshed, health200. All grade mutation tests mocked; no live grade edits, commit/push or VPS deploy.
 
-Evidence: construction/build-and-test/2026-11-10-grading-quiet-autosave.md. Prior pending changes retained. Full build/real multi-session/mobile visual checks not repeated. Security/Resiliency retained; PBT disabled.
+Evidence: construction/build-and-test/2026-11-10/2026-11-10-grading-quiet-autosave.md. Prior pending changes retained. Full build/real multi-session/mobile visual checks not repeated. Security/Resiliency retained; PBT disabled.
 
 ## Student published result entry — 2026-11-10
 
 - [x] Confirmed local published8/10 is hidden behind a newer draft plus pre-deadline history filtering. Detail now retains submitted result and a published-only detail link; read-only viewer admits current grading candidate before deadline without older history/drafts. Existing backend ownership/publication controls retained.
 - [x] Connected26 frontend/9 GradebookService cases and final13 affected page cases pass; TypeScript/scoped lint/whitespace pass. No live grade writes, student-account switch, subagents, commit/push or deployment. Prior pending changes retained.
 
-Evidence: construction/build-and-test/2026-11-10-student-published-result-entry.md. Student live visual acceptance/full build not performed. Security/Resiliency retained; PBT disabled.
+Evidence: construction/build-and-test/2026-11-10/2026-11-10-student-published-result-entry.md. Student live visual acceptance/full build not performed. Security/Resiliency retained; PBT disabled.
 
 ## Local commits and fresh verification — 2026-11-10
 
@@ -1144,7 +1189,7 @@ Evidence: construction/build-and-test/2026-11-10-student-published-result-entry.
 - [x] Full Maven verify2146 tests with no failures/errors/skips and required integration/traced-suite guard pass. Full frontend956 tests/134 files pass; final connected211 tests/25 files and workspace39 tests pass after subsequent additions (overlapping counts). TypeScript, scoped ESLint, production frontend build and whitespace pass. No live grade edits, paid model calls, subagents, commit/push or deploy.
 - [x] User restarted the local backend; direct Orca UI acceptance passed for published corrections8→8.25, student visibility/detail access, background AI across navigation, concurrent manual edits preserved when AI completes, explicit Apply without automatic saving and quiet30-second autosave without reload. Restored saved8.00 and original feedback. New AI proposals remain in history. Archived-class/group UI acceptance was not performed; automated coverage remains. The earlier rejected restart command stopped/restarted no process.
 
-Plan: construction/plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md. Evidence: construction/build-and-test/2026-11-11-editable-grades-and-background-ai.md. Security/Resiliency compliant for existing scope; PBT disabled. Existing U12 preservation of official group grades on resubmission remains, with stale-receipt edits denied. Student tabs see saved corrections on load/refetch; no realtime push added.
+Plan: construction/plans/code-generation-plan/2026-11-11-editable-grades-and-background-ai.md. Evidence: construction/build-and-test/2026-11-11/2026-11-11-editable-grades-and-background-ai.md. Security/Resiliency compliant for existing scope; PBT disabled. Existing U12 preservation of official group grades on resubmission remains, with stale-receipt edits denied. Student tabs see saved corrections on load/refetch; no realtime push added.
 
 User subsequently authorized descriptive local commits. Source/tests and documentation recorded separately; fresh precommit frontend grading/assignment-work run passed211 tests/25 files. No push or deployment.
 
@@ -1157,7 +1202,7 @@ Người dùng duyệt "sửa 3 lỗi trên". Baseline origin/staging ce40e447; 
 - [x] 332 test/51 file, TypeScript, ESLint, diff check qua. Production build exit 0, có cảnh báo font bị chặn và 27 standalone traced files ở ngoài root do junction dependency.
 - [x] Ghi giới hạn: chưa kiểm tra layout trên browser/mobile, chưa xác nhận standalone deployment; không commit/push/deploy hay thay checkout gốc.
 
-[Kế hoạch](construction/plans/code-generation-plan/2026-11-11-three-ui-fixes.md) và [kết quả](construction/build-and-test/2026-11-11-three-ui-fixes.md). Security/Resiliency giữ phạm vi đã duyệt, PBT disabled. Các stage thiết kế mới/stories/hạ tầng/operations không cần cho ba lỗi hiện hữu.
+[Kế hoạch](construction/plans/code-generation-plan/2026-11-11-three-ui-fixes.md) và [kết quả](construction/build-and-test/2026-11-11/2026-11-11-three-ui-fixes.md). Security/Resiliency giữ phạm vi đã duyệt, PBT disabled. Các stage thiết kế mới/stories/hạ tầng/operations không cần cho ba lỗi hiện hữu.
 
 ### Staging readiness — ba lỗi UI/UX, 2026-11-11
 
@@ -1202,7 +1247,7 @@ cho phép push/tạo PR vào staging; không tự merge PR. Xem PR GitHub để 
 - [x] Reviewed checkout 65fcc764 on feat/ai-prompt-guardrail with existing AI-DLC conventions and module context.
 - [x] Full backend verify 2,342 tests/no skips and required integration guard; frontend 1,018 tests, lint, production build and clean-cache typecheck passed. MCP hook 14 scenarios and deploy ShellCheck passed.
 - [x] Confirmed four defects with local probes: quiz exit after failed save (P1), quota fallback transaction rollback, quiz resumption in archived prior class, aggregate AI timeout (P2). Findings are reported, not fixed.
-- [x] Vietnamese report and evidence: construction/build-and-test/2026-11-12-project-bug-review.md. Plan: construction/plans/2026-11-12-project-bug-review.md.
+- [x] Vietnamese report and evidence: construction/build-and-test/2026-11-12/2026-11-12-project-bug-review.md. Plan: construction/plans/2026-11-12-project-bug-review.md.
 
 No application source edits, live data/provider writes, restart, subagents, commit/push/deploy. Stale generated route types moved to .tmp before rebuilding. Live browser/provider/production/load checks not performed; Python fixture unavailable and deploy shell harness not rerun. Security/Resiliency retained with recovery defects reported, PBT disabled. Concurrent audit additions preserved.
 
@@ -1211,7 +1256,7 @@ No application source edits, live data/provider writes, restart, subagents, comm
 - [x] Fixed BUG-01–04 from the 12/11 review: failed quiz exit save, quota rollback fallback, class-scoped retake attempts, aggregate AI retry timeout.
 - [x] User policy: retain old work in archived class; new class gets independent attempts and limits. Enrollment restriction unchanged.
 - [x] Final isolated backend 88 tests/no skips, PostgreSQL migration; frontend quiz 35 tests, TypeScript/scoped lint passed.
-- Evidence: construction/build-and-test/2026-11-13-review-fixes-results.md. No live migration/commit/push/deploy; unrelated concurrent work preserved.
+- Evidence: construction/build-and-test/2026-11-13/2026-11-13-review-fixes-results.md. No live migration/commit/push/deploy; unrelated concurrent work preserved.
 
 ## Group controls and AI authoring — 2026-11-13
 
@@ -1219,7 +1264,7 @@ No application source edits, live data/provider writes, restart, subagents, comm
 - [x] Full backend verify 2349 tests without failures/errors/skips; required integration guard and 57 traced cases pass. Final cap delta 107 academics/identity tests pass. Full frontend 1024 tests/148 files, final two enrollment cases, scoped lint, isolated typecheck and production build pass.
 - [x] Browser checks teacher/manager UI at local mobile viewport; no post-change data writes or paid AI call. Running backend still advertises old source types and needs reload. Original tsconfig restored after isolated build. Automatic review blocked deletion of stale generated type directory; no retry/deletion performed. No commit/push/deploy.
 
-Plan/evidence: construction/plans/code-generation-plan/2026-11-13-group-and-ai-authoring.md and construction/build-and-test/2026-11-13-group-and-ai-authoring.md. Existing security/resiliency scope retained; PBT disabled.
+Plan/evidence: construction/plans/code-generation-plan/2026-11-13-group-and-ai-authoring.md and construction/build-and-test/2026-11-13/2026-11-13-group-and-ai-authoring.md. Existing security/resiliency scope retained; PBT disabled.
 
 ## Kế hoạch đính kèm trong khung chat AI — 2026-11-13
 
@@ -1237,7 +1282,7 @@ Kế hoạch: construction/plans/code-generation-plan/2026-11-13-ai-chat-attachm
 - [x] Full frontend 1038 tests/150 files, full lint, isolated TypeScript and production build pass; original tsconfig/next config restored. Final verification ran sequentially with two workers after Windows virtual-memory exhaustion in a concurrent run. Manager UI validates DOCX/reference/template transitions and TXT drop; PNG thumbnail renders but running backend still uses old image policy. No model call or assignment edits; fixture attachments removed from composer.
 - [ ] Deferred by user: all URL/link work. Not required for this phase's completion.
 
-Plan/evidence: construction/plans/code-generation-plan/2026-11-13-ai-chat-attachments.md and construction/build-and-test/2026-11-13-ai-chat-files.md. Backend reload and page refresh needed for live image acceptance. Scoped blob-preview design false-positive exemption recorded; no global exemption. No commit/push/deploy, no subagents.
+Plan/evidence: construction/plans/code-generation-plan/2026-11-13-ai-chat-attachments.md and construction/build-and-test/2026-11-13/2026-11-13-ai-chat-files.md. Backend reload and page refresh needed for live image acceptance. Scoped blob-preview design false-positive exemption recorded; no global exemption. No commit/push/deploy, no subagents.
 
 ### Runtime UI recheck — 2026-11-13
 
@@ -1265,7 +1310,7 @@ Plan/evidence: construction/plans/code-generation-plan/2026-11-13-ai-chat-attach
 - [ ] Await full deployed assignment link to verify that record's status/class; not claiming the screenshot's production root cause is conclusively verified.
 - [ ] Product fix not requested/applied in this diagnosis turn. Proposed discoverable closed/unsubmitted category plus matching labels; preserve actionable class-summary predicates and authorization.
 
-Evidence: construction/build-and-test/2026-11-13-student-assignment-visibility.md. Only diagnosis documents changed; no commit/push/deploy.
+Evidence: construction/build-and-test/2026-11-13/2026-11-13-student-assignment-visibility.md. Only diagnosis documents changed; no commit/push/deploy.
 
 ### Approved visibility repair — 2026-11-13
 
@@ -1287,7 +1332,7 @@ Evidence: construction/build-and-test/2026-11-13-student-assignment-visibility.m
 - [x] Backend55/55; frontend grading199/199 plus API4/4 (three overlap); scoped lint and isolated source/test TypeScript pass. Normal TypeScript fails only on old generated Next route validators. Temporary typecheck config removed, production config untouched.
 - [x] User will perform UI acceptance. No browser check, production build, live grade changes, AI call, backend restart, commit/push/deploy. Backend must load new code before testing the new strict request field.
 
-Plan: construction/plans/code-generation-plan/2026-11-13-member-contribution-levels.md. Results: construction/build-and-test/2026-11-13-member-contribution-levels.md. Security/Resiliency scope retained, PBT disabled.
+Plan: construction/plans/code-generation-plan/2026-11-13-member-contribution-levels.md. Results: construction/build-and-test/2026-11-13/2026-11-13-member-contribution-levels.md. Security/Resiliency scope retained, PBT disabled.
 
 ### Group grading side panel — implemented 2026-11-13
 
@@ -1297,7 +1342,7 @@ Plan: construction/plans/code-generation-plan/2026-11-13-member-contribution-lev
 - [x] Live teacher local UI1440/390: two columns/sticky panel, correct member, jump in page/step modes, draft retained across member switch and drawer Escape/reopen. Removed temporary unsaved QA note; restored554x930 viewport. No actual grade save, publish or AI call.
 - No backend delta/restart, production build, commit/push/deploy. Existing five-level feature WIP preserved; no subagents. Security/Resiliency retained, PBT disabled.
 
-Plan: construction/plans/code-generation-plan/2026-11-13-group-grading-side-panel.md. Results: construction/build-and-test/2026-11-13-group-grading-side-panel.md.
+Plan: construction/plans/code-generation-plan/2026-11-13-group-grading-side-panel.md. Results: construction/build-and-test/2026-11-13/2026-11-13-group-grading-side-panel.md.
 
 ### Local commit delivery — member grading
 
@@ -1308,7 +1353,7 @@ Plan: construction/plans/code-generation-plan/2026-11-13-group-grading-side-pane
 ## Staging readiness — 2026-11-16
 
 - [x] HEAD matches freshly fetched origin/staging at d8ac7d21; no merge conflicts found. Exact-SHA CI backend/frontend/deploy-script/images succeeded.
-- [x] Report: construction/build-and-test/2026-11-16-staging-readiness.md. Local frontend dependency installation incomplete and Docker engine stopped; no live deployment verification, push or deploy.
+- [x] Report: construction/build-and-test/2026-11-16/2026-11-16-staging-readiness.md. Local frontend dependency installation incomplete and Docker engine stopped; no live deployment verification, push or deploy.
 
 
 ## Góp ý giảng viên và Syllabus SWR302/SWD392 — 2026-11-20
@@ -1324,7 +1369,7 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 
 - [x] Lập kế hoạch theo yêu cầu "lập plan hoàn chỉnh để cải thiện độ chính xác AI chấm bài hiện tại": construction/plans/code-generation-plan/2026-11-20-ai-grading-accuracy.md. Dựa trên kết quả đánh giá 2026-11-13/15 và đọc code tĩnh; tìm 9 nguyên nhân gốc R1–R9 (mã block không gửi kèm nội dung, sơ đồ gửi hai lần, mã block sai làm hỏng cả đề xuất, thiếu system boundary…).
 - [x] Người dùng duyệt làm giai đoạn 1–3 trước. Đã làm: mã block trong prompt chấm, mã block sai không còn làm hỏng đề xuất, bỏ gửi sơ đồ lần hai, tóm tắt sơ đồ có hình chữ nhật và quan hệ "trong", chỉ dẫn loại sơ đồ/chuẩn ký pháp/rubric mơ hồ/sơ đồ bị cắt/lạc đề. Test liên quan 86/86, unit test các unit bị ảnh hưởng 755 đạt, 8 bỏ qua.
-- [x] Đo live 2026-11-20 (gemini-3.5-flash-lite, badminton-booking, cũ 7d51a16f và mới): không cải thiện, bài 08 tụt khi có mã block (G1); bài 04 sai ở cả hai bản (G2). Kết quả: construction/build-and-test/2026-11-20-ai-grading-accuracy-results.md.
+- [x] Đo live 2026-11-20 (gemini-3.5-flash-lite, badminton-booking, cũ 7d51a16f và mới): không cải thiện, bài 08 tụt khi có mã block (G1); bài 04 sai ở cả hai bản (G2). Kết quả: construction/build-and-test/2026-11-20/2026-11-20-ai-grading-accuracy-results.md.
 - [x] Sửa G1 (bằng chứng phải đối chiếu) và G3 (cấu hình suy nghĩ theo provider; Gemini mặc định không gửi tham số, 0 lần bị cắt khi đo). 926 unit test đạt. Kết quả mục 4–5 file kết quả 2026-11-20.
 - [x] G4 (làm tròn điểm) và G2 (nét liền) đã sửa 2026-11-21; 928 unit test đạt, live bài 04 đúng 3,75, replay xác nhận G4.
 - [x] Chạy lại cả bộ 2026-11-21: 9,46/10, sai số điểm 2,3%, kappa 0,84; G5, G6 mới phát hiện.

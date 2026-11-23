@@ -32,6 +32,13 @@ def probability(text: str) -> float:
     return value
 
 
+def non_negative(text: str) -> float:
+    value = float(text)
+    if not value >= 0:
+        raise argparse.ArgumentTypeError("Value must be zero or greater")
+    return value
+
+
 def positive_int(text: str) -> int:
     value = int(text)
     if value < 1:
@@ -54,6 +61,10 @@ def parser(settings: dict) -> argparse.ArgumentParser:
     cli.add_argument("--allow-hosted", choices=sorted(HOSTED), action="append", default=[],
                      help="Allow this judge to receive bundled synthetic data and use account quota")
     cli.add_argument("--priority", default=settings.get("QA_JUDGE_PRIORITY") or DEFAULT_PRIORITY)
+    cli.add_argument("--score-tolerance", type=non_negative, default=0.0,
+                     help="Largest total-score error that still counts as a completed task")
+    cli.add_argument("--input-price", type=non_negative, help="USD per million input tokens of the graded model")
+    cli.add_argument("--output-price", type=non_negative, help="USD per million output tokens of the graded model")
     cli.add_argument("--timeout", type=positive_int, default=180, help="Seconds per judge invocation")
     cli.add_argument("--max-calls", type=positive_int, default=6)
     cli.add_argument("--no-semantic", "--prepare-only", dest="prepare_only", action="store_true",
@@ -165,7 +176,9 @@ def run_evaluation(args) -> dict:
     metadata = {
         "evaluation_run_id": str(uuid4()), "mode": args.mode,
         "evaluation_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "metric_version": METRIC_VERSION, "judge_calls": 0, "judge_call_limit": args.max_calls,
+        "metric_version": METRIC_VERSION,
+        "score_tolerance": args.score_tolerance, "input_price": args.input_price, "output_price": args.output_price,
+        "judge_calls": 0, "judge_call_limit": args.max_calls,
         "semantic_required": "semantic" in scheduled and not args.prepare_only,
     }
     thresholds = {metric: getattr(args, f"{metric}_threshold") for metric in METRICS}

@@ -1,8 +1,8 @@
 # U15 Admin Dashboard — AS-BUILT source snapshot 2026-11-07
 
-**Convention delta 2026-11-05:** internal actions use `loadDashboard`, `loadActivity`, `listBackups`, `requireNonNegativeCount` and `validateBackupSummary`; dependencies identify actual services/contracts. Frontend API uses load/list verbs; chart components live in `DashboardCharts.tsx`. All callers/imports/tests are updated. Public routes, response data, source deadlines, stale-data/denial behavior and MCP provider contracts remain unchanged. [Naming verification and exceptions](../../build-and-test/2026-11-05-u05-u09-u15-conventions-results.md).
+**Convention delta 2026-11-05:** internal actions use `loadDashboard`, `loadActivity`, `listBackups`, `requireNonNegativeCount` and `validateBackupSummary`; dependencies identify actual services/contracts. Frontend API uses load/list verbs; chart components live in `DashboardCharts.tsx`. All callers/imports/tests are updated. Public routes, response data, source deadlines, stale-data/denial behavior and MCP provider contracts remain unchanged. [Naming verification and exceptions](../../build-and-test/2026-11-05/2026-11-05-u05-u09-u15-conventions-results.md).
 
-**Follow-up delta 2026-11-05:** independent frontend sources render counts without waiting for activity/usage/history. Each request has a five-second deadline and linked cancellation; optional cards distinguish pending from unavailable. Thirty-second visible-tab refresh, stale-primary behavior and denial clearing remain. Backend fan-out/contracts are unchanged. [Current verification and limits](../../build-and-test/2026-11-05-u05-u09-u15-followup-results.md); older dated evidence below remains historical.
+**Follow-up delta 2026-11-05:** independent frontend sources render counts without waiting for activity/usage/history. Each request has a five-second deadline and linked cancellation; optional cards distinguish pending from unavailable. Thirty-second visible-tab refresh, stale-primary behavior and denial clearing remain. Backend fan-out/contracts are unchanged. [Current verification and limits](../../build-and-test/2026-11-05/2026-11-05-u05-u09-u15-followup-results.md); older dated evidence below remains historical.
 
 Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths are catalogued in [current-code-baseline](../../../inception/reverse-engineering/current-code-baseline.md). Dated deltas/test results below retain their original scope; this update is not runtime acceptance.
 
@@ -27,11 +27,11 @@ Tests: [admindashboard](../../../../backend/src/test/java/edu/aiplatform/adminda
 
 ## Evidence và giới hạn
 
-Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
+Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
 
 ### Ghi nhận kiểm thử trước baseline
 
-- [aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-audit-report.md](../../build-and-test/2026-10-25-u05-u15-audit-report.md)
-- [aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-manual-test-guide.md](../../build-and-test/2026-10-25-u05-u15-manual-test-guide.md)
-- [aidlc-docs/construction/build-and-test/2026-10-26-u05-u15-followup-report.md](../../build-and-test/2026-10-26-u05-u15-followup-report.md)
+- [aidlc-docs/construction/build-and-test/2026-10-25/2026-10-25-u05-u15-audit-report.md](../../build-and-test/2026-10-25/2026-10-25-u05-u15-audit-report.md)
+- [aidlc-docs/construction/build-and-test/2026-10-25/2026-10-25-u05-u15-manual-test-guide.md](../../build-and-test/2026-10-25/2026-10-25-u05-u15-manual-test-guide.md)
+- [aidlc-docs/construction/build-and-test/2026-10-26/2026-10-26-u05-u15-followup-report.md](../../build-and-test/2026-10-26/2026-10-26-u05-u15-followup-report.md)
 - [aidlc-docs/construction/build-and-test/u15-verification.md](../../build-and-test/u15-verification.md)
