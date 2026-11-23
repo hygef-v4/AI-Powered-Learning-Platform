@@ -19,7 +19,7 @@ Design: [Nền tảng học tập – 45 màn theo screen flow G21](https://clau
 
 | # | Màn (artboard) | Component | UC | Role |
 |---|---|---|---|---|
-| 6 | AI Connection (`c12`), popup Thêm khóa API (`c12a`), Kết nối agent mới (`c12b`), Token agent và owner reveal khi có ciphertext (`c12c`) | `AiConnectionPage`, `ApiKeyDialog`, `McpCredentialDialog`, `McpTokenDialog` | 31, 32 | Student, Teacher, Subject Manager |
+| 6 | AI Connection (`c12`), popup Thêm khóa API (`c12a`), Kết nối agent mới (`c12b`), Token agent hiện một lần sau khi tạo (`c12c`) | `AiConnectionPage`, `ApiKeyDialog`, `McpCredentialDialog`, `McpTokenDialog` | 31, 32 | Student, Teacher, Subject Manager |
 | 7 | AI Usage History (`c13`) | `AiUsageHistoryPage` | 33 | Student, Teacher, Subject Manager |
 | – | Tài liệu MCP `/ai/mcp-guide`, mở từ tab Agent MCP | `McpGuidePage`, `McpClientSetup` | 32, BR-U06-50 | Student, Teacher, Subject Manager |
 | 10 | Setting Detail — API AI của trường và hạn mức: tab Khóa và hạn mức (`a14`), tab Usage (`a14c`) | `AiConnectionsPanel`, `TeacherQuotaPanel` | 14, 15, 33 | Admin |

@@ -36,15 +36,6 @@ public class McpCredentialController {
     public record UpdateRequest(String label, Access access) {
     }
 
-    /** Token rõ, chỉ trả cho chủ agent; không in ra log. */
-    public record TokenResponse(String token) {
-
-        @Override
-        public String toString() {
-            return "TokenResponse[***]";
-        }
-    }
-
     /** {@code endpoint} là đường dẫn MCP trên cùng địa chỉ backend; frontend ghép với origin để hướng dẫn. */
     public record CreateResponse(CredentialView credential, String token, String endpoint) {
 
@@ -70,11 +61,6 @@ public class McpCredentialController {
     public CredentialView updateCredential(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                  @RequestBody UpdateRequest request) {
         return mcpCredentialService.updateCredential(actor, id, request.label(), request.access());
-    }
-
-    @GetMapping("/{id}/token")
-    public TokenResponse issueToken(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
-        return new TokenResponse(mcpCredentialService.reveal(actor, id));
     }
 
     @DeleteMapping("/{id}")

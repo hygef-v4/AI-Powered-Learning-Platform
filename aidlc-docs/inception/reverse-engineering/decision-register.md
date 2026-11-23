@@ -20,7 +20,7 @@ Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`. User approved docum
 | D05 council scope | Backup/activity/email/provenance | Source exists; runtime acceptance is separate | No NFR certification |
 | D03 audit | Student MCP, no Admin MCP | MCP_SELF for Teacher/Subject Manager/Admin; Student personal API remains | Merge staff expansion 26/10 |
 | D04 audit | Single institutional key/provider | Multiple keys/provider | Document AS-BUILT cardinality |
-| D05 audit | MCP token shown once | Owner can reveal ACTIVE credential if ciphertext exists | Document encryption, audit and legacy-key limits |
+| D05 audit | MCP token shown once | Closed 2026-11-23: token shown once only; reveal and stored ciphertext removed | Lost token means revoke and create a new agent |
 | D06 audit | OPEN requires teacher | Domain/service/DB permit no teacher; create remains DRAFT | Document source behavior, not migration comment alone |
 | D07 audit | Configurable 1–365 day retention | Activity retention is fixed at 1 day | No automatic penalty inferred |
 | D08 audit | Leader request/reject reason required | Optional, maximum 1,000 characters | Update validation and flow |

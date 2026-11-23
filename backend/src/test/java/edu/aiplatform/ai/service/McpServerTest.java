@@ -149,8 +149,10 @@ class McpServerTest {
         assertThat(handle(Access.READ_ONLY, call("read_own_work", "{\"q\":\"x\"}")).at("/error/code").asInt())
                 .isEqualTo(-32029);
         when(limiter.tryAcquire(any())).thenThrow(new IllegalStateException("redis down"));
-        assertThat(handle(Access.READ_ONLY, call("read_own_work", "{\"q\":\"x\"}")).at("/error/code").asInt())
-                .isEqualTo(-32029);
+        // Still refused (fail closed), but with its own code so callers are not told they sent too many calls.
+        var unavailable = handle(Access.READ_ONLY, call("read_own_work", "{\"q\":\"x\"}"));
+        assertThat(unavailable.at("/error/code").asInt()).isEqualTo(-32030);
+        assertThat(unavailable.at("/error/message").asText()).doesNotContain("60");
         verify(provider, never()).call(any(), anyString(), any());
     }
 

@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Credential MCP cho agent của người dùng (F4, F5; BR-U06-30, 31): token 256 bit hiện một lần, lưu SHA-256 và 4 ký tự
  * cuối; hạn 7, 30 hoặc 90 ngày; tối đa 5 còn hiệu lực. Xác thực mỗi lời gọi dùng role và trạng thái tài khoản hiện
- * hành; đổi mật khẩu không thu hồi credential.
+ * hành; đổi mật khẩu không thu hồi credential. Token rõ chỉ trả một lần khi tạo, server không lưu bản có thể giải mã.
  */
 @Service
 public class McpCredentialService {
@@ -50,25 +50,22 @@ public class McpCredentialService {
     private final AiAccess access;
     private final IAudit audit;
     private final Clock clock;
-    private final KeyCipher cipher;
     private final SecureRandom random = new SecureRandom();
 
     public McpCredentialService(McpCredentialRepository repository, IAccountLookup accounts, AiAccess access, IAudit audit,
-                                Clock clock, KeyCipher cipher) {
+                                Clock clock) {
         this.repository = repository;
         this.accounts = accounts;
         this.access = access;
         this.audit = audit;
         this.clock = clock;
-        this.cipher = cipher;
     }
 
     @Transactional(readOnly = true)
     public List<CredentialView> listCredentials(Actor actor) {
         access.require(actor, Actions.MCP_SELF);
         Instant now = clock.instant();
-        Set<UUID> revealable = repository.listRevealableIds(actor.accountId());
-        return repository.listOwn(actor.accountId()).stream().map(c -> view(c, now, revealable.contains(c.id()))).toList();
+        return repository.listOwn(actor.accountId()).stream().map(c -> view(c, now)).toList();
     }
 
     @Transactional
@@ -91,17 +88,19 @@ public class McpCredentialService {
         McpCredential credential = new McpCredential(UUID.randomUUID(), actor.accountId(), name, accessLevel, hash(token),
                 token.substring(token.length() - 4), now.plus(Duration.ofDays(validity)), null, null, now);
         repository.insert(credential);
-        boolean revealable = storeSecret(credential.id(), token);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("label", name);
         details.put("access", accessLevel.name());
         details.put("days", validity);
         details.put("tokenHint", credential.tokenHint());
         record(actor.accountId(), "MCP_CREDENTIAL_CREATED", credential.id(), details);
-        return new Created(view(credential, now, revealable), token);
+        return new Created(view(credential, now), token);
     }
 
-    /** Sửa nhãn và quyền của agent còn hiệu lực; token, hạn dùng giữ nguyên. */
+    /**
+     * Sửa nhãn và quyền của agent còn hiệu lực; token, hạn dùng giữ nguyên. Chỉ được hạ quyền: nâng một token đang
+     * dùng lên đọc-ghi sẽ trao quyền ghi cho cả bản token có thể đã lộ, nên muốn quyền ghi thì tạo agent mới.
+     */
     @Transactional
     public CredentialView updateCredential(Actor actor, UUID id, String label, Access accessLevel) {
         access.require(actor, Actions.MCP_SELF);
@@ -110,6 +109,10 @@ public class McpCredentialService {
         Instant now = clock.instant();
         McpCredential credential = repository.findOwn(actor.accountId(), id)
                 .filter(c -> c.resolveStatus(now) == McpCredential.Status.ACTIVE).orElseThrow(AiAccess::createNotFoundError);
+        if (credential.access() == Access.READ_ONLY && accessLevel == Access.READ_WRITE) {
+            throw ApiException.createBadRequest("MCP_ACCESS_UPGRADE_NOT_ALLOWED",
+                    "Không nâng được agent chỉ đọc lên đọc và ghi; hãy tạo agent mới với quyền đọc và ghi");
+        }
         repository.updateCredential(id, name, accessLevel);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("label", name);
@@ -119,29 +122,7 @@ public class McpCredentialService {
         McpCredential next = new McpCredential(id, credential.accountId(), name, accessLevel, credential.tokenHash(),
                 credential.tokenHint(), credential.expiresAt(), credential.revokedAt(), credential.lastUsedAt(),
                 credential.createdAt());
-        return view(next, now, repository.findSecret(id).isPresent());
-    }
-
-    /** Token rõ của agent còn hiệu lực, cho chủ agent xem lại trong popup Sửa; mỗi lần xem ghi audit. */
-    @Transactional
-    public String reveal(Actor actor, UUID id) {
-        access.require(actor, Actions.MCP_SELF);
-        Instant now = clock.instant();
-        McpCredential credential = repository.findOwn(actor.accountId(), id)
-                .filter(c -> c.resolveStatus(now) == McpCredential.Status.ACTIVE).orElseThrow(AiAccess::createNotFoundError);
-        String token = cipher.decryptKey(repository.findSecret(id).orElseThrow(AiAccess::createNotFoundError));
-        record(actor.accountId(), "MCP_TOKEN_REVEALED", id, Map.of("tokenHint", credential.tokenHint()));
-        return token;
-    }
-
-    /** Lưu bản mã token; chưa cấu hình khóa mã hóa thì bỏ qua (agent vẫn dùng được, chỉ không xem lại token). */
-    private boolean storeSecret(UUID id, String token) {
-        try {
-            repository.saveSecret(id, cipher.encryptKey(token));
-            return true;
-        } catch (ApiException e) {
-            return false;
-        }
+        return view(next, now);
     }
 
     private static String requireValidLabel(String label) {
@@ -194,7 +175,11 @@ public class McpCredentialService {
         if (contact.isEmpty() || contact.get().status() != AccountStatus.ACTIVE || !AGENT_ROLES.contains(contact.get().role())) {
             return Optional.empty();
         }
-        repository.touch(found.get().id(), now);
+        // A minute is precise enough for "last used"; writing it on every call costs one UPDATE per tool call.
+        Instant lastUsedAt = found.get().lastUsedAt();
+        if (lastUsedAt == null || lastUsedAt.isBefore(now.minus(Duration.ofMinutes(1)))) {
+            repository.touch(found.get().id(), now);
+        }
         return Optional.of(new McpPrincipal(found.get(), new Actor(contact.get().accountId(), contact.get().role())));
     }
 
@@ -212,18 +197,16 @@ public class McpCredentialService {
                 AuditResult.SUCCESS, null, details, clock.instant()));
     }
 
-    static CredentialView view(McpCredential c, Instant now, boolean revealable) {
+    static CredentialView view(McpCredential c, Instant now) {
         return new CredentialView(c.id(), c.label(), c.access(), c.tokenHint(), c.createdAt(), c.expiresAt(),
-                c.lastUsedAt(), c.resolveStatus(now), revealable);
+                c.lastUsedAt(), c.resolveStatus(now));
     }
 
-    /** {@code revealable}: có bản mã token, chủ agent xem lại được khi còn hiệu lực. */
     public record CredentialView(UUID id, String label, Access access, String tokenHint, Instant createdAt,
-                                 Instant expiresAt, Instant lastUsedAt, McpCredential.Status status,
-                                 boolean revealable) {
+                                 Instant expiresAt, Instant lastUsedAt, McpCredential.Status status) {
     }
 
-    /** Token rõ trả lúc tạo; sau đó chỉ xem lại qua {@link #reveal}. */
+    /** Token rõ chỉ trả lúc tạo; mất token thì tạo agent mới. */
     public record Created(CredentialView credential, String token) {
 
         @Override

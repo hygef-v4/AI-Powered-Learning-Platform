@@ -32,8 +32,6 @@ export type McpCredential = {
   expiresAt: string;
   lastUsedAt: string | null;
   status: McpStatus;
-  /** Có bản mã token: chủ agent xem lại được trong popup Sửa. */
-  revealable?: boolean;
 };
 
 export type McpCreated = { credential: McpCredential; token: string; endpoint: string };

@@ -59,7 +59,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Bấm Tạo, nhập nhãn (tên agent), chọn quyền `READ_ONLY` hoặc `READ_WRITE` và hạn 7, 30 hoặc 90 ngày; frontend gọi `POST /api/v1/me/mcp-credentials`.
 3. Kiểm role Student, Teacher hoặc Subject Manager đang `ACTIVE`; Admin bị từ chối; chưa có quá 5 credential còn hiệu lực (BR-U06-30).
 4. Sinh token ngẫu nhiên 256 bit; lưu bản băm, 4 ký tự cuối và hạn (BR-U06-31).
-5. Ghi audit `MCP_CREDENTIAL_CREATED`; trả token khi tạo; owner ACTIVE có thể reveal khi có bản mã kèm địa chỉ `/mcp` và hướng dẫn cho từng ứng dụng agent đã kiểm chứng (BR-U06-50).
+5. Ghi audit `MCP_CREDENTIAL_CREATED`; trả token một lần khi tạo, kèm địa chỉ `/mcp` và hướng dẫn cho từng ứng dụng agent đã kiểm chứng (BR-U06-50). Không có thao tác xem lại token.
 
 ### F5 - Thu hồi credential MCP (UC 32)
 1. Bấm Thu hồi, xác nhận; frontend gọi `DELETE /api/v1/me/mcp-credentials/{id}`.
@@ -141,4 +141,4 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; API key chung và cá nhân chỉ ghi, danh sách chỉ hiện phần nhận diện đã che (D15). Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
 
-Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`, GET `/{id}/token`. List DTO có revealable; popup chỉnh label/access không đổi token/hạn. Negative cases: wrong owner, Admin, expired/revoked, ciphertext thiếu và account/role đổi.
+Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`. Popup chỉnh label và hạ quyền, không đổi token/hạn; không nâng READ_ONLY lên READ_WRITE. Negative cases: wrong owner, Admin, expired/revoked, nâng quyền và account/role đổi.

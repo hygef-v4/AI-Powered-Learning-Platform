@@ -28,7 +28,7 @@ Yêu cầu có header `Origin` (gửi từ trang web trong trình duyệt) bị 
    - **Chỉ đọc**: đọc ngữ cảnh bài tập/quiz, bài nộp và học liệu trong quyền của bạn.
    - **Đọc và ghi**: thêm các thao tác được làm như tạo bản nháp, đề xuất chấm. Không có công cụ nộp bài chính thức hay công bố điểm.
 3. Chọn hạn dùng 7, 30 hoặc 90 ngày, bấm **Tạo token**.
-4. Sao chép token khi tạo. Nếu hệ thống lưu được bản mã (`revealable=true`), chủ token có thể xem lại trong Sửa agent; token cũ hoặc chưa cấu hình mã hóa có thể không xem lại được. Mỗi tài khoản có tối đa 5 token còn hiệu lực.
+4. Sao chép token ngay khi tạo. Token chỉ hiện **một lần**: hệ thống chỉ lưu mã băm, không ai xem lại được. Mất token thì thu hồi agent đó và tạo agent mới. Agent chỉ đọc không nâng lên đọc và ghi được; muốn quyền ghi thì tạo agent mới. Mỗi tài khoản có tối đa 5 token còn hiệu lực.
 
 Ai có token có thể dùng công cụ của nền tảng bằng tài khoản của bạn. Không dán token vào tệp đưa lên Git. Lộ token thì bấm **Thu hồi**: lời gọi tiếp theo bị từ chối ngay. Đổi mật khẩu không thu hồi token; tài khoản bị khóa thì mọi token ngừng dùng được.
 
@@ -162,6 +162,7 @@ Nền tảng không biết agent dùng bao nhiêu token của mô hình. Lịch 
 | HTTP 401 | Token sai/thu hồi/hết hạn, tài khoản không ACTIVE hoặc role hiện tại là Admin |
 | HTTP 403 | Yêu cầu có header `Origin` (gọi từ trình duyệt) |
 | Lỗi JSON-RPC `-32029` | Vượt 60 lời gọi mỗi phút; chờ rồi thử lại |
+| Lỗi JSON-RPC `-32030` | Máy chủ tạm không kiểm được giới hạn lời gọi (thường do mất kết nối Redis) nên từ chối để an toàn; báo quản trị viên nếu lỗi kéo dài |
 | Lỗi `-32602` "Không có tool này" | Tool không có, không dành cho role của bạn, hoặc là tool ghi trong khi token chỉ đọc |
 | Kết quả `isError: true` "Không tìm thấy hoặc không có quyền" | Dữ liệu ngoài phạm vi lớp hoặc môn của bạn |
 

@@ -20,8 +20,7 @@ class McpStaffAdmissionTest {
     private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(now, ZoneOffset.UTC);
     private final McpCredentialService service = new McpCredentialService(repository, accounts,
-            new AiAccess(authorization, audit, clock), audit, clock,
-            new KeyCipher(KeyCipherAndCatalogTest.properties(KeyCipherAndCatalogTest.KEY_V1, null)));
+            new AiAccess(authorization, audit, clock), audit, clock);
 
     @Test void studentManagesCredentialsWithMcpPermissionWithoutSharedAi() {
         Actor admin = new Actor(UUID.randomUUID(), Role.STUDENT);

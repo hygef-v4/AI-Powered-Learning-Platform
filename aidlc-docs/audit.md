@@ -13914,5 +13914,47 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **User Input**: "Nghiên cứu và cài các skill cần thiết sau đó làm task sau: Làm trang landingpage đẹp và ấn tượng hơn"
 **AI Response**: "Tìm trên skills.sh và cài skill chính thức anthropics/skills@frontend-design (global); ui-ux-pro-max đã có sẵn. Nhánh feat/landing-redesign từ origin/staging (e10b2c69). Phần đầu landing thành bảng vẽ nền xanh đêm (data-theme dark cục bộ) với sơ đồ lớp UML tự vẽ khi tải trang và phiếu rubric: cột cam là điểm AI đề xuất, cột xanh lơ là điểm giảng viên chốt; rê chuột lên tiêu chí làm sáng phần sơ đồ tương ứng (CSS :has). Tính năng chia hai tính năng chính và bốn tính năng phụ, các bước nối bằng mũi tên UML, vai trò dùng hình actor UML, dải kêu gọi cuối dùng lại bảng vẽ. Thêm khóa reviewSheet.* cho en/vi; bỏ DiagramIllustration. globals.css thêm .drafting-board, hiệu ứng phiếu rubric và quy tắc [data-theme]:not(:root) gắn lại --color-* để khối theme lồng đọc đúng màu. Kiểm: Vitest 159 tệp, 1.208 test đạt (thêm ca phiếu rubric), tsc và ESLint đạt; dev server ở 1024/1280 px và 375 px, theme sáng và tối, không tràn ngang."
 **Context**: Code Generation và Build and Test cho thay đổi giao diện landing; chưa commit.
+## Construction - Sửa rủi ro MCP (bắt đầu)
+**Timestamp**: 2026-11-23T16:24:23Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm lần lượt từng bước"
+**AI Response**: "Bắt đầu theo thứ tự đã đề xuất cho 11 vấn đề MCP. Bước 1: khởi động lại backend trong terminal Orca; MCP vẫn từ chối mọi lời gọi với 'Vượt 60 lời gọi mỗi phút', Redis không nhận kết nối nào từ backend, nên lỗi nằm ở code chứ không do hạ tầng. Bước 2: viết system test gọi /mcp qua HTTP với Redis có mật khẩu để tái hiện lỗi trước khi sửa."
+**Context**: Bug fix MCP theo danh sách 11 mục; không có test nào trước đây gọi /mcp qua HTTP.
+
+---
+
+## Construction - Sửa rủi ro MCP, đợt 1 (kết quả)
+**Timestamp**: 2026-11-23T16:36:55Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm lần lượt từng bước"
+**AI Response**: "Bước 1: MCP local hỏng do chuyển tiếp cổng Docker Desktop của Redis và RabbitMQ sau khi container khởi động lại; khởi động lại hai container thì chạy lại. Bước 2: thêm 4 test HTTP cho /mcp vào PlatformWorkflowIntegrationTest, Redis test bắt mật khẩu. Bước 3: mục 1 trả -32030 và log nguyên nhân khi không kiểm được giới hạn; mục 2 xác thực trước rồi đọc thân yêu cầu tối đa 1 MB; mục 3 gắn untrustedContent cho read_authorized_submission. 112 test MCP và 39 test platform đạt; kiểm tra trên backend local đạt. Chưa commit."
+**Context**: Bug fix MCP, mục 1 đến 3 trong 11 mục; mục 4 đến 10 chờ làm, mục 5 chờ người dùng chọn.
+
+---
+
+## Construction - Sửa rủi ro MCP, đợt 2
+**Timestamp**: 2026-11-23T16:44:57Z
+**Requested by:** Quang Hung
+**User Input**: "b"
+**AI Response**: "Người dùng chọn cách B cho mục 5. Bỏ tính năng xem lại token MCP ở backend, frontend và cơ sở dữ liệu (migration V20261123_1200 xóa cột bản mã); mục 4 chặn nâng agent chỉ đọc lên đọc và ghi. Cập nhật BR-U06-30/31, D05, hướng dẫn và tài liệu U06. 175 test backend và 54 test frontend đạt; typecheck, lint sạch. Chưa khởi động lại backend local, chưa commit."
+**Context**: Bug fix MCP, mục 4 và 5; còn mục 6 đến 10.
+
+---
+
+## Construction - Sửa rủi ro MCP, khởi động lại và đợt 3 (bắt đầu)
+**Timestamp**: 2026-11-23T16:47:52Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi khởi động lại" rồi "giúp tôi làm bước 5 luôn"
+**AI Response**: "Khởi động lại backend local: migration 20261123.1200 áp dụng thành công, mcp_credentials chỉ còn token_hash và token_hint, token đang dùng vẫn gọi MCP được. Bắt đầu bước 5: xóa code MCP chết của Admin, chuyển SQL của McpWriteRequestService sang repository, dọn mcp_write_requests cũ và giảm ghi last_used_at, chạy scripts/test-check-mcp.py."
+**Context**: Bug fix MCP, mục 7 đến 10.
+
+---
+
+## Construction - Sửa rủi ro MCP, đợt 3 (kết quả)
+**Timestamp**: 2026-11-23T16:55:11Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm bước 5 luôn"
+**AI Response**: "Mục 9 xóa code MCP chết của Admin; mục 8 chuyển SQL sang McpWriteRequestRepository; mục 7 thêm McpWriteRequestCleanupScanner xóa bản ghi chống ghi trùng cũ hơn 7 ngày (migration V20261123_1210 cấp quyền delete) và chỉ ghi last_used_at khi cũ hơn 1 phút; mục 10 chạy scripts/test-check-mcp.py đạt 2/2 và giữ lại. 204 test backend đạt. Trên backend local: hai migration áp dụng, MCP gọi được, job dọn xóa 6 bản ghi cũ từ 26/10 đến 02/11 không lỗi. Mục 6 để cho reverse proxy. Chưa commit."
+**Context**: Bug fix MCP hoàn tất mục 1 đến 5 và 7 đến 10.
 
 ---
