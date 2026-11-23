@@ -4849,7 +4849,21 @@
         },
         "ctaTitle": "Sẵn sàng vào lớp?",
         "ctaBody": "Đăng nhập bằng tài khoản quản trị viên môn học đã tạo cho bạn.",
-        "privacy": "Chính sách quyền riêng tư"
+        "privacy": "Chính sách quyền riêng tư",
+        "reviewSheet": {
+          "numberLocale": "vi-VN",
+          "title": "Rubric bài 2: sơ đồ lớp",
+          "criterion": "Tiêu chí",
+          "aiColumn": "AI",
+          "lecturerColumn": "Giảng viên",
+          "adjusted": "Giảng viên đã nâng điểm",
+          "total": "Tổng điểm",
+          "criteria": {
+            "classes": "Đủ lớp và thuộc tính",
+            "inheritance": "Quan hệ kế thừa",
+            "methods": "Phương thức đúng trách nhiệm"
+          }
+        }
       }
     }
   }
