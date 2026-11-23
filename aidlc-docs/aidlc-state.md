@@ -1,5 +1,24 @@
 # AI-DLC State Tracking
 
+## U07/U03/U06: Tạo đề bằng AI nhận ảnh WebP · 2026-11-23
+
+Người dùng: "sửa phần tạo đề ai hỗ trợ up ảnh webp đi". Chỉ mở danh sách định dạng, không đổi API hay schema.
+
+- [x] Tệp nguồn soạn bài bằng AI (`ASSIGNMENT_SOURCE`) nhận thêm WEBP (`PurposePolicy`). Ảnh WebP được gửi thẳng cho model đọc ảnh qua `AssignmentAiDraftService.SOURCE_IMAGE_TYPES` (dùng chung với `AssignmentSourceImageSource`), `AiTaskService.IMAGE_TYPES` và ô tải tệp của `AiReviseChat`. Gemini, OpenAI và Anthropic đều nhận WebP, gateway chỉ truyền nguyên `mediaType`.
+- [x] Cập nhật BR-U06-54 và mô tả `ASSIGNMENT_SOURCE` của U07. Giữ báo cáo lịch sử nguyên văn.
+- [x] Kiểm thử backend: PurposePolicyTest 4, AssignmentSourceImageSourceTest 5 (có ca WebP cho tạo và sửa đề), AssignmentAiDraftServiceTest 16, AiTaskFlowTest 39, đều đạt.
+- [ ] Chưa thử tải ảnh WebP thật trên giao diện; backend đang chạy cần khởi động lại để nhận thay đổi.
+
+## U09: AI điền thẳng đề xuất vào form chấm điểm · 2026-11-23
+
+Người dùng: bấm chấm bằng AI xong thì điểm và nhận xét nên điền luôn vào form, có nút từ chối đề xuất, không phải kéo xuống lịch sử để bấm áp dụng. Chỉ frontend, không đổi API hay schema.
+
+- [x] Đề xuất READY do giáo viên vừa yêu cầu tự điền vào form (`useGradingWorkspace`). Form đang có chỉnh sửa chưa lưu thì không ghi đè, thanh trên form hỏi Áp dụng/Bỏ qua.
+- [x] Thanh `AiDraftBanner` trên form: Giữ đề xuất / Hoàn tác (khôi phục form trước khi AI điền) / Chi tiết. Bảng so sánh `AiProposalPanel` chuyển lên ngay dưới thanh. Autosave vẫn chặn khi nháp AI chưa được giữ.
+- [x] Hoàn tác hỏi xác nhận khi giáo viên đã sửa tay sau lúc AI điền (tránh mất chỉnh sửa). Ô điểm và nhận xét chung do AI điền có nhãn ✨ AI, mất khi sửa ô đó.
+- [x] Nút Chấm bằng AI kẹt "AI đang chấm…" khi task kẹt ở QUEUED: thêm nút **Hủy chấm AI** trên thanh công cụ, gọi API hủy sẵn có `POST /ai/tasks/{id}:cancel` rồi tải lại danh sách. Chỉ hủy được task QUEUED; task RUNNING đã gửi nhà cung cấp, backend tự đóng (UNKNOWN) khi hết hạn gọi.
+- [x] ESLint, tsc đạt; Vitest grading + i18n 234/234 (sửa 1 test cũ, thêm 4 test mới). Chưa kiểm tra trên trình duyệt thật. Làm trên nhánh `audit-staging`.
+
 ## SEO cho alapedu.online — 2026-11-22
 
 Người dùng: "tôi muốn làm seo cho trang web"; chọn nền tảng kỹ thuật + landing page, đã có Search Console, nhánh mới từ staging. [Kế hoạch](construction/plans/code-generation-plan/2026-11-22-seo.md), [kết quả](construction/build-and-test/2026-11-22-seo-results.md). Nhánh `feat/seo` từ `origin/staging@47837e52`, worktree `.claude/worktrees/seo`.
