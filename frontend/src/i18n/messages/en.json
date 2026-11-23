@@ -4763,5 +4763,81 @@
         "closeNotification": "Close notification"
       }
     }
+  },
+  "landing": {
+    "pages": {
+      "LandingPage": {
+        "home": "ALAP home page",
+        "signIn": "Sign in",
+        "metaTitle": "ALAP – UML diagram assignments with AI-assisted grading",
+        "metaDescription": "ALAP is a learning platform for Software Engineering courses: draw UML diagrams in the browser, submit individual or group assignments, practise quizzes and get rubric-based AI grading proposals reviewed by your lecturer.",
+        "eyebrow": "Learning platform for software design courses",
+        "headline": "Draw your UML diagrams. AI proposes the grade, your lecturer makes the call.",
+        "intro": "ALAP brings classes, materials, diagram assignments, quizzes and grading together for Software Engineering students and lecturers. The AI reads each submission against the rubric and proposes points and feedback; official grades are always reviewed and published by the lecturer.",
+        "seeFeatures": "See features",
+        "accountNote": "Accounts are created by your course administrator. Check your school email for the activation code.",
+        "featuresTitle": "Everything a software design course needs",
+        "featuresIntro": "From the first lecture to published grades, every step of the course happens in one place.",
+        "feature": {
+          "diagrams": {
+            "title": "Diagram assignments",
+            "body": "Draw UML diagrams right in the browser with the built-in diagrams.net editor and submit them together with your answers."
+          },
+          "aiGrading": {
+            "title": "AI grading proposals",
+            "body": "The AI reads the submission and the rubric, then proposes points and feedback for each criterion. Lecturers review, edit and publish the official grade."
+          },
+          "groupWork": {
+            "title": "Individual and group work",
+            "body": "Form groups, write shared group documents and submit together. Lecturers approve groups and can grade each member."
+          },
+          "quizzes": {
+            "title": "Quizzes and practice",
+            "body": "Practise with quizzes built from the subject question bank and review your results and explanations after submitting."
+          },
+          "materials": {
+            "title": "Class materials",
+            "body": "Open PDF, Word, PowerPoint and Excel files directly in the browser, organised by subject and class."
+          },
+          "mcp": {
+            "title": "Connect your AI agent",
+            "body": "Use MCP to work with your own AI agent on the data your role allows: lecturers draft assignments and quizzes, students ask for private feedback on practice work."
+          }
+        },
+        "stepsTitle": "How it works",
+        "step": {
+          "publish": {
+            "title": "Lecturer publishes",
+            "body": "The lecturer creates an assignment with a brief and a rubric, then gives it to the class."
+          },
+          "submit": {
+            "title": "Students draw and submit",
+            "body": "Students draw their diagrams, alone or as a group, and submit before the deadline."
+          },
+          "review": {
+            "title": "AI proposes, lecturer decides",
+            "body": "The AI proposes points per criterion; the lecturer checks each one, adjusts and publishes the grades."
+          }
+        },
+        "rolesTitle": "Built for every role in the course",
+        "role": {
+          "students": {
+            "title": "Students",
+            "body": "Submit assignments, practise quizzes, collaborate in groups and follow grades and announcements for each class."
+          },
+          "lecturers": {
+            "title": "Lecturers",
+            "body": "Create assignments and quizzes, grade with a rubric and AI proposals, and publish grades to your classes."
+          },
+          "subjectManagers": {
+            "title": "Subject managers",
+            "body": "Manage subjects, shared materials, template assignments and the question bank across classes."
+          }
+        },
+        "ctaTitle": "Ready for class?",
+        "ctaBody": "Sign in with the account your course administrator created for you.",
+        "privacy": "Privacy policy"
+      }
+    }
   }
 }

@@ -16796,3 +16796,125 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Đối chiếu lại 70 nhãn hoạt động và kiểm ảnh xuất. Phạm vi chỉ gồm tài liệu.
 
 ---
+## SEO cho alapedu.online — Requirements Analysis và Workflow Planning
+**Timestamp**: 2026-11-22T15:02:31Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn làm seo cho trang web" — trả lời câu hỏi: "Nền tảng + landing page (Recommended)", Search Console: "Có rồi", nhánh: "Nhánh mới từ staging (Recommended)"
+**AI Response**: "Khảo sát hiện trạng: / chỉ là client redirect, không có robots.txt/sitemap/noindex/canonical/JSON-LD, staging không có X-Robots-Tag; cookie phiên có path /api nên / không biết trạng thái đăng nhập phía máy chủ. Tạo worktree .claude/worktrees/seo, nhánh feat/seo từ origin/staging@47837e52 (--no-track). Viết yêu cầu SEO-FR1–FR9 và kế hoạch 11 bước: aidlc-docs/construction/plans/code-generation-plan/2026-11-22-seo.md. Chờ duyệt."
+**Context**: Requirements (Standard) + Workflow Planning; chỉ Code Generation và Build and Test. Chưa sửa code.
+
+---
+## SEO — duyệt kế hoạch Code Generation
+**Timestamp**: 2026-11-22T15:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, làm đi"
+**AI Response**: "Bắt đầu thực hiện 11 bước trong aidlc-docs/construction/plans/code-generation-plan/2026-11-22-seo.md trên nhánh feat/seo."
+**Context**: Code Generation được duyệt.
+
+---
+## SEO — Code Generation và Build and Test
+**Timestamp**: 2026-11-22T15:20:08Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, làm đi"
+**AI Response**: "Hoàn tất 11/11 bước kế hoạch SEO trên feat/seo: landing / dựng phía máy chủ (en/vi) với SignedInRedirect, robots.ts và sitemap.ts động theo SEO_INDEXABLE, noindex cho 15 layout đăng nhập và activate/reset-password/post-login, canonical /, /login, /privacy, JSON-LD có nonce, meta GOOGLE_SITE_VERIFICATION, compose production mặc định SEO_INDEXABLE=true, staging ép false và nginx X-Robots-Tag noindex. Điều chỉnh: robots.txt không chặn trang đăng nhập để bot đọc được noindex. ESLint, tsc đạt; Vitest 1.203/1.203; dev server kiểm robots/sitemap/meta và giao diện desktop/375 px. next build biên dịch xong rồi dừng ở SecurityFatalError của Next.js 16.4.3 (đề nghị nâng cấp) — không chạy lại/nâng cấp, báo người dùng. Kết quả: aidlc-docs/construction/build-and-test/2026-11-22-seo-results.md."
+**Context**: Code Generation + Build and Test. Chưa commit/push/deploy.
+
+---
+## SEO — commit cục bộ
+**Timestamp**: 2026-11-22T15:25:53Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit đi"
+**AI Response**: "Commit toàn bộ thay đổi SEO (mã, test, infra, tài liệu AIDLC) trên nhánh feat/seo. Không push, không deploy."
+**Context**: Commit theo yêu cầu người dùng.
+
+---
+## SEO — push và mở PR
+**Timestamp**: 2026-11-22T15:28:03Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Push và mở PR"
+**AI Response**: "Push nhánh feat/seo lên origin và mở PR vào staging. Không tự merge, không deploy."
+**Context**: Thao tác Git theo yêu cầu người dùng.
+
+---
+## Operations — Kiểm tra và mock lại dữ liệu bản deploy
+**Timestamp**: 2026-11-22T15:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra data trên bản deploy và mock lại từ đầu cho tôi" — chọn "Production and staging", "All 5 current subjects", "Keep demo logins (Recommended)" — sau đó "Áp luôn lên prod"
+**AI Response**: "Kiểm tra production: seed demo 2026-11-09 lẫn dữ liệu test thủ công. Backup prod và staging vào /root/db-backups/ trên VPS, xóa dữ liệu nghiệp vụ (giữ tài khoản, cấu hình, AI, MCP, audit log) và mock lại bằng .tmp/remock/remock.mjs: 5 môn FA26 (SWD392, SWR302, SWT301, PRN212, SWP391), 6 lớp, 12 sinh viên thêm, 19 bài tập có sơ đồ UML Draw.io, 38 lượt làm bài, 47 phiếu chấm, 9 Quiz, 29 lượt Quiz, 44 câu hỏi, 17 video tài liệu, nhóm và thông báo. Chạy thử trên DB nháp trước, áp staging rồi production; log backend không lỗi, site trả 200."
+**Context**: Thao tác dữ liệu trên VPS; không đổi mã nguồn repo, chưa kiểm tra giao diện bằng đăng nhập.
+
+---
+## Inception — Rà soát Report 1 (Project Introduction)
+**Timestamp**: 2026-11-22T15:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "@"D:\Download\Report-1_Project Introduction (2).docx" kiểm tra lại report 1 xem có sai lệch gì không, sau đó gửi tôi 1 báo cáo nhận xét"
+**AI Response**: "Đối chiếu Report 1 (change log tới 28/10/2026) với requirements.md, các delta 29/10–16/11, biên bản phỏng vấn 12/11 và code. Ghi nhận 4 sai lệch (thời điểm chấm sau đóng nhận bài, backup mã hóa tùy chọn, lưu tệp production, AS-IS chưa dẫn nguồn), 12 tính năng đã duyệt chưa có trong report, 9 lỗi trình bày. Báo cáo: aidlc-docs/inception/requirements/2026-11-22-report-1-review.md."
+**Context**: Chỉ đọc report và tài liệu; không sửa report, code; chưa commit.
+
+---
+## Operations — Bổ sung mã số sinh viên trên production
+**Timestamp**: 2026-11-22T15:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "thêm mã số sinh viên cho các sinh viên đang trống (ví dụ như sinh viên 1 demo)"
+**AI Response**: "Kiểm tra cả hai môi trường: chỉ 6 sinh viên demo trên production thiếu MSSV (staging đã đủ). Gán Sinh viên Demo 1–6 = SE180601–SE180606; không còn sinh viên nào trống MSSV."
+**Context**: Cập nhật dữ liệu tài khoản trên VPS; không đổi mã nguồn repo.
+
+---
+## Inception — Sửa Report 1 theo nhận xét
+**Timestamp**: 2026-11-22T15:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa report 1 thành bản docx mới, tuy nhiên tạm thời giữ nguyên không sửa phần s4 (AS-IS), tôi sẽ sửa phần này sau"
+**AI Response**: "Tạo D:\Download\Report-1_Project Introduction (v2026-11-22).docx từ bản (2): sửa S1 (chấm sau khi đóng nhận bài), S2 (backup mã hóa khi có khóa), S3 (lưu Drive, demo có thể lưu trên máy chủ); bổ sung T1–T12 vào I.2/IV/FE-01…15; dựng lại bảng từ viết tắt; rút gọn Project Purpose; viết lại điểm yếu Artemis/PrairieLearn, GAP-07, tiêu đề LI-12; thống nhất EduNext/PRACTICE; ngày bìa November 2026; thêm dòng change log 22/11; cập nhật mục lục bằng Word. Giữ nguyên II và III.1 (AS-IS) theo yêu cầu. Không SSH được VPS để kiểm production nên S2/S3 viết theo cách đúng với mọi cấu hình."
+**Context**: Chỉnh tài liệu báo cáo ngoài repo; bản gốc giữ nguyên; chưa commit.
+
+---
+## Inception — Sửa Report 2 theo nhận xét
+**Timestamp**: 2026-11-22T16:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa toàn bộ report 2 theo báo cáo nhận xét cho tôi, rút gọn phần change log (cả các change log cũ) cho gọn"
+**AI Response**: "Tạo D:\Download\Report-2_Project Management Plan_v1.6.docx từ bản (2) theo aidlc-docs/inception/requirements/2026-11-22-report-2-review.md: S1, S2, S4, S5, S6, T1–T6 và các mục trình bày; rút gọn change log còn 7 dòng (v1.0–v1.6). Không đổi bảng phân công (S3 đúng thực tế). Bản gốc giữ nguyên."
+**Context**: Chỉnh tài liệu báo cáo ngoài repo; chưa commit.
+
+---
+## Inception — Sửa unit-of-work.md theo S3 của nhận xét Report 2
+**Timestamp**: 2026-11-22T16:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "sửa luôn unit-of-work.md theo S3"
+**AI Response**: "Đổi U06 ↔ U09 giữa Người 2 và Người 5 ở bảng unit và bảng Phân công code, sửa LOC cộng dồn (10 và 8), thêm dòng ánh xạ Người 1–5 sang tên thật theo Report 2 v1.6. Không sửa các kế hoạch cũ."
+**Context**: Sửa tài liệu application design; chưa commit.
+
+---
+## Inception — Đối chiếu Jira và sửa phân công U07/U14
+**Timestamp**: 2026-11-22T17:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra Jira KAN-29, KAN-30, KAN-31 giúp tôi"
+**AI Response**: "Đọc KAN-18…32 (chỉ đọc). KAN-29 U06 = Vo Minh Tai, KAN-31 U09 = Khuat Quang Hung: khớp. KAN-30 U14 = Hải Nam, KAN-26 U07 = hai vo: lệch Report 2. Nhiều issue còn To Do/In Progress dù code đã có."
+**Context**: Kiểm tra Jira; không sửa Jira.
+
+---
+## Inception — Sửa U07/U14 theo Jira
+**Timestamp**: 2026-11-22T17:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, sửa theo Jira"
+**AI Response**: "Report 2 v1.6: Võ Chiến Thắng = U03, U07, U08 (KAN-20/26/27); Vũ Hải Nam = U04, U13, U14 (KAN-24/22/30); thêm câu lưu ý phân bổ lệch iteration; cập nhật dòng change log v1.6. unit-of-work.md: U07 → Người 3, U14 → Người 4, LOC 12 và 6, sửa câu quy ước một unit mỗi iteration và ghi chú nguồn Jira."
+**Context**: Sửa tài liệu báo cáo và application design; chưa commit.
+
+---
+
+## Git — Đối chiếu thay đổi local với staging và chuyển sang nhánh mới
+**Timestamp**: 2026-11-22T16:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem có thay đổi nào tôi chưa commit không" — "kiểm tra trên staging xem đã có chưa, có xung đột gì không cho tôi" — "Yes, do it"
+**AI Response**: "Staging đã có việc dời 12 flow cũ vào superseded-2026-10-30/ và bộ 5 flow mới (bản staging mới hơn, commit 47837e52), nên bỏ bản flow cũ ở local. Tạo nhánh docs/report-reviews-sync từ origin/staging (--no-track), mang sang phần sửa unit-of-work.md, 4 file rà soát/báo cáo và 7 mục audit từ 15:05Z chưa có trên staging. Toàn bộ thay đổi cũ của codex/nfr-remediation được giữ trong git stash."
+**Context**: Thao tác Git cục bộ; chưa commit, chưa push.
+
+---
+
+## Git — Kiểm tra và commit nhánh docs/report-reviews-sync
+**Timestamp**: 2026-11-22T16:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra các thay đổi này có đúng không, nếu đúng thì commit"
+**AI Response**: "Kiểm tra diff so với origin/staging: unit-of-work.md đổi U06↔U09, U07 → Người 3, U14 → Người 4, tổng LOC khớp cột ước lượng (10/12/6/8); audit.md chỉ thêm dòng, mỗi mục có Requested by; 4 file báo cáo không chứa secret, link nội bộ hợp lệ, không lỗi whitespace hay conflict marker. Commit trên docs/report-reviews-sync, chưa push."
+**Context**: Thao tác Git cục bộ.
+
+---

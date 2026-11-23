@@ -4763,5 +4763,81 @@
         "closeNotification": "Đóng thông báo"
       }
     }
+  },
+  "landing": {
+    "pages": {
+      "LandingPage": {
+        "home": "Trang chủ ALAP",
+        "signIn": "Đăng nhập",
+        "metaTitle": "ALAP – Bài tập sơ đồ UML, chấm điểm có AI hỗ trợ",
+        "metaDescription": "ALAP là nền tảng học tập cho các môn Kỹ thuật phần mềm: vẽ sơ đồ UML ngay trên trình duyệt, nộp bài cá nhân hoặc nhóm, luyện quiz và nhận đề xuất chấm điểm theo rubric từ AI, được giảng viên duyệt lại.",
+        "eyebrow": "Nền tảng học tập cho môn thiết kế phần mềm",
+        "headline": "Vẽ sơ đồ UML. AI đề xuất điểm, giảng viên quyết định.",
+        "intro": "ALAP gom lớp học, tài liệu, bài tập sơ đồ, quiz và chấm điểm vào một nơi cho sinh viên và giảng viên Kỹ thuật phần mềm. AI đọc từng bài nộp theo rubric rồi đề xuất điểm và nhận xét; điểm chính thức luôn do giảng viên xem lại và công bố.",
+        "seeFeatures": "Xem tính năng",
+        "accountNote": "Tài khoản do quản trị viên môn học tạo. Hãy xem email trường để lấy mã kích hoạt.",
+        "featuresTitle": "Mọi thứ một môn thiết kế phần mềm cần",
+        "featuresIntro": "Từ buổi học đầu tiên tới lúc công bố điểm, mọi bước của môn học đều diễn ra ở một nơi.",
+        "feature": {
+          "diagrams": {
+            "title": "Bài tập sơ đồ",
+            "body": "Vẽ sơ đồ UML ngay trên trình duyệt bằng trình vẽ diagrams.net tích hợp sẵn và nộp kèm bài làm."
+          },
+          "aiGrading": {
+            "title": "AI đề xuất điểm",
+            "body": "AI đọc bài nộp và rubric rồi đề xuất điểm, nhận xét cho từng tiêu chí. Giảng viên xem lại, chỉnh sửa và công bố điểm chính thức."
+          },
+          "groupWork": {
+            "title": "Bài cá nhân và bài nhóm",
+            "body": "Lập nhóm, cùng viết tài liệu nhóm và nộp chung. Giảng viên duyệt nhóm và có thể chấm riêng từng thành viên."
+          },
+          "quizzes": {
+            "title": "Quiz và luyện tập",
+            "body": "Luyện tập với quiz lấy từ ngân hàng câu hỏi của môn, xem kết quả và lời giải sau khi nộp."
+          },
+          "materials": {
+            "title": "Tài liệu lớp học",
+            "body": "Mở tệp PDF, Word, PowerPoint và Excel ngay trên trình duyệt, sắp xếp theo môn và lớp."
+          },
+          "mcp": {
+            "title": "Kết nối AI agent của bạn",
+            "body": "Dùng MCP để làm việc với AI agent riêng trên dữ liệu mà vai trò của bạn được phép: giảng viên soạn nháp bài tập và quiz, sinh viên xin nhận xét riêng cho bài luyện tập."
+          }
+        },
+        "stepsTitle": "Cách hoạt động",
+        "step": {
+          "publish": {
+            "title": "Giảng viên giao bài",
+            "body": "Giảng viên tạo bài tập có đề bài và rubric, rồi giao cho lớp."
+          },
+          "submit": {
+            "title": "Sinh viên vẽ và nộp",
+            "body": "Sinh viên vẽ sơ đồ, một mình hoặc theo nhóm, và nộp trước hạn."
+          },
+          "review": {
+            "title": "AI đề xuất, giảng viên quyết định",
+            "body": "AI đề xuất điểm theo từng tiêu chí; giảng viên kiểm từng mục, điều chỉnh và công bố điểm."
+          }
+        },
+        "rolesTitle": "Dành cho mọi vai trò trong môn học",
+        "role": {
+          "students": {
+            "title": "Sinh viên",
+            "body": "Nộp bài, luyện quiz, làm việc nhóm và theo dõi điểm, thông báo của từng lớp."
+          },
+          "lecturers": {
+            "title": "Giảng viên",
+            "body": "Tạo bài tập và quiz, chấm theo rubric với đề xuất từ AI, và công bố điểm cho lớp."
+          },
+          "subjectManagers": {
+            "title": "Chủ nhiệm môn",
+            "body": "Quản lý môn học, tài liệu dùng chung, đề mẫu và ngân hàng câu hỏi cho các lớp."
+          }
+        },
+        "ctaTitle": "Sẵn sàng vào lớp?",
+        "ctaBody": "Đăng nhập bằng tài khoản quản trị viên môn học đã tạo cho bạn.",
+        "privacy": "Chính sách quyền riêng tư"
+      }
+    }
   }
 }

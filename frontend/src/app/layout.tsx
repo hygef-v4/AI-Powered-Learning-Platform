@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { connection } from "next/server";
-import { SITE_URL } from "@/shared/siteMetadata";
+import { GOOGLE_SITE_VERIFICATION, NO_INDEX, SEO_INDEXABLE, SITE_URL } from "@/shared/siteMetadata";
 import { LocaleGate } from "@/i18n/LocaleGate";
 import { DEFAULT_LOCALE, OG_LOCALES } from "@/i18n/locales";
 import { requestLocale, loadServerTranslator } from "@/i18n/server";
@@ -23,6 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: title, template: `%s · ${name}` },
     description,
     applicationName: name,
+    // Ngoài production không trang nào được index; trang cần đăng nhập tự đặt NO_INDEX ở layout của nó.
+    robots: SEO_INDEXABLE ? undefined : NO_INDEX,
+    verification: GOOGLE_SITE_VERIFICATION ? { google: GOOGLE_SITE_VERIFICATION } : undefined,
     openGraph: { type: "website", locale: OG_LOCALES[locale], siteName: name, title, description },
     twitter: { card: "summary_large_image", title, description },
   };

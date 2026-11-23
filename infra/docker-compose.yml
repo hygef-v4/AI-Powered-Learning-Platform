@@ -92,6 +92,11 @@ services:
 
   frontend:
     image: ghcr.io/${GHCR_OWNER:-max2min}/platform-frontend:${IMAGE_TAG:?}
+    environment:
+      # SEO: production cho máy tìm kiếm index trang công khai; staging ghi đè thành false.
+      SEO_INDEXABLE: ${SEO_INDEXABLE:-true}
+      # Mã thẻ meta của Google Search Console (chỉ phần content); để trống nếu đã xác minh bằng cách khác.
+      GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION:-}
     networks: [edge]
     deploy:
       resources: { limits: { cpus: "0.5", memory: 512M } }
