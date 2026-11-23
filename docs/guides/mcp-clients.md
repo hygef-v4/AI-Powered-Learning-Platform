@@ -162,6 +162,7 @@ Nền tảng không biết agent dùng bao nhiêu token của mô hình. Lịch 
 | HTTP 401 | Token sai/thu hồi/hết hạn, tài khoản không ACTIVE hoặc role hiện tại là Admin |
 | HTTP 403 | Yêu cầu có header `Origin` (gọi từ trình duyệt) |
 | Lỗi JSON-RPC `-32029` | Vượt 60 lời gọi mỗi phút; chờ rồi thử lại |
+| Lỗi JSON-RPC `-32030` | Máy chủ tạm không kiểm được giới hạn lời gọi (thường do mất kết nối Redis) nên từ chối để an toàn; báo quản trị viên nếu lỗi kéo dài |
 | Lỗi `-32602` "Không có tool này" | Tool không có, không dành cho role của bạn, hoặc là tool ghi trong khi token chỉ đọc |
 | Kết quả `isError: true` "Không tìm thấy hoặc không có quyền" | Dữ liệu ngoài phạm vi lớp hoặc môn của bạn |
 

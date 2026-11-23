@@ -6,13 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.ai.service.McpCredentialService;
 import edu.aiplatform.ai.service.McpCredentialService.McpPrincipal;
 import edu.aiplatform.ai.service.McpServer;
+import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -27,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/mcp")
 public class McpController {
 
-    static final long MAX_BODY_BYTES = 1024 * 1024;
+    static final int MAX_BODY_BYTES = 1024 * 1024;
     static final String PROTOCOL_HEADER = "MCP-Protocol-Version";
 
     private final McpCredentialService mcpCredentialService;
@@ -50,8 +52,7 @@ public class McpController {
     public ResponseEntity<?> post(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
                                   @RequestHeader(value = HttpHeaders.ORIGIN, required = false) String origin,
                                   @RequestHeader(value = PROTOCOL_HEADER, required = false) String protocol,
-                                  @RequestHeader(value = HttpHeaders.CONTENT_LENGTH, required = false) Long length,
-                                  @RequestBody(required = false) String body) {
+                                  HttpServletRequest request) throws IOException {
         // Step 1: Reject requests with Origin header to block browser-based DNS rebinding attacks
         if (origin != null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -69,10 +70,15 @@ public class McpController {
             return ResponseEntity.badRequest().build();
         }
 
-        // Step 4: Enforce maximum request payload size limit (1 MB)
-        if ((length != null && length > MAX_BODY_BYTES) || (body != null && body.length() > MAX_BODY_BYTES)) {
+        // Step 4: Read at most 1 MB, and only after authentication, so anonymous callers cannot fill memory
+        if (request.getContentLengthLong() > MAX_BODY_BYTES) {
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
         }
+        byte[] raw = request.getInputStream().readNBytes(MAX_BODY_BYTES + 1);
+        if (raw.length > MAX_BODY_BYTES) {
+            return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).build();
+        }
+        String body = raw.length == 0 ? null : new String(raw, StandardCharsets.UTF_8);
 
         // Step 5: Parse JSON body into JsonNode tree, catching parse errors
         JsonNode message;
