@@ -20,7 +20,7 @@ Compilation verified via `mvn test-compile -DskipTests` with BUILD SUCCESS (0 er
 
 **Requested by:** Quang Hung
 
-User inputs (raw): “b giúp tôi test thử tạo 1 bài nữa xem nào cho lớp se js” and “giúp tôi tạo commit rõ ràng”. The separately requested trial read full AUTHOR_ASSIGNMENT from MCP without local skills, resolved SE_JS, fetched current schema/material metadata and successfully created one DRAFT/READY proposal for a meeting-room booking design assignment (4 questions, 10 points, 10 rubric items). Returned exact reviewUrl; no automatic apply/publication. User now authorizes a local English commit for server-managed workflow source, wrappers, tests and AI-DLC documentation; no push. Existing 39 backend/architecture tests, package/resource checks and authenticated workflow-read evidence retained; no repeated unrelated tests or private configuration changes.
+User inputs (raw): “bạn giúp tôi test thử tạo 1 bài nữa xem nào cho lớp SE JS” and “giúp tôi tạo commit rõ ràng”. The separately requested trial read full AUTHOR_ASSIGNMENT from MCP without local skills, resolved SE_JS, fetched current schema/material metadata and successfully created one DRAFT/READY proposal for a meeting-room booking design assignment (4 questions, 10 points, 10 rubric items). Returned exact reviewUrl; no automatic apply/publication. User now authorizes a local English commit for server-managed workflow source, wrappers, tests and AI-DLC documentation; no push. Existing 39 backend/architecture tests, package/resource checks and authenticated workflow-read evidence retained; no repeated unrelated tests or private configuration changes.
 
 ## 2026-11-01 — Server-managed workflow execution completed
 
@@ -34,7 +34,7 @@ Observed catalog regression RED before implementation. Backend affected/architec
 
 **Requested by:** Quang Hung
 
-User input (raw): “giúp tôi lập kết hoạch và triển khai”. This authorizes the preceding agreed read_agent_workflow approach with AUTHOR_ASSIGNMENT and GRADE_WITH_RUBRIC, complete server-managed instructions and optional local skill installation. Read CLAUDE/current state, existing MCP registry/capabilities/requirements, source skills and Docker build context. Created requirements/stories and an inline execution plan. Full resources will live inside backend/src for packaged/Docker availability; old local skill paths become optional wrappers. No new provider calls, credential changes, write-tool acceptance, commit or push are part of this work.
+User input (raw): “giúp tôi lập kế hoạch và triển khai”. This authorizes the preceding agreed read_agent_workflow approach with AUTHOR_ASSIGNMENT and GRADE_WITH_RUBRIC, complete server-managed instructions and optional local skill installation. Read CLAUDE/current state, existing MCP registry/capabilities/requirements, source skills and Docker build context. Created requirements/stories and an inline execution plan. Full resources will live inside backend/src for packaged/Docker availability; old local skill paths become optional wrappers. No new provider calls, credential changes, write-tool acceptance, commit or push are part of this work.
 
 ## 2026-11-01 — Commit preparation
 
@@ -65,7 +65,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-12T15:04:50Z
-**User Input**: "giúp tôi triển khai quy trình ai dlc"
+**User Input**: "giúp tôi triển khai quy trình AI-DLC"
 **AI Response**: "Started the AI-DLC workflow, displayed the required welcome message, loaded common rules and extension opt-in prompts, and began Workspace Detection."
 **Context**: New AI-DLC workflow initialization
 
@@ -76,7 +76,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-12T15:04:50Z
-**User Input**: "giúp tôi triển khai quy trình ai dlc"
+**User Input**: "giúp tôi triển khai quy trình AI-DLC"
 **AI Response**: "Detected a greenfield workspace with no application source files, build files, existing AI-DLC state, or reverse-engineering artifacts. Initialized AI-DLC tracking and selected Requirements Analysis as the next stage."
 **Context**: INCEPTION - Workspace Detection completed
 
@@ -87,7 +87,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-12T15:05:58Z
-**User Input**: "giúp tôi triển khai quy trình ai dlc"
+**User Input**: "giúp tôi triển khai quy trình AI-DLC"
 **AI Response**: "Classified the greenfield request as architectural and currently vague. Started comprehensive Requirements Analysis and created requirement-verification-questions.md with product, technical, quality, and extension opt-in questions. Requested that the user complete every [Answer]: field before requirements generation."
 **Context**: INCEPTION - Requirements Analysis, awaiting user answers
 
@@ -135,47 +135,14 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 
 ---
 
-## Requirements Analysis - Approval Prompt
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-12T15:42:13Z
-**User Input**: "check lại"
-**AI Response**: "Requested review and explicit approval of aidlc-docs/inception/requirements/requirements.md before proceeding to User Stories."
-**Context**: INCEPTION - Requirements Analysis approval gate
-
----
-
 ## Requirements Analysis - Refinement
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-12T16:09:00Z
-**User Input**: "thêm system test, sao yêu cầu chức năng lại có fr 016, bỏ fr15"
+**User Input**: "thêm system test, sao yêu cầu chức năng lại có FR-016, bỏ FR-015"
 **AI Response**: "Refined requirements.md: added System Test explicitly to NFR-004, removed out-of-scope FR-015 (minor student data governance), and relocated FR-016 (AI-DLC documentation workflow) from Functional Requirements to Section 9 (Project Governance and Constraints). Updated traceability matrix to FR-001 through FR-014."
 **Context**: INCEPTION - Requirements Analysis refinement
-
----
-
-## Requirements Analysis - Approval and Session Continuation
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-12T16:12:20Z
-**User Input**: "ok đọc lại f:\code\git\AI-Powered-Learning-Platform\aidlc-docs\inception\requirements\requirements.md và tiếp tục quy trình ai dlc"
-**AI Response**: "Re-read the requirements and supporting Requirements Analysis artifacts, treated the explicit instruction to continue as approval of the current requirements, marked Requirements Analysis complete, and advanced to User Stories planning."
-**Context**: INCEPTION - Requirements Analysis approved; session resumed
-
----
-
-## User Stories - Assessment and Planning
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-12T16:12:20Z
-**User Input**: "ok đọc lại f:\code\git\AI-Powered-Learning-Platform\aidlc-docs\inception\requirements\requirements.md và tiếp tục quy trình ai dlc"
-**AI Response**: "Assessed User Stories as required for this complex, multi-persona, user-facing MVP. Created user-stories-assessment.md and story-generation-plan.md with seven decision questions and a checkbox-tracked generation plan. Requested completion of every [Answer]: field before plan approval and story generation."
-**Context**: INCEPTION - User Stories Part 1, awaiting user answers
 
 ---
 
@@ -245,28 +212,6 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 
 ---
 
-## User Stories - Approval Response
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-12T16:56:33Z
-**User Input**: "approve and continue"
-**AI Response**: "Recorded explicit approval of stories.md and personas.md, marked User Stories complete, and started Workflow Planning."
-**Context**: INCEPTION - User Stories approved
-
----
-
-## Workflow Planning - Plan Created and Approval Prompt
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-12T16:56:33Z
-**User Input**: "approve and continue"
-**AI Response**: "Created aidlc-docs/inception/plans/execution-plan.md. Recommended executing Application Design, Units Generation, all five per-unit Construction stages, and Build and Test; skipped Reverse Engineering because the project is greenfield; retained Operations as a placeholder. Requested explicit approval or user override before proceeding to Application Design."
-**Context**: INCEPTION - Workflow Planning approval gate
-
----
-
 ## Session Pause and Commit Request
 
 **Requested by:** Quang Hung
@@ -283,7 +228,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-13T13:26:21Z
-**User Input**: "giúp tôi so sánh với user story hiện tại, xem cần bổ sung user story những gì với những cái trong uc1.pdf có hợp lý cho hệ thống ko, với lại bỏ qua cái role head of department đi"
+**User Input**: "giúp tôi so sánh với user story hiện tại, xem cần bổ sung user story những gì với những cái trong uc1.pdf có hợp lý cho hệ thống không, với lại bỏ qua cái role head of department đi"
 **AI Response**: "Reviewed uc1.pdf against the approved requirements, personas, and user stories; excluded Head of Department from the comparison and prepared recommendations without changing the approved story set."
 **Context**: INCEPTION - User Stories review; Workflow Planning remains paused at its approval gate
 
@@ -294,7 +239,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-13T13:40:11Z
-**User Input**: "tôi muốn bỏ phần ngoại ngữ, chỉ ghi chung là bài viết luận thôi, với làm theo plan sửa lại user story đi , theo ai dlc"
+**User Input**: "tôi muốn bỏ phần ngoại ngữ, chỉ ghi chung là bài viết luận thôi, với làm theo plan sửa lại user story đi, theo AI-DLC"
 **AI Response**: "Reopened the AI-DLC requirements/user-story artifacts, expanded functional requirements through FR-024, revised the catalog to 51 stories with MVP/Phase 2 separation, removed Head of Department from the role model, normalized written assignments to one essay type, updated personas/traceability/workflow state, and prepared the User Stories approval checkpoint."
 **Context**: INCEPTION - User Stories revision after uc1.pdf comparison
 
@@ -305,7 +250,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-13T13:42:04Z
-**User Input**: "tôi muốn bỏ phần ngoại ngữ, chỉ ghi chung là bài viết luận thôi, với làm theo plan sửa lại user story đi , theo ai dlc"
+**User Input**: "tôi muốn bỏ phần ngoại ngữ, chỉ ghi chung là bài viết luận thôi, với làm theo plan sửa lại user story đi, theo AI-DLC"
 **AI Response**: "# 📚 User Stories Complete
 
 > **📋 REVIEW REQUIRED:**
@@ -326,7 +271,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-13T14:24:33Z
-**User Input**: "chỉnh plantuml thành drawio sinh viên vẽ trên canvas drawio và nộp code xml để chấm (code xml đã được rút gọn), chủ yếu người học dùng web trên máy tính thôi, với cho tôi hỏi chủ nhiệm môn khác biệt gì so với giảng viên, 1 chủ nhiệm môn có thể chủ nhiệm nhiều môn ko, với cho tôi hỏi quản trị viên thì có thể là ai trong trường học?, với tài khoản của giảng viên, sinh viên thì là đăng nhập theo mail của trường thôi có cần bước đăng kí tài khoản ko? \nthu hồi bài đánh giá để tái sử dụng nội dung mà vẫn bảo toàn lịch sử là sao?\nvới chấm bài thì sinh viên noopj bài gửi giảng viên giảng viên mới quyết định là  chấm bằng ai hay chấm tay \nbỏ cái **US-GRD-009 - Phân công chấm chéo (Phase 2)**"
+**User Input**: "chỉnh plantuml thành drawio sinh viên vẽ trên canvas drawio và nộp code xml để chấm (code xml đã được rút gọn), chủ yếu người học dùng web trên máy tính thôi, với cho tôi hỏi chủ nhiệm môn khác biệt gì so với giảng viên, 1 chủ nhiệm môn có thể chủ nhiệm nhiều môn không, với cho tôi hỏi quản trị viên thì có thể là ai trong trường học?, với tài khoản của giảng viên, sinh viên thì là đăng nhập theo mail của trường thôi có cần bước đăng ký tài khoản không? \nthu hồi bài đánh giá để tái sử dụng nội dung mà vẫn bảo toàn lịch sử là sao?\nvới chấm bài thì sinh viên nộp bài gửi giảng viên giảng viên mới quyết định là chấm bằng AI hay chấm tay \nbỏ cái **US-GRD-009 - Phân công chấm chéo (Phase 2)**"
 **AI Response**: "Accepted as Request Changes at the User Stories approval gate. Planned updates: Draw.io canvas and reduced XML submission, desktop-first learner experience, institution-email account provisioning without public registration, teacher-selected manual or AI-assisted grading after submission, clearer clone/unpublish semantics, and removal of US-GRD-009."
 **Context**: INCEPTION - User Stories revision change request
 
@@ -337,7 +282,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-13T14:29:33Z
-**User Input**: "chỉnh plantuml thành drawio sinh viên vẽ trên canvas drawio và nộp code xml để chấm (code xml đã được rút gọn), chủ yếu người học dùng web trên máy tính thôi, với cho tôi hỏi chủ nhiệm môn khác biệt gì so với giảng viên, 1 chủ nhiệm môn có thể chủ nhiệm nhiều môn ko, với cho tôi hỏi quản trị viên thì có thể là ai trong trường học?, với tài khoản của giảng viên, sinh viên thì là đăng nhập theo mail của trường thôi có cần bước đăng kí tài khoản ko? \nthu hồi bài đánh giá để tái sử dụng nội dung mà vẫn bảo toàn lịch sử là sao?\nvới chấm bài thì sinh viên noopj bài gửi giảng viên giảng viên mới quyết định là  chấm bằng ai hay chấm tay \nbỏ cái **US-GRD-009 - Phân công chấm chéo (Phase 2)**"
+**User Input**: "chỉnh plantuml thành drawio sinh viên vẽ trên canvas drawio và nộp code xml để chấm (code xml đã được rút gọn), chủ yếu người học dùng web trên máy tính thôi, với cho tôi hỏi chủ nhiệm môn khác biệt gì so với giảng viên, 1 chủ nhiệm môn có thể chủ nhiệm nhiều môn không, với cho tôi hỏi quản trị viên thì có thể là ai trong trường học?, với tài khoản của giảng viên, sinh viên thì là đăng nhập theo mail của trường thôi có cần bước đăng ký tài khoản không? \nthu hồi bài đánh giá để tái sử dụng nội dung mà vẫn bảo toàn lịch sử là sao?\nvới chấm bài thì sinh viên nộp bài gửi giảng viên giảng viên mới quyết định là chấm bằng AI hay chấm tay \nbỏ cái **US-GRD-009 - Phân công chấm chéo (Phase 2)**"
 **AI Response**: "Applied the requested changes and prepared a revised approval checkpoint. The catalog now has 50 stories (38 MVP, 12 Phase 2), uses Draw.io canvas with reduced XML submission, is desktop-first, provisions learner/instructor accounts through institution email without public registration, makes the instructor choose manual or AI-assisted grading after submission, clarifies clone versus stop-assignment behavior, and removes US-GRD-009. Requested review of stories.md and personas.md with Request Changes or Approve & Continue options."
 **Context**: INCEPTION - User Stories revision approval gate
 
@@ -391,7 +336,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-13T16:30:00Z
-**User Input**: "dựa vào user story giúp tôi gen đoc usecase đầy đủ"
+**User Input**: "dựa vào user story giúp tôi tạo doc use case đầy đủ"
 **AI Response**: "Generated a complete use case specification derived from the current 55 user stories, including actors, preconditions, postconditions, main flows, alternative/error flows, relationships, business rules, security/resiliency constraints, and full story-to-use-case traceability."
 **Context**: User Stories revision cycle; added `aidlc-docs/inception/user-stories/use-cases.md` and retained the explicit approval checkpoint before Workflow Planning.
 
@@ -401,7 +346,7 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-13T16:45:00Z
-**User Input**: "giúp tôi tiếp tục quy trình ai dlc"
+**User Input**: "giúp tôi tiếp tục quy trình AI-DLC"
 **AI Response**: "Interpreted the request to continue as approval of the current User Stories, personas, use case specification and revalidated execution plan; marked User Stories and Workflow Planning complete and moved the next stage to Application Design."
 **Status**: Approved
 **Context**: INCEPTION - Workflow Planning approval gate
@@ -412,39 +357,17 @@ User input (raw): “giúp tôi triển khai theo kế hoạch $ponytail:ponytai
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-13T16:50:00Z
-**User Input**: "giúp tôi tiếp tục quy trình ai dlc"
+**User Input**: "giúp tôi tiếp tục quy trình AI-DLC"
 **AI Response**: "Started Application Design planning, created decision questions for component boundaries, asynchronous processing, file/XML storage, AI adapters and frontend/backend contracts. Awaiting answers before generating design artifacts."
 **Context**: INCEPTION - Application Design planning; questions stored in `aidlc-docs/inception/plans/application-design-plan.md`.
 
 ---
-## Application Design - Answers and Generation
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-13T17:10:00Z
-**User Input**: "ok rồi"
-**AI Response**: "Validated all five Application Design answers as complete and consistent (A/A/A/A/A), then generated components, component methods, services/orchestration, dependency/data flow and consolidated design artifacts. Requested explicit review before Units Generation."
-**Context**: INCEPTION - Application Design generation and approval checkpoint.
-
----
-## Application Design - Approval
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-13T17:20:00Z
-**User Input**: "approve"
-**AI Response**: "Recorded explicit approval of Application Design, marked the stage complete and started Units Generation Part 1 by creating the Unit of Work planning questions."
-**Status**: Approved
-**Context**: INCEPTION - Transition from Application Design to Units Generation planning.
-
----
-
 ## Units Generation - Next-step Guidance
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T07:13:13Z
-**User Input**: "tiepse tuc ai dlc h can lam nhung gi"
+**User Input**: "tiếp tục AI-DLC, giờ cần làm những gì"
 **AI Response**: "Confirmed that Application Design is approved and the active checkpoint is Units Generation Part 1 Planning. Directed the user to answer the six questions in unit-of-work-plan.md; recommended B/A/A/A/A/A for the current modular-monolith project, after which the answers will be validated and the Unit of Work Plan presented for approval before artifact generation."
 **Context**: INCEPTION - Units Generation Part 1 Planning guidance.
 
@@ -546,7 +469,7 @@ thì sao"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T07:46:30Z
-**User Input**: "nếu tách worker rồi thì cần tách infra ko, infra là gì"
+**User Input**: "nếu tách worker rồi thì cần tách infra không, infra là gì"
 **AI Response**: "Explained that infrastructure is the configuration used to run and connect frontend, API, worker, database, queue, object storage, networking, secrets, monitoring, and deployment environments. Clarified that separating worker does not technically require a top-level infra project, but centralized /infra is recommended when backend and worker are separate deployables so shared runtime configuration is not duplicated."
 **Context**: INCEPTION - Units Generation Part 1 clarification guidance; no decision changed.
 
@@ -563,35 +486,12 @@ thì sao"
 
 ---
 
-## Units Generation - Plan Approval
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-14T07:50:14Z
-**User Input**: "ok"
-**AI Response**: "Interpreted the unambiguous response as approval of the Unit of Work Plan, marked Part 1 approved, and started Units Generation Part 2 artifact generation."
-**Status**: Approved
-**Context**: INCEPTION - Transition from Units Generation Part 1 to Part 2.
-
----
-
-## Units Generation - Artifact Generation and Approval Prompt
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-14T07:56:29Z
-**User Input**: "ok"
-**AI Response**: "Generated eight logical units, an acyclic dependency matrix and critical path, and a one-owner story map covering exactly 55 stories (44 MVP and 11 Phase 2). Documented the effective monorepo structure /frontend, /backend, /worker, /infra, /contracts; worker ownership; dependency waves; integration gates; and stage-level Security/Resiliency compliance. Presented the Units Generation review checkpoint with Request Changes and Approve & Continue options."
-**Context**: INCEPTION - Units Generation completion checkpoint; awaiting explicit artifact approval.
-
----
-
 ## Units Generation - Database and API Contract Stage Guidance
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T07:58:51Z
-**User Input**: "khi nào đến bước thiết kế database, api constract?"
+**User Input**: "khi nào đến bước thiết kế database, API contract?"
 **AI Response**: "Explained that after Units Generation approval, Construction proceeds per unit. Functional Design defines domain entities, relationships, business constraints, data flow, and API integration needs; NFR Design refines technical/security/performance contract constraints; Infrastructure Design selects and configures physical persistence/runtime services; Code Generation materializes database migrations and executable OpenAPI/job/event schemas. Clarified that high-level API methods and boundaries already exist in Application Design, while detailed endpoint/DTO/error contracts are finalized per unit before implementation."
 **Context**: INCEPTION - Units Generation approval checkpoint guidance; no stage transition.
 
@@ -614,7 +514,7 @@ giải thích tại sao lại tách constract ra"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T08:09:17Z
-**User Input**: "trong code constract có thể sự dụng hay chỉ đọc thôi"
+**User Input**: "trong code, contract có thể sử dụng hay chỉ đọc thôi"
 **AI Response**: "Clarified that contracts are executable build/runtime inputs, not read-only documentation: OpenAPI can generate frontend clients and backend interfaces/models; JSON Schema or equivalent can generate/validate worker job and event models; compatibility tests enforce producer-consumer agreement. Distinguished editable source schemas from generated code, which should be regenerated rather than manually edited, and reiterated that business logic must remain in backend/worker modules."
 **Context**: INCEPTION - Units Generation artifact explanation; no artifact change requested.
 
@@ -625,7 +525,7 @@ giải thích tại sao lại tách constract ra"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T08:11:45Z
-**User Input**: "để frontend truy cập constract thì có sợ lộ api, vấn đề security ko"
+**User Input**: "để frontend truy cập contract thì có sợ lộ API, vấn đề security không"
 **AI Response**: "Explained that browser-facing endpoint names and request formats are inherently discoverable and must not be treated as secrets. Recommended generating a frontend client from a public-facing OpenAPI subset without shipping internal worker/admin schemas or secrets, keeping the full contract in the repository/build pipeline, restricting production API documentation UI, and enforcing authentication, object/function authorization, validation, TLS, CORS/CSRF, rate limiting, and safe errors on the backend."
 **Context**: INCEPTION - Units Generation security guidance; no artifact change requested.
 
@@ -636,7 +536,7 @@ giải thích tại sao lại tách constract ra"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T08:14:19Z
-**User Input**: "frontend có nên gọi worker server k hay backend gọi"
+**User Input**: "frontend có nên gọi worker server không hay backend gọi"
 **AI Response**: "Recommended that the frontend never call the worker directly. The frontend should submit commands and poll/subscribe to job status through the backend; the backend authenticates and authorizes the actor, persists the business request, and publishes a versioned job for the worker. The worker uses a scoped machine identity to fetch inputs and publish results. Identified direct signed upload to object storage as a controlled exception that still requires backend-issued authorization, not a worker call."
 **Context**: INCEPTION - Units Generation trust-boundary guidance; no artifact change requested.
 
@@ -647,7 +547,7 @@ giải thích tại sao lại tách constract ra"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T08:28:52Z
-**User Input**: "ok tipes tục"
+**User Input**: "ok tiếp tục"
 **AI Response**: "Interpreted the response as Approve & Continue for the reviewed Units Generation artifacts. Marked Units Generation complete, transitioned from INCEPTION to CONSTRUCTION, selected U01 Platform Foundation and Identity as the first unit, and created its Functional Design Plan with ten questions covering account provisioning, activation, role combinations, admin bootstrap, sessions, school-email domains, file scanning, backend-worker interaction, audit detail, and contract governance. Added database-design.md and api-contract.md to the planned Functional Design artifacts as requested by the user."
 **Status**: Approved
 **Context**: Units Generation approval; transition to CONSTRUCTION - U01 Functional Design Part 1 Planning.
@@ -659,7 +559,7 @@ giải thích tại sao lại tách constract ra"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T08:33:22Z
-**User Input**: "có cách nào thiết kế database tổng quát trc ko để vẽ doc nộp trc"
+**User Input**: "có cách nào thiết kế database tổng quát trước không để vẽ doc nộp trước"
 **AI Response**: "Confirmed that a cross-unit Global Database Design can be inserted before per-unit Functional Design as a supplementary architecture artifact. Recommended a conceptual/logical ERD containing core entities, cardinalities, module ownership, lifecycle/versioning, and key constraints, while deferring detailed columns, indexes, migrations, and physical tuning to per-unit Functional/NFR/Infrastructure Design. Proposed producing a database overview document, data dictionary, and editable Draw.io ERD for submission."
 **Context**: CONSTRUCTION - U01 Functional Design planning guidance; no workflow change applied yet.
 
@@ -693,7 +593,7 @@ giải thích"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T08:41:47Z
-**User Input**: "ok xong r"
+**User Input**: "ok xong rồi"
 **AI Response**: "Validated all ten original U01 Functional Design answers. Eight answers are complete and consistent. Detected ambiguity in Q4B about whether a fixed administrator seed includes hardcoded credentials, which would violate SECURITY-09/12, and a contradiction between Q7C and the approved Malware Scan Port/quarantine design. Added two targeted clarification questions to the U01 plan and paused before Functional Design generation."
 **Context**: CONSTRUCTION - U01 Functional Design Part 1 clarification required.
 
@@ -704,7 +604,7 @@ giải thích"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T08:47:28Z
-**User Input**: "xong r"
+**User Input**: "xong rồi"
 **AI Response**: "Validated both clarification answers. Clarification 1B explicitly selects a fixed default administrator password in a database migration, creating a blocking SECURITY-09/12 finding. Clarification 2B makes file upload unavailable until a real scanner exists, which remains ambiguous against the approved MVP upload, RAG, Draw.io XML, and shared DOCX scope. Added a second clarification round with safe bootstrap alternatives and an explicit scanner/upload scope decision; paused before approval."
 **Context**: CONSTRUCTION - U01 Functional Design Part 1 clarification round 2 required.
 
@@ -721,49 +621,14 @@ giải thích"
 
 ---
 
-## U01 Functional Design - Plan Approval
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-14T08:52:53Z
-**User Input**: "approve"
-**AI Response**: "Recorded explicit approval of the U01 Functional Design Plan, marked Part 1 approved, and started Part 2 generation for business logic, rules, entities, logical database design, API contract, frontend components, and foundation contracts."
-**Status**: Approved
-**Context**: CONSTRUCTION - U01 Functional Design Part 2 generation.
-
----
-
-## U01 Functional Design - Generation Complete and Approval Prompt
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-14T08:59:57Z
-**User Input**: "approve"
-**AI Response**: "Generated all seven approved U01 Functional Design artifacts: business logic, 42 business rules plus extension compliance, domain entities, logical database design, API contract, frontend components, and foundation contracts. Validated artifact presence, all eight U01 story references, answer completeness, key security/resiliency decisions, Markdown fences, and diff formatting. Presented the standardized Functional Design U01 review checkpoint with Request Changes and Continue to Next Stage options."
-**Context**: CONSTRUCTION - U01 Functional Design completion checkpoint; awaiting explicit approval.
-
----
-
 ## Global Database Design - ERD Request and Design Proposal
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T09:13:41Z
-**User Input**: "thiết kế erd database tổng quan dựa theo mẫu này , để tôi thêm vào doc cho thầy duyệt\n[Attached image showing a Conceptual Data Model template with a Crow-Foot ERD and per-entity descriptions]"
+**User Input**: "thiết kế ERD database tổng quan dựa theo mẫu này, để tôi thêm vào doc cho thầy duyệt\n[Attached image showing a Conceptual Data Model template with a Crow-Foot ERD and per-entity descriptions]"
 **AI Response**: "Classified the request as an architectural documentation addition. Proposed a Word-ready conceptual ERD using Crow-Foot notation and business-verb relationship labels, organized by the eight approved units, with only key business attributes. Proposed deliverables are an editable Draw.io source, exported PNG and SVG, and a Markdown entity-description section matching the supplied template. Paused for design approval before generating the artifacts."
 **Context**: CONSTRUCTION - supplementary Global Database Design proposal; current U01 Functional Design approval checkpoint remains unchanged.
-
----
-
-## Global Database Design - ERD Approval
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-14T09:17:52Z
-**User Input**: "approve"
-**AI Response**: "Recorded approval of the proposed Word-ready conceptual database package and started generation of an editable Crow-Foot Draw.io ERD, high-resolution PNG/SVG exports, and entity descriptions matching the supplied document template."
-**Status**: Approved
-**Context**: Supplementary Global Database Design generation; U01 Functional Design approval checkpoint remains pending.
 
 ---
 
@@ -772,7 +637,7 @@ giải thích"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T09:29:47Z
-**User Input**: "chỉ cần viết detail database erd ra file md thôi k cần gen file vẽ, với bảng nào gộp được thì cứ gộp k cần phải phân nhỏ ra, ví dụ bảng account với password thì nên gộp làm 1 bảng account thôi"
+**User Input**: "chỉ cần viết detail database ERD ra file md thôi không cần gen file vẽ, với bảng nào gộp được thì cứ gộp không cần phải phân nhỏ ra, ví dụ bảng account với password thì nên gộp làm 1 bảng account thôi"
 **AI Response**: "Stopped the image/Draw.io deliverable, removed the generated Draw.io, PNG, and SVG files, and replaced the earlier conceptual description with one detailed Markdown database ERD. Consolidated account/password, role/scope, auth tokens, class memberships, learning resources, bank items, assessment versions, submission attempts, grade proposals/final grades, and AI requests/jobs where history and invariants remain safe. Retained separate history, artifact, group-allocation, payment/entitlement, and audit tables where separation is required."
 **Context**: Supplementary Global Database Design revised to Markdown-only output; U01 Functional Design approval checkpoint remains unchanged.
 
@@ -783,7 +648,7 @@ giải thích"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T08:16:42Z
-**User Input**: "nếu fe chỉ gọi backend , backend chỉ gọi worker thì tại sao phải thêm contract"
+**User Input**: "nếu FE chỉ gọi backend, backend chỉ gọi worker thì tại sao phải thêm contract"
 **AI Response**: "Clarified that each communication edge needs its own contract: frontend-backend uses a Web API/OpenAPI contract, while backend-worker uses a job/event schema. The frontend does not consume worker contracts. Explicit contracts prevent independently compiled projects from silently drifting, enable generated clients/models and compatibility tests, and remain necessary even when communication is indirect. Also clarified that a top-level /contracts directory is an organizational recommendation, not a technical requirement; schemas could be colocated with their producer if ownership and automated synchronization remain clear."
 **Context**: INCEPTION - Units Generation contract-boundary explanation; no artifact change requested.
 
@@ -792,7 +657,7 @@ giải thích"
 
 **Requested by:** Quang Hung
 
-**User Input**: "gộp role vào account, subject manager có thể có các chức năng của giảng viên, bỏ bảng session được k, class memberships có thể bỏ memebership_role, artifact với learning_resources khác gì nhau, assessment với grade history khác j nhau, bỏ lưu background job có được k, entitlements đổi tên được k"
+**User Input**: "gộp role vào account, subject manager có thể có các chức năng của giảng viên, bỏ bảng session được không, class memberships có thể bỏ membership_role, artifact với learning_resources khác gì nhau, assessment với grade history khác gì nhau, bỏ lưu background job có được không, entitlements đổi tên được không"
 
 **AI Response**: Analyzed the requested ERD simplifications. Recommended a single hierarchical role on accounts, retaining the distinction between file artifacts and business learning resources, retaining assessment definitions separately from immutable grade history, renaming entitlements to access_grants, and omitting background_jobs from the conceptual business ERD only when durable queue infrastructure owns job state. Identified instructor-to-class cardinality as the remaining ambiguity before removing membership_role and created erd-simplification-questions.md.
 
@@ -800,7 +665,7 @@ giải thích"
 
 **Requested by:** Quang Hung
 
-**User Input**: "role code là gì, giử session trong redis được k, k cần lưu qua db đúng k, đổi assessment thành assignment đc k, bỏ background job lưu trong rabbitmq\nok tôi trả lời câu hỏi rồi với sửa theo plan với note của tôi, nhớ thêm description vào các entity"
+**User Input**: "role code là gì, giữ session trong Redis được không, không cần lưu qua DB đúng không, đổi assessment thành assignment được không, bỏ background job lưu trong RabbitMQ\nok tôi trả lời câu hỏi rồi với sửa theo plan với note của tôi, nhớ thêm description vào các entity"
 
 **Validated Answer**: Question 1 = A. Each class has exactly one primary instructor; learner membership becomes enrollment.
 
@@ -810,7 +675,7 @@ giải thích"
 
 **Requested by:** Quang Hung
 
-**User Input**: "thế thì lưu otp trong redis , còn gì lưu tạm thời nữa k để lưu trong redis"
+**User Input**: "thế thì lưu OTP trong Redis, còn gì lưu tạm thời nữa không để lưu trong Redis"
 
 **AI Response**: Renamed accounts.role_code to accounts.role, removed auth_tokens from the relational ERD, and documented Redis ownership of hashed OTPs, refresh sessions, attempt/rate-limit counters, short-lived cache and temporary distributed locks. Added TTL, deletion, revocation and source-of-truth constraints; RabbitMQ remains responsible for temporary background-job delivery.
 
@@ -818,36 +683,16 @@ giải thích"
 
 **Requested by:** Quang Hung
 
-**User Input**: "thế thì tôi muốn lưu bằng gg drive"
+**User Input**: "thế thì tôi muốn lưu bằng Google Drive"
 
 **AI Response**: Updated the global ERD to make the organization's Google Shared Drive the file-byte storage provider. Replaced the generic object key in artifacts with storage_provider, provider_file_id, drive_id and original_file_name, while retaining checksum, scan state and derived-artifact lineage. Added the constraint that files remain private and are accessed by backend/worker only after application authorization.
 ## 2026-09-14 - Main Business Flow design request
 
 **Requested by:** Quang Hung
 
-**User Input**: "giúp tôi thiết kê bussiness flow theo mẫu này [attached sample showing Main Business Flow with Trigger, End condition and swimlane diagram]"
+**User Input**: "giúp tôi thiết kế business flow theo mẫu này [attached sample showing Main Business Flow with Trigger, End condition and swimlane diagram]"
 
 **AI Response**: Proposed nine end-to-end business flows covering authentication, academic setup, AI-assisted learning-content generation, assignment publication, learning progress, group organization, individual/shared submission, grading, and payment/access grant. Selected Mermaid flowchart subgraphs as Markdown-compatible swimlanes with trigger, end condition and text alternative for every flow. Created business-flow-design-plan.md and paused for scope approval before generating the diagrams.
-
-## 2026-09-14 - Main Business Flow plan approval and generation
-
-**Requested by:** Quang Hung
-
-**User Input**: "approve"
-
-**Validated Answer**: Question 1 = A. Generate all nine proposed business flows.
-
-**AI Response**: Generated business-flows.md with nine end-to-end flows. Every flow includes an ID, trigger, end condition, Mermaid swimlane-style diagram and text alternative. The flows reflect the approved role hierarchy, one primary instructor per class, Google Drive artifacts, Redis authentication state, RabbitMQ worker jobs, assignment terminology, individual/shared group submissions, instructor-controlled grading and verified payment access grants.
-## 2026-09-14 - System Functionalities section approval and generation
-
-**Requested by:** Quang Hung
-
-**User Input**: "approve"
-
-**Approved Design**: Create one Section 5 Markdown document containing Screen Flow, detailed Screen List, External API Inventory and Background Job Inventory based on the supplied SRS template.
-
-**AI Response**: Generated system-functionalities.md with a role-colored Mermaid screen flow, text alternative, 45-screen inventory, six external API entries, ten RabbitMQ background jobs, operational/security rules and a functional coverage summary. The artifact reflects school-email authentication, hierarchical Subject Manager behavior, Google Drive file storage, Redis temporary authentication state, assignment terminology, group submissions and instructor-controlled AI grading.
----
 
 ## Main Business Flows - Draw.io Generation Complete
 
@@ -876,7 +721,7 @@ giải thích"
 **Requested by:** Đào Chí Cường
 
 **Timestamp**: 2026-09-15T02:55:26Z
-**User Input**: "sửa lại tên của pool cho đúng với từng diagram, bỏ tex (BR, trigger, End condition) trong file png, chỉ giữ sơ đồ swimlane như ảnh mẫu tôi gửi ở trên"
+**User Input**: "sửa lại tên của pool cho đúng với từng diagram, bỏ text (BR, trigger, End condition) trong file png, chỉ giữ sơ đồ swimlane như ảnh mẫu tôi gửi ở trên"
 **AI Response**: "Renamed the Horizontal Pool 1 container on all nine standalone diagrams and all nine consolidated pages to the matching business-flow name without the BF prefix. Removed the separate BF title, Trigger, and End condition cells, cropped every page to the pool, regenerated all nine PNG exports locally with only the swimlane visible, and visually inspected every PNG against the supplied sample."
 **Context**: INCEPTION - Supplementary Main Business Flow documentation correction complete; U01 Functional Design approval checkpoint unchanged.
 
@@ -898,20 +743,9 @@ giải thích"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T13:52:30Z
-**User Input**: "giúp tô đọc lại user-cases.md xem đủ tính năng chưa với tôi muốn viết lại theo format kiểu này , usecase cũng chia nhỏ theo kiểu này\n[Attached images showing a Use Cases table with columns ID, Use Case, Feature, and Use Case Description, where operations such as sign in, sign out, view profile, update profile, and individual class-management actions are separate rows.]"
+**User Input**: "giúp tôi đọc lại user-cases.md xem đủ tính năng chưa với tôi muốn viết lại theo format kiểu này, use case cũng chia nhỏ theo kiểu này\n[Attached images showing a Use Cases table with columns ID, Use Case, Feature, and Use Case Description, where operations such as sign in, sign out, view profile, update profile, and individual class-management actions are separate rows.]"
 **AI Response**: "Resumed the existing AI-DLC project, classified the documentation change as bounded, and started reviewing use-cases.md against approved requirements, user stories, business flows, and the system functionality inventory. No use-case artifact changes will be made until the proposed table structure and granularity are explicitly approved."
 **Context**: Supplementary review and reformatting of the approved use-case specification; the U01 Functional Design approval checkpoint remains unchanged.
-
----
-
-## Use Case Reformat - Review Findings and Approval Prompt
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-14T13:54:07Z
-**User Input**: "N/A - approval checkpoint generated from the user's preceding request."
-**AI Response**: "Reported that use-cases.md covers all 55 approved user stories but only through 37 coarse-grained use cases, so it is not complete at the atomic action level shown in the reference. Identified merged authentication, profile, account, academic structure, enrollment, content, group, assignment, grading, reporting, payment and notification actions; missing explicit view/list/status actions; omission of Admin from shared authentication/profile actors; and a stale multi-role statement that conflicts with the latest single highest-role hierarchy in global-database-erd.md. Proposed replacing the coarse detailed-use-case section with feature-grouped four-column tables (ID, Use Case, Feature, Use Case Description), splitting each user-visible goal into one row, marking Phase 2 rows, retaining actor/business-rule and user-story traceability appendices, and aligning the document with the latest approved role, Google Drive, Redis and RabbitMQ decisions. Asked the user to reply 'approve' before the file is modified."
-**Context**: Supplementary use-case reformat design approval checkpoint; no use-case file changes made.
 
 ---
 
@@ -966,21 +800,9 @@ giải thích"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T14:21:06Z
-**User Input**: "những usecase nào có thể gộp được, mấy cái bản nháp có thể goppj được hay rút gọn gì k, mấy cái use case có actor hệ thống thì k cần cho vào, nhận thông báo thì actor là người dùng thôi, xem trạng thái tác vụ nền k cần, các usecase tìm kiếm k tính là use case\n[Attached screenshots highlighting UC-GRP-15/16, UC-QBK-11, UC-AIG-01 through UC-AIG-04, UC-PAY-04 and UC-OPS-02.]"
+**User Input**: "những usecase nào có thể gộp được, mấy cái bản nháp có thể gộp được hay rút gọn gì không, mấy cái use case có actor hệ thống thì không cần cho vào, nhận thông báo thì actor là người dùng thôi, xem trạng thái tác vụ nền không cần, các usecase tìm kiếm không tính là use case\n[Attached screenshots highlighting UC-GRP-15/16, UC-QBK-11, UC-AIG-01 through UC-AIG-04, UC-PAY-04 and UC-OPS-02.]"
 **AI Response**: "Classified the request as a bounded documentation consolidation. Reviewed the catalogue using business-goal granularity and proposed removing system-only, background-status, search and filter rows; changing notification receipt to a user actor; merging AI draft view/edit/accept/discard into the two scope-specific draft-generation use cases; merging AI administration actions; and consolidating related view/detail, lifecycle, group grading, assignment authoring/submission and grading steps. Paused for explicit approval before renumbering and rewriting the catalogue."
 **Context**: Supplementary use-case consolidation design checkpoint; no consolidation changes made yet.
-
----
-
-## Use Case Consolidation - Design Approval
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-14T14:23:00Z
-**User Input**: "ok"
-**AI Response**: "Recorded approval to consolidate the use-case catalogue at business-goal granularity, remove system-only/search/filter/background-status rows, merge AI draft steps and related supporting actions, change notification receipt to a user actor, and renumber the remaining use cases while preserving all approved feature traceability."
-**Status**: Approved
-**Context**: Supplementary use-case consolidation implementation; the U01 Functional Design approval checkpoint remains unchanged.
 
 ---
 
@@ -1033,7 +855,7 @@ giải thích"
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-14T14:38:51Z
-**User Input**: "Làm và nộp bài [Draw.io](http://draw.io/)\ncái này cx thế, với laij 2 use case này có  thể đổi tên là gì bỏ chữ bản nháp được ko Điểm khác\tUC-AIG-01\tUC-AIG-02\nActor\tGiảng viên\tChủ nhiệm môn\nNguồn dữ liệu\tNội dung của lớp được phân công\tKho RAG chung của môn\nLoại assignment\tAssignment riêng của lớp\tAssignment chung cấp môn\nNơi phát hành\tMột lớp cụ thể\tTất cả lớp hiện hành thuộc môn\n\nTuy nhiên, ở mức danh mục use case thì hai mục này khá giống nhau và có thể gộp thành:\n**Actor:** Giảng viên / Chủ nhiệm môn\n**Use Case:** Tạo và duyệt bản nháp assignment bằng AI\n**Description:** Cho phép giảng viên tạo bản nháp từ nội dung lớp hoặc Chủ nhiệm môn tạo bản nháp từ RAG cấp môn; người dùng xem căn cứ, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả trước khi phát hành."
+**User Input**: "Làm và nộp bài [Draw.io](http://draw.io/)\ncái này cũng thế, với lại 2 use case này có thể đổi tên là gì bỏ chữ bản nháp được không Điểm khác\tUC-AIG-01\tUC-AIG-02\nActor\tGiảng viên\tChủ nhiệm môn\nNguồn dữ liệu\tNội dung của lớp được phân công\tKho RAG chung của môn\nLoại assignment\tAssignment riêng của lớp\tAssignment chung cấp môn\nNơi phát hành\tMột lớp cụ thể\tTất cả lớp hiện hành thuộc môn\n\nTuy nhiên, ở mức danh mục use case thì hai mục này khá giống nhau và có thể gộp thành:\n**Actor:** Giảng viên / Chủ nhiệm môn\n**Use Case:** Tạo và duyệt bản nháp assignment bằng AI\n**Description:** Cho phép giảng viên tạo bản nháp từ nội dung lớp hoặc Chủ nhiệm môn tạo bản nháp từ RAG cấp môn; người dùng xem căn cứ, chỉnh sửa, chấp nhận hoặc loại bỏ kết quả trước khi phát hành."
 **AI Response**: "Renamed UC-ASM-12 to Làm và nộp bài thực hành vẽ UML while retaining Draw.io and XML in its description. Recommended renaming UC-AIG-01 to Soạn assignment cấp lớp với AI hỗ trợ and UC-AIG-02 to Soạn assignment chung cấp môn với AI hỗ trợ, removing bản nháp from the use-case names while preserving draft-only behavior in the descriptions. Paused for approval before changing the AI use-case names."
 **Context**: Supplementary terminology update and bounded AI authoring rename proposal.
 
@@ -1061,17 +883,6 @@ giải thích"
 
 ---
 
-## Global Database ERD - Commit and Push Request
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-09-15T09:02:32Z
-**User Input**: "commit lên github"
-**AI Response**: "Verified that only the ERD documentation and AI-DLC audit log were modified, then prepared to commit those scoped changes on main and push them to origin."
-**Context**: Version-control publication of the approved supplementary ERD documentation correction.
-
----
-
 ## Report 3 Overall Requirements Sections 3.2-3.3 - Revision Request
 
 **Requested by:** Vu Hai Nam
@@ -1091,17 +902,6 @@ giải thích"
 **User Input**: "N/A - implementation continued from the user's explicit Report 3 documentation request."
 **AI Response**: "Created Report-3_Sections-3.2-3.3.docx using the Report 3 heading and table formats. Section 3.2 contains 24 entity blocks with Purpose, Key business attributes, Business identity, and Status/lifecycle; Section 3.3 contains 15 data business rules with Rule, Description, and Enforced On. Reopened the output in Word and verified two Heading 3 sections only, 24 valid 5x2 entity tables, one valid 16x3 rules table, no unrelated major section, no template placeholders, and a seven-page document."
 **Context**: Supplementary SRS Report 3 fragment completed; the U01 Functional Design approval checkpoint remains unchanged.
-
----
-
-## Audit-Only Local Commit Request
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-09-15T09:49:17Z
-**User Input**: "commit audit changes lên git, đừng push"
-**AI Response**: "Prepared a local commit containing only aidlc-docs/audit.md and explicitly excluded all other files. No push will be performed."
-**Context**: Local version-control checkpoint for AI-DLC audit changes only.
 
 ---
 
@@ -1141,7 +941,7 @@ giúp tôi sửa các doc trong inception phase như trên và đề xuất ý t
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-22T22:36:32+07:00
-**User Input**: "ok tôi trả lời xong r"
+**User Input**: "ok tôi trả lời xong rồi"
 **AI Response**: "Validated the three follow-up answers: simulation exams may optionally count toward component grades but are never official/proctored exams; group final scores are manually determined from separately displayed individual and shared-work results without an automatic formula; inconsistency is graded in the shared-work integration rubric and may additionally affect an identified responsible part. Revised `requirements.md` with all approved first-round and clarification decisions and moved the change request to Requirements Approval."
 **Status**: Requirements revision awaiting explicit approval
 **Context**: Requirements Analysis change request; downstream Inception artifacts remain unchanged pending approval.
@@ -1164,7 +964,7 @@ giúp tôi sửa các doc trong inception phase như trên và đề xuất ý t
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-22T23:01:09+07:00
-**User Input**: "giúp tôi tiếp tục quy trình ai dlc"
+**User Input**: "giúp tôi tiếp tục quy trình AI-DLC"
 **AI Response**: "Interpreted the instruction to continue as approval of the revised requirements and transitioned the change request to User Stories propagation."
 **Status**: Approved
 **Context**: Requirements change approved; previous U01 Functional Design checkpoint remains preserved.
@@ -1182,18 +982,6 @@ giúp tôi sửa các doc trong inception phase như trên và đề xuất ý t
 
 ---
 
-## User Stories Change Propagation - Approved
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-22T23:05:32+07:00
-**User Input**: "ok"
-**AI Response**: "Recorded approval of the revised 59-story, 90-use-case catalogue and proceeded to Workflow Planning revalidation."
-**Status**: Approved
-**Context**: User Stories change checkpoint completed; U01 Functional Design checkpoint remains preserved.
-
----
-
 ## Workflow Planning Change Revalidation - Approval Requested
 
 **Requested by:** Quang Hung
@@ -1202,18 +990,6 @@ giúp tôi sửa các doc trong inception phase như trên và đề xuất ý t
 **AI Response**: "Revalidated the execution plan for the approved change request. Kept all existing stage decisions, identified major impact in U03-U05, moderate impact in U06, minor impact in U02/U07, no direct impact in U01/U08, and recommended synchronizing Application Design then Units Generation before returning to U01 Functional Design."
 **Status**: Awaiting explicit approval
 **Context**: Workflow Planning change checkpoint; Security and Resiliency compliance remain without blocking findings.
-
----
-
-## Workflow Planning Change Revalidation - Approved
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-22T23:16:42+07:00
-**User Input**: "ok giúp tôi tiếp tục"
-**AI Response**: "Recorded approval of the revalidated execution plan and proceeded to synchronize Application Design artifacts."
-**Status**: Approved
-**Context**: Workflow Planning change checkpoint completed; U01 Functional Design checkpoint remains preserved.
 
 ---
 
@@ -1251,18 +1027,6 @@ giúp tôi sửa các doc trong inception phase như trên và đề xuất ý t
 
 ---
 
-## Units Generation Change Synchronization - Approved
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-22T23:34:13+07:00
-**User Input**: "approve"
-**AI Response**: "Recorded approval of synchronized Units Generation and returned the workflow to Construction."
-**Status**: Approved
-**Context**: Inception change request completed.
-
----
-
 ## Error - U01 Functional Design Resumption
 
 **Requested by:** Quang Hung
@@ -1281,7 +1045,7 @@ giúp tôi sửa các doc trong inception phase như trên và đề xuất ý t
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-22T23:36:54+07:00
-**User Input**: "xong r"
+**User Input**: "xong rồi"
 **Recovery Choice**: "A - Tạo lại plan và toàn bộ artefact U01; hỏi lại các điểm cần làm rõ."
 **Recovery Steps**: Reconstructed traceable decisions from audit and approved Inception artifacts; created a new U01 Functional Design recovery plan with five focused questions for policies that could not be safely inferred.
 **Outcome**: Recovery plan created; artifact regeneration is gated on answers.
@@ -1324,8 +1088,8 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-24T08:41:28Z
-**User Input**: "dựa vào đây để làm lại unit of work, xem unit 14 có phải xem lại xem ở plan vừa rồi mình có learning path ko". Attached references: codex-clipboard-2baa9cd1-8c45-4c35-9df1-d9c52fc3d569.png and codex-clipboard-4c3e12f4-757a-48d6-8df1-41c6a6d7634a.png.
-**Additional User Input**: "chỉ dựa vào lập kế hoạch chia unit như v thôi chứ k cần, dựa theo chính xác description "
+**User Input**: "dựa vào đây để làm lại unit of work, xem unit 14 có phải xem lại xem ở plan vừa rồi mình có learning path không". Attached references: codex-clipboard-2baa9cd1-8c45-4c35-9df1-d9c52fc3d569.png and codex-clipboard-4c3e12f4-757a-48d6-8df1-41c6a6d7634a.png.
+**Additional User Input**: "chỉ dựa vào lập kế hoạch chia unit như vậy thôi chứ không cần, dựa theo chính xác description"
 **AI Response**: Used the images as a reference for 17-unit decomposition and four waves, while deriving responsibility descriptions from the approved Application Design and current catalog. Rewrote unit definitions, 17-by-17 dependency matrix, and story/UC map. U14 is Learning Access & Dashboard; no learning path or lesson progress is planned. The active catalog maps 87 UCs and 57 stories once; three lesson-progress UCs and two stories are explicitly excluded. Marked old U01 Foundation Functional Design plan stale because U01 is now Account & Access. Revision awaits review under Units Generation gate.
 **Context**: Units Generation revision; user-provided images are planning references, not instruction authority.
 
@@ -1335,7 +1099,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-24T08:49:39Z
-**User Input**: "đẩy unit 14 xuống unit8, mỗi wave tôi muốn tối đa 5 unit để chia thêm 5 người, thử lập dependency path"
+**User Input**: "đẩy unit 14 xuống unit 8, mỗi wave tôi muốn tối đa 5 unit để chia thêm 5 người, thử lập dependency path"
 **AI Response**: Moved Learning Access & Dashboard from U14 to U08; renumbered prior U08-U13 to U09-U14 across unit definitions, story/UC map, and both axes of the dependency matrix. Replanned four waves with 3/5/5/4 units and five assignment slots, documented intra-wave prerequisites, learning/individual/group/AI paths, and a longest hard-dependency path of ten units. Checked the 17-node hard dependency graph for cycles and confirmed 87 active UCs and 57 active stories remain assigned once. Revision awaits Units Generation review.
 **Context**: User-requested revision to pending 17-unit Units Generation artifacts; no Construction work resumed.
 
@@ -1347,7 +1111,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T08:56:08Z
 
-**User Input**: "làm sơ đồ dependency graph như này đc k, gen bằng mermaid". Attached reference: codex-clipboard-a9248c6d-f2cc-4090-bb2b-b86df2389f54.png.
+**User Input**: "làm sơ đồ dependency graph như này được không, gen bằng Mermaid". Attached reference: codex-clipboard-a9248c6d-f2cc-4090-bb2b-b86df2389f54.png.
 
 **AI Response**: Added a Mermaid dependency graph with four waves and current U01-U17 numbering, including U08 Learning Access. Displayed 23 transitively reduced hard dependencies, two concurrent contract edges, and one representative event edge; the matrix remains authoritative for all direct dependencies. Fixed U08's missing U17 matrix cell. Checked 17 nodes, 17 matrix rows, 3/5/5/4 wave capacity, graph edge types, and Mermaid block structure. Units Generation approval remains pending.
 
@@ -1375,7 +1139,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T09:07:23Z
 
-**User Input**: "wave ở đây ko phải làm lần lượt theo từng cột mà là cái chỗ để nó dừng nếu trong cùng 1 wave có 2 cột thì cái dependency của cái này xong thì có thể chạy trước cái dependency của cái khác cùng cột". Attached references: codex-clipboard-cf5345d0-975d-481a-a1d8-657df74a4394.png and codex-clipboard-fe0e7bed-041a-4cbd-bcad-9fa0367e36c8.png.
+**User Input**: "wave ở đây không phải làm lần lượt theo từng cột mà là cái chỗ để nó dừng nếu trong cùng 1 wave có 2 cột thì cái dependency của cái này xong thì có thể chạy trước cái dependency của cái khác cùng cột". Attached references: codex-clipboard-cf5345d0-975d-481a-a1d8-657df74a4394.png and codex-clipboard-fe0e7bed-041a-4cbd-bcad-9fa0367e36c8.png.
 
 **AI Response**: Corrected the prior interpretation that each wave must be an independent topological layer. Restored four planning/checkpoint waves with 4/5/5/3 current units, including U08 Learning Access. A unit can start when its direct hard providers are ready, even if other units in its wave or an earlier wave are unfinished; the five-person limit applies to active units across overlapping waves. Updated Mermaid, wave tables, gates, plan, and state. The dependency matrix and story mapping remain unchanged; Units Generation approval remains pending.
 
@@ -1417,7 +1181,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T15:15:51Z
 
-**User Input**: "t vừa điền câu hỏi u01 rồi check lại"
+**User Input**: "tôi vừa điền câu hỏi U01 rồi, check lại"
 
 **Recorded answer**: Question 1 - Initial account credential: "A"
 
@@ -1461,7 +1225,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T15:45:47Z
 
-**User Input**: "approve làm tiếp aidlc question bằng tiếng việt làm ui cho t chọn luôn trên claude rồi note râ doc"
+**User Input**: "approve, làm tiếp AI-DLC question bằng tiếng Việt, làm UI cho tôi chọn luôn trên Claude rồi note ra doc"
 
 **Answers (UI, raw)**: Câu 2 "Nút kích hoạt riêng (Khuyến nghị)"; Câu 3 "Tối thiểu 8 ký tự, có chữ và số"; Câu 4 "6 chữ số, hạn 10 phút, sai 5 lần hủy (Khuyến nghị)"; Câu 5 "5 lần sai → khóa tạm 15 phút, tự mở (Khuyến nghị)"; Câu 6 "Thu hồi mọi phiên, buộc đăng nhập lại (Khuyến nghị)"; Câu 7 "U01 đặt role, U04 gán môn (Khuyến nghị)"; Câu 8 "Chặn, phải gỡ phân công trước (Khuyến nghị)"; Câu 9 "Chặn tự hạ/khóa mình và admin cuối cùng (Khuyến nghị)"; Câu 10 "gộp lại thành DISABLED", then confirmed interpretation "Đúng"; Câu 11 "Tên hiển thị, số điện thoại, ảnh đại diện"; Câu 12 "Đảo ngược qua port (Khuyến nghị)"; Câu 13 "CSV, email trùng báo lỗi dòng (Khuyến nghị)"; Câu 14 "Chỉ phiên hiện tại"
 
@@ -1485,20 +1249,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U01 Functional Design - Approval
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T16:05:47Z
-
-**User Input**: "làm tiếp đi"
-
-**AI Response**: Treated as explicit approval of U01 Functional Design and moved to U01 NFR Requirements.
-
-**Context**: U01 Functional Design approved.
-
----
-
 ## U01 NFR Requirements - Questions, Decisions and Artifacts
 
 **Requested by:** max2min
@@ -1510,20 +1260,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **AI Response**: Warned that dropping admin MFA and the breached-password check violates SEC-002 and enabled rule SECURITY-12, that JWT delays revocation beyond the Functional Design, and that allowing login while Redis is down is impossible with refresh tokens stored in Redis. User reaffirmed the MFA and breached-list removal and accepted a 15-minute revocation delay; reverted to fail-closed for Redis. Recorded both as accepted SECURITY-12 exceptions, updated SEC-002, updated BR-U01-31/32/44/47/63 and added BR-U01-95, removed the admin second-factor step from the logic model and frontend. Created NFR plan, Vietnamese question file, `nfr-requirements.md` (NFR-U01-01..62) and `tech-stack-decisions.md`.
 
 **Context**: U01 NFR Requirements Step 7; awaiting explicit approval.
-
----
-
-## U01 NFR Requirements - Approval
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T16:11:45Z
-
-**User Input**: "approve"
-
-**AI Response**: Recorded approval of U01 NFR Requirements and started U01 NFR Design.
-
-**Context**: U01 NFR Requirements approved.
 
 ---
 
@@ -1541,20 +1277,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U01 NFR Design - Approval
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T16:18:59Z
-
-**User Input**: "approve"
-
-**AI Response**: Recorded approval of U01 NFR Design and started U01 Infrastructure Design.
-
-**Context**: U01 NFR Design approved.
-
----
-
 ## U01 Infrastructure Design - Questions and Artifacts
 
 **Requested by:** max2min
@@ -1566,20 +1288,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **AI Response**: Warned that a single VPS without backup means permanent loss of all data if the VPS fails. Recorded accepted exceptions and rewrote SEC-001, REL-002, REL-006 and REL-008. Treated unencrypted container-to-container traffic on the host-local Docker network as part of the SEC-001 exception. Created shared-infrastructure.md (containers, networks, secrets, deploy/rollback, observability, exceptions) and U01 infrastructure-design.md and deployment-architecture.md.
 
 **Context**: U01 Infrastructure Design Step 7; awaiting explicit approval.
-
----
-
-## U01 Infrastructure Design - Approval
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T16:23:59Z
-
-**User Input**: "approve"
-
-**AI Response**: Recorded approval of U01 Infrastructure Design and shared infrastructure; started U01 Code Generation Part 1.
-
-**Context**: U01 Infrastructure Design approved.
 
 ---
 
@@ -1603,7 +1311,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T16:40:41Z
 
-**User Input**: "liệt kê lại các sec với res rule rồi điều chỉnh lại cho nó đơn giản hơn, phù hợp với 1 dựa ns sinh viên"; answers "Theo đề xuất: giữ 7 Security + 3 Resiliency (Khuyến nghị)", "Bỏ, chỉ dùng docker logs (Khuyến nghị)"
+**User Input**: "liệt kê lại các security với resiliency rule rồi điều chỉnh lại cho nó đơn giản hơn, phù hợp với 1 dự án sinh viên"; answers "Theo đề xuất: giữ 7 Security + 3 Resiliency (Khuyến nghị)", "Bỏ, chỉ dùng docker logs (Khuyến nghị)"
 
 **AI Response**: Listed all 15 Security and 15 Resiliency rules with current status. Reduced scope to SECURITY-03, 04, 05, 08, 09, 12, 15 and RESILIENCY-04, 06, 10; the rest are N/A "ngoài phạm vi đồ án". Rewrote requirements sections 7, 8, 12 and 13 (SEC-001..007, REL-001..004), recorded the scope in aidlc-state, removed Prometheus/Grafana/Loki from shared infrastructure, replaced U01 compliance tables and removed alerting requirements, the RESILIENCY-14 failure-test section and code-generation step 27.
 
@@ -1617,7 +1325,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T16:46:01Z
 
-**User Input**: "check lại lần nữa xem các cài sec với res có cái nào mất phí ko, có thì bỏ đi"; answers "có vps rồi", "Mailpit khi dev + Gmail SMTP khi demo (Khuyến nghị)"
+**User Input**: "check lại lần nữa xem các cái security với resiliency có cái nào mất phí không, có thì bỏ đi"; answers "có VPS rồi", "Mailpit khi dev + Gmail SMTP khi demo (Khuyến nghị)"
 
 **AI Response**: Found three potential costs: VPS hosting, a domain for HTTPS, and a production SMTP provider. VPS is already owned, so no new cost. Documented Let's Encrypt with an existing domain or a free DuckDNS subdomain, and Gmail SMTP with an App Password for demos. Added REL-005 requiring zero-cost security and operations components. Noted that AI API and payment gateway fees are functional costs outside this review.
 
@@ -1631,7 +1339,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T17:14:06Z
 
-**User Input**: "nếu mà gen doc unit 2 trước code unit 1 đc ko", then "sang unit 2 đi"
+**User Input**: "nếu mà gen doc unit 2 trước code unit 1 được không", then "sang unit 2 đi"
 
 **AI Response**: Explained the deviation from the per-unit design-then-code rule; U01 and U02 share only contract edges, so designing U02 first is safe and lets U01 code use real audit/job contracts. Paused the U01 code generation plan (not approved) and started U02 Functional Design.
 
@@ -1653,20 +1361,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U02 Functional Design - Approval
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T17:22:16Z
-
-**User Input**: "approve"
-
-**AI Response**: Recorded approval of U02 Functional Design and started U02 NFR Requirements.
-
-**Context**: U02 Functional Design approved.
-
----
-
 ## U02 NFR Requirements - Questions and Artifacts
 
 **Requested by:** max2min
@@ -1681,20 +1375,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U02 NFR Requirements - Approval
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T17:31:19Z
-
-**User Input**: "approve"
-
-**AI Response**: Recorded approval and started U02 NFR Design.
-
-**Context**: U02 NFR Requirements approved.
-
----
-
 ## U02 NFR Design - Questions and Artifacts
 
 **Requested by:** max2min
@@ -1706,20 +1386,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **AI Response**: Resolved the retry-mechanism conflict with U01 Infrastructure Design in favour of PostgreSQL-driven retry. Created U02 NFR Design plan, questions, `nfr-design-patterns.md` (P1-P9: afterCommit publish, conditional-UPDATE claim, DB-driven backoff, lease expiry, idempotent audit insert, REVOKE UPDATE/DELETE on audit_events, per-job-type queues) and `logical-components.md`. Removed delay queues and DLQ from U01 infrastructure design and renamed its queue to `jobs.u01.otp-delivery`.
 
 **Context**: U02 NFR Design Step 7; awaiting approval.
-
----
-
-## U02 NFR Design - Approval
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T17:32:29Z
-
-**User Input**: "approve"
-
-**AI Response**: Recorded approval and started U02 Infrastructure Design.
-
-**Context**: U02 NFR Design approved.
 
 ---
 
@@ -1741,7 +1407,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T19:24:28Z
 
-**User Input**: "Continue"; code-order question answered "sinh u02 thì đến u03"; clarification answered "làm cho xong plan u02"
+**User Input**: "Continue"; code-order question answered "sinh U02 thì đến U03"; clarification answered "làm cho xong plan U02"
 
 **AI Response**: Recorded approval of U02 Infrastructure Design and closed all U02 design plans. Interpreted the instruction as finishing U02 design and moving to U03 design before any code generation. U01 code generation plan stays paused.
 
@@ -1769,7 +1435,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T19:44:44Z
 
-**User Input**: "approved"; then interrupted the U03 NFR questions with "tạm thời bỏ qua đã unit 2 vẫn chưa xong mà vẫn còn code generation plan"
+**User Input**: "approved"; then interrupted the U03 NFR questions with "tạm thời bỏ qua đã, unit 2 vẫn chưa xong mà vẫn còn code generation plan"
 
 **AI Response**: Recorded approval of U03 Functional Design and paused U03 NFR Requirements. Acknowledged the earlier misreading of "làm cho xong plan u02" as design completion instead of the code generation plan. Created `construction/plans/u02-audit-job-and-outbox-code-generation-plan.md` (Step 0 plus 26 steps in six groups; shared scaffold reused from U01 plan steps 1-6; fake fail-closed AuthorizationPort until U01 is coded) and asked for approval.
 
@@ -1783,7 +1449,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T19:53:21Z
 
-**User Input**: "được r làm tiếp u03 đi"; answers N1 "dựa vào .env", N2 "Tối đa 5 cùng lúc, ghi file tạm ra đĩa (Khuyến nghị)"
+**User Input**: "được rồi, làm tiếp U03 đi"; answers N1 "dựa vào .env", N2 "Tối đa 5 cùng lúc, ghi file tạm ra đĩa (Khuyến nghị)"
 
 **AI Response**: Treated "được r" as approval of the U02 code generation plan (flagged to the user). Interpreted N1 as: Drive auth mode and credentials come from environment variables, supporting service account (default) and OAuth. Created U03 NFR plan, questions, `nfr-requirements.md` (NFR-U03-01..31) and `tech-stack-decisions.md`; added Drive variables to shared infrastructure secrets.
 
@@ -1805,55 +1471,13 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U03 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T19:56:02Z
-
-**User Input**: "approved"
-
-**AI Response**: Recorded approval of U03 NFR Requirements. Evaluated NFR Design question categories; all choices were already fixed, so no new questions. Created U03 NFR Design plan, `nfr-design-patterns.md` (P1-P8: compensating upload cleanup, streaming download with safe headers, Tika + hardened XML parser, no ZIP extraction, Redis download tokens, swappable Drive/local storage, Drive timeouts/retry, derived deletion via U02 jobs, cached Drive health) and `logical-components.md`.
-
-**Context**: U03 NFR Design Step 7; awaiting approval.
-
----
-
-## U03 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T20:00:19Z
-
-**User Input**: "approve"
-
-**AI Response**: Recorded approval of U03 NFR Design. No new infrastructure questions (Drive, VPS, Compose and secrets already decided). Created U03 `infrastructure-design.md` (component mapping, Drive service-account config, upload-tmp volume, Nginx unbuffered 50 MB uploads, artifacts migration) and `deployment-architecture.md`; added Nginx upload settings and Google API egress to shared infrastructure.
-
-**Context**: U03 Infrastructure Design Step 7; awaiting approval. Code generation plan follows approval.
-
----
-
-## U03 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T20:02:49Z
-
-**User Input**: "Approve"
-
-**AI Response**: Recorded approval of U03 Infrastructure Design. Created `u03-file-and-artifact-code-generation-plan.md` (Step 0 + 28 steps: scaffold check, domain/logic, data/storage adapters, API, shared frontend file components, README and test run). AuthorizationPort fake denies when U01 is not coded; JobPort/AuditPort use real U02.
-
-**Context**: U03 Code Generation Part 1; plan awaiting approval.
-
----
-
 ## U03 Code Plan Approval and U04 Functional Design
 
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-24T20:26:41Z
 
-**User Input**: "continue"; UI answers: "NHÁP → MỞ → LƯU TRỮ (Khuyến nghị)", "Đúng 1 giảng viên chính (Khuyến nghị)", "Đúng 1 người (Khuyến nghị)", "Cả hai", "Làm bản đơn giản", "Trong app + email", "thanh toán chỉ thêm token ai thôi chứ ko ảnh hưởng đến lớp", "Được, khôi phục bản ghi cũ (Khuyến nghị)", "Sửa luôn (Khuyến nghị)", "Không, 1 lớp đang mở mỗi môn (Khuyến nghị)", "Sửa thông tin, mở/lưu trữ, ghi danh (Khuyến nghị)", "Được khi không còn lớp mở (Khuyến nghị)"
+**User Input**: "continue"; UI answers: "NHÁP → MỞ → LƯU TRỮ (Khuyến nghị)", "Đúng 1 giảng viên chính (Khuyến nghị)", "Đúng 1 người (Khuyến nghị)", "Cả hai", "Làm bản đơn giản", "Trong app + email", "thanh toán chỉ thêm token AI thôi chứ không ảnh hưởng đến lớp", "Được, khôi phục bản ghi cũ (Khuyến nghị)", "Sửa luôn (Khuyến nghị)", "Không, 1 lớp đang mở mỗi môn (Khuyến nghị)", "Sửa thông tin, mở/lưu trữ, ghi danh (Khuyến nghị)", "Được khi không còn lớp mở (Khuyến nghị)"
 
 **AI Response**: Treated "continue" as approval of the U03 code generation plan. Asked 12 U04 questions via UI and recorded them. Payment only adds AI tokens, so removed U04 → U07 `C` edge and entitlement checks from requirements FR-005/FR-010 and application-design files. Created U04 functional design (BR-U04-01..54, F1-F9, entities Subject/CourseClass/Enrollment, frontend components). Simple invite code included.
 
@@ -1875,69 +1499,13 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U04 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T20:33:40Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U04 NFR Requirements. No new questions. Created U04 NFR Design plan, `nfr-design-patterns.md` (P1-P8: indexed scope queries, advisory lock per learner+subject, per-row transactions for bulk enrollment, optimistic locking, after-commit events, invite code generation and Redis rate limit, not-found masking, fail closed) and `logical-components.md`.
-
-**Context**: U04 NFR Design Step 7; awaiting approval.
-
----
-
-## U04 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T20:34:25Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U04 NFR Design. No new questions. Created U04 `infrastructure-design.md` (component mapping, Redis invite-fail key, event routing key on `platform.events`, migration with no DELETE grant) and `deployment-architecture.md`. No changes to shared infrastructure.
-
-**Context**: U04 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U04 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T20:35:57Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U04 Infrastructure Design. Created `u04-subject-class-enrollment-code-generation-plan.md` (Step 0 + 29 steps). Uses real U01/U02 ports; `PublishedContentPort` has a temporary empty adapter until U05; U04 replaces U01's fake scope adapters.
-
-**Context**: U04 Code Generation Part 1; plan awaiting approval.
-
----
-
-## U04 Code Generation Plan Approval
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T20:37:28Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of the U04 code generation plan. U04 design is complete; U05 Functional Design is next.
-
-**Context**: U04 Code Generation Part 1 approved.
-
----
-
 ## U05 Functional Design
 
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-24T21:13:47Z
 
-**User Input**: "continue"; UI answers in order: "Chương → bài → mục", "GV chọn bài cấp môn đưa vào lớp", "RAG là gì", "Không tự phiên âm (Khuyến nghị)", "chưa có hướng gợi ý đi với lại sao phải 0 đồng", "Sửa luôn (Khuyến nghị)", "Sửa tạo bản nháp mới, phát hành lại (Khuyến nghị)", "phase 2 là gì sao lại có", "Cho phép tốn ít, có trần (Khuyến nghị)", "chưa có ý tưởng hỏi nhiều câu hỏi hơn để gợi ý", "sao lại có phase 2 nó là gì", "tạm thời bỏ qua để hội ý sau", "AI tạo đề từ học liệu, AI chấm gợi ý có căn cứ", "Vừa: ≤ 200 file", "Đã chọn AI (ghi ở ô khác)", "Google Gemini", "Chưa biết", "embedding là sao", "Luôn bản mới nhất đã phát hành (Khuyến nghị)", "Không OCR, vẫn cho xem (Khuyến nghị)", "Chỉ xem PDF, không tải", "nhưng à dùng api gemini hay thế nào", "thế thì cho tải tất cả về đi, ko chỉ xem nữa", "Đồng ý (Khuyến nghị)"
+**User Input**: "continue"; UI answers in order: "Chương → bài → mục", "GV chọn bài cấp môn đưa vào lớp", "RAG là gì", "Không tự phiên âm (Khuyến nghị)", "chưa có hướng gợi ý đi với lại sao phải 0 đồng", "Sửa luôn (Khuyến nghị)", "Sửa tạo bản nháp mới, phát hành lại (Khuyến nghị)", "phase 2 là gì sao lại có", "Cho phép tốn ít, có trần (Khuyến nghị)", "chưa có ý tưởng hỏi nhiều câu hỏi hơn để gợi ý", "sao lại có phase 2 nó là gì", "tạm thời bỏ qua để hội ý sau", "AI tạo đề từ học liệu, AI chấm gợi ý có căn cứ", "Vừa: ≤ 200 file", "Đã chọn AI (ghi ở ô khác)", "Google Gemini", "Chưa biết", "embedding là sao", "Luôn bản mới nhất đã phát hành (Khuyến nghị)", "Không OCR, vẫn cho xem (Khuyến nghị)", "Chỉ xem PDF, không tải", "nhưng mà dùng API Gemini hay thế nào", "thế thì cho tải tất cả về đi, không chỉ xem nữa", "Đồng ý (Khuyến nghị)"
 
 **AI Response**: Treated "continue" as moving to U05 after the U04 code plan approval. Explained RAG, embedding, the zero-cost origin (REL-005) and the MVP/Phase 2 split; recommended Gemini embedding + pgvector, which the user accepted. Synced inception: no auto transcription (FR-004, US-CNT-005 S2, UC-CNT-08, personas); REL-005 now allows capped AI cost. Created U05 functional design (BR-U05-01..51, F1-F9, chapter/lesson/version/item, YouTube, SourceDocument/RagChunk, contracts). US-CNT-003/004 left out pending team discussion.
 
@@ -1959,115 +1527,17 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U05 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:20:28Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U05 NFR Requirements. No new questions. Created U05 NFR Design plan, `nfr-design-patterns.md` (P1-P8: worker ingest pipeline, streaming extraction, chunking, Redis daily embedding budget and kill-switch, Gemini/YouTube clients with ID regex, filtered pgvector search, safe markdown/video rendering, fake adapters) and `logical-components.md`.
-
-**Context**: U05 NFR Design Step 7; awaiting approval.
-
----
-
-## U05 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:21:27Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U05 NFR Design. No new questions. Created U05 `infrastructure-design.md` and `deployment-architecture.md`. Shared infrastructure updated: PostgreSQL image `pgvector/pgvector:pg16`, worker memory 1.5 GB (fallback 1 GB with 2 ingest jobs), CSP `frame-src` for youtube-nocookie, egress to Gemini/YouTube, secrets `GEMINI_API_KEY` and `YOUTUBE_API_KEY`.
-
-**Context**: U05 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U05 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:22:26Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U05 Infrastructure Design. Created `u05-content-material-rag-code-generation-plan.md` (Step 0 + 31 steps). Uses real U01-U04 ports; replaces U04's empty content adapter; AI kill-switch read from `.env` until U13.
-
-**Context**: U05 Code Generation Part 1; plan awaiting approval.
-
----
-
 ## U05 Code Plan Approval and U06 Functional Design
 
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-24T21:33:41Z
 
-**User Input**: "continue"; UI answers: "Môn + lớp (Khuyến nghị)", "Tất cả 4 loại", "rubrick sẽ làm theo kiểu automic mỗi mục nhỏ sẽ có các checklist để tính điểm rồi cộng vào", "cả 2", "Đúng, chỉ đạt/không đạt (Khuyến nghị)", "cả 4 loại, khi code cả 4 loại sẽ có một cái dạng chung nên sẽ làm theo dạng đấy", "nếu ko cập nhật có phải tạo thêm bảng ko", "Gắn chương/bài U05, Độ khó, Tag tự do", "thế thì ko cần cập nhật, cũng ko cần báo giáo viên luôn", "Mỗi loại một file mẫu"
+**User Input**: "continue"; UI answers: "Môn + lớp (Khuyến nghị)", "Tất cả 4 loại", "rubric sẽ làm theo kiểu atomic mỗi mục nhỏ sẽ có các checklist để tính điểm rồi cộng vào", "cả 2", "Đúng, chỉ đạt/không đạt (Khuyến nghị)", "cả 4 loại, khi code cả 4 loại sẽ có một cái dạng chung nên sẽ làm theo dạng đấy", "nếu không cập nhật có phải tạo thêm bảng không", "Gắn chương/bài U05, Độ khó, Tag tự do", "thế thì không cần cập nhật, cũng không cần báo giáo viên luôn", "Mỗi loại một file mẫu"
 
 **AI Response**: Treated "continue" as approval of the U05 code generation plan. Explained that versions are rows grouped by stable_key, so no extra table is needed. Created U06 functional design: subject + class banks, 4 question types, checklist rubric (pass/fail items summed), per-type import templates (xlsx/csv, 500 rows), assignments pin versions with no update or notice (BR-U06-01..51). US-QBK-002 S2/S3 moved to U08/U11; US-QBK-003 left out pending team discussion.
 
 **Context**: U06 Functional Design Step 7; awaiting approval.
-
----
-
-## U06 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:34:41Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U06 Functional Design. No new questions. Created U06 NFR plan, `nfr-requirements.md` (NFR-U06-01..31: search/import performance, immutable versions, numeric points, xlsx zip-bomb limits, answer hiding) and `tech-stack-decisions.md` (jsonb + records, Apache POI, Commons CSV).
-
-**Context**: U06 NFR Requirements Step 7; awaiting approval.
-
----
-
-## U06 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:35:38Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U06 NFR Requirements. No new questions. Created U06 NFR Design plan, `nfr-design-patterns.md` (P1-P6: immutable versions, polymorphic definition with two-level validation, streaming import with zip-bomb limits, BigDecimal rubric scorer, latest-active search, manager/learner views) and `logical-components.md`.
-
-**Context**: U06 NFR Design Step 7; awaiting approval.
-
----
-
-## U06 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:36:14Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U06 NFR Design. No new questions. Created U06 `infrastructure-design.md` (backend-only mapping, bank_items migration with partial unique draft index and GIN tags) and `deployment-architecture.md`. No shared infrastructure changes.
-
-**Context**: U06 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U06 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:37:00Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U06 Infrastructure Design. Created `u06-rubric-question-bank-code-generation-plan.md` (Step 0 + 28 steps). Uses real U01-U04 ports; ContentRefPort has a permissive adapter until U05.
-
-**Context**: U06 Code Generation Part 1; plan awaiting approval.
 
 ---
 
@@ -2077,25 +1547,11 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T21:45:45Z
 
-**User Input**: "Viêt commit cho cái này, với cả hãy nhỡ cái context đừng ghi doc do chỉ mình t dùng local này: tự động ghi commiit cho t sau mỗi unit,"; then "continue"; UI answers: "Mọi tài khoản", "PayOS", "Gói cố định do admin tạo (Khuyến nghị)", "Credit quy đổi + tặng hàng tháng (Khuyến nghị)", "Mọi người như nhau", "Được, bắt buộc lý do + audit (Khuyến nghị)", "Không hỗ trợ (Khuyến nghị)"
+**User Input**: "Viết commit cho cái này, với cả hãy nhớ cái context (đừng ghi vào doc do chỉ mình tôi dùng local này): tự động ghi commit cho tôi sau mỗi unit"; then "continue"; UI answers: "Mọi tài khoản", "PayOS", "Gói cố định do admin tạo (Khuyến nghị)", "Credit quy đổi + tặng hàng tháng (Khuyến nghị)", "Mọi người như nhau", "Được, bắt buộc lý do + audit (Khuyến nghị)", "Không hỗ trợ (Khuyến nghị)"
 
 **AI Response**: Gave the U06 commit message and saved the "commit message after each unit" preference to local memory (not repo docs). Treated "continue" as approval of the U06 code generation plan. Created U07 functional design: PayOS payments for fixed credit packages, signed webhook + reconciliation, AI credit wallet (equal monthly free credits, purchased credits never expire, reserve/settle/release for U13), admin adjustments with reason, no refunds (BR-U07-01..52). Synced inception: US-PAY-001..003, UC-PAY-01/02 and U07 row now describe AI credits; added `H` edge U07 → U13 (matrix, Mermaid, wave text, draw.io copy).
 
 **Context**: U07 Functional Design Step 7; awaiting approval.
-
----
-
-## U07 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:46:37Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U07 Functional Design. No new questions. Created U07 NFR plan, `nfr-requirements.md` (NFR-U07-01..32: single locked ledger write path, DB uniques, integer money, append-only ledger, PayOS secrets/timeouts/signature, webhook limits, fake adapter) and `tech-stack-decisions.md`.
-
-**Context**: U07 NFR Requirements Step 7; awaiting approval.
 
 ---
 
@@ -2105,39 +1561,11 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-24T21:47:27Z
 
-**User Input**: "Conitunue"
+**User Input**: "Continue"
 
 **AI Response**: Recorded approval of U07 NFR Requirements. No new questions. Created U07 NFR Design plan, `nfr-design-patterns.md` (P1-P7: single locked ledger path, shared idempotent settlement for webhook and reconcile, webhook verification with constant-time HMAC, idempotent link creation and 53-bit orderCode, idempotent reservations with SKIP LOCKED sweeper, batched reconcile, fake PayOS adapter) and `logical-components.md`.
 
 **Context**: U07 NFR Design Step 7; awaiting approval.
-
----
-
-## U07 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:48:45Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U07 NFR Design. No new questions. Created U07 `infrastructure-design.md` (mapping, PayOS setup and webhook URL, Nginx webhook limit, migration with append-only ledger grants) and `deployment-architecture.md`. Shared infrastructure: PayOS secrets, `APP_PUBLIC_URL`, egress to PayOS, webhook body limit.
-
-**Context**: U07 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U07 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:49:31Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U07 Infrastructure Design. Created `u07-payment-credit-code-generation-plan.md` (Step 0 + 27 steps). Uses real U01/U02 ports; PayOS adapter plus fake adapter for local; provides CreditPort for U13.
-
-**Context**: U07 Code Generation Part 1; plan awaiting approval.
 
 ---
 
@@ -2155,69 +1583,13 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U08 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:55:43Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U08 Functional Design. No new questions. Created U08 NFR plan, `nfr-requirements.md` (NFR-U08-01..41: performance, UTC storage with Vietnam display, server-time deadlines, locked content, conditional state transitions, answer hiding) and `tech-stack-decisions.md` (scheduling via U02 jobs).
-
-**Context**: U08 NFR Requirements Step 7; awaiting approval.
-
----
-
-## U08 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:56:27Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U08 NFR Requirements. No new questions. Created U08 NFR Design plan, `nfr-design-patterns.md` (P1-P6: locked aggregate with optimistic locking, U02 scheduled jobs with conditional updates keyed by expected time, on-the-fly submission window, learner view mapping, extensible review checks, after-commit events) and `logical-components.md`.
-
-**Context**: U08 NFR Design Step 7; awaiting approval.
-
----
-
-## U08 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:57:08Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U08 NFR Design. No new questions. Created U08 `infrastructure-design.md` (mapping, queues, event routing keys, UTC containers, migration with CHECK constraints and partial unique publication index) and `deployment-architecture.md`. No shared infrastructure changes.
-
-**Context**: U08 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U08 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T21:58:06Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U08 Infrastructure Design. Created `u08-assessment-core-publication-code-generation-plan.md` (Step 0 + 26 steps). Uses real U01, U02, U04, U05, U06 ports; temporary adapters for U09 type-config check (pass) and U13 AI drafts (unavailable).
-
-**Context**: U08 Code Generation Part 1; plan awaiting approval.
-
----
-
 ## U08 Code Plan Approval and U09 Functional Design
 
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-24T22:16:19Z
 
-**User Input**: "Continue"; UI answers: "Đúng hết mới có điểm (Khuyến nghị)", "Trộn câu / trộn đáp án, Giới hạn thời gian, Hiện điểm ngay sau nộp, Hiện đáp án đúng", "tham khảo cái github demo do an de lam mot trang copy doc, cái dạng bài xml cũng ko phải chỉ có xml mà nó cũng là dạng doc đấy", "giáo viên mới chọn đề chứ ko có đề chung", "DRAWIO đổi tên thành DOCUMENT", "làm dạng kiểu tự do, có thể import doc để lấy khung nhưng cái document những block mà giáo viên viết sẽ ko thể sửa, với cả sửa lại khác bản demo là nếu là ảnh thì giữ nguyên, hoặc là nếu detect đc diagram mà ko dùng ai thì mới thay bằng digram block", "GV nhập khung/dàn ý từ DOCX, Xuất bài nộp ra DOCX", "chủ nhiệm môn có lớp thì mới đc phát hành đề cho lớp đấy", "ESSAY là dạng văn viết bình thường thôi, ko giới hạn từ, cả DOCUMENT cx ko giới hạn từ", "đúng nhưng m phải tra xem drawio có xuất png chứa diagram ko", "chèn tự do xung quanh và cho sửa cả table, với diagram của cái có sẵn", "Chỉ GV của lớp (Khuyến nghị)"
+**User Input**: "Continue"; UI answers: "Đúng hết mới có điểm (Khuyến nghị)", "Trộn câu / trộn đáp án, Giới hạn thời gian, Hiện điểm ngay sau nộp, Hiện đáp án đúng", "tham khảo cái GitHub demo đồ án để làm một trang copy doc, cái dạng bài XML cũng không phải chỉ có XML mà nó cũng là dạng doc đấy", "giáo viên mới chọn đề chứ ko có đề chung", "DRAWIO đổi tên thành DOCUMENT", "làm dạng kiểu tự do, có thể import doc để lấy khung nhưng cái document những block mà giáo viên viết sẽ ko thể sửa, với cả sửa lại khác bản demo là nếu là ảnh thì giữ nguyên, hoặc là nếu detect được diagram mà không dùng AI thì mới thay bằng diagram block", "GV nhập khung/dàn ý từ DOCX, Xuất bài nộp ra DOCX", "chủ nhiệm môn có lớp thì mới được phát hành đề cho lớp đấy", "ESSAY là dạng văn viết bình thường thôi, ko giới hạn từ, cả DOCUMENT cũng không giới hạn từ", "đúng nhưng bạn phải tra xem drawio có xuất PNG chứa diagram không", "chèn tự do xung quanh và cho sửa cả table, với diagram của cái có sẵn", "Chỉ GV của lớp (Khuyến nghị)"
 
 **AI Response**: Treated "Continue" as approval of the U08 code generation plan. Read the sibling project demo_do_an (document essays with templates, embedded diagrams, DOCX import/export). Verified draw.io embeds the diagram XML in PNG text chunks and in the SVG `content` attribute when "Include a copy of my diagram" is enabled. Created U09 functional design: QUIZ config, ESSAY rich text with no word limit, DOCUMENT free-form editor with locked teacher text/image blocks and learner-editable teacher tables/diagrams, DOCX skeleton import with non-AI diagram detection (else keep image), DOCX export with re-embedded XML, XML compaction for AI (BR-U09-01..60). Synced: DRAWIO → DOCUMENT, no subject-wide assignment (FR-007, FR-017, US-ASM-002 marked removed, UC-ASM-04/08/12, story map, unit-of-work), U06 and U08 docs, U03 purpose DOCUMENT_IMAGE, dependency edges U03 → U09 (H) and U09 → U06 (C), CSP frame-src embed.diagrams.net.
 
@@ -2239,115 +1611,17 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U09 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:19:32Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U09 NFR Requirements. No new questions. Created U09 NFR Design plan, `nfr-design-patterns.md` (P1-P7: single document schema for Java/TS, hash-based block locking, streaming DOCX import with zip guard and PNG/SVG draw.io detection, bounded DOCX export with re-embedded XML, SVG sanitiser, draw.io iframe protocol with origin check and timeout, virtualised editor) and `logical-components.md`.
-
-**Context**: U09 NFR Design Step 7; awaiting approval.
-
----
-
-## U09 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:20:21Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U09 NFR Design. No new questions. Created U09 `infrastructure-design.md` (backend-only mapping, Nginx DOCX limit, heap note, migration for question_type_config and document_skeletons) and `deployment-architecture.md`; added the DOCX import route to shared infrastructure.
-
-**Context**: U09 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U09 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:21:24Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U09 Infrastructure Design. Created `u09-question-type-authoring-code-generation-plan.md` (Step 0 + 27 steps), referencing demo_do_an classes for DOCX import/export and rasterising. U09 replaces the temporary adapters of U06 (DocumentModelPort) and U08 (TypeConfigCheckPort).
-
-**Context**: U09 Code Generation Part 1; plan awaiting approval.
-
----
-
 ## U09 Code Plan Approval and U10 Functional Design
 
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-24T22:29:29Z
 
-**User Input**: "continue"; UI answers: "Giữ (Khuyến nghị)", "Mọi loại", "Không giới hạn", "ngừng giao thì vẫn sửa đc mà nên vẫn xem diff đc chứ", "Đúng, sửa tạo version mới (Khuyến nghị)"
+**User Input**: "continue"; UI answers: "Giữ (Khuyến nghị)", "Mọi loại", "Không giới hạn", "ngừng giao thì vẫn sửa được mà nên vẫn xem diff được chứ", "Đúng, sửa tạo version mới (Khuyến nghị)"
 
 **AI Response**: Treated "continue" as approval of the U09 code generation plan. Created U10 functional design: subject templates authored as U08 assignments with ownerType SUBJECT_TEMPLATE and released read-only versions, copy template/class-to-class with lineage (class-bank items duplicated via U06), version diff, simulation for all types with unlimited attempts option and locked policy (BR-U10-01..40). Amended U08 (stableKey/versionNo, edit after all publications closed/retired creates a new version, TypeConfigPort.copy) and synced FR-016, US-QBK-002 S3, US-ASM-008 (no longer Phase 2), UC-ASM-15, story map, application-design; U06 class-to-class copy.
 
 **Context**: U10 Functional Design Step 7; awaiting approval.
-
----
-
-## U10 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:30:39Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U10 Functional Design. No new questions. Created U10 NFR plan, `nfr-requirements.md` (NFR-U10-01..31: copy/diff performance, atomic copy, conditional policy lock, append-only lineage, dual-scope authorization) and `tech-stack-decisions.md` (java-diff-utils).
-
-**Context**: U10 NFR Requirements Step 7; awaiting approval.
-
----
-
-## U10 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:31:27Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U10 NFR Requirements. No new questions. Created U10 NFR Design plan, `nfr-design-patterns.md` (P1-P4: single-transaction copy across U08/U06/U09, keyed component diff, conditional policy lock, pure result calculator) and `logical-components.md`.
-
-**Context**: U10 NFR Design Step 7; awaiting approval.
-
----
-
-## U10 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:32:02Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U10 NFR Design. No new questions. Created U10 `infrastructure-design.md` (backend-only, migration with append-only lineage and nullable max attempts) and `deployment-architecture.md`. No shared infrastructure changes.
-
-**Context**: U10 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U10 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:32:54Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U10 Infrastructure Design. Created `u10-template-copy-simulation-code-generation-plan.md` (Step 0 + 24 steps). Uses real U01, U02, U04, U06, U08, U09 ports; provides SimulationPolicyPort for U11/U15.
-
-**Context**: U10 Code Generation Part 1; plan awaiting approval.
 
 ---
 
@@ -2365,62 +1639,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U11 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:37:44Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U11 Functional Design. No new questions. Created U11 NFR plan, `nfr-requirements.md` (NFR-U11-01..32: 100 concurrent autosaving users, 10 MB content cap with gzip, uniqueness and conditional updates for start/save/submit, immutable submitted content via trigger, ownership checks, autosave rate limit, k6 load test) and `tech-stack-decisions.md`.
-
-**Context**: U11 NFR Requirements Step 7; awaiting approval.
-
----
-
-## U11 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:38:36Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U11 NFR Requirements. No new questions. Created U11 NFR Design plan, `nfr-design-patterns.md` (P1-P7: advisory-locked attempt start, versioned conditional draft save with gzip limit, single idempotent submit path, immutability trigger, scheduled/event auto-submit, save rate limit, client autosave queue) and `logical-components.md`.
-
-**Context**: U11 NFR Design Step 7; awaiting approval.
-
----
-
-## U11 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:39:13Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U11 NFR Design. No new questions. Created U11 `infrastructure-design.md` (mapping, queues and event bindings, Nginx 12 MB save route, migration with partial unique and immutability trigger) and `deployment-architecture.md`; added the save route to shared infrastructure.
-
-**Context**: U11 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U11 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:40:03Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U11 Infrastructure Design. Created `u11-attempt-submission-code-generation-plan.md` (Step 0 + 27 steps). Uses real U01-U04, U06, U08-U10 ports; temporary CodeRunPort adapter until U13; score display hidden until U15.
-
-**Context**: U11 Code Generation Part 1; plan awaiting approval.
-
----
-
 ## U11 Code Plan Approval and U12 Functional Design
 
 **Requested by:** max2min
@@ -2432,62 +1650,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **AI Response**: Treated "Continue" as approval of the U11 code generation plan. Read demo_do_an group plan for reference. Created U12 functional design: one group set per group assignment (manual, balanced random split, reuse from another group assignment), exactly one leader, leader change requests with teacher approval plus direct change, teacher allocates each part to exactly one member (members may hold several parts), readiness check for publishing, reassignment keeps prior submissions (BR-U12-01..32). Added `GroupReadinessPort` (C edge U12 → U08) to U08 docs, U08 code plan and dependency matrix; updated U12 row.
 
 **Context**: U12 Functional Design Step 7; awaiting approval.
-
----
-
-## U12 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:46:48Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U12 Functional Design. No new questions. Created U12 NFR plan, `nfr-requirements.md` (NFR-U12-01..31: save/lookup performance, atomic optimistic-locked save, partial uniques, append-only history, preview-only random split, authorization) and `tech-stack-decisions.md`.
-
-**Context**: U12 NFR Requirements Step 7; awaiting approval.
-
----
-
-## U12 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:47:25Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U12 NFR Requirements. No new questions. Created U12 NFR Design plan, `nfr-design-patterns.md` (P1-P5: desired-state atomic save with pure validator and soft-close history, pure random splitter, conditional leader-request transitions, indexed allocation lookup, coded readiness errors) and `logical-components.md`.
-
-**Context**: U12 NFR Design Step 7; awaiting approval.
-
----
-
-## U12 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:48:01Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U12 NFR Design. No new questions. Created U12 `infrastructure-design.md` (backend-only, event routing keys, migration with partial uniques and no DELETE grants for history) and `deployment-architecture.md`. No shared infrastructure changes.
-
-**Context**: U12 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U12 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:48:45Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U12 Infrastructure Design. Created `u12-group-allocation-code-generation-plan.md` (Step 0 + 22 steps). Uses real U01, U02, U04, U08 ports; implements GroupReadinessPort for U08 and provides AllocationPort for U14-U16.
-
-**Context**: U12 Code Generation Part 1; plan awaiting approval.
 
 ---
 
@@ -2505,62 +1667,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U13 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:55:42Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U13 Functional Design. No new questions (defaults configurable). Created U13 NFR plan, `nfr-requirements.md` (NFR-U13-01..42: latency targets, worker concurrency, 2 USD default daily cap, token estimation for credit reserve, timeouts, isolated Judge0 network, per-process limits, degraded modes, tests with fakes and real Judge0) and `tech-stack-decisions.md`.
-
-**Context**: U13 NFR Requirements Step 7; awaiting approval.
-
----
-
-## U13 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:56:45Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U13 NFR Requirements. No new questions. Created U13 NFR Design plan, `nfr-design-patterns.md` (P1-P8: ordered AI guard, provider-neutral gateway with per-task model and cost tracking, data-bounded prompts with injection scan, two-layer output validation, idempotent AI jobs with credit release, Judge0 batch adapter with language check, deterministic code scorer, queue concurrency) and `logical-components.md`.
-
-**Context**: U13 NFR Design Step 7; awaiting approval.
-
----
-
-## U13 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:57:48Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U13 NFR Design. No new questions. Created U13 `infrastructure-design.md` (mapping, 4 Judge0 containers from demo_do_an in an internal-only `sandbox` network with privileged isolate mitigations, judge0.conf limits, migration, VPS sizing) and `deployment-architecture.md`. Shared infrastructure: Judge0 containers, `sandbox` network, `JUDGE0_AUTH_TOKEN`, VPS suggestion raised to 4 vCPU / 8 GB / 60 GB.
-
-**Context**: U13 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U13 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-24T22:58:54Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U13 Infrastructure Design. Created `u13-ai-code-execution-code-generation-plan.md` (Step 0 + 30 steps), referencing demo_do_an Judge0 runner, solution verifier and injection scanner. Replaces temporary adapters in U05 (kill-switch), U08 (AI drafts, code-lab check) and U11 (code runs).
-
-**Context**: U13 Code Generation Part 1; plan awaiting approval.
-
----
-
 ## U13 Code Plan Approval and U14 Functional Design (group work redesign)
 
 **Requested by:** max2min
@@ -2572,62 +1678,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **AI Response**: Treated "continue" as approval of the U13 code generation plan. Redesigned group work: a group assignment is a shared DOCUMENT per group built from the teacher skeleton (work sections from `workSection` headings, groups may add sections); members claim sections (locked to them), edit in a separate page, press Done to publish into the shared document in real time (SSE) as IN_REVIEW and unlock; comments for review; section revisions track authors; leader submits (resubmit allowed), auto-submit at deadline/retire. Created U14 functional design (BR-U14-01..50) and synced FR-026, US-GRP-003..005, UC-GRP-05..07, UC-ASM-06, unit-of-work, story map, dependency matrix/Mermaid/draw.io (removed U11→U14, added U09→U14 and U11→U15), U12 (teacher allocation removed, GroupMembershipPort), U08, U09 (`workSection`), U11, U13.
 
 **Context**: U14 Functional Design Step 7; awaiting approval.
-
----
-
-## U14 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:38:19Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U14 Functional Design. No new questions. Created U14 NFR plan, `nfr-requirements.md` (NFR-U14-01..31: SSE latency ≤ 2 s, 100 connections, heartbeat/reconnect, conditional claim, owner-and-version checks, immutable revisions/submissions, idempotent auto-submit, channel authorization) and `tech-stack-decisions.md` (SseEmitter + RabbitMQ fanout).
-
-**Context**: U14 NFR Requirements Step 7; awaiting approval.
-
----
-
-## U14 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:39:49Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U14 NFR Requirements. No new questions. Created U14 NFR Design plan, `nfr-design-patterns.md` (P1-P5: conditional-update section locks, RabbitMQ fanout + SseHub with small payloads/heartbeat/reconnect, SSE channel authorization tied to membership events, single idempotent submit path with consistent snapshot, document initialisation from skeleton) and `logical-components.md`.
-
-**Context**: U14 NFR Design Step 7; awaiting approval.
-
----
-
-## U14 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:40:34Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U14 NFR Design. No new questions. Created U14 `infrastructure-design.md` (mapping, RabbitMQ fanout and listeners, Nginx SSE settings, Tomcat async, migration with immutable revisions/submissions) and `deployment-architecture.md`; added SSE and section-draft routes to shared infrastructure.
-
-**Context**: U14 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U14 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:41:42Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U14 Infrastructure Design. Created `u14-group-document-submission-code-generation-plan.md` (Step 0 + 26 steps). Uses real U01-U04, U08, U09, U12 ports; provides GroupSubmissionQueryPort and u14.group.submitted for U15/U16.
-
-**Context**: U14 Code Generation Part 1; plan awaiting approval.
 
 ---
 
@@ -2645,62 +1695,6 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U15 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:49:35Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U15 Functional Design. No new questions. Created U15 NFR plan, `nfr-requirements.md` (NFR-U15-01..31: auto-grading latency, bulk finalize/publish, gradebook query, BigDecimal and DB checks, versioned updates, append-only history, idempotent event consumption, learner-only published view) and `tech-stack-decisions.md`.
-
-**Context**: U15 NFR Requirements Step 7; awaiting approval.
-
----
-
-## U15 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:50:25Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U15 NFR Requirements. No new questions. Created U15 NFR Design plan, `nfr-design-patterns.md` (P1-P6: single versioned grade write path with history, idempotent event consumption, pure quiz scorer, per-item bulk transactions and set-based publish, separate learner/teacher views, single gradebook query without totals) and `logical-components.md`.
-
-**Context**: U15 NFR Design Step 7; awaiting approval.
-
----
-
-## U15 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:51:07Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U15 NFR Design. No new questions. Created U15 `infrastructure-design.md` (mapping, event bindings, migration with score CHECK and append-only history) and `deployment-architecture.md`. No shared infrastructure changes.
-
-**Context**: U15 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U15 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:52:15Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U15 Infrastructure Design. Created `u15-grading-code-generation-plan.md` (Step 0 + 26 steps). Uses real ports of U01, U02, U04, U06, U08-U11, U13, U14; provides GradeQueryPort and u15.grade.published.
-
-**Context**: U15 Code Generation Part 1; plan awaiting approval.
-
----
-
 ## U15 Code Plan Approval and U16 Functional Design
 
 **Requested by:** max2min
@@ -2715,69 +1709,13 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 ---
 
-## U16 Functional Design Approval and NFR Requirements
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:58:08Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U16 Functional Design. No new questions. Created U16 NFR plan, `nfr-requirements.md` (NFR-U16-01..31: notification latency, batch inserts, 1 email/s within the daily cap, idempotency and Redis cap counter, reminder rescheduling, privacy of email content, escaping, Mailpit tests) and `tech-stack-decisions.md`.
-
-**Context**: U16 NFR Requirements Step 7; awaiting approval.
-
----
-
-## U16 NFR Requirements Approval and NFR Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:58:55Z
-
-**User Input**: "continue"
-
-**AI Response**: Recorded approval of U16 NFR Requirements. No new questions. Created U16 NFR Design plan, `nfr-design-patterns.md` (P1-P5: batched idempotent fan-out with realtime signal, capped prioritised email dispatcher with SKIP LOCKED and 1/s limiter, idempotent send with counter rollback, reminder jobs keyed by expected deadline, single-query progress report) and `logical-components.md`.
-
-**Context**: U16 NFR Design Step 7; awaiting approval.
-
----
-
-## U16 NFR Design Approval and Infrastructure Design
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T03:59:38Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U16 NFR Design. No new questions. Created U16 `infrastructure-design.md` (mapping, event bindings, SMTP, Redis cap counter, migration, retention job) and `deployment-architecture.md`. Renamed U14's realtime fanout to shared `platform.realtime` (U14 docs and code plan updated); added notification SSE route to shared infrastructure.
-
-**Context**: U16 Infrastructure Design Step 7; awaiting approval.
-
----
-
-## U16 Infrastructure Design Approval and Code Generation Plan
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T04:00:55Z
-
-**User Input**: "Continue"
-
-**AI Response**: Recorded approval of U16 Infrastructure Design. Created `u16-reporting-notification-code-generation-plan.md` (Step 0 + 24 steps). All 16 units now have design artifacts and a code generation plan; the U01 code plan is still paused and unapproved.
-
-**Context**: U16 Code Generation Part 1; plan awaiting approval.
-
----
-
 ## Dependency Graph Figure
 
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-25T04:38:55Z
 
-**User Input**: "sửa cái graph.io thành giống dự án của t"; "đừng sửa vị trí chỉ sửa line thôi"; "làm lại đi nãy nhầm bản"; "ko đc hình cũ của t gọn thế này m nối kiểu gì đấy chỗ nào khác mới sửa thôi"; "cái dependecy path vẽ thành thế này cho dễ nhìn đc ko" (UI answers: "Giữ vị trí, chỉ đổi chữ trong hình tròn", "Đổi chữ như lần trước")
+**User Input**: "sửa cái graph.io thành giống dự án của tôi"; "đừng sửa vị trí chỉ sửa line thôi"; "làm lại đi nãy nhầm bản"; "không được, hình cũ của tôi gọn thế này, bạn nối kiểu gì đấy, chỗ nào khác mới sửa thôi"; "cái dependency path vẽ thành thế này cho dễ nhìn được không" (UI answers: "Giữ vị trí, chỉ đổi chữ trong hình tròn", "Đổi chữ như lần trước")
 
 **AI Response**: Updated the user's `Downloads/graph.drawio` with minimal changes (relabelled circles, deleted old U14 circle, moved one circle, kept 16 original edges, removed 4 wrong edges, added missing ones; 24 edges matching the matrix). After the user adjusted it, rendered it to `unit-of-work-dependency.png`, copied the source to `unit-of-work-dependency.drawio`, and embedded the figure with a text alternative in §6 of `unit-of-work-dependency.md`.
 
@@ -2791,7 +1729,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 
 **Timestamp**: 2026-09-25T04:42:34Z
 
-**User Input**: "xoá cái dependecy graph ở trên đi, cái dependency path là graph ấy t nhầm tên"
+**User Input**: "xoá cái dependency graph ở trên đi, cái dependency path là graph ấy tôi nhầm tên"
 
 **AI Response**: Removed the Mermaid graph in §2 of `unit-of-work-dependency.md`, moved the draw.io figure and its text alternative there (out of §6), and updated the explanation to say the figure shows reduced `H` edges plus `E` U15 → U16 while `C` edges are listed in the matrix.
 
@@ -2850,7 +1788,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-25T06:10:00Z
-**User Input**: "hỉnh lại hình theo thế này rồi xác nhận độ đồng bộ của toàn dự án lần nữa" (kèm ảnh graph)
+**User Input**: "chỉnh lại hình theo thế này rồi xác nhận độ đồng bộ của toàn dự án lần nữa" (kèm ảnh graph)
 **AI Response**: Updated the dependency figure to match the screenshot: U01→U07 and U02→U07 now leave from the centre of each node and share one vertical trunk. Fixed the dependency text: the text alternative now has U01/U02 → U07; the C-edge list gained U13→U05, U05→U06 and U09→U13; added a note that U16's H edges on U11/U14 are covered by U15→U16; the Wave 2 text now says U07 opens after U01/U02. Also fixed: U01 docs no longer say dead-letter (the job ends `FAILED`); U02 title and story-map row now read "Audit, Job & Event"; unit-of-work story count 57→56; U09 no longer mentions a temporary DOCX file in U03. Raised one finding: U03 still has file purposes, an XML check and derived files that no unit uses.
 **Context**: Consistency re-check. The U03 decision is pending.
 
@@ -2861,7 +1799,7 @@ CodeExecutionService — dù runCode có trong methods và job policy "Code exec
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-25T06:15:00Z
-**User Input**: "DOCUMENT thì vẫn chứa drawio mà" / "là sao tức là có đúng lúc nộp bài thì lưu drawio dạng full còn gửi lên thì lưu dạng rút gọn ko"
+**User Input**: "DOCUMENT thì vẫn chứa drawio mà" / "là sao tức là có đúng lúc nộp bài thì lưu drawio dạng full còn gửi lên thì lưu dạng rút gọn không"
 **AI Response**: Explained where the Draw.io XML lives: the full XML is stored inside the DIAGRAM block of the document in PostgreSQL. The compact XML is built in memory only when AI grading runs and is never saved. The U03 decision is still pending.
 **Context**: Construction - consistency re-check
 
@@ -2883,99 +1821,12 @@ Checked with no issues: all 56 stories and 86 UC are mapped, the 4 removed UC ar
 
 ---
 
-## Final Consistency Check
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T06:55:00Z
-**User Input**: "kiểm tra lại một lần nữa để xác nhận ko gì bị lệch rồi t commit"
-**AI Response**: Ran a final pass for stale terms, `<br>` inside tables, references to removed BR-U03 rules, broken markdown links, story/UC counts, matrix vs declared ports, and graph vs matrix. Fixed:
-- use-cases.md counts (86 UC / 56 story);
-- U02 plan titles now read "Audit, Job & Event";
-- added U15 C U11 (`GradeQueryPort` for showing scores) to the matrix and to the U11 contract table.
-Nothing else is out of sync.
-**Context**: Consistency review complete; ready to commit.
-
----
-
-## Consistency Check (round 2)
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T07:10:00Z
-**User Input**: "lần nữa đi xem còn chỗ lệch nhỏ nào nữa ko"
-**AI Response**: Ran checks from new angles: doc titles, event names (published vs consumed), unit names, migrations, Redis prefixes, table ownership, data ownership vs matrix, and each code plan's dependency table vs the matrix. Fixed:
-- U04/U05 names in the story map and aidlc-state now match the unit docs;
-- removed `u13.ai.proposal-ready` from U13 infra (no unit consumes it; proposals are read by polling status);
-- component-dependency §4 "Used by" lists now match the matrix (U04, U05, U06, U08, U09, U12, U13, U14);
-- added U02 C U01 (U01 uses U02 job/audit via a port) to the matrix, with the explanation and wave-1 text updated.
-**Context**: Consistency review, round 2
-
----
-
-## Consistency Check (round 3)
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T07:35:00Z
-**User Input**: "Vẫn còn tìm ra được chỗ lệch thì tiếp tục kiểm tra đi"
-**AI Response**: Checked more angles: BR/NFR/FR references, story traces per unit, event bindings, job types and queues, env/secret names, Nginx routes vs endpoints, key parameters (email cap, 12/20/50 MB limits, Gemini models, languages), plan checkboxes, stale technology terms, compliance scope, and duplicate routes/APIs. Fixed:
-- unit-of-work §6 cross-unit security/resiliency rules rewritten for the reduced scope (removed circuit breaker, encryption, alerting, backup, multi-zone);
-- added reduced-scope notes to the Units Generation and User Stories compliance tables, and fixed the RESILIENCY-02/08/10/11 rows;
-- requirements.md history row: noted that multi-zone was dropped;
-- U16 infra no longer uses the old name `u14.realtime`;
-- U01 plans: old REL codes annotated;
-- ticked approval checkboxes that were already done (U01 FD; story and unit checkpoints; execution-plan Functional Design, NFR and Infra stages);
-- services.md: noted that service names are logical names.
-Remaining open items (by design): Phase 2 team discussion; the U01 code plan is still paused.
-**Context**: Consistency review, round 3
-
----
-
-## Consistency Check (round 4)
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T08:10:00Z
-**User Input**: "tiếp tục kiểm tra lại đi"
-**AI Response**: This round checked content (requirements/stories/use-cases vs business rules), who may do what, FR↔story traceability, the ports/consumers listed in every construction file, enums, Mermaid/ASCII diagrams, cross-unit table references, and per-row story-map counts. Fixed:
-- **FR/stories:**
-  - FR-003, FR-002, USCN-001, US-CAT-002, personas: only ADMIN creates subjects/classes; there is no separate "course" entity.
-  - FR-023 now covers semantic search/summary (US-CNT-003).
-  - US-ASM-008 now traces FR-016 and FR-028 instead of FR-023 (Phase 2).
-  - FR-026 retitled.
-  - FR-010 now says "no credit added" and "AI credit".
-- **Wording in stories and use-cases:**
-  - US-RPT-001: the system reminds learners automatically.
-  - US-QBK-001: rubric is a checklist.
-  - US-GRP-001/002: group set per assignment; the leader change does not touch claimed sections.
-  - US-GRP-006/UC-GRP-08: "tài liệu nhóm" instead of "bài chung".
-  - UC-GRP-07 actor: leader / instructor.
-  - ACT-03: subject manager manages the subject template.
-- **Rules and constraints:**
-  - Group rule in requirements and use-cases §5: the leader submits.
-  - requirements: providers now chosen.
-  - use-cases §6: no malware scan.
-  - use-cases §7 count: 56 active stories.
-- **Construction:**
-  - U05 BR-U05-40, NFR-U05-23, text, diagram, plan: only U13 calls RAG.
-  - U12 GroupMembershipPort no longer lists U15.
-  - U04 ClassAccessPort consumer list; U11 SubmissionQueryPort consumer list.
-  - U08 GroupReadinessPort no longer mentions "phân công".
-- **Inception:**
-  - unit-of-work U10 row (retire/clone is MVP, in U08); versioning rule; "credit AI".
-  - dependency doc: U04 consumer list; code-run consumers.
-  - Compliance tables in stories and unit-of-work: out-of-scope rules now N/A.
-**Context**: Consistency review, round 4
-
----
-
 ## Documentation Consistency and AI Credit Clarification
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-25T06:41:59Z
-**User Input**: "bỏ global database giúp tôi sửa , cái ai là trừ token người dùng nếu hệ thống hết lượt token thì sẽ thông báo hệ thống đang bận, có câu hỏi b cần làm rõ thì cứ hỏi "
+**User Input**: "bỏ global database giúp tôi sửa, cái AI là trừ token người dùng nếu hệ thống hết lượt token thì sẽ thông báo hệ thống đang bận, có câu hỏi bạn cần làm rõ thì cứ hỏi"
 **AI Response**: "Updated live Inception and Construction documents to remove references to the deleted global ERD, align 56 active stories and UC-ASM-01 traceability, charge user AI credits for Gemini generation and embedding, and show a separate system-busy message when system AI quota is exhausted."
 **Context**: Inception/Construction documentation consistency correction
 
@@ -2997,7 +1848,7 @@ Remaining open items (by design): Phase 2 team discussion; the U01 code plan is 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-25
-**User Input**: "1a, 2, phase 2 là gì?, 3, b"; "tưởng triển khai theo ai dlc thì phase 2 là sao"; "tải docx lên thì có thể làm luôn còn hoàn tiền thì chưa biết để xem payos có hỗ trợ hoàn tiền k đã"
+**User Input**: "1a, 2, phase 2 là gì?, 3, b"; "tưởng triển khai theo AI-DLC thì phase 2 là sao"; "tải DOCX lên thì có thể làm luôn còn hoàn tiền thì chưa biết để xem PayOS có hỗ trợ hoàn tiền không đã"
 **AI Response**: "Clarified that product Phase 2 differs from AI-DLC phases; synchronized simulation default 3 attempts and range 1-10, learner DOCX preview/import into an in-progress DOCUMENT attempt, and no weighted course total. Reviewed official payOS API: cancellation applies to payment links and payout is a separate transfer; direct reversal/refund API was not found in the published API reference. Refund policy remains open; MVP design has no refund flow yet."
 **Context**: Inception and Construction scope/design revision. No application code exists yet.
 
@@ -3008,7 +1859,7 @@ Remaining open items (by design): Phase 2 team discussion; the U01 code plan is 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-25
-**User Input**: "nhóm tôi k định làm phase 2'"; "9. Đối sánh điểm AI đề xuất với điểm giảng viên chốt. 10. cho tôi hỏi tưởng là ai đề xuất điểm trc sau giảng viên là người quyết định điểm"
+**User Input**: "nhóm tôi không định làm phase 2"; "9. Đối sánh điểm AI đề xuất với điểm giảng viên chốt. 10. cho tôi hỏi tưởng là AI đề xuất điểm trước, sau đó giảng viên là người quyết định điểm"
 **AI Response**: "Restricted delivery scope to MVP only (47 stories, 74 use cases), marked the former 9 Phase 2 stories and 12 use cases as out of project scope, and removed pending Phase 2 design tasks. Clarified that per-submission AI grade proposals followed by teacher final decisions remain in MVP; only the aggregate comparison report is out of scope."
 **Context**: Scope revision across Inception and Construction documentation; historical entries retained for traceability.
 
@@ -3020,7 +1871,7 @@ Remaining open items (by design): Phase 2 team discussion; the U01 code plan is 
 
 **Timestamp**: 2026-09-25
 
-**User Input**: "trông số uc này tôi chỉ muốn là 2,7,8 giúp tôi đồng bộ doc , với tôi muốn gộp hết vào mvp k chia phase 2 nữa"
+**User Input**: "trong số UC này tôi chỉ muốn là 2,7,8 giúp tôi đồng bộ doc, với tôi muốn gộp hết vào MVP, không chia phase 2 nữa"
 
 **AI Response**: "Updated the current MVP scope to include feature 2 (class announcements and Q&A, US-CNT-004/UC-CNT-06..07), feature 7 (learner dashboard, US-RPT-002/UC-RPT-02), and feature 8 (gradebook CSV/XLSX export, US-RPT-003/UC-RPT-03). The six other former Phase 2 stories remain outside project scope. Synchronized current requirements, story/use-case catalog, ownership map, U04/U05/U15/U16 construction designs and code plans, and application architecture. Active scope: 50 stories and 78 use cases; no separate product Phase 2. Historical decisions above remain for traceability."
 
@@ -3056,27 +1907,13 @@ Remaining open items (by design): Phase 2 team discussion; the U01 code plan is 
 
 ---
 
-## Inception and Construction Consistency Review
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-09-25
-
-**User Input**: "soát lại toàn bộ doc inception construction xem doc đồng bộ chưa"
-
-**AI Response**: "Reviewed the current Inception and Construction Markdown corpus and corrected stale eight-unit plans, YouTube transcription/payment wording, U03 export ownership, U16 scope plan, active FR-to-story traceability, U05 RAG versus class communication, AI kill-switch polarity, U05-to-U16 event names/payload, U04 grade distribution controls, frontend route discrepancies, and story/UC scope counts. Verified 16 unit directories with four design-stage folders each, 78 unique MVP use cases referencing exactly 50 active stories, all 29 FR identifiers mapped, no duplicate BR IDs, no broken relative Markdown links, and clean diff whitespace. Historical question files were marked as superseded where their answers conflicted with current decisions. Refund policy remains the previously recorded open decision."
-
-**Context**: Documentation review and synchronization only; no application code or implementation tests were run. Previous uncommitted documentation changes were preserved.
-
----
-
 ## Remove Historical Stories from Current Catalog
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-25
 
-**User Input**: "xoas bo khoi user sotry di"
+**User Input**: "xoá bỏ khỏi user story đi"
 
 **AI Response**: "Removed all nine out-of-scope story blocks from `stories.md`, leaving exactly 50 MVP stories. Updated personas, scope statements, story map, state, requirements wording, and Construction plans/rules so deleted story IDs are not referenced as current requirements. The existing 78 UC rows still reference exactly the 50 retained stories. Historical decisions remain in this audit log; removed IDs are not reused."
 
@@ -3103,40 +1940,12 @@ Asked for approval of the U01 code plan.
 
 ---
 
-## U01 Code Generation Plan Approval
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T08:50:00Z
-**User Input**: "approved"
-**AI Response**: Recorded approval of the U01 code generation plan. Code Generation Part 1 is complete for all 16 units. Next: finish the US-GRD story check, then Code Generation Part 2.
-**Context**: Construction - U01 Code Generation Part 1 approved
-
----
-
-## Consistency Check (after scope commit 3d91cc3)
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-25T09:20:00Z
-**User Input**: "check lại đồng bộ giữa inception và construction và giữa các unit của construction"
-**AI Response**: Rebuilt the automated checker for the current 50-story/78-UC MVP scope. It checks ports vs matrix across all construction files, graph vs matrix, C-edge list, data ownership, code-plan dependency tables, story/UC coverage and counts, BR/NFR/FR references, FR↔story traceability, stale terms, `<br>` in tables, unit titles, and that consumed events are published. Also reviewed the new features from commit 3d91cc3 (U05 class announcements, U16 dashboard/export, U05 embedding credits, learner DOCX import, simulation 1-10 attempts) and the US-GRD stories against U15.
-Fixed:
-- U15 → U16 changed from E to H (U16 reads the gradebook synchronously through a port). The figure now matches the transitive reduction of H exactly. Figure text updated: U05 → U16 removed from the text alternative because it is an undrawn E edge; wave-4 text updated.
-- `ClassAccessPort` and `AssignmentQueryPort` consumer lists now match the matrix.
-- shared-infrastructure: added the learner route `/api/v1/attempts/*/docx:preview` (20 MB, 60 s).
-- U01 logical-components diagram: port name fixed and box widths aligned.
-Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05/U15/U16 rules. Open item remains: PayOS refund policy.
-**Context**: Consistency review
-
----
-
 ## Derived MVP diagrams
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T08:42:11Z
-**User Input**: "dựa vào doc construction đã làm xong giúp tôi sinh ra erd, screen flow, bussiness flow, usecase, context diagram , đặt trong thư mục docs"
+**User Input**: "dựa vào doc construction đã làm xong giúp tôi sinh ra ERD, screen flow, business flow, use case, context diagram, đặt trong thư mục docs"
 **AI Response**: "Created docs/README.md, erd.md, screen-flow.md, business-flow.md, use-case.md, and context-diagram.md from the current Construction design. The diagrams cover 16 unit-owned data sets, 62 documented PostgreSQL tables, 78 current use cases, role-based screens, business journeys, and external integrations. Cross-unit references are identified separately from unit-owned tables."
 **Context**: Documentation diagrams derived from completed Construction design
 
@@ -3147,7 +1956,7 @@ Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T09:08:17Z
-**User Input**: "erd vẽ ra drawio , gộp hết các bảng vào ko chia theo group"
+**User Input**: "ERD vẽ ra drawio, gộp hết các bảng vào, không chia theo group"
 **AI Response**: "Created docs/erd.drawio with all 62 Construction tables on one canvas and 55 connections (36 from the previous ERD plus 19 selected cross-unit references). Updated docs/erd.md and docs/README.md so the editable draw.io file is the primary ERD; removed the grouped Mermaid ERD presentation."
 **Context**: Documentation diagram format and layout change
 
@@ -3158,7 +1967,7 @@ Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T09:12:36Z
-**User Input**: "đây là usecase của doc cũ giúp tôi viết lại 1 bảng có format như này, uc nào cũ đúng rồi thì k đổi còn nếu khác thì sửa, thêm sửa xóa"
+**User Input**: "đây là usecase của doc cũ giúp tôi viết lại 1 bảng có format như này, uc nào cũ đúng rồi thì không đổi còn nếu khác thì sửa, thêm sửa xóa"
 **AI Response**: "Created docs/use-case-table.md as one English four-column SRS table aligned to the current 78 MVP use cases. Preserved 54 old entries verbatim, revised 20, removed 12 obsolete entries, and added four current use cases. Linked the table from docs/README.md."
 **Context**: Documentation-only reconciliation against aidlc-docs/inception/user-stories/use-cases.md and the attached old SRS use-case list
 
@@ -3169,7 +1978,7 @@ Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T09:19:15Z
-**User Input**: "sửa lại cái business flow như cái mẫu này, vẽ theo kieuerr swimlane"
+**User Input**: "sửa lại cái business flow như cái mẫu này, vẽ theo kiểu swimlane"
 **AI Response**: "Created docs/business-flow.drawio with five editable swimlane pages for the existing MVP business flows; replaced Mermaid diagrams in docs/business-flow.md with links and kept their text explanations; updated docs/README.md. Validated five pages, lane containers, edge references, and XML structure."
 **Context**: Documentation-only visualization change requested with screenshot example C:/Users/QUANGH~1/AppData/Local/Temp/codex-clipboard-ca957603-b7df-48af-a8dc-66bcaef3c62d.png
 
@@ -3180,7 +1989,7 @@ Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T09:27:31Z
-**User Input**: "tôi nghĩ bỏ uc này đik cần đối soát thủ công đâu, xem doc nào liên quan thì bỏ luôn"
+**User Input**: "tôi nghĩ bỏ UC này đi, không cần đối soát thủ công đâu, xem doc nào liên quan thì bỏ luôn"
 **AI Response**: "Started a cross-document scope revision: remove UC-PAY-02 and administrator-triggered reconciliation/credit adjustment, retain automatic PayOS reconciliation for missed webhooks, and update dependent catalog, design, plans, diagrams, and counts."
 **Context**: Inception and Construction documentation scope change
 
@@ -3191,7 +2000,7 @@ Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T09:36:27Z
-**User Input**: "tôi nghĩ bỏ uc này đik cần đối soát thủ công đâu, xem doc nào liên quan thì bỏ luôn"
+**User Input**: "tôi nghĩ bỏ UC này đi, không cần đối soát thủ công đâu, xem doc nào liên quan thì bỏ luôn"
 **AI Response**: "Removed UC-PAY-02 and US-PAY-003 from active catalogs; moved automatic PayOS reconciliation to US-PAY-002/UC-PAY-01; removed administrator reconciliation and manual credit adjustment from U07 design, UI, business rules, domain, methods, code plan, and diagrams; updated current scope to 49 stories and 77 use cases. Validated catalog counts, direct story traceability, SRS numbering, draw.io XML, and formatting."
 **Context**: Inception/Construction documentation reconciliation; no application code changed
 
@@ -3202,7 +2011,7 @@ Result: checker TOTAL 0. US-GRD, US-CNT-004 and US-RPT-002/003 stories match U05
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-26T02:30:00Z
-**User Input**: "ko bỏ outbox đâu để im bây giờ sửa lại domain entity đi"
+**User Input**: "không bỏ outbox đâu, để im, bây giờ sửa lại domain entity đi"
 **AI Response**: Kept `email_outbox` and `payment_webhook_events`. Target is 45 tables: the 62 in the current ERD minus 17. Updated `functional-design/domain-entities.md` of U01, U05, U07, U08, U09, U10, U11, U12, U13, U14, U15, U16:
 - `app_settings` replaces `platform_settings`, `credit_settings` and `ai_global_settings` (U01 migration; key prefix per unit).
 - Credit balance moves to columns in `accounts`; reservations become RESERVE/SETTLE/RELEASE ledger rows.
@@ -3224,7 +2033,7 @@ Not yet updated: business rules/logic, NFR/infra (migration, index), code plans,
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-26T03:30:00Z
-**User Input**: "viết lại tất cả domain entities, viết thêm tổng quan giống u1 cho những cai thiếu, cái nào có trạng thái thì vẽ graph, và tổng quan và các đầu mục ko được ghi các cột của bảng (do vừa sửa nên còn nhiều cái vẫn ghi cột của bảng)"
+**User Input**: "viết lại tất cả domain entities, viết thêm tổng quan giống u1 cho những cái thiếu, cái nào có trạng thái thì vẽ graph, và tổng quan và các đầu mục không được ghi các cột của bảng (do vừa sửa nên còn nhiều cái vẫn ghi cột của bảng)"
 **AI Response**: Rewrote `functional-design/domain-entities.md` for all 16 units in one layout:
 - Tổng quan table: Entity / Loại / Lưu ở (table name only) / Unit ghi, plus "không sở hữu".
 - Headings show only the entity name.
@@ -3278,23 +2087,12 @@ Updated the checker to read the new contract tables and the 49/77 scope. Result:
 
 ---
 
-## Re-approval of Updated Code Plans
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-09-26T05:10:00Z
-**User Input**: "duyệt"
-**AI Response**: Recorded re-approval of the updated code plans for U01 and U05-U16 (45-table data model). All 16 code plans are approved; Code Generation Part 1 is complete. Next: Code Generation Part 2.
-**Context**: Construction - Code Generation Part 1 re-approval
-
----
-
 ## Redis/RabbitMQ Consolidation and Renaming (Option B)
 
 **Requested by:** max2min
 
 **Timestamp**: 2026-09-26T07:30:00Z
-**User Input**: "mấy cái db của redis với rabbitmq có đúng yêu cầu giống như posgres ko" / "là sao nếu gộp là gộp gì" / "hiện redis với rabbit có bao nhiêu cái" / "sao cái rabbit lại lên 19 cái rồi nãy m bảo 16 mà" / "3 cái queue nghe event có cần thiết ko" / "queue job gộp đc thêm ko" / "Gộp thêm những vẫn phải đúng 3 cái t bảo ở posgres ấy" / "Ko để default" / "đc rồi thế gộp redis và rabbit theo phương án B nhưng đổi lại tên tất cả các cái: ko để kiểu u01 hay u bao nhiêu đó mà ghi rõ tên ra, rabbit cái quêu nghe event cũng phải ghi rõ ra theo kiểu jobs.cái gì đó, rồi soát lại doc xem đã đồng bộ chưa (tự soát đừng dùng script), nếu chưa thì sửa đi"
+**User Input**: "mấy cái DB của Redis với RabbitMQ có đúng yêu cầu giống như Postgres không" / "là sao nếu gộp là gộp gì" / "hiện Redis với RabbitMQ có bao nhiêu cái" / "sao cái RabbitMQ lại lên 19 cái rồi, nãy bạn bảo 16 mà" / "3 cái queue nghe event có cần thiết không" / "queue job gộp được thêm không" / "Gộp thêm nhưng vẫn phải đúng 3 cái tôi bảo ở Postgres ấy" / "Không để default" / "được rồi, thế gộp Redis và RabbitMQ theo phương án B nhưng đổi lại tên tất cả các cái: không để kiểu U01 hay u bao nhiêu đó mà ghi rõ tên ra, RabbitMQ cái queue nghe event cũng phải ghi rõ ra theo kiểu jobs.cái gì đó, rồi soát lại doc xem đã đồng bộ chưa (tự soát đừng dùng script), nếu chưa thì sửa đi"
 **AI Response**:
 - **Audit:** now INSERTed in the business transaction; DENIED/FAILURE entries use REQUIRES_NEW. Exchange `audit`, queue `audit.events` and `AuditListener` are removed.
 - **Required cross-unit reactions:** now declared ports implemented by the receiving unit, which only enqueues its own U02 job:
@@ -3353,7 +2151,7 @@ Pointed out the only hidden queue: Judge0's internal work queue in container `ju
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T14:51:44Z
-**User Input**: "cái plans trong construction hơi bừa nhóm thư mục đi"
+**User Input**: "cái plans trong construction hơi bừa, nhóm thư mục đi"
 **AI Response**: "Grouped 105 construction plan and question files into 16 unit folders; updated plan path rules and the U01 NFR reference."
 **Context**: Documentation-only organization; no workflow stage advancement.
 
@@ -3364,7 +2162,7 @@ Pointed out the only hidden queue: Judge0's internal work queue in container `ju
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T14:56:13Z
-**User Input**: "tách mỗi loại file trong plans construction thành 1 folder chứ k phải là theo unit kiểu code generation plan ..."
+**User Input**: "tách mỗi loại file trong plans construction thành 1 folder chứ không phải là theo unit kiểu code generation plan ..."
 **AI Response**: "Regrouped 105 construction plan and question files by file type into 9 folders; corrected plan path rules and U01 NFR reference."
 **Context**: Documentation-only organization; correction to prior grouping.
 
@@ -3386,7 +2184,7 @@ Pointed out the only hidden queue: Judge0's internal work queue in container `ju
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T15:04:24Z
-**User Input**: "đặt tên ngắn gọn xúc tích được ko"
+**User Input**: "đặt tên ngắn gọn xúc tích được không"
 **AI Response**: "Shortened backend Java package names in all 16 code generation plans and aligned the architecture overview and U01 diagram."
 **Context**: Documentation update; U01-U16 remain traceability and migration identifiers.
 
@@ -3408,7 +2206,7 @@ Pointed out the only hidden queue: Judge0's internal work queue in container `ju
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-26T15:26:21Z
-**User Input**: "viết lại bằng tiếng anh , tên uc đúng với trong file usecase md"
+**User Input**: "viết lại bằng tiếng Anh, tên UC đúng với trong file usecase md"
 **AI Response**: "Rewrote docs/use-case-specifications.md entirely in English and matched all ten UC titles exactly to docs/use-case-table.md."
 **Context**: Documentation revision; UC IDs and business rules retained.
 
@@ -3464,7 +2262,7 @@ kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa
 **Requested by:** Đào Chí Cường
 
 **Timestamp**: 2026-09-27T06:52:00Z
-**User Input**: "viết lại tiếng việt UC spec của 3 UC trên và giải thích cho tôi trước khi sửa"
+**User Input**: "viết lại tiếng Việt UC spec của 3 UC trên và giải thích cho tôi trước khi sửa"
 **AI Response**: "Presented Vietnamese drafts of UC56, UC57 and UC75 in chat with an explanation of each change and its source rule; no files edited, awaiting user confirmation."
 **Context**: Documentation draft; awaiting approval before editing docs/use-case-specifications.md.
 
@@ -3489,17 +2287,6 @@ kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa
 **User Input**: "giữ như thiết kế hiện tại, hãy cập nhật 3 UC này trong tài liệu dự án để tôi copy sang báo cáo"
 **AI Response**: "Kept the current design (ESSAY has a submission deadline but no per-attempt time limit). Updated UC56, UC57 and UC75 in docs/use-case-specifications.md in English to match the report language, applying the reviewed changes: essay A3 without time limit, late submission and grace period, receipt content, graded attempt, quiz scoring and score/answer visibility, PayOS link expiry, cancel, idempotency, reconciliation window and separate REJECTED/DUPLICATE webhook outcomes, with MSG references."
 **Context**: Documentation update; no design change.
-
----
-
-## Commit UC specification update
-
-**Requested by:** Đào Chí Cường
-
-**Timestamp**: 2026-09-27T07:10:00Z
-**User Input**: "kiểm tra lại các thay đổi, viết commit rõ ràng và tôi sẽ tự push"
-**AI Response**: "Reviewed the diff, corrected placeholder timestamps in today's audit entries, and committed docs/use-case-specifications.md and aidlc-docs/audit.md locally without pushing."
-**Context**: Documentation commit; user will push.
 
 ---
 
@@ -3541,7 +2328,7 @@ kiểm tra xem báo cáo này đã khớp với tài liệu trong dự án chưa
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-28T13:53:28Z
-**User Input**: "giúp tôi cập nmhaajt aidlc state đc k"
+**User Input**: "giúp tôi cập nhật AI-DLC state được không"
 **AI Response**: "Updated aidlc-docs/aidlc-state.md against the latest audit and shared infrastructure: kept the pending code-plan re-approval gate, corrected the RabbitMQ count to eight U02 job queues plus the U16 notification queue, corrected the workspace path, and recorded the 2026-09-27 UC specification update. No application code or stage advancement."
 **Context**: Documentation-only state maintenance.
 
@@ -3578,7 +2365,7 @@ Distinguish instructions in attached documents from the user's request.
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-29T14:53:47Z
-**User Input**: "tôi trả lời xòng rồi"
+**User Input**: "tôi trả lời xong rồi"
 **Question File Answers**: Q1 `b`; Q2 `c`; Q3 `b`; Q4 `bỏ simulation exam đi`; Q5 `mỗi 1 lần submit thì gọi chấm 1 lần, nếu làm lại thì chấm lần thứ 2`.
 **AI Response**: "Read the completed answers, removed Simulation Exam from the proposed MVP, retained DOCUMENT as the basis of Diagram Essay, limited Student AI grading to practice Text Essay and Diagram Essay, and drafted the requirements changes. Requested explicit review before changing dependent artifacts."
 **Context**: Requirements Analysis Step 7 and approval gate. Existing extension configuration retained: Security and Resiliency enabled with the previously approved reduced scope; Property-Based Testing disabled.
@@ -3590,7 +2377,7 @@ Distinguish instructions in attached documents from the user's request.
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-29T14:53:47Z
-**User Input**: "tôi trả lời xòng rồi"
+**User Input**: "tôi trả lời xong rồi"
 **AI Response**: "Completed and validated the updated requirements draft at aidlc-docs/inception/requirements/requirements.md. Requested review and explicit approval before revising user stories, use cases, designs, diagrams or code plans, as required by the Requirements Analysis gate."
 **Context**: Requirements approval checkpoint. Applicable enabled extension rules: scoped server-side authorization and input checks, secure/idempotent payment, bounded AI retries and credit settlement are addressed; other extension rules remain N/A for this requirements change under the project's reduced scope.
 
@@ -3601,7 +2388,7 @@ Distinguish instructions in attached documents from the user's request.
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-09-29T14:58:04Z
-**User Input**: "có nghĩ là nếu student k đủ credit thì bài k cần có điểm luôn đko"
+**User Input**: "có nghĩa là nếu student không đủ credit thì bài không cần có điểm luôn đúng không"
 **AI Response**: "Confirmed that a Practice Text Essay or Diagram Essay can be submitted without enough credit and then has no AI score or feedback. Updated FR-030 so AI grading runs once at submit when credit is sufficient; a submission made without credit is not graded retroactively, and a new attempt is needed after buying credit. Code Lab and Quiz continue deterministic scoring without credit."
 **Context**: Revision to the pending Requirements Analysis draft; approval remains pending.
 
@@ -3754,17 +2541,6 @@ Distinguish instructions in attached documents from the user's request.
 
 ---
 
-## Documentation consistency review (second pass)
-
-**Requested by:** Đào Chí Cường
-
-**Timestamp**: 2026-10-01T03:02:07Z
-**User Input**: "kiểm tra lại toàn bộ các tài liệu dự án xem đã đồng bộ với nhau chưa và gửi tôi báo cáo"
-**AI Response**: "Read-only review after the 2026-10-01 sync. Consistent: 40 UC coverage in story map, story-UC matrix (49 stories), ERD 46 tables vs unit domain entities, class-level groups and REVIEW state across U12/U14/U15, credit rules, 24-hour reminder. Reported: screen-flow.md table does not match screen-flow.drawio (claims 57 screens/15 tabs/80 popups; drawio has about 50 screens and 38 popups with different names); erd.drawio title says 45 tables; plan headers still say 69 current use cases; group.document-review event missing from U16 notification types, U14 infrastructure and U16 code plan, and no notification for a rejected leader change; U06 question bank keeps ESSAY/DOCUMENT/CODE items and imports while UC 25/FR-016/US-QBK-002 cover quiz questions only; Subject Manager gradebook export allowed in UC 36/U16 but not in FR-024/US-RPT-003; FR-010/FR-021 lack credit packages and monthly grant; minor wording and legacy codes in functional design plans; debug.log tracked; root README empty. No files other than this log were changed."
-**Context**: Documentation review only; no stage advanced.
-
----
-
 ## Apply second review fixes
 
 **Requested by:** Đào Chí Cường
@@ -3779,17 +2555,6 @@ Distinguish instructions in attached documents from the user's request.
 
 ---
 
-## Documentation consistency review (third pass)
-
-**Requested by:** Đào Chí Cường
-
-**Timestamp**: 2026-10-01T03:27:37Z
-**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
-**AI Response**: "Read-only review after commit be9914e. Consistent: 49 stories in story-UC matrix, 40 UC names, ERD 46 tables vs domain entities, screen-flow table vs drawio (92/92 cells), event publishers vs U16 listeners, question bank across U06/U08/U09/U10/U13. Reported: SEC-006 wrongly removed from US-RPT-003 in the previous fix (SEC-006 is an in-scope requirement mapped to SECURITY-09/15); quiz-only bank wording left in requirements (lines 24, 47, 307), context-diagram and US-AIG-002; Subject Manager persona lacks gradebook export and US-RPT-003; student dashboard (UC 18) has its own U16 page but no drawio cell, and screen-flow.md maps it to My Classes. No files other than this log were changed."
-**Context**: Documentation review only; no stage advanced.
-
----
-
 ## Apply third review fixes
 
 **Requested by:** Đào Chí Cường
@@ -3801,17 +2566,6 @@ Distinguish instructions in attached documents from the user's request.
 
 ---
 
-## Documentation consistency review (fourth pass)
-
-**Requested by:** Đào Chí Cường
-
-**Timestamp**: 2026-10-01T03:34:22Z
-**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
-**AI Response**: "Read-only review after commit dde50f0. Consistent: stories/matrix/UC names, spec UC names, persona and trace IDs, ERD, screen flow (93/93), events, question bank, application design, 0 broken links in 302 Markdown files, every BR-Uxx-nn reference defined. Reported: student dashboard content differs (UC 18/FR-024 list enrolled classes and notifications; BR-U16-40, StudentDashboard and U16 frontend omit notifications; US-RPT-002 statement omits classes and notifications) and the student landing route is not defined (U04 app/learn is MyClassesPage, U16 app/learn/dashboard, U01 has no role redirect). Legacy UC codes in functional-design plans remain by design. No files other than this log were changed."
-**Context**: Documentation review only; no stage advanced.
-
----
-
 ## Apply fourth review fixes
 
 **Requested by:** Đào Chí Cường
@@ -3820,17 +2574,6 @@ Distinguish instructions in attached documents from the user's request.
 **User Input**: "sửa đi"
 **AI Response**: "Aligned the student dashboard with UC 18/FR-024 (enrolled classes, upcoming work, latest unread notifications, submission status, published grades) in BR-U16-40, StudentDashboard, U16 F6, U16 frontend, U16 code plan step 7a and US-RPT-002. Added BR-U01-48 role landing (Student /learn/dashboard, Teacher and Subject Manager /teaching, Admin /admin/accounts) to U01 rules, F3, LoginForm and code plan step 30; U01 plan needs re-approval. aidlc-state updated. Nothing committed."
 **Context**: Documentation synchronization; no stage advanced.
-
----
-
-## Documentation consistency review (fifth pass)
-
-**Requested by:** Đào Chí Cường
-
-**Timestamp**: 2026-10-01T03:41:04Z
-**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
-**AI Response**: "Read-only review after commit 7d4f9e4. Structural checks all pass (49 stories, 40 UC, ERD 46, screen flow 93/93, 0 broken links, no undefined BR or trace IDs). Reported: BR-U01-48 sends Teacher/Subject Manager to /teaching but no unit defines a page there (My Teaching Classes is app/teaching/classes in U04); screen-flow.md maps invite code and grade distribution to the Edit Class popup while U04 puts them in InviteCodeTab and GradeDistributionToggle on Class Detail; U09 F2 step 4 (copy skeleton from bank) is not in U09 code plan step 6 and the U09 plan is still marked Approved. No files other than this log were changed."
-**Context**: Documentation review only; no stage advanced.
 
 ---
 
@@ -3868,17 +2611,6 @@ Distinguish instructions in attached documents from the user's request.
 
 ---
 
-## Commit 39-case synchronization
-
-**Requested by:** Đào Chí Cường
-
-**Timestamp**: 2026-10-01T11:40:00Z
-**User Input**: "viết commit rõ ràng, chưa push để tôi review lại"
-**AI Response**: "Committed the use-case table change and the full documentation synchronization locally without pushing."
-**Context**: Version control only; no content changes.
-
----
-
 ## Split group assignment out of Manage Assignments
 
 **Requested by:** Đào Chí Cường
@@ -3912,28 +2644,6 @@ Distinguish instructions in attached documents from the user's request.
 
 ---
 
-## Commit group assignment split
-
-**Requested by:** Đào Chí Cường
-
-**Timestamp**: 2026-10-01T12:30:00Z
-**User Input**: "viết commit rõ ràng, chưa push để tôi review lại"
-**AI Response**: "Committed the UC 27 Manage Group Assignment split and the full documentation synchronization locally without pushing."
-**Context**: Version control only; no content changes.
-
----
-
-## Verify synchronization of the 40-case table
-
-**Requested by:** Đào Chí Cường
-
-**Timestamp**: 2026-10-01T12:40:00Z
-**User Input**: "kiểm tra lại toàn bộ tài liệu xem đã đồng bộ chưa"
-**AI Response**: "Checked all Markdown and draw.io files: table IDs 1-40 consecutive; every 'UC N <name>' reference matches the table (only the lần 6 history entry in aidlc-state keeps the old name by design); stories matrix names match; story map assigns each of UC 1-40 to exactly one unit; no UC28/UC-28/'use case 28' variants; no stale 39 counts outside history notes; UC 27/28 references reviewed by meaning. Fixed one stale note in requirements.md traceability ('bảng 40 use case (nay 39)' -> '(sau đó 39, nay 40)')."
-**Context**: Documentation verification; no stage advanced.
-
----
-
 ## Question: why authoring is split by type but student work is not
 
 **Requested by:** Đào Chí Cường
@@ -3949,7 +2659,7 @@ Distinguish instructions in attached documents from the user's request.
 **Requested by:** Đào Chí Cường
 
 **Timestamp**: 2026-10-01T13:00:00Z
-**User Input**: "có nên gộp 2 uc33,34 không"
+**User Input**: "có nên gộp 2 UC33, UC34 không"
 **AI Response**: "Recommended keeping UC 33 Grade Submissions and UC 34 Finalize Grades separate (different goal, single vs bulk scope, publication is the irreversible student-facing step with its own FR-020/US-GRD-005), but fixing the overlap: UC 33 should end at an unpublished draft grade and UC 34 should own finalization and publication for one or many submissions; US-GRD-003 was mapped to both. No files changed."
 **Context**: Advisory question; no stage advanced.
 
@@ -3987,17 +2697,6 @@ Distinguish instructions in attached documents from the user's request.
 
 ---
 
-## Answers: UC 18 replacement scope
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-10-03T09:10:00Z
-**User Input**: "Thống kê: Tài khoản (Recommended), Môn, lớp, ghi danh (Recommended) | Phân bố điểm: xem trong cùng trang với assignment list | Landing: Student Menu (Recommended) | SM Class: như admin"
-**AI Response**: "Decisions recorded: UC 18 becomes View Statistics for the Administrator (accounts by role and status; subjects, classes by status and enrollments); the anonymized grade distribution moves to the student's Assignment List; Student lands on Student Menu; Subject Manager manages the classes of the subjects they manage with the Administrator's class rights. Applying the change, then running the sync review."
-**Context**: CONSTRUCTION change request, decisions captured.
-
----
-
 ## Sync review: questions on blocking conflicts
 
 **Requested by:** max2min
@@ -4014,7 +2713,7 @@ Distinguish instructions in attached documents from the user's request.
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-03T10:40:00Z
-**User Input**: "Wave: Sửa cạnh và wave (Recommended) | ERD: markdown đang sai , drawio thì đang ở conceptial, dựa vào cái drawio để làm lại thêm các bảng quan hệ để thành database | Gói credit: Gói cố định (Recommended) | UC 36 Admin: Bỏ Admin khỏi UC 36 (Recommended)"
+**User Input**: "Wave: Sửa cạnh và wave (Recommended) | ERD: markdown đang sai, drawio thì đang ở conceptual, dựa vào cái drawio để làm lại thêm các bảng quan hệ để thành database | Gói credit: Gói cố định (Recommended) | UC 36 Admin: Bỏ Admin khỏi UC 36 (Recommended)"
 **AI Response**: "Will drop the unsupported H edges and regroup waves, make credit packages fixed system configuration, remove Administrator from UC 36, and derive a database ERD (with junction tables) from the conceptual drawio, then rewrite erd.md. Asked which conceptual page is the base and how groups relate to classes."
 **Context**: CONSTRUCTION change request; decisions captured.
 
@@ -4061,7 +2760,7 @@ Còn lại gì sửa nốt đi"
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-03T13:10:00Z
-**User Input**: "Phạm vi DB: Sửa cả Construction đúng y ERD | Tên bảng: Theo ERD | Học liệu: Chapter/Lesson làm thư mục (Recommended) | Hộp thoại: popup t ko vẽ đầy đủ cái nào cần thì cứ giữ nhưng đừng sửa drawio"
+**User Input**: "Phạm vi DB: Sửa cả Construction đúng y ERD | Tên bảng: Theo ERD | Học liệu: Chapter/Lesson làm thư mục (Recommended) | Hộp thoại: popup tôi không vẽ đầy đủ cái nào cần thì cứ giữ nhưng đừng sửa drawio"
 **AI Response**: "Construction tables will be exactly the database derived from the conceptual ERD (entities + junction tables for many-to-many only), named after ERD entities. Learning materials: each Lesson is one uploaded file or YouTube link inside a Chapter, scanned automatically; no authoring, versions or publishing. Needed dialogs stay as components; screen-flow.drawio is not edited."
 **Context**: CONSTRUCTION change request; decisions captured.
 
@@ -4094,7 +2793,7 @@ Còn lại gì sửa nốt đi"
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-03T16:00:00Z
-**User Input**: "soát lại  lần nữa giữa docs và aidlc, inception và construction và giữa các unit, nếu chưa đồng bộ thì sửa, sau đó ghi 1 file giống uc-wave-map.md giống cái để trong Downloads, chia theo wave và sắp xếp theo các uc làm trước đến sau"
+**User Input**: "soát lại lần nữa giữa docs và aidlc, inception và construction và giữa các unit, nếu chưa đồng bộ thì sửa, sau đó ghi 1 file giống uc-wave-map.md giống cái để trong Downloads, chia theo wave và sắp xếp theo các uc làm trước đến sau"
 **AI Response**: "Kiểm lại 18 điểm lệch của bản rà ngày 2026-10-02 và chạy lại các kiểm tra (story/UC, story map, bảng ↔ unit, screen flow ↔ frontend, event, port ↔ ma trận). Sửa 16 chỗ lệch (xem mục 2 của uc-wave-map.md). Viết aidlc-docs/construction/uc-wave-map.md: 40 UC theo wave 1–4 và thứ tự code, mỗi UC có actor, bước code plan, bảng ghi/đọc (25 bảng), màn hình, nghiệp vụ, ngoại lệ, tham chiếu. Ghi lại 5 điểm còn mở cần sửa screen-flow.drawio hoặc quyết định."
 **Context**: Construction docs sync; screen-flow.drawio không bị sửa.
 
@@ -4140,7 +2839,7 @@ Uc 05 cũng nhập mật khẩu hiện tại trc kiểm rồi mới nhập mk m�
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-03T18:40:00Z
-**User Input**: "sửa lại cái uc-wave những cái đang dựa vào swimlane diễn giải lại khi ko dựa vào swimlane (tức là dựa vào aidlc doc"
+**User Input**: "sửa lại cái uc-wave những cái đang dựa vào swimlane diễn giải lại khi không dựa vào swimlane (tức là dựa vào AI-DLC doc)"
 **AI Response**: "Viết lại phần Nghiệp vụ của 26 UC từng dựa vào swimlane (UC 9, 11, 12, 15–18, 21–38, 40) theo business-logic-model và business-rules của unit, mỗi bước ghi luồng F/BR làm căn cứ; bỏ nhãn swimlane ở cả 40 UC. Trong lúc đối chiếu sửa thêm: U06 còn stableKey/versionNo (đổi lineage_id/version), ADMIN trong BR-U05-01/02, BR-U06-01/02, thực thể và NFR thông báo lớp U05 (screen flow không có Admin ở các màn này), BR-U07-51 webhook REJECTED, BR-U13-10 học liệu 'đã phát hành', tech-stack U10 bankItemId/stableKey."
 **Context**: Construction docs sync.
 
@@ -4151,7 +2850,7 @@ Uc 05 cũng nhập mật khẩu hiện tại trc kiểm rồi mới nhập mk m�
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-03T19:00:00Z
-**User Input**: "t vẫn thấy nó như swimlane ấy, xoá sạch đi xong viết lại từ đầu các uc đấy trong uc-wave-map, ko refer lại bản cũ"
+**User Input**: "tôi vẫn thấy nó như swimlane ấy, xoá sạch đi xong viết lại từ đầu các uc đấy trong uc-wave-map, không refer lại bản cũ"
 **AI Response**: "Xoá toàn bộ nội dung 26 mục UC từng dựa vào swimlane (UC 9, 11, 12, 15–18, 21–38, 40) và viết lại từ business-logic-model/business-rules: Actor, unit chủ trì/đóng góp, bước code plan, dữ liệu ghi/đọc, màn hình, 'Nghiệp vụ theo thiết kế' (mỗi dòng một luồng F của một unit), 'Quy tắc chính' (BR), 'Hạ tầng'. Cập nhật mục Cách đọc."
 **Context**: Construction docs.
 
@@ -4162,7 +2861,7 @@ Uc 05 cũng nhập mật khẩu hiện tại trc kiểm rồi mới nhập mk m�
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-03T19:20:00Z
-**User Input**: "ko đc ghi theo đúng form của các cái khác mà đừng sáng tạo vớ vẩn" (kèm ảnh mục UC 8 làm mẫu)
+**User Input**: "không được, ghi theo đúng form của các cái khác, đừng sáng tạo vớ vẩn" (kèm ảnh mục UC 8 làm mẫu)
 **AI Response**: "Viết lại 26 mục (UC 9, 11, 12, 15–18, 21–38, 40) đúng mẫu UC 8: Actor + Bước code plan, Bảng ghi, Bảng đọc, Màn hình, Nghiệp vụ (bước đánh số), Ngoại lệ và quy tắc, Tham chiếu thiết kế, Ghi chú; bỏ các mục tự đặt (Unit chủ trì, Dữ liệu, Nghiệp vụ theo thiết kế, Quy tắc chính, Hạ tầng). Nội dung lấy từ business-logic-model/business-rules."
 **Context**: Construction docs.
 
@@ -4173,7 +2872,7 @@ Uc 05 cũng nhập mật khẩu hiện tại trc kiểm rồi mới nhập mk m�
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-03T19:40:00Z
-**User Input**: "uc06 lúc tạo đề là phải tạo rubric r mở bank ra chỉ edit thôi, với cả rubric nhân bản theo đề"
+**User Input**: "uc06 lúc tạo đề là phải tạo rubric rồi mở bank ra chỉ edit thôi, với cả rubric nhân bản theo đề"
 **AI Response**: "BR-U06-34 (tạo rubric trong Assignment Editor/Template Editor qua RubricPort.createForAssignment; Question Bank chỉ xem/sửa), BR-U06-35 (rubric nhân bản theo đề khi nhân bản, version mới, copy template/lớp; không nhân bản riêng, không dùng chung). U06 F8, RubricPort, frontend (không nút tạo ở bank, CloneDialog chỉ câu hỏi). U08 BR-U08-16 (Text Essay, Diagram Essay, bài nhóm bắt buộc có rubric; Quiz, Code Lab không), BR-U08-20/41/43, RubricSection. U10 BR-U10-13/14. UC 20 table, US-QBK-001, FR-016, component-methods, plan U06/U08/U10, uc-wave-map UC 20, 23, 25, 27, 28."
 **Context**: U06/U08/U10 design.
 
@@ -4184,7 +2883,7 @@ Uc 05 cũng nhập mật khẩu hiện tại trc kiểm rồi mới nhập mk m�
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-03T20:00:00Z
-**User Input**: "uc09 chịn dạng và chế độ xong mới copy, có thể chọn ngẫu nhiễn từ bank"
+**User Input**: "UC09 chọn dạng và chế độ xong mới copy, có thể chọn ngẫu nhiên từ bank"
 **AI Response**: "BR-U08-17: tạo bài chọn dạng và chế độ trước, rồi mới chọn nguồn (trống, copy template, copy bài lớp khác) và chỉ hiện nguồn cùng dạng/chế độ. BR-U08-18: thêm câu từ ngân hàng chọn tay hoặc ngẫu nhiên N câu khớp dạng và bộ lọc (ghim vào bài, xem lại, bốc lại từng câu). U06 BankQueryPort.pickRandom; U08 F1, CreateAssignmentDialog, AddFromBankDialog; U10 BR-U10-05/10, F1/F2, frontend; plan U06/U08; UC 28; component-methods; uc-wave-map UC 28."
 **Context**: U08/U06/U10 design.
 
@@ -4195,7 +2894,7 @@ Uc 05 cũng nhập mật khẩu hiện tại trc kiểm rồi mới nhập mk m�
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-04T09:00:00Z
-**User Input**: "uc40 học sinh nộp bài xong ko tự chấm, bấm nút chấm với ai sẽ chấm, với lại quá 5 phút thì trả lỗi luôn\nUc29 ngưng giao nhưng có điểm thì vx show\nuc31 trong assignment list sẽ hiện lượt gần nhất, trong trang submitted sẽ hiện cái gần nhất nhưng có nút <> để chuyển giữa các lần"
+**User Input**: "uc40 học sinh nộp bài xong không tự chấm, bấm nút chấm với AI sẽ chấm, với lại quá 5 phút thì trả lỗi luôn\nUc29 ngưng giao nhưng có điểm thì vẫn show\nuc31 trong assignment list sẽ hiện lượt gần nhất, trong trang submitted sẽ hiện cái gần nhất nhưng có nút <> để chuyển giữa các lần"
 **AI Response**: "UC 40: nộp không tự chấm; Student bấm 'Chấm với AI' trên Submitted Assignment, kiểm credit lúc bấm, thiếu thì báo và bấm lại được; mọi yêu cầu chấm AI quá 5 phút chuyển FAILED, trả credit, báo lỗi (BR-U11-21/33/35, BR-U13-24, U11 F4, U13 F3a, FR-030, US-ASM-012, đặc tả UC 40). UC 29: BR-U08-03 bài RETIRED vẫn hiện khi sinh viên đã có điểm. UC 31: BR-U11-36 Assignment List hiện lượt gần nhất, Submitted Assignment mở lượt gần nhất có nút ‹ ›. Cập nhật frontend/plan U11, use-case-table, business-flow, uc-wave-map."
 **Context**: U08/U11/U13 design.
 
@@ -4206,7 +2905,7 @@ Uc 05 cũng nhập mật khẩu hiện tại trc kiểm rồi mới nhập mk m�
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-04T09:30:00Z
-**User Input**: "cái uc27 sửa giống uc28\nUc16  ko cho student sửa xoá các mục teacher làm,  trưởng nhóm có thể giao việc hoặc thành viên có thể tự nhận, người giữ phần nào sẽ mở một cái popup che kin trang chỉ có các phần của trang đấy rồi sửa, bấm xong thì sửa realtime asignment workspace, mọi mục xong thì ko chuyển sang review hay báo để đọc lại gì hết, trưởng nhóm nộp hay hết giờ thì lưu lại, nếu hết giờ thì các thành viên đang làm sẽ tự động nộp (tự động nộp thì ko quay về trang workspace mà sang trang nộp sau khi quay quay chờ nộp xong, mục giữ quá lâu ko lưu thì ko gợi ý nhả gì hết"
+**User Input**: "cái uc27 sửa giống uc28\nUC16 không cho student sửa xoá các mục teacher làm,  trưởng nhóm có thể giao việc hoặc thành viên có thể tự nhận, người giữ phần nào sẽ mở một cái popup che kín trang chỉ có các phần của trang đấy rồi sửa, bấm xong thì sửa realtime assignment workspace, mọi mục xong thì không chuyển sang review hay báo để đọc lại gì hết, trưởng nhóm nộp hay hết giờ thì lưu lại, nếu hết giờ thì các thành viên đang làm sẽ tự động nộp (tự động nộp thì không quay về trang workspace mà sang trang nộp sau khi quay quay chờ nộp xong, mục giữ quá lâu không lưu thì không gợi ý nhả gì hết"
 **AI Response**: "UC 27: mô tả và mục uc-wave-map viết theo cách UC 28 (chọn dạng trước, nguồn copy, khung, rubric, duyệt, phát hành có lịch, tự mở/đóng, sửa lịch, ngưng giao, nhân bản, version). UC 16/U14: BR-U14-02 sinh viên không sửa/xóa/di chuyển mục và phần chung của giảng viên; BR-U14-11 popup che kín trang chỉ có block của mục; BR-U14-12 Xong đóng popup, workspace cập nhật realtime; bỏ BR-U14-14 (gợi ý nhả mục 48 giờ) và BR-U14-25; BR-U14-24 không có bước review; BR-U14-30/32 trưởng nhóm nộp bất kỳ lúc nào trước hạn; BR-U14-33 tự nộp sau hạn 30 giây, chốt mục đang giữ bằng bản nháp đã lưu, tài liệu CLOSED; BR-U14-36 client đang sửa hiện vòng chờ rồi sang Submitted Assignment. Trạng thái tài liệu IN_PROGRESS/CLOSED. Cập nhật BLM, domain, frontend (SectionEditorDialog, AutoSubmitOverlay, GroupSubmissionView), NFR, patterns (bỏ P6), logical, infra, plan U14; U16 bỏ group.document-review/GROUP_DOCUMENT_REVIEW; inception (components, unit-of-work, services, component-methods, FR-026, USCN-006, US-GRP-004/005); docs (use-case-table UC 16/27, đặc tả UC 16, screen-flow.md, business-flow md + drawio trang 3, erd.md); uc-wave-map UC 16, 27, 38."
 **Context**: U14 design; không sửa screen-flow.drawio.
 
@@ -4217,7 +2916,7 @@ Uc 05 cũng nhập mật khẩu hiện tại trc kiểm rồi mới nhập mk m�
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-04T11:00:00Z
-**User Input**: "Uc33 trong quêu có thể chọn chấm hàng loạt rồi dùng batch process để chấm hàng loạt, xong thì chuyển sang trang workspace từng cái để xác nhận từng cái, trong workspace có thể có nút <> để chuyển các bài nộp, chấm xong bài này sẽ tự động sang bài kế
+**User Input**: "UC33 trong queue có thể chọn chấm hàng loạt rồi dùng batch process để chấm hàng loạt, xong thì chuyển sang trang workspace từng cái để xác nhận từng cái, trong workspace có thể có nút <> để chuyển các bài nộp, chấm xong bài này sẽ tự động sang bài kế
 Uc34 điểm khác ai thì ko cần ghi lý do mà chỉ cần sửa lý do giải thích của ai thôi (nếu thích)
 Uc16 cái thành viên đang xem workspace mà nộp thì cũng hiện vòng chờ rồi chuyển trang submitted
 Uc17 tài liệu chung ko cần tô màu, tài liệu chung gửi ai như dạng bài document thôi, chấm đóng góp thì chấm tay hoặc để mặc định các thành viên giống nhau, cái ghi lý do cũng là tự chọn nếu thích ghi, nộp lại thì sử lý như bài document bình thường thôi
@@ -4232,7 +2931,7 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-04T11:05:00Z
-**User Input**: "uc18 view statistic hiện ngay trên admin menu chứ ko phải bấm nút nào, kiểu admin menu sẽ chứa statistic và các nút để dẫn tới các trang manage khác"
+**User Input**: "uc18 view statistic hiện ngay trên admin menu chứ không phải bấm nút nào, kiểu admin menu sẽ chứa statistic và các nút để dẫn tới các trang manage khác"
 **AI Response**: "BR-U16-40/41: thống kê hiện ngay trên Admin Menu, đếm mỗi lần mở, không popup; ViewStatisticsDialog → AdminStatisticsPanel (frontend, plan U16); use-case-table UC 18, requirements, US-RPT-002, personas, screen-flow.md (bỏ popup View Statistics), uc-wave-map UC 18."
 **Context**: U16 design; không sửa screen-flow.drawio.
 
@@ -4254,20 +2953,9 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-04T11:40:00Z
-**User Input**: "T chia wave theo thế này thì vẽ lại cái dependecy graph đi, mấy cái ass tách ra khỏi unit khác và về hết unit 9 có 5 cái loại ass ấy)" (kèm bảng unit/wave/số UC/trọng số và bảng phân việc 5 người)
+**User Input**: "Tôi chia wave theo thế này thì vẽ lại cái dependency graph đi, mấy cái assignment tách ra khỏi unit khác và về hết unit 9 có 5 cái loại assignment ấy)" (kèm bảng unit/wave/số UC/trọng số và bảng phân việc 5 người)
 **AI Response**: "Sửa trực tiếp unit-of-work-dependency.drawio của người dùng: U13 sang wave 4, U15 sang wave 3, U10 dời trong wave 4; cạnh U13 → U15 đảo thành U15 → U13 (U13 cắm implementation vào port của U15); thêm hộp 'U09: 5 loại bài' (Text Essay, Quiz, Diagram Essay, Code Lab, Group). Chưa sửa bảng wave trong unit-of-work-dependency.md và file png."
 **Context**: Inception application design; chỉ sửa hình.
-
----
-
-## Inception - Kiểm tra mũi tên dependency graph
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-10-04T11:55:00Z
-**User Input**: "kiểm tra lại các mũi tên xem có đung ko và giải thích"
-**AI Response**: "So 25 mũi tên với rút gọn bắc cầu các cạnh H của ma trận: 24 đúng; mũi tên U15 → U13 sai (ma trận là U13 → U15 H, chiều ngược U13 → U15 chỉ là C) nên đã xóa. Ghi chú: để U13 ở wave 4 thì U15 → U13 trong ma trận phải đổi H thành C (AI chấm cắm vào port của U15); việc chuyển 5 loại bài vào U09 thêm phụ thuộc U09 → U12 (nhóm hợp lệ) và U09 → U13 (chạy code, C), chưa cập nhật ma trận."
-**Context**: Inception application design.
 
 ---
 
@@ -4298,7 +2986,7 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-04T12:20:00Z
-**User Input**: "bây giờ phân lại cái uc wave map theo dependecy này"
+**User Input**: "bây giờ phân lại cái uc wave map theo dependency này"
 **AI Response**: "uc-wave-map.md xếp lại theo wave mới: W1 U01, U02, U03, U04; W2 U05, U06, U07, U12, U08; W3 U09 (gồm UC 23–27, chuyển UC 26 từ U13 và UC 27 từ U14), U11, U14, U15; W4 U10, U13, U16. Đánh số lại 1–40, nội dung từng UC giữ nguyên; §1 ghi thứ tự unit mới và U15 phụ thuộc U13 qua C."
 **Context**: Construction tra cứu.
 
@@ -4309,7 +2997,7 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-04T12:40:00Z
-**User Input**: "bây giờ đồng bộ lại giữa docs à aidlc, inception và construction, các unit"
+**User Input**: "bây giờ đồng bộ lại giữa docs và AI-DLC, inception và construction, các unit"
 **AI Response**: "Inception: unit-of-work (U09 soạn cả năm loại bài, bảng wave và gate G1–G4 mới), unit-of-work-dependency (ma trận U09 → U13 `C`, danh sách cạnh `C`, diễn giải hình, bảng wave §5, gate, đường bài nhóm), story map (U09 UC 23–27, U13 UC 22, U14 UC 16). Construction: BR-U09-03, domain U09/U13/U14, plan U09 (UC 26/27, CodeLabConfigForm, GroupAssignmentConfigForm, adapter giả cho U13), plan U13/U14 (chỉ phần hỗ trợ), plan U15 và U13 (thứ tự code: U13 sau U11/U14/U15), uc-wave-map bước code UC 26/27. aidlc-state: wave mới, U12 wave 2. docs không ghi unit theo wave nên không đổi."
 **Context**: Đồng bộ toàn bộ sau khi đổi wave.
 
@@ -4320,20 +3008,9 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** max2min
 
 **Timestamp**: 2026-10-04T13:00:00Z
-**User Input**: "Rà soát kỹ từng cái 1 lần nữa sau đó ghi cho t cách mà m hiểu unit sẽ tiến hành  code frontend và backend cùng những database của unit đo (sau khi ghi đầy đủ bảng quanheej (ghi rõ cái nào theo erd caais nào là bảng quan hệ))"
+**User Input**: "Rà soát kỹ từng cái 1 lần nữa sau đó ghi cho tôi cách mà bạn hiểu unit sẽ tiến hành code frontend và backend cùng những database của unit đó (sau khi ghi đầy đủ bảng quan hệ (ghi rõ cái nào theo ERD, cái nào là bảng quan hệ))"
 **AI Response**: "Chạy lại các script kiểm (refs, UC ↔ unit, ma trận ↔ port, port, màn hình). Sửa: U09 domain thêm cấu hình CODE_LAB, GROUP_ASSIGNMENT và port dùng CodeLabCheckPort/CodeRunPort của U13; U13 domain ghi U09 dùng CodeLabCheckPort; story map ghi U11 góp UC 35. Còn lại là cảnh báo giả của script (port tự khai báo, adapter ngoài, US-ASM-011 là mã lịch sử). Viết construction/unit-implementation-guide.md: 25 bảng (20 bảng thực thể theo ERD, 5 bảng quan hệ), 27 quan hệ 1–N bằng khóa ngoại, 37 khóa ngoại; cách code chung; từng unit theo wave gồm database, backend, frontend."
 **Context**: Rà soát và tài liệu hướng dẫn code.
-
----
-
-## Construction - Soát tay U01 và ghi cách code
-
-**Requested by:** max2min
-
-**Timestamp**: 2026-10-04T13:30:00Z
-**User Input**: "tự soát đừng dùng script, soát lại construction xem giống cái uc wavemap chưa, sau đó kiểm tra chỗ plan inception của nó, soát xong t bảo ghi những cái trên ra mà, bắt đầu từ unit 1 đi"
-**AI Response**: "Đọc tay uc-wave-map UC 1–7, functional design U01, plan U01, inception (unit-of-work, story map, US-IAM-001…007, FR-001, FR-015, component-methods). Sửa: BR-U01-48 Admin Menu hiện thống kê ngay trên trang; plan U01 thêm Redis `ticket:*` và `countByRoleAndStatus`; component-methods U01 viết lại theo OTP hai bước, đổi mật khẩu, quản trị tài khoản, nhập CSV hai bước; FR-001 bỏ 'đồng bộ từ nguồn danh tính'. Ghi mục U01 chi tiết (database, backend, frontend, thứ tự code) trong unit-implementation-guide.md."
-**Context**: Soát từng unit, bắt đầu U01.
 
 ---
 
@@ -4365,7 +3042,7 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-04T13:49:24Z
-**User Input**: "giúp tôi xem xết mục sửa 3,4 trong doc aidlc"
+**User Input**: "giúp tôi xem xét mục sửa 3,4 trong doc aidlc"
 **AI Response**: "Verified item 3: BR-U06-36 and U06 business flow already preserve pinned rubric versions for reviewed/published assignments. Clarified the U06 RubricEditor description to include REVIEWED. Verified item 4: SKELETON_DRAFT is already documented in U09 F2c, U13 task configuration/business rules and U13 code plan step 6; no additional AI behavior was needed."
 **Context**: Review of the user's screenshots, scoped to Construction documentation. No change to rubric behavior or AI implementation scope.
 
@@ -4387,7 +3064,7 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-04T15:02:52Z
-**User Input**: "giúp tôi sửa aidlc doc hiện tại thành brevo"
+**User Input**: "giúp tôi sửa aidlc doc hiện tại thành Brevo"
 **AI Response**: Updated current Inception and Construction email provider decisions from Gmail SMTP to Brevo SMTP, retaining Mailpit for local/test. Synchronized U01/U16 requirements, design, infrastructure and code-generation references; documented SMTP credentials, STARTTLS, sender verification and shared provider quota for OTP/notifications.
 **Context**: User-authorized documentation-only provider change. Historical audit entries and original question options preserved. No application code generated; existing code-generation checkpoints unchanged.
 
@@ -4491,7 +3168,7 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-08T06:10:30Z
-**User Input**: "sửa lại tên screen heo file drawio  mới"
+**User Input**: "sửa lại tên screen theo file drawio mới"
 **Attachment**: `C:/Users/Quang Hung/Downloads/screen-flow.drawio`.
 **AI Response**: "Aligned the screen column in docs/use-cases-and-screens.md with decoded labels in the supplied Drawio. Replaced old screen aliases, mapped Student assignment lists to the five type-specific screens and Submission History to its own screen, and marked UC 53-54 as missing screen mappings because no subject-template screen appears in the new diagram. Verified every mapped screen label exists in the supplied file and all 69 UC IDs, names and actors are unchanged. The supplied diagram and existing repository diagram have identical SHA256 hashes."
 **Context**: Documentation-only screen-name correction. The user's modified docs/screen-flow.drawio was read, not edited. Other AI-DLC designs and code-generation plans remain pending synchronization. Security/resiliency extensions are N/A for screen-name mapping; disabled property-based-testing extension skipped. Existing implementation checkpoints unchanged.
@@ -4514,7 +3191,7 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-08T06:43:21Z
-**User Input**: "ôi tôi thiếu uc view audit log rồi giúp tôi bổ sung uc đó vào bảng uc trên gg doc và usecase and screen, với đồng bộ lại"
+**User Input**: "ôi tôi thiếu uc view audit log rồi giúp tôi bổ sung uc đó vào bảng uc trên Google Docs và usecase and screen, với đồng bộ lại"
 **AI Response**: Added UC 70 View Audit Log (Audit Management) to section 4.2 and an Administrator-only view/search row to section 4.4 of the user's existing Google SRS document (file ID 1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n). Audit records are read-only. Appended UC 70 / Administrator / Audit Log to docs/use-cases-and-screens.md and synchronized current Inception requirements, audit story traceability, U02 ownership, plan summaries and state to 70 UC. Fetched a fresh source before upload to preserve concurrent document edits, verified the saved cloud content and visually checked both affected table pages. Only the DOCX document-body part changed; all other package entries, styles and media were preserved.
 **Context**: User-authorized cloud document edit and local synchronization. Audit Log already exists in the user's supplied diagram; docs/screen-flow.drawio was not edited. UC 53-54 remain explicitly unmapped because the diagram has no subject-template screens. Historical records retained and Construction/code plans left for a separate synchronization.
 
@@ -4565,17 +3242,6 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 
 ---
 
-## Construction consistency review - Current SRS and Inception
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-08T07:06:46Z
-**User Input**: "check construction doc theo doc mới, inception docs"
-**AI Response**: Reviewed Construction documentation against the current 70-UC catalog, revised 51-story/16-unit Inception and latest screen flow. Saved construction/plans/construction-consistency-review-2026-10-08.md with ten finding groups and source evidence: class structure permissions, Administrator inheritance/assignment eligibility, subject-versus-teaching scopes, missing Admin package management/global payment history, prohibited announcement updates, removed avatar updates still present, legacy UC traceability, outdated screen mappings and 21 broken local source links. Distinguished already-designed audit/template/AI behaviors and supporting flows from actual requirement gaps; proposed a synchronization order without modifying the designs or code.
-**Context**: User-authorized documentation review, not implementation. Historical questions/approvals and generated-code summaries were treated as earlier-baseline evidence. Existing permission descriptions do not yet meet revised authorization requirements; enabled Resiliency constraints retained, runtime checks N/A and disabled Property-Based Testing skipped. No stage/checkpoint advanced; no commit created.
-
----
-
 ## Construction documentation synchronization - 70-UC revision
 
 **Requested by:** Quang Hung
@@ -4604,33 +3270,9 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-08T07:40:37Z
-**User Input**: "tôi k muốn dùng pgvector nữa thì sao"
+**User Input**: "tôi không muốn dùng pgvector nữa thì sao"
 **AI Response**: Explained that AI drafting can remain with directly selected learning materials and extracted text; PostgreSQL keyword search is another option. Recommended direct source selection for a simpler project design, and identified Inception/U05/U13/database/code-plan/credit changes that would be required.
 **Context**: Discussion only; pgvector removal was not applied. Entry recorded at commit preparation; this commit retains the existing pgvector/embedding design.
-
----
-
-## Commit preparation - Construction documentation synchronization
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-08T07:40:37Z
-**User Input**: "ok giúp tôi commit change construction hiện tại đi đã, nhớ ghi description change đầy đủ"
-**AI Response**: Prepared a local commit of current Construction synchronization, related Inception status notes and state/audit. Wrote a detailed commit description covering authorization, new Admin flows, announcement lifecycle, profile fields, UC/story/screen mappings, source links, historical-plan preservation and validation.
-**Validation**: Construction check passes for 244 documents, 160 current design headers, 16 code plans, 64 preserved historical stage-plan bodies and U03 completed baseline; 70 unique UC and 51 unique stories. Inception coverage and local links pass; whitespace passes. No application/contracts/migrations/diagram changes.
-**Context**: User-authorized commit on the current branch. No push or pgvector-removal change requested for this commit. Existing implementation checkpoints unchanged; runtime checks N/A, enabled documentation constraints retained and disabled Property-Based Testing skipped.
-
----
-
-## Inception and Construction documentation review - 73-UC baseline
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-09T06:09:48Z
-**User Input**: "giúp tôi check lại doc construction với inception"
-**AI Response**: Reviewed the current local 73-UC catalog and G21_Diagrams.drawio Page-2 against Inception requirements, stories, architecture, ownership and current Construction designs/code plans. Saved construction/plans/inception-construction-review-2026-10-09.md with nine finding groups: contradictory Administrator permissions, stale 70-UC/16-unit ownership after U10 removal and Settings addition, retired features still in active Inception, lesson-scan retry/state recovery contradictions, failed-scan credit/summary inconsistencies, obsolete Admin wallet eligibility, incomplete Inception ingestion orchestration, stale U05 AI configuration instructions, and broken catalog links/outdated screen labels.
-**Validation**: Structural scan of 163 current Markdown documents found five broken local links across four files and no odd code fences; Drawio XML parsed. Local catalog has 73 UC rows, story catalog 51 story headings, and Construction 15 unit directories. Findings distinguish active documentation from historical approvals/questions/generated summaries. No application runtime, Google SRS or live integration verification performed.
-**Context**: Documentation review only; existing designs, code, diagrams, approvals and stage checkpoints unchanged. SECURITY-08 and dependency retry/state concerns remain findings; other runtime checks N/A. Disabled Property-Based Testing skipped. No commit or new stage approval.
 
 ---
 
@@ -4643,18 +3285,6 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 **AI Response**: Synchronized current Inception and Construction documentation to local use-cases-73.md and G21_Diagrams.drawio Page-2: 73 UC, 51 stories, 15 units. Rebuilt primary ownership and traceability; assigned Settings to U03 and subject assignments/version/copy to U08; removed U10 from current architecture/waves. Aligned Admin authorization/wallet restrictions, Subject Manager teaching scope, retired features, screen names and source links. Repaired lesson-scan retry/lease/deadline recovery, durable child-call checkpoints, credit settlement and summary retention; runtime AI configuration uses U03 Settings. Updated current state and planning preambles; added review resolution and revision checklist.
 **Validation**: Checked 179 active documents and 150 design headers: 73 continuous UC and 51 unique stories each have exactly one primary unit, no broken local links or odd fences, no hard-dependency cycle. Preserved 64 historical stage plans, U03 completed code plan and state history. Drawio XML parses; git diff --check passes; substantive tracked changes are confined to aidlc-docs.
 **Context**: Authorized documentation revision only. Existing approvals, implementation checkpoints, application code, contracts and source diagrams preserved; legacy dependency images explicitly historical. No commit, new stage approval, live SRS or runtime/integration verification. Enabled security/resiliency design constraints retained; runtime/deployment/health checks N/A and disabled Property-Based Testing skipped.
-
----
-
-## Inception/Construction post-revision recheck
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-09T06:44:29Z
-**User Input**: "check lại inception với construction đã đồng bộ chưa"
-**AI Response**: Rechecked the current documentation and recorded construction/plans/inception-construction-recheck-2026-10-09.md. Primary mappings are aligned, but semantic synchronization is incomplete: U07 reserve/refund instructions conflict with U05/U13 lesson HOLD settlement, FR-024 retains obsolete UC numbers/screens, grading/reporting stories retain old entries and an incorrect grade-distribution toggle actor, AiUsagePort lacks explicit checkpoint recovery/result contract details, and shared infrastructure still says 16 units. No current design or code was changed by this recheck.
-**Validation**: Fresh checks over 178 active documents: 73 continuous UC, 73 exact-name trace rows, 51 unique stories, 15 primary units, 150 aligned design headers, no broken local links or odd fences, no hard-dependency cycles. Git diff --check passes. Structural success does not resolve the five semantic findings.
-**Context**: Documentation review only; no stage approval, commit, application/runtime or live SRS verification. SECURITY-08 actor inconsistency remains a finding; other runtime security/deployment/health verification N/A. Recovery-contract review does not certify RESILIENCY-10 runtime behavior; disabled Property-Based Testing skipped.
 
 ---
 
@@ -4704,18 +3334,6 @@ Uc35 view grade xem trong assignment list chứ ko phải class detail, giảng 
 
 ---
 
-## Commit preparation — on-demand material summary
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-09T07:36:20Z
-**User Input**: "giúp tôi commit nhớ ghi rõ description"
-**AI Response**: Prepare a local documentation commit with a detailed description of upload without AI/credit, View Material summary action for scoped Student/Teacher/Subject Manager, requester-owned one-HOLD billing and shared result reuse, two-stage extraction/AI lifecycle, queue/API/migration design and synchronized Inception/U03/U05/U07/U13 pending plans.
-**Validation**: Fresh working-tree scope and diff checks confirm documentation-only changes; git diff --check passes. Prior revision validation records 10 contract checks, local links/fences and preserved completed code-plan lines. Application tests N/A for documentation-only commit.
-**Context**: User authorizes commit; no push. Existing implementation status and historical approvals remain unchanged.
-
----
-
 ## Main Business Flows - Circle Start and End
 
 **Requested by:** Đào Chí Cường
@@ -4755,7 +3373,7 @@ giúp tôi review lại doc check phần 5. System Functionalities phần diagra
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-09T07:54:21Z
-**User Input**: "ok giúp tôi ủa lại cả phần 5 đấy"
+**User Input**: "ok giúp tôi sửa lại cả phần 5 đấy"
 **AI Response**: Corrected the existing SRS Office DOCX in place via Google Drive files.update, preserving file ID 1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n. Rebuilt section 5.1.b as 51 screens/popups aligned with the supplied diagram/current AI-DLC; synchronized eight external API descriptions and 17 background jobs, including JOB-17 explicit viewer-requested summary/indexing, requester-funded one-HOLD semantics and two-stage extraction/AI lifecycle. Section 5.1.a diagram and other sections were preserved.
 **Validation**: Source modification time unchanged immediately before write. Local package integrity passed; only word/document.xml changed, only the three target tables differ structurally, all 86 media parts and other package parts are identical. Packaged render failed because LibreOffice was unavailable; Microsoft Word hidden export succeeded, all 11 section-preview pages were rendered and visually inspected. Drive update succeeded at 2026-10-09T07:54:03.873Z; fresh connector readback confirms screen #51, JOB-17 and no obsolete Screen List names. Existing sharing/parents/name/MIME retained.
 **Context**: User authorized online section edit; Google Drive and Documents workflows used for existing Office file, no native conversion. No application code edit, commit or push. Related section III review findings remain outside this requested edit. Temporary local files cleaned after successful readback.
@@ -4767,7 +3385,7 @@ giúp tôi review lại doc check phần 5. System Functionalities phần diagra
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-09T10:08:39Z
-**User Input**: "## 7. Background Job Inventory, 8. External API Inventory, IV, V giúp tôi check lại các phần trên trong doc và sửa lại cho đồng bộ doc aidlc, chỉ sửa nội dung template troc doc vẫn giữ nguyên"
+**User Input**: "## 7. Background Job Inventory, 8. External API Inventory, IV, V giúp tôi check lại các phần trên trong doc và sửa lại cho đồng bộ doc AI-DLC, chỉ sửa nội dung template trong doc vẫn giữ nguyên"
 **AI Response**: Reviewed and updated only III.7 Background Job Inventory, III.8 External API Inventory, IV Non-Functional Requirements and V Requirement Appendix of the existing SRS Office DOCX, file ID 1ebPCxJyusasIm8aiMmm3pWiIAaEr7D7n. Aligned 17 jobs and eight external integrations with current AI-DLC: upload/caption extraction without AI or credit, explicit viewer summary action, requester-owned shared HOLD, actual-usage settlement, fenced recovery and fixed 24/25-hour deadlines. Added JOB-17 using the existing job-section pattern. Corrected Admin scope/no wallet/AI/code, Subject Question Bank only, assignment-owned non-versioned rubrics, subject shared schedules, Practice-only unscheduled Quiz, Settings/monthly credit, announcement without comments, grading correction/distribution rights, notification budgets/fanout, security/reliability/testing descriptions and applicable BR/MSG content.
 **Validation**: Before write, Drive modification time still matched 2026-10-09T07:54:03.873Z. Scoped OOXML checks confirm all body nodes before III.7 and the terminal section properties are unchanged; every package part except word/document.xml is byte-identical, including styles, headers/footers and all media. Existing table geometry/properties and 30 BR / 31 MSG identifiers retained. Hidden Microsoft Word export and visual inspection of all 26 scoped-preview pages passed. Drive update succeeded at 2026-10-09T10:08:25.181Z; fresh connector readback confirms JOB-17, no Admin wallet, no rubric versions, the 25-hour threshold and revised insufficient-credit message.
 **Context**: Content synchronization within the user-authorized sections; retained template, figures, sharing, file ID/name/type and unrelated sections. No application changes, new approvals, implementation/test completion claim, commit or push. Enabled security authorization/validation/privacy and bounded resiliency requirements retained at specification level; runtime/deployment checks N/A. Disabled Property-Based Testing skipped.
@@ -4791,7 +3409,7 @@ giúp tôi review lại doc check phần 5. System Functionalities phần diagra
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-09T10:24:54Z
-**User Input**: "viết description ngắn gọn, viết bằng tiếng anh, name field thì có thể màn tiếng việt vì màn hình là tiếng việt"
+**User Input**: "viết description ngắn gọn, viết bằng tiếng Anh, name field thì có thể là tiếng Việt vì màn hình là tiếng việt"
 **AI Response**: Rewrote all 51 screen descriptions in III.1–III.6 as short English prose and synchronized related action lists/field descriptions with the review and current AI-DLC. Retained Vietnamese field/button labels. Corrected Settings, bank types/version/rubric ownership, Practice-only Quiz, explicit requester-paid material summary, subject Assignment List/schedule, authoring review/copy, rubric checklist/locking, removed comments, group versus individual controls, assigned teaching/grading scope, dynamic AI quote, monthly credit and role-aware checkout. Added shell logout/notification coverage and supporting fields within existing screens.
 **Validation**: Fresh raw source baseline 2026-10-09T10:10:31.750Z, unchanged immediately before upload. Only III.1–III.6 body content changed; all outside nodes, drawing paragraphs and all non-document.xml package parts remained identical. Hidden Word export rendered a 24-page prose/table preview, all pages visually inspected and affected pages rechecked after final edits. Drive update succeeded at 2026-10-09T10:24:41.089Z; fresh readback confirmed 51 descriptions/51 screen IDs, new material/Quiz/Settings/subject-assignment rules and absence of five obsolete phrases.
 **Context**: Existing same-ID Office DOCX updated in place; template, captions, images, sharing/name/type and earlier III.7/III.8/IV/V updates retained. Screenshot contents not claimed corrected. No implementation changes, approvals, commit or push. Enabled security scope/input/privacy and bounded resiliency retained at specification level; runtime/deployment verification N/A, disabled Property-Based Testing skipped.
@@ -5075,7 +3693,7 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-18T03:40:00Z
-**User Input**: "ok bắt đầu code U02 đi, NHỚ LÀM THEO NHỮUNG GÌ DOCS AI DLC bảo và bạn tôi đã làm trước đấy."
+**User Input**: "ok bắt đầu code U02 đi, NHỚ LÀM THEO NHỮNG GÌ DOCS AI-DLC bảo và bạn tôi đã làm trước đấy."
 **AI Response**: "Loaded construction/code-generation.md, session-continuity, aidlc-state.md, all U02 design artifacts (functional, NFR, NFR design, infrastructure) and the U03 code and code summary as the team pattern. Detailed the U02 code generation plan in place (9 steps: migration, repository, IAudit store, IAuditQuery service, API, shared Pagination, Audit Log screen, documentation, review) with unit context, story traceability, extension scope and three gaps found (U01 accounts API uses q not email, conditional REVOKE when role app is absent, missing shared Pagination). Approval prompt: 'Duyệt plan U02 để bắt đầu Part 2 (code)?' — waiting for explicit approval."
 **Context**: CONSTRUCTION - Code Generation U02, Part 1 Step 6 (approval prompt logged)
 
@@ -5103,25 +3721,6 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 
 ---
 
-## Code Generation - U02 Audit - Review and Completion Prompt
-
-**Requested by:** Vo Minh Tai
-
-**Timestamp**: 2026-10-18T04:50:00Z
-**User Input**: (none, step 9 review)
-**AI Response**: "Found the eight U02 commits had been created on `ui-reference` because the working branch had been switched outside this session; moved them onto `audit` (cherry-pick of the seven code commits, docs commit rebuilt with only the U02 log entries appended) and reset `ui-reference` to `origin/ui-reference`; code on `audit` is identical to the tested commit. Reviewed UC 13, US-AUD-001 S1-S3 and BR-U02-01..09, 50, 51 against the code; extension compliance: SECURITY-05, 08, 15 and RESILIENCY-10 compliant, SECURITY-03 compliant (no new logging of details), SECURITY-04, 09, 12 and RESILIENCY-04, 06 N/A for this unit. Completion message presented with Request Changes / Continue options; waiting for user approval before pushing `audit` and opening a PR."
-**Context**: CONSTRUCTION - Code Generation U02, Part 2 Steps 14-15
-
----
-
-## Code Generation - U02 Audit - Code Approval
-
-**Requested by:** Vo Minh Tai
-
-**Timestamp**: 2026-10-18T05:00:00Z
-**User Input**: "ok push lên và mở PR đi"
-**AI Response**: "Code approved (Continue to Next Stage). Plan step 9 ticked; aidlc-state updated. Pushing branch `audit` and preparing a PR into `main`."
-**Context**: CONSTRUCTION - Code Generation U02, Part 2 Step 16 (approval recorded: APPROVED)
 ## 2026-10-15T00:00:00Z — Council feedback compliance review
 
 **Requested by:** Đào Chí Cường
@@ -5180,7 +3779,7 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 
 **Requested by:** Đào Chí Cường
 
-**User Input**: "đề xuất cho tôi quyết định của bạn. Đối với các mẫu thuẫn thì làm theo các thiết kế đang có trong dự án, SRS sẽ sửa lại sau"
+**User Input**: "đề xuất cho tôi quyết định của bạn. Đối với các mâu thuẫn thì làm theo các thiết kế đang có trong dự án, SRS sẽ sửa lại sau"
 
 **AI Response**: Filled section 3 of the temporary plan `aidlc-docs/construction/plans/TEMP-u01-implementation-working-plan.md` with decisions: conflicts follow the U01 aidlc-docs design (single login error message, immediate revocation, no school code, New Account without phone, no Account Detail history, separate role/status actions, design lifecycle, no password-reuse check, design routes with Admin temporarily at /admin/accounts, no version on own profile, imports:validate/commit, Bucket4j on Redis); internal design conflict Q04 resolved by the newest rule BR-U01-44 (fail closed, 503 when Redis is down). Proposals where the design is silent: narrow ArchitectureTest exception identity → audit.contract/jobs.contract (Q01), separate audit FK migration after U02 (Q02), jjwt + commons-csv (Q03), Actions/AccessPolicy catalog registering U02/U03 actions (Q14), cookie CSRF token (Q16). Marked items needing team agreement; synchronized backend/frontend/test steps. SRS and aidlc-docs fixes listed for later. No code, commit or Jira change.
 
@@ -5209,18 +3808,6 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 **AI Response**: Implemented M0–M1 of the temporary U01 plan on branch `cuong` (uncommitted): pom dependencies (jjwt 0.12.6, commons-csv 1.12.0, bucket4j_jdk17 core/lettuce 8.14.0); ArchitectureTest exception letting `identity` use only `audit.contract`/`jobs.contract` (Q01 option A); `platform.identity` configuration (`IdentityProperties`, `IdentityConfig`, application.yml/application-local.yml, compose and .env.example variables incl. bootstrap Admin and local `U01_COOKIE_SECURE=false`); migration `identity/V20260925_0930__create_accounts.sql` (accounts + FK system_settings.updated_by, audit FK deferred per Q02); domain `Account`, `AccountSearch`, `EmailPolicy`, `PasswordPolicy`, `ProfilePolicy`, `AccountRepository` (JdbcClient). Unit tests: 18 new; `mvn test` 112 tests, 0 failures. Migration and repository SQL not yet run against PostgreSQL (Docker not running). No commit, push or Jira change.
 
 **Context**: Construction — U01 Code Generation Part 2, milestones M0–M1.
-
----
-
-## 2026-10-17T17:20:00Z — U01 code: milestone M2
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "Review done, continue with M2: Redis session, JWT, filter, CSRF, IAuthorization, login/logout, Admin bootstrap and login screen."
-
-**AI Response**: Implemented M2 (uncommitted, branch `cuong`). Backend: `Hashing`, `SessionStore` (Redis sessions, hashed rotating refresh tokens, reuse revokes session, 2 h idle / 7 d ceiling), `RequestThrottle` (Bucket4j on Lettuce), `JwtService` (HS256, 15 min, secret ≥ 32 bytes), `AuthCookies`, `SessionAuthority` + `JwtAuthFilter` (Actor principal with current DB role, Redis/DB failure → 503), `IdentityHttpSecurity` (cookie CSRF, 401/403 Problem Detail, public `/api/v1/auth/**`) wired by one call in shared `SecurityConfig`; `Actions` contract + `AccessPolicy` + `AuthorizationService` (default deny, registers U02/U03 actions); `AuthService` login/refresh/logout with single neutral error, lockout, dummy bcrypt; `AuthController`, `MeController` (GET profile), `BootstrapAdminInitializer`; `GlobalExceptionHandler` maps Redis/DB unavailability to 503; `server.forward-headers-strategy: native`. Frontend: `shared/api/client.ts` CSRF header and one-shot refresh with `setUnauthenticatedHandler`; identity api/types/session; AuthLayout, BrandLogo, InfoCard, RecentWorkPreview, PasswordField; Login page; AppShell, AccountMenu, SignOutDialog, RoleGuard, AuthenticatedLayout; `/`, `/post-login`, `/admin` layout and temporary `/admin/accounts`. Added `.claude/launch.json` for the frontend dev preview. Results: `mvn test` 154 tests 0 failures (ArchitectureTest passes with identity → audit.contract); frontend typecheck, lint, 28 tests and `next build` pass; login page visually checked against the mock-up. Not yet run end-to-end with PostgreSQL/Redis (Docker not running). No commit, push or Jira change.
-
-**Context**: Construction — U01 Code Generation Part 2, milestone M2.
 
 ---
 
@@ -5272,41 +3859,6 @@ giúp tôi đọc lại doc aidlc và để xuất những điểm cần sửa
 
 ---
 
-## 2026-10-17T19:15:00Z — U01 local end-to-end run preparation
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "Guide me to start Docker local and run the T3 scenarios (activate admin via Mailpit, login, reset, CSV import, role/status) end to end."
-
-**AI Response**: Docker daemon was not running, so nothing was started. Created gitignored `infra/.env.local` with random local-only secrets, `fpt.edu.vn` domain, bootstrap Admin `admin@fpt.edu.vn` and 1-minute login lock; passed `U01_LOGIN_LOCK_DURATION` through `docker-compose.local.yml`; created sample CSV `.tmp/u01-t3/tai-khoan-t3.csv` (gitignored). Validated the merged compose config (`docker compose config --quiet`). Gave the user step-by-step commands for starting the stack and running T3 scenarios. No commit.
-
-**Context**: Construction — U01 Build and Test preparation (manual T3).
-
----
-
-## 2026-10-17T20:45:00Z — U01 end-to-end check on local Docker stack
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "tôi đã bật docker desktop, hãy kiểm tra cho tôi"
-
-**AI Response**: Started the local stack (backend, worker, frontend, Nginx, PostgreSQL, Redis, RabbitMQ, Mailpit). Host ports 5432 and 8080 were already taken (local PostgreSQL, AgentService) and the repo RabbitMQ healthcheck (5 s timeout) failed on this machine although RabbitMQ was up, so a temporary override `.tmp/u01-t3/docker-compose.ports.yml` remapped ports and relaxed the healthcheck (not committed; infra issue to report). Verified migrations, bootstrap Admin and real U01 beans. Activated the Admin through the UI with the OTP from Mailpit. Ran the T3 scenarios with a script through Nginx (`.tmp/u01-t3/t3.sh`): first run exposed a real bug — Spring `SessionManagementFilter` rotated the CSRF token after every JWT-authenticated request, so the next write got 403 CSRF_INVALID; fixed with `NullAuthenticatedSessionStrategy` on the CSRF config plus a regression test (confirmed failing without the fix). Also made the U01 exception handler take precedence (`@Order`) so malformed JSON returns `INVALID_REQUEST`, plus a test. Script issues (Windows curl encoding, temp paths) fixed. Final fresh run: 52/52 checks pass; Redis-down gives 503 and recovers; logs contain no secrets; profile save works in the real browser. Backend 208 tests pass. Updated code-summary. Stack left running. No commit, push or Jira change.
-
-**Context**: Construction — U01 Build and Test (manual T3 on local stack).
-
----
-
-## 2026-10-17T21:00:00Z — U01 commits (not pushed)
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "viết commit rõ ràng, chưa push lên main để tôi kiểm tra lại"
-
-**AI Response**: Committed U01 on branch `cuong` in four commits without pushing and without Claude co-author lines: `5b05625` dependencies/config/ArchitectureTest exception, `00c57a4` backend UC 01–12 with tests, `f58d704` frontend screens with tests, and a docs commit (code summary, aidlc-state U01 row, this audit log). Left uncommitted on purpose: the temporary working plan `construction/plans/TEMP-u01-implementation-working-plan.md` (must be removed before any PR to main) and `.claude/launch.json` (local preview config).
-
-**Context**: Construction — U01 Code Generation Part 2, commit for user review.
-
----
 ## U04 implementation planning only — 2026-10-18
 
 **Requested by:** Vu Hai Nam
@@ -5407,14 +3959,6 @@ Xem lại kế hoạch
 **Progress / limits**: Marked B05 complete; B03 SQL/isolated checks done but overall migration step still unchecked until actual U01 accounts migration and shared chain validate. Added persistence-review.md with reading order/version table/test commands; updated summary/state/official plan without claiming U04 complete. Final git diff --check passed; user Git index preserved. No commit, push, Jira write or teammate messaging.
 **Control compliance**: Constraint/bind-parameter validation and bounded pagination implemented (SECURITY-05); no credentials in tracked source/logged user data (SECURITY-03/09), archive/auth/audit gates remain future service/provider work (SECURITY-08/12/15 not claimed runtime compliant). RESILIENCY-04 migration tested on isolated DB only, shared migration gate pending; RESILIENCY-06 no health changes, RESILIENCY-10 external/provider timeouts still pending. PBT remains disabled; other controls outside reduced project subset N/A.
 
-## U04 B06 query and scope continuation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-18T06:07:23Z
-**User Input**: đã đọc qua hướng dẫn review persistence, tiếp tục đi
-**AI Response / Scope**: User reviewed persistence and authorizes the next reviewable slice B06: implement ISubjectQuery/ISubjectScope through the private U04 repository, no-cache current assignment checks, missing/archived semantics, unit and Spring wiring tests, and PostgreSQL read-after-reassignment evidence. Preserve staged index and unrelated code; do not implement U01 authentication or U05 class behavior. Apply already approved Q05 to U04-owned ISubjectClasses stub so unavailable cannot masquerade as verified zero classes. Lifecycle guard and admin service/API remain separate next slices. No commit/push/Jira write.
-
 ## U04 B06 query and scope checkpoint
 
 **Requested by:** Vu Hai Nam
@@ -5424,14 +3968,6 @@ Xem lại kế hoạch
 **Verification**: Full Maven suite PASS: 144 tests, 0 failures/errors/skipped, including 16 PostgreSQL16.15 cases, 14 new unit/wiring tests and 3 architecture rules. Real DB evidence covers archive, assignment A to B to null, current scope and query mapping. No frontend changes or repeated frontend checks. Updated B06 checkboxes, state, summary and query-scope-review.md; B03 real U01 migration integration remains pending. git diff --check passed. Preserved Git index; no commit, push, Jira write or teammate message.
 **Cleanup**: Sandbox Docker socket access required escalation; approved cleanup verified generated container name and task label, stopped only this --rm test container, verified it absent and removed temporary connection metadata. No other containers or volumes touched. Docker Desktop remains running.
 **Control compliance and limits**: Fresh assignment reads and null-deny semantics support SECURITY-08/15; input binding and bounded repository queries retain SECURITY-05. Current account ACTIVE/session/JWT and caller fail-closed HTTP behavior remain U01 integration work, not certified here. No tracked secrets introduced (SECURITY-03/09). External classes placeholder fails explicitly; actual provider timeout behavior, lifecycle guard, admin authorization, audit, Q14 disable-unassignment and HTTP APIs remain pending. No infrastructure/health changes; shared migration gate still open. NFR p95 performance not measured. PBT remains disabled; controls outside the enabled subset are N/A. B06 only is complete; user review precedes B07.
-
-## U04 B07 admin read continuation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-18T06:46:36Z
-**User Input**: tiếp tục đi
-**Scope**: User authorizes next reviewable B07 slice: admin list/detail/classes read service, request-local manager deduplication, classes availability with bounded deadline, tests and review notes. Preserve index and existing changes. No controller, commands, JWT/provider implementation, commit/push/Jira writes. NFR stale zero-class placeholder text will be aligned with approved Q05. PBT remains disabled.
 
 ## U04 B07 admin read checkpoint
 
@@ -5443,14 +3979,6 @@ Xem lại kế hoạch
 **Verification**: Final full Maven PASS166 tests,0 failures/errors/skipped, including16 PostgreSQL16.15 regression cases,15 admin read cases,6 reader cases,4 wiring cases (1 new),3 architecture rules. New tests cover authorization before data, request-local dedup, pagination/count forwarding, missing contact, missing subject, provider failures/nulls, DB error propagation, deadline interrupt, caller interrupt and rejected executor. First sandbox run stalled on ByteBuddy attach pipe access; inspected exact JVM identities and stopped only those test processes with approved escalation. Initial elevated retry had a log file lock and was not treated as pass. Actual retry exposed Mockito re-stubbing of a throwing mock; fixed test using doReturn(null), without disabling assertion or changing service policy. Final run used disposable loopback DB, generated credential only in process env, verified container name/label, stopped its --rm container in finally and verified absent. No other containers/volumes touched; no temporary connection metadata retained.
 **Progress and controls**: B07 checked in temporary plan; official full service step remains unchecked because commands/guard/audit are pending. Updated state/summary and admin-read-review.md with reading order, self-checks and integration limits. SECURITY-05 paging/bind parameter boundaries retained; SECURITY-08/15 read authorization and fail-closed failures tested at consumer level; SECURITY-03/09 no secrets or internal dependency errors returned. JWT/session/account ACTIVE and SECURITY-12 remain U01 work, audit ACCESS_DENIED B10 pending, no full runtime-compliance claim. SECURITY-04/RESILIENCY-04/06 no new HTTP/infra/deployment/health change; RESILIENCY-10 classes deadline bounded, contact latency and actual provider deadlines/performance remain integration work. PBT disabled; rules outside project subset N/A. NFR p95 not measured; shared U01 migration gate, Q14 disable-unassign and tester-independent integration remain open. git diff --check PASS. Preserved Git index, no commit/push/Jira write or teammate messaging. Stop at B07 review before B08.
 
-## U04 B08 command continuation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-18T07:06:13Z
-**User Input**: tiếp tục đi
-**Scope**: Next reviewable B08 command slice, with necessary success-audit hooks from B10, meaningful unit/transaction tests. U01 account-lock contract/provider still absent locally. Introduce only U04-internal assignment gate boundary; missing provider must fail closed on real assignment changes, not substitute contact lookup for locking. Keep B08/B08-D and full B10 incomplete until provider integration/disable flow. No U01 implementation, HTTP endpoint, commit/push/Jira or index mutation.
-
 ## U04 B08 command-core checkpoint
 
 **Requested by:** Vu Hai Nam
@@ -5461,14 +3989,6 @@ Xem lại kế hoạch
 **Validation**: Focused command/read run PASS40 tests (25 command+15 read). First full run196 tests had one architecture failure because the new interface lacked required I prefix; renamed it, retained all architecture rules, and used clean build to remove obsolete compiled class. Added command-level concurrent duplicate regression, then final Maven clean test PASS197,0 failures/errors/skipped, including21 PostgreSQL16.15 cases,25 command cases,5 wiring cases (1 new),3 architecture rules. Five new DB cases cover proxy transactions, audit exception rollback for insert/update/manager changes, account fixture lock orchestration, subject lock retention after detach/mandatory transaction, and two create commands yielding one success/one duplicate with one success hook. PostgreSQL test gate locks only accounts UUID fixture; contacts and IAudit are mock. Does not certify real U01 eligibility/disable or U02 audit table propagation/durability. No frontend changes/rerun or new dependency/shared config/migration. Review links validated and git diff --check PASS.
 **Cleanup**: Both full test attempts used separate loopback-only disposable PostgreSQL containers, generated credentials in process env only; finally verified exact generated name/task label, stopped only own --rm container and confirmed absent. Cleared test env, retained ignored logs but no connection metadata. No project containers/volumes or Docker Desktop service removed.
 **Progress/control compliance**: Marked only B08 command/developer-check subtasks and B10 success-hook subtask complete; B08/B08-D/B10/full service step remain unchecked. Updated state/summary/official plan/manual TEMP plan, added command-review.md, refreshed B07 reading instructions after helper extraction. SECURITY-05 input/domain/version validation and bind queries retained; SECURITY-08/15 authorization before data and fail-closed missing guard, atomic command rollback on audit exception tested at consumer level. SECURITY-03/09 audit allowlist/no secrets introduced; SECURITY-12/current session/ACTIVE provider remain U01, denied/failure audit and safe HTTP normalization remain B10/B11. SECURITY-04/RESILIENCY-04/06 no new HTTP/infra/deployment/health change; RESILIENCY-10 guard lock budgets/provider failures and NFR p95 remain integration work, classes deadline unchanged. PBT disabled, rules outside reduced subset N/A. No whole-unit/runtime compliance claim. Preserved staged index, no git add/reset/commit/push, Jira writes or teammate messaging. Stop at command review before further slices.
-
-## U04 B09 lifecycle continuation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-18T07:53:16Z
-**User Input**: tiếp tục đi
-**Scope**: Continue next reviewable B09 archive/reopen and U04-owned shared subject mutation guard. Keep same caller transaction/thread for archive class checks, bounded PostgreSQL lock/query budgets, fail closed missing U05 provider, success audit hooks and unit/DB concurrency fixture evidence. U05 actual class writers/provider and owner agreement remain separate integration gates; no implementation of U05, U01 or HTTP endpoints. Preserve index, no commit/push/Jira.
 
 ## Account-lock clarification preceding B09 (recorded retrospectively)
 
@@ -5508,14 +4028,6 @@ Xem lại kế hoạch
 **Progress/limits**: Updated state, official/manual plans, summary and B07 constructor note; added audit-review.md. Marked only consumer audit subtask, kept B10 overall pending real U02 durable provider, U01 cross-layer dedup and Q14. No generic business FAILURE catalog added; denied authorization-unavailable is explicitly a rejected request, not a claimed U01 deny decision. Full code-generation-plan can continue API/frontend with isolated provider tests; schema/real JWT/session/guard/writer/NFR/tester gates are not waived or fabricated. Preserved staged index, no commit/push/Jira write or teammate message. Stop at reviewable audit checkpoint; next B11 API.
 **Controls**: SECURITY-03 allowlisted audit payloads/no secret propagation; SECURITY-05 safe constants and bound fixture SQL; SECURITY-08/15 authorization-before-data and fail-closed audit failure tested, transaction separation demonstrated with fixture. SECURITY-09 no default allow/provider added; SECURITY-12 session/current account ACTIVE still U01 and not runtime-certified. SECURITY-04/RESILIENCY-04/06 no HTTP/deploy/infra/health changes; RESILIENCY-10 actual audit provider latency/durability pending. PBT disabled, rules outside reduced subset N/A. No whole-unit completion/runtime compliance claim.
 
-## U04 B11 REST continuation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-18T08:33:14Z
-**User Input**: tiếp tục đi
-**Scope**: Continue B11 seven HTTP endpoints, strict U04-local JSON request whitelist/types/presence, snapshot responses, scoped ProblemDetail advice and MockMvc consumer tests. Use trusted server Actor only; do not implement/change U01 JWT/session/CSRF or disable shared security filters. Keep actual provider/JWT integration gates pending, preserve index, no commit/push/Jira or teammate messaging.
-
 ## U04 B11 REST checkpoint
 
 **Requested by:** Vu Hai Nam
@@ -5525,14 +4037,6 @@ Xem lại kế hoạch
 **Validation**: Initial focused HTTP run PASS30; added two meaningful cases for typed filtered paging/statusCounts and explicit-null unassignment. Final full Maven PASS271 tests,0 failures/errors/skipped,including32 new HTTP consumer cases,31 PostgreSQL16.15 regression cases,3 architecture rules. HTTP tests use standalone MockMvc with real U04 services and mock repository/providers, server-set Actor TestingAuthenticationToken and argument resolver; not JWT/filter-chain/HTTP+DB integration. Tested seven routes, response shape/timestamps/location, safe unknown/missing/coerced/overflow inputs, UUID/enum/page validation, anonymous/wrong principal, forged role header, authorization before blockers/data, stale/duplicate/missing-provider/error status and safe JSON responses. No added security-test dependency or disabled production filter. Shared security still requires authentication/CSRF; real U01 filter error entrypoints/session/current ACTIVE remain B12. Parsing errors may precede service audit without exposing resource data; filter-layer audit ownership still pending.
 **Cleanup/progress**: Full suite used generated loopback-only disposable PostgreSQL with own database/schema. Credential process env only, cleared in finally; verified exact name/task label, stopped own --rm container and verified absent. Other containers/volumes unaffected. Added api-review.md, validated local links, updated manual B11 and official API step to complete at code/developer-check level, state/summary; real provider/JWT/NFR/tester gates remain unchecked. No frontend changes or redundant frontend rerun. git diff --check PASS; index/staged user files preserved. No commit/push/Jira or teammate messaging. Stop for reviewable API checkpoint; next consumer security checks/frontend route/screens.
 **Controls**: SECURITY-05 strict local JSON schema/presence/type/whitelist/query bound plus domain validation; SECURITY-08 Actor from server and Admin service gate before resource data; SECURITY-15 fail closed provider/error paths and safe scoped responses tested. SECURITY-03/09 no secret/default allow/config change; SECURITY-12 authentication/session/CSRF are shared U01 integration not certified by standalone tests. SECURITY-04 header/security-chain behavior not changed or certified here; RESILIENCY-04/06 no deploy/infra/health change, RESILIENCY-10 actual provider latency/NFR pending. PBT disabled, out-of-subset controls N/A. No whole-unit or production-ready claim.
-
-## U04 security-consumer and frontend read continuation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-18T08:53:28Z
-**User Input**: tiếp tục đi
-**Scope**: Strengthen existing HTTP consumer authorization matrix without claiming JWT/filter-chain integration or changing shared security. Implement two U04 read routes plus list/detail/classes feature components and race/error tests. Existing current-user hook has no role/loading state and admin layout hard-codes ADMIN, so do not invent U01 RoleGuard or mark F02/B12 complete. Forms/mutations remain subsequent review slices. Preserve index; no commit/push/Jira or messages.
 
 ## U04 frontend read and security-consumer checkpoint
 
@@ -5544,14 +4048,6 @@ Xem lại kế hoạch
 **UI QA and cleanup**: Inspected supplied a05/a07/a07b references and desktop browser list/detail/classes; clicked OPEN filter, displayed1/3 classes while total remained3. Used ignored temporary loopback-only API fixture and scoped Next BACKEND_URL, never imported fake data into application. Closed own browser tab, verified process command lines/IDs before stopping only own Next tree/API process, removed only known fixture script/metadata. Next dev generated untracked frontend AGENTS.md and CLAUDE.md; read content and verified generator-only markers/@AGENTS.md before removing after shutdown. No shared/user files or other servers affected. Mobile/cross-browser and actual providers not certified.
 **Progress**: Added frontend-read-review.md; updated manual/official plan, state and code-summary. Marked F03/F07 and two-route subtask only; F02 RoleGuard and F05/F06 edit/manager workflow remain incomplete, F04/F08 not started. Current-user hook lacks role/auth loading and admin layout hard-codes ADMIN; do not pretend this is a guard or implement U01 login/token flow. B12 real auth/CSRF, B03 U01 schema, B08 account guard/Q14, B09 U05 checker/writers, B10 durable audit/dedup and NFR/independent tester gates remain pending. TEMP files must be cleaned before PR main. git diff --check PASS, staged user files preserved; no git add/reset/commit/push, Jira update or teammate message. Stop at reviewable read-screen checkpoint, next F04.
 **Controls**: SECURITY-05 bounded query/input/error UI; SECURITY-08/15 authorization-before-data matrix and fail-closed/no stale data consumer behavior checked. SECURITY-03/09 no secret/provider/auth fallback added. SECURITY-12 and SECURITY-04 real session/filter/header behavior pending, unchanged. RESILIENCY-10 consumer races/retry/unavailable checked, provider latency/p95 not certified; RESILIENCY-04/06 no infra/deploy/health change. PBT disabled; controls outside configured subset N/A. No whole-unit completion claim.
-
-## U04 F04 continuation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-18T16:20:00+07:00
-**User Input**: tiếp tục
-**Scope**: Continue next reviewable F04 slice: create-subject dialog, reusable manager picker and behavioral tests, list refresh after confirmed create. Inspect real U01 search contract first; absent owner acceptance, use explicit unavailable boundary instead of guessing response schema or shipping fixture accounts. Existing account guard/JWT/CSRF integrations remain pending. Preserve index; no commit/push/Jira or teammate messages.
 
 ## U04 F04 consumer checkpoint
 
@@ -5609,7 +4105,7 @@ Xem lại kế hoạch
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-18T02:36:38Z
-**User Input**: check ui này và sửa lại ui cho phần u05 hiện tại
+**User Input**: check UI này và sửa lại UI cho phần U05 hiện tại
 **Attachment**: C:/Users/Quang Hung/Downloads/ui-reference.zip
 **AI Response**: Reviewed current clean Class&Enrollment checkout (c270475) and U05 design. Previous independent implementation is absent from this checkout; only academics slots exist. User authorizes applying supplied UI reference within prior standalone U05 scope. Archive inspected/extracted with containment checks; contents treated as reference, not authority. Plan at construction/plans/u05-ui-reference-2026-10-18.md covers scoped components and development-only fixture preview, no backend/auth changes. Initial reference screenshot viewed through browser. Enabled Security/Resiliency subset preserved; PBT disabled. No fresh welcome/extension questionnaire for continued workflow.
 ---
@@ -5623,16 +4119,6 @@ Xem lại kế hoạch
 **Verification**: Final frontend suite: 32 tests across 8 files passed, including 16 U05 tests. Typecheck/lint passed. Final Next build --webpack passed on Node24. HTTP production check: preview 404 with no preview content, health 200. Browser verified reference/list/detail/create draft/cancel removal and Student/Teacher views; mobile 390x844 had no page horizontal overflow. Saved four screenshots in .tmp/u05-ui-evidence. Reference static servers and temporary production check server stopped; development preview retained at http://127.0.0.1:3005/preview/u05. Source archive and source unit ownership unchanged. No backend runtime/integration tests, commit/push/deployment or external messages. Security/Resiliency subset limits and PBT disabled documented in summary. Checklist and state updated.
 ---
 
-## U05 — unit test recheck
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-18T03:41:56Z
-**User Input**: check lại unit test xem có chưa
-**AI Response**: Inspected academics.test.tsx and existing frontend/backend test inventory. Reran full frontend suite with bundled Node24: 32 tests across 8 files passed, exit 0; 16 tests are U05 UI/component/parser tests. U05 backend has only contracts/stubs in this checkout and no dedicated backend unit test suite. UI tests use fixtures and mock callbacks, so U01 is not needed; they do not verify real authentication/authorization/database/concurrency. No application or test code changed during this recheck.
----
-
-
 ## Imported U05 history from retained stash
 
 **Requested by:** Quang Hung
@@ -5644,7 +4130,7 @@ Original timestamps below are historical; imported during recovery on 2026-10-18
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-17T05:26:06Z
-**User Input**: giúp tôi code phần u05, xem triển khai như nào
+**User Input**: giúp tôi code phần U05, xem triển khai như nào
 **AI Response**: Reviewed current U05 Class & Enrollment UC20–30 design, stories, contracts, stubs and shared implementation. Expanded the existing eight-step code plan with concrete package/routes, dependency limits, batch transaction boundaries, authorization, audit/event handling, tests and proposed PostgreSQL subject transaction locking for empty-enrollment/reopen races. Added one approval question file and a current state note. No application code changed or runtime tests claimed. Prior U05 Content/Material labels are historical. U01/U04 schema/auth and U02 audit are not implemented; integration evidence remains pending the respective owners/tester. Working tree was clean before this review.
 **Approval prompt**: Kế hoạch U05 đã bổ sung backend, API, giao diện và unit test. Vui lòng chọn A trong aidlc-docs/construction/plans/code-generation-plan/u05-implementation-approval-questions.md để duyệt triển khai toàn bộ kế hoạch, hoặc B để yêu cầu sửa. CLAUDE.md yêu cầu "Create code generation plan with checkboxes, get user approval"; code-generation.md Part 1 Step 7 yêu cầu "Do not proceed until the user explicitly approves the unit code generation plan". Bản plan hiện hành chưa được duyệt.
 **Context**: Continued existing AI-DLC workflow; no new welcome/extension opt-in needed. Security and resiliency reduced subset preserved; PBT disabled and skipped. Plan compliance is documented without asserting runtime compliance. Rule content reviewed; plain Markdown only, no new diagrams or embedded executable blocks. PostgreSQL locking behavior checked against official documentation. Approval response pending.
@@ -5655,7 +4141,7 @@ Original timestamps below are historical; imported during recovery on 2026-10-18
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-17T05:38:16Z
-**User Input**: thôi cứ code những phần u05 mà chưa cần đến u04 hay u01 trc đã , đợi người khác làm xong thì code tiếp
+**User Input**: thôi cứ code những phần U05 mà chưa cần đến U04 hay U01 trước đã, đợi người khác làm xong thì code tiếp
 **AI Response**: Accepted scoped authorization. Implement independent U05 domain, enrollment list parser, opt-in JDBC persistence, staged SQL outside Flyway, isolated UI components and unit tests. Defer account/subject authorization, application orchestration, controllers and real session/API wiring. Existing plan updated with S1–S6 checklist. No additional approval requested; remaining full-plan approval question is superseded for this slice. Image table is supporting allocation context, not a new instruction. Existing Security/Resiliency subset retained; PBT disabled.
 ---
 
@@ -5691,7 +4177,7 @@ Original timestamps below are historical; imported during recovery on 2026-10-18
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-18T03:53:43.487601+00:00
-**User Input**: cứ giúp tôi commit trong branch này trc đã sau khi mn code xong u01 u04 thì tôi merge vào sau
+**User Input**: cứ giúp tôi commit trong branch này trước đã, sau khi mọi người code xong U01, U04 thì tôi merge vào sau
 **AI Response**: Preparing one local commit for the current independent U05 backend, reference UI, tests and documentation on Class&Enrollment. User explicitly defers merging U01/U04 until their owners finish. No push, remote merge, stash removal or scope expansion.
 **Validation**: Fresh full backend run exit 0: 123 tests/29 suites, zero failures/errors/skips; frontend 37 tests/8 files, typecheck and lint pass. Existing SQL pending and persistence opt-in preserved.
 ---
@@ -5716,7 +4202,7 @@ Original timestamps below are historical; imported during recovery on 2026-10-18
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-18T15:03:14.765023+00:00
-**User Input**: "giúp tôi bổ sung unit test còn thiếu cho u05"
+**User Input**: "giúp tôi bổ sung unit test còn thiếu cho U05"
 **Yêu cầu theo ngữ cảnh (diễn giải)**: Bổ sung các test còn thiếu đã được rà: quyền theo vai trò/phạm vi, luồng đọc thành công, batch lỗi sau một số dòng đã xử lý và hợp đồng request/response/validation API. Dùng mock contract unit khác, chưa cần merge hoặc database thật. Giữ nguyên phần triển khai U05 chưa commit; không khẳng định coverage100% hoặc integration hoàn tất.
 
 
@@ -5728,18 +4214,6 @@ Original timestamps below are historical; imported during recovery on 2026-10-18
 **AI Response**: Đã thêm 140 ca backend: 99 quyền/phạm vi/đọc dữ liệu, 35 hợp đồng API/validation và 6 batch transaction/retry. Test batch quan sát commit/rollback từng dòng, dòng trước thành công khi dòng sau lỗi, retry không ghi danh/phát event trùng và caller rollback không cuốn theo dòng REQUIRES_NEW.
 **Kiểm chứng**: Maven clean test qua 304 test/36 suite; riêng U05 210 test, không failure/error/skip. Review độc lập xác nhận assertion đúng nhánh, không có ghi/event ngoài ý muốn; SHA256 của 449 file source ứng dụng khớp trước tác vụ. Frontend không thay đổi, không chạy lại trong đợt này. Không khẳng định coverage100%, xác thực thật hoặc độ bền/concurrency PostgreSQL từ mock. Chi tiết: construction/plans/u05-unit-test-expansion-2026-10-18.md. Không commit/push.
 
-
-## U05 - yêu cầu commit phần hoàn thiện và unit test
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-18T15:14:29.057942+00:00
-**User Input**: "giúp tôi commit"
-**Yêu cầu theo ngữ cảnh (diễn giải)**: Tạo commit trên nhánh hiện tại cho toàn bộ phần hoàn thiện U05, bộ unit test bổ sung và tài liệu bàn giao đã thực hiện trong phiên; không yêu cầu push hoặc deploy.
-**Kiểm chứng trước commit**: Backend 304 test qua (210 riêng U05), không failure/error/skip; 449 file source khớp SHA256 bản đã kiểm thử. Frontend trước đó qua 70 test, lint/typecheck/build và không đổi source sau kiểm chứng. Rà các file pending không phát hiện private-key/token thông dụng, credential hoặc build artifact. Giữ giới hạn migration/session/audit/concurrency thật là bước tích hợp sau merge.
-**Action**: Tạo local commit: feat(u05): complete class and enrollment workflows.
-
----
 
 ## 2026-10-19T09:20:00Z — U01 code review on branch cuong
 
@@ -5777,43 +4251,6 @@ Original timestamps below are historical; imported during recovery on 2026-10-18
 
 ---
 
-## 2026-10-19T17:21:37Z — Jira access and UC roadmap for Đào Chí Cường
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "https://sep490-g21-fall26.atlassian.net/jira/software/projects/KAN/list?jql=project%20%3D%20KAN%20AND%20assignee%20%3D%20712020%3A72680e65-5cea-4ee5-b16d-c34402f2f25b%20ORDER%20BY%20cf%5B10019%5D%20ASC
-bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên plan để làm toàn bộ các UC của tôi"
-
-**AI Response**: Read the Jira list after the user signed in (25 issues: U01 UC 01–12 under KAN-18, U10 UC 46–48 under KAN-23, U11 UC 49–52 under KAN-25, KAN-7/13 done, KAN-152 report task). Compared with aidlc-docs and code: U01 coded on branch `cuong` but not merged into `staging`/`main`; U10/U11 only have the skeleton; every contract they use exists with stubs. Wrote `construction/plans/cuong-uc-roadmap-2026-10-20.md` (phase 0 close U01, phase 1 UC 46–47, phase 2 UC 48, phase 3 U11, phase 4 AI/MCP, phase 5 test and Jira). Asked the user to approve the roadmap and the U10 code generation plan before writing code. No code changed, no Jira change.
-
-**Context**: Construction — Code Generation Part 1 (U10, U11 plans pending approval).
-
----
-
-## 2026-10-19T17:25:48Z — Roadmap approved, phase 0 started
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "Duyệt lộ trình. Bắt đầu giai đoạn 0: mở PR cuong → staging và chốt U01."
-
-**AI Response**: Roadmap approved. Starting phase 0: merge origin/staging into `cuong` (staging already contains the earlier U01 merge at 1871236 plus U02, U03, U04, U05), resolve conflicts, point HomePaths to the U04/U05 routes, rerun tests, push and open PR `cuong` → `staging`. Jira changes will be confirmed with the user first.
-
-**Context**: Construction — U01 integration (roadmap phase 0).
-
----
-
-## 2026-10-19T17:34:38Z — U01 merged with staging, PR prepared
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: (continuation of "Duyệt lộ trình. Bắt đầu giai đoạn 0: mở PR cuong → staging và chốt U01.")
-
-**AI Response**: Merged origin/staging into `cuong`. Conflicts resolved: `not-found.tsx` uses staging's `ErrorPage`; `AppShell.test.tsx` keeps both tests; `audit.md` keeps both sections. `HomePaths` now follows BR-U01-48 (Student/Teacher → `/classes`, Subject Manager → `/manager`, Admin still `/admin/accounts` until U15). Account Detail links again to the U02 Audit Log filtered by `objectType=ACCOUNT&objectId`. Results: backend `mvn -B verify` 676 tests, 0 failures, 31 skipped (U04 `SubjectRepositoryIntegrationTest` needs `U04_TEST_JDBC_URL`); frontend tsc, eslint and vitest (214 tests) pass. Not rerun end-to-end with Docker. Pushing `cuong` and opening PR `cuong` → `staging`.
-
-**Context**: Construction — U01 integration (roadmap phase 0).
-
----
-
 ## 2026-10-19T17:44:34Z — Jira update deferred
 
 **Requested by:** Đào Chí Cường
@@ -5830,7 +4267,7 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 
 **Requested by:** Đào Chí Cường
 
-**User Input**: "Ci đỏ, kiểm tra và fix"
+**User Input**: "CI đỏ, kiểm tra và fix"
 
 **AI Response**: Build jobs (backend, frontend) pass; only GitGuardian Security Checks fails with 2 "Generic Password" findings, both test fixtures: Testcontainers role passwords in `AccountRepositoryIntegrationTest` (commit 1e71a76) and MockMvc request passwords in `IdentityWebSecurityTest` (commit 3be0d7a). Not real credentials. Replaced the literals with per-run `UUID.randomUUID()` values (18 + 14 tests pass, Testcontainers ran). GitGuardian scans every commit in the PR, so the check stays red until the two incidents are marked as false positive / test credential in GitGuardian (or history is rewritten, not done).
 
@@ -5864,7 +4301,7 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-20T10:06:21Z
-**User Input**: "giúp tôi sửa lỗi trc"
+**User Input**: "giúp tôi sửa lỗi trước"
 **AI Response**: Investigate and repair the backend offline dependency packaging failure and frontend Turbopack child-process build failure reported in the previous turn. Preserve existing uncommitted work and U09 behavior/contracts. Apply systematic-debugging skill; reproduce before changing configuration.
 **Context**: Continue existing Construction build/test work. Existing project security/resiliency scope retained; PBT disabled.
 
@@ -5880,23 +4317,12 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 
 ---
 
-## U09 local commit split
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-20T10:23:58Z
-**User Input**: "giúp tôi chia nhỏ commit chưa push"
-**AI Response**: Reviewed branch grading-gradebook, baseline HEAD 6341aed2f66271dd7d112bf3e3565349071402d2 and all changes. Prepared seven Conventional Commit groups with explicit file lists. git add failed creating .git/index.lock (Permission denied); no files staged and no commits created. Prepare a local PowerShell fallback with branch/HEAD/index/file-hash checks for execution outside the sandbox. No push command or remote mutation.
-**Context**: AI-DLC Construction handoff/publication preparation; preserve source state and existing verification evidence. No permission escalation or workaround around read-only Git metadata attempted.
-
----
-
 ## U05 Clean Code assessment
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-20T10:39:42Z
-**User Input**: "Dùng skill clean code và giúp tôi check lại u05 xem có cẩn phải refactor gì k như u09"
+**User Input**: "Dùng skill clean code và giúp tôi check lại U05 xem có cần phải refactor gì không như U09"
 **AI Response**: Applied Clean Code skill and resumed existing Construction review. Initial working tree clean. Reviewed U05 design, backend/frontend consumers and tests against U09's local refactor approach. Recommend readable route orchestration, clearer backend names/operation outlines, named pagination calculations and removal of the obsolete Frame wrapper. Archived student dashboard versus detail behavior is intentional under BR-U05-40/41/42, not a bug. Focused backend 213 passed, zero failures/errors/skips; frontend 33 passed/5 files after an initial sandbox temp ENOENT was avoided using process-local workspace temp and one worker. No production/test/config changes, commit or push. Existing integration/NFR gates retained; disabled PBT skipped. Report: construction/plans/2026-10-20-u05-clean-code-review.md.
 **Context**: Review-only request completed; no implementation stage advanced or refactor performed. Documentation-only extension checks N/A; no deployed compliance claim.
 
@@ -5907,7 +4333,7 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-20T10:42:50Z
-**User Input**: "Giúp tôi refactor mà k làm thay đổi hành vi, contract, clean code"
+**User Input**: "Giúp tôi refactor mà không làm thay đổi hành vi, contract, clean code"
 **AI Response**: Continue existing Construction and implement the four previously reviewed clean-code changes inline. Preserve all public contracts, strings, validation/authorization/lock order, transaction/audit/event behavior and existing pagination quirks. Retain characterization tests on unchanged source before editing; reuse existing adequate backend coverage. Prior review documentation remains baseline. No commit/push requested. Execution plan: construction/plans/2026-10-20-u05-clean-code-refactor.md. Reduced Security/Resiliency scope retained; PBT disabled.
 **Context**: Explicit approval of prior reviewed refactor scope; no new feature/design stage needed.
 
@@ -5923,23 +4349,12 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 
 ---
 
-## U05 local commit preparation
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-20T10:54:42Z
-**User Input**: "Giúp tôi commit chưa push"
-**AI Response**: Reviewed the complete U05 change set on grading-gradebook, baseline HEAD 985fae119ebf9a55d28a9a6a25969555b86ff8e7, with an initially empty index. Split local Conventional Commits into characterization tests (26971c2e), backend refactor (c5cd5511), frontend refactor (1bdff199), and a documentation commit containing this audit entry and the review/refactor evidence. Git metadata writes required approved sandbox escalation after index.lock access was denied; the approved writes succeeded. Reuse prior verified test/build evidence because source and tests are unchanged since verification. No push or remote mutation requested or performed. Final commit identities and working-tree state are checked through Git after documentation is committed.
-**Context**: Local publication of the approved U05 refactor only; existing integration/NFR limitations retained.
-
----
-
 ## Jira status reconciliation - U05 and U09
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-20T11:05:42Z
-**User Input**: "Check jira xem còn đầu việc gì nữa với cập nhật status unit đã xong"
+**User Input**: "Check Jira xem còn đầu việc gì nữa với cập nhật status unit đã xong"
 **AI Response**: Read live Jira through Atlassian and compared against committed U05/U09 implementation and verification handoffs. U05 KAN-21 was already Done; its eleven UC20-30 stories remain In Review, pending independent acceptance evidence. Kept those existing statuses. Transitioned U09 Epic KAN-31 and stories KAN-84 (UC42), KAN-58 (UC43), KAN-59 (UC44), KAN-81 (UC45) from To Do to In Review; all five transition responses confirmed the resulting status. Did not mark Done without integration/acceptance evidence. Remaining new assigned work: U15 Epic KAN-32 and UC66 KAN-80, both To Do. U05 live DB/access/concurrency and U09 real U06/U07/U08/migration/group/event/browser/NFR acceptance gates remain open. No comments/messages, assignee/date/sprint changes, new Jira tickets, source changes, commit or push.
 **Context**: User authorized Jira status updates. Repository code/build evidence was reused without rerunning tests because source was unchanged. Epic U05 Done versus children In Review is an existing tracking inconsistency, not silently corrected or treated as proof of acceptance.
 
@@ -5950,7 +4365,7 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-20T11:19:52Z
-**User Input**: "Giúp tôi lập plan triển khai u15 luôn theo doc aidlc, contract ,sử dụng skill clean code, superpower"
+**User Input**: "Giúp tôi lập plan triển khai U15 luôn theo doc AI-DLC, contract, sử dụng skill clean code, superpowers"
 **AI Response**: Applied Clean Code and Superpowers using-superpowers/brainstorming/writing-plans. Resumed brownfield Construction from existing U15 FD/NFR/infra and current unit mapping; preserved prior Jira reconciliation edits in audit/state. Inspected actual public contracts, provider implementations, permissions, backup/settings semantics, Admin layout/nav and HomePaths. Replaced the old five-step scaffold plan with a seven-task implementation draft including exact file boundaries, proposed HTTP/DTO schema, TDD cases, bounded fan-out deadlines, safe partial availability, frontend/history, homePath cutover, verification/review/acceptance and rollback. Created contract review C01-C07 and two approval questions. Important gaps: BackupRunView has no startedAt; IBackupStatus lacks direct latest-success/7-day summary; UI/source differ on shortcuts, retention exception and enrollment subtitle. Recommend current-contract consumer slice with missing metadata visibly unavailable and full acceptance gated on separate U03 contract handoff; alternative waits for full metadata. No provider contract changes, product code, tests, Jira writes, messages to owners, commit or push. Verified local Markdown links, seven tasks, UTF-8/fences and git diff whitespace; no runtime checks claimed.
 **Context**: Code Generation Part1 draft complete for review, Part2 not authorized. Existing requirements/design reused, no new unit decomposition or infrastructure. Reduced Security/Resiliency scope covered in tasks; PBT remains disabled. User choice/approval recorded as pending in u15-implementation-approval-questions.md; approval rule from CLAUDE.md/code-generation.md applies before generation.
 
@@ -5961,7 +4376,7 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-20T11:28:04Z
-**User Input**: "Cứ giúp tôi code trc theo plan còn khi nào u3 xong thì xử lý sau"
+**User Input**: "Cứ giúp tôi code trước theo plan, còn khi nào U03 xong thì xử lý sau"
 **AI Response**: Execute approved U15 plan inline under clean-code and Superpowers executing-plans/TDD. Select slice A; retain missing U03 metadata as unavailable. Preserve planning/audit changes, use current feature checkout and ignored execution ledger. No provider contract change, commit or push authorized.
 
 ---
@@ -5975,15 +4390,6 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Context**: Slice A code-ready, not full UC66 acceptance or global Build & Test completion. Real JWT/current-account/audit persistence/provider/browser integration, U03 C01/C02 metadata, healthy p95<=1s, fault2s+overhead/stress/JDBC release and independent tester/owner acceptance remain open. Existing U09 prerequisite U07/U08 migration startup gate and62skips retained. Security03/04/05/08/09/12/15 and Resiliency04/06/10 local coverage/limits documented in implementation-summary; other rules N/A per reduced scope; PBT disabled. Bookkeeping adapted to PowerShell and existing feature checkout; no reset or Git index writes.
 
 ---
-
-## U15 local commit grouping
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-20T14:21:07Z
-**User Input**: "giúp tôi commit"
-**AI Response**: Inspected working tree and empty index on grading-gradebook, checked whitespace and reran focused backend49/frontend21 tests successfully. Created local Conventional Commits d3d8c7b5 (backend/API/OpenAPI/authorization/homePath/tests) and a71d7fd1 (dashboard/history UI/navigation/tests), followed by the documentation commit containing approved plan, contract decisions, verification/handoff and accumulated Jira reconciliation audit/state. No product changes during commit preparation; no push, merge or Jira mutation. Git metadata writes used sandbox escalation for the authorized local commit operation. Final commit identities and clean working tree checked after documentation commit.
-**Context**: User authorizes local commits of the implemented U15 slice A. Existing U03 metadata and real integration/NFR acceptance gates remain open; historical no-commit statements describe earlier execution only.
 
 ## 2026-10-20T01:58:03Z — CI recheck before merging to staging
 
@@ -6006,18 +4412,6 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **AI Response**: Rewrote only the 9 commits in `origin/staging..cuong` (staging commits untouched; the merge still has e74058f as parent) with `git filter-branch --index-filter` (byte-exact blob edits). Test passwords in `AccountRepositoryIntegrationTest`, `IdentityWebSecurityTest` and, after a second GitGuardian finding on the same incident, `ProfileAndPasswordChangeTest` now use per-run `UUID.randomUUID()` values from the commit that first touches them. Old abe7ba6 was reworded to "docs: log GitGuardian test-password findings" since its code change moved into earlier commits. GitHub refused to reopen PR #5 after the force-push, so the branch was briefly pushed back to the PR's recorded head f28917d, the PR reopened, then the rewritten history force-pushed (final head 8d4c22b). Local backups: `backup/cuong-before-rewrite` (abe7ba6), `backup/cuong-rewrite-1` (1cac343). Affected tests pass locally (ProfileAndPasswordChangeTest 10, IdentityWebSecurityTest 18, AccountRepositoryIntegrationTest 14, ArchitectureTest 2); CI on 1cac343 had backend and frontend green.
 
 **Context**: Construction — U01 integration (roadmap phase 0), CI fix.
-
----
-
-## 2026-10-20T02:15:19Z — PR #5 merged into staging
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "làm sao để duyệt PR" / "merge luôn cho tôi, sau đó kiểm tra trên nhánh staging để tránh conflict"
-
-**AI Response**: Explained that the author cannot approve their own PR and `staging` has no required review (merge state CLEAN). Merged PR #5 with a merge commit (`gh pr merge 5 --merge --match-head-commit 8d4c22b`): staging is now 6341aed, parents e74058f and 8d4c22b; branch `cuong` kept. Checks: staging tree equals 8d4c22b's tree (3748f59, CI green on that head); no conflict markers in code or Markdown; no other open PR targets staging. Test merges into the new staging: Class&Enrollment, audit, subject-administration already included; `main` (+1 diagram commit) merges cleanly; `ui-reference` (+2 docs commits, 2026-10-18) conflicts only in `aidlc-docs/audit.md`, and already conflicted with the old staging, so not caused by PR #5. Jira not changed yet.
-
-**Context**: Construction — U01 integration (roadmap phase 0).
 
 ---
 
@@ -6165,18 +4559,6 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 
 ---
 
-## 2026-10-20T09:33:53Z — Pushed quiz-practice, opened PR #6
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "Push nhánh quiz-practice (gồm cả U10 và U11) và mở PR vào staging, kiểm CI trước khi merge."
-
-**AI Response**: origin/staging unchanged (6341aed); no secret-like literals in the three commits (5d70173, f3b54bc, cfc4cbf). Pushed `quiz-practice` and opened PR #6 into `staging` (https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/6), bound to the session. CI started; PR not merged. Audit entry left uncommitted.
-
-**Context**: Construction — U10/U11 integration.
-
----
-
 ## 2026-10-20T09:51:17Z — PR #6 merged into staging
 
 **Requested by:** Đào Chí Cường
@@ -6223,23 +4605,12 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 
 **Context**: Construction — U10/U11 end-to-end verification.
 
-## Merge conflict check and resolution
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-20T14:36:53Z
-**User Input**: "check conflict" (GitHub Desktop screenshot showing four conflicted files)
-**AI Response**: Inspected active merge of staging c7a4791d into grading-gradebook ea02f62e. Resolved four additive conflicts in aidlc-state.md, audit.md, AccessPolicy.java and Actions.java by retaining both branches' grading/dashboard and quiz/practice changes. Verified exact union of36 actions/rules without modifying role/scope; all audit lines from both parents retained. State keeps current U15 Admin Dashboard row over obsolete staging U15 Grading row. Fresh merged-tree Maven verify:852 total/775pass/77skip/0 failures/errors, executable JAR; frontend292pass/57files, lint/typecheck pass. Logs .tmp/u15/merge-*.log. Staged only four resolved conflict paths; retained other139-file incoming merge changes. No merge commit, push or unrelated source edits.
-**Context**: Conflict resolution and compatibility check only; final merge commit remains pending in GitHub Desktop. Existing independent browser/provider/DB/NFR acceptance gates and skipped tests unchanged.
-
----
-
 ## U13 Code Generation Part 1 — readiness and approval
 
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-10-21T05:54:32Z
-**User Input**: "giúp tôi code unit 13 gồm uc 58-62, dựa trên code-generation-plan của u13 và aidlc-docs. UI ở folder E:\FPTUni\sem9_fa26\ui-reference"
+**User Input**: "giúp tôi code unit 13 gồm UC 58-62, dựa trên code-generation-plan của U13 và aidlc-docs. UI ở folder E:\FPTUni\sem9_fa26\ui-reference"
 **AI Response**: "Tôi sẽ đọc hướng dẫn AI-DLC, kế hoạch code của Unit 13 và tài liệu UC 58–62, rồi đối chiếu UI tham chiếu để triển khai và kiểm tra."
 **Context**: Resumed existing Construction; clean working tree on reference-materials. Read CLAUDE/common/Code Generation rules, state and U13 functional/NFR/infrastructure artifacts, current contracts and local UI artboard sources. Updated existing ten-step plan with concrete paths, role/scope/transaction/job race/resource-limit/UI/test decisions C01–C05. JobTypes/routing and manager nav already exist and must be reused. U06 MaterialText lacks version metadata; proposed compatible consumer implementation with an explicit provenance handoff gate. Security/Resiliency reduced scope retained; PBT disabled and skipped. No subagents, runtime source edits, tests, commit/push or external mutations.
 
@@ -6262,7 +4633,7 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **AI Response**: "Tôi dừng tại đây. Tôi đã đọc lựa chọn A, nhưng chưa sửa code ứng dụng. Bạn cứ bổ sung yêu cầu nhé."
 **User Input**: "việc sửa đổi code ở các unit khác có chấp nhận được không?"
 **AI Response**: Explained minimal cross-unit integration edits: U01 action registry, reuse existing U03 services/routing, U06 DTO metadata gap, existing frontend slots; no automatic contract/schema/business changes. Implementation remains paused.
-**User Input**: "ở u06 thay đổi những gì, chi tiết"
+**User Input**: "ở U06 thay đổi những gì, chi tiết"
 **AI Response**: Inspected IReferenceMaterial, SelectableMaterial, MaterialText, conditional stub, all backend/src and frontend/src references, and U13 F7 design. Explain current approved C04 needs no U06 source change; a separate proposed contract enhancement adds version and extraction-state metadata, potentially kind/URL, while preserving method signatures and unit boundaries. In this checkout no concrete U07/U10 calls or DTO constructions were found; cross-branch consumers are unverified. No application source changes or approval to resume inferred from discussion.
 
 ---
@@ -6274,7 +4645,7 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Timestamp**: 2026-10-21T06:14:27Z
 **User Input**: "ok cứ bỏ qua đi"
 **Context**: Keep U06 DTO unchanged; no authorization to change shared U06 records inferred.
-**User Input**: "thực hiện code cho tôi u13 đi"
+**User Input**: "thực hiện code cho tôi U13 đi"
 **AI Response**: Resuming all ten approved U13 steps inline, without U06 DTO changes or commit/push. Approval file Answer a confirmed.
 
 
@@ -6283,7 +4654,7 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-10-21T07:17:14Z
-**User Input**: "thực hiện code cho tôi u13 đi"
+**User Input**: "thực hiện code cho tôi U13 đi"
 **AI Response**: Implemented UC58–62 inline using approved plan and local UI reference. Added materials migration/domain/JPA, scoped access/commands/queries, CAS/version history, parser child JVM/job/sweeper, unchanged-U06-contract provider and MCP, REST/OpenAPI, pages/dialogs/viewers and U05/U08/U11 slot registrations. Added four U01 actions/rules and scoped frontend security headers; U03/U06 implementation/contracts unchanged. No subagents, commit/push/Jira or owner messages.
 **Verification**: Full backend verify928 total/851pass/77skip/0fail/0error and JAR. Own review repaired read-transaction rollback-only behavior for expected MCP errors and allowed staff archived MCP references while rejecting them for new AI sources; final focused80pass (78U13+2architecture), package pass. PDF/DOCX/PPTX parser tests and packaged-JAR PDF smoke pass. Full frontend321pass/61files including29U13; final typecheck/lint/build pass, lint zero warnings. Three standalone U13 routes returned200 with CSP/blob/YouTube/nosniff. Browser loopback fixture: create/playlist rejection/edit/replace/archive and mobile; U13-only CSS repaired whole-page overflow. Native PDF blob iframe loaded but in-app native renderer remained blank; real-browser PDF acceptance is explicitly pending.
 **Environment**: Initial Maven cache/SWC sandbox AccessDenied and Vitest temp/IPC failures were retried with authorized escalated commands/process-local temp; interrupted/failed attempts not counted pass. Next dev auto-generated two untracked frontend instruction files; only those were backed up in ignored .tmp/u13 and removed after dev stopped; root AGENTS/CLAUDE preserved. Full PostgreSQL/provider/session/audit/Drive/Rabbit/tester/NFR acceptance and U06 provenance metadata remain gates. User review pending, global stage not advanced.
@@ -6291,16 +4662,6 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 
 ---
 
-## U13 technology explanation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-21T07:28:36Z
-**User Input**: "ngoài nhũng gate chưa hoàn tất ra thì u13 đã ready rồi đúng không?"
-**AI Response**: Confirmed code ready for review/integration, with documented acceptance gates still open; no production readiness claim.
-**User Input**: "giải thích những công nghệ sử dụng cho u13"
-**AI Response**: Explain Java17/Spring Boot, REST/validation/security, JPA/PostgreSQL/Flyway/CAS, U03 artifact/Drive/Redis download tokens, RabbitMQ jobs and isolated Tika/PDFBox/POI extraction, Next.js/React/TypeScript/CSS/slots/viewers, U06 contract/MCP consumers and JUnit/Mockito/ArchUnit/Vitest/build verification. Read actual source; no implementation changes.
----
 ## U13 technology and documentation compliance review
 
 **Requested by:** Vu Hai Nam
@@ -6314,19 +4675,11 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Requested by:** Vu Hai Nam
 
 **Date**: 2026-10-21
-**User Input**: "việc thay đổi như vậy có ổn không? Và cho tôi biết đã cài `IReferenceMaterial` của U06, thay adapter rỗng trong bước 6 chưa ?"
+**User Input**: "việc thay đổi như vậy có ổn không? Và cho tôi biết đã cài `IReferenceMaterial` của U06, thay adapter rỗng trong bước 6 chưa?"
 **AI Response**: Verified real ReferenceMaterialService implements IReferenceMaterial; conditional fallback remains in source but is suppressed by the U13 provider, with passing single-bean context test. U06 DTO unchanged. Explained nonce correction and required rendering/browser checks.
-**User Input**: "sửa lại cấu hình bảo mật để khớp với ai-dlc đi"
+**User Input**: "sửa lại cấu hình bảo mật để khớp với AI-DLC đi"
 **AI Response**: Authorized SEC-004 correction: removed scoped static headers, added frontend/src/proxy.ts and security regression tests, changed root layout to request rendering. Fresh 256-bit nonce overwrites inbound CSP/x-nonce and matches Next-generated scripts; production no unsafe script directives, DENY/frame-ancestors none, HSTS/nosniff/referrer, approved PDF/YouTube/Draw.io child frames. Style attributes retain documented unsafe-inline exception for existing dynamic React styles; eval/WebSocket development only. Applied all HTML page routes per enabled SECURITY-04; no U06/backend changes.
 **Verification**: Focused6pass; full frontend323pass/62files, typecheck/lint/standalone build pass. HTTP login/list/detail/view/404/repeat requests verify all script nonce/header/cache consistency and asset200. Browser login hydration and U13 fixture client navigation/PDF iframe/YouTube player pass without CSP console errors; native PDF renderer still blank in in-app browser and Chrome/Edge acceptance remains pending. Sandbox SWC/temp/IPC failures retried with authorized elevated build/full tests; extra thread attempt stopped after successful full-suite evidence. Updated canonical plan, handoff, verification and state. No commit/push/deployment or stage advancement.
----
-## U13 local commit authorization
-
-**Requested by:** Vu Hai Nam
-
-**Date**: 2026-10-21
-**User Input**: "chia thành các commit nhỏ rồi commit lên branch reference-materials, không push"
-**AI Response**: Confirmed current branch reference-materials and empty Git index. Split the verified U13 changes into eight cohesive local commits: domain/persistence, scoped management, background extraction, AI/MCP, REST/OpenAPI, frontend, SEC-004 correction and AI-DLC handoff. Preserve approved U06 contract and outstanding acceptance gates. No source changes or test reruns needed for commit organization. Do not push.
 ---
 ## U13 local commit results
 
@@ -6340,7 +4693,7 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-10-21T08:20:18Z
-**User Input**: "chuyển sang branch announcements-and-notifications, bắt đầu thực hiện code u14 gồm các uc 63-65 "
+**User Input**: "chuyển sang branch announcements-and-notifications, bắt đầu thực hiện code U14 gồm các UC 63-65"
 **AI Response**: Current checkout was already announcements-and-notifications with clean working tree and empty index; no checkout/reset/merge was needed. Read root CLAUDE.md, workflow/common rules, enabled reduced Security/Resiliency baseline (PBT disabled), U14 functional/NFR/infrastructure docs, UC63–65 and stories, actual U01/U03/U05/U07/U08/U12 contracts and published event payloads, frontend slots and local UI reference. Expanded the existing unapproved eleven-step canonical plan with concrete paths/tests and C01–C08, rather than creating a competing plan. Application code/dependencies not changed.
 **Findings**: U01 findAccounts limits20 and cannot enumerate every active Admin, so plan proposes explicit additive paginated Admin lookup plus provider/stub/tests. U07/U08/U12 currently expose stubs on this branch: reminders/group recipients and multi-instance SSE need real owner integration, not empty-data success. EMAIL_SEND already routes through U03 jobs.email; DomainEvent consumer requires separate bounded retry topology. SMTP accept-before-SENT crash window cannot be claimed exactly-once through current IMail. Frontend branch lacks SEC-004 nonce correction from U13: plan explicitly includes only those security files, not a whole-unit merge.
 **Approval**: Existing U14 plan explicitly says not approved. Per CLAUDE.md and .aidlc-rule-details/construction/code-generation.md, obtain explicit approval of concrete plan before generation. Prepared u14-implementation-approval-questions.md with one question, A approve C01–C08, B request changes, E other; Answer blank. All implementation checkboxes remain unchecked. No commit/push/deployment/teammate messaging/real email or global stage transition.
@@ -6368,28 +4721,6 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **Browser**: Disposable loopback fixture only; Teacher create/edit/delete and important/email behavior, Student read-only feed,5email preferences and read-all count2-to0; desktop visual inspection and browser console without CSP/hydration warnings/errors. No actual SMTP/provider use. Fixture does not certify backend auth/DB or actual U12 hub. Mobile viewport/provider acceptance not claimed.
 **Environment and limits**: Maven/SWC/temp/loopback sandbox issues retried with approved commands. Removed only verified generated Next type directories from previous branch and regenerated. First full frontend run concurrent with build had5existing-test timeout failures; final maxWorkers2 run passed without editing old tests/timeouts. U07/U08/U12 still stubs; real migration/provider/Rabbit/SMTP/cap/session/CSRF/audit/SSE2instance/mobile/NFR and scanner cardinality gates retained. IMail cannot prove exactly-once across SMTP-accept/DB-commit crash window; explicitly approved limitation remains.
 **Artifacts**: Canonical plan steps1-10 checked, step11 user review pending; code-summary and u14-verification tester matrix updated; no commit/push/deploy/teammate messages/global-stage transition.
----
-
-## U14 code approval and scoped Build & Test continuation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-21T09:37:09Z
-**User Input**: "tiếp tục "
-**Approval**: User approves code-generation review step11 and requests continuation. Marked plan/state/code-summary accordingly; no commit/push/deployment approval inferred.
-**AI Response**: Read Build & Test workflow, actual CI/Maven/npm/local compose and existing tester handoff. Prepared build-instructions, unit-test-instructions, integration-test-instructions, performance-test-instructions, security-test-instructions, e2e-test-instructions, build-and-test-summary and scoped u14-build-and-test-plan. Global all-units-complete prerequisite is not satisfied, so global stage/Operations remain pending.
-**Execution**: Fresh final-source mvn -B verify BUILD SUCCESS:921total/844passed/77skipped/0failures/errors,85s, finished2026-10-21T16:35:07+07:00; executable JAR. Retained final frontend314pass/61files and lint/typecheck/build/production audit0vulnerabilities without redundant reruns. Skips and fixture checks are not independent integration acceptance.
-**Runtime findings**: Docker CLI installed but Engine named pipe dockerDesktopLinuxEngine unavailable. U09 migration references missing real U07/U08 schemas; U07/U08/U12 providers remain stubs. No substitute schema, local stack startup, real SMTP or source changes. Independent PostgreSQL/Rabbit/SMTP/provider/session/SSE/mobile/NFR tests and SMTP accept-before-SENT crash ambiguity remain explicit.
----
-
-## U14 local commit request
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-21T09:44:17Z
-**User Input**: "chia nhỏ thành các commit, commit lên branch announcements-and-notifications, không push"
-**AI Response**: Verified correct branch and initially empty index; split source into seven functional commits, with eighth documentation commit. Source commits:6cef92a identity, cdb8b9d persistence,3f4a201 announcement APIs,2920fc6 notification fanout/email/reminder/APIs/OpenAPI,14c17cf CSP nonce,28fdc92 announcement UI,adfc51f notification UI. No source modifications or unrelated files; retained existing final-source verification and checked staged whitespace each time.
-**Environment**: Initial sandbox denied .git/index.lock write; retried local git add/commit through approved escalated execution. No automatic approval rejection. No push, deployment, real email or acceptance gate advancement.
 ---
 
 ## staging into announcements-and-notifications — approved conflict resolution
@@ -6426,30 +4757,6 @@ bạn có thể truy cập link này không" / "tôi đã đăng nhập" / "lên
 **AI Response**: Verified local and remote `cuong` (8d4c22b) are contained in origin/staging, then deleted it locally and on GitHub. Remaining local branches: `main`, `staging`.
 
 **Context**: Repository housekeeping.
-
----
-
-## 2026-10-20T14:45:00Z — Roadmap status check
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "roadmap đã hoàn thành chưa"
-
-**AI Response**: Not complete. Phases 0–3 and the E2E run are done; remaining: phase 4 (AI/MCP of U10), tester integration tests, closing KAN-18/KAN-23/KAN-25, KAN-152. Ticked the missed E2E checkbox. (These edits were later lost from the working tree and re-applied on 2026-10-22.)
-
-**Context**: Roadmap status review.
-
----
-
-## 2026-10-22T03:30:00Z — Roadmap feasibility check
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "kiểm tra lại roadmap và dự án xem có thể hoàn thành roadmap được chưa"
-
-**AI Response**: Fetched origin. `staging` (08a6134) now has U09, U13, U15. Findings: U06 contract on `staging` is sufficient for phase 4 (same pattern as U09 `GradingProposalResultHandler`, `GradingMcpTools`); U13 implements `IReferenceMaterial` and the `LearningMaterialSection` slot on `staging`, unblocking G4 `MaterialQuizList` and a reference-material picker. U06 implementation and `AiSourcePicker` exist only on `ai-connections`; U08 tracker and `activity.retentionDays` only on `assignment` — neither merged, no open PRs. No tester integration tests for U01/U10/U11 on any branch. Jira: KAN-18 In Progress, KAN-23/KAN-25 To Do, KAN-152 In Progress (no description or attachment; Report 3 not in repo). Re-applied the audit entries from GitHub Desktop stash@{0} and the roadmap E2E tick, which had been lost from the working tree. Conclusion: roadmap cannot be fully closed yet; phase 4 code and G4 can be done now on stubs/staging.
-
-**Context**: Roadmap status review.
 
 ---
 
@@ -6611,18 +4918,6 @@ check lại lỗi
 
 ---
 
-## 2026-10-22T08:50:00Z — staging health check
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "kiểm tra nhánh staging xem có lỗi gì không"
-
-**AI Response**: Checked origin/staging e21df97 (same as local quiz-ai-mcp). Frontend: npm ci, lint, typecheck, 356 tests, build pass. Backend `mvn -B verify` (JDK 17): 999 tests, 0 failures, 4 errors — all Flyway failures at grading/V20260925_1500 (references `assignments`, `assignment_attempts` from unmerged U07/U08); with that folder excluded from target, all other migrations (incl. materials, notifications) apply and 31 repository integration tests pass. SubjectRepositoryIntegrationTest (31) is skipped by design (needs U04_TEST_JDBC_URL). Started the packaged jar against a temporary Postgres 16 (removed afterwards): APPLICATION FAILED TO START — bean 'notificationTopology' defined twice (U14 `@Configuration NotificationTopology` with `@Bean notificationTopology()`, commit 2920fc6); still invalid with bean overriding enabled. No test builds the Spring context, so CI cannot catch it. Added this blocker to the roadmap. No code changed.
-
-**Context**: Staging verification.
-
----
-
 ## 2026-10-22T09:00:00Z — Team message drafted
 
 **Requested by:** Đào Chí Cường
@@ -6695,18 +4990,6 @@ check lại lỗi
 
 ---
 
-## 2026-10-22T12:20:00Z — PR #8 opened; staging merged into quiz-activity
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "Push nhánh quiz-activity lên origin (nhánh riêng cùng tên) và mở PR vào staging, kiểm CI trước khi merge."
-
-**AI Response**: Pushed `quiz-activity` to `origin/quiz-activity` (upstream now its own remote branch) and opened PR #8 into staging. GitHub reported conflicts because staging gained 4bcca43 (U14 fix for the `notificationTopology` bean collision) during the push; conflicts were only in append-only docs (aidlc-state.md, audit.md). Merged origin/staging into `quiz-activity`, kept both sides (staging entries first), and pushed so CI can run.
-
-**Context**: Delivery — PR #8.
-
----
-
 ## 2026-10-22T12:40:00Z — PR #8 CI fix: duplicate POI dependency
 
 **Requested by:** Đào Chí Cường
@@ -6716,17 +4999,6 @@ check lại lỗi
 **AI Response**: Enabled Auto-fix for PR #8. CI frontend passed; backend failed at POM validation: `poi-ooxml` declared twice (U10's plain declaration and U07's declaration with poi-ooxml-lite excluded plus poi-ooxml-full, both kept by the U07 merge into staging), and `poi.version` duplicated. Kept a single declaration in U07's form (full schemas also cover U10's .xlsx import) and one property. Verified with `mvn -B verify` (JDK 17): 1114 tests, 0 failures/errors, QuestionImporterTest passes. Committed and pushed to `quiz-activity`.
 
 **Context**: Delivery — PR #8 CI fix.
-
-## Construction - Jira reassignment
-
-**Requested by:** Vo Minh Tai
-
-**Timestamp**: 2026-10-20T18:00:00Z
-**User Input**: "xem lại jira cho tôi, đã có thay đổi về công việc"
-**AI Response**: Jira (cập nhật 2026-10-20): U09 (KAN-31, KAN-84, KAN-59, KAN-81, KAN-58) chuyển sang Khuất Quang Hưng, đã code trên nhánh `grading-gradebook` và gộp vào `staging`; U06 (KAN-29, KAN-34 UC31, KAN-35 UC32, KAN-37 UC33) giao cho Người 2; U12 giữ nguyên; KAN-49 Done. Hỏi người dùng thứ tự làm và cách xử lý nhánh `grading` (U09 trùng).
-**Context**: Construction, đổi phân công
-
----
 
 ## Construction - Reassignment decisions
 
@@ -6754,7 +5026,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T01:00:00Z
-**User Input**: "duyet"
+**User Input**: "duyệt"
 **AI Response**: Plan U06 được duyệt, gồm 4 điểm khác thiết kế (MCP tự cài JSON-RPC, Flyway out-of-order, `UsageMeasurement.ESTIMATED`, hướng dẫn agent "chưa kiểm chứng"). Bắt đầu Part 2 trên nhánh `ai-connections`.
 **Context**: Construction, U06 Code Generation Part 1 → Part 2
 
@@ -6797,7 +5069,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T18:45:00Z
-**User Input**: "lam toan bo buoc con lai cho toi di"
+**User Input**: "làm toàn bộ bước còn lại cho tôi đi"
 **AI Response**: Làm Bước 13 (hạ tầng, hướng dẫn), 14 (tài liệu), 15 (review và kiểm tra toàn bộ).
 **Context**: Construction, U06 Code Generation Part 2
 
@@ -6828,7 +5100,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T19:30:00Z
-**User Input**: "h con gi can lam de hoan thanh cac task cua toi trong jira"
+**User Input**: "giờ còn gì cần làm để hoàn thành các task của tôi trong Jira"
 **AI Response**: Không đọc được Jira (connector Atlassian chưa cấp quyền site, phiên trình duyệt hết hạn - 401). Trả lời theo lần đọc Jira 2026-10-21 và trạng thái nhánh: U06 code xong chờ duyệt và gộp; U12 còn bước 3–14 (bước 1–2 đã có commit nhưng chưa tick plan); việc phối hợp (migration 1500 của U09, `AiSourcePicker` cho U09, KAN-14).
 **Context**: Construction, trạng thái công việc
 
@@ -6839,7 +5111,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T19:40:00Z
-**User Input**: "toi dang nhap jira roi"
+**User Input**: "tôi đăng nhập Jira rồi"
 **AI Response**: Đọc lại Jira (Vo Minh Tai): KAN-5 Done; KAN-14 In Progress (Revise User Interface Designs); KAN-19 epic U02 In Progress dù KAN-49 Done; KAN-29 U06 (KAN-34, 35, 37 To Do, Iteration 2); KAN-28 U12 (KAN-62, 63, 64, 66, 151 To Do, Iteration 3). Không có việc mới so với 2026-10-21.
 **Context**: Construction, trạng thái công việc
 
@@ -6861,7 +5133,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T21:45:00Z
-**User Input**: "lamf 2 3 ddi"
+**User Input**: "làm 2, 3 đi"
 **AI Response**: Jira: KAN-34, 35, 37, 29 (U06) và KAN-151, 62, 63, 64, 66, 28 (U12) chuyển In Review theo cách nhóm đang dùng; KAN-19 chuyển Done. Build & Test U06: rà NFR thấy thiếu giới hạn 2 lời gọi đồng thời mỗi provider của API chung (NFR-U06-03), thêm vào `AiTaskJobHandler` kèm test (eff4083); viết `build-and-test/u06-verification.md`. Phần U12 ghi trên nhánh `group-assignment`.
 **Context**: Construction, Build & Test U06
 
@@ -6872,7 +5144,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T22:00:00Z
-**User Input**: "gio con gi nua"
+**User Input**: "giờ còn gì nữa"
 **AI Response**: Kiểm tra `staging`: đã tiến 39 commit (nhóm gộp qua PR, ví dụ #8), hai nhánh `ai-connections`, `group-assignment` chưa được gộp và nay xung đột với `staging` (audit, aidlc-state, Actions, AccessPolicy; U06 thêm `backend/pom.xml`). Đề xuất gộp `staging` vào từng nhánh, giải xung đột, chạy test, push, mở PR.
 **Context**: Construction, trạng thái công việc
 
@@ -6883,7 +5155,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T22:10:00Z
-**User Input**: "gio toi muon gop nhanh cua minh vao stagging co duoc khong"
+**User Input**: "giờ tôi muốn gộp nhánh của mình vào staging có được không"
 **AI Response**: Được, theo quy trình nhóm (PR vào `staging`). Chuẩn bị: gộp `origin/staging` vào `ai-connections` rồi `group-assignment`, giải xung đột (giữ cả hai bên), chạy test, push; sau đó hỏi người dùng cách gộp (PR hay gộp thẳng).
 **Context**: Construction, gộp nhánh
 
@@ -6928,23 +5200,12 @@ check lại lỗi
 
 ---
 
-## Code Generation - U12 approval and push
-
-**Requested by:** Vo Minh Tai
-
-**Timestamp**: 2026-10-21T20:50:00Z
-**User Input**: "neu cai nao oke roi thi hay push len cho toi"
-**AI Response**: Người dùng duyệt và yêu cầu push. Đánh dấu bước 14 của U12 (duyệt code). Push nhánh `ai-connections` (U06) và `group-assignment` (U12) lên `origin`; không mở PR, không gộp `staging` (Max2Min gộp).
-**Context**: Construction, U12 Code Generation bước 14
-
----
-
 ## Status question - remaining work after push
 
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T21:00:00Z
-**User Input**: "the phan cua toi gio con gi"
+**User Input**: "thế phần của tôi giờ còn gì"
 **AI Response**: Liệt kê việc còn lại: gộp hai nhánh vào `staging` (Max2Min, giải xung đột cộng thêm), cập nhật Jira (KAN-34/35/37, KAN-151/62/63/64/66, đóng KAN-19, KAN-14), giai đoạn Build & Test của AI-DLC, phần chờ U07/U08, kiểm thử với khóa API và agent thật, báo Hưng migration 1500, dọn nhánh cũ.
 **Context**: Construction, trạng thái công việc
 
@@ -6955,7 +5216,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T21:05:00Z
-**User Input**: "gio nen lam gi truoc"
+**User Input**: "giờ nên làm gì trước"
 **AI Response**: Đề xuất thứ tự: (1) báo Max2Min gộp hai nhánh và báo Hưng lỗi migration 1500; (2) chuyển Jira các story U06, U12 sang trạng thái đang review, đóng KAN-19; (3) viết Build & Test trong lúc chờ gộp; (4) thử khóa API thật và agent MCP thật; (5) KAN-14 và dọn nhánh, container.
 **Context**: Construction, trạng thái công việc
 
@@ -6966,7 +5227,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T21:10:00Z
-**User Input**: "lamf 2 3 ddi"
+**User Input**: "làm 2, 3 đi"
 **AI Response**: Làm bước 2 (chuyển trạng thái Jira các story U06, U12; đóng epic KAN-19) và bước 3 (Build & Test cho U06, U12).
 **Context**: Construction, Jira và Build & Test
 
@@ -6982,23 +5243,12 @@ check lại lỗi
 
 ---
 
-## Open pull requests request
-
-**Requested by:** Vo Minh Tai
-
-**Timestamp**: 2026-10-21T22:40:00Z
-**User Input**: "mở PR vào staging cho tôi"
-**AI Response**: Gộp `origin/staging` vào `ai-connections` (59a2f42; backend 1204 test 0 lỗi, frontend 424 test, lint, typecheck, build đạt) và `group-assignment` (d7adad9; backend 1175 test 0 lỗi, frontend 424 test, lint, typecheck, build đạt), push. Viết tiêu đề và mô tả hai PR (không ghi Claude). Trình duyệt chưa đăng nhập GitHub, máy không có `gh`: chờ người dùng đăng nhập để tạo PR.
-**Context**: Construction, mở PR
-
----
-
 ## Pull requests opened
 
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T22:55:00Z
-**User Input**: "tôi đăng nhập github rồi đó"
+**User Input**: "tôi đăng nhập GitHub rồi đó"
 **AI Response**: Mở PR #9 (`ai-connections` → `staging`, U06) và PR #10 (`group-assignment` → `staging`, U12) qua trình duyệt, mô tả theo mẫu PR #8, không ghi Claude. CI PR #9: backend, frontend, GitGuardian đạt; PR #10 đang chạy lúc ghi.
 **Context**: Construction, mở PR
 
@@ -7009,7 +5259,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T23:00:00Z
-**User Input**: "merch thang truc tiep vao stagging luon dc k"
+**User Input**: "merge thẳng trực tiếp vào staging luôn được không"
 **AI Response**: Trả lời: được về kỹ thuật (người dùng là Collaborator, chưa thấy chặn bởi review), nhưng khác quy trình nhóm (Max2Min gộp). Đề xuất thứ tự: gộp #9 qua nút Merge trên GitHub; cập nhật `group-assignment` theo `staging`, giải xung đột, chạy test, push; chờ CI #10 đạt rồi gộp #10. Chờ người dùng xác nhận trước khi gộp.
 **Context**: Construction, gộp PR
 
@@ -7020,7 +5270,7 @@ check lại lỗi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-21T23:05:00Z
-**User Input**: "moi nguoi bao tu gop luon r"
+**User Input**: "mọi người bảo tự gộp luôn rồi"
 **AI Response**: Nhóm đồng ý người dùng tự gộp. Gộp PR #9 vào `staging`, cập nhật `group-assignment`, chờ CI rồi gộp PR #10.
 **Context**: Construction, gộp PR
 
@@ -7072,17 +5322,6 @@ First CI attempt39787018235: backend and GitGuardian succeeded; frontend lint/ty
 
 Final verification: rerun frontend job119854495999 succeeded on the same ae7a1b69 head. Latest PR rollup: backend SUCCESS, frontend SUCCESS, GitGuardian SUCCESS; images/deploy SKIPPED by workflow policy. Re-read PR12: base staging, OPEN, mergedAt null, mergeable, autoMergeRequest null. PR remains unmerged; the initial U04 focus failure and successful rerun are disclosed to the user. Only this local audit changed after the published commit.
 
-## U09 — merge PR12 vào staging và kiểm tra sau merge
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-22T13:39:49Z
-**User Input**: "Giúp tôi merge PR #12 vào staging rồi kiểm tra lại sau merge."
-**AI Response**: Re-read PR12 immediately before merge: CLEAN/MERGEABLE, head ae7a1b697804713677d49c02204a75f2b5243243, base fa1c0f06, backend/frontend/GitGuardian SUCCESS. Merged via GitHub CLI using merge-commit method and expected-head guard. GitHub confirms MERGED at2026-10-22T13:38:21Z with merge commit8519bea466ecb996a97ed75b53d1a38c9adafc61; fetched origin/staging and verified both parents. Current checkout tree, origin/staging tree and the CI-tested PR merge tree d6be646 all equal593001ae7fd9d1b469c3638c4594ccfa9c48ab38. No conflict markers in backend/src, frontend/src or aidlc-docs. Fresh postmerge focused U09/U06 picker tests15/15 passed on the identical code tree. No new workflow run for the staging merge SHA (workflow push targets main only); prior green PR CI applies to exactly the same tree. Kept grading-gradebook checkout and preserved the local audit; no additional source edits, branch deletion or deployment.
-**Context**: Authorized merge and postmerge verification; this audit update remains local, not committed.
-
----
-
 ## U15 — backup contract review và plan hoàn thiện
 
 **Requested by:** Quang Hung
@@ -7094,22 +5333,12 @@ Final verification: rerun frontend job119854495999 succeeded on the same ae7a1b6
 
 ---
 
-## U15 — publish planning documents to staging
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-22T13:58:57Z
-**User Input**: "giúp tôi commit plan và merge vào staging"
-**AI Response**: User authorizes committing and publishing the five planning/audit/state documents and merging into staging through a documentation-only PR. Implementation approval remains pending; no U03/U15 source, schema or tests changed. Validate Markdown local links/fences, conflict markers and whitespace before commit; verify PR diff and available CI before merging.
-**Context**: Documentation publication only; no approval inferred to implement D1–D7.
-
----
 ## U15/U03 implementation approval
 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-22T14:00:39.9543520Z
-**User Input**: "thôi thắng nhờ tôi sửa luôn r, giúp tôi duyệt plan và sửa u03 và u15"
+**User Input**: "thôi Thắng nhờ tôi sửa luôn rồi, giúp tôi duyệt plan và sửa U03 và U15"
 **AI Response**: Approval A recorded for D1–D7/B1–B5 including additive U03 provider and U15 consumer. Continue inline on codex/u15-backup-completion-plan; planning commit32abe4bc remains unpublished. Preserve legacy contracts, use test-first verification; no implementation acceptance claimed.
 
 
@@ -7206,7 +5435,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-23T14:20:15Z
-**User Input**: "ok giúp tôi mở ui và test lại xem đã sửa hết lỗi chưa"
+**User Input**: "ok giúp tôi mở UI và test lại xem đã sửa hết lỗi chưa"
 **AI Response**: Started the updated frontend and opened the protected class route in the Codex in-app browser. The route redirected to login because this tab has no authenticated test session. Ran the complete frontend suite (78 files, 448 tests passed), full ESLint, and Next route type generation followed by TypeScript checking; all final runs passed. Ran focused backend tests (66 passed, 0 failures/errors/skips) for AcademicsService, Academics API/controller contracts, and GradebookService. Updated the stale AcademicsService conflict assertion to expect the student display name, then reran the focused suite successfully. Existing Docker services were inspected read-only and left untouched.
 **User Input (clarification)**: "mở ui in app ấy chứ k phải mở chrome riêng"
 **AI Response**: Kept the page in the Codex in-app browser, not a separate Chrome tab. No authenticated UI path or all-57 artifact retest is claimed; the 26 skipped cases remain unverified.
@@ -7235,7 +5464,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-23
-**User Input**: "giúp tôi lập plan xử lý test nốt các test case đang bỏ qua, nếu thiếu dữ kiện thì có thể insert database hoặc thao tác ui để thêm dữ liệu vào sau đó tiền hành test"
+**User Input**: "giúp tôi lập plan xử lý test nốt các test case đang bỏ qua, nếu thiếu dữ kiện thì có thể insert database hoặc thao tác ui để thêm dữ liệu vào sau đó tiến hành test"
 **AI Response**: Created construction/plans/2026-10-23-skipped-cases-test-plan.md covering all 49 currently skipped artifact cases with per-case fixture and evidence mapping. Live baseline is 62 pass, 3 fail, 49 skip, 240 untested. SQL/UI fixture authorization recorded for subsequent execution; no fixtures inserted in this turn. Direct execution without subagents preserved.
 **Context**: AI-DLC Build & Test planning continuation. Dependency gates: U13-02 upload invalid-session error and grading GRADE_VERSION_CONFLICT. SQL seed is preparation, never proof of runtime event delivery. Existing extension configuration retained; no new production design or PBT extension. Plan reviewed for 49 unique case IDs and scoped data protection/provider/time limitations.
 
@@ -7259,7 +5488,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-23T15:54:12Z
-**User Input**: "thực hiện tiếp thêm kế hoạch, giúp tôi tạo bài và test nôt u09, dữ liệu anof thiếu thì tạo"
+**User Input**: "thực hiện tiếp thêm kế hoạch, giúp tôi tạo bài và test nốt U09, dữ liệu nào thiếu thì tạo"
 **AI Response**: "Đọc lại artifact U09, xác nhận bài QA đã tồn tại, chạy bộ test frontend liên quan và full suite, kiểm tra trạng thái đăng nhập/database, cập nhật note U09-02 trong artifact; chưa chạy được live U09 vì đăng nhập Teacher/Student trả BAD_PASSWORD."
 **Context**: Tiếp tục plan skipped-cases P1/P2. U09 có 2 Đạt, 24 Bỏ qua; assignment tồn tại nhưng không có submission/evaluation. Không ghi DB và không đổi source; tài khoản QA vẫn ACTIVE/chưa khóa.
 
@@ -7270,7 +5499,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-23T16:52:53Z
-**User Input**: "tự đăng nhập đi"; later clarified "ddaay tooi đn đc r mà" and provided a screenshot showing the Teacher session on `/classes`.
+**User Input**: "tự đăng nhập đi"; later clarified "đây, tôi đăng nhập được rồi mà" and provided a screenshot showing the Teacher session on `/classes`.
 **AI Response / Context**: Accepted the correction; did not retry credentials. Continued the already authorized U09 test directly without subagents. The earlier BAD_PASSWORD report is superseded by the authenticated Teacher session and the live U09 UI evidence.
 **Artifact**: Entered notes for U09-01/02/03/05/08/13/15/16/18/19/20. Current U09 filter showed 26 cases: 4 pass, 2 fail, 20 skipped. U09-05 remains failed on `GRADE_VERSION_CONFLICT`; U09-19 remains failed pending runtime retest. U09-03/13/15/16/18 remain skipped for partial coverage or missing fixture. U09-08 stale-tab conflict and U09-20 Student draft-score hiding passed. A note for U09-03 was re-read after changing units; repeated unit-filter clicks later timed out, so persistence of the remaining new notes could not be independently rechecked after unmount.
 **Verdict review**: Final per-card read found U09-03 and U09-20 marked opposite to their evidence. Corrected U09-03 to Bỏ qua (the one-evaluation fixture cannot test next-item navigation) and U09-20 to Đạt (Student list/detail hide the draft grade and feedback). Re-read both status controls; U09 total remains 4 pass/2 fail/20 skipped.
@@ -7284,7 +5513,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-23T17:46:05Z
-**User Input**: "tôi đã cấu hình sẵn r b giúp tôi check lại đi, chia subagent check với fix nhiều task cũng đc , giúp tôi fix bug u09, test cái nào skip"
+**User Input**: "tôi đã cấu hình sẵn rồi, bạn giúp tôi check lại đi, chia subagent check với fix nhiều task cũng được, giúp tôi fix bug U09, test cái nào skip"
 **AI Response**: "Continuing the approved U09 test plan. I will verify the configured AI connection without exposing secrets, investigate and fix reproducible U09 bugs with regression tests, run skipped cases whose prerequisites are available, create only scoped QA fixtures, and update the result ledger and Claude artifact where supported."
 **Context**: Resumed U09 Build & Test. Two independent read-only/focused investigation tracks dispatched with the user's explicit authorization; all existing working-tree changes are preserved. Local UI testing remains subject to the previous in-app browser URL policy; automated/backend evidence will be gathered without alternate browser access.
 
@@ -7295,7 +5524,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-23T18:23:22Z
-**User Input**: "tôi muốn test phải đạt hết u09 , tôi có cấu hình sẵn ai gemini cá nhân rồi, b có thể gọi để chấm điểm thoải mái"
+**User Input**: "tôi muốn test phải đạt hết U09, tôi có cấu hình sẵn AI Gemini cá nhân rồi, bạn có thể gọi để chấm điểm thoải mái"
 **AI Response / Context**: Continued authorized U09 defect work without delegated agents. The user explicitly permitted real Gemini grading requests. Read-only connection state showed two personal Gemini connections ACTIVE and last stored test SUCCESS; no credential material was read. No fresh provider call was sent because the in-app browser’s local URL policy blocked the app workflow, and the same action was not rerouted through HTTP/API/CDP or another browser.
 **Code**: Fixed stale provider selection on reopening the U09 proposal picker by conditionally mounting it. Added U09 batch estimate endpoint that builds current evaluation prompts and sums unique evaluations using the same character-based quota estimate; it does not dispatch AI or reserve quota. Frontend displays that estimate, OpenAPI contract updated.
 **Validation**: Full frontend 79 files / 452 tests passed, typecheck passed. Backend U09 grading and validation set 21/21 passed, including aggregation/deduplication and token-estimate formula. Regression for previous picker state was red before fix and now passes.
@@ -7309,31 +5538,10 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-23T18:32:28Z
-**User Input**: "sau khi test xong thì giúp tôi sửa tất cả lỗi u5 u9 u15 và cập nhật lại trong artifact claude"
+**User Input**: "sau khi test xong thì giúp tôi sửa tất cả lỗi U05, U09, U15 và cập nhật lại trong artifact Claude"
 **AI Response / Context**: User authorizes testing and fixing defects across U05, U09, and U15, then updating the linked Claude artifact. Current artifact snapshot: U05 23 cases (17 pass, 0 fail, 6 skipped); U09 26 (4 pass, 2 fail, 20 skipped); U15 8 (7 pass, 0 fail, 1 skipped). Existing working-tree changes are preserved. The in-app browser rejected observation of the local app URL due to its URL security policy; continue with safe source/test investigation only and do not route the same browser interaction through another surface or API. No grade publication or notification is authorized by this request.
 **Plan**: First run focused baseline tests in independent U05/U09/U15 domains, inspect failures and regression coverage, then implement only reproducible fixes with failing tests first. Re-run affected tests and relevant full frontend/backend suites; update artifact statuses only with direct UI evidence, leaving blocked black-box cases skipped with specific reasons. No commit, push, deployment, direct database fixture writes, password changes, or email sends.
 **Approval**: The user's raw request explicitly authorizes the test→fix→artifact-update sequence. Code generation plan continuation is approved within this scope.
-
----
-
-## Local commit organization
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-23T18:48:21Z
-**User Input**: "check ok rồi thì giúp tôi chia commit rõ ràng , chưa push"
-**AI Response / Context**: Auditing the existing verified working-tree changes and grouping them into focused local commits. User explicitly requests no push; no merge, push, deploy, or destructive cleanup will be performed. Existing unrelated/untracked diagnostic files will remain untouched unless confirmed to belong in a requested commit.
----
-
-## 2026-10-22T13:40:00Z — PR #8 merged; staging verified
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "Merge PR #8 vào staging bằng merge commit, rồi kiểm tra staging sau merge."
-
-**AI Response**: Rechecked PR #8 (head 57b801c, CI backend/frontend/GitGuardian pass, CLEAN) and merged with a merge commit: staging 20c1458, whose tree equals the CI-verified 57b801c. Fast-forwarded local staging. Started the full local stack from source on fresh volumes under compose project `staging-smoke` (temporary env with random secrets and a port override in the scratchpad): all 8 containers healthy, 14 Flyway migrations applied up to 20260925.2000, /health, /, /login, /quiz-practice 200, protected APIs 401, no ERROR/exception in backend, worker, frontend, nginx logs, RabbitMQ job and notification queues declared with consumers. Tore down the project with its volumes and deleted the temporary files. Updated roadmap and aidlc-state (uncommitted on local staging).
-
-**Context**: Delivery — PR #8 merged; staging verification.
 
 ---
 
@@ -7346,18 +5554,6 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **AI Response**: Ran staging 20c1458 on a fresh local stack (compose project `quiz-e2e`, temporary env with random secrets and test passwords in the scratchpad). Seeded via API: admin activated by OTP through Mailpit, manager, teacher, two students, subject QZE2E, OPEN class, two YouTube materials, three active bank questions, a class quiz. In the browser pane: AI draft popup (material locked: U13 hasText=false for YouTube; stub → FAILED "AI chưa sẵn sàng"); material attach (and API 400 MATERIAL_NOT_SELECTABLE for a foreign id); an MCP-origin READY draft inserted directly into quiz_ai_drafts (U06 MCP server not on staging) shown and partially accepted (inline item added, version bump, audit with count/origin only); activity switch locked until admin set activity.retentionDays=30, notice required, review and publish; student notification link resolved the class; Quiz Practice Detail notice and attached material; MaterialQuizList on the learning material page, exhausted after one attempt; taking page tracker recorded SESSION_START, HIDDEN, VISIBLE (simulated visibilitychange), SESSION_END; teacher saw the activity timeline (1 away, 4 s). No backend/worker errors. Found a pre-existing bug: QuizDetailPage shows "Hệ thống tạm bận" on client-side validation errors. Tore down the stack with volumes and deleted temporary files. Wrote results to U10/U11 code-summary, roadmap and aidlc-state (uncommitted on local staging).
 
 **Context**: Verification — end-to-end run.
-
----
-
-## 2026-10-22T15:00:00Z — Roadmap refresh after U06 and U12 merged
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "kiểm tra các thay đổi mới nhất xem roadmap của tôi đã hoàn thành chưa, còn cần chờ UC nào nữa không"
-
-**AI Response**: Fetched origin: staging is d2a06cd with PR #9 (U06 AI connections and MCP) and PR #10 (U12 group assignment) merged; all units U10/U11 depend on are now on staging. AI contract unchanged for U10 (only UsageMeasurement.ESTIMATED added); no quiz files touched. Jira unchanged; no tester integration tests yet. Banner fix 61171a9 on fix/quiz-detail-client-validation-banner (from d2a06cd) is local, unpushed. Roadmap updated: no UC left to wait for; doable now — swap AiSourceSelect for U06 AiSourcePicker, run MCP tools through the real U06 MCP server, real AI drafting (needs a real provider key entered by the user), push/PR the banner fix; waiting on people — tester, BR-U11-20 decision, Report 3.
-
-**Context**: Roadmap status review.
 
 ---
 
@@ -7433,18 +5629,6 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 ---
 
-## 2026-10-22T18:00:00Z — PR #11 merged; staging rechecked
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "Merge PR #11 vào staging bằng merge commit, rồi kiểm tra staging sau merge."
-
-**AI Response**: Rechecked PR #11 (head 61171a9, CI backend 1265 tests, frontend 438 tests, GitGuardian pass, CLEAN) and merged with a merge commit: staging fa1c0f0, tree identical to 61171a9. Built and started the local stack from a temporary detached worktree of origin/staging (project `stg-check`, temporary env): frontend healthy, backend and worker still fail with "APPLICATION FAILED TO START" (U06/U07/U08 bean cycle), so the banner fix could not be exercised in the browser. Tore down the stack with volumes, removed the worktree and the temporary env. Updated the roadmap (uncommitted on quiz-u06-integration).
-
-**Context**: Delivery — PR #11 merged; staging verification.
-
----
-
 ## 2026-10-22T18:10:00Z — Phase 7 committed (7.1–7.3); branch cleanup
 
 **Requested by:** Đào Chí Cường
@@ -7473,23 +5657,11 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 ---
 
-## 2026-10-23T15:20:00Z — PR #14 merged
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "Merge PR #14 vào staging bằng merge commit."
-
-**AI Response**: Kiểm lại PR #14 (head `d642708`, CI backend/frontend/GitGuardian đạt, `MERGEABLE`/`CLEAN`), merge bằng merge commit: `staging` `eb0cf1a`.
-
-**Context**: Construction — U10 giai đoạn 7, merge PR.
-
----
-
 ## 2026-10-23T15:50:00Z — Xóa nhánh, chạy thử MCP thật (bước 7.4), cập nhật tài liệu
 
 **Requested by:** Đào Chí Cường
 
-**User Input**: "xoá nhánh, cập nhật roadmap và jira và chạy thử mcp thật"
+**User Input**: "xoá nhánh, cập nhật roadmap và Jira và chạy thử MCP thật"
 
 **AI Response**: Xóa nhánh `quiz-u06-integration` (local và remote). Dựng stack Docker local từ `staging` `eb0cf1a` (project `mcp-e2e`, cổng tạm 18088/18025 vì stack `platform` giữ 8088; secret ngẫu nhiên trong scratchpad). Tạo dữ liệu bằng API; gọi `/mcp` bằng script: 16/16 kiểm đạt (credential `READ_WRITE`/`READ_ONLY`, `initialize`, `tools/list`, `read_quiz_context`, `save_quiz_draft`, version sai, quyền ghi, schema, lớp khác, sinh viên, `Origin`, token sai). Trên trình duyệt: chấp nhận đề xuất MCP 2 câu vào Quiz; popup `AiSourcePicker` hiện 4 nguồn mờ kèm lý do, hủy giữ form. Không có lỗi trong log. Gỡ stack cùng volume, xóa file có secret. Cập nhật code-summary U10, plan U10 (7.4–7.6), lộ trình, `aidlc-state.md` trên nhánh `u10-mcp-e2e-docs`. Jira: chờ người dùng duyệt nội dung trước khi cập nhật.
 
@@ -7503,7 +5675,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 **Timestamp**: 2026-10-24T10:42:02+07:00
 
-**User Input**: "giúp tôi resolve conflict"; "merge xong r thì chạy thử backend frontend xem có được k".
+**User Input**: "giúp tôi resolve conflict"; "merge xong rồi thì chạy thử backend, frontend xem có được không".
 
 **AI Response / Context**: Giải xung đột duy nhất trong `aidlc-docs/audit.md`, giữ nguyên các mục được thêm từ cả `mcp-test` và `staging`. Hoàn tất merge cục bộ bằng commit `b5bf4b61` (`Merge branch 'staging' into mcp-test`); không push.
 
@@ -7571,7 +5743,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 **Requested by:** Quang Hung
 
-**User Input**: "lên kế hoạch sửa cả ui, cái phần ui soạn bài nữa, hỗ trợ sinh đề tiếng anh hoặc tiếng việt, có thể upload file làm dữ liệu đầu vào, bao nhiêu yêu cầu, tổng điểm, điểm từng tiêu chí".
+**User Input**: "lên kế hoạch sửa cả UI, cái phần UI soạn bài nữa, hỗ trợ sinh đề tiếng Anh hoặc tiếng Việt, có thể upload file làm dữ liệu đầu vào, bao nhiêu yêu cầu, tổng điểm, điểm từng tiêu chí".
 
 **Context / Evidence**: Đọc ảnh form ba tab do người dùng gửi, đối chiếu AssignmentFormPage (autosave/version queue), RubricEditor, DOCX import API, U03 PurposePolicy/ArtifactPurpose và U13 MaterialTextExtractor. UI hiện có rubric từng mục nhưng thiếu tóm tắt mục tiêu; U03 chưa có TXT/purpose file nguồn riêng tư nên upload là thay đổi hợp đồng và vòng đời file, không chỉ UI.
 
@@ -7603,7 +5775,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 **Requested by:** Quang Hung
 
-**User Input**: "giúp tôi chạy luon" (build lại image backend và recreate worker theo lệnh đã cung cấp).
+**User Input**: "giúp tôi chạy luôn" (build lại image backend và recreate worker theo lệnh đã cung cấp).
 
 **Action / Evidence**: Docker Compose local build `backend` thành công từ source hiện tại, image `platform-backend:local`; chỉ recreate service `worker` với `--no-deps --force-recreate`. Worker mới khởi động profile `worker`, kết nối PostgreSQL/RabbitMQ và health check `healthy`. Không restart backend/frontend hoặc datastore, không chạy thêm lượt Gemini. Người dùng cần bỏ proposal cũ (0 sections, thiếu title/validation) và tạo yêu cầu mới để kiểm tra luồng đồng bộ. Chưa commit/push.
 
@@ -7611,7 +5783,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 **Requested by:** Quang Hung
 
-**User Input**: "sao k có rubric, với ui đề text đang nối tiếp nhau hơi khó nhìn, giúp tôi sửa"; ba ảnh cho thấy bối cảnh dài/lặp, 0 câu, 0 rubric, total 0/10, validation INVALID.
+**User Input**: "sao không có rubric, với UI đề text đang nối tiếp nhau hơi khó nhìn, giúp tôi sửa"; ba ảnh cho thấy bối cảnh dài/lặp, 0 câu, 0 rubric, total 0/10, validation INVALID.
 
 **Root cause / regression**: Sau đồng bộ worker, schema gốc vẫn chấp nhận sections=[] và không buộc rubric. Test Instructions-only/empty-sections trước sửa thất bại (schema chấp nhận). Model có thể tiêu token vào businessContext đứng trước sections. Đây là lỗi hợp đồng generation còn lại, không kết luận mọi triệu chứng trước đó chỉ do worker cũ.
 
@@ -7621,39 +5793,14 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 **Verification**: 31 test backend trong 6 suite và 7 test UI preview/dialog đạt; typecheck, lint các file sửa và production build đạt. Một lượt chạy 2 test file cùng lúc lỗi temp sandbox; chạy riêng đạt. Build nhiều worker từng hết RAM/pagefile; build với CIRCLE_NODE_TOTAL=3, TOKIO_WORKER_THREADS=2, RAYON_NUM_THREADS=2 đạt, không thay config build của repo. Docker backend image build và recreate worker thành công; backend chạy bằng Maven trong terminal người dùng cần restart để nạp schema mới. Chưa chạy lượt Gemini thật cho bản sửa này. Chưa commit/push.
 
-## Chia commit cục bộ — 2026-10-24
-
-**Requested by:** Quang Hung
-
-**User Input**: "giúp tôi chia commit rõ ràng chưa push".
-
-**Action**: Rà thay đổi chưa stage trên nhánh mcp-test, chia theo phụ thuộc thành bốn commit: (1) purpose/private source upload + text extraction, (2) backend generation schema/validator/source preview/safe apply, (3) UI authoring/progress/question-rubric preview, (4) kế hoạch và bằng chứng triển khai. Không amend/rebase hoặc push.
-
-**Review correction**: Phát hiện MaterialTextExtractorTest đã bị thay thế trong quá trình triển khai trước; khôi phục đầy đủ test timeout/PDF/DOCX/PPTX từ HEAD và giữ thêm hai test UTF-8. Chạy lại cả 6 test bằng Mockito agent nạp sẵn/forkCount=0: đạt. Không thêm thay đổi production mới khi chia commit. Các kiểm tra source/UI trước đó vẫn được ghi ở trên; live Gemini và các phần mở rộng chưa hoàn tất vẫn để mở.
-
-**Code commits**: 35bd38b4 (private assignment sources), 5a00fb7e (AI draft backend/validation), e3f7cdad (authoring/rubric UI). Tài liệu được gom thành commit tiếp theo; mọi nhóm được kiểm git diff --cached --check trước commit. Chỉ tạo commit local.
-
----
-
 ## Merge startup fix request
 
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-22T09:15:00Z
-**User Input**: "goopj luoon cho toi"
+**User Input**: "gộp luôn cho tôi"
 **AI Response**: Mở PR `fix/u06-ai-handler-cycle` → `staging`, chạy `mvn verify` ở máy song song với CI, gộp khi CI đạt.
 **Context**: Construction, U06 sửa lỗi sau khi gộp
-
----
-
-## Team black-box test plan review
-
-**Requested by:** Vo Minh Tai
-
-**Timestamp**: 2026-10-24T08:00:00Z
-**User Input**: "https://claude.ai/artifact/Wbj4CKoyBcDE6dPyCHbour ban toi da test va gui cho toi arrtifact nay, cap nhat github xem da mearch cac nhanh cua toi vao chua. va xem o artifact nay can gi phai sua o phan cua toi hay hay phai test nhu the nao khong"
-**AI Response**: Kiểm `origin/staging` (301c573): `ai-connections`, `group-assignment`, `fix/u06-ai-handler-cycle` đều đã gộp. Đối chiếu U06-01..21 và U12-01..29 với code: U06 khớp; U12 lệch U12-03 (chưa kéo thả, nhãn "mới" chưa có ngoặc), U12-05 (chưa có nút Mở tab Sinh viên), U12-08 (nhận mục bằng nút, chưa bấm vào mục), U12-13 (popup tự nộp chưa ghi giờ hết hạn). Chưa sửa, chờ người dùng quyết.
-**Context**: Construction, rà kế hoạch kiểm thử hộp đen của nhóm
 
 ---
 
@@ -7684,20 +5831,9 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-24T10:00:00Z
-**User Input**: "gop cho toi di hoac mo lick github de toi dang nhap" / "mở lại đi, tôi vừa restart máh" / "rồi đó, gộp hết cho tôi rồi test luôn đi"
+**User Input**: "gộp cho tôi đi hoặc mở link GitHub để tôi đăng nhập" / "mở lại đi, tôi vừa restart máy" / "rồi đó, gộp hết cho tôi rồi test luôn đi"
 **AI Response**: Mở trang đăng nhập GitHub trong trình duyệt của app; người dùng tự đăng nhập. Mở PR #17 `fix/u12-test-plan-gaps` → `staging`; CI đạt (3 đạt, 2 bỏ qua); gộp, merge commit 6d54047. Chạy thử giao diện bằng `next dev` với backend giả (Docker chưa chạy sau khi khởi động lại máy): `?tab=students` mở tab Sinh viên; kéo thả chuyển người sang nhóm khác, nhóm mới ghi "(mới)" (U12-03); bấm mục người khác giữ không mở trình soạn, bấm mục Mở thì nhận và mở trình soạn "Bạn đang giữ" (U12-08/09); sự kiện tự nộp hiện "Đã hết hạn nộp lúc 30/10/2026 23:59" rồi chuyển sang Bản nộp (U12-13). Nút Mở tab Sinh viên trên Assignment Form chỉ kiểm bằng unit test. Chưa chạy với backend thật.
 **Context**: Construction, U12 sửa sau kiểm thử hộp đen
-
----
-
-## Full re-test request
-
-**Requested by:** Vo Minh Tai
-
-**Timestamp**: 2026-10-24T10:20:00Z
-**User Input**: "tôi đã bật docker rồi đaays, xem lại cho tôi đi, và test giúp tôi toàn bộ các task trong jira xem tôi còn gì chưa làm nữa không"
-**AI Response**: Docker chưa có container dự án và chưa có `infra/.env.local`; tạo `infra/.env.local` (gitignored, toàn giá trị thử sinh ngẫu nhiên) rồi build và chạy stack local `platform-local` ở cổng 8088 từ `staging` (6d54047). Kết nối Atlassian của phiên không còn quyền (cloud id chưa được cấp lại) và trình duyệt chưa đăng nhập Jira; mở trang đăng nhập Atlassian để người dùng tự đăng nhập.
-**Context**: Construction, kiểm thử lại U06/U12 và rà Jira
 
 ---
 
@@ -7706,7 +5842,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-24T13:10:00Z
-**User Input**: "tôi đăng nhập jira rồi" / "test lai toan bo cac phan cua toi di xem da oke chua" / "toi tong co 3 u ma, check ky cho toi nhe"
+**User Input**: "tôi đăng nhập Jira rồi" / "test lại toàn bộ các phần của tôi đi xem đã ổn chưa" / "tôi tổng có 3 unit mà, check kỹ cho tôi nhé"
 **AI Response**: Đọc Jira qua trình duyệt: KAN-14 In Progress, 8 story U06/U12 In Review, U02 Done; điều kiện Done cần bằng chứng kiểm thử tích hợp độc lập. Dựng stack local, tạo dữ liệu thử, chạy test end-to-end bằng API cho U02, U06, U12 theo kế hoạch kiểm thử của nhóm, kiểm giao diện ở trình duyệt. Tìm và sửa 7 lỗi trên nhánh `fix/e2e-u06-u12-findings`: U12 không lưu được nháp (bộ kiểm U07 thấy thiếu block người soạn); ân hạn làm bài vừa mở bị coi là quá hạn và bộ quét tự nộp đóng tài liệu; sinh viên thấy nguồn SHARED; gửi đồng thời vượt giới hạn 3 tác vụ; Gemini khóa sai báo sai thông điệp; nhãn tác vụ trong Lịch sử AI; nhãn audit của U06, U12. Sau sửa: U02 16/16, U06 39/40, U12 55/55; mvn verify 1353, frontend 473, build đạt. Bằng chứng `construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md`.
 **Context**: Construction, kiểm thử end-to-end U02, U06, U12
 
@@ -7717,7 +5853,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-24T13:30:00Z
-**User Input**: "merch toan bo vao stagging chua"
+**User Input**: "merge toàn bộ vào staging chưa"
 **AI Response**: PR #19 `fix/e2e-u06-u12-findings` → `staging`: CI đạt (3 đạt, 2 bỏ qua), gộp, merge commit 6337b42. Kiểm lại: `ai-connections`, `group-assignment`, `fix/u06-ai-handler-cycle`, `fix/u12-test-plan-gaps`, `fix/e2e-u06-u12-findings` đều đã vào `origin/staging`.
 **Context**: Construction, gộp bản sửa sau kiểm thử end-to-end
 
@@ -7728,7 +5864,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-24T13:40:00Z
-**User Input**: "gio con gi chua lam khong" / "sap het token roi, h co viec gi co the lam luon duoc k de co gi toi nay reset token roi lam tiep"
+**User Input**: "giờ còn gì chưa làm không" / "sắp hết token rồi, giờ có việc gì có thể làm luôn được không để có gì tối nay reset token rồi làm tiếp"
 **AI Response**: Liệt kê việc còn lại (Draw.io cho tài liệu nhóm KAN-64/66, khóa ngoại assignment_id, test khóa AI thật, Jira, dọn dẹp). Tạo nhánh `feat/u12-document-editor` từ `staging` 6337b42 và plan `construction/plans/2026-10-24-u12-document-editor.md` (chờ duyệt) để làm tiếp khi có token.
 **Context**: Construction, chuẩn bị U12 tích hợp trình soạn chung
 
@@ -7739,7 +5875,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-10-23T14:08:22Z
-**User Input**: "tạo 1 branch mới từ branch staging để sửa các lỗi và những phần khiến cho phải bỏ qua các test của u04, 13, 14 mà bạn đã check vào artifact, mang hết các thay đổi chưa commit vào staging sang branch đó luôn"
+**User Input**: "tạo 1 branch mới từ branch staging để sửa các lỗi và những phần khiến cho phải bỏ qua các test của U04, U13, U14 mà bạn đã check vào artifact, mang hết các thay đổi chưa commit vào staging sang branch đó luôn"
 **AI Response**: Created and switched from staging to codex/fix-u04-u13-u14-blackbox. Both HEAD and staging resolve to 41c5ff7f989237ed62cde15169ccb20a8c327189. All pre-existing tracked modifications and untracked files remain present: aidlc-state.md, infra/docker-compose.local.yml, the black-box report, and both reports/blackbox-2026-10-23 evidence files. Git index remains empty. No stash, reset, commit, push or source modification performed. Branch is prepared for the U04/U13/U14 remediation work.
 **Context**: Branch setup only; baseline acceptance results remain 30 passed, 3 failed, 17 skipped until fixes and retesting.
 
@@ -7750,21 +5886,10 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-10-23T14:17:17Z
-**User Input**: "sửa các lỗi của u04, u13, u14 trên branch fix-u04-u13-u14 cho tôi"
+**User Input**: "sửa các lỗi của U04, U13, U14 trên branch fix-u04-u13-u14 cho tôi"
 **AI Response**: Confirmed current branch fix-u04-u13-u14; preserved dirty files/index. Read workflow, scoped business rules, failed/skipped-case evidence and relevant source. Confirmed XHR upload omits CSRF header while fetch client sends it; U04 table lacks visible guidance. U14 backend deliberately rejects raw HTML while frontend sanitizes Markdown, requiring explicit policy choice rather than silently weakening validation. Traced grade version flow; final cause still requires a real JPA regression. Created executable six-step remediation plan including narrowly scoped U09 blocker, tests and artifact retest.
 **Approval Prompt**: Review construction/plans/code-generation-plan/u04-u13-u14-blackbox-remediation-plan.md and answer A/B/C/X in u04-u13-u14-remediation-approval-questions.md. CLAUDE.md Code Generation Part1 and .aidlc-rule-details/construction/code-generation.md Step7 require explicit plan approval before generation. No application/test/config changes made in this turn.
 **Context**: Construction resume; plan ready, implementation pending explicit approval. Browser/time restrictions distinguished from application defects; no commit/push/restart or artifact result changes.
-
----
-
-## U04 U13 U14 remediation approval
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-23T14:29:10Z
-**User Input**: "tôi chọn rồi"
-**Approval Evidence**: u04-u13-u14-remediation-approval-questions.md contains [Answer]: a.
-**AI Response**: Accept explicit plan approval A; begin scoped implementation, tests and local retest on fix-u04-u13-u14. Preserve all existing dirty files. No commit/push.
 
 ---
 
@@ -7778,29 +5903,6 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 
 ---
 
-## Construction resume — U04 U13 U14 remediation
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-24T02:00:00Z
-**User Input**: "tiếp tục"
-**AI Response**: Continue scoped remediation from the approved plan A on fix-u04-u13-u14. Preserve all dirty files, including the user's infra/docker-compose.local.yml changes. Full backend verify evidence remains 1297 tests, 1262 passed and 35 environment-gated skips. The additional stale-version/no-side-effects regression completed in the focused GradingServiceTest rerun: 7 passed, no failures/errors/skips. Docker Desktop was stopped overnight; started it and resumed the existing local Compose stack without deleting volumes or changing credentials. All eight services subsequently healthy.
-**Context**: Artifact readback revealed some old notes alongside new statuses. Repair notes through UI input events and verify after reload. U13-20 AI-source exclusion after archival remains pending until the app tab can be accessed again; browser security policy blocked control of its internal error page, so the user was asked to reopen localhost:8088. No workaround, commit or push.
-
----
-
-## Construction — final selector retest and artifact readback
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-24T02:18:27Z
-**User Input**: "được rồi"
-**Context**: User answered the request to reopen http://localhost:8088 after the browser security policy blocked its internal error page.
-**AI Response**: Reacquired the visibly restored login tab, signed in as the existing QA subject manager and opened the existing draft Quiz. After archival, the formerly extracted PDF is absent from both attachment choices and AI reference choices; the other three NO_TEXT files loaded and appear disabled in the AI picker. No AI request submitted. U13-20 set to Pass via keyboard activation, independently from note changes. Reloaded artifact and read all 50 dispositions: U04 13 passed, U13 18 passed/4 skipped, U14 13 passed/2 skipped, zero failures or unclassified cases. All six skips carry explicit limitations. Corrected old notes for U04-09 and U13-01/12/16/18/20 and verified persistence after reload.
-**Evidence**: Preserved baseline checklist-results.json; created checklist-results-after.json, artifact-u13-after.png and u13-ai-picker-after-archive.png under reports/blackbox-2026-10-23. Added scoped remediation verification report and code summary; updated the approved plan and scoped state. Local stack healthy; user-owned Compose overlay retained. No commit, push, merge, schema/live-clock change, production deployment or global acceptance claimed.
-
----
-
 ## Follow-up questions and user PDF verification
 
 **Requested by:** Vu Hai Nam
@@ -7808,7 +5910,7 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Timestamp**: 2026-10-24T02:43:04Z
 **Earlier User Inputs (recorded on this follow-up)**: "giờ tôi phải check lại những gì"; "xem pdf thường và pdf scan ở đâu trong U13-05, U13-10, U13-15"
 **AI Responses**: Explained six pending cases and role-specific navigation, including that the former ordinary PDF was archived for U13-20 and a new active PDF was needed for student verification.
-**User Input**: "của quản lý môn đã xem và tải được. của sinh viên cũng đã ok. Nhưng ở cả 2 thì phần tiêu đề pdf hiện trên vùng xem trước lại là untitled"
+**User Input**: "của quản lý môn đã xem và tải được. của sinh viên cũng đã ok. Nhưng ở cả 2 thì phần tiêu đề PDF hiện trên vùng xem trước lại là untitled"
 **Attachments**: Three user-provided Chrome screenshots; ordinary and scan preview images preserved as user-chrome-pdf-text.png and user-chrome-pdf-scan.png in reports/blackbox-2026-10-23.
 **Clarification Asked**: "Với PDF thường có 2 trang, bạn đã chuyển sang trang 2 và thấy nội dung ở cả Chủ nhiệm/Sinh viên chưa? Đây là bước còn thiếu để chốt U13-05."
 **User Input**: "Đã chuyển trang và xem được"
@@ -7821,9 +5923,9 @@ End-to-end: submitted one short SWR diagram assignment request using personal Ge
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-10-24T02:57:24Z
-**User Input**: "**U13-22**Lấy **cùng một URL tải**: mở bằng tài khoản khác phải bị từ chối; mở lại sau **6 phút** cũng phải bị từ chối.  test như nào"
+**User Input**: "**U13-22**Lấy **cùng một URL tải**: mở bằng tài khoản khác phải bị từ chối; mở lại sau **6 phút** cũng phải bị từ chối. Test như nào"
 **AI Response**: Explained Network download-token response URL, initial same-account success, different signed-in account before expiry and original account after six minutes; no blob URL or fresh-token substitution.
-**User Input**: "sinh viên a lúc đầu vẫn ok, sau đó tôi copy url sang sinh viên b ngay thì được như ảnh. Sau 6 phút copy lại vào sinh viên a thì cũng được như vậy"
+**User Input**: "sinh viên a lúc đầu vẫn ok, sau đó tôi copy URL sang sinh viên b ngay thì được như ảnh. Sau 6 phút copy lại vào sinh viên a thì cũng được như vậy"
 **Evidence**: User screenshot shows HTTP404 and DOWNLOAD_TOKEN_NOT_FOUND. Raw URL/token intentionally not copied into repository evidence.
 **AI Response**: Marked U13-22 Pass with manual-evidence provenance, reloaded status/note and read all50 cases:48 passed,0 failed,2 skipped. Saved separate user-url-retest snapshot and token-free artifact screenshot. No application changes, commit or push.
 **User Input**: "**U14-08**Ngắt mạng 30 giây rồi bật lại: chuông tự kết nối, cập nhật đúng số chưa đọc, không cần tải lại trang.**U14-15**Quan sát thực tế sau khi dời hạn thêm 2 ngày: không nhắc lặp hạn cũ, nhắc đúng hạn mới; bài đã ngưng không gửi nhắc. &#x20;
@@ -7837,7 +5939,7 @@ test 2 cái này như nào"
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-10-24T03:10:31Z
-**User Input**: "u14-08 đã ok"
+**User Input**: "U14-08 đã ok"
 **AI Response**: Mark U14-08 Pass following the user's explicit confirmation after manual instructions. Artifact note credits the user's manual test rather than an agent-operated Chrome session or the prior automated regression. Latest scoped totals49 passed, zero failed, one pending U14-15; preserve earlier snapshots and save a separate offline-retest readback/proof. No source change, commit, push or global acceptance.
 
 ---
@@ -7899,7 +6001,7 @@ test 2 cái này như nào"
 **Timestamp**: 2026-10-24T09:37:06Z
 **Earlier User Input**: "Có nên bỏ các file ở reports, các file mới tạo trong code generation plan hay không?"
 **AI Response**: Inspected current report files/size and Git ignore/status; recommended preserving approved AI-DLC plans and reports, retaining evidence until U14-15 closes, with selective duplicate cleanup later. No files deleted or ignore rules changed.
-**User Input**: "khi test u14-15 tôi đã thấy thông báo gửi cho student vào đúng 24h trước hạn nộp, sau đó tôi đổi lại cho hạn mới cách khoảng 5p so với hạn cũ thì đúng đến 5p sau tôi đã thấy thông báo mới. "
+**User Input**: "khi test U14-15 tôi đã thấy thông báo gửi cho student vào đúng 24h trước hạn nộp, sau đó tôi đổi lại cho hạn mới cách khoảng 5 phút so với hạn cũ thì đúng 5 phút sau tôi đã thấy thông báo mới."
 **AI Response**: Record original24h reminder and successful approximately+5minute rescheduling as user manual evidence. Read original artifact steps: stopped assignment and reschedule by2days. Distinguish the5minute variant from exact2day E2E, retain prior automated9/9 scanner coverage separately. Add partial evidence to existing artifact/report/state/plan without changing the overall49/0/1 disposition.
 **Clarification Asked**: "Bạn đã kiểm một bài tập được “Ngưng giao” trước mốc nhắc và xác nhận qua mốc đó không có thông báo mới cho Sinh viên chưa?"
 **Context**: Awaiting user confirmation of the stopped-assignment branch. No application change, live clock/DB mutation, commit/push or global acceptance.
@@ -7931,7 +6033,7 @@ test 2 cái này như nào"
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-10-24T09:51:00Z
-**User Input**: "Kiểm tra xem dòng chữ này có phải lỗi do tôi sửa u04, 13, 14 không? Nó thường xuất hiện ở phía trên cùng "
+**User Input**: "Kiểm tra xem dòng chữ này có phải lỗi do tôi sửa U04, U13, U14 không? Nó thường xuất hiện ở phía trên cùng"
 **Reported Sentence**: "She rewrote the article to make it clearer. She rewrote."
 **AI Response**: Inspected current source/diff, root layout/AppShell, proxy and Nginx configuration. No sentence found in application source or the325 files searched in the actual frontend container's .next/server, .next/static and public directories. Root layout/AppShell/proxy have no changes from this remediation and no top-level text injection. Actual Nginx configuration has no matching sentence or content-injection directives. Reloaded/re-authenticated the existing QA student session in the in-app browser: same student and7 unread notifications, no sentence in DOM/top-of-page UI. User's earlier screenshot also showed the sentence below a raw JSON404 response, which is outside the React layout. Current evidence points toward a Chrome-profile extension/userscript injection rather than U04/U13/U14 changes; the exact browser-side source is not proven.
 **Clarification Asked**: "Bạn thử mở cùng trang bằng Chrome chế độ Khách (Guest), đăng nhập cùng tài khoản, rồi cho biết dòng “She rewrote…” còn xuất hiện không?"
@@ -8094,33 +6196,9 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-25T07:10:00Z
-**User Input**: "lam het cho toi di"
+**User Input**: "làm hết cho tôi đi"
 **AI Response**: Bật lại Docker Desktop, build lại stack local; migration V20261025_1800 chạy được. Kiểm giao diện: DocumentEditor trong mục, chèn Draw.io, tự lưu, Xong → nội dung có PARAGRAPH và DIAGRAM. U12 end-to-end 30/30 (sửa script U12-26 dùng mã block riêng); `mvn verify` 1384 test 0 lỗi; frontend 483 test. Mở PR `feat/u12-document-editor` → `staging`, gộp khi CI đạt.
 **Context**: Construction, U12 tích hợp trình soạn chung (KAN-64, KAN-66)
-
----
-
-## 2026-10-25T02:00:00Z — Rà toàn bộ dự án trên staging
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "kiểm tra trên staging toàn bộ dự án cho tôi xem còn lỗi gì không sau đó gửi tôi báo cáo"
-
-**AI Response**: Bắt đầu rà `staging` `d9a0300` (sau PR #16, #18): build/test đầy đủ, test DB bị bỏ qua, dựng stack Docker và smoke test, rà tĩnh bảo mật/cấu hình/phụ thuộc, rà logic các module rủi ro cao. Kết quả: backend `mvn verify` 1346 test đạt (35 bỏ qua); chạy riêng 35 test DB bị bỏ qua trên PostgreSQL của stack tạm: U06 2/2, U12 2/2 đạt, U04 26/31 (5 case lỗi có sẵn từ trước PR #18, test cũ so với `c58e8c3`/`79effa0`, hành vi thật đúng khi kiểm qua API). Stack Docker riêng (`auditstack`, cổng khác, không đụng stack `platform`) lên đủ 8 container healthy, không stub, không lỗi log; e2e API 50/50 (kích hoạt OTP, đặt lại mật khẩu, tạo môn/lớp/ghi danh, ngân hàng câu, phát hành Quiz, làm và nộp, xung đột answerVersion, chặn đổi role, phân quyền chéo, lỗi đăng nhập trung tính, đăng xuất, lưu trữ/mở lại môn). Phát hiện: `next` 16.3.8 có 2 lỗ hổng critical và 1 high (sửa ở 16.4.3); `U03_FILEREF_SECRET` thiếu thì mỗi tiến trình tự sinh khóa riêng; `DeadlineReminderScanner` không bắt lỗi từng lớp; Flyway `out-of-order` bật. Đã gỡ stack tạm, volume, image và file secret. Không sửa code.
-
-**Context**: Rà soát toàn dự án, ngoài luồng stage.
-
----
-
-## 2026-10-25T03:00:00Z — Test UI thật và báo cáo lỗi cho nhóm
-
-**Requested by:** Đào Chí Cường
-
-**User Input**: "kiểm tra bằng cách test thật trên giao diện UI, sau đó tổng hợp lại tất cả các lỗi cùng với người chịu trách nghiệm rồi gửi tôi 1 bản báo cáo để tôi có thể gửi cho nhóm của mình"
-
-**AI Response**: Dựng lại stack tạm `auditstack` từ `staging` `d9a0300`, test giao diện bằng trình duyệt theo từng vai trò, gán lỗi theo unit và người phụ trách, xuất bản báo cáo. Đã test UI đủ 4 vai (Admin, Chủ nhiệm môn, giảng viên, sinh viên): tài khoản, môn, audit, cài đặt, ngân hàng câu hỏi, soạn/duyệt/phát hành Quiz, soạn/phát hành bài tập, làm và nộp bài, chấm/chốt/công bố điểm, sổ điểm, làm Quiz, thông báo, thông báo lớp (kiểm lọc HTML), chia nhóm. Lỗi mới: link thông báo bài tập của sinh viên sai route (U14), trang chấm bài lồng hai khung (U09), audit hiện mã thô (U02), hộp chặn đổi role hiện UUID (U01), banner cũ sau khi thêm câu (U10). Đã gỡ stack tạm và file chứa mật khẩu test. Không sửa code.
-
-**Context**: Rà soát toàn dự án qua UI, ngoài luồng stage.
 
 ---
 
@@ -8140,7 +6218,7 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 
 **Requested by:** Quang Hung
 
-**User Input**: "giúp tôi kiêm tra các bug này , và lập plan fix bug"
+**User Input**: "giúp tôi kiểm tra các bug này và lập plan fix bug"
 
 **Inputs**: image(3).png (file_0000000065cc8211b2df420fa5efdc07), image(4).png (file_0000000081488211b53121665920f2b5). Correct attached images resolved and extracted text read.
 
@@ -8176,25 +6254,12 @@ d630655 chore(local): allow backend and RabbitMQ startup health checks
 
 **U09 build completion**: npm run build passed, exit 0, including the teaching evaluation and assignment submissions routes. Full source verification now complete; authenticated Docker runtime acceptance remains pending. No application source changed after the successful full test/typecheck/lint runs.
 
-## U09 local commit handoff - 2026-10-25
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-25T08:35:00Z
-**User Input**: "giúp tôi commit những gì đã thay đổi chưa push"
-**AI Response**: Prepare three local Conventional Commits on mcp-test: evaluation shell/UUID and regressions; submission context/filters and regressions; AI-DLC planning/verification records. Stage explicit paths only, exclude temporary test/build outputs, preserve existing audit history. Repeat targeted grading/notifications verification before committing. No push, merge, deploy, AI call or database change.
-**Context**: User now authorizes local commits, superseding earlier no-commit scope for this handoff only. Full frontend 501 tests, typecheck/lint/build evidence remains the prior successful run; no application changes since that run.
-
----
-
-**Commit execution blocked**: git add failed before staging: Unable to create .git/index.lock, Permission denied. No commit was created, no push attempted. Prepared ignored .tmp/commit-u09-local.ps1 for the user to run in their local terminal; script stages only the three documented groups and contains no push command. This supersedes any implication that the commit handoff already completed.
-
 ## Student navigation 404 investigation and runtime repair - 2026-10-25
 
 **Requested by:** Quang Hung
 
-**User Input**: "sao tôi bấm vào các tab bài tập, luyện tập quiz, thông báo lớp của student vẫn bị  404 not found, giúp tôi check lại và fix bug"
-**Additional User Input**: "cả khi bấm vào kết nối ai nữa"
+**User Input**: "sao tôi bấm vào các tab bài tập, luyện tập quiz, thông báo lớp của student vẫn bị 404 Not Found, giúp tôi check lại và fix bug"
+**Additional User Input**: "cả khi bấm vào kết nối AI nữa"
 **AI Response**: Read the two attached images and reproduced all four bare Next 404s on the authenticated U05 Mock Student IAB session. Classes works. All four source routes/layouts and generated/standalone manifests exist; navigation hrefs and repository proxy config are correct. Runtime stale/incomplete image or stale upstream remains a hypothesis pending direct container inspection. Prepared scripts/repair-student-routes.ps1 to identify the existing 8088 Compose stack, probe direct frontend routes, rebuild/replace frontend only and restart nginx, then probe gateway paths. Script syntax and three mock scenarios validated; actual -CheckOnly invocation stopped on Docker socket permission denied. No application source edits or runtime success claim; no credential/DB changes, commit/push/merge. Scoped plan/evidence: construction/plans/2026-10-25-student-menu-404-repair.md.
 
 ---
@@ -8236,7 +6301,7 @@ Handoff target verified as existing antigravity/Argon session term_95be006a-9105
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-25T11:46:50Z
-**User Input**: "BAN GIAO TOAN BO QUYEN THUC THI U09 UI POLISH CHO ARGON 4. Nguoi dung vua yeu cau: "Giup toi sua theo ke hoach tao plan sau dua cho argon lam". Day la yeu cau IMPLEMENT that, thay cho yeu cau chi doc code truoc do. Toi da tao plan, se dung sua code sau khi ban nhan. Ban lam truc tiep checkout F:/code/git/AI-Powered-Learning-Platform, mcp-test, khong tao agent/subagent/worktree, khong commit/push/deploy.
+**User Input**: "BAN GIAO TOAN BO QUYEN THUC THI U09 UI POLISH CHO ARGON 4. Nguoi dung vua yeu cau: "Giúp tôi sửa theo kế hoạch, tạo plan sau đó đưa cho Argon làm". Day la yeu cau IMPLEMENT that, thay cho yeu cau chi doc code truoc do. Toi da tao plan, se dung sua code sau khi ban nhan. Ban lam truc tiep checkout F:/code/git/AI-Powered-Learning-Platform, mcp-test, khong tao agent/subagent/worktree, khong commit/push/deploy.
 
 DOC VA THUC HIEN: aidlc-docs/construction/plans/code-generation-plan/2026-10-25-u09-ui-polish-code-generation-plan.md. Doc AGENTS.md, CLAUDE.md, frontend/AGENTS.md, git status/diff va plan partial-scores lien quan. Nguoi dung da chon cac cai tien UI vua duoc audit va yeu cau trien khai; khong dung o lap lai ke hoach hay hoi phe duyet chung. Tuan tu 7 buoc trong plan, cap nhat checklist va ket qua.
 
@@ -8268,34 +6333,11 @@ Viet regression tests phu hop, chay full frontend tests/lint/typecheck/build, tr
 
 ---
 
-## U09 pre-commit review - 2026-10-25
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-25T19:49:57.4049280+07:00
-**User Input**: "Đọc lại changes giúp tôi chia commit rõ ràng, chưa cần push"
-**AI Response**: Argon confirmed it stopped file edits and Git operations; Codex reviewed the complete U09 diff and will create six local Conventional Commits on mcp-test: backend/contract fractional scores, frontend workspace/AI review, submission list/batch actions, local API-worker launcher, generated Next.js agent guidance, and AI-DLC evidence. No push, merge or deployment. Source tests and docs/temporary artifacts are assigned explicitly; ignored screenshots/logs/fixtures are excluded.
-**Validation**: Fresh full frontend523/86files PASS, targeted backend27 PASS with0failures/errors/skips, ESLint PASS, TypeScript PASS, git diff --check PASS. Added missing partial-score fields to OpenAPI and parsed YAML successfully. No production source changes were needed during this review. Existing isolated production-build/live-UI evidence remains attributed to Argon; it is not a new build run.
-**Evidence corrections**: Report and plan now distinguish workspace container-width checks from actual mobile viewport and200percent browser zoom acceptance, which remain unverified. Read-only DB check confirms QA DRAFT9.50/version3 after UI retest; original DRAFT0.00/version7 remains unchanged. Earlier version2 records describe the earlier baseline.
-**Context**: Local commit preparation explicitly authorized; keep branch and all existing changes, exclude secrets/build output, no push.
-
-## U09 local commit grouping
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-25T19:51:38.4739986+07:00
-**User Input**: "Đọc lại changes giúp tôi chia commit rõ ràng, chưa cần push"
-**AI Response**: Created local commits on mcp-test: a0f53dc2 feat(grading): persist fractional rubric item scores (backend, tests, OpenAPI); 507d8b20 feat(grading): streamline rubric and AI draft review (workspace, fractional input, comparisons, diagnostics and tests); af0b1bf0 feat(grading): simplify submission summaries and batch actions; c22756f7 fix(dev): run local API and worker from the current checkout; e7c174b2 chore(frontend): add Next.js agent guidance. The final docs(aidlc) group includes this audit/state, partial-score plan, UI polish plan and UI results with corrected acceptance limits. No source/fixture/screenshot/log/secret changes are added by the documentation group. No push, merge, deploy or grade mutation.
-**Validation**: All groups staged by explicit path manifests and checked before commit. Fresh frontend523/86files, backend27, lint, TypeScript and YAML validation passed. Final working-tree/commit checks follow documentation commit. Existing source behavior remains as reviewed; actual mobile viewport/200percent zoom remain unverified.
-**Context**: Authorized local Conventional Commits only; preserve existing branch and history.
-
----
-
 ## 2026-10-25T08:00:00Z — Rà lại U01, U10, U11
 
 **Requested by:** Đào Chí Cường
 
-**User Input**: "Làm việc khác, kiểm tra lại các phần của tôi (cuong) xem code còn bug gì không, còn gì cần sửa đổi bổ sung cải thiện không"
+**User Input**: "Làm việc khác, kiểm tra lại các phần của tôi (Cường) xem code còn bug gì không, còn gì cần sửa đổi bổ sung cải thiện không"
 
 **AI Response**: Rà `staging` `b306884` cho U01, U10, U11, tập trung các phần chưa rà ở đợt trước (OTP, kích hoạt, đặt lại mật khẩu, hồ sơ, nhập CSV; nhập câu hỏi, nhân bản, AI/MCP; truy vấn luyện tập, giảng viên xem lượt, hoạt động; frontend). Kết quả: không thấy lỗi chặn luồng. Điểm cần xử lý: (1) U11 API kết quả vẫn trả cờ đúng/sai từng câu và số câu đúng khi Quiz đặt không hiện đáp án (BR-U11-20 chưa chốt), lộ đáp án câu một lựa chọn; (2) U01 job OTP thử lại sinh mã mới, có thể gửi hai email hai mã; (3) U11 danh sách lượt cho giảng viên tra tên từng sinh viên một (N+1), U01 chưa có tra cứu theo lô; (4) U11 vẫn nhận sự kiện hoạt động sau hạn cộng ân hạn tới khi scanner nộp; (5) `AiDrafts.tsx` có 3 chỗ tắt `exhaustive-deps`. Các phần đã rà và ổn: OTP/ticket một lần, đặt lại mật khẩu thu hồi mọi phiên, chặn open redirect `next`, nhập CSV kiểm lại khi xác nhận, nhân bản/copy Quiz, danh sách câu, nhận kết quả AI. Không sửa code.
 
@@ -8347,17 +6389,6 @@ Viet regression tests phu hop, chay full frontend tests/lint/typecheck/build, tr
 
 ---
 
-## Kiểm tra khả năng nghiệm thu UI/SMTP thật
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-25T14:27:59Z
-**User Input**: "bạn có kiểm được UI/SMTP thật không?"
-**AI Response**: Đọc trạng thái stack local: nginx/app đang có container tại 8088; backend và worker cấu hình SMTP mailpit:1025, nhưng không có container Mailpit đang chạy. infra/.env.local không có TEST_ACCOUNT_PASSWORD hoặc credential SMTP provider được cấu hình. Có thể kiểm UI qua trình duyệt sau khi chạy bản sửa và có phiên tài khoản test; SMTP thực qua Mailpit cần bật service, còn email tới hộp thư ngoài cần provider và địa chỉ nhận thử. Chưa gửi thư hoặc thay runtime/config/credential trong lượt kiểm tra khả năng này.
-**Context**: Read-only runtime/config discovery, không chứng nhận UI/SMTP acceptance hoặc đọc ra secret.
-
----
-
 ## Nghiệm thu UI/SMTP local theo yêu cầu
 
 **Requested by:** Vu Hai Nam
@@ -8376,17 +6407,6 @@ Viet regression tests phu hop, chay full frontend tests/lint/typecheck/build, tr
 **Timestamp**: 2026-10-25T14:48:07Z
 **AI Response**: UI mở đúng bài CLASS/SUBJECT theo lớp A/B; email mở bài và nhắc hạn được bấm từ Mailpit mở đúng trang B. UI truy cập chéo lớp bị chặn, API hai chiều 404. SMTP thật qua worker/RabbitMQ/SmtpMailAdapter tới Mailpit: 5 OTP kích hoạt, 3 thư mở bài và 3 thư nhắc hạn; đúng link/người nhận, SENT và không trùng qua hơn 1 phút/lượt scan. B8 failure injection trong DB QA: lỗi lớp A lúc21:41:31.493, notification B tạo21:41:31.518 trong cùng scan; A không có marker cho tới gỡ lỗi và phục hồi21:43:31. Gỡ trigger/function QA, cuối cùng3markers/3reminders. Dừng8container QA exit0, giữ volume/bằng chứng; stack platform vẫn7healthy. Không thêm source fix hoặc commit/push/deploy. Report construction/build-and-test/2026-10-25-b2-ui-smtp-acceptance-results.md, plan6/6, screenshots tại .tmp/b2-ui-smtp; không ghi credential/OTP/cookie vào báo cáo. Chưa SMTP provider Internet/TLS/auth hoặc deliverability ngoài local.
 **Context**: Hoàn tất yêu cầu “kiểm giúp tôi”; supersedes giới hạn UI/SMTP local của lượt verify trước. Chỉ cập nhật tài liệu sau nghiệm thu, không lặp full suite vì không đổi source.
-
----
-
-## Chia commit local theo yêu cầu
-
-**Requested by:** Vu Hai Nam
-
-**Timestamp**: 2026-10-25T14:53:04Z
-**User Input**: "chia thành các commit nhỏ, commit lên branch, không push"
-**AI Response**: Rà trạng thái/diff trên fix/notification-links-reminders-u04-tests; index ban đầu chưa có staging. Chia 5 nhóm: B2 link+email (tách hunk route của scanner và regression), B8 isolation+SQL transaction regression, U04 Testcontainers/lifecycle assertions, CI guard, tài liệu review/plan/verification/UI-SMTP. Chỉ stage danh sách file tường minh; .tmp, credential, OTP/cookie, image/volume, JAR/log/screenshot QA bị loại. Tái dùng bằng chứng verify 1375 ca (1371 đạt,4skip U06/U12), scoped78/78 và UI/SMTP thật vì không đổi source sau kiểm thử; không chạy lại toàn suite chỉ để commit.
-**Context**: Được phép commit local trên nhánh hiện tại; không push, không đổi nhánh hoặc sửa lịch sử.
 
 ---
 
@@ -8412,7 +6432,7 @@ Chuẩn bị commit tài liệu cuối; chỉ stage tám file AI-DLC tường mi
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-25T20:44:57.9703778+07:00
-**User Input**: "khi bấm chốt điểm và công bố điểm màn hình hiện thoại [Image #1] như hình 1 tôi muốn nó chỉ hiện thông báo nhỏ thôi biến mất sau vài giây, với lại [Image #2] trang sổ điểm đang hơi bị loạ, nếu để phía trên mỗi cột 1 tên bài thì k đủ chỗ, b đề xuất cho tôi bố chí ui [Image #3] với ui thông tin lớp"
+**User Input**: "khi bấm chốt điểm và công bố điểm màn hình hiện thông báo [Image #1] như hình 1 tôi muốn nó chỉ hiện thông báo nhỏ thôi biến mất sau vài giây, với lại [Image #2] trang sổ điểm đang hơi bị loạn, nếu để phía trên mỗi cột 1 tên bài thì không đủ chỗ, bạn đề xuất cho tôi bố trí UI [Image #3] với UI thông tin lớp"
 **AI Response**: Inspect current clean checkout and BatchActionDialog; implement success-only four-second notice after existing confirmation, preserve errors/partial results and AI workflow. Propose gradebook/class layouts without implementing those larger changes. Plan: construction/plans/2026-10-25-u09-feedback-class-layout.md. No new agent, commit/push/deploy or real-grade mutation.
 **Context**: Scoped continuation of U09 UI; existing reduced security/resiliency scope retained, PBT disabled.
 
@@ -8433,7 +6453,7 @@ Chuẩn bị commit tài liệu cuối; chỉ stage tám file AI-DLC tường mi
 
 **Timestamp**: 2026-10-25T14:09:40Z
 
-**User Input**: "BAN GIAO THUC THI CHO GEMINI DANG MO (hien Gemini4 Argon Medium). Nguoi dung yeu cau: "lap plan sau dua cho gemini lam, code xong thi bao cao toi tu test ui, dua guide test day du". Yeu cau nay thay cho chi dan dung sua truoc day: bay gio BAN la implementer duy nhat, Codex dung chinh sua sau handoff. KHONG tao agent/subagent/worktree, KHONG commit/push/merge/deploy.
+**User Input**: "BAN GIAO THUC THI CHO GEMINI DANG MO (hien Gemini4 Argon Medium). Nguoi dung yeu cau: "lập plan sau đó đưa cho Gemini làm, code xong thì báo cáo tôi tự test UI, đưa guide test đầy đủ". Yeu cau nay thay cho chi dan dung sua truoc day: bay gio BAN la implementer duy nhat, Codex dung chinh sua sau handoff. KHONG tao agent/subagent/worktree, KHONG commit/push/merge/deploy.
 
 Doc va IMPLEMENT tuan tu plan: aidlc-docs/construction/plans/code-generation-plan/2026-10-25-u09-gradebook-class-layout-code-generation-plan.md . Guide40ca UI da viet: aidlc-docs/construction/build-and-test/2026-10-25-u09-gradebook-class-layout-manual-test-guide.md . User da dong y phuong an va giao thuc hien, khong dung o ke hoach/hop phe duyet chung.
 
@@ -8467,23 +6487,11 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 
 ---
 
-## U09 local commit request - 2026-10-25
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-25T14:48:30Z
-
-**User Input**: "giúp tôi commit"
-
-**AI Response**: Split the staged transient-notice changes and the newly implemented gradebook/class-overview changes into four scoped local Conventional Commits (`feat(grading): replace batch success dialogs with transient notices`, `feat(grading): add assignment-first and matrix gradebook modes`, `feat(classes): structure teacher class overview and lazy distributions`, and `docs(aidlc): record U09 feedback, gradebook and class overview handoff`). Verified `git diff --check` and working tree cleanliness without pushing.
-
-**Context**: Local version-control commit grouping on `mcp-test`; no push, merge, or deployment performed.
-
 ## U05 / U15 Jira-based audit handoff - 2026-10-25
 
 **Requested by:** Quang Hung
 
-**User Input**: "check u05 với u15 xem có lỗi j ko, ui ổn chưa, lập plan check theo jira và đưa cho gemini check"
+**User Input**: "check U05 với U15 xem có lỗi gì không, UI ổn chưa, lập plan check theo Jira và đưa cho Gemini check"
 
 **AI Response**: Read current workflow and clean HEAD 41d6cd19, current Gemini terminal, live Jira and unit business rules. Saved a live-source snapshot and sequential functional/UI audit plan covering UC20–30 and UC66. Delegate execution to the existing Gemini terminal through Orca CLI; no production code or Jira changed. Results remain pending, not an acceptance claim.
 
@@ -8510,7 +6518,7 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 
 **Timestamp**: 2026-10-25T17:03:28Z
 
-**User Input**: "chuyển job hiện tại cho codex đi"; "cứ chekc đi"
+**User Input**: "chuyển job hiện tại cho Codex đi"; "cứ check đi"
 
 **AI Response**: Took over the active U05/U15 follow-up after interrupting the Gemini terminal to avoid concurrent edits. Preserved the existing dirty checkout and made bounded fixes for four corroborated findings: authorization guard ordering in AdminDashboard and Academics, teaching/manager class navigation hrefs, and theme fallbacks for academic cards. Fresh backend targeted tests passed 43/43; frontend focused tests passed 83/83; lint, typecheck, isolated production build (28 routes), and `git diff --check` passed. Host API and frontend are available on ports 8080/3000; Docker worker was stopped before launching the host `local,worker` backend. Authenticated live UI checks remain blocked because Orca redirects to `/login` after restart; no credentials were guessed or changed. Follow-up evidence: `construction/build-and-test/2026-10-26-u05-u15-followup-report.md`. No Jira or grade mutations, commit, push, merge, or deployment.
 
@@ -8542,7 +6550,7 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-26T03:00:00Z
-**User Input**: "toi dang nhap git hub r, jira chi can cap nhat task thoi, khong can comment" / "dang nhap jira roi, chuyen done di"
+**User Input**: "tôi đăng nhập GitHub rồi, Jira chỉ cần cập nhật task thôi, không cần comment" / "đăng nhập Jira rồi, chuyển Done đi"
 **AI Response**: Chuyển sang Done (không bình luận): KAN-34, KAN-35, KAN-37 (U06), KAN-151, KAN-62, KAN-63, KAN-64, KAN-66 (U12), epic KAN-29, KAN-28. KAN-14 giữ In Progress.
 **Context**: Sau khi gộp PR #19, #21 vào staging
 
@@ -8564,7 +6572,7 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-26T04:00:00Z
-**User Input**: "ok toi dan khoa roi"
+**User Input**: "ok tôi dán khóa rồi"
 **AI Response**: Kiểm trạng thái khóa (chỉ 4 ký tự cuối). Bấm Kiểm tra qua API: Đạt. Chạy tác vụ tạo nháp bằng AI với khóa cá nhân: READY, token thật 438/878; nháp không tự áp; lịch sử ghi PERSONAL; hạn mức trường không đổi; 4 tác vụ liên tiếp thì tác vụ thứ 4 bị AI_TOO_MANY_TASKS. 7/7 đạt; ghi vào `construction/build-and-test/e2e-u02-u06-u12-2026-10-24.md`.
 **Context**: Construction, U06 kiểm thử với khóa AI thật
 
@@ -8575,7 +6583,7 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-26T05:00:00Z
-**User Input**: "ok toi da gan api key vao roi nhung da reset lai may." / "mearch het vao stagging va test cac phan cua toi o stagging duoc k"
+**User Input**: "ok tôi đã gắn API key vào rồi nhưng đã reset lại máy." / "merge hết vào staging và test các phần của tôi ở staging được không"
 **AI Response**: Cả 8 nhánh của người dùng đã ở `staging` (41f1ab1); nhóm chưa có server staging (bước deploy trong CI chưa bật), nên build stack local từ đúng `staging` (có commit mới của nhóm) và chạy lại toàn bộ e2e. Kết quả trên lớp mới SE-TEST4/môn SWT303: U02 16/16, U06 24/24 (U06-16 bỏ qua vì hạn mức chung đã đặt từ trước), U06 bổ sung 15/15, U12 52/52, U12 bài nhóm 30/30. Sự cố: script `u06b.mjs` cũ đã ghi đè khóa Gemini thật người dùng dán cho `gv.test` (thay bằng khóa thử) — đã báo người dùng dán lại; sửa script để thao tác khóa trên tài khoản chủ nhiệm môn và chạy tác vụ lỗi bằng khóa OpenAI giả, không đụng khóa Gemini của giảng viên. Seed nhận `E2E_CLASS`, `E2E_SUBJECT`; thêm `u06-real-key.mjs`; `u12.mjs` sửa version rubric và số lượt nộp.
 **Context**: Construction, kiểm thử lại U02/U06/U12 trên staging mới nhất
 
@@ -8588,8 +6596,8 @@ Teacher session/host app da co; khong reset auth/key/model, khong bat Docker wor
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-26T03:12:18Z
-**User Input**: "giúp tôi ktra và lập plan fix bug sau đó đưa cho gemini đang mở làm"
-**Additional User Input**: "\"C:\Users\Quang Hung\Downloads\Bao_cao_7A1.pdf\" với lại giúp tôi tham khảo ý tưởng chấm điểm với lấy feedback trong này, đề xuất hệ thống tôi nên thêm feedback như tnao cho rõ ràng"
+**User Input**: "giúp tôi kiểm tra và lập plan fix bug, sau đó đưa cho Gemini đang mở làm"
+**Additional User Input**: "\"C:\Users\Quang Hung\Downloads\Bao_cao_7A1.pdf\" với lại giúp tôi tham khảo ý tưởng chấm điểm với lấy feedback trong này, đề xuất hệ thống tôi nên thêm feedback như thế nào cho rõ ràng"
 **AI Response**: Investigated task READY/handler_done=false versus proposal PENDING; eventual proposal READY approximately 87 seconds after provider completion. Prepared construction/plans/2026-10-26-u09-ai-result-delivery.md; no source edits. Existing Gemini 4 Argon selected for implementation handoff. Root cause not asserted without reproduction.
 **Context**: Construction planning; user authorized plan and delegation. Additional PDF feedback analysis is separate scope.
 
@@ -8612,7 +6620,7 @@ Gemini handoff receipt: accepted=true for existing terminal term_257953b7-6266-4
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-26T03:26:53Z
-**User Input**: Giúp tôi lập plan sửa feedback và đưa cho gemini làm luôn
+**User Input**: Giúp tôi lập plan sửa feedback và đưa cho Gemini làm luôn
 **AI Response**: Prepared construction/plans/2026-10-26-u09-structured-feedback.md from the approved recommendations. Existing Gemini will execute after the result-delivery bugfix checkpoint. Includes item evidence/reason/improvement, teacher review, draft persistence, legacy/group/history compatibility, published-student DTO privacy, automated verification and a full user UI guide. No code changes by Codex in this planning turn.
 **Context**: User authorized feedback implementation handoff. No commit/push, no PDF transmission, no live grade finalization/publication.
 
@@ -8649,17 +6657,6 @@ Gemini handoff receipt: accepted=true for existing terminal term_257953b7-6266-4
 **User Input**: cần làm gì để fix lỗi này
 **AI Response**: Reproduced rejection as FEEDBACK_MISSING_EVIDENCE on a UI proposal retry. Schema allowed null evidence with requiresReview=false, while callback rejected it. Added fixed safe diagnostics, evidence-or-explicit-review schema branches and explicit zero-score/uncertainty prompt instructions. Regression demonstrated the old mismatch; 31 focused tests passed. Existing Gemini UI proposal version 4 reached READY with all 9 feedback items in 7.636 seconds; inspected first item's evidence/reason/submission link. No grade apply/save/finalize/publish, no key/model change, no commit/push.
 **Context**: Follow-up to Gemini structured feedback implementation; preserved all existing uncommitted work. Report in construction/build-and-test/2026-10-26-u09-feedback-evidence-fix.md.
-
----
-
-## U09 scoped local commits
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-26T05:10:43Z
-**User Input**: Giúp tôi chia commit rõ ràng chưa push
-**AI Response**: Reviewed current changes and partitioned code into four local English commits: 37a73624 AI delivery, bd2b22b6 structured-feedback backend, ea2e97e7 teacher/student UI and resilient polling, f45264cf evidence-or-review schema fix and regressions. Used index-only content partitioning for shared files; working source remained unchanged. Fresh backend suite: 73/73 tests; frontend grading: 76/76 tests in 10 files; lint and typecheck exit 0. Documentation is being grouped as the fifth commit; temporary screenshots excluded.
-**Context**: User explicitly authorized local commits, superseding previous no-commit constraints. No push/merge/deploy. Owned backend stopped before Maven tests and restarted afterward. Live AI success remains recorded in the separate evidence-fix report; full manual acceptance remains pending.
 
 ---
 
@@ -8728,7 +6725,7 @@ User explicitly approved creating and using a seven-day READ_ONLY token for the 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-26T09:34:49Z
-**User Input**: "tôi nghĩ nên có thêm mcp tạo assignment, quiz, b check xem còn các tính năng dungfg ai nào dùng đc vs mcp ko, trên tất cả role"
+**User Input**: "tôi nghĩ nên có thêm MCP tạo assignment, quiz, bạn check xem còn các tính năng dùng AI nào dùng được với MCP không, trên tất cả role"
 **AI Response**: Reviewed all four roles, five domain MCP providers and four implemented AI task families. Confirmed nine distinct tools overall, with four for Student, seven for Teacher/Subject Manager and no Admin MCP admission. Identified missing assignment/quiz creation, bank-target question proposals, discovery, complete individual/group grading context and batch proposal writes. Recorded optional student learning, teaching analytics and separate Admin reporting proposals in construction/build-and-test/2026-10-26-mcp-role-capability-review.md. Existing working-tree changes preserved.
 **Context**: Source audit and recommendations only. No application implementation, additional-role runtime acceptance, provider calls, tool writes, user data mutation, commit, push or deployment.
 
@@ -8737,7 +6734,7 @@ User explicitly approved creating and using a seven-day READ_ONLY token for the 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-26T09:52:18Z
-**User Input**: "tôi nghĩ là bỏ việc sử dụng mcp cho student chỉ cho 3 role teacher, subject manager, admin"
+**User Input**: "tôi nghĩ là bỏ việc sử dụng MCP cho student chỉ cho 3 role teacher, subject manager, admin"
 **AI Response**: Accepted the product-scope decision: exclude Student MCP, retain Student personal AI through the UI, admit Teacher/Subject Manager/Admin with separate academic and Admin reporting permissions. Existing Student bearer credentials must fail authentication after implementation.
 **Context**: Product decision carried into the subsequent implementation request; no code changed at this decision.
 
@@ -8750,16 +6747,6 @@ User explicitly approved creating and using a seven-day READ_ONLY token for the 
 **AI Response**: Inspected CLAUDE.md, existing workspace changes, source contracts and frontend instructions. Recorded the agreed scope and proposed contracts in inception/requirements/2026-10-26-mcp-staff-expansion.md. Created a seven-task technical implementation plan in construction/plans/code-generation-plan/2026-10-26-mcp-staff-expansion-code-generation-plan.md and a dedicated approval question file. The plan covers role/token/UI changes, discovery, idempotent assignment/quiz creation, question bank, complete individual/group grading and batch proposals, teaching/Admin reports and verification. Checked artifact paths and requirement/test coverage. Preserved all prior workspace changes.
 **Context**: Product scope accepted from the conversation. CLAUDE.md Code Generation Part 1 Step 7 explicitly requires approval of the new unit code generation plan before implementation. Approval prompt logged here before final delivery. Application code, live credentials/data, provider calls and deployment remain untouched; no commit/push. Existing security/resiliency extension choices inherited; no repeated opt-in question.
 **Approval prompt**: Review the technical plan and answer A (approve and execute all seven tasks), B (request plan changes), or X (other) in inception/requirements/2026-10-26-mcp-staff-expansion-approval.md or by reply. This gate concerns the new implementation plan, not the already agreed three-role scope.
-
-## MCP staff expansion continuation
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-26T10:14:47Z
-**User Input**: làm tiếp
-**AI Response**: Resumed AI-DLC construction; continuation approves the pending seven-task plan. Baseline 35 backend tests passed. Student UI regression reproduced (1 failed, 6 passed). Preserving prior changes, sequential execution without subagents, no commit/push/provider calls/live migration. Existing extension configuration inherited; disabled property-based testing skipped.
-**Context**: Code Generation Part 2.
-
 
 ## MCP staff expansion auto-approved continuation
 
@@ -8792,7 +6779,7 @@ User explicitly approved creating and using a seven-day READ_ONLY token for the 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-26 11:10:55 UTC
-**User Input**: giups tooi restart backend frontend vaf chayj test thuwr mcp cho teacher
+**User Input**: giúp tôi restart backend, frontend và chạy test thử MCP cho teacher
 **AI Response**: Restarted only this workspace's local backend and frontend. Flyway applied migration `20261026.1800`. Teacher token passed MCP initialize, ping, tools/list and `get_my_capabilities` over localhost:3000: role TEACHER, access READ_WRITE, 23 visible tools. Read-only class, subject and class-scoped assignment discovery passed (1/1/2 results at test time). No write tool or provider/grade operation was called. Other acceptance cases remain pending.
 **Context**: Approved local runtime smoke test; existing teacher token used without logging or printing it.
 
@@ -8801,7 +6788,7 @@ User explicitly approved creating and using a seven-day READ_ONLY token for the 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-26 11:25:46 UTC
-**User Input**: "Thử tạo đề swr bằng mcp xem nào"
+**User Input**: "Thử tạo đề SWR bằng MCP xem nào"
 **AI Response**: Used the existing Teacher READ_WRITE credential and read_authoring_requirements to create a QA quiz in test class U05-A / Software Requirement via create_quiz_draft. Quiz 84c5f170-b3ab-43e4-9a73-dcc3c4468c3a is DRAFT version 1; READY proposal 6bf3e5d2-005a-44c4-8dd5-9e7f993837e8 contains two sample questions. list_quizzes found it; read_quiz_context showed zero active questions. Replaying the same requestRef/payload returned the same quiz/proposal IDs. No provider call, publication, student assignment or grade change. UI review/apply remains with the user.
 **Context**: Explicitly requested MCP quiz creation test; test-only class chosen from the Teacher's scoped class list. No secret written to logs/docs.
 
@@ -8810,49 +6797,18 @@ User explicitly approved creating and using a seven-day READ_ONLY token for the 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-26 12:30:21 UTC
-**User Input**: "Test tính năng chấm bài bằng mcp xem"
+**User Input**: "Test tính năng chấm bài bằng MCP xem"
 **AI Response**: Teacher MCP list_assignments/list_submissions succeeded for test class U05-A. The QA assignment is DRAFT with one NOT_SUBMITTED row and no evaluationId. The other assignment has one PUBLISHED evaluation. Did not read student submission content or call the proposal-write tool because there is no safe PENDING/DRAFT QA evaluation; no proposal or grade changed. Full context/proposal test awaits a test-student submission in an eligible state.
 **Context**: Authenticated, scoped, read-only grading discovery; no credentials or student content recorded.
-
-## MCP system connectivity check
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-26 13:24:46 UTC
-**User Input**: "check kết nối mcp với hệ thống"
-**AI Response**: Authenticated MCP checks passed on both http://localhost:3000/mcp and http://localhost:8080/mcp. Each reported server ai-learning-platform, protocol 2025-06-18, 23 tools, and get_my_capabilities role TEACHER / access READ_WRITE. No write tools or user data were changed; token value was not printed or recorded.
-**Context**: Existing Teacher credential read from Windows user environment for a read-only connectivity check.
-
-## Review report U01–U15 (2026-10-22) – user's units
-
-**Requested by:** Vo Minh Tai
-
-**Timestamp**: 2026-10-26T08:00:00Z
-**User Input**: "@"C:\Users\PC\Downloads\u01-u15-code-aidlc-review-2026-10-22.md" ban toi hom truoc gui toi cai nay"
-**AI Response**: Đối chiếu các mục thuộc U02/U06/U12 với `staging` hiện tại: R02 đã sửa (PR #19); R09 đã sửa (PR #21) trừ nút Đóng vẫn đóng khi lưu lỗi; R06 đã được Quang Hưng sửa (37a7362); R07 còn (U12 gửi GROUP_MEMBERSHIP_CHANGED không có groupId, U14 từ chối); R10 còn (MaterialText thiếu version, liên quan U06 contract, U13, U07, U10). Sửa trên nhánh `fix/review-r07-r09`: U12 phát một sự kiện mỗi nhóm có groupId (người vào theo nhóm mới, người bị gỡ theo nhóm đã rời), test kiểm cả `RecipientResolver.id`; nút Đóng chỉ đóng khi lưu thành công, kèm test. R10 để người dùng bàn với nhóm vì cần đổi contract và code của U13/U07/U10.
-**Context**: Construction, xử lý review tổng U01–U15 phần của người dùng
-
----
 
 ## Full re-test on staging 7b5edba
 
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-26T08:40:00Z
-**User Input**: "gio hay test lai cho toi tren nhanh stagging tat ca cac phan do toi phu trach di"
+**User Input**: "giờ hãy test lại cho tôi trên nhánh staging tất cả các phần do tôi phụ trách đi"
 **AI Response**: Build lại stack từ `staging` 7b5edba, lớp mới SE-TEST5/SWT304. U02 16/16 (sửa script lọc AUDIT_QUERIED); U06 24/24 + 15/15 + khóa thật 7/7 (lần đầu Google 503, chạy lại đạt); U12 52/52 + 30/30; thêm `u12-notify.mjs` kiểm R07: 3/3. Ghi vào file bằng chứng e2e.
 **Context**: Construction, kiểm thử lại toàn bộ phần của người dùng trên staging
-
----
-
-## Report 5 – unit test workbook
-
-**Requested by:** Vo Minh Tai
-
-**Timestamp**: 2026-10-26T13:50:00Z
-**User Input**: "xem trong drive cua nhom phan report 5 xem can sua gi k" / "report unit test ay" / "@"C:\Users\PC\OneDrive\Tài liệu\Report-5.0_Test Documentation.docx"" / "@"C:\Users\PC\OneDrive\Tài liệu\Report-5.1_Unit Test.xlsx" ban toi bao dien unit tést th"
-**AI Response**: Đọc Report-5.0 (góp ý: ngày bìa, Change Log trống, lỗi chính tả "Minium", mục 1.2/3.2 còn mô tả Iteration 1/Pending, thiếu Testcontainers và script e2e, mục 3 chưa có số liệu). Điền Report-5.1 theo mẫu sheet U15 có sẵn: thêm sheet U02_Audit (4 hàm, 26 ca), U06_AI_Connections (40 hàm, 86 ca), U12_Group_Assignment (38 hàm, 59 ca); mỗi ca ứng với một JUnit test có thật (bỏ test tích hợp Testcontainers), Round 1 Passed ngày 26/10/2026 theo lần mvn verify trên staging 7b5edba; ca hồi quy ghi Defect ID. Thêm dòng ở Test Cases, Test Statistics (công thức theo mẫu, tổng mới ở dòng 146) và Record of change. Không đổi ô nào của U05/U09/U15. Lưu bản mới cạnh file gốc: `Report-5.1_Unit Test (them U02 U06 U12).xlsx`, không ghi đè.
-**Context**: Tài liệu dự án, Report 5 Unit Test
 
 ---
 
@@ -8861,7 +6817,7 @@ User explicitly approved creating and using a seven-day READ_ONLY token for the 
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-26T13:53:00Z
-**User Input**: giúp tôi commit rõ ràng chưa push sau đó thử check merge nhánh staging vào nhánh này có conflict gì thì resolve
+**User Input**: giúp tôi commit rõ ràng, chưa push, sau đó thử check merge nhánh staging vào nhánh này có conflict gì thì resolve
 **AI Response**: Created separate local commits 44a206d5 (backend MCP), 23651893 (staff UI and proposal review), 6a92bcaf (connectivity diagnostics), and 92750b2a (documentation). Fetched origin/staging at 934ba59b and merged into mcp-test. The only textual conflict was this append-only audit log; retained both branches' entries. Reviewed automatic merges in AssignmentFormPage and QuizAiDraftServiceTest. Fresh merged-tree verification: frontend 92 files / 565 tests passed; TypeScript passed; backend focused MCP/AI/architecture suite 101 tests passed with zero failures, errors or skips. Git diff whitespace validation passed. Crash log and temporary report directories remain untracked. No push.
 **Context**: Repository integration of already approved work; no new feature design or deployment. Existing security/resiliency scope retained; property-based testing remains disabled.
 
@@ -8874,7 +6830,7 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-26T14:10:00Z
-**User Input**: "lam di"
+**User Input**: "làm đi"
 **AI Response**: Tạo bản sửa của Report-5.0 (không ghi đè bản gốc): bìa "Oct 2026"; "Minimum" ở mục lục và tiêu đề; mục 1.2 ghi cả 15 unit đã có code, U02/U06/U12 đã chạy trên staging 7b5edba; thêm mô tả U06 và U12 ở 1.2.4/1.2.5; thêm Testcontainers 1.21.4 và script e2e vào 2.3; thêm mốc 24–26/10 vào 3.2; dòng Change Log 26/10/2026; mục II.3 điền số liệu riêng U02/U06/U12 (UT 171, IT 147, đều đạt; 12 lỗi đều đã sửa: Review 5, IT 6, AT 1). Lưu `Report-5.0_Test Documentation (sua U02 U06 U12).docx` cạnh bản gốc.
 **Context**: Tài liệu dự án, Report 5
 
@@ -8885,7 +6841,7 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Vo Minh Tai
 
 **Timestamp**: 2026-10-26T14:40:00Z
-**User Input**: "cho tôi luồng review màn hình và các chức năng uc group assignment cho tôi đi" / (ảnh lỗi PowerShell khi chạy seed) / (ảnh Sửa nhóm báo "Bộ nhóm có lỗi" nhưng không nhóm nào bị đánh dấu) "toi k lưu nhóm được"
+**User Input**: "cho tôi luồng review màn hình và các chức năng UC group assignment cho tôi đi" / (ảnh lỗi PowerShell khi chạy seed) / (ảnh Sửa nhóm báo "Bộ nhóm có lỗi" nhưng không nhóm nào bị đánh dấu) "tôi không lưu nhóm được"
 **AI Response**: Soạn luồng review U12 40 bước (UC57, UC54, UC55, UC53, UC56). Hướng dẫn cú pháp PowerShell `$env:E2E_CLASS=...` và tạo lớp SE-TEST6. Lỗi lưu nhóm: người dùng xóa Nhóm B đã có tài liệu/bản nộp; backend chặn đúng BR-U12-05 (GROUP_IN_USE) nhưng lý do gắn với nhóm không còn trên màn nên không hiện. Sửa `GroupEditor` hiện các lỗi của nhóm không còn trong danh sách ngay trong thông báo đỏ; thêm test. Nhánh `fix/u12-group-editor-orphan-issues`.
 **Context**: Construction, U12 sửa sau khi người dùng review tay
 
@@ -8896,7 +6852,7 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-30T04:47:18Z
-**User Input**: "giúp tôi check doc aidlc và code hiện tại xem lệch thế nào, sau đó lập kế hoạch đồng bộ lại doc aidlc theo code mới"
+**User Input**: "giúp tôi check doc AI-DLC và code hiện tại xem lệch thế nào, sau đó lập kế hoạch đồng bộ lại doc AI-DLC theo code mới"
 **AI Response**: Compared staging@794a405304bf02dd2593a9fa2c88662d7cd52845 against AI-DLC overview, design, rules and test summaries. Created inception/plans/2026-10-30-doc-code-drift-audit.md (14 drift groups, 15-unit inventory) and inception/plans/2026-10-30-aidlc-doc-sync-plan.md (six ordered tasks). Static review only; no fresh application test/runtime acceptance claimed.
 **Context**: CLAUDE workflow, existing Security/Resiliency scope retained, PBT disabled. Current code to documentation; application code, DB and runtime config unchanged. No commit/push/deploy; synchronization execution pending plan review.
 
@@ -8905,7 +6861,7 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-30T04:47:18Z
-**User Input**: "tôi plan đồng bộ, tôi muốn doc aidlc cập nhật theo những thay đổi mới trong code"
+**User Input**: "tôi plan đồng bộ, tôi muốn doc AI-DLC cập nhật theo những thay đổi mới trong code"
 **AI Response**: Confirmed direction: update AI-DLC documents from current code behavior, schema, APIs, permissions and flows; preserve previous decisions as traceability rather than stale current descriptions.
 **Context**: Same documentation planning task. Existing audit entries preserved; append only.
 
@@ -8929,7 +6885,7 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-30T05:18:30.529740+00:00
-**User Input**: "drawio là sửa những cái j"
+**User Input**: "drawio là sửa những cái gì"
 **AI Response**: Explained selected changes in BF01 class teacher optional, BF02 modules, BF06 Quiz/activity, BF08 AI/MCP roles/keys, BF12 optional reasons, baseline annotations in other flows and simplified unit dependency scope. Existing layout retained; XML/combined file and PNGs refreshed and checked.
 **Context**: Status/scope clarification during approved execution; no cancellation or new application change.
 
@@ -8949,7 +6905,7 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-30T05:36:26.594452+00:00
-**User Input**: "giúp tôi rà soát doc aidlc với code 1 lần nữa check xem test unit đã đúng theo bussiness rule của từng unit , usecase chưa"
+**User Input**: "giúp tôi rà soát doc AI-DLC với code 1 lần nữa check xem test unit đã đúng theo business rule của từng unit, use case chưa"
 **AI Response**: Reviewed actual assertions/fixtures against current BR/source across15units/66UC with three independent read-only review groups. Found documentation drift, non-discriminating fixtures, coverage gaps and U03 source risks. Fresh Maven verify:1471total/1372pass/99skip/0fail/error, but required DB-suite guard fails on skipped PostgreSQL tests. Initial frontend import failures repaired by npm ci against existing lockfile; final94files/597tests pass. Wrote consolidated audit, three per-UC appendices and machine-readable run evidence; no application/test source/config/dependency-version changes.
 **Context**: Review-only continuation. Existing uncommitted doc sync preserved. No live stack/provider/email/grade changes, commit/push/deploy. Test env JDBC URLs blank only in the Maven process. Security/resiliency scope retained; PBT disabled. Passing assertions do not certify all BR/usecases; remediation not executed.
 
@@ -8961,7 +6917,7 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-30T06:39:43.159511+00:00
-**User Input**: "Giúp tôi sửa lại các lỗi trên với sửa mcp bỏ kết nối mcp ra khỏi admin, thêm lại vào student, student có thể kế nối mcp để dùng dịch vụ ai practice quiz như cũ"
+**User Input**: "Giúp tôi sửa lại các lỗi trên với sửa MCP, bỏ kết nối MCP ra khỏi admin, thêm lại vào student, student có thể kết nối MCP để dùng dịch vụ AI practice quiz như cũ"
 **AI Response**: Implementing approved audit fixes via failing regressions then source fixes; restoring Student/removing Admin MCP. User clarified API AI business operations define MCP scope: UC41 submitted Practice feedback, not new AI Quiz explanation. Disposable Docker tests enabled; no app DB migration, external provider, commit/push/deploy.
 **Context**: Existing uncommitted docs retained; code/test/docs scope authorized.
 
@@ -8970,7 +6926,7 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-30T06:39:43.159511+00:00
-**User Input**: "Ơ khoan luồng cũ trong uc có cái giải thích quiz đã nộp ko, cái api ai dùng tnao thì mcp dùng như thế"
+**User Input**: "Ơ khoan luồng cũ trong UC có cái giải thích quiz đã nộp không, cái API AI dùng thế nào thì MCP dùng như thế"
 **AI Response**: Verified legacy UC41 supports personal API or MCP feedback for own submitted Practice Assignment. UC52 is deterministic allowed Quiz result/explanation. Removed the suggested new AI Quiz-explanation scope.
 
 ## Execution preference
@@ -8978,7 +6934,7 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-30T06:39:43.159511+00:00
-**User Input**: "tự làm đi đừn chia subagent làm nữa"
+**User Input**: "tự làm đi, đừng chia subagent làm nữa"
 **AI Response**: Stopped existing subagents and continued all remaining implementation/review/verification directly. No further delegation.
 
 ---
@@ -9000,19 +6956,8 @@ Diagnostic fixture rerun: scripts/test-check-mcp.py passed both test methods usi
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-10-30T07:02:14.039643+00:00
-**User Input**: "h doc aidlc đã khớp code với test rồi dko"
+**User Input**: "giờ doc AI-DLC đã khớp code với test rồi đúng không"
 **AI Response**: Confirmed current documentation alignment within the reviewed implementation/test scope. Historical evidence and pending full-UC, E2E/provider acceptance remain explicitly distinguished.
-
-## Local commit request and pre-commit verification
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-10-30T07:02:14.039643+00:00
-**User Input**: "giúp tôi commit rõ ràng, ghi rõ description"
-**AI Response**: Prepared four local commits on the current aidlc-docs branch: Student/Admin MCP, job/enrollment/Quiz fixes, remaining BR regression coverage, and AI-DLC synchronization. Each has a descriptive body covering behavior, reason, relevant limitations and verification. Fresh pre-commit backend verify: 1611 passed/0 failures/errors/skips; frontend: 599 passed/94 files/0 pending; required PostgreSQL guard passed. Commit bodies describe validation of the complete remediation tree. Cache/build/log files excluded by explicit path lists.
-**Context**: User authorizes local commits; no push, merge, deployment or live database migration requested. Actual commit IDs and completion are recorded by Git history and reported to the user after creation.
-
----
 
 ## Code structure audit and refactor planning — 2026-10-30
 
@@ -9844,7 +7789,7 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-11-02T06:30:51Z
-**User Input**: "giúp tôi lập kế hoạch sửa những bugs mới vừa tìm đợc, sau đó triển khai trên 1 branch gọi là fix/u05-u09-u15"
+**User Input**: "giúp tôi lập kế hoạch sửa những bugs mới vừa tìm được, sau đó triển khai trên 1 branch gọi là fix/u05-u09-u15"
 **AI Response**: Created fix/u05-u09-u15 from clean staging; scoped plan covers KAN-153–157 with regression-first fixes and unit documentation. User authorized planning followed by implementation; no deployment, push or merge is inferred.
 **Context**: Existing requirements/designs reused. Security/resiliency scope retained; PBT remains disabled. No new architecture or migration required.
 
@@ -9855,20 +7800,9 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-11-02T07:07:00Z
-**User Input**: Continuation of the authorized KAN-153–157 plan/implementation and prior instruction "mấy cái nào fix r thì để done đi"; no new approval or scope inferred.
+**User Input**: Continuation of the authorized KAN-153–157 plan/implementation and prior instruction "mấy cái nào fix rồi thì để Done đi"; no new approval or scope inferred.
 **AI Response**: Fixed the five defects on fix/u05-u09-u15. Verified 411 distinct backend cases (zero skips, real PostgreSQL), 189 frontend cases, typecheck, focused lint, final production build and diff checks. Fresh review found one legacy metadata issue, corrected under failing regressions; re-review found no remaining Critical/Important issues. Updated all three unit docs and the dated plan/results. KAN-153–157 moved to Done with branch/evidence/limitations comments; assignee unchanged. No source commit, push, merge, deployment or live grade write.
 **Context**: Build and Test completed for this scoped change. Browser verified admin backup status and inline empty history; broad role/mobile/load acceptance and production deployment remain outside scope. Full lint retains one unrelated existing warning.
-
----
-
-## Local commit — U05/U09/U15
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-11-02T07:16:28Z
-**User Input**: "giúp tôi commit"
-**AI Response**: Reviewed the scoped diff and recorded verification, prepared one English commit covering KAN-153–157 on fix/u05-u09-u15. No source changes since the passing verification; only commit-state documentation updated. Commit includes source, regression tests and AI-DLC artifacts; excludes temporary logs/build/config outputs. No push requested or performed.
-**Context**: User-authorized local commit; no merge or deployment.
 
 ---
 
@@ -9877,7 +7811,7 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-11-02T09:00:00Z
-**User Input**: "[@Superpowers](plugin://superpowers@openai-curated-remote) giúp tôi check lại lỗi như hình tại sao không up được link youtube lên, và tại sao chỉ có sinh viên mới có phần cài đặt thông báo, tôi nghĩ tất cả các role đều phải có chứ."
+**User Input**: "[@Superpowers](plugin://superpowers@openai-curated-remote) giúp tôi check lại lỗi như hình tại sao không up được link YouTube lên, và tại sao chỉ có sinh viên mới có phần cài đặt thông báo, tôi nghĩ tất cả các role đều phải có chứ."
 **Attachment**: C:/Users/ADMIN/AppData/Local/Temp/codex-clipboard-d2bb898f-6332-40d4-9b40-2852857f4f0b.png. Screenshot treated as evidence, not instructions.
 **AI Response**: Using Superpowers systematic-debugging; read CLAUDE.md, AI-DLC common/workspace/requirements rules, state, extension decisions and relevant U13/U14 source/rules/tests. Existing project artifacts reused. Both YouTube validators reject list/index unconditionally; frontend and backend both restrict email preferences to Student. Current BR-U13-10 and BR-U14-20/21 explicitly document these behaviors. Investigation and focused verification in progress; no product source edits or deployment.
 **Context**: Workspace Detection complete; scoped requirements investigation. Existing security/resiliency scope retained; PBT disabled. The unrelated staged/deleted report DOCX is preserved.
@@ -9910,7 +7844,7 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Requested by:** Vu Hai Nam
 
 **Timestamp**: 2026-11-02T08:18:15Z
-**User Input**: "có phải bạn đang hiểu sai ý tôi không. Tôi muốn sửa 2 thứ: đầu tiên là việc up link video youtube trong list và thứ 2 là việc các role khác ngoài role sinh viên không có các mục về cài đặt thông báo"
+**User Input**: "có phải bạn đang hiểu sai ý tôi không. Tôi muốn sửa 2 thứ: đầu tiên là việc up link video YouTube trong list và thứ 2 là việc các role khác ngoài role sinh viên không có các mục về cài đặt thông báo"
 **AI Response**: Acknowledged unnecessary scope selection; user explicitly directs fixing both defects. Continue directly on existing fix/u04-u13-u14 branch. Plan: accept and canonicalize single-video links containing playlist context; expose role-appropriate functioning settings in UI/API. Reuse existing notification/email infrastructure; staff emails opt-in off by default, mandatory Admin backup remains visible and locked. Existing A/B question superseded, no further approval inferred as necessary for these authorized reversible fixes. Use regression-first tests and scoped verification.
 **Context**: User clarification takes precedence over redundant workflow gates. No worktree relocation or unrelated report changes. No commit/push/deployment/live email authorized.
 
@@ -9990,7 +7924,7 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Requested by:** Quang Hung
 
 **Timestamp**: 2026-11-02T15:19:14+07:00 (completion record)
-**User Input**: "điểm đã chốt rồi thi k được sửa nữa, giúp tôi sửa lại business rule, doc aidlc sau sửa lại code, test"
+**User Input**: "điểm đã chốt rồi thì không được sửa nữa, giúp tôi sửa lại business rule, doc AI-DLC, sau đó sửa lại code, test"
 **Clarification**: "Cho nộp lại thành lượt mới, giữ nguyên điểm đã chốt của lượt cũ"
 **AI Response**: Implement immutable FINALIZED/PUBLISHED grades; publication only changes visibility. Retain old graded snapshots and create a separate pending grading round on resubmission. Update AI-DLC before implementation and verify backend/UI/persistence. Existing branch fix/u05-u09-u15, initially clean at d857fd7f. No commit/push/live migration requested.
 
@@ -10009,16 +7943,6 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 
 ---
 
-## Local commit authorization — finalized grade lock
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-11-02T16:10:53+07:00
-**User Input**: "giúp tôi commit"
-**AI Response**: Review and commit the verified grading lock/reset implementation, regression tests, API contract and AI-DLC in English on fix/u05-u09-u15. Rechecked working diff and recorded test/build evidence; no production source change since verification. Exclude generated files and local logs; no migration, push, restart or deployment.
-
----
-
 ## Resolve staging merge conflict
 
 **Requested by:** Quang Hung
@@ -10026,14 +7950,6 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 **Timestamp**: 2026-11-02T16:15:25+07:00
 **User Input**: "[Image #1] giúp tôi resolve conflict"
 **AI Response**: Resolve the in-progress merge of staging d33e31c3 into fix/u05-u09-u15. The sole conflict is aidlc-state.md: retain both Finalized grade lock and Staging check fixes sections, removing markers only. Preserve all already auto-merged source/package/test changes and existing audit entries, then complete the local merge commit. Checked section uniqueness, conflict markers, staged whitespace and package JSON parsing. Runtime tests/build are not rerun for this documentation conflict resolution; prior branch test evidence remains dated. No push, live DB change or restart.
-
----
-
-## Local Run - Quiz Review
-**Timestamp**: 2026-11-02T11:38:07Z
-**User Input**: "chạy local dự án để tôi kiểm tra lại các thay đổi mới của phần quiz"
-**AI Response**: "Khởi động Docker Desktop, build và chạy stack local từ staging (047c2e5c) bằng docker compose; mọi container healthy, ứng dụng ở http://localhost:8088. Không đổi code và không đổi dữ liệu."
-**Context**: Chạy thử theo yêu cầu, không phải thay đổi phần mềm; không mở stage AI-DLC mới.
 
 ---
 
@@ -10047,7 +7963,7 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 
 ## Local Run - Test Account Passwords
 **Timestamp**: 2026-11-02T11:56:55Z
-**User Input**: "đặt mặt khẩu cho các tài khoản là [đã ẩn mật khẩu] cho tôi"
+**User Input**: "đặt mật khẩu cho các tài khoản là [đã ẩn mật khẩu] cho tôi"
 **AI Response**: "Ghi trực tiếp hash bcrypt vào database local cho 4 tài khoản *@platform.local vì mật khẩu này không đạt chính sách mật khẩu của ứng dụng; không đổi code và không đổi chính sách."
 **Context**: Chỉ áp dụng cho tài khoản thử trên stack Docker local.
 
@@ -10077,27 +7993,11 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 
 ---
 
-## Merge Readiness Check - origin/staging
-**Timestamp**: 2026-11-03T08:54:40Z
-**User Input**: "kiểm tra các thay đổi mới nhất trên staging xem có xung đột gì không, có thể merge vào chưa"
-**AI Response**: "Thử merge không đổi cây làm việc với origin/staging 1878da06: chỉ xung đột aidlc-docs/audit.md. Trên bản ghép: frontend typecheck, lint, 745 test đạt; backend chạy 1721 test có 9 lỗi do thiếu thư mục khi đóng gói, chạy lại đủ mã nguồn đều đạt. Chưa merge."
-**Context**: Kiểm tra trước khi merge; không đổi code.
-
----
-
-## Merge origin/staging Into Local staging
-**Timestamp**: 2026-11-03T08:59:50Z
-**User Input**: "Merge vào local"
-**AI Response**: "Merge origin/staging vào staging local; xung đột aidlc-docs/audit.md xử lý bằng cách giữ cả hai bên. Không push."
-**Context**: Thực hiện sau kiểm tra sẵn sàng merge.
-
----
-
 ## Dedicated MCP documentation — 2026-11-02
 
 **Requested by:** Quang Hung
 
-**User Input**: "[Image #1] phần kết nối mcp này thì nên có 1 trang doc riêng, cho 1 cái link hay 1 cái nút vào để xem doc mcp trong đó thì mô tả rõ cách dùng, cách kết nối, mô tả từng chức năng, tool làm gì"
+**User Input**: "[Image #1] phần kết nối MCP này thì nên có 1 trang doc riêng, cho 1 cái link hay 1 cái nút vào để xem doc MCP trong đó thì mô tả rõ cách dùng, cách kết nối, mô tả từng chức năng, tool làm gì"
 **AI Response**: Build a dedicated authenticated guide linked from Agent MCP. Reuse safe client setup/copy prompt; explain workflows, per-tool behavior/permissions and troubleshooting. Preserve the existing design and token management. Read current provider schemas and official client documentation; no new backend/DB behavior, dependency or live write.
 
 ---
@@ -10110,13 +8010,6 @@ log bug ở jira sau đó sửa tất cả các lỗi trên 1 nhánh mới cho t
 
 ---
 
-## Local commit — dedicated MCP documentation
-
-**Requested by:** Quang Hung
-
-**Timestamp**: 2026-11-02T18:47:03+07:00
-**User Input**: "giúp tôi commit"
-**AI Response**: Commit the verified MCP documentation route/link, 29-tool catalog, shared safe setup/SSR handling, regression tests and U06 AI-DLC in English on fix/u05-u09-u15. Reviewed the scoped diff, whitespace and recorded test/build/browser evidence; no application source changed after verification. Exclude generated files, local scripts/logs/screenshots and credentials. Local commit only; no push, backend restart or DB migration.
 ## Merge to staging — 2026-11-02
 
 **Requested by:** Vo Minh Tai
@@ -10284,30 +8177,6 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 
 ---
 
-## Merge Readiness Check - Local staging
-**Timestamp**: 2026-11-03T10:02:45Z
-**User Input**: "kiểm tra xem có thể merge vào staging chưa"
-**AI Response**: "Không có commit mới trên origin/staging, không xung đột. Chạy các bước CI trên 841436e5 trong container: xem kết quả ở tin nhắn trả lời. Chưa push."
-**Context**: Kiểm tra trước khi đưa staging local lên remote.
-
----
-
-## Merge Readiness Check - Progress Question
-**Timestamp**: 2026-11-03T10:02:45Z
-**User Input**: "được chưa"
-**AI Response**: "Báo backend đã đạt, frontend còn đang chạy."
-**Context**: Hỏi tiến độ khi đang chạy kiểm tra CI.
-
----
-
-## Pull Request - Draw Rule Shortage Warning
-**Timestamp**: 2026-11-03T10:25:37Z
-**User Input**: "Mở PR vào staging"
-**AI Response**: "Tạo nhánh feat/quiz-draw-rule-shortage-warning không theo dõi upstream, commit các mục audit còn lại, push nhánh và mở PR vào staging."
-**Context**: Đưa cảnh báo thiếu câu lên staging qua PR để CI chạy.
-
----
-
 ## U05/U09/U15 cleanup implementation — 2026-11-04
 
 **Requested by:** Quang Hung
@@ -10341,7 +8210,7 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Timestamp**: 2026-11-04T16:33:53Z
 **Requested by:** Quang Hung
 
-**User Input**: "có thể bổ sung thêm rule vào aidlc cái audit.md để ai tự tự động điền tên người  commit vào ko?"
+**User Input**: "có thể bổ sung thêm rule vào AI-DLC cái audit.md để AI tự động điền tên người commit vào không?"
 
 **AI Response**: Added a mandatory audit/commit trigger and attribution procedure to CLAUDE.md. New entries resolve the prepared committer from the active Git identity while remaining Pending. Actual names/hashes/times require a verified source commit; author differences and multi-commit text provenance stay explicit. Later authorized audit edits reconcile committed Pending records. No identity guessing/configuration change, self-referential amend, extra commit, installed hook or automatic push.
 
@@ -10359,21 +8228,12 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **AI Response**: Simplified the rule and audit format to one Committed by (audit record) line containing the verified Git committer, short hash and commit time. Removed the Commit status/Prepared for committer fields, secondary provenance lines and the long backfill note. All 835 verified primary attribution lines and original historical requests/actions remain unchanged. Uncommitted entries retain only Not committed yet.; a later authorized audit edit can resolve their actual commit.
 
 **Validation**: Checked one attribution line per entry, retained historical metadata and original text, and removed auxiliary attribution fields. Documentation-only change; no application test, Git hook, commit or push.
-## Local commit — single-line audit attribution
-
-**Timestamp**: 2026-11-04T17:04:59Z
-**Requested by:** Quang Hung
-
-**User Input**: "giúp tôi commit rõ ràng"
-
-**AI Response**: Reviewed and prepared an English documentation commit limited to CLAUDE.md and audit.md. It backfills 835 historical audit entries with verified Git committer/hash/time and establishes the requested single-line attribution rule. Uncommitted entries remain Not committed yet.; no auxiliary identity/status fields, Git hook or history rewrite. All 835 attributions were rechecked against Git metadata and all 8,020 original audit lines remain in order. Whitespace checks passed; no application tests needed for documentation-only changes. Local commit authorized; no push.
-
 ## Audit requester GitHub usernames — 2026-11-05
 
 **Timestamp**: 2026-11-04T17:51:23Z
 **Requested by:** Quang Hung
 
-**User Input**: "đổi lại k rule bỏ cái commited by đi chỉ cần requested by thôi, sửa lại cái log audit md cái committed  by thành requested by: tên user github"
+**User Input**: "đổi lại rule, bỏ cái committed by đi chỉ cần requested by thôi, sửa lại cái log audit md cái committed by thành requested by: tên user GitHub"
 **Follow-up User Input**: "k cần thêm hash"
 
 **AI Response**: Replaced every audit committer field with a single Requested by field containing only the GitHub username. Mapped historical Git display names to GitHub accounts using verified linked commit accounts, as explicitly requested; this migration source does not independently identify the original prompt sender. The authenticated account for this conversation is hygef-v4. Updated CLAUDE.md to fill the requester immediately from confirmed GitHub identity, preserve historical requesters and omit commit hashes/times/status fields. Original audit requests, actions and normal timestamps are unchanged.
@@ -10385,7 +8245,7 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Timestamp**: 2026-11-04T17:53:21Z
 **Requested by:** Quang Hung
 
-**User Input**: "nhầm k phải username mà là tên trên github ấy ví dụ của tôi là Quang Hung"
+**User Input**: "nhầm, không phải username mà là tên trên GitHub ấy ví dụ của tôi là Quang Hung"
 
 **AI Response**: Changed requester fields and the CLAUDE.md rule to GitHub profile display names instead of login usernames. Confirmed Quang Hung from the authenticated profile and the user statement; resolved the other historical accounts through public GitHub profiles. Preserve profile spelling and case, original prompts/actions and normal entry timestamps. Keep only the Requested by line, without commit metadata or extra identity fields.
 
@@ -10420,42 +8280,20 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 
 **AI Response**: Summarized independent dashboard loading/cancellation, single-student gradebook reads, typed submission adaptation, preserved rubric arithmetic and U05 helper cleanup. Reported the recorded backend 1,782/frontend 776 passing results and the manual-browser limitation. No source changes.
 
-## U05/U09/U15 commit and staging PR — 2026-11-05
-
-**Timestamp**: 2026-11-05T03:29:36Z
-**Requested by:** Quang Hung
-
-**User Input**: "giúp tôi commit sau đó chạy ci pr lên staging"
-
-**AI Response**: Preparing an English commit for the verified follow-up, pushing the existing feature branch and opening a pull request targeting staging. Confirmed requester GitHub display name Quang Hung, no existing open PR for this head, and staging/head both at the same baseline before this commit. CI will run on the pull request; its current head/check links and outcome are reported through the PR and final response. No merge or deployment requested.
-
-**Context**: Source unchanged since the recorded backend/frontend verification. Public contracts, database schema, grade locks/resubmission and authorization remain unchanged. Manual browser acceptance is still deferred.
-
 ## Shared source code conventions — 2026-11-05
 
 **Timestamp**: 2026-11-05T14:58:46Z
 **Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "ok giúp tôi tạo doc quy ước trong aidlc như kế hoạch k chỉ cho mỗi u09 riêng mà là cả src code chung"
+**User Input**: "ok giúp tôi tạo doc quy ước trong AI-DLC như kế hoạch, không chỉ cho mỗi U09 riêng mà là cả src code chung"
 **AI Response**: Created construction/code-conventions.md for all backend/frontend units, tests and project scripts. Linked README and CLAUDE.md and updated state. Defined dependency naming, verb-object action methods, file names, framework/contract exceptions and verification checklist. Documentation references, migration link, Markdown fences and whitespace diff checked. No source code rename or application tests.
 **Context**: Approved documentation-only proposal; implementation stages unnecessary. GitHub CLI configuration could not be read, so current requester display name is unverified. Historical attribution preserved. No commit/push or tooling changes.
-
-## Commit shared source code conventions — 2026-11-05
-
-**Timestamp**: 2026-11-05T15:05:00Z
-**Requested by:** Quang Hung
-
-**User Input**: "giúp tôi commit rõ ràng"
-
-**AI Response**: Reviewed the five pending documentation files and prepared a descriptive English commit for project-wide source conventions. The canonical document covers backend/frontend names, service dependencies, action methods, files, framework/contract exceptions and refactor verification; README and CLAUDE.md link to it. Preserve historical requester fields. Verify local references, Markdown fences and whitespace; application tests are unnecessary for documentation-only changes.
-
-**Context**: Commit locally on the current fix/u05-u09-u15 branch. No application code, dependency, database, push, merge or deployment change requested.
 
 ## Apply shared code conventions to U05/U09/U15 — 2026-11-05
 
 **Timestamp**: 2026-11-05T15:17:14Z
 **Requested by:** Quang Hung
 
-**User Input**: "đọc coding convention mới cập nhật và giúp tôi sửa các u05 u09 u15 theo convention mới"
+**User Input**: "đọc coding convention mới cập nhật và giúp tôi sửa các U05, U09, U15 theo convention mới"
 
 **AI Response**: Read the published shared convention and started a scoped naming/import refactor in academics, grading and admindashboard. Inventory dependencies/actions/files and all callers before changes; preserve public contracts, framework names, HTTP/JSON bindings, security and business behavior. Record the plan and fresh verification in AI-DLC. No commit or push requested.
 
@@ -10469,15 +8307,6 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **User Input**: "sửa cái contract mấy cái import để * như cũ cũng được cho gọn, code mới import hơi nhiều"
 
 **AI Response**: Updated the shared convention to permit wildcard/static wildcard imports, including contract types, with explicit imports retained when needed for collisions/clarity. Restored original import blocks in 71 changed U05/U09/U15 Java files (883 fewer import statements); self-check verifies all source bytes outside those blocks are preserved, including the prior naming changes. Fresh backend production/test compilation passed at 2026-11-05T16:43:51Z; full runtime tests and frontend build were not repeated for import-only edits. Updated current U05/U09 notes, appended the plan/results follow-up and updated state without rewriting historical verification. Security/resiliency scope unchanged; PBT disabled. No commit/push, behavior/contract/schema/dependency/frontend change, live write or restart. Evidence: construction/build-and-test/2026-11-05-u05-u09-u15-conventions-results.md, .tmp/conventions-wildcard-compile.log.
-
-## Commit U05/U09/U15 convention refactor locally — 2026-11-05
-
-**Timestamp**: 2026-11-05T16:53:23Z
-**Requested by:** Quang Hung
-
-**User Input**: "giúp tôi commit rõ ràng, chưa push"
-
-**AI Response**: Reviewed the pending convention refactor and wildcard-import follow-up for a single descriptive English commit on fix/u05-u09-u15. Include role-specific dependency names, verb-object actions/helpers, four PascalCase React module moves, all callers/mocks/tests, the JSON compatibility regression and synchronized AI-DLC records. Preserve contracts, business behavior and the user's compact import preference. Confirmed recorded backend verify 1,783 / frontend 776 passing before import restoration, lint/typecheck/production build passing, and fresh backend production/test compilation after import restoration. Check the staged diff and restrict staging to task-owned files. No new runtime test rerun, push, merge, deployment, live write or restart requested.
 
 ## Resolve staging merge into U05/U09/U15 — 2026-11-06
 
@@ -10495,7 +8324,7 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **Timestamp**: 2026-11-05T17:46:57Z
 **Requested by:** Quang Hung
 
-**User Input**: "giúp tôi tạo pr ci lên staging trước khi merger"
+**User Input**: "giúp tôi tạo PR, chạy CI lên staging trước khi merge"
 
 **AI Response**: Preparing the existing fix/u05-u09-u15 branch for a PR into staging and monitoring its CI before merge. GitHub profile confirms display name Quang Hung; initial local/remote head b466400b matches, comparison is three commits ahead/zero behind staging, and no matching open PR exists. Source is unchanged from the recorded backend 1,804 / frontend 799 passing verification, lint/typecheck/production build and required PostgreSQL guard. Record delivery in audit/state, verify only these documentation changes, commit/push the branch normally, then open a descriptive English PR through the GitHub plugin. The existing pull_request workflow runs backend/frontend checks; inspect the final head's CI and report its PR/check links and actual outcome. Do not merge or enable auto-merge. No new runtime source edit, local test rerun, deployment or unrelated branch push; security/resiliency scope unchanged and PBT disabled.
 
@@ -10503,7 +8332,7 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 
 **Timestamp**: 2026-11-06T06:46:41Z
 **Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "soát lại code u05 u09 u15 format lại code cho dễ đọc hơn, hjienej tại để return hết cùng 1 dòng trông khó đọc quá"
+**User Input**: "soát lại code U05, U09, U15, format lại code cho dễ đọc hơn, hiện tại để return hết cùng 1 dòng trông khó đọc quá"
 **AI Response**: Formatted 71 Java source files across academics/grading/admindashboard; checked all 85 against Git tokens and formatter idempotence. Expanded inline bodies, signatures and calls with approximately 100-column wrapping and four-space indentation. Preserved names, comments, literals, wildcard imports, contracts and behavior. Fresh isolated compilation passed for 720 production and 246 test source files; tests not executed. Updated shared conventions, plan, evidence and state.
 **Context**: Screenshot targets backend Java readability; frontend unchanged. JVM sandbox/security and initial heap reservation limitations resolved with approved execution and bounded memory. No commit/push, app restart or migration. Current requester display name not independently verified; historical attribution preserved.
 
@@ -10523,20 +8352,11 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **AI Response**: Executed the approved three-task refactor, preserving the existing formatted worktree through a 1,581-file snapshot. U05 single-use mutation helper inlined; U09 identical batch-size validation shared; U15 identical source-to-section helpers consolidated in the existing reader. Three U05 and fifteen U09 characterization cases passed before production edits and remained green afterward; reused existing U15 protection. Scoped runs passed 175/30/59 cases. Independent review found no actionable findings. Full verification initially encountered unavailable Docker; started Docker Desktop and reran with disposable database containers. Final full result pending in the linked evidence.
 **Context**: Seven production/three test files changed versus snapshot, no frontend or public contract change. No commit/push, app restart, live migration or deployment. Evidence: construction/build-and-test/2026-11-06-u05-u09-u15-simplification-results.md.
 
-## Continue simplification execution — 2026-11-06
-
-**Timestamp**: 2026-11-06T07:15:37Z
-**Requested by:** Quang Hung
-**User Input**: "continue"
-**AI Response**: Continued the same approved implementation without restarting or replacing the prior formatting baseline. Runtime verification and final documentation remain part of the active task.
-
-**Final verification — 2026-11-06T07:17:44Z**: All three approved tasks complete. Fresh backend verify passed 1,822 tests with zero failures/errors/skips and packaged the executable JAR; required real PostgreSQL suites passed 31 + 2 tests. Independent read-only reviewer found no actionable findings. Snapshot comparison confirms only seven production/three test files changed and existing formatting preserved. Initial Docker-not-running attempt is recorded separately; final rerun succeeded after starting Docker Desktop. Plan/state/evidence synchronized. No commit/push/PR, frontend change, live database migration, app restart or deployment.
-
 ## Restart backend/frontend and rerun tests — 2026-11-06
 
 **Timestamp**: 2026-11-06T07:32:13Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi chạy lại backend frontend , chạy test"
+**User Input**: "giúp tôi chạy lại backend, frontend, chạy test"
 **AI Response**: Fresh backend verify passed 1,822 tests without failures/errors/skips and built the JAR; required PostgreSQL guard passed 31 + 2 cases. Frontend 799 tests / 116 files, lint, typecheck and production build passed. Restored generated tsconfig/next-env/AGENTS changes from pre-run snapshots and typechecked again. Started backend local,worker on 8080 and frontend dev Webpack on 3000 as hidden background processes, with logs/PIDs in ignored scratch; restarted existing Mailpit, preserved databases/volumes and left old Docker worker stopped. Both health endpoints return UP/200, login 200 and protected API through frontend returns 401 without credentials. Source/config hashes unchanged; services left running.
 **Context**: Operational verification authorized by user, no product code/dependency change, commit/push or deployment. Live startup validated 32 migrations and found no pending migrations. No authenticated business-data writes, manual UI/provider acceptance or load test. Evidence: construction/build-and-test/2026-11-06-restart-test-results.md.
 
@@ -10547,19 +8367,11 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **User Input**: "tóm tắt lại thay đổi"
 **AI Response**: Summarized U05 helper inlining, U09 shared batch validation, U15 shared source mapping, prior Java formatting and AI-DLC conventions/evidence. Reported unchanged public behavior/contracts and the latest successful 1,822 backend/799 frontend verification plus local runtime startup. No source edit.
 
-## Local commit without push — 2026-11-06
-
-**Timestamp**: 2026-11-06T07:37:14Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit chưa push"
-**AI Response**: Reviewed current diff, whitespace and verified-source hashes; staging the scoped U05/U09/U15 formatting/refactor, three characterization test files and corresponding AI-DLC documentation as one descriptive local commit on fix/u05-u09-u15. Source unchanged since the passing backend 1,822/frontend 799 checks; no redundant runtime rerun required. Preserve ignored logs/credentials and leave local apps running.
-**Context**: Explicit local commit authorization only. No push, remote write, PR, merge or deployment.
-
 ## U05/U09 JDBC direction confirmed — 2026-11-06
 
 **Timestamp**: 2026-11-06T08:52:10Z
 **Requested by:** Quang Hung
-**User Input**: "tôi vừa discard changes, h tôi k muốn u05 u09 dùng hết jdbc, nhớ sửa lại cả dự án chỉ dùng jdbc trong doc aidlc"
+**User Input**: "tôi vừa discard changes, giờ tôi không muốn U05, U09 dùng hết JDBC, nhớ sửa lại cả dự án chỉ dùng JDBC trong doc AI-DLC"
 **AI Response**: Verified a clean checkout after discard and asked to resolve conflicting wording before editing. Stopped the prior JPA migration; no discarded changes restored.
 **Context**: Direction clarification.
 
@@ -10583,7 +8395,7 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 
 **Timestamp**: 2026-11-06T09:36:00Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi restart fe,be chạy test"
+**User Input**: "giúp tôi restart FE, BE, chạy test"
 **AI Response**: Verified app process ownership on ports 8080/3000, captured 1,572 source/config hashes and generated-config backups, stopped only the identified backend and frontend processes, restarted existing Mailpit and launched fresh full backend verify plus frontend test/lint/typecheck/build. Rebuild the standard executable JAR now that the old process released its lock, then start both apps and verify HTTP readiness. Preserve all pending JDBC/doc changes.
 **Context**: Explicit restart/test authorization; no source/dependency/schema change, commit/push or deployment. Existing Docker data/services retained; security/resiliency scope retained, PBT disabled. Evidence in progress: construction/build-and-test/2026-11-06-jdbc-restart-test-results.md.
 
@@ -10591,23 +8403,15 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 
 **Timestamp**: 2026-11-06T09:47:58Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi restart fe,be chạy test"
+**User Input**: "giúp tôi restart FE, BE, chạy test"
 **AI Response**: Fresh backend normal-target Maven verify passed all 1,830 tests/236 suites with no failures/errors/skips; executable JAR repackage now succeeds. Required PostgreSQL suites 31 + 2 + 10 + 1 passed. Frontend 799 tests/116 files plus lint/typecheck/production build and final typecheck passed. Restarted backend PID 50084 on 8080 with local,worker and frontend listener 3184/launcher 43712 on 3000. Seven HTTP checks passed: backend health/liveness/readiness UP, frontend root/login 200, protected API direct/via frontend 401. Live Flyway validated 32 migrations with no new migration. Restored Next-generated next-env.d.ts/AGENTS.md to exact snapshots; 1,572 source/config hashes unchanged. Preserved pending JDBC changes, existing data and other processes; left apps/dependencies running.
 **Context**: Restart/test request completed. No product source/dependency/schema change, authenticated UI/provider/load acceptance, commit, push or deployment. Mailpit healthy; old Docker worker remains stopped. Security/resiliency retained, PBT disabled. Evidence: construction/build-and-test/2026-11-06-jdbc-restart-test-results.md.
-
-## Clear local JDBC commits requested — 2026-11-06
-
-**Timestamp**: 2026-11-06T09:55:36Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit rõ ràng"
-**AI Response**: Reviewed the scoped production/test/script and documentation diffs, whitespace and fresh verification evidence. Prepared two descriptive local changesets: U09 JPA-to-JDBC persistence with regression/architecture/DB guards, then project-wide AI-DLC JDBC policy and migration/restart evidence. Verified all 1,572 source/config hashes still match the successful 1,830 backend and 799 frontend checks; required PostgreSQL suites 31 + 2 + 10 + 1 pass. No additional runtime rerun needed for staging/metadata-only work. Exclude scratch logs, credentials and generated artifacts; leave local services running.
-**Context**: Explicit local commit authorization only; no push, remote action, merge, deploy or Git configuration change. All pending paths are classified within the requested JDBC work and documentation scope.
 
 ## Simplify U05 repository names — 2026-11-06
 
 **Timestamp**: 2026-11-06T10:23:47Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] chỉ cần để tên repository như bthg là được k cần thêm prefix JDBC đâu"
+**User Input**: "[Image #1] chỉ cần để tên repository như bình thường là được, không cần thêm prefix JDBC đâu"
 **AI Response**: Rename the three concrete U05 repository classes/files shown in the screenshot to AcademicsReadRepository, CourseClassRepository and EnrollmentRepository; update all constructor/method-reference/test callers and the related test field. Keep interfaces, JDBC, SQL, transaction and public behavior unchanged. Add the no-Jdbc-prefix naming rule to shared AI-DLC conventions and update the current U05 summary; run existing focused tests rather than adding tests that mirror a rename.
 **Context**: Naming-only scope in U05; other unit repositories remain outside this edit. No automatic app restart, commit, push, dependency/schema change or historical evidence rewrite. Security/resiliency scope retained, PBT disabled.
 
@@ -10615,17 +8419,9 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 
 **Timestamp**: 2026-11-06T10:29:01Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] chỉ cần để tên repository như bthg là được k cần thêm prefix JDBC đâu"
+**User Input**: "[Image #1] chỉ cần để tên repository như bình thường là được, không cần thêm prefix JDBC đâu"
 **AI Response**: Renamed the three concrete U05 repositories/files to AcademicsReadRepository, CourseClassRepository and EnrollmentRepository; synchronized all test/constructor/method-reference callers and naming documentation. Verified the five Java files match exactly the planned identifier substitutions, leaving SQL, guards, transaction/API and behavior text unchanged. Fresh compilation of 718 main/246 test sources and 200 Academics/Architecture cases passed with zero failures/errors/skips. Old source references/class output absent; whitespace and documentation checklist validation passed.
 **Context**: No new implementation-mirroring tests, full backend/frontend/runtime rerun, dependency/schema change, restart, commit or push. Existing local apps retained. Evidence: construction/plans/code-generation-plan/2026-11-06-u05-repository-names.md; scratch logs excluded from source control.
-
-## U05 repository naming local commit requested — 2026-11-06
-
-**Timestamp**: 2026-11-06T10:33:03Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit"
-**AI Response**: Reviewed the naming-only diff and confirmed all five Java files still match the exact intended identifier replacements validated by the successful 200 Academics/Architecture tests. Prepare one descriptive local commit with the three repository renames, synchronized tests and corresponding AI-DLC naming/verification documentation. No redundant test rerun for unchanged source; exclude scratch artifacts and retain running apps.
-**Context**: Explicit local commit authorization supersedes the prior no-automatic-commit naming scope. No push, remote write, restart, merge, deployment or Git configuration change.
 
 ## Staging pull request requested — 2026-11-06
 
@@ -10640,14 +8436,6 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 **User Input**: "Bật Auto-fix"
 **AI Response**: "Bật Auto-fix cho PR 45."
 **Context**: Theo dõi CI và review của PR.
-
----
-
-## Pull Request 45 - Merge Check
-**Timestamp**: 2026-11-03T10:38:00Z
-**User Input**: "kiểm tra xem merge được chưa"
-**AI Response**: "Đọc trạng thái PR, CI và review trên GitHub; không merge."
-**Context**: Kiểm tra trước khi merge PR.
 
 ---
 
@@ -10667,17 +8455,9 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 
 ---
 
-## Deployment Question - NVMe
-**Timestamp**: 2026-11-05T19:57:44Z
-**User Input**: "nvme là gì" (kèm ảnh chụp bảng giá NVMe VPS Việt Nam trên xvps.vn, gói PLATIUM 6-6-80, chu kỳ 3 tháng, mã FLASH-SALE50)
-**AI Response**: "Giải thích NVMe là chuẩn ổ SSD cắm thẳng vào PCIe, nhanh hơn SSD SATA và HDD, và lợi ích cho Postgres, RabbitMQ, Docker."
-**Context**: Hỏi khái niệm khi chọn VPS, không đổi code.
-
----
-
 ## Deployment - VPS Runbook
 **Timestamp**: 2026-11-05T20:03:00Z
-**User Input**: "tôi đã thuê vps này, hướng dẫn tôi deploy" (kèm ảnh chụp đơn hàng VPS KVM trên xvps.vn: Ubuntu 24.04 x86_64, 6 CPU, 6 GB RAM, 80 GB đĩa, thuê 3 tháng)
+**User Input**: "tôi đã thuê VPS này, hướng dẫn tôi deploy" (kèm ảnh chụp đơn hàng VPS KVM trên xvps.vn: Ubuntu 24.04 x86_64, 6 CPU, 6 GB RAM, 80 GB đĩa, thuê 3 tháng)
 **AI Response**: "Kiểm tra CI, image GHCR (công khai, có tag b91413ca... của main), cấu hình compose, Nginx, Postgres init và yêu cầu Drive; viết docs/runbooks/deploy-vps.md (SSH, tường lửa, swap, Docker, .env, lưu tệp Drive hoặc local, cấp chứng chỉ standalone lần đầu, khởi động, kiểm tra, cập nhật). Không đăng nhập vào VPS."
 **Context**: Hướng dẫn deploy production/demo, chỉ thêm tài liệu, không đổi code.
 
@@ -10685,7 +8465,7 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 
 ## Deployment - Request To Deploy On User's Behalf
 **Timestamp**: 2026-11-05T20:21:29Z
-**User Input**: "tôi có thể đưa cho bạn thông tin vps và bạn deploy cho tôi được không"
+**User Input**: "tôi có thể đưa cho bạn thông tin VPS và bạn deploy cho tôi được không"
 **AI Response**: "Từ chối dùng mật khẩu root; tạo khóa SSH riêng ~/.ssh/alap_vps_deploy trên máy người dùng và đề nghị người dùng tự thêm public key vào VPS. AI sẽ làm các bước deploy qua SSH; người dùng tự điền SMTP và Google Drive vào .env, xác nhận điều khoản Let's Encrypt, cung cấp tên miền, email Admin và tên miền email được phép."
 **Context**: Chuẩn bị deploy qua SSH bằng khóa, chưa kết nối VPS.
 
@@ -10693,7 +8473,7 @@ Answers: "\"Giảng viên chỉ đổi nhóm khi bắt đầu môn học\": mố
 
 ## Deployment - How To Add SSH Key
 **Timestamp**: 2026-11-05T20:28:16Z
-**User Input**: "làm sao để thêm khoá ssh vào vps"
+**User Input**: "làm sao để thêm khoá SSH vào VPS"
 **AI Response**: "Hướng dẫn chạy một lệnh PowerShell gửi alap_vps_deploy.pub lên VPS qua SSH (người dùng tự nhập mật khẩu root), cách dự phòng qua console web, và lệnh kiểm tra đăng nhập bằng khóa."
 **Context**: Chuẩn bị quyền SSH bằng khóa cho deploy.
 
@@ -10770,7 +8550,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ## Deployment - Request To Enter Cloudflare Token
 **Timestamp**: 2026-11-05T21:35:52Z
-**User Input**: "bạn hãy điểm token vào cho tôi"
+**User Input**: "bạn hãy điền token vào cho tôi"
 **AI Response**: "Từ chối nhập API token thay người dùng; đưa lệnh một dòng để người dùng tự dán token (không hiện ra màn hình) và lưu vào /opt/platform/infra/cloudflare.ini quyền 600."
 **Context**: Lưu token Cloudflare cho DNS-01.
 
@@ -10802,7 +8582,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ## Code Generation - Brevo HTTPS API Mail Transport
 **Timestamp**: 2026-11-06T02:30:00Z
-**User Input**: "sửa backend để gửi mail qua api https của brevo cho tôi"
+**User Input**: "sửa backend để gửi mail qua API HTTPS của Brevo cho tôi"
 **AI Response**: "Phân tích yêu cầu mức tối giản: chỉ thêm một adapter thứ hai cho cổng IMail sẵn có của U01, nên bỏ qua user story, thiết kế ứng dụng và chia unit. Kế hoạch: aidlc-docs/construction/plans/code-generation-plan/2026-11-06-brevo-api-mail.md. Thêm BrevoApiMailAdapter (POST https://api.brevo.com/v3/smtp/email, header api-key) và bộ chọn MAIL_TRANSPORT (smtp mặc định, brevo-api; giá trị khác làm backend không khởi động); thêm biến vào application.yml, infra/docker-compose.yml, infra/.env.example; thêm test adapter và test chọn bean; cập nhật runbook deploy-vps.md."
 **Context**: VPS xvps chặn SMTP đi ra ngoài; gửi OTP qua cổng 443.
 
@@ -10816,17 +8596,9 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
-## Delivery Path Question
-**Timestamp**: 2026-11-06T07:00:00Z
-**User Input**: "tại sao không lên staging trước sau đó mới mở pr vào main"
-**AI Response**: "origin/staging hơn origin/main 8 commit (refactor lớn: grading JPA sang JDBC, đổi tên repository, 279 file), chưa có trên production. Đi staging rồi PR staging vào main sẽ đưa cả refactor đó lên VPS cùng lúc. Đề xuất: theo quy trình staging trước nếu nhóm yêu cầu; hoặc hotfix: một PR vào staging và một PR cherry-pick cùng thay đổi vào main. Chờ người dùng chọn."
-**Context**: Chọn đường đưa thay đổi Brevo API lên production.
-
----
-
 ## Requirements Analysis - Allow Any Email Domain
 **Timestamp**: 2026-11-06T07:20:00Z
-**User Input**: "tôi muốn bỏ phần tên miền email được phép đăng ký, cho phép bất kỳ email nào. sửa cả code và đồng bộ doc luôn cho tôi\"
+**User Input**: "tôi muốn bỏ phần tên miền email được phép đăng ký, cho phép bất kỳ email nào. sửa cả code và đồng bộ doc luôn cho tôi"
 **AI Response**: "Phân tích yêu cầu mức tối giản: bỏ phần tên miền của BR-U01-03, bỏ biến U01_ALLOWED_EMAIL_DOMAINS và mã EMAIL_DOMAIN_NOT_ALLOWED; giữ duy nhất, chuẩn hóa và định dạng email; không thêm tự đăng ký (Admin vẫn tạo tài khoản, người dùng kích hoạt bằng OTP); không đổi schema. Kế hoạch: aidlc-docs/construction/plans/code-generation-plan/2026-11-06-any-email-domain.md."
 **Context**: Thay đổi quy tắc nghiệp vụ U01 theo yêu cầu người dùng.
 
@@ -10842,7 +8614,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ## Requirements Analysis - Continuous Deployment
 **Timestamp**: 2026-11-06T17:00:00Z
-**User Input**: "tôi muốn setup ci cd để khi code được đẩy lên main sẽ tự động deploy lại ở vps (nhưng có thể rollback lại bản gần nhất nếu lỗi)"
+**User Input**: "tôi muốn setup CI/CD để khi code được đẩy lên main sẽ tự động deploy lại ở VPS (nhưng có thể rollback lại bản gần nhất nếu lỗi)"
 **AI Response**: "Kiểm tra mạng: GitHub-hosted runner không SSH được vào VPS (xvps chặn kết nối quốc tế vào cổng 22); runner tự cài cũng không chạy được vì VPS không tới được pipelines/broker.actions.githubusercontent.com; VPS vẫn gọi được api.github.com, github.com và ghcr.io. Phát hiện healthcheck RabbitMQ trên VPS báo unhealthy giả (rabbitmq-diagnostics ping mất khoảng 7 giây, timeout là 5 giây), làm backend và worker không khởi động lại được qua compose. Hỏi người dùng chọn cách deploy."
 **Context**: Thiết kế CD cho VPS production.
 
@@ -10876,34 +8648,6 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
-## Delivery - Merge Readiness Check
-**Timestamp**: 2026-11-07T00:30:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem merge được chưa"
-**AI Response**: "PR #52 trên head 323f513a: backend, frontend, deploy-script, GitGuardian đều SUCCESS; images SKIPPED (chỉ chạy khi push main); mergeable, mergeStateStatus CLEAN; staging chưa có commit mới so với nhánh. Không merge."
-**Context**: Kiểm tra trước khi merge vào staging.
-
----
-
-## Delivery - Final Review and Merge to Staging
-**Timestamp**: 2026-11-07T01:00:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem còn lỗi gì không, sau đó đưa lên staging cho tôi"
-**AI Response**: "Rà lại toàn bộ diff của PR #52 so với staging: không còn tham chiếu tới giới hạn tên miền trong code; stub IMail là auto-configuration nên không đè adapter; không có IP, khóa hay email cá nhân trong diff. Sửa hai chỗ: platform-deploy.sh xóa LAST_PROBLEM mỗi lần chuyển bản, để khi quay về cũng lỗi thì thông báo nêu đúng lỗi của lần quay về thay vì lỗi cũ (thêm test t_failed_rollback_reports_its_own_problem, bỏ bản sửa thì test báo lỗi); bỏ dòng trống thừa sau package ở ba service. Shellcheck sạch, 12 test script deploy qua. Commit, push, chờ CI xanh rồi merge PR #52 vào staging theo yêu cầu."
-**Context**: Rà soát cuối và merge vào staging; không đụng main.
-
----
-
-## U05/U09/U15 structure review — 2026-11-06
-
-**Timestamp**: 2026-11-06T12:06:03Z
-**Requested by:** Quang Hung
-**User Input**: "xem lại cấu trúc file thư mục của u05 u09 u15 đã ổn chưa"
-**AI Response**: Reviewed current HEAD 0996df4e, shared conventions, latest unit baselines, file inventories, ArchitectureTest and representative responsibilities/callers. U05 has 26 backend/24 frontend files; U09 50/29; U15 7/8. Static scan of explicit imports in the 83 backend files found zero cross-unit non-contract imports, excluding shared infrastructure. Main structure is suitable; no mandatory relocation found. Optional cleanup: move grading formatErrorMessage from hooks/useResource.ts to a model utility with its six external consumers/tests; optionally align two U09 RepositoryAdapter names with U05 naming. Neither is a demonstrated runtime bug. Keep mapping rows in repository and avoid artificial U15 model/repository folders.
-**Context**: Application review only, directly without subagents; no source/test/config changes or fresh build/test/runtime run, commit or push. Historical passing evidence is not fresh verification. Security/resiliency implementation assessment is outside directory scope; configuration retained; PBT disabled. Append-only audit record required by CLAUDE.md.
-
----
-
 ## Approved U09 structure cleanup completed — 2026-11-06
 
 **Timestamp**: 2026-11-06T12:13:17Z
@@ -10924,16 +8668,6 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
-## U09 structure cleanup local commit requested — 2026-11-07
-
-**Timestamp**: 2026-11-07T04:26:42Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit"
-**AI Response**: Reviewed current diff and confirmed scope remains the approved U09 formatter relocation, two repository renames, synchronized consumers/test wiring and AI-DLC review/verification records. Prepare one local commit with those changes. Prior full verification remains applicable: 1,830 backend tests with no skips, required PostgreSQL guard, 799 frontend tests, lint/typecheck/production build passed; no application changes since that verification. Exclude ignored logs, generated build output and scratch files.
-**Context**: Explicit local commit authorization; no push, merge, deployment, application restart or redundant full test rerun. Existing audit history retained. Manual UI/provider/performance/restore limits remain as recorded in the verification report.
-
----
-
 ## AI-DLC source synchronization local commit requested — 2026-11-07
 
 **Timestamp**: 2026-11-07T05:59:21Z
@@ -10944,29 +8678,11 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
-## U04/U13/U14 requirements-only coverage recheck
-**Timestamp**: 2026-11-07T13:55:49Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "hãy check lại requirements trong aidlc-docs, đừng check trong folder doc, xem xem các test case đã cover đầy đủ các yêu cầu của aidlc-docs chưa"
-**AI Response**: Rechecking current aidlc-docs requirements, UC catalog, stories, three units' functional design and NFR requirements against actual current assertions, including cross-unit dependencies. Do not read docs/ or doc/ as requirement sources, even when linked by aidlc-docs. Workspace now staging c9b7ce96; preserve user's staged draft report and plan. No further report drafting, application/test edits, staging/commit or new live/test execution. Delegated read-only per-unit coverage matrices under the already selected Superpowers parallel review workflow. Shared code conventions loaded as required by updated CLAUDE.md.
-**Context**: Distinguish missing unit scenarios, partial assertions, conflicts within aidlc-docs and requirements needing integration/manual/performance evidence. Previous run counts are historical, not fresh evidence for the new HEAD. Security/resiliency scope retained; disabled PBT remains skipped. Current requester profile display name is not available/confirmed; do not infer it from historical audit entries or git identity.
-
----
-
 ## U04/U13/U14 aidlc-only coverage recheck results
 **Timestamp**: 2026-11-07T13:59:51Z
 **Requested by:** Unknown — GitHub display name not confirmed
 **AI Response**: Completed current-HEAD assertion mapping of all three units' BR/NFR IDs, relevant FR/UC/story scenarios and functional-design clauses using only aidlc-docs as requirement sources. No docs/ or doc/ source opened. Coverage is incomplete even at unit level: U04 archived-subject U07/U13 branches and multi-release/dual-audit subcases; U13 real listSelectable, success update/version/archive audit, real historical-version fixture, text thresholds/cap and metadata/module boundaries; U14 group non-submitter contract, retention boundary, deleted/ordered feeds, exact audit and retry callback. Existing shared U03 job retry, U01 CSRF/auth and U12 SSE tests credited without treating mocked checks as real full-stack evidence.
 **Context**: Current U14 tests now expect staff email default-on (NotificationServiceTest159/EmailDeliveryServiceTest180), conflicting with aidlc BR21 default-off; previous-head conclusion is superseded for this detail. Additional conflicts: U04 class-count UI assertion vs BR50, U13 fixed/XLSX policy vs BR10/FR013, internal U04 archive precondition vs cascading rule. No automatic changes to tests/requirements justified by inconsistency. Performance and mandatory integration4role/SSE requirements remain distinct from unit coverage; advanced Lesson/RAG extension and staged persistence migrations excluded from mandatory missing-case claims. No fresh test runs, coverage percentage, report drafting, source edits, commit/push/deploy. Preserved staged draft/plan exactly; only audit appended.
-
----
-
-## Latest remote baseline and aidlc coverage verification
-**Timestamp**: 2026-11-07T14:04:49Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "HEAD `c9b7ce96`  có phải mới nhất 6 tiếng trước hay không, kiểm tra lại giúp tôi test case với yêu cầu trong aidlc-docs bản mới nhất"
-**AI Response**: Executed git fetch origin successfully after default sandbox denied writing .git/FETCH_HEAD. Fresh remote origin/staging equals local HEAD c9b7ce96c5d31d066cec724389dc7c6956f05436; ahead/behind0/0. Commit dated2026-11-07T14:49:49+07:00, about6h15m before verification around21:04 local. origin/main remains e3ad250c dated13:48:37+07. Latest aidlc-docs commit on staging is2ee1a095 dated13:00:10+07, already an ancestor of c9b7ce96. No diff between local and fetched staging for aidlc-docs or backend/frontend tests; no uncommitted changes in authoritative requirements or test files. Therefore prior exhaustive current-HEAD requirements-only coverage mapping applies to latest remote staging, not a stale local-only snapshot.
-**Context**: Reconfirmed current U04 BR50 vs absent class-count UI assertion; U13 BR31 real selectable-list and BR41 three success-audit gaps; U14 BR21 default-off vs default-on tests, BR31 group recipients, BR14 retention and BR42 mocked retry callback limitations. Latest BR21 file change is6ee10fc2 onNov2; Nov7 documentation sync did not update that rule. No requirement source outside aidlc-docs, no fresh application test run or pass claim, no source/test/report edit, checkout/pull/merge/commit/push/deploy. Existing staged draft/plan preserved; only audit appended.
 
 ---
 
@@ -10998,15 +8714,6 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
-## Current frontend subject class-count inspection
-**Timestamp**: 2026-11-07T14:54:18Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "check giúp tôi xem frontend hiện tại đang ghi số lớp như thế nào"
-**AI Response**: Read current U04 frontend source/components/types and supporting query data path. Admin subject list SubjectTable renders code/name/manager/status/navigation, no class-count column. SubjectDetailPage77 passes API data.classCount into Lớp học tab; Tabs64 renders numeric count including0, hides it when null maps to undefined. SubjectClassesTab renders status filter labels only, no per-status/filtered count; SubjectMetaCard shows status/creation date only. Classes unavailable has explicit message/retry in detail, whereas unknown tab classCount itself is simply hidden. This is source inspection, not a live-browser observation. Question2 remains unanswered; no choice inferred from this information request. No code/test/requirement/report edits.
-**Context**: Side question supports ongoing one-question-at-a-time requirements reconciliation. Return current UI behavior before the user chooses class-count policy.
-
----
-
 ## Stepwise reconciliation — answer2 recorded, question3 opened
 **Timestamp**: 2026-11-07T14:57:39Z
 **Requested by:** Unknown — GitHub display name not confirmed
@@ -11029,7 +8736,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## Frontend semester field clarification
 **Timestamp**: 2026-11-07T15:04:43Z
 **Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "TÔi muốn hỏi hiện frontend còn giữ học kỳ không"
+**User Input**: "Tôi muốn hỏi hiện frontend còn giữ học kỳ không?"
 **AI Response**: Read current subjects and academics frontend source. U04 class table no longer displays semester or semester filter; only class code/teacher/status and status/code filters. U05 ClassFormDialog explicitly removed semester, submits term empty; ClassInfoForm has no semester field and preserves existing value.term on save. Types/API still retain term for compatibility. This is source inspection, not live UI observation. Question4 remains unanswered; do not infer choice from clarification request. No code/test/requirement/report changes.
 **Context**: Clarification supporting the pending semester-filter decision.
 
@@ -11064,15 +8771,6 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
-## Stepwise reconciliation resumed — question6 opened
-**Timestamp**: 2026-11-08T02:27:56Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "tiếp tục"
-**AI Response**: Verified workspace remains fix/remove-term at base c9b7ce96 with local implementation and existing staged drafts preserved. Read state/completed plan and previous dated verification; did not rerun or present prior test results as a fresh run. Term-removal slice completed; original requirements reconciliation continues. Rechecked SubjectFormDialog test X/Escape/no mutation/no cancel and aidlc frontend-components requirement for Hủy. Opened only question6: keep existing X/Escape (recommended) versus add explicit Hủy button, plus Other; Answer blank. No code/test/report change or implementation of unselected UI option.
-**Context**: User requested one decision at a time. No commit/push/deploy/live migration. Previous07/11 evidence remains backend1846 zero skips, frontend149/typecheck/lint/build passed; report drafting remains paused.
-
----
-
 ## Stepwise reconciliation — answer6 confirmed, question7 opened
 **Timestamp**: 2026-11-08T02:30:32Z
 **Requested by:** Unknown — GitHub display name not confirmed
@@ -11086,7 +8784,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## XLSX support clarification during question7
 **Timestamp**: 2026-11-08T02:31:56Z
 **Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "hiện tại code có hỗ trợ xlsx không?"
+**User Input**: "hiện tại code có hỗ trợ XLSX không?"
 **AI Response**: Inspected current PurposePolicy/FileType, content-based UploadService/ContentInspector, dynamic frontend file policy and DocumentViewer/readWorkbook. XLSX is allowed for MATERIAL; upload validation uses detected MIME; frontend has an XLSX viewer with sheet selection, formatted cell values and5000rows/200columns per sheet. Existing PurposePolicy and readWorkbook tests directly cover whitelist and actual workbook parsing. XLSX-specific end-to-end upload/extraction regression is not present in inspected suites; do not certify end-to-end or AI extraction from generic parser presence. Question7 remains unanswered; no choice inferred, no code/test/report change.
 **Context**: Explain actual implemented support to help choose formats; static inspection only, no new runtime test executed.
 
@@ -11183,7 +8881,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## Expanded requirements clause remediation — continued implementation
 **Timestamp**: 2026-11-08T09:02:41Z
 **Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "tiếp tục rà soát để cover hết theo requirements của aidlc-docs cho unit 4, 13, 14 đi"
+**User Input**: "tiếp tục rà soát để cover hết theo requirements của aidlc-docs cho unit 04, 13, 14 đi"
 **User Input**: "tiếp tục phần còn dở"
 **AI Response**: Continued the explicitly requested expanded scope on fix/remove-term with current aidlc-docs as authority and all settled decisions retained. Wrote the clause-closure execution plan/map, audited clauses independently, then implemented inline. Actual business REDs established missing U13 current-version metadata, U04 null archive result, swallowed U08 GROUP lookup failure, missing U13 module deny audit, blocked normal U04 lifecycle JDBC query, and two silently truncated501-candidate reminder lists. Corrected those production defects and adapted MaterialText constructor consumers; null versionNo remains appropriate for unversioned uploads. Setup/compiler/Jackson and late HTTP-advice oracle failures are not counted as business RED/TDD. Original tests' historical TDD or fully code-independent authorship is not inferred.
 **Verification**: Fresh full Maven verify BUILD SUCCESS2,010 tests, zero failures/errors/skips,15:52:14+07. Actual PostgreSQL owner HTTP/security matrix119 cases, required guard31/7/10/1, term/material migrations2/1, Redis grant1 and Rabbit two-hub1 all pass without skips. Later test-only content/retention refinements6/6 passed at15:55:01+07. Latest frontend run exited0 with233/233, zero pending/failures; TypeScript/scoped ESLint exited0. Final module rollback tests and production frontend build remain tracked in the execution plan until their commands finish.
@@ -11197,13 +8895,6 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **Authorization reference**: Expanded review/continuation requests recorded above; no new approval requested.
 **AI Response**: Final module delete/relocation rollback and archive/reopen retention tests3/3 passed at16:03:03+07. Final real multirow reorder CAS-loss/rollback/identical-retry test1/1 passed at16:06:51+07; trigger witness proves second update reached. Independent reviewer confirmed no actionable findings, explicitly distinguishing fault injection from concurrent clients. Frontend production build exited0,31 pages;233 affected tests/typecheck/scoped lint and E2E script syntax checks passed. No frontend generated tracked config changes. Required PostgreSQL guard repeated31/7/10/1 no skips;230 relative links/29 files resolve; whitespace check passed.35 requirement hashes and67 changed source/test/script hashes match final verification. Two staged historical drafts remain163/16 unchanged.
 **Outcome and limits**: Local implementation/verification steps in the clause plan are complete; five explicit acceptance gates remain unchecked. Full backend2,010 evidence predates late test-only additions;6/3/1 targeted passes are separate and overlapping, not a fabricated fresh full-suite total. No100% requirement coverage, production load, browser/proxy/provider or universal lifecycle deadline claim. Report drafting remains paused; no commit/push/merge/deploy/live DB/provider writes.
-
----
-## Git delivery and staging integration — requested
-**Timestamp**: 2026-11-08T09:17:45Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "vậy giúp tôi chia nhỏ các commit, push lên branch hiện tại, sau đó merge từ branch staging vào branch hiện tại  rồi chạy e2e để xem có bị lỗi không"
-**AI Response**: Continuing on fix/remove-term. Explicit authorization now includes logical local commits, push of this branch, merging current origin/staging into this branch and E2E execution. This supersedes prior no-commit/no-push limits for this delivery only. Plan: six scoped commits (semester removal; subject archive; material fixes/tests; notification fixes/tests; cross-unit integration coverage; AI-DLC decisions/evidence), push before merge, merge staging, rebuild and run isolated E2E. Existing staged historical drafts stay unchanged in content and remain drafts; no new unit-test report is being authored. No merge into staging, force-push or production deployment. Full backend verification running before delivery. Remote branch matches original HEAD; origin/staging is11 commits ahead. GitHub CLI unavailable, so requester attribution remains explicitly Unknown.
 
 ---
 ## Git delivery — precommit broker readiness failure
@@ -11433,16 +9124,6 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 
 ---
 
-## Automated integration tests — scope B confirmed and concrete design
-**Timestamp**: 2026-11-08T11:55:36Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "tôi đã chọn"
-**AI Response**: Read the user's persisted answer `[Answer]: b` in the scope question file; scope is all15 units, not only U04/U13/U14. Inspected existing owner composition, database/Redis/Rabbit suites, actual versus mocked collaborator boundaries, Maven/CI and all15 requirement document starting anchors. Wrote inception/application-design/2026-11-08-integration-test-design.md with per-unit integration targets, existing reuse candidates and gaps, four delivery groups, isolated environment rules, requirement-to-method execution traceability and English Excel preservation requirements. Added concrete design review as question2; no repeat scope confirmation. Dispatched the independent builder-check explicitly required by superpowers:brainstorming. Its HARD-GATE states that nothing gets built until the human partner approves the design doc, so implementation waits for that explicit review while documentation/preparation proceeds. CLAUDE.md likewise requires requirements/workflow/code-generation plan review. Current reports remain untouched and no new-task passing execution is claimed. Existing security/resiliency retained, PBT disabled; no product source/test implementation, commit/push/PR or live provider action.
-
-**Builder review result**: Independent read-only reviewer returned "nothing important left". Design is ready for the user's review. Markdown whitespace check passed; approval remains question2, not a repeated request to choose scope.
-
----
-
 ## Integration test implementation and verified execution
 **Timestamp**: 2026-11-08T12:39:39Z
 **Requested by:** Unknown — GitHub display name not confirmed
@@ -11450,16 +9131,6 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 **AI Response**: Read persisted question2 `[Answer]: a`, explicitly approving the concrete design, detailed planning and sequential implementation. Continued without another routine permission gate. Added16 methods in PlatformWorkflowIntegrationTest with actual production component composition and disposable PostgreSQL/Redis/Rabbit, plus test role fixture. Kept all production code, migrations, dependencies, public contracts and frontend unchanged. Added49-case requirements/method/boundary manifest and extended the existing required-suite guard without changing the Maven/CI entry point. Independent whole-change review found no actionable findings. Existing security/resiliency retained; PBT disabled.
 **Execution evidence**: Initial baseline was invalidated by overlapping Maven compilation into the same target; bytecode replacement caused missing classes, so its log is retained without a product-defect/acceptance claim. All subsequent Maven runs were sequential. Test-only setup corrections addressed context scanning and fixture schema/defaults/rubric requirements. Focused16/16 passed, then fresh complete Maven verify with the final generated-secret/context-shutdown refinements passed2,020/2,020, zero failures/errors/skips, BUILD SUCCESS19:47:22+07 on2026-11-08. Fresh report directory was archived separately. Guard passed49 mapped report cases/54 actual executions and required31/7/10/1/16 suite counts. Guard QA accepted valid evidence and rejected missing suite, skipped case, renamed mapped method and hidden failure node. Source-hashed evidence and explicit remaining coverage/provider/deployment boundaries are documented in construction/build-and-test/2026-11-08-integration-test-results.md and its JSON manifests.
 **Report progress**: Authored English content/formulas with bundled artifact-tool after one successful operation marker; preserving original OOXML style/native parts works around imported hyperlink colorSource limitations. Data checks show49 Passed, later rounds Pending, original template SHA unchanged and style/drawing/column preservation. Reopened visual validation is still in progress; no final artifact completion claim yet. No commit/push/PR, live data/provider operation or deployment.
-
----
-
-## Integration report — final artifact validation and delivery
-**Timestamp**: 2026-11-08T15:56:36Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "tiếp tục"
-**AI Response**: Continued the existing approved integration-test/report task. Final workbook contains19 sheets and49 representative integration cases across U01–U15, mapped to54 passing JUnit executions. Added16 actual production-composition integration methods; final full backend remains2,020 passed, zero failures/errors/skips, BUILD SUCCESS19:47:22+07. Rechecked all1,031 backend source/configuration hashes against that verified execution; none changed. Required-suite guard passed again with all mapped methods present. Four negative guard fixtures were rejected and valid evidence accepted. All19 populated sheets were rendered/reopened and visually reviewed, including trace columns and metadata. Fixed clipped summary labels using shorter text/sheet names while retaining fonts, colors, borders and column widths; kept each sheet's original status-validation vocabulary. Recalculation checks changed/restored Round1/2 values in a disposable reopened model and verified dependent totals without modifying the output file.
-**Preservation**: Template source SHA remains04bbda174116da1fd0894f58314d530cd936348332d18e9fc3a53edd89290008. Original style definitions, drawings/media/theme, unit column widths/hidden groups and native validation conventions preserved.49 navigation links verified; no formula errors or broken sample references remain. Round1Passed49; Rounds2/3Pending49 each. No human tester/approver fabricated and no exhaustive requirements/TDD/provider acceptance claim.
-**Output**: `C:\Users\ADMIN\.codex\visualizations\2026\11\07\01a1b635-2514-78e0-acde-e96ed7b0a899\outputs\integration-test-report-20261108\Report-5.2_Integration Test.xlsx`. Scoped tests/guard/traceability documents remain uncommitted on integration-test; production source, dependencies, migrations and frontend unchanged. No push/PR/merge, production deployment or live provider/data writes. Existing security/resiliency retained; PBT disabled. Per-unit partial/excluded coverage remains explicit in construction/build-and-test/2026-11-08-integration-test-results.md.
 
 ---
 
@@ -11498,7 +9169,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## Integration-test delivery — authorized Git and E2E operations
 **Timestamp**: 2026-11-09T04:31:56.2950085Z
 **Requested by:** Vu Hai Nam
-**User Input**: "giúp tôi commit và push lên branch hiện tại, sau đó merge staging vào branch hiện tại, kiểm tra lại e2e không vấn đề gì thì tạo pr vào staging"
+**User Input**: "giúp tôi commit và push lên branch hiện tại, sau đó merge staging vào branch hiện tại, kiểm tra lại e2e không vấn đề gì thì tạo PR vào staging"
 **AI Response**: Continue on integration-test. User explicitly authorizes scoped commits, normal push, merging origin/staging into the current branch, isolated E2E and a PR targeting staging if checks pass. No PR merge or deployment is authorized. Verified all1,031 backend source hashes still match the successful2,028-test snapshot; the actual57-case guard passed again. Plan records disposable local fixtures, required backend/worker health, API/proxy/SSE boundaries and no live provider calls. Existing security/resiliency retained; PBT disabled. Authenticated GitHub profile display name verified via API; historical requester attribution remains unchanged.
 
 ## U01/U10/U11 documentation sync — 2026-11-08
@@ -11708,15 +9379,15 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## U09 — Group AI grading output budget
 **Timestamp**: 2026-11-09T04:29:38Z
 **Requested by**: Quang Hung
-**User Input**: "lỗi k chấm đc ai bài nhóm"
+**User Input**: "lỗi không chấm được AI bài nhóm"
 **AI Response**: The failed SE_JS task used 4,079 output tokens against a 4,096-token budget and failed output validation. Increased the budget for group documents using the rubric item count, retaining the 8,192-token ceiling and existing validation.
 **Verification**: 11 focused backend tests passed. Local backend repackaged and restarted. The SE_JS token estimate API returned 11,644 including prompt and output. An automated approval review rejected a new Gemini request because it would send submission and rubric data to an external provider and could consume quota. Provider output after the change remains unverified.
 
 ## U09 — Group grading workspace layout
 **Timestamp**: 2026-11-09T04:38:21Z
 **Requested by**: Quang Hung
-**User Input**: "giúp tôi sửa giao diện chấm điểm của bài tập nhốm giống kiểu style với bài tập cá nhân"
-**User Input**: "b xem giao diện chấm nhóm nào dễ dùng cho giáo viên nhât thì sửa cho tôi"
+**User Input**: "giúp tôi sửa giao diện chấm điểm của bài tập nhóm giống kiểu style với bài tập cá nhân"
+**User Input**: "bạn xem giao diện chấm nhóm nào dễ dùng cho giáo viên nhất thì sửa cho tôi"
 **AI Response**: Kept the shared document, rubric, and toolbar layout. Moved author names beside their section headings, with a header fallback for submissions without matching headings. Added a toolbar shortcut to the member grades and restyled the rows using the shared field and button components.
 **Verification**: Verified the five author labels, focus transfer to the five-member panel, and no panel overflow on the local SE_JS submission at the default width and 390 px. All 139 grading frontend tests, TypeScript, and scoped ESLint passed. No grade was written during browser verification.
 
@@ -11730,7 +9401,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## U09 — Individual AI grading output budget
 **Timestamp**: 2026-11-09T04:52:52Z
 **Requested by**: Quang Hung
-**User Input**: "sao h chấm bài cá nhân lại bị như này"
+**User Input**: "sao giờ chấm bài cá nhân lại bị như này"
 **Attachment**: Screenshot shows the grading message "Kết quả AI không đúng định dạng yêu cầu".
 **AI Response**: Two failed individual grading tasks used 4,526 of 4,544 output tokens before schema rejection. The evidence suggests truncation near the limit. Reused the group budget formula for all grading proposals, increasing the affected 16-item evaluation to 7,616 output tokens while retaining the 8,192 ceiling.
 **Verification**: 20 focused backend tests passed. Repackaged and restarted the local backend. Verified that the affected evaluation estimate increased from 13,043 to 16,115 total tokens. No new Gemini request was made during this verification.
@@ -11738,35 +9409,17 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## U09 — Show AI proposal history after reopening grading
 **Timestamp**: 2026-11-09T04:57:29Z
 **Requested by**: Quang Hung
-**User Input**: "b nhìn màn hình này lúc mà thoát ra vào lại làm gì có"
+**User Input**: "bạn nhìn màn hình này, lúc mà thoát ra vào lại làm gì có"
 **AI Response**: Replaced the visually hidden history control with a visible toolbar button that toggles the existing AI proposal panel.
 **Verification**: Reloaded the SWD392 grading workspace and opened previous proposals from the visible toolbar control. All 29 workspace tests passed.
 
 ## U09 — Show applied grading feedback in the draft
 **Timestamp**: 2026-11-09T05:03:28Z
 **Requested by**: Quang Hung
-**User Input**: "làm gì có, bấm áp dụng r vẫn trắng trơn này"
+**User Input**: "làm gì có, bấm áp dụng rồi vẫn trắng trơn này"
 **Attachment**: The grading workspace shows rubric checkboxes without the saved feedback.
 **AI Response**: Show the saved general feedback and summary in the document header, and render the existing feedback disclosure beside each matching rubric item. Show awarded points including zero when the item has feedback.
 **Verification**: Reloaded the saved SWD392 draft and verified the general feedback, 16 matching disclosures, and the point explanation after expanding a criterion. All 140 grading frontend tests, TypeScript and scoped ESLint passed.
-
-## U09 — Full test run and local commit
-**Timestamp**: 2026-11-09T05:11:36Z
-**Requested by**: Quang Hung
-**User Input**: "giúp tôi chạy test be fe sau đó commit"
-**AI Response**: Verified the grading changes for group submission navigation, AI output budgets and proposal history, and draft feedback display. Kept the separate MCP comment edits outside this commit.
-**Verification**: Backend 2,004 passed with no failures, errors, or skips. All four required PostgreSQL suites passed. Frontend 810 passed. The first backend run encountered Windows loopback and relative-path errors. The rerun from the backend directory with a forked JVM and workspace socket directory passed.
-
----
-
-## Integration-test delivery — final E2E verification and publication preparation
-**Timestamp**: 2026-11-09T05:43:33.061972+00:00
-**Requested by:** Vu Hai Nam
-**User Input**: "tiếp tục"
-**AI Response**: Completed the authorized staging integration and verification. First full merged snapshot passed2,028 backend tests and800 frontend tests; preserved seven earlier5000ms timeouts and successful isolated40/40/full800 reruns with two workers and unchanged oracles. Staging advanced to198b796f before business E2E; merged its U12 fix as65f86a6c and verified95/95 backend, current frontend build/typecheck/scoped lint and15/15 U12 tests. All168 authenticated API/proxy/SSE assertions passed on that latest rebuilt code. Stopped only the task stack/frontend and verified7 original platform container IDs unchanged; volumes/logs preserved. Exact source/artifact/result hashes and scopes recorded. Preparing the final evidence commit, normal push and one PR to staging; no PR merge/deploy. PR/CI state will be reported from GitHub rather than guessed in this pre-publication snapshot. Existing security/resiliency retained; PBT disabled.
-
-
----
 
 ## Frontend - Link preview metadata
 **Timestamp**: 2026-11-09T05:50:27Z
@@ -11780,18 +9433,9 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## Thay đổi giao diện: sidebar dạng cây
 **Timestamp**: 2026-11-09T12:40:58Z
 **Requested by:** Đào Chí Cường
-**User Input**: "sửa lại thanh sibebar hiển thị theo dạng tree (như trang fap) thay vì đổi sidebar mới" (kèm 3 ảnh: trang Lớp được phân công và trang Thông tin môn PRN212 của Chủ nhiệm môn, và trang chủ FAP có menu dạng cây)
+**User Input**: "sửa lại thanh sidebar hiển thị theo dạng tree (như trang FAP) thay vì đổi sidebar mới" (kèm 3 ảnh: trang Lớp được phân công và trang Thông tin môn PRN212 của Chủ nhiệm môn, và trang chủ FAP có menu dạng cây)
 **AI Response**: "Sidebar của môn và lớp không còn thay menu của role: thêm parentHref vào NavContext (frontend/src/shared/layout/navigation.ts); AppShell giữ menu role và vẽ nhánh cây ngay dưới mục cha (Môn được phân công, Lớp được phân công, Lớp của tôi), mục cha chỉ tô khi đúng trang của nó hoặc khi sidebar thu gọn; thêm component NavTree (frontend/src/shared/layout/NavTree.tsx) với các nút môn/lớp bấm để mở/đóng, nút của trang đang mở mở sẵn; ClassNavContexts dựng cây môn/lớp thay cho lối về + ô chọn, và hiện cây cả ở trang danh sách (/manager, /teaching/classes, /classes). Cập nhật test navContexts; typecheck các file sửa, lint và 797 test qua (3 file test materials lỗi sẵn do thiếu package xlsx/pdfjs-dist/docx-preview); đã kiểm tra trên dev server với API giả."
 **Context**: Thay đổi nhỏ trong giao diện (minimal depth); không commit.
-
----
-
-## Commit: sidebar dạng cây
-**Timestamp**: 2026-11-09T12:45:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
-**AI Response**: "Commit thay đổi sidebar dạng cây (navigation.ts, NavTree.tsx, AppShell.tsx, ClassNavContexts.tsx, navContexts.test.tsx) cùng audit.md lên nhánh staging; không push."
-**Context**: Commit thay đổi giao diện sidebar dạng cây.
 
 ---
 
@@ -11820,7 +9464,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## Lịch sử nộp bài — bàn giao vào staging
 **Timestamp**: 2026-11-09T17:07:03Z
 **Requested by:** Vu Hai Nam
-**User Input**: "giúp tôi chia thành các commit nhỏ, push lên branch hiện tại rồi merge staging vào branch này. Sau đó check e2e rồi tạo pr vào staging, khi nào CI xanh thì merge branch hiện tại vào staging"
+**User Input**: "giúp tôi chia thành các commit nhỏ, push lên branch hiện tại rồi merge staging vào branch này. Sau đó check e2e rồi tạo PR vào staging, khi nào CI xanh thì merge branch hiện tại vào staging"
 **AI Response**: Chia thay đổi giao diện và kiểm thử thành một commit, tài liệu AI-DLC thành một commit. Đồng bộ staging sau khi push, xác minh E2E trên mã đã đồng bộ và kiểm tra CI của PR trước khi merge.
 **Context**: Bàn giao U08 trên nhánh fix/student-ai-grading.
 
@@ -11829,19 +9473,10 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## Requirements / Workflow Planning — Excel và YouTube
 **Timestamp**: 2026-11-09T14:12:32Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1]  giúp tôi fix các lỗi sau"
+**User Input**: "[Image #1] giúp tôi fix các lỗi sau"
 **Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794233005454-3e125cc1-8228-4f99-8224-6d401eabe462.png; chữ trong ảnh: "fix bug", "đổi nhập csv thành nhập excel", "màn hình youtube video k xem được trong web".
 **AI Response**: "Đọc CLAUDE.md và AI-DLC; dùng systematic-debugging/ponytail. Xác nhận UI/controller/service chỉ hỗ trợ CSV; nguyên nhân lỗi YouTube runtime chưa xác định. Tạo bản yêu cầu 2026-11-09-excel-youtube-fixes.md. Lần ghi audit/state trước bị sandbox từ chối; yêu cầu escalation bị ngắt bởi người dùng. Chưa sửa mã ứng dụng."
 **Context**: Workspace brownfield, cây ban đầu sạch; giữ Security/Resiliency và bỏ qua PBT đang tắt.
-
----
-
-## Workflow Planning — tiếp tục
-**Timestamp**: 2026-11-09T14:12:32Z
-**Requested by:** Quang Hung
-**User Input**: "continue"
-**AI Response**: "Tiếp tục từ bản yêu cầu, kiểm tra không có ghi audit/state dở dang. Chuẩn bị inception/plans/2026-11-09-excel-youtube-execution-plan.md với các bước parser/API/UI/test và tái hiện video trước khi sửa. Đề nghị duyệt kế hoạch để sửa mã và kiểm thử theo CLAUDE.md và quy tắc code-generation."
-**Context**: Workflow Planning hoàn tất bản kế hoạch, chờ duyệt trước sửa mã; source/test chưa thay đổi hoặc chạy.
 
 ---
 
@@ -11857,7 +9492,7 @@ Lưu tệp: Google Drive" (kèm ảnh chụp trang DNS của alapedu.online trê
 ## Điều chỉnh phạm vi — chỉ chuyển nhập CSV sang Excel
 **Timestamp**: 2026-11-09T14:30:24Z
 **Requested by:** Quang Hung
-**User Input**: "thôi tôi k bị lỗi yt link nữa giúp tôi chuyển import csv bất cứ chỗ nào thành import excel, 2 phàn này có ở trong admin với manager"
+**User Input**: "thôi tôi không bị lỗi YouTube link nữa, giúp tôi chuyển import CSV bất cứ chỗ nào thành import Excel, 2 phần này có ở trong admin với manager"
 **AI Response**: "Hủy sửa YouTube theo yêu cầu. Chuyển cả ba chỗ nhập: tài khoản Admin, ghi danh sinh viên Manager và câu hỏi Manager. Backend U01 dùng POI để đọc XLSX theo validation/transaction hiện có; U05 đọc sheet email rồi dùng API danh sách text hiện có; U10 đã hỗ trợ XLSX nên đổi UI và mẫu. Sinh ba mẫu Excel thật, xóa mẫu câu hỏi CSV khỏi UI; giữ API CSV cũ và xuất CSV. Test frontend 814/119 files, backend liên quan 39/0 skip, lint và build đã qua. Typecheck độc lập đang kiểm tra sau khi build tái sinh types."
 **Context**: Phạm vi được người dùng yêu cầu trực tiếp. Không sửa YouTube/CSP, không thêm dependency/schema; Security/Resiliency giữ phạm vi hiện có, PBT tắt.
 
@@ -11902,7 +9537,7 @@ sửa soạn câu hỏi từ popup về flat
 ## User steering — manual UI acceptance
 **Timestamp**: 2026-11-09T15:31:28Z
 **Requested by:** Quang Hung
-**User Input**: "cứ sửa trươc sdid sau tôi tự test ui"
+**User Input**: "cứ sửa trước đi, sau tôi tự test UI"
 **AI Response**: Dừng kiểm tra UI trình duyệt, đóng tab local do agent mở. Tiếp tục kiểm tra tự động và sửa finding Important từ reviewer. Browser capture host CUA không sẵn sàng, không tuyên bố có nghiệm thu hình ảnh/mobile.
 **Context**: Người dùng tự test UI; không dừng công việc mã/kiểm thử đã duyệt.
 
@@ -11921,7 +9556,7 @@ sửa soạn câu hỏi từ popup về flat
 ## Follow-up fix — Vietnamese status labels
 **Timestamp**: 2026-11-09T15:31:28Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] bỏ chữ enabled, disabled đi đewe tiensg việt bật rawstr là dược"
+**User Input**: "[Image #1] bỏ chữ enabled, disabled đi, để tiếng Việt bật/tắt là được"
 **Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794238144009-bd815772-27b7-4eb1-8f17-f5e023c49bcc.png
 **AI Response**: Thay nhãn hiển thị trên form tạo/sửa, detail và list bằng Bật/Tắt; giữ tên trường API enabled.55tests học liệu/8files qua. Copy-only change không cần chạy lại full suite/build.
 **Context**: Chỉ đổi copy theo yêu cầu, không đổi trạng thái hoặc quyền.
@@ -11941,7 +9576,7 @@ sửa soạn câu hỏi từ popup về flat
 ## Follow-up fix — optional AI API source at HTTP boundary
 **Timestamp**: 2026-11-09T22:44:00+07:00
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] sao chạy lại backend rồi vẫn bị thiếu src khi tạo ai quiz tôi chọn tài liêu jr"
+**User Input**: "[Image #1] sao chạy lại backend rồi vẫn bị thiếu src khi tạo AI quiz tôi chọn tài liệu rồi"
 **Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794238683249-430c5181-8919-4e3e-b099-87adaf400e7e.png
 **AI Response**: Shared AiDraftRequests incorrectly required source despite frontend automatic selection via null. Made parser argument optional for quiz and bank; invalid explicit values still rejected. Regression red reproduced; backend50/0skip and executable JAR package passed; frontend payload2 passed. Report: construction/build-and-test/2026-11-09-quiz-http-auto-source-fix.md.
 **Context**: Selected materialIds are separate from AI API source. No additional migration/frontend production change, app restart, provider call, manual UI test or commit/push/deploy. Existing Security/Resiliency scope retained; PBT disabled.
@@ -11951,7 +9586,7 @@ sửa soạn câu hỏi từ popup về flat
 ## AI quiz provider failure diagnosis
 **Timestamp**: 2026-11-09T23:00:00+07:00
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] sao k tạo được"
+**User Input**: "[Image #1] sao không tạo được"
 **Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794239579431-1133c648-d58f-4db9-b983-23dab1288534.png
 **AI Response**: Traced exact HTTP503 message to HttpProviderGateway response handling. Existing worker retries transient503 after2s and5s before eligible fallback. Screenshot therefore shows provider HTTP failure, not missing source validation. No current application runtime log was available among workspace logs, so provider/model and precise upstream cause cannot be established. Also identified unrelated AUTO source label rendering null personal text. No application changes or real provider calls made in this diagnostic turn; user retains UI acceptance.
 
@@ -11970,7 +9605,7 @@ sửa soạn câu hỏi từ popup về flat
 ## AI-DLC documentation reconciliation — current working tree
 **Timestamp**: 2026-11-09T23:07:04.2971378+07:00
 **Requested by:** Quang Hung
-**User Input**: "check doc aidlc xem từ những phần tôi sửa như này có cần sửa lại doc aidlc tương ứng k"
+**User Input**: "check doc AI-DLC xem từ những phần tôi sửa như này có cần sửa lại doc AI-DLC tương ứng không"
 **AI Response**: Compared implemented Excel/material/quiz/source changes with current unit documents. Updated19 Markdown files: U01 import entity/API, U05 enrollment rule, U10 AI rule/domain, U13 fields/UI/JDBC scope, U03 download-owner contract, U11 formatted instructions UI, U06 local worker operations, four unit as-built deltas, requirements/stories, current inventory and persistence policy. Report construction/build-and-test/2026-11-09-aidlc-doc-sync.md. Verified22 added local links resolve, Markdown fences balanced and scoped diff whitespace passed.
 **Context**: Documentation-only; no application code/config/schema/runtime changes or application tests rerun. Historical test evidence/audit retained; no claim full U13 JDBC or successful live AI generation. Existing Security/Resiliency scope retained, PBT disabled.
 
@@ -11979,7 +9614,7 @@ sửa soạn câu hỏi từ popup về flat
 ## Follow-up fix — automatic AI source label
 **Timestamp**: 2026-11-09T23:10:43.4809130+07:00
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] sao mỗi lần bấm tạo bằng ai nó lại ghi null cá nhân"
+**User Input**: "[Image #1] sao mỗi lần bấm tạo bằng AI nó lại ghi null cá nhân"
 **Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794240551724-14199c95-76b9-47aa-bfd9-d0d1a6ea7175.png
 **AI Response**: Shared DraftView treated all non-SHARED/non-MCP provenance as personal and interpolated null provider. Added explicit PERSONAL branch and automatic-source label; legacy PERSONAL without provider uses API cá nhân. Five regression cases reproduce3 failures before fix; after fix37 related tests/2files passed, scoped ESLint and whitespace passed. Updated U10 frontend behavior documentation.
 **Context**: Presentation-only change covers quiz/bank; no request/source selection, database, runtime or provider changes. No manual UI test per user preference. Security/Resiliency scope retained; PBT disabled.
@@ -11989,7 +9624,7 @@ sửa soạn câu hỏi từ popup về flat
 ## AI quiz review follow-up
 **Timestamp**: 2026-11-09T23:32:50.9223211+07:00
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] cái nút xem này là sao bấm vào k có tác dụng gì, với sau hiện  là null, lúc chọn src thì k bắt buộc thêm prompt , nếu prompt k liên quan gì đến src thì nó hiện cảnh báo chữ màu vàng trước những câu hỏi AI vừa tạo và prompt sẽ theo mặc didhj là tạo quiz theo document vừa gắn, với lại thêm nút chấp nhật tất cả đề xuất quiz tạo bằng ai, hiện tại chỉ có thể accept từng câu một"
+**User Input**: "[Image #1] cái nút xem này là sao bấm vào không có tác dụng gì, với sau hiện là null, lúc chọn src thì không bắt buộc thêm prompt, nếu prompt không liên quan gì đến src thì nó hiện cảnh báo chữ màu vàng trước những câu hỏi AI vừa tạo và prompt sẽ theo mặc định là tạo quiz theo document vừa gắn, với lại thêm nút chấp nhận tất cả đề xuất quiz tạo bằng AI, hiện tại chỉ có thể accept từng câu một"
 **Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794240746137-83ddf011-e65c-410c-aec9-1ac365743340.png
 **AI Response**: Implemented active Xem/Thu gọn with dirty guards, optional instructions/default document quiz prompt across shared HTTP/service/UI, same-call semantic relevance metadata and persistent yellow sourceWarnings, bulk acceptance via existing API preserving edits/drops/validation/version and pending-save locks. Null label fix retained. Red regression observed; final frontend66tests/5files, scoped ESLint/typecheck passed; backend98tests/5suites0skip and executable JAR package passed. U10 domain/UI/rules/as-built and story acceptance synchronized. Plan/results named 2026-11-09-ai-quiz-review-followup.md in their respective plan/build-and-test directories.
 **Context**: No migration/dependency/provider call/UI test/restart/commit/push/deploy. Existing drafts not retroactively assessed; model warning is fallible and requires author review. User previously requested direct implementation and owns manual UI acceptance. Security/Resiliency retained, PBT disabled.
@@ -12012,7 +9647,7 @@ sửa soạn câu hỏi từ popup về flat
 ## Source grounding enforcement correction
 **Timestamp**: 2026-11-10T00:09:08.9224434+07:00
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] sao tôi chọn tài liệu sau prompt câu hỏi k liên quan đến tài liệu nó vẫn tạo câu hỏi k liên quan"
+**User Input**: "[Image #1] sao tôi chọn tài liệu, sau đó prompt câu hỏi không liên quan đến tài liệu, nó vẫn tạo câu hỏi không liên quan"
 **Attachment**: C:\Users\QUANGH~1\AppData\Local\Temp\orca-paste-1794242796413-846f0b2c-3497-4244-ac9f-4dbc4c1e9c4a.png
 **AI Response**: Confirmed previous warning-only handler still made mismatched output READY. Added negative request/question grounding gates: discard wrong-topic output, retain warning/PENDING and perform one bounded source-only retry with original custom prompt absent. Preserve source IDs/count/type/difficulty/API policy; repeat current authorization/version/text/quota checks. New QuizSourceRetry bean serializes with draft row lock and deterministic reference, commits task+metadata together, records submit errors after rollback; after-commit callback and owner-only poll recovery, stale old-task callbacks ignored. Second mismatch FAILED/AI_SOURCE_MISMATCH with no questions. Red reproduced; final103 backend tests/6suites0skip and package passed, including11 PostgreSQL repo and26 real workflow cases. Frontend44/2files passed; scoped diff and29 local links passed. Current U10/stories synchronized, report construction/build-and-test/2026-11-10-ai-source-grounding-fix.md.
 **Runtime**: Zero RUNNING AI tasks checked before graceful restart of existing Orca backend terminal. scripts/run-backend.bat clean rebuilt current source; new PID55012 started00:08:15+07 and health200. No additional migration. Older incorrect READY drafts left unchanged; user must discard/recreate.
@@ -12039,7 +9674,7 @@ sửa soạn câu hỏi từ popup về flat
 ## Prepare pull request into staging
 **Timestamp**: 2026-11-10T00:23:59.7652239+07:00
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi tạo pr trước khi merge staginfg"
+**User Input**: "giúp tôi tạo PR trước khi merge staging"
 **AI Response**: User authorizes publishing the current branch and creating a PR into staging, not merging. Fetched origin; feature headfb8846ad contains the four reviewed commits, staginga35d9854 is ahead by5 while feature is ahead by4. git merge-tree computed a clean merge (77f503aaca9323236dd30232f16bad32ce36493b) without changing either branch. No open PR found for this head/base. Remote feature branch is an ancestor, so normal fast-forward push is sufficient. Add only this delivery receipt before publishing; source/config unchanged from final239+54 backend and849 frontend/lint/typecheck verification. PR body follows mattpocock-skills:pr template, explains two additive migrations, source-only retry limit/cost and evidence scope. CI verifies the current merged PR tree; no merge, auto-merge, reviewer messages or deployment authorized.
 **Context**: Publish branch via Git transport and create/check PR with GitHub connector. Existing Security/Resiliency scope retained; PBT disabled. This entry records preparation; live PR URL/check status will be reported from GitHub rather than guessed in this commit.
 
@@ -12048,7 +9683,7 @@ sửa soạn câu hỏi từ popup về flat
 ## Resolve PR59 conflicts and prepare staging merge
 **Timestamp**: 2026-11-10T00:33:47.9482154+07:00
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi resolve conflict pr vừa tạo merge vào staging"
+**User Input**: "giúp tôi resolve conflict PR vừa tạo merge vào staging"
 **AI Response**: User now explicitly authorizes conflict resolution and merge of PR59 into staging. Latest staging9a07e1e includes PR58 student feedback and U12 changes; original feature head5576222a CI backend/frontend/deploy-script passed. Merged origin/staging into the feature branch without rewriting existing commits. Only audit.md conflicted: retained both conflict blocks verbatim, including historical requester attribution/raw whitespace. All application changes merged automatically. Verify code preservation and local merged checks, commit/push resolution, then require latest-head CI green and merge PR with expected-head protection. No force push, branch deletion or production deploy.
 **Context**: Current approval supersedes the earlier PR-only/no-merge instruction. Keep Security/Resiliency scope and PBT disabled. Original CI is historical evidence until refreshed for the resolution head.
 
@@ -12060,7 +9695,7 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## Grading remediation continuation
 **Timestamp**: 2026-11-10T03:40:11.360412+00:00
 **Requested by:** Quang Hung
-**User Input**: "Giúp tôi làm tiếp, tự làm đừng chia subagent"
+**User Input**: "Giúp tôi làm tiếp, tự làm, đừng chia subagent"
 **AI Response**: Continue the reviewed Antigravity plan sequentially without subagents. Restored stash e9dd4bdd onto matching HEAD d0e56561; original stash retained. Track execution in construction/plans/code-generation-plan/2026-11-10-grading-remediation-continuation.md. No commit/push/deploy/live grade write.
 
 ---
@@ -12078,7 +9713,7 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## UI acceptance instructions after user-reported restart
 **Timestamp**: 2026-11-10T04:34:09.986801+00:00
 **Requested by:** Quang Hung
-**User Input**: "tôi resrat rồi h đưa tooi quy  trình test trên ui , và ddauw tôi tóm tắt những gì đã sửa trong các changes hiện tại"
+**User Input**: "tôi restart rồi, giờ đưa tôi quy trình test trên UI, và đưa tôi tóm tắt những gì đã sửa trong các changes hiện tại"
 **AI Response**: Rechecked current Git changes, exact UI labels and recorded evidence. Application source still matches the verified 1,637-file snapshot. Created construction/build-and-test/2026-11-10-grading-ui-acceptance.md with ordered teacher/student/group/quiz/deadline/Practice/privacy checks and expected outcomes. User reports restart; no runtime/artifact/migration verification or UI execution claimed.
 **Context**: Documentation only; no application changes, repeat test run, live grading/provider action, commit/push or delegation. Existing verification remains dated evidence.
 
@@ -12088,7 +9723,7 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## Grading UI screenshot follow-up
 **Timestamp**: 2026-11-10T04:55:57.799719+00:00
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] [Image #2] cái bar điểm số 0/10 đang bị che kuhaast ở phía trên, các chit tiết nhận xết các ô đang hơi nhỏ gv phải bấm vào cuộn xuống rất khó khăn, đi tới đoạn làm bài ko cần phải thêm id vào ui, k tạo được đề xuất k cần phải lưu lịch sử, lịch sử nên có giờ ngày tạo đề xuất ai"
+**User Input**: "[Image #1] [Image #2] cái bar điểm số 0/10 đang bị che khuất ở phía trên, các chi tiết nhận xét các ô đang hơi nhỏ, GV phải bấm vào cuộn xuống rất khó khăn, đi tới đoạn làm bài không cần phải thêm ID vào UI, không tạo được đề xuất thì không cần phải lưu lịch sử, lịch sử nên có giờ, ngày tạo đề xuất AI"
 **AI Response**: Continue the existing authorized U09 remediation sequentially, without subagents. Fix toolbar-relative sticky score/comments, expanding readable feedback fields, clean evidence links and dated successful proposal history. Latest failure remains an actionable notice; internal task diagnostics and records remain intact. See construction/plans/code-generation-plan/2026-11-10-grading-ui-feedback-polish.md. No live provider request, grade write, backend change, migration, runtime restart, commit or push.
 
 ---
@@ -12105,7 +9740,7 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## AI grading button and error screenshot
 **Timestamp**: 2026-11-10T05:08:34.091244+00:00
 **Requested by:** Quang Hung
-**User Input**: "để nút chấm bằng ai to hơn chút [Image #1] với lại đang lỗi gì này, nút chấm bằng ai ghi rõ chấm bằng AI chứ ddwungf để mỗi cái icon"
+**User Input**: "để nút chấm bằng AI to hơn chút [Image #1] với lại đang lỗi gì này, nút chấm bằng AI ghi rõ chấm bằng AI chứ đừng để mỗi cái icon"
 **AI Response**: Increase the existing control to36px and show its label permanently; wrap narrow read-only toolbar layout without changing action guards. Read-only Orca terminal and PostgreSQL evidence confirms two Gemini READY results rejected by grading validation with PROPOSAL_SCHEMA_MISMATCH. Past payloads are deliberately cleared after handling, so no exact field-level cause or backend fix is claimed. See construction/plans/code-generation-plan/2026-11-10-grading-ai-button-and-error.md and the corresponding build-and-test report. No subagents/provider retry/live grade write or backend change.
 
 ---
@@ -12122,7 +9757,7 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## AI grading rejection fix requested
 **Timestamp**: 2026-11-10T05:18:18.948232+00:00
 **Requested by:** Quang Hung
-**User Input**: "check log đi giúp tôi sửa lỗi ai"
+**User Input**: "check log đi, giúp tôi sửa lỗi AI"
 **AI Response**: Investigate and fix sequentially without subagents. Read runtime logs and replayed last successful payload against current rubric; accepted. Added validation-stage-only diagnostics, checked zero queued/running AI tasks and gracefully refreshed the local API/worker. Authenticated teacher browser is available. Sent one controlled proposal request through the API with no application to draft and no save/finalize. A read-only in-memory probe watches the transient result and preserves only anonymized regression shape if rejected; raw output clearing remains intact. Plan: construction/plans/code-generation-plan/2026-11-10-grading-ai-rejection-fix.md.
 
 ---
@@ -12139,7 +9774,7 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## Grading feedback formatting requested
 **Timestamp**: 2026-11-10T05:45:20.902234+00:00
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] giúp tôi format lạ phần nhậ xét chung , điểm mạnh và điểm cần cải thiện nên format chữ cho gọn gàng, xuống dòng các theuws"
+**User Input**: "[Image #1] giúp tôi format lại phần nhận xét chung, điểm mạnh và điểm cần cải thiện, nên format chữ cho gọn gàng, xuống dòng các thứ"
 **AI Response**: Improve the existing teacher feedback layout: explicit paragraph action for general feedback; separate bulleted summary entries with add/remove controls and retained manual line breaks. Fix the old per-keystroke summary parsing that erased trailing newlines. Preserve plain text/array contracts, limits, historical nextSteps and save/review behavior. Remove only blank editing rows at save. No subagents/live grading/provider request/backend change or restart. Plan: construction/plans/code-generation-plan/2026-11-10-grading-feedback-format.md.
 
 ---
@@ -12156,7 +9791,7 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## Repeated grade actions requested
 **Timestamp**: 2026-11-10T06:12:45.668064+00:00
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] nếu chốt điểm hoặc đã công bố điểm mà bấm vào chốt haowjc công bố lần nữa ở 1 student ở đây thì thông báo lỗi như này"
+**User Input**: "[Image #1] nếu chốt điểm hoặc đã công bố điểm mà bấm vào chốt hoặc công bố lần nữa ở 1 student ở đây thì thông báo lỗi như này"
 **User Follow-up**: "xong chưa"
 **AI Response**: Trace repeat action UI. Known raw states now filter eligible items for gradebook and submission-detail batches; actions without candidates disable. On INVALID_GRADE_STATE, shared dialog reads only affected evaluations to recognize already-completed state; it never auto-finalizes an already published/unconfirmed grade. Preserve original-version and backend guards. Translate outcomes and allow closing result dialogs. Plan: construction/plans/code-generation-plan/2026-11-10-grading-repeat-actions.md. No live finalize/publish/backend change/restart or subagents.
 
@@ -12171,15 +9806,10 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ---
 
 
-## Grading local commits requested and verified
-**Timestamp**: 2026-11-10T06:24:42.261637+00:00
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit rõ ràng, chưa push"
-**AI Response**: Reviewed119 changed files and explicit group manifests, checked added content for credential patterns and retained original stash. Created local source commits51428543 (rubric/deadline),66af2cd5 (quiz/activity),27ec9f0a (grading/group/AI backend),8f0ac9ea (grading UI). This documentation commit records the fifth group. Fresh full backend2096/0fail/0error/0skip plus executable JAR, five required suites/57 traced cases, full frontend891/128files, full lint/typecheck passed. Application source hashes unchanged during packaging. Combined final tree verified; intermediate commits not separately rebuilt. No push, GitHub CI, deployment, runtime restart, provider/live grade action or subagents. Receipt: construction/build-and-test/2026-11-10-grading-local-commits.md.
 ## Tính năng: khung chat AI sửa đề đang có
 **Timestamp**: 2026-11-09T16:10:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "tôi muốn thêm 1 khung chat nhỏ với AI (như ảnh 2) để sửa đề đang sẵn có (để ở trên phần Toàn bài) để khi tạo đề xong rồi có thể sửa lại đề đó bằng AI (chẳng hạn như ảnh 3 tôi đã tạo xong đề bằng tiếng trung nhưng tôi muốn đổi lại thành tiếng anh thì phải tạo lại từ đầu, việc này rất mất công nên tôi muốn thêm box chat với AI, gửi cho AI toàn bộ context và nó có thể sửa trực tiếp theo yêu cầu của người dùng)" (kèm 3 ảnh: trang soạn bài có thẻ rubric bên phải, thẻ rubric phóng to, đề tiếng Trung đã tạo bằng AI)
+**User Input**: "tôi muốn thêm 1 khung chat nhỏ với AI (như ảnh 2) để sửa đề đang sẵn có (để ở trên phần Toàn bài) để khi tạo đề xong rồi có thể sửa lại đề đó bằng AI (chẳng hạn như ảnh 3 tôi đã tạo xong đề bằng tiếng Trung nhưng tôi muốn đổi lại thành tiếng Anh thì phải tạo lại từ đầu, việc này rất mất công nên tôi muốn thêm box chat với AI, gửi cho AI toàn bộ context và nó có thể sửa trực tiếp theo yêu cầu của người dùng)" (kèm 3 ảnh: trang soạn bài có thẻ rubric bên phải, thẻ rubric phóng to, đề tiếng Trung đã tạo bằng AI)
 **AI Response**: "Thêm chế độ REVISE cho luồng AI soạn đề (POST /assignments/{id}/ai-drafts, trường mode): máy chủ gửi AI toàn bộ đề đã lưu (tên, hướng dẫn, mọi khối, rubric từng mục, rubric Toàn bài) với mã khối ngắn, AI trả bản đầy đủ đã sửa (schema riêng); áp dụng giữ id, ảnh, sơ đồ và định dạng chữ của khối giữ mã, kiểm tra khung bằng DocumentModelService, ghi lại rubric theo mục. Mới: AssignmentDraftRevision.java; sửa AssignmentAiDraftService, AiDraftProposal (tách chuẩn hóa rubric), AssignmentCommands/AssignmentRequests (mode). Frontend: AiReviseChat.tsx đặt trên thẻ Toàn bài (chỉ khi bài nháp, sửa được), lưu trước khi gửi, ghi thẳng kết quả lên trang, Ctrl+Z quay lại; API requestAiRevision. Test: backend AssignmentAiRevisionTest 5 ca, gói assignments + ArchitectureTest 96/96; frontend assignments 43/43, lint các file sửa sạch, typecheck chỉ còn lỗi sẵn có (thiếu package materials). Chưa chạy thử với AI thật trên trình duyệt (stack Docker đang chạy image backend cũ)."
 **Context**: Tính năng thêm vào U07 trong phạm vi thành phần hiện có (minimal depth); không commit.
 
@@ -12221,30 +9851,12 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 
 ---
 
-## Commit merge origin/staging vào staging
-**Timestamp**: 2026-11-10T02:48:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
-**AI Response**: "Commit merge 63e91aa0 (Merge remote-tracking branch 'origin/staging' into staging), thân thông điệp ghi cách giải quyết conflict import ở QuizScreens.test.tsx. Không push."
-**Context**: Commit merge; chưa push.
-
----
-
 ## Kiểm thử đầy đủ sau merge origin/staging
 **Timestamp**: 2026-11-10T03:16:44Z
 **Requested by:** Đào Chí Cường
 **User Input**: "Chạy full test trước"
 **AI Response**: "Chạy trên 63e91aa0. Frontend: vitest 867/867 (126 file), eslint sạch, build thành công, tsc sạch sau khi build tạo lại .next/types. Backend: mvn -B verify trong maven:3.9-eclipse-temurin-17 với Testcontainers, 2.081 test, 0 failure, 0 error, 0 skipped, BUILD SUCCESS. Lần chạy backend đầu có 10 error NoSuchFile (../infra, ../agent-skills) do chỉ mount thư mục backend vào container; mount cả repo thì hết. Đã khởi động Docker Desktop để chạy. Không đổi mã nguồn."
 **Context**: Kiểm thử sau merge; mục audit này chưa commit, chưa push.
-
----
-
-## Kiểm tra CI sau khi push staging
-**Timestamp**: 2026-11-10T03:25:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra CI cho tôi"
-**AI Response**: "CI không chạy cho 0deea035: workflow chỉ kích hoạt khi push lên main hoặc có pull request. PR #45 (feat/quiz-draw-rule-shortage-warning vào staging) báo CONFLICTING; 4 commit của PR đã nằm trên staging, còn 490512b2 (40 dòng audit) chưa vào."
-**Context**: Kiểm tra CI; không đổi mã nguồn.
 
 ---
 
@@ -12287,7 +9899,7 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## Documentation Sync — staging code vs AI-DLC docs
 **Timestamp**: 2026-11-10T04:35:55Z
 **Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra code mới nhất trên staging xem code và tài liệu đã đồng bộ với nhau chưa, đồng bộ tài liệu aidlc theo code mới nhất"
+**User Input**: "kiểm tra code mới nhất trên staging xem code và tài liệu đã đồng bộ với nhau chưa, đồng bộ tài liệu AI-DLC theo code mới nhất"
 **AI Response**: "Đối chiếu staging@062a43f5 với aidlc-docs; ghi danh sách khoảng cách vào construction/build-and-test/2026-11-10-aidlc-code-sync-gaps.md (U07 REVISE, U08 bỏ biên nhận và kiểm nộp, U09 phần trống 0 điểm, U10, U06, shell). Lượt này dừng do hết hạn mức sử dụng trước khi sửa tài liệu unit; chưa chạy test, không sửa code."
 **Context**: Construction — documentation sync, bước đối chiếu xong, bước cập nhật tài liệu unit còn lại
 
@@ -12308,14 +9920,6 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 **User Input**: "Build lại và thử"
 **AI Response**: "Build lại image platform-backend:local từ mã hiện tại, recreate backend và worker (--no-deps); Flyway áp 5 migration mới lên DB local (tới v20261109.2201), cả hai healthy. Lượt AI thật không chạy được: stack local báo 'API chung không đủ hạn mức cho lượt này và bạn chưa lưu khóa API cá nhân'. Thay bằng một đề xuất READY (origin MCP) chèn thẳng vào assignment_ai_drafts của bài thử 95feaf71-92a3-43b7-9ec3-30db07c3e06f rồi áp dụng qua giao diện (?proposalId=). Kết quả đối chiếu với máy chủ: sau khi áp dụng còn 1 mục 'Database design' với rubric 10 điểm; bấm Hoàn tác thì hai mục cũ cùng rubric 5 điểm của từng mục trở lại trên trang và trên máy chủ; bấm Làm lại thì về bản AI cùng rubric của nó. Chưa kiểm được trên trình duyệt: khôi phục hướng dẫn (luồng này không thay hướng dẫn) và luồng khung chat với AI thật. Không đổi mã nguồn trong lượt này; dev server đã dừng."
 **Context**: Kiểm thử trên trình duyệt; bài thử và đề xuất thử còn trong DB local; chưa commit.
-
----
-
-## Staging merge check and authorized resolution
-**Timestamp**: 2026-11-10T06:45:33Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi check conflict merge với xem staging thay đổi gì"
-**AI Response**: Read-only comparison confirmed current MERGE_HEAD57b0bb8d matches fetched origin/staging,97 automatically staged paths and only audit.md unresolved. Frontend typecheck and59 backend tests passed; frontend284/285 exposed an old feedback fixture without closesAt/serverTime required by the new history gate. No merge commit or push during inspection.
 
 ---
 
@@ -12340,16 +9944,8 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## Authorized staging-to-main pull request and CI gate
 **Timestamp**: 2026-11-10T06:55:26Z
 **Requested by:** Quang Hung
-**User Input**: "tạo pr từ staging lên main, chạy ci nếu pass thì merge vào main"
+**User Input**: "tạo PR từ staging lên main, chạy CI, nếu pass thì merge vào main"
 **AI Response**: Confirmed remote main57b0bb8d is an ancestor of remote staging7fbf5703; release scope is five grading/quiz/assignment/UI documentation commits plus the previous merge. User explicitly authorizes creating the PR, running CI and merging only after success, superseding the earlier no-push restriction for this release. Record this request in a documentation-only staging commit, publish it without force, create staging-to-main PR and require successful backend/frontend/deploy-script jobs on its current head. PR images is intentionally skipped; main push builds and publishes SHA-tagged images, which existing VPS automation may deploy. Full local merged-source verification2110 backend tests/JAR and908 frontend tests/lint/typecheck passed before this documentation-only change. Final CI and merge receipt is recorded in the GitHub PR and chat; no infrastructure settings changed or branch deletion.
-
----
-
-## Gradebook export requirements review
-**Timestamp**: 2026-11-10T07:05:14Z
-**Requested by:** Quang Hung
-**User Input**: Giúp tôi check phần export gradebook excel nên hợp lý hơn với export nên để tên excel theo tên asignment
-**AI Response**: Inspected UI download, backend header, exporter, service and existing tests. Prepared concrete assignment-title filename criteria in inception/requirements/2026-11-10-gradebook-export.md. CLAUDE.md requires explicit requirements approval before implementation; awaiting review. No application source edited or runtime tests executed. Existing Security/Resiliency retained; PBT disabled.
 
 ---
 
@@ -12382,7 +9978,7 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 ## Kiểm tra bản f8885746 đã deploy lên VPS chưa
 **Timestamp**: 2026-11-10T07:57:37Z
 **Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem bản này đã được deploy trên vps chưa cho tôi"
+**User Input**: "kiểm tra xem bản này đã được deploy trên VPS chưa cho tôi"
 **AI Response**: "Chưa deploy. CI main run 42778541773: frontend, backend, deploy-script SUCCESS; job images vẫn in_progress nên workflow chưa thành công và VPS chưa thể kéo image f8885746. https://alapedu.online vẫn trả 200 (bản cũ đang chạy). Lệnh SSH đọc platform-deploy status trên VPS bị từ chối quyền nên chưa xác minh trực tiếp SHA đang chạy. Không thay đổi gì trên VPS."
 **Context**: Phát hành staging→main; chờ job images và timer deploy của VPS.
 
@@ -12424,30 +10020,6 @@ Only audit.md required manual resolution; both branch blocks retained verbatim. 
 
 ---
 
-## Commit nút Xóa Quiz nháp
-**Timestamp**: 2026-11-10T08:24:49Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
-**AI Response**: "Tạo nhánh feat/delete-draft-quiz (--no-track) từ main và commit toàn bộ thay đổi: nút Xóa Quiz nháp (frontend), hook onDeleting gỡ Quiz khỏi module (backend), test và audit. Không push."
-**Context**: Construction — sửa nhỏ U10/U13, commit.
-
----
-
-## Kiểm tra sẵn sàng đưa lên staging
-**Timestamp**: 2026-11-10T08:45:49Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem có thể đưa lên staging chưa"
-**AI Response**: "Sẵn sàng: origin/staging cùng nội dung với main, nhánh merge fast-forward không conflict. Frontend lint, typecheck, 910 test, build đạt; backend mvn verify 2054 test, 10 lỗi do container thiếu ../infra và ../agent-skills, chạy lại với cả repo thì 78 test đạt. Chưa có integration test xóa Quiz đang gắn module trên PostgreSQL."
-**Context**: Construction — kiểm tra trước khi mở PR vào staging.
-
----
-
-## Push và mở PR vào staging
-**Timestamp**: 2026-11-10T08:45:49Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Push và mở PR"
-**AI Response**: "Push nhánh feat/delete-draft-quiz (upstream cùng tên) và mở PR vào staging."
-**Context**: Construction — phát hành vào staging.
 ## Rà soát UI/UX toàn dự án
 **Timestamp**: 2026-11-10T04:58:00Z
 **Requested by:** Đào Chí Cường
@@ -12542,7 +10114,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Gradebook Vietnamese workbook and filename screenshot follow-up
 **Timestamp**: 2026-11-10T09:24:22Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] để tiếng việt  với để tên file phải giống tên bài assignment, chứu k phải id như này [Image #2]"
+**User Input**: "[Image #1] để tiếng Việt, với để tên file phải giống tên bài assignment, chứ không phải ID như này [Image #2]"
 **AI Response**: User authorizes Vietnamese export presentation and assignment-title filenames. Reproduced missing assignment-context default in a parent/dialog frontend regression1/16 failing, and English headers/raw status, Gradebook sheet and ID fallback in backend4/15 failing. Existing uncommitted naming changes retained. Extend current scoped plan, implement both symptoms and run connected checks; environment question pending for live acceptance. No subagents or publish/deploy action.
 
 ---
@@ -12550,7 +10122,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Gradebook local runtime acceptance
 **Timestamp**: 2026-11-10T09:30:25Z
 **Requested by:** Quang Hung
-**User Input**: "hiên tại trên máy, nhóm cũng deploy fps r"
+**User Input**: "hiện tại trên máy, nhóm cũng deploy VPS rồi"
 **AI Response**: Confirmed local browser context. Final backend15/15, frontend35/35, typecheck and scoped lint passed. Restarted only the identified existing local API/worker launcher; health200, startup applied two pending staging assignment migrations20261109.2330 and20261110.1200. Downloaded SWD392 – Thiết kế hệ thống nhắn tin.xlsx from the authenticated UI and verified actual XLSX XML has9 Vietnamese headers, Bảng điểm sheet,5 rows for the selected assignment, localized statuses/flags and unchanged0.00 published score. Aggregate download Bảng điểm tổng hợp-2026-11-10.xlsx verified20rows/4assignments and no class ID. Temporary tab closed and original browser tab restored. Existing uncommitted changes preserved; no live grade/provider action, VPS update, commit/push, full-suite/build rerun or subagents. Updated the current requirements/plan/state and verification report.
 
 ---
@@ -12559,7 +10131,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Diagram-only AI grading investigation and consistency fix
 **Timestamp**: 2026-11-10T09:58:29Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] b thử check xem sao chấm bằng AI được có 2 điểm trên browser này, đồng thới rà saost lại code chấm điểm xem đã đồng nhất với tạo đề bài và rubric chưa"
+**User Input**: "[Image #1] bạn thử check xem sao chấm bằng AI được có 2 điểm trên browser này, đồng thời rà soát lại code chấm điểm xem đã đồng nhất với tạo đề bài và rubric chưa"
 **AI Response**: Inspected the exact local Chrome evaluation dbbf3c65 and its READY2.00 proposal. Two diagram-only rubric sections were zeroed by deterministic blank detection before AI. All3 submitted diagrams are compressed Draw.io, while grading used a raw mxCell regex. Live rubric snapshot canonically matches2+4+4 maxima and3 heading IDs; criteria TEXT does not prohibit diagram evidence. Added real compressed-diagram fixtures and cross-module regressions (2 RED), then expose the existing bounded DiagramXml cellCount through IDocumentModel and use it in every empty-part grading path, including explicit-parts/MCP. Initial connected46 tests pass; final regression/full backend verification and local proposal acceptance pending. No original grade, rubric or student submission changed; no subagents or publish action. Plan: construction/plans/code-generation-plan/2026-11-10-grading-diagram-parity.md.
 
 ---
@@ -12568,7 +10140,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Diagram-only grading verified
 **Timestamp**: 2026-11-10T10:04:22Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] b thử check xem sao chấm bằng AI được có 2 điểm trên browser này, đồng thới rà saost lại code chấm điểm xem đã đồng nhất với tạo đề bài và rubric chưa"
+**User Input**: "[Image #1] bạn thử check xem sao chấm bằng AI được có 2 điểm trên browser này, đồng thời rà soát lại code chấm điểm xem đã đồng nhất với tạo đề bài và rubric chưa"
 **AI Response**: Fixed compressed Draw.io content detection via shared bounded assignments parser; no rubric or grading policy adjustment to target6points. Both RED regressions now pass; connected46 and full2116 tests/253suites0fail0error0skip/JAR plus required guard passed. Refreshed local API/worker. One successful Gemini request yields READY proposal379a92c1 at8.50(2+3.5+3), recognizing all diagrams. Initial UI request during restart failed500 without creating a proposal, then startup was verified before retry. Persisted grade verified DRAFT0.00/version1 and original submission hash unchanged; new proposal remains an unsaved form. No assignment/submission mutation, official grade action, new migration, frontend change, VPS release, commit/push or subagents. Results and model-judgment limits recorded in construction/build-and-test/2026-11-10-grading-diagram-parity.md.
 
 ---
@@ -12577,7 +10149,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Accurate Vietnamese AI grading errors
 **Timestamp**: 2026-11-10T10:19:37Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] hình như log lỗi sai nếu hết token thì ghi hết token nếu lỗi gì thì ghi lỗi gì, đừng log tên lỗi in hoa như kia ra"
+**User Input**: "[Image #1] hình như log lỗi sai, nếu hết token thì ghi hết token, nếu lỗi gì thì ghi lỗi gì, đừng log tên lỗi in hoa như kia ra"
 **AI Response**: Actual two latest rejections have TOTAL validation diagnostics; not token exhaustion. Added6 failing cases across16 tests, then centralized Vietnamese proposal diagnostics, including old stored messages on read without a DB migration. Internal validator codes stay in server logs. Gateway now checks explicit Gemini/OpenAI/Claude completion reasons for token truncation before accepting output, preserving CHARGED usage; HTTP429 quota/rate distinction uses structured error codes only. Initial34 tests pass; final connected verification and local browser acceptance pending. Prior diagram fix retained, no grading policy change, paid retry, grade mutation or subagents. Plan: construction/plans/code-generation-plan/2026-11-10-grading-ai-errors.md.
 
 ---
@@ -12586,7 +10158,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## AI grading error presentation verified
 **Timestamp**: 2026-11-10T10:23:03Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] hình như log lỗi sai nếu hết token thì ghi hết token nếu lỗi gì thì ghi lỗi gì, đừng log tên lỗi in hoa như kia ra"
+**User Input**: "[Image #1] hình như log lỗi sai, nếu hết token thì ghi hết token, nếu lỗi gì thì ghi lỗi gì, đừng log tên lỗi in hoa như kia ra"
 **AI Response**: Final343 AI/grading/diagram/architecture cases pass0fail0error0skip. New/legacy grading errors use one Vietnamese formatter; validator codes remain in logs. Gateway reads explicit token-limit stop metadata for3 providers, preserves charged usage and distinguishes structured quota/rate codes without assuming429 means exhaustion. Refreshed local API/worker and inspected existing failure in a separate authenticated Chrome tab: exact Vietnamese total-mismatch explanation appears, PROPOSAL_ absent. Temporary tab closed and original form retained; before/after saved grade/state/version/submission hash unchanged. No paid model call, grading action, new migration, source dependency, commit/push, VPS update or subagents. Evidence: construction/build-and-test/2026-11-10-grading-ai-errors.md.
 
 ---
@@ -12595,7 +10167,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Deterministic AI proposal totals — investigation
 **Timestamp**: 2026-11-10T10:30:02Z
 **Requested by:** Quang Hung
-**User Input**: "tại sao lại cộng điểm k khớp với tiêu chí? h vẫn bị lỗi đó b giúp tôi fix được k"
+**User Input**: "tại sao lại cộng điểm không khớp với tiêu chí? Giờ vẫn bị lỗi đó, bạn giúp tôi fix được không"
 **AI Response**: Confirmed newest local proposal version7 still rejected at TOTAL with saved grade DRAFT0.00/version1 unchanged. Provider schema redundantly requires score alongside every item score; normalizer preserves supplied totals for strict validation, so model arithmetic errors reject otherwise usable proposals. Scope: provider prompt/schema and regression tests; reuse existing absent-total derivation followed by strict rubric validator. Preserve full MCP contract, unknown/missing/range/precision/check/evidence validation, stored history and existing uncommitted work. User explicitly authorizes fixing this ongoing defect; no new approval gate, subagents, grade action or deployment. Security/Resiliency retained; PBT remains disabled.
 
 ---
@@ -12604,7 +10176,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Deterministic AI totals verified
 **Timestamp**: 2026-11-10T10:35:42Z
 **Requested by:** Quang Hung
-**User Input**: "tại sao lại cộng điểm k khớp với tiêu chí? h vẫn bị lỗi đó b giúp tôi fix được k"
+**User Input**: "tại sao lại cộng điểm không khớp với tiêu chí? Giờ vẫn bị lỗi đó, bạn giúp tôi fix được không"
 **AI Response**: Provider prompt/schema now omit redundant score; existing normalization derives it from rubric item scores before strict validation. Full MCP contract unchanged. RED2/12; initial connected run exposed2 contradictory-check fixture failures because score was omitted from the full-validator fixture, corrected its setup. Final349 connected AI/grading/diagram/architecture tests pass0fail0error0skip. Refreshed local API/worker, health200, one paid Gemini request yields READY proposalc58454d1/version8 at7.50, independently verified12 item scores and section totals2+3+2.5 in DB and UI. Persisted grade remains DRAFT0.00/version1 with identical submission hash. Original browser form untouched; separate verification tab1728489459 remains open with7.50 unsaved after browser closeTab timed out. No official grade action, migration, dependency, frontend change, history rewrite, commit/push, VPS update or subagents. Evidence: construction/build-and-test/2026-11-10-grading-derived-total.md. Security/Resiliency retained; PBT disabled.
 
 ---
@@ -12613,7 +10185,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Remove confusing grade-history panel
 **Timestamp**: 2026-11-10T11:09:40Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] cái lịch sử sửa điểm này là sao tôi thấy nó cứ sao sao ấy, bỏ được k"
+**User Input**: "[Image #1] cái lịch sử sửa điểm này là sao, tôi thấy nó cứ sao sao ấy, bỏ được không"
 **AI Response**: Inspected Evaluation.saveGrade: history includes saved draft total changes after the first save, not only official revisions. Teacher panel renders empty reason separators. User authorizes removal from workspace UI; delete renderer/caller and empty spacing, adapt existing test. Preserve backend persisted audit history, save behavior, student data and separate AI proposal history. Scope3 frontend files plus workflow records. Verification pending; no subagents or live grade writes. Plan: construction/plans/code-generation-plan/2026-11-10-remove-grade-history-panel.md. Existing Security/Resiliency retained; disabled PBT skipped.
 
 ---
@@ -12622,7 +10194,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Adjustment validation and paragraph-action explanation
 **Timestamp**: 2026-11-10T11:13:06Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] với lại nếu tôi nhập điểm cộng trừ mà k nhập lý do thì nó luôn reload trang và show Adjustment requires a reason
+**User Input**: "[Image #1] với lại nếu tôi nhập điểm cộng trừ mà không nhập lý do thì nó luôn reload trang và show Adjustment requires a reason
 
 
 , với lại lý do cộng trừ điểm thì khác gì lý do sửa điểm?"
@@ -12635,7 +10207,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Optional manual feedback and compact grading controls
 **Timestamp**: 2026-11-10T11:24:58Z
 **Requested by:** Quang Hung
-**User Input**: "nút nào thừa thì bỏ với lại nếu bấm chấm AI thì sẽ hiện nhiều mục hơn là chấm thủ công tôi muốn chấm thử công cũng có thể tạo ra mấy cái ô như chấm bằng AI ví dụ ô điểm mạnh điểm yếu gvien nên có tùy chọn thêm, chi tiết nhận xét và mình chứng, đi tới đoạn làm bài gv cũng nên có nma nó là optional nếu chấm thủ công, đừng làm giao diện dối, chữ nào bỏ được, nút nào bỏ được cho gọn mà k ảnh hưởng thì bỏ"
+**User Input**: "nút nào thừa thì bỏ, với lại nếu bấm chấm AI thì sẽ hiện nhiều mục hơn là chấm thủ công, tôi muốn chấm thủ công cũng có thể tạo ra mấy cái ô như chấm bằng AI, ví dụ ô điểm mạnh, điểm yếu giảng viên nên có tùy chọn thêm, chi tiết nhận xét và minh chứng, đi tới đoạn làm bài GV cũng nên có nhưng mà nó là optional nếu chấm thủ công, đừng làm giao diện rối, chữ nào bỏ được, nút nào bỏ được cho gọn mà không ảnh hưởng thì bỏ"
 **AI Response**: Added manual optional summary/item editors with collapsed disclosures, no feedback creation on opening, no fabricated explanation. Manual navigation falls back to rubric section without visible IDs. Removed paragraph-split utility/button/help and whole-feedback-clear control; optional change note uses compact disclosure and clearer label. Backend manual feedback allows blank explanation/evidence while AI intake retains full required coverage/evidence and review flags/anchor/size guards. RED1 frontend +2 backend. Prior adjustment fix passed172 UI tests/typecheck/lint. Broader run encountered Windows paging-file exhaustion before any backend test; lowered own test heaps and serialized verification. Initial frontend run172/173, old AI preview test updated to scope its anchor inside the preview because manual anchors now also exist. Verification ongoing; no grade writes, provider calls, commit/push, deployment or subagents. Plan: construction/plans/code-generation-plan/2026-11-10-manual-feedback-parity.md. Security/Resiliency retained; PBT disabled.
 
 ---
@@ -12644,7 +10216,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Grading UI parity and validation verified
 **Timestamp**: 2026-11-10T11:35:35Z
 **Requested by:** Quang Hung
-**User Input**: "nút nào thừa thì bỏ với lại nếu bấm chấm AI thì sẽ hiện nhiều mục hơn là chấm thủ công tôi muốn chấm thử công cũng có thể tạo ra mấy cái ô như chấm bằng AI ví dụ ô điểm mạnh điểm yếu gvien nên có tùy chọn thêm, chi tiết nhận xét và mình chứng, đi tới đoạn làm bài gv cũng nên có nma nó là optional nếu chấm thủ công, đừng làm giao diện dối, chữ nào bỏ được, nút nào bỏ được cho gọn mà k ảnh hưởng thì bỏ"
+**User Input**: "nút nào thừa thì bỏ, với lại nếu bấm chấm AI thì sẽ hiện nhiều mục hơn là chấm thủ công, tôi muốn chấm thủ công cũng có thể tạo ra mấy cái ô như chấm bằng AI, ví dụ ô điểm mạnh, điểm yếu giảng viên nên có tùy chọn thêm, chi tiết nhận xét và minh chứng, đi tới đoạn làm bài GV cũng nên có nhưng mà nó là optional nếu chấm thủ công, đừng làm giao diện rối, chữ nào bỏ được, nút nào bỏ được cho gọn mà không ảnh hưởng thì bỏ"
 **AI Response**: Completed optional collapsed manual summary/item editors and section navigation, removed redundant paragraph/history/clear controls, compact optional change note, inline adjustment validation and autosave error pause/recovery. Final173 frontend +204 backend tests, TypeScript/lint and final45 polish cases pass. Local API/worker refreshed, health200; DOM checks pass. Browser automation accidentally changed one draft item0.50→0.00 and autosaved local evaluation7.40→6.90; reported and restored through normal versioned save/review path. All non-audit contents now semantically match baseline at7.40 DRAFT; version7 and2 additional history records retained. Temporary explanation confirmation text removed verbatim; no finalized/published/VPS mutation or audit deletion. Temporary verification tab closed. Screenshot captures timed out, so full visual/mobile acceptance not claimed. No provider call, migration, commit/push, deployment or subagents. Evidence: construction/build-and-test/2026-11-10-manual-feedback-parity.md. Security/Resiliency retained; PBT disabled.
 
 ---
@@ -12653,7 +10225,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Student assignment class and subject context
 **Timestamp**: 2026-11-10T11:38:03Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] sửa phần bài tập nên hiện thêm cột lớp nào , môn nào"
+**User Input**: "[Image #1] sửa phần bài tập nên hiện thêm cột lớp nào, môn nào"
 **AI Response**: StudentRow already contains authorized classCode/subjectCode. Added Lớp/Môn học columns across3 tabs, matching fixed widths, scrollable minimum table width, missing-value fallback and correct loading/empty spans. Adapted existing list/filter/submitted-row tests. Prior uncommitted grading work retained. Verification pending; no backend/data/account change, browser write, dependency, subagents, commit/push or VPS deployment. Plan: construction/plans/code-generation-plan/2026-11-10-student-assignment-context.md. Existing Security/Resiliency retained; PBT disabled.
 
 ---
@@ -12662,7 +10234,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Student assignment context verified
 **Timestamp**: 2026-11-10T11:39:32Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] sửa phần bài tập nên hiện thêm cột lớp nào , môn nào"
+**User Input**: "[Image #1] sửa phần bài tập nên hiện thêm cột lớp nào, môn nào"
 **AI Response**: Added existing class/subject codes as Lớp/Môn học columns across3 student-assignment tabs; matching widths, neutral missing-code fallback, full-code titles and correct empty/loading spans. Shared table overflow preserves narrow-screen access. Assignment-work23 tests/5files plus final4 page tests, TypeScript/scoped lint and whitespace checks pass. Corrected unsupported test query exact option caught by typecheck; source unchanged after initial23 green cases. No new API/backend/data change, account switch, live browser write, commit/push, VPS update or subagents. Prior grading edits retained. Evidence: construction/build-and-test/2026-11-10-student-assignment-context.md. Security/Resiliency retained; PBT disabled; full build/mobile visual checks not repeated.
 
 ---
@@ -12672,9 +10244,9 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 **Timestamp**: 2026-11-10T11:49:53Z
 **Requested by:** Quang Hung
 **User Input**: "[Image #1] sao mỗi lần tôi điều chỉnh điểm trang nó lại reload 1 lần sau 1 giây hay sao ấy, tìm hiểu nguyên nhân"
-**Additional User Input**: "[Image #1] tôi nghĩ có ghi chú thay đổi (tùy chọn) rồi thì k cần ls do công trừ điểm"
-**Additional User Input**: "tôi k muoosnm tự lưu sau 1.5s tôi nghĩ tăng tgian lên 30s"
-**Additional User Input**: "hoặc là tự động lưu thì k nên reload lại trang"
+**Additional User Input**: "[Image #1] tôi nghĩ có ghi chú thay đổi (tùy chọn) rồi thì không cần lý do cộng trừ điểm"
+**Additional User Input**: "tôi không muốn tự lưu sau 1.5s, tôi nghĩ tăng thời gian lên 30s"
+**Additional User Input**: "hoặc là tự động lưu thì không nên reload lại trang"
 **AI Response**: Isolated mock diagnostic confirms1500ms autosave sets global busy, removes focused score input, recreates it after response, with1 evaluation load and0 navigations; actual page reload is not required to reproduce. User authorizes30-second idle save and quiet background saves, plus one optional note. RED4 frontend/48 and1 backend/6 demonstrate desired behavior absent. Added separate saving/single-flight state, edit revision preservation and returned-version reuse, blocked conflicting commands, retained explicit save/Ctrl+S and error pause. Unified note preserves historical adjustment notes and maps to both existing API fields; removed separate required-reason field and aggregate requirement as explicitly requested, retaining score bounds/locks/versions/AI review guards. Initial48 focused cases pass; final connected tests/typecheck/lint pending. All mutations use mocks, no live grade editing or browser actions. No subagents, commit/push or deployment. Plan: construction/plans/code-generation-plan/2026-11-10-grading-quiet-autosave.md. Security/Resiliency retained; PBT disabled.
 
 ---
@@ -12683,7 +10255,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Quiet autosave verified
 **Timestamp**: 2026-11-10T11:56:27Z
 **Requested by:** Quang Hung
-**User Input**: "hoặc là tự động lưu thì k nên reload lại trang"
+**User Input**: "hoặc là tự động lưu thì không nên reload lại trang"
 **AI Response**: Completed both authorized preferences:30-second idle debounce and background save without editor removal/focus loss. Added latest-save ref after RED showed a focus-only render reset the timer. Single-flight and edit-revision guards preserve newer points/text/adjustments/notes and reuse the saved evaluation version; command buttons serialize operations, manual save/Ctrl+S stay immediate, error pause remains. Unified optional note preserves old adjustment notes, maps to existing API fields and removes required-adjustment-reason aggregate rule per explicit request. Final176 grading UI tests +206 grading/backend/architecture tests +13 final hook cases pass; TypeScript/scoped lint/whitespace pass. Refreshed local API/worker, health200. No browser grade interaction, real grade mutation, AI call, migration, commit/push, VPS update or subagents in this turn; prior pending work retained. Evidence: construction/build-and-test/2026-11-10-grading-quiet-autosave.md. Security/Resiliency retained; PBT disabled; full build/live multi-session/mobile checks not repeated.
 
 ---
@@ -12691,7 +10263,7 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Student published result entry
 **Timestamp**: 2026-11-10T12:09:00Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] sao xem bài chấm của sinh viên thì k thấy được bài giảng viên vừa chấm k vào được để xem chi tiết chấm điểm như nào"
+**User Input**: "[Image #1] sao xem bài chấm của sinh viên thì không thấy được bài giảng viên vừa chấm, không vào được để xem chi tiết chấm điểm như nào"
 **AI Response**: Read-only local evaluation inspection confirms latest submitted attempt has PUBLISHED8/10 while the detail page shows a newer IN_PROGRESS draft. Result card selection only uses latestAttempt, and the history viewer blocks the grading candidate before deadline. RED3/13 cases reproduce both defects. Reuse current submitted grading candidate and existing result/document viewer; show explicit detail link only for API-published scores. Keep full old-history deadline, draft exclusion, ownership/enrollment and unpublished feedback suppression. No grade edits, subagents, commit/push or deployment. Plan: construction/plans/code-generation-plan/2026-11-10-student-published-result-entry.md. Existing Security/Resiliency retained; PBT disabled. Verification pending.
 
 ---
@@ -12699,16 +10271,8 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 ## Student published result entry verified
 **Timestamp**: 2026-11-10T12:11:00Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] sao xem bài chấm của sinh viên thì k thấy được bài giảng viên vừa chấm k vào được để xem chi tiết chấm điểm như nào"
+**User Input**: "[Image #1] sao xem bài chấm của sinh viên thì không thấy được bài giảng viên vừa chấm, không vào được để xem chi tiết chấm điểm như nào"
 **AI Response**: Fixed draft hiding the submitted result and pre-deadline detail-view blockage. Added published-only “Xem chi tiết chấm điểm” link preserving attempt/class/return context and retained Continue editing. Older full history remains gated; backend owns access and private feedback suppression. Connected26 assignment-work UI cases,9 GradebookService cases and final13 affected page cases pass; TypeScript/scoped lint/whitespace pass. No grade writes, account switch, subagents, commit/push, schema changes, Docker restart or VPS deploy. Browser inventory showed teacher session; live student visual acceptance/full build not performed. Evidence: construction/build-and-test/2026-11-10-student-published-result-entry.md. Security/Resiliency retained; PBT disabled.
-
----
-
-## Commit reviewed grading and student assignment changes
-**Timestamp**: 2026-11-10T12:19:05Z
-**Requested by:** Quang Hung
-**User Input**: "Giúp rôi commit rõ ràng"
-**AI Response**: Reviewed the current working tree and separated three functional commits, each with regression tests and its implementation/verification documents: ee0a3838 simplifies optional manual feedback and saves quietly after30s while preserving in-flight edits;23f9309a adds class/subject columns;4873b931 retains published grading beside a newer draft and opens current submission details before deadline. Fresh combined frontend run202 cases/24 files and backend grading/architecture206 cases pass with0 failures/errors/skips; TypeScript, scoped ESLint and whitespace checks pass. Logs: .tmp/commit-grading-student-tests.log, .tmp/commit-backend-tests.log, .tmp/commit-typecheck.log, .tmp/commit-lint.log. This workflow-only commit records the cumulative audit/state, including prior incident restoration and verification limits. No push, deployment, grade mutation, account switch or subagents. Full production build and live student visual verification not repeated. Security/Resiliency retained; PBT disabled.
 
 ---
 
@@ -12745,24 +10309,6 @@ I hit my usage limit while you were working, but it has reset now. Please contin
 **User Input**: "Có, mở PR"
 **AI Response**: Commit các mục audit sau merge PR #64 lên nhánh `docs/ui-ux-remediation-audit` và mở PR vào `staging`. Chỉ đổi `aidlc-docs/audit.md`; không đổi mã nguồn, không merge PR.
 **Context**: Construction — Build and Test, sau merge PR #64
-
----
-
-## Kiểm tra PR #63 merge được vào staging chưa
-**Timestamp**: 2026-11-10T09:12:12Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem merge được vào staging chưa"
-**AI Response**: "PR #63 OPEN, mergeable, mergeStateStatus CLEAN. CI: backend, frontend, deploy-script, GitGuardian SUCCESS; images SKIPPED (chỉ chạy khi push main). Staging không có branch protection, chưa có review. Chưa merge."
-**Context**: Construction — phát hành vào staging.
-
----
-
-## Merge PR #63 vào staging
-**Timestamp**: 2026-11-10T09:24:57Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Merge PR"
-**AI Response**: "Merge PR #63 (feat/delete-draft-quiz) vào staging bằng merge commit, giữ nhánh nguồn."
-**Context**: Construction — phát hành vào staging.
 
 ---
 
@@ -12809,7 +10355,7 @@ Tôi muốn lấy tài liệu từ nguồn chính thức trên trang flm, hãy c
 ## Lượt kiểm tra tự động: rà lỗi toàn dự án và đồng bộ AI-DLC
 **Timestamp**: 2026-11-10T20:31:00Z
 **Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiểm tra toàn bộ dự án xem còn lỗi nào không và sửa bug. Đồng thời đồng bộ tài liệu doc aidlc theo code mới nhất"
+**User Input**: "kiểm tra toàn bộ dự án xem còn lỗi nào không và sửa bug. Đồng thời đồng bộ tài liệu doc AI-DLC theo code mới nhất"
 **AI Response**: "Tác vụ theo lịch, không có người theo dõi. Làm trên nhánh mới fix/scheduled-audit-2026-11-10 từ origin/staging@353383f2 trong môi trường cloud; không đổi nhánh đang checkout (feat/delete-draft-quiz), không push. Frontend tsc --noEmit và eslint qua (1 cảnh báo eslint-disable thừa ở opengraph-image.tsx); không chạy được mvn verify và vitest (không truy cập Maven/npm registry, máy local Java 11, thiếu binding rolldown Linux). Rà tĩnh các commit cd79f72c..4873b931, sửa 4 lỗi: (1) xóa Quiz nháp đã được copy vỡ khóa ngoại fk_quizzes_source (500) -> 409 QUIZ_HAS_COPIES; (2) QuizDetailPage tải lại quiz vừa xóa và hiện lỗi 404 trước khi chuyển trang; (3) đề xuất AI bị từ chối vì GRADE_VERSION_CONFLICT/GRADE_LOCKED chỉ nhận câu lỗi chung; (4) BatchActionDialog không hiện câu lỗi AI tiếng Việt trả về trong kết quả hàng loạt. Thêm test cho 1, 3, 4. Đồng bộ 27 tài liệu AI-DLC (U01, U06–U10, U13, current-code-baseline, api-inventory, build-and-test-summary, aidlc-state, Đợt 3 trong 2026-11-10-aidlc-code-sync-gaps.md). Kết quả: commit 72ecc240 dạng bundle và patch trong .tmp/scheduled-audit/."
 **Context**: Construction — sửa lỗi và đồng bộ tài liệu; chờ người dùng áp dụng nhánh, chạy mvn verify và npm test trước khi merge.
 
@@ -12825,15 +10371,6 @@ kiểm tra và sửa các điểm trong báo cáo này"
 
 ---
 
-## Kết quả đẩy học liệu FLM lên production
-**Timestamp**: 2026-11-11T02:06:55Z
-**Requested by:** Đào Chí Cường
-**User Input**: "tại sao không được" / "Đã chạy xong"
-**AI Response**: "Lần chạy đầu lỗi 401 vì script gửi cả dấu backtick bọc mật khẩu trong .tmp/prod-demo-accounts.md; đã sửa push-prod.mjs để bỏ backtick. Người dùng chạy lại thành công trên https://alapedu.online: tạo môn SWR302 và SWD392, 18 module, 58 học liệu cho SWT301, SWR302, SWD392, không bỏ qua mục nào. AI không đăng nhập production để kiểm tra lại."
-**Context**: Nạp dữ liệu production — hoàn tất, không sửa mã nguồn.
-
----
-
 ## Commit sửa UI/UX đợt 2
 **Timestamp**: 2026-11-11T02:07:25Z
 **Requested by:** Đào Chí Cường
@@ -12846,7 +10383,7 @@ kiểm tra và sửa các điểm trong báo cáo này"
 ## Plan editable published grades and background AI grading
 **Timestamp**: 2026-11-11T03:19:26Z
 **Requested by:** Quang Hung
-**User Input**: "Điểm vẫn có thể sửa trong khi course còn, không nên khóa việc cô không được sửa
+**User Input**: "Điểm vẫn có thể sửa trong khi course còn, không nên khóa việc không được sửa
 Sửa về async: khi nhấn chấm bài bằng AI thì phải ở tại màn hình đó chờ AI chấm xong mới được thao tác cái khác
 giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt điểm đko? b đề xuất cho tôi thầy cô muốn lúc chấm điểm thì lưu lại dddeesns khi nào muốn cho sinh viên xem thì công bố điểm, nma vẫn có thể sửa lại điểm được vì quá trình cho điểm có thể sai sót"
 **User Decision**: After publication corrections, "Cập nhật cho sinh viên ngay mỗi lần lưu". Grading remains editable "Đến khi lớp được lưu trữ (ARCHIVED), kể cả đã đóng nhận bài (đề xuất)".
@@ -12918,7 +10455,7 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 ## Sửa bố cục trang Hồ sơ, Đổi mật khẩu thành khối trên trang
 **Timestamp**: 2026-11-11T04:30:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "sửa lại trang hồ sơ, phần đổi mật khẩu không hiện pop-up nữa mà ở luôn trang này dạng flat, ngoài ra chỉnh lại bố cục cho hợp lí"
+**User Input**: "sửa lại trang hồ sơ, phần đổi mật khẩu không hiện pop-up nữa mà ở luôn trang này dạng flat, ngoài ra chỉnh lại bố cục cho hợp lý"
 **AI Response**: "Thay PasswordChangeDialog bằng PasswordChangeForm (khối Section phẳng dưới thông tin cá nhân; mật khẩu hiện tại một ô, mật khẩu mới và nhập lại hai cột; đổi xong xóa các ô và báo toast). ProfileForm thành khối 'Thông tin cá nhân': dải đầu avatar chữ viết tắt, họ tên, email, nhãn trạng thái; lưới hai cột Họ và tên · Số điện thoại, Email trường · Vai trò; bỏ nút mở popup. Đổi tên test tương ứng, thêm kiểm tra xóa ô sau khi đổi. Cập nhật frontend-components.md của U01. tsc, eslint, Vitest identity (39 test) qua; xem trên trình duyệt ở 1440px và 375px với backend local. Không commit."
 **Context**: Construction — chỉnh UI frontend U01, không đổi API/backend.
 
@@ -12969,24 +10506,6 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 
 ---
 
-## Requirements Analysis — người dùng duyệt
-**Timestamp**: 2026-11-11T06:48:17Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Ghi Requirements Analysis hoàn tất. Đánh giá User Stories: cần chạy (tính năng mới hai vai trò). Tạo đánh giá và kế hoạch story kèm câu hỏi."
-**Context**: INCEPTION — Requirements Analysis duyệt; bắt đầu User Stories phần lập kế hoạch.
-
----
-
-## User Stories — kế hoạch và câu hỏi
-**Timestamp**: 2026-11-11T06:49:02Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Tạo inception/plans/2026-11-11-student-self-grouping-story-plan.md: đánh giá (chạy User Stories, độ sâu vừa), đề xuất bốn story US-GRP-007…010 theo hành trình, 4 câu hỏi (cách chia, nơi ghi, persona, mức chi tiết). Chờ người dùng trả lời."
-**Context**: INCEPTION — User Stories phần lập kế hoạch.
-
----
-
 ## User Stories — trả lời và duyệt kế hoạch
 **Timestamp**: 2026-11-11T07:28:41Z
 **Requested by:** Đào Chí Cường
@@ -13005,42 +10524,6 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 
 ---
 
-## User Stories — người dùng duyệt
-**Timestamp**: 2026-11-11T07:48:22Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Ghi User Stories hoàn tất (US-GRP-007…010). Bắt đầu Workflow Planning."
-**Context**: INCEPTION — User Stories duyệt.
-
----
-
-## Workflow Planning — chờ duyệt
-**Timestamp**: 2026-11-11T07:49:19Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Tạo inception/plans/2026-11-11-student-self-grouping-execution-plan.md. Rủi ro trung bình. Chạy: Functional Design U12, Code Generation, Build and Test. Bỏ qua: Application Design, Units Generation, NFR Requirements, NFR Design, Infrastructure Design. Ghi chú: thư mục làm việc có thay đổi của phiên khác, cần nhánh/worktree riêng trước khi viết mã. Hỏi: Ready to proceed with this plan?"
-**Context**: INCEPTION — Workflow Planning, lời hỏi duyệt.
-
----
-
-## Workflow Planning — người dùng duyệt
-**Timestamp**: 2026-11-11T07:57:06Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Ghi Workflow Planning hoàn tất. Bắt đầu Functional Design U12: đọc tài liệu thiết kế U12 hiện có và mã liên quan, tạo kế hoạch và câu hỏi."
-**Context**: INCEPTION — Workflow Planning duyệt; CONSTRUCTION — bắt đầu Functional Design U12.
-
----
-
-## Functional Design U12 — kế hoạch và câu hỏi
-**Timestamp**: 2026-11-11T07:58:19Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Đọc tài liệu functional design U12 và ClassGroupService.save/apply, EventTypes, NotificationEventService. Tạo construction/plans/functional-design-plan/2026-11-11-u12-student-self-grouping-functional-design-plan.md với 9 câu hỏi (đường duyệt, duyệt nhiều, thành viên không hiệu lực, hạn chót, lịch sử, đổi tên, thông báo trùng, thông báo do hệ thống, vị trí giao diện). Chờ người dùng trả lời."
-**Context**: CONSTRUCTION — Functional Design U12, lập kế hoạch.
-
----
-
 ## Functional Design U12 — trả lời câu hỏi
 **Timestamp**: 2026-11-11T08:14:42Z
 **Requested by:** Đào Chí Cường
@@ -13056,24 +10539,6 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 **User Input**: "Use your proposals"
 **AI Response**: "Thêm thiết kế tự chia nhóm vào bốn tệp functional-design U12: GroupFormationSettings, GroupProposal, ProposalMember, hai máy trạng thái, 4 sự kiện, API mới; BR-U12-70…96; luồng F16–F24; component frontend. Kiểm Mermaid và liên kết. Security/Resiliency: tuân thủ hoặc N/A có lý do. Hỏi duyệt: Request Changes hoặc Continue to Next Stage (Code Generation)."
 **Context**: CONSTRUCTION — Functional Design U12, lời hỏi duyệt.
-
----
-
-## Functional Design U12 — người dùng duyệt
-**Timestamp**: 2026-11-11T08:29:40Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Ghi Functional Design U12 hoàn tất. Bắt đầu Code Generation phần lập kế hoạch."
-**Context**: CONSTRUCTION — Functional Design U12 duyệt.
-
----
-
-## Code Generation U12 — kế hoạch chờ duyệt
-**Timestamp**: 2026-11-11T08:30:48Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Đọc code-conventions, mã và test groups hiện có. Tạo construction/plans/code-generation-plan/2026-11-11-u12-student-self-grouping-code-generation-plan.md (19 bước: migration, model, repository, 3 service, sửa ClassGroupService.save, sự kiện và notifications, controller, test unit/integration, frontend sinh viên và giảng viên, tài liệu). Hỏi duyệt kế hoạch và chọn nơi viết mã (worktree mới hay checkout hiện tại) vì thư mục làm việc có thay đổi chưa commit của phiên khác."
-**Context**: CONSTRUCTION — Code Generation U12 phần lập kế hoạch, lời hỏi duyệt.
 
 ---
 
@@ -13104,15 +10569,6 @@ giúp tôi lập plkan sửa lại, tôi nghĩ như vậy thì k còn chốt đi
 
 ---
 
-## Code Generation U12 — người dùng duyệt
-**Timestamp**: 2026-11-11T13:23:46Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Ghi Code Generation U12 hoàn tất. Bắt đầu Build and Test: mvn -B verify toàn backend trong maven:3.9-eclipse-temurin-17 có Testcontainers, frontend lint/typecheck/test/build toàn bộ, thử hai vai trò trên trình duyệt."
-**Context**: CONSTRUCTION — Code Generation duyệt; bắt đầu Build and Test.
-
----
-
 ## Build and Test U12 — tiếp tục phiên ở tài khoản Claude khác
 **Timestamp**: 2026-11-11T13:44:45Z
 **Requested by:** Đào Chí Cường
@@ -13132,19 +10588,10 @@ bạn có thể tiếp tục phiên này không"
 
 ---
 
-## Build and Test U12 — người dùng duyệt, commit
-**Timestamp**: 2026-11-11T14:10:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Duyệt & commit"
-**AI Response**: "Ghi Build and Test U12 được duyệt. Commit mã và tài liệu tính năng sinh viên tự chia nhóm lên nhánh feat/student-self-grouping (chưa push). Operations là placeholder."
-**Context**: CONSTRUCTION — Build and Test U12 duyệt; commit.
-
----
-
 ## Rà soát bảo mật khóa API AI cá nhân
 **Timestamp**: 2026-11-11T07:05:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "để người dùng lưu api key cá nhân trên web có ổn không, hiện tại có đang lưu api vào db không. Có cách nào để tránh lộ lọt thông tin api key người dùng không"
+**User Input**: "để người dùng lưu API key cá nhân trên web có ổn không, hiện tại có đang lưu API vào DB không. Có cách nào để tránh lộ lọt thông tin API key người dùng không"
 **AI Response**: "Trả lời: khóa được lưu trong ai_connections, mã hóa AES-256-GCM, khóa giải mã ở biến môi trường, chỉ hiện 4 ký tự cuối. Điểm yếu: GET /me/ai-connections/{id}/key và GET /admin/ai/connections/{id}/key trả khóa rõ; khóa giải mã nằm cùng VPS với DB; GCM chưa gắn AAD. Đề xuất sửa mục trả khóa rõ và AAD."
 **Context**: Câu hỏi bảo mật U06, chỉ đọc code.
 
@@ -13193,24 +10640,6 @@ bạn có thể tiếp tục phiên này không"
 **User Input**: "sửa 3 lỗi trên"
 **AI Response**: "Hoàn tất ba lỗi trên codex/ui-ux-staging. Lượt cuối 332 test/51 file, TypeScript, ESLint và diff check qua. Build exit 0; ghi rõ font fetch EACCES và 27 traced files thiếu trong standalone vì junction dependency. Chưa kiểm tra browser/mobile, chưa commit/push/deploy. Kết quả ở construction/build-and-test/2026-11-11-three-ui-fixes.md."
 **Context**: Build and Test hoàn tất trong phạm vi; artifact standalone chưa xác minh để deploy. Security/Resiliency giữ nguyên; PBT disabled.
-
----
-
-## UI/UX staging — đánh giá sẵn sàng tích hợp
-**Timestamp**: 2026-11-11T09:26:13Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiểm tra xem có thể đưa lên staging chưa"
-**AI Response**: "Fetch staging và xác nhận vẫn cùng baseline ce40e447. Review diff và CI; chạy toàn bộ frontend suite và kiểm tra Docker build theo Dockerfile để làm rõ cảnh báo standalone do junction. Chưa commit/push/merge."
-**Context**: Build and Test — staging readiness review.
-
----
-
-## UI/UX staging — kết luận readiness
-**Timestamp**: 2026-11-11T09:29:32Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiểm tra xem có thể đưa lên staging chưa"
-**AI Response**: "Không phát hiện blocker. origin/staging vẫn cùng ce40e447; toàn bộ frontend 963 test/135 file qua; Dockerfile build thành công không còn cảnh báo font/standalone; container cô lập network none trả health UP, login/icon 200. Source không đổi; đủ điều kiện commit và tạo PR staging, merge sau CI PR. Chưa xác minh browser/mobile thực, chưa commit/push/merge."
-**Context**: Build and Test readiness; image local giữ lại, container thử tự xóa. Không tác động container đang chạy. Security/Resiliency retained, PBT disabled.
 
 ---
 
@@ -13367,24 +10796,6 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 
 ---
 
-## Two-tier AI prompt guardrail — browser check and commit
-**Timestamp**: 2026-11-12T01:58:38Z
-**Requested by:** Đào Chí Cường
-**User Input**: "tiếp tục"
-**AI Response**: "Continued the two open items. Ran the branch backend separately on port 8081 with Flyway disabled (shared local DB and another session's stack untouched), frontend dev pointed at it, logged in as the local test teacher. An injection-style request in the AI revise chat returned 400 AI_PROMPT_REJECTED, the chat showed the friendly message and \"Đề chưa thay đổi.\", no draft or AI task row was created, and the log contains only the rule id. No valid request sent (would call the real provider). Temporary container and env file removed. Committed the change on feat/ai-prompt-guardrail; no push or PR."
-**Context**: Construction — Build and Test browser verification; local commit.
-
----
-
-## Two-tier AI prompt guardrail — staging merge, push and PR
-**Timestamp**: 2026-11-12T02:12:20Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Push, PR to staging"
-**AI Response**: "Branch conflicted with origin/staging (16 commits ahead). Merged staging into feat/ai-prompt-guardrail: kept staging's template/reference support for AI revise and wrapped template, materials, instruction and document in untrusted-data tags; added format_template to reserved delimiters and the Tier 1 spoof rule; updated the revision prompt test. Kept both sides of aidlc-state.md and audit.md in chronological order. Full backend verify on the merge: 2,287 tests, 0 failures. Pushed the branch to its own remote ref and opened a PR into staging without Claude attribution; no merge."
-**Context**: Construction — integration with staging and PR publication.
-
----
-
 ## PR77 auto-fix — frontend CI
 **Timestamp**: 2026-11-12T02:34:04Z
 **Requested by:** Đào Chí Cường
@@ -13439,42 +10850,6 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 
 ---
 
-## Requirements Analysis — duyệt yêu cầu nhập đề từ ảnh/PDF
-**Timestamp**: 2026-11-11T07:28:36Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Ghi nhận duyệt inception/requirements/2026-11-11-exam-image-import.md; bỏ qua User Stories. Chuyển sang Workflow Planning."
-**Context**: INCEPTION — Requirements Analysis hoàn tất.
-
----
-
-## Workflow Planning — kế hoạch thực thi nhập đề từ ảnh/PDF
-**Timestamp**: 2026-11-11T07:28:36Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Tạo inception/plans/2026-11-11-exam-image-import-execution-plan.md. Rủi ro Medium. Chạy Functional Design (U07 kèm delta U06/U03), Code Generation, Build and Test; bỏ qua Application Design, Units Generation, NFR Requirements, NFR Design, Infrastructure Design. Thứ tự: gateway U06 → giới hạn tệp U03 và pom (PDFBox, imageio-webp) → backend U07 → frontend → tài liệu. Hỏi: Ready to proceed with this plan?"
-**Context**: INCEPTION — Workflow Planning, chờ duyệt.
-
----
-
-## Workflow Planning — duyệt kế hoạch nhập đề từ ảnh/PDF
-**Timestamp**: 2026-11-11T07:40:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Ghi nhận duyệt execution plan. Chuyển sang Functional Design (U07 kèm delta U06/U03)."
-**Context**: INCEPTION — Workflow Planning hoàn tất; CONSTRUCTION — bắt đầu Functional Design.
-
----
-
-## Functional Design — kế hoạch và câu hỏi U07 nhập đề từ ảnh/PDF
-**Timestamp**: 2026-11-11T07:55:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Approve & Continue"
-**AI Response**: "Đọc AssignmentAiDraftService, AiTaskService/AiTaskJobHandler, IProviderGateway, ProviderCatalog, DocxImporter, PurposePolicy, ContentInspector. Tạo construction/plans/functional-design-plan/2026-11-11-u07-exam-image-import-functional-design-plan.md: dùng lại bản nháp AI với chế độ IMPORT, endpoint multipart mới, IAiImageSource do U06 khai báo và U07 cài, cắt hình trong onReady, apply REPLACE/APPEND. 6 câu hỏi thiết kế (chỗ giữ ảnh trang, định dạng chữ, ảnh xoay, nguồn AI, tiêu đề, PDF có lớp chữ). Chờ trả lời."
-**Context**: CONSTRUCTION — Functional Design U07, chờ trả lời câu hỏi.
-
----
-
 ## Functional Design — trả lời và tài liệu U07 nhập đề từ ảnh/PDF
 **Timestamp**: 2026-11-11T07:57:41Z
 **Requested by:** Đào Chí Cường
@@ -13493,15 +10868,6 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 
 ---
 
-## Code Generation — kế hoạch U07 nhập đề từ ảnh/PDF
-**Timestamp**: 2026-11-11T08:15:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Đọc code-conventions và mã liên quan (AssignmentAuthoringService.saveSkeleton, AiDraftRepository, ScheduledScanRunner/IScheduledScanner, test hiện có). Tạo construction/plans/code-generation-plan/2026-11-11-u07-exam-image-import-code-generation-plan.md: bước 0 nhánh feat/exam-image-import (--no-track từ origin/staging), 22 bước (U03 1–2, U06 3–8, U07 backend 9–17, frontend 18–21, tài liệu 22). Hỏi duyệt kế hoạch."
-**Context**: CONSTRUCTION — Code Generation Part 1, chờ duyệt.
-
----
-
 ## Code Generation — duyệt kế hoạch và tạo worktree
 **Timestamp**: 2026-11-11T08:25:00Z
 **Requested by:** Đào Chí Cường
@@ -13517,24 +10883,6 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **User Input**: "Hãy thử lại"
 **AI Response**: "Tiếp tục Code Generation trong worktree feat/exam-image-import sau khi phiên bị ngắt; trạng thái worktree còn nguyên. Hoàn tất 22/22 bước: U03 (WEBP, ASSIGNMENT_IMPORT, IArtifact.inspect), U06 (ảnh trong prompt, IAiImageSource, vision-models, gateway gửi ảnh cho Gemini/OpenAI/Claude), U07 (migration assignment_import_pages, kiểm và chuẩn hóa trang, prompt/schema, ánh xạ khối, cắt hình, AssignmentImportService, handler, image source, scanner dọn, POST /imports, :apply placement), frontend (ExamImportDialog, mục Nhập đề từ tệp, popup tạo bài nhận ảnh/PDF), tài liệu (tóm tắt mã, api-inventory, baseline, ghi chú điều chỉnh BR-U07). Maven trong Docker: U03 25/25, U06 64/64, U07 79/79, ArchitectureTest 3/3; frontend tsc, eslint sạch, Vitest assignments 61/61. Chưa commit. Trình Code Generation Complete: Request Changes / Continue to Next Stage (Build and Test)."
 **Context**: CONSTRUCTION — Code Generation Part 2, chờ duyệt.
-
----
-
-## Code Generation — duyệt mã nhập đề từ ảnh/PDF
-**Timestamp**: 2026-11-11T13:20:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Ghi nhận duyệt mã. Chuyển sang Build and Test: chạy toàn bộ backend, toàn bộ frontend (Vitest, lint, typecheck, build), thử luồng nhập trên trình duyệt, ghi kết quả."
-**Context**: CONSTRUCTION — Code Generation hoàn tất; bắt đầu Build and Test.
-
----
-
-## Build and Test — kết quả một phần (dừng vì hết hạn mức)
-**Timestamp**: 2026-11-11T13:40:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Frontend: Vitest 968/968 (135 file), tsc, eslint sạch, npm run build thành công. Backend mvn verify (Docker, Testcontainers qua socket): 2141 test, 0 failure, 13 error, BUILD FAILURE. Lỗi gồm JdbcQuizAttemptRepositoryIntegrationTest, JdbcQuestionRepositoryIntegrationTest, JdbcQuizRepositoryIntegrationTest (lỗi khởi tạo 0,003 s, nghi do môi trường Testcontainers) và 3 lỗi trong PlatformWorkflowIntegrationTest; chưa phân tích nguyên nhân. Chưa thử trên trình duyệt, chưa viết tài liệu build-and-test. Dừng vì hết hạn mức sử dụng."
-**Context**: CONSTRUCTION — Build and Test, dở dang.
 
 ---
 
@@ -13575,29 +10923,11 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 
 ---
 
-## Merge staging vào nhánh nhập đề
-**Timestamp**: 2026-11-11T17:00:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Merge và test"
-**AI Response**: "Merge origin/staging (28 commit, PR #70–#75) vào feat/exam-image-import. Xung đột mã ở AiTaskJobHandler.dispatch: giữ tham số images, dùng cipher.decryptConnectionKey(connection) của PR #72. audit.md dựng lại bằng bản staging cộng các mục ghi thêm của nhánh (cả hai bên chỉ ghi thêm, git ghép nhầm dòng Context chung); aidlc-state.md giữ cả mục U07 nhập đề và U12 tự chia nhóm. Backend mvn verify 2264/2264 BUILD SUCCESS; frontend Vitest 998/998, tsc, eslint sạch. Commit merge, chưa push."
-**Context**: CONSTRUCTION — sau Build and Test, đồng bộ staging.
-
----
-
 ## Gỡ xung đột PR #76 với staging
 **Timestamp**: 2026-11-12T02:00:00Z
 **Requested by:** Đào Chí Cường
 **User Input**: "exam-image-import vào staging" / "Gỡ xung đột"
 **AI Response**: "Push feat/exam-image-import, mở PR #76 vào staging (không draft). PR báo xung đột vì staging thêm 4 commit (bảng điểm ma trận, 2cfc9ac5). Merge origin/staging: xung đột chỉ ở audit.md và aidlc-state.md, hai bên đều chỉ chèn thêm ở cùng vị trí; giữ phần chèn của cả hai (audit: staging rồi nhánh này; state: mục nhập đề rồi mục U05/U08/U14, U09). Backend mvn verify 2268/2268 BUILD SUCCESS; frontend Vitest 1003/1003, tsc, eslint sạch. Commit merge và push."
-**Context**: CONSTRUCTION — đồng bộ staging cho PR #76.
-
----
-
-## Gỡ xung đột PR #76 lần 2
-**Timestamp**: 2026-11-12T02:15:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "tiếp tục"
-**AI Response**: "CI của PR #76 xanh (backend, frontend, deploy-script, GitGuardian) nhưng staging lại có commit mới (1a36439b, 456356a5) nên PR xung đột. Merge origin/staging: xung đột ở api/index.ts (giữ importDraft, nhận listAiTemplates(own)), CreateAssignmentDialog.tsx (mặc định EXISTING, giữ templateFiles), AssignmentFormPage.tsx (giữ Nhập đề từ tệp và ExamImportDialog, nhận downloadDocx, nhãn Tải đề (DOCX), AiReviseChat nổi). Sửa test ảnh đề cũ chọn Đề mới trước. Docker Desktop đã tắt giữa chừng, khởi động lại. Xóa .next/types cũ (output build, gitignored) rồi next typegen. Backend mvn verify 2273/2273 BUILD SUCCESS; frontend Vitest 1018/1018, tsc, eslint sạch. Commit merge và push."
 **Context**: CONSTRUCTION — đồng bộ staging cho PR #76.
 
 ---
@@ -13608,51 +10938,6 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **User Input**: "Turn on Auto-fix"
 **AI Response**: "Auto-fix reported PR77 conflicting with staging. Fetched origin/staging and merged it (no rebase/force-push). AiTaskService: kept both the guardrail free-text check and staging's AI image validation/vision connection filter; aidlc-state.md: kept both sections. Added the guardrail argument to staging's new vision-limited AiTaskFlowTest constructor call. New ASSIGNMENT_IMPORT (image/PDF) task carries no user free text, so it needs no guardrail input. Full backend verify on the merge: 2,342 tests, 0 failures. Committed and pushed to the PR branch."
 **Context**: Construction — PR conflict resolution under Auto-fix.
-
----
-
-## PR77 merge into staging
-**Timestamp**: 2026-11-12T02:52:56Z
-**Requested by:** Đào Chí Cường
-**User Input**: "merge PR 77 vào staging"
-**AI Response**: "Waited for CI on head 65fcc764: backend, frontend, deploy-script and GitGuardian passed, images skipped; GitHub reported MERGEABLE/CLEAN. Merged PR77 into staging with a merge commit pinned to that head (merge commit 3fd7bbee, 2026-11-12T02:54:18Z). No main merge or deployment."
-**Context**: Construction — PR publication; U06 prompt guardrail is on staging.
-
----
-
-## Whole-project bug review — 2026-11-12
-**Timestamp**: 2026-11-12T03:00:00Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiểm tra toàn bộ dự án xem còn bug gì không và báo cáo tôi"
-**AI Response**: "Review current checkout 65fcc764 on feat/ai-prompt-guardrail; inspect all module boundaries, run frontend/backend checks, validate actionable defects and report evidence. No application source fixes requested. Existing AI-DLC context reused; design/code generation/deployment stages not applicable to this review. Security/Resiliency retained; property-based extension disabled. gh is unavailable, so requester identity is not inferred from historical entries."
-**Context**: Review and verification; frontend tests 1018 passed; checking stale generated route types and Docker-based backend verification.
-
----
-
-## Whole-project bug review completed — 2026-11-12
-**Timestamp**: 2026-11-12T03:15:07Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiểm tra toàn bộ dự án xem còn bug gì không và báo cáo tôi"
-**AI Response**: "Reported four locally reproduced defects: quiz exit ignores failed answer saves (P1); AI quota fallback causes rollback-only transaction failure; subject quiz resumes an unusable attempt from an archived prior class; aggregate AI timeout interrupts valid fallback chains (P2). Full Maven verify 2342/2342 with no failures/errors/skips and required integration guard pass. Frontend 1018/1018, lint, production build and clean-cache typecheck pass; 14 MCP hook fixtures and deployment ShellCheck pass. Stale generated Next route types were isolated into .tmp. Report at construction/build-and-test/2026-11-12-project-bug-review.md. No application source fixes, live business writes, provider calls, commit/push/deploy or subagents. Existing concurrent PR77 audit entry preserved."
-**Context**: Review completed, defects remain unfixed. Security/Resiliency retained; PBT disabled. Browser/live provider/production/load testing, Python MCP fixture (Python unavailable) and deploy shell harness remain unverified.
-
----
-
-## Codebase and architecture cleanliness review — 2026-11-12
-**Timestamp**: 2026-11-12T08:00:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra codebase và architecture dự án xem đã clean chưa cho tôi, sau đó gửi lại tôi báo cáo"
-**AI Response**: "Review-only: read shared code/persistence conventions; check backend module boundaries, layering, JPA/JDBC gap, naming conventions, contract stubs, file sizes, frontend feature boundaries and repo hygiene; run frontend typecheck/lint and backend test-compile via Maven Docker image. No application source changes."
-**Context**: Review; design/code generation/deployment stages not applicable.
-
----
-
-## Codebase and architecture cleanliness review completed — 2026-11-12
-**Timestamp**: 2026-11-12T08:30:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra codebase và architecture dự án xem đã clean chưa cho tôi, sau đó gửi lại tôi báo cáo"
-**AI Response**: "Overall mostly clean, not fully. Frontend typecheck/lint and backend test-compile (Maven Docker, offline) pass. Findings: ARCH-01 contract stubs enabled by default with allow-all permission stubs (P2 fail-open risk); ARCH-02 groups<->groupdocs cycle via internals; ARCH-03 remaining JPA in U04/U13 module/U14 plus Hibernate/JPA exceptions leaking to service/controller; ARCH-04 backup->files and files->settings internal imports; naming debt (Jdbc-prefixed repositories, generic dependency names, SQL in McpWriteRequestService); oversized files (DocumentEditor.tsx 1968 lines); vitest cache committed under backend/node_modules. Report at construction/build-and-test/2026-11-12-codebase-architecture-review.md. No application source changes, commits or subagents."
-**Context**: Review completed; findings unfixed. Full test suite not rerun; runtime stub activation not verified.
 
 ---
 
@@ -13677,7 +10962,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Design Research - Login Logo Options v2
 **Timestamp**: 2026-11-12T00:00:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "tôi không ưng phương án nào, trang web của tôi đối tượng nhắm tới là sinh viên ngành software engineer của trường đại học fpt, đặc biệt dành cho môn software design, chú trọng vào tính năng có thể chấm diagram"
+**User Input**: "tôi không ưng phương án nào, trang web của tôi đối tượng nhắm tới là sinh viên ngành Software Engineering của trường Đại học FPT, đặc biệt dành cho môn Software Design, chú trọng vào tính năng có thể chấm diagram"
 **AI Response**: "Drafted 4 new logo options themed on Software Design and diagram grading in a scratchpad comparison page: A UML class box + orange grading tick (recommended), B UML generalization tree with one highlighted subclass, C UML composition diamond with tick, D letter D with diagram-editor selection handles. Rendered at 64/28/16px on light and dark. Deliberately did not reuse FPT University branding. No application source changes; temporary launch.json preview entry added and removed."
 **Context**: Design proposal only, awaiting user choice.
 
@@ -13686,7 +10971,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Design Research - ALAP Logo
 **Timestamp**: 2026-11-12T00:00:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "Tên dự án là ALAP, có cách nào làm logo chi tiết và đẹp/có liên quan hơn không. Nếu kết nối bạn với higgfield liệu bạn có thể làm lại giao diện đẹp hơn không"
+**User Input**: "Tên dự án là ALAP, có cách nào làm logo chi tiết và đẹp/có liên quan hơn không. Nếu kết nối bạn với Higgsfield liệu bạn có thể làm lại giao diện đẹp hơn không"
 **AI Response**: "Searched the connector registry: no Higgsfield connector available. Designed an ALAP identity in a scratchpad page: logomark where the letter A is a UML generalization arrowhead whose legs connect to two subclass boxes (one orange with grading tick) on a dot-grid gradient tile; simplified A mark for favicon; wordmark where A = generalization triangle, L = orthogonal connector with arrowhead, P = class box with orange header. Rendered on light and dark at 128/64/32/16px. Explained Higgsfield fits raster illustrations, not logo/UI code. No application source changes; temporary launch.json preview entry added and removed."
 **Context**: Design proposal only, awaiting user feedback.
 
@@ -13750,7 +11035,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Construction - AI Grading Evaluation Live Runs
 **Timestamp**: 2026-11-13T07:30:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "Run with Claude" / "tôi đang dùng key gemini chứ không phải claude" / "mở lại tab terminal" / "Done running"
+**User Input**: "Run with Claude" / "tôi đang dùng key Gemini chứ không phải Claude" / "mở lại tab terminal" / "Done running"
 **AI Response**: "First live run sent a Gemini key to Anthropic: 24/24 HTTP 401; harness then fixed to report 'no metrics measured', stop on auth rejection and check key prefix. Added Gemini runner script (key entered hidden in terminal; model list check first). Gemini 2.5 Flash run: 9/24 valid, composite 9.35/10, kappa 0.59 and citation 67.7% below threshold, off-topic/injection unmeasured. Findings recorded in construction/build-and-test/2026-11-13-ai-grading-eval-gemini-results.md: F1 MAX_TOKENS on 12 runs (thinking tokens share maxOutputTokens; no thinkingConfig), F2 DiagramXml.clean strips <<include>>/<<extend>> labels. Harness: 503 no longer stops the run, recordings keep httpStatus, replay counts runs per case; GradingEvalHarnessTest 9/9 pass. Warned user that a key typed at the PowerShell prompt is in terminal/PSReadLine history and should be rotated. No production code changed."
 **Context**: Construction - AI evaluation test tooling, live verification.
 
@@ -13777,7 +11062,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Whole-project code, architecture and UX review — 2026-11-13
 **Timestamp**: 2026-11-13T14:00:00Z
 **Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiểm tra toàn bộ dự án xem code và architecture đã clean chưa, còn bug nào không, ui-ux đã tối ưu chưa và gửi lại tôi báo cáo"
+**User Input**: "kiểm tra toàn bộ dự án xem code và architecture đã clean chưa, còn bug nào không, UI/UX đã tối ưu chưa và gửi lại tôi báo cáo"
 **AI Response**: "Review current dirty checkout af245ac3; reuse AI-DLC context, verify prior findings against current source, run existing checks, inspect UI and produce a Vietnamese evidence-based report. Review/report only; implementation/design stages not applicable. Existing Security/Resiliency scope retained; PBT disabled. gh is unavailable, so current requester display name cannot be verified."
 **Context**: Authorized whole-project review; preserve existing changes and concurrent work.
 
@@ -13834,28 +11119,10 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 **User Input**: "chạy xong"
 **AI Response**: "Full Gemini rerun (gemini-2.5-flash) after F6/F7: 11/24 valid, 13 runs HTTP 429 (daily quota exhausted), 0 invalid outputs (F6 fixed), kappa 0.89, MAE 1.5%, no fabricated credit, composite 9.06/10. F7 not verified: all 3 off-topic runs hit 429. Case 04 run 1 gave full d-dashed credit for a solid line. Citation rate 14% (evidenceBlockId null on 123/143 items). Results doc section 8 and plan updated. Nothing committed."
 **Context**: Construction - AI evaluation live verification.
-## Merge PR #76 vào staging
-**Timestamp**: 2026-11-12T02:33:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem đã có thể merge vào main chưa cho tôi" / "Merge #76"
-**AI Response**: "Kiểm tra: PR #76 vào staging MERGEABLE CLEAN, CI xanh (backend, frontend, deploy-script, GitGuardian), chưa có review; không đọc được quy tắc bảo vệ nhánh (404). Lên main phải qua PR staging → main, kéo theo 15 commit khác của staging; merge thử staging vào main không xung đột. Theo yêu cầu, merge PR #76 vào staging bằng merge commit a9ae40a9 lúc 2026-11-12T02:32:46Z. Chưa thử lại trên trình duyệt sau các lần merge staging; chưa mở PR staging → main."
-**Context**: OPERATIONS — đưa tính năng nhập đề vào staging.
-
----
-
-## Merge PR #78 staging vào main
-**Timestamp**: 2026-11-12T02:50:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Mở PR lên main" / "kiểm tra CI của PR #78 xong chưa, xem còn xung đột gì không, kiểm tra xem có thể merge vào main chưa" / "Merge #78"
-**AI Response**: "Mở PR #78 staging → main (release: nhập đề từ ảnh/PDF, tự chia nhóm, bảng điểm ma trận, không gian làm bài nhóm, trợ lý AI nổi, xuất DOCX). CI xanh (backend, frontend, deploy-script, GitGuardian), MERGEABLE CLEAN, chưa có review. Báo người dùng: merge vào main build image và VPS tự deploy production, chạy 2 migration mới. Theo yêu cầu, merge PR #78 bằng merge commit a85e3f19 lúc 2026-11-12T02:49:21Z; theo dõi CI run 43144023309 trên main."
-**Context**: OPERATIONS — phát hành lên main.
-
----
-
 ## Kiểm tra deploy production a85e3f19
 **Timestamp**: 2026-11-12T03:06:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "ssh và kiểm tra xem đã deploy thành công hay chưa cho tôi"
+**User Input**: "SSH và kiểm tra xem đã deploy thành công hay chưa cho tôi"
 **AI Response**: "SSH vào VPS (alapedu.online) bằng khóa alap_vps_deploy, chỉ đọc. platform-deploy: sao lưu database predeploy-20261112T030106Z-8923d45d509b.dump, deploy a85e3f19 lúc 10:01 giờ VN, báo 'xong, mọi dịch vụ khỏe'; bản quay về được 8923d45d. Backend, worker, frontend chạy image a85e3f19, đều healthy. Flyway áp dụng 2 migration (20261111.1300 create assignment import pages, 20261111.1800 group self formation). Không có dòng ERROR/Exception trong log backend và worker từ lúc khởi động. https://alapedu.online/ trả 200. Chưa thử luồng nhập đề trên production."
 **Context**: OPERATIONS — xác nhận deploy production.
 
@@ -13879,15 +11146,6 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 
 ---
 
-## Commit và mở PR kết quả thử trên trình duyệt
-**Timestamp**: 2026-11-12T06:28:50Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Commit and open PR"
-**AI Response**: "Commit kết quả thử bổ sung và audit trên nhánh docs/self-grouping-browser-check, push và mở PR vào staging."
-**Context**: CONSTRUCTION — Build and Test U12, công bố kết quả.
-
----
-
 ## Rà soát danh sách bug nhóm và tạo đề AI
 **Timestamp**: 2026-11-13T05:10:00Z
 **Requested by:** Quang Hung
@@ -13900,7 +11158,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Kiểm tra trực tiếp UI nhóm, thêm sinh viên và đề mẫu
 **Timestamp**: 2026-11-13T05:20:34Z
 **Requested by:** Quang Hung
-**User Input**: "giảng viên chua chỉnh đc trưởng nhóm [Image #1]  b có thể đăng nhập vào hệ thống và hcekc lại tất cả lỗi kia giúp tôi"
+**User Input**: "giảng viên chưa chỉnh được trưởng nhóm [Image #1], bạn có thể đăng nhập vào hệ thống và check lại tất cả lỗi kia giúp tôi"
 **AI Response**: "Đăng nhập local bằng tài khoản teacher và manager đã cung cấp, qua hai profile riêng. Teacher SWD392/SE1933 đổi trưởng nhóm từ U05 Mock Student sang JS SE Student 2, lưu thành công, reload vẫn giữ; sau đó đổi lại U05 Mock Student và vào lại trang xác nhận khôi phục. Không tái hiện lỗi đổi trưởng nhóm trên local này. Popup thành viên không có chọn tất cả. Manager thêm sinh viên chỉ có combobox chọn một người; không thêm/gỡ sinh viên. Popup Tạo từ AI: mẫu nhận .docx, tham khảo .pdf,.txt,.docx; không gọi AI hay upload. Manager qua Môn được phân công > SWD392 > Bài tập mở Đề mẫu bài tập có Tạo đề mẫu. Teacher vào tài liệu nhóm thấy Nhả mục của JS SE Student 2 và mở được xác nhận; đóng mà không nhả, tránh bỏ bản nháp. Hộp xác nhận chỉ có tiêu đề và nút, chưa mô tả hậu quả. Định dạng AI xác nhận qua schema ở lượt trước, chưa chạy model để tái hiện. Hỏi môi trường xảy ra lỗi trưởng nhóm qua câu hỏi async, chưa nhận trả lời. Không sửa source, commit/push/deploy. Đổi trưởng nhóm phát sinh lịch sử/audit dù đã phục hồi người cũ."
 **Context**: Browser acceptance local; không kết luận cho bản deploy hoặc mọi lớp; còn chờ xác định môi trường của lỗi trưởng nhóm.
 
@@ -13918,7 +11176,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Lập kế hoạch đính kèm trong chat AI
 **Timestamp**: 2026-11-13T06:08:00Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi lập plan trển khai"
+**User Input**: "giúp tôi lập plan triển khai"
 **AI Response**: "Dùng writing-plans và quy trình AI-DLC, đối chiếu code hiện tại và lưu kế hoạch 2026-11-13-ai-chat-attachments.md. Giai đoạn 1: menu ba mục, nguồn có sẵn tách tải từ máy, DOCX chuyển vai trò, Ctrl+V ảnh, kéo thả, giữ nội dung khi gửi lỗi. Giai đoạn 2: thẻ đọc link HTTPS công khai, backend tải có giới hạn/chống SSRF rồi lưu TXT private qua FileRef hiện có; chỉ báo đã đọc khi thật sự có nội dung. Có file map, task/test, giới hạn và điều kiện giao từng giai đoạn. Chưa triển khai hoặc commit/push."
 **Context**: Planning only; preserve all existing uncommitted work; native sequential execution if later authorized, no subagents.
 
@@ -13928,7 +11186,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Triển khai đính kèm tệp trong chat AI
 **Timestamp**: 2026-11-13T06:31:36Z
 **Requested by:** Quang Hung
-**User Input**: "thôi hiện tại chauw cần đọc link đâu cứ làm đọc file thôi, giúp tôi trienrek hai"
+**User Input**: "thôi hiện tại chưa cần đọc link đâu, cứ làm đọc file thôi, giúp tôi triển khai"
 **AI Response**: "Đã triển khai phần tệp, bỏ toàn bộ đọc link khỏi scope. Menu ba mục, paste ảnh/kéo thả, DOCX chuyển vai trò có xác nhận, hàng đợi chung và giữ text/tệp khi lỗi; requestRef chống retry trùng, phục hồi có chủ động. 1037 frontend test/150 file, lint, TypeScript và build riêng qua. UI DOCX/TXT và đổi vai trò qua, paste PNG có ảnh blob thật nhưng backend runtime cũ vẫn từ chối PNG, cần nạp bản sửa trước và reload trang. Chưa gọi AI, thay nội dung đề, commit/push/deploy. Đã gỡ tệp thử khỏi composer; ba upload fixture nhỏ dùng vòng đời tệp hiện có. Cảnh báo detector thiếu src của SourceImagePreview là false positive, đã miễn hẹp theo file sau khi kiểm blob tải được và lifecycle test."
 **Context**: CONSTRUCTION, phase 1 approved; no URL backend endpoints or network reader added; no subagents; evidence 2026-11-13-ai-chat-files.md.
 
@@ -13939,7 +11197,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Khởi động lại backend và kiểm tra UI tệp AI
 **Timestamp**: 2026-11-13T06:56:13Z
 **Requested by:** Quang Hung
-**User Input**: "Giúp tôi khởi động lại và test kại ui"
+**User Input**: "Giúp tôi khởi động lại và test lại UI"
 **AI Response**: "Tiếp tục kiểm thử phần tệp đã duyệt. Đã xác minh backend Java local ở cổng 8080, gửi Ctrl+C vào đúng terminal; dừng container worker cũ thuộc infra dự án để không nhận job bằng mã cũ. Chạy lại scripts/run-backend.bat trong terminal hiện có với profiles local,worker; đang build để nạp bản sửa. Tiếp theo reload trang và kiểm UI ảnh/tệp, không commit/push."
 **Context**: BUILD AND TEST follow-up, explicit new restart authorization; Orca CLI used for terminal/browser, no subagents.
 
@@ -13950,7 +11208,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Kiểm tra AI provider thực tế qua UI
 **Timestamp**: 2026-11-13T07:09:22Z
 **Requested by:** Quang Hung
-**User Input**: "Gọi ai thực tế đi"
+**User Input**: "Gọi AI thực tế đi"
 **AI Response**: "Tạo riêng đề nháp QA f0643cc5-f9a5-4947-8eea-5056564bffa8 trong lớp thử của giảng viên, chuẩn bị ảnh và TXT không nhạy cảm chứa mã kiểm tra riêng không có trong lời nhắn. Sẽ gửi qua chat UI để kiểm đường upload, vision, đọc tệp, worker/provider và áp dụng kết quả; không công bố đề."
 **Context**: Explicit live-provider call authorization; no source changes or subagents.
 
@@ -13958,19 +11216,10 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 
 ---
 
-## Local commit and staging integration check
-**Timestamp**: 2026-11-13T07:24:33Z
-**Requested by:** Quang Hung
-**User Input**: "Giúp tôi commit, check mêrg staging vào nhánh hỉện tại"
-**AI Response**: "Đã đối chiếu toàn bộ WIP, chạy lại 217 test frontend/31 file và 131 test backend liên quan, đều qua. Tách thành commit quản lý sinh viên/nhóm, commit nguồn ảnh/đính kèm và định dạng AI, cùng commit tài liệu kế hoạch/kiểm thử. Fetch origin/staging và merge vào fix/u05-u09-u15 trả Already up to date; không có conflict hoặc commit staging mới cần nhập. Giữ nguyên ghi nhận AI thiếu rubric ở lượt đầu và bold chưa đạt. Chưa push, tạo PR hoặc deploy."
-**Context**: User-authorized local integration; no source changes or subagents. Evidence .tmp/ai-authoring-precommit.log and .tmp/ai-authoring-backend-precommit.log. Existing full verification and live provider evidence retained.
-
----
-
 ## Push branch and open staging PR
 **Timestamp**: 2026-11-13T07:37:47Z
 **Requested by:** Quang Hung
-**User Input**: "Giúo tôi push và tạo pr trc khi merge staging"
+**User Input**: "Giúp tôi push và tạo PR trước khi merge staging"
 **AI Response**: "Tiếp nhận yêu cầu push fix/u05-u09-u15 và tạo PR nhắm staging để review trước khi merge. Working tree sạch, fetch xác nhận staging không có commit mới cần nhập; remote feature branch vẫn ở base và chưa có PR mở. Dùng skill PR để mô tả scope, test và vấn đề rubric/formatting còn tồn tại. Đưa audit này vào commit tài liệu trước khi push; không tự merge, bật auto-merge hoặc deploy."
 **Context**: Explicit push/PR authorization only. Existing verified source commits unchanged; no new test run needed for audit-only delta. Final PR URL and status reported to user after GitHub confirmation.
 
@@ -13999,7 +11248,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Commit and open staging PR for assignment visibility
 **Timestamp**: 2026-11-13T14:42:00Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi commit và tạo pr lên staging"
+**User Input**: "giúp tôi commit và tạo PR lên staging"
 **AI Response**: "Kiểm tra đúng chín file sửa/tài liệu, fetch origin xác nhận nhánh hiện tại trùng base staging và chưa có PR mở. Chạy lại test assignmentwork trước commit; đưa phần sửa bài đóng/chưa nộp, regression và tài liệu vào một commit rõ nguyên nhân. Push fix/u05-u09-u15 và tạo PR nhắm staging bằng GitHub CLI do connector trước đó bị từ chối quyền ghi. Mô tả PR nêu full frontend 1047 test đã qua, lint/typecheck riêng, giới hạn cache Next cũ và chưa xác minh record production. Không merge hoặc deploy trong yêu cầu này."
 **Context**: Explicit commit/push/PR authorization for the completed visibility repair; supplied Ponytail remains active, PR skill applied. No product source changes in this delivery step. Final PR URL/status to be verified and reported to user.
 
@@ -14008,7 +11257,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Member contribution levels — design review
 **Timestamp**: 2026-11-13T22:12:11+07:00
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi có thể bổ sung  phần này ko, nhớ ghi rõ cách chấm vào"
+**User Input**: "giúp tôi có thể bổ sung phần này không, nhớ ghi rõ cách chấm vào"
 **AI Response**: "Kiểm tra MemberContributionPanel, API/service/model và repository JSONB hiện có. Soạn đề xuất lưu 5 mức tùy chọn cùng điểm/lý do, hướng dẫn chấm theo rubric và đóng góp/vấn đáp, không tự quy đổi mức thành điểm; giữ quyền, version, công bố và reset khi nộp lại. Chuẩn bị tài liệu cụ thể để duyệt theo CLAUDE.md và brainstorming; chưa sửa source."
 **Context**: Requirements/design proposal at inception/requirements/2026-11-13-member-contribution-levels.md. Existing reverse engineering reused; workspace initially clean. No subagents, tests, commit/push or live writes. Awaiting approval of this new feature scope, not re-requesting prior authorizations.
 
@@ -14028,7 +11277,7 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 ## Restart FE/BE in existing Orca terminal tabs
 **Timestamp**: 2026-11-13T22:37:58.4945460+07:00
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi khởi động lại 2 tab fe be terminal orca"
+**User Input**: "giúp tôi khởi động lại 2 tab FE, BE terminal Orca"
 **AI Response**: "Dùng skill orca-cli, xác nhận hai terminal đúng workspace đều đã dừng ở PowerShell prompt và cổng 3000/8080 trống. Khởi chạy FE bằng npm --prefix frontend run dev trên cổng 3000 và BE bằng scripts/run-backend.bat (clean compile, profiles local,worker) trong chính hai tab có sẵn. Xác nhận worker Docker thuộc dự án rồi dừng để tránh chạy mã cũ song song với worker local. FE /login HTTP200, BE /health HTTP200 status UP; startup hoàn tất."
 **Context**: Explicit restart authorization. Preserved all feature WIP. No new tabs, source/config changes, AI calls, manual grade writes, commit/push/deploy. Initial health probes used protected /actuator/health and returned401; corrected to configured /health and verified UP. User will test UI.
 
@@ -14045,20 +11294,10 @@ Hãy đọc cấu trúc thư mục hiện tại của dự án, đề xuất v�
 
 **Result**: Implemented the approved group grading side-panel layout with an optional shared editor slot, rubric/member tabs, one-member selector, author/section jump links and responsive modeless drawer. Retained drafts across member/tab/drawer changes and other-member saves; rebases only unchanged server values, preserves conflicting drafts/version for server rejection. Added unsaved navigation/unload and publish guards. RED3/44controls; full frontend1056/151files and final50 scoped tests pass, lint/isolated TypeScript pass. Initial jsdom scroll API error and one new fixture type mismatch corrected and rerun; normal stale Next validators left unchanged. Live local teacher UI1440/390 verified correct author selection, both navigation directions/page-step mode, draft switching and drawer Escape/reopen. Removed unsaved QA note, restored554x930 viewport; no real score changes, publish, AI requests, backend restart, production build, commit/push/deploy. Screenshots .tmp/group-grading-desktop.png and .tmp/group-grading-mobile.png. Evidence construction/build-and-test/2026-11-13-group-grading-side-panel.md.
 
-## Commit member assessments and group grading UI
-**Timestamp**: 2026-11-13T23:23:47.7955058+07:00
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit rõ ràng"
-**AI Response**: "Kiểm tra đúng nhánh fix/u05-u09-u15, staged index ban đầu trống, giữ toàn bộ WIP đã triển khai. Chia thành commit dữ liệu đánh giá năm mức/API/quyền xem, commit UI chấm nhóm cạnh bài và bảo vệ bản nháp, cùng commit tài liệu/kế hoạch/kết quả. Chạy lại test grading backend và frontend/shared document/caller trước commit, kiểm whitespace và loại trừ log/ảnh .tmp. Chỉ commit local, không push/merge/deploy."
-**Context**: Explicit local commit authorization for the completed five-level member assessment and approved group-side-panel UI work. Existing production build/type-cache limitations remain as recorded in evidence; no new product changes or live grade writes in this delivery step.
-
----
-
-**Fresh precommit verification**: Backend55 tests passed with no failures/errors/skips; frontend grading/shared document and submission-history caller276 tests/26 files passed, exit0. Logs .tmp/grading-assessments-precommit-backend.log and .tmp/grading-assessments-precommit-frontend.log. Whitespace/index checks passed. Created separate local data/API and UI feature commits; recording plans, guidance, UI acceptance and delivery evidence in a documentation commit. No product changes during delivery, no push/merge/deploy or production build. Temporary logs, commit-message files and screenshots remain ignored under .tmp.
 ## Requirements Analysis — đề xuất mã số sinh viên
 **Timestamp**: 2026-11-13T14:57:34Z
 **Requested by:** Hải Nam
-**User Input**: "tôi muốn thêm trường mã số sinh viên cho roll student. Hãy đề xuất phương hướng sửa các chức năng liên quan cho tôi, có cần thêm bớt chức năng gì không"
+**User Input**: "tôi muốn thêm trường mã số sinh viên cho role student. Hãy đề xuất phương hướng sửa các chức năng liên quan cho tôi, có cần thêm bớt chức năng gì không"
 **AI Response**: "Rà U01 identity (accounts, AccountImportService, AccountAdminService, ProfileService, AccountRepository search, AccountContact/IAccountLookup) và các nơi dùng thông tin sinh viên (U04 ghi danh theo danh sách/ứng viên, U09 bảng điểm và xuất XLSX/CSV, U12 nhóm, chấm bài, lượt làm quiz). Đưa đề xuất phạm vi: cột student_code nullable + unique, bắt buộc với STUDENT khi tạo/nhập, Admin sửa được còn sinh viên chỉ xem, thêm vào AccountContact và các DTO Person, tìm kiếm và ghi danh theo mã, cột mã trong bảng điểm/export; kèm các câu hỏi cần người dùng chốt. Chưa sửa mã nguồn."
 **Context**: Requirements Analysis (chưa duyệt). Chỉ đề xuất, chưa tạo tài liệu yêu cầu hay sửa mã. Không lấy được tên hiển thị GitHub (máy không có gh CLI).
 
@@ -14097,15 +11336,6 @@ tôi đã trả lời các câu hỏi, câu trả lời nằm ở sau câu hỏi
 
 ---
 
-## Requirements Analysis — người dùng duyệt
-**Timestamp**: 2026-11-13T15:14:41Z
-**Requested by:** Hải Nam
-**User Input**: "Duyệt, tiếp tục"
-**AI Response**: "Ghi nhận duyệt yêu cầu SC-01…11 và giả định G2–G4; bỏ qua User Stories. Sửa nhãn unit trong tài liệu cho đúng danh mục (ghi danh là U05, lượt làm quiz là U11). Chuyển sang Workflow Planning."
-**Context**: Requirements Analysis hoàn tất; bắt đầu Workflow Planning.
-
----
-
 ## Workflow Planning — xin duyệt kế hoạch mã số sinh viên
 **Timestamp**: 2026-11-13T15:16:00Z
 **Requested by:** Hải Nam
@@ -14130,16 +11360,6 @@ tôi đã trả lời các câu hỏi, câu trả lời nằm ở sau câu hỏi
 **User Input**: "Nhập sai mã: Sửa khi chưa kích hoạt (Recommended). Bỏ thêm: Lọc 'chưa có MSSV'"
 **AI Response**: "Sửa yêu cầu: SC-03 bỏ chức năng đổi MSSV, Admin chỉ gán mã cho tài khoản chưa có mã hoặc sửa khi tài khoản còn PENDING, ngoài ra trả STUDENT_CODE_LOCKED; SC-07 thành gán mã hàng loạt, bỏ CHANGED và hoán đổi mã, thêm lỗi STUDENT_CODE_ALREADY_SET; SC-08 bỏ bộ lọc chưa có MSSV, giữ tìm theo MSSV và cột. Giữ ghi danh bằng MSSV và tìm bạn mời nhóm theo MSSV. Cập nhật execution plan, tệp câu hỏi (Q6, Q7), aidlc-state. Trình lại kế hoạch để duyệt."
 **Context**: Workflow Planning — thu hẹp phạm vi, chờ duyệt lại.
-
----
-
-## Workflow Planning — người dùng duyệt
-**Timestamp**: 2026-11-13T15:27:22Z
-**Requested by:** Hải Nam
-**AI Prompt**: "Ready to proceed with this plan?"
-**User Input**: "Duyệt, tiếp tục"
-**AI Response**: "Ghi nhận duyệt execution plan đã thu hẹp. Bắt đầu Functional Design U01 kèm U05/U09/U11/U12: tạo kế hoạch functional design có câu hỏi."
-**Context**: Workflow Planning hoàn tất (Approved); bắt đầu Functional Design.
 
 ---
 
@@ -14203,15 +11423,6 @@ tôi đã trả lời các câu hỏi, câu trả lời nằm ở sau câu hỏi
 **User Input**: "(Không có input mới — AI trình lại functional design)"
 **AI Response**: "Đã cập nhật SC-01, SC-04, NFR-SC-04, Q4, execution plan; BR-U01-102 (giữ check role ở DB), BR-U01-107 (chặn STUDENT_ROLE_CHANGE_NOT_ALLOWED), BR-U01-115, bỏ BR-U01-116; domain-entities, F11, popup Đổi vai trò, ghi chú và SECURITY-11 trong kế hoạch. Trình duyệt lại; nêu hệ quả tài khoản tạo nhầm role không sửa được."
 **Context**: Functional Design — chờ duyệt lại.
-
----
-
-## Functional Design U01 — người dùng duyệt
-**Timestamp**: 2026-11-13T15:53:39Z
-**Requested by:** Hải Nam
-**User Input**: "Duyệt, tiếp tục"
-**AI Response**: "Ghi nhận duyệt functional design MSSV (BR-U01-100…115, BR-U05-56…60, BR-U09-73…75, BR-U11-42, BR-U12-97…98). Bắt đầu Code Generation Part 1: lập kế hoạch."
-**Context**: Functional Design hoàn tất; sang Code Generation.
 
 ---
 
@@ -14296,15 +11507,6 @@ tôi đã trả lời các câu hỏi, câu trả lời nằm ở sau câu hỏi
 
 ---
 
-## Build and Test — thử nốt các màn chưa thử
-**Timestamp**: 2026-11-14T10:05:48Z
-**Requested by:** Hải Nam
-**User Input**: "thử nốt các phần chưa thử giúp tôi được không?"
-**AI Response**: "Dựng thêm bài tập, bài nộp, quiz, nhóm trên stack studentcode rồi thử trình duyệt bảng điểm, chấm bài, chi tiết bài nộp, lượt làm quiz, các màn nhóm, màn hẹp và chế độ tối."
-**Context**: Build and Test — bổ sung kiểm thử trình duyệt.
-
----
-
 ## Build and Test — đã thử nốt các màn còn lại
 **Timestamp**: 2026-11-14T10:42:58Z
 **Requested by:** Hải Nam
@@ -14314,20 +11516,10 @@ tôi đã trả lời các câu hỏi, câu trả lời nằm ở sau câu hỏi
 
 ---
 
-## Build and Test — người dùng duyệt
-**Timestamp**: 2026-11-14T10:43:59Z
-**Requested by:** Hải Nam
-**AI Prompt**: "Build and test instructions complete. Ready to proceed to Operations stage?"
-**User Input**: "Duyệt"
-**AI Response**: "Ghi nhận duyệt Build and Test. Operations là giai đoạn giữ chỗ, không có bước nào; workflow MSSV hoàn tất. Chưa commit, push hay deploy; stack studentcode vẫn chạy."
-**Context**: Build and Test hoàn tất; Operations placeholder.
-
----
-
 ## Giao nhánh MSSV — commit, push, merge staging, e2e, PR
 **Timestamp**: 2026-11-14T10:45:53Z
 **Requested by:** Hải Nam
-**User Input**: "commit và push giúp tôi, sau đó merge nhánh staging vào branch hiện tại, check e2e rồi tạo pr vào staging"
+**User Input**: "commit và push giúp tôi, sau đó merge nhánh staging vào branch hiện tại, check e2e rồi tạo PR vào staging"
 **AI Response**: "Tách 2 commit (mã + test MSSV, tài liệu AIDLC), push fix/student-code, fetch và merge origin/staging, chạy lại mvn verify, Vitest/lint/build và e2e trên stack studentcode dựng lại từ mã sau merge, rồi tạo PR vào staging. Không tự merge PR."
 **Context**: Giao nhánh theo yêu cầu người dùng.
 
@@ -14393,30 +11585,12 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 
 ---
 
-## Học kỳ lớp — duyệt yêu cầu
-**Timestamp**: 2026-11-14T15:48:47Z
-**Requested by:** Hải Nam
-**User Input**: "Approve & Continue"
-**AI Response**: "Ghi nhận duyệt CT-01…09 và G1–G4; bỏ qua User Stories. Chuyển sang Workflow Planning: viết aidlc-docs/inception/plans/2026-11-14-class-term-execution-plan.md và trình duyệt."
-**Context**: Requirements Analysis hoàn tất → Workflow Planning.
-
----
-
 ## Học kỳ lớp — trình duyệt kế hoạch thực hiện
 **Timestamp**: 2026-11-14T15:48:47Z
 **Requested by:** Hải Nam
 **User Input**: "(chưa có — lời nhắc duyệt)"
 **AI Response**: "Workflow Planning Complete. Trình duyệt aidlc-docs/inception/plans/2026-11-14-class-term-execution-plan.md: chạy Functional Design U05 kèm U04, Code Generation, Build and Test; bỏ qua Reverse Engineering, User Stories, Application Design, Units Generation, NFR Requirements/Design, Infrastructure Design. Rủi ro trung bình (migration backfill + đổi ràng buộc duy nhất, API tạo/sửa lớp bắt buộc startsOn). Lựa chọn: Request Changes, Add Skipped Stages, Approve & Continue sang Functional Design."
 **Context**: Workflow Planning — lời nhắc duyệt.
-
----
-
-## Học kỳ lớp — duyệt kế hoạch thực hiện
-**Timestamp**: 2026-11-14T15:51:26Z
-**Requested by:** Hải Nam
-**User Input**: "Approve & Continue"
-**AI Response**: "Ghi nhận duyệt execution plan. Bắt đầu Functional Design U05 kèm U04: đọc tài liệu functional design U05/U04, lập kế hoạch có câu hỏi."
-**Context**: Workflow Planning hoàn tất → Functional Design.
 
 ---
 
@@ -14444,15 +11618,6 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **User Input**: "(chưa có — lời nhắc duyệt)"
 **AI Response**: "Functional Design Complete - U05 kèm U04. Cập nhật U05 domain-entities (ClassTermPolicy, ràng buộc dữ liệu, ClassRef.term), business-rules (sửa BR-U05-11/13, thêm BR-U05-61…72), business-logic-model (F17–F20), frontend-components (TermFilter, ClassFormDialog, ClassInfoForm, ClassLabel, bộ lọc ở ClassListPage/ClassDashboardPage, hộp chọn lớp nguồn); U04 domain-entities/business-rules/frontend-components (SubjectClassSummary.term, cột Học kỳ); U07 CopySource.term. Security/Resiliency tuân thủ hoặc N/A; PBT tắt. Lựa chọn: Request Changes hoặc Continue to Next Stage (Code Generation)."
 **Context**: Functional Design U05 kèm U04 — lời nhắc duyệt.
-
----
-
-## Học kỳ lớp — duyệt Functional Design
-**Timestamp**: 2026-11-14T16:00:54Z
-**Requested by:** Hải Nam
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Ghi nhận duyệt Functional Design U05 kèm U04. Bắt đầu Code Generation Part 1: đọc code-generation.md, code-conventions.md, lập kế hoạch sinh code."
-**Context**: Functional Design hoàn tất → Code Generation.
 
 ---
 
@@ -14489,15 +11654,6 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **User Input**: "(chưa có — lời nhắc duyệt)"
 **AI Response**: "Xong 20/20 bước kế hoạch. Backend: ClassTermPolicy, CourseClass.startsOn và term() suy ra, migration V20261114_1100 (starts_on, term generated, khóa duy nhất theo môn–học kỳ–mã), repository/service/controller/MCP lọc theo term, contract và U07/U08/U14 có học kỳ. Frontend: term.ts, TermFilter, ClassLabel có học kỳ, form tạo/sửa lớp có Ngày bắt đầu và xem trước học kỳ, lọc học kỳ ở danh sách lớp, cột Học kỳ ở bảng lớp của môn. E2E script gửi startsOn. Tóm tắt: aidlc-docs/construction/u05-class-enrollment/code/2026-11-14-class-term-summary.md. Kiểm tra: mvn -o test 2426 test qua, 0 bỏ qua; tsc, eslint sạch; Vitest 540 test qua (timeout 60 giây). Khác thiết kế: học kỳ đặt cạnh mã lớp thay vì nối vào tiêu đề; CreateQuizDialog chưa hiện học kỳ vì không có thông tin lớp nguồn. Chưa chạy e2e, chưa kiểm trên trình duyệt, chưa commit. Chờ duyệt: Request Changes hoặc Continue to Next Stage (Build and Test)."
 **Context**: Code Generation Part 2 — lời nhắc duyệt.
-
----
-
-## Học kỳ lớp — duyệt Code Generation, bắt đầu Build and Test
-**Timestamp**: 2026-11-15T02:29:40Z
-**Requested by:** Hải Nam
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Ghi nhận duyệt mã. Bắt đầu Build and Test: chạy mvn -o -B verify, npm run lint, tsc, vitest run toàn bộ, npm run build; ghi kết quả vào aidlc-docs/construction/build-and-test/2026-11-15-class-term-results.md."
-**Context**: Code Generation hoàn tất → Build and Test.
 
 ---
 
@@ -14552,33 +11708,6 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **User Input**: "Yes, fix them"
 **AI Response**: "Đã thêm bước Hoàn tất (POST /assignments/{id}/review, kiểm 200) trước khi phát hành trong u12.mjs, u12b.mjs, u12c.mjs. Chạy lại trên stack classterm: u12b 36/36, u12c 20/20, u12 58/59. Lỗi còn lại U12-02 là do lần chạy trước đã chia hết sinh viên của SE-TEST1 vào nhóm; ở lần chạy đầu trên lớp mới bước này qua. Ghi vào 2026-11-15-class-term-results.md và aidlc-state.md. Chưa commit."
 **Context**: Sau Build and Test — sửa script e2e hoàn tất.
-
----
-
-## Học kỳ lớp — commit lên nhánh
-**Timestamp**: 2026-11-15T03:36:05Z
-**Requested by:** Hải Nam
-**User Input**: "chia thành các commit nhỏ, commit lên branch"
-**AI Response**: "Chia thay đổi học kỳ lớp thành các commit nhỏ trên nhánh fix/term: backend academics (ngày bắt đầu, học kỳ, migration, lọc), backend nhãn lớp ở U07/U08/U14, frontend academics và ô dùng chung, frontend các module khác, script e2e gửi startsOn, script e2e U12 thêm bước Hoàn tất, tài liệu AIDLC. Không push."
-**Context**: Sau Build and Test — commit theo yêu cầu.
-
----
-
-## Học kỳ lớp — push nhánh
-**Timestamp**: 2026-11-15T03:39:20Z
-**Requested by:** Hải Nam
-**User Input**: "Push it"
-**AI Response**: "Đã push fix/term lên origin (6c0bdc16..f7aa3471, 8 commit). Chưa tạo PR."
-**Context**: Sau Build and Test — push theo yêu cầu.
-
----
-
-## Học kỳ lớp — merge staging, kiểm e2e, mở PR và merge
-**Timestamp**: 2026-11-15T03:42:10Z
-**Requested by:** Hải Nam
-**User Input**: "merge staging vào branch hiện tại, check lại e2e rồi mới mở pr vào staging, check CI xanh thì merge vào staging"
-**AI Response**: "Merge origin/staging vào fix/term, dựng lại stack classterm từ mã đã merge, chạy lại e2e; nếu ổn thì push, mở PR fix/term → staging, chờ CI xanh rồi merge."
-**Context**: Sau Build and Test — tích hợp vào staging theo yêu cầu.
 
 ---
 
@@ -14690,15 +11819,6 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 
 ---
 
-## Quy ước U04/U13/U14 — duyệt code, vào Build and Test
-**Timestamp**: 2026-11-15T11:23:27Z
-**Requested by:** Hải Nam
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Ghi duyệt Code Generation; bắt đầu Build and Test: chạy mvn -o -B verify đầy đủ, frontend lint, typecheck, Vitest, build; ghi kết quả vào construction/build-and-test/."
-**Context**: Code Generation đã duyệt; vào Build and Test.
-
----
-
 ## Quy ước U04/U13/U14 — Build and Test, build lại Docker
 **Timestamp**: 2026-11-15T11:33:57Z
 **Requested by:** Hải Nam
@@ -14744,33 +11864,6 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 
 ---
 
-## Quy ước U04/U13/U14 — commit thay đổi
-**Timestamp**: 2026-11-15T12:25:48Z
-**Requested by:** Hải Nam
-**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
-**AI Response**: "Rà soát cây làm việc: 161 file (151 sửa, 2 đổi tên, 8 file tài liệu mới), tất cả thuộc phạm vi U04/U13/U14."
-**Context**: Sau Operations — chuẩn bị commit trên nhánh fix/code-conventions-u04-u13-u14.
-
----
-
-## Quy ước U04/U13/U14 — chia commit nhỏ
-**Timestamp**: 2026-11-15T12:25:48Z
-**Requested by:** Hải Nam
-**User Input**: "chia thành các commit nhỏ, không push"
-**AI Response**: "Chia 10 commit: backend subjects, materials, announcements, notifications; frontend subjects, materials, announcements và notifications; tài liệu yêu cầu và kế hoạch, tóm tắt code, Build and Test cùng state và audit. Tách hunk của RequirementsCoverageIntegrationTest theo unit để mỗi commit compile được; kiểm từng commit trong worktree tạm. Không push."
-**Context**: Commit cục bộ, không push.
-
----
-
-## Review PR staging lên main — PR 87
-**Timestamp**: 2026-11-15T13:37:25Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi review pr trên đã thay đổi gì, có vấn đề gì ko trc khi tôi merge vào main"
-**AI Response**: "Review ghim base 3b86e57d và head 4b46daea: 33 commit, 369 file. Ngoài MSSV/học kỳ/chấm thành viên/hiển thị bài đã đóng còn có refactor quy ước U04/U13/U14. CI run 43719011999 đúng head: backend, frontend, deploy-script success; images skipped đúng PR. Chạy lại 5 file Vitest liên quan: 115/115 qua. Xác nhận P2 mất draft thành viên: nhập căn cứ -> lưu điểm nhóm thành công -> refresh GET lỗi -> useGradingWorkspace.ts:207 đặt members=[] -> MemberRow bị unmount -> retry tải lại không còn draft. Test hồi quy tạm trên GradingWorkspacePage thất bại đúng lỗi (expected căn cứ chưa lưu, actual chuỗi rỗng); đã xóa test tạm. Đề nghị giữ draft qua lỗi refresh, vẫn khóa thao tác ghi đến khi có phiên bản mới. Hai finding Standards P3: MaterialService còn biến m trong phạm vi dài (CC-03), ClassTermPolicy có method mới termOf/yearOf/seasonRank không theo động từ + đối tượng. Không phát hiện regression nghiệp vụ trong refactor U04/U13/U14 hoặc lỗi spec khác đã xác nhận. Lưu ý migration có starts_on NOT NULL không có default nên rollback image cũ không đủ cho chức năng tạo lớp, theo giới hạn runbook hiện có. Không sửa mã nguồn, không bình luận GitHub, không merge/deploy; chỉ append audit local."
-**Context**: Review chỉ đọc theo ponytail-review và code-review (hai góc Standards/Spec). Security/Resiliency xem trong phạm vi diff, không chứng nhận toàn hệ thống; PBT disabled nên bỏ qua. Chưa chạy lại full backend/frontend/e2e hoặc kiểm database production.
-
----
-
 ## U09 — sửa mất bản nháp thành viên sau refresh lỗi
 **Timestamp**: 2026-11-15T13:43:20Z
 **Requested by:** Quang Hung
@@ -14801,27 +11894,9 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 ## Audit ngày tháng, kiểm tra API key và thời điểm chấm bài
 **Timestamp**: 2026-11-15T15:30:52Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi đổi lại định dạng chọn ngày tháng thành ngày trước thảng sau ở mấy  cái chọn ngày tháng của học kì,audit, ....  check lại nút bấm check ai api key, hiện tại lúc nào bấm check cũng bị đỏ, giúp tôi xem lại xem giảng viên hiện tại có thể chấm bài nếu hạn nộp chưa kết thúc hoặc bài chưa đóng ko,  tôi nghĩ là nên để cho gv ko thể chấm và công bố điểm, có thể cho tùy chọn giảng viên có thể đóng bài sớm hạn, bạn thử review lại và đề xuất cho tôi $ponytail:ponytail-audit"
+**User Input**: "giúp tôi đổi lại định dạng chọn ngày tháng thành ngày trước tháng sau ở mấy cái chọn ngày tháng của học kỳ, audit, ... Check lại nút bấm check AI API key, hiện tại lúc nào bấm check cũng bị đỏ, giúp tôi xem lại xem giảng viên hiện tại có thể chấm bài nếu hạn nộp chưa kết thúc hoặc bài chưa đóng không, tôi nghĩ là nên để cho GV không thể chấm và công bố điểm, có thể cho tùy chọn giảng viên có thể đóng bài sớm hạn, bạn thử review lại và đề xuất cho tôi $ponytail:ponytail-audit"
 **AI Response**: "Audit chỉ đọc trên staging@7d0905d4, phạm vi ô ngày, AI connection và U07/U08/U09/U12 liên quan. Xác nhận 6 component dùng input date/datetime-local native, định dạng nhìn thấy phụ thuộc browser dù html lang=vi; đề xuất DateInput chung hiện dd/MM/yyyy, dữ liệu ISO giữ nguyên. Kiểm key dùng MAX_OUTPUT=5 từ trước; gateway thêm chặn MAX_TOKENS/length/max_tokens ngày 2026-11-10 và trả ProviderException HTTP200; tester coi lỗi => có đường báo đỏ dù key được provider chấp nhận. Chưa xác nhận mọi lần đỏ của người dùng vì local audit chỉ có test cũ đến 2026-11-09 (17 thành công). Tái hiện trực tiếp shortTestResult: thông báo hết token bị gán Hết hạn mức. Đề xuất probe ngân sách phù hợp model và phân loại kết quả/lỗi rõ, giữ kiểm cắt token cho tác vụ sinh nội dung. Giảng viên hiện chấm/công bố được khi bài OPEN: GradingService chỉ kiểm quyền/lớp/phiên bản/biên nhận, không kiểm hạn bài; đây là hành vi hiện có, yêu cầu chặn tới lúc đóng là thay đổi nghiệp vụ. Đề xuất guard backend thống nhất cho chấm tay/AI/member/batch/MCP/công bố và trạng thái read-only ở UI; mở chấm sau đóng nhận bài, gồm lateUntil và ân hạn30s, chốt auto-submit trước khi chấm. Chưa có đóng sớm; retire là Ngưng giao, status RETIRED và auto-submit, không thay thế CLOSED. Đề xuất nút Đóng nhận bài, kiểm quyền/version, xác nhận ảnh hưởng, chốt lượt đang làm và audit, giữ hạn đã công bố. Test có sẵn:64/64 backend (HttpProviderGatewayTest,AiConnectionServiceTest,GradingServiceTest,AssignmentPublicationServiceTest),38/38 frontend AI qua. Không đổi mã/test/config, không gọi provider bằng key thật, không commit/push/merge/deploy; chỉ append audit theo CLAUDE.md."
 **Context**: ponytail-audit một lượt báo cáo và đề xuất, giả định nhiều giảng viên/sinh viên dùng chung VPS/backend-worker. Security/Resiliency chỉ rà các đường liên quan; PBT disabled, bỏ qua. Chưa nghiệm thu browser/live provider/production hay toàn repo.
-
----
-
-## Construction - Staging readiness check and merge
-**Timestamp**: 2026-11-15T15:35:26Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem có thể đưa lên staging chưa" / "xong chưa, có thể đưa lên staging chauw" / "Merge, push, open PR"
-**AI Response**: "Branch was 51 commits behind origin/staging. Trial merge in a temporary worktree: resolved HttpProviderGateway conflict (staging empty-output reasons + F1/F6), removed the blank-evidence rejection case from GradingProposalResultHandlerTest (intended F6 behaviour change), added starts_on to the class insert in JdbcQuizAttemptRepositoryIntegrationTest (staging made it required). Merged tree: backend mvn verify 2447 tests 0 failures 1 skipped, required-suite script passed (57 traced cases); frontend lint, typecheck, 1095 tests and build passed. Merged origin/staging into feat/ai-prompt-guardrail with the same resolutions, audit/state docs union-merged; pushing and opening a PR to staging as requested."
-**Context**: Construction - integration with staging.
-
----
-
-## Construction - Merge PR #89 into staging
-**Timestamp**: 2026-11-15T15:43:47Z
-**Requested by:** Đào Chí Cường
-**User Input**: "merge vào staging cho tôi"
-**AI Response**: "Checked PR #89: backend, frontend, deploy-script and GitGuardian checks passed, mergeable CLEAN. Merged with a merge commit (938da1b3) into staging. Branch kept. Outstanding: F7 live check, migration V20261113_1000 on a real database."
-**Context**: Construction - integration with staging.
 
 ---
 
@@ -14843,19 +11918,10 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 
 ---
 
-## Commit ngày tháng, AI và đóng nhận bài
-**Timestamp**: 2026-11-15T16:27:27Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit"
-**AI Response**: "Kiểm tra working tree trên fix/date-ai-grading-window, index ban đầu trống; chia ba commit chức năng date/AI/grading-closure và một commit tài liệu kiểm chứng. Giữ nguyên bản source đã kiểm thử: frontend1135, final academics37, backend integration282, lint/typecheck/build đã ghi ở lượt triển khai. Kiểm lại git diff whitespace và script guard5 required PostgreSQL suites/58 traced cases trước commit đều qua. Stage đường dẫn rõ ràng, không thêm log/cache/config tạm. Kiểm tra lại lịch sử và working tree sau commit."
-**Context**: User cho phép commit cục bộ. Không yêu cầu push/merge/deploy, không chạy lại test/build khi mã không đổi; các giới hạn key thật/browser/tải lớn giữ nguyên. Attribution xác nhận bằng gh api user --jq .name, không thay requester lịch sử. Không đổi quy tắc Security/Resiliency; PBT disabled, không phát sinh thiết kế hoặc mã mới.
-
----
-
 ## Bàn giao PR vào staging
 **Timestamp**: 2026-11-15T16:52:50Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi tạo pr lên staging"
+**User Input**: "giúp tôi tạo PR lên staging"
 **AI Response**: "Kiểm tra nhánh fix/date-ai-grading-window và origin/staging sau fetch: working tree sạch, đã có merge staging, không thiếu commit staging. Chưa có PR mở cùng head. Chạy lại HttpProviderGatewayTest, AiConnectionServiceTest, GradingServiceTest sau merge:85/85 qua, không lỗi hoặc skip. Push nhánh và mở PR #91 vào staging với mô tả ngày/AI/đóng nhận bài, bằng chứng trước/sau và giới hạn nghiệm thu. GitHub connector tạo PR bị 403 Resource not accessible by integration; chuyển sang GitHub CLI đã đăng nhập và tạo thành công tại https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/91. Không merge hoặc bật auto-merge."
 **Context**: User cho phép push và tạo PR. PR skill dùng cho nội dung; chỉ thêm tài liệu bàn giao, không sửa source. Kết quả1135 frontend/282 tích hợp/build thuộc đợt trước merge; không coi đó là kiểm toàn bộ head sau merge. CI sẽ kiểm head PR. Chưa key thật/browser/tải lớn. Security/Resiliency giữ phạm vi, PBT disabled. GitHub display name xác nhận bằng gh api user --jq .name; giữ requester lịch sử.
 
@@ -14891,7 +11957,7 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 ## Orca - dùng ponytail khi sửa code/audit
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "Thêm rule các agent nếu sửa code hoặc audit nên dùng skill của pony tail"
+**User Input**: "Thêm rule các agent nếu sửa code hoặc audit nên dùng skill của ponytail"
 **AI Response**: "Thêm quy tắc: Developer dùng ponytail:ponytail, audit dùng ponytail-audit, review dùng ponytail-review; ghi vào brief mỗi worker."
 **Context**: Cấu hình quy trình.
 
@@ -14900,7 +11966,7 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 ## Audit nhánh staging và sửa lỗi quan trọng
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "Có sẵn skill rồi. Ok bắt đầu công việc, giúp tôi audit lại nhánh staging, nhớ chia việc theo rule tôi vừa phân công, tạo 1 branch mới để audit và sửa bug, tự động audit , sửa bug cần thiết, chưa cần commit hay push, tôi sẽ là người check lại cuối cùng, cứ sửa những lỗi quan trọng trước"
+**User Input**: "Có sẵn skill rồi. Ok bắt đầu công việc, giúp tôi audit lại nhánh staging, nhớ chia việc theo rule tôi vừa phân công, tạo 1 branch mới để audit và sửa bug, tự động audit, sửa bug cần thiết, chưa cần commit hay push, tôi sẽ là người check lại cuối cùng, cứ sửa những lỗi quan trọng trước"
 **AI Response**: "Tạo nhánh audit-staging từ staging@f1c351dd (worktree Orca). Auditor Codex Sol High (ponytail-audit, chỉ đọc) xác nhận 8 lỗi AUD-001..008, ghi AUDIT-FINDINGS.md chưa theo dõi. Chưa sửa code ở lượt này."
 **Context**: Construction - audit. Chưa commit/push theo yêu cầu.
 
@@ -14924,19 +11990,10 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 
 ---
 
-## Orca - kiểm tra trạng thái auditor
-**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
-**Requested by:** Quang Hung
-**User Input**: "Tôi thấy codex audit xong r mà b vẫn chưa nhận đc status à"
-**AI Response**: "Kiểm tra terminal: auditor chưa idle, báo cáo chưa ghi; giải thích lệnh chờ chỉ kích hoạt khi idle."
-**Context**: Thao tác chỉ đọc.
-
----
-
 ## Orca - hết quota Codex
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "Nếu codex hết usage b có thể dùng reset cho nó"
+**User Input**: "Nếu Codex hết usage bạn có thể dùng reset cho nó"
 **AI Response**: "Giải thích không reset được quota (reset lúc 11:15 ngày 22/11); nếu hết quota thì dừng, báo, không tự chuyển code sang Claude."
 **Context**: Hỏi đáp.
 
@@ -14945,7 +12002,7 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 ## Orca - hỏi tiến độ và phát hiện Developer chết
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "Các agent làm đến đâu r"
+**User Input**: "Các agent làm đến đâu rồi"
 **AI Response**: "Phát hiện Developer đầu bị crash (Rust memory allocation failed), chưa sửa gì; đề xuất dừng và chạy lại."
 **Context**: Thao tác chỉ đọc.
 
@@ -14972,7 +12029,7 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 ## Orca - lưu workflow thành skill Claude
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "Giúp tôi lưu, tạo tòan bộ workflow thống nhất từ trc đến thành 1 skill cho claude"
+**User Input**: "Giúp tôi lưu, tạo toàn bộ workflow thống nhất từ trước đến giờ thành 1 skill cho Claude"
 **AI Response**: "Tạo skill toàn cục C:\Users\Quang Hung\.claude\skills\orca-master-workflow\SKILL.md (ngoài repo)."
 **Context**: Không đổi mã nguồn dự án.
 
@@ -14987,19 +12044,10 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 
 ---
 
-## Orca - kiểm tra lại việc, phát hiện Developer #2 chưa bắt đầu
-**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
-**Requested by:** Quang Hung
-**User Input**: "Check lại việc"
-**AI Response**: "Developer #2 (AUD-001/002) chưa có thay đổi, terminal trống và hiển thị chế độ YOLO; báo user và hỏi hướng xử lý."
-**Context**: Thao tác chỉ đọc.
-
----
-
 ## Orca - chấp nhận Yolo/Auto Approve
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "Để yolo hay auto approve cũng đv"
+**User Input**: "Để yolo hay auto approve cũng được"
 **AI Response**: "Cập nhật skill: ưu tiên Auto Approve, chấp nhận Yolo; nhắc Developer #2 qua send, nó bắt đầu làm AUD-001/002."
 **Context**: Construction - code generation, Level 3. Mã sửa: identity SessionStore/AuthService/SessionAuthority/PasswordChangeService cùng test, theo thiết kế Opus.
 
@@ -15017,25 +12065,16 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 ## Orca - làm rõ ý khởi động lại worker
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "Ý là b khởi động lại worker chứ k phải skill"
+**User Input**: "Ý là bạn khởi động lại worker chứ không phải skill"
 **AI Response**: "Xác nhận hiểu nhầm; dòng thêm vào skill chỉ ghi quy tắc, việc chính là tự khởi động lại worker khi kẹt; Developer #2 đang chạy bình thường."
 **Context**: Hỏi đáp.
-
----
-
-## Orca - hỏi tiến độ QA
-**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
-**Requested by:** Quang Hung
-**User Input**: "Xong chưa"
-**AI Response**: "Tester QA đợt 2 kẹt giống trước; nhắc qua send, nó bắt đầu chạy."
-**Context**: Thao tác điều phối.
 
 ---
 
 ## Sửa AUD-006 và AUD-007, QA
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "Giúp tôi phân việc làm luôn aud 7 7 và test luôn"
+**User Input**: "Giúp tôi phân việc làm luôn audit 7/7 và test luôn"
 **AI Response**: "Developer #3 (Sol High) sửa AUD-006 (khóa quiz) và AUD-007 (ảnh nhóm); QA đợt 3 PASS. Cùng giai đoạn: QA đợt 1 FAIL AUD-004 và QA đợt 2 FAIL AUD-002 được sửa qua các vòng sửa lỗi; QA đợt 4 PASS AUD-001/002; Opus duyệt cuối APPROVE WITH CONDITIONS."
 **Context**: Construction - code generation + build-and-test. Mã sửa: quizpractice/quizzes (khóa), GroupSectionEditorPage, identity, AssignmentWorkspacePage cùng test.
 
@@ -15047,15 +12086,6 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **User Input**: "[Ảnh chụp sidebar Orca] tester đang chạy ở đâu"
 **AI Response**: "Chỉ ra qa-batch3 và qa-batch4 trong sidebar."
 **Context**: Hỏi đáp.
-
----
-
-## Orca - worker không chạy thật
-**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
-**Requested by:** Quang Hung
-**User Input**: "tôi có thấy worker nào đang chạy đâu nhỉ? b check lại xem"
-**AI Response**: "Cả hai Tester để prompt dán trong ô nhập chưa gửi; gửi Enter để chạy; quota Codex còn 3%."
-**Context**: Thao tác điều phối.
 
 ---
 
@@ -15071,25 +12101,16 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 ## Dọn worktree QA
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi dọn các worktree trước , tôi đã reset codex rồi"
+**User Input**: "giúp tôi dọn các worktree trước, tôi đã reset Codex rồi"
 **AI Response**: "Sao lưu báo cáo/test QA ra C:\Users\Quang Hung\orca-qa-backup, gỡ liên kết node_modules, xóa worktree và branch qa-batch1..4. Giữ audit-staging."
 **Context**: Dọn dẹp; không đổi mã nguồn trong audit-staging.
-
----
-
-## Opus chạy test BE/FE và review audit-staging
-**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi nhờ opus 5.5 chạy lại be fe, chạy unit test, review lại changes trên audit-staging trước khi tôi quyết định commit"
-**AI Response**: "Giao Opus 5.5 High chạy test backend/frontend và review 32 file; worker đầu mất khi Orca khởi động lại, đã chạy lại; kết quả chưa có."
-**Context**: Build-and-test. Chưa có kết quả; NOT TESTED: full suite, build production, trình duyệt, restore image thật, tải lớn.
 
 ---
 
 ## Cập nhật aidlc-state.md và audit.md
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "với giúp tôi cập nhật aidlc state với audit.md"
+**User Input**: "với giúp tôi cập nhật AI-DLC state với audit.md"
 **AI Response**: "Thêm mục trạng thái AUD-001..008 vào aidlc-state.md và một entry audit gộp (nay đã tách thành từng lượt theo yêu cầu bên dưới)."
 **Context**: Tài liệu AIDLC trong audit-staging.
 
@@ -15098,7 +12119,7 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 ## Quy tắc luôn cập nhật tài liệu AIDLC
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác từng lượt không được lưu lại, thứ tự theo trình tự phiên)
 **Requested by:** Quang Hung
-**User Input**: "sửa bất kì code hay thay đổi gì thì cũng phải cập nhật doc aidlc"
+**User Input**: "sửa bất kì code hay thay đổi gì thì cũng phải cập nhật doc AI-DLC"
 **AI Response**: "Ghi nhớ quy tắc (memory) và thêm vào skill orca-master-workflow; áp dụng từ giờ."
 **Context**: Cấu hình quy trình.
 
@@ -15112,47 +12133,20 @@ Tôi đã trả lời các câu hỏi của bạn ở sau câu hỏi cách bởi
 **Context**: Sửa tài liệu audit trong audit-staging theo yêu cầu user; các entry lịch sử khác giữ nguyên.
 
 ---
-## Opus 5.5 High kiểm chứng test BE/FE và review audit-staging (kết quả)
-**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác không được lưu lại)
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi nhờ opus 5.5 chạy lại be fe, chạy unit test, review lại changes trên audit-staging trước khi tôi quyết định commit"
-**AI Response**: "Opus báo READY WITH CONDITIONS. Backend mvn test: BUILD SUCCESS, 2539 test, 0 lỗi, 1 bỏ qua (GradingAiEvaluationTest cần ai.eval.mode). Frontend: tsc, eslint, vitest (156 file, 1147 test) qua; next build lỗi trên ổ C: do liên kết node_modules khác ổ, cùng diff build qua trên worktree tạm ở ổ F: (đã xóa); test restore qua và fail trên bản gốc như mong đợi. Cả 8 sửa AUD-001..008 có mặt và có test. Chưa sửa mã ở lượt này. Còn mở: (1) quay lại nhanh khi lưu rời trang chậm có thể xung đột phiên bản và mất bản sửa (AssignmentWorkspacePage.tsx:120, từ đọc mã), (2) test-restore-isolated.sh chưa vào CI, (3) lock bắt đầu attempt xếp hàng toàn quiz, nên cân nhắc for share, (4) tên test có tiền tố qa. Điều kiện: không commit AUDIT-*.md gốc, stage từng đường dẫn, deploy mọi backend cùng lúc, Redis một node và >= 6.0."
-**Context**: Build-and-test. Opus chỉ đọc và chạy test, không sửa mã; dịch vụ dev của repo chính không bị đụng. NOT TESTED: trình duyệt thật AUD-004/007, restore bằng image thật, shellcheck, deploy nhiều instance, Redis sập/cluster, tải, tài khoản ACTIVE có password_changed_at null. aidlc-state.md cập nhật theo kết quả này.
-
----
-
 ## Opus 5.5 High sửa các mục review còn mở và chuẩn bị commit
 **Timestamp**: 2026-11-16T03:55:05Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi nhờ opus sửa lỗi luôn và cbi commit"
+**User Input**: "giúp tôi nhờ Opus sửa lỗi luôn và chuẩn bị commit"
 **AI Response**: "Sửa (1) AssignmentWorkspacePage.tsx: lần lưu lúc rời trang ghi vào Map<attemptId, Promise> cấp module, mở lại cùng attempt chờ lần lưu đó rồi mới gọi workApi.attempt; test vitest mới đỏ trước (lần lưu sau gửi version 1) rồi xanh. (2) ci.yml job deploy-script: shellcheck thêm infra/scripts/restore-isolated.sh và test-restore-isolated.sh, thêm bước sh infra/scripts/test-restore-isolated.sh. (4) Bỏ tiền tố qa ở 3 test SessionStoreIntegrationTest. Mục (3) for share giữ là nợ đã ghi nhận, không đổi khóa. Kiểm tra: vitest workspace-ui + assignmentwork 18/18 qua; eslint 2 file đã sửa qua; tsc --noEmit qua; mvn test -Dtest=SessionStoreIntegrationTest 24/24 qua (Redis thật); sh infra/scripts/test-restore-isolated.sh qua; YAML ci.yml parse được. Viết commit-plan.md ngoài repo (8 nhóm, git add theo đường dẫn, loại AUDIT-*.md). Không stage, commit, push hay đổi nhánh."
 **Context**: Construction - sửa mục review theo ponytail, người dùng cho phép Opus sửa code thay Codex. NOT TESTED: shellcheck (không cài trên máy), trình duyệt thật, full suite sau lần sửa này (chỉ chạy kiểm tra có mục tiêu), restore bằng image thật. Security/Resiliency tuân thủ trong phạm vi; PBT disabled.
 
 ---
-## Commit các thay đổi audit-staging
-**Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác không được lưu lại)
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit changes, k dùng claude co author"
-**AI Response**: "Commit cục bộ 8 commit trên nhánh audit-staging theo kế hoạch Opus (identity, Draw.io, assignmentwork, infra restore + CI, quiz, groupdocs, AI, docs), stage theo từng đường dẫn, không thêm dòng Co-Authored-By của Claude theo yêu cầu. Ba file AUDIT-*.md ở thư mục gốc không đưa vào commit. Không push, không merge."
-**Context**: Git commit cục bộ theo yêu cầu. Không đổi mã nguồn. Chưa kiểm compile từng commit riêng, chỉ cây thư mục đầy đủ đã build/test. NOT TESTED như đã ghi ở các entry trước (shellcheck, trình duyệt thật, restore image thật, deploy nhiều instance).
-
----
-
 ## Tạo PR audit-staging vào staging
 **Timestamp**: 2026-11-16 (phiên Orca; giờ chính xác không được lưu lại)
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi tạo pr lên staging"
+**User Input**: "giúp tôi tạo PR lên staging"
 **AI Response**: "Fetch origin: origin/staging là tổ tiên của audit-staging (không cần merge), chưa có PR cùng head. Push audit-staging (8 commit, không dòng đồng tác giả Claude) và tạo PR #92 vào staging bằng GitHub CLI: https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/92. PR MERGEABLE; mô tả gồm bảng 8 lỗi, kiểm chứng, điều kiện deploy, phần NOT TESTED và nợ kỹ thuật. Không merge, không bật auto-merge, không deploy."
 **Context**: User cho phép push và tạo PR. Chỉ thêm tài liệu bàn giao. Kết quả test trong PR thuộc đợt trước vòng sửa cuối ở mức toàn suite; CI sẽ kiểm head PR, trong đó shellcheck chạy lần đầu trên restore-isolated.sh. Trạng thái CI chưa kiểm tại thời điểm ghi.
-
----
-
-## Rà soát MSSV trên danh sách sinh viên và bộ chọn
-**Timestamp**: 2026-11-16T04:40:00Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi check lại giao diện chỗ nào có danh sách sinh viên thì nênđi kèm với mssv"
-**AI Response**: "Đối chiếu yêu cầu SC-10/SC-11 và component/DTO hiện tại. Xác minh 8 nhóm vị trí còn thiếu MSSV: bộ chọn/tiêu đề bảng chấm theo sinh viên, chấm thành viên và tác giả từng phần, hoạt động khi chấm, duyệt đề xuất nhóm, đổi trưởng nhóm, lời mời đề xuất, tài liệu nhóm và ngữ cảnh chi tiết lượt quiz. Các bảng chính đã có MSSV được giữ nguyên. Viết kết quả/phạm vi và file câu hỏi duyệt trong inception/requirements/2026-11-16-student-code-ui-completeness*.md; chờ người dùng quyết định chỉ rà soát hoặc tiếp tục sửa theo gate của CLAUDE.md."
-**Context**: Requirements Analysis, brownfield trên audit-staging. Chỉ sửa tài liệu hiện hành; chưa sửa mã ứng dụng, chạy test mới, đăng nhập browser, commit/push hoặc thay dữ liệu. Không mở rộng quyền đọc MSSV; giữ Security/Resiliency hiện hữu, PBT disabled.
 
 ---
 
@@ -15182,7 +12176,7 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 ## 2026-11-16 12:28:23 — Browser UI verification for student codes
 
 - Requester: Quang Hung (GitHub display name đã xác minh trong phiên).
-- User request (verbatim): “Giúp tôi mơt browser chạy test ui luôn”. Người dùng tiếp đó cung cấp ảnh tài khoản kiểm thử local; không ghi lại mật khẩu.
+- User request (verbatim): “Giúp tôi mở browser chạy test UI luôn”. Người dùng tiếp đó cung cấp ảnh tài khoản kiểm thử local; không ghi lại mật khẩu.
 - Opened Orca browser; đăng nhập giảng viên/sinh viên, kiểm tra 1440×900 và 390×844. Dữ liệu gốc có 5 MSSV null; kiểm tra fallback thật và nhãn có mã bằng fixture chỉ trong JSON GET ở browser. Giữ ID/quyền/trạng thái, không lưu/gửi thao tác học tập. Hai lượt tracker ghi nhận 0 request ghi; fixture đã gỡ bằng reload và xác minh không còn mã mô phỏng trên trang.
 - Verified: gradebook/list/header, tìm client theo mã, trưởng nhóm ở tiến độ, bộ chọn trưởng nhóm, chấm thành viên/byline/hoạt động, lịch sử người khác và Bạn · MSSV; các màn kiểm tra không tràn trang ngang ở 390px.
 - Limits: giao mục bị khóa bởi CLOSED; tự chia nhóm tắt và thiếu ngữ cảnh đề xuất/lời mời; quiz có 0 lượt nên chưa mở hộp chi tiết. Thông báo CSP inline style trên quiz được ghi nhận, chưa quy nguồn hoặc kết luận regression. Không giả PASS cho các ca này.
@@ -15192,7 +12186,7 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 ## Local seed database: assign student codes
 **Timestamp**: 2026-11-16T05:34:44Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi insert mssv vào seed db có định dạng HE19xxxx"
+**User Input**: "giúp tôi insert MSSV vào seed DB có định dạng HE19xxxx"
 **User clarification**: "x là số"
 **AI Response**: Gán mã thật HE190001–HE190005 cho u05.student@school.test và u05.student2–5@school.test; HE190006 cho qa.u15.20261023@school.test. Chỉ cập nhật student_code đang null trên 6 tài khoản STUDENT nêu rõ, tăng version và updated_at theo quy ước repository. Không đổi role, trạng thái, mật khẩu hoặc dữ liệu học tập khác.
 **Context**: Thao tác dữ liệu local được yêu cầu rõ, tiếp nối kiểm tra UI MSSV; không phải thay đổi tính năng/schema. Target đã xác minh là Docker platform-postgres-1, PostgreSQL platform/public.accounts, cổng local 5432. Không sửa script e2e seed cho bộ tài khoản *.test@fpt.edu.vn khác với bộ local u05.
@@ -15202,7 +12196,7 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 ## Student table: separate student code and email columns
 **Timestamp**: 2026-11-16T05:40:37Z
 **Requested by:** Quang Hung
-**User Input**: "[Image #1] tách cột mssv với email ra đừng để sát nhau như này, format lại text cho đẹp"
+**User Input**: "[Image #1] tách cột MSSV với email ra đừng để sát nhau như này, format lại text cho đẹp"
 **Context**: Ảnh chỉ bảng Sinh viên của giảng viên. Yêu cầu sửa trực tiếp và cụ thể, tiếp nối phạm vi MSSV đã được duyệt; thực hiện thay đổi trình bày tối thiểu trong ClassGroupsPanel với component bảng hiện có. Code Generation bổ sung trong kế hoạch ngày 2026-11-16; kiểm tra bằng suite hiện có và browser, không thay nghiệp vụ/database.
 
 
@@ -15214,18 +12208,10 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Limits**: Chưa production build/cross-engine. Không đổi backend/database/commit/push; không thêm test chỉ để khóa bố cục CSS. Security/Resiliency giữ ràng buộc hiện hữu; PBT disabled.
 
 
-## Commit authorization for student-code UI changes
-**Timestamp**: 2026-11-16T05:51:52Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit"
-**AI Response**: Chuẩn bị một commit local cho source/backend/frontend, test và tài liệu MSSV đã thực hiện trong phiên; giữ ba báo cáo AUDIT gốc ngoài phạm vi, không push. Thao tác backfill seed database local không phải nội dung Git; không thêm file tạm, ảnh local, cấu hình hoặc bí mật.
-**Context**: Yêu cầu mới thay thế giới hạn không commit trước đó; không thay đổi phạm vi triển khai hoặc kết quả kiểm thử đã ghi nhận.
-
-
 ## Pull request request: student code UI to staging
 **Timestamp**: 2026-11-16T05:59:13Z
 **Requested by:** Quang Hung
-**User Input**: "tạo pr lên staging"
+**User Input**: "tạo PR lên staging"
 **AI Response**: Chuẩn bị PR mới từ audit-staging vào staging cho phần MSSV và tách cột Email; kiểm tra PR hiện hữu để tránh trùng. PR audit trước đã được merge. Người dùng cho phép publish nhánh phục vụ PR; không thực hiện merge PR vào staging.
 **Context**: Diff ứng dụng với staging đúng phần đã review/test; merge staging vào nhánh không thay cây mã ứng dụng đã kiểm chứng. Kết quả kiểm thử và giới hạn giữ như báo cáo browser. Backfill database local, ảnh/script tạm và ba báo cáo AUDIT gốc không thuộc nội dung PR.
 
@@ -15234,7 +12220,7 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 ## Build and Test - bổ sung integration test còn thiếu cho Report 5.2
 **Timestamp**: 2026-11-16T06:16:46Z
 **Requested by:** Hải Nam
-**User Input**: "giúp tôi hoàn thiện report 5.2, viết code test còn thiếu (ngoài phần cho google drive vì 1 thành vien trong nhóm đang sửa chưa đẩy lên)"
+**User Input**: "giúp tôi hoàn thiện report 5.2, viết code test còn thiếu (ngoài phần cho Google Drive vì 1 thành viên trong nhóm đang sửa chưa đẩy lên)"
 **AI Response**: "Bắt đầu viết integration test mới (chỉ thêm file test, không sửa mã nguồn chính) cho 7 luồng nối module chưa có test: AI gợi ý chấm điểm (U09-U06), nhập đề từ ảnh (U07-U03-U06), đặt lại mật khẩu bằng OTP (U01-U03-mail-Redis-U02), yêu cầu đổi trưởng nhóm (U12-U14 qua RabbitMQ), học liệu gắn vào bài (U13-U07-U08), dọn tệp chưa gắn (U03-Redis-kho tệp local), header bảo mật khi tải SVG (U03-U01 qua HTTP). Không viết test cho Google Drive theo yêu cầu. Sau đó đưa các test đã có và test mới vào Report-5.2 (file Excel ngoài repo)."
 **Context**: Construction / Build and Test, phạm vi chỉ thêm test. Trước đó trong cùng phiên: cập nhật Report-5.2 (ngoài repo) theo phân chia 5.2/5.3/5.4, thêm case kết nối hệ thống bên ngoài; không đổi mã nguồn.
 
@@ -15243,7 +12229,7 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 ## Build and Test - kết quả bổ sung integration test và hoàn thiện Report 5.2
 **Timestamp**: 2026-11-16T06:43:41Z
 **Requested by:** Hải Nam
-**User Input**: "giúp tôi hoàn thiện report 5.2, viết code test còn thiếu (ngoài phần cho google drive vì 1 thành vien trong nhóm đang sửa chưa đẩy lên)"
+**User Input**: "giúp tôi hoàn thiện report 5.2, viết code test còn thiếu (ngoài phần cho Google Drive vì 1 thành viên trong nhóm đang sửa chưa đẩy lên)"
 **AI Response**: "Thêm file test backend/src/test/java/edu/aiplatform/requirements/CrossUnitFlowIntegrationTest.java (7 test, Spring context thật với PostgreSQL, Redis, RabbitMQ qua Testcontainers và kho tệp local; chỉ ghi nhận mail provider và nạp kết quả AI qua handler thật, không gọi AI hay gửi email thật). Chạy: 7/7 Passed. Chạy lại 10 test có sẵn đưa vào report (NotificationDeliveryIntegrationTest 2, AccountRepositoryIntegrationTest 1, SessionStoreIntegrationTest 2, RequestThrottleIntegrationTest 2, GradingPersistenceTest 1, EvaluationVersionIntegrationTest 1, MaterialModuleMigrationIntegrationTest 1): 10/10 Passed. Cập nhật Report-5.2 (E:/FPTUni/sem9_fa26/test_report, ngoài repo): thêm 17 case tự động (IT-U01-010..015, IT-U03-006..007, IT-U07-008, IT-U09-006..008, IT-U12-009, IT-U13-012..013, IT-U14-012..013), bỏ IT-U06-014 (unit test hàm thuần) và đổi IT-U06-015 thành IT-U06-014, bỏ NFR-U03-44 khỏi IT-U14-006, IT-U14-M04 và B3 của U14. Tổng 162 case: 119 tự động Passed, 43 thủ công Pending; độ phủ 73,46%, tỉ lệ đạt 100%. Không sửa Report 5.3, 5.4. Bản trước được giữ trong scratchpad."
 **Context**: Construction / Build and Test, chỉ thêm test, không sửa mã nguồn chính. NOT TESTED: Google Drive (theo yêu cầu, thành viên khác đang sửa); không mở được file Excel mới bằng Excel để kiểm tra trực quan vì Excel đang kẹt hộp thoại (HRESULT 0x800AC472, cả với file gốc) - đã kiểm bằng cách parse toàn bộ XML, đọc lại nội dung từng sheet và đối chiếu phạm vi công thức; chưa chạy lại toàn bộ test suite backend, chỉ chạy các test nêu trên. File test mới chưa commit.
 
@@ -15276,48 +12262,12 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 
 ---
 
-## Commit integration test trên nhánh integration-test-drive
-**Timestamp**: 2026-11-16T10:01:19Z
-**Requested by:** Hải Nam
-**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
-**AI Response**: "Commit CrossUnitFlowIntegrationTest.java, DriveStorageIntegrationTest.java và audit.md trên nhánh integration-test-drive với thông điệp test(backend): add cross-unit flow and Google Drive storage integration tests. Không push."
-**Context**: Build and Test, commit theo yêu cầu người dùng; chưa push.
-
----
-
 ## Sửa GitGuardian trên PR #96
 **Timestamp**: 2026-11-16T10:14:34Z
 **Requested by:** Hải Nam
-**User Input**: "check ci, hiện git guardian bị failed"
+**User Input**: "check CI, hiện GitGuardian bị failed"
 **AI Response**: "CI của PR #96 (d01db2cb): backend, frontend, deploy-script đạt; GitGuardian Security Checks failed với 1 Generic Password ở CrossUnitFlowIntegrationTest.java (ba mật khẩu test viết cứng, chỉ dùng cho tài khoản tạo trong container test, không phải bí mật thật). Đã thay bằng generateTestPassword() sinh mật khẩu ngẫu nhiên mỗi lần chạy (đúng PasswordPolicy). Chạy lại passwordResetDeliversOtpThroughQueueRevokesSessionsAndAcceptsOnlyTheNewPassword: 1/1 Passed. Commit d01db2cb vẫn chứa chuỗi cũ nên cần amend + force push hoặc đánh dấu incident là test credential trên GitGuardian."
 **Context**: Build and Test, sửa file test; chưa commit, chưa push.
-
----
-
-## Amend và force push nhánh integration-test-drive
-**Timestamp**: 2026-11-16T10:15:20Z
-**Requested by:** Hải Nam
-**User Input**: "Amend + force push"
-**AI Response**: "Gộp bản sửa mật khẩu test và audit.md vào commit d01db2cb (git commit --amend, giữ thông điệp), rồi git push --force-with-lease origin integration-test-drive để PR #96 không còn chứa mật khẩu viết cứng."
-**Context**: Build and Test, sửa lịch sử nhánh PR theo yêu cầu người dùng.
-
----
-
-## GitGuardian vẫn báo lỗi sau lần force push đầu
-**Timestamp**: 2026-11-16T10:20:04Z
-**Requested by:** Hải Nam
-**User Input**: "Amend + force push"
-**AI Response**: "Sau push 1f086cf9, GitGuardian vẫn báo cùng incident ở dòng authService.login(email, newPassword, <IP>): bộ dò Generic Password coi chuỗi IP literal đứng sau biến mật khẩu là mật khẩu. Đã thay các IP 198.51.100.x trong test đặt lại mật khẩu bằng buildDocumentationIp(n). Chạy lại test: 1/1 Passed. Amend lại commit và force push với lease."
-**Context**: Build and Test, tiếp tục sửa GitGuardian trên PR #96.
-
----
-
-## Project-wide review request
-**Timestamp**: 2026-11-15T10:22:30Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra toàn bộ dự án xem còn bug nào không, doc đã đúng chưa, còn nghiệp vụ nào chưa rõ ràng không và gửi tôi báo cáo"
-**AI Response**: "Rà soát chỉ đọc trên chi-cuongg/haddock@3b86e57d. Frontend typecheck, lint và 1.038/1.038 test qua. Backend chạy bằng JDK 21: 2.215 test, 0 thất bại, 5 lỗi và 159 bỏ qua do không có Docker. Đối chiếu API inventory (346/346 khớp), liên kết Markdown và biến môi trường bằng script. Báo cáo ghi 3 lỗi logic (nhóm nộp lại sau khi điểm đã công bố, lượt nộp lại bỏ dở tự nộp làm mất điểm đã công bố, nhắc hạn không quét bù), 2 chỗ mã thừa, 8 chỗ tài liệu lệch code và 6 quy tắc nghiệp vụ cần người dùng quyết định. Các lỗi logic xác nhận bằng đọc code, chưa tái hiện trên ứng dụng đang chạy."
-**Context**: Review only; no AI-DLC stage started. No source, test, schema, config or design document changed; no commit or push. Tests needing PostgreSQL/Redis/RabbitMQ, E2E, browser and provider checks were not run.
 
 ---
 
@@ -15411,15 +12361,6 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 
 ---
 
-## Staging readiness check and merge
-**Timestamp**: 2026-11-16T10:26:40Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem đưa lên staging được chưa cho tôi"
-**AI Response**: "Fetch lại: origin/staging đã đi thêm 35 commit tới 5f9c0173 (giao diện đa ngôn ngữ, Google Drive); gộp thử xung đột 5 file nên nhánh chưa lên được. Gộp origin/staging vào nhánh, xử lý xung đột ở aidlc-state.md, audit.md và ba file frontend đã chuyển sang khóa thông báo; bỏ ba khóa thông báo không còn dùng ở en/ja/vi. Chạy lại toàn bộ kiểm tra của CI trên bản đã gộp: backend mvn -B verify có Docker 2.546 test, 0 thất bại, 0 lỗi, 1 bỏ qua; bộ kiểm bắt buộc qua; frontend npm ci, lint, typecheck, 1.159/1.159 test và production build qua. Commit gộp cục bộ, không push."
-**Context**: Người dùng nhắn "tiếp tục" khi lượt bị ngắt giữa chừng. Chờ người dùng quyết định push và mở PR vào staging.
-
----
-
 ## Delivery to staging
 **Timestamp**: 2026-11-16T10:34:13Z
 **Requested by:** Đào Chí Cường
@@ -15432,20 +12373,11 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 ## U02/U06/U12 regression on updated staging and e2e script fixes
 **Timestamp**: 2026-11-16T12:35:00Z
 **Requested by:** Vo Minh Tai
-**User Input**: "chạy lại e2e và test của u02 u06 u12 đi"; "sửa u06b.mjs theo API mới đi"; "test lại cho tôi toàn bộ các uc đi rồi merch"
+**User Input**: "chạy lại e2e và test của U02, U06, U12 đi"; "sửa u06b.mjs theo API mới đi"; "test lại cho tôi toàn bộ các UC đi rồi merge"
 **AI Response**: Re-ran the suites on staging `abca8520`. Full backend: 2504 tests, 0 failures, 1 skipped. Full frontend: 1159 tests pass, lint clean, no type errors in source. E2E on the local stack: u02 16/16, u06 24/24, u06b 18/18, u12 59/59, u12b 36/36, u12c 20/20, u12-notify 3/3. Two e2e scripts were outdated, not the system: `u06b.mjs` called personal AI keys by provider name while the API is id-based with several keys per provider since 2026-11-05, and its failing-task case succeeded through the automatic fallback to another personal key; the script now uses ids, checks the multi-key rule, and pauses the lecturer's other personal keys while AI tasks run (status toggle only, restored afterwards) so a real key is never called. `u12-notify.mjs` counted notifications in a 50-item window and missed a new one on an account with many notifications; it now detects the new notification by id. The first u06b run before the fix consumed about 3,000 input and 2,350 output tokens of the lecturer test account's working Gemini key through that fallback; the user was told.
 **Context**: Construction — Build and Test, regression after 157 teammate commits; test scripts only, no application code changed.
 
 ---
-## Staging readiness check before main
-**Timestamp**: 2026-11-16T12:55:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem staging còn lỗi nào không, doc đã đồng bộ chưa, có thể đưa staging lên main chưa"
-**AI Response**: "Kiểm tra `origin/staging@d8ac7d21` so với `origin/main@e3825aa6`: main không có commit nào ngoài staging, không có PR mở. CI của d8ac7d21 qua cả bốn job (backend, frontend, images, deploy-script); không chạy lại test ở máy. Staging trên VPS chạy abca8520 (khác HEAD ở hai script e2e và audit.md), mọi dịch vụ khỏe, schema 20261116.1010, 6 giờ không có dòng ERROR ở backend; lần deploy gần nhất chưa kéo được HEAD vì git fetch tới GitHub timeout. Kết luận: chưa nên đưa lên main. Mã mới dùng Google Drive khi có biến GOOGLE_DRIVE_OAUTH_*, kể cả khi U03_REQUIRE_DRIVE=false, trong khi production đang lưu tệp trên đĩa VPS; production và staging dùng chung thư mục Drive mặc định. Tài liệu lệch: runbook deploy-vps mục 6, README và restore-isolated chưa có Drive cá nhân và khóa backup tùy chọn; đa ngôn ngữ và trang quyền riêng tư chưa được ghi; một ô trong aidlc-state.md còn trống dù PR #97 đã gộp."
-**Context**: Chỉ kiểm tra; không bắt đầu giai đoạn AI-DLC, không đổi file nào. Lệnh đọc `.env` production bị từ chối quyền nên rủi ro về Drive dựa trên ghi chú của phiên trước, chưa xác nhận. Mục audit này ghi bù ở lượt sau vì lúc kiểm tra thư mục làm việc đang ở main.
-
----
-
 ## Documentation sync on staging
 **Timestamp**: 2026-11-16T13:06:33Z
 **Requested by:** Đào Chí Cường
@@ -15463,18 +12395,10 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **Context**: Review only; no application change, merge, push or deploy. Existing AI-DLC context reused; design/code generation not applicable.
 
 ---
-## Documentation sync on staging — commit and PR
-**Timestamp**: 2026-11-16T13:11:48Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."; sau đó chọn Create PR trong ứng dụng (lệnh create-pr, base ghi là main).
-**AI Response**: "Commit 9 file tài liệu thành d19f0329 trên nhánh docs/sync-ops-docs-staging. Push nhánh và mở PR vào staging, không vào main: nhánh tạo từ staging nên PR vào main sẽ kéo theo toàn bộ commit của staging, trong khi việc đưa staging lên main còn chờ kiểm cấu hình Drive của production. File chưa theo dõi aidlc-docs/construction/build-and-test/2026-11-16-staging-readiness.md do một lượt khác tạo, không đưa vào commit."
-**Context**: Chỉ tài liệu. Số PR và trạng thái CI ghi trên GitHub và trong phản hồi cuối.
-
----
 ## Security review — project and production VPS
 **Timestamp**: 2026-11-16T13:14:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra sercurity dự án và gửi tôi báo cáo, bạn có thể truy cập vps của tôi để kiểm tra, dự án đã được deploy tại https://alapedu.online/login?next=%2Fassignments%2Fbabb748c-7f46-4cbf-8006-9d5dc4ba361d%3FclassId%3Dd49234ef-fc5b-4608-a94f-dcbb9203bef5"
+**User Input**: "kiểm tra security dự án và gửi tôi báo cáo, bạn có thể truy cập VPS của tôi để kiểm tra, dự án đã được deploy tại https://alapedu.online/login?next=%2Fassignments%2Fbabb748c-7f46-4cbf-8006-9d5dc4ba361d%3FclassId%3Dd49234ef-fc5b-4608-a94f-dcbb9203bef5"
 **AI Response**: "Bắt đầu rà soát bảo mật chỉ đọc: mã nguồn backend/frontend/infra, site production từ bên ngoài và cấu hình VPS. Kết quả ghi trong báo cáo ở construction/build-and-test."
 **Context**: Review only; không đổi mã ứng dụng, cấu hình hay dữ liệu trên VPS. Không áp dụng các stage thiết kế/sinh mã của AI-DLC.
 
@@ -15482,17 +12406,9 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 ## Performance review — project and production VPS
 **Timestamp**: 2026-11-16T13:17:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra performance dự án và gửi tôi báo cáo, bạn có thể truy cập vps của tôi để kiểm tra, dự án đã được deploy tại https://alapedu.online/login?next=%2Fassignments%2Fbabb748c-7f46-4cbf-8006-9d5dc4ba361d%3FclassId%3Dd49234ef-fc5b-4608-a94f-dcbb9203bef5"
+**User Input**: "kiểm tra performance dự án và gửi tôi báo cáo, bạn có thể truy cập VPS của tôi để kiểm tra, dự án đã được deploy tại https://alapedu.online/login?next=%2Fassignments%2Fbabb748c-7f46-4cbf-8006-9d5dc4ba361d%3FclassId%3Dd49234ef-fc5b-4608-a94f-dcbb9203bef5"
 **AI Response**: "Đo chỉ đọc: thời gian phản hồi và tài nguyên trang /login từ bên ngoài, tài nguyên VPS, container, JVM, Postgres, Redis, log nginx, và mã frontend liên quan. Báo cáo ở aidlc-docs/construction/build-and-test/2026-11-16-performance-report.md. Chưa đo các trang sau đăng nhập và chưa load test."
 **Context**: Review only; không đổi mã ứng dụng, cấu hình hay dữ liệu trên VPS. Không áp dụng các stage thiết kế/sinh mã của AI-DLC.
-
----
-## Security review — report delivered
-**Timestamp**: 2026-11-16T13:24:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: (không có input mới; tiếp theo yêu cầu "kiểm tra sercurity dự án và gửi tôi báo cáo, ...")
-**AI Response**: "Hoàn tất rà soát chỉ đọc: mã nguồn (xác thực, CSRF, CSP, tệp, MCP, key AI, SQL), site production từ bên ngoài, và VPS (SSH, tường lửa, Docker, PostgreSQL, TLS, backup). Báo cáo ghi ở .tmp/security-review-2026-11-16.md (gitignored vì chứa chi tiết điểm yếu hạ tầng): 3 mục mức Cao đều thuộc vận hành VPS/database, 3 mục Trung bình, 8 mục Thấp; mã ứng dụng không có phát hiện nghiêm trọng trong phần đã đọc."
-**Context**: Review only; không đổi mã, cấu hình, dữ liệu hay VPS. Chưa đối chiếu quyền của từng endpoint, chưa quét CVE Maven, không tấn công chủ động. Chưa sửa mục nào.
 
 ---
 ## Performance fixes — request
@@ -15504,14 +12420,6 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 
 ---
 
-## NFR review — báo cáo phi chức năng
-**Timestamp**: 2026-11-16T13:20:00Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiểm tra non-functionality của dự án và gửi tôi báo cáo"
-**AI Response**: "Rà soát NFR hiện hữu qua requirements, source/config, kiểm thử có thể chạy trong môi trường local; lập báo cáo với bằng chứng, ưu tiên và giới hạn kiểm chứng."
-**Context**: Review-only theo CLAUDE.md; dùng lại reverse engineering và yêu cầu đã chốt, không mở stage thiết kế/sinh mã. Security/Resiliency theo phạm vi trong state; PBT disabled. gh không có trong PATH nên không suy diễn danh tính từ audit lịch sử. Giữ nguyên công việc đồng thời; không sửa source, deploy, dữ liệu thật, commit/push.
-
----
 ## Performance fixes — plan approval prompt
 **Timestamp**: 2026-11-16T13:40:00Z
 **Requested by:** Đào Chí Cường
@@ -15529,18 +12437,10 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 
 ---
 
-## NFR review — bàn giao báo cáo
-**Timestamp**: 2026-11-16T13:25:32Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiểm tra non-functionality của dự án và gửi tôi báo cáo"
-**AI Response**: "Đã lập construction/build-and-test/2026-11-16-non-functional-review.md: 8 phát hiện (2 P1, 5 P2, 1 P3), ma trận NFR, bằng chứng kiểm thử và kế hoạch nghiệm thu. 2 CSP tests, 14 MCP hook scenarios, restore cleanup harness và 4 crypto probes qua. Frontend thiếu next-intl, Maven offline thiếu dependency, Docker engine chưa chạy, deploy harness thiếu flock nên các phần tương ứng chưa được xác minh. 25 link nội bộ hợp lệ, diff whitespace đạt."
-**Context**: Review-only hoàn tất, không phê duyệt deploy. Baseline source 281362a5; chốt lúc HEAD b121f0ca và có frontend WIP của lượt khác, không nghiệm thu WIP đó. Security/Resiliency còn các điểm F01/F02/F04; PBT disabled. Chỉ tạo báo cáo, probe trong .tmp và append audit; không sửa source ứng dụng, commit/push hoặc thay đổi runtime.
-
----
 ## Security review — fail2ban and remaining checks
 **Timestamp**: 2026-11-16T13:45:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "đăng nhập ssh bằng mật khẩu và fail2ban khác gì nhau"; sau đó: "tạm thời chưa tắt ssh, chỉ thêm fail2ban, kiểm tra các phần còn lại cho tôi"
+**User Input**: "đăng nhập SSH bằng mật khẩu và fail2ban khác gì nhau"; sau đó: "tạm thời chưa tắt SSH, chỉ thêm fail2ban, kiểm tra các phần còn lại cho tôi"
 **AI Response**: "Giải thích khác biệt giữa tắt đăng nhập SSH bằng mật khẩu và fail2ban. Cài fail2ban trên VPS với jail sshd (5 lần sai trong 10 phút, chặn 1 giờ, tăng dần tới 1 tuần); không đổi cấu hình sshd. Kiểm bổ sung: phân quyền endpoint bằng script (345 endpoint, 621 method nhận Actor), CVE thư viện backend qua OSV từ danh sách jar của image production, thử production từ ngoài không đăng nhập, cấu hình repo GitHub. Cập nhật báo cáo .tmp/security-review-2026-11-16.md (thêm hai phát hiện về thư viện backend cũ và quy tắc nhánh main)."
 **Context**: Thay đổi duy nhất trên hạ tầng là cài fail2ban. Không đổi mã ứng dụng, database hay cấu hình deploy. Chưa thử IDOR bằng tài khoản thật; chưa xác nhận CVE nào khai thác được.
 
@@ -15580,7 +12480,7 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 ## Performance fixes — merged and applied on staging
 **Timestamp**: 2026-11-16T14:15:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "merge vào staging giúp tôi, sau đó truy cập vào vps của tôi và xử lí 2 việc trên"
+**User Input**: "merge vào staging giúp tôi, sau đó truy cập vào VPS của tôi và xử lý 2 việc trên"
 **AI Response**: "PR 101 merge vào staging (e2014177) sau khi xung đột audit.md với PR 100 được gộp trên nhánh (e7110051) và CI qua. VPS không git fetch được từ GitHub nên chép commit qua git bundle; staging tự deploy c9f68aab rồi e2014177, mọi dịch vụ khỏe. Trên VPS: cài lại /usr/local/bin/platform-deploy và /usr/local/bin/platform-staging-deploy từ bản mới (bản cũ giữ ở *.bak-20261116); CREATE EXTENSION pg_stat_statements cho database staging; restart container nginx của staging vì deploy không tạo lại nginx nên cấu hình mới chưa được nạp."
 **Context**: Operations. Không đụng container hay database production. Production chưa có bản này; khi lên production cần restart nginx và tạo extension cho database production.
 
@@ -15591,63 +12491,6 @@ Duyệt phạm vi, tiếp tục sửa và kiểm thử"
 **User Input**: "Có, sửa đi"
 **AI Response**: "Trả lời câu hỏi có sửa script deploy để tự nạp lại nginx khi cấu hình nginx đổi hay không. Tạo nhánh fix/deploy-restart-nginx từ origin/staging@e2014177 trong worktree riêng. platform-deploy.sh: switch_to khởi động lại nginx khi infra/nginx khác nhau giữa hai bản, kể cả lúc quay về. Thêm test (16/16 qua), cập nhật runbook. Hỏi người dùng duyệt mã và quyết định commit, push, mở PR vào staging."
 **Context**: Code Generation và Build and Test xong; chờ duyệt. Chưa commit, push hay cài lên VPS.
-
----
-## Deploy script — commit request
-**Timestamp**: 2026-11-16T14:40:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
-**AI Response**: "Commit cục bộ thay đổi script deploy, test, runbook và tài liệu AI-DLC trên nhánh fix/deploy-restart-nginx. Không push."
-**Context**: Người dùng duyệt mã bằng yêu cầu commit. Chưa push, chưa mở PR, chưa cài lên VPS.
-
----
-## Deploy script — pull request
-**Timestamp**: 2026-11-16T14:50:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Push và mở PR"
-**AI Response**: "Push nhánh fix/deploy-restart-nginx và mở PR vào staging. Không tự merge."
-**Context**: Số PR ghi trên GitHub và trong phản hồi cuối.
-
----
-## Deploy script — merged and installed on the VPS
-**Timestamp**: 2026-11-17T03:00:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "merge đi"
-**AI Response**: "Merge PR 102 vào staging (706e46f1). Chép commit sang VPS bằng git bundle; hai lần deploy đầu dừng ở git fetch vì VPS không tới được GitHub, lần thứ ba qua và staging lên 706e46f1, mọi dịch vụ khỏe. Cài lại /usr/local/bin/platform-deploy và /usr/local/bin/platform-staging-deploy từ bản mới (bản trước giữ ở *.bak-20261117)."
-**Context**: Operations theo yêu cầu của người dùng. Production vẫn chạy e3825aa6, không đổi.
-
----
-
-## NFR remediation — tiếp tục kiểm chứng
-**Timestamp**: 2026-11-17T02:32:06Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "tiếp tục"
-**AI Response**: "Tiếp tục sửa F01–F08. Sửa thêm mapping SQLState 55P03/57014 sau test PostgreSQL thật; ShellCheck sửa assertion trong restore harness. Backend verify 2570 tests, 0 failure/error, 1 skip AI evaluation; 66 frontend tests qua. Đang hoàn tất kiểm image/restore và tài liệu."
-**Context**: Lượt trước dừng khi automatic approval review không thực hiện được vì hết hạn mức, không phải do hành động bị đánh giá không an toàn. Hạn mức hiện cho phép tiếp tục các kiểm thử Docker cô lập. Không deploy/commit/push, không thay dữ liệu production.
-
----
-## NFR remediation — hoàn tất Code Generation và Build and Test
-**Timestamp**: 2026-11-17T02:56:37Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "tiếp tục"
-**AI Response**: "Đã sửa và kiểm chứng F01–F08. Backend verify 2570 tests, 0 failures/errors, 1 skip AI evaluation; 16 test health/worker chạy lại sau chỉnh trình bày qua; frontend liên quan 66/66. Guard PostgreSQL, deploy 15/15, restore harness 4/4, ShellCheck, image pins và Compose config qua. Dockerfile backend build thành công; restore fixture PostgreSQL thật bằng image đó qua, script báo 5 giây. Báo cáo: aidlc-docs/construction/build-and-test/2026-11-17-nfr-remediation-results.md."
-**Context**: Hoàn tất 9/9 bước kế hoạch. Giữ công việc đồng thời; không commit/push/deploy phần NFR, không đổi dữ liệu production. Tải mục tiêu, RPO/RTO production, accessibility toàn hành trình và soak/chaos chưa nghiệm thu. Security/Resiliency tuân thủ trong phạm vi đã duyệt, PBT disabled. Các trở ngại môi trường của lượt trước đã được giải quyết để chạy kiểm local; không còn hành động bị chặn bởi approval review.
-
----
-## NFR staging readiness — kiểm tra trước phát hành
-**Timestamp**: 2026-11-17T03:04:53Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiể tra xem đưa lên staging đuộc chưa"
-**AI Response**: "Fetch staging, xác minh CI 706e46f1 thành công cả 4 job. Nhánh local e7110051 chậm 4 commit; mã NFR không xung đột, hai tài liệu state/audit xung đột trong mô phỏng gộp trên bản sao tạm. Guard DB/image qua; harness deploy mới nhất staging 16/16 qua. Kiểm Dockerfile frontend với digest mới trước khi chốt kết luận."
-**Context**: Review-only trong workflow NFR đã có; không commit/push/merge/deploy, không truy cập VPS. Báo cáo ở aidlc-docs/construction/build-and-test/2026-11-17-nfr-staging-readiness.md. Không suy ra danh tính requester từ tên Git commit hoặc các entry lịch sử.
-
----
-## NFR staging readiness — kết quả
-**Timestamp**: 2026-11-17T03:07:07Z
-**Requested by:** Unknown — GitHub display name not confirmed
-**User Input**: "kiể tra xem đưa lên staging đuộc chưa"
-**AI Response**: "Đủ điều kiện chuẩn bị PR vào staging về mặt mã nguồn. Dockerfile frontend đã build thành công; container 384 MiB/0,5 CPU trả 200 ở health/login và chạy UID 100; đã dọn container. Trước merge cần đưa phần NFR chưa commit lên nền staging mới, gộp hai tài liệu xung đột và chờ CI của PR mới. CI staging hiện tại không thay CI của phần NFR."
-**Context**: Báo cáo readiness đã hoàn tất. Không đổi branch/source, không commit/push/merge/deploy hoặc truy cập VPS. Bản mô phỏng gộp chỉ ở .tmp; workspace chính không chứa conflict marker do lượt kiểm này tạo.
 
 ---
 ## NFR — yêu cầu đồng bộ staging, commit và mở PR
@@ -15668,7 +12511,7 @@ Làm cho tôi
 ## Kiểm tra đồng bộ tài liệu AI-DLC và mã nguồn
 **Timestamp**: 2026-11-17T14:49:08Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi check lại tính đồng bộ doc aidlc và src code hiện tại"
+**User Input**: "giúp tôi check lại tính đồng bộ doc AI-DLC và src code hiện tại"
 **AI Response**: "Đối chiếu tự động trên staging@706e46f1: (1) api-inventory khớp 347/347 mapping của 50 controller; (2) đường dẫn trong tài liệu hiện hành (as-built-baseline, code-summary, current-code-baseline, api-inventory, traceability) còn tồn tại, chỉ báo cáo cũ có ngày và bản tóm tắt remediation U04/U13/U14 trỏ tới tệp đã xóa; (3) migration mới nhất v20261116.1010 đã ghi. Lệch: current-code-baseline thiếu V20261113_1000__scope_quiz_attempts_to_class.sql và 39 tệp test backend; U11 domain-entities ghi attemptNo duy nhất theo (quizId, accountId) trong khi DB ràng buộc theo (quizId, accountId, classId); code-summary U02/U03/U08/U12 còn liệt kê component đã xóa (AuditDetailDialog, SettingGroupTable, DelegatedSectionCard, ReceiptPage, ClassAssignmentsCard, GroupCountCard, GroupProgressView); U03 nfr-design vẫn mô tả backup luôn mã hóa; comment LocaleGate.tsx còn ghi máy chủ dựng tiếng Việt; tài liệu U14 chưa nêu chuông thông báo chỉ poll khi SSE mất; aidlc-state chưa ghi PR 102 đã merge và còn ô chưa đánh dấu đã làm xong (commit/PR tài liệu vận hành 2026-11-16)."
 **Context**: Kiểm tra chỉ đọc; không sửa tài liệu hay mã, không commit. Chờ người dùng quyết định có sửa các điểm lệch không.
 
@@ -15692,17 +12535,9 @@ Làm cho tôi
 ## Đồng bộ tài liệu AI-DLC với mã nguồn — commit trên staging
 **Timestamp**: 2026-11-17T15:15:15Z
 **Requested by:** Quang Hung
-**User Input**: "k cần tạo branch mới"
+**User Input**: "không cần tạo branch mới"
 **AI Response**: "Đưa commit lên thẳng nhánh staging cục bộ (fast-forward), xóa nhánh docs/aidlc-code-sync-2026-11-17, ghi mục này rồi amend vào cùng commit. Không push."
 **Context**: Commit cục bộ trên staging, chưa push.
-
----
-## Kiểm tra JPA trong U04/U13/U14
-**Timestamp**: 2026-11-18T13:05:08Z
-**Requested by:** Hải Nam
-**User Input**: "kiểm tra lại giúp tôi các chức năng của u04, u13, u14 có đang dùng jpa không?"
-**AI Response**: "Xác nhận trên staging@2e179598: vẫn dùng JPA. U04: ISubjectJpaRepository (Spring Data JPA, @Lock PESSIMISTIC_WRITE, @Modifying/@Query), SubjectJpaEntity (@Entity, @Version), SubjectRepositoryAdapter (EntityManager persist, createNativeQuery), SubjectCommandService bắt org.hibernate ConstraintViolationException. U13: MaterialModuleRepositoryAdapter dùng EntityManager.createNativeQuery; MaterialRepositoryAdapter đã JDBC. U14: Announcement/Notification/NotificationPreference/EmailDelivery/DeadlineReminder là @Entity; AnnouncementRepositoryAdapter và NotificationRepositoryAdapter dùng EntityManager (JPQL, native, persist, lock.timeout); NotificationExceptionHandler import PersistenceException. Hạ tầng: pom.xml còn spring-boot-starter-data-jpa, application.yml còn spring.jpa (ddl-auto validate). Test còn dựng EntityManagerFactory/JpaTransactionManager: SubjectRepositoryIntegrationTest, NotificationDeliveryIntegrationTest, OwnerRequirementsTestConfig, EvaluationVersionIntegrationTest (U09); SubjectAdminCommandTest dùng lớp exception Hibernate. Khớp bảng persistence-conventions.md."
-**Context**: Kiểm tra chỉ đọc; không sửa mã, không commit.
 
 ---
 ## Kiểm tra ERD conceptual (tab erd-class-diagram-new)
@@ -15717,7 +12552,7 @@ không sửa code hay file drawio, kiểm tra giúp tôi xem diagram ở tab erd
 ## U04/U13/U14 chuyển JPA sang JDBC — tạo nhánh và câu hỏi yêu cầu
 **Timestamp**: 2026-11-18T13:12:24Z
 **Requested by:** Hải Nam
-**User Input**: "giúp tôi tạo branch mới từ staging để sửa lại từ jpa sang sử dụng jdbc cho cả 3 unit"
+**User Input**: "giúp tôi tạo branch mới từ staging để sửa lại từ JPA sang sử dụng JDBC cho cả 3 unit"
 **AI Response**: "Tạo nhánh refactor/jdbc-u04-u13-u14 từ staging@2e179598 (khớp origin/staging). Đọc code JPA của U04, U13 module, U14 và quy định persistence. Phát hiện EmailDeliveryService dựa vào dirty checking JPA để ghi trạng thái email (sendEmail, markEmailFailed, releaseDeferredEmails, cả attempts++ khi lỗi mail và flush trước khi đếm hạn mức). Tạo aidlc-docs/inception/requirements/2026-11-18-u04-u13-u14-jdbc-questions.md với 4 câu hỏi: phạm vi gỡ hạ tầng JPA, cách chuyển model U14, mức kiểm chứng, cách commit. Thêm mục mới trong aidlc-state.md."
 **Context**: Requirements Analysis (Standard). Chưa sửa mã, chưa commit. Chờ người dùng trả lời câu hỏi.
 
@@ -15738,14 +12573,6 @@ không sửa code hay file drawio, kiểm tra giúp tôi xem diagram ở tab erd
 **Context**: Approval prompt — Requirements Analysis và Workflow Planning.
 
 ---
-## U04/U13/U14 chuyển JPA sang JDBC — duyệt Requirements và Workflow Planning
-**Timestamp**: 2026-11-18T13:20:02Z
-**Requested by:** Hải Nam
-**User Input**: "Duyệt, tiếp tục"
-**AI Response**: "Ghi nhận duyệt; vào Code Generation Part 1 (lập kế hoạch)."
-**Context**: Requirements Analysis và Workflow Planning đã duyệt; vào Code Generation Part 1.
-
----
 ## U04/U13/U14 chuyển JPA sang JDBC — Code Generation Part 1, yêu cầu duyệt kế hoạch
 **Timestamp**: 2026-11-18T13:22:07Z
 **Requested by:** Hải Nam
@@ -15757,7 +12584,7 @@ không sửa code hay file drawio, kiểm tra giúp tôi xem diagram ở tab erd
 ## U04/U13/U14 chuyển JPA sang JDBC — duyệt kế hoạch Code Generation
 **Timestamp**: 2026-11-18T13:25:06Z
 **Requested by:** Hải Nam
-**User Input**: "hiện các unit khác có dùng hibernate không, nếu không thì duyệt kế hoạch"
+**User Input**: "hiện các unit khác có dùng Hibernate không, nếu không thì duyệt kế hoạch"
 **AI Response**: "Grep toàn backend: production của các unit khác không dùng org.hibernate, jakarta.persistence, Spring Data JPA, org.springframework.orm hay EntityManager. Còn lại hạ tầng chung (pom.xml spring-boot-starter-data-jpa, application.yml spring.jpa) và ba file test: ArchitectureTest (chuỗi package trong rule), EvaluationVersionIntegrationTest của U09 (tự dựng EntityManagerFactory quét subjects.repository), OwnerRequirementsTestConfig (cấu hình test của U04/U13/U14). Điều kiện của người dùng thỏa, coi kế hoạch đã duyệt; vào Code Generation Part 2."
 **Context**: Code Generation Part 1 đã duyệt; vào Part 2.
 
@@ -15785,14 +12612,6 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **User Input**: "không dựa vào folder docs mà phải dựa vào aidlc-docs thì mới đúng được"
 **AI Response**: "Xác nhận bảng được đối chiếu với aidlc-docs (construction/u01–u14 functional-design/business-rules.md, inception/requirements/requirements.md) và migration Flyway; không dùng thư mục docs/. Sửa lại một ý ở mục trước: D01 nghĩa là Quiz chỉ để luyện tập, không vào sổ điểm; D03 là Student không có AI cho bài nhóm. Mục trước ghi nhầm 'Student chỉ dùng AI cho Quiz Practice'."
 **Context**: Chỉ trả nội dung trong chat; không sửa mã, không sửa file drawio, không commit.
-
----
-## Rà thư mục docs/ cho nguồn business rules
-**Timestamp**: 2026-11-18T13:46:55Z
-**Requested by:** Hải Nam
-**User Input**: "trong folder docs có những gì có thể ảnh hưởng đến việc bạn lấy business rules không?"
-**AI Response**: "Liệt kê 24 tệp trong docs/. Bảng rules không lấy từ docs/. Tệp có thể ảnh hưởng: report3-conceptual-data-model.drawio (mô hình dữ liệu conceptual có thêm Enrollment, Module, Assignment Part, AI Usage Record, Leader Change Request, Backup Run, MCP Credential), usecase_table.md (bản 2026-10-14), guides/*.md, runbooks/restore-isolated.md, contracts/openapi/*.yaml. Đây là tài liệu dẫn xuất, không phải nguồn business rule; nếu khác aidlc-docs thì theo aidlc-docs."
-**Context**: Kiểm tra chỉ đọc; không sửa mã, không commit.
 
 ---
 ## Dựng lại tab database_design_new theo database dự án
@@ -15843,36 +12662,12 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Sửa file drawio ngoài repo theo yêu cầu; không sửa mã dự án, không commit.
 
 ---
-## U04/U13/U14 chuyển JPA sang JDBC — duyệt Code Generation
-**Timestamp**: 2026-11-18T14:44:22Z
-**Requested by:** Hải Nam
-**User Input**: "Continue to Next Stage"
-**AI Response**: "Ghi nhận duyệt Code Generation. Build and Test: dùng kết quả mvn -B verify (2572 test, 0 fail, 0 error, 1 skipped) đã chạy trên a4bd6934; thêm phần cách chạy lại vào 2026-11-18-u04-u13-u14-jdbc-results.md, thêm dòng vào build-and-test-summary.md, sửa ghi chú 'JPA validates the remaining U04/U13/U14 mappings' trong integration-test-instructions.md. Commit tài liệu cục bộ, không push. Hỏi: Build and test instructions complete. Ready to proceed to Operations stage?"
-**Context**: Code Generation đã duyệt; Build and Test hoàn tất, chờ duyệt chuyển Operations (placeholder).
-
----
 ## U04/U13/U14 chuyển JPA sang JDBC — duyệt Build and Test, Operations
 **Timestamp**: 2026-11-18T14:45:06Z
 **Requested by:** Hải Nam
 **User Input**: "Proceed to Operations"
 **AI Response**: "Ghi nhận duyệt Build and Test. Operations là placeholder: không có bước triển khai; không push, không tạo PR, không deploy. Đánh dấu workflow U04/U13/U14 JDBC hoàn tất trong aidlc-state.md và commit cục bộ."
 **Context**: Workflow U04/U13/U14 JPA → JDBC hoàn tất trên nhánh refactor/jdbc-u04-u13-u14 (chỉ commit cục bộ).
-
----
-## U04/U13/U14 chuyển JPA sang JDBC — E2E và PR vào staging
-**Timestamp**: 2026-11-18T14:48:55Z
-**Requested by:** Hải Nam
-**User Input**: "chạy e2e sau đó mở pr vào staging"
-**AI Response**: "Dựng stack cô lập mới jdbc1118 (cổng nginx 39188, Mailpit 39125, Postgres 35534) với image backend build từ nhánh refactor/jdbc-u04-u13-u14; không đụng stack platform và conv041314. Chạy scripts/e2e/u04-u13-u14.mjs, ghi kết quả, rồi push nhánh và mở PR vào staging."
-**Context**: Sau Operations; người dùng cho phép push nhánh và tạo PR vào staging. Không merge, không deploy.
-
----
-## U04/U13/U14 chuyển JPA sang JDBC — E2E bị chặn bởi lỗi RabbitMQ trên staging
-**Timestamp**: 2026-11-18T15:07:19Z
-**Requested by:** Hải Nam
-**User Input**: "(không có input mới; tiếp tục yêu cầu chạy e2e rồi mở PR)"
-**AI Response**: "Stack cô lập jdbc1118 build từ nhánh lên đủ 8 service. E2E u04-u13-u14 dừng ở bước dựng fixture (0 pass, 1 fail): OTP kích hoạt admin không tới Mailpit. Worker báo 'The class edu.aiplatform.jobs.contract.JobMessage is not in the trusted packages: [java.util, java.lang]'. Nguyên nhân: commit staging 3ed52391 (nâng Spring Boot 3.5.6 → 3.5.16, spring-rabbit 3.2.12) khiến Jackson2JsonMessageConverter trong jobs/config/AmqpMessageConfig.java chỉ tin java.util/java.lang; mọi job qua RabbitMQ (OTP, email, AI, Drive, backup) không deserialize được. Không do thay đổi JDBC. Stack platform/conv041314 dùng image cũ nên không gặp. Chưa sửa (ngoài phạm vi ba unit), chưa mở PR; hỏi người dùng cách xử lý."
-**Context**: E2E bị chặn; chờ người dùng quyết định.
 
 ---
 ## U04/U13/U14 chuyển JPA sang JDBC — hỏi về build lại Docker
@@ -15905,14 +12700,6 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **User Input**: "Sửa nhóm rõ ràng"
 **AI Response**: "Đổi tên JdbcQuestionRepository, JdbcQuizRepository, JdbcQuizAiDraftRepository, JdbcQuizAttemptRepository và 3 integration test thành tên không tiền tố. McpInput: get/text/uuid/integer/version/choice/page/size thành readValue/readText/readUuid/readInteger/readVersion/readChoice/readPage/readSize; page(list) thành paginateItems; teaching/admin thành requireTeaching/requireAdmin; invalid thành createInvalidArguments. Contract Java: IAiTask.get thành loadTask, IAssignmentQuery.get thành loadAssignment, IQuizQuery.get thành loadQuiz, cập nhật mọi caller, stub và test. Xuống dòng/tách method cho McpInput, McpFingerprint, McpWriteRequestService, AdminAiMcpTools, McpAuthoringRequirementsTools, AssignmentMcpAuthoringService, AssignmentMcpQueryTools, QuizMcpAuthoringService, QuizMcpQueryTools, QuestionBankMcpTools; giữ nguyên tên MCP tool, schema, chuỗi và JSON. Build: test-compile thành công; 593 test liên quan (gồm ArchitectureTest và 3 integration test repository) 0 lỗi. Chưa chạy mvn verify toàn bộ, chưa commit."
 **Context**: Refactor tên/định dạng theo code-conventions; không đổi API HTTP, JSON, schema DB hay tên MCP tool.
-
----
-## PR #105 — CI backend lỗi bước kiểm suite bắt buộc
-**Timestamp**: 2026-11-18T17:05:00Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi check lỗi pr105"
-**AI Response**: "CI run 44351291168: mvn -B verify thành công; lỗi ở scripts/assert-required-backend-tests.ps1 vì manifest 2026-11-08-integration-test-cases.json còn tên suite cũ JdbcQuizAttemptRepositoryIntegrationTest (cùng JdbcQuestion/JdbcQuiz). Đổi 8 chỗ sang tên mới trong manifest trên worktree audit-staging; method trace giữ nguyên. Chưa commit, chưa push."
-**Context**: Sửa manifest truy vết cho PR #105; chờ người dùng cho phép commit/push.
 
 ---
 ## U03 — sửa RabbitMQ trusted packages
@@ -15952,7 +12739,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Tổng hợp việc cần làm sau rà soát góp ý giảng viên và Syllabus
 **Timestamp**: 2026-11-20T02:48:44Z
 **Requested by:** Quang Hung
-**User Input**: "tóm lại từ đầu đến h trao đổi những việc cần làm là gì, để xuất"
+**User Input**: "tóm lại từ đầu đến giờ trao đổi những việc cần làm là gì, đề xuất"
 **AI Response**: "Tổng hợp danh sách việc theo 3 nhóm: tài liệu/trình bày (làm ngay), cấu hình không code (rubric mẫu, khai báo AI), chức năng cần GVHD duyệt (loại sơ đồ Context/DFD/Communication, ghi vấn đáp/present, thư viện mẫu rubric); đề xuất thứ tự thực hiện."
 **Context**: Tổng hợp chỉ đọc, không sửa code; chờ người dùng chọn việc.
 
@@ -15960,7 +12747,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Cập nhật tài liệu theo góp ý giảng viên (mục 2, 3, 4, 5) và phân tích mục 8
 **Timestamp**: 2026-11-20T02:59:00Z
 **Requested by:** Quang Hung
-**User Input**: "2,3,4,5,8 giúp tôi cập nhật với cho tôi hỏi nếu sửa mục 8 thì có ảnh hưởng gì đến chức năng hành vi hiện tại ko"
+**User Input**: "2,3,4,5,8 giúp tôi cập nhật với cho tôi hỏi nếu sửa mục 8 thì có ảnh hưởng gì đến chức năng hành vi hiện tại không"
 **AI Response**: "Tạo inception/requirements/2026-11-20-lecturer-feedback-syllabus.md (định vị, AS-IS theo Syllabus, giữ D01, MCP/AI/chi phí); sửa requirements.md §1, §2.3, §2.4, REL-005; thêm mục 0 trạng thái 2026-11-20 vào gap analysis 2026-11-12. Mục 8: tạo 2026-11-20-diagram-types.md (hành vi hiện tại, phương án A/B, ảnh hưởng) và 2026-11-20-diagram-types-questions.md (Q1–Q4). Ảnh hưởng chính: không migration; nhãn sơ đồ cũ có thể đổi (phương án A); đếm requiredDiagrams có thể đổi nhưng giao diện/MCP không đặt được giá trị này; frontend phải triển khai cùng backend; không rollback đơn giản sau khi đã lưu loại mới; quyết định 2026-10-22 bị đảo nếu chọn phương án B."
 **Context**: Requirements Analysis mục 8 đang chờ câu trả lời Q1–Q4 và GVHD duyệt; chưa sửa code. Cập nhật aidlc-state.md.
 
@@ -15968,7 +12755,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Mục 8 loại sơ đồ — làm rõ phương án B
 **Timestamp**: 2026-11-20T03:04:05Z
 **Requested by:** Quang Hung
-**User Input**: "phương án b là người dùng k cần chọn loại diagram đko, hệ thống nhận diện theo cấu hình"
+**User Input**: "phương án b là người dùng không cần chọn loại diagram đúng không, hệ thống nhận diện theo cấu hình"
 **AI Response**: "Làm rõ: tự nhận diện không cho sửa là phương án A. Phương án B được viết lại thành: tự nhận diện như A, không bắt buộc chọn, có ô sửa tùy chọn khi đoán sai, loại đã sửa tay được giữ. B không còn đảo phần 'chèn không bắt buộc chọn loại' của quyết định 2026-10-22. Đã sửa 2026-11-20-diagram-types.md (bảng phương án, ảnh hưởng mục 1) và Q1 trong file câu hỏi."
 **Context**: Requirements Analysis mục 8, chờ trả lời Q1–Q4; chưa sửa code.
 
@@ -15976,7 +12763,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Mục 8 loại sơ đồ — hỏi hướng hiện tại
 **Timestamp**: 2026-11-20T03:05:53Z
 **Requested by:** Quang Hung
-**User Input**: "hiện tại hệ thống đangl mà theo hướng nào"
+**User Input**: "hiện tại hệ thống đang làm theo hướng nào"
 **AI Response**: "Hiện tại theo phương án A (chỉ tự nhận diện): frontend luôn chèn sơ đồ loại OTHER (types.ts:185), không có ô chọn/sửa loại; backend đoán loại mỗi lần lưu (DocumentModelService:665-674, quyết định 2026-10-22), không đoán được thì giữ OTHER."
 **Context**: Trả lời câu hỏi; không sửa code hay tài liệu khác.
 
@@ -15984,7 +12771,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Mục 8 loại sơ đồ — liên quan chấm bài
 **Timestamp**: 2026-11-20T03:07:38Z
 **Requested by:** Quang Hung
-**User Input**: "phần này liên quan đến chám bài dko"
+**User Input**: "phần này liên quan đến chấm bài đúng không"
 **AI Response**: "Có liên quan gián tiếp: điểm tính theo rubric, không theo loại sơ đồ; loại sơ đồ chỉ là nhãn '[Sơ đồ <loại>]' đi kèm nội dung sơ đồ trong prompt AI chấm, phản hồi Practice và MCP, và là điều kiện đếm requiredDiagrams khi nộp. Phát hiện phụ: GradingPromptBuilder gửi XML sơ đồ rút gọn hai lần (toPlainText đã kèm compactDiagramXml, sau đó thêm lần nữa ở dòng 253-256)."
 **Context**: Trả lời câu hỏi; không sửa code.
 
@@ -15992,7 +12779,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Mục 8 loại sơ đồ — AI tự nhận loại theo đề khi chấm
 **Timestamp**: 2026-11-20T03:10:54Z
 **Requested by:** Quang Hung
-**User Input**: "có cách nào cấu hình ai chấm theo từng loại bài chuẩn ko mà k thay đổi giao đề hiện tại ko, kiểu cái other diagram ai sẽ tự nhận diện đc theo như đề bài ấy"
+**User Input**: "có cách nào cấu hình AI chấm theo từng loại bài chuẩn không mà không thay đổi giao đề hiện tại không, kiểu cái other diagram AI sẽ tự nhận diện được theo như đề bài ấy"
 **AI Response**: "Có. Prompt chấm đã gửi đề (instructions), khung bài (skeleton), rubric và nội dung sơ đồ, nhưng chưa có subject code hay học liệu. Đề xuất: (1) thêm chỉ dẫn vào GradingPromptBuilder.buildGradingInstructions và prompt phản hồi Practice: nhãn loại là tự đoán, có thể OTHER hoặc sai; AI tự xác định loại sơ đồ từ đề, tiêu đề phần và rubric rồi áp ký pháp tương ứng; (2) chuẩn ký pháp theo môn (COMET/Wiegers) ghi trong rubric hoặc đề, không cần code; (3) thêm chỉ dẫn tương tự vào agent-skills/grade-with-rubric/SKILL.md cho kênh MCP; (4) sửa luôn lỗi gửi XML sơ đồ hai lần; (5) thêm bài mẫu DFD/Context vào bộ đánh giá để đo. Chưa sửa code; chờ người dùng đồng ý."
 **Context**: Requirements Analysis mục 8, phương án bổ sung không đổi giao diện giao đề.
 
@@ -16008,7 +12795,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Kế hoạch AI chấm — hỏi về key Gemini
 **Timestamp**: 2026-11-20T03:18:32Z
 **Requested by:** Quang Hung
-**User Input**: "Có cần tôi đưa api gemịn để chạy test ai ko"
+**User Input**: "Có cần tôi đưa API Gemini để chạy test AI không"
 **AI Response**: "Chưa cần. Giai đoạn 1–3 chỉ cần test tự động và harness không gọi AI. Key chỉ cần cho các lần chạy live (0.4 đo mốc, 4.3–4.4 đo lại); đề xuất chạy mốc trên commit cũ và đo bản mới cùng một ngày. Không dán key vào chat; đặt vào file env ngoài repo hoặc biến môi trường AI_EVAL_API_KEY."
 **Context**: Trả lời câu hỏi; kế hoạch vẫn chờ duyệt.
 
@@ -16016,7 +12803,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Kế hoạch AI chấm — duyệt làm giai đoạn 1–3
 **Timestamp**: 2026-11-20T03:19:38Z
 **Requested by:** Quang Hung
-**User Input**: "Ok vậy giúp tôi làm theo kế hoạch đề xúât"
+**User Input**: "Ok vậy giúp tôi làm theo kế hoạch đề xuất"
 **AI Response**: "Bắt đầu Code Generation Part 2 cho giai đoạn 1–3 của 2026-11-20-ai-grading-accuracy.md (không cần key, không gọi AI). Giai đoạn 0, 4, 5 chưa làm."
 **Context**: Construction — U09 Code Generation, người dùng duyệt phương án làm giai đoạn 1–3 trước.
 
@@ -16024,7 +12811,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Kế hoạch AI chấm — hoàn thành giai đoạn 1–3
 **Timestamp**: 2026-11-20T03:27:26Z
 **Requested by:** Quang Hung
-**User Input**: "Ok vậy giúp tôi làm theo kế hoạch đề xúât"
+**User Input**: "Ok vậy giúp tôi làm theo kế hoạch đề xuất"
 **AI Response**: "Sửa DocumentModelService/IDocumentModel (toPlainTextWithBlockIds), AssignmentsContractStubs, GradingPromptBuilder (văn bản có mã block, bỏ gửi sơ đồ lần hai, chỉ dẫn mới), GradingProposalNormalizer (mã block sai thành null), DiagramXml (hình chữ nhật, quan hệ 'trong' theo cha và tọa độ). Test: 86/86 liên quan, 755 unit test của assignments/assignmentwork/grading/groupdocs/ai đạt, 8 bỏ qua. 3.1 đổi sang chỉ dẫn prompt thay cho quy tắc server. Chưa chạy integration test (Docker tắt) và chưa gọi AI thật."
 **Context**: Construction — U09 Code Generation Part 2, giai đoạn 1–3; giai đoạn 0, 4, 5 chưa làm. Chưa commit.
 
@@ -16040,7 +12827,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Kế hoạch AI chấm — tạo file env mẫu
 **Timestamp**: 2026-11-20T04:58:24Z
 **Requested by:** Quang Hung
-**User Input**: "b tạo sẵn cho tôi đău tôi đg dẫn để tôi cho vào"
+**User Input**: "bạn tạo sẵn cho tôi đâu, tôi đường dẫn để tôi cho vào"
 **AI Response**: "Tạo C:\Users\Quang Hung\.ai-eval.env (ngoài repo) với giá trị giữ chỗ DAN_KEY_GEMINI_VAO_DAY; người dùng tự thay key."
 **Context**: Chuẩn bị chạy đánh giá AI thật; chưa chạy.
 
@@ -16048,7 +12835,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Kế hoạch AI chấm — đổi model đánh giá
 **Timestamp**: 2026-11-20T04:59:06Z
 **Requested by:** Quang Hung
-**User Input**: "đổi thành model 3.5 flash lite được k"
+**User Input**: "đổi thành model 3.5 Flash Lite được không"
 **AI Response**: "Đổi dòng AI_EVAL_MODEL trong ~/.ai-eval.env thành gemini-3.5-flash-lite bằng sed, không đọc các dòng khác (key). Lưu ý: số liệu cũ đo bằng gemini-2.5-flash nên phải đo mốc lại bằng cùng model; thinkingBudget với Gemini 3.5 chưa kiểm."
 **Context**: Chuẩn bị chạy đánh giá; chưa chạy.
 
@@ -16059,14 +12846,6 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **User Input**: "tôi điền rồi, giúp tôi chạy test AI"
 **AI Response**: "Chạy GradingAiEvaluationTest live với key trong ~/.ai-eval.env (không đọc/in key): thử 1 bài trước, sau đó đo bản mới và bản cũ 7d51a16f cùng model gemini-3.5-flash-lite."
 **Context**: Construction — U09, giai đoạn 4.3 (đo lại) và mốc 0.4 trên bộ badminton-booking.
-
----
-## Kế hoạch AI chấm — kết quả đo live
-**Timestamp**: 2026-11-20T05:12:51Z
-**Requested by:** Quang Hung
-**User Input**: "xomg chưa"
-**AI Response**: "Đo live gemini-3.5-flash-lite, badminton-booking 8×3, bản cũ 7d51a16f và bản mới. Cũ 9,48 (22/24 hợp lệ, kappa 0,84); mới 9,35 (19/24, kappa 0,80). Trích dẫn và lạc đề 100% ở cả hai. Bài 08 tụt ở bản mới (AI chép dòng [block …] làm bằng chứng và cho đủ điểm); bài 04 sai ở cả hai. Ghi kết quả vào construction/build-and-test/2026-11-20-ai-grading-accuracy-results.md; đề xuất sửa G1 và chạy lại 3 bài."
-**Context**: Construction — U09 giai đoạn 4.3 (một phần). Chờ người dùng chọn.
 
 ---
 ## Kế hoạch AI chấm — sửa G1 và chạy lại
@@ -16088,7 +12867,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Kế hoạch AI chấm — thiết kế dùng nhiều model linh hoạt
 **Timestamp**: 2026-11-20T07:13:24Z
 **Requested by:** Quang Hung
-**User Input**: "nhỡ tôi đổi model khác như dùng claude hay chat gpt thì sao, tôi muốn b thiết kế tnao mà dùng model khác nhau linh hoạt được"
+**User Input**: "nhỡ tôi đổi model khác như dùng Claude hay ChatGPT thì sao, tôi muốn bạn thiết kế thế nào mà dùng model khác nhau linh hoạt được"
 **AI Response**: "Đối chiếu HttpProviderGateway: Gemini và OpenAI tính token suy nghĩ chung trần đầu ra (OpenAI chưa gửi mức suy nghĩ), Claude không bật suy nghĩ. Ghi thiết kế G3 vào mục 8 của plan: cấu hình reasoning-models/reasoning-effort/reasoning-reserve-tokens theo provider, adapter dịch sang tham số gốc, trần = câu trả lời + reserve, quota theo trần thực, kiểm bằng lời gọi thử từng provider. Chờ duyệt."
 **Context**: Construction — U06/U09 thiết kế; chưa sửa code.
 
@@ -16096,17 +12875,9 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Kế hoạch AI chấm — chỉ có key Gemini
 **Timestamp**: 2026-11-20T07:17:32Z
 **Requested by:** Quang Hung
-**User Input**: "nma hiện tại tôi chỉ có api cho gemini thôi"
+**User Input**: "nhưng mà hiện tại tôi chỉ có API cho Gemini thôi"
 **AI Response**: "Vẫn làm thiết kế chung; chỉ Gemini được kiểm bằng gọi thật. OpenAI/Claude kiểm bằng unit test hình dạng request; mặc định an toàn cho provider chưa kiểm: chỉ cộng reasoning-reserve-tokens, không gửi tham số suy nghĩ gốc cho đến khi có key để thử. Chờ duyệt."
 **Context**: Construction — thiết kế G3 (mục 8 plan).
-
----
-## Kế hoạch AI chấm — vì sao gửi tham số suy nghĩ cho Gemini
-**Timestamp**: 2026-11-20T07:19:59Z
-**Requested by:** Quang Hung
-**User Input**: "tại sao gemini lại cần gửi tham số suy nghĩ"
-**AI Response**: "Giải thích: Gemini có suy nghĩ tự quyết lượng suy nghĩ, tính chung trần đầu ra và tính tiền; tham số giúp giới hạn để không chạm trần và bớt chi phí. Không bắt buộc: có thể chỉ chừa token, đổi lại tốn hơn và không có trần chắc chắn. Đề xuất đo cả hai cách bằng bài 04/06/08."
-**Context**: Trả lời câu hỏi; thiết kế G3 chờ duyệt.
 
 ---
 ## Kế hoạch AI chấm — duyệt làm G3
@@ -16136,7 +12907,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Kế hoạch AI chấm — làm G4, G2
 **Timestamp**: 2026-11-21T04:17:35Z
 **Requested by:** Quang Hung
-**User Input**: "làm tiếp g4, g2"
+**User Input**: "làm tiếp G4, G2"
 **AI Response**: "Bắt đầu G4 (làm tròn điểm mục trong khoảng hợp lệ) và G2 (phân biệt nét liền/nét đứt cho cạnh có stereotype)."
 **Context**: Construction — U07/U09.
 
@@ -16144,25 +12915,9 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Kế hoạch AI chấm — G4, G2 hoàn thành
 **Timestamp**: 2026-11-21T04:26:52Z
 **Requested by:** Quang Hung
-**User Input**: "làm tiếp g4, g2"
+**User Input**: "làm tiếp G4, G2"
 **AI Response**: "G4: làm tròn điểm mục trong 0..max (GradingProposalNormalizer), cập nhật BR-U09-32, sửa test cũ. G2: '(nét liền)' cho cạnh stereotype không nét đứt + chỉ dẫn. 928 unit test đạt. Live 04/06 × 3: bài 04 về 3,75 (trước 4,00), 06 không lỗi định dạng; replay 06 từ bản ghi cũ: hết INVALID_AI_PROPOSAL. Ghi mục 6 file kết quả."
 **Context**: Construction — U07/U09. Chưa commit.
-
----
-## Kế hoạch AI chấm — chạy lại cả bộ
-**Timestamp**: 2026-11-21T04:39:37Z
-**Requested by:** Quang Hung
-**User Input**: "ok"
-**AI Response**: "Hiểu là đồng ý chạy lại cả bộ 8 bài × 3 với cấu hình mặc định mới (Gemini không gửi tham số suy nghĩ, chừa 4.096). Chưa commit."
-**Context**: Construction — U09 giai đoạn 4.3.
-
----
-## Kế hoạch AI chấm — kết quả cả bộ sau G1–G4
-**Timestamp**: 2026-11-21T04:43:23Z
-**Requested by:** Quang Hung
-**User Input**: "ok"
-**AI Response**: "Cả bộ 8×3: 17/24 hợp lệ (6 lỗi 503, 1 bị cắt), 9,46/10, sai số điểm 2,3% (cũ 4,1%), bài lệch ≤10% 88,2%, kappa 0,84; bài 04 về đúng 3,75. Phát hiện G5 (bài chèn lệnh sinh 11.034 token bị cắt) và G6 (cho điểm nét đứt khi không có include/extend). Ghi mục 7 file kết quả."
-**Context**: Construction — U09 giai đoạn 4.3 (badminton-booking). Chưa commit.
 
 ---
 ## Kế hoạch AI chấm — xin đề xuất sửa G5, G6
@@ -16208,7 +12963,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Bỏ tiếng Nhật khỏi hệ thống
 **Timestamp**: 2026-11-21T05:18:38Z
 **Requested by:** Quang Hung
-**User Input**: "mà khoan giúp tôi bỏ tiếng nhật ra khỏi hệ thống"
+**User Input**: "mà khoan, giúp tôi bỏ tiếng Nhật ra khỏi hệ thống"
 **AI Response**: "Tạm dừng commit; khảo sát mọi chỗ dùng locale ja trước khi sửa."
 **Context**: Yêu cầu mới (frontend i18n), chen trước việc commit.
 
@@ -16216,7 +12971,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Bỏ tiếng Nhật — xác nhận phạm vi
 **Timestamp**: 2026-11-21T05:22:46Z
 **Requested by:** Quang Hung
-**User Input**: "bỏ cả ngôn ngữ giao diện lẫn tạo bài bằng tiếng nhật , chỗ nào có tieensg nhật thì bỏ"
+**User Input**: "bỏ cả ngôn ngữ giao diện lẫn tạo bài bằng tiếng Nhật, chỗ nào có tiếng Nhật thì bỏ"
 **AI Response**: "Bỏ locale ja (locales.ts, msg.ts, ja.json, test) và lựa chọn JA khi AI soạn đề (validation, prompt, kiểu frontend, test); quét toàn repo tìm chỗ còn sót, giữ nguyên tài liệu lịch sử."
 **Context**: Yêu cầu bỏ tiếng Nhật.
 
@@ -16224,7 +12979,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Bỏ tiếng Nhật — hoàn thành
 **Timestamp**: 2026-11-21T05:23:43Z
 **Requested by:** Quang Hung
-**User Input**: "bỏ cả ngôn ngữ giao diện lẫn tạo bài bằng tiếng nhật , chỗ nào có tieensg nhật thì bỏ"
+**User Input**: "bỏ cả ngôn ngữ giao diện lẫn tạo bài bằng tiếng Nhật, chỗ nào có tiếng Nhật thì bỏ"
 **AI Response**: "Bỏ locale ja và ja.json, lựa chọn JA khi AI soạn đề (frontend, backend validation và prompt), sửa test; cập nhật README, requirements, current-code-baseline. Frontend 1.161 test, backend assignments 166 test đạt. Giữ chữ tiếng Trung trong test dịch. Hỏi về con dấu 学 (HankoMark)."
 **Context**: Thay đổi frontend i18n và U07; chưa commit.
 
@@ -16232,7 +12987,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Bỏ tiếng Trung trong test
 **Timestamp**: 2026-11-21T06:12:34Z
 **Requested by:** Quang Hung
-**User Input**: "Sao lại có tiếng trung bỏ đi"
+**User Input**: "Sao lại có tiếng Trung, bỏ đi"
 **AI Response**: "Giải thích chữ Hán chỉ là dữ liệu mẫu trong AssignmentAiRevisionTest; thay bằng dữ liệu tiếng Việt, giữ nguyên ý nghĩa test."
 **Context**: Dọn dữ liệu test; tiếp nối yêu cầu bỏ tiếng Nhật.
 
@@ -16240,7 +12995,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Bỏ tiếng Trung trong test — hoàn thành
 **Timestamp**: 2026-11-21T06:13:14Z
 **Requested by:** Quang Hung
-**User Input**: "Sao lại có tiếng trung bỏ đi"
+**User Input**: "Sao lại có tiếng Trung, bỏ đi"
 **AI Response**: "Thay chữ Hán trong AssignmentAiRevisionTest bằng câu tiếng Việt cùng nghĩa, đổi chineseSkeleton thành vietnameseSkeleton. Quét lại repo: chỉ còn chữ 学 của con dấu HankoMark (chờ quyết)."
 **Context**: Dọn dữ liệu test; chưa commit.
 
@@ -16261,27 +13016,10 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **Context**: Frontend U01; chưa commit.
 
 ---
-## Commit theo nhóm, chưa push
-**Timestamp**: 2026-11-21T06:17:13Z
-**Requested by:** Quang Hung
-**User Input**: "Giúp tôi chia commit rõ ràng chưa push"
-**AI Response**: "Tách 5 commit trên audit-staging: (1) AI chấm: prompt, tóm tắt sơ đồ, chuẩn hóa đề xuất; (2) cấu hình suy nghĩ theo provider và bộ đánh giá; (3) gợi ý rubric chỉ nêu trường hợp bị trừ; (4) bỏ tiếng Nhật và tiếng Trung; (5) tài liệu AI-DLC. Không push, không thêm Co-Authored-By."
-**Context**: Giao nhận local.
-
----
-## Commit theo nhóm — kết quả
-**Timestamp**: 2026-11-21T06:17:45Z
-**Requested by:** Quang Hung
-**User Input**: "Giúp tôi chia commit rõ ràng chưa push"
-**AI Response**: "Đã tạo d8f69175 (grading), 43857601 (ai reasoning), 3aa94c57 (rubric hint), fc8ec0cf (bỏ tiếng Nhật/Trung); commit tài liệu AI-DLC là commit cuối. Không push."
-**Context**: Giao nhận local trên audit-staging.
-
----
-
 ## Ưu tiên rubric và kiểm bằng chứng khi chấm AI
 **Timestamp**: 2026-11-21T07:43:57Z
 **Requested by:** Quang Hung
-**User Input**: "Sửa heo đề xuất tốt nhất để đảm bảo độ chính xác ai tin cậy nhất"
+**User Input**: "Sửa theo đề xuất tốt nhất để đảm bảo độ chính xác AI tin cậy nhất"
 **AI Response**: "Tiếp tục kế hoạch độ chính xác U09. Cập nhật prompt cho điểm tối đa theo điều kiện bắt buộc, tôn trọng điều kiện tùy chọn và chuyển cách tính điểm mơ hồ cho giảng viên xem. Đánh dấu bằng chứng dẫn sai phần trong đề xuất provider và MCP, giữ điểm đề xuất và hỗ trợ gửi lại cùng mã yêu cầu. Bổ sung ca hồi quy và chạy lại bộ đánh giá."
 **Context**: Tiếp nối audit U09 tại 97be9a3f và phép đo Gemini theo hai rubric. Phạm vi gồm prompt, xử lý đề xuất và kiểm thử.
 
@@ -16290,7 +13028,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Ưu tiên rubric và kiểm bằng chứng khi chấm AI — kiểm chứng
 **Timestamp**: 2026-11-21T07:48:04Z
 **Requested by:** Quang Hung
-**User Input**: "Sửa heo đề xuất tốt nhất để đảm bảo độ chính xác ai tin cậy nhất"
+**User Input**: "Sửa theo đề xuất tốt nhất để đảm bảo độ chính xác AI tin cậy nhất"
 **AI Response**: "Đã cập nhật code và quy tắc BR-U09-31/32. Ba ca hồi quy qua sau sửa. Toàn bộ backend chạy 2.582 test, 2.581 đạt và một test backup lỗi mã hóa ký tự mặc định trên Windows. Chạy riêng backup với UTF-8 đạt 11/11. Giao diện duyệt điểm đạt 71/71. Replay 24 phản hồi giữ nguyên kết quả điểm."
 **Context**: Backend Java 17, PostgreSQL cục bộ. Lượt Java 21 đầu bị giới hạn bộ nhớ phân trang. Phiên Gemini kiểm chứng prompt mới đang chờ khóa.
 
@@ -16362,7 +13100,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 — chạy lại chấm Gemini trực tiếp
 **Timestamp**: 2026-11-21T10:00:17Z
 **Requested by:** Quang Hung
-**User Input**: "Giúp tôi chạy lại luồng gemini"
+**User Input**: "Giúp tôi chạy lại luồng Gemini"
 **AI Response**: "Chuẩn bị chạy HttpProviderGateway của backend đang kiểm chứng với Gemini 3.5 Flash Lite trên bài tổng hợp 01-complete, rubric 13 mục, ba lần. Orca hiển thị ô nhập khóa thử nghiệm ẩn ký tự."
 **Context**: Đối chiếu dữ liệu mẫu của ca hồi quy định dạng. Dùng bản sao có nội dung backend và pom.xml khớp với audit-staging.
 
@@ -16371,25 +13109,16 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 — kết quả chấm Gemini trực tiếp
 **Timestamp**: 2026-11-21T10:03:59Z
 **Requested by:** Quang Hung
-**User Input**: "Giúp tôi chạy lại luồng gemini"
+**User Input**: "Giúp tôi chạy lại luồng Gemini"
 **AI Response**: "Gemini 3.5 Flash Lite nhận ba lượt chấm bài tổng hợp 01-complete. Lượt 1 và 2 trả HTTP 503. Lượt 3 chấm 4,00/4,00, qua kiểm tra định dạng, có đủ 13 mục và không có mục cần giảng viên kiểm tra."
 **Context**: Đọc kết quả từng lượt từ results.json. Bằng chứng phiên này nằm dưới backend/target/gemini-rerun-1795255085378. Chạy trực tiếp qua pipeline backend cô lập. Chưa xác minh trên trình duyệt hoặc đo được độ ổn định của điểm giữa nhiều phản hồi hợp lệ.
-
----
-
-## U09 — tách commit grading
-**Timestamp**: 2026-11-21T10:06:57Z
-**Requested by:** Quang Hung
-**User Input**: "Giúp tôi commit chưa push"
-**AI Response**: "Tách thay đổi xử lý phản hồi AI, khôi phục yêu cầu chấm bị gián đoạn và hồ sơ AI-DLC thành các commit cục bộ."
-**Context**: Chi nhánh audit-staging. Không push.
 
 ---
 
 ## U09 — chuẩn bị PR vào staging
 **Timestamp**: 2026-11-21T10:11:07Z
 **Requested by:** Quang Hung
-**User Input**: "Giúp tôi push và tạo pr lên staging"
+**User Input**: "Giúp tôi push và tạo PR lên staging"
 **AI Response**: "Nhập staging vào audit-staging để giữ bản sửa RabbitMQ đã có ở nhánh đích. Giải quyết phần nhật ký bằng cách giữ các mục riêng từ hai nhánh. Chuẩn bị push audit-staging và mở PR vào staging."
 **Context**: Giao nhận thay đổi grading và các commit đang chờ trên audit-staging.
 
@@ -16398,7 +13127,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Sửa tuần tự phát hiện audit mã nguồn
 **Timestamp**: 2026-11-21T11:14:39Z
 **Requested by:** Quang Hung
-**User Input**: "Giúp rôi sửa và test lần luợt các lỗi"
+**User Input**: "Giúp tôi sửa và test lần lượt các lỗi"
 **AI Response**: "Thực hiện theo thứ tự báo cáo audit đã duyệt. Mỗi lỗi được tái hiện và kiểm lại trước khi đánh dấu hoàn tất."
 **Context**: audit-staging tại 91d593be. Kế hoạch 2026-11-21-audit-remediation.md. Security và Resiliency giữ phạm vi hiện hành. Property-Based Testing tắt.
 
@@ -16407,7 +13136,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Sửa tuần tự phát hiện audit mã nguồn — kiểm chứng
 **Timestamp**: 2026-11-21T11:47:42Z
 **Requested by:** Quang Hung
-**User Input**: "Giúp rôi sửa và test lần luợt các lỗi"
+**User Input**: "Giúp tôi sửa và test lần lượt các lỗi"
 **AI Response**: "Đã ghép và kiểm 19 mục. Mỗi mục có tái hiện trước sửa và kiểm lại. Bản ghép đạt 249 test backend được chọn, 1.186 test frontend, ESLint, TypeScript, 17 ca deploy và 3 ca restore giả lập."
 **Context**: Dữ liệu tổng hợp. Test tích hợp chạy PostgreSQL, Redis và RabbitMQ cô lập. Nháp toàn môn chỉ chuyển khi đích hợp lệ duy nhất và giữ nguyên biên nhận cũ. Có migration Flyway cho lịch dọn tệp, vẫn đọc lịch Redis cũ. Chưa commit, push, deploy, gọi provider thật hoặc chạy E2E trình duyệt.
 
@@ -16416,7 +13145,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 — kiểm tra Gemini sau sửa audit
 **Timestamp**: 2026-11-21T11:54:04Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi test gemini"
+**User Input**: "giúp tôi test Gemini"
 **AI Response**: "Chuẩn bị gọi Gemini 3.5 Flash Lite qua pipeline backend đã ghép 19 bản sửa. Dùng dữ liệu tổng hợp 01-complete và 08-wrong-actors, mỗi bài ba lượt."
 **Context**: Bản sao đã qua test tích hợp khớp với mã backend hiện tại. Orca hiển thị ô nhập khóa thử nghiệm ẩn ký tự.
 
@@ -16425,7 +13154,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 — kết quả Gemini sau sửa audit
 **Timestamp**: 2026-11-21T11:58:15Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi test gemini"
+**User Input**: "giúp tôi test Gemini"
 **AI Response**: "Gemini 3.5 Flash Lite trả đủ sáu phản hồi hợp lệ trên hai bài tổng hợp. 01-complete đạt 4,00/4,00 ở cả ba lượt. 08-wrong-actors đạt 2,50, 2,37 và 2,25 trên 4,00 so với 2,80 kỳ vọng. Mục actor lần lượt đạt 0,00, 0,12 và 0,00 so với 0,10 kỳ vọng. Không lượt nào yêu cầu giảng viên kiểm tra."
 **Context**: Chạy GradingAiEvaluationTest ở chế độ live trên bản backend đã ghép. Điểm kỳ vọng do nhóm soạn. Xem báo cáo trong backend/target/gemini-after-repair-1795261996874. Chưa chạy màn hình thật.
 
@@ -16434,7 +13163,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Sửa lỗi audit — chuẩn bị PR vào staging
 **Timestamp**: 2026-11-21T11:59:58Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi commit và pr lên staging"
+**User Input**: "giúp tôi commit và tạo PR lên staging"
 **AI Response**: "Chuẩn bị commit mã và test của đợt sửa 19 lỗi, tách script vận hành và tài liệu AI-DLC. Push audit-staging và mở PR vào staging."
 **Context**: Nhánh nguồn và nhánh đích cùng ở 91d593be khi kiểm tra. Dùng bằng chứng kiểm thử tích hợp và Gemini trên dữ liệu tổng hợp.
 
@@ -16443,7 +13172,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## PR 109 — sửa ca kiểm thử restore trong CI
 **Timestamp**: 2026-11-21T12:04:19Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi commit và pr lên staging"
+**User Input**: "giúp tôi commit và tạo PR lên staging"
 **AI Response**: "ShellCheck SC2251 chỉ ra điều kiện phủ định độc lập có thể bị bỏ qua. Sửa test để xóa nhầm container sau restore thành công gây exit 1. Ba ca chuẩn đạt. Fixture giả lập xóa nhầm chuyển từ exit 0 sang exit 1."
 **Context**: Cập nhật nhánh của PR 109. Thay đổi giới hạn ở test và hồ sơ kiểm chứng.
 
@@ -16475,14 +13204,14 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U10 AI question generation audit
 **Timestamp**: 2026-11-22T05:00:00Z
 **Requested by:** Quang Hung
-**User Input**: "audit phần tạo đề, tạo bằng AI xem có vấn đề gì ko"
+**User Input**: "audit phần tạo đề, tạo bằng AI xem có vấn đề gì không"
 **AI Response**: "Audit chỉ đọc luồng đề xuất câu AI của U10. Nêu 6 vấn đề: trần token khi xin nhiều câu, tạo lại thừa khi yêu cầu lệch tài liệu, lượt tạo lại hỏng khi quiz đổi version, đánh giá bám nguồn do model tự khai, loại câu và độ khó không được ép, requestRef không có unique index."
 **Context**: Investigation, không đổi code.
 
 ## U10 AI question generation fixes
 **Timestamp**: 2026-11-22T05:22:01Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi sửa , b có thể gọi model gpt 6 luna medium qua orca cli để test lại"
+**User Input**: "giúp tôi sửa, bạn có thể gọi model GPT-6 Luna Medium qua Orca CLI để test lại"
 **AI Response**: "Sửa QuizDraftResultHandler (chỉ tạo lại khi questionsMatchSources=false, cảnh báo khi requestMatchesSources=false), QuizSourceRetry (bỏ ràng buộc version), QuizDraftPrompt.buildSchema (ép type và difficulty). 38 test đạt. Codex gpt-6-luna medium qua Orca đo mẫu 50 câu: 6.134 token o200k, cận dưới vì mẫu có lựa chọn giữ chỗ. Provider đã báo rõ khi output bị cắt; trần token chưa đổi vì chưa có phép đo thật."
 **Context**: Code generation nhỏ trong unit U10. Không commit, push hay đổi cấu hình.
 
@@ -16500,7 +13229,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 Sol judge selection
 **Timestamp**: 2026-11-22T05:34:44Z
 **Requested by:** Quang Hung
-**User Input**: "tôi chọn gpt 6.2 sol high làm judge"
+**User Input**: "tôi chọn GPT-6.2 Sol High làm judge"
 **AI Response**: "Cấu hình Codex judge GPT-6.2 Sol với reasoning effort high."
 **Context**: Thay đổi trong công cụ QA. Lưu reasoning effort cho đối chiếu các bài đánh giá.
 
@@ -16509,7 +13238,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 full dataset evaluation
 **Timestamp**: 2026-11-22T05:34:44Z
 **Requested by:** Quang Hung
-**User Input**: "h toi muốn test toàn bộ dataset bằng gpt 6 luna medium sau chạy judge bằng gpt 6.2 sol high"
+**User Input**: "giờ tôi muốn test toàn bộ dataset bằng GPT-6 Luna Medium, sau đó chạy judge bằng GPT-6.2 Sol High"
 **AI Response**: "Luna medium chấm 20 ca tổng hợp qua Codex CLI. Backend xác thực đủ 20 phản hồi. Sol high đánh giá đủ 60 điểm GEval, 15 ca đạt cả ba ngưỡng."
 **Context**: Bỏ ngoài phạm vi 20 chỗ holdout chưa có bài nộp. Phiên chạy dùng xác thực ChatGPT và không đổi luồng grading production.
 
@@ -16527,7 +13256,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 grading prompt and readable report
 **Timestamp**: 2026-11-22T05:54:49Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi sửa lại, với giúp tôi viết cấu trúc test report đấy dễ đọc 1 chút , đổi tên file md thành test ai grading test đi, tôi muốn sau tôi thêm 1 judge là opus 5.5 để test thêm"
+**User Input**: "giúp tôi sửa lại, với giúp tôi viết cấu trúc test report đấy dễ đọc 1 chút, đổi tên file md thành AI grading test đi, tôi muốn sau này thêm 1 judge là Opus 5.5 để test thêm"
 **AI Response**: "Sửa prompt theo bằng chứng riêng của từng mục, thứ tự và nhánh sequence, điểm một phần, và kiểm tra điểm với lý do. 57 test backend đạt. Ca thiếu FK và ca thiếu phân quyền khớp mốc ở prompt chốt. Báo cáo đổi tên và có cột Opus riêng."
 **Context**: Ca lạc đề còn lệch 0,25 điểm ở trigger. Không sửa fixture hoặc schema. Xác nhận Claude Code có đăng nhập thuê bao, chưa gọi Opus.
 
@@ -16545,7 +13274,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 cập nhật hướng dẫn kiểm thử
 **Timestamp**: 2026-11-22T07:20:18Z
 **Requested by:** Quang Hung
-**User Input**: "À mà sửa instructionn trc đã"
+**User Input**: "À mà sửa instruction trước đã"
 **AI Response**: "Cập nhật hướng dẫn theo bốn lớp, làm rõ đường đi của bản ghi Luna và cách đối chiếu Sol với Opus. Kiểm tra lệnh lập danh sách 20 ca cho Opus và dựng lại báo cáo từ dữ liệu lưu."
 **Context**: Maven xác nhận 57 test backend đạt. Pytest xác nhận 18 test QA đạt. Lệnh lập danh sách không gọi model.
 
@@ -16572,7 +13301,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U07 đo độ ổn định Luna và kiểm tương thích U09
 **Timestamp**: 2026-11-22T08:23:50Z
 **Requested by:** Quang Hung
-**User Input**: "dùng 6 luna test độ ổn định đi, với lại tạo đề như này vẫn đúng so với grading prompt như nãy đkdo"
+**User Input**: "dùng GPT-6 Luna test độ ổn định đi, với lại tạo đề như này vẫn đúng so với grading prompt như nãy đúng không"
 **AI Response**: "Lặp ba lượt trên cùng sáu đề với GPT-6 Luna medium. Có 18/18 phản hồi hợp schema, 15/18 hợp tổng điểm và 2/3 cảnh báo trên đề mâu thuẫn. Kiểm tra giữ nguyên rubric trong prompt U09 và chạy đối chứng nét đứt, nét liền, sai actor phụ."
 **Context**: Kiểm thử với dữ liệu tổng hợp. Ghi kết quả và khác biệt Java 17/21 trong [báo cáo U07](construction/build-and-test/2026-11-22-u07-pe-assignment-evaluation.md). Mã ứng dụng của lượt đo giữ nguyên.
 
@@ -16590,7 +13319,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 bổ sung kết quả Opus 5.5 cho lượt 3
 **Timestamp**: 2026-11-22T09:30:00Z
 **Requested by:** Quang Hung
-**User Input**: "đọc ai grading instruciton với ai grading test report hiện tại đang thiếu dự liệu test của opus 5.5" / trả lời câu hỏi chọn phạm vi: "test lượt 3 trước, đừng chạy subagent , b tự test"
+**User Input**: "đọc AI grading instruction với AI grading test report, hiện tại đang thiếu dữ liệu test của Opus 5.5" / trả lời câu hỏi chọn phạm vi: "test lượt 3 trước, đừng chạy subagent, bạn tự test"
 **AI Response**: "Chạy `judge-saved.py --judge opus` (claude-opus-5-5, effort high, 1 worker) trên 20 bản ghi Luna của lượt 3, không dùng subagent. 20/20 EVALUATED, 15/20 đạt cả ba chỉ số. Dựng lại `test-ai-grading-test.md`. Cập nhật hướng dẫn và aidlc-state."
 **Context**: Build and Test, DeepEval với dữ liệu `SYNTHETIC_TEAM`. Không đổi code ứng dụng. Lượt 2 còn 17 ca chưa có Opus.
 
@@ -16605,19 +13334,10 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 
 ---
 
-## U09 gộp báo cáo kiểm thử AI chấm bài thành một file
-**Timestamp**: 2026-11-22T09:55:00Z
-**Requested by:** Quang Hung
-**User Input**: "ý là để vào thành 1 cái report chung ở ngoài  ấy , b xem nên để ở đâu để ở đây cx đc aidlc-docs\construction\build-and-test\"
-**AI Response**: "Tạo `construction/build-and-test/2026-11-22-u09-ai-grading-test-report.md` từ báo cáo trong `.tmp/`, bỏ cột và link bằng chứng, ghi vị trí bản ghi gốc cục bộ. Xóa thư mục `2026-11-22-u09-ai-grading-test/` (337 file) vừa tạo. Hai link còn lại đều mở được. Cập nhật hướng dẫn và aidlc-state. Không commit."
-**Context**: Build and Test, lưu tài liệu. Không đổi code ứng dụng.
-
----
-
 ## U09 lưu bằng chứng lượt 3 cho báo cáo kiểm thử AI chấm bài
 **Timestamp**: 2026-11-22T10:10:00Z
 **Requested by:** Quang Hung
-**User Input**: "có nên lưu bằng chứng k" / "ok giúp tôi lưu lượt 3 thôi"
+**User Input**: "có nên lưu bằng chứng không" / "ok giúp tôi lưu lượt 3 thôi"
 **AI Response**: "Khuyên lưu riêng lượt 3. Copy 83 file (prompt, phản hồi Luna, kết quả Sol, Opus của 20 case, log test backend, đối chiếu đầu vào, lệnh chạy lại) vào `construction/build-and-test/2026-11-22-u09-ai-grading-test-evidence/`. Dựng lại báo cáo: bảng lượt 3, ví dụ `05-off-topic` và đoạn judge bất đồng có link, các lượt trước không có link. 92 link, 0 hỏng. Không thấy key, token, email hay đường dẫn máy. Không commit."
 **Context**: Build and Test, lưu tài liệu với dữ liệu `SYNTHETIC_TEAM`. Không đổi code ứng dụng.
 
@@ -16626,25 +13346,16 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U09 bỏ ngày khỏi tên báo cáo kiểm thử AI chấm bài
 **Timestamp**: 2026-11-22T10:20:00Z
 **Requested by:** Quang Hung
-**User Input**: "tôi vừa undo commit tôi nghĩ  cái file ai grading test report bỏ ngày đi bởi vì nó là file tổng hợp"
+**User Input**: "tôi vừa undo commit tôi nghĩ cái file AI grading test report bỏ ngày đi bởi vì nó là file tổng hợp"
 **AI Response**: "Đổi tên `2026-11-22-u09-ai-grading-test-report.md` thành `construction/build-and-test/ai-grading-test-report.md`. Cập nhật liên kết trong hướng dẫn đánh giá và aidlc-state. Thư mục bằng chứng lượt 3 giữ tên có ngày. Chưa commit lại."
 **Context**: Build and Test, lưu tài liệu. Không đổi code ứng dụng.
-
----
-
-## U07 kiểm thử chế độ AI tự chia điểm
-**Timestamp**: 2026-11-22T08:50:31Z
-**Requested by:** Quang Hung
-**User Input**: "kiểm tra lại chế độ ai tự chia điểm dùng 6 luna"
-**AI Response**: "Chạy 6 brief × 3 với GPT-6 Luna medium, để trống điểm từng câu. Có 14 bản đúng tổng và số câu, 2 bản bị chặn vì sai tổng và 2 phản hồi có dữ liệu thừa sau JSON. 12 test backend và 3 test frontend đạt."
-**Context**: QA với dữ liệu tổng hợp qua Codex CLI. Ghi kết quả từng lượt trong [báo cáo U07](construction/build-and-test/2026-11-22-u07-pe-assignment-evaluation.md). Chưa chạy Gemini qua gateway.
 
 ---
 
 ## U07 đề xuất sửa chế độ AI tự chia điểm
 **Timestamp**: 2026-11-22T08:52:27Z
 **Requested by:** Quang Hung
-**User Input**: "đề xuát sửa"
+**User Input**: "đề xuất sửa"
 **AI Response**: "Đề xuất cho giảng viên chốt số câu riêng, giữ kiểm tổng khi tạo và áp dụng, dùng lỗi validator để hướng dẫn chạy lại. Thử cấu hình output schema ở Codex CLI và đo riêng lỗi định dạng. Sau đó chạy lại cùng 18 lượt và giữ nguyên kiểm hồi quy nhập điểm từng câu."
 **Context**: Rà code và hai phản hồi Codex lỗi định dạng của lượt đo U07. Phạm vi yêu cầu là đề xuất, chưa triển khai thay đổi ứng dụng.
 
@@ -16653,18 +13364,9 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## U07 triển khai số câu tùy chọn và cảnh báo mâu thuẫn
 **Timestamp**: 2026-11-22T09:04:21Z
 **Requested by:** Quang Hung
-**User Input**: "ok giúp tôi trienerk khai"
+**User Input**: "ok giúp tôi triển khai"
 **AI Response**: "Thêm ô số câu tùy chọn, suy ra số câu và tổng khi nhập dãy điểm, mở xem trước khi AI phát hiện số câu trong lời nhắc khác cấu hình. Kiểm 32 test backend, 96 test frontend và Chrome với API giả lập. Cả hai ca 4/5 câu với Luna medium sinh 4 câu, đủ 10 điểm và hiện cảnh báo. Một ca đối chứng 4/4 bị chặn do tổng 7,50."
 **Context**: Triển khai theo đề xuất đã được duyệt trong cuộc trao đổi, bổ sung Step 6 vào kế hoạch U07. Dùng AI với dữ liệu tổng hợp qua Codex CLI, chưa chạy Gemini qua gateway.
-
----
-
-## Nhóm thay đổi U07 và U09 để review
-**Timestamp**: 2026-11-22T09:07:07Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit"
-**AI Response**: "Rà phạm vi và tách ba nhóm: cách đọc cạnh sơ đồ khi chấm U09, cấu hình tạo đề U07 cùng bằng chứng QA, và hướng dẫn kiểm thử với kết quả Sol/Opus."
-**Context**: Giữ riêng dữ liệu chạy cục bộ. Rà diff và xác minh các test hồi quy liên quan.
 
 ---
 
@@ -16680,7 +13382,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## PR #103 review and staging sync
 **Timestamp**: 2026-11-22T00:00:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra pr103"; sau đó: "Sửa ở đây"
+**User Input**: "kiểm tra PR #103"; sau đó: "Sửa ở đây"
 **AI Response**: "Rà PR #103 (chỉ đọc): CI xanh trên nền cũ nhưng xung đột với staging ở audit.md, restore-isolated.sh, test-restore-isolated.sh; scripts/assert-required-backend-tests.ps1 còn tên lớp test cũ JdbcQuizAttemptRepositoryIntegrationTest đã đổi thành QuizAttemptRepositoryIntegrationTest trên staging. Sau đó gộp origin/staging vào codex/nfr-remediation trong worktree riêng: restore-isolated.sh giữ bản của PR (image ghim digest, phát hiện container đã dừng, dọn cả volume) cộng phần kiểm RESTORE_READY_TIMEOUT_SECONDS chặt hơn và pg_isready -t 1 của staging; test-restore-isolated.sh giữ bản của PR cộng hai kiểm của staging (khóa có mặt khi giải mã, thông báo lỗi nêu PostgreSQL); audit.md giữ mục của cả hai bên; sửa mục test bắt buộc thành QuizAttemptRepositoryIntegrationTest = 10."
 **Context**: Chạy local: check-image-pins đạt (13 tham chiếu), test-restore-isolated.sh 4/4 đạt. Không chạy được mvn (máy không có Maven), shellcheck, và test-platform-deploy.sh (Git Bash thiếu flock); để CI kiểm. Không đổi mã Java.
 
@@ -16707,7 +13409,7 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 ## Merge staging vào audit-staging và mở PR lên main
 **Timestamp**: 2026-11-22T10:40:00Z
 **Requested by:** Quang Hung
-**User Input**: "merge staging vào nhánh  này rồi resolve conflict sau đó tạo pr lên main"
+**User Input**: "merge staging vào nhánh này rồi resolve conflict sau đó tạo pr lên main"
 **AI Response**: "Hoàn tất merge `staging` (210b0550) đang dở: giữ phía nhánh này ở 7 hunk của aidlc-state, audit và hướng dẫn đánh giá vì staging là bản cũ hoặc rỗng. Merge tiếp `origin/staging` (fd9d42bb, KAN-211): audit.md giữ cả hai phía theo thứ tự. Push nhánh và mở PR `audit-staging` → `main`."
 **Context**: Tích hợp nhánh. Không sửa code ứng dụng khi resolve; code KAN-211 lấy nguyên từ staging.
 
@@ -16719,14 +13421,6 @@ giúp tôi sửa lại bảng data business rules theo đúng yêu cầu dự á
 **User Input**: "tôi cần vẽ lại toàn bộ BF, chỉ vẽ 5 luồng chính, có thể như gợi ý trong ảnh hoặc khác (bạn hãy gửi lại list BF bạn đề xuất)." [ảnh: "2. Main Business Flow — Lesson-Based Learning, Quiz-Based Learning, Assignment Practice, Individual-Graded Assignment, Group-Graded Assignment"] — sau đó: "được, làm đi"
 **AI Response**: "Đề xuất và được duyệt 5 luồng: BF-01 Material-Based Learning (thay Lesson-Based Learning vì hệ thống không có Lesson), BF-02 Quiz-Based Learning, BF-03 Assignment Practice, BF-04 Individual-Graded Assignment, BF-05 Group-Graded Assignment. Vẽ lại 5 file draw.io theo quy ước làn/đánh số hiện có, xuất PNG, chuyển 12 BF cũ vào thư mục lưu trữ và cập nhật README."
 **Context**: Inception documentation — main business flows cho Report 3 (SRS). Chỉ sửa tài liệu trong aidlc-docs/inception/main-business-flows; không đổi mã nguồn, không commit/push. BF-09 (backup Google Drive) không còn là luồng chính; ghi chú rủi ro góp ý hội đồng trong README.
-
----
-## Main Business Flows — hoàn tất vẽ lại 5 luồng
-**Timestamp**: 2026-11-22T07:54:03Z
-**Requested by:** Đào Chí Cường
-**User Input**: "được, làm đi"
-**AI Response**: "Đã tạo 5 file draw.io (BF-01 Material-Based Learning, BF-02 Quiz-Based Learning, BF-03 Assignment Practice, BF-04 Individual-Graded Assignment, BF-05 Group-Graded Assignment), file gộp 5 trang và PNG 2x trong exports/. README mới có quy ước, bảng tổng quan, đối chiếu góp ý hội đồng và bảng hoạt động. 12 BF cũ chuyển nguyên trạng vào superseded-2026-10-30/ (sửa đường dẫn tương đối, thêm ghi chú superseded). XML draw.io đã parse hợp lệ; PNG render bằng draw.io viewer và kiểm tra bằng mắt."
-**Context**: Chỉ thay đổi tài liệu trong aidlc-docs/inception/main-business-flows; chưa commit/push, chưa cập nhật Jira KAN-204. BF-09 (backup Google Drive) không còn là luồng chính — đã ghi chú trong README.
 
 ---
 ## Report 3 — cập nhật mục I.2 Main Business Flow
@@ -16746,14 +13440,6 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Cập nhật Jira theo yêu cầu người dùng; không commit/push.
 
 ---
-## Rà soát các unit Cường phụ trách (U01, U10, U11)
-**Timestamp**: 2026-11-22T08:34:41Z
-**Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra lại toàn bộ các phần tôi phụ trách xem còn lỗi nào không, sau đó gửi tôi báo cáo"
-**AI Response**: "Rà soát U01/U10/U11 trên origin/staging 210b0550 (worktree .claude/worktrees/review-owned-units): CI staging đạt (backend 2.625 ca, identity 263, quizzes 188, quizpractice 57; frontend 157 file), Jira không còn Bug mở. Code review tìm 1 lỗi nên sửa (lượt Quiz quá hạn chuyển qua lại giữa trang làm bài và kết quả), 2 lỗi nhỏ (start trả lượt cũ không kiểm OPEN/hạn; ghi OTP Redis không nguyên tử) và 2 điểm vặt. Báo cáo: aidlc-docs/construction/build-and-test/2026-11-22-cuong-owned-units-review.md."
-**Context**: Review-only; không sửa code, không commit/push, không đổi Jira. Chưa chạy test local (không có Maven, Docker tắt) — dùng kết quả CI của đúng commit.
-
----
 ## Tạo bug Jira từ báo cáo rà soát U01/U10/U11
 **Timestamp**: 2026-11-22T08:36:33Z
 **Requested by:** Đào Chí Cường
@@ -16770,70 +13456,21 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Chỉnh tài liệu báo cáo ngoài repo; chưa tải lên Drive, chưa bình luận KAN-188.
 
 ---
-## Main Business Flows — commit lên nhánh mới
-**Timestamp**: 2026-11-22T11:02:32Z
-**Requested by:** Đào Chí Cường
-**User Input**: "commit thay đổi BF lên nhánh mới"
-**AI Response**: "Tạo nhánh docs/kan-204-main-business-flows từ origin/staging 4beacb89 (worktree riêng), chép thư mục aidlc-docs/inception/main-business-flows từ bản làm việc (5 BF mới, README, exports, 12 BF cũ trong superseded-2026-10-30/) cùng các mục audit của phiên, rồi commit."
-**Context**: Commit tài liệu theo yêu cầu; chưa push hay mở PR.
-
----
-
 ## Đồng bộ AI-DLC và sơ đồ BF theo mã hiện hành
 **Timestamp**: 2026-11-22T13:47:41Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi sửa lại doc aidlc và bf diagram"
+**User Input**: "giúp tôi sửa lại doc AI-DLC và BF diagram"
 **AI Response**: "Chỉnh tài liệu U06, U07, U09 và hướng dẫn CI. Sửa BF-01 đến BF-05, bản Draw.io gộp và năm PNG. Đối chiếu 70 hoạt động giữa bảng và hai dạng Draw.io, kiểm cấu trúc và soát ảnh xuất."
 **Context**: Đối chiếu với mã nguồn trên audit-staging. Các thay đổi nằm trong tài liệu hiện hành; báo cáo lịch sử giữ phạm vi ban đầu. Validator không báo lỗi, các cảnh báo bố cục đã có từ bản gốc được giữ.
 
 ---
 
-## Ghi nhận bản cập nhật AI-DLC và sơ đồ BF
-**Timestamp**: 2026-11-22T13:54:17Z
-**Requested by:** Quang Hung
-**User Input**: "giúp tôi commit"
-**AI Response**: "Gom tài liệu AI-DLC, năm sơ đồ BF, bản Draw.io gộp và năm PNG vào cùng một thay đổi để review."
-**Context**: Đối chiếu lại 70 nhãn hoạt động và kiểm ảnh xuất. Phạm vi chỉ gồm tài liệu.
-
----
 ## SEO cho alapedu.online — Requirements Analysis và Workflow Planning
 **Timestamp**: 2026-11-22T15:02:31Z
 **Requested by:** Đào Chí Cường
-**User Input**: "tôi muốn làm seo cho trang web" — trả lời câu hỏi: "Nền tảng + landing page (Recommended)", Search Console: "Có rồi", nhánh: "Nhánh mới từ staging (Recommended)"
+**User Input**: "tôi muốn làm SEO cho trang web" — trả lời câu hỏi: "Nền tảng + landing page (Recommended)", Search Console: "Có rồi", nhánh: "Nhánh mới từ staging (Recommended)"
 **AI Response**: "Khảo sát hiện trạng: / chỉ là client redirect, không có robots.txt/sitemap/noindex/canonical/JSON-LD, staging không có X-Robots-Tag; cookie phiên có path /api nên / không biết trạng thái đăng nhập phía máy chủ. Tạo worktree .claude/worktrees/seo, nhánh feat/seo từ origin/staging@47837e52 (--no-track). Viết yêu cầu SEO-FR1–FR9 và kế hoạch 11 bước: aidlc-docs/construction/plans/code-generation-plan/2026-11-22-seo.md. Chờ duyệt."
 **Context**: Requirements (Standard) + Workflow Planning; chỉ Code Generation và Build and Test. Chưa sửa code.
-
----
-## SEO — duyệt kế hoạch Code Generation
-**Timestamp**: 2026-11-22T15:10:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Duyệt, làm đi"
-**AI Response**: "Bắt đầu thực hiện 11 bước trong aidlc-docs/construction/plans/code-generation-plan/2026-11-22-seo.md trên nhánh feat/seo."
-**Context**: Code Generation được duyệt.
-
----
-## SEO — Code Generation và Build and Test
-**Timestamp**: 2026-11-22T15:20:08Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Duyệt, làm đi"
-**AI Response**: "Hoàn tất 11/11 bước kế hoạch SEO trên feat/seo: landing / dựng phía máy chủ (en/vi) với SignedInRedirect, robots.ts và sitemap.ts động theo SEO_INDEXABLE, noindex cho 15 layout đăng nhập và activate/reset-password/post-login, canonical /, /login, /privacy, JSON-LD có nonce, meta GOOGLE_SITE_VERIFICATION, compose production mặc định SEO_INDEXABLE=true, staging ép false và nginx X-Robots-Tag noindex. Điều chỉnh: robots.txt không chặn trang đăng nhập để bot đọc được noindex. ESLint, tsc đạt; Vitest 1.203/1.203; dev server kiểm robots/sitemap/meta và giao diện desktop/375 px. next build biên dịch xong rồi dừng ở SecurityFatalError của Next.js 16.4.3 (đề nghị nâng cấp) — không chạy lại/nâng cấp, báo người dùng. Kết quả: aidlc-docs/construction/build-and-test/2026-11-22-seo-results.md."
-**Context**: Code Generation + Build and Test. Chưa commit/push/deploy.
-
----
-## SEO — commit cục bộ
-**Timestamp**: 2026-11-22T15:25:53Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Commit đi"
-**AI Response**: "Commit toàn bộ thay đổi SEO (mã, test, infra, tài liệu AIDLC) trên nhánh feat/seo. Không push, không deploy."
-**Context**: Commit theo yêu cầu người dùng.
-
----
-## SEO — push và mở PR
-**Timestamp**: 2026-11-22T15:28:03Z
-**Requested by:** Đào Chí Cường
-**User Input**: "Push và mở PR"
-**AI Response**: "Push nhánh feat/seo lên origin và mở PR vào staging. Không tự merge, không deploy."
-**Context**: Thao tác Git theo yêu cầu người dùng.
 
 ---
 ## Operations — Kiểm tra và mock lại dữ liệu bản deploy
@@ -16842,14 +13479,6 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **User Input**: "kiểm tra data trên bản deploy và mock lại từ đầu cho tôi" — chọn "Production and staging", "All 5 current subjects", "Keep demo logins (Recommended)" — sau đó "Áp luôn lên prod"
 **AI Response**: "Kiểm tra production: seed demo 2026-11-09 lẫn dữ liệu test thủ công. Backup prod và staging vào /root/db-backups/ trên VPS, xóa dữ liệu nghiệp vụ (giữ tài khoản, cấu hình, AI, MCP, audit log) và mock lại bằng .tmp/remock/remock.mjs: 5 môn FA26 (SWD392, SWR302, SWT301, PRN212, SWP391), 6 lớp, 12 sinh viên thêm, 19 bài tập có sơ đồ UML Draw.io, 38 lượt làm bài, 47 phiếu chấm, 9 Quiz, 29 lượt Quiz, 44 câu hỏi, 17 video tài liệu, nhóm và thông báo. Chạy thử trên DB nháp trước, áp staging rồi production; log backend không lỗi, site trả 200."
 **Context**: Thao tác dữ liệu trên VPS; không đổi mã nguồn repo, chưa kiểm tra giao diện bằng đăng nhập.
-
----
-## Inception — Rà soát Report 1 (Project Introduction)
-**Timestamp**: 2026-11-22T15:10:00Z
-**Requested by:** Đào Chí Cường
-**User Input**: "@"D:\Download\Report-1_Project Introduction (2).docx" kiểm tra lại report 1 xem có sai lệch gì không, sau đó gửi tôi 1 báo cáo nhận xét"
-**AI Response**: "Đối chiếu Report 1 (change log tới 28/10/2026) với requirements.md, các delta 29/10–16/11, biên bản phỏng vấn 12/11 và code. Ghi nhận 4 sai lệch (thời điểm chấm sau đóng nhận bài, backup mã hóa tùy chọn, lưu tệp production, AS-IS chưa dẫn nguồn), 12 tính năng đã duyệt chưa có trong report, 9 lỗi trình bày. Báo cáo: aidlc-docs/inception/requirements/2026-11-22-report-1-review.md."
-**Context**: Chỉ đọc report và tài liệu; không sửa report, code; chưa commit.
 
 ---
 ## Operations — Bổ sung mã số sinh viên trên production
@@ -16863,7 +13492,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Inception — Sửa Report 1 theo nhận xét
 **Timestamp**: 2026-11-22T15:40:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "sửa report 1 thành bản docx mới, tuy nhiên tạm thời giữ nguyên không sửa phần s4 (AS-IS), tôi sẽ sửa phần này sau"
+**User Input**: "sửa Report 1 thành bản DOCX mới, tuy nhiên tạm thời giữ nguyên không sửa phần s4 (AS-IS), tôi sẽ sửa phần này sau"
 **AI Response**: "Tạo D:\Download\Report-1_Project Introduction (v2026-11-22).docx từ bản (2): sửa S1 (chấm sau khi đóng nhận bài), S2 (backup mã hóa khi có khóa), S3 (lưu Drive, demo có thể lưu trên máy chủ); bổ sung T1–T12 vào I.2/IV/FE-01…15; dựng lại bảng từ viết tắt; rút gọn Project Purpose; viết lại điểm yếu Artemis/PrairieLearn, GAP-07, tiêu đề LI-12; thống nhất EduNext/PRACTICE; ngày bìa November 2026; thêm dòng change log 22/11; cập nhật mục lục bằng Word. Giữ nguyên II và III.1 (AS-IS) theo yêu cầu. Không SSH được VPS để kiểm production nên S2/S3 viết theo cách đúng với mọi cấu hình."
 **Context**: Chỉnh tài liệu báo cáo ngoài repo; bản gốc giữ nguyên; chưa commit.
 
@@ -16871,7 +13500,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Inception — Sửa Report 2 theo nhận xét
 **Timestamp**: 2026-11-22T16:30:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "sửa toàn bộ report 2 theo báo cáo nhận xét cho tôi, rút gọn phần change log (cả các change log cũ) cho gọn"
+**User Input**: "sửa toàn bộ Report 2 theo báo cáo nhận xét cho tôi, rút gọn phần change log (cả các change log cũ) cho gọn"
 **AI Response**: "Tạo D:\Download\Report-2_Project Management Plan_v1.6.docx từ bản (2) theo aidlc-docs/inception/requirements/2026-11-22-report-2-review.md: S1, S2, S4, S5, S6, T1–T6 và các mục trình bày; rút gọn change log còn 7 dòng (v1.0–v1.6). Không đổi bảng phân công (S3 đúng thực tế). Bản gốc giữ nguyên."
 **Context**: Chỉnh tài liệu báo cáo ngoài repo; chưa commit.
 
@@ -16901,28 +13530,37 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 
 ---
 
-## Git — Đối chiếu thay đổi local với staging và chuyển sang nhánh mới
-**Timestamp**: 2026-11-22T16:20:00Z
+## Audit — Kiểm tra định dạng audit.md
+**Timestamp**: 2026-11-23T16:20:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra xem có thay đổi nào tôi chưa commit không" — "kiểm tra trên staging xem đã có chưa, có xung đột gì không cho tôi" — "Yes, do it"
-**AI Response**: "Staging đã có việc dời 12 flow cũ vào superseded-2026-10-30/ và bộ 5 flow mới (bản staging mới hơn, commit 47837e52), nên bỏ bản flow cũ ở local. Tạo nhánh docs/report-reviews-sync từ origin/staging (--no-track), mang sang phần sửa unit-of-work.md, 4 file rà soát/báo cáo và 7 mục audit từ 15:05Z chưa có trên staging. Toàn bộ thay đổi cũ của codex/nfr-remediation được giữ trong git stash."
-**Context**: Thao tác Git cục bộ; chưa commit, chưa push.
+**User Input**: "kiểm tra file audit.md cho tôi sau đó gửi tôi báo cáo"
+**AI Response**: "Rà 1.567 mục (chỉ đọc): 8 dòng Requested by sai cú pháp, 46 mục thiếu Requested by, 128 timestamp không theo ISO UTC, 185 mục không có Timestamp, 55 chỗ đảo thứ tự thời gian, tên người yêu cầu không thống nhất (Hải Nam / Vu Hai Nam, max2min). Không có secret hay conflict marker."
+**Context**: Kiểm tra tài liệu; không sửa file.
 
 ---
 
-## Git — Kiểm tra và commit nhánh docs/report-reviews-sync
-**Timestamp**: 2026-11-22T16:30:00Z
+## Audit — Lọc bỏ prompt chỉ kiểm tra / prompt rác
+**Timestamp**: 2026-11-23T16:36:00Z
 **Requested by:** Đào Chí Cường
-**User Input**: "kiểm tra các thay đổi này có đúng không, nếu đúng thì commit"
-**AI Response**: "Kiểm tra diff so với origin/staging: unit-of-work.md đổi U06↔U09, U07 → Người 3, U14 → Người 4, tổng LOC khớp cột ước lượng (10/12/6/8); audit.md chỉ thêm dòng, mỗi mục có Requested by; 4 file báo cáo không chứa secret, link nội bộ hợp lệ, không lỗi whitespace hay conflict marker. Commit trên docs/report-reviews-sync, chưa push."
-**Context**: Thao tác Git cục bộ.
+**User Input**: "chỉ giữ những prompt quan trọng/prompt hay, loại bỏ các prompt chỉ yêu cầu kiểm tra/prompt rác cho tôi" — chọn bỏ các nhóm: "Chỉ hỏi/kiểm tra (~127),Duyệt/xác nhận ngắn (~203),Thao tác Git (~142)"
+**AI Response**: "Xóa 319 mục khỏi audit.md (129 duyệt/xác nhận ngắn, 109 thao tác Git, 81 chỉ hỏi/kiểm tra); giữ 1.248 mục, gồm mọi mục yêu cầu tạo/sửa/thiết kế/triển khai, trả lời câu hỏi thiết kế và mục AI tự ghi kết quả. File mới chỉ xóa dòng, không sửa nội dung mục còn lại; bản gốc vẫn còn trong lịch sử git."
+**Context**: Ngoại lệ có chủ ý với quy tắc lưu đầy đủ audit log, theo yêu cầu người dùng; chưa commit.
+
+---
+
+## Audit — Chuẩn hoá chính tả các prompt
+**Timestamp**: 2026-11-23T17:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra các promt xem có bị sai chính tả, viết tắt, viết không dấu,.. không. Sửa lại cho đẹp hơn" (kèm ảnh chụp mục "Direct merge question" / "Direct merge approval")
+**AI Response**: "Rà toàn bộ dòng prompt còn lại trong audit.md; sửa khoảng 390 dòng: lỗi gõ (vd 'noopj' → 'nộp', 'xòng' → 'xong'), viết tắt (k/ko → không, đc → được, r → rồi, trc → trước, b/m → bạn, t → tôi), câu viết không dấu (vd 'merch thang truc tiep vao stagging luon dc k' → 'merge thẳng trực tiếp vào staging luôn được không'), và viết hoa thuật ngữ (AI-DLC, UC, API, PR, CI, MCP, Jira, GitHub, Gemini). Chỉ sửa câu chữ trong dòng prompt, giữ nguyên ý; không đổi AI Response, Context hay các trường khác. Làm trên nhánh docs/audit-prune (worktree riêng) vì thư mục chính đang ở nhánh khác."
+**Context**: Ngoại lệ có chủ ý với quy tắc ghi nguyên văn prompt, theo yêu cầu người dùng; chưa commit.
 
 ---
 
 ## U09 — AI điền đề xuất vào form chấm điểm, có Hoàn tác
 **Timestamp**: 2026-11-23T06:32:00Z
 **Requested by:** Quang Hung
-**User Input**: "tôi muốn sửa phần giao diện chấm điểm bằng ai các bài assignment thì lúc bấm chấm điểm xong, nó nên đề xuất điểm , nhận xét thì fill luôn vào phần form chấm điểm luôn, có nút kiểu từ chối đề xuất discard ấy, chứ k cần phải kéo xuống phần lịch sử để xuất bấm chấp nhận như hiện tại, b có thể đề xuất giao diện như vậy cho tôi đck o" — "ok toi đồng ý /ponytail:ponytail"
+**User Input**: "tôi muốn sửa phần giao diện chấm điểm bằng AI các bài assignment thì lúc bấm chấm điểm xong, nó nên đề xuất điểm, nhận xét thì fill luôn vào phần form chấm điểm luôn, có nút kiểu từ chối đề xuất discard ấy, chứ không cần phải kéo xuống phần lịch sử đề xuất bấm chấp nhận như hiện tại, bạn có thể đề xuất giao diện như vậy cho tôi được không" — "ok tôi đồng ý /ponytail:ponytail"
 **AI Response**: "Đề xuất giao diện rồi cài đặt: đề xuất READY do giáo viên vừa yêu cầu tự điền vào form; nếu form có chỉnh sửa chưa lưu thì hỏi trước. Thanh AiDraftBanner có Giữ đề xuất / Hoàn tác / Chi tiết. Hook giữ bản chụp form để Hoàn tác. Bảng so sánh chuyển lên dưới thanh. Sửa useGradingWorkspace.ts, GradingWorkspacePage.tsx, thêm AiDraftBanner.tsx, khóa i18n vi/en, test workspace.test.tsx."
 **Context**: Code Generation, chỉ frontend. ESLint, tsc đạt; Vitest grading + i18n 232/232. Chưa kiểm tra trên trình duyệt thật; chưa commit.
 
@@ -16931,7 +13569,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Hoàn tác có xác nhận và nhãn ô do AI điền
 **Timestamp**: 2026-11-23T06:44:28Z
 **Requested by:** Quang Hung
-**User Input**: "làm 1, 2 trước" — "b sửa ở main hả? chuyể sang audit staging branch ấy"
+**User Input**: "làm 1, 2 trước" — "bạn sửa ở main hả? Chuyển sang audit-staging branch ấy"
 **AI Response**: "Hoàn tác hỏi xác nhận khi giáo viên đã sửa tay sau lúc AI điền. Ô điểm từng mục và nhận xét chung do AI điền có nhãn ✨ AI cho đến khi bị sửa (hàm listAiFilledItems, RubricChecklistPanel, GradingWorkspaceHeader). Phát hiện đã sửa nhầm trên main, chuyển toàn bộ thay đổi sang nhánh audit-staging (worktree F:/code/git/AI-Powered-Learning-Platform) bằng patch, đưa main về sạch."
 **Context**: Code Generation, chỉ frontend, nhánh audit-staging. ESLint, tsc đạt; Vitest grading + i18n 233/233. Chưa kiểm tra trên trình duyệt thật; chưa commit.
 
@@ -16940,7 +13578,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Hủy yêu cầu chấm AI bị kẹt
 **Timestamp**: 2026-11-23T06:53:00Z
 **Requested by:** Quang Hung
-**User Input**: "nhiều luc bấm ai chấm mà tôi đổi khóa hoặc gì đó k chấm được, tôi chuyển trang thì nút ai đang chấm bị kẹt mãi có giải pháp nào ko" (kèm ảnh nút "AI đang chấm…" bị khóa)
+**User Input**: "nhiều lúc bấm AI chấm mà tôi đổi khóa hoặc gì đó không chấm được, tôi chuyển trang thì nút AI đang chấm bị kẹt mãi, có giải pháp nào không" (kèm ảnh nút "AI đang chấm…" bị khóa)
 **AI Response**: "Nút bị khóa vì còn đề xuất PENDING (aiGenerating) và UI không có cách thoát; backend tự hủy QUEUED sau 30 phút. Thêm gradingApi.cancelTask (POST /ai/tasks/{id}:cancel, API sẵn có) và nút 'Hủy chấm AI' trên thanh công cụ khi task QUEUED, sau đó resumePolling để backend đối chiếu CANCELLED→FAILED. Task RUNNING không hủy được ở backend nên không hiện nút."
 **Context**: Code Generation, chỉ frontend, nhánh audit-staging. ESLint, tsc đạt; Vitest grading + i18n 234/234. Chưa kiểm tra trên trình duyệt thật; chưa commit.
 
@@ -16949,7 +13587,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U07/U03/U06 — Tạo đề bằng AI nhận ảnh WebP
 **Timestamp**: 2026-11-23T07:54:57Z
 **Requested by:** Quang Hung
-**User Input**: "sửa phần tạo đề ai hỗ trợ up ảnh webp đi"
+**User Input**: "sửa phần tạo đề AI hỗ trợ up ảnh WebP đi"
 **AI Response**: "Mở WEBP ở các danh sách cho phép: PurposePolicy (ASSIGNMENT_SOURCE), AssignmentAiDraftService.SOURCE_IMAGE_TYPES (dùng chung với AssignmentSourceImageSource), AiTaskService.IMAGE_TYPES, AiImageRef (javadoc) và accept của AiReviseChat. Cập nhật PurposePolicyTest, AssignmentSourceImageSourceTest (tham số hóa png/webp), AiTaskFlowTest, BR-U06-54 và frontend-components U07."
 **Context**: Code Generation, backend và frontend nhỏ, nhánh audit-staging. Chưa commit.
 
@@ -16958,18 +13596,9 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Sửa lỗi realtime chuông thông báo (IT-U14-M03)
 **Timestamp**: 2026-11-23T02:47:01Z
 **Requested by:** Hải Nam
-**User Input**: "các case failed có phải là defects không? Nếu có hãy tạo defects trên jira: https://sep490-g21-fall26.atlassian.net/issues?jql=project%20%3D%20KAN%20AND%20issuetype%20%3D%20Bug%20ORDER%20BY%20priority%20DESC%2C%20created%20DESC và cập nhật trạng thái. sau đó tạo branch mới từ staging, đề xuất sửa và chạy lại U09-M01, U08-M01, U07-M03. Sau đó tiếp tục phần còn lại"
+**User Input**: "các case failed có phải là defects không? Nếu có hãy tạo defects trên Jira: https://sep490-g21-fall26.atlassian.net/issues?jql=project%20%3D%20KAN%20AND%20issuetype%20%3D%20Bug%20ORDER%20BY%20priority%20DESC%2C%20created%20DESC và cập nhật trạng thái. Sau đó tạo branch mới từ staging, đề xuất sửa và chạy lại U09-M01, U08-M01, U07-M03. Sau đó tiếp tục phần còn lại"
 **AI Response**: "Phân loại: chỉ IT-U14-M03 là defect của code (BR-U14-12). NotificationService bọc sseHub.publish trong afterCommit, còn RabbitSseHub.publish lại đăng ký afterCommit lần nữa. Callback đăng ký trong lúc afterCommit đang chạy không bao giờ được gọi, nên sự kiện không tới exchange platform.realtime. U02-M02/U15-M02 (chuyển về trang chủ theo BR-U01-48) và U05-M01 (bỏ lớp nháp từ 2026-11-05) là case/tài liệu lệch thiết kế. U07-M03, U08-M01, U09-M01 là lỗi script kiểm thử. Tạo nhánh fix/u14-realtime-notification-sse từ staging: NotificationService gọi sseHub.publish trực tiếp, hub tự chờ commit; ghi rõ hợp đồng trong ISseHub; thêm test hồi quy dùng RabbitSseHub thật (hỏng trên code cũ, qua trên code mới). Test notifications và groupdocs đều qua. Chưa commit."
 **Context**: Bugfix trong phạm vi U14, không đổi API/schema; Jira bug chờ người dùng đăng nhập trong browser pane.
-
----
-
-## Construction — Tạo Jira bug cho IT-U14-M03
-**Timestamp**: 2026-11-23T03:10:23Z
-**Requested by:** Hải Nam
-**User Input**: "Signed in"
-**AI Response**: "Tạo KAN-215 '[U14] Notification bell does not update in real time: SSE event is never published' (Bug, parent KAN-30, Medium, gán Hải Nam, nhãn defect/u14/systest-2026-11-22) với các mục Impact, Reproduction, Observed, Expected, Root cause, Fix, Evidence; chuyển trạng thái sang In Progress vì bản sửa có trên nhánh fix/u14-realtime-notification-sse nhưng chưa merge."
-**Context**: Cập nhật Jira theo yêu cầu tạo defect; không sửa issue khác.
 
 ---
 
@@ -16985,7 +13614,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Report-5.2 nhóm 2/3: chỉ có khóa Gemini
 **Timestamp**: 2026-11-23T03:55:00Z
 **Requested by:** Hải Nam
-**User Input**: "Tôi sẽ chuẩn bị AI keys đầu tiên nhưng tôi chỉ lấy khóa cho gemini được không"
+**User Input**: "Tôi sẽ chuẩn bị AI keys đầu tiên nhưng tôi chỉ lấy khóa cho Gemini được không"
 **AI Response**: "Đồng ý: IT-U06-M03 và IT-U08-M02 chạy đầy đủ với khóa Gemini; IT-U06-M04 chạy phần Gemini và bước khóa không hợp lệ, phần OpenAI và Claude ghi Blocked (thiếu khóa test), cả case ghi Blocked kèm kết quả phần Gemini. Người dùng tự nhập khóa thật vào form của app."
 **Context**: Report-5.2 nhóm 2; khóa thật không đưa vào chat, log hay evidence.
 
@@ -17000,37 +13629,19 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 
 ---
 
-## Construction — Report-5.2 nhóm 2: chạy 3 case AI
-**Timestamp**: 2026-11-23T04:16:26Z
-**Requested by:** Hải Nam
-**User Input**: "ok, tiếp tục"
-**AI Response**: "IT-U06-M03 Passed (mức riêng = usage trong ngày + 3.000 token; lượt 2 bị từ chối, không có task/usage mới; thẻ Admin 16.134 token). IT-U06-M04 Failed: phần Gemini đạt (model gemini-3.1-flash-lite vì gemini-4-argon trả 429 với khóa free), OpenAI/Claude BLOCKED do không có khóa, bước khóa sai hiện 'Wrong key' nhưng vẫn ghi usage CONNECTION_TEST FAILED (trái bước 4 business-logic-model U06). IT-U08-M02 Passed (409 FEEDBACK_PENDING, góp ý đủ 4 mục, không tạo điểm, thu hồi khóa thì bị từ chối kèm link AI connection). Dọn dẹp: thu hồi khóa trường và mọi khóa cá nhân test (REVOKED), xóa mức riêng tạm của Teacher One. Thêm trạng thái BLOCKED cho check trong ev.mjs/build-pdf.mjs."
-**Context**: Report-5.2 nhóm 2; stack systest cô lập; không commit.
-
----
-
 ## Construction — Defect IT-U06-M04 (KAN-216), sửa lỗi và chuẩn bị Brevo/Google Drive
 **Timestamp**: 2026-11-23T04:38:00Z
 **Requested by:** Hải Nam
-**User Input**: "tạo defect cho IT-U06-M04 và fix. Giúp tôi chuẩn bị brevo và google drive"
+**User Input**: "tạo defect cho IT-U06-M04 và fix. Giúp tôi chuẩn bị Brevo và Google Drive"
 **AI Response**: "Tạo Jira KAN-216 ([U06] Checking an invalid AI key records a CONNECTION_TEST usage entry with no tokens), parent KAN-29, nhãn defect/u06/systest-2026-11-22, chuyển In Progress. Nguyên nhân: AiConnectionService.testDraft và test luôn gọi recordProvider(CONNECTION_TEST) kể cả khi nhà cung cấp từ chối khóa và không trả usage. Sửa trên worktree E:\GitHub\AI-Powered-Learning-Platform-u06fix, nhánh fix/u06-connection-test-usage (từ staging): thêm recordTestUsage chỉ ghi khi có token đo được (BR-U06-14, bước 4 business-logic-model U06); audit AI_CONNECTION_TESTED giữ nguyên. Test: sửa connectionTestUsesFixedPromptAndRecordsSanitizedResult, thêm draftCheckWithRejectedKeyRecordsNoUsage và draftCheckRecordsProviderMeasuredUsage; 3 test đỏ trước khi sửa, sau khi sửa module AI 204 test, 0 lỗi. Chưa retest trên stack systest (cần merge/deploy). Chuẩn bị nhóm 3: tạo cặp khóa RSA 3072 test trong .tmp/systemtest/backup-keys (khóa riêng không lên server), thêm EXT_U03_BACKUP_PUBLIC_KEY và EXT_TEST_MAILBOX vào ext-test.env, thêm U03_BACKUP_PUBLIC_KEY vào ext-test.override.yml; docker compose config hợp lệ. Hướng dẫn người dùng tự điền khóa Brevo/Drive vào file, không gửi qua chat."
 **Context**: Report-5.2; defect U06; chưa commit.
-
----
-
-## Construction — Defect KAN-216: chưa commit
-**Timestamp**: 2026-11-23T07:36:55Z
-**Requested by:** Hải Nam
-**User Input**: "Not yet"
-**AI Response**: "Giữ bản sửa U06 chưa commit trên worktree E:\GitHub\AI-Powered-Learning-Platform-u06fix (nhánh fix/u06-connection-test-usage); chưa tạo PR. Chờ người dùng điền ext-test.env để chạy nhóm 3."
-**Context**: Report-5.2; defect U06; không commit, không push.
 
 ---
 
 ## Construction — Report-5.2 nhóm 3: chuẩn bị chạy IT-U01-M04
 **Timestamp**: 2026-11-23T07:41:56Z
 **Requested by:** Hải Nam
-**User Input**: "Tôi đã điền xong ext-test.env cho brevo, chạy nhóm 3 đi"
+**User Input**: "Tôi đã điền xong ext-test.env cho Brevo, chạy nhóm 3 đi"
 **AI Response**: "Kiểm tra ext-test.env (chỉ xem có/không, không in giá trị): SMTP login, SMTP key, API key Brevo đúng định dạng; EXT_SMTP_FROM và EXT_TEST_MAILBOX còn trống nên chưa chạy được IT-U01-M04; các giá trị Google Drive trống. Viết .tmp/systemtest/evidence/it-u01-m04.mjs (SMTP relay, HTTPS API, khóa API sai; đọc log Brevo qua API; che hộp thư và người gửi trong ảnh/văn bản; khôi phục Mailpit cuối case). Dry-run phát hiện lệnh up thường sẽ tạo lại postgres/rabbitmq/redis do compose file đã mới hơn stack; đổi sang --no-deps chỉ đụng backend và worker, đã xác nhận stack không đổi. Chờ người dùng điền hai giá trị còn thiếu."
 **Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
 
@@ -17045,30 +13656,12 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 
 ---
 
-## Construction — Report-5.2 nhóm 3: hỏi về EXT_TEST_MAILBOX
-**Timestamp**: 2026-11-23T07:44:47Z
-**Requested by:** Hải Nam
-**User Input**: "test mailbox điền cái gì?"
-**AI Response**: "Giải thích: EXT_TEST_MAILBOX là một địa chỉ email thật người dùng mở được (ví dụ Gmail cá nhân hoặc Gmail phụ), chưa có tài khoản trên stack systest; script tạo tài khoản Student PENDING với địa chỉ này và gửi mã kích hoạt qua Brevo tới đó; có thể trùng địa chỉ người gửi; được che trong evidence."
-**Context**: Report-5.2 nhóm 3; hướng dẫn, không đổi mã.
-
----
-
 ## Construction — Report-5.2 nhóm 3: IT-U01-M04 chờ IP được Brevo cho phép
 **Timestamp**: 2026-11-23T07:45:51Z
 **Requested by:** Hải Nam
 **User Input**: "đã điền xong, chạy IT-U01-M04 đi"
 **AI Response**: "Kiểm tra trước khi chạy: EXT_SMTP_FROM và EXT_TEST_MAILBOX đã là địa chỉ email (gmail.com), chưa có tài khoản trên systest. Gọi thử API Brevo bằng khóa test: HTTP 401 unauthorized vì IP máy chưa nằm trong Authorised IPs của tài khoản Brevo. Chưa chạy case (bước 4–5 và việc đọc log Brevo cần API); nhờ người dùng tự thêm IP hoặc tắt chặn IP trong Brevo (Security > Authorised IPs)."
 **Context**: Report-5.2 nhóm 3; stack không đổi; không commit.
-
----
-
-## Construction — Report-5.2 nhóm 3: chạy IT-U01-M04
-**Timestamp**: 2026-11-23T08:00:06Z
-**Requested by:** Hải Nam
-**User Input**: "Done, run it"
-**AI Response**: "Kiểm tra lại API Brevo: HTTP 200, người gửi đã xác minh và active. Chạy it-u01-m04.mjs: lần 1 dừng vì script gọi /health ở cổng frontend (:49088) thay vì backend (:49080), sửa script; lần 2 dừng vì Brevo đổi người gửi gmail.com sang địa chỉ brevosend.com nên check so sánh người gửi sai, sửa script và ghi deviation; lần 3: /health UP, SMTP relay delivered sau 7,8 s; khi chuyển MAIL_TRANSPORT=brevo-api (SMTP_USER/SMTP_PASSWORD rỗng) worker unhealthy, lệnh up --wait lỗi, case dừng ở bước 4 (Blocked do script). Handler thoát đã khôi phục backend/worker về cấu hình Mailpit; đang điều tra nguyên nhân worker unhealthy."
-**Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
 
 ---
 
@@ -17084,7 +13677,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Report-5.2 nhóm 3: xác nhận email SMTP và API, chạy lại IT-U01-M04
 **Timestamp**: 2026-11-23T08:11:38Z
 **Requested by:** Hải Nam
-**User Input**: "đã nhận 2 mail 1 vào 15:07 1 vào 15:10"
+**User Input**: "đã nhận 2 mail, 1 vào 15:07, 1 vào 15:10"
 **AI Response**: "Ghi nhận: email 15:07 (SMTP relay) và 15:10 (HTTPS API, Brevo delivered 15:10:19) đến hộp thư test. Lần chạy 4 (sửa chờ health 6 phút): /health UP, SMTP delivered 6,4 s, API delivered 3,8 s; check 'thông báo trung lập' FAIL sai do script tìm chữ trên trang trong khi trang không hiện chữ mà chuyển sang bước OTP, thông báo trung lập nằm ở body API 202. Dừng lần chạy, sửa check so sánh message API và trạng thái trang, thêm deviation; chạy lại (gửi thêm 2 email)."
 **Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
 
@@ -17111,7 +13704,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Report-5.2: hỏi về thay thế OpenAI/Claude trong IT-U06-M04
 **Timestamp**: 2026-11-23T08:33:53Z
 **Requested by:** Hải Nam
-**User Input**: "ok, trong lúc đó tôi muốn hỏi là test case kiểm tra kết nối với AI mà đã pass trường hợp sử dụng gemini nhưng do chưa có api cho chat gpt và claude nên bỏ qua thì trong test case đó có để sử dụng 1 model của chat gpt hay claude để kiểm chứng thay thế không"
+**User Input**: "ok, trong lúc đó tôi muốn hỏi là test case kiểm tra kết nối với AI mà đã pass trường hợp sử dụng Gemini nhưng do chưa có API cho ChatGPT và Claude nên bỏ qua, thì trong test case đó có để sử dụng 1 model của ChatGPT hay Claude để kiểm chứng thay thế không"
 **AI Response**: "Không thay thế được: mỗi nhà cung cấp có adapter riêng (OpenAI Bearer + json_schema, Claude tool use), URL gắn cứng api.openai.com/api.anthropic.com trong HttpProviderGateway, danh sách model theo nhà cung cấp. Đề xuất: giữ phần khóa hợp lệ OpenAI/Claude BLOCKED; bổ sung kiểm tra khóa sai gọi thật tới OpenAI/Claude (miễn phí, 401) và đính kèm kết quả HttpProviderGatewayTest (adapter OpenAI/Claude với server giả lập) làm bằng chứng phụ; hoặc người dùng tự mua khóa thử giới hạn thấp."
 **Context**: Report-5.2 IT-U06-M04; tư vấn, chưa thay đổi.
 
@@ -17147,7 +13740,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Judge có "unknown" và chi phí trên mỗi bài chấm hoàn tất
 **Timestamp**: 2026-11-23T08:25:15Z
 **Requested by:** Quang Hung
-**User Input**: "làm việc 1,2"
+**User Input**: "làm việc 1, 2"
 **AI Response**: "Việc 1: thêm judge phán quyết correct/incorrect/unknown (evaluation.py: Verdict, make_verdict_grader; trạng thái QUALITY_UNKNOWN qua dataset.py, runner.py, reports.py, evaluate.py), thêm --judge-style verdict (tùy chọn), mặc định vẫn geval. Việc 2: summary.cost (token và USD trên mỗi ca hoàn tất) từ usage trong bản ghi Java, thêm --score-tolerance, --input-price, --output-price. Thêm 2 test pytest, cập nhật README."
 **Context**: Code Generation, scripts/ai-grading-eval. pytest 20/20; chưa chạy judge thật; chưa commit. Nhánh đang checkout: audit-staging (cùng commit cf8b0370 với staging; PR 121 staging vào main đang mở).
 
@@ -17156,7 +13749,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Giữ GEval làm mặc định cho judge
 **Timestamp**: 2026-11-23T08:29:48Z
 **Requested by:** Quang Hung
-**User Input**: "tôi nghĩ giữ nguyên như hiện tại cũng đc r, b thấy sao"
+**User Input**: "tôi nghĩ giữ nguyên như hiện tại cũng được rồi, bạn thấy sao"
 **AI Response**: "Đồng ý giữ nguyên: chưa có bằng chứng verdict tốt hơn trên dữ liệu của dự án. Đổi mặc định --judge-style về geval, verdict còn là tùy chọn; cập nhật README, aidlc-state. Phần chi phí trên mỗi ca hoàn tất không phụ thuộc kiểu judge nên giữ."
 **Context**: scripts/ai-grading-eval. Chưa commit.
 
@@ -17165,7 +13758,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Hoàn lại phần judge verdict, giữ chi phí
 **Timestamp**: 2026-11-23T08:31:36Z
 **Requested by:** Quang Hung
-**User Input**: "revert changes" — "vabh recommend đi"
+**User Input**: "revert changes" — "vậy bạn recommend đi"
 **AI Response**: "Khuyến nghị và thực hiện: gỡ phần judge correct/incorrect/unknown (khôi phục evaluation.py, runner.py; bỏ --judge-style và trạng thái QUALITY_UNKNOWN khỏi dataset.py, evaluate.py, reports.py, README, test), giữ summary.cost cùng --score-tolerance, --input-price, --output-price. Đã lưu patch đầy đủ trước khi gỡ ở scratchpad (ai-eval-verdict-and-cost.patch) để áp lại khi có nhãn giảng viên."
 **Context**: scripts/ai-grading-eval. Chưa commit.
 
@@ -17174,7 +13767,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Cập nhật báo cáo kiểm thử AI chấm điểm với token và thời gian
 **Timestamp**: 2026-11-23T08:33:34Z
 **Requested by:** Quang Hung
-**User Input**: "cái test report có thể cập nhật đc luôn k"
+**User Input**: "cái test report có thể cập nhật được luôn không"
 **AI Response**: "Hiểu 'test report' là construction/build-and-test/ai-grading-test-report.md. Thêm vào mục 3 ba dòng và một đoạn giải thích: 416.997 token cho 20 ca lượt 3 (vào 361.876, ra 55.121), 27.800 token mỗi ca hoàn tất (15/20 khớp mốc nhóm), thời gian trung vị 56 giây (34 đến 68). Số liệu tính từ 20 provider-result.json trong thư mục bằng chứng đã commit; không quy ra tiền; lượt 1, 2 chưa tính vì bản ghi nằm ngoài repo."
 **Context**: Tài liệu, không đổi code. Chưa commit.
 
@@ -17183,7 +13776,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Báo cáo kiểm thử AI chấm điểm: độ lệch điểm, theo đề, nguyên nhân ca lệch
 **Timestamp**: 2026-11-23T08:41:33Z
 **Requested by:** Quang Hung
-**User Input**: "đây là chỉ là chấm độ chính xác của ai thôi tôi nghĩ làm cái 1 trước"
+**User Input**: "đây chỉ là chấm độ chính xác của AI thôi, tôi nghĩ làm cái 1 trước"
 **AI Response**: "Thêm vào ai-grading-test-report.md: bảng độ lệch điểm theo lượt (MAE 0,148, 0,065, 0,165; sai lớn nhất 2,00, 0,50, 1,50; chiều lệch), kết quả lượt 3 theo từng đề, giải thích hai ca lệch còn lại (06-prompt-injection, 08-wrong-actors) từ điểm từng mục và lý do của Luna, nhóm nguyên nhân của năm ca lệch, mô tả mã băm prompt và schema. Nêu rõ lượt 3 lệch điểm lớn hơn lượt 2 và mỗi ca chỉ chấm một lần."
 **Context**: Tài liệu, không đổi code. Số liệu tính từ phụ lục và bằng chứng đã commit. Chưa commit.
 
@@ -17192,7 +13785,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Báo cáo kiểm thử AI chấm điểm: phần A (kết luận, giới hạn, độ chính xác theo mục, cờ, môi trường, token ba lượt)
 **Timestamp**: 2026-11-23T08:48:21Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi làm phần a trước"
+**User Input**: "giúp tôi làm phần A trước"
 **AI Response**: "Thêm vào ai-grading-test-report.md: độ chính xác theo mục (225/234 khớp, 9 mục lệch đều thấp hơn mốc), hiệu quả cờ cần xem lại (14 cờ, bắt 2/9 mục lệch, ba ca lệch không có cờ), token và thời gian ba lượt (lượt 1 và 2 tính từ bản ghi .tmp cục bộ, đã xác minh tổng điểm thô khớp bảng phụ lục 20/20 mỗi lượt), khối môi trường kiểm thử từ judge-result.json, backend-tests.log và requirements.lock, mục 5 giới hạn, mục 6 kết luận và khuyến nghị (bản nháp chờ nhóm xác nhận)."
 **Context**: Tài liệu, không đổi code, không chạy lại model hay judge. Chưa commit.
 
@@ -17201,7 +13794,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Sửa nhận định lượt 3 so với lượt 2 trong báo cáo kiểm thử
 **Timestamp**: 2026-11-23T08:54:28Z
 **Requested by:** Quang Hung
-**User Input**: "Ủa sao tôi thấy so sánh mục 2-3 thấy điểm lệch của cái 9.5 -7 còn lệch nhiều hơn lần cũ"
+**User Input**: "Ủa sao tôi thấy so sánh mục 2-3 thấy điểm lệch của cái 9.5 - 7 còn lệch nhiều hơn lần cũ"
 **AI Response**: "Xác nhận ca swd-workshop-missing-fk lệch 0,00 ở lượt 2 và 1,50 ở lượt 3 (swd-workshop-complete 0,00 và 0,75). Báo cáo trước đó viết lượt 3 cải thiện phản hồi theo hai judge, đúng so với lượt 1 nhưng không đúng so với lượt 2 (Sol 18/20 ở cả hai, Opus lượt 2 chỉ có 3 ca). Đã sửa mục 4, kết luận 4 và khuyến nghị, thêm bảng ca đổi điểm giữa lượt 2 và lượt 3 và ghi rằng các lần thử nhỏ trước lượt 3 không chạy đề workshop."
 **Context**: Tài liệu, không đổi code, không chạy lại model. Chưa commit.
 
@@ -17246,7 +13839,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Gom báo cáo kiểm thử theo ngày trong build-and-test
 **Timestamp**: 2026-11-23T09:53:51Z
 **Requested by:** Quang Hung
-**User Input**: "nhóm lại các thư mục ngày tháng này trong build and test folder lại cho gọn" (kèm ảnh cây thư mục)
+**User Input**: "nhóm lại các thư mục ngày tháng này trong build-and-test folder lại cho gọn" (kèm ảnh cây thư mục)
 **AI Response**: "Chuyển 123 mục có tiền tố ngày trong aidlc-docs/construction/build-and-test vào 24 thư mục YYYY-MM-DD/, giữ nguyên tên tệp. Giữ 2026-11-08-integration-test-cases.json ở gốc vì scripts/assert-required-backend-tests.ps1 (CI) đọc theo đường dẫn. Dùng script tính đường dẫn mới cho mọi liên kết tương đối (resolve theo vị trí cũ, map, relativize theo vị trí mới) và sửa 183 tệp (558 liên kết, 52 đường dẫn dạng chữ). Không sửa audit.md và history/ vì là bản ghi lịch sử; các đường dẫn cũ trong audit.md trỏ tới cấu trúc trước ngày 2026-11-23 (tên tệp có tiền tố ngày nay nằm trong thư mục cùng ngày). Kiểm tra: 224 tệp tracked không mất tệp nào, 0 liên kết hỏng trỏ vào build-and-test, tổng liên kết hỏng sẵn có không đổi."
 **Context**: Chỉ di chuyển và sửa liên kết, không đổi nội dung báo cáo hay code. Chưa commit.
 
@@ -17255,7 +13848,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Commit và PR bản sửa KAN-215, KAN-216; phân loại case Failed của Report-5.2
 **Timestamp**: 2026-11-23T09:42:50Z
 **Requested by:** Hải Nam
-**User Input**: "commit cả 2 bản fix u14 và u06 sau đó tạo pr vào staging. Cho biết các case failed cần phải sửa những gì"
+**User Input**: "commit cả 2 bản fix U14 và U06, sau đó tạo PR vào staging. Cho biết các case failed cần phải sửa những gì"
 **AI Response**: "Commit 521f50a7 fix(notifications) KAN-215 và c819eb27 docs(aidlc) audit Report-5.2 trên fix/u14-realtime-notification-sse; commit cd94e3d3 fix(ai) KAN-216 trên fix/u06-connection-test-usage; rebase cả hai lên origin/staging (cf8b0370), audit.md gộp phần thêm của hai bên. mvn test: notifications + groupdocs 22 bộ / 203 ca đạt; ai 26 bộ / 261 ca đạt; 0 lỗi. Push và mở PR #122 (U14) và PR #123 (U06) vào staging. Phân loại 7 case Failed: U14-M03, U06-M04 là lỗi sản phẩm đã có PR; U02-M02, U15-M02 (giao diện chuyển role sai về trang chủ thay vì trang từ chối, BR-U01-48 so với BR-U15-01), U05-M01 (frontend mở lớp ngay sau khi tạo, trái BR-U05-10/14), U08-M01 (danh sách chấm không hiện giờ nộp, BR-U09-11 không yêu cầu), U09-M02 (không xem được lượt nộp cũ trong Grading Workspace, BR-U09-12 không yêu cầu) cần nhóm chọn sửa sản phẩm hay sửa test case/BR."
 **Context**: Report-5.2 sau Round 1; PR chờ CI và review.
 
@@ -17273,7 +13866,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Report-5.2: evidence chỉ giữ screenshot
 **Timestamp**: 2026-11-23T10:31:40Z
 **Requested by:** Hải Nam
-**User Input**: "trong evidence tôi muốn bỏ phần extracts, chỉ giữ lại screen shot có được không"
+**User Input**: "trong evidence tôi muốn bỏ phần extracts, chỉ giữ lại screenshot có được không"
 **AI Response**: "Bỏ mục Extracts khỏi Report-5.2_Evidence.pdf và README.md của từng case (render lại 50 README từ result.json); giữ bước, bảng check và screenshot. Bản trích DB/log/HTTP/email đầy đủ vẫn nằm trong detail\ của từng case (lưu trữ cục bộ) và result.json. ev.mjs ghi README không có Extracts cho các lần chạy sau."
 **Context**: Report-5.2 evidence format.
 
@@ -17306,11 +13899,11 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 
 ---
 
-## Construction — PR tài liệu Report-5.2 Round 2 và BR U05
-**Timestamp**: 2026-11-23T10:37:49Z
-**Requested by:** Hải Nam
-**User Input**: "Yes, separate PR"
-**AI Response**: "Tách thay đổi tài liệu U05 (BR-U05-10, BR-U05-14, business-logic-model, domain-entities, frontend-components) và các mục audit từ 23/11 sau PR #122 sang nhánh docs/report-5.2-round2-u05-br tạo từ origin/staging (d5d0e8cb); mở PR riêng vào staging. Bỏ các thay đổi đó khỏi thư mục làm việc của nhánh fix/u14-realtime-notification-sse để PR #122 chỉ còn bản sửa KAN-215."
-**Context**: PR tài liệu riêng; không đổi code.
+## Audit — Lọc và chuẩn hoá các mục audit mới từ staging
+**Timestamp**: 2026-11-23T17:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, làm luôn" (đồng ý lọc và sửa chính tả các mục audit mới trên staging)
+**AI Response**: "Merge origin/staging vào docs/audit-prune (không xung đột). Trong 48 mục audit mới: bỏ 6 mục duyệt/thao tác Git/chỉ hỏi ('ok, tiếp tục', 'Signed in', 'Not yet', 'Done, run it', 'Yes, separate PR', 'test mailbox điền cái gì?'); sửa chính tả, viết tắt và thuật ngữ trong 20 dòng prompt. Không đổi AI Response, Context hay trường khác."
+**Context**: Tiếp nối PR #125; cùng ngoại lệ có chủ ý với quy tắc audit đầy đủ và nguyên văn.
 
 ---
