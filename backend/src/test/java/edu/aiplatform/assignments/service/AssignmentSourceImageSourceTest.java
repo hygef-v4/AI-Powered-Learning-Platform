@@ -14,14 +14,14 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class AssignmentSourceImageSourceTest {
     private final AssignmentFixtures f = new AssignmentFixtures();
 
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void imagesReachGenerationAndRevisionWithoutBeingPassedToTextExtractor(boolean revise) {
+    @CsvSource({"false,image/png", "true,image/png", "false,image/webp", "true,image/webp"})
+    void imagesReachGenerationAndRevisionWithoutBeingPassedToTextExtractor(boolean revise, String mediaType) {
         var assignment = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
         AtomicReference<AssignmentAiDraft> saved = new AtomicReference<>();
         doAnswer(call -> { saved.set(call.getArgument(0)); return null; }).when(f.drafts).insert(any());
@@ -33,7 +33,7 @@ class AssignmentSourceImageSourceTest {
         });
         when(f.artifacts.attach(any(), eq(f.teacher), eq(ArtifactPurpose.ASSIGNMENT_SOURCE)))
                 .thenReturn(new StoredFileInfo("private-image", f.teacher.accountId(), ArtifactPurpose.ASSIGNMENT_SOURCE,
-                        "diagram.png", "image/png", 3, "hash"));
+                        "diagram", mediaType, 3, "hash"));
         when(f.aiTasks.sourceOrder(any(), any(), anyInt())).thenReturn(List.of(new AiSourceChoice(AiSource.SHARED, null)));
         when(f.aiTasks.submit(any())).thenReturn(new AiTaskView(java.util.UUID.randomUUID(), AiTaskState.QUEUED,
                 AiSource.SHARED, null, "vision", null, null, null));

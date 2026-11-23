@@ -79,6 +79,8 @@ public class AssignmentAiDraftService {
     static final int MAX_OUTPUT_TOKENS = 8_000;
     static final int MAX_SOURCE_FILES = 3;
     static final long MAX_SOURCE_BYTES = 2L * 1024 * 1024;
+    /** Ảnh nguồn gửi thẳng cho model đọc ảnh; mọi provider đang hỗ trợ đều nhận WEBP. */
+    static final Set<String> SOURCE_IMAGE_TYPES = Set.of("image/png", "image/jpeg", "image/webp");
     static final long MAX_SOURCE_TOTAL_BYTES = MAX_SOURCE_FILES * MAX_SOURCE_BYTES;
     static final int MAX_FORMAT_CHARS = 30_000;
     private final AssignmentRepository assignments;
@@ -704,7 +706,7 @@ public class AssignmentAiDraftService {
     }
 
     private static boolean isSourceImage(StoredFileInfo file) {
-        return Set.of("image/png", "image/jpeg").contains(file.mediaType());
+        return SOURCE_IMAGE_TYPES.contains(file.mediaType());
     }
 
     private List<AssignmentSourceText> extractSources(List<StoredFileInfo> files) {

@@ -6,7 +6,7 @@ Thiết kế, chưa có mã. Phục vụ U07 BR-U07-87…101. [Yêu cầu](../..
 
 | Mã | Quy tắc |
 |---|---|
-| BR-U06-54 | `AiPrompt` có thêm `images: List<AiImageRef>` (mặc định rỗng; constructor cũ `AiPrompt(system, user)` giữ nguyên). `AiImageRef(source, ref, mediaType)`: `mediaType` chỉ `image/jpeg` hoặc `image/png`, tối đa 10 ảnh mỗi tác vụ, `source` phải có `IAiImageSource` đăng ký. Sai thì `400 AI_TASK_INVALID`. `input_payload` lưu `{system, user, images: [{source, ref, mediaType}]}`, không lưu bytes. Fingerprint chống gửi trùng gồm cả danh sách ảnh. |
+| BR-U06-54 | `AiPrompt` có thêm `images: List<AiImageRef>` (mặc định rỗng; constructor cũ `AiPrompt(system, user)` giữ nguyên). `AiImageRef(source, ref, mediaType)`: `mediaType` chỉ `image/jpeg`, `image/png` hoặc `image/webp`, tối đa 10 ảnh mỗi tác vụ, `source` phải có `IAiImageSource` đăng ký. Sai thì `400 AI_TASK_INVALID`. `input_payload` lưu `{system, user, images: [{source, ref, mediaType}]}`, không lưu bytes. Fingerprint chống gửi trùng gồm cả danh sách ảnh. |
 | BR-U06-55 | `IAiImageSource` (U06 khai báo, unit gọi cài): `source()`, `load(ref) → Optional<AiImage(mediaType, bytes)>`. Worker nạp ảnh ngay trước khi gọi nhà cung cấp AI. Thiếu ảnh nào thì tác vụ FAILED với lỗi an toàn "Ảnh gửi AI không còn", không gọi nhà cung cấp, hoàn chỗ quota đã giữ. |
 | BR-U06-56 | Ước tính quota: mỗi ảnh tính thêm 1.600 token vào phần đầu vào khi giữ chỗ (`QuotaReservationService.estimate`). Quyết toán vẫn theo usage thật nhà cung cấp trả. |
 | BR-U06-57 | Model đọc ảnh: mỗi provider có `vision-models` trong cấu hình (`U06_GEMINI_VISION_MODELS`, `U06_OPENAI_VISION_MODELS`, `U06_CLAUDE_VISION_MODELS`). Không đặt thì mặc định bằng danh sách `models`. `ProviderCatalog.supportsImages(provider, model)`. |

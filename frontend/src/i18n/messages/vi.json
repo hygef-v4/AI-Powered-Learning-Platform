@@ -2014,6 +2014,18 @@
   },
   "grading": {
     "components": {
+      "AiDraftBanner": {
+        "applied": "AI đã điền đề xuất vào form chấm điểm: {score} / {max}.",
+        "offered": "AI có đề xuất mới: {score} / {max}. Bạn đang có chỉnh sửa chưa lưu nên chưa tự điền.",
+        "reviewItems": "{count} mục cần xem lại.",
+        "apply": "Áp dụng đề xuất",
+        "skip": "Bỏ qua",
+        "keep": "Giữ đề xuất",
+        "undo": "Hoàn tác",
+        "details": "Chi tiết",
+        "filledByAi": "AI đã điền mục này, bạn chưa sửa",
+        "aiLabel": "AI"
+      },
       "AiProposalPanel": {
         "waitingToBeProcessed": "Đang chờ xử lý",
         "readyToReview": "Sẵn sàng để xem",
@@ -2360,6 +2372,7 @@
         "resolveOverlappingEdits": "Dùng bản trên máy chủ cho các mục sửa trùng và giữ các thay đổi riêng của bạn?",
         "useServerEdits": "Dùng bản máy chủ cho mục trùng",
         "youHaveUnsavedChangesLeave": "Bạn có thay đổi chưa lưu. Rời bài này?",
+        "undoDiscardsEdits": "Hoàn tác sẽ bỏ cả các chỉnh sửa của bạn sau khi AI điền. Tiếp tục?",
         "discardChanges": "Bỏ thay đổi",
         "checkEachItemsPointsFrom": "Kiểm tra điểm từng mục: từ 0 đến điểm tối đa, với tối đa 2 chữ số thập phân.",
         "theServerDoesNotSupport": "Máy chủ chưa hỗ trợ lưu điểm lẻ. Cần cập nhật máy chủ rồi tải lại phiên bản; điểm bạn đang nhập vẫn được giữ.",
@@ -2412,6 +2425,8 @@
       "GradingWorkspacePage": {
         "loadingWork": "Đang tải bài làm…",
         "aNewAiProposalIs": "Đã có đề xuất AI mới. Mở Xem đề xuất AI để kiểm tra.",
+        "cancelAiGrading": "Hủy chấm AI",
+        "aiGradingRequestCancelled": "Đã hủy yêu cầu chấm AI.",
         "aiGradingSentYouCan": "Đã gửi chấm AI. Bạn có thể tiếp tục làm việc.",
         "youHaveUnsavedMemberAssessments": "Bạn có đánh giá thành viên chưa lưu. Hãy lưu điểm thành viên trước khi công bố.",
         "groupWork": "Bài làm nhóm",

@@ -16918,3 +16918,39 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Thao tác Git cục bộ.
 
 ---
+
+## U09 — AI điền đề xuất vào form chấm điểm, có Hoàn tác
+**Timestamp**: 2026-11-23T06:32:00Z
+**Requested by:** Quang Hung
+**User Input**: "tôi muốn sửa phần giao diện chấm điểm bằng ai các bài assignment thì lúc bấm chấm điểm xong, nó nên đề xuất điểm , nhận xét thì fill luôn vào phần form chấm điểm luôn, có nút kiểu từ chối đề xuất discard ấy, chứ k cần phải kéo xuống phần lịch sử để xuất bấm chấp nhận như hiện tại, b có thể đề xuất giao diện như vậy cho tôi đck o" — "ok toi đồng ý /ponytail:ponytail"
+**AI Response**: "Đề xuất giao diện rồi cài đặt: đề xuất READY do giáo viên vừa yêu cầu tự điền vào form; nếu form có chỉnh sửa chưa lưu thì hỏi trước. Thanh AiDraftBanner có Giữ đề xuất / Hoàn tác / Chi tiết. Hook giữ bản chụp form để Hoàn tác. Bảng so sánh chuyển lên dưới thanh. Sửa useGradingWorkspace.ts, GradingWorkspacePage.tsx, thêm AiDraftBanner.tsx, khóa i18n vi/en, test workspace.test.tsx."
+**Context**: Code Generation, chỉ frontend. ESLint, tsc đạt; Vitest grading + i18n 232/232. Chưa kiểm tra trên trình duyệt thật; chưa commit.
+
+---
+
+## U09 — Hoàn tác có xác nhận và nhãn ô do AI điền
+**Timestamp**: 2026-11-23T06:44:28Z
+**Requested by:** Quang Hung
+**User Input**: "làm 1, 2 trước" — "b sửa ở main hả? chuyể sang audit staging branch ấy"
+**AI Response**: "Hoàn tác hỏi xác nhận khi giáo viên đã sửa tay sau lúc AI điền. Ô điểm từng mục và nhận xét chung do AI điền có nhãn ✨ AI cho đến khi bị sửa (hàm listAiFilledItems, RubricChecklistPanel, GradingWorkspaceHeader). Phát hiện đã sửa nhầm trên main, chuyển toàn bộ thay đổi sang nhánh audit-staging (worktree F:/code/git/AI-Powered-Learning-Platform) bằng patch, đưa main về sạch."
+**Context**: Code Generation, chỉ frontend, nhánh audit-staging. ESLint, tsc đạt; Vitest grading + i18n 233/233. Chưa kiểm tra trên trình duyệt thật; chưa commit.
+
+---
+
+## U09 — Hủy yêu cầu chấm AI bị kẹt
+**Timestamp**: 2026-11-23T06:53:00Z
+**Requested by:** Quang Hung
+**User Input**: "nhiều luc bấm ai chấm mà tôi đổi khóa hoặc gì đó k chấm được, tôi chuyển trang thì nút ai đang chấm bị kẹt mãi có giải pháp nào ko" (kèm ảnh nút "AI đang chấm…" bị khóa)
+**AI Response**: "Nút bị khóa vì còn đề xuất PENDING (aiGenerating) và UI không có cách thoát; backend tự hủy QUEUED sau 30 phút. Thêm gradingApi.cancelTask (POST /ai/tasks/{id}:cancel, API sẵn có) và nút 'Hủy chấm AI' trên thanh công cụ khi task QUEUED, sau đó resumePolling để backend đối chiếu CANCELLED→FAILED. Task RUNNING không hủy được ở backend nên không hiện nút."
+**Context**: Code Generation, chỉ frontend, nhánh audit-staging. ESLint, tsc đạt; Vitest grading + i18n 234/234. Chưa kiểm tra trên trình duyệt thật; chưa commit.
+
+---
+
+## U07/U03/U06 — Tạo đề bằng AI nhận ảnh WebP
+**Timestamp**: 2026-11-23T07:54:57Z
+**Requested by:** Quang Hung
+**User Input**: "sửa phần tạo đề ai hỗ trợ up ảnh webp đi"
+**AI Response**: "Mở WEBP ở các danh sách cho phép: PurposePolicy (ASSIGNMENT_SOURCE), AssignmentAiDraftService.SOURCE_IMAGE_TYPES (dùng chung với AssignmentSourceImageSource), AiTaskService.IMAGE_TYPES, AiImageRef (javadoc) và accept của AiReviseChat. Cập nhật PurposePolicyTest, AssignmentSourceImageSourceTest (tham số hóa png/webp), AiTaskFlowTest, BR-U06-54 và frontend-components U07."
+**Context**: Code Generation, backend và frontend nhỏ, nhánh audit-staging. Chưa commit.
+
+---
