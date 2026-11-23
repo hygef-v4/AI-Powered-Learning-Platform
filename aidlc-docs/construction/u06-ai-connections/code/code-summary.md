@@ -52,7 +52,7 @@ Code viết ngày 2026-10-21 đến 2026-10-22 theo [plan](../../plans/code-gene
 |---|---|
 | `GET /api/v1/ai/providers` | 14, 31 |
 | `GET/POST /api/v1/me/ai-connections`, `POST ...:test`, `PUT/DELETE /{id}`, `GET /{id}/key`, `POST /{id}:test`, `PUT /{id}/status` | 31; nhiều key/provider, owner scope |
-| `GET/POST /api/v1/me/mcp-credentials`, `PATCH/DELETE /{id}`, `GET /{id}/token` | 32; owner-only, token reveal có guard |
+| `GET/POST /api/v1/me/mcp-credentials`, `PATCH/DELETE /{id}` | 32; owner-only, token chỉ trả lúc tạo, sửa chỉ được hạ quyền |
 | `POST /mcp` (Bearer; `GET` 405; có `Origin` thì 403) | 32 |
 | `GET /api/v1/me/ai-usage` | 33 |
 | `GET /api/v1/ai/sources`, `GET /api/v1/ai/tasks/{id}`, `POST /{id}:cancel` | U07–U10 |

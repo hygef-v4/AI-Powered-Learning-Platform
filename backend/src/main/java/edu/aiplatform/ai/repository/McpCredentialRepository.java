@@ -2,7 +2,6 @@ package edu.aiplatform.ai.repository;
 
 import edu.aiplatform.ai.model.McpCredential;
 
-import edu.aiplatform.ai.model.AiConnection.EncryptedKey;
 import edu.aiplatform.ai.model.McpCredential.Access;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -10,14 +9,12 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * Bảng {@code mcp_credentials}; chỉ dùng trong U06. Tìm theo băm token, không lưu token rõ; bản mã của token chỉ để
- * chủ agent xem lại.
+ * Bảng {@code mcp_credentials}; chỉ dùng trong U06. Tìm theo băm token, không lưu token rõ hay bản có thể giải mã.
  */
 @Repository
 public class McpCredentialRepository {
@@ -69,29 +66,6 @@ public class McpCredentialRepository {
     public int revoke(UUID id, Instant now) {
         return jdbc.sql("update mcp_credentials set revoked_at = :now where id = :id and revoked_at is null")
                 .param("id", id).param("now", Timestamp.from(now)).update();
-    }
-
-    /** Lưu bản mã của token để chủ agent xem lại; xác thực vẫn chỉ dùng {@code token_hash}. */
-    public void saveSecret(UUID id, EncryptedKey secret) {
-        jdbc.sql("update mcp_credentials set token_ciphertext = :cipher, token_iv = :iv, token_key_version = :version "
-                        + "where id = :id")
-                .param("id", id).param("cipher", secret.ciphertext()).param("iv", secret.iv())
-                .param("version", secret.version()).update();
-    }
-
-    public Optional<EncryptedKey> findSecret(UUID id) {
-        return jdbc.sql("select token_ciphertext, token_iv, token_key_version from mcp_credentials where id = :id "
-                        + "and token_ciphertext is not null")
-                .param("id", id)
-                .query((rs, n) -> new EncryptedKey(rs.getBytes("token_ciphertext"), rs.getBytes("token_iv"),
-                        rs.getInt("token_key_version")))
-                .optional();
-    }
-
-    /** Agent của một người có bản mã token (xem lại được). */
-    public Set<UUID> listRevealableIds(UUID accountId) {
-        return Set.copyOf(jdbc.sql("select id from mcp_credentials where account_id = :id and token_ciphertext is not null")
-                .param("id", accountId).query(UUID.class).list());
     }
 
     public int updateCredential(UUID id, String label, Access access) {

@@ -130,7 +130,7 @@ class AiControllersTest {
     @Test
     void mcpCredentialCreateReturnsTokenOnce() throws Exception {
         CredentialView view = new CredentialView(UUID.randomUUID(), "Claude Desktop", Access.READ_ONLY, "AbCd", NOW,
-                NOW.plusSeconds(86400), null, McpCredential.Status.ACTIVE, true);
+                NOW.plusSeconds(86400), null, McpCredential.Status.ACTIVE);
         when(credentials.createCredential(actor, "Claude Desktop", Access.READ_ONLY, 30)).thenReturn(new Created(view, "mcp_xyzAbCd"));
         when(credentials.listCredentials(actor)).thenReturn(List.of(view));
 
