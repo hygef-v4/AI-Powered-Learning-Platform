@@ -6,7 +6,6 @@ import edu.aiplatform.assignments.repository.AiDraftRepository;
 import edu.aiplatform.files.contract.IArtifact;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +39,7 @@ public class AssignmentSourceImageSource implements IAiImageSource {
             if (draft.isEmpty()) return Optional.empty();
             var file = draft.get().provenance().path("sourceFiles").path(index);
             String mediaType = file.path("mediaType").asText("");
-            if (!Set.of("image/png", "image/jpeg").contains(mediaType)
+            if (!AssignmentAiDraftService.SOURCE_IMAGE_TYPES.contains(mediaType)
                     || file.path("fileId").asText("").isBlank()
                     || file.path("byteSize").asLong() < 1
                     || file.path("byteSize").asLong() > AssignmentAiDraftService.MAX_SOURCE_BYTES) {

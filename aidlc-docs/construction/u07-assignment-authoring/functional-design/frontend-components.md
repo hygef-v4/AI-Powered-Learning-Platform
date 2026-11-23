@@ -140,7 +140,7 @@ Route `/assignments/*` và `/manager/assignments` cho Teacher, Subject Manager (
 
 ## Nguồn ảnh và định dạng AI — 2026-11-13
 
-Menu cấp môn mang tên Đề mẫu; route và quyền giữ nguyên. ASSIGNMENT_SOURCE nhận thêm PNG/JPEG, dùng chung cả tạo mới và sửa đề; tối đa 3 tệp, 2 MB/tệp, tổng 6 MB. Xem trước ảnh local có thu hồi object URL khi gỡ/rời màn hình. Worker nhận tham chiếu draft/index của ảnh đã attach qua kiểm quyền; không nhận fileId tự do từ client. Model phải hỗ trợ ảnh; đây không phải OCR chuyển ảnh thành chữ. Mẫu định dạng vẫn DOCX, ảnh là tài liệu tham khảo.
+Menu cấp môn mang tên Đề mẫu; route và quyền giữ nguyên. ASSIGNMENT_SOURCE nhận thêm PNG/JPEG/WEBP, dùng chung cả tạo mới và sửa đề; tối đa 3 tệp, 2 MB/tệp, tổng 6 MB. Xem trước ảnh local có thu hồi object URL khi gỡ/rời màn hình. Worker nhận tham chiếu draft/index của ảnh đã attach qua kiểm quyền; không nhận fileId tự do từ client. Model phải hỗ trợ ảnh; đây không phải OCR chuyển ảnh thành chữ. Mẫu định dạng vẫn DOCX, ảnh là tài liệu tham khảo.
 
 Đề xuất tạo mới có businessContextFormat, titleFormat/guidanceFormat từng mục; sửa đề có format từng block. Chỉ nhận thuộc tính định dạng của document editor: align, bold/italic/underline/strike/code, color/highlight hex và runs để nhấn riêng từng đoạn chữ. Runs phải ghép đúng nội dung plain text. LIST/TABLE khi sửa nhận định dạng áp dụng toàn khối. Dữ liệu cũ chỉ có plain text vẫn dùng được; không có HTML/CSS tùy ý. Xem trước và áp dụng giữ định dạng; rubric, version và quyền kiểm lại như trước.
 
