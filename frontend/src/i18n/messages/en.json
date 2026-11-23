@@ -2014,6 +2014,18 @@
   },
   "grading": {
     "components": {
+      "AiDraftBanner": {
+        "applied": "AI filled the grading form with its proposal: {score} / {max}.",
+        "offered": "AI has a new proposal: {score} / {max}. You have unsaved edits, so it was not filled in.",
+        "reviewItems": "{count} items need review.",
+        "apply": "Apply proposal",
+        "skip": "Skip",
+        "keep": "Keep proposal",
+        "undo": "Undo",
+        "details": "Details",
+        "filledByAi": "Filled by AI, not edited by you",
+        "aiLabel": "AI"
+      },
       "AiProposalPanel": {
         "waitingToBeProcessed": "Waiting to be processed",
         "readyToReview": "Ready to review",
@@ -2360,6 +2372,7 @@
         "resolveOverlappingEdits": "Use the server version for overlapping edits and keep your other changes?",
         "useServerEdits": "Use server edits for overlapping fields",
         "youHaveUnsavedChangesLeave": "You have unsaved changes. Leave this submission?",
+        "undoDiscardsEdits": "Undo will also discard your edits made after the AI filled the form. Continue?",
         "discardChanges": "Discard changes",
         "checkEachItemsPointsFrom": "Check each item''s points: from 0 to the item''s maximum, with at most 2 decimal places.",
         "theServerDoesNotSupport": "The server does not support saving decimal scores yet. Update the server and reload the version; the scores you entered are kept.",
@@ -2412,6 +2425,8 @@
       "GradingWorkspacePage": {
         "loadingWork": "Loading work…",
         "aNewAiProposalIs": "A new AI proposal is available. Open View AI proposal to check it.",
+        "cancelAiGrading": "Cancel AI grading",
+        "aiGradingRequestCancelled": "AI grading request cancelled.",
         "aiGradingSentYouCan": "AI grading sent. You can keep working.",
         "youHaveUnsavedMemberAssessments": "You have unsaved member assessments. Save member scores before publishing.",
         "groupWork": "Group work",

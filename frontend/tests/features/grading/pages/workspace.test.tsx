@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   saveEvaluation: vi.fn(),
   listProposals: vi.fn(),
   requestProposal: vi.fn(),
+  cancelTask: vi.fn(),
   push: vi.fn(),
   loadTask: vi.fn(),
   saveMemberGrade: vi.fn(),
@@ -997,21 +998,93 @@ describe("AI grading request lifecycle", () => {
     expect(screen.getByRole("button", { name: "Chấm bằng AI" })).toHaveAttribute("aria-busy", "true");
   }
 
-  it("retains manual work when AI becomes READY and only applies on request", async () => {
-    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([
-      { ...pending, status: "READY", taskState: undefined, proposal: { checks: { r1: ["i1"] }, itemScoresByRubric: { r1: { i1: 1 } }, score: 1, feedback: "AI xong" } },
-    ]);
+  const readyProposal = { ...pending, status: "READY", taskState: undefined, proposal: { checks: { r1: ["i1"] }, itemScoresByRubric: { r1: { i1: 1 } }, score: 1, feedback: "AI xong" } };
+
+  it("fills the form when AI becomes READY and lets the teacher undo or keep it", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([readyProposal]);
     await requestAiGrade();
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
     expect(screen.queryByRole("alertdialog", { name: "Đang chấm bằng AI" })).not.toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
-    fireEvent.click(screen.getByRole("button", { name: "Xem đề xuất AI" }));
-    fireEvent.click(screen.getByRole("button", { name: "Áp dụng vào bản nháp" }));
     expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
+    expect(screen.getByText(/AI đã điền đề xuất vào form chấm điểm: 1\.00 \/ 1\.00/)).toBeInTheDocument();
     expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Hoàn tác" }));
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    expect(screen.queryByRole("button", { name: "Hoàn tác" })).not.toBeInTheDocument();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+  });
+
+  it("lets the teacher cancel a queued AI request that is stuck after reopening the page", async () => {
+    const queued = { ...pending, id: "p-stuck", taskId: "task-1", taskState: "QUEUED" };
+    mocks.listProposals.mockResolvedValueOnce([queued]).mockResolvedValue([
+      { ...queued, status: "FAILED", taskState: undefined, safeError: "Người dùng đã hủy" },
+    ]);
+    mocks.cancelTask.mockResolvedValue(undefined);
+    render(<><GradingWorkspacePage evaluationId="e" /><Toaster /></>);
+    const aiButton = await screen.findByRole("button", { name: "Chấm bằng AI" });
+    await waitFor(() => expect(aiButton).toBeDisabled());
+
+    fireEvent.click(await screen.findByRole("button", { name: "Hủy chấm AI" }));
+    await waitFor(() => expect(mocks.cancelTask).toHaveBeenCalledWith("task-1"));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Chấm bằng AI" })).toBeEnabled());
+    expect(screen.queryByRole("button", { name: "Hủy chấm AI" })).not.toBeInTheDocument();
+  });
+
+  it("marks AI-filled fields until they are edited and confirms before undoing manual edits", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([readyProposal]);
+    await requestAiGrade();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    const marker = "AI đã điền mục này, bạn chưa sửa";
+    const filledCount = screen.getAllByTitle(marker).length;
+    expect(filledCount).toBeGreaterThan(1);
+
+    const comment = screen.getByRole("textbox", { name: "Nhận xét chung" });
+    expect(comment).toHaveValue("AI xong");
+    fireEvent.change(comment, { target: { value: "Tôi sửa lại" } });
+    expect(screen.getAllByTitle(marker)).toHaveLength(filledCount - 1);
+
+    fireEvent.click(screen.getByRole("button", { name: "Hoàn tác" }));
+    expect(comment).toHaveValue("Tôi sửa lại");
+    fireEvent.click(screen.getAllByRole("button", { name: "Hoàn tác" }).at(-1)!);
+    expect(comment).toHaveValue("original");
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    expect(screen.queryAllByTitle(marker)).toHaveLength(0);
+    expect(screen.queryByRole("button", { name: "Giữ đề xuất" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the filled form when the teacher confirms the AI proposal", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([readyProposal]);
+    await requestAiGrade();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Giữ đề xuất" }));
+    expect(screen.queryByRole("button", { name: "Hoàn tác" })).not.toBeInTheDocument();
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
+  });
+
+  it("asks before replacing unsaved manual edits with the AI proposal", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([readyProposal]);
+    await requestAiGrade();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Thực thể chính/ }));
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", { name: /Thực thể chính/ }));
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Áp dụng đề xuất" }));
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Hoàn tác" }));
+    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
   });
 
   it("reports a proposal that FAILED while polling and lets the teacher request again", async () => {
