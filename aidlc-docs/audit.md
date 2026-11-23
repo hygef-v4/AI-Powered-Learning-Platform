@@ -17251,3 +17251,66 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Chỉ di chuyển và sửa liên kết, không đổi nội dung báo cáo hay code. Chưa commit.
 
 ---
+
+## Construction — Commit và PR bản sửa KAN-215, KAN-216; phân loại case Failed của Report-5.2
+**Timestamp**: 2026-11-23T09:42:50Z
+**Requested by:** Hải Nam
+**User Input**: "commit cả 2 bản fix u14 và u06 sau đó tạo pr vào staging. Cho biết các case failed cần phải sửa những gì"
+**AI Response**: "Commit 521f50a7 fix(notifications) KAN-215 và c819eb27 docs(aidlc) audit Report-5.2 trên fix/u14-realtime-notification-sse; commit cd94e3d3 fix(ai) KAN-216 trên fix/u06-connection-test-usage; rebase cả hai lên origin/staging (cf8b0370), audit.md gộp phần thêm của hai bên. mvn test: notifications + groupdocs 22 bộ / 203 ca đạt; ai 26 bộ / 261 ca đạt; 0 lỗi. Push và mở PR #122 (U14) và PR #123 (U06) vào staging. Phân loại 7 case Failed: U14-M03, U06-M04 là lỗi sản phẩm đã có PR; U02-M02, U15-M02 (giao diện chuyển role sai về trang chủ thay vì trang từ chối, BR-U01-48 so với BR-U15-01), U05-M01 (frontend mở lớp ngay sau khi tạo, trái BR-U05-10/14), U08-M01 (danh sách chấm không hiện giờ nộp, BR-U09-11 không yêu cầu), U09-M02 (không xem được lượt nộp cũ trong Grading Workspace, BR-U09-12 không yêu cầu) cần nhóm chọn sửa sản phẩm hay sửa test case/BR."
+**Context**: Report-5.2 sau Round 1; PR chờ CI và review.
+
+---
+
+## Construction — Report-5.2: sửa 5 test case, Round 2 và retest KAN-215/KAN-216
+**Timestamp**: 2026-11-23T10:31:40Z
+**Requested by:** Hải Nam
+**User Input**: "Fix test cases only"
+**AI Response**: "Viết lại 5 test case theo hành vi hiện tại (không sửa sản phẩm): IT-U02-M02 và IT-U15-M02 (role sai bị đưa về trang chủ theo BR-U01-48, kiểm 403 và ACCESS_DENIED qua API dashboard), IT-U05-M01 (lớp OPEN ngay khi tạo, bỏ bước mở lớp), IT-U08-M01 (so trạng thái và nhãn trễ thay cho giờ nộp), IT-U09-M02 (chỉ chấm lượt mới nhất, Previous/Next chuyển giữa sinh viên). Chạy lại 5 case (Round 2) trên systest build e781ca66: cả 5 Passed. Evidence Round 1 giữ trong evidence/5.2/<case>/round1/. Lưu ý: BR-U05-10 và BR-U05-14 vẫn ghi lớp bắt đầu ở DRAFT (chưa sửa tài liệu BR)."
+**Context**: Report-5.2 Round 2.
+
+---
+
+## Construction — Report-5.2: evidence chỉ giữ screenshot
+**Timestamp**: 2026-11-23T10:31:40Z
+**Requested by:** Hải Nam
+**User Input**: "trong evidence tôi muốn bỏ phần extracts, chỉ giữ lại screen shot có được không"
+**AI Response**: "Bỏ mục Extracts khỏi Report-5.2_Evidence.pdf và README.md của từng case (render lại 50 README từ result.json); giữ bước, bảng check và screenshot. Bản trích DB/log/HTTP/email đầy đủ vẫn nằm trong detail\ của từng case (lưu trữ cục bộ) và result.json. ev.mjs ghi README không có Extracts cho các lần chạy sau."
+**Context**: Report-5.2 evidence format.
+
+---
+
+## Construction — Report-5.2: retest IT-U14-M03 và IT-U06-M04 sau khi sửa lỗi
+**Timestamp**: 2026-11-23T10:31:40Z
+**Requested by:** Hải Nam
+**User Input**: "sau đó check cả 2 case IT-U14-M03 và IT-U06-M04 nữa"
+**AI Response**: "Build image platform-backend:systest-fix từ e781ca66 cộng hai commit sửa của PR #122 (KAN-215) và PR #123 (KAN-216) (worktree tạm, đã xóa; commit cherry-pick chỉ ở local, không push). Chuyển backend và worker của systest sang image này, chạy lại hai case (Round 2), rồi trả stack về platform-backend:systest. IT-U14-M03 Passed: chuông tăng 66 -> 67 sau 2,6 s không tải lại. IT-U06-M04: khóa sai của Gemini, OpenAI và Claude không còn ghi usage (107/107), khóa Gemini hợp lệ vẫn ghi token (589/287), adapter test 36/36; case vẫn Blocked vì phần khóa hợp lệ OpenAI/Claude chưa có khóa. Quét evidence: không có khóa, mật khẩu hay địa chỉ thật."
+**Context**: Retest KAN-215, KAN-216 trước khi merge PR.
+
+---
+
+## Construction — Report-5.2: khóa Gemini cho retest
+**Timestamp**: 2026-11-23T10:31:40Z
+**Requested by:** Hải Nam
+**User Input**: "đã add vào env"
+**AI Response**: "Xác nhận biến GEMINI_TEST_KEY có trong .tmp/systemtest/ext-test.env (gitignored) mà không in giá trị; script đọc biến này khi chạy IT-U06-M04 và không ghi khóa vào evidence. Rebuild Report-5.2_Evidence.pdf: 43 case, 40 Passed, 0 Failed, 3 Blocked. Cập nhật Report-5.2_Integration Test.xlsx lên v1.5 (bản v1.4 sao lưu ở test_report\backup\Report-5.2_Integration Test_v1.4_before-round2_20261123.xlsx): cột Round 2 của 7 case, nội dung mới của 5 test case ở sheet unit và SecurityTest, Defect IDs 'None (test case revised)' cho 5 case, dòng Record of change v1.5; thống kê vẫn theo Round 1 (164/7/2). Cập nhật Manual-Integration-Cases.md (bản cũ ở backup)."
+**Context**: Report-5.2 v1.5 hoàn tất; không commit.
+
+---
+
+## Construction — U05: cập nhật BR tạo lớp theo hành vi hiện tại
+**Timestamp**: 2026-11-23T10:36:48Z
+**Requested by:** Hải Nam
+**User Input**: "Yes, update BR"
+**AI Response**: "Sửa tài liệu U05 (không đổi code): BR-U05-10 và BR-U05-14 nay tách hai lớp: API (CourseClass.create) vẫn tạo DRAFT, còn nút Tạo lớp trên Class List gọi DRAFT→OPEN ngay (audit CLASS_CREATED rồi CLASS_STATUS_CHANGED), nên lớp tạo từ giao diện ở OPEN; mở không được thì lớp ở lại DRAFT. Thêm bước 6 vào F7 (business-logic-model.md), thêm câu vào text alternative của sơ đồ trạng thái (domain-entities.md, không đổi Mermaid), sửa mô tả ClassFormDialog (frontend-components.md: không còn ghi chú 'Lớp mới ở trạng thái Nháp'). Căn cứ: ClassRoutes.tsx và IT-U05-M01 Round 2."
+**Context**: Đồng bộ BR với test case IT-U05-M01 v1.5; chưa commit.
+
+---
+
+## Construction — PR tài liệu Report-5.2 Round 2 và BR U05
+**Timestamp**: 2026-11-23T10:37:49Z
+**Requested by:** Hải Nam
+**User Input**: "Yes, separate PR"
+**AI Response**: "Tách thay đổi tài liệu U05 (BR-U05-10, BR-U05-14, business-logic-model, domain-entities, frontend-components) và các mục audit từ 23/11 sau PR #122 sang nhánh docs/report-5.2-round2-u05-br tạo từ origin/staging (d5d0e8cb); mở PR riêng vào staging. Bỏ các thay đổi đó khỏi thư mục làm việc của nhánh fix/u14-realtime-notification-sse để PR #122 chỉ còn bản sửa KAN-215."
+**Context**: PR tài liệu riêng; không đổi code.
+
+---
