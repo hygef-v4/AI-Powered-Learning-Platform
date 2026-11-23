@@ -36,6 +36,7 @@ def saved_run(tmp_path):
     write_json(records / "run-1.json", {
         "caseKey": sample.case_id, "runIndex": 1, "provider": "GEMINI",
         "model": "flash", "httpStatus": 0, "output": json.dumps(payload),
+        "usage": {"inputTokens": 1000, "outputTokens": 200, "cachedTokens": None, "reasoningTokens": None},
     })
     write_json(records / "run-2.json", {
         "caseKey": sample.case_id, "runIndex": 2, "provider": "GEMINI",
@@ -261,3 +262,29 @@ def test_regression_distinguishes_other_judge_and_missing_case():
     assert compare_reports(other_judge, baseline)[0]["findings"] == ["CROSS_JUDGE_COMPARISON"]
     other_effort = dict(current, metadata=dict(metadata, judge_reasoning_effort="high"))
     assert compare_reports(other_effort, baseline)[0]["findings"] == ["CROSS_JUDGE_COMPARISON"]
+
+
+def test_cost_divides_all_recorded_usage_by_completed_tasks(saved_run):
+    from dataset import BUNDLED_DATASET, load_artifacts, load_dataset
+    from reports import build_report, summary_markdown
+
+    _, rows = load_artifacts(load_dataset(BUNDLED_DATASET), saved_run)
+    assert (rows[0].input_tokens, rows[0].output_tokens) == (1000, 200)
+    assert all(row.input_tokens is None for row in rows[1:])
+
+    strict = build_report(rows, {"score_tolerance": 0}, {})["summary"]["cost"]
+    assert strict["completed"] == 0 and strict["tokens_per_completed_task"] is None
+
+    metadata = {"score_tolerance": 0.5, "input_price": 1.0, "output_price": 5.0}
+    report = build_report(rows, metadata, {})
+    cost = report["summary"]["cost"]
+    # Run 1 is 0.43 away from its reference, so it completes at 0.5; the other attempts have no score or usage.
+    assert cost["completed"] == 1 and cost["attempts"] == 4 and cost["attempts_without_usage"] == 3
+    assert (cost["input_tokens"], cost["output_tokens"]) == (1000, 200)
+    assert cost["tokens_per_completed_task"] == 1200
+    assert cost["cost_usd"] == pytest.approx(0.002) and cost["cost_per_completed_task_usd"] == pytest.approx(0.002)
+    text = summary_markdown(report)
+    assert "Cost per completed task (USD) | $0.0020 (lower bound: 3 attempts have no usage)" in text
+
+    unpriced = build_report(rows, {"score_tolerance": 0.5}, {})["summary"]["cost"]
+    assert unpriced["cost_usd"] is None and unpriced["tokens_per_completed_task"] == 1200

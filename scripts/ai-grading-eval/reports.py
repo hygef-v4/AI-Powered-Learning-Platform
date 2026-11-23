@@ -86,6 +86,7 @@ def build_report(rows: list[Row], metadata: dict, thresholds: dict, *, layers=No
             "attempts": len(rows), "cases": len({row.test_case_id for row in rows}),
             "input_status_counts": dict(input_counts), "evaluated": len(completed),
             "quality_passes": passed,
+            "cost": cost_summary(serialized, rows, metadata),
             "judge_errors": sum(row.evaluation_status == "JUDGE_ERROR" for row in rows),
             "coverage": len(completed) / len(rows) if rows else None,
             "valid_output_coverage": len(completed) / input_counts["VALID_OUTPUT"]
@@ -99,6 +100,35 @@ def build_report(rows: list[Row], metadata: dict, thresholds: dict, *, layers=No
             "mae": mae,
         },
         "rows": serialized, "regressions": [],
+    }
+
+
+def cost_summary(serialized: list[dict], rows: list[Row], metadata: dict) -> dict:
+    """Tokens and cost per completed task, the figure to compare models on.
+
+    A task is completed when the saved or replayed total is within score_tolerance of the labeled reference.
+    Every attempt is billed, including the failed ones, so all recorded usage is divided by the completed count.
+    Prices are USD per million tokens and optional; without them only tokens are reported.
+    """
+    tolerance = metadata.get("score_tolerance") or 0.0
+    completed = sum(
+        row["score_comparison"]["absolute_error"] is not None
+        and row["score_comparison"]["absolute_error"] <= tolerance + 1e-9
+        for row in serialized
+    )
+    measured = [row for row in rows if row.input_tokens is not None and row.output_tokens is not None]
+    input_tokens = sum(row.input_tokens for row in measured)
+    output_tokens = sum(row.output_tokens for row in measured)
+    input_price, output_price = metadata.get("input_price"), metadata.get("output_price")
+    cost = (input_tokens * input_price + output_tokens * output_price) / 1_000_000 \
+        if input_price is not None and output_price is not None else None
+    return {
+        "score_tolerance": tolerance, "attempts": len(rows), "completed": completed,
+        # Attempts without recorded usage make the totals a lower bound.
+        "attempts_without_usage": len(rows) - len(measured),
+        "input_tokens": input_tokens, "output_tokens": output_tokens,
+        "tokens_per_completed_task": (input_tokens + output_tokens) / completed if completed else None,
+        "cost_usd": cost, "cost_per_completed_task_usd": cost / completed if cost is not None and completed else None,
     }
 
 
@@ -223,6 +253,18 @@ def summary_markdown(report: dict, shared=False) -> str:
         error = summary["mae"][source]
         value = f"{error['value']:.3f} points" if error["value"] is not None else "N/A"
         lines.append(f"| MAE · {label} | {value} (n={error['count']}) |")
+    cost = summary["cost"]
+    partial = f" (lower bound: {cost['attempts_without_usage']} attempts have no usage)" \
+        if cost["attempts_without_usage"] else ""
+    tokens = cost["tokens_per_completed_task"]
+    usd = cost["cost_per_completed_task_usd"]
+    lines += [
+        f"| Completed tasks (score within {cost['score_tolerance']:g} of reference) | "
+        f"{cost['completed']} of {cost['attempts']} |",
+        f"| Tokens per completed task | {f'{tokens:,.0f}' if tokens is not None else 'N/A'}{partial} |",
+        f"| Cost per completed task (USD) | "
+        f"{f'${usd:.4f}' if usd is not None else 'N/A (set --input-price and --output-price)'}{partial} |",
+    ]
     if not shared:
         lines += ["", "## Layers", "", "| Layer | Status |", "|---|---|"]
         lines += [f"| {layer} | {details['status']} |" for layer, details in report["layers"].items()]
