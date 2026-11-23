@@ -24,7 +24,7 @@ Tests: [materials](../../../../backend/src/test/java/edu/aiplatform/materials).
 
 ## Evidence và giới hạn
 
-Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
+Kiểm tra của đợt refactor được ghi trong [refactor results](../../build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md). Những báo cáo có ngày trước đó là bằng chứng lịch sử. Có source/test không đồng nghĩa test pass hoặc runtime/provider healthy. Negative cases cần kiểm trong test nguồn: actor sai role/scope, không có dữ liệu, stale version, unavailable provider; chi tiết thật theo assertions của từng file test.
 
 ### Ghi nhận kiểm thử trước baseline
 
@@ -34,8 +34,8 @@ Kiểm tra của đợt refactor được ghi trong [refactor results](../../bui
 
 Thêm enabled độc lập status, descriptionDocument và kiểm lại quyền đổi token tải; sinh viên/nguồn AI bị chặn khi tắt. Material/version adapter đã JDBC, module adapter còn JPA. Hai row JPA của material/version đã xóa. UI nhãn Bật/Tắt, rich description và sửa gutter bullet/số.
 
-Delta này bổ sung snapshot commit có ngày phía trên, chưa tạo commit mới và không sửa lại evidence lịch sử. [Kết quả và giới hạn](../../build-and-test/2026-11-09-material-quiz-ui-results.md); [đối chiếu tài liệu](../../build-and-test/2026-11-09-aidlc-doc-sync.md).
+Delta này bổ sung snapshot commit có ngày phía trên, chưa tạo commit mới và không sửa lại evidence lịch sử. [Kết quả và giới hạn](../../build-and-test/2026-11-09/2026-11-09-material-quiz-ui-results.md); [đối chiếu tài liệu](../../build-and-test/2026-11-09/2026-11-09-aidlc-doc-sync.md).
 
 ## Delta 2026-11-18 — chuyển JPA sang JDBC
 
-Repository của unit dùng `JdbcClient`, giữ SQL, khóa, version/CAS, thứ tự và API như trước; entity/repository JPA đã xóa. [Kết quả kiểm chứng](../../build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).
+Repository của unit dùng `JdbcClient`, giữ SQL, khóa, version/CAS, thứ tự và API như trước; entity/repository JPA đã xóa. [Kết quả kiểm chứng](../../build-and-test/2026-11-18/2026-11-18-u04-u13-u14-jdbc-results.md).

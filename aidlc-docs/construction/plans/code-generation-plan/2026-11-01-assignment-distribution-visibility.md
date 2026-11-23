@@ -16,6 +16,6 @@ GET and PUT `/api/v1/classes/{classId}/assignments/{assignmentId}/grade-distribu
 - [x] 2. Implement backend persistence, teacher authorization, endpoint and student gate; test defaults, assignment/class isolation, privacy and concurrent writes.
 - [x] 3. Remove manager UI and wire a grading-owned assignment settings section, including subject assignment class context, error handling and focused tests.
 - [x] 4. Synchronize current requirements, stories, unit designs and API documentation without rewriting historical evidence.
-- [x] 5. Review integration, run relevant backend/frontend verification and production build, and record results and practical limits. See [verification results](../../build-and-test/2026-11-01-assignment-distribution-visibility-results.md).
+- [x] 5. Review integration, run relevant backend/frontend verification and production build, and record results and practical limits. See [verification results](../../build-and-test/2026-11-01/2026-11-01-assignment-distribution-visibility-results.md).
 
 Security and resiliency scope is retained from the current AI-DLC state. Property-based testing remains disabled. No dependencies, deployment, commit or push are requested.

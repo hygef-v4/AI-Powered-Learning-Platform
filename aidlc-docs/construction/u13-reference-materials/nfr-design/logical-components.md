@@ -1,6 +1,6 @@
 # U13 Reference Materials — logical-components — chuẩn JDBC
 
-> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code unit này đã chuyển JDBC ngày 2026-11-18 ([kết quả](../../build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md)).
+> Quyết định persistence 2026-11-06: [Spring JDBC cho toàn dự án](../../persistence-conventions.md). Thay lựa chọn ORM trong thiết kế cũ; snapshot/evidence có ngày là lịch sử. Code unit này đã chuyển JDBC ngày 2026-11-18 ([kết quả](../../build-and-test/2026-11-18/2026-11-18-u04-u13-u14-jdbc-results.md)).
 
 > Current structure: parent HEAD 5a76e428 + working-tree refactor, 2026-10-30. Unit ownership unchanged; runtime/provider acceptance remains separate.
 
@@ -22,7 +22,7 @@ Các bảng Compliant/Pending ở trên là đánh giá thiết kế hoặc evid
 
 ## Structure refactor — 2026-10-30
 
-Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30-package-moves-only-results.md).
+Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md).
 
 ## Persistence thực tế — 2026-11-09
 

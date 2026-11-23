@@ -184,6 +184,6 @@ Tool giai đoạn đầu theo FR-035:
 
 ## Credential/key schema delta — 2026-10-30
 
-McpCredential: tokenHash/hint vẫn xác thực; migration 27/10 thêm `token_ciphertext bytea`, `token_iv bytea`, `token_key_version integer` nullable. Legacy row null không reveal được; storeSecret có thể không lưu khi encryption chưa cấu hình. INSTITUTIONAL unique/provider đã bỏ, PERSONAL owner/provider giữ unique. Key kết nối AI không còn reveal (D15 đóng 2026-11-11), bản mã gắn AAD theo kết nối; list DTO vẫn masked. Token MCP vẫn reveal cho chủ như trên, chưa gắn AAD.
+McpCredential: chỉ tokenHash/hint dùng để xác thực. Migration 27/10 từng thêm `token_ciphertext`, `token_iv`, `token_key_version` để xem lại token; migration `V20261123_1200` xóa ba cột này cùng tính năng xem lại. INSTITUTIONAL unique/provider đã bỏ, PERSONAL owner/provider giữ unique. Key kết nối AI không còn reveal (D15 đóng 2026-11-11), bản mã gắn AAD theo kết nối; list DTO vẫn masked.
 
 Source: [McpCredentialService.java](../../../../backend/src/main/java/edu/aiplatform/ai/service/McpCredentialService.java); [AiConnectionService.java](../../../../backend/src/main/java/edu/aiplatform/ai/service/AiConnectionService.java).

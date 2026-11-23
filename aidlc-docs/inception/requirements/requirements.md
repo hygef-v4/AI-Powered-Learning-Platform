@@ -503,7 +503,7 @@ Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is deni
 - FR-004/005/013: học liệu có Bật/Tắt độc lập lưu trữ; chặn sinh viên cả direct view và token tải cũ khi tắt, chặn chọn nguồn AI; staff quản lý theo quyền. Mô tả học liệu có định dạng giới hạn, tương thích plain text.
 - FR-006/007/017: mô tả quiz có định dạng; soạn câu tay/ngân hàng/AI tại chỗ; dropdown chọn nhiều tài liệu nguồn; nguồn API tự chọn khi thiếu/null source. AI chỉ đề xuất, người soạn vẫn xem/chấp nhận, không tự phát hành.
 
-Thiết kế được duyệt ở [proposal](2026-11-09-material-quiz-ui-proposal.md); [đối chiếu unit và bằng chứng](../../construction/build-and-test/2026-11-09-aidlc-doc-sync.md). Không thêm UC/role mới hoặc thay quyết định YouTube đã hủy; runtime provider acceptance còn giới hạn trong báo cáo.
+Thiết kế được duyệt ở [proposal](2026-11-09-material-quiz-ui-proposal.md); [đối chiếu unit và bằng chứng](../../construction/build-and-test/2026-11-09/2026-11-09-aidlc-doc-sync.md). Không thêm UC/role mới hoặc thay quyết định YouTube đã hủy; runtime provider acceptance còn giới hạn trong báo cáo.
 
 ## Historical grading remediation amendment — 2026-11-10
 

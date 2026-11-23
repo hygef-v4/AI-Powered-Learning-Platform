@@ -1,8 +1,8 @@
 # Kế hoạch refactor cấu trúc code — 2026-10-30
 
-> **Đã thay thế theo yêu cầu mới nhất:** chỉ chuyển file/package và sửa tham chiếu. Các phần tách service/editor, thêm public exports, batch lookup, xóa Admin MCP và thêm test/guard trong bản rộng dưới đây đã được hoàn tác. Đây là hồ sơ đề xuất/thực thi cũ; [phạm vi và kiểm tra hiện tại](../../construction/build-and-test/2026-10-30-package-moves-only-results.md).
+> **Đã thay thế theo yêu cầu mới nhất:** chỉ chuyển file/package và sửa tham chiếu. Các phần tách service/editor, thêm public exports, batch lookup, xóa Admin MCP và thêm test/guard trong bản rộng dưới đây đã được hoàn tác. Đây là hồ sơ đề xuất/thực thi cũ; [phạm vi và kiểm tra hiện tại](../../construction/build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md).
 
-**Trạng thái:** Đã được người dùng duyệt triển khai và đã thực hiện trên working tree; xem [kết quả và giới hạn](../../construction/build-and-test/2026-10-30-code-structure-refactor-results.md).
+**Trạng thái:** Đã được người dùng duyệt triển khai và đã thực hiện trên working tree; xem [kết quả và giới hạn](../../construction/build-and-test/2026-10-30/2026-10-30-code-structure-refactor-results.md).
 
 **Mục tiêu:** Tìm được controller, service, repository, API, kiểu dữ liệu và component bằng một quy ước ngắn; giữ nguyên hành vi hệ thống.
 

@@ -64,7 +64,7 @@ public class AiTaskService implements IAiTask {
      */
     static final Set<String> FREE_TEXT_TASK_TYPES = Set.of("ASSIGNMENT_DRAFT", "QUIZ_QUESTION_DRAFT");
     static final int MAX_IMAGES = 10;
-    static final Set<String> IMAGE_TYPES = Set.of("image/jpeg", "image/png");
+    static final Set<String> IMAGE_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
 
     private final AiTaskRepository tasks;
     private final AiConnectionRepository connections;
@@ -329,7 +329,7 @@ public class AiTaskService implements IAiTask {
         promptGuardrail.requireValid(userInput);
     }
 
-    /** Ảnh trong prompt: tối đa 10, JPEG/PNG, nguồn đã đăng ký (BR-U06-54). */
+    /** Ảnh trong prompt: tối đa 10, JPEG/PNG/WEBP, nguồn đã đăng ký (BR-U06-54). */
     private void validateImages(List<AiImageRef> images) {
         if (images.size() > MAX_IMAGES) {
             throw ApiException.createBadRequest("AI_TASK_INVALID", "Tối đa 10 ảnh mỗi yêu cầu AI");

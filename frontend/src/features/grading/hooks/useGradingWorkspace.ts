@@ -50,6 +50,8 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   const [conflict, setConflict] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [aiAutoApplied, setAiAutoApplied] = useState(false);
+  /** Form trước khi AI điền, để "Hoàn tác" khôi phục; giữ bản gốc nếu AI điền nhiều lần liên tiếp. */
+  const [aiBackup, setAiBackup] = useState<{ form: GradingFormValues; dirty: boolean } | null>(null);
   const evaluation = detail.evaluation;
   const submitAiRequest = useGradingAiRequest(
     JSON.stringify([evaluation.id, evaluation.submissionHash, detail.rubrics]),
@@ -146,6 +148,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         setDirty(rebased.dirty);
         dirtyRef.current = rebased.dirty;
         setAiAutoApplied(aiAutoApplied && rebased.form.usedProposalId !== null);
+        if (rebased.form.usedProposalId === null) setAiBackup(null);
         setConflict(false);
         setError("");
         if (receiptChanged) resumePolling();
@@ -258,7 +261,10 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
           usedProposalId: null,
         }));
         setDirty(preserveEdits);
-        if (!preserveEdits) setAiAutoApplied(false);
+        if (!preserveEdits) {
+          setAiAutoApplied(false);
+          setAiBackup(null);
+        }
         dirtyRef.current = preserveEdits;
         if (advance && next && !preserveEdits) router.push(buildEvaluationHref(next, filters));
         return saved;
@@ -312,9 +318,31 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       itemScores,
       structuredFeedback,
     );
+    setAiBackup((backup) => backup ?? { form, dirty });
     setForm((current) => ({ ...current, ...patch }));
     setDirty(true);
     setAiAutoApplied(true);
+  }
+
+  function discardProposal() {
+    if (!aiBackup || disabled || reloadingRef.current) return;
+    const restore = () => {
+      editRevision.current += 1;
+      setForm(aiBackup.form);
+      setDirty(aiBackup.dirty);
+      dirtyRef.current = aiBackup.dirty;
+      setAiAutoApplied(false);
+      setAiBackup(null);
+    };
+    // aiAutoApplied tắt khi giáo viên sửa tay sau lúc AI điền: hoàn tác sẽ mất cả phần sửa đó nên hỏi trước.
+    if (aiAutoApplied) restore();
+    else requestConfirm(msg("grading.hooks.useGradingWorkspace.undoDiscardsEdits"), restore, msg("grading.components.AiDraftBanner.undo"));
+  }
+
+  /** Chốt bản AI đã điền (chưa lưu): bỏ khả năng hoàn tác và cho autosave chạy lại. */
+  function keepProposal() {
+    setAiAutoApplied(false);
+    setAiBackup(null);
   }
 
   return {
@@ -326,6 +354,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     error: conflict ? msg("grading.hooks.useGradingWorkspace.overlappingEditsRequireReview") : error,
     dirty,
     aiAutoApplied,
+    hasAiBackup: aiBackup !== null,
     proposals,
     proposalsLoaded,
     pollExhausted,
@@ -348,5 +377,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     requestProposal,
     resumePolling,
     applyProposal,
+    discardProposal,
+    keepProposal,
   };
 }

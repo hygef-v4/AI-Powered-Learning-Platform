@@ -10,7 +10,7 @@ Use isolated PostgreSQL/Redis/RabbitMQ and authorized local configuration. Flywa
 
 - November: AI source preference, personal-key enabled/disabled state and multiple keys/provider; assignment-class grade-distribution visibility; group collaboration/assignment phase; Quiz rework and attempt activity penalty. Exact migration names/paths are in the current source manifest. Do not infer live upgrade acceptance from their presence.
 
-- AI27/10: multiple institutional keys/provider and nullable MCP ciphertext/IV/key version. Check legacy credentials and wrong-owner reveal.
+- AI27/10: multiple institutional keys/provider. MCP token ciphertext columns were dropped on 2026-11-23 (`V20261123_1200`); check that credentials still authenticate by hash and that `PlatformWorkflowIntegrationTest` covers `/mcp` over HTTP.
 - Classes27/10: OPEN teacher constraint removed; create domain still DRAFT.
 - Materials29/10: module table, backfill Module1, required materials.module_id and unique Quiz module link. Check delete with active/archived materials and cross-subject attach.
 - Groups29/10: leader request reason check removed; service max1,000 remains.

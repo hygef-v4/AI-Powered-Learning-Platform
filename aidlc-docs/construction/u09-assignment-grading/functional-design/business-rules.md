@@ -75,7 +75,7 @@ Kết quả từ provider có thể để `null` hoặc bỏ trống minh chứn
 
 Khi đề xuất từ provider hoặc MCP dẫn mã bằng chứng thuộc một phần đã biết khác với phần của rubric, backend giữ điểm đề xuất và đánh dấu mục cần giảng viên xem. Quy tắc này áp dụng cho rubric gắn với một phần. Rubric toàn bài vẫn có thể dẫn bằng chứng từ mọi phần.
 
-Tóm tắt Draw.io cho AI chấm bài ghi tên hiển thị và ID kỹ thuật ở hai đầu mỗi cạnh, cùng hướng nối và kiểu nét. Prompt đọc cạnh từ trái sang phải theo tên hiển thị. Ký pháp như nét đứt chỉ ảnh hưởng đến điểm khi rubric yêu cầu. [Kiểm thử đối chứng](../../build-and-test/2026-11-22-u07-pe-assignment-evaluation.md#kiểm-thử-lại-sau-khi-sửa-ba-điểm)
+Tóm tắt Draw.io cho AI chấm bài ghi tên hiển thị và ID kỹ thuật ở hai đầu mỗi cạnh, cùng hướng nối và kiểu nét. Prompt đọc cạnh từ trái sang phải theo tên hiển thị. Ký pháp như nét đứt chỉ ảnh hưởng đến điểm khi rubric yêu cầu. [Kiểm thử đối chứng](../../build-and-test/2026-11-22/2026-11-22-u07-pe-assignment-evaluation.md#kiểm-thử-lại-sau-khi-sửa-ba-điểm)
 
 Với tiêu chí chữ yêu cầu ghi đúng danh sách actor phụ cụ thể, backend đối chiếu danh sách với ô actor phụ trong bảng đặc tả cùng phần. Nếu ô này thiếu tên bắt buộc mà AI cho tối đa, backend giữ đề xuất và yêu cầu giảng viên xem trước khi công bố. Prompt yêu cầu xét từng actor bắt buộc theo vai trò và dùng cách chia điểm hoặc tên tương đương được đề hay rubric chấp nhận.
 

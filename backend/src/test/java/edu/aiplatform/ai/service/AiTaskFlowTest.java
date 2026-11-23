@@ -756,6 +756,14 @@ class AiTaskFlowTest {
     }
 
     @Test
+    void acceptsWebpImagesFromRegisteredSources() {
+        registerPages();
+        org.assertj.core.api.Assertions.assertThatCode(() -> service.submit(imageRequest("img-webp", List.of(
+                new edu.aiplatform.ai.contract.AiImageRef("TEST_PAGES", "x", "image/webp")))))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
     void imagesAddToTheQuotaEstimateAndTheDuplicateFingerprint() {
         registerPages();
         AiTaskRequest shared = new AiTaskRequest(teacher, AiSource.SHARED, null, "GRADING_PROPOSAL", "evaluation:1", 3,

@@ -72,8 +72,8 @@ Each row requires a case ID, role, setup, steps, expected/actual, API observatio
 - [x] Run `npm --prefix frontend test -- src/features/academics src/features/admindashboard --maxWorkers=1`; add grading/groups suites for teacher overview integration (15 files / 82 tests pass). Backend unit suite with `-Dtest=edu.aiplatform.academics.**,edu.aiplatform.admindashboard.**` (18 classes / 249 tests pass). Backup integration suite with Testcontainers PostgreSQL 16 (3 classes / 12 tests pass).
 - [x] Inspect relevant tests/contracts for denied access, version/state, partial failures and stale responses. Corroborated Findings 1–4 with reproduction steps.
 - [ ] Authorized minimal fixes implementation (addressed in follow-up plan).
-- [x] Write `aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-audit-report.md`: scope/HEAD/env, requirement matrix for all 12 UCs, cases Pass/Fail/Blocked/Not run, reproducible defects, UI verdict per role/screen, exact checks/counts/skips, known limitations and next actions.
-- [x] Write `aidlc-docs/construction/build-and-test/2026-10-25-u05-u15-manual-test-guide.md` in Vietnamese with complete setup/roles/URLs/data/steps/expected/cleanup. User-result column initialized to Chưa test.
+- [x] Write `aidlc-docs/construction/build-and-test/2026-10-25/2026-10-25-u05-u15-audit-report.md`: scope/HEAD/env, requirement matrix for all 12 UCs, cases Pass/Fail/Blocked/Not run, reproducible defects, UI verdict per role/screen, exact checks/counts/skips, known limitations and next actions.
+- [x] Write `aidlc-docs/construction/build-and-test/2026-10-25/2026-10-25-u05-u15-manual-test-guide.md` in Vietnamese with complete setup/roles/URLs/data/steps/expected/cleanup. User-result column initialized to Chưa test.
 - [x] Update plan checkboxes, append audit/state without overwriting concurrent entries.
 - [x] Report concise findings to user, distinguishing executed vs blocked.
 

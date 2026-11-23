@@ -16,10 +16,11 @@ import { useSubmissionContext } from "../hooks/useSubmissionContext";
 import { useSubmissionDirectory } from "../hooks/useSubmissionDirectory";
 import { gradingApi } from "../api";
 import { useResource } from "../hooks/useResource";
-import { buildChecklistBindings } from "../components/GradingForm";
+import { buildChecklistBindings, listAiFilledItems } from "../components/GradingForm";
 import { useGradingWorkspace } from "../hooks/useGradingWorkspace";
 import { ActivityReview } from "../components/GradingReviewPanels";
 import { AiProposalPanel, buildAiRequest } from "../components/AiProposalPanel";
+import { AiDraftBanner } from "../components/AiDraftBanner";
 import { BatchActionDialog } from "../components/BatchActionDialog";
 import { MemberContributionPanel } from "../components/MemberContributionPanel";
 import { GroupGradingPanel } from "../components/GroupGradingPanel";
@@ -32,11 +33,12 @@ import {
   listNoteCriteria,
   useSubmissionImages,
 } from "../components/GradingWorkspaceHeader";
-import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail } from "../model/types";
+import { formatPoints, GRADE_STATUS_LABELS, type AiRequest, type Detail, type Proposal } from "../model/types";
 import { convertToEditorDocument } from "../model/submissionDocument";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import type { NavigationFilters } from "../model/navigation";
 import { setGradingAiLabel } from "../model/gradingAiTasks";
+import { formatErrorMessage } from "../model/format";
 import { msg } from "@/i18n/msg";
 
 export function GradingWorkspacePage({
@@ -91,6 +93,7 @@ function Workspace({
     error,
     dirty,
     aiAutoApplied,
+    hasAiBackup,
     proposals,
     proposalsLoaded,
     pollExhausted,
@@ -110,8 +113,13 @@ function Workspace({
     requestProposal,
     resumePolling,
     applyProposal,
+    discardProposal,
+    keepProposal,
   } = workspace;
   const [action, setAction] = useState<"publish" | null>(null);
+  // Đề xuất do giáo viên vừa yêu cầu ở trang này: READY thì tự điền vào form (hoặc chờ đồng ý nếu form đang có chỉnh sửa chưa lưu).
+  const awaitedProposalId = useRef<string | null>(null);
+  const [offeredProposalId, setOfferedProposalId] = useState<string | null>(null);
   const [aiOpen, setAiOpen] = useState(Boolean(proposalId));
   const [aiRequesting, setAiRequesting] = useState(false);
   const aiGenerating = aiRequesting || proposals.some((proposal) => proposal.status === "PENDING");
@@ -131,6 +139,7 @@ function Workspace({
     setAiOpen(false);
     setAiRequesting(true);
     const created = await requestProposal(input ?? buildAiRequest());
+    if (created) awaitedProposalId.current = created.id;
     setAiRequesting(false);
     if (created) setGradingAiLabel(evaluation.id, `${assignmentTitle} — ${studentName}`);
     if (created?.status === "FAILED" || created?.status === "REJECTED") {
@@ -140,6 +149,44 @@ function Workspace({
         ? msg("grading.pages.GradingWorkspacePage.aNewAiProposalIs")
         : msg("grading.pages.GradingWorkspacePage.aiGradingSentYouCan"));
     }
+  };
+
+  function applyReadyProposal(proposal: Proposal) {
+    if (!proposal.proposal) return;
+    const { checks, feedback, itemScoresByRubric, structuredFeedback } = proposal.proposal;
+    applyProposal(checks, feedback ?? "", proposal.id, itemScoresByRubric, structuredFeedback);
+  }
+
+  function settleAwaitedProposal() {
+    const awaited = proposals.find((proposal) => proposal.id === awaitedProposalId.current);
+    if (!awaited || awaited.status === "PENDING" || disabled) return;
+    awaitedProposalId.current = null;
+    if (awaited.status !== "READY" || !awaited.proposal) return;
+    if (dirty) setOfferedProposalId(awaited.id);
+    else applyReadyProposal(awaited);
+  }
+
+  // Chạy mỗi lần render để dùng form mới nhất; ref chặn xử lý lặp.
+  useEffect(settleAwaitedProposal);
+
+  const offeredProposal = proposals.find((proposal) => proposal.id === offeredProposalId && proposal.proposal);
+  const draftProposal = offeredProposal
+    ?? (hasAiBackup ? proposals.find((proposal) => proposal.id === form.usedProposalId && proposal.proposal) : undefined);
+
+  const aiFilledItems = listAiFilledItems(detail.rubrics, form, hasAiBackup ? draftProposal : undefined);
+  const isFeedbackAiFilled = hasAiBackup && Boolean(draftProposal?.proposal?.feedback) && form.feedback === draftProposal?.proposal?.feedback;
+
+  // Chỉ task còn QUEUED mới hủy được; RUNNING đã gửi tới nhà cung cấp, tự kết thúc khi hết thời gian chờ.
+  const queuedProposal = proposals.find((proposal) => proposal.status === "PENDING" && proposal.taskId && proposal.taskState === "QUEUED");
+  const handleCancelAi = async () => {
+    if (!queuedProposal?.taskId) return;
+    try {
+      await gradingApi.cancelTask(queuedProposal.taskId);
+      showToast(msg("grading.pages.GradingWorkspacePage.aiGradingRequestCancelled"));
+    } catch (error) {
+      showErrorToast(formatErrorMessage(error));
+    }
+    resumePolling();
   };
 
   const handlePublish = async () => {
@@ -280,6 +327,7 @@ function Workspace({
             <RubricChecklist
               rubric={rubric}
               {...checklist}
+              aiFilledItems={aiFilledItems}
               validBlockIds={validBlockIds}
               onSetItemScore={setItemScore}
               onChangeStructuredItem={updateStructuredItem}
@@ -377,6 +425,45 @@ function Workspace({
       )}
       {!detail.rubrics.length && <Alert tone="warning">{msg("grading.pages.GradingWorkspacePage.theAssignmentHasNoUsable")}</Alert>}
 
+      {draftProposal && (
+        <AiDraftBanner
+          proposal={draftProposal}
+          maxScore={evaluation.maxScore}
+          offered={Boolean(offeredProposal)}
+          onApply={() => { applyReadyProposal(draftProposal); setOfferedProposalId(null); }}
+          onSkip={() => setOfferedProposalId(null)}
+          onKeep={keepProposal}
+          onUndo={discardProposal}
+          onDetails={() => setAiOpen(true)}
+        />
+      )}
+      {aiOpen && (
+        <section id="grading-ai-review" aria-label={msg("grading.pages.GradingWorkspacePage.gradeWithAi")} className="scroll-mt-52 border-b border-line pb-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold text-ink">{msg("grading.pages.GradingWorkspacePage.gradeWithAi")}</h2>
+            <Button size="sm" icon="close" onClick={() => setAiOpen(false)}>{msg("grading.pages.GradingWorkspacePage.close")}</Button>
+          </div>
+          <AiProposalPanel
+            evaluationId={evaluation.id}
+            proposals={proposals}
+            proposalsLoaded={proposalsLoaded}
+            selectedProposalId={proposalId}
+            disabled={disabled}
+            rubrics={detail.rubrics}
+            currentValues={form}
+            partTitles={partTitles}
+            validBlockIds={validBlockIds}
+            pollExhausted={pollExhausted}
+            onRecheck={resumePolling}
+            onRequest={(input) => void handleAiGrade(input)}
+            onApply={(checks, feedback, id, itemScores, structuredFeedback) => {
+              applyProposal(checks, feedback, id, itemScores, structuredFeedback);
+              setOfferedProposalId(null);
+              setAiOpen(false);
+            }}
+          />
+        </section>
+      )}
       {evaluation.state === "PUBLISHED" && <p className="text-xs text-muted">
         {msg("grading.pages.GradingWorkspacePage.changesWillBeVisibleTo")}</p>}
       <DocumentEditor
@@ -395,6 +482,7 @@ function Workspace({
             assignmentKind={assignmentKind}
             unanchoredAuthors={[...unanchoredAuthors]}
             form={form}
+            aiFilledFeedback={isFeedbackAiFilled}
             disabled={disabled}
             setFeedback={setFeedback}
             setAdjustment={setAdjustment}
@@ -478,6 +566,16 @@ function Workspace({
             >
               <span className="hidden md:inline">{msg("grading.pages.GradingWorkspacePage.viewAiProposal")}</span>
             </ToolbarButton>
+            {queuedProposal && (
+              <ToolbarButton
+                icon="close"
+                title={msg("grading.pages.GradingWorkspacePage.cancelAiGrading")}
+                aria-label={msg("grading.pages.GradingWorkspacePage.cancelAiGrading")}
+                onClick={() => void handleCancelAi()}
+              >
+                <span className="hidden md:inline">{msg("grading.pages.GradingWorkspacePage.cancelAiGrading")}</span>
+              </ToolbarButton>
+            )}
             <ToolbarButton
               icon="smart_toy"
               title={evaluation.kind === "MEMBER" ? msg("grading.pages.GradingWorkspacePage.openTheGroupSubmissionTo") : msg("grading.pages.GradingWorkspacePage.gradeWithAi")}
@@ -496,32 +594,6 @@ function Workspace({
       <div className={detail.activityState === "DISABLED" ? "hidden" : "mt-6"}>
         <ActivityReview detail={detail} />
       </div>
-      {aiOpen && (
-        <section id="grading-ai-review" aria-label={msg("grading.pages.GradingWorkspacePage.gradeWithAi")} className="scroll-mt-52 border-t border-line pt-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-ink">{msg("grading.pages.GradingWorkspacePage.gradeWithAi")}</h2>
-            <Button size="sm" icon="close" onClick={() => setAiOpen(false)}>{msg("grading.pages.GradingWorkspacePage.close")}</Button>
-          </div>
-          <AiProposalPanel
-            evaluationId={evaluation.id}
-            proposals={proposals}
-            proposalsLoaded={proposalsLoaded}
-            selectedProposalId={proposalId}
-            disabled={disabled}
-            rubrics={detail.rubrics}
-            currentValues={form}
-            partTitles={partTitles}
-            validBlockIds={validBlockIds}
-            pollExhausted={pollExhausted}
-            onRecheck={resumePolling}
-            onRequest={(input) => void handleAiGrade(input)}
-            onApply={(checks, feedback, id, itemScores, structuredFeedback) => {
-              applyProposal(checks, feedback, id, itemScores, structuredFeedback);
-              setAiOpen(false);
-            }}
-          />
-        </section>
-      )}
       {action && !disabled && (
         <BatchActionDialog
           action={action}

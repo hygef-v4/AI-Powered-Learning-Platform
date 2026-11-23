@@ -118,12 +118,6 @@ public final class McpInput {
         }
     }
 
-    public static void requireAdmin(Actor actor) {
-        if (actor == null || actor.role() != Role.ADMIN) {
-            throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
-        }
-    }
-
     public static ApiException createInvalidArguments() {
         return ApiException.createBadRequest("INVALID_MCP_ARGUMENTS", "Tham số MCP không hợp lệ");
     }

@@ -60,6 +60,13 @@ class PracticeFeedbackMcpParityTest {
         assertThat(captured.getValue().feedback().toString()).doesNotContain("estimatedTotal","rubric");
         verifyNoInteractions(f.aiTasks);
     }
+    @Test void teacherSubmissionReadMarksStudentTextAsUntrusted() {
+        var attempt=f.attempt(1,AttemptStatus.SUBMITTED,NOW,false);
+        var read=tools.call(f.teacher,"read_authorized_submission",Map.of("attemptId",attempt.id().toString()));
+        assertThat(read.error()).isFalse();
+        assertThat((Map<String,Object>)read.content()).containsKey("submission")
+                .containsEntry("untrustedContent",true);
+    }
     @Test void staleHashCannotPersistFeedback() {
         var a=f.attempt(1,AttemptStatus.SUBMITTED,NOW,false);
         error(tools.call(f.student,"record_private_feedback",args(a.id(),"stale")),"SUBMISSION_HASH_MISMATCH");

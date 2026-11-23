@@ -6,6 +6,7 @@ import type {
   Evaluation,
   GradingFormValues,
   ItemScores,
+  Proposal,
   Rubric,
   StructuredFeedback,
   StructuredFeedbackItem,
@@ -253,6 +254,26 @@ export function buildProposalDraftPatch(
     reviewedItemScores,
     usedProposalId: proposalId,
   };
+}
+
+/** Mục rubric mà form còn đúng bằng giá trị AI đã điền; sửa tay mục nào thì mục đó rời khỏi tập. Khóa `rubricId:itemId`. */
+export function listAiFilledItems(rubrics: Rubric[], form: GradingFormValues, proposal: Proposal | undefined): Set<string> {
+  const filled = new Set<string>();
+  if (!proposal?.proposal) return filled;
+  const aiChecks = proposal.proposal.checks ?? {};
+  const aiScores = proposal.proposal.itemScoresByRubric ?? {};
+  for (const rubric of rubrics) {
+    for (const item of rubric.criteria.flatMap((criterion) => criterion.items)) {
+      const hasAiItem = Object.prototype.hasOwnProperty.call(aiScores[rubric.rubricId] ?? {}, item.itemId)
+        || Object.prototype.hasOwnProperty.call(aiChecks, rubric.rubricId);
+      const max = Number(item.points);
+      if (hasAiItem && resolveItemPoints(rubric.rubricId, item.itemId, max, form.checks, form.itemScores)
+        === resolveItemPoints(rubric.rubricId, item.itemId, max, aiChecks, aiScores)) {
+        filled.add(`${rubric.rubricId}:${item.itemId}`);
+      }
+    }
+  }
+  return filled;
 }
 
 /** Nối checklist với biểu mẫu chấm điểm. */

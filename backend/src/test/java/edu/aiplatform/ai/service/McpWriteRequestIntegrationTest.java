@@ -9,7 +9,11 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.*;
+import edu.aiplatform.ai.repository.McpWriteRequestRepository;
+import java.time.Duration;
+import java.time.Instant;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.*;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
@@ -26,12 +30,25 @@ class McpWriteRequestIntegrationTest {
         jdbc.execute("create role app");
         jdbc.execute("create table accounts(id uuid primary key)");
         jdbc.execute(Files.readString(Path.of("src/main/resources/db/migration/ai/V20261026_1800__create_mcp_write_requests.sql")));
+        jdbc.execute(Files.readString(Path.of("src/main/resources/db/migration/ai/V20261123_1210__allow_mcp_write_request_cleanup.sql")));
         jdbc.execute("create table test_drafts(id uuid primary key)");
-        service = new McpWriteRequestService(jdbc, new ObjectMapper(), new DataSourceTransactionManager(source));
+        service = new McpWriteRequestService(new McpWriteRequestRepository(JdbcClient.create(source)), new ObjectMapper(),
+                new DataSourceTransactionManager(source));
     }
     @BeforeEach void account() { jdbc.update("insert into accounts values (?)", actor.accountId()); }
     @Test void runtimeRoleCanReadAndInsertRetryResults() {
-        assertThat(jdbc.queryForObject("select has_table_privilege('app','mcp_write_requests','SELECT, INSERT')",Boolean.class)).isTrue();
+        assertThat(jdbc.queryForObject("select has_table_privilege('app','mcp_write_requests','SELECT, INSERT, DELETE')",Boolean.class)).isTrue();
+    }
+    @Test void cleanupDeletesOnlyRecordsOlderThanSevenDays() {
+        service.execute(actor,"create","old","same",() -> Map.of("id","old"));
+        service.execute(actor,"create","recent","same",() -> Map.of("id","recent"));
+        Instant now = Instant.now();
+        jdbc.update("update mcp_write_requests set created_at=? where request_ref='old'",
+                java.sql.Timestamp.from(now.minus(Duration.ofDays(8))));
+
+        assertThat(service.deleteExpiredRequests(now)).isEqualTo(1);
+        assertThat(jdbc.queryForList("select request_ref from mcp_write_requests where account_id=?",String.class,
+                actor.accountId())).containsExactly("recent");
     }
     @Test void concurrentRetryCreatesOneDraftAndReturnsSameResult() throws Exception {
         var count = new AtomicInteger();

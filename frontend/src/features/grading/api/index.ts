@@ -63,6 +63,8 @@ export const gradingApi = {
     fetchApi<{ state: string; safeError: string | null }>(
       `${API_ROOT}/ai/tasks/${encodeURIComponent(id)}`,
     ),
+  cancelTask: (id: string) =>
+    fetchApi<void>(`${API_ROOT}/ai/tasks/${encodeURIComponent(id)}:cancel`, { method: "POST" }),
   listProposals: (id: string) => fetchApi<Proposal[]>(`${API_ROOT}/evaluations/${id}/ai-proposals`),
   requestProposal: (id: string, input: AiRequest) =>
     writeRequest<Proposal>(`/evaluations/${id}/ai-proposals`, input),

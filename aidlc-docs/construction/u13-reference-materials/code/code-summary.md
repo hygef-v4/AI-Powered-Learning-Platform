@@ -1,6 +1,6 @@
 # U13 Reference Materials — bàn giao code
 
-**Persistence 2026-11-18:** repository của unit chuyển từ JPA sang `JdbcClient`; các đoạn nhắc JPA/EntityManager/Hibernate bên dưới là lịch sử. [Kết quả](../../build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).
+**Persistence 2026-11-18:** repository của unit chuyển từ JPA sang `JdbcClient`; các đoạn nhắc JPA/EntityManager/Hibernate bên dưới là lịch sử. [Kết quả](../../build-and-test/2026-11-18/2026-11-18-u04-u13-u14-jdbc-results.md).
 
 Sửa lỗi 2026-11-02: nhận link một video YouTube có thêm `list`/`index`, lưu URL chuẩn của riêng video; playlist không có video vẫn bị chặn. Cả tạo và thay nguồn dùng cùng bộ phân tích backend. [Kế hoạch và kiểm chứng](../../plans/code-generation-plan/2026-11-02-u04-u13-u14.md).
 

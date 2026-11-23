@@ -198,8 +198,7 @@ public class AiConnectionService {
             throw ApiException.createBadRequest("AI_KEY_REQUIRED", "Cần nhập khóa API");
         }
         ConnectionTestService.Result result = connectionTestService.test(probe);
-        aiUsageService.recordProvider(actor.accountId(), source, null, provider, model, "CONNECTION_TEST",
-                result.ok() ? "OK" : "FAILED", result.usage(), null);
+        recordTestUsage(actor, source, provider, model, result);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("provider", provider.name());
         details.put("scope", scope.name());
@@ -269,8 +268,7 @@ public class AiConnectionService {
         ConnectionTestService.Result result = connectionTestService.test(connection);
         Instant now = clock.instant();
         repository.saveTest(connection.id(), result.message(), now);
-        aiUsageService.recordProvider(actor.accountId(), source, null, connection.provider(), connection.model(), "CONNECTION_TEST",
-                result.ok() ? "OK" : "FAILED", result.usage(), null);
+        recordTestUsage(actor, source, connection.provider(), connection.model(), result);
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("provider", connection.provider().name());
         details.put("scope", connection.scope().name());
@@ -279,6 +277,20 @@ public class AiConnectionService {
                 connection.id().toString(), result.ok() ? AuditResult.SUCCESS : AuditResult.FAILURE,
                 result.ok() ? null : result.message(), details, now));
         return view(connection.provider(), connection.recordTest(result.message(), now));
+    }
+
+    /**
+     * Chỉ ghi usage {@code CONNECTION_TEST} khi nhà cung cấp báo token đã dùng; khóa sai hay bị từ chối
+     * không tốn token nên không ghi (BR-U06-14). Kết quả kiểm tra vẫn nằm trong audit.
+     */
+    private void recordTestUsage(Actor actor, Source source, AiProvider provider, String model,
+                                 ConnectionTestService.Result result) {
+        IProviderGateway.Usage usage = result.usage();
+        if (usage == null || (usage.inputTokens() == null && usage.outputTokens() == null)) {
+            return;
+        }
+        aiUsageService.recordProvider(actor.accountId(), source, null, provider, model, "CONNECTION_TEST",
+                result.ok() ? "OK" : "FAILED", usage, null);
     }
 
     private void auditChange(Actor actor, AiConnection connection, String change) {

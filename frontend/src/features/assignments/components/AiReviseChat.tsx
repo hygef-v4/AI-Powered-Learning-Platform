@@ -356,7 +356,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
             <IconButton type="submit" icon="arrow_forward" label={msg("assignments.components.AiReviseChat.sendRequest")} data-testid="ai-revise-send"
               disabled={busy || !input.trim() || attachments.pending} className="bg-primary text-on-primary hover:bg-primary-strong hover:text-on-primary" />
           </form>
-          <input ref={referenceInput} type="file" multiple accept=".docx,.pdf,.txt,.png,.jpg,.jpeg" hidden aria-label={msg("assignments.components.AiReviseChat.uploadAFileFromComputer")}
+          <input ref={referenceInput} type="file" multiple accept=".docx,.pdf,.txt,.png,.jpg,.jpeg,.webp" hidden aria-label={msg("assignments.components.AiReviseChat.uploadAFileFromComputer")}
             data-testid="ai-revise-reference-file"
             onChange={event => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} />
         </div>

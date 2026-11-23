@@ -1,6 +1,6 @@
 # Refactor execution ledger
 
-> **Đã thay thế theo yêu cầu mới nhất:** chỉ chuyển file/package và sửa tham chiếu. Các phần tách service/editor, thêm public exports, batch lookup, xóa Admin MCP và thêm test/guard trong bản rộng dưới đây đã được hoàn tác. Đây là hồ sơ đề xuất/thực thi cũ; [phạm vi và kiểm tra hiện tại](../../build-and-test/2026-10-30-package-moves-only-results.md).
+> **Đã thay thế theo yêu cầu mới nhất:** chỉ chuyển file/package và sửa tham chiếu. Các phần tách service/editor, thêm public exports, batch lookup, xóa Admin MCP và thêm test/guard trong bản rộng dưới đây đã được hoàn tác. Đây là hồ sơ đề xuất/thực thi cũ; [phạm vi và kiểm tra hiện tại](../../build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md).
 
 Plan: [approved refactor plan](../../../inception/plans/2026-10-30-code-structure-refactor-plan.md).
 
