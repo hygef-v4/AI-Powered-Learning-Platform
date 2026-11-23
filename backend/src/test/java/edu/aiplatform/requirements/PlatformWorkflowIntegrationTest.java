@@ -78,6 +78,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -102,6 +104,8 @@ import org.testcontainers.utility.DockerImageName;
 class PlatformWorkflowIntegrationTest {
     static final String JWT_SECRET = UUID.randomUUID().toString() + UUID.randomUUID();
     static final String FILE_SECRET = UUID.randomUUID().toString() + UUID.randomUUID();
+    // Production Redis requires a password; the MCP rate limiter must authenticate like every other client.
+    static final String REDIS_PASSWORD = UUID.randomUUID().toString();
     static final String ENCRYPTION_KEY = Base64.getEncoder().encodeToString(
             UUID.randomUUID().toString().replace("-", "").getBytes(java.nio.charset.StandardCharsets.UTF_8));
     @Configuration(proxyBeanMethods = false)
@@ -157,6 +161,7 @@ class PlatformWorkflowIntegrationTest {
             .withPassword(UUID.randomUUID().toString());
     @Container
     static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:7.4-alpine"))
+            .withCommand("redis-server", "--requirepass", REDIS_PASSWORD)
             .withExposedPorts(6379);
     @Container
     static final GenericContainer<?> BROKER = new GenericContainer<>(
@@ -184,7 +189,7 @@ class PlatformWorkflowIntegrationTest {
         properties.add("spring.flyway.password", DATABASE::getPassword);
         properties.add("spring.data.redis.host", REDIS::getHost);
         properties.add("spring.data.redis.port", () -> REDIS.getMappedPort(6379));
-        properties.add("spring.data.redis.password", () -> "");
+        properties.add("spring.data.redis.password", () -> REDIS_PASSWORD);
         properties.add("spring.rabbitmq.host", BROKER::getHost);
         properties.add("spring.rabbitmq.port", () -> BROKER.getMappedPort(5672));
         properties.add("spring.rabbitmq.username", () -> BROKER.getEnvMap().get("RABBITMQ_DEFAULT_USER"));
@@ -415,6 +420,70 @@ class PlatformWorkflowIntegrationTest {
             executor.shutdownNow();
             assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
         }
+    }
+
+    @Test
+    void mcpEndpointRejectsMissingTokenAndBrowserOrigin() throws Exception {
+        mvc.perform(post("/mcp").contentType(MediaType.APPLICATION_JSON).content(buildRpc("ping", "{}")))
+                .andExpect(status().isUnauthorized());
+        String token = createMcpToken(actor(Role.TEACHER), Access.READ_ONLY);
+
+        mvc.perform(post("/mcp").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .header(HttpHeaders.ORIGIN, "https://attacker.example")
+                        .contentType(MediaType.APPLICATION_JSON).content(buildRpc("ping", "{}")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void readOnlyAgentCallsToolsThroughRealRateLimiterButCannotWrite() throws Exception {
+        String token = createMcpToken(actor(Role.TEACHER), Access.READ_ONLY);
+
+        callMcp(token, "tools/call", "{\"name\":\"get_my_capabilities\",\"arguments\":{}}")
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.result.isError").value(false));
+        callMcp(token, "tools/list", "{}")
+                .andExpect(jsonPath("$.result.tools[?(@.name == 'get_my_capabilities')]").exists())
+                .andExpect(jsonPath("$.result.tools[?(@.name == 'save_assignment_draft')]").doesNotExist());
+        callMcp(token, "tools/call", "{\"name\":\"save_assignment_draft\",\"arguments\":{}}")
+                .andExpect(jsonPath("$.error.message").value("Không có tool này"));
+    }
+
+    @Test
+    void mcpRateLimitBlocksTheSixtyFirstCallWithinAMinute() throws Exception {
+        String token = createMcpToken(actor(Role.TEACHER), Access.READ_ONLY);
+        String capabilities = "{\"name\":\"get_my_capabilities\",\"arguments\":{}}";
+
+        for (int call = 1; call <= 60; call++) {
+            callMcp(token, "tools/call", capabilities).andExpect(jsonPath("$.error").doesNotExist());
+        }
+        callMcp(token, "tools/call", capabilities).andExpect(jsonPath("$.error.code").value(-32029));
+    }
+
+    @Test
+    void mcpRefusesOversizedBodiesAndChecksTheTokenFirst() throws Exception {
+        String oversized = buildRpc("ping", "{\"padding\":\"" + "x".repeat(1024 * 1024) + "\"}");
+        mvc.perform(post("/mcp").contentType(MediaType.APPLICATION_JSON).content(oversized))
+                .andExpect(status().isUnauthorized());
+        String token = createMcpToken(actor(Role.TEACHER), Access.READ_ONLY);
+
+        mvc.perform(post("/mcp").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(oversized))
+                .andExpect(status().isPayloadTooLarge());
+    }
+
+    String createMcpToken(Actor owner, Access access) {
+        return mcpCredentialService.createCredential(owner, "System test agent", access, 7).token();
+    }
+
+    org.springframework.test.web.servlet.ResultActions callMcp(String token, String method, String params)
+            throws Exception {
+        return mvc.perform(post("/mcp").header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(buildRpc(method, params)))
+                .andExpect(status().isOk());
+    }
+
+    static String buildRpc(String method, String params) {
+        return "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"" + method + "\",\"params\":" + params + "}";
     }
 
     @Test
