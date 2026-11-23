@@ -4851,7 +4851,21 @@
         },
         "ctaTitle": "Ready for class?",
         "ctaBody": "Sign in with the account your course administrator created for you.",
-        "privacy": "Privacy policy"
+        "privacy": "Privacy policy",
+        "reviewSheet": {
+          "numberLocale": "en-US",
+          "title": "Rubric: class diagram, assignment 2",
+          "criterion": "Criterion",
+          "aiColumn": "AI",
+          "lecturerColumn": "Lecturer",
+          "adjusted": "Raised by the lecturer",
+          "total": "Total",
+          "criteria": {
+            "classes": "Classes and attributes",
+            "inheritance": "Inheritance",
+            "methods": "Methods fit responsibilities"
+          }
+        }
       }
     }
   }

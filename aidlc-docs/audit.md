@@ -17314,3 +17314,12 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: PR tài liệu riêng; không đổi code.
 
 ---
+
+## Construction — Landing page: thiết kế lại phần đầu và bố cục
+**Timestamp**: 2026-11-23T16:50:19Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Nghiên cứu và cài các skill cần thiết sau đó làm task sau: Làm trang landingpage đẹp và ấn tượng hơn"
+**AI Response**: "Tìm trên skills.sh và cài skill chính thức anthropics/skills@frontend-design (global); ui-ux-pro-max đã có sẵn. Nhánh feat/landing-redesign từ origin/staging (e10b2c69). Phần đầu landing thành bảng vẽ nền xanh đêm (data-theme dark cục bộ) với sơ đồ lớp UML tự vẽ khi tải trang và phiếu rubric: cột cam là điểm AI đề xuất, cột xanh lơ là điểm giảng viên chốt; rê chuột lên tiêu chí làm sáng phần sơ đồ tương ứng (CSS :has). Tính năng chia hai tính năng chính và bốn tính năng phụ, các bước nối bằng mũi tên UML, vai trò dùng hình actor UML, dải kêu gọi cuối dùng lại bảng vẽ. Thêm khóa reviewSheet.* cho en/vi; bỏ DiagramIllustration. globals.css thêm .drafting-board, hiệu ứng phiếu rubric và quy tắc [data-theme]:not(:root) gắn lại --color-* để khối theme lồng đọc đúng màu. Kiểm: Vitest 159 tệp, 1.208 test đạt (thêm ca phiếu rubric), tsc và ESLint đạt; dev server ở 1024/1280 px và 375 px, theme sáng và tối, không tràn ngang."
+**Context**: Code Generation và Build and Test cho thay đổi giao diện landing; chưa commit.
+
+---
