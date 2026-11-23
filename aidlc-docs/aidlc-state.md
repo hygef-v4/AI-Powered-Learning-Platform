@@ -1,5 +1,26 @@
 # AI-DLC State Tracking
 
+## Sửa rủi ro MCP, đợt 1 · 2026-11-23
+
+Người dùng: "giúp tôi làm lần lượt từng bước" theo danh sách 11 vấn đề MCP đã rà soát. Đợt 1 làm bước 1 đến 3.
+
+- [x] Bước 1, chẩn đoán MCP từ chối mọi lời gọi trên máy local. Nguyên nhân là chuyển tiếp cổng Docker Desktop của Redis và RabbitMQ hỏng sau khi container khởi động lại lúc 19:25 (Redis trong mạng Docker trả PONG, từ máy vào bị đóng kết nối). Khởi động lại hai container thì MCP chạy lại. Không phải lỗi code.
+- [x] Bước 2, system test gọi `/mcp` qua HTTP trong `PlatformWorkflowIntegrationTest`: 401 khi thiếu token, 403 khi có `Origin`, token chỉ đọc gọi được công cụ đọc nhưng không thấy và không gọi được công cụ ghi, lời gọi thứ 61 trả `-32029`, thân yêu cầu quá 1 MB. Redis của bộ test nay bắt mật khẩu như môi trường thật.
+- [x] Mục 1: Redis lỗi vẫn từ chối (BR-U06-53) nhưng trả mã riêng `-32030`, log ERROR kèm nguyên nhân, audit `RATE_LIMIT_UNAVAILABLE`. Hướng dẫn `docs/guides/mcp-clients.md` thêm mã mới.
+- [x] Mục 2: `McpController` xác thực trước, rồi mới đọc thân yêu cầu tối đa 1 MB; không còn nhận `@RequestBody String`.
+- [x] Mục 3: `read_authorized_submission` gắn `untrustedContent: true`.
+- [x] Kiểm tra: 112 test MCP (unit và integration) và 39 test `PlatformWorkflowIntegrationTest` đạt. Trên backend local đã khởi động lại: gọi MCP thật được, 401 với thân 3 MB trong 0,01 giây, 403 khi có `Origin`.
+- [x] Mục 4: sửa agent chỉ được hạ quyền; READ_ONLY nâng lên READ_WRITE trả `MCP_ACCESS_UPGRADE_NOT_ALLOWED`. Giao diện khóa lựa chọn "Đọc và ghi" và hướng dẫn tạo agent mới.
+- [x] Mục 5, người dùng chọn cách B: bỏ xem lại token. Xóa endpoint `GET /api/v1/me/mcp-credentials/{id}/token`, hàm `reveal`, việc lưu bản mã, trường `revealable` và ô xem token trên giao diện. Migration `V20261123_1200__drop_mcp_token_ciphertext.sql` xóa ba cột bản mã; token đang dùng vẫn xác thực bằng hash. Cập nhật BR-U06-30/31, D05, hướng dẫn MCP, tài liệu thiết kế và test bảo mật U06.
+- [x] Kiểm tra: 175 test backend (MCP, credential, controller, repository, `PlatformWorkflowIntegrationTest`) và 54 test frontend AI/i18n đạt; typecheck và lint frontend sạch.
+- [x] Khởi động lại backend local: migration `20261123.1200` và `20261123.1210` áp dụng thành công; token đang dùng vẫn gọi MCP được.
+- [x] Mục 9: xóa `AdminAiMcpTools`, `AdminDashboardMcpTools`, `AdminAiMcpToolsTest` và `McpInput.requireAdmin`; Admin vốn bị chặn ở `MCP_SELF`, xác thực token và registry.
+- [x] Mục 8: SQL của `McpWriteRequestService` chuyển sang `McpWriteRequestRepository` (JdbcClient), giữ khóa advisory và transaction.
+- [x] Mục 7: `McpWriteRequestCleanupScanner` (worker, mỗi phút) xóa bản ghi chống ghi trùng cũ hơn 7 ngày; migration `V20261123_1210` cấp quyền delete cho role runtime. Xác thực chỉ ghi `last_used_at` khi giá trị cũ quá 1 phút. Bảng audit và thống kê sử dụng giữ nguyên vì là dữ liệu đối soát và quota.
+- [x] Mục 10: `scripts/test-check-mcp.py` chạy đạt 2/2; giữ lại vì kiểm tra công cụ chẩn đoán `check-mcp.ps1` cho người dùng, khác phạm vi system test.
+- [x] Kiểm tra: 204 test backend (MCP, admin dashboard, `ArchitectureTest`, `PlatformWorkflowIntegrationTest`) đạt.
+- [ ] Mục 6 (giới hạn tần suất theo IP) để cho reverse proxy khi triển khai, không sửa code. Chưa commit.
+
 ## Gom báo cáo kiểm thử theo ngày trong build-and-test · 2026-11-23
 
 Người dùng: "nhóm lại các thư mục ngày tháng này trong build and test folder lại cho gọn". Chỉ đổi vị trí tài liệu, không đổi nội dung báo cáo.
