@@ -16954,3 +16954,192 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Code Generation, backend và frontend nhỏ, nhánh audit-staging. Chưa commit.
 
 ---
+
+## Construction — Sửa lỗi realtime chuông thông báo (IT-U14-M03)
+**Timestamp**: 2026-11-23T02:47:01Z
+**Requested by:** Hải Nam
+**User Input**: "các case failed có phải là defects không? Nếu có hãy tạo defects trên jira: https://sep490-g21-fall26.atlassian.net/issues?jql=project%20%3D%20KAN%20AND%20issuetype%20%3D%20Bug%20ORDER%20BY%20priority%20DESC%2C%20created%20DESC và cập nhật trạng thái. sau đó tạo branch mới từ staging, đề xuất sửa và chạy lại U09-M01, U08-M01, U07-M03. Sau đó tiếp tục phần còn lại"
+**AI Response**: "Phân loại: chỉ IT-U14-M03 là defect của code (BR-U14-12). NotificationService bọc sseHub.publish trong afterCommit, còn RabbitSseHub.publish lại đăng ký afterCommit lần nữa. Callback đăng ký trong lúc afterCommit đang chạy không bao giờ được gọi, nên sự kiện không tới exchange platform.realtime. U02-M02/U15-M02 (chuyển về trang chủ theo BR-U01-48) và U05-M01 (bỏ lớp nháp từ 2026-11-05) là case/tài liệu lệch thiết kế. U07-M03, U08-M01, U09-M01 là lỗi script kiểm thử. Tạo nhánh fix/u14-realtime-notification-sse từ staging: NotificationService gọi sseHub.publish trực tiếp, hub tự chờ commit; ghi rõ hợp đồng trong ISseHub; thêm test hồi quy dùng RabbitSseHub thật (hỏng trên code cũ, qua trên code mới). Test notifications và groupdocs đều qua. Chưa commit."
+**Context**: Bugfix trong phạm vi U14, không đổi API/schema; Jira bug chờ người dùng đăng nhập trong browser pane.
+
+---
+
+## Construction — Tạo Jira bug cho IT-U14-M03
+**Timestamp**: 2026-11-23T03:10:23Z
+**Requested by:** Hải Nam
+**User Input**: "Signed in"
+**AI Response**: "Tạo KAN-215 '[U14] Notification bell does not update in real time: SSE event is never published' (Bug, parent KAN-30, Medium, gán Hải Nam, nhãn defect/u14/systest-2026-11-22) với các mục Impact, Reproduction, Observed, Expected, Root cause, Fix, Evidence; chuyển trạng thái sang In Progress vì bản sửa có trên nhánh fix/u14-realtime-notification-sse nhưng chưa merge."
+**Context**: Cập nhật Jira theo yêu cầu tạo defect; không sửa issue khác.
+
+---
+
+## Construction — Report-5.2 nhóm 2/3 và PDF evidence
+**Timestamp**: 2026-11-23T03:46:48Z
+**Requested by:** Hải Nam
+**User Input**: "tiếp tục làm cùng tôi 6 case nhóm 2 và 3 sau đó chạy node build-pdf.mjs để tạo Report-5.2_Evidence.pdf một lần, rồi cập nhật Report-5.2."
+**AI Response**: "Hoàn tất chạy lại nhóm 1 (U09-M02, U11-M01); chuẩn bị 6 case nhóm 2/3 (IT-U06-M03, IT-U06-M04, IT-U08-M02, IT-U01-M04, IT-U03-M03, IT-U03-M04) trên stack systest cô lập; hỏi người dùng các tài nguyên test (khóa AI, Brevo, Google Drive) vì người dùng tự nhập khóa thật; sau đó chạy build-pdf.mjs một lần và cập nhật Report-5.2."
+**Context**: Report-5.2 manual integration test; không commit.
+
+---
+
+## Construction — Report-5.2 nhóm 2/3: chỉ có khóa Gemini
+**Timestamp**: 2026-11-23T03:55:00Z
+**Requested by:** Hải Nam
+**User Input**: "Tôi sẽ chuẩn bị AI keys đầu tiên nhưng tôi chỉ lấy khóa cho gemini được không"
+**AI Response**: "Đồng ý: IT-U06-M03 và IT-U08-M02 chạy đầy đủ với khóa Gemini; IT-U06-M04 chạy phần Gemini và bước khóa không hợp lệ, phần OpenAI và Claude ghi Blocked (thiếu khóa test), cả case ghi Blocked kèm kết quả phần Gemini. Người dùng tự nhập khóa thật vào form của app."
+**Context**: Report-5.2 nhóm 2; khóa thật không đưa vào chat, log hay evidence.
+
+---
+
+## Construction — Report-5.2 nhóm 2: nhập khóa Gemini
+**Timestamp**: 2026-11-23T04:00:30Z
+**Requested by:** Hải Nam
+**User Input**: "[khóa API Gemini đã che — không ghi vào audit] đây là key API"
+**AI Response**: "Nhắc khóa đã lộ trong chat, nên xoay khóa sau khi test. Nhập khóa vào ô mật khẩu 'Add API key' của School API keys trên stack systest (localhost), Check 'Đạt', lưu với model gemini-3.1-flash-lite; evidence chỉ có gợi ý ••••bmcA."
+**Context**: Chuẩn bị IT-U06-M03; khóa không ghi ra file, log hay evidence.
+
+---
+
+## Construction — Report-5.2 nhóm 2: chạy 3 case AI
+**Timestamp**: 2026-11-23T04:16:26Z
+**Requested by:** Hải Nam
+**User Input**: "ok, tiếp tục"
+**AI Response**: "IT-U06-M03 Passed (mức riêng = usage trong ngày + 3.000 token; lượt 2 bị từ chối, không có task/usage mới; thẻ Admin 16.134 token). IT-U06-M04 Failed: phần Gemini đạt (model gemini-3.1-flash-lite vì gemini-4-argon trả 429 với khóa free), OpenAI/Claude BLOCKED do không có khóa, bước khóa sai hiện 'Wrong key' nhưng vẫn ghi usage CONNECTION_TEST FAILED (trái bước 4 business-logic-model U06). IT-U08-M02 Passed (409 FEEDBACK_PENDING, góp ý đủ 4 mục, không tạo điểm, thu hồi khóa thì bị từ chối kèm link AI connection). Dọn dẹp: thu hồi khóa trường và mọi khóa cá nhân test (REVOKED), xóa mức riêng tạm của Teacher One. Thêm trạng thái BLOCKED cho check trong ev.mjs/build-pdf.mjs."
+**Context**: Report-5.2 nhóm 2; stack systest cô lập; không commit.
+
+---
+
+## Construction — Defect IT-U06-M04 (KAN-216), sửa lỗi và chuẩn bị Brevo/Google Drive
+**Timestamp**: 2026-11-23T04:38:00Z
+**Requested by:** Hải Nam
+**User Input**: "tạo defect cho IT-U06-M04 và fix. Giúp tôi chuẩn bị brevo và google drive"
+**AI Response**: "Tạo Jira KAN-216 ([U06] Checking an invalid AI key records a CONNECTION_TEST usage entry with no tokens), parent KAN-29, nhãn defect/u06/systest-2026-11-22, chuyển In Progress. Nguyên nhân: AiConnectionService.testDraft và test luôn gọi recordProvider(CONNECTION_TEST) kể cả khi nhà cung cấp từ chối khóa và không trả usage. Sửa trên worktree E:\GitHub\AI-Powered-Learning-Platform-u06fix, nhánh fix/u06-connection-test-usage (từ staging): thêm recordTestUsage chỉ ghi khi có token đo được (BR-U06-14, bước 4 business-logic-model U06); audit AI_CONNECTION_TESTED giữ nguyên. Test: sửa connectionTestUsesFixedPromptAndRecordsSanitizedResult, thêm draftCheckWithRejectedKeyRecordsNoUsage và draftCheckRecordsProviderMeasuredUsage; 3 test đỏ trước khi sửa, sau khi sửa module AI 204 test, 0 lỗi. Chưa retest trên stack systest (cần merge/deploy). Chuẩn bị nhóm 3: tạo cặp khóa RSA 3072 test trong .tmp/systemtest/backup-keys (khóa riêng không lên server), thêm EXT_U03_BACKUP_PUBLIC_KEY và EXT_TEST_MAILBOX vào ext-test.env, thêm U03_BACKUP_PUBLIC_KEY vào ext-test.override.yml; docker compose config hợp lệ. Hướng dẫn người dùng tự điền khóa Brevo/Drive vào file, không gửi qua chat."
+**Context**: Report-5.2; defect U06; chưa commit.
+
+---
+
+## Construction — Defect KAN-216: chưa commit
+**Timestamp**: 2026-11-23T07:36:55Z
+**Requested by:** Hải Nam
+**User Input**: "Not yet"
+**AI Response**: "Giữ bản sửa U06 chưa commit trên worktree E:\GitHub\AI-Powered-Learning-Platform-u06fix (nhánh fix/u06-connection-test-usage); chưa tạo PR. Chờ người dùng điền ext-test.env để chạy nhóm 3."
+**Context**: Report-5.2; defect U06; không commit, không push.
+
+---
+
+## Construction — Report-5.2 nhóm 3: chuẩn bị chạy IT-U01-M04
+**Timestamp**: 2026-11-23T07:41:56Z
+**Requested by:** Hải Nam
+**User Input**: "Tôi đã điền xong ext-test.env cho brevo, chạy nhóm 3 đi"
+**AI Response**: "Kiểm tra ext-test.env (chỉ xem có/không, không in giá trị): SMTP login, SMTP key, API key Brevo đúng định dạng; EXT_SMTP_FROM và EXT_TEST_MAILBOX còn trống nên chưa chạy được IT-U01-M04; các giá trị Google Drive trống. Viết .tmp/systemtest/evidence/it-u01-m04.mjs (SMTP relay, HTTPS API, khóa API sai; đọc log Brevo qua API; che hộp thư và người gửi trong ảnh/văn bản; khôi phục Mailpit cuối case). Dry-run phát hiện lệnh up thường sẽ tạo lại postgres/rabbitmq/redis do compose file đã mới hơn stack; đổi sang --no-deps chỉ đụng backend và worker, đã xác nhận stack không đổi. Chờ người dùng điền hai giá trị còn thiếu."
+**Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
+
+---
+
+## Construction — Report-5.2 nhóm 3: IT-U03-M03/M04 Blocked
+**Timestamp**: 2026-11-23T07:43:13Z
+**Requested by:** Hải Nam
+**User Input**: "Yes, mark Blocked"
+**AI Response**: "Ghi IT-U03-M03 và IT-U03-M04 là Blocked (không có shared drive Google Workspace và service account test; không dùng thông tin Drive production). Tạo evidence README/result.json qua .tmp/systemtest/evidence/it-u03-blocked.mjs, mọi kết quả mong đợi đánh BLOCKED. IT-U01-M04 vẫn chờ người dùng điền EXT_SMTP_FROM và EXT_TEST_MAILBOX."
+**Context**: Report-5.2 nhóm 3; không commit.
+
+---
+
+## Construction — Report-5.2 nhóm 3: hỏi về EXT_TEST_MAILBOX
+**Timestamp**: 2026-11-23T07:44:47Z
+**Requested by:** Hải Nam
+**User Input**: "test mailbox điền cái gì?"
+**AI Response**: "Giải thích: EXT_TEST_MAILBOX là một địa chỉ email thật người dùng mở được (ví dụ Gmail cá nhân hoặc Gmail phụ), chưa có tài khoản trên stack systest; script tạo tài khoản Student PENDING với địa chỉ này và gửi mã kích hoạt qua Brevo tới đó; có thể trùng địa chỉ người gửi; được che trong evidence."
+**Context**: Report-5.2 nhóm 3; hướng dẫn, không đổi mã.
+
+---
+
+## Construction — Report-5.2 nhóm 3: IT-U01-M04 chờ IP được Brevo cho phép
+**Timestamp**: 2026-11-23T07:45:51Z
+**Requested by:** Hải Nam
+**User Input**: "đã điền xong, chạy IT-U01-M04 đi"
+**AI Response**: "Kiểm tra trước khi chạy: EXT_SMTP_FROM và EXT_TEST_MAILBOX đã là địa chỉ email (gmail.com), chưa có tài khoản trên systest. Gọi thử API Brevo bằng khóa test: HTTP 401 unauthorized vì IP máy chưa nằm trong Authorised IPs của tài khoản Brevo. Chưa chạy case (bước 4–5 và việc đọc log Brevo cần API); nhờ người dùng tự thêm IP hoặc tắt chặn IP trong Brevo (Security > Authorised IPs)."
+**Context**: Report-5.2 nhóm 3; stack không đổi; không commit.
+
+---
+
+## Construction — Report-5.2 nhóm 3: chạy IT-U01-M04
+**Timestamp**: 2026-11-23T08:00:06Z
+**Requested by:** Hải Nam
+**User Input**: "Done, run it"
+**AI Response**: "Kiểm tra lại API Brevo: HTTP 200, người gửi đã xác minh và active. Chạy it-u01-m04.mjs: lần 1 dừng vì script gọi /health ở cổng frontend (:49088) thay vì backend (:49080), sửa script; lần 2 dừng vì Brevo đổi người gửi gmail.com sang địa chỉ brevosend.com nên check so sánh người gửi sai, sửa script và ghi deviation; lần 3: /health UP, SMTP relay delivered sau 7,8 s; khi chuyển MAIL_TRANSPORT=brevo-api (SMTP_USER/SMTP_PASSWORD rỗng) worker unhealthy, lệnh up --wait lỗi, case dừng ở bước 4 (Blocked do script). Handler thoát đã khôi phục backend/worker về cấu hình Mailpit; đang điều tra nguyên nhân worker unhealthy."
+**Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
+
+---
+
+## Construction — Report-5.2 nhóm 3: xác nhận hộp thư IT-U01-M04
+**Timestamp**: 2026-11-23T08:00:06Z
+**Requested by:** Hải Nam
+**User Input**: "đã nhận được 2 email trong thư rác"
+**AI Response**: "Ghi nhận: 2 email OTP gửi qua SMTP relay (lần chạy dừng lúc khoảng 14:50 và lần 3 lúc 14:55 giờ VN) đến hộp thư test, nằm trong thư mục Spam. Bước HTTPS API chưa gửi email nào vì worker lỗi khi chuyển sang brevo-api."
+**Context**: Report-5.2 nhóm 3; xác nhận của tester cho bước 3.
+
+---
+
+## Construction — Report-5.2 nhóm 3: xác nhận email SMTP và API, chạy lại IT-U01-M04
+**Timestamp**: 2026-11-23T08:11:38Z
+**Requested by:** Hải Nam
+**User Input**: "đã nhận 2 mail 1 vào 15:07 1 vào 15:10"
+**AI Response**: "Ghi nhận: email 15:07 (SMTP relay) và 15:10 (HTTPS API, Brevo delivered 15:10:19) đến hộp thư test. Lần chạy 4 (sửa chờ health 6 phút): /health UP, SMTP delivered 6,4 s, API delivered 3,8 s; check 'thông báo trung lập' FAIL sai do script tìm chữ trên trang trong khi trang không hiện chữ mà chuyển sang bước OTP, thông báo trung lập nằm ở body API 202. Dừng lần chạy, sửa check so sánh message API và trạng thái trang, thêm deviation; chạy lại (gửi thêm 2 email)."
+**Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
+
+---
+
+## Construction — Report-5.2 nhóm 3: IT-U01-M04 chạm giới hạn OTP, chạy lại bằng địa chỉ plus
+**Timestamp**: 2026-11-23T08:22:47Z
+**Requested by:** Hải Nam
+**User Input**: "(không có tin nhắn mới — xử lý kết quả lần chạy 5)"
+**AI Response**: "Lần chạy 5: SMTP delivered 8,2 s; check thông báo trung lập Passed (message API 202, trang chuyển sang bước OTP); bước 5 API không có sự kiện Brevo vì tài khoản test đã yêu cầu OTP lần thứ 6 trong 1 giờ (giới hạn U01_RL_OTP_PER_EMAIL_PER_HOUR=5, trang vẫn hiện thông báo trung lập, không gửi email — đúng thiết kế). Dừng lần chạy; đổi script dùng địa chỉ Gmail dạng plus của hộp thư test (cùng hộp thư, tài khoản mới) thay vì xóa bộ đếm trong hệ thống; thêm deviation; chạy lại."
+**Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
+
+---
+
+## Construction — Report-5.2 nhóm 3: tester xác nhận hộp thư (lần chạy plus-address)
+**Timestamp**: 2026-11-23T08:30:45Z
+**Requested by:** Hải Nam
+**User Input**: "[Ảnh chụp hộp thư Gmail: 3 email 'Mã xác thực kích hoạt tài khoản - Nền tảng học tập' lúc 15:29, 15:25, 15:14 — mã OTP trong ảnh không ghi vào audit]"
+**AI Response**: "Ghi nhận email 15:25 (bước 3 SMTP, Brevo delivered 15:25:37) và 15:29 (bước 5 HTTPS API) của lần chạy hiện tại; 15:14 thuộc lần chạy trước. Ghi xác nhận (không mã OTP, không tên người gửi) vào .tmp/systemtest/u01m04-inbox-confirmed.txt để script đưa vào check; không lưu ảnh vì có mã OTP."
+**Context**: Report-5.2 IT-U01-M04; xác nhận của tester.
+
+---
+
+## Construction — Report-5.2: hỏi về thay thế OpenAI/Claude trong IT-U06-M04
+**Timestamp**: 2026-11-23T08:33:53Z
+**Requested by:** Hải Nam
+**User Input**: "ok, trong lúc đó tôi muốn hỏi là test case kiểm tra kết nối với AI mà đã pass trường hợp sử dụng gemini nhưng do chưa có api cho chat gpt và claude nên bỏ qua thì trong test case đó có để sử dụng 1 model của chat gpt hay claude để kiểm chứng thay thế không"
+**AI Response**: "Không thay thế được: mỗi nhà cung cấp có adapter riêng (OpenAI Bearer + json_schema, Claude tool use), URL gắn cứng api.openai.com/api.anthropic.com trong HttpProviderGateway, danh sách model theo nhà cung cấp. Đề xuất: giữ phần khóa hợp lệ OpenAI/Claude BLOCKED; bổ sung kiểm tra khóa sai gọi thật tới OpenAI/Claude (miễn phí, 401) và đính kèm kết quả HttpProviderGatewayTest (adapter OpenAI/Claude với server giả lập) làm bằng chứng phụ; hoặc người dùng tự mua khóa thử giới hạn thấp."
+**Context**: Report-5.2 IT-U06-M04; tư vấn, chưa thay đổi.
+
+---
+
+## Construction — Report-5.2: IT-U01-M04 Passed
+**Timestamp**: 2026-11-23T09:25:25Z
+**Requested by:** Hải Nam
+**User Input**: "(không có tin nhắn mới — kết quả lần chạy plus-address)"
+**AI Response**: "IT-U01-M04 Passed: /health UP; SMTP relay delivered 5,5 s; HTTPS API delivered 3,2 s; trang kích hoạt luôn trả cùng thông báo trung lập (message API 202, chuyển sang bước OTP); khóa API sai: 6 dòng 'API Brevo trả HTTP 401 (unauthorized)', OTP_DELIVERY_FAILED sau hết lượt thử, không có sự kiện Brevo, log không chứa khóa hay mã; tester xác nhận 2 email (15:25, 15:29) trong Spam. Stack khôi phục Mailpit (/health UP). Quét evidence: không có địa chỉ, khóa hay mã OTP."
+**Context**: Report-5.2 nhóm 3.
+
+---
+
+## Construction — Report-5.2: bổ sung IT-U06-M04 theo đề xuất
+**Timestamp**: 2026-11-23T09:25:25Z
+**Requested by:** Hải Nam
+**User Input**: "ok theo đề xuất sau khi U01-M04 xong"
+**AI Response**: "Chạy HttpProviderGatewayTest tại commit e781ca66 (worktree tạm, đã xóa): 36/36 Passed. Script it-u06-m04-supp.mjs giữ nguyên lần chạy cũ và thêm S1–S3: khóa bịa với API thật của OpenAI và Claude -> 'Wrong key' (đạt), nhưng vẫn ghi usage CONNECTION_TEST FAILED cho cả hai (cùng lỗi KAN-216, bản sửa chưa vào build này); S3 đính kèm kết quả unit test adapter. Phần khóa hợp lệ OpenAI/Claude vẫn BLOCKED; case vẫn Failed."
+**Context**: Report-5.2 IT-U06-M04.
+
+---
+
+## Construction — Report-5.2: PDF evidence và cập nhật workbook
+**Timestamp**: 2026-11-23T09:25:25Z
+**Requested by:** Hải Nam
+**User Input**: "[Trả lời câu hỏi] Round: 'Round 1 (Recommended)'; Defect IDs: '\"Pending triage\" (Recommended)'"
+**AI Response**: "Chạy build-pdf.mjs: E:\FPTUni\sem9_fa26\test_report\Report-5.2_Evidence.pdf (43 case, 10 MB; 34 Passed, 7 Failed, 2 Blocked). Cập nhật Report-5.2_Integration Test.xlsx (bản cũ sao lưu ở test_report\backup\Report-5.2_Integration Test_before-round1-manual_20261123.xlsx): 43 dòng manual ở cột Round 1 (trạng thái, ngày 22–23/11/2026, tester Vũ Hải Nam, Defect IDs KAN-215/KAN-216/Pending triage, Note có lý do và tham chiếu evidence; 2 case Blocked ghi Pending kèm 'Blocked: …'); Cover v1.4, ngày phát hành 23/11/2026, dòng Record of change v1.4; Test Statistics mã tài liệu, ngày và ghi chú. Excel COM bị treo sau lần ghi đầu (hộp thoại ẩn) nên sửa trực tiếp XML của các ô cần đổi (giữ nguyên style, merge, validation; fullCalcOnLoad có sẵn). Mở lại bằng Excel: không lỗi; thống kê 164 Passed, 7 Failed, 2 Pending / 173; coverage 98,84 %, pass rate 95,91 %."
+**Context**: Report-5.2 hoàn tất; không commit.
+
+---
