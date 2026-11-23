@@ -117,7 +117,6 @@ Generated from the current service directories; includes use-case services and t
 
 ### U06 — AI Connections
 
-- [AdminAiMcpTools](../../../backend/src/main/java/edu/aiplatform/ai/service/AdminAiMcpTools.java)
 - [AiAccess](../../../backend/src/main/java/edu/aiplatform/ai/service/AiAccess.java)
 - [AiConnectionService](../../../backend/src/main/java/edu/aiplatform/ai/service/AiConnectionService.java)
 - [AiConnectionsSection](../../../backend/src/main/java/edu/aiplatform/ai/service/AiConnectionsSection.java)
@@ -139,6 +138,7 @@ Generated from the current service directories; includes use-case services and t
 - [McpCredentialService](../../../backend/src/main/java/edu/aiplatform/ai/service/McpCredentialService.java)
 - [McpServer](../../../backend/src/main/java/edu/aiplatform/ai/service/McpServer.java)
 - [McpToolRegistry](../../../backend/src/main/java/edu/aiplatform/ai/service/McpToolRegistry.java)
+- [McpWriteRequestCleanupScanner](../../../backend/src/main/java/edu/aiplatform/ai/service/McpWriteRequestCleanupScanner.java)
 - [McpWriteRequestService](../../../backend/src/main/java/edu/aiplatform/ai/service/McpWriteRequestService.java)
 - [ProviderCatalog](../../../backend/src/main/java/edu/aiplatform/ai/service/ProviderCatalog.java)
 - [QuotaPolicyService](../../../backend/src/main/java/edu/aiplatform/ai/service/QuotaPolicyService.java)
@@ -325,5 +325,4 @@ Generated from the current service directories; includes use-case services and t
 ### U15 — Admin Dashboard
 
 - [AdminDashboardActivityService](../../../backend/src/main/java/edu/aiplatform/admindashboard/service/AdminDashboardActivityService.java)
-- [AdminDashboardMcpTools](../../../backend/src/main/java/edu/aiplatform/admindashboard/service/AdminDashboardMcpTools.java)
 - [AdminDashboardService](../../../backend/src/main/java/edu/aiplatform/admindashboard/service/AdminDashboardService.java)

@@ -175,7 +175,11 @@ public class McpCredentialService {
         if (contact.isEmpty() || contact.get().status() != AccountStatus.ACTIVE || !AGENT_ROLES.contains(contact.get().role())) {
             return Optional.empty();
         }
-        repository.touch(found.get().id(), now);
+        // A minute is precise enough for "last used"; writing it on every call costs one UPDATE per tool call.
+        Instant lastUsedAt = found.get().lastUsedAt();
+        if (lastUsedAt == null || lastUsedAt.isBefore(now.minus(Duration.ofMinutes(1)))) {
+            repository.touch(found.get().id(), now);
+        }
         return Optional.of(new McpPrincipal(found.get(), new Actor(contact.get().accountId(), contact.get().role())));
     }
 

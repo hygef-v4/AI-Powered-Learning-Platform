@@ -320,7 +320,6 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 - [HttpProviderGatewayTest.java](../../../backend/src/test/java/edu/aiplatform/ai/integration/HttpProviderGatewayTest.java)
 - [AiDomainTest.java](../../../backend/src/test/java/edu/aiplatform/ai/model/AiDomainTest.java)
 - [AiRepositoriesIntegrationTest.java](../../../backend/src/test/java/edu/aiplatform/ai/model/AiRepositoriesIntegrationTest.java)
-- [AdminAiMcpToolsTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AdminAiMcpToolsTest.java)
 - [AiConnectionServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiConnectionServiceTest.java)
 - [AiSettingsSectionsTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiSettingsSectionsTest.java)
 - [AiSourceServiceTest.java](../../../backend/src/test/java/edu/aiplatform/ai/service/AiSourceServiceTest.java)
@@ -350,6 +349,8 @@ Primary UC 31–33; FR-012, FR-021, FR-034, FR-035, FR-036, FR-037.
 - [V20261102_0900__create_ai_source_preferences.sql](../../../backend/src/main/resources/db/migration/ai/V20261102_0900__create_ai_source_preferences.sql)
 - [V20261105_1200__personal_connection_switch.sql](../../../backend/src/main/resources/db/migration/ai/V20261105_1200__personal_connection_switch.sql)
 - [V20261105_1300__allow_many_personal_keys.sql](../../../backend/src/main/resources/db/migration/ai/V20261105_1300__allow_many_personal_keys.sql)
+- [V20261123_1200__drop_mcp_token_ciphertext.sql](../../../backend/src/main/resources/db/migration/ai/V20261123_1200__drop_mcp_token_ciphertext.sql)
+- [V20261123_1210__allow_mcp_write_request_cleanup.sql](../../../backend/src/main/resources/db/migration/ai/V20261123_1210__allow_mcp_write_request_cleanup.sql)
 
 ### Frontend
 

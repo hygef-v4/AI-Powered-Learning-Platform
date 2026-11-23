@@ -29,8 +29,7 @@ class McpStaffCatalogTest {
                 new edu.aiplatform.materials.service.MaterialMcpQueryTools(null),
                 new edu.aiplatform.grading.service.GradingMcpTools(null,null,json,null),
                 new edu.aiplatform.grading.service.GradingMcpQueryService(null,null,null,null,json,null,null),
-                new edu.aiplatform.grading.service.GradingMcpBatchService(null,new edu.aiplatform.grading.service.GradingMcpTools(null,null,json,null),json),
-                new AdminAiMcpTools(null,null),new edu.aiplatform.admindashboard.service.AdminDashboardMcpTools(null));
+                new edu.aiplatform.grading.service.GradingMcpBatchService(null,new edu.aiplatform.grading.service.GradingMcpTools(null,null,json,null),json));
     }
     @Test void allSchemasCompileAndEveryRoleTokenCombinationHasCorrectCatalog() {
         var providers=catalog();var checker=new JsonSchemaChecker(json);

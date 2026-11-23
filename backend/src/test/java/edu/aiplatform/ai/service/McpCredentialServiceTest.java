@@ -120,6 +120,19 @@ class McpCredentialServiceTest {
     }
 
     @Test
+    void authenticateWritesLastUsedAtMostOncePerMinute() {
+        when(accounts.getContact(staff.accountId())).thenReturn(Optional.of(
+                new AccountContact(staff.accountId(), "a@x", "A", Role.TEACHER, AccountStatus.ACTIVE)));
+        McpCredential recent = new McpCredential(UUID.randomUUID(), staff.accountId(), "agent", Access.READ_ONLY,
+                McpCredentialService.hash(TOKEN), "DEFG", NOW.plusSeconds(60), null, NOW.minusSeconds(30),
+                NOW.minusSeconds(3600));
+        when(repository.findByHash(recent.tokenHash())).thenReturn(Optional.of(recent));
+
+        assertThat(service.authenticate(TOKEN)).isPresent();
+        verify(repository, never()).touch(any(), any());
+    }
+
+    @Test
     void authenticateRejectsExpiredRevokedInactiveAndAdmin() {
         when(accounts.getContact(staff.accountId())).thenReturn(Optional.of(
                 new AccountContact(staff.accountId(), "a@x", "A", Role.ADMIN, AccountStatus.ACTIVE)));

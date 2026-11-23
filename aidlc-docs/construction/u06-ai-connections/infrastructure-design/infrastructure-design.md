@@ -21,4 +21,4 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ## AI migration deltas — 2026-10-26/27
 
-26/10 adds mcp_write_requests for persistent staff create/retry handling. 27/10 removes institutional provider uniqueness (PERSONAL uniqueness remains) and adds nullable token_ciphertext/token_iv/token_key_version for credential reveal. Existing source migration inventory is authoritative; do not read the base migration count as the complete current schema.
+26/10 adds mcp_write_requests for persistent staff create/retry handling. 27/10 removes institutional provider uniqueness (PERSONAL uniqueness remains) and adds nullable token_ciphertext/token_iv/token_key_version for credential reveal. 23/11 drops those three columns with the reveal feature and lets the runtime role delete mcp_write_requests; a worker scanner removes retry records older than 7 days. Existing source migration inventory is authoritative; do not read the base migration count as the complete current schema.
