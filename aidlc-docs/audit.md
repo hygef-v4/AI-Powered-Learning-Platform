@@ -13560,7 +13560,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — AI điền đề xuất vào form chấm điểm, có Hoàn tác
 **Timestamp**: 2026-11-23T06:32:00Z
 **Requested by:** Quang Hung
-**User Input**: "tôi muốn sửa phần giao diện chấm điểm bằng ai các bài assignment thì lúc bấm chấm điểm xong, nó nên đề xuất điểm , nhận xét thì fill luôn vào phần form chấm điểm luôn, có nút kiểu từ chối đề xuất discard ấy, chứ k cần phải kéo xuống phần lịch sử để xuất bấm chấp nhận như hiện tại, b có thể đề xuất giao diện như vậy cho tôi đck o" — "ok toi đồng ý /ponytail:ponytail"
+**User Input**: "tôi muốn sửa phần giao diện chấm điểm bằng AI các bài assignment thì lúc bấm chấm điểm xong, nó nên đề xuất điểm, nhận xét thì fill luôn vào phần form chấm điểm luôn, có nút kiểu từ chối đề xuất discard ấy, chứ không cần phải kéo xuống phần lịch sử đề xuất bấm chấp nhận như hiện tại, bạn có thể đề xuất giao diện như vậy cho tôi được không" — "ok tôi đồng ý /ponytail:ponytail"
 **AI Response**: "Đề xuất giao diện rồi cài đặt: đề xuất READY do giáo viên vừa yêu cầu tự điền vào form; nếu form có chỉnh sửa chưa lưu thì hỏi trước. Thanh AiDraftBanner có Giữ đề xuất / Hoàn tác / Chi tiết. Hook giữ bản chụp form để Hoàn tác. Bảng so sánh chuyển lên dưới thanh. Sửa useGradingWorkspace.ts, GradingWorkspacePage.tsx, thêm AiDraftBanner.tsx, khóa i18n vi/en, test workspace.test.tsx."
 **Context**: Code Generation, chỉ frontend. ESLint, tsc đạt; Vitest grading + i18n 232/232. Chưa kiểm tra trên trình duyệt thật; chưa commit.
 
@@ -13569,7 +13569,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Hoàn tác có xác nhận và nhãn ô do AI điền
 **Timestamp**: 2026-11-23T06:44:28Z
 **Requested by:** Quang Hung
-**User Input**: "làm 1, 2 trước" — "b sửa ở main hả? chuyể sang audit staging branch ấy"
+**User Input**: "làm 1, 2 trước" — "bạn sửa ở main hả? Chuyển sang audit-staging branch ấy"
 **AI Response**: "Hoàn tác hỏi xác nhận khi giáo viên đã sửa tay sau lúc AI điền. Ô điểm từng mục và nhận xét chung do AI điền có nhãn ✨ AI cho đến khi bị sửa (hàm listAiFilledItems, RubricChecklistPanel, GradingWorkspaceHeader). Phát hiện đã sửa nhầm trên main, chuyển toàn bộ thay đổi sang nhánh audit-staging (worktree F:/code/git/AI-Powered-Learning-Platform) bằng patch, đưa main về sạch."
 **Context**: Code Generation, chỉ frontend, nhánh audit-staging. ESLint, tsc đạt; Vitest grading + i18n 233/233. Chưa kiểm tra trên trình duyệt thật; chưa commit.
 
@@ -13578,7 +13578,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Hủy yêu cầu chấm AI bị kẹt
 **Timestamp**: 2026-11-23T06:53:00Z
 **Requested by:** Quang Hung
-**User Input**: "nhiều luc bấm ai chấm mà tôi đổi khóa hoặc gì đó k chấm được, tôi chuyển trang thì nút ai đang chấm bị kẹt mãi có giải pháp nào ko" (kèm ảnh nút "AI đang chấm…" bị khóa)
+**User Input**: "nhiều lúc bấm AI chấm mà tôi đổi khóa hoặc gì đó không chấm được, tôi chuyển trang thì nút AI đang chấm bị kẹt mãi, có giải pháp nào không" (kèm ảnh nút "AI đang chấm…" bị khóa)
 **AI Response**: "Nút bị khóa vì còn đề xuất PENDING (aiGenerating) và UI không có cách thoát; backend tự hủy QUEUED sau 30 phút. Thêm gradingApi.cancelTask (POST /ai/tasks/{id}:cancel, API sẵn có) và nút 'Hủy chấm AI' trên thanh công cụ khi task QUEUED, sau đó resumePolling để backend đối chiếu CANCELLED→FAILED. Task RUNNING không hủy được ở backend nên không hiện nút."
 **Context**: Code Generation, chỉ frontend, nhánh audit-staging. ESLint, tsc đạt; Vitest grading + i18n 234/234. Chưa kiểm tra trên trình duyệt thật; chưa commit.
 
@@ -13587,7 +13587,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U07/U03/U06 — Tạo đề bằng AI nhận ảnh WebP
 **Timestamp**: 2026-11-23T07:54:57Z
 **Requested by:** Quang Hung
-**User Input**: "sửa phần tạo đề ai hỗ trợ up ảnh webp đi"
+**User Input**: "sửa phần tạo đề AI hỗ trợ up ảnh WebP đi"
 **AI Response**: "Mở WEBP ở các danh sách cho phép: PurposePolicy (ASSIGNMENT_SOURCE), AssignmentAiDraftService.SOURCE_IMAGE_TYPES (dùng chung với AssignmentSourceImageSource), AiTaskService.IMAGE_TYPES, AiImageRef (javadoc) và accept của AiReviseChat. Cập nhật PurposePolicyTest, AssignmentSourceImageSourceTest (tham số hóa png/webp), AiTaskFlowTest, BR-U06-54 và frontend-components U07."
 **Context**: Code Generation, backend và frontend nhỏ, nhánh audit-staging. Chưa commit.
 
@@ -13596,18 +13596,9 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Sửa lỗi realtime chuông thông báo (IT-U14-M03)
 **Timestamp**: 2026-11-23T02:47:01Z
 **Requested by:** Hải Nam
-**User Input**: "các case failed có phải là defects không? Nếu có hãy tạo defects trên jira: https://sep490-g21-fall26.atlassian.net/issues?jql=project%20%3D%20KAN%20AND%20issuetype%20%3D%20Bug%20ORDER%20BY%20priority%20DESC%2C%20created%20DESC và cập nhật trạng thái. sau đó tạo branch mới từ staging, đề xuất sửa và chạy lại U09-M01, U08-M01, U07-M03. Sau đó tiếp tục phần còn lại"
+**User Input**: "các case failed có phải là defects không? Nếu có hãy tạo defects trên Jira: https://sep490-g21-fall26.atlassian.net/issues?jql=project%20%3D%20KAN%20AND%20issuetype%20%3D%20Bug%20ORDER%20BY%20priority%20DESC%2C%20created%20DESC và cập nhật trạng thái. Sau đó tạo branch mới từ staging, đề xuất sửa và chạy lại U09-M01, U08-M01, U07-M03. Sau đó tiếp tục phần còn lại"
 **AI Response**: "Phân loại: chỉ IT-U14-M03 là defect của code (BR-U14-12). NotificationService bọc sseHub.publish trong afterCommit, còn RabbitSseHub.publish lại đăng ký afterCommit lần nữa. Callback đăng ký trong lúc afterCommit đang chạy không bao giờ được gọi, nên sự kiện không tới exchange platform.realtime. U02-M02/U15-M02 (chuyển về trang chủ theo BR-U01-48) và U05-M01 (bỏ lớp nháp từ 2026-11-05) là case/tài liệu lệch thiết kế. U07-M03, U08-M01, U09-M01 là lỗi script kiểm thử. Tạo nhánh fix/u14-realtime-notification-sse từ staging: NotificationService gọi sseHub.publish trực tiếp, hub tự chờ commit; ghi rõ hợp đồng trong ISseHub; thêm test hồi quy dùng RabbitSseHub thật (hỏng trên code cũ, qua trên code mới). Test notifications và groupdocs đều qua. Chưa commit."
 **Context**: Bugfix trong phạm vi U14, không đổi API/schema; Jira bug chờ người dùng đăng nhập trong browser pane.
-
----
-
-## Construction — Tạo Jira bug cho IT-U14-M03
-**Timestamp**: 2026-11-23T03:10:23Z
-**Requested by:** Hải Nam
-**User Input**: "Signed in"
-**AI Response**: "Tạo KAN-215 '[U14] Notification bell does not update in real time: SSE event is never published' (Bug, parent KAN-30, Medium, gán Hải Nam, nhãn defect/u14/systest-2026-11-22) với các mục Impact, Reproduction, Observed, Expected, Root cause, Fix, Evidence; chuyển trạng thái sang In Progress vì bản sửa có trên nhánh fix/u14-realtime-notification-sse nhưng chưa merge."
-**Context**: Cập nhật Jira theo yêu cầu tạo defect; không sửa issue khác.
 
 ---
 
@@ -13623,7 +13614,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Report-5.2 nhóm 2/3: chỉ có khóa Gemini
 **Timestamp**: 2026-11-23T03:55:00Z
 **Requested by:** Hải Nam
-**User Input**: "Tôi sẽ chuẩn bị AI keys đầu tiên nhưng tôi chỉ lấy khóa cho gemini được không"
+**User Input**: "Tôi sẽ chuẩn bị AI keys đầu tiên nhưng tôi chỉ lấy khóa cho Gemini được không"
 **AI Response**: "Đồng ý: IT-U06-M03 và IT-U08-M02 chạy đầy đủ với khóa Gemini; IT-U06-M04 chạy phần Gemini và bước khóa không hợp lệ, phần OpenAI và Claude ghi Blocked (thiếu khóa test), cả case ghi Blocked kèm kết quả phần Gemini. Người dùng tự nhập khóa thật vào form của app."
 **Context**: Report-5.2 nhóm 2; khóa thật không đưa vào chat, log hay evidence.
 
@@ -13638,37 +13629,19 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 
 ---
 
-## Construction — Report-5.2 nhóm 2: chạy 3 case AI
-**Timestamp**: 2026-11-23T04:16:26Z
-**Requested by:** Hải Nam
-**User Input**: "ok, tiếp tục"
-**AI Response**: "IT-U06-M03 Passed (mức riêng = usage trong ngày + 3.000 token; lượt 2 bị từ chối, không có task/usage mới; thẻ Admin 16.134 token). IT-U06-M04 Failed: phần Gemini đạt (model gemini-3.1-flash-lite vì gemini-4-argon trả 429 với khóa free), OpenAI/Claude BLOCKED do không có khóa, bước khóa sai hiện 'Wrong key' nhưng vẫn ghi usage CONNECTION_TEST FAILED (trái bước 4 business-logic-model U06). IT-U08-M02 Passed (409 FEEDBACK_PENDING, góp ý đủ 4 mục, không tạo điểm, thu hồi khóa thì bị từ chối kèm link AI connection). Dọn dẹp: thu hồi khóa trường và mọi khóa cá nhân test (REVOKED), xóa mức riêng tạm của Teacher One. Thêm trạng thái BLOCKED cho check trong ev.mjs/build-pdf.mjs."
-**Context**: Report-5.2 nhóm 2; stack systest cô lập; không commit.
-
----
-
 ## Construction — Defect IT-U06-M04 (KAN-216), sửa lỗi và chuẩn bị Brevo/Google Drive
 **Timestamp**: 2026-11-23T04:38:00Z
 **Requested by:** Hải Nam
-**User Input**: "tạo defect cho IT-U06-M04 và fix. Giúp tôi chuẩn bị brevo và google drive"
+**User Input**: "tạo defect cho IT-U06-M04 và fix. Giúp tôi chuẩn bị Brevo và Google Drive"
 **AI Response**: "Tạo Jira KAN-216 ([U06] Checking an invalid AI key records a CONNECTION_TEST usage entry with no tokens), parent KAN-29, nhãn defect/u06/systest-2026-11-22, chuyển In Progress. Nguyên nhân: AiConnectionService.testDraft và test luôn gọi recordProvider(CONNECTION_TEST) kể cả khi nhà cung cấp từ chối khóa và không trả usage. Sửa trên worktree E:\GitHub\AI-Powered-Learning-Platform-u06fix, nhánh fix/u06-connection-test-usage (từ staging): thêm recordTestUsage chỉ ghi khi có token đo được (BR-U06-14, bước 4 business-logic-model U06); audit AI_CONNECTION_TESTED giữ nguyên. Test: sửa connectionTestUsesFixedPromptAndRecordsSanitizedResult, thêm draftCheckWithRejectedKeyRecordsNoUsage và draftCheckRecordsProviderMeasuredUsage; 3 test đỏ trước khi sửa, sau khi sửa module AI 204 test, 0 lỗi. Chưa retest trên stack systest (cần merge/deploy). Chuẩn bị nhóm 3: tạo cặp khóa RSA 3072 test trong .tmp/systemtest/backup-keys (khóa riêng không lên server), thêm EXT_U03_BACKUP_PUBLIC_KEY và EXT_TEST_MAILBOX vào ext-test.env, thêm U03_BACKUP_PUBLIC_KEY vào ext-test.override.yml; docker compose config hợp lệ. Hướng dẫn người dùng tự điền khóa Brevo/Drive vào file, không gửi qua chat."
 **Context**: Report-5.2; defect U06; chưa commit.
-
----
-
-## Construction — Defect KAN-216: chưa commit
-**Timestamp**: 2026-11-23T07:36:55Z
-**Requested by:** Hải Nam
-**User Input**: "Not yet"
-**AI Response**: "Giữ bản sửa U06 chưa commit trên worktree E:\GitHub\AI-Powered-Learning-Platform-u06fix (nhánh fix/u06-connection-test-usage); chưa tạo PR. Chờ người dùng điền ext-test.env để chạy nhóm 3."
-**Context**: Report-5.2; defect U06; không commit, không push.
 
 ---
 
 ## Construction — Report-5.2 nhóm 3: chuẩn bị chạy IT-U01-M04
 **Timestamp**: 2026-11-23T07:41:56Z
 **Requested by:** Hải Nam
-**User Input**: "Tôi đã điền xong ext-test.env cho brevo, chạy nhóm 3 đi"
+**User Input**: "Tôi đã điền xong ext-test.env cho Brevo, chạy nhóm 3 đi"
 **AI Response**: "Kiểm tra ext-test.env (chỉ xem có/không, không in giá trị): SMTP login, SMTP key, API key Brevo đúng định dạng; EXT_SMTP_FROM và EXT_TEST_MAILBOX còn trống nên chưa chạy được IT-U01-M04; các giá trị Google Drive trống. Viết .tmp/systemtest/evidence/it-u01-m04.mjs (SMTP relay, HTTPS API, khóa API sai; đọc log Brevo qua API; che hộp thư và người gửi trong ảnh/văn bản; khôi phục Mailpit cuối case). Dry-run phát hiện lệnh up thường sẽ tạo lại postgres/rabbitmq/redis do compose file đã mới hơn stack; đổi sang --no-deps chỉ đụng backend và worker, đã xác nhận stack không đổi. Chờ người dùng điền hai giá trị còn thiếu."
 **Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
 
@@ -13683,30 +13656,12 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 
 ---
 
-## Construction — Report-5.2 nhóm 3: hỏi về EXT_TEST_MAILBOX
-**Timestamp**: 2026-11-23T07:44:47Z
-**Requested by:** Hải Nam
-**User Input**: "test mailbox điền cái gì?"
-**AI Response**: "Giải thích: EXT_TEST_MAILBOX là một địa chỉ email thật người dùng mở được (ví dụ Gmail cá nhân hoặc Gmail phụ), chưa có tài khoản trên stack systest; script tạo tài khoản Student PENDING với địa chỉ này và gửi mã kích hoạt qua Brevo tới đó; có thể trùng địa chỉ người gửi; được che trong evidence."
-**Context**: Report-5.2 nhóm 3; hướng dẫn, không đổi mã.
-
----
-
 ## Construction — Report-5.2 nhóm 3: IT-U01-M04 chờ IP được Brevo cho phép
 **Timestamp**: 2026-11-23T07:45:51Z
 **Requested by:** Hải Nam
 **User Input**: "đã điền xong, chạy IT-U01-M04 đi"
 **AI Response**: "Kiểm tra trước khi chạy: EXT_SMTP_FROM và EXT_TEST_MAILBOX đã là địa chỉ email (gmail.com), chưa có tài khoản trên systest. Gọi thử API Brevo bằng khóa test: HTTP 401 unauthorized vì IP máy chưa nằm trong Authorised IPs của tài khoản Brevo. Chưa chạy case (bước 4–5 và việc đọc log Brevo cần API); nhờ người dùng tự thêm IP hoặc tắt chặn IP trong Brevo (Security > Authorised IPs)."
 **Context**: Report-5.2 nhóm 3; stack không đổi; không commit.
-
----
-
-## Construction — Report-5.2 nhóm 3: chạy IT-U01-M04
-**Timestamp**: 2026-11-23T08:00:06Z
-**Requested by:** Hải Nam
-**User Input**: "Done, run it"
-**AI Response**: "Kiểm tra lại API Brevo: HTTP 200, người gửi đã xác minh và active. Chạy it-u01-m04.mjs: lần 1 dừng vì script gọi /health ở cổng frontend (:49088) thay vì backend (:49080), sửa script; lần 2 dừng vì Brevo đổi người gửi gmail.com sang địa chỉ brevosend.com nên check so sánh người gửi sai, sửa script và ghi deviation; lần 3: /health UP, SMTP relay delivered sau 7,8 s; khi chuyển MAIL_TRANSPORT=brevo-api (SMTP_USER/SMTP_PASSWORD rỗng) worker unhealthy, lệnh up --wait lỗi, case dừng ở bước 4 (Blocked do script). Handler thoát đã khôi phục backend/worker về cấu hình Mailpit; đang điều tra nguyên nhân worker unhealthy."
-**Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
 
 ---
 
@@ -13722,7 +13677,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Report-5.2 nhóm 3: xác nhận email SMTP và API, chạy lại IT-U01-M04
 **Timestamp**: 2026-11-23T08:11:38Z
 **Requested by:** Hải Nam
-**User Input**: "đã nhận 2 mail 1 vào 15:07 1 vào 15:10"
+**User Input**: "đã nhận 2 mail, 1 vào 15:07, 1 vào 15:10"
 **AI Response**: "Ghi nhận: email 15:07 (SMTP relay) và 15:10 (HTTPS API, Brevo delivered 15:10:19) đến hộp thư test. Lần chạy 4 (sửa chờ health 6 phút): /health UP, SMTP delivered 6,4 s, API delivered 3,8 s; check 'thông báo trung lập' FAIL sai do script tìm chữ trên trang trong khi trang không hiện chữ mà chuyển sang bước OTP, thông báo trung lập nằm ở body API 202. Dừng lần chạy, sửa check so sánh message API và trạng thái trang, thêm deviation; chạy lại (gửi thêm 2 email)."
 **Context**: Report-5.2 nhóm 3; stack systest cô lập; không commit.
 
@@ -13749,7 +13704,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Report-5.2: hỏi về thay thế OpenAI/Claude trong IT-U06-M04
 **Timestamp**: 2026-11-23T08:33:53Z
 **Requested by:** Hải Nam
-**User Input**: "ok, trong lúc đó tôi muốn hỏi là test case kiểm tra kết nối với AI mà đã pass trường hợp sử dụng gemini nhưng do chưa có api cho chat gpt và claude nên bỏ qua thì trong test case đó có để sử dụng 1 model của chat gpt hay claude để kiểm chứng thay thế không"
+**User Input**: "ok, trong lúc đó tôi muốn hỏi là test case kiểm tra kết nối với AI mà đã pass trường hợp sử dụng Gemini nhưng do chưa có API cho ChatGPT và Claude nên bỏ qua, thì trong test case đó có để sử dụng 1 model của ChatGPT hay Claude để kiểm chứng thay thế không"
 **AI Response**: "Không thay thế được: mỗi nhà cung cấp có adapter riêng (OpenAI Bearer + json_schema, Claude tool use), URL gắn cứng api.openai.com/api.anthropic.com trong HttpProviderGateway, danh sách model theo nhà cung cấp. Đề xuất: giữ phần khóa hợp lệ OpenAI/Claude BLOCKED; bổ sung kiểm tra khóa sai gọi thật tới OpenAI/Claude (miễn phí, 401) và đính kèm kết quả HttpProviderGatewayTest (adapter OpenAI/Claude với server giả lập) làm bằng chứng phụ; hoặc người dùng tự mua khóa thử giới hạn thấp."
 **Context**: Report-5.2 IT-U06-M04; tư vấn, chưa thay đổi.
 
@@ -13785,7 +13740,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Judge có "unknown" và chi phí trên mỗi bài chấm hoàn tất
 **Timestamp**: 2026-11-23T08:25:15Z
 **Requested by:** Quang Hung
-**User Input**: "làm việc 1,2"
+**User Input**: "làm việc 1, 2"
 **AI Response**: "Việc 1: thêm judge phán quyết correct/incorrect/unknown (evaluation.py: Verdict, make_verdict_grader; trạng thái QUALITY_UNKNOWN qua dataset.py, runner.py, reports.py, evaluate.py), thêm --judge-style verdict (tùy chọn), mặc định vẫn geval. Việc 2: summary.cost (token và USD trên mỗi ca hoàn tất) từ usage trong bản ghi Java, thêm --score-tolerance, --input-price, --output-price. Thêm 2 test pytest, cập nhật README."
 **Context**: Code Generation, scripts/ai-grading-eval. pytest 20/20; chưa chạy judge thật; chưa commit. Nhánh đang checkout: audit-staging (cùng commit cf8b0370 với staging; PR 121 staging vào main đang mở).
 
@@ -13794,7 +13749,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Giữ GEval làm mặc định cho judge
 **Timestamp**: 2026-11-23T08:29:48Z
 **Requested by:** Quang Hung
-**User Input**: "tôi nghĩ giữ nguyên như hiện tại cũng đc r, b thấy sao"
+**User Input**: "tôi nghĩ giữ nguyên như hiện tại cũng được rồi, bạn thấy sao"
 **AI Response**: "Đồng ý giữ nguyên: chưa có bằng chứng verdict tốt hơn trên dữ liệu của dự án. Đổi mặc định --judge-style về geval, verdict còn là tùy chọn; cập nhật README, aidlc-state. Phần chi phí trên mỗi ca hoàn tất không phụ thuộc kiểu judge nên giữ."
 **Context**: scripts/ai-grading-eval. Chưa commit.
 
@@ -13803,7 +13758,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Hoàn lại phần judge verdict, giữ chi phí
 **Timestamp**: 2026-11-23T08:31:36Z
 **Requested by:** Quang Hung
-**User Input**: "revert changes" — "vabh recommend đi"
+**User Input**: "revert changes" — "vậy bạn recommend đi"
 **AI Response**: "Khuyến nghị và thực hiện: gỡ phần judge correct/incorrect/unknown (khôi phục evaluation.py, runner.py; bỏ --judge-style và trạng thái QUALITY_UNKNOWN khỏi dataset.py, evaluate.py, reports.py, README, test), giữ summary.cost cùng --score-tolerance, --input-price, --output-price. Đã lưu patch đầy đủ trước khi gỡ ở scratchpad (ai-eval-verdict-and-cost.patch) để áp lại khi có nhãn giảng viên."
 **Context**: scripts/ai-grading-eval. Chưa commit.
 
@@ -13812,7 +13767,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Cập nhật báo cáo kiểm thử AI chấm điểm với token và thời gian
 **Timestamp**: 2026-11-23T08:33:34Z
 **Requested by:** Quang Hung
-**User Input**: "cái test report có thể cập nhật đc luôn k"
+**User Input**: "cái test report có thể cập nhật được luôn không"
 **AI Response**: "Hiểu 'test report' là construction/build-and-test/ai-grading-test-report.md. Thêm vào mục 3 ba dòng và một đoạn giải thích: 416.997 token cho 20 ca lượt 3 (vào 361.876, ra 55.121), 27.800 token mỗi ca hoàn tất (15/20 khớp mốc nhóm), thời gian trung vị 56 giây (34 đến 68). Số liệu tính từ 20 provider-result.json trong thư mục bằng chứng đã commit; không quy ra tiền; lượt 1, 2 chưa tính vì bản ghi nằm ngoài repo."
 **Context**: Tài liệu, không đổi code. Chưa commit.
 
@@ -13821,7 +13776,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Báo cáo kiểm thử AI chấm điểm: độ lệch điểm, theo đề, nguyên nhân ca lệch
 **Timestamp**: 2026-11-23T08:41:33Z
 **Requested by:** Quang Hung
-**User Input**: "đây là chỉ là chấm độ chính xác của ai thôi tôi nghĩ làm cái 1 trước"
+**User Input**: "đây chỉ là chấm độ chính xác của AI thôi, tôi nghĩ làm cái 1 trước"
 **AI Response**: "Thêm vào ai-grading-test-report.md: bảng độ lệch điểm theo lượt (MAE 0,148, 0,065, 0,165; sai lớn nhất 2,00, 0,50, 1,50; chiều lệch), kết quả lượt 3 theo từng đề, giải thích hai ca lệch còn lại (06-prompt-injection, 08-wrong-actors) từ điểm từng mục và lý do của Luna, nhóm nguyên nhân của năm ca lệch, mô tả mã băm prompt và schema. Nêu rõ lượt 3 lệch điểm lớn hơn lượt 2 và mỗi ca chỉ chấm một lần."
 **Context**: Tài liệu, không đổi code. Số liệu tính từ phụ lục và bằng chứng đã commit. Chưa commit.
 
@@ -13830,7 +13785,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Báo cáo kiểm thử AI chấm điểm: phần A (kết luận, giới hạn, độ chính xác theo mục, cờ, môi trường, token ba lượt)
 **Timestamp**: 2026-11-23T08:48:21Z
 **Requested by:** Quang Hung
-**User Input**: "giúp tôi làm phần a trước"
+**User Input**: "giúp tôi làm phần A trước"
 **AI Response**: "Thêm vào ai-grading-test-report.md: độ chính xác theo mục (225/234 khớp, 9 mục lệch đều thấp hơn mốc), hiệu quả cờ cần xem lại (14 cờ, bắt 2/9 mục lệch, ba ca lệch không có cờ), token và thời gian ba lượt (lượt 1 và 2 tính từ bản ghi .tmp cục bộ, đã xác minh tổng điểm thô khớp bảng phụ lục 20/20 mỗi lượt), khối môi trường kiểm thử từ judge-result.json, backend-tests.log và requirements.lock, mục 5 giới hạn, mục 6 kết luận và khuyến nghị (bản nháp chờ nhóm xác nhận)."
 **Context**: Tài liệu, không đổi code, không chạy lại model hay judge. Chưa commit.
 
@@ -13839,7 +13794,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## U09 — Sửa nhận định lượt 3 so với lượt 2 trong báo cáo kiểm thử
 **Timestamp**: 2026-11-23T08:54:28Z
 **Requested by:** Quang Hung
-**User Input**: "Ủa sao tôi thấy so sánh mục 2-3 thấy điểm lệch của cái 9.5 -7 còn lệch nhiều hơn lần cũ"
+**User Input**: "Ủa sao tôi thấy so sánh mục 2-3 thấy điểm lệch của cái 9.5 - 7 còn lệch nhiều hơn lần cũ"
 **AI Response**: "Xác nhận ca swd-workshop-missing-fk lệch 0,00 ở lượt 2 và 1,50 ở lượt 3 (swd-workshop-complete 0,00 và 0,75). Báo cáo trước đó viết lượt 3 cải thiện phản hồi theo hai judge, đúng so với lượt 1 nhưng không đúng so với lượt 2 (Sol 18/20 ở cả hai, Opus lượt 2 chỉ có 3 ca). Đã sửa mục 4, kết luận 4 và khuyến nghị, thêm bảng ca đổi điểm giữa lượt 2 và lượt 3 và ghi rằng các lần thử nhỏ trước lượt 3 không chạy đề workshop."
 **Context**: Tài liệu, không đổi code, không chạy lại model. Chưa commit.
 
@@ -13884,7 +13839,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Gom báo cáo kiểm thử theo ngày trong build-and-test
 **Timestamp**: 2026-11-23T09:53:51Z
 **Requested by:** Quang Hung
-**User Input**: "nhóm lại các thư mục ngày tháng này trong build and test folder lại cho gọn" (kèm ảnh cây thư mục)
+**User Input**: "nhóm lại các thư mục ngày tháng này trong build-and-test folder lại cho gọn" (kèm ảnh cây thư mục)
 **AI Response**: "Chuyển 123 mục có tiền tố ngày trong aidlc-docs/construction/build-and-test vào 24 thư mục YYYY-MM-DD/, giữ nguyên tên tệp. Giữ 2026-11-08-integration-test-cases.json ở gốc vì scripts/assert-required-backend-tests.ps1 (CI) đọc theo đường dẫn. Dùng script tính đường dẫn mới cho mọi liên kết tương đối (resolve theo vị trí cũ, map, relativize theo vị trí mới) và sửa 183 tệp (558 liên kết, 52 đường dẫn dạng chữ). Không sửa audit.md và history/ vì là bản ghi lịch sử; các đường dẫn cũ trong audit.md trỏ tới cấu trúc trước ngày 2026-11-23 (tên tệp có tiền tố ngày nay nằm trong thư mục cùng ngày). Kiểm tra: 224 tệp tracked không mất tệp nào, 0 liên kết hỏng trỏ vào build-and-test, tổng liên kết hỏng sẵn có không đổi."
 **Context**: Chỉ di chuyển và sửa liên kết, không đổi nội dung báo cáo hay code. Chưa commit.
 
@@ -13893,7 +13848,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Commit và PR bản sửa KAN-215, KAN-216; phân loại case Failed của Report-5.2
 **Timestamp**: 2026-11-23T09:42:50Z
 **Requested by:** Hải Nam
-**User Input**: "commit cả 2 bản fix u14 và u06 sau đó tạo pr vào staging. Cho biết các case failed cần phải sửa những gì"
+**User Input**: "commit cả 2 bản fix U14 và U06, sau đó tạo PR vào staging. Cho biết các case failed cần phải sửa những gì"
 **AI Response**: "Commit 521f50a7 fix(notifications) KAN-215 và c819eb27 docs(aidlc) audit Report-5.2 trên fix/u14-realtime-notification-sse; commit cd94e3d3 fix(ai) KAN-216 trên fix/u06-connection-test-usage; rebase cả hai lên origin/staging (cf8b0370), audit.md gộp phần thêm của hai bên. mvn test: notifications + groupdocs 22 bộ / 203 ca đạt; ai 26 bộ / 261 ca đạt; 0 lỗi. Push và mở PR #122 (U14) và PR #123 (U06) vào staging. Phân loại 7 case Failed: U14-M03, U06-M04 là lỗi sản phẩm đã có PR; U02-M02, U15-M02 (giao diện chuyển role sai về trang chủ thay vì trang từ chối, BR-U01-48 so với BR-U15-01), U05-M01 (frontend mở lớp ngay sau khi tạo, trái BR-U05-10/14), U08-M01 (danh sách chấm không hiện giờ nộp, BR-U09-11 không yêu cầu), U09-M02 (không xem được lượt nộp cũ trong Grading Workspace, BR-U09-12 không yêu cầu) cần nhóm chọn sửa sản phẩm hay sửa test case/BR."
 **Context**: Report-5.2 sau Round 1; PR chờ CI và review.
 
@@ -13911,7 +13866,7 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Construction — Report-5.2: evidence chỉ giữ screenshot
 **Timestamp**: 2026-11-23T10:31:40Z
 **Requested by:** Hải Nam
-**User Input**: "trong evidence tôi muốn bỏ phần extracts, chỉ giữ lại screen shot có được không"
+**User Input**: "trong evidence tôi muốn bỏ phần extracts, chỉ giữ lại screenshot có được không"
 **AI Response**: "Bỏ mục Extracts khỏi Report-5.2_Evidence.pdf và README.md của từng case (render lại 50 README từ result.json); giữ bước, bảng check và screenshot. Bản trích DB/log/HTTP/email đầy đủ vẫn nằm trong detail\ của từng case (lưu trữ cục bộ) và result.json. ev.mjs ghi README không có Extracts cho các lần chạy sau."
 **Context**: Report-5.2 evidence format.
 
@@ -13944,11 +13899,11 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 
 ---
 
-## Construction — PR tài liệu Report-5.2 Round 2 và BR U05
-**Timestamp**: 2026-11-23T10:37:49Z
-**Requested by:** Hải Nam
-**User Input**: "Yes, separate PR"
-**AI Response**: "Tách thay đổi tài liệu U05 (BR-U05-10, BR-U05-14, business-logic-model, domain-entities, frontend-components) và các mục audit từ 23/11 sau PR #122 sang nhánh docs/report-5.2-round2-u05-br tạo từ origin/staging (d5d0e8cb); mở PR riêng vào staging. Bỏ các thay đổi đó khỏi thư mục làm việc của nhánh fix/u14-realtime-notification-sse để PR #122 chỉ còn bản sửa KAN-215."
-**Context**: PR tài liệu riêng; không đổi code.
+## Audit — Lọc và chuẩn hoá các mục audit mới từ staging
+**Timestamp**: 2026-11-23T17:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Có, làm luôn" (đồng ý lọc và sửa chính tả các mục audit mới trên staging)
+**AI Response**: "Merge origin/staging vào docs/audit-prune (không xung đột). Trong 48 mục audit mới: bỏ 6 mục duyệt/thao tác Git/chỉ hỏi ('ok, tiếp tục', 'Signed in', 'Not yet', 'Done, run it', 'Yes, separate PR', 'test mailbox điền cái gì?'); sửa chính tả, viết tắt và thuật ngữ trong 20 dòng prompt. Không đổi AI Response, Context hay trường khác."
+**Context**: Tiếp nối PR #125; cùng ngoại lệ có chủ ý với quy tắc audit đầy đủ và nguyên văn.
 
 ---
