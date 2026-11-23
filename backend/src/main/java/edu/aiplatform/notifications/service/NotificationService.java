@@ -9,7 +9,6 @@ import java.time.*;
 import java.util.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.*;
 
 @Service
 @Transactional(timeout = 15)
@@ -76,19 +75,7 @@ public class NotificationService {
                 changed.add(recipient);
             }
         }
-        if (!changed.isEmpty())
-            runAfterCommit(
-                    () ->
-                            changed.forEach(
-                                    id -> {
-                                        try {
-                                            sseHub.publish(
-                                                    buildChannel(id),
-                                                    Map.of("type", "notification-changed"));
-                                        } catch (RuntimeException ignored) {
-                                            /* REST fallback; committed state stays authoritative. */
-                                        }
-                                    }));
+        changed.forEach(this::notifyChanged);
     }
 
     @Transactional(readOnly = true, timeout = 5)
@@ -147,25 +134,13 @@ public class NotificationService {
         return "notifications:account:" + id;
     }
 
+    // ISseHub.publish already waits for the commit. Deferring here too would register the hub's
+    // callback during afterCommit, where Spring never runs it, so the bell would not update (BR-U14-12).
     private void notifyChanged(UUID owner) {
-        runAfterCommit(
-                () -> {
-                    try {
-                        sseHub.publish(buildChannel(owner), Map.of("type", "notification-changed"));
-                    } catch (RuntimeException ignored) {
-                        /* Refresh fallback. */
-                    }
-                });
-    }
-
-    private void runAfterCommit(Runnable work) {
-        if (TransactionSynchronizationManager.isSynchronizationActive())
-            TransactionSynchronizationManager.registerSynchronization(
-                    new TransactionSynchronization() {
-                        public void afterCommit() {
-                            work.run();
-                        }
-                    });
-        else work.run();
+        try {
+            sseHub.publish(buildChannel(owner), Map.of("type", "notification-changed"));
+        } catch (RuntimeException ignored) {
+            /* REST/refresh fallback; committed state stays authoritative. */
+        }
     }
 }
