@@ -49,7 +49,7 @@ stateDiagram-v2
     ARCHIVED --> OPEN: Mở lại
 ```
 
-**Text alternative**: Lớp tạo ra ở `DRAFT`. Mở lớp cần môn `ACTIVE`; teacher có thể chưa gán. `DRAFT` hoặc `OPEN` đều lưu trữ được; lớp `ARCHIVED` mở lại về `OPEN` và bị từ chối nếu có sinh viên đang học lớp chưa lưu trữ khác cùng môn.
+**Text alternative**: Lớp tạo ra ở `DRAFT`; Class List mở lớp ngay sau khi tạo nên trên giao diện lớp mới ở `OPEN` (BR-U05-10, BR-U05-14). Mở lớp cần môn `ACTIVE`; teacher có thể chưa gán. `DRAFT` hoặc `OPEN` đều lưu trữ được; lớp `ARCHIVED` mở lại về `OPEN` và bị từ chối nếu có sinh viên đang học lớp chưa lưu trữ khác cùng môn.
 
 ### 2.1 Học kỳ — `ClassTermPolicy` (D-U04-05)
 
