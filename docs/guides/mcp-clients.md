@@ -167,7 +167,7 @@ Nền tảng không biết agent dùng bao nhiêu token của mô hình. Lịch 
 
 ## Ứng dụng đã kiểm chứng
 
-Codex CLI đã gọi đọc thành công bằng token Teacher ở kiểm tra readiness trước đợt mở rộng. Tool mới cần backend chạy migration mới và được khởi động lại từ mã hiện tại; test tự động không thay thế nghiệm thu tài khoản thật. Xem [báo cáo mở rộng MCP](../../aidlc-docs/construction/build-and-test/2026-10-26-mcp-staff-expansion-results.md).
+Codex CLI đã gọi đọc thành công bằng token Teacher ở kiểm tra readiness trước đợt mở rộng. Tool mới cần backend chạy migration mới và được khởi động lại từ mã hiện tại; test tự động không thay thế nghiệm thu tài khoản thật. Xem [báo cáo mở rộng MCP](../../aidlc-docs/construction/build-and-test/2026-10-26/2026-10-26-mcp-staff-expansion-results.md).
 
 ## Student: API và MCP cùng nghiệp vụ
 

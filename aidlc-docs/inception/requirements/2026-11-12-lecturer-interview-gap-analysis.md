@@ -15,7 +15,7 @@
 |---|---|---|---|
 | D2 Thang mức đóng góp | ❌ | ✅ Có 5 mức tùy chọn, giảng viên tự quyết điểm, không tự quy đổi | [2026-11-13-member-contribution-levels.md](2026-11-13-member-contribution-levels.md) |
 | F2 Mỗi kỳ một file | 🟡 | 🟡 Lớp đã có học kỳ tự tính từ ngày bắt đầu để lọc (D-U04-05). Sổ điểm vẫn mỗi bài một cột, chưa gom theo đầu điểm | [2026-11-14-class-term.md](2026-11-14-class-term.md) |
-| J4 Đánh giá AI chấm | ❌ | 🟡 Đã có bộ đánh giá (`backend/src/test/.../grading/eval`) và lần chạy Gemini. Điểm kỳ vọng do nhóm tự soạn, **chưa** được giảng viên xác nhận | [kết quả 2026-11-13](../../construction/build-and-test/2026-11-13-ai-grading-eval-gemini-results.md) |
+| J4 Đánh giá AI chấm | ❌ | 🟡 Đã có bộ đánh giá (`backend/src/test/.../grading/eval`) và lần chạy Gemini. Điểm kỳ vọng do nhóm tự soạn, **chưa** được giảng viên xác nhận | [kết quả 2026-11-13](../../construction/build-and-test/2026-11-13/2026-11-13-ai-grading-eval-gemini-results.md) |
 | C6/H Ký pháp sơ đồ | 🟡 | 🟡 Đã sửa lỗi xóa nhãn `<<include>>`/`<<extend>>` trước khi gửi AI (`DiagramXml` giữ stereotype). Chưa có rubric mẫu | `DiagramXml.java:293-302` |
 | M1/M2 + P2-5 Quiz GRADED | ⚠️ | **Rút khỏi ưu tiên, giữ D01**: Syllabus cho thấy progress test chính thức chạy trên LMS hoặc tại lớp | [2026-11-20-lecturer-feedback-syllabus.md](2026-11-20-lecturer-feedback-syllabus.md) mục 3 |
 | D3 Vấn đáp, present | ❌ | ❌ Syllabus xác nhận nhu cầu: oral test ở SWR302, present cá nhân 60% ở SWD392 | như trên, mục 2 |

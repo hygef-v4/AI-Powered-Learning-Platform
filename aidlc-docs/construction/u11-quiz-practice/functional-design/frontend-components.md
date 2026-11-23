@@ -74,7 +74,7 @@ Route `/quiz-practice/*` và `/quiz-attempts/*` chỉ cho Student (dùng `RoleGu
 
 ## Mô tả quiz có định dạng — 2026-11-09
 
-PracticeQuizDetail nhận thêm instructionsDocument tùy chọn từ U10; QuizPracticeDetailPage dùng shared FormattedTextView, fallback instructions plain text cho dữ liệu cũ. Giữ danh sách/bullet, căn lề và định dạng chữ; không render HTML tùy ý. Không đổi luồng bắt đầu/nộp/chấm hoặc chính sách đáp án. [Kiểm chứng liên quan](../../build-and-test/2026-11-09-material-quiz-ui-results.md).
+PracticeQuizDetail nhận thêm instructionsDocument tùy chọn từ U10; QuizPracticeDetailPage dùng shared FormattedTextView, fallback instructions plain text cho dữ liệu cũ. Giữ danh sách/bullet, căn lề và định dạng chữ; không render HTML tùy ý. Không đổi luồng bắt đầu/nộp/chấm hoặc chính sách đáp án. [Kiểm chứng liên quan](../../build-and-test/2026-11-09/2026-11-09-material-quiz-ui-results.md).
 
 ## Mã số sinh viên (MSSV) — 2026-11-13
 

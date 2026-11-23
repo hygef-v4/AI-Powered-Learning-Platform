@@ -4,7 +4,7 @@
 **Trạng thái:** người dùng duyệt 2026-11-20 làm giai đoạn 1–3 trước (không cần key). Giai đoạn 1–3 đã xong; giai đoạn 0, 4, 5 chưa làm.
 **Unit:** U09 Assignment Grading (chính); U07 (`DiagramXml`, `DocumentModelService`); U08 (phản hồi Practice); `agent-skills/grade-with-rubric`.
 **Nguồn:**
-- [Kết quả đánh giá AI chấm 2026-11-13/15](../../build-and-test/2026-11-13-ai-grading-eval-gemini-results.md) và [hướng dẫn đánh giá](../../build-and-test/ai-grading-evaluation-instructions.md).
+- [Kết quả đánh giá AI chấm 2026-11-13/15](../../build-and-test/2026-11-13/2026-11-13-ai-grading-eval-gemini-results.md) và [hướng dẫn đánh giá](../../build-and-test/ai-grading-evaluation-instructions.md).
 - [Góp ý giảng viên và Syllabus 2026-11-20](../../../inception/requirements/2026-11-20-lecturer-feedback-syllabus.md) và [phân tích loại sơ đồ](../../../inception/requirements/2026-11-20-diagram-types.md).
 - Đọc code tĩnh trên `audit-staging` sau commit `7d51a16f`.
 
@@ -94,7 +94,7 @@ AI đề xuất điểm sát giảng viên hơn, nêu được bằng chứng �
 - [ ] 4.1 Đưa chỉ dẫn 2.1–2.4 vào prompt phản hồi Practice (`PracticeFeedbackService`), giữ giới hạn hiện có (không lộ rubric hay điểm chính thức cho sinh viên).
 - [ ] 4.2 Cập nhật `agent-skills/grade-with-rubric/SKILL.md`: cách đọc tóm tắt sơ đồ, xác định loại sơ đồ theo đề, nêu bằng chứng theo block, báo cần xem.
 - [ ] 4.3 Chạy lại 3 bộ × 3 lần với Gemini, so với mốc 0.4.
-  - *Đã chạy một phần (2026-11-20):* chỉ bộ badminton-booking, `gemini-3.5-flash-lite`, bản cũ `7d51a16f` và bản mới cùng ngày. Không cải thiện; bài 08 tụt (G1). [Kết quả](../../build-and-test/2026-11-20-ai-grading-accuracy-results.md).
+  - *Đã chạy một phần (2026-11-20):* chỉ bộ badminton-booking, `gemini-3.5-flash-lite`, bản cũ `7d51a16f` và bản mới cùng ngày. Không cải thiện; bài 08 tụt (G1). [Kết quả](../../build-and-test/2026-11-20/2026-11-20-ai-grading-accuracy-results.md).
 - [ ] 4.4 Chạy thêm một provider khác (Claude hoặc OpenAI) trên cùng bộ để so sánh.
 - [ ] 4.5 Ghi kết quả vào `construction/build-and-test/2026-11-xx-ai-grading-accuracy-results.md`, cập nhật hướng dẫn đánh giá và mục J4 trong gap analysis.
 

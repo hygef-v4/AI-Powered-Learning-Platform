@@ -1,6 +1,6 @@
 # Kế hoạch rút gọn code U05/U09/U15, giữ nguyên hành vi
 
-**Trạng thái:** Đã triển khai và kiểm chứng ngày 2026-11-06. [Kết quả và giới hạn](../../build-and-test/2026-11-06-u05-u09-u15-simplification-results.md).
+**Trạng thái:** Đã triển khai và kiểm chứng ngày 2026-11-06. [Kết quả và giới hạn](../../build-and-test/2026-11-06/2026-11-06-u05-u09-u15-simplification-results.md).
 
 **Mục tiêu:** Giảm phần xử lý lặp và tầng gọi không cần thiết trong backend Java U05/U09/U15, giữ cách trình bày dễ đọc sau đợt format.
 
@@ -10,7 +10,7 @@
 
 **Công nghệ:** Java 17, Spring Boot, JUnit 5, Mockito, AssertJ; Maven và bộ kiểm tra kiến trúc hiện có.
 
-**Căn cứ:** Yêu cầu người dùng “giúp tôi lập kế hoạch tối ưu code”, trao đổi trước đó về code gọn và không đổi hành vi; [quy ước chung](../../code-conventions.md), [kết quả format](../../build-and-test/2026-11-06-u05-u09-u15-format-results.md), [kết quả merge trước đó](../../build-and-test/2026-11-06-merge-staging-u05-u09-u15.md). Tài liệu lịch sử là nguồn tham khảo; đối chiếu code hiện tại trước khi sửa.
+**Căn cứ:** Yêu cầu người dùng “giúp tôi lập kế hoạch tối ưu code”, trao đổi trước đó về code gọn và không đổi hành vi; [quy ước chung](../../code-conventions.md), [kết quả format](../../build-and-test/2026-11-06/2026-11-06-u05-u09-u15-format-results.md), [kết quả merge trước đó](../../build-and-test/2026-11-06/2026-11-06-merge-staging-u05-u09-u15.md). Tài liệu lịch sử là nguồn tham khảo; đối chiếu code hiện tại trước khi sửa.
 
 ## 1. Baseline và cách thực hiện
 

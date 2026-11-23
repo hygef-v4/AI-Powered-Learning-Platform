@@ -63,4 +63,4 @@ Chạy ngày 2026-11-15 trên máy làm việc (Windows, Docker 29.7.2), mã ngu
 | `npx eslint` các file frontend đã sửa | Không lỗi |
 | `npx vitest run` thư mục academics, announcements, assignments, assignmentwork, subjects, quizzes, shared (`--testTimeout=60000 --maxWorkers=4`) | 73 file, 540 test đạt |
 
-Ghi chú: chạy Vitest với timeout mặc định 5 giây và nhiều worker trên máy này thì một số test nặng (không liên quan học kỳ, ví dụ `authoringFlow`, `SubmissionHistoryPage`) quá giờ, mỗi lần một nhóm khác nhau; tăng timeout thì đều đạt. Kết quả kiểm trên trình duyệt và chạy e2e ở stack riêng: xem [kết quả Build and Test](../../build-and-test/2026-11-15-class-term-results.md).
+Ghi chú: chạy Vitest với timeout mặc định 5 giây và nhiều worker trên máy này thì một số test nặng (không liên quan học kỳ, ví dụ `authoringFlow`, `SubmissionHistoryPage`) quá giờ, mỗi lần một nhóm khác nhau; tăng timeout thì đều đạt. Kết quả kiểm trên trình duyệt và chạy e2e ở stack riêng: xem [kết quả Build and Test](../../build-and-test/2026-11-15/2026-11-15-class-term-results.md).

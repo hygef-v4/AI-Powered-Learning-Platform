@@ -25,7 +25,7 @@
 
 ## Phạm vi triển khai và khoảng cách hiện tại
 
-Quy định áp dụng toàn bộ backend. Đợt 2026-11-06 chuyển U05/U09; đợt học liệu 2026-11-09 chuyển thêm material/version adapter của U13; đợt 2026-11-18 chuyển U04, module U13 và U14 ([kế hoạch](plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md), [kết quả](build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md)). Sau đợt này code production không còn entity hay repository JPA; hạ tầng JPA chung vẫn giữ (xem dưới).
+Quy định áp dụng toàn bộ backend. Đợt 2026-11-06 chuyển U05/U09; đợt học liệu 2026-11-09 chuyển thêm material/version adapter của U13; đợt 2026-11-18 chuyển U04, module U13 và U14 ([kế hoạch](plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md), [kết quả](build-and-test/2026-11-18/2026-11-18-u04-u13-u14-jdbc-results.md)). Sau đợt này code production không còn entity hay repository JPA; hạ tầng JPA chung vẫn giữ (xem dưới).
 
 | Unit | Hiện trạng và cập nhật đợt U05/U09 | Việc còn lại |
 |---|---|---|

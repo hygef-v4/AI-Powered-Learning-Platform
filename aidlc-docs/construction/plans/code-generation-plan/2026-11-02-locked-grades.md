@@ -12,4 +12,4 @@ Scope: U09 grade locking and resubmission; U12 existing submit contract unchange
 
 Existing authorization, optimistic versions, identity/row locks and transaction/fail-closed boundaries remain. Security/resiliency scope retained; PBT disabled.
 
-[Results](../../build-and-test/2026-11-02-locked-grades-results.md).
+[Results](../../build-and-test/2026-11-02/2026-11-02-locked-grades-results.md).

@@ -11,4 +11,4 @@ Thiết kế: một thẻ Tổng quan bài tập đủ chiều rộng, cùng ki�
 
 Security/Resiliency giữ phạm vi đã duyệt; PBT disabled. Chỉ frontend và tài liệu, không backend/migration hay ghi bài nộp.
 
-[Kết quả kiểm tra](../../build-and-test/2026-11-11-student-class-overview.md): full frontend972/972,138 tệp; kiểm cuối7/7 và lint/typecheck/build qua. UI local sáng/tối, desktop/mobile và link thống kê đã đối chiếu; chưa test VPS/điện thoại thật.
+[Kết quả kiểm tra](../../build-and-test/2026-11-11/2026-11-11-student-class-overview.md): full frontend972/972,138 tệp; kiểm cuối7/7 và lint/typecheck/build qua. UI local sáng/tối, desktop/mobile và link thống kê đã đối chiếu; chưa test VPS/điện thoại thật.

@@ -81,7 +81,7 @@ Files:
 - [x] Before Maven clean/build/tests, stop the owned backend or otherwise isolate build output so the running JVM cannot lose its class files. Check whether Java IDE autobuild also writes backend/target/classes. Do not kill unrelated Java processes or silently change global IDE settings.
 - [ ] Run one live AI proposal against a dedicated submission using the existing personal Gemini connection. Record task READY time, delivery time, proposal READY time and UI transition. Do not apply/finalize/publish scores.
 - [x] Run `git diff --check` and inspect final diff for secrets or unrelated changes.
-- [x] Write `aidlc-docs/construction/build-and-test/2026-10-26-u09-ai-result-delivery-report.md`: proven cause vs unknowns, files changed, exact checks/counts, observed timings, UI evidence or explicit pending status, risks and manual test results.
+- [x] Write `aidlc-docs/construction/build-and-test/2026-10-26/2026-10-26-u09-ai-result-delivery-report.md`: proven cause vs unknowns, files changed, exact checks/counts, observed timings, UI evidence or explicit pending status, risks and manual test results.
 - [x] Update this plan, aidlc-state.md and append audit.md. Finish with a concise Vietnamese report. Stop; do not commit or push.
 
 ## User manual test guide (record Pass / Fail / Pending)

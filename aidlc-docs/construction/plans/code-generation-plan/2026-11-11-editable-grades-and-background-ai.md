@@ -156,7 +156,7 @@
 **Files:**
 - Update spec: `aidlc-docs/construction/u09-assignment-grading/functional-design/business-rules.md`, `business-logic-model.md`, `domain-entities.md`.
 - Update: mô tả workflow MCP liên quan GRADE_WITH_RUBRIC nếu còn chỉ dẫn chốt điểm; `aidlc-docs/aidlc-state.md`, `aidlc-docs/audit.md`.
-- Create evidence only after implementation: `aidlc-docs/construction/build-and-test/2026-11-11-editable-grades-and-background-ai.md`.
+- Create evidence only after implementation: `aidlc-docs/construction/build-and-test/2026-11-11/2026-11-11-editable-grades-and-background-ai.md`.
 
 - [x] Chạy các test mới RED trước, GREEN sau từng task; kiểm tra caller còn FINALIZED/finalize/hasOfficialGrade trước khi kết luận đã bỏ khóa. Không xóa các dấu trạng thái phục vụ dữ liệu cũ hoặc superseded.
 - [x] Chạy `npm test -- tests/features/grading tests/features/assignmentwork --maxWorkers=1`, typecheck và lint scope thay đổi; thêm layout/identity tests nếu sửa layout/auth lifecycle.
@@ -175,7 +175,7 @@
 
 ## Giới hạn và trạng thái
 
-Đã triển khai đủ sáu task theo phê duyệt, gồm Apply thủ công/thông báo. Backend verify và frontend test/build đều qua; xem [bằng chứng xác minh](../../build-and-test/2026-11-11-editable-grades-and-background-ai.md). Không thay đổi điểm thật, gọi AI trả phí hoặc commit/push/deploy. Kiểm duyệt tự động chặn dừng/khởi động lại backend local với lý do “blocked by policy”; không tiến trình nào bị dừng bởi lệnh bị chặn. Cần restart backend thủ công để nạp mã mới; chưa nghiệm thu browser trên backend vừa cập nhật. Test UI dùng fixture và workflow tích hợp dùng PostgreSQL thực. Không thêm realtime/hủy task hoặc thay chính sách giữ điểm nhóm official khi nộp lại.
+Đã triển khai đủ sáu task theo phê duyệt, gồm Apply thủ công/thông báo. Backend verify và frontend test/build đều qua; xem [bằng chứng xác minh](../../build-and-test/2026-11-11/2026-11-11-editable-grades-and-background-ai.md). Không thay đổi điểm thật, gọi AI trả phí hoặc commit/push/deploy. Kiểm duyệt tự động chặn dừng/khởi động lại backend local với lý do “blocked by policy”; không tiến trình nào bị dừng bởi lệnh bị chặn. Cần restart backend thủ công để nạp mã mới; chưa nghiệm thu browser trên backend vừa cập nhật. Test UI dùng fixture và workflow tích hợp dùng PostgreSQL thực. Không thêm realtime/hủy task hoặc thay chính sách giữ điểm nhóm official khi nộp lại.
 
 ## Implementation ledger — 2026-11-11
 

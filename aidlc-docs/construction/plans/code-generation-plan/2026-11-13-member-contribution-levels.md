@@ -58,6 +58,6 @@ thêm dependency, migration hoặc công thức điểm.
 
 - [x] Chạy test grading backend/frontend liên quan; ESLint và TypeScript.
 - [x] Review diff/callers/persistence/security và ghi kết quả thực chạy vào
-  construction/build-and-test/2026-11-13-member-contribution-levels.md.
+  construction/build-and-test/2026-11-13/2026-11-13-member-contribution-levels.md.
 - [x] Cập nhật hướng dẫn U09 và state/audit. Người dùng tự test UI; không restart,
   thao tác điểm thật, commit, push hoặc deploy trong yêu cầu này.

@@ -115,8 +115,8 @@ Form AI không bắt buộc Yêu cầu khi đã chọn tài liệu nguồn; đ�
 
 AI đánh giá requestMatchesSources trong cùng response sinh câu. Nếu đánh giá không liên quan và có tài liệu, hiển thị cảnh báo vàng cố định trước các câu hỏi; yêu cầu sinh câu ưu tiên nội dung nguồn. Cảnh báo là đánh giá của AI, được lưu cùng sourceWarnings và không thay thế việc kiểm tra của người soạn.
 
-Chấp nhận tất cả lưu một lần toàn bộ câu chưa Bỏ, gồm nội dung đã sửa; nếu có câu lỗi thì mở câu đó để sửa và chưa gọi API. Giữ chấp nhận từng câu; khóa thao tác đề xuất khi lưu, giữ version/error checks phía server. [Kết quả và giới hạn](../../build-and-test/2026-11-09-ai-quiz-review-followup.md).
+Chấp nhận tất cả lưu một lần toàn bộ câu chưa Bỏ, gồm nội dung đã sửa; nếu có câu lỗi thì mở câu đó để sửa và chưa gọi API. Giữ chấp nhận từng câu; khóa thao tác đề xuất khi lưu, giữ version/error checks phía server. [Kết quả và giới hạn](../../build-and-test/2026-11-09/2026-11-09-ai-quiz-review-followup.md).
 
 ## Cảnh báo và tạo lại theo nguồn — 2026-11-10
 
-Kết quả AI báo lệch tài liệu không còn hiện thành câu chờ chấp nhận như delta trước: backend giữ proposal rỗng/PENDING trong lượt tạo lại theo nguồn, vẫn hiện cảnh báo vàng và trạng thái task mới. Tạo lại thất bại hoặc tiếp tục báo lệch thì FAILED, không có thao tác nhận câu. Đề xuất cũ đã READY giữ nguyên lịch sử; người soạn cần bỏ và tạo yêu cầu mới. Không thêm API/UI option. [Kết quả](../../build-and-test/2026-11-10-ai-source-grounding-fix.md).
+Kết quả AI báo lệch tài liệu không còn hiện thành câu chờ chấp nhận như delta trước: backend giữ proposal rỗng/PENDING trong lượt tạo lại theo nguồn, vẫn hiện cảnh báo vàng và trạng thái task mới. Tạo lại thất bại hoặc tiếp tục báo lệch thì FAILED, không có thao tác nhận câu. Đề xuất cũ đã READY giữ nguyên lịch sử; người soạn cần bỏ và tạo yêu cầu mới. Không thêm API/UI option. [Kết quả](../../build-and-test/2026-11-10/2026-11-10-ai-source-grounding-fix.md).
