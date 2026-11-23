@@ -150,9 +150,42 @@ class AiConnectionServiceTest {
         assertThat(request.getValue().maxOutputTokens()).isEqualTo(1024);
         assertThat(request.getValue().user()).isEqualTo(ConnectionTestService.USER);
         assertThat(request.getValue().apiKey()).isEqualTo("AIzaSy-old-key-0000");
+        assertConnectionTestAudited();
+        verify(usageRepository, never()).insert(any());
+    }
+
+    @Test
+    void draftCheckWithRejectedKeyRecordsNoUsage() {
+        when(gateway.call(eq(AiProvider.GEMINI), any())).thenThrow(new ProviderException(
+                IProviderGateway.FailureKind.REJECTED, 400, "Key API không hợp lệ hoặc không có quyền (HTTP 400)", null));
+
+        var result = service.testPersonalDraft(teacher, AiProvider.GEMINI, null,
+                new SaveCommand("AIzaSy-QA-invalid-key-0000", "gemini-2.5-flash", null));
+
+        assertThat(result.ok()).isFalse();
+        assertConnectionTestAudited();
+        verify(usageRepository, never()).insert(any());
+    }
+
+    @Test
+    void draftCheckRecordsProviderMeasuredUsage() {
+        when(gateway.call(eq(AiProvider.GEMINI), any()))
+                .thenReturn(new Response("OK", "r", new IProviderGateway.Usage(9L, 2L, null, null)));
+
+        assertThat(service.testPersonalDraft(teacher, AiProvider.GEMINI, null,
+                new SaveCommand("AIzaSy-new-key-9999", "gemini-2.5-flash", null)).ok()).isTrue();
+
         ArgumentCaptor<AiUsageRecord> usage = ArgumentCaptor.forClass(AiUsageRecord.class);
         verify(usageRepository).insert(usage.capture());
-        assertThat(usage.getValue().inputTokens()).as("không biết thì để rỗng, không ghi 0").isNull();
+        assertThat(usage.getValue().taskType()).isEqualTo("CONNECTION_TEST");
+        assertThat(usage.getValue().inputTokens()).isEqualTo(9L);
+        assertThat(usage.getValue().outputTokens()).isEqualTo(2L);
+    }
+
+    private void assertConnectionTestAudited() {
+        ArgumentCaptor<AuditEvent> events = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(audit, org.mockito.Mockito.atLeastOnce()).record(events.capture());
+        assertThat(events.getAllValues()).extracting(AuditEvent::action).contains("AI_CONNECTION_TESTED");
     }
 
     @Test
@@ -230,6 +263,7 @@ class AiConnectionServiceTest {
                 .containsExactly("AIzaSy-new-key-9999", "AIzaSy-old-key-0000");
         verify(repository, org.mockito.Mockito.never()).saveTest(any(), any(), any());
         verify(repository, org.mockito.Mockito.never()).insert(any());
+        verify(usageRepository, never()).insert(any());
         assertThatThrownBy(() -> service.testInstitutionalDraft(admin, AiProvider.GEMINI, null,
                 new SaveCommand(" ", "gemini-2.5-flash", null)))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_KEY_REQUIRED"));
