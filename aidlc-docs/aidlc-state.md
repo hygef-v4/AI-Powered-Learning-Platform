@@ -1,5 +1,31 @@
 # AI-DLC State Tracking
 
+## Gom báo cáo kiểm thử theo ngày trong build-and-test · 2026-11-23
+
+Người dùng: "nhóm lại các thư mục ngày tháng này trong build and test folder lại cho gọn". Chỉ đổi vị trí tài liệu, không đổi nội dung báo cáo.
+
+- [x] 123 mục có tiền tố ngày (tệp và thư mục bằng chứng) chuyển vào 24 thư mục `YYYY-MM-DD/` ngay dưới `construction/build-and-test/`. Gốc thư mục từ 144 mục còn 45: 24 thư mục ngày, tài liệu hiện hành (hướng dẫn build và test, `build-and-test-summary.md`, báo cáo xác minh theo unit, `ai-grading-test-report.md` cùng thư mục hình) và `2026-11-08-integration-test-cases.json`.
+- [x] `2026-11-08-integration-test-cases.json` giữ ở gốc vì `scripts/assert-required-backend-tests.ps1` (chạy trong CI) đọc tệp này theo đường dẫn.
+- [x] Sửa 183 tệp: 558 liên kết và 52 đường dẫn dạng chữ, gồm `aidlc-state.md`, `README.md`, các `as-built-baseline.md`, kế hoạch và các báo cáo bị chuyển (liên kết tương đối thêm một cấp). Kiểm tra: 224 tệp đang được git theo dõi đều còn nguyên, không liên kết nào trỏ vào `build-and-test` bị hỏng, tổng số liên kết hỏng sẵn có không đổi (110 trước và sau).
+- [x] Không sửa `audit.md` và `history/` vì là bản ghi lịch sử: các đường dẫn cũ trong đó trỏ tới vị trí trước ngày 2026-11-23. Quy tắc tìm tệp: tên tệp bắt đầu bằng ngày nằm trong thư mục cùng tên ngày.
+- [ ] Chưa commit. Các nhánh khác đang sửa tài liệu trong `build-and-test` có thể xung đột đường dẫn khi merge.
+
+## U09: Chi phí trên mỗi bài chấm hoàn tất cho eval chấm AI · 2026-11-23
+
+Người dùng chọn hai việc từ khóa Introduction to evals ("làm việc 1,2"), sau đó giữ nguyên judge GEval và yêu cầu hoàn lại phần verdict. Chỉ đổi `scripts/ai-grading-eval`, không đổi backend hay API.
+
+- [x] Báo cáo thêm `summary.cost`: token và chi phí trên mỗi ca hoàn tất (tổng lệch trong `--score-tolerance` so với tham chiếu), chia toàn bộ usage đã ghi cho số ca hoàn tất. Đọc usage từ bản ghi Java; `--input-price` và `--output-price` (USD mỗi triệu token) cho ra số tiền.
+- [x] Cập nhật [báo cáo kiểm thử AI chấm điểm](construction/build-and-test/ai-grading-test-report.md) lượt 3 với token và thời gian: 416.997 token cho 20 ca, 27.800 token mỗi ca hoàn tất (15/20), trung vị 56 giây mỗi lần chấm. Tính từ `provider-result.json`, chưa quy ra tiền.
+- [x] Báo cáo kiểm thử AI chấm điểm thêm độ lệch điểm theo lượt (sai số trung bình 0,148 → 0,065 → 0,165), kết quả theo từng đề, nguyên nhân hai ca lệch còn lại ở lượt 3 (`06-prompt-injection`, `08-wrong-actors`) và nhóm nguyên nhân của năm ca lệch. Tính từ các bảng phụ lục và bằng chứng đã commit.
+- [x] Báo cáo kiểm thử AI chấm điểm thêm phần A: độ chính xác theo mục (225/234, 96,2%), hiệu quả cờ xem lại (2/9 mục lệch), token và thời gian ba lượt (lượt 1, 2 lấy từ `.tmp` cục bộ), môi trường kiểm thử, mục 5 giới hạn và mục 6 kết luận (bản nháp chờ nhóm xác nhận).
+- [x] Sửa nhận định trong báo cáo kiểm thử AI chấm điểm: lượt 3 không cho thấy cải thiện so với lượt 2 (Sol vẫn 18/20, Opus chưa so sánh được, điểm lệch lớn hơn, hai ca workshop xấu đi); chỉ tốt hơn lượt 1. Thêm bảng ca đổi điểm giữa lượt 2 và lượt 3.
+- [x] Chạy lặp `swd-workshop-missing-fk` (Luna `medium`, 3 lần mỗi prompt lượt 2 và lượt 3, 124.866 token): cùng một prompt ra 7,00 đến 9,25, trung bình 8,38 (lượt 2) và 8,31 (lượt 3). Rút lại nhận định prompt lượt 3 làm ca này xấu đi; cập nhật mục 4, 5, 6 và lưu bằng chứng ở [thư mục chạy lặp](construction/build-and-test/2026-11-23/2026-11-23-u09-ai-grading-rerun-evidence/). Chưa chạy lặp `swd-workshop-complete`.
+- [x] Chạy lặp thêm ba ca (`03-one-normal-flow`, `05-off-topic`, `swd-workshop-complete`; Luna `medium`, 3 lần mỗi prompt lượt 2 và lượt 3, 374.382 token): lượt 3 đúng hơn ở hai ca nhắm tới (`05` 3/3 so với trigger sai 3/3; `03` 2/3 so với 0/3), hai prompt dao động như nhau ở `swd-workshop-complete` (mất 1,50 ở `s-authorization`). Sửa kết luận 4, khuyến nghị và giới hạn trong báo cáo kiểm thử; bằng chứng ở thư mục chạy lặp. 16 ca còn lại chưa chạy lặp.
+- [x] Báo cáo kiểm thử AI chấm điểm thêm 7 hình: sơ đồ quy trình (Mermaid, đã render kiểm tra bằng mermaid-cli) và 6 biểu đồ matplotlib (kết quả theo đề, mục rubric và cờ, ba lượt, độ lệch điểm, chạy lặp, token và thời gian). Số liệu giữ nguyên như bảng; script vẽ và ảnh nằm ở `construction/build-and-test/ai-grading-test-report-charts/`.
+- [x] Viết lại báo cáo kiểm thử AI chấm điểm cho gọn và dễ hiểu: thêm Tóm tắt và khung Thuật ngữ, gộp mục 1 và 2, gộp hai bảng ca lệch thành một, chuyển các bảng chi tiết xuống Phụ lục A, đưa khuyến nghị về mục 6, bỏ ghi chú sửa nội bộ và giọng ngôi thứ nhất. Số liệu không đổi; thân báo cáo còn khoảng một nửa độ dài.
+- [x] Judge `correct/incorrect/unknown` đã làm rồi gỡ theo quyết định giữ GEval. Phán quyết có thể làm lại sau khi có nhãn của giảng viên để so hai kiểu.
+- [x] Pytest của bộ eval 19/19 (18 cũ, thêm 1 cho chi phí). Chưa chạy lại trên lượt ghi thật. Chưa commit.
+
 ## U07/U03/U06: Tạo đề bằng AI nhận ảnh WebP · 2026-11-23
 
 Người dùng: "sửa phần tạo đề ai hỗ trợ up ảnh webp đi". Chỉ mở danh sách định dạng, không đổi API hay schema.
