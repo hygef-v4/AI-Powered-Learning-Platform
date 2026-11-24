@@ -14,6 +14,7 @@ type Props = {
   task: string;
   /** Token ước tính cho yêu cầu này, nếu unit gọi tính được. */
   estimatedTokens?: number;
+  requireConfirmation?: boolean;
   busy?: boolean;
   onCancel: () => void;
   onSubmit: (choice: SourceChoice) => void;
@@ -28,7 +29,7 @@ function buildKey(option: SourceOption) {
  * (FB-U06-01) và nguồn đó dùng được thì popup tự gửi bằng nguồn ấy, không bắt chọn lại; mặc định không dùng được
  * thì báo lý do để chọn nguồn khác cho lần này. Lỗi hay hết hạn mức không tự đổi nguồn (BR-U06-10, 11).
  */
-export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, onSubmit }: Props) {
+export function AiSourcePicker({ open, task, estimatedTokens, requireConfirmation, busy, onCancel, onSubmit }: Props) {
   const [options, setOptions] = useState<SourceOption[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -49,8 +50,10 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
         setError(null);
         const preferred = loaded.find((option) => option.preferred && option.available);
         setSelected(preferred ? buildKey(preferred) : null);
-        setAutoSent(!!preferred);
-        if (preferred) submitRef.current({ source: preferred.source, provider: preferred.provider });
+        setAutoSent(!!preferred && !requireConfirmation);
+        if (preferred && !requireConfirmation) {
+          submitRef.current({ source: preferred.source, provider: preferred.provider });
+        }
       },
       () => {
         if (active) setError(msg("shared.ai.AiSourcePicker.couldNotLoadTheAi"));
@@ -59,7 +62,7 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
     return () => {
       active = false;
     };
-  }, [open]);
+  }, [open, requireConfirmation]);
 
   const choice = options?.find((option) => buildKey(option) === selected && option.available);
   const preferred = options?.find((option) => option.preferred);
@@ -113,6 +116,9 @@ export function AiSourcePicker({ open, task, estimatedTokens, busy, onCancel, on
             />
           ))}
         </div>
+      )}
+      {options && requireConfirmation && estimatedTokens === undefined && (
+        <p className="text-xs text-muted">{msg("shared.ai.AiSourcePicker.estimateUnavailable")}</p>
       )}
       <p className="text-xs text-muted">
         {preferred ? msg("shared.ai.AiSourcePicker.changeDefaultSource") : msg("shared.ai.AiSourcePicker.dontWantToChooseEvery")} {msg("shared.ai.AiSourcePicker.in")}{" "}

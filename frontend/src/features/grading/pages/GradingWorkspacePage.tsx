@@ -591,7 +591,7 @@ function Workspace({
         }
       />
 
-      <div className={detail.activityState === "DISABLED" ? "hidden" : "mt-6"}>
+      <div className="mt-6">
         <ActivityReview detail={detail} />
       </div>
       {action && !disabled && (

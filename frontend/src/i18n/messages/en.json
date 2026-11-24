@@ -1148,6 +1148,7 @@
       },
       "AiDraftDialog": {
         "reviewTemplateDraft": "This draft uses a template. Check the questions and rubric before applying.",
+        "draftFailed": "Draft generation failed",
         "theAiReturnedNoResult": "The AI returned no result.",
         "youCanStillWriteIt": "{value} You can still write it manually.",
         "waitForUploadsToFinish": "Wait for uploads to finish or remove failed files before creating the assignment.",
@@ -1159,7 +1160,7 @@
         "editRequestAndRegenerate": "Edit request and regenerate",
         "applyProposal": "Apply proposal",
         "createAssignment": "Create assignment",
-        "describeTheAssignmentYouNeed": "Describe the assignment you need; the AI writes questions with a grading rubric and puts them straight on the page. Press Ctrl+Z to undo. All fields below are optional.",
+        "describeTheAssignmentYouNeed": "Describe the assignment you need. Review the questions and rubric before applying the proposal. All fields below are optional.",
         "template": "Template",
         "noTemplate": "No template",
         "subjectTemplates": "Subject templates",
@@ -2222,8 +2223,7 @@
       },
       "GradingReviewPanels": {
         "activityWhileWorking": "Activity while working",
-        "timesLeftThePage": " times left the page · ",
-        "gapsInTheData": " gaps in the data. ",
+        "gapsInTheData": "gaps in the data.",
         "leftThePageTimesGaps": " — left the page {awayCount} times, {unknownGaps} gaps in the data",
         "forReferenceOnlyThePlatform": "For reference only; the platform does not conclude cheating or change scores by itself."
       },
@@ -2529,7 +2529,7 @@
         "findMembers": "Find members",
         "noMatchingMembers": "No matching members.",
         "deselectMember": "Deselect member",
-        "assigningItToSomeoneElse": "Assigning it to someone else releases it from the previous holder.",
+        "assigningItToSomeoneElse": "Reassigning this section releases it from the previous holder and discards their unfinished draft.",
         "unclaimed": "Unclaimed",
         "cannotSubmitYetBecauseSome": "Cannot submit yet because some sections are not done.",
         "couldNotSubmitPleaseTry": "Could not submit, please try again later.",
@@ -4448,12 +4448,13 @@
         "modelConfiguredByAnAdministrator": "Model configured by an Administrator",
         "tokensLeftToday": " · {value} / {value2} tokens left today",
         "notLimitedByTheSchool": " · not limited by the school",
-        "aboutTokens": " · about {value} tokens"
+        "aboutTokens": " · estimated {value} tokens",
+        "estimateUnavailable": "Token estimate unavailable before sending."
       },
       "AiTaskStatus": {
-        "pending": "Pending",
+        "pending": "Queued",
         "running": "Running",
-        "error": "Error",
+        "error": "Failed",
         "unknownResult": "Unknown result",
         "cancelled": "Cancelled",
         "couldNotCancelTheTask": "Could not cancel; the task may have already started.",

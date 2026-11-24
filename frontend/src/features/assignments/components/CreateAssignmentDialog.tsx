@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { getPolicies, uploadFile } from "@/features/files/api";
 import { acceptAttribute, checkFile, type PurposePolicy } from "@/features/files/model/purposes";
+import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
 import { Alert, Button, Dialog, Field, Icon, IconButton, Select, Textarea, TextInput } from "@/shared/ui";
 import { AiProgress, ReferencePicker, type SourceUpload } from "./AiDraftDialog";
 import { SearchPicker } from "./SearchPicker";
@@ -57,8 +58,8 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * - Đề có sẵn: copy đề mẫu của môn hay bài ở lớp mình dạy; bài copy theo Loại đã chọn (chọn bài nguồn thì Loại nhảy theo
  *   bài đó, vẫn đổi được).
  * - Đề mới: Mẫu đề là tệp DOCX (nhập luôn vào khung), không copy.
- * - Tạo từ AI: Mẫu đề, Tài liệu tham khảo và Yêu cầu ngay trong popup này; bấm Tạo thì tạo bài, AI soạn rồi ghi đề
- *   lên trang. AI chỉ có ở bước tạo, không có trong trang soạn. AI lỗi thì giữ bài đã tạo để thử lại; đóng popup thì bỏ bài.
+ * - Tạo từ AI: Mẫu đề, Tài liệu tham khảo và Yêu cầu ngay trong popup này; xác nhận nguồn trước khi tạo.
+ *   AI lỗi thì giữ bài đã tạo để thử lại; đóng popup thì bỏ bài.
  * Bài của môn chỉ là đề mẫu, không giao cho lớp.
  */
 export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
@@ -76,6 +77,8 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   // Tạo từ AI: bài đã tạo mà AI chưa ghi được đề; thử lại dùng lại bài này.
   const [aiCreated, setAiCreated] = useState<AssignmentDetail | null>(null);
   const [aiRunning, setAiRunning] = useState(false);
+  const [pickingSource, setPickingSource] = useState(false);
+  const [aiTaskId, setAiTaskId] = useState<string | null>(null);
   const [aiTemplateId, setAiTemplateId] = useState("");
   const [aiTemplateFile, setAiTemplateFile] = useState<File | null>(null);
   const [preserveTemplatePoints, setPreserveTemplatePoints] = useState(false);
@@ -211,8 +214,8 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     setUploads((list) => list.filter((upload) => upload.id !== item.id));
   }
 
-  /** AI soạn trên bài vừa tạo, chờ xong rồi ghi đề lên trang; đề lỗi thì bỏ bản nháp và báo lý do. */
-  async function draftWithAi(assignment: AssignmentDetail): Promise<void> {
+  /** AI soạn trên bài vừa tạo rồi mở đề xuất cần giảng viên duyệt. */
+  async function draftWithAi(assignment: AssignmentDetail, choice: SourceChoice): Promise<void> {
     let formatText: string | undefined;
     if (aiTemplateFile) {
       const imported = await assignmentsApi.importDocx(assignment.id, aiTemplateFile);
@@ -226,6 +229,8 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       formatText,
       templateAssignmentId: aiTemplateFile ? undefined : aiTemplateId || undefined,
       preserveTemplateQuestionPoints: keepTemplatePoints || undefined,
+      source: choice.source,
+      provider: choice.source === "PERSONAL" ? choice.provider ?? undefined : undefined,
       options: { profile: "AUTO", language,
         targetPoints: keepTemplatePoints || questionPoints?.length ? undefined : AI_TARGET_POINTS,
         ...(questionCount ? { questionCount } : {}),
@@ -233,6 +238,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       requestRef: requestRef(),
     });
     while (draft.status === "PENDING") {
+      setAiTaskId(draft.taskId);
       await wait(POLL_MS);
       if (!alive.current) throw new Error(msg("assignments.components.CreateAssignmentDialog.thePopupWasClosed"));
       draft = await assignmentsApi.aiDraft(assignment.id, draft.draftId);
@@ -251,7 +257,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     onCreated(await assignmentsApi.applyAiDraft(assignment.id, draft.draftId, assignment.version, true, false));
   }
 
-  async function submit() {
+  async function submit(choice?: SourceChoice) {
     const name = title.trim();
     if (!created && !aiCreated && !name) {
       setTitleError(msg("assignments.components.CreateAssignmentDialog.enterAnAssignmentTitle"));
@@ -271,6 +277,11 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     }
     if (ai && questionCount === null) {
       setError(msg("assignments.components.AiDraftDialog.theNumberOfQuestionsMust"));
+      return;
+    }
+    if (ai && !choice) {
+      setError(null);
+      setPickingSource(true);
       return;
     }
     if (method === "NEW" && file && importKindOf(file) !== "DOCX") {
@@ -296,13 +307,14 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
             : await assignmentsApi.createForSubject(target.subjectId, createInput(name));
         }
       }
-      if (ai) {
+      if (ai && choice) {
         setAiCreated(assignment);
         setAiRunning(true);
         try {
-          await draftWithAi(assignment);
+          await draftWithAi(assignment, choice);
         } finally {
           setAiRunning(false);
+          setAiTaskId(null);
         }
         return;
       }
@@ -330,7 +342,10 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     onClose();
   }
 
-  if (aiRunning) return <AiProgress />;
+  if (aiRunning) return <AiProgress taskId={aiTaskId} />;
+  if (pickingSource) return <AiSourcePicker open requireConfirmation task={title.trim()}
+    onCancel={() => setPickingSource(false)}
+    onSubmit={(choice) => { setPickingSource(false); void submit(choice); }} />;
 
   return (
     <Dialog open title={isClass ? msg("assignments.components.CreateAssignmentDialog.newAssignment") : msg("assignments.components.CreateAssignmentDialog.newTemplate")} size="lg" onClose={() => void close()} dismissible={!busy}

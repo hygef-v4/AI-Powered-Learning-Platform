@@ -12,10 +12,14 @@ import { fromLocalInput, toLocalInput } from "@/features/assignments/model/forma
 import { RubricEditor, cleanCriteria, isPenaltyOnlyCriterion, isRubricPointsMalformed } from "@/features/assignments/components/RubricEditor";
 import { ScheduleForm } from "@/features/assignments/components/ScheduleForm";
 import { statusLabels, type AssignmentDetail } from "@/features/assignments/model/types";
+import { confirmAiSource, mockAiSources } from "./aiSourceFixture";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }), useSearchParams: () => new URLSearchParams(window.location.search) }));
 
-afterEach(() => window.history.replaceState(null, "", "/"));
+afterEach(() => {
+  window.history.replaceState(null, "", "/");
+  vi.unstubAllGlobals();
+});
 
 const reviewed = {
   id: "a1", status: "REVIEWED", opensAt: null, closesAt: null, lateUntil: null, maxAttempts: null,
@@ -278,6 +282,7 @@ describe("CreateAssignmentDialog", () => {
   ) => {
     const created = { id: "a8", version: 0, title: "Lab AI", gradingMode: "GRADED" } as AssignmentDetail;
     const applied = { id: "a8", version: 1 } as AssignmentDetail;
+    mockAiSources();
     const create = vi.spyOn(assignmentsApi, "createForClass").mockResolvedValue(created);
     vi.spyOn(assignmentsApi, "copySources").mockResolvedValue([
       { classId: "s1", code: "SWD392", name: "Thiết kế", status: null, kind: "SUBJECT", assignments: [{ id: "t1", title: "Đề mẫu cuối kỳ" }] as never },
@@ -344,11 +349,19 @@ describe("CreateAssignmentDialog", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Nhóm" }));
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Lab AI" } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
+    const school = await screen.findByRole("radio", { name: /API của trường/ });
+    expect(school).toHaveTextContent("Trường chịu chi phí");
+    expect(school).toHaveTextContent("còn 80 / 100 token hôm nay");
+    expect(screen.getByText("Chưa có ước tính token trước khi gửi.")).toBeInTheDocument();
+    expect(create).not.toHaveBeenCalled();
+    expect(requestAiDraft).not.toHaveBeenCalled();
+    await confirmAiSource();
     await waitFor(() => useTemplate || countConflict ? expect(onCreated).toHaveBeenCalledWith(created, "d1")
       : expect(onCreated).toHaveBeenCalledWith(applied));
     expect(create.mock.calls[0]![1]).toMatchObject({ title: "Lab AI", submissionMode: "GROUP", gradingMode: "GRADED" });
     expect(requestAiDraft).toHaveBeenCalledWith("a8", expect.objectContaining({
       request, materialIds: ["m1"], templateAssignmentId: useTemplate ? "t1" : undefined,
+      source: "SHARED", provider: undefined,
       ...(preservePoints ? { preserveTemplateQuestionPoints: true } : {}),
       options: { profile: "AUTO", language: "VI", targetPoints: preservePoints || manualPoints ? undefined : 10,
         ...(countConflict ? { questionCount: 4 } : {}),
@@ -360,6 +373,7 @@ describe("CreateAssignmentDialog", () => {
   });
 
   it("Tạo từ AI lỗi: giữ bài đã tạo để thử lại, đóng popup thì bỏ bài vừa tạo", async () => {
+    mockAiSources();
     const created = { id: "a9", version: 0, title: "Lab AI", gradingMode: "GRADED" } as AssignmentDetail;
     const create = vi.spyOn(assignmentsApi, "createForClass").mockResolvedValue(created);
     vi.spyOn(assignmentsApi, "copySources").mockResolvedValue([]);
@@ -375,10 +389,12 @@ describe("CreateAssignmentDialog", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Tạo từ AI" }));
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Lab AI" } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
+    await confirmAiSource();
     expect(await screen.findByRole("alert")).toHaveTextContent("Hết hạn mức AI.");
     expect(screen.getByTestId("create-assignment-title")).toBeDisabled();
     expect(screen.getByTestId("create-assignment-submit")).toHaveTextContent("Thử lại");
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
+    await confirmAiSource();
     await waitFor(() => expect(requestAiDraft).toHaveBeenCalledTimes(2));
     expect(create).toHaveBeenCalledTimes(1);
     fireEvent.click(await screen.findByRole("button", { name: "Đóng" }));

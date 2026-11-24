@@ -13985,3 +13985,21 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Construction / Build and Test.
 
 ---
+
+## System test — chẩn đoán các ca Failed của WF01/WF02
+**Timestamp**: 2026-11-24T10:14:59Z
+**Requested by:** Quang Hung
+**User Input**: "Check xem test case sai hay là do code sai nếu 1 trong 2 sai thì sửa"
+**AI Response**: "Đối chiếu sáu ca Failed với đặc tả. Sửa đăng ký ảnh tạm trong nhập DOCX, xác nhận nguồn và hiển thị trạng thái AI, hiển thị thời gian rời trang và trạng thái tắt theo dõi, cảnh báo mất bản nháp khi giao lại phần và cập nhật giao diện khi đến hạn bài nhóm. Làm rõ WF01-003, WF01-004 và WF01-007 trong Report 5.3. Chạy lại sáu ca trên dữ liệu tổng hợp, xác nhận 27 kiểm thử backend và 196 kiểm thử frontend đạt."
+**Context**: Construction / Build and Test, WF01_Individual_Assignment và WF02_Group_Assignment.
+
+---
+
+## System test — sửa cảnh báo GitGuardian ở PR #129
+**Timestamp**: 2026-11-24T11:00:10Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi sửa pr đó"
+**AI Response**: "Đối chiếu cảnh báo Generic Password trong bộ fixture WF01/WF02. Đổi cách sinh mật khẩu test bằng dữ liệu ngẫu nhiên tại runtime và kiểm tra 512 mẫu theo chính sách mật khẩu. Chuẩn bị lại hai commit chưa merge trên staging để cập nhật PR #129."
+**Context**: Construction / Build and Test.
+
+---

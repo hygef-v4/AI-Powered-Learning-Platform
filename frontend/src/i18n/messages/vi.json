@@ -1148,6 +1148,7 @@
       },
       "AiDraftDialog": {
         "reviewTemplateDraft": "Đề được tạo từ mẫu. Kiểm tra câu hỏi và rubric trước khi áp dụng.",
+        "draftFailed": "Tạo bản nháp thất bại",
         "theAiReturnedNoResult": "AI không trả kết quả.",
         "youCanStillWriteIt": "{value} Bạn vẫn soạn thủ công được.",
         "waitForUploadsToFinish": "Hãy đợi tải xong hoặc gỡ các tệp bị lỗi trước khi tạo đề.",
@@ -1159,7 +1160,7 @@
         "editRequestAndRegenerate": "Sửa yêu cầu và tạo lại",
         "applyProposal": "Áp dụng đề xuất",
         "createAssignment": "Tạo đề",
-        "describeTheAssignmentYouNeed": "Mô tả đề bạn cần, AI soạn câu hỏi kèm rubric chấm điểm rồi ghi thẳng lên trang; nhấn Ctrl+Z để hoàn tác. Các ô dưới đây đều không bắt buộc.",
+        "describeTheAssignmentYouNeed": "Mô tả đề bạn cần. Kiểm tra câu hỏi và rubric trước khi áp dụng đề xuất. Tất cả các ô đều không bắt buộc.",
         "template": "Mẫu đề",
         "noTemplate": "Không dùng đề mẫu",
         "subjectTemplates": "Đề mẫu của môn",
@@ -2222,8 +2223,7 @@
       },
       "GradingReviewPanels": {
         "activityWhileWorking": "Hoạt động khi làm bài",
-        "timesLeftThePage": " lần rời trang · ",
-        "gapsInTheData": " khoảng thiếu dữ liệu. ",
+        "gapsInTheData": "khoảng thiếu dữ liệu.",
         "leftThePageTimesGaps": " — {awayCount} lần rời trang, {unknownGaps} khoảng thiếu dữ liệu",
         "forReferenceOnlyThePlatform": "Chỉ để tham khảo; nền tảng không kết luận gian lận hoặc tự thay đổi điểm."
       },
@@ -2529,7 +2529,7 @@
         "findMembers": "Tìm thành viên",
         "noMatchingMembers": "Không có thành viên phù hợp.",
         "deselectMember": "Bỏ chọn thành viên",
-        "assigningItToSomeoneElse": "Giao cho người khác sẽ nhả mục trước đó.",
+        "assigningItToSomeoneElse": "Giao phần này cho người khác sẽ thu hồi quyền giữ phần và xóa bản nháp chưa hoàn tất của người đang giữ.",
         "unclaimed": "Chưa ai nhận",
         "cannotSubmitYetBecauseSome": "Chưa nộp được vì còn mục chưa xong.",
         "couldNotSubmitPleaseTry": "Không nộp được, thử lại sau.",
@@ -4448,7 +4448,8 @@
         "modelConfiguredByAnAdministrator": "Mô hình do Quản trị viên cấu hình",
         "tokensLeftToday": " · còn {value} / {value2} token hôm nay",
         "notLimitedByTheSchool": " · không giới hạn bởi trường",
-        "aboutTokens": " · ước tính {value} token"
+        "aboutTokens": " · ước tính {value} token",
+        "estimateUnavailable": "Chưa có ước tính token trước khi gửi."
       },
       "AiTaskStatus": {
         "pending": "Đang chờ",
