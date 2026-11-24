@@ -14174,3 +14174,12 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Documentation sync on branch docs/sync-mcp-token-reveal (branched off origin/staging) targeting staging.
 
 ---
+
+## Docs Sync — PR #134 review follow-up (remaining living aidlc-docs)
+**Timestamp**: 2026-11-24T16:42:30Z
+**Requested by:** Quang Hung
+**User Input**: "Address PR #134 automated review findings for remaining living aidlc-docs"
+**AI Response**: "Synced the remaining six living docs under aidlc-docs/ flagged in PR #134 review (u06 business-logic-model.md, u06 as-built-baseline.md, inception requirements.md, use-cases.md, stories.md, and build-and-test/unit-test-instructions.md) to remove stale MCP token reveal and ciphertext references, aligned frontend-components.md line 68 with PATCH /{id} and downgrade-only edit rules, and fixed the escaped paths in the PR #134 description. Left docs/usecase_table.md and backend McpCredentialController.java Javadoc untouched per aidlc-docs-only scope."
+**Context**: PR #134 review remediation on branch docs/sync-mcp-token-reveal targeting staging.
+
+---
