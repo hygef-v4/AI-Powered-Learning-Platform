@@ -132,7 +132,12 @@ class McpServerTest {
                 .isEqualTo(-32602);
         String big = "{\"q\":\"" + "a".repeat(64 * 1024) + "\"}";
         assertThat(handle(Access.READ_ONLY, call("read_own_work", big)).at("/error/message").asText()).contains("64 KB");
+        assertThat(handle(Access.READ_ONLY, call("read_own_work", "[1]")).at("/error/code").asInt()).isEqualTo(-32602);
         verify(provider, never()).call(any(), anyString(), any());
+        var events = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(audit, org.mockito.Mockito.times(3)).record(events.capture());
+        assertThat(events.getAllValues()).extracting(AuditEvent::reason)
+                .containsExactly("INVALID_ARGS", "ARGS_TOO_LARGE", "INVALID_ARGS");
     }
 
     @Test

@@ -21,8 +21,9 @@ final class GradingSecondaryActorCheck {
     private static final Pattern REQUIRED_ACTORS = Pattern.compile(
             "^(?:tên use case [^,;():]+, (?:primary actor|actor chính|tác nhân chính) [^,;():]+ và )?"
                     + SECONDARY_ACTOR + " \\(([\\p{L}\\p{M}\\p{N} ,;.'’-]+)\\) ghi đúng\\.?$");
+    // (?U): Unicode \b, otherwise a word ending in a Vietnamese letter such as "dụ" never matches.
     private static final Pattern NON_MANDATORY = Pattern.compile(
-            "\\b(?:hoặc|hay|or|nếu|tùy chọn|optional|có thể|tương đương|ví dụ|chẳng hạn|such as|e\\.g|v\\.v)\\b");
+            "(?U)\\b(?:hoặc|hay|or|nếu|tùy chọn|optional|có thể|tương đương|ví dụ|chẳng hạn|such as|e\\.g|v\\.v)\\b");
     private static final Pattern SEPARATOR = Pattern.compile("[,;\\r\\n]+|\\s+(?:và|and)\\s+");
     private static final Pattern WHITESPACE = Pattern.compile("(?U)\\s+");
 
