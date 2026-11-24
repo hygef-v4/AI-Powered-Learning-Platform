@@ -14803,8 +14803,26 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 ## Rà soát scripts, .gitignore và audit.md
 **Timestamp**: 2026-11-25T03:00:00Z
 **Requested by:** max2min
-**User Input**: "check folder script xem những file nào sử dụng trong deployment" / "cả mấy cái để chạy test nữa" / "folder vitest trong backend node modules tại sao lại để đấy cái đấy là frontend, với cả cái folder agent-skill để làm gì" / "folder script xoá đc những gì" / "nhóm t có chức năng mcp, cái mcp kia liên quan ko" / "mấy cái lúc deploy ko cần nữa là cái nào" / "deploy vx phải chạy test" / "Nếu đưa hết thì còn những gì" / "run-backend.bat maven-local-cache-settings.xml cho 2 cái này vào ignore r xoá các chỗ readme dùng" / "kiểm tra lại audit của t xem cái nào vút ddc thì vứt, cái nào thiếu thì thêm"
+**User Input**: "Move scripts/run-backend.bat and scripts/maven-local-cache-settings.xml
+to .gitignore and untrack them; they are Windows dev conveniences not
+used by CI or deployment. Replace README references with a plain
+`mvn spring-boot:run` instruction using profiles local,worker."
 **AI Response**: "Xác định deploy chỉ dùng scripts/assert-required-backend-tests.ps1 và scripts/check-image-pins.mjs qua CI; backend/node_modules/.vitest-cache là cache Vitest commit nhầm; agent-skills là wrapper skill tùy chọn cho MCP. Đưa scripts/run-backend.bat và scripts/maven-local-cache-settings.xml vào .gitignore, gỡ khỏi git, bỏ tham chiếu trong README.md và scripts/e2e/README.md. Dọn audit.md: bỏ Requested by chèn nhầm trong prompt gốc, sửa heading H1 và đoạn mồ côi, xoá mục PR59 resolution checkpoint, chuẩn hóa nhãn Requested by và timestamp về UTC, dời các mục đầu file về đúng thứ tự ngày, ghi bù các ngày có commit của max2min mà chưa có mục audit."
 **Context**: Dọn repo và audit theo yêu cầu; không đổi code ứng dụng, chưa commit.
+## Docs Sync — remove stale MCP token reveal references after PR #127
+**Timestamp**: 2026-11-24T16:28:15Z
+**Requested by:** Quang Hung
+**User Input**: "Update aidlc-docs to remove stale MCP token reveal references after PR #127"
+**AI Response**: "Verified current source code on origin/staging (McpCredentialController.java, McpCredentialService.java, McpCredential.java, V20261123_1200__drop_mcp_token_ciphertext.sql, McpAgentSection.tsx, features/ai/api/index.ts, features/ai/model/types.ts) and updated the three living docs under aidlc-docs/: removed @GetMapping(\"/{id}/token\") from inception/reverse-engineering/api-inventory.md, updated McpTokenDialog/McpCredentialDialog and the AI/MCP current flow section in construction/u06-ai-connections/functional-design/frontend-components.md to reflect one-time token display and no READ_ONLY-to-READ_WRITE upgrade, and removed the contradictory MCP token readback sentence from construction/build-and-test/security-test-instructions.md. No backend or frontend source code was modified."
+**Context**: Documentation sync on branch docs/sync-mcp-token-reveal (branched off origin/staging) targeting staging.
+
+---
+
+## Docs Sync — PR #134 review follow-up (remaining living aidlc-docs)
+**Timestamp**: 2026-11-24T16:42:30Z
+**Requested by:** Quang Hung
+**User Input**: "Address PR #134 automated review findings for remaining living aidlc-docs"
+**AI Response**: "Synced the remaining six living docs under aidlc-docs/ flagged in PR #134 review (u06 business-logic-model.md, u06 as-built-baseline.md, inception requirements.md, use-cases.md, stories.md, and build-and-test/unit-test-instructions.md) to remove stale MCP token reveal and ciphertext references, aligned frontend-components.md line 68 with PATCH /{id} and downgrade-only edit rules, and fixed the escaped paths in the PR #134 description. Left docs/usecase_table.md and backend McpCredentialController.java Javadoc untouched per aidlc-docs-only scope."
+**Context**: PR #134 review remediation on branch docs/sync-mcp-token-reveal targeting staging.
 
 ---
