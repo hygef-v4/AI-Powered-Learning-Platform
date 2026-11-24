@@ -351,7 +351,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     <Dialog open title={isClass ? msg("assignments.components.CreateAssignmentDialog.newAssignment") : msg("assignments.components.CreateAssignmentDialog.newTemplate")} size="lg" onClose={() => void close()} dismissible={!busy}
       footer={<>
         {created && <Button onClick={() => onCreated(created)} disabled={busy}>{msg("assignments.components.CreateAssignmentDialog.openAssignment")}</Button>}
-        <Button variant="primary" onClick={() => void submit()} disabled={busy} data-testid="create-assignment-submit">
+        <Button variant="primary" onClick={() => void submit()} loading={busy} data-testid="create-assignment-submit">
           {created || aiCreated ? msg("assignments.components.CreateAssignmentDialog.retry") : msg("assignments.components.CreateAssignmentDialog.create")}
         </Button>
       </>}>

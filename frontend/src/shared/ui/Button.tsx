@@ -27,18 +27,25 @@ const BASE =
 
 type Common = { variant?: Variant; size?: Size; icon?: IconName; children: ReactNode };
 
+/** `loading`: thay icon bằng vòng quay, khóa nút nhưng giữ màu đậm để người dùng biết đang xử lý. */
 export function Button({
   variant = "secondary",
   size = "md",
   icon,
+  loading = false,
   className,
   type = "button",
+  disabled,
   children,
   ...rest
-}: Common & ButtonHTMLAttributes<HTMLButtonElement>) {
+}: Common & { loading?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
-    <button type={type} className={cx(BASE, VARIANTS[variant], SIZES[size].box, className)} {...rest}>
-      {icon && <Icon name={icon} size={SIZES[size].icon} />}
+    <button type={type} className={cx(BASE, VARIANTS[variant], SIZES[size].box, loading && "disabled:cursor-progress disabled:opacity-100", className)}
+      disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
+      {loading ? (
+        <span aria-hidden="true" style={{ width: SIZES[size].icon, height: SIZES[size].icon }}
+          className="shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" />
+      ) : icon && <Icon name={icon} size={SIZES[size].icon} />}
       {children}
     </button>
   );
