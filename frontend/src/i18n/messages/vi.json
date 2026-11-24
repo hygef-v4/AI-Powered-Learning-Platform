@@ -810,7 +810,9 @@
         "couldNotRevokeTheKey": "Không thu hồi được khóa.",
         "revoke": "Thu hồi",
         "areYouSureYouWant": "Bạn có chắc muốn thu hồi khóa ",
-        "text": " không?"
+        "text": " không?",
+        "off": "Đang tắt",
+        "turnBackOn": "Bật lại"
       },
       "McpAgentSection": {
         "couldNotRevokeTheAgent": "Không thu hồi được agent, thử lại sau.",
@@ -892,6 +894,26 @@
         "mcpDocumentation": "Tài liệu MCP",
         "howToConnectAppsCreate": "Cách kết nối ứng dụng, tạo đề, chấm bài và sử dụng từng tool.",
         "viewMcpDocumentation": "Xem tài liệu MCP"
+      },
+      "SourceSection": {
+        "title": "Nguồn AI dùng mặc định",
+        "intro": "Chọn một nguồn cho mọi tác vụ AI (tạo đề, chấm bài, góp ý…). Chọn nguồn cụ thể thì AI chỉ chạy bằng nguồn đó; nguồn lỗi hoặc hết hạn mức thì báo lỗi, không tự đổi sang nguồn khác.",
+        "automatic": "Tự động",
+        "automaticDetailShared": "Dùng API của trường trước; không đủ hạn mức thì dùng khóa cá nhân (Claude, rồi OpenAI, rồi Gemini).",
+        "automaticDetailPersonal": "Dùng khóa cá nhân đang có theo thứ tự Claude, OpenAI, Gemini; khóa lỗi thì thử khóa kế tiếp.",
+        "schoolApi": "API của trường",
+        "personalKey": "Khóa cá nhân · {provider}",
+        "tokensLeftToday": "còn {left} / {limit} token hôm nay",
+        "paidBySchool": "Trường chi trả",
+        "paidByYou": "Bạn chi trả",
+        "loading": "Đang tải…",
+        "couldNotLoadSources": "Không tải được danh sách nguồn AI.",
+        "couldNotSaveSource": "Không lưu được nguồn AI mặc định.",
+        "saving": "Đang lưu…",
+        "saved": "Đã lưu nguồn AI mặc định.",
+        "note": "Lựa chọn lưu ngay và áp dụng cho các lần gọi AI sau.",
+        "addKeyHint": "Muốn dùng khóa của riêng bạn, thêm khóa ở bảng Khóa API cá nhân bên dưới.",
+        "reload": "Tải lại"
       }
     },
     "model": {

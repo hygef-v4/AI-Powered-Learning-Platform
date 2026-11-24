@@ -90,6 +90,7 @@ function backend(overrides: { connections?: ConnectionView[]; credentials?: McpC
     if (url === "/api/v1/me/mcp-credentials" && method === "POST")
       return json({ credential: { ...AGENT, id: "c2", label: "Cursor" }, token: "mcp_SECRETtokenXYZ9", endpoint: "/mcp" }, 201);
     if (url === "/api/v1/ai/sources") return json(overrides.sources ?? [SHARED]);
+    if (url === "/api/v1/me/ai-source-preference" && method === "PUT") return json(JSON.parse(String(init?.body)));
     if (url.startsWith("/api/v1/me/ai-usage"))
       return json({ items: [], page: 0, size: 50, total: 0, shared: { requests: 0, tokens: 0 }, personal: { requests: 3, tokens: 0 }, mcp: { requests: 2, tokens: 0 } });
     if (url.startsWith("/api/v1/me/ai-connections/") && method === "PUT") return json(CLAUDE);
@@ -119,12 +120,35 @@ describe("AiConnectionPage", () => {
     expect(await screen.findByText("3")).toBeInTheDocument();
   });
 
-  it("tab Cài đặt chỉ liệt kê khóa đã thêm, khóa luôn che, mỗi khóa có công tắc", async () => {
+  it("tab Cài đặt chỉ liệt kê khóa đã thêm, khóa luôn che, không còn công tắc từng khóa", async () => {
     backend();
     render(<AiConnectionPage initialTab="settings" />);
     expect(await screen.findByText("••••3kQf")).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Bật khóa Claude ••••3kQf" })).toBeChecked();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     expect(within(screen.getByRole("table")).queryByText("Gemini")).not.toBeInTheDocument();
+  });
+
+  it("chọn một nguồn AI mặc định thay cho công tắc: lưu đúng nguồn, Tự động là bỏ mặc định", async () => {
+    const personal: SourceOption = { source: "PERSONAL", provider: "CLAUDE", model: "claude-sonnet-5-5", keyHint: "3kQf",
+      available: true, reason: null, quota: null, costBearer: "SELF" };
+    const noKey: SourceOption = { ...personal, provider: "OPENAI", model: null, keyHint: null, available: false,
+      reason: "Chưa lưu khóa API cho nhà cung cấp này" };
+    const calls = backend({ sources: [SHARED, personal, noKey] });
+    render(<AiConnectionPage initialTab="settings" />);
+    const group = await screen.findByRole("radiogroup", { name: "Nguồn AI dùng mặc định" });
+    const radios = await within(group).findAllByRole("radio");
+    expect(radios).toHaveLength(3);
+    expect(within(group).getByRole("radio", { name: /Tự động/ })).toBeChecked();
+    expect(within(group).queryByRole("radio", { name: /Khóa cá nhân · OpenAI/ })).not.toBeInTheDocument();
+
+    fireEvent.click(within(group).getByRole("radio", { name: /Khóa cá nhân · Claude/ }));
+    await waitFor(() => expect(calls.some((c) => c.url === "/api/v1/me/ai-source-preference" && c.method === "PUT"
+      && JSON.stringify(c.body) === JSON.stringify({ source: "PERSONAL", provider: "CLAUDE" }))).toBe(true));
+    expect(await screen.findByText("Đã lưu nguồn AI mặc định.")).toBeInTheDocument();
+
+    fireEvent.click(within(group).getByRole("radio", { name: /Tự động/ }));
+    await waitFor(() => expect(calls.some((c) => c.url === "/api/v1/me/ai-source-preference" && c.method === "PUT"
+      && JSON.stringify(c.body) === JSON.stringify({ source: null, provider: null }))).toBe(true));
   });
 
   it("học sinh có tab Agent MCP và quản lý agent của chính mình", async () => {

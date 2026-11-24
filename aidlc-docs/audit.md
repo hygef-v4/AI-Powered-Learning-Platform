@@ -17251,3 +17251,21 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Chỉ di chuyển và sửa liên kết, không đổi nội dung báo cáo hay code. Chưa commit.
 
 ---
+
+## U06 Chọn nguồn AI mặc định thay cho công tắc từng khóa
+**Timestamp**: 2026-11-23T11:16:16Z
+**Requested by:** Vo Minh Tai
+**User Input**: "ban toi check thay phan chọn model có 2 nút tick nếu tick bật cả 2 thì sẽ sử dụng model nào, và bảo đang khó dùng quá, hãy sửa lại kiểu có thể chọn dùng giữa model các nhân hoặc model chung ấy" / "cái 1 là sao" / "làm cách 1 đi"
+**AI Response**: "Giải thích: hai công tắc chỉ cho phép dùng khóa; khi nguồn trống hệ thống tự chọn API của trường trước rồi khóa cá nhân theo Claude, OpenAI, Gemini. Làm cách 1 trên nhánh feat/u06-ai-source-choice: thẻ Nguồn AI dùng mặc định (Tự động, API của trường, từng nhà cung cấp có khóa cá nhân) trên tab API cá nhân, bỏ công tắc ở bảng khóa cá nhân (giữ công tắc ở bảng khóa của trường); tác vụ AI không ghi nguồn sẽ dùng nguồn mặc định đã chọn (FB-U06-01) và worker chỉ thử khóa cùng nguồn đó; Tự động giữ luồng BR-U06-10 hiện tại."
+**Context**: Construction, U06 AI Connections, sửa UX theo phản hồi người dùng. Dùng lại API ai-source-preference có sẵn, không đổi schema.
+
+---
+
+## U06 Gộp chọn nguồn AI mặc định vào staging
+**Timestamp**: 2026-11-24T14:30:23Z
+**Requested by:** Vo Minh Tai
+**User Input**: "test lại cho tôi xem được chưa" / "merch cho tôi vào stagging đi"
+**AI Response**: "Kiểm tra trên stack local build từ nhánh: đặt nguồn API của trường thì tác vụ chấm AI chạy bằng API trường, khóa trường sai thì FAILED và không chuyển sang khóa cá nhân; đặt Claude chưa có khóa thì đề xuất FAILED, không tạo tác vụ AI; trả về Tự động; giao diện có thẻ chọn nguồn, bảng khóa cá nhân không còn công tắc (10/11 bước kiểm; bước còn lại là thông báo lỗi chung của U09). Commit nhánh feat/u06-ai-source-choice và gộp vào staging."
+**Context**: Construction, U06 AI Connections. Test: AiTaskFlowTest 43, AiSourceServiceTest 5, AiConnectionServiceTest 13; frontend tests/features/ai 50.
+
+---

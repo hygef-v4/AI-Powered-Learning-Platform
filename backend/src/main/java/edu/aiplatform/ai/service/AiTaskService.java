@@ -17,7 +17,9 @@ import edu.aiplatform.ai.contract.IPromptGuardrail;
 import edu.aiplatform.ai.contract.UserPromptInput;
 import edu.aiplatform.ai.model.AiConnection;
 import edu.aiplatform.ai.model.AiConnection.Status;
+import edu.aiplatform.ai.model.AiSourcePreference;
 import edu.aiplatform.ai.repository.AiConnectionRepository;
+import edu.aiplatform.ai.repository.AiSourcePreferenceRepository;
 import edu.aiplatform.ai.model.AiTask;
 import edu.aiplatform.ai.repository.AiTaskRepository;
 import edu.aiplatform.ai.repository.AiUsageRepository;
@@ -81,6 +83,7 @@ public class AiTaskService implements IAiTask {
     private final TransactionTemplate transactions;
     private final Clock clock;
     private AiImageSourceRegistry imageSources = AiImageSourceRegistry.createRegistry(List.of());
+    private AiSourcePreferenceRepository sourcePreferences;
 
     public AiTaskService(AiTaskRepository tasks, AiConnectionRepository connections, AiUsageRepository usage,
                          AiTaskResultHandlerRegistry handlers, QuotaReservationService quotaReservationService, ProviderCatalog catalog,
@@ -106,6 +109,11 @@ public class AiTaskService implements IAiTask {
     @Autowired(required = false)
     void setImageSources(AiImageSourceRegistry imageSources) {
         this.imageSources = imageSources;
+    }
+
+    @Autowired(required = false)
+    void setSourcePreferences(AiSourcePreferenceRepository sourcePreferences) {
+        this.sourcePreferences = sourcePreferences;
     }
 
     @Override
@@ -197,6 +205,11 @@ public class AiTaskService implements IAiTask {
             throw ApiException.createBadRequest("AI_TASK_INVALID", "Yêu cầu AI thiếu thông tin");
         }
         if (source == null || source == AiSource.PERSONAL && provider == null) {
+            Optional<AiSourcePreference> preferred = findPreference(actor, source);
+            if (preferred.isPresent()) {
+                resolveConnection(actor, preferred.get().source(), preferred.get().provider(), false);
+                return;
+            }
             if (listCandidates(actor, source, new AiPrompt(null, "x"), 1).isEmpty()) {
                 throw createUnavailableError();
             }
@@ -206,22 +219,44 @@ public class AiTaskService implements IAiTask {
     }
 
     /**
-     * Nguồn tự chọn (yêu cầu 2026-11-05) khi bên gọi để trống nguồn ({@code PERSONAL} không kèm provider là chỉ khóa cá
-     * nhân): API chung nếu người gọi được dùng và hạn mức còn đủ cho ước tính token của lượt này, không thì khóa cá nhân
-     * tốt nhất; lỗi lúc chạy thì worker tự thử các khóa kế tiếp.
+     * Bên gọi để trống nguồn ({@code PERSONAL} không kèm provider là chỉ khóa cá nhân): dùng nguồn mặc định người dùng
+     * đã chọn ở Kết nối AI (FB-U06-01), không dùng được thì báo lỗi chứ không đổi nguồn. Chọn Tự động (chưa có nguồn
+     * mặc định) thì tự chọn như yêu cầu 2026-11-05: API chung nếu được dùng và hạn mức còn đủ cho ước tính token của
+     * lượt này, không thì khóa cá nhân tốt nhất; lỗi lúc chạy thì worker tự thử các khóa kế tiếp.
      */
     private AiTaskRequest resolveSource(AiTaskRequest request) {
         if (request.source() == AiSource.SHARED || request.provider() != null) {
             return request;
+        }
+        Optional<AiSourcePreference> preferred = findPreference(request.actor(), request.source());
+        if (preferred.isPresent()) {
+            return buildRequest(request, preferred.get().source(), preferred.get().provider());
         }
         List<AiSourceChoice> order = listCandidates(request.actor(), request.source(), request.prompt(), request.maxOutputTokens());
         if (order.isEmpty()) {
             throw createUnavailableError();
         }
         AiSourceChoice choice = order.get(0);
-        return new AiTaskRequest(request.actor(), choice.source(), choice.provider(), request.taskType(),
+        return buildRequest(request, choice.source(), choice.provider());
+    }
+
+    private static AiTaskRequest buildRequest(AiTaskRequest request, AiSource source, AiProvider provider) {
+        return new AiTaskRequest(request.actor(), source, provider, request.taskType(),
                 request.targetRef(), request.inputVersion(), request.requestRef(), request.prompt(), request.outputSchema(),
                 request.maxOutputTokens(), request.userInput());
+    }
+
+    /**
+     * Nguồn mặc định của người gọi khớp phạm vi bên gọi cho phép ({@code only} rỗng là mọi nguồn); API chung mà người
+     * gọi không còn quyền dùng thì coi như chưa chọn (BR-U06-11).
+     */
+    private Optional<AiSourcePreference> findPreference(Actor actor, AiSource only) {
+        if (sourcePreferences == null || actor == null) {
+            return Optional.empty();
+        }
+        return sourcePreferences.findPreference(actor.accountId())
+                .filter(p -> only == null || p.source() == only)
+                .filter(p -> p.source() != AiSource.SHARED || access.canPerform(actor, Actions.AI_SHARED_USE));
     }
 
     private List<AiSourceChoice> listCandidates(Actor actor, AiSource only, AiPrompt prompt, int maxOutputTokens) {

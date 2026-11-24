@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { useUrlState } from "@/shared/navigation/useUrlState";
 import { PageHeader, SettingsCard, Tabs, type TabItem } from "@/shared/ui";
 import { useSession } from "@/features/identity/hooks/SessionProvider";
@@ -15,6 +16,7 @@ import {
 } from "../api";
 import { AiUsageHistoryPage } from "./AiUsageHistoryPage";
 import { KeysSection, type KeysApi } from "../components/KeysSection";
+import { SourceSection } from "../components/SourceSection";
 import { ApiSetupGuide } from "../components/SetupGuides";
 import { msg } from "@/i18n/msg";
 
@@ -57,14 +59,18 @@ const PERSONAL: KeysApi = {
 };
 
 /**
- * Tab API cá nhân: bảng khóa cá nhân giống hệt bảng khóa của trường (nhiều khóa cho một nhà cung cấp, công tắc, kiểm tra,
- * thay, thu hồi) và hướng dẫn lấy khóa. Khi gọi AI hệ thống tự thử khóa của trường rồi khóa cá nhân (yêu cầu 2026-11-05).
+ * Tab API cá nhân: thẻ Nguồn AI dùng mặc định (một lựa chọn cho mọi tác vụ AI, yêu cầu 2026-11-23), bảng khóa cá nhân
+ * (nhiều khóa cho một nhà cung cấp, kiểm tra, thay, thu hồi; không có công tắc) và hướng dẫn lấy khóa.
  */
 function PersonalKeysTab() {
+  const [keysVersion, setKeysVersion] = useState(0);
+  const handleKeysChanged = useCallback(() => setKeysVersion((v) => v + 1), []);
   return (
     <SettingsCard>
+      <SourceSection refreshKey={keysVersion} />
       <KeysSection title={msg("ai.pages.AiConnectionPage.personalApiKeys")} api={PERSONAL} revokeTitle={msg("ai.pages.AiConnectionPage.revokeApiKey")}
-        loadError={msg("ai.pages.AiConnectionPage.couldNotLoadAiConnections")} />
+        loadError={msg("ai.pages.AiConnectionPage.couldNotLoadAiConnections")} allowDisable={false}
+        onChanged={handleKeysChanged} />
       <ApiSetupGuide />
     </SettingsCard>
   );

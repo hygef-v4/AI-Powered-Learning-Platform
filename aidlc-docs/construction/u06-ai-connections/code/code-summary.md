@@ -152,3 +152,9 @@ Plan: `construction/plans/code-generation-plan/2026-11-02-u06-u12-feedback.md`. 
   - `AiSourcePicker` tự gửi bằng nguồn mặc định khi dùng được, báo lý do khi không; liên kết tới Kết nối AI.
   - `shared/ai/preference.ts` (`usePreferredSource`) cho hộp tạo nháp của U07 (`AiDraftDialog` lấy làm giá trị ban đầu).
 - **Test:** `AiSourceServiceTest` (+3), `AiControllersTest` (+1), `AiSourcePicker.test.tsx` (+2), `DefaultSourceSection.test.tsx` (2, mới).
+
+Cập nhật 2026-11-23 (phản hồi: hai công tắc khóa cá nhân khó hiểu, không biết AI dùng khóa nào):
+
+- **Frontend:** `SourceSection` (thẻ Nguồn AI dùng mặc định) ở tab API cá nhân: một nhóm radio Tự động, API của trường, từng nhà cung cấp có khóa cá nhân đang bật; lưu ngay qua `PUT /api/v1/me/ai-source-preference`. `KeysSection` thêm `allowDisable` (tab cá nhân không còn công tắc; khóa cũ đang tắt có nút Bật lại; bảng khóa của trường giữ công tắc) và `onChanged` để thẻ nguồn tải lại khi khóa đổi.
+- **Backend:** `AiTaskService.resolveSource` và `requireSource` dùng nguồn mặc định khi bên gọi để trống nguồn; nguồn đó không dùng được thì báo lỗi, không đổi nguồn. `AiTaskJobHandler.chooseNextDispatch` chỉ thử các khóa của đúng nguồn mặc định (khóa của trường, hoặc khóa cùng nhà cung cấp). Chọn Tự động (chưa có mặc định) giữ luồng BR-U06-10. Không đổi API hay schema.
+- **Test:** `AiTaskFlowTest` (+4), `AiConnectionPage.test.tsx` (sửa 1, thêm 1).
