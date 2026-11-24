@@ -255,22 +255,15 @@ class AiRepositoriesIntegrationTest {
     }
 
     @Test
-    void legacyCredentialsRemainHashAuthenticatableWithoutRevealableCiphertext() {
+    void credentialTableKeepsOnlyTheHashOfTheToken() {
         McpCredentialRepository credentials = new McpCredentialRepository(jdbc);
-        McpCredential legacy = credential(UUID.randomUUID(), "a".repeat(64), NOW.plus(90, ChronoUnit.DAYS));
-        credentials.insert(legacy);
+        McpCredential credential = credential(UUID.randomUUID(), "a".repeat(64), NOW.plus(90, ChronoUnit.DAYS));
+        credentials.insert(credential);
 
-        assertThat(credentials.findByHash(legacy.tokenHash())).hasValue(legacy);
-        assertThat(credentials.findSecret(legacy.id())).isEmpty();
-        assertThat(credentials.listRevealableIds(account)).isEmpty();
-        credentials.saveSecret(legacy.id(), new EncryptedKey(new byte[] {4, 5, 6}, new byte[] {7, 8}, 2));
-        assertThat(credentials.findSecret(legacy.id())).hasValueSatisfying(secret -> {
-            assertThat(secret.ciphertext()).containsExactly(4, 5, 6);
-            assertThat(secret.iv()).containsExactly(7, 8);
-            assertThat(secret.version()).isEqualTo(2);
-        });
-        assertThat(credentials.listRevealableIds(account)).containsExactly(legacy.id());
-        assertThat(credentials.findByHash(legacy.tokenHash())).hasValue(legacy);
+        assertThat(credentials.findByHash(credential.tokenHash())).hasValue(credential);
+        assertThat(jdbc.sql("select column_name from information_schema.columns "
+                + "where table_name = 'mcp_credentials' and column_name like 'token_%'").query(String.class).list())
+                .containsExactlyInAnyOrder("token_hash", "token_hint");
     }
 
     @Test

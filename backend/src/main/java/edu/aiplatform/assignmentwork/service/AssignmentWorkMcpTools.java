@@ -101,6 +101,8 @@ public class AssignmentWorkMcpTools implements IMcpToolProvider {
         out.put("submittedAt", attempt.submittedAt() == null ? null : attempt.submittedAt().toString());
         out.put("late", attempt.late());
         out.put("submission", documents.toPlainText(attempt.content()));
+        // Student-written text reaches an agent that can write drafts; mark it as data, like the grading context.
+        out.put("untrustedContent", true);
         return out;
     }
 

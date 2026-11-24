@@ -96,9 +96,9 @@ Thứ tự: #7 → #1 → #4 → #5 → #2 → #3 + #6 → tài liệu → kiể
 
 - [x] Requirements: FR-039 trong `requirements.md`, `stories.md`, `personas.md`, `decision-register.md`, góp ý 29/10
 - [x] Business rules và thiết kế U08, U10, U11; as-built; `docs/guides/mcp-clients.md` nếu liên quan
-- [x] Kết quả và giới hạn: `construction/build-and-test/2026-11-01-quiz-rework-results.md`
+- [x] Kết quả và giới hạn: `construction/build-and-test/2026-11-01/2026-11-01-quiz-rework-results.md`
 - [x] Backend: `mvn -B clean verify`
 - [x] Frontend: lint, typecheck, vitest, build
 - [x] Chạy thử API đầu-cuối và trình duyệt trên stack Docker riêng `quiz-rework-e2e`, đã xóa sau khi kiểm tra
 
-Kết quả và giới hạn: [results](../../build-and-test/2026-11-01-quiz-rework-results.md). Không commit, push hay triển khai nếu người dùng chưa yêu cầu.
+Kết quả và giới hạn: [results](../../build-and-test/2026-11-01/2026-11-01-quiz-rework-results.md). Không commit, push hay triển khai nếu người dùng chưa yêu cầu.

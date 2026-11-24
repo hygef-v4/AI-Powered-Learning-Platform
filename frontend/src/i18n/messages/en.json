@@ -828,6 +828,8 @@
         "areYouSureYouWant": "Are you sure you want to revoke the agent “",
         "text": "”?",
         "theLabelMustBe1": "The label must be 1–60 characters.",
+        "tokenShownOnce": "The token is shown only once, when it is created. If you lose it, revoke this agent and create a new one.",
+        "upgradeNeedsNewAgent": "To get read and write access, create a new agent; a read-only agent cannot be upgraded.",
         "couldNotSaveTheAgent": "Could not save the agent, please try again later.",
         "couldNotCreateTheToken": "Could not create the token, please try again later.",
         "editAgent2": "Edit agent",
@@ -837,10 +839,6 @@
         "days": " days",
         "youHave": "You have ",
         "activeAgents": " active agents.",
-        "couldNotViewTheToken": "Could not view the token, please try again later.",
-        "oldTokenCannotBeViewed": "Old token, cannot be viewed again",
-        "hideToken": "Hide token",
-        "oldTokenCannotBeCopied": "Old token, cannot be copied",
         "copied": "Copied",
         "copyToken": "Copy token",
         "close": "Close",
@@ -4851,7 +4849,21 @@
         },
         "ctaTitle": "Ready for class?",
         "ctaBody": "Sign in with the account your course administrator created for you.",
-        "privacy": "Privacy policy"
+        "privacy": "Privacy policy",
+        "reviewSheet": {
+          "numberLocale": "en-US",
+          "title": "Rubric: class diagram, assignment 2",
+          "criterion": "Criterion",
+          "aiColumn": "AI",
+          "lecturerColumn": "Lecturer",
+          "adjusted": "Raised by the lecturer",
+          "total": "Total",
+          "criteria": {
+            "classes": "Classes and attributes",
+            "inheritance": "Inheritance",
+            "methods": "Methods fit responsibilities"
+          }
+        }
       }
     }
   }

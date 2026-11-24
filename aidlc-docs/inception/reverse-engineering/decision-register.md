@@ -4,11 +4,11 @@
 
 Người dùng hủy hướng chuyển U05/U09 sang JPA và xác nhận: “Chuyển U05/U09 sang JDBC và sửa AI-DLC quy định toàn dự án dùng JDBC”. [Quy định persistence chung](../../construction/persistence-conventions.md) thay lựa chọn Spring Data JPA/ORM trong tech-stack và các kế hoạch persistence cũ cho code mới/migration. JDBC gồm JdbcTemplate, NamedParameterJdbcTemplate hoặc JdbcClient; native SQL qua EntityManager không đáp ứng quy định.
 
-U05 đã JDBC; U09 chuyển hai adapter evaluation/proposal, giữ visibility JDBC. U04/U13/U14 hiện còn JPA, cần migration riêng; giữ hạ tầng JPA chung cho các owner đó trong giai đoạn chuyển tiếp, không tuyên bố toàn bộ code đã JDBC. Giữ schema/API/JSONB, locks/CAS/version, transaction/audit và public contracts. Các decision/evidence có ngày cũ bên dưới là lịch sử; không viết lại kết quả test cũ thành kết quả mới. [Kế hoạch và phạm vi](../../construction/plans/code-generation-plan/2026-11-06-u05-u09-jdbc.md), [bằng chứng mới](../../construction/build-and-test/2026-11-06-u05-u09-jdbc-results.md).
+U05 đã JDBC; U09 chuyển hai adapter evaluation/proposal, giữ visibility JDBC. U04/U13/U14 hiện còn JPA, cần migration riêng; giữ hạ tầng JPA chung cho các owner đó trong giai đoạn chuyển tiếp, không tuyên bố toàn bộ code đã JDBC. Giữ schema/API/JSONB, locks/CAS/version, transaction/audit và public contracts. Các decision/evidence có ngày cũ bên dưới là lịch sử; không viết lại kết quả test cũ thành kết quả mới. [Kế hoạch và phạm vi](../../construction/plans/code-generation-plan/2026-11-06-u05-u09-jdbc.md), [bằng chứng mới](../../construction/build-and-test/2026-11-06/2026-11-06-u05-u09-jdbc-results.md).
 
 ## U04/U13/U14 sang JDBC — 2026-11-18
 
-Người dùng yêu cầu chuyển cả ba unit từ JPA sang JDBC và chỉ sửa U04, U13, U14, không ảnh hưởng unit khác. Repository của ba unit dùng `JdbcClient`; giữ `spring-boot-starter-data-jpa`, `spring.jpa` và `JpaTransactionManager` chung. Code production không còn entity hay repository JPA. [Kế hoạch](../../construction/plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md), [kết quả](../../construction/build-and-test/2026-11-18-u04-u13-u14-jdbc-results.md).
+Người dùng yêu cầu chuyển cả ba unit từ JPA sang JDBC và chỉ sửa U04, U13, U14, không ảnh hưởng unit khác. Repository của ba unit dùng `JdbcClient`; giữ `spring-boot-starter-data-jpa`, `spring.jpa` và `JpaTransactionManager` chung. Code production không còn entity hay repository JPA. [Kế hoạch](../../construction/plans/code-generation-plan/2026-11-18-u04-u13-u14-jdbc.md), [kết quả](../../construction/build-and-test/2026-11-18/2026-11-18-u04-u13-u14-jdbc-results.md).
 
 ## Baseline lịch sử 2026-10-30
 
@@ -20,7 +20,7 @@ Baseline `staging@794a405304bf02dd2593a9fa2c88662d7cd52845`. User approved docum
 | D05 council scope | Backup/activity/email/provenance | Source exists; runtime acceptance is separate | No NFR certification |
 | D03 audit | Student MCP, no Admin MCP | MCP_SELF for Teacher/Subject Manager/Admin; Student personal API remains | Merge staff expansion 26/10 |
 | D04 audit | Single institutional key/provider | Multiple keys/provider | Document AS-BUILT cardinality |
-| D05 audit | MCP token shown once | Owner can reveal ACTIVE credential if ciphertext exists | Document encryption, audit and legacy-key limits |
+| D05 audit | MCP token shown once | Closed 2026-11-23: token shown once only; reveal and stored ciphertext removed | Lost token means revoke and create a new agent |
 | D06 audit | OPEN requires teacher | Domain/service/DB permit no teacher; create remains DRAFT | Document source behavior, not migration comment alone |
 | D07 audit | Configurable 1–365 day retention | Activity retention is fixed at 1 day | No automatic penalty inferred |
 | D08 audit | Leader request/reject reason required | Optional, maximum 1,000 characters | Update validation and flow |

@@ -54,6 +54,8 @@ class Recording(BaseModel):
     errorKind: str | None = None
     httpStatus: int = 0
     errorMessage: str | None = None
+    # Normalised by the backend gateway; outputTokens already includes reasoning tokens.
+    usage: dict | None = None
 
 
 class MetricResult(BaseModel):
@@ -97,6 +99,8 @@ class Row(BaseModel):
     error_code: str | None = None
     error_detail: str | None = None
     provider_http_status: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
     missing_criteria: list[str] = Field(default_factory=list)
     metrics: dict[str, MetricResult] = Field(default_factory=dict)
     deterministic_results: CheckResult = Field(default_factory=CheckResult)
@@ -240,6 +244,7 @@ def adapt_run(dataset: Dataset, sample: Case, run: JavaRun, record: Recording | 
     payload = None
     missing = []
     http = record.httpStatus if record else 0
+    usage = (record.usage if record else None) or {}
     if status == "PROVIDER_ERROR":
         code = re.search(r"_(\d{3})$", error or "")
         http = http or (int(code[1]) if code else 0)
@@ -267,6 +272,7 @@ def adapt_run(dataset: Dataset, sample: Case, run: JavaRun, record: Recording | 
         output_hash=fingerprint(payload) if payload is not None else None,
         ai_score=run.aiTotal if status == "VALID_OUTPUT" else None,
         input_status=status, error_code=error, error_detail=detail, provider_http_status=http or None,
+        input_tokens=usage.get("inputTokens"), output_tokens=usage.get("outputTokens"),
         missing_criteria=missing,
     )
 

@@ -1,0 +1,7 @@
+round3 1 {'ok': True, 'input_tokens': 18401, 'output_tokens': 2455, 'cached_input_tokens': 0, 'model_requested': 'gpt-6-luna', 'reasoning_effort': 'medium', 'arm': 'round3', 'run': 1, 'elapsed_ms': 49768}
+round2 1 {'ok': True, 'input_tokens': 18095, 'output_tokens': 2538, 'cached_input_tokens': 0, 'model_requested': 'gpt-6-luna', 'reasoning_effort': 'medium', 'arm': 'round2', 'run': 1, 'elapsed_ms': 50713}
+round2 2 {'ok': True, 'input_tokens': 18097, 'output_tokens': 2565, 'cached_input_tokens': 0, 'model_requested': 'gpt-6-luna', 'reasoning_effort': 'medium', 'arm': 'round2', 'run': 2, 'elapsed_ms': 50590}
+round3 2 {'ok': True, 'input_tokens': 18399, 'output_tokens': 2804, 'cached_input_tokens': 0, 'model_requested': 'gpt-6-luna', 'reasoning_effort': 'medium', 'arm': 'round3', 'run': 2, 'elapsed_ms': 56150}
+round2 3 {'ok': True, 'input_tokens': 18091, 'output_tokens': 2480, 'cached_input_tokens': 0, 'model_requested': 'gpt-6-luna', 'reasoning_effort': 'medium', 'arm': 'round2', 'run': 3, 'elapsed_ms': 50042}
+round3 3 {'ok': True, 'input_tokens': 18397, 'output_tokens': 2544, 'cached_input_tokens': 0, 'model_requested': 'gpt-6-luna', 'reasoning_effort': 'medium', 'arm': 'round3', 'run': 3, 'elapsed_ms': 50006}
+6/6 Codex calls returned an answer

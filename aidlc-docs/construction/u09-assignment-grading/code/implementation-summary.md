@@ -135,7 +135,7 @@ Backend scoped55/55, frontend grading199/199 và API4/4 (ba case trùng trong199
 và isolated TypeScript qua. Normal TypeScript vẫn gặp cache route Next cũ; không đổi
 config sản phẩm hoặc xóa cache. Người dùng tự test UI sau khi backend nạp mã mới.
 Không migration, dependency, MCP/Excel change, live grading writes, commit/push/deploy.
-Xem ../../build-and-test/2026-11-13-member-contribution-levels.md.
+Xem ../../build-and-test/2026-11-13/2026-11-13-member-contribution-levels.md.
 
 ## Chấm thành viên cạnh bài nhóm — 2026-11-13
 
@@ -150,4 +150,4 @@ Full frontend1056/151file; kiểm cuối50 test, ESLint/isolated TypeScript qua.
 Từng phần; không bấm lưu/công bố/AI. Ghi chú QA đã xóa, viewport554x930 khôi phục.
 Ảnh .tmp/group-grading-desktop.png và group-grading-mobile.png. Không backend delta,
 production build, live grade write, commit/push/deploy. Kết quả chi tiết tại
-../../build-and-test/2026-11-13-group-grading-side-panel.md.
+../../build-and-test/2026-11-13/2026-11-13-group-grading-side-panel.md.

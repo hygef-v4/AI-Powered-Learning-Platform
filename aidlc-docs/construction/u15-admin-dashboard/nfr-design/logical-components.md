@@ -25,4 +25,4 @@ AdminDashboardActivityService reads IAuditStats and IAssignmentQuery through Das
 
 ## Structure refactor — 2026-10-30
 
-Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30-package-moves-only-results.md).
+Đường dẫn hiện hành theo bảng trên; [unit source inventory](../code/as-built-baseline.md). Public contract, quyền, transaction và cấu hình chạy giữ nguyên; [automated verification and limits](../../build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md).

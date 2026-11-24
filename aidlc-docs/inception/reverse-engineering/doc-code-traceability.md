@@ -75,11 +75,11 @@ The initial 66-row matrix was built from declared UC and FR references at the 20
 
 | Phạm vi | Truy vết yêu cầu và thiết kế | Bằng chứng triển khai |
 |---|---|---|
-| MSSV (U01, U05, U09, U11, U12), UC 09–12 và UC 28 | [SC-01…11](../requirements/2026-11-13-student-code.md) | [Tóm tắt U01 và tích hợp](../../construction/u01-account-and-access/code/2026-11-13-student-code-summary.md), [kiểm thử](../../construction/build-and-test/2026-11-14-student-code-results.md) |
-| Học kỳ của lớp (U04/U05), UC 20, 22, 24–26, 29 | [CT-01…09](../requirements/2026-11-14-class-term.md), BR-U05-61…72 | [Tóm tắt U05](../../construction/u05-class-enrollment/code/2026-11-14-class-term-summary.md), [kiểm thử](../../construction/build-and-test/2026-11-15-class-term-results.md) |
-| Nhập đề từ ảnh hoặc PDF scan (U07, U06, U03), UC 35 | [FR-IMP-01…08](../requirements/2026-11-11-exam-image-import.md), BR-U07-87…101 | [Tóm tắt U07](../../construction/u07-assignment-authoring/code/2026-11-11-exam-image-import-summary.md), [kiểm thử](../../construction/build-and-test/2026-11-11-exam-image-import-verification.md) |
-| Sinh viên lập đề xuất nhóm, giảng viên duyệt (U12), UC 54/57 | [SG-01…09](../requirements/2026-11-11-student-self-grouping.md), [US-GRP-007…010](../user-stories/stories.md#us-grp-007---bật-đợt-sinh-viên-tự-chia-nhóm), BR-U12-70…96 | [GroupProposalController](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupProposalController.java), [kiểm thử](../../construction/build-and-test/2026-11-11-student-self-grouping-results.md) |
-| Công bố/sửa điểm và mức đóng góp (U09/U12), UC 42–45/56 | FR-008/020/026, [BR-U09-41/42/50](../../construction/u09-assignment-grading/functional-design/business-rules.md), [mức đóng góp](../requirements/2026-11-13-member-contribution-levels.md) | [GradingService](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingService.java), [EvaluationLifecycleService](../../../backend/src/main/java/edu/aiplatform/grading/service/EvaluationLifecycleService.java), [kiểm thử mức đóng góp](../../construction/build-and-test/2026-11-13-member-contribution-levels.md) |
+| MSSV (U01, U05, U09, U11, U12), UC 09–12 và UC 28 | [SC-01…11](../requirements/2026-11-13-student-code.md) | [Tóm tắt U01 và tích hợp](../../construction/u01-account-and-access/code/2026-11-13-student-code-summary.md), [kiểm thử](../../construction/build-and-test/2026-11-14/2026-11-14-student-code-results.md) |
+| Học kỳ của lớp (U04/U05), UC 20, 22, 24–26, 29 | [CT-01…09](../requirements/2026-11-14-class-term.md), BR-U05-61…72 | [Tóm tắt U05](../../construction/u05-class-enrollment/code/2026-11-14-class-term-summary.md), [kiểm thử](../../construction/build-and-test/2026-11-15/2026-11-15-class-term-results.md) |
+| Nhập đề từ ảnh hoặc PDF scan (U07, U06, U03), UC 35 | [FR-IMP-01…08](../requirements/2026-11-11-exam-image-import.md), BR-U07-87…101 | [Tóm tắt U07](../../construction/u07-assignment-authoring/code/2026-11-11-exam-image-import-summary.md), [kiểm thử](../../construction/build-and-test/2026-11-11/2026-11-11-exam-image-import-verification.md) |
+| Sinh viên lập đề xuất nhóm, giảng viên duyệt (U12), UC 54/57 | [SG-01…09](../requirements/2026-11-11-student-self-grouping.md), [US-GRP-007…010](../user-stories/stories.md#us-grp-007---bật-đợt-sinh-viên-tự-chia-nhóm), BR-U12-70…96 | [GroupProposalController](../../../backend/src/main/java/edu/aiplatform/groups/controller/GroupProposalController.java), [kiểm thử](../../construction/build-and-test/2026-11-11/2026-11-11-student-self-grouping-results.md) |
+| Công bố/sửa điểm và mức đóng góp (U09/U12), UC 42–45/56 | FR-008/020/026, [BR-U09-41/42/50](../../construction/u09-assignment-grading/functional-design/business-rules.md), [mức đóng góp](../requirements/2026-11-13-member-contribution-levels.md) | [GradingService](../../../backend/src/main/java/edu/aiplatform/grading/service/GradingService.java), [EvaluationLifecycleService](../../../backend/src/main/java/edu/aiplatform/grading/service/EvaluationLifecycleService.java), [kiểm thử mức đóng góp](../../construction/build-and-test/2026-11-13/2026-11-13-member-contribution-levels.md) |
 
 ## Delta disposition
 
@@ -87,7 +87,7 @@ The initial 66-row matrix was built from declared UC and FR references at the 20
 
 ## Structure snapshot
 
-Paths refreshed for parent HEAD `5a76e428` + working-tree structure refactor; endpoint annotations and public contracts unchanged. [Verification results](../../construction/build-and-test/2026-10-30-package-moves-only-results.md).
+Paths refreshed for parent HEAD `5a76e428` + working-tree structure refactor; endpoint annotations and public contracts unchanged. [Verification results](../../construction/build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md).
 
 ## Delta 2026-11-01: làm lại Quiz
 

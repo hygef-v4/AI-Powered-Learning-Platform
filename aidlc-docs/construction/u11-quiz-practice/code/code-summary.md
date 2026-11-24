@@ -182,4 +182,4 @@ Các thao tác kiểm thì làm trên trình duyệt (khung trình duyệt của
 
 ## Làm lại Quiz (2026-11-01)
 
-Thêm `AttemptActivityAssessor`, `ActivityOutcome`, `ActivitySignal`, `PenaltyDecision`, `QuestionPager`. Mã lỗi: `PENALTY_REASON_INVALID`, `PENALTY_POINTS_INVALID`, `PENALTY_NOT_DECIDABLE`. Mục G4 ở trên là lịch sử, đã bỏ. Chi tiết: [kết quả](../../build-and-test/2026-11-01-quiz-rework-results.md).
+Thêm `AttemptActivityAssessor`, `ActivityOutcome`, `ActivitySignal`, `PenaltyDecision`, `QuestionPager`. Mã lỗi: `PENALTY_REASON_INVALID`, `PENALTY_POINTS_INVALID`, `PENALTY_NOT_DECIDABLE`. Mục G4 ở trên là lịch sử, đã bỏ. Chi tiết: [kết quả](../../build-and-test/2026-11-01/2026-11-01-quiz-rework-results.md).

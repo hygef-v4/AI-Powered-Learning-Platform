@@ -15,7 +15,7 @@ Bản sửa đầu tiên (trên `3b86e57d`) còn gồm chặn nộp lại khi đ
 - [x] 3. Migration `assignmentwork/V20261116_1010__unlimited_attempt_numbers.sql`: bỏ trần 10 của `attempt_no`.
 - [x] 4. Frontend: bỏ xử lý mã `GRADE_LOCKED` (`format.ts`, `BatchActionDialog.tsx`) và nhãn audit `GROUP_PEER_REVIEW_SAVED`; cập nhật ba test.
 - [x] 5. Tài liệu: OpenAPI grading bỏ `GRADE_LOCKED` và ghi điều kiện ghi điểm hiện hành; `2026-11-02-locked-grades.md` gắn ghi chú đã thay; `requirements.md` (số unit cũ, số story, số mục trùng, tham chiếu file không còn, FR-019); `stories.md`; `docs/usecase_table.md`; `aidlc-state.md` (key reveal); BR-U08-70, BR-U12-73, BR-U14-30; `current-code-baseline.md`.
-- [x] 6. Build và test trên nền staging; ghi [kết quả](../../build-and-test/2026-11-16-review-fixes-on-staging-results.md).
+- [x] 6. Build và test trên nền staging; ghi [kết quả](../../build-and-test/2026-11-16/2026-11-16-review-fixes-on-staging-results.md).
 - [x] 7. Gộp `origin/staging@5f9c0173` (đi thêm 35 commit sau bước 6), xử lý 5 xung đột, bỏ ba khóa thông báo không còn dùng ở ba ngôn ngữ, chạy lại toàn bộ kiểm tra của CI.
 
 ## Không làm

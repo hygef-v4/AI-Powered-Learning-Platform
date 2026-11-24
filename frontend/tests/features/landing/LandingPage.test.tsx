@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { getProfile } from "@/features/identity/api";
@@ -38,6 +38,16 @@ describe("LandingPage", () => {
     renderLanding("vi");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Vẽ sơ đồ UML.");
     expect(screen.getAllByRole("link", { name: "Đăng nhập" })[0]).toHaveAttribute("href", "/login");
+  });
+
+  it("phiếu rubric mẫu cho thấy điểm AI đề xuất và điểm giảng viên chốt, định dạng số theo ngôn ngữ", () => {
+    renderLanding("vi");
+    const rubric = screen.getByRole("table", { name: "Rubric bài 2: sơ đồ lớp" });
+    const inheritance = within(rubric).getByRole("row", { name: /Quan hệ kế thừa/ });
+    expect(inheritance).toHaveTextContent("Giảng viên đã nâng điểm");
+    expect(within(inheritance).getAllByRole("cell").map((cell) => cell.textContent)).toEqual(["2,0", "2,5"]);
+    const total = within(rubric).getByRole("row", { name: /Tổng điểm/ });
+    expect(within(total).getAllByRole("cell").map((cell) => cell.textContent)).toEqual(["9,0", "9,5/10"]);
   });
 
   it("chèn JSON-LD có nonce, không đóng được thẻ script", () => {

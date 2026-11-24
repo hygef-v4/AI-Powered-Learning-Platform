@@ -9,4 +9,4 @@ Continue the existing authorized grading follow-up without subagents.
 
 Scope: GradingWorkspacePage, DocumentEditor's narrow read-only toolbar layout, workspace regression test, AI-DLC records. No backend/data/provider call, grade write, runtime restart, commit or push. Security/Resiliency retained; PBT disabled.
 
-[Results and diagnostic limits](../../build-and-test/2026-11-10-grading-ai-button-and-error.md).
+[Results and diagnostic limits](../../build-and-test/2026-11-10/2026-11-10-grading-ai-button-and-error.md).

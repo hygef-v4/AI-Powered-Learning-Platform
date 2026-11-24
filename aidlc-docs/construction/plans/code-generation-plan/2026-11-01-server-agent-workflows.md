@@ -42,4 +42,4 @@ Ruling: full source lives under backend/src/main/resources because Docker's cont
 
 Execution ruling: keep build configuration unchanged. Run tests first, then briefly stop only the local backend before standard packaging/restart, so Maven never overwrites the running jar. A new classifier/build profile solely to avoid a few seconds of local downtime is unnecessary. No Docker image build is claimed from inspecting Docker COPY src and packaged resource entries.
 
-Completion: implemented and verified; [results and remaining acceptance](../../build-and-test/2026-11-01-server-agent-workflows-results.md). No commit/push or private configuration changes.
+Completion: implemented and verified; [results and remaining acceptance](../../build-and-test/2026-11-01/2026-11-01-server-agent-workflows-results.md). No commit/push or private configuration changes.

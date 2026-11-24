@@ -44,6 +44,7 @@ public class McpServer {
     static final int METHOD_NOT_FOUND = -32601;
     static final int INVALID_PARAMS = -32602;
     static final int RATE_LIMITED = -32029;
+    static final int RATE_LIMIT_UNAVAILABLE = -32030;
 
     private static final Logger log = LoggerFactory.getLogger(McpServer.class);
 
@@ -161,8 +162,11 @@ public class McpServer {
         try {
             allowed = rateLimiter.tryAcquire(credentialId);
         } catch (RuntimeException e) {
-            log.warn("Không kiểm được giới hạn lời gọi MCP: {}", e.toString());
-            allowed = false;
+            // Fail closed (BR-U06-53), but say why: an unreachable Redis is not the caller's fault.
+            log.error("Không kiểm được giới hạn lời gọi MCP; từ chối lời gọi", e);
+            record(accountId, name, AuditResult.DENIED, "RATE_LIMIT_UNAVAILABLE");
+            return buildError(id, RATE_LIMIT_UNAVAILABLE,
+                    "Hệ thống tạm không kiểm được giới hạn lời gọi; hãy thử lại sau");
         }
         if (!allowed) {
             record(accountId, name, AuditResult.DENIED, "RATE_LIMITED");

@@ -12,4 +12,4 @@ File mẫu được đọc cục bộ, không chỉnh sửa: sinh viên theo hà
 
 Giữ Security/Resiliency và phạm vi phân quyền đã duyệt; PBT tắt. Không schema/dependency mới. Không nhập điểm/dữ liệu sinh viên từ file mẫu.
 
-Kết quả: [kiểm tra và giới hạn](../../build-and-test/2026-11-11-gradebook-matrix.md). Frontend970 test/full backend2.153 test qua; test bổ sung cuối19/19. Chưa xác nhận download live với backend mới.
+Kết quả: [kiểm tra và giới hạn](../../build-and-test/2026-11-11/2026-11-11-gradebook-matrix.md). Frontend970 test/full backend2.153 test qua; test bổ sung cuối19/19. Chưa xác nhận download live với backend mới.

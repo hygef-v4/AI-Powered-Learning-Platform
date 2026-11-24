@@ -71,7 +71,7 @@ Task 1–3: RED→GREEN; regression frontend 338/338, backend 141/141. Final: cl
 
 Người dùng yêu cầu mở browser và chạy test UI; đã đăng nhập bằng tài khoản giảng viên/sinh viên local do người dùng cung cấp. Đã kiểm tra các luồng hiện có ở 1440×900 và 390×844, gồm gradebook, chọn trưởng nhóm, chấm thành viên và lịch sử tác giả. Các tài khoản đều chưa có MSSV, nên phần hiển thị mã khác rỗng dùng fixture GET chỉ trong browser; đã gỡ sau kiểm tra, không ghi dữ liệu học tập.
 
-Xem [báo cáo UI và bằng chứng](../../build-and-test/2026-11-16-student-code-ui-browser-results.md). Không phát hiện regression MSSV trong ca đã chạy. Giao mục chưa thử vì bài CLOSED; duyệt đề xuất/lời mời chưa có ngữ cảnh phù hợp; hộp quiz chưa thử vì 0 lượt. Có thông báo CSP inline style khi mở quiz, nguồn chưa xác định, không kết luận là lỗi MSSV. Không tính các ca thiếu dữ liệu là PASS.
+Xem [báo cáo UI và bằng chứng](../../build-and-test/2026-11-16/2026-11-16-student-code-ui-browser-results.md). Không phát hiện regression MSSV trong ca đã chạy. Giao mục chưa thử vì bài CLOSED; duyệt đề xuất/lời mời chưa có ngữ cảnh phù hợp; hộp quiz chưa thử vì 0 lượt. Có thông báo CSP inline style khi mở quiz, nguồn chưa xác định, không kết luận là lỗi MSSV. Không tính các ca thiếu dữ liệu là PASS.
 
 
 ## Tinh chỉnh bảng Sinh viên theo ảnh phản hồi — 2026-11-16

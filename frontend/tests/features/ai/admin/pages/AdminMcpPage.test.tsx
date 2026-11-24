@@ -13,7 +13,6 @@ const AGENT = {
   expiresAt: "2026-11-02T10:00:00Z",
   lastUsedAt: null,
   status: "ACTIVE",
-  revealable: true,
 };
 
 function backend(list: unknown[]) {
@@ -29,10 +28,8 @@ function backend(list: unknown[]) {
         method === "POST"
           ? { credential: { ...AGENT, id: "new" }, token: "mcp_TEST_ONCE", endpoint: "/mcp" }
           : method === "PATCH"
-            ? { ...AGENT, label: "Báo cáo", access: "READ_WRITE" }
-            : url.endsWith("/token")
-              ? { token: "mcp_SECRET_ONCE" }
-              : list;
+            ? { ...AGENT, label: "Báo cáo", access: "READ_ONLY" }
+            : list;
       return Promise.resolve(
         new Response(JSON.stringify(body), { status: method === "POST" ? 201 : 200, headers: { "Content-Type": "application/json" } }),
       );
@@ -62,8 +59,8 @@ it("Admin tạo agent: popup token có biểu tượng sao chép, cấu hình m�
   expect(calls.every((c) => c.url === "/api/v1/me/mcp-credentials")).toBe(true);
 });
 
-it("Sửa agent dùng cùng popup: đổi nhãn, quyền; xem lại token; lưu xong không hiện cách kết nối", async () => {
-  const calls = backend([AGENT]);
+it("Sửa agent dùng cùng popup: đổi nhãn, hạ quyền; token chỉ hiện dạng che; lưu xong không hiện cách kết nối", async () => {
+  const calls = backend([{ ...AGENT, access: "READ_WRITE" }]);
   render(<McpAgentsTab />);
   expect(await screen.findByText("Hiệu lực")).toBeInTheDocument();
   expect(screen.queryByRole("columnheader", { name: /Lần dùng cuối/ })).not.toBeInTheDocument();
@@ -71,19 +68,30 @@ it("Sửa agent dùng cùng popup: đổi nhãn, quyền; xem lại token; lưu 
   const dialog = await screen.findByRole("dialog", { name: "Sửa agent" });
   expect(within(dialog).queryByText(/Hạn dùng/)).not.toBeInTheDocument();
 
-  fireEvent.click(within(dialog).getByRole("button", { name: "Xem token" }));
-  expect(await within(dialog).findByText("mcp_SECRET_ONCE")).toBeInTheDocument();
+  expect(within(dialog).getByText("mcp_••••••••ONCE")).toBeInTheDocument();
+  expect(within(dialog).queryByRole("button", { name: "Xem token" })).not.toBeInTheDocument();
+  expect(within(dialog).getByText(/chỉ hiện một lần/)).toBeInTheDocument();
 
   fireEvent.change(within(dialog).getByLabelText(/Nhãn/), { target: { value: "Báo cáo" } });
-  fireEvent.click(within(dialog).getByRole("radio", { name: "Đọc và ghi" }));
+  fireEvent.click(within(dialog).getByRole("radio", { name: "Chỉ đọc" }));
   fireEvent.click(within(dialog).getByRole("button", { name: "Lưu" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   expect(calls.find((c) => c.method === "PATCH")).toEqual({
     url: "/api/v1/me/mcp-credentials/a1",
     method: "PATCH",
-    body: { label: "Báo cáo", access: "READ_WRITE" },
+    body: { label: "Báo cáo", access: "READ_ONLY" },
   });
+  expect(calls.some((c) => c.url.endsWith("/token"))).toBe(false);
   expect(screen.queryByRole("dialog", { name: "Token agent" })).not.toBeInTheDocument();
+});
+
+it("agent chỉ đọc không nâng lên đọc và ghi được: lựa chọn bị khóa và có hướng dẫn tạo agent mới", async () => {
+  backend([AGENT]);
+  render(<McpAgentsTab />);
+  fireEvent.click(await screen.findByRole("button", { name: "Sửa agent Reporting" }));
+  const dialog = await screen.findByRole("dialog", { name: "Sửa agent" });
+  expect(within(dialog).getByRole("radio", { name: "Đọc và ghi" })).toBeDisabled();
+  expect(within(dialog).getByText(/hãy tạo agent mới/)).toBeInTheDocument();
 });
 
 it("shows a retry action when Admin credential loading fails", async () => {

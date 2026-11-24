@@ -1612,17 +1612,17 @@ Student/Teacher/Subject Manager ACTIVE manage own MCP credentials; Admin is deni
 - US-CNT-001/002: Given học liệu đang bật, When staff đủ quyền tắt, Then sinh viên không thấy/mở/tải kể cả qua token đã cấp; lịch sử vẫn giữ và staff có thể bật lại. Given mô tả có bullet/căn lề, When lưu/mở lại, Then giữ định dạng an toàn và plain fallback.
 - US-AIG-001/002 và US-QBK-002: Given quiz cho phép sửa, When soạn tay/chọn ngân hàng/soạn AI, Then thao tác trong khung câu hỏi, chọn nhiều tài liệu có chữ, không cần popup nguồn API; thiếu/null source vẫn tới cơ chế tự chọn. Lỗi giữ input, rời bản soạn chưa lưu được cảnh báo. Đề xuất AI vẫn cần người chấp nhận.
 
-Đây là tiêu chí cập nhật, không tự xác nhận mọi UI/provider acceptance đã qua. [Bằng chứng theo phạm vi](../../construction/build-and-test/2026-11-09-aidlc-doc-sync.md).
+Đây là tiêu chí cập nhật, không tự xác nhận mọi UI/provider acceptance đã qua. [Bằng chứng theo phạm vi](../../construction/build-and-test/2026-11-09/2026-11-09-aidlc-doc-sync.md).
 
 ## AI quiz review acceptance bổ sung — 2026-11-09
 
 US-AIG-001/002, US-QBK-002: Given có tài liệu nguồn dùng được, When gửi mà để trống yêu cầu, Then tạo prompt mặc định bám tài liệu. Given model đánh giá yêu cầu không liên quan tài liệu, When mở đề xuất mới, Then hiện cảnh báo vàng trước câu hỏi và giữ cảnh báo khi mở lại. Đánh giá model có thể sai; không coi là chứng minh chất lượng.
 
-Given đề xuất đang mở, When bấm Thu gọn, Then đóng phần xem theo guard chưa lưu. Given các câu chưa Bỏ đều hợp lệ, When Chấp nhận tất cả, Then lưu một request dùng nội dung sửa mới nhất và version quiz hiện tại; câu lỗi chặn lưu để sửa. [Kiểm chứng](../../construction/build-and-test/2026-11-09-ai-quiz-review-followup.md).
+Given đề xuất đang mở, When bấm Thu gọn, Then đóng phần xem theo guard chưa lưu. Given các câu chưa Bỏ đều hợp lệ, When Chấp nhận tất cả, Then lưu một request dùng nội dung sửa mới nhất và version quiz hiện tại; câu lỗi chặn lưu để sửa. [Kiểm chứng](../../construction/build-and-test/2026-11-09/2026-11-09-ai-quiz-review-followup.md).
 
 ## Source-grounded AI proposal acceptance correction — 2026-11-10
 
-US-AIG-001/002: Given AI nhận tài liệu và trả đánh giá lệch nguồn, When xử lý kết quả, Then không đưa câu lệch sang READY/chấp nhận; tạo lại tối đa một task chỉ dùng prompt mặc định và tài liệu đã kiểm lại quyền. Given lượt tạo lại vẫn báo lệch, Then FAILED và proposal rỗng. Cảnh báo được giữ, không chạy lặp vô hạn; có thể tốn thêm một task AI. Legacy READY drafts không được sửa ngầm; đánh giá model không phải bằng chứng tuyệt đối về chất lượng. [Kiểm chứng](../../construction/build-and-test/2026-11-10-ai-source-grounding-fix.md).
+US-AIG-001/002: Given AI nhận tài liệu và trả đánh giá lệch nguồn, When xử lý kết quả, Then không đưa câu lệch sang READY/chấp nhận; tạo lại tối đa một task chỉ dùng prompt mặc định và tài liệu đã kiểm lại quyền. Given lượt tạo lại vẫn báo lệch, Then FAILED và proposal rỗng. Cảnh báo được giữ, không chạy lặp vô hạn; có thể tốn thêm một task AI. Legacy READY drafts không được sửa ngầm; đánh giá model không phải bằng chứng tuyệt đối về chất lượng. [Kiểm chứng](../../construction/build-and-test/2026-11-10/2026-11-10-ai-source-grounding-fix.md).
 
 ## Grading remediation acceptance amendment — 2026-11-10
 

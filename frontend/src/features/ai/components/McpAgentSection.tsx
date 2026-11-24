@@ -4,7 +4,6 @@ import { useId, useState, type ReactNode } from "react";
 import { formatDate, masked } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Button, Dialog, Field, IconButton, Pill, SettingsGroup, TableFrame, Td, TextInput, Th, cx } from "@/shared/ui";
-import { revealMcpToken } from "../api";
 import { ACCESS_LABEL, MAX_AGENTS, MCP_STATUS, describeErrorCode } from "../model/labels";
 import { McpClientSetup } from "./SetupGuides";
 import type { McpAccess, McpCreated, McpCredential } from "../model/types";
@@ -17,7 +16,7 @@ type Props = {
   onRevoke: (id: string) => Promise<void>;
 };
 
-/** Bảng credential MCP (UC 32): tối đa 5 còn hiệu lực; sửa nhãn và quyền, xem lại token trong popup Sửa. */
+/** Bảng credential MCP (UC 32): tối đa 5 còn hiệu lực; sửa nhãn và hạ quyền; token chỉ hiện một lần lúc tạo. */
 export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: Props) {
   const [editing, setEditing] = useState<McpCredential | "new" | null>(null);
   const [created, setCreated] = useState<McpCreated | null>(null);
@@ -145,7 +144,7 @@ async function copyText(text: string): Promise<boolean> {
 
 /**
  * Popup Kết nối agent mới (c12b) và Sửa agent dùng chung, chỉ khác tiêu đề: nhãn, quyền; tạo mới có thêm hạn dùng 7 / 30
- * / 90 ngày, sửa có thêm ô xem lại token (mắt, sao chép).
+ * / 90 ngày. Sửa chỉ hiện token đã che; agent chỉ đọc không nâng lên đọc và ghi được (phải tạo agent mới).
  */
 export function McpCredentialDialog({
   active,
@@ -165,6 +164,7 @@ export function McpCredentialDialog({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const editing = current !== null;
+  const upgradeBlocked = current?.access === "READ_ONLY";
 
   const submit = async () => {
     const name = label.trim();
@@ -201,23 +201,40 @@ export function McpCredentialDialog({
       <Field label={msg("ai.components.McpAgentSection.label")} htmlFor={labelId} required error={error}>
         <TextInput id={labelId} value={label} maxLength={60} onChange={(e) => setLabel(e.target.value)} disabled={busy} />
       </Field>
-      {current && <TokenField credential={current} />}
+      {current && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-body">Token</span>
+          <TokenCard value={`mcp_••••••••${current.tokenHint}`} />
+          <p className="text-xs text-muted">{msg("ai.components.McpAgentSection.tokenShownOnce")}</p>
+        </div>
+      )}
       <fieldset className="flex flex-col gap-1.5">
         <legend className="mb-1.5 text-xs font-semibold text-body">
           {msg("ai.components.McpAgentSection.permissions")}<span className="text-danger"> *</span>
         </legend>
-        {(["READ_ONLY", "READ_WRITE"] as McpAccess[]).map((option) => (
-          <label
-            key={option}
-            className={cx(
-              "flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2.5",
-              access === option ? "border-primary bg-primary-soft" : "border-line-strong",
-            )}
-          >
-            <input type="radio" name="mcp-access" checked={access === option} onChange={() => setAccess(option)} disabled={busy} />
-            <span className="font-semibold text-ink">{ACCESS_LABEL[option]}</span>
-          </label>
-        ))}
+        {(["READ_ONLY", "READ_WRITE"] as McpAccess[]).map((option) => {
+          const locked = upgradeBlocked && option === "READ_WRITE";
+          return (
+            <label
+              key={option}
+              className={cx(
+                "flex items-center gap-2 rounded-xl border px-3 py-2.5",
+                locked ? "cursor-not-allowed opacity-60" : "cursor-pointer",
+                access === option ? "border-primary bg-primary-soft" : "border-line-strong",
+              )}
+            >
+              <input
+                type="radio"
+                name="mcp-access"
+                checked={access === option}
+                onChange={() => setAccess(option)}
+                disabled={busy || locked}
+              />
+              <span className="font-semibold text-ink">{ACCESS_LABEL[option]}</span>
+            </label>
+          );
+        })}
+        {upgradeBlocked && <p className="text-xs text-muted">{msg("ai.components.McpAgentSection.upgradeNeedsNewAgent")}</p>}
       </fieldset>
       {!editing && (
         <>
@@ -249,51 +266,7 @@ export function McpCredentialDialog({
   );
 }
 
-/** Ô token trong popup Sửa: ẩn mặc định, nút mắt và sao chép luôn có; token tạo trước bản này không xem lại được (nút khóa). */
-function TokenField({ credential }: { credential: McpCredential }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [shown, setShown] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadAgents = async () => {
-    if (token) return token;
-    try {
-      const loaded = (await revealMcpToken(credential.id)).token;
-      setToken(loaded);
-      return loaded;
-    } catch {
-      setError(msg("ai.components.McpAgentSection.couldNotViewTheToken"));
-      return null;
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-semibold text-body">Token</span>
-      <TokenCard value={shown && token ? token : `mcp_••••••••${credential.tokenHint}`}>
-        <IconButton
-          icon={shown ? "visibility_off" : "visibility"}
-          label={!credential.revealable ? msg("ai.components.McpAgentSection.oldTokenCannotBeViewed") : shown ? msg("ai.components.McpAgentSection.hideToken") : "Xem token"}
-          disabled={!credential.revealable}
-          onClick={() => {
-            if (shown) setShown(false);
-            else void loadAgents().then((t) => t && setShown(true));
-          }}
-        />
-        <IconButton
-          icon={copied ? "check" : "copy"}
-          label={!credential.revealable ? msg("ai.components.McpAgentSection.oldTokenCannotBeCopied") : copied ? msg("ai.components.McpAgentSection.copied") : msg("ai.components.McpAgentSection.copyToken")}
-          disabled={!credential.revealable}
-          onClick={() => void loadAgents().then(async (t) => t && setCopied(await copyText(t)))}
-        />
-      </TokenCard>
-      {error && <p className="text-xs text-danger">{error}</p>}
-    </div>
-  );
-}
-
-/** Thẻ cam chứa token, các biểu tượng (xem, sao chép) nằm trong thẻ bên phải; dùng chung cho popup Tạo và Sửa. */
+/** Thẻ cam chứa token, biểu tượng sao chép nằm trong thẻ bên phải; dùng chung cho popup Tạo và Sửa. */
 function TokenCard({ value, children }: { value: string; children?: ReactNode }) {
   return (
     <div className="flex min-h-11 items-center gap-1 rounded-xl border border-primary/40 bg-primary-soft py-1.5 pr-1.5 pl-3">

@@ -137,8 +137,8 @@ Files:
 - [x] Re-read current git diff and active delivery-fix report before final verification; preserve all work from that task.
 - [x] Run backend focused tests above, relevant grading integration tests, frontend grading tests, lint, typecheck and git diff --check. Broaden only for changed cross-unit contracts or failures.
 - [x] Run isolated frontend production build if required; never replace the live .next output. Stop owned backend before Maven clean/test compilation or isolate its output; do not let IDE autobuild replace classes under the running JVM.
-- [x] Write `aidlc-docs/construction/build-and-test/2026-10-26-u09-structured-feedback-report.md` with exact changes, constraints, test commands/counts, known gaps and live UI evidence or explicit Pending status. Preserve the separate delivery-fix report.
-- [x] Write `aidlc-docs/construction/build-and-test/2026-10-26-u09-structured-feedback-manual-test-guide.md` with IDs, roles, steps, expected result and Pass/Fail/Pending for each case below. Do not claim unrun UI cases passed.
+- [x] Write `aidlc-docs/construction/build-and-test/2026-10-26/2026-10-26-u09-structured-feedback-report.md` with exact changes, constraints, test commands/counts, known gaps and live UI evidence or explicit Pending status. Preserve the separate delivery-fix report.
+- [x] Write `aidlc-docs/construction/build-and-test/2026-10-26/2026-10-26-u09-structured-feedback-manual-test-guide.md` with IDs, roles, steps, expected result and Pass/Fail/Pending for each case below. Do not claim unrun UI cases passed.
 - [x] Update this plan and append state/audit entries. Report in Vietnamese when code and checks are ready for the user to test. No commit/push.
 
 Manual cases (use dedicated disposable fixtures; never publish/overwrite live grades as an agent):

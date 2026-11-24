@@ -51,9 +51,6 @@ export const createMcpCredential = (label: string, access: McpAccess, days: numb
 export const updateMcpCredential = (id: string, label: string, access: McpAccess) =>
   fetchApi<McpCredential>(`${MCP}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ label, access }) });
 
-/** Token rõ của agent còn hiệu lực, chỉ chủ agent xem được. */
-export const revealMcpToken = (id: string) => fetchApi<{ token: string }>(`${MCP}/${encodeURIComponent(id)}/token`);
-
 export const revokeMcpCredential = (id: string) =>
   fetchApi<void>(`${MCP}/${encodeURIComponent(id)}`, { method: "DELETE" });
 
