@@ -12,5 +12,7 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./tests/locale.setup.ts", "./tests/setup.ts"],
     include: ["tests/**/*.test.{ts,tsx}"],
+    // Interaction-heavy jsdom tests take ~1 s alone but exceed 5 s when every core runs a worker.
+    testTimeout: 15_000,
   },
 });

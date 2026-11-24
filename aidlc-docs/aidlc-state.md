@@ -1485,3 +1485,26 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 - [x] Chạy đủ 20 ca với prompt hiện tại. Luna trả 20 kết quả hợp lệ, 15/20 khớp điểm tổng của nhóm và Sol đạt ngưỡng cả ba chỉ số ở 18/20 ca.
 - [x] Opus 5.5 `high` đánh giá đủ 20 bản ghi Luna của lượt 3: 15/20 đạt cả ba chỉ số. Hai judge cùng đạt 15 ca, chỉ Sol đạt 3 ca (`01-complete`, `03-one-normal-flow`, `05-off-topic`, Opus cho chỉ số hữu ích 0,70), cùng dưới ngưỡng 2 ca workshop.
 - [ ] Luna vẫn cho 0 thay vì 0,25 ở mục một luồng. Lượt đầy đủ cũng ghi nhận lệch bội số và kiểm tra quyền ở hai ca workshop. Lượt 2 còn 17 ca chưa có Opus.
+
+## Tối ưu luồng MCP (2026-11-24)
+
+- [x] Xóa `McpServer.cut()` và `TRUNCATED` không còn nơi gọi.
+- [x] `JsonSchemaChecker.validateToolArguments` giữ schema đã biên dịch cho tool MCP. Schema output AI theo từng task vẫn biên dịch mỗi lần để map không tăng mãi.
+- [x] `read_grading_context` đo kích thước tăng dần theo block thay vì tuần tự hóa lại cả trang. Thêm overload nhận ngân sách byte.
+- [x] `read_grading_batch` truyền phần ngân sách 180 KB còn lại cho từng item. Item sau nhận trang ngắn hơn kèm `continuation`; không vừa thì trả `MCP_BATCH_RESULT_LIMIT`.
+- [x] Test MCP và grading MCP đạt. Toàn bộ backend 2663 test còn 1 lỗi có sẵn trên HEAD (`GradingProposalValidatorTest.onlyHoldsFullCreditForExplicitActorLists[2]`), không liên quan.
+- [ ] Chưa đo thời gian trước và sau trên evaluation nhiều block; chưa chạy E2E WF01/WF02.
+- [x] Chạy luồng MCP thật trên backend worktree (cổng 8081, DB local): tạo đề nhóm nháp, replay và xung đột requestRef; đọc ngữ cảnh và ghi đề xuất chấm bài nhóm `GROUP_DOCUMENT`, replay, sai fingerprint; điểm chính thức giữ `PUBLISHED`.
+- [ ] `read_grading_batch` 6 bài thật: 4 OK (bài cuối nhận trang ngắn kèm continuation), 2 trả `MCP_BATCH_RESULT_LIMIT` vì kích thước sau escape trong envelope vượt 240 KB dù ngân sách thô còn đủ. Chưa sửa.
+
+## Ổn định luồng MCP (2026-11-24)
+
+- [x] Ngân sách `read_grading_batch` tính thêm hệ số phình do escape vào envelope, giữ kiểm tra 240 KB làm chốt chặn. Test với item nhiều dấu ngoặc kép.
+- [x] `McpServer` ghi audit `INVALID_ARGS` khi `arguments` không phải object hoặc sai schema (chỉ mã lý do, không ghi thông điệp validator).
+- [x] `scripts/mcp-smoke.py` và `scripts/test-mcp-smoke.py`: smoke test tạo đề, replay, xung đột requestRef, đọc ngữ cảnh, lô, sai fingerprint, ghi đề xuất và replay. Chạy thật trên backend worktree: 11/11 PASS.
+- [x] Đo lại lô 6 bài thật: hệ số phình chỉ 1,14; bài 3–4 bị `MCP_BATCH_RESULT_LIMIT` vì phần cố định mỗi trang (~28 KB rubric, schema, ngữ cảnh đề) lớn hơn ngân sách còn ~25,8 KB. Hành vi đúng; không phải do escape như giả thuyết trước.
+- [ ] Đề xuất sau: không lặp phần cố định giống nhau giữa các item cùng bài tập trong một lô.
+- [x] Sửa `GradingSecondaryActorCheck.NON_MANDATORY`: thêm `(?U)` để `\b` nhận chữ tiếng Việt; tiêu chí "(ví dụ …)" không còn bị giữ duyệt nhầm. Toàn bộ backend 2664 test đạt, 0 lỗi.
+- [x] Frontend: `vitest.config.mts` đặt `testTimeout` 15 giây. Năm test UI nặng (grading workspace, bulk selection, authoring flow) chỉ mất 0,25–1,2 giây khi chạy riêng nhưng vượt 5 giây khi 24 worker jsdom chạy song song. Toàn bộ 1213 test đạt hai lần liên tiếp; typecheck và lint sạch.
+- [x] E2E trên backend worktree (`local,worker`, cổng 8081): `wf01-wf02-grading.mjs` PASS (2 ca), `wf01-mcp-client.mjs read` đọc đủ 7 block, `record` trả đề xuất READY.
+- [x] Đã xóa 2 đề nháp thử `[MCP test]`/`[MCP smoke]` qua API của giảng viên. Ba đề xuất chấm thử trên bài nhóm SE_JS không có API xóa nên được giữ lại; không đổi điểm chính thức.

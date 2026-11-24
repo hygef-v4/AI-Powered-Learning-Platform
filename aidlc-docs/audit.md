@@ -14039,3 +14039,93 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Construction / Build and Test.
 
 ---
+
+## Review — rà soát luồng MCP
+**Timestamp**: 2026-11-24T12:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "check lại luồng mcp xem có vấn đề gì cần tối ưu ko"
+**AI Response**: "Rà McpController, McpServer, McpToolRegistry, JsonSchemaChecker, McpCredentialService, RedisMcpRateLimiter, McpWriteRequestService và các tool chấm điểm. Báo cáo điểm cần tối ưu: đóng gói trang read_grading_context tuần tự hóa lại toàn bộ kết quả sau mỗi block, read_grading_batch tốn công đọc rồi bỏ item do giới hạn 180 KB, schema tool được biên dịch lại ở mỗi lời gọi, McpServer.cut không còn nơi gọi. Chưa sửa code."
+**Context**: Construction / review, chỉ đọc mã; chưa đổi code.
+
+---
+
+## Review — tổng hợp và đề xuất cải thiện luồng MCP
+**Timestamp**: 2026-11-24T12:20:00Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi tổng hợp lại và đề xuất cải thiện /pstack:poteto-mode /ponytail:ponytail"
+**AI Response**: "Tổng hợp kết quả review MCP thành 4 đơn vị thay đổi theo thứ tự: xóa McpServer.cut, cache schema đã biên dịch, đo kích thước tăng dần khi chia trang read_grading_context, truyền ngân sách còn lại cho read_grading_batch. Nêu các mục bỏ qua và cách kiểm chứng. Chưa sửa code."
+**Context**: Construction / review, đề xuất; chưa đổi code.
+
+---
+
+## Code — tối ưu luồng MCP
+**Timestamp**: 2026-11-24T12:45:00Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi sửa code và chạy test lại"
+**AI Response**: "Xóa McpServer.cut, cache schema tool MCP, đo kích thước tăng dần khi chia trang read_grading_context, truyền ngân sách còn lại cho read_grading_batch. Thêm 3 test hành vi. Test MCP và grading MCP đạt; toàn bộ backend 2663 test còn 1 lỗi GradingProposalValidatorTest có sẵn trên HEAD. Không đổi readOnly của GradingMcpQueryService.call vì listProposals có ghi."
+**Context**: Construction / Code Generation, sửa nhỏ ngoài kế hoạch unit; chưa commit.
+
+---
+
+## Hỏi đáp — MCP chấm bài nhóm
+**Timestamp**: 2026-11-24T13:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "hiện tại mcp có chấm điểm cho bài nhóm chưa"
+**AI Response**: "Có, ở mức tài liệu nhóm (GROUP_DOCUMENT): agent đọc ngữ cảnh và ghi đề xuất chấm cho cả nhóm; evaluation MEMBER bị từ chối; prompt cấm đánh giá đóng góp cá nhân; giảng viên duyệt qua reviewUrl. Không có tool đánh giá đóng góp từng thành viên."
+**Context**: Hỏi đáp, chỉ đọc mã.
+
+---
+
+## Build and Test — chạy luồng MCP thật
+**Timestamp**: 2026-11-24T19:30:00Z
+**Requested by:** Quang Hung
+**User Input**: "ok hiện tôi chỉ cần làm vậy thôi giúp tôi tóm tắt lại changes và chạy test mcp tạo đề và chấm điểm trên luồng thật xem có vấn đề gì ko"
+**AI Response**: "Chạy backend của worktree trên cổng 8081 với DB local, gọi MCP qua HTTP. Tạo đề nhóm nháp '[MCP test] Thiết kế use case thư viện', kiểm replay và xung đột requestRef. Chấm bài nhóm SE_JS: đọc ngữ cảnh, ghi đề xuất READY, replay, sai fingerprint bị chặn, điểm chính thức không đổi. Lô 6 bài: 2 item bị MCP_BATCH_RESULT_LIMIT do escape trong envelope. Đã tắt backend 8081."
+**Context**: Construction / Build and Test, dữ liệu local.
+
+---
+
+## Hỏi đáp — đề xuất để MCP chạy ổn định
+**Timestamp**: 2026-11-24T19:45:00Z
+**Requested by:** Quang Hung
+**User Input**: "b có đề xuất gì để c hạy ổn đinh ko"
+**AI Response**: "Đề xuất theo thứ tự: sửa ngân sách lô tính cả escape, ghi audit cho lời gọi sai schema, biến script thử luồng thật thành smoke test lặp lại được, sửa test GradingProposalValidatorTest đang đỏ, script chạy backend local nạp env, theo dõi Redis vì MCP fail-closed, thêm ví dụ payload vào authoring requirements. Chưa sửa code."
+**Context**: Hỏi đáp, đề xuất.
+
+---
+
+## Code — ổn định luồng MCP
+**Timestamp**: 2026-11-24T20:15:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại theo đề xuất /ponytail:ponytail"
+**AI Response**: "Sửa mục 1 (ngân sách lô tính escape), mục 2 (audit INVALID_ARGS), mục 3 (scripts/mcp-smoke.py kèm test offline, ghi vào docs/guides/mcp-clients.md). Mục 5 đã có sẵn scripts/run-backend.bat. Test MCP backend và test script đạt; smoke test thật 11/11 PASS. Đo lại cho thấy giới hạn lô do phần cố định mỗi trang, không phải escape. Chưa sửa GradingProposalValidatorTest, chưa commit."
+**Context**: Construction / Code Generation và Build and Test.
+
+---
+
+## Code — sửa lỗi còn lại
+**Timestamp**: 2026-11-24T20:40:00Z
+**Requested by:** Quang Hung
+**User Input**: "sửa hết lỗi còn lại"
+**AI Response**: "Sửa root cause của GradingProposalValidatorTest: regex NON_MANDATORY trong GradingSecondaryActorCheck dùng \b ASCII nên 'ví dụ' không khớp; thêm (?U). Rà các regex \b khác có tiếng Việt: không còn. Toàn bộ backend 2664 test đạt. Chưa xóa dữ liệu thử trong DB local vì cần xác nhận; chưa làm gộp phần cố định trong lô vì đổi định dạng kết quả."
+**Context**: Construction / Build and Test.
+
+---
+
+## Build and Test — hoàn tất việc còn lại, test frontend và E2E
+**Timestamp**: 2026-11-24T21:10:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm nốt việc còn lại bao  gồm test frontend e2e"
+**AI Response**: "Chạy test frontend: lần đầu 9 lỗi, lần sau 5 lỗi khác nhau, đều là timeout 5 giây do tải song song; đặt testTimeout 15 giây, 1213/1213 đạt hai lần, typecheck và lint sạch. Chạy E2E WF01/WF02 trên backend worktree: PASS; MCP client đọc ngữ cảnh và ghi đề xuất READY. Xóa 2 đề nháp thử qua API. Không làm gộp phần cố định của lô vì đổi định dạng kết quả cho agent."
+**Context**: Construction / Build and Test.
+
+---
+
+## Commit — tối ưu và ổn định luồng MCP
+**Timestamp**: 2026-11-24T21:20:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Commit các thay đổi MCP, regex actor phụ, timeout test frontend, smoke test và tài liệu trên nhánh audit-staging. Không push."
+**Context**: Construction / Build and Test, commit theo yêu cầu.
+
+---

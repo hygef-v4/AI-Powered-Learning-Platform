@@ -114,7 +114,7 @@ Cách tổ chức guide tham khảo [GitHub MCP: chọn ứng dụng trước](h
 
 Phiên bản công cụ trên máy đã kiểm tra: Codex 0.166.0, Claude Code 2.1.308, agy 1.4.12, OpenCode 2.2.5. Kiểm tra phiên bản/định dạng không thay thế nghiệm thu kết nối có xác thực cho từng ứng dụng. Đợt này không cài cấu hình cá nhân, không tạo token hay gọi model thật.
 
-Dành cho người bảo trì: script chẩn đoán có sẵn tại `scripts/check-mcp.ps1`, fixture tại `scripts/test-check-mcp.py`; không cần chạy để làm theo guide chính. Workflow/skill/hook: [MCP agent workflows](mcp-agent-workflows.md).
+Dành cho người bảo trì: script chẩn đoán có sẵn tại `scripts/check-mcp.ps1`, fixture tại `scripts/test-check-mcp.py`. Smoke test luồng tạo đề và chấm thật: đặt `PLATFORM_MCP_TOKEN` rồi chạy `python scripts/mcp-smoke.py --class-id <id> --evaluation-id <id>` (thêm `--write` để tạo một đề nháp và một đề xuất chấm; không đổi điểm chính thức). Không cần chạy để làm theo guide chính. Workflow/skill/hook: [MCP agent workflows](mcp-agent-workflows.md).
 
 ## MCP và các nút AI trong ứng dụng
 
