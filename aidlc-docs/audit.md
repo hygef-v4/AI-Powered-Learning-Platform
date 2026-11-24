@@ -14165,3 +14165,21 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Construction, U06 AI Connections, sửa UX theo phản hồi người dùng. Dùng lại API ai-source-preference có sẵn, không đổi schema. Kiểm tra: AiTaskFlowTest 43, AiSourceServiceTest 5, AiConnectionServiceTest 13, frontend tests/features/ai 50; trên stack local, nguồn API của trường với khóa sai thì tác vụ FAILED và không chuyển sang khóa cá nhân, nguồn Claude chưa có khóa thì không tạo tác vụ AI. Gộp vào staging theo yêu cầu "Merge cho tôi vào staging đi".
 
 ---
+
+## Docs Sync — remove stale MCP token reveal references after PR #127
+**Timestamp**: 2026-11-24T16:28:15Z
+**Requested by:** Quang Hung
+**User Input**: "Update aidlc-docs to remove stale MCP token reveal references after PR #127"
+**AI Response**: "Verified current source code on origin/staging (McpCredentialController.java, McpCredentialService.java, McpCredential.java, V20261123_1200__drop_mcp_token_ciphertext.sql, McpAgentSection.tsx, features/ai/api/index.ts, features/ai/model/types.ts) and updated the three living docs under aidlc-docs/: removed @GetMapping(\"/{id}/token\") from inception/reverse-engineering/api-inventory.md, updated McpTokenDialog/McpCredentialDialog and the AI/MCP current flow section in construction/u06-ai-connections/functional-design/frontend-components.md to reflect one-time token display and no READ_ONLY-to-READ_WRITE upgrade, and removed the contradictory MCP token readback sentence from construction/build-and-test/security-test-instructions.md. No backend or frontend source code was modified."
+**Context**: Documentation sync on branch docs/sync-mcp-token-reveal (branched off origin/staging) targeting staging.
+
+---
+
+## Docs Sync — PR #134 review follow-up (remaining living aidlc-docs)
+**Timestamp**: 2026-11-24T16:42:30Z
+**Requested by:** Quang Hung
+**User Input**: "Address PR #134 automated review findings for remaining living aidlc-docs"
+**AI Response**: "Synced the remaining six living docs under aidlc-docs/ flagged in PR #134 review (u06 business-logic-model.md, u06 as-built-baseline.md, inception requirements.md, use-cases.md, stories.md, and build-and-test/unit-test-instructions.md) to remove stale MCP token reveal and ciphertext references, aligned frontend-components.md line 68 with PATCH /{id} and downgrade-only edit rules, and fixed the escaped paths in the PR #134 description. Left docs/usecase_table.md and backend McpCredentialController.java Javadoc untouched per aidlc-docs-only scope."
+**Context**: PR #134 review remediation on branch docs/sync-mcp-token-reveal targeting staging.
+
+---

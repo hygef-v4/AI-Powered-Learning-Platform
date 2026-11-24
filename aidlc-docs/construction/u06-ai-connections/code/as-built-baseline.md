@@ -4,7 +4,7 @@ Source snapshot `f68a6ec5889074de80a1f1f0faf7bcb7e7054ec8`; current source paths
 
 **Documentation UI delta 2026-11-02:** /ai/mcp-guide under the existing authenticated AI layout replaces the long inline MCP setup guide with a persistent connection-tab link. Reuses McpClientSetup for four native formats/English prompt, stable SSR endpoint and placeholder-only docs. Includes per-role workflows, 29 source-aligned non-Admin tools, proposal/apply and grading-quality limits, retries, disconnect/revoke and official references. No backend/API/schema changes. [Verification](../../build-and-test/2026-11-02/2026-11-02-mcp-documentation-results.md).
 
-MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; API key chung và cá nhân chỉ ghi, danh sách chỉ hiện phần nhận diện đã che (D15). Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
+MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Token MCP chỉ hiện một lần lúc tạo, server chỉ lưu `token_hash`/`token_hint` (D05 đóng 2026-11-23, bỏ xem lại token); API key chung và cá nhân chỉ ghi, danh sách chỉ hiện phần nhận diện đã che (D15). Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
 
 ## Source và negative-test inventory
 
