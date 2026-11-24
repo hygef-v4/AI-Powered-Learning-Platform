@@ -13958,3 +13958,174 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Bug fix MCP hoàn tất mục 1 đến 5 và 7 đến 10.
 
 ---
+
+## Build and Test - System test xác thực
+**Timestamp**: 2026-11-23T17:36:54Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check system test authentication system test" và "giúp tôi test nốt, tôi đả mở container mailpit"
+**AI Response**: "Chạy 179 test identity (đạt), viết và chạy system test xác thực trên localhost:3000 (19/19) và OTP qua Mailpit (16/16). Tìm ra run-backend.bat thiếu SMTP_FROM nên OTP không gửi được khi chạy backend local; thêm SMTP_FROM=no-reply@platform.local như docker-compose.local.yml. Chưa commit."
+**Context**: Kiểm thử U01; sửa cấu hình chạy local một dòng.
+
+---
+
+## Build and Test - Đưa system test xác thực vào repo
+**Timestamp**: 2026-11-23T17:46:13Z
+**Requested by:** Quang Hung
+**User Input**: "có"
+**AI Response**: "Thêm scripts/e2e/auth.mjs và auth-otp.mjs, đọc tài khoản và mật khẩu từ biến môi trường; sửa Session trong lib.mjs để giữ cookie theo tên và đường dẫn; cập nhật README e2e. Chạy lại trên local: 18/18 và 16/16 đạt. Các script e2e cũ chưa chạy lại vì cần stack Docker 8088. Chưa commit."
+**Context**: Kiểm thử U01.
+
+---
+
+## Build and Test - Ca đổi mật khẩu khi đang đăng nhập
+**Timestamp**: 2026-11-24T00:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm nốt ca 5" và "làm xong thì bảo codex cập nhật lại"
+**AI Response**: "Thêm ca A10 đến A10g vào scripts/e2e/auth.mjs cho ST-WF07-005: sai mật khẩu hiện tại 400 CURRENT_PASSWORD_INVALID, mật khẩu mới yếu 400, đổi đúng 204, phiên hiện tại giữ, phiên khác bị thu hồi, mật khẩu cũ hết dùng được, rồi đổi lại như cũ. Chạy trên localhost:3000: 25/25 đạt. Cập nhật README e2e. Chưa commit."
+**Context**: Kiểm thử U01 FR-001, FR-015.
+
+---
+
+## Build and Test - System test giao diện WF07 Round 1
+**Timestamp**: 2026-11-24T01:30:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi kiểm thử trên giao diện thật để cập nhật trạng thái các round" và "nhớ lưu lại các ảnh và up vào thư mục này nhé, làm bằng chứng system test theo luồng nhớ đặt tên file,folder rõ ràng"
+**AI Response**: "Chạy 6 ca ST-WF07-001 đến 006 trên giao diện localhost:3000 bằng trình duyệt Orca (Chrome extension không kết nối): kích hoạt bằng OTP, mã sai và mã hết hạn sau 10 phút, đăng xuất, quên mật khẩu (email có và không có tài khoản), đổi mật khẩu khi đang đăng nhập, sửa hồ sơ. Cả 6 đạt. Lưu 32 ảnh theo thư mục từng ca và tên file theo thứ tự bước, tạo thư mục Drive tương ứng trong system test proof, nhờ Codex tải ảnh lên và ghi Round 1 vào sheet. Đã khôi phục mật khẩu và hồ sơ của gv.test và sv1.test; còn lại tài khoản ui.* (đã kích hoạt hoặc chờ kích hoạt) trong dữ liệu local. Không in mật khẩu hay OTP; một ảnh Mailpit lộ mã OTP đã bị bỏ. Chưa commit."
+**Context**: Kiểm thử U01 trên giao diện, FR-001, FR-015.
+
+---
+
+## System test — WF01 và WF02
+**Timestamp**: 2026-11-23T20:04:12Z
+**Requested by:** Quang Hung
+**User Input**: "Claude sắp hết token, b giupd tôi xử lý dữ liệu test, e2e script còn ui thù tạo 1 phiên orca gpt luna high test chụp bằng chứng, sau khi xong thì báo cáo bạn và bạn tự cập nhật lên drive. Tự động duyệt, ảppove yêu cầu. Đừng hỏi tôi cho đến khi làm xong"
+**AI Response**: "Tạo fixture PE có ba sơ đồ, chạy API E2E trên stack local và giao một phiên Orca GPT Luna High kiểm thử UI. Cập nhật bằng chứng và trạng thái sau khi xác minh báo cáo."
+**Context**: Construction / Build and Test, Round 1 trên lớp demo cô lập theo run ID.
+
+---
+
+## System test — cấu hình phiên
+**Timestamp**: 2026-11-23T20:04:12Z
+**Requested by:** Quang Hung
+**User Input**: "Nhớ để permission no restrict"
+**AI Response**: "Dùng quyền filesystem hiện có và phiên Orca được cấp cho phạm vi kiểm thử."
+**Context**: Construction / Build and Test.
+
+---
+
+## System test — cập nhật Report 5.3
+**Timestamp**: 2026-11-24T03:08:10Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi cập nhật lại sheet status report 5, và commit"
+**AI Response**: "Cập nhật ghi chú Round 1 và link bằng chứng trong Test Statistics. Tải lại workbook để xác nhận 8 ca WF01/WF02 Passed và tổng 14 Passed, 0 Failed, 110 Pending. Kiểm tra script E2E và fixture Draw.io để commit."
+**Context**: Construction / Build and Test.
+
+---
+
+## System test — chẩn đoán các ca Failed của WF01/WF02
+**Timestamp**: 2026-11-24T10:14:59Z
+**Requested by:** Quang Hung
+**User Input**: "Check xem test case sai hay là do code sai nếu 1 trong 2 sai thì sửa"
+**AI Response**: "Đối chiếu sáu ca Failed với đặc tả. Sửa đăng ký ảnh tạm trong nhập DOCX, xác nhận nguồn và hiển thị trạng thái AI, hiển thị thời gian rời trang và trạng thái tắt theo dõi, cảnh báo mất bản nháp khi giao lại phần và cập nhật giao diện khi đến hạn bài nhóm. Làm rõ WF01-003, WF01-004 và WF01-007 trong Report 5.3. Chạy lại sáu ca trên dữ liệu tổng hợp, xác nhận 27 kiểm thử backend và 196 kiểm thử frontend đạt."
+**Context**: Construction / Build and Test, WF01_Individual_Assignment và WF02_Group_Assignment.
+
+---
+
+## System test — sửa cảnh báo GitGuardian ở PR #129
+**Timestamp**: 2026-11-24T11:00:10Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi sửa pr đó"
+**AI Response**: "Đối chiếu cảnh báo Generic Password trong bộ fixture WF01/WF02. Đổi cách sinh mật khẩu test bằng dữ liệu ngẫu nhiên tại runtime và kiểm tra 512 mẫu theo chính sách mật khẩu. Chuẩn bị lại hai commit chưa merge trên staging để cập nhật PR #129."
+**Context**: Construction / Build and Test.
+
+---
+
+## Review — rà soát luồng MCP
+**Timestamp**: 2026-11-24T12:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "check lại luồng mcp xem có vấn đề gì cần tối ưu ko"
+**AI Response**: "Rà McpController, McpServer, McpToolRegistry, JsonSchemaChecker, McpCredentialService, RedisMcpRateLimiter, McpWriteRequestService và các tool chấm điểm. Báo cáo điểm cần tối ưu: đóng gói trang read_grading_context tuần tự hóa lại toàn bộ kết quả sau mỗi block, read_grading_batch tốn công đọc rồi bỏ item do giới hạn 180 KB, schema tool được biên dịch lại ở mỗi lời gọi, McpServer.cut không còn nơi gọi. Chưa sửa code."
+**Context**: Construction / review, chỉ đọc mã; chưa đổi code.
+
+---
+
+## Review — tổng hợp và đề xuất cải thiện luồng MCP
+**Timestamp**: 2026-11-24T12:20:00Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi tổng hợp lại và đề xuất cải thiện /pstack:poteto-mode /ponytail:ponytail"
+**AI Response**: "Tổng hợp kết quả review MCP thành 4 đơn vị thay đổi theo thứ tự: xóa McpServer.cut, cache schema đã biên dịch, đo kích thước tăng dần khi chia trang read_grading_context, truyền ngân sách còn lại cho read_grading_batch. Nêu các mục bỏ qua và cách kiểm chứng. Chưa sửa code."
+**Context**: Construction / review, đề xuất; chưa đổi code.
+
+---
+
+## Code — tối ưu luồng MCP
+**Timestamp**: 2026-11-24T12:45:00Z
+**Requested by:** Quang Hung
+**User Input**: "Giúp tôi sửa code và chạy test lại"
+**AI Response**: "Xóa McpServer.cut, cache schema tool MCP, đo kích thước tăng dần khi chia trang read_grading_context, truyền ngân sách còn lại cho read_grading_batch. Thêm 3 test hành vi. Test MCP và grading MCP đạt; toàn bộ backend 2663 test còn 1 lỗi GradingProposalValidatorTest có sẵn trên HEAD. Không đổi readOnly của GradingMcpQueryService.call vì listProposals có ghi."
+**Context**: Construction / Code Generation, sửa nhỏ ngoài kế hoạch unit; chưa commit.
+
+---
+
+## Hỏi đáp — MCP chấm bài nhóm
+**Timestamp**: 2026-11-24T13:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "hiện tại mcp có chấm điểm cho bài nhóm chưa"
+**AI Response**: "Có, ở mức tài liệu nhóm (GROUP_DOCUMENT): agent đọc ngữ cảnh và ghi đề xuất chấm cho cả nhóm; evaluation MEMBER bị từ chối; prompt cấm đánh giá đóng góp cá nhân; giảng viên duyệt qua reviewUrl. Không có tool đánh giá đóng góp từng thành viên."
+**Context**: Hỏi đáp, chỉ đọc mã.
+
+---
+
+## Build and Test — chạy luồng MCP thật
+**Timestamp**: 2026-11-24T19:30:00Z
+**Requested by:** Quang Hung
+**User Input**: "ok hiện tôi chỉ cần làm vậy thôi giúp tôi tóm tắt lại changes và chạy test mcp tạo đề và chấm điểm trên luồng thật xem có vấn đề gì ko"
+**AI Response**: "Chạy backend của worktree trên cổng 8081 với DB local, gọi MCP qua HTTP. Tạo đề nhóm nháp '[MCP test] Thiết kế use case thư viện', kiểm replay và xung đột requestRef. Chấm bài nhóm SE_JS: đọc ngữ cảnh, ghi đề xuất READY, replay, sai fingerprint bị chặn, điểm chính thức không đổi. Lô 6 bài: 2 item bị MCP_BATCH_RESULT_LIMIT do escape trong envelope. Đã tắt backend 8081."
+**Context**: Construction / Build and Test, dữ liệu local.
+
+---
+
+## Hỏi đáp — đề xuất để MCP chạy ổn định
+**Timestamp**: 2026-11-24T19:45:00Z
+**Requested by:** Quang Hung
+**User Input**: "b có đề xuất gì để c hạy ổn đinh ko"
+**AI Response**: "Đề xuất theo thứ tự: sửa ngân sách lô tính cả escape, ghi audit cho lời gọi sai schema, biến script thử luồng thật thành smoke test lặp lại được, sửa test GradingProposalValidatorTest đang đỏ, script chạy backend local nạp env, theo dõi Redis vì MCP fail-closed, thêm ví dụ payload vào authoring requirements. Chưa sửa code."
+**Context**: Hỏi đáp, đề xuất.
+
+---
+
+## Code — ổn định luồng MCP
+**Timestamp**: 2026-11-24T20:15:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại theo đề xuất /ponytail:ponytail"
+**AI Response**: "Sửa mục 1 (ngân sách lô tính escape), mục 2 (audit INVALID_ARGS), mục 3 (scripts/mcp-smoke.py kèm test offline, ghi vào docs/guides/mcp-clients.md). Mục 5 đã có sẵn scripts/run-backend.bat. Test MCP backend và test script đạt; smoke test thật 11/11 PASS. Đo lại cho thấy giới hạn lô do phần cố định mỗi trang, không phải escape. Chưa sửa GradingProposalValidatorTest, chưa commit."
+**Context**: Construction / Code Generation và Build and Test.
+
+---
+
+## Code — sửa lỗi còn lại
+**Timestamp**: 2026-11-24T20:40:00Z
+**Requested by:** Quang Hung
+**User Input**: "sửa hết lỗi còn lại"
+**AI Response**: "Sửa root cause của GradingProposalValidatorTest: regex NON_MANDATORY trong GradingSecondaryActorCheck dùng \b ASCII nên 'ví dụ' không khớp; thêm (?U). Rà các regex \b khác có tiếng Việt: không còn. Toàn bộ backend 2664 test đạt. Chưa xóa dữ liệu thử trong DB local vì cần xác nhận; chưa làm gộp phần cố định trong lô vì đổi định dạng kết quả."
+**Context**: Construction / Build and Test.
+
+---
+
+## Build and Test — hoàn tất việc còn lại, test frontend và E2E
+**Timestamp**: 2026-11-24T21:10:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm nốt việc còn lại bao  gồm test frontend e2e"
+**AI Response**: "Chạy test frontend: lần đầu 9 lỗi, lần sau 5 lỗi khác nhau, đều là timeout 5 giây do tải song song; đặt testTimeout 15 giây, 1213/1213 đạt hai lần, typecheck và lint sạch. Chạy E2E WF01/WF02 trên backend worktree: PASS; MCP client đọc ngữ cảnh và ghi đề xuất READY. Xóa 2 đề nháp thử qua API. Không làm gộp phần cố định của lô vì đổi định dạng kết quả cho agent."
+**Context**: Construction / Build and Test.
+
+---
+
+## Commit — tối ưu và ổn định luồng MCP
+**Timestamp**: 2026-11-24T21:20:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Commit các thay đổi MCP, regex actor phụ, timeout test frontend, smoke test và tài liệu trên nhánh audit-staging. Không push."
+**Context**: Construction / Build and Test, commit theo yêu cầu.
+
+---

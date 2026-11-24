@@ -37,7 +37,6 @@ public class McpServer {
     static final int MAX_ARGS_BYTES = 64 * 1024;
     static final int MAX_RESULT_BYTES = 256 * 1024;
     static final int MAX_TOOL_NAME = 100;
-    static final String TRUNCATED = "\n…[đã cắt vì vượt 256 KB]";
 
     static final int PARSE_ERROR = -32700;
     static final int INVALID_REQUEST = -32600;
@@ -184,14 +183,17 @@ public class McpServer {
         // Step 4: Validate arguments object size (max 64 KB) and JSON schema compliance
         JsonNode args = params.has("arguments") ? params.get("arguments") : json.createObjectNode();
         if (!args.isObject()) {
+            record(accountId, name, AuditResult.DENIED, "INVALID_ARGS");
             return buildError(id, INVALID_PARAMS, "arguments phải là object");
         }
         if (countBytes(args.toString()) > MAX_ARGS_BYTES) {
             record(accountId, name, AuditResult.DENIED, "ARGS_TOO_LARGE");
             return buildError(id, INVALID_PARAMS, "Tham số vượt 64 KB");
         }
-        Optional<String> invalid = schemas.validateValue(entry.get().definition().parameterSchema(), args);
+        Optional<String> invalid = schemas.validateToolArguments(entry.get().definition().parameterSchema(), args);
         if (invalid.isPresent()) {
+            // Reason code only: the validator message can echo agent-supplied property names.
+            record(accountId, name, AuditResult.DENIED, "INVALID_ARGS");
             return buildError(id, INVALID_PARAMS, "Tham số không đúng schema: " + invalid.get());
         }
         Long inputTokens = readReportedTokens(params.path("_meta").path("inputTokens"));
@@ -255,27 +257,6 @@ public class McpServer {
         } catch (JsonProcessingException e) {
             return "";
         }
-    }
-
-    /** Cắt theo byte UTF-8, không cắt giữa một ký tự (F6 bước 7). */
-    static String cut(String text) {
-        byte[] raw = text.getBytes(StandardCharsets.UTF_8);
-        if (raw.length <= MAX_RESULT_BYTES) {
-            return text;
-        }
-        int limit = MAX_RESULT_BYTES - countBytes(TRUNCATED);
-        int end = 0;
-        int used = 0;
-        while (end < text.length()) {
-            int cp = text.codePointAt(end);
-            int size = cp < 0x80 ? 1 : cp < 0x800 ? 2 : cp < 0x10000 ? 3 : 4;
-            if (used + size > limit) {
-                break;
-            }
-            used += size;
-            end += Character.charCount(cp);
-        }
-        return text.substring(0, end) + TRUNCATED;
     }
 
     private static int countBytes(String s) {

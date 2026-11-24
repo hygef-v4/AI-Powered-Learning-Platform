@@ -1,6 +1,7 @@
 import type { SubmissionDocumentDto } from "./submissionDocument";
 import type { ContributionLevel } from "./contributionLevels";
 import { msg } from "@/i18n/msg";
+import type { ActivitySummary } from "@/shared/activity/ActivityTimeline";
 
 export type Decimal = string | number;
 export type GradeStatus = "PENDING" | "DRAFT" | "FINALIZED" | "PUBLISHED" | "SUPERSEDED";
@@ -90,12 +91,7 @@ export type Detail = {
   rubrics: Rubric[];
   navigationIds: string[];
   activityState: string;
-  activity: null | {
-    awayCount: number;
-    knownAwayDuration: string;
-    unknownGaps: number;
-    reliabilityNote: string;
-  };
+  activity: ActivitySummary | null;
   members: Evaluation[];
   memberActivities: { student: Person; activity: Detail["activity"]; state: string }[];
   sectionAuthors: { partId: string; accountId: string }[];

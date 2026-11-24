@@ -13,6 +13,7 @@ import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { finishSection, getWorkspace, groupDocImageUrl, previewSectionDocx, saveDraft, sendActivity } from "../api";
 import { useClock } from "../hooks/useClock";
 import { useGroupDocStream } from "../hooks/useGroupDocStream";
+import { useGroupDeadlineRefresh } from "../hooks/useGroupDeadlineRefresh";
 import { describeDeadline, formatRemaining } from "../model/deadline";
 import { assembleEditorDocument, assembleGroupDocument, splitDrafts } from "../model/document";
 import type { DocumentBlock, DocumentModel, SectionView, WorkspaceView } from "../model/types";
@@ -82,6 +83,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   const latest = useRef<{ drafts: Drafts; dirty: string[] }>({ drafts: {}, dirty: [] });
   const held = useRef(new Map<string, HeldSection>());
   const finished = useRef(new Set<string>());
+  const lastView = useRef<WorkspaceView | null>(null);
   useEffect(() => {
     latest.current.drafts = drafts;
     latest.current.dirty = dirty;
@@ -89,6 +91,9 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
 
   // Bản xem mới: thêm mục vừa nhận, giữ nguyên bài đang viết của mục còn giữ, bỏ mục đã mất và báo.
   const applyView = useCallback((loaded: WorkspaceView) => {
+    const previous = lastView.current;
+    if (previous?.documentId === loaded.documentId && previous.version > loaded.version) return;
+    lastView.current = loaded;
     const mine = listHeldSections(loaded);
     const ids = new Set(mine.map((s) => s.id));
     const lost = [...held.current]
@@ -115,15 +120,19 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   }, []);
 
   const reload = useCallback(
-    () => getWorkspace(documentId).then(applyView, (e: unknown) => {
-      setLoadError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupSectionEditorPage.groupDocumentNotFound") : msg("groupdocs.pages.GroupSectionEditorPage.couldNotLoadTheGroup"));
-    }),
+    (signal?: AbortSignal) => getWorkspace(documentId, signal).then(
+      (loaded) => { if (!signal?.aborted) applyView(loaded); },
+      (e: unknown) => {
+        if (!signal?.aborted) setLoadError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupSectionEditorPage.groupDocumentNotFound") : msg("groupdocs.pages.GroupSectionEditorPage.couldNotLoadTheGroup"));
+      },
+    ),
     [documentId, applyView],
   );
   useEffect(() => {
     void reload();
   }, [reload]);
   useGroupDocStream(view ? documentId : null, () => void reload(), () => void reload());
+  useGroupDeadlineRefresh(view, reload);
   const now = useClock();
 
   const editable = !!view && view.status === "IN_PROGRESS" && view.window !== "CLOSED";
@@ -330,7 +339,7 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
           viewSlot={viewSlot} />
       )}
 
-      {importing && (
+      {editable && importing && (
         <DocxImportDialog
           allowReplace={false}
           title={msg("groupdocs.pages.GroupSectionEditorPage.importDocxIntoSection", { title: String(importing.title) })}

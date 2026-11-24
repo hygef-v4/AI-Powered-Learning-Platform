@@ -280,7 +280,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
-  async function requestProposal(input: AiRequest): Promise<Proposal | null> {
+  async function requestProposal(input: AiRequest): Promise<Proposal | null> { // yêu cầu tạo đề xuất AI
     if (disabled || savingRef.current || reloadingRef.current || requestingRef.current) return null;
     requestingRef.current = true;
     const sessionRevision = readGradingAiSessionRevision();

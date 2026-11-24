@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class UnattachedFiles {
@@ -26,6 +28,8 @@ public class UnattachedFiles {
         this.redis = redis;
     }
 
+    // The uploaded file exists even if its caller is read-only or rolls back.
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void addFile(String fileId, Instant refExpiresAt) {
         repository.saveFile(fileId, refExpiresAt.plus(GRACE));
     }

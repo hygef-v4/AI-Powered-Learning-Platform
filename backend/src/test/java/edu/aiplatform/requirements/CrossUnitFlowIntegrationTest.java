@@ -80,6 +80,8 @@ import java.time.*;
 import java.util.*;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
+import org.apache.poi.util.Units;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.*;
 import org.springframework.amqp.core.Message;
@@ -90,6 +92,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -584,6 +587,41 @@ class CrossUnitFlowIntegrationTest {
                 .isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> materialQueryService.listClassMaterials(student, classId, true, List.of(subjectMaterial)))
                 .isInstanceOf(ApiException.class);
+    }
+
+    @Test
+    void docxImportKeepsTheEmbeddedImageAfterSavingTheAssignment() throws Exception {
+        var teacher = actor(Role.TEACHER);
+        var assignment = assignmentAuthoringService.createForClass(teacher, classId,
+                new AssignmentCommands.Create(SubmissionMode.INDIVIDUAL, GradingMode.GRADED, false, "DOCX import"));
+        byte[] png = createPagePng("Embedded image");
+        var output = new ByteArrayOutputStream();
+        try (var docx = new XWPFDocument()) {
+            docx.createParagraph().createRun().addPicture(new ByteArrayInputStream(png), XWPFDocument.PICTURE_TYPE_PNG,
+                    "embedded.png", Units.toEMU(320), Units.toEMU(160));
+            docx.write(output);
+        }
+        var file = new MockMultipartFile("file", "import.docx",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document", output.toByteArray());
+        var session = loginCookie(teacher);
+        String csrf = UUID.randomUUID().toString();
+        byte[] response = mvc.perform(multipart("/api/v1/assignments/{id}/skeleton:import-docx", assignment.id())
+                        .file(file).cookie(session, new Cookie("XSRF-TOKEN", csrf)).header("X-XSRF-TOKEN", csrf))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        var preview = json.readValue(response, AssignmentViews.ImportPreview.class);
+        assertThat(preview.warnings()).extracting(ValidationIssue::code).doesNotContain("IMAGE_SKIPPED");
+        assertThat(preview.imageCount()).isEqualTo(1);
+        DocumentBlock image = preview.document().blocks().get(0);
+        assertThat(image.type()).isEqualTo(BlockType.IMAGE);
+        assertThat(count("select count(*) from unattached_files")).isEqualTo(1);
+
+        assignmentAuthoringService.saveSkeleton(teacher, assignment.id(),
+                new AssignmentCommands.Skeleton(assignment.version(), preview.document(), null, true));
+        assertThat(count("select count(*) from unattached_files")).isZero();
+        String imageUrl = assignmentAuthoringService.resolveImageUrl(teacher, assignment.id(), image.id());
+        var imageDownload = mvc.perform(get(imageUrl).cookie(session)).andReturn();
+        mvc.perform(asyncDispatch(imageDownload)).andExpect(status().isOk()).andExpect(content().bytes(png));
     }
 
     @Test

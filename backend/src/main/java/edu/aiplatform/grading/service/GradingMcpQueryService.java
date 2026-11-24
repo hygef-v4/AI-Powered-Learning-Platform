@@ -140,6 +140,13 @@ public class GradingMcpQueryService implements IMcpToolProvider {
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, timeout = 20)
     public Map<String, Object> loadGradingContext(Actor actor, Map<String, Object> args,
             boolean recordRead) {
+        return loadGradingContext(actor, args, recordRead, CONTEXT_BYTES);
+    }
+
+    /** Loads a grading context page whose serialized size stays within {@code maxBytes}. */
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, timeout = 20)
+    public Map<String, Object> loadGradingContext(Actor actor, Map<String, Object> args,
+            boolean recordRead, int maxBytes) {
         var snapshot = loadSnapshot(actor, args);
         var detail = snapshot.detail();
         var e = detail.evaluation();
@@ -173,16 +180,19 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         out.put("documentBlocks", selected);
         int next = offset;
         out.put("complete", false);
-        out.put("continuation",
-                buildContinuation(id, e.version, e.submissionHash, snapshot.fingerprint(), next));
-        if (measureJsonBytes(out) > CONTEXT_BYTES)
+        // Measure with the widest continuation offset; the final one is never longer, and null once complete.
+        out.put("continuation", buildContinuation(id, e.version, e.submissionHash,
+                snapshot.fingerprint(), blocks.size()));
+        int used = measureJsonBytes(out);
+        if (used > maxBytes)
             throw createResultLimitError();
         while (next < blocks.size()) {
-            selected.add(blocks.get(next));
-            if (measureJsonBytes(out) > CONTEXT_BYTES) {
-                selected.remove(selected.size() - 1);
+            // A block adds its own JSON plus a comma after the first one.
+            int size = measureJsonBytes(blocks.get(next)) + (selected.isEmpty() ? 0 : 1);
+            if (used + size > maxBytes)
                 break;
-            }
+            selected.add(blocks.get(next));
+            used += size;
             next++;
         }
         if (next == offset && next < blocks.size())

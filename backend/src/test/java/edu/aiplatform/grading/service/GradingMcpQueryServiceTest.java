@@ -151,4 +151,17 @@ class GradingMcpQueryServiceTest {
         verify(gradingProposalService).listStoredProposals(List.of(e.id));
         verify(gradingProposalService, never()).listProposals(any(), any());
     }
+    @Test void pageFillsItsByteBudgetWithoutOverflow() throws Exception {
+        var e=evaluation();List<DocumentBlock> blocks=new ArrayList<>();
+        for(int n=0;n<12;n++)blocks.add(new DocumentBlock(UUID.randomUUID(),null,BlockType.PARAGRAPH,objectMapper.createObjectNode().put("text","x".repeat(7000+n))));
+        setup(e,blocks);
+        int budget=40000;
+        var page=gradingMcpQueryService.loadGradingContext(teacher,Map.of("evaluationId",e.id.toString()),false,budget);
+        int served=((List<?>)page.get("documentBlocks")).size();
+        int size=objectMapper.writeValueAsBytes(page).length;
+        assertThat(served).isBetween(1,blocks.size()-1);
+        assertThat(size).isLessThanOrEqualTo(budget);
+        assertThat(size+objectMapper.writeValueAsBytes(blocks.get(served)).length+1).isGreaterThan(budget-2); // final continuation offset may be one digit shorter than the measured one
+        verifyNoInteractions(progress);
+    }
 }

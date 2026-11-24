@@ -32,4 +32,39 @@ Phạm vi: U04 tạo/xem/sửa môn, xung đột version, gán chủ nhiệm, l�
 
 Mỗi ca in `PASS`/`FAIL`; có lỗi thì exit code là `1`. Không in mật khẩu, OTP hay token. JSON kết quả tùy chọn chỉ được ghi trong `.tmp/` (gitignored). Kiểm tra cú pháp không gọi API: `node --check scripts/e2e/u04-u13-u14.mjs`.
 
-Các script cũ vẫn mặc định dùng `localhost:8088` và Mailpit `localhost:8025`. Helper dùng chung nhận `E2E_BASE_URL`/`E2E_MAILPIT_URL` khi có; `env(key)` ưu tiên biến môi trường rồi mới đọc `infra/.env.local`, và không yêu cầu file này tồn tại.
+## U01 xác thực
+
+Hai script gọi ứng dụng đang chạy như trình duyệt (cookie và CSRF), dùng được với stack Docker (`8088`) hoặc backend chạy bằng `scripts/run-backend.bat` cùng frontend `npm run dev` (`http://localhost:3000`). Không in mật khẩu, OTP, cookie hay token; có ca lỗi thì exit code là `1`, thiếu biến môi trường thì `2`.
+
+- `auth.mjs` (25 ca): 401 khi chưa đăng nhập, sai mật khẩu trả `AUTH_FAILED`, cookie phiên HttpOnly và SameSite, thiếu CSRF bị 403, giảng viên gọi API admin bị 403, refresh xoay cookie, đăng xuất vô hiệu cookie cũ, dùng lại refresh token (409 trong 20 giây, sau đó bị từ chối và thu hồi phiên thật, BR-U01-46), đổi mật khẩu khi đang đăng nhập (sai mật khẩu hiện tại, mật khẩu yếu, giữ phiên hiện tại, thu hồi phiên khác, rồi đổi lại như cũ, BR-U01-33/34). Ca dùng lại token **thu hồi mọi phiên** của tài khoản sinh viên dùng để test, nên chọn tài khoản không ai đang đăng nhập. Chạy khoảng 30 giây.
+- `auth-otp.mjs` (16 ca): Admin tạo một tài khoản sinh viên mới mỗi lần chạy, kích hoạt bằng OTP đọc từ Mailpit (sai mã, mã dùng lại, mật khẩu yếu, không lộ tài khoản tồn tại), rồi quên mật khẩu (giãn cách OTP 60 giây, mật khẩu cũ hết hiệu lực, phiên cũ bị thu hồi). Tài khoản test `otp.*@<domain>` được giữ lại. Cần Mailpit, worker đang chạy và `SMTP_FROM` đã đặt. Chạy khoảng 1 phút rưỡi vì phải chờ giãn cách OTP.
+
+```powershell
+$env:E2E_BASE_URL = "http://localhost:3000"
+$env:E2E_MAILPIT_URL = "http://localhost:8025"
+$env:E2E_AUTH_PASSWORD = "<mật khẩu tài khoản test local>"
+$env:E2E_TEACHER_EMAIL = "<giảng viên ACTIVE>"; $env:E2E_STUDENT_EMAIL = "<sinh viên ACTIVE>"
+node scripts/e2e/auth.mjs
+$env:E2E_ADMIN_EMAIL = "<admin ACTIVE>"; $env:E2E_ACCOUNT_DOMAIN = "school.test"
+node scripts/e2e/auth-otp.mjs
+```
+
+`E2E_AUTH_PASSWORD`, `E2E_ADMIN_EMAIL` và `E2E_ACCOUNT_DOMAIN` có thể bỏ trống để đọc `TEST_ACCOUNT_PASSWORD`, `U01_BOOTSTRAP_ADMIN_EMAIL` và `U01_ALLOWED_EMAIL_DOMAINS` trong `infra/.env.local`. Mỗi lần chạy `auth-otp.mjs` dùng 4 lượt OTP của địa chỉ IP (giới hạn mặc định 20 lượt mỗi giờ).
+
+Các script cũ vẫn mặc định dùng `localhost:8088` và Mailpit `localhost:8025`. Helper dùng chung nhận `E2E_BASE_URL`/`E2E_MAILPIT_URL` khi có; `env(key)` ưu tiên biến môi trường rồi mới đọc `infra/.env.local`, và không yêu cầu file này tồn tại. `Session` giữ cookie theo tên và đường dẫn như trình duyệt, nên cookie `refresh_token` chỉ gửi kèm các route `/api/v1/auth`.
+
+## Chấm điểm PE WF01 và WF02
+
+Dùng stack test loopback có worker và Mailpit đang chạy. Ba sơ đồ Draw.io mẫu có sẵn
+trong `scripts/e2e/fixtures/pe-diagrams`.
+Đặt `E2E_BASE_URL`, `E2E_MAILPIT_URL`, `WF_TEST_ADMIN` và `WF_TEST_ADMIN_PASSWORD`
+trong môi trường cục bộ, rồi chạy `node scripts/e2e/wf01-wf02-grading.mjs`.
+
+Mỗi lượt tạo lớp, tài khoản demo, đề, rubric và bài nộp mới. Thư mục kết quả dưới
+`.tmp/systemtest/grading-<id>` chứa `fixture.json` và `api-results.json`. File
+`test-login.private.json` dành cho đăng nhập demo qua UI. Giữ file đó trên máy test.
+
+Với cùng `E2E_BASE_URL`, lệnh `node scripts/e2e/wf01-mcp-client.mjs read <folder>`
+đọc toàn bộ ngữ cảnh MCP của bài nộp demo. Sau khi agent soạn proposal theo schema,
+chạy `node scripts/e2e/wf01-mcp-client.mjs record <folder> <proposal.json>` để nhận
+đường dẫn duyệt. Giảng viên duyệt, lưu và công bố điểm trên web.

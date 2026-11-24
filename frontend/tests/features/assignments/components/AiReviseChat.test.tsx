@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { assignmentsApi } from "@/features/assignments/api";
 import { AiReviseChat } from "@/features/assignments/components/AiReviseChat";
 import type { AiDraft } from "@/features/assignments/model/types";
+import { confirmAiSource, mockAiSources } from "./aiSourceFixture";
 
 function draft(status: AiDraft["status"], extra: Partial<AiDraft> = {}): AiDraft {
   return {
@@ -23,7 +24,11 @@ function send(text: string) {
 }
 
 describe("AiReviseChat", () => {
-  afterEach(() => vi.restoreAllMocks());
+  beforeEach(() => mockAiSources());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
 
   it("saves first, sends the instruction as a revision and applies the result to the page", async () => {
     const request = vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue(draft("READY"));
@@ -33,11 +38,12 @@ describe("AiReviseChat", () => {
     render(<AiReviseChat assignmentId="a1" prepare={prepare} onApplied={onApplied} />);
 
     send("Dịch đề sang tiếng Anh");
+    await confirmAiSource();
 
     expect(await screen.findByText(/Đã sửa đề theo yêu cầu/)).toBeInTheDocument();
     expect(screen.getByText("Dịch đề sang tiếng Anh")).toBeInTheDocument();
     expect(screen.getByText(/chưa có tiêu chí chấm/)).toBeInTheDocument();
-    expect(request).toHaveBeenCalledWith("a1", "Dịch đề sang tiếng Anh", expect.any(String));
+    expect(request).toHaveBeenCalledWith("a1", "Dịch đề sang tiếng Anh", expect.any(String), { source: "SHARED", provider: undefined });
     expect(prepare.mock.invocationCallOrder[0]).toBeLessThan(request.mock.invocationCallOrder[0]!);
     expect(apply).toHaveBeenCalledWith("a1", "d1", 4, true, true);
     expect(onApplied).toHaveBeenCalledOnce();
@@ -49,6 +55,7 @@ describe("AiReviseChat", () => {
     render(<AiReviseChat assignmentId="a1" prepare={vi.fn().mockResolvedValue(3)} onApplied={vi.fn()} />);
 
     send("Thêm một câu hỏi");
+    await confirmAiSource();
 
     expect(await screen.findByText("Hết hạn mức. Đề chưa thay đổi.")).toBeInTheDocument();
     expect(apply).not.toHaveBeenCalled();
@@ -63,6 +70,7 @@ describe("AiReviseChat", () => {
     render(<AiReviseChat assignmentId="a1" prepare={vi.fn().mockResolvedValue(3)} onApplied={vi.fn()} />);
 
     send("tạo cho tôi 10 yêu cầu");
+    await confirmAiSource();
 
     expect(await screen.findByText(/AI chưa thay đổi gì/)).toBeInTheDocument();
     expect(apply).not.toHaveBeenCalled();
@@ -132,10 +140,11 @@ describe("AiReviseChat", () => {
     expect(screen.getByRole("menuitem", { name: "Chọn đề mẫu có sẵn" })).toBeEnabled();
     fireEvent.click(screen.getByTestId("ai-revise-attach"));
     send("Làm lại đề theo mẫu này");
+    await confirmAiSource();
 
     expect(await screen.findByText(/Đã sửa đề theo yêu cầu/)).toBeInTheDocument();
     expect(request).toHaveBeenCalledWith("a1", "Làm lại đề theo mẫu này", expect.any(String),
-      { formatText: undefined, templateAssignmentId: "o1", materialIds: ["m1"], sourceFileRefs: [] });
+      { source: "SHARED", provider: undefined, formatText: undefined, templateAssignmentId: "o1", materialIds: ["m1"], sourceFileRefs: [] });
     const sent = screen.getByRole("list", { name: "Tệp gửi kèm" });
     expect(sent).toHaveTextContent("Mẫu đề: Đề giữa kỳ năm trước");
     expect(sent).toHaveTextContent("Tài liệu tham khảo: Chương 3 UML");

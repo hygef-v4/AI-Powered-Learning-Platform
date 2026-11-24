@@ -208,7 +208,7 @@ describe("GroupWorkspacePage", () => {
     const held = await screen.findByRole("dialog", { name: "Giao mục" });
     // Ô chọn ghi sẵn người đang giữ; chưa chọn người khác thì chưa giao được.
     expect(within(held).getByLabelText("Thành viên nhận mục")).toHaveAttribute("placeholder", "Bình");
-    expect(within(held).getByText("Giao cho người khác sẽ nhả mục trước đó.")).toBeInTheDocument();
+    expect(within(held).getByText(/xóa bản nháp chưa hoàn tất/)).toBeInTheDocument();
     expect(within(held).getByRole("button", { name: "Giao mục" })).toBeDisabled();
     fireEvent.click(within(held).getByRole("button", { name: "Đóng" }));
 
@@ -435,5 +435,26 @@ describe("GroupWorkspacePage", () => {
 
     expect(await screen.findByText(/nộp bây giờ bị tính trễ\. Còn 40 phút tới khi đóng nhận bài/)).toBeInTheDocument();
     expect(screen.getByText("Mọi mục đã Xong.")).toBeInTheDocument();
+  });
+
+  it("keeps late work editable and removes workspace actions when refreshed at the final cutoff", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-11-24T09:28:00Z") });
+    const view = workspace(LEADER, { closesAt: "2026-11-24T09:28:05Z", lateUntil: "2026-11-24T09:29:05Z" });
+    backend(view);
+    render(<GroupWorkspacePage documentId="doc1" />);
+
+    expect(await screen.findByRole("button", { name: /Nộp tài liệu/ })).toBeEnabled();
+    view.window = "LATE";
+    await act(async () => { await vi.advanceTimersByTimeAsync(5_001); });
+    expect(screen.getByRole("button", { name: /Nộp tài liệu/ })).toBeEnabled();
+    expect(screen.getByText(/nộp bây giờ bị tính trễ/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Nộp tài liệu/ }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+
+    view.window = "CLOSED";
+    await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Nộp tài liệu/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Nhận mục/ })).not.toBeInTheDocument();
   });
 });

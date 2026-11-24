@@ -87,7 +87,7 @@ public class GradingProposalTransactions {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Prepared prepareProposal(Actor actor, UUID evaluationId, AiRequest request,
-            Long expectedVersion) {
+            Long expectedVersion) {         // kiểm tra phiên bản bài nộp
         requireAiSource(request);
         var evaluation = evaluationRepository.lockById(evaluationId)
                 .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
