@@ -36,8 +36,8 @@ app/ai/connection/            AiConnectionPage     #6 AI Connection
     ApiKeyDialog                                   c12a: thêm, thay khóa, chọn mô hình, kiểm tra
     ApiSetupGuide                                  hướng dẫn lấy khóa từng nhà cung cấp
   McpAgentSection                                  bảng credential MCP
-    McpCredentialDialog                            c12b: nhãn, quyền, hạn dùng
-    McpTokenDialog                                 c12c: token tạo/reveal có kiểm owner và ACTIVE
+    McpCredentialDialog                            c12b: nhãn, quyền, hạn dùng; sửa không nâng READ_ONLY lên READ_WRITE
+    McpTokenDialog                                 c12c: token hiện một lần sau khi tạo, không hỗ trợ xem lại
     McpSetupGuide                                  liên kết tài liệu riêng, vẫn hiện nếu tải credential lỗi
 app/ai/mcp-guide/             McpGuidePage          hướng dẫn kết nối, sử dụng, tool và xử lý lỗi
   McpClientSetup                                  cấu hình/prompt tiếng Anh dùng chung với token dialog
@@ -81,6 +81,6 @@ Route `/ai/*` chỉ cho Student, Teacher, Subject Manager (dùng `RoleGuard` c�
 
 ## AI/MCP current flow — 2026-10-30
 
-MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; API key chung và cá nhân chỉ ghi, danh sách chỉ hiện phần nhận diện đã che (D15). Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
+MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Token MCP chỉ hiện một lần lúc tạo, server chỉ lưu `token_hash`/`token_hint` (D05 đóng 2026-11-23, bỏ xem lại token); API key chung và cá nhân chỉ ghi, danh sách chỉ hiện phần nhận diện đã che (D15). Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
 
-Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`, GET `/{id}/token`. List DTO có revealable; popup chỉnh label/access không đổi token/hạn. Negative cases: wrong owner, Admin, expired/revoked, ciphertext thiếu và account/role đổi.
+Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`. List DTO chỉ trả phần nhận diện đã che (`tokenHint`), không có trường xem lại; popup chỉnh label/access giữ nguyên token/hạn, chỉ cho hạ quyền và không nâng `READ_ONLY` lên `READ_WRITE` (`MCP_ACCESS_UPGRADE_NOT_ALLOWED`). Negative cases: wrong owner, Admin, expired/revoked, nâng `READ_ONLY` lên `READ_WRITE` và account/role đổi.
