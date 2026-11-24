@@ -12,7 +12,8 @@ Dự án đã có implementation của 15 unit theo quy trình AI-DLC. Backend v
 | `frontend/` | Next.js 16, React 19, TypeScript, Tailwind, Vitest |
 | `infra/` | Docker Compose (Nginx, PostgreSQL 16, Redis, RabbitMQ, Mailpit khi chạy local), cấu hình Nginx, script role PostgreSQL |
 | `aidlc-docs/` | Tài liệu AI-DLC: [requirements](aidlc-docs/inception/requirements/requirements.md), [stories](aidlc-docs/inception/user-stories/stories.md), [unit of work](aidlc-docs/inception/application-design/unit-of-work.md), [thiết kế từng unit](aidlc-docs/construction/README.md), [tổng hợp 15 unit](aidlc-docs/construction/unit-summary.md) |
-| `docs/` | [Bảng use case](docs/usecase_table.md), sơ đồ Draw.io |
+| `docs/` | [Bảng use case](docs/usecase_table.md), sơ đồ Draw.io, [hướng dẫn](docs/guides/) (kết nối MCP, khóa AI, người dùng) và [runbook](docs/runbooks/) (deploy, khôi phục, mã hóa khóa AI) |
+| `scripts/` | Chạy backend local, kiểm tra MCP, [E2E](scripts/e2e/README.md), đánh giá chấm AI |
 
 ## Unit và package
 
@@ -47,9 +48,11 @@ Dự án đã có implementation của 15 unit theo quy trình AI-DLC. Backend v
 - Migration Flyway đặt trong `backend/src/main/resources/db/migration/<thư mục của unit>/` (danh sách trong `README.md` ở thư mục đó).
 - Người code viết unit test; integration test do tester viết.
 
-Đợt sắp xếp này chỉ chuyển file và cập nhật package/import/tham chiếu; giữ nguyên nội dung xử lý và các file gốc. [Kết quả kiểm tra](aidlc-docs/construction/build-and-test/2026-10-30/2026-10-30-package-moves-only-results.md).
-
 ## Chạy local
+
+Cần Docker, JDK 17, Maven 3.9 và Node.js 20.9 trở lên.
+
+### Toàn bộ bằng Docker
 
 ```bash
 cp infra/.env.example infra/.env.local
@@ -60,5 +63,25 @@ docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml --e
 - Không điền cấu hình Drive (service account với Shared Drive, hoặc ba biến `GOOGLE_DRIVE_OAUTH_*` của Drive cá nhân) thì tệp lưu ở volume `files-local`, backup database ở `backups-local`. Production đặt `U03_REQUIRE_DRIVE=true`: thiếu Drive thì upload, tải và backup báo tạm thời không khả dụng. Cách cấu hình: [runbook deploy](docs/runbooks/deploy-vps.md) mục 6.
 - Backup cần `BACKUP_DB_PASSWORD`. `U03_BACKUP_PUBLIC_KEY` là tùy chọn: có thì archive được mã hóa, bỏ trống thì lưu bản dump thường. Tạo khóa và khôi phục theo [runbook](docs/runbooks/restore-isolated.md).
 - Giao diện có tiếng Anh (mặc định) và tiếng Việt; chuỗi nằm trong `frontend/src/i18n/messages/`.
-- Test: `mvn test` trong `backend/`; `npm run lint`, `npm run typecheck`, `npm test` trong `frontend/`.
-- Staging dùng chung cho nhóm kiểm thử trên VPS: [docs/runbooks/deploy-staging.md](docs/runbooks/deploy-staging.md).
+
+### Backend và frontend chạy trực tiếp khi phát triển
+
+Giữ PostgreSQL, Redis, RabbitMQ và Mailpit trong Docker, dừng container `backend` và `worker` rồi chạy:
+
+- Backend: `scripts\run-backend.bat` (Windows). Script nạp `infra/.env.local`, chạy API cùng worker với profile `local,worker` ở cổng 8080 và từ chối chạy khi cổng đã bị chiếm.
+- Frontend: `npm install` rồi `npm run dev` trong `frontend/`, mở <http://localhost:3000>. Next chuyển `/api/v1/*` và `/mcp` sang `BACKEND_URL` (mặc định `http://localhost:8080`).
+
+## Kiểm thử
+
+- Backend: `mvn test` trong `backend/`.
+- Frontend: `npm run lint`, `npm run typecheck`, `npm test` trong `frontend/`.
+- E2E trên stack local: [scripts/e2e/README.md](scripts/e2e/README.md).
+- MCP: `scripts/check-mcp.ps1` kiểm tra kết nối; `scripts/mcp-smoke.py` chạy thử luồng tạo đề và chấm thật ([hướng dẫn](docs/guides/mcp-clients.md)).
+
+## Agent qua MCP
+
+Giáo viên và sinh viên có thể dùng agent riêng (Codex, Claude Code, Antigravity, OpenCode…) qua endpoint `/mcp` với token tạo trong ứng dụng. Agent chỉ đọc dữ liệu được phép và tạo bản nháp hoặc đề xuất; không nộp bài chính thức và không công bố điểm. Cách kết nối: [docs/guides/mcp-clients.md](docs/guides/mcp-clients.md). Quy trình soạn đề và chấm: [docs/guides/mcp-agent-workflows.md](docs/guides/mcp-agent-workflows.md).
+
+## Triển khai
+
+Staging dùng chung cho nhóm kiểm thử trên VPS: [docs/runbooks/deploy-staging.md](docs/runbooks/deploy-staging.md). Production: [docs/runbooks/deploy-vps.md](docs/runbooks/deploy-vps.md).
