@@ -222,6 +222,36 @@ it("Hoàn thành tất cả: đăng mọi mục đang giữ rồi về tài li�
   ]);
 });
 
+it("switches an open editor to view-only and picks up auto-submission without a stream event", async () => {
+  vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-11-24T09:29:25Z") });
+  const open = workspace({ closesAt: "2026-11-24T09:29:30Z" });
+  const views = { current: open };
+  const calls = backend(views);
+  render(<GroupSectionEditorPage documentId="doc1" focusPart="s2" />);
+
+  expect(await screen.findByRole("button", { name: "Hoàn thành tất cả" })).toBeEnabled();
+  views.current = { ...open, window: "CLOSED" };
+  await act(async () => { await vi.advanceTimersByTimeAsync(5_001); });
+  expect(screen.queryByRole("button", { name: "Hoàn thành tất cả" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Xong" })).toBeDisabled();
+  expect(screen.getByText("Bản nháp của tôi")).toBeInTheDocument();
+
+  vi.mocked(fetch).mockResolvedValueOnce(await json({ detail: "Temporary outage" }, 503));
+  await act(async () => { await vi.advanceTimersByTimeAsync(20_000); });
+  expect(screen.getByText("Bản nháp của tôi")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Xong" })).toBeDisabled();
+
+  views.current = workspace({ ...views.current, status: "CLOSED", version: 6, sections: [
+    section("s2", null, { status: "DONE", lastAuthorId: ME }),
+  ] });
+  await act(async () => { await vi.advanceTimersByTimeAsync(20_000); });
+  expect(screen.getByRole("link", { name: "Về tài liệu nhóm" })).toBeInTheDocument();
+
+  const afterClosure = calls.length;
+  await act(async () => { await vi.advanceTimersByTimeAsync(30_000); });
+  expect(calls).toHaveLength(afterClosure);
+});
+
 it("số thứ tự của mục giữ như trang tài liệu nhóm, dù mục của người khác không hiện", async () => {
   backend({ current: workspace({ sections: [section("s2", OTHER), section("s3", ME)] }) });
   const nav = groupDocContext({ pathname: "/group-docs/doc1/edit", search: new URLSearchParams() })!;

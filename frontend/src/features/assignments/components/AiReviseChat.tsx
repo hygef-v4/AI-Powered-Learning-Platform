@@ -3,6 +3,7 @@
 import { AiChatAttachments } from "./AiChatAttachments";
 import { useAiChatAttachments } from "../hooks/useAiChatAttachments";
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ClipboardEvent, type DragEvent } from "react";
+import { AiSourcePicker, AiTaskStatus, type SourceChoice } from "@/shared/ai";
 import { Button, Dialog, Icon, IconButton, MenuItem, cx, showErrorToast, type IconName } from "@/shared/ui";
 import { assignmentsApi } from "../api";
 import { describeError, requestRef } from "../model/format";
@@ -48,6 +49,8 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pickingSource, setPickingSource] = useState(false);
+  const [taskId, setTaskId] = useState<string | null>(null);
   const [menu, setMenu] = useState<AttachMenu | null>(null);
   const [query, setQuery] = useState("");
   const [templates, setTemplates] = useState<TemplateOption[]>([]);
@@ -135,8 +138,16 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   const hasTemplate = Boolean(template || pickedTemplate);
   const hasReferences = pickedMaterials.length > 0 || sources.uploads.length > 0;
 
-  async function sendMessage(event?: FormEvent) {
+  function chooseSource(event?: FormEvent) {
     event?.preventDefault();
+    if (pickingSource || submitting.current || !input.trim()) return;
+    if (attachments.pending) { showErrorToast(msg("assignments.components.AiReviseChat.waitForUploadsToFinish")); return; }
+    setMenu(null);
+    setPickingSource(true);
+  }
+
+  async function sendMessage(choice: SourceChoice) {
+    setPickingSource(false);
     const text = input.trim();
     if (!text || submitting.current) return;
     if (attachments.pending) { showErrorToast(msg("assignments.components.AiReviseChat.waitForUploadsToFinish")); return; }
@@ -144,8 +155,16 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
     const materialIds = [...chosen];
     const templateName = template ? template.file.name : pickedTemplate?.title;
     const references = [...pickedMaterials.map(item => item.title), ...sources.uploads.map(item => item.file.name)];
-    const payload = { formatText: template?.text, templateAssignmentId: template ? undefined : templateId || undefined,
-      materialIds, sourceFileRefs: sources.fileRefs };
+    const payload = {
+      source: choice.source,
+      provider: choice.source === "PERSONAL" ? choice.provider ?? undefined : undefined,
+      ...(hasTemplate || hasReferences ? {
+        formatText: template?.text,
+        templateAssignmentId: template ? undefined : templateId || undefined,
+        materialIds,
+        sourceFileRefs: sources.fileRefs,
+      } : {}),
+    };
     const key = JSON.stringify([text, payload]);
     if (pendingRequest.current?.key !== key) pendingRequest.current = { key, ref: requestRef() };
     const ref = pendingRequest.current.ref;
@@ -160,9 +179,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
     try {
       await prepare();
       if (!alive.current) return;
-      const requested = hasTemplate || hasReferences
-        ? await assignmentsApi.requestAiRevision(assignmentId, text, ref, payload)
-        : await assignmentsApi.requestAiRevision(assignmentId, text, ref);
+      const requested = await assignmentsApi.requestAiRevision(assignmentId, text, ref, payload);
       if (!alive.current) return;
       accepted = true;
       pendingRequest.current = null;
@@ -170,6 +187,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       setInput("");
       attachments.clear();
       setChosen([]);
+      if (requested.status === "PENDING") setTaskId(requested.taskId);
       draft = await waitForResult(assignmentId, requested, () => alive.current);
       if (!alive.current) return;
       if (draft.status !== "READY" || !draft.proposal) {
@@ -207,7 +225,10 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       if (!applying && draft?.status === "READY") void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
     } finally {
       submitting.current = false;
-      if (alive.current) setBusy(false);
+      if (alive.current) {
+        setBusy(false);
+        setTaskId(null);
+      }
     }
   }
 
@@ -260,7 +281,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
-      void sendMessage();
+      chooseSource();
     }
     if (event.key === "Escape") closeChat();
   }
@@ -302,12 +323,14 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
               )}
             </div>
           ))}
-          {busy && <p role="status" className="self-start rounded-lg bg-sunken px-2.5 py-1.5 text-xs text-muted">{msg("assignments.components.AiReviseChat.theAiIsEditingThe")}</p>}
+          {busy && (taskId
+            ? <AiTaskStatus key={taskId} taskId={taskId} cancellable={false} intervalMs={500} />
+            : <p role="status" className="self-start rounded-lg bg-sunken px-2.5 py-1.5 text-xs text-muted">{msg("assignments.components.AiReviseChat.theAiIsEditingThe")}</p>)}
         </div>
         <div className="flex shrink-0 flex-col gap-2 border-t border-line px-3 py-2.5">
           <AiChatAttachments attachments={attachments} templateName={template?.file.name ?? pickedTemplate?.title}
             materials={pickedMaterials} disabled={busy} onUnchoose={id => setChosen(current => current.filter(value => value !== id))} />
-          <form onSubmit={(event) => void sendMessage(event)} className="flex items-end gap-1.5">
+          <form onSubmit={chooseSource} className="flex items-end gap-1.5">
             <div ref={attach} className="relative shrink-0">
               <IconButton icon="add" label={msg("assignments.components.AiReviseChat.addATemplateOrReferences")} data-testid="ai-revise-attach" disabled={busy || attachments.processing}
                 aria-haspopup="menu" aria-expanded={menu !== null} onClick={() => showMenu(menu ? null : "root")}
@@ -361,6 +384,9 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
             onChange={event => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} />
         </div>
       </section>
+      {pickingSource && <AiSourcePicker open requireConfirmation
+        task={msg("assignments.components.AiReviseChat.editAssignmentWithAi")}
+        onCancel={() => setPickingSource(false)} onSubmit={(choice) => void sendMessage(choice)} />}
       <Dialog open={attachments.replacement !== null} title={msg("assignments.components.AiReviseChat.replaceTemplate")} onClose={attachments.cancelReplacement}
         footer={<Button variant="primary" onClick={() => void attachments.confirmReplacement()}>{msg("assignments.components.AiReviseChat.replaceTemplate2")}</Button>}>
         <p>{msg("assignments.components.AiReviseChat.theNewTemplateReplacesThe")}</p>

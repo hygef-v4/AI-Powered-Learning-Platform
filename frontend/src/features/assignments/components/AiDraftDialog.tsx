@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BusyOverlay, Button, Dialog, Field, Icon, IconButton, Pill, Select, showErrorToast, Textarea } from "@/shared/ui";
+import { AiSourcePicker, AiTaskStatus, type SourceChoice } from "@/shared/ai";
+import { Alert, BusyOverlay, Button, Dialog, Field, Icon, IconButton, Pill, Select, showErrorToast, Textarea } from "@/shared/ui";
 import { assignmentsApi } from "../api";
 import { AiDraftPreview } from "./AiDraftPreview";
 import { SearchPicker } from "./SearchPicker";
@@ -35,9 +36,7 @@ const POLL_MS = 2000;
 const DEFAULT_TARGET_POINTS = "10";
 
 /**
- * t13b Tạo nháp bằng AI (F6; BR-U07-50, 51). Yêu cầu 2026-11-05: không chọn nguồn AI (hệ thống dùng API chung nếu hạn mức
- * còn đủ cho lượt này, không thì API cá nhân; API chung lỗi thì tự chuyển sang API cá nhân), tệp nguồn, tài liệu tham khảo
- * và định dạng đề trên một dòng. Đề có mẫu hoặc cảnh báo nguồn cần được xem trước khi áp dụng.
+ * Tạo và xem lại bản nháp AI trước khi áp dụng vào đề.
  */
 export function AiDraftDialog({
   assignmentId,
@@ -65,6 +64,7 @@ export function AiDraftDialog({
   const templateInput = useRef<HTMLInputElement>(null);
 
   const [draft, setDraft] = useState<AiDraft | null>(null);
+  const [pickingSource, setPickingSource] = useState(false);
   const [busy, setBusy] = useState(Boolean(initialDraftId));
   /** Đang gửi yêu cầu hoặc đang ghi đề lên trang: hiện popup chờ riêng (yêu cầu 2026-11-05). */
   const [phase, setPhase] = useState<"idle" | "sending" | "applying">("idle");
@@ -77,18 +77,9 @@ export function AiDraftDialog({
   const uploading = sources.pending || template?.status === "READING";
   const templateReady = template?.status === "READY";
 
-  /**
-   * Kết quả AI về. Lỗi khi chạy: hệ thống đã tự thử lần lượt các khóa (trường rồi cá nhân) ở phía máy chủ, hết khóa mới báo
-   * lỗi; quay về popup soạn, giữ nguyên mọi thứ đã nhập, báo lỗi ở góc.
-   */
   function receive(next: AiDraft) {
-    if (next.status !== "FAILED") {
-      setDraft(next);
-      return;
-    }
-    showErrorToast(msg("assignments.components.AiDraftDialog.youCanStillWriteIt", { value: String(next.safeError ?? msg("assignments.components.AiDraftDialog.theAiReturnedNoResult")) }));
-    setDraft(null);
-    ref.current = requestRef();
+    setDraft(next);
+    if (next.status === "FAILED") ref.current = requestRef();
   }
 
   useEffect(() => {
@@ -133,8 +124,7 @@ export function AiDraftDialog({
   const proposal = draft?.status === "READY" ? draft.proposal : null;
   const validation = proposal?.validation;
   const invalid = proposal !== null && (!validation || validation.status === "INVALID" || proposal.sections.length === 0);
-  const requiresReview = requiresAiDraftReview(draft);
-  const canAutoApply = proposal !== null && !invalid && !requiresReview;
+  const canAutoApply = proposal !== null && !invalid && draft?.origin !== "MCP" && !requiresAiDraftReview(draft);
 
   /** Đọc mẫu đề bằng bộ nhập DOCX; số câu hỏi là số mục ngoài cùng của mẫu. */
   async function readTemplate(file: File) {
@@ -156,13 +146,17 @@ export function AiDraftDialog({
   }
 
   // Không trường nào bắt buộc (yêu cầu 2026-11-09): bỏ trống thì AI tự quyết; nút Tạo đề không bị khóa.
-  async function sendRequest() {
+  async function sendRequest(choice?: SourceChoice) {
     if (countError || pointsError || questionPoints === null) {
       setError(countError ?? pointsError ?? msg("assignments.components.QuestionPointsField.invalid"));
       return;
     }
     if (uploading) {
       setError(msg("assignments.components.AiDraftDialog.waitForUploadsToFinish"));
+      return;
+    }
+    if (!choice) {
+      setPickingSource(true);
       return;
     }
     applied.current = false;
@@ -172,6 +166,8 @@ export function AiDraftDialog({
       sourceFileRefs: sources.fileRefs,
       formatText: templateReady ? template.text : undefined,
       templateAssignmentId: template ? undefined : templateId || undefined,
+      source: choice.source,
+      provider: choice.source === "PERSONAL" ? choice.provider ?? undefined : undefined,
       // Ngôn ngữ theo ô Ngôn ngữ, ưu tiên hơn ngôn ngữ ghi trong yêu cầu hay đề mẫu.
       options: { profile: "AUTO" as const, language,
         questionCount: count ?? undefined,
@@ -252,7 +248,11 @@ export function AiDraftDialog({
     ? msg("assignments.components.AiDraftDialog.totalPointsMustBeGreater") : undefined;
   const working = phase !== "idle" || draft?.status === "PENDING" || (busy && !draft) || canAutoApply;
   // Popup chờ riêng: popup soạn vẫn giữ nguyên trạng thái để quay về khi lỗi.
-  if (working) return <AiProgress />;
+  if (working) return <AiProgress taskId={draft?.status === "PENDING" ? draft.taskId : null} />;
+  if (pickingSource) return <AiSourcePicker open requireConfirmation
+    task={currentTitle || msg("assignments.components.AiDraftDialog.draftWithAi")}
+    onCancel={() => setPickingSource(false)}
+    onSubmit={(choice) => { setPickingSource(false); void sendRequest(choice); }} />;
   return (
     <Dialog
       open
@@ -282,7 +282,12 @@ export function AiDraftDialog({
     >
       {!showPreview && (
         <>
-          {/* Lời dẫn cho người mới dùng (yêu cầu 2026-11-10): ô nào cũng không bắt buộc, đề tạo xong ghi thẳng lên trang. */}
+          {draft?.status === "FAILED" && <Alert tone="danger" role="alert">
+            <p className="font-semibold">{msg("assignments.components.AiDraftDialog.draftFailed")}</p>
+            <p>{msg("assignments.components.AiDraftDialog.youCanStillWriteIt", {
+              value: draft.safeError ?? msg("assignments.components.AiDraftDialog.theAiReturnedNoResult"),
+            })}</p>
+          </Alert>}
           <p className="text-[13px] leading-relaxed text-muted" data-testid="ai-intro">
             {msg("assignments.components.AiDraftDialog.describeTheAssignmentYouNeed")}</p>
           {/* Mẫu đề và tài liệu tham khảo chỉ thêm ngữ cảnh, không bắt buộc (yêu cầu 2026-11-09). */}
@@ -361,6 +366,11 @@ export function AiDraftDialog({
           {draft?.provenance.templateReviewRequired === true && (
             <p className="text-sm text-muted">{msg("assignments.components.AiDraftDialog.reviewTemplateDraft")}</p>
           )}
+          {typeof draft?.provenance.model === "string" && (
+            <p className="text-sm text-muted">{msg("shared.ai.AiSourcePicker.model", {
+              model: draft.provenance.model,
+            })}</p>
+          )}
           <AiDraftPreview proposal={proposal}
             targetPoints={!initialDraftId && !hasQuestionPoints && pointsValid ? pointsNumber : undefined} />
         </div>
@@ -369,11 +379,12 @@ export function AiDraftDialog({
   );
 }
 
-/** Popup chờ khi AI đang soạn hay đang ghi đề: chỉ vòng xoay và chữ. */
-export function AiProgress() {
+/** Popup chờ khi AI đang soạn hay đang ghi đề. */
+export function AiProgress({ taskId }: { taskId?: string | null }) {
   return (
     <BusyOverlay label={msg("assignments.components.AiDraftDialog.creatingDraft")} spinner testId="ai-progress">
       <span className="text-[14px] font-semibold text-ink">{msg("assignments.components.AiDraftDialog.creatingDraft")}</span>
+      {taskId && <AiTaskStatus key={taskId} taskId={taskId} cancellable={false} intervalMs={500} />}
     </BusyOverlay>
   );
 }

@@ -13,6 +13,7 @@ import { AssignSectionDialog, SubmitGroupDialog } from "../components/SectionDia
 import { SectionHistoryDialog } from "../components/SectionHistoryDialog";
 import type { SectionView, StreamEvent, WorkspaceView } from "../model/types";
 import { useGroupDocStream } from "../hooks/useGroupDocStream";
+import { useGroupDeadlineRefresh } from "../hooks/useGroupDeadlineRefresh";
 import { useClock } from "../hooks/useClock";
 import { describeDeadline, formatRemaining } from "../model/deadline";
 import { assembleGroupDocument } from "../model/document";
@@ -62,13 +63,17 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   useEffect(() => () => headerObserver?.disconnect(), [headerObserver]);
 
   const reload = useCallback(
-    () =>
-      getWorkspace(documentId).then(
+    (signal?: AbortSignal) =>
+      getWorkspace(documentId, signal).then(
         (loaded) => {
-          setView(loaded);
+          if (signal?.aborted) return;
+          setView((previous) => previous?.documentId === loaded.documentId && previous.version > loaded.version
+            ? previous : loaded);
           setError(null);
         },
-        (e: unknown) => setError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupWorkspacePage.groupDocumentNotFound") : msg("groupdocs.pages.GroupWorkspacePage.couldNotLoadTheGroup")),
+        (e: unknown) => {
+          if (!signal?.aborted) setError(e instanceof ApiError && e.problem.status === 404 ? msg("groupdocs.pages.GroupWorkspacePage.groupDocumentNotFound") : msg("groupdocs.pages.GroupWorkspacePage.couldNotLoadTheGroup"));
+        },
       ),
     [documentId],
   );
@@ -100,6 +105,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
     [reload],
   );
   useGroupDocStream(view ? documentId : null, onEvent, () => void reload());
+  useGroupDeadlineRefresh(view, reload);
   const now = useClock();
 
   const send = useCallback(
@@ -276,8 +282,8 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         viewSlot={viewSlot} />
 
       {history && <SectionHistoryDialog view={view} section={history} onClose={() => setHistory(null)} />}
-      {assigning && <AssignSectionDialog view={view} section={assigning} onClose={() => setAssigning(null)} onChanged={() => { clearInvalid(assigning.id); void reload(); }} />}
-      {submitting && (
+      {editable && assigning && <AssignSectionDialog view={view} section={assigning} onClose={() => setAssigning(null)} onChanged={() => { clearInvalid(assigning.id); void reload(); }} />}
+      {editable && submitting && (
         <SubmitGroupDialog
           view={view}
           onClose={() => setSubmitting(false)}
@@ -300,7 +306,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         />
       )}
       <Dialog
-        open={releasing !== null}
+        open={editable && releasing !== null}
         title={msg("groupdocs.pages.GroupWorkspacePage.releaseSection")}
         icon="warning"
         tone="warning"
@@ -322,7 +328,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
         {releasing && <p>{msg("groupdocs.pages.GroupWorkspacePage.releaseSection2")}<strong>{formatSectionName(releasing)}</strong> {msg("groupdocs.pages.GroupWorkspacePage.of")}<strong>{resolveName(resolveSectionPerson(releasing))}</strong>{msg("groupdocs.pages.GroupWorkspacePage.theDraftInProgressFor")}</p>}
       </Dialog>
       <Dialog
-        open={confirmingEdit !== null}
+        open={editable && confirmingEdit !== null}
         title={msg("groupdocs.pages.GroupWorkspacePage.editSection")}
         icon="edit"
         onClose={() => setConfirmingEdit(null)}

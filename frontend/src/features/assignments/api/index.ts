@@ -103,8 +103,9 @@ export const assignmentsApi = {
   /** AI sửa đề đang có theo yêu cầu; máy chủ gửi kèm toàn bộ đề và rubric đã lưu (yêu cầu 2026-11-09). */
   requestAiRevision: (id: string, request: string, requestRef: string,
     /** Tệp gửi kèm (yêu cầu 2026-11-12): mẫu đề (chữ của DOCX tải lên hoặc một đề cũ) và tài liệu tham khảo. */
-    attachments?: { formatText?: string; templateAssignmentId?: string; materialIds?: string[]; sourceFileRefs?: string[] }) =>
-    writeJson<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", { request, mode: "REVISE", requestRef, ...attachments }),
+    options?: { formatText?: string; templateAssignmentId?: string; materialIds?: string[]; sourceFileRefs?: string[];
+      source?: "SHARED" | "PERSONAL"; provider?: string }) =>
+    writeJson<AiDraft>(`/assignments/${enc(id)}/ai-drafts`, "POST", { request, mode: "REVISE", requestRef, ...options }),
   aiDraft: (id: string, draftId: string, signal?: AbortSignal) =>
     fetchApi<AiDraft>(`${base}/assignments/${enc(id)}/ai-drafts/${enc(draftId)}`, { signal }),
   importDraft: (id: string, draftId: string, signal?: AbortSignal) =>

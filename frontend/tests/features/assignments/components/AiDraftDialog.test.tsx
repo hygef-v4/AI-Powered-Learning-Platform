@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import * as ui from "@/shared/ui";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { assignmentsApi } from "@/features/assignments/api";
 import { AiDraftDialog } from "@/features/assignments/components/AiDraftDialog";
 import type { AiDraft } from "@/features/assignments/model/types";
 import * as filesApi from "@/features/files/api";
+import { confirmAiSource, mockAiSources } from "./aiSourceFixture";
 
 const MATERIAL = [{ materialId: "m1", title: "UML basics", hasText: true }] as never;
 
@@ -17,7 +18,11 @@ async function pickReference(title = "UML basics") {
 }
 
 describe("AiDraftDialog", () => {
-  afterEach(() => vi.restoreAllMocks());
+  beforeEach(() => mockAiSources());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
 
   it("opens an existing MCP proposal for review without submitting a provider request", async () => {
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);
@@ -86,6 +91,8 @@ describe("AiDraftDialog", () => {
     expect(screen.queryByLabelText("Nguồn AI")).not.toBeInTheDocument();
     expect(screen.getByTestId("ai-send")).toBeEnabled();
     fireEvent.click(screen.getByTestId("ai-send"));
+    expect(requestAiDraft).not.toHaveBeenCalled();
+    await confirmAiSource();
 
     await waitFor(() => expect(requestAiDraft).toHaveBeenCalledWith("a1", expect.objectContaining({
       request: "",
@@ -93,7 +100,7 @@ describe("AiDraftDialog", () => {
       materialIds: [],
       sourceFileRefs: [],
     })));
-    expect(requestAiDraft.mock.calls[0]![1]).not.toHaveProperty("source");
+    expect(requestAiDraft.mock.calls[0]![1]).toMatchObject({ source: "SHARED", provider: undefined });
   });
 
   it("an out-of-range question count shows an inline error instead of sending", async () => {
@@ -118,12 +125,13 @@ describe("AiDraftDialog", () => {
     expect(requestAiDraft).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("Tổng điểm"), { target: { value: "20" } });
     fireEvent.click(screen.getByTestId("ai-send"));
+    await confirmAiSource();
     await waitFor(() => expect(requestAiDraft).toHaveBeenCalledWith("a1", expect.objectContaining({
       options: { profile: "AUTO", language: "VI", questionCount: 3, targetPoints: 20 },
     })));
   });
 
-  it("writes a valid proposal straight onto the page with safe title/instruction defaults", async () => {
+  it("writes a valid proposal straight onto the page with safe title and instruction defaults", async () => {
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue(MATERIAL);
     const ready: AiDraft = {
       draftId: "d1", assignmentId: "a1", origin: "AI_TASK", status: "READY", taskId: null,
@@ -141,6 +149,7 @@ describe("AiDraftDialog", () => {
     await pickReference();
     fireEvent.change(screen.getByLabelText("Số câu hỏi"), { target: { value: "2" } });
     fireEvent.click(screen.getByTestId("ai-send"));
+    await confirmAiSource();
 
     await waitFor(() => expect(onApplied).toHaveBeenCalled());
     expect(applyDraft).toHaveBeenCalledWith("a1", "d1", 4, true, false);
@@ -170,6 +179,7 @@ describe("AiDraftDialog", () => {
     await waitFor(() => expect(screen.queryByText("Đang đọc…")).toBeNull());
     expect(preview).toHaveBeenCalledWith("a1", ["source-ref"], expect.any(AbortSignal));
     fireEvent.click(screen.getByTestId("ai-send"));
+    await confirmAiSource();
     await waitFor(() => expect(request).toHaveBeenCalledWith("a1", expect.objectContaining({ request: "", sourceFileRefs: ["source-ref"] })));
   });
 
@@ -196,6 +206,7 @@ describe("AiDraftDialog", () => {
     expect(within(screen.getByRole("list", { name: "Tài liệu đã chọn" })).getAllByRole("listitem")).toHaveLength(2);
     fireEvent.change(screen.getByLabelText("Số câu hỏi"), { target: { value: "2" } });
     fireEvent.click(screen.getByTestId("ai-send"));
+    await confirmAiSource();
     await waitFor(() => expect(requestAiDraft).toHaveBeenCalledWith("a1", expect.objectContaining({ materialIds: ["m2", "m1"] })));
   });
 
@@ -211,6 +222,7 @@ describe("AiDraftDialog", () => {
     fireEvent.change(screen.getByLabelText("Số câu hỏi"), { target: { value: "4" } });
     fireEvent.change(screen.getByLabelText("Ngôn ngữ"), { target: { value: "VI" } });
     fireEvent.click(screen.getByTestId("ai-send"));
+    await confirmAiSource();
 
     expect(await screen.findByTestId("ai-progress")).toHaveTextContent("Đang tạo bản nháp");
     expect(screen.queryByRole("textbox", { name: "Yêu cầu" })).toBeNull();
@@ -224,6 +236,44 @@ describe("AiDraftDialog", () => {
     expect(screen.getByTestId("ai-send")).toHaveTextContent("Tạo đề");
     expect(screen.queryByRole("alert")).toBeNull();
     expect(toast).toHaveBeenCalledWith(expect.any(String));
+  });
+
+  it("shows queued, running, then a safe personal key error without applying or editing the assignment", async () => {
+    const failure = "Key API không hợp lệ hoặc không có quyền (HTTP 401)";
+    const pending: AiDraft = {
+      draftId: "d1", assignmentId: "a1", origin: "AI_TASK", status: "PENDING",
+      taskId: "t1", proposal: null, provenance: {}, safeError: null,
+      baseVersion: 3, createdAt: "now", decidedAt: null,
+    };
+    let taskReads = 0;
+    mockAiSources(() => ({
+      taskId: "t1", state: taskReads++ === 0 ? "QUEUED" : "RUNNING", source: "PERSONAL",
+      provider: "OPENAI", model: "personal-model", applyResult: null, safeError: null, usage: null,
+    }));
+    vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);
+    vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([]);
+    vi.spyOn(filesApi, "getPolicies").mockResolvedValue([]);
+    const submit = vi.spyOn(assignmentsApi, "requestAiDraft").mockResolvedValue(pending);
+    vi.spyOn(assignmentsApi, "aiDraft").mockResolvedValue({
+      ...pending, status: "FAILED", safeError: failure,
+    });
+    const apply = vi.spyOn(assignmentsApi, "applyAiDraft");
+    const onApplied = vi.fn();
+    render(<AiDraftDialog assignmentId="a1" version={3} currentPartCount={2} currentTitle="Saved title"
+      currentInstructions="Saved instructions" gradingMode="GRADED" onClose={vi.fn()} onApplied={onApplied} />);
+    fireEvent.change(screen.getByRole("textbox", { name: "Yêu cầu" }), { target: { value: "Original request" } });
+    fireEvent.click(screen.getByTestId("ai-send"));
+    await confirmAiSource(/API cá nhân/);
+
+    expect(await screen.findByText("Đang chờ")).toBeInTheDocument();
+    expect(await screen.findByText("Đang chạy")).toBeInTheDocument();
+    const alert = await screen.findByRole("alert", undefined, { timeout: 3000 });
+    expect(alert).toHaveTextContent("Tạo bản nháp thất bại");
+    expect(alert).toHaveTextContent(failure);
+    expect(screen.getByRole("textbox", { name: "Yêu cầu" })).toHaveValue("Original request");
+    expect(submit).toHaveBeenCalledWith("a1", expect.objectContaining({ source: "PERSONAL", provider: "OPENAI" }));
+    expect(apply).not.toHaveBeenCalled();
+    expect(onApplied).not.toHaveBeenCalled();
   });
 
   it("an uploaded template file becomes the format; language and count stay the user's choice", async () => {
@@ -253,6 +303,7 @@ describe("AiDraftDialog", () => {
     expect(screen.getByLabelText("Số câu hỏi")).toBeEnabled();
     await waitFor(() => expect(screen.queryByText("Đang đọc…")).toBeNull());
     fireEvent.click(screen.getByTestId("ai-send"));
+    await confirmAiSource();
     await waitFor(() => expect(requestAiDraft).toHaveBeenCalledWith("with-template", expect.objectContaining({
       options: { profile: "AUTO", language: "EN", questionCount: undefined, targetPoints: 10 },
       formatText: ["I. Phân tích", "I.1. Use case", "II. Thiết kế"].join("\n"),
@@ -274,6 +325,7 @@ describe("AiDraftDialog", () => {
     expect(within(picker).getByRole("option", { name: "Tải đề mẫu lên…" })).toBeInTheDocument();
     fireEvent.change(picker, { target: { value: "t1" } });
     fireEvent.click(screen.getByTestId("ai-send"));
+    await confirmAiSource();
     await waitFor(() => expect(requestAiDraft).toHaveBeenCalledWith("a1", expect.objectContaining({
       templateAssignmentId: "t1",
       formatText: undefined,
@@ -297,6 +349,7 @@ describe("AiDraftDialog", () => {
     await pickReference();
     fireEvent.change(screen.getByLabelText("Số câu hỏi"), { target: { value: "2" } });
     fireEvent.click(screen.getByTestId("ai-send"));
+    await confirmAiSource();
     expect(await screen.findByTestId("ai-proposal")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sửa yêu cầu và tạo lại" }));
     await waitFor(() => expect(discard).toHaveBeenCalledWith("a1", "d1"));

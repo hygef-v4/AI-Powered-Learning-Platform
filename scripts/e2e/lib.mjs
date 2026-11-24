@@ -15,24 +15,39 @@ export function env(key) {
 export class Session {
   constructor(name) {
     this.name = name;
+    this.cookies = new Map();
     this.jar = new Map();
   }
-  cookieHeader() {
-    return [...this.jar].map(([k, v]) => `${k}=${v}`).join("; ");
+  // Like a browser, cookies are keyed by name and path. Login sets refresh_token on /api/v1/auth and clears a legacy
+  // refresh_token on /api/v1/auth/refresh; a name-only jar would drop the valid one.
+  cookieHeader(path = "/api/v1/") {
+    return [...this.cookies.values()]
+      .filter((c) => path.startsWith(c.path))
+      .sort((a, b) => b.path.length - a.path.length)
+      .map((c) => `${c.name}=${c.value}`)
+      .join("; ");
   }
   absorb(res) {
     for (const c of res.headers.getSetCookie?.() ?? []) {
-      const [pair] = c.split(";");
+      const [pair, ...attrs] = c.split(";");
       const i = pair.indexOf("=");
-      const k = pair.slice(0, i).trim();
-      const v = pair.slice(i + 1).trim();
-      if (v === "" || /max-age=0/i.test(c)) this.jar.delete(k);
-      else this.jar.set(k, v);
+      const name = pair.slice(0, i).trim();
+      const value = pair.slice(i + 1).trim();
+      const pathAttr = attrs.map((a) => a.trim()).find((a) => /^path=/i.test(a));
+      const path = pathAttr ? pathAttr.slice(5) : "/";
+      if (value === "" || /max-age=0/i.test(c)) this.cookies.delete(`${name} ${path}`);
+      else this.cookies.set(`${name} ${path}`, { name, path, value });
     }
+    this.jar = new Map([...this.cookies.values()].map((c) => [c.name, c.value]));
+  }
+  /** Copies another session's cookies, e.g. to replay an old refresh token. */
+  copyCookies(other) {
+    this.cookies = new Map(other.cookies);
+    this.jar = new Map(other.jar);
   }
   async call(method, path, body, { raw = false, headers = {} } = {}) {
     if (method !== "GET" && !this.jar.has("XSRF-TOKEN")) await this.call("GET", "/api/v1/me/profile").catch(() => {});
-    const h = { Accept: "application/json", Cookie: this.cookieHeader(), ...headers };
+    const h = { Accept: "application/json", Cookie: this.cookieHeader(path), ...headers };
     if (body !== undefined) h["Content-Type"] = "application/json";
     if (this.jar.has("XSRF-TOKEN")) h["X-XSRF-TOKEN"] = decodeURIComponent(this.jar.get("XSRF-TOKEN"));
     const res = await fetch(BASE + path, { method, headers: h, body: body === undefined ? undefined : JSON.stringify(body), redirect: "manual" });

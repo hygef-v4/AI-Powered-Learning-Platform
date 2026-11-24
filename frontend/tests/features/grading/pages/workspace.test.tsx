@@ -85,6 +85,33 @@ function mockGroupWorkspace(wide = true) {
   return group;
 }
 
+it("shows disabled monitoring and displays real leave times when available", async () => {
+  const { unmount } = render(<GradingWorkspacePage evaluationId="e" />);
+  expect(await screen.findByText("Không bật theo dõi hoạt động")).toBeVisible();
+  unmount();
+
+  mocks.loadEvaluation.mockResolvedValue({
+    ...detail,
+    activityState: "AVAILABLE",
+    activity: {
+      policyState: "AVAILABLE",
+      awayCount: 2,
+      knownAwayDuration: "PT20S",
+      intervals: [
+        { start: "2026-11-24T09:00:00Z", end: "2026-11-24T09:00:10Z", certainty: "KNOWN" },
+        { start: "2026-11-24T09:00:20Z", end: "2026-11-24T09:00:30Z", certainty: "KNOWN" },
+      ],
+      unknownGaps: 0,
+      reliabilityNote: "Dữ liệu hoạt động để tham khảo",
+    },
+  });
+  render(<GradingWorkspacePage evaluationId="e" />);
+  const heading = await screen.findByRole("heading", { name: "Hoạt động khi làm bài" });
+  const activity = within(heading.closest("details")!);
+  expect(activity.getByText(/2 lần.*20 giây/)).toBeVisible();
+  expect(activity.getAllByRole("listitem")).toHaveLength(2);
+});
+
 it("distinguishes group members by student code in grading controls and activity", async () => {
   const group = mockGroupWorkspace();
   group.memberActivities = group.memberActivities.map((entry, index) => ({

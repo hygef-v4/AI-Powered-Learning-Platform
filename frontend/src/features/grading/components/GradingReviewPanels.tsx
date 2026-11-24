@@ -1,4 +1,5 @@
 import { formatStudentLabel } from "@/shared/studentCode";
+import { ActivityTimeline } from "@/shared/activity/ActivityTimeline";
 import { ACTIVITY_LABELS, type Detail } from "../model/types";
 import { Card } from "@/shared/ui";
 import { msg } from "@/i18n/msg";
@@ -12,10 +13,11 @@ export function ActivityReview({ detail }: { detail: Detail }) {
         <span className="text-xs text-muted">{ACTIVITY_LABELS[detail.activityState] ?? detail.activityState}</span>
       </summary>
       <div className="mt-2 space-y-1.5 border-t border-line-soft pt-2">
-        {detail.activity && (
-          <p>
-            {detail.activity.awayCount} {msg("grading.components.GradingReviewPanels.timesLeftThePage")}{detail.activity.unknownGaps} {msg("grading.components.GradingReviewPanels.gapsInTheData")}{detail.activity.reliabilityNote}
-          </p>
+        {detail.activity?.policyState === "AVAILABLE" && (
+          <>
+            <ActivityTimeline summary={detail.activity} />
+            <p>{detail.activity.unknownGaps} {msg("grading.components.GradingReviewPanels.gapsInTheData")}</p>
+          </>
         )}
         <div>
           {detail.memberActivities?.map((m) => (

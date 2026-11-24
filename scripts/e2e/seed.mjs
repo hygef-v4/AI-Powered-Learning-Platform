@@ -8,10 +8,12 @@ const CLASS_CODE = process.env.E2E_CLASS ?? "SE-TEST1";
 // Mỗi sinh viên chỉ học một lớp trong một môn: lớp mới cho đủ 5 sinh viên thì đặt thêm E2E_SUBJECT.
 const SUBJECT_CODE = process.env.E2E_SUBJECT ?? "SWT301";
 const ADMIN = env("U01_BOOTSTRAP_ADMIN_EMAIL");
+// Docker stack allows fpt.edu.vn; a local backend may allow another school domain (U01_ALLOWED_EMAIL_DOMAINS).
+const DOMAIN = process.env.E2E_EMAIL_DOMAIN ?? "fpt.edu.vn";
 const people = [
-  { key: "manager", email: "cn.test@fpt.edu.vn", displayName: "Chủ nhiệm Thử", role: "SUBJECT_MANAGER" },
-  { key: "teacher", email: "gv.test@fpt.edu.vn", displayName: "Giảng viên Thử", role: "TEACHER" },
-  ...[1, 2, 3, 4, 5].map((i) => ({ key: `sv${i}`, email: `sv${i}.test@fpt.edu.vn`, displayName: `Sinh viên ${i}`, role: "STUDENT" })),
+  { key: "manager", email: `cn.test@${DOMAIN}`, displayName: "Chủ nhiệm Thử", role: "SUBJECT_MANAGER" },
+  { key: "teacher", email: `gv.test@${DOMAIN}`, displayName: "Giảng viên Thử", role: "TEACHER" },
+  ...[1, 2, 3, 4, 5].map((i) => ({ key: `sv${i}`, email: `sv${i}.test@${DOMAIN}`, displayName: `Sinh viên ${i}`, role: "STUDENT" })),
 ];
 
 const out = { accounts: {} };

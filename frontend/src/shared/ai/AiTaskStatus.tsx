@@ -20,12 +20,14 @@ const LABEL: Record<AiTaskState, { text: string; tone: Tone }> = {
 
 type Props = {
   taskId: string;
+  cancellable?: boolean;
+  intervalMs?: number;
   /** Gọi một lần khi task tới trạng thái cuối. */
   onFinished?: (task: AiTaskView) => void;
 };
 
 /** Theo dõi task AI mỗi 2 giây tới khi kết thúc; còn chờ thì cho hủy (BR-U06-26). */
-export function AiTaskStatus({ taskId, onFinished }: Props) {
+export function AiTaskStatus({ taskId, cancellable = true, intervalMs = 2000, onFinished }: Props) {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
   const fetcher = useCallback(() => fetchApi<AiTaskView>(`/api/v1/ai/tasks/${encodeURIComponent(taskId)}`), [taskId]);
@@ -37,7 +39,7 @@ export function AiTaskStatus({ taskId, onFinished }: Props) {
     },
     [onFinished],
   );
-  const { data, error } = usePollStatus(fetcher, isFinal, 2000);
+  const { data, error } = usePollStatus(fetcher, isFinal, intervalMs);
 
   const cancel = async () => {
     setCancelling(true);
@@ -62,7 +64,7 @@ export function AiTaskStatus({ taskId, onFinished }: Props) {
       )}
       {data.safeError && data.state !== "UNKNOWN" && <span className="text-danger">{data.safeError}</span>}
       {data.applyResult === "STALE" && <span className="text-warning">{msg("shared.ai.AiTaskStatus.theDataChangedWhileWaiting")}</span>}
-      {data.state === "QUEUED" && (
+      {cancellable && data.state === "QUEUED" && (
         <Button size="sm" onClick={() => void cancel()} disabled={cancelling}>
           {msg("shared.ai.AiTaskStatus.cancel")}</Button>
       )}

@@ -9,7 +9,8 @@ const buildSectionPath = (id: string, sectionId: string) => `${buildDocPath(id)}
 export const getMyGroupDoc = (assignmentId: string) =>
   fetchApi<WorkspaceView>(`/api/v1/assignments/${encodeURIComponent(assignmentId)}/my-group-doc`);
 
-export const getWorkspace = (id: string) => fetchApi<WorkspaceView>(buildDocPath(id));
+export const getWorkspace = (id: string, signal?: AbortSignal) =>
+  fetchApi<WorkspaceView>(buildDocPath(id), { cache: "no-store", signal });
 
 export const claimSection = (id: string, sectionId: string) =>
   fetchApi<SectionView>(`${buildSectionPath(id, sectionId)}:claim`, { method: "POST" });
