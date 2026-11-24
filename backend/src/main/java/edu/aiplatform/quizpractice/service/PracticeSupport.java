@@ -116,7 +116,7 @@ class PracticeSupport {
         return attempt;
     }
 
-    /** Như {@link #ownAttempt} và người gọi còn học lớp đang mở của lượt (R5, như U08): làm bài, lưu, nộp, ghi hoạt động. */
+    /** Như {@link #loadOwnAttempt} và người gọi còn học lớp đang mở của lượt (R5, như U08): làm bài, lưu, nộp, ghi hoạt động. */
     QuizAttempt loadOwnActiveAttempt(Actor actor, UUID attemptId, String action) {
         QuizAttempt attempt = loadOwnAttempt(actor, attemptId, action);
         access.requireClass(actor, action, attempt.classId(), PracticeAccess.OBJECT, attemptId, ATTEMPT_NOT_FOUND);

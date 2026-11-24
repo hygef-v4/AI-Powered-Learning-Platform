@@ -14844,3 +14844,30 @@ used by CI or deployment. Replace README references with a plain
 **Context**: Construction, U02 Audit, tiếp nối yêu cầu nhật ký chi tiết.
 
 ---
+
+## Hướng dẫn đọc code U01, U10, U11 (mentor)
+**Timestamp**: 2026-11-24T18:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tôi cần hiểu code các phần tôi đảm nhiệm, đóng vai trò như 1 mentor, kiểm tra và giải thích chi tiết cho tôi để tôi có thể hiểu (coi tôi như 1 người mới chưa biết gì)."
+**AI Response**: "Xác định Người 1 phụ trách U01, U10, U11 theo unit-of-work.md; giải thích backend (đăng nhập, phiên Redis, JWT, phân quyền, vòng đời Quiz, phiên bản câu, phát hành, chấm, lượt làm, tự lưu, tự nộp, hiện kết quả) và nêu 5 điểm nhỏ cần dọn. Không sửa code."
+**Context**: Giải thích code, không thuộc stage AI-DLC.
+
+---
+
+## Giải thích frontend U01, U10, U11
+**Timestamp**: 2026-11-24T18:40:30Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Giải thích frontend"
+**AI Response**: "Giải thích API client (CSRF, refresh dùng chung, 409 concurrent), SessionProvider, chống open redirect, RoleGuard, proxy CSP, slot registry, trang soạn Quiz và trang làm Quiz (debounce, flush tuần tự, keepalive, gộp ba bên khi xung đột, lệch đồng hồ, nộp). Xác minh điểm 5 lần trước là ổn; phát hiện lưu nửa chừng ở QuizDetailPage.saveSettings."
+**Context**: Giải thích code, không thuộc stage AI-DLC.
+
+---
+
+## Sửa các điểm nhỏ U10, U11
+**Timestamp**: 2026-11-24T18:56:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa các điểm nhỏ"
+**AI Response**: "Gộp hai Javadoc của Quiz.DEFAULT_SETTINGS cho khớp code; sửa link Javadoc #ownAttempt thành #loadOwnAttempt trong PracticeSupport; QuizAttemptService.start gọi listByAccount một lần; QuizAttempt.replaceAnswers và markSubmitted giữ outcome; QuizDetailPage.saveSettings cập nhật version ngay sau khi lưu cấu hình để lưu điểm câu lỗi không gây xung đột version. Backend 58 test liên quan đạt (QuizAttemptTest, QuizPracticeServicesTest, AttemptActivityAssessorTest, QuizPracticeControllerTest, QuizTest); frontend typecheck, eslint và 82 test quizzes đạt. Không chạy toàn bộ mvn verify, chưa commit."
+**Context**: Construction, sửa nhỏ U10/U11, không đổi API, schema hay hành vi nghiệp vụ.
+
+---

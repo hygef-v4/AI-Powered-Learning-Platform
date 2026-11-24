@@ -80,11 +80,12 @@ public class QuizAttemptService {
             access.recordRejected(actor, "QUIZ_SUBMIT_REJECTED", null, "NO_ATTEMPTS_LEFT");
             throw ApiException.createConflict("NO_ATTEMPTS_LEFT", "Bạn đã dùng hết " + max + "/" + max + " lượt làm quiz này");
         }
-        Set<UUID> seen = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()
+        List<QuizAttempt> previousAttempts = attempts.listByAccount(actor.accountId(), List.of(quizId));
+        Set<UUID> seen = previousAttempts.stream()
                 .flatMap(a -> a.snapshot().questionOrder().stream()).collect(Collectors.toSet());
         long seed = SEEDS.nextLong();
         QuizStudentView view = support.createPaper(quizId, seen, seed);
-        int nextAttemptNo = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()
+        int nextAttemptNo = previousAttempts.stream()
                 .filter(a -> a.classId().equals(classId)).mapToInt(QuizAttempt::attemptNo).max().orElse(0) + 1;
         QuizAttempt attempt = QuizAttempt.start(quizId, classId, actor.accountId(), nextAttemptNo,
                 AttemptSnapshot.createSnapshot(view, seed), clock.instant());
