@@ -4,7 +4,7 @@ Business rules của U06 và U12 đã chốt, file `business-rules.md` giữ ngu
 
 | Mã | Nội dung | Quan hệ với BR đã chốt |
 |---|---|---|
-| FB-U06-01 | Nguồn AI mặc định theo tài khoản (Kết nối AI › API cá nhân: API của trường, API cá nhân theo nhà cung cấp, hoặc Hỏi mỗi lần). Có mặc định và nguồn dùng được thì popup Chọn nguồn AI tự gửi; nguồn chưa dùng được thì báo lý do và cho chọn nguồn khác, không tự đổi nguồn. Hộp tạo nháp U07 lấy mặc định làm giá trị ban đầu. | Làm thêm; giữ BR-U06-10, 11 (không tự đổi nguồn). |
+| FB-U06-01 | Nguồn AI mặc định theo tài khoản (Kết nối AI › API cá nhân: API của trường, API cá nhân theo nhà cung cấp, hoặc Hỏi mỗi lần; từ 2026-11-23 là Tự động thay Hỏi mỗi lần, thay luôn công tắc từng khóa cá nhân, và tác vụ AI để trống nguồn dùng đúng nguồn mặc định). Có mặc định và nguồn dùng được thì popup Chọn nguồn AI tự gửi; nguồn chưa dùng được thì báo lý do và cho chọn nguồn khác, không tự đổi nguồn. Hộp tạo nháp U07 lấy mặc định làm giá trị ban đầu. | Làm thêm; giữ BR-U06-10, 11 (không tự đổi nguồn). |
 
 ## Chờ làm
 

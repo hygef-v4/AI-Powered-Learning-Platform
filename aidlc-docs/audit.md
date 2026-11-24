@@ -14156,3 +14156,12 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Construction / Bug fix U09, mở PR.
 
 ---
+
+## U06 Chọn nguồn AI mặc định thay cho công tắc từng khóa
+**Timestamp**: 2026-11-23T11:16:16Z
+**Requested by:** Vo Minh Tai
+**User Input**: "Bạn tôi check thấy phần chọn model có 2 nút tick, nếu tick bật cả 2 thì sẽ sử dụng model nào, và bảo đang khó dùng quá, hãy sửa lại kiểu có thể chọn dùng giữa model cá nhân hoặc model chung ấy" / "Cái 1 là sao?" / "Làm cách 1 đi"
+**AI Response**: "Giải thích: hai công tắc chỉ cho phép dùng khóa; khi nguồn trống hệ thống tự chọn API của trường trước rồi khóa cá nhân theo Claude, OpenAI, Gemini. Làm cách 1 trên nhánh feat/u06-ai-source-choice: thẻ Nguồn AI dùng mặc định (Tự động, API của trường, từng nhà cung cấp có khóa cá nhân) trên tab API cá nhân, bỏ công tắc ở bảng khóa cá nhân (giữ công tắc ở bảng khóa của trường); tác vụ AI không ghi nguồn sẽ dùng nguồn mặc định đã chọn (FB-U06-01) và worker chỉ thử khóa cùng nguồn đó; Tự động giữ luồng BR-U06-10 hiện tại."
+**Context**: Construction, U06 AI Connections, sửa UX theo phản hồi người dùng. Dùng lại API ai-source-preference có sẵn, không đổi schema. Kiểm tra: AiTaskFlowTest 43, AiSourceServiceTest 5, AiConnectionServiceTest 13, frontend tests/features/ai 50; trên stack local, nguồn API của trường với khóa sai thì tác vụ FAILED và không chuyển sang khóa cá nhân, nguồn Claude chưa có khóa thì không tạo tác vụ AI. Gộp vào staging theo yêu cầu "Merge cho tôi vào staging đi".
+
+---

@@ -810,7 +810,9 @@
         "couldNotRevokeTheKey": "Could not revoke the key.",
         "revoke": "Revoke",
         "areYouSureYouWant": "Are you sure you want to revoke the key ",
-        "text": "?"
+        "text": "?",
+        "off": "Off",
+        "turnBackOn": "Turn on"
       },
       "McpAgentSection": {
         "couldNotRevokeTheAgent": "Could not revoke the agent, please try again later.",
@@ -890,6 +892,26 @@
         "mcpDocumentation": "MCP documentation",
         "howToConnectAppsCreate": "How to connect apps, create assignments, grade and use each tool.",
         "viewMcpDocumentation": "View MCP documentation"
+      },
+      "SourceSection": {
+        "title": "Default AI source",
+        "intro": "Choose one source for every AI task (drafting, grading, feedback…). A specific source is the only one used; if it fails or runs out of quota you get an error instead of a silent switch.",
+        "automatic": "Automatic",
+        "automaticDetailShared": "Uses the school API first; when its quota is not enough, uses your personal keys (Claude, then OpenAI, then Gemini).",
+        "automaticDetailPersonal": "Uses your personal keys in the order Claude, OpenAI, Gemini; a failing key moves on to the next one.",
+        "schoolApi": "School API",
+        "personalKey": "Personal key · {provider}",
+        "tokensLeftToday": "{left} / {limit} tokens left today",
+        "paidBySchool": "Paid by the school",
+        "paidByYou": "Paid by you",
+        "loading": "Loading…",
+        "couldNotLoadSources": "Could not load the AI sources.",
+        "couldNotSaveSource": "Could not save the default AI source.",
+        "saving": "Saving…",
+        "saved": "Default AI source saved.",
+        "note": "Your choice is saved at once and applies to the next AI requests.",
+        "addKeyHint": "To use your own key, add it in the Personal API keys table below.",
+        "reload": "Reload"
       }
     },
     "model": {

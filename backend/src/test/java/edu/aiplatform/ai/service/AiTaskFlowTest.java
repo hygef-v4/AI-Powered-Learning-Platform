@@ -38,6 +38,8 @@ import edu.aiplatform.ai.contract.UserPromptInput;
 import edu.aiplatform.ai.contract.UsageMeasurement;
 import edu.aiplatform.ai.model.AiConnection;
 import edu.aiplatform.ai.repository.AiConnectionRepository;
+import edu.aiplatform.ai.repository.AiSourcePreferenceRepository;
+import edu.aiplatform.ai.model.AiSourcePreference;
 import edu.aiplatform.ai.model.AiTask;
 import edu.aiplatform.ai.model.AiUsageRecord;
 import edu.aiplatform.ai.repository.AiUsageRepository;
@@ -219,6 +221,69 @@ class AiTaskFlowTest {
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_PERSONAL_NOT_CONFIGURED"));
         assertThat(tasks.rows).isEmpty();
         verify(jobs, never()).enqueue(any(), any(), any());
+    }
+
+    // ---- nguồn mặc định (FB-U06-01) -----------------------------------------------------------------------
+
+    private AiSourcePreferenceRepository preferSource(Actor actor, AiSource source, AiProvider provider) {
+        AiSourcePreferenceRepository preferences = mock(AiSourcePreferenceRepository.class);
+        when(preferences.findPreference(any())).thenReturn(Optional.empty());
+        when(preferences.findPreference(actor.accountId()))
+                .thenReturn(Optional.of(new AiSourcePreference(source, provider)));
+        service.setSourcePreferences(preferences);
+        worker.setSourcePreferences(preferences);
+        return preferences;
+    }
+
+    @Test
+    void emptySourceUsesTheDefaultSourceInsteadOfAutomaticOrder() {
+        when(quota.calculateRemaining(teacher.accountId()))
+                .thenReturn(new QuotaReservationService.Remaining(0, 10_000, 10_000, null));
+        preferSource(teacher, AiSource.PERSONAL, AiProvider.OPENAI);
+
+        AiTaskView view = service.submit(request(teacher, null, null, "pref-personal"));
+
+        assertThat(view.source()).isEqualTo(AiSource.PERSONAL);
+        assertThat(view.provider()).isEqualTo(AiProvider.OPENAI);
+        verify(quota, never()).reserve(any(), anyLong());
+    }
+
+    @Test
+    void defaultSharedSourceFailsInsteadOfFallingBackToPersonal() {
+        preferSource(teacher, AiSource.SHARED, null);
+        AiTaskView view = service.submit(request(teacher, null, null, "pref-shared"));
+        when(gateway.call(eq(AiProvider.GEMINI), any()))
+                .thenThrow(new ProviderException(FailureKind.REJECTED, 503, "Không kết nối được", null));
+
+        worker.handle(message(view.taskId()));
+
+        AiTask task = tasks.rows.get(view.taskId());
+        assertThat(view.source()).isEqualTo(AiSource.SHARED);
+        assertThat(task.state()).isNotEqualTo(AiTaskState.READY);
+        assertThat(task.source()).isEqualTo(AiSource.SHARED);
+        verify(gateway, never()).call(eq(AiProvider.OPENAI), any());
+    }
+
+    @Test
+    void defaultProviderWithoutKeyIsReportedNotSwitched() {
+        preferSource(teacher, AiSource.PERSONAL, AiProvider.CLAUDE);
+
+        assertThatThrownBy(() -> service.submit(request(teacher, null, null, "pref-claude")))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.readCode()).isEqualTo("AI_PERSONAL_NOT_CONFIGURED"));
+        assertThatThrownBy(() -> service.requireSource(teacher, null, null))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.readCode()).isEqualTo("AI_PERSONAL_NOT_CONFIGURED"));
+        assertThat(tasks.rows).isEmpty();
+    }
+
+    @Test
+    void defaultSharedSourceIsIgnoredForStudents() {
+        preferSource(student, AiSource.SHARED, null);
+
+        assertThatThrownBy(() -> service.submit(request(student, null, null, "pref-student")))
+                .isInstanceOfSatisfying(ApiException.class,
+                        e -> assertThat(e.readCode()).isEqualTo("AI_SOURCE_UNAVAILABLE"));
     }
 
     // ---- guardrail tập trung ------------------------------------------------------------------------------
