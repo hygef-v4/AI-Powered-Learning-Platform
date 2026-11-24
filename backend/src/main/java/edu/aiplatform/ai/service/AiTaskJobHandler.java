@@ -17,7 +17,9 @@ import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTokenEstimate;
 import edu.aiplatform.ai.model.AiConnection;
 import edu.aiplatform.ai.model.AiConnection.Status;
+import edu.aiplatform.ai.model.AiSourcePreference;
 import edu.aiplatform.ai.repository.AiConnectionRepository;
+import edu.aiplatform.ai.repository.AiSourcePreferenceRepository;
 import edu.aiplatform.ai.model.AiTask;
 import edu.aiplatform.ai.repository.AiTaskRepository;
 import edu.aiplatform.ai.model.AiUsageRecord.Source;
@@ -81,6 +83,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     /** API chung: tối đa 2 lời gọi đồng thời mỗi provider trong một worker (NFR-U06-03). */
     private final Map<AiProvider, Semaphore> sharedSlots = new EnumMap<>(AiProvider.class);
     private AiImageSourceRegistry imageSources = AiImageSourceRegistry.createRegistry(List.of());
+    private AiSourcePreferenceRepository sourcePreferences;
 
     public AiTaskJobHandler(AiTaskRepository tasks, AiConnectionRepository connections, IProviderGateway gateway,
                             KeyCipher cipher, JsonSchemaChecker schemas, QuotaReservationService quotaReservationService,
@@ -107,6 +110,11 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
     @Autowired(required = false)
     void setImageSources(AiImageSourceRegistry imageSources) {
         this.imageSources = imageSources;
+    }
+
+    @Autowired(required = false)
+    void setSourcePreferences(AiSourcePreferenceRepository sourcePreferences) {
+        this.sourcePreferences = sourcePreferences;
     }
 
     // ---- IJobHandler ----------------------------------------------------------------------------------------
@@ -294,6 +302,23 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         return images;
     }
 
+    /** Nguồn mặc định của người gửi, chỉ khi task đang chạy đúng nguồn đó (Tự động thì không có). */
+    private Optional<AiSourcePreference> findPinnedSource(AiTask task) {
+        if (sourcePreferences == null) {
+            return Optional.empty();
+        }
+        return sourcePreferences.findPreference(task.actorId())
+                .filter(p -> p.source() == task.source())
+                .filter(p -> p.source() == AiSource.SHARED || p.provider() == task.provider());
+    }
+
+    private static boolean isPinnedConnection(AiSourcePreference pinned, AiConnection connection) {
+        if (pinned.source() == AiSource.SHARED) {
+            return connection.scope() == AiConnection.Scope.INSTITUTIONAL;
+        }
+        return connection.scope() == AiConnection.Scope.PERSONAL && connection.provider() == pinned.provider();
+    }
+
     /**
      * Khóa kế tiếp sau khóa của task (đã quyết toán quota lần trước): API chung theo thứ tự rồi API cá nhân của người
      * gửi; khóa chung mà hết hạn mức thì bỏ qua. Nếu hết suất gọi, lưu khóa mới ở trạng thái chờ.
@@ -305,6 +330,8 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             order.addAll(ConnectionOrder.filterActive(connections.listInstitutional(), catalog));
         }
         order.addAll(ConnectionOrder.filterActive(connections.listPersonal(task.actorId()), catalog));
+        // Người gửi đã chọn nguồn mặc định (FB-U06-01): chỉ thử các khóa của đúng nguồn đó, không đổi sang nguồn khác.
+        findPinnedSource(task).ifPresent(pinned -> order.removeIf(c -> !isPinnedConnection(pinned, c)));
         int at = -1;
         for (int i = 0; i < order.size(); i++) {
             if (order.get(i).id().equals(task.connectionId())) {

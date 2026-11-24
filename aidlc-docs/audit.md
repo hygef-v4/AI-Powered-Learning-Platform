@@ -14129,3 +14129,39 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Construction / Build and Test, commit theo yêu cầu.
 
 ---
+
+## Release — chuyển WIP sang staging và PR staging lên main
+**Timestamp**: 2026-11-24T22:10:00Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] chuyển cái này sang staging và tạo pr staging lên main"
+**AI Response**: "So sánh 11 file thay đổi trong worktree audit-staging-wip (F:\) với origin/staging: 6 file giống, 4 file là bản cũ hơn staging, audit.md có 2 mục log WF01/WF02 (Round 1, Retest) không có trên staging. Lưu patch và bản sao vào F:\...\.tmp\audit-staging-wip-backup-20261124 rồi chuyển worktree sang staging (96780384). Đưa worktree audit-staging về nhánh audit-staging. Tạo PR #131 staging -> main."
+**Context**: Release.
+
+---
+
+## Bug fix — HTTP 500 ở submission-progress trên production
+**Timestamp**: 2026-11-24T22:40:00Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #2] [Image #3] [Image #4] [Image #5] b check lại xem đây là lỗi gì tôi thấy ở production https://alapedu.online/teaching/classes/b6d72eff-2764-4857-9852-41c9c1d5288a"
+**AI Response**: "GET /api/v1/classes/{id}/submission-progress trả 500. Nguyên nhân: GroupWorkQueryService.listGroupSubmissions trả groupDocumentId null cho nhóm chưa mở tài liệu; SubmissionReviewService.buildListing gọi submission.groupDocumentId().equals(...) nên NullPointerException khi bài nhóm đã có evaluation. Thêm test tái hiện (lỗi NPE trước khi sửa), đảo chiều so sánh sang candidate.groupDocumentId.equals(...). Toàn bộ backend 2665 test đạt. Chưa commit; chưa xem log production để xác nhận."
+**Context**: Construction / Bug fix U09.
+
+---
+
+## PR — hotfix submission-progress lên staging
+**Timestamp**: 2026-11-24T22:50:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit pr lên staging"
+**AI Response**: "Commit bản sửa NullPointerException ở SubmissionReviewService.buildListing cùng test tái hiện trên audit-staging, push nhánh và tạo PR vào staging."
+**Context**: Construction / Bug fix U09, mở PR.
+
+---
+
+## U06 Chọn nguồn AI mặc định thay cho công tắc từng khóa
+**Timestamp**: 2026-11-23T11:16:16Z
+**Requested by:** Vo Minh Tai
+**User Input**: "Bạn tôi check thấy phần chọn model có 2 nút tick, nếu tick bật cả 2 thì sẽ sử dụng model nào, và bảo đang khó dùng quá, hãy sửa lại kiểu có thể chọn dùng giữa model cá nhân hoặc model chung ấy" / "Cái 1 là sao?" / "Làm cách 1 đi"
+**AI Response**: "Giải thích: hai công tắc chỉ cho phép dùng khóa; khi nguồn trống hệ thống tự chọn API của trường trước rồi khóa cá nhân theo Claude, OpenAI, Gemini. Làm cách 1 trên nhánh feat/u06-ai-source-choice: thẻ Nguồn AI dùng mặc định (Tự động, API của trường, từng nhà cung cấp có khóa cá nhân) trên tab API cá nhân, bỏ công tắc ở bảng khóa cá nhân (giữ công tắc ở bảng khóa của trường); tác vụ AI không ghi nguồn sẽ dùng nguồn mặc định đã chọn (FB-U06-01) và worker chỉ thử khóa cùng nguồn đó; Tự động giữ luồng BR-U06-10 hiện tại."
+**Context**: Construction, U06 AI Connections, sửa UX theo phản hồi người dùng. Dùng lại API ai-source-preference có sẵn, không đổi schema. Kiểm tra: AiTaskFlowTest 43, AiSourceServiceTest 5, AiConnectionServiceTest 13, frontend tests/features/ai 50; trên stack local, nguồn API của trường với khóa sai thì tác vụ FAILED và không chuyển sang khóa cá nhân, nguồn Claude chưa có khóa thì không tạo tác vụ AI. Gộp vào staging theo yêu cầu "Merge cho tôi vào staging đi".
+
+---

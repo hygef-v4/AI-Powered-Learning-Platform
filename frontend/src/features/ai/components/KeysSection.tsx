@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { PROVIDER_LABEL, masked } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
-import { Alert, Button, Dialog, IconButton, SettingsGroup, Switch, TableFrame, Td, Th, cx } from "@/shared/ui";
+import { Alert, Button, Dialog, IconButton, Pill, SettingsGroup, Switch, TableFrame, Td, Th, cx } from "@/shared/ui";
 import type { AiProvider } from "@/shared/ai";
 import { ApiKeyDialog } from "./ApiKeyDialog";
 import { getProviders } from "../api";
@@ -27,13 +27,17 @@ const OK = msg("ai.components.KeysSection.passed");
 
 /**
  * Bảng khóa API dùng chung cho khóa của trường (UC 14, 15) và khóa cá nhân (UC 31; yêu cầu 2026-11-05): nhiều khóa cho
- * mỗi nhà cung cấp; kiểm tra, bật/tắt, thay, thu hồi trên từng dòng; 409 báo tải lại.
+ * mỗi nhà cung cấp; kiểm tra, bật/tắt, thay, thu hồi trên từng dòng; 409 báo tải lại. Khóa cá nhân không có công tắc
+ * (`allowDisable` false): người dùng chọn nguồn ở thẻ Nguồn AI dùng mặc định, khóa cũ đang tắt chỉ còn nút Bật lại.
  */
-export function KeysSection({ title, api, loadError, revokeTitle }: {
+export function KeysSection({ title, api, loadError, revokeTitle, allowDisable = true, onChanged }: {
   title: string;
   api: KeysApi;
   loadError: string;
   revokeTitle: string;
+  allowDisable?: boolean;
+  /** Gọi sau khi danh sách khóa đổi (thêm, thay, bật, thu hồi), để phần khác của trang tải lại. */
+  onChanged?: () => void;
 }) {
   const [connections, setConnections] = useState<ConnectionView[] | null>(null);
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
@@ -48,10 +52,11 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
         ([loaded, catalog]) => {
           setConnections(loaded.filter((c) => c.configured && c.id));
           setProviders(catalog);
+          onChanged?.();
         },
         () => setError(loadError),
       ),
-    [api, loadError],
+    [api, loadError, onChanged],
   );
 
   useEffect(() => {
@@ -168,12 +173,20 @@ export function KeysSection({ title, api, loadError, revokeTitle }: {
                   </Td>
                   <Td>
                     <div className="flex items-center justify-end gap-1">
-                      <Switch
-                        checked={c.status === "ACTIVE"}
-                        label=""
-                        ariaLabel={msg("ai.components.KeysSection.enableKey", { label: String(label), value: String(c.keyHint ?? "") })}
-                        onChange={(enabled) => toggle(id, enabled, c.version)}
-                      />
+                      {allowDisable ? (
+                        <Switch
+                          checked={c.status === "ACTIVE"}
+                          label=""
+                          ariaLabel={msg("ai.components.KeysSection.enableKey", { label: String(label), value: String(c.keyHint ?? "") })}
+                          onChange={(enabled) => toggle(id, enabled, c.version)}
+                        />
+                      ) : c.status !== "ACTIVE" && (
+                        <>
+                          <Pill tone="neutral">{msg("ai.components.KeysSection.off")}</Pill>
+                          <Button size="sm" disabled={busy !== null} onClick={() => void toggle(id, true, c.version)}>
+                            {msg("ai.components.KeysSection.turnBackOn")}</Button>
+                        </>
+                      )}
                       <IconButton icon="edit" label={msg("ai.components.KeysSection.replaceKey", { label: String(label) })} disabled={busy !== null} onClick={() => setEditing(c)} />
                       <IconButton
                         icon="trash"

@@ -179,7 +179,8 @@ public class SubmissionReviewService {
             for (var submission : provider.listGroupSubmissions(assignmentId, classId)) {
                 var evaluation = evals.stream()
                         .filter(candidate -> candidate.kind == EvaluationKind.GROUP_DOCUMENT
-                                && submission.groupDocumentId().equals(candidate.groupDocumentId)
+                                // A group that never opened its document has no id; it matches nothing.
+                                && candidate.groupDocumentId.equals(submission.groupDocumentId())
                                 && candidate.state != EvaluationStatus.SUPERSEDED)
                         .findFirst().orElse(null);
                 rows.add(new SubmissionRow(
