@@ -58,6 +58,8 @@ set "SMTP_HOST=localhost"
 set "SMTP_PORT=1025"
 set "SMTP_AUTH_ENABLED=false"
 set "SMTP_STARTTLS_ENABLED=false"
+rem Mailpit needs a sender address; same value as infra/docker-compose.local.yml.
+set "SMTP_FROM=no-reply@platform.local"
 set "U03_REQUIRE_DRIVE=false"
 
 cd /d "%BACKEND_DIR%"

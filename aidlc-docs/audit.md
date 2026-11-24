@@ -13959,6 +13959,42 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 
 ---
 
+## Build and Test - System test xác thực
+**Timestamp**: 2026-11-23T17:36:54Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check system test authentication system test" và "giúp tôi test nốt, tôi đả mở container mailpit"
+**AI Response**: "Chạy 179 test identity (đạt), viết và chạy system test xác thực trên localhost:3000 (19/19) và OTP qua Mailpit (16/16). Tìm ra run-backend.bat thiếu SMTP_FROM nên OTP không gửi được khi chạy backend local; thêm SMTP_FROM=no-reply@platform.local như docker-compose.local.yml. Chưa commit."
+**Context**: Kiểm thử U01; sửa cấu hình chạy local một dòng.
+
+---
+
+## Build and Test - Đưa system test xác thực vào repo
+**Timestamp**: 2026-11-23T17:46:13Z
+**Requested by:** Quang Hung
+**User Input**: "có"
+**AI Response**: "Thêm scripts/e2e/auth.mjs và auth-otp.mjs, đọc tài khoản và mật khẩu từ biến môi trường; sửa Session trong lib.mjs để giữ cookie theo tên và đường dẫn; cập nhật README e2e. Chạy lại trên local: 18/18 và 16/16 đạt. Các script e2e cũ chưa chạy lại vì cần stack Docker 8088. Chưa commit."
+**Context**: Kiểm thử U01.
+
+---
+
+## Build and Test - Ca đổi mật khẩu khi đang đăng nhập
+**Timestamp**: 2026-11-24T00:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi làm nốt ca 5" và "làm xong thì bảo codex cập nhật lại"
+**AI Response**: "Thêm ca A10 đến A10g vào scripts/e2e/auth.mjs cho ST-WF07-005: sai mật khẩu hiện tại 400 CURRENT_PASSWORD_INVALID, mật khẩu mới yếu 400, đổi đúng 204, phiên hiện tại giữ, phiên khác bị thu hồi, mật khẩu cũ hết dùng được, rồi đổi lại như cũ. Chạy trên localhost:3000: 25/25 đạt. Cập nhật README e2e. Chưa commit."
+**Context**: Kiểm thử U01 FR-001, FR-015.
+
+---
+
+## Build and Test - System test giao diện WF07 Round 1
+**Timestamp**: 2026-11-24T01:30:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi kiểm thử trên giao diện thật để cập nhật trạng thái các round" và "nhớ lưu lại các ảnh và up vào thư mục này nhé, làm bằng chứng system test theo luồng nhớ đặt tên file,folder rõ ràng"
+**AI Response**: "Chạy 6 ca ST-WF07-001 đến 006 trên giao diện localhost:3000 bằng trình duyệt Orca (Chrome extension không kết nối): kích hoạt bằng OTP, mã sai và mã hết hạn sau 10 phút, đăng xuất, quên mật khẩu (email có và không có tài khoản), đổi mật khẩu khi đang đăng nhập, sửa hồ sơ. Cả 6 đạt. Lưu 32 ảnh theo thư mục từng ca và tên file theo thứ tự bước, tạo thư mục Drive tương ứng trong system test proof, nhờ Codex tải ảnh lên và ghi Round 1 vào sheet. Đã khôi phục mật khẩu và hồ sơ của gv.test và sv1.test; còn lại tài khoản ui.* (đã kích hoạt hoặc chờ kích hoạt) trong dữ liệu local. Không in mật khẩu hay OTP; một ảnh Mailpit lộ mã OTP đã bị bỏ. Chưa commit."
+**Context**: Kiểm thử U01 trên giao diện, FR-001, FR-015.
+
+---
+
 ## System test — WF01 và WF02
 **Timestamp**: 2026-11-23T20:04:12Z
 **Requested by:** Quang Hung

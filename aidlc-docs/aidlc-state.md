@@ -9,6 +9,20 @@
 - Workbook: https://docs.google.com/spreadsheets/d/1kTzIL-Xg6MdJg0Ms5vnCae-lfVvYeA9U/edit?gid=1203805996
 - Bằng chứng và báo cáo: https://drive.google.com/drive/folders/108mLgtbeBSNVGBNO7IsfgQCT5MDu8lez
 
+## System test xác thực trên ứng dụng local · 2026-11-24
+
+Người dùng: "giúp tôi check system test authentication system test", rồi "giúp tôi test nốt, tôi đả mở container mailpit".
+
+- [x] 179 test identity trong repo đạt (web security, JWT, phiên và chặn tần suất trên Redis thật, OTP, tài khoản trên Postgres thật).
+- [x] System test qua `localhost:3000`, 19/19 đạt: 401 khi chưa đăng nhập, sai mật khẩu trả `AUTH_FAILED`, cookie `access_token`/`refresh_token` HttpOnly và SameSite, thiếu CSRF bị 403, phân quyền admin, refresh xoay cookie, đăng xuất vô hiệu cookie cũ, dùng lại refresh token: 409 trong 20 giây và thu hồi phiên sau 20 giây (BR-U01-46).
+- [x] System test OTP qua Mailpit, 16/16 đạt: kích hoạt (sai OTP, OTP dùng lại, mật khẩu yếu, không lộ tài khoản tồn tại) và quên mật khẩu (giãn cách 60 giây, mật khẩu cũ hết hiệu lực, phiên cũ bị thu hồi).
+- [x] Sửa `scripts/run-backend.bat`: thêm `SMTP_FROM=no-reply@platform.local` như `infra/docker-compose.local.yml`. Trước đó backend chạy bằng script này không gửi được OTP vì `SmtpMailAdapter` từ chối khi thiếu người gửi, job `OTP_DELIVERY` thử lại mãi.
+- [x] Đưa hai script vào repo: `scripts/e2e/auth.mjs` (25 ca, gồm đổi mật khẩu khi đang đăng nhập ST-WF07-005) và `scripts/e2e/auth-otp.mjs` (16 ca), đọc tài khoản và mật khẩu từ biến môi trường, không in bí mật; chạy lại trên local đều đạt. README e2e có mục U01.
+- [x] System test giao diện thật WF07 Round 1 (ST-WF07-001 đến 006) trên localhost:3000 bằng trình duyệt Orca, đạt 6/6; ảnh bằng chứng theo từng bước đưa lên Drive thư mục system test proof; trạng thái Round 1 cập nhật vào sheet. Không đổi mã nguồn.
+- [x] `scripts/e2e/lib.mjs`: `Session` giữ cookie theo tên và đường dẫn như trình duyệt, thêm `copyCookies`. Trước đó jar chỉ theo tên nên lệnh xóa cookie `refresh_token` ở đường dẫn cũ làm mất cookie hợp lệ và refresh trả 401.
+- [ ] Các script e2e cũ (U02, U06, U12) chưa chạy lại sau khi đổi `lib.mjs` vì cần stack Docker `8088`. DB local còn tài khoản test `otp.*@school.test`. Chưa commit.
+
+
 ## Sửa rủi ro MCP, đợt 1 · 2026-11-23
 
 Người dùng: "giúp tôi làm lần lượt từng bước" theo danh sách 11 vấn đề MCP đã rà soát. Đợt 1 làm bước 1 đến 3.
