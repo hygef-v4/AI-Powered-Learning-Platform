@@ -154,4 +154,26 @@ class SubmissionReviewNavigationTest {
         assertThat(submissionReviewService.loadEvaluation(actor, values.get(2).id).groupEvaluationId())
                 .isNull();
     }
+
+    @Test void groupWithoutDocumentDoesNotBreakClassProgress() {
+        var values = fixture();
+        var assignment = assignmentQuery.loadAssignment(assignmentId).orElseThrow();
+        when(assignment.assignmentId()).thenReturn(assignmentId);
+        when(assignment.submissionMode()).thenReturn(SubmissionMode.GROUP);
+        when(assignmentQuery.listForClass(classId)).thenReturn(List.of(assignment));
+        when(groupSubmissionSourceProvider.getIfAvailable()).thenReturn(groupSource);
+        var root = values.get(0);
+        root.kind = EvaluationKind.GROUP_DOCUMENT;
+        root.groupDocumentId = UUID.randomUUID();
+        when(evaluationRepository.findForClass(classId)).thenReturn(List.of(root));
+        // A group that never opened its document has no document id yet.
+        when(groupSource.listGroupSubmissions(assignmentId, classId)).thenReturn(List.of(
+                new GroupSubmissionStatus(null, UUID.randomUUID(), "Not started", false, null, false),
+                new GroupSubmissionStatus(root.groupDocumentId, UUID.randomUUID(), "Submitted", true, Instant.now(), false)));
+
+        var progress = submissionReviewService.loadProgress(actor, classId).get(assignmentId);
+
+        assertThat(progress.total()).isEqualTo(2);
+        assertThat(progress.summary()).containsEntry("notSubmitted", 1L).containsEntry("PENDING", 1L);
+    }
 }
