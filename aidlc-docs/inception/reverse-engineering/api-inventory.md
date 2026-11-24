@@ -102,7 +102,6 @@ kiểm quyền giảng viên/lớp OPEN/version và chốt bài đã lưu trong 
 @GetMapping
 @PostMapping
 @PatchMapping("/{id}")
-@GetMapping("/{id}/token")
 @DeleteMapping("/{id}")
 ```
 

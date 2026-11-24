@@ -34,7 +34,7 @@ Mỗi ca in `PASS`/`FAIL`; có lỗi thì exit code là `1`. Không in mật kh�
 
 ## U01 xác thực
 
-Hai script gọi ứng dụng đang chạy như trình duyệt (cookie và CSRF), dùng được với stack Docker (`8088`) hoặc backend chạy bằng `scripts/run-backend.bat` cùng frontend `npm run dev` (`http://localhost:3000`). Không in mật khẩu, OTP, cookie hay token; có ca lỗi thì exit code là `1`, thiếu biến môi trường thì `2`.
+Hai script gọi ứng dụng đang chạy như trình duyệt (cookie và CSRF), dùng được với stack Docker (`8088`) hoặc backend chạy trực tiếp cùng frontend `npm run dev` (`http://localhost:3000`). Không in mật khẩu, OTP, cookie hay token; có ca lỗi thì exit code là `1`, thiếu biến môi trường thì `2`.
 
 - `auth.mjs` (25 ca): 401 khi chưa đăng nhập, sai mật khẩu trả `AUTH_FAILED`, cookie phiên HttpOnly và SameSite, thiếu CSRF bị 403, giảng viên gọi API admin bị 403, refresh xoay cookie, đăng xuất vô hiệu cookie cũ, dùng lại refresh token (409 trong 20 giây, sau đó bị từ chối và thu hồi phiên thật, BR-U01-46), đổi mật khẩu khi đang đăng nhập (sai mật khẩu hiện tại, mật khẩu yếu, giữ phiên hiện tại, thu hồi phiên khác, rồi đổi lại như cũ, BR-U01-33/34). Ca dùng lại token **thu hồi mọi phiên** của tài khoản sinh viên dùng để test, nên chọn tài khoản không ai đang đăng nhập. Chạy khoảng 30 giây.
 - `auth-otp.mjs` (16 ca): Admin tạo một tài khoản sinh viên mới mỗi lần chạy, kích hoạt bằng OTP đọc từ Mailpit (sai mã, mã dùng lại, mật khẩu yếu, không lộ tài khoản tồn tại), rồi quên mật khẩu (giãn cách OTP 60 giây, mật khẩu cũ hết hiệu lực, phiên cũ bị thu hồi). Tài khoản test `otp.*@<domain>` được giữ lại. Cần Mailpit, worker đang chạy và `SMTP_FROM` đã đặt. Chạy khoảng 1 phút rưỡi vì phải chờ giãn cách OTP.

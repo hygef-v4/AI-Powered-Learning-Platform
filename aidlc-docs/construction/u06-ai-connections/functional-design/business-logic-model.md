@@ -139,6 +139,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ## AI/MCP current flow — 2026-10-30
 
-MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Owner reveal ACTIVE MCP token khi có ciphertext; API key chung và cá nhân chỉ ghi, danh sách chỉ hiện phần nhận diện đã che (D15). Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
+MCP credential dành ACTIVE Student/Teacher/Subject Manager; Admin bị từ chối. Nhiều institutional keys/provider; repository chọn ACTIVE tạo sớm nhất. Token MCP chỉ hiện một lần lúc tạo, server chỉ lưu `token_hash`/`token_hint` (D05 đóng 2026-11-23, bỏ xem lại token); API key chung và cá nhân chỉ ghi, danh sách chỉ hiện phần nhận diện đã che (D15). Staff write tools có proposal/retry/confirmation theo source, không tự finalize/publish.
 
 Credential HTTP: GET/POST `/api/v1/me/mcp-credentials`, PATCH/DELETE `/{id}`. Popup chỉnh label và hạ quyền, không đổi token/hạn; không nâng READ_ONLY lên READ_WRITE. Negative cases: wrong owner, Admin, expired/revoked, nâng quyền và account/role đổi.
