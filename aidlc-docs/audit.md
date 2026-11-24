@@ -13958,3 +13958,30 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Bug fix MCP hoàn tất mục 1 đến 5 và 7 đến 10.
 
 ---
+
+## System test — WF01 và WF02
+**Timestamp**: 2026-11-23T20:04:12Z
+**Requested by:** Quang Hung
+**User Input**: "Claude sắp hết token, b giupd tôi xử lý dữ liệu test, e2e script còn ui thù tạo 1 phiên orca gpt luna high test chụp bằng chứng, sau khi xong thì báo cáo bạn và bạn tự cập nhật lên drive. Tự động duyệt, ảppove yêu cầu. Đừng hỏi tôi cho đến khi làm xong"
+**AI Response**: "Tạo fixture PE có ba sơ đồ, chạy API E2E trên stack local và giao một phiên Orca GPT Luna High kiểm thử UI. Cập nhật bằng chứng và trạng thái sau khi xác minh báo cáo."
+**Context**: Construction / Build and Test, Round 1 trên lớp demo cô lập theo run ID.
+
+---
+
+## System test — cấu hình phiên
+**Timestamp**: 2026-11-23T20:04:12Z
+**Requested by:** Quang Hung
+**User Input**: "Nhớ để permission no restrict"
+**AI Response**: "Dùng quyền filesystem hiện có và phiên Orca được cấp cho phạm vi kiểm thử."
+**Context**: Construction / Build and Test.
+
+---
+
+## System test — cập nhật Report 5.3
+**Timestamp**: 2026-11-24T03:08:10Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi cập nhật lại sheet status report 5, và commit"
+**AI Response**: "Cập nhật ghi chú Round 1 và link bằng chứng trong Test Statistics. Tải lại workbook để xác nhận 8 ca WF01/WF02 Passed và tổng 14 Passed, 0 Failed, 110 Pending. Kiểm tra script E2E và fixture Draw.io để commit."
+**Context**: Construction / Build and Test.
+
+---

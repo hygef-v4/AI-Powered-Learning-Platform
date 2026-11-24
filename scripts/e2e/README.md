@@ -33,3 +33,19 @@ Phạm vi: U04 tạo/xem/sửa môn, xung đột version, gán chủ nhiệm, l�
 Mỗi ca in `PASS`/`FAIL`; có lỗi thì exit code là `1`. Không in mật khẩu, OTP hay token. JSON kết quả tùy chọn chỉ được ghi trong `.tmp/` (gitignored). Kiểm tra cú pháp không gọi API: `node --check scripts/e2e/u04-u13-u14.mjs`.
 
 Các script cũ vẫn mặc định dùng `localhost:8088` và Mailpit `localhost:8025`. Helper dùng chung nhận `E2E_BASE_URL`/`E2E_MAILPIT_URL` khi có; `env(key)` ưu tiên biến môi trường rồi mới đọc `infra/.env.local`, và không yêu cầu file này tồn tại.
+
+## Chấm điểm PE WF01 và WF02
+
+Dùng stack test loopback có worker và Mailpit đang chạy. Ba sơ đồ Draw.io mẫu có sẵn
+trong `scripts/e2e/fixtures/pe-diagrams`.
+Đặt `E2E_BASE_URL`, `E2E_MAILPIT_URL`, `WF_TEST_ADMIN` và `WF_TEST_ADMIN_PASSWORD`
+trong môi trường cục bộ, rồi chạy `node scripts/e2e/wf01-wf02-grading.mjs`.
+
+Mỗi lượt tạo lớp, tài khoản demo, đề, rubric và bài nộp mới. Thư mục kết quả dưới
+`.tmp/systemtest/grading-<id>` chứa `fixture.json` và `api-results.json`. File
+`test-login.private.json` dành cho đăng nhập demo qua UI. Giữ file đó trên máy test.
+
+Với cùng `E2E_BASE_URL`, lệnh `node scripts/e2e/wf01-mcp-client.mjs read <folder>`
+đọc toàn bộ ngữ cảnh MCP của bài nộp demo. Sau khi agent soạn proposal theo schema,
+chạy `node scripts/e2e/wf01-mcp-client.mjs record <folder> <proposal.json>` để nhận
+đường dẫn duyệt. Giảng viên duyệt, lưu và công bố điểm trên web.

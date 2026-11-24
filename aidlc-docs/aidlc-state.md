@@ -1,5 +1,14 @@
 # AI-DLC State Tracking
 
+## Chấm điểm bài cá nhân và bài nhóm · Round 1 · 2026-11-24
+
+- [x] Tạo fixture PE với Context Diagram, Use Case Diagram và Conceptual ERD theo COMET. Chạy seed và kiểm tra batch thực qua API bằng `scripts/e2e/wf01-wf02-grading.mjs`.
+- [x] Đọc snapshot và lưu đề xuất qua MCP bằng `scripts/e2e/wf01-mcp-client.mjs`.
+- [x] Phiên Orca GPT-6 Luna High chạy UI trên dữ liệu demo. 8/8 ca Passed sau kiểm tra lại OpenAI, lịch sử MCP và giới hạn điểm thành viên.
+- Report 5.3, Round 1: WF01 5 Passed, WF02 3 Passed. Tổng workbook 14 Passed, 0 Failed, 110 Pending trên 124 ca.
+- Workbook: https://docs.google.com/spreadsheets/d/1kTzIL-Xg6MdJg0Ms5vnCae-lfVvYeA9U/edit?gid=1203805996
+- Bằng chứng và báo cáo: https://drive.google.com/drive/folders/108mLgtbeBSNVGBNO7IsfgQCT5MDu8lez
+
 ## Sửa rủi ro MCP, đợt 1 · 2026-11-23
 
 Người dùng: "giúp tôi làm lần lượt từng bước" theo danh sách 11 vấn đề MCP đã rà soát. Đợt 1 làm bước 1 đến 3.
