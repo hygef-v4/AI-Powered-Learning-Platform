@@ -1,5 +1,6 @@
 package edu.aiplatform.quizzes.service;
 
+import edu.aiplatform.audit.contract.AuditDetails;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -26,7 +27,8 @@ class QuizAudit {
     }
 
     void recordDenied(Actor actor, String action, String objectType, UUID objectId, String reason) {
-        record(actor, "ACCESS_DENIED", objectType, objectId, AuditResult.DENIED, reason, Map.of("action", action));
+        record(actor, "ACCESS_DENIED", objectType, objectId, AuditResult.DENIED, reason,
+                AuditDetails.describeDenial(actor, action));
     }
 
     private void record(Actor actor, String action, String objectType, UUID objectId, AuditResult result,

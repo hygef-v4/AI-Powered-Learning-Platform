@@ -1,5 +1,6 @@
 package edu.aiplatform.quizpractice.service;
 
+import edu.aiplatform.audit.contract.AuditDetails;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -65,7 +66,8 @@ class PracticeAccess {
     /** Từ chối kèm audit {@code ACCESS_DENIED} (ví dụ xem lượt của người khác, BR-U11-22). */
     ApiException deny(Actor actor, String action, String objectType, UUID objectId, String notFoundCode) {
         try {
-            record(actor, "ACCESS_DENIED", objectType, objectId, AuditResult.DENIED, notFoundCode, Map.of("action", action));
+            record(actor, "ACCESS_DENIED", objectType, objectId, AuditResult.DENIED, notFoundCode,
+                    AuditDetails.describeDenial(actor, action));
         } catch (RuntimeException auditDown) {
             throw ApiException.createUnavailable("QUIZ_PRACTICE_AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
         }

@@ -14165,3 +14165,21 @@ sửa bản này để tôi up lại lên drive luôn, sau đó mới cập nh�
 **Context**: Construction, U06 AI Connections, sửa UX theo phản hồi người dùng. Dùng lại API ai-source-preference có sẵn, không đổi schema. Kiểm tra: AiTaskFlowTest 43, AiSourceServiceTest 5, AiConnectionServiceTest 13, frontend tests/features/ai 50; trên stack local, nguồn API của trường với khóa sai thì tác vụ FAILED và không chuyển sang khóa cá nhân, nguồn Claude chưa có khóa thì không tạo tác vụ AI. Gộp vào staging theo yêu cầu "Merge cho tôi vào staging đi".
 
 ---
+
+## U02 Nhật ký audit chi tiết hơn, bỏ ghi tra cứu audit
+**Timestamp**: 2026-11-24T18:15:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra phần Log và làm chi tiết hơn cho tôi (chẳng hạn tôi thấy Truy cập bị từ chối, đối tượng là lớp nhưng không biết là lớp nào, lý do cũng đang quá chung chung. Ngoài ra chỉ cần log các sự kiện cần thiết và quan trọng, không log hành động tra cứu audit"
+**AI Response**: "Nguyên nhân: U05 ghi ACCESS_DENIED với loại COURSE_CLASS (bộ tra tên chỉ hiểu CLASS), các lệnh theo môn ghi id môn dưới loại lớp, và không ghi thao tác bị chặn hay vai trò người gọi; giao diện rút lý do còn 2–3 chữ và không hiện details. Sửa: bỏ ghi AUDIT_QUERIED và ẩn các dòng cũ; U05 ghi thao tác, vai trò và đúng loại đối tượng; tra tên cho COURSE_CLASS; màn Log hiện thao tác bị chặn, lý do đầy đủ và dòng chi tiết mở rộng."
+**Context**: Construction, U02 Audit (sửa nhỏ, không đổi schema).
+
+---
+
+## U02 Ghi vai trò lúc bị từ chối cho nhóm, chấm điểm và quiz
+**Timestamp**: 2026-11-24T18:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "làm tiếp vai trò lúc đó cho nhóm, chấm điểm và quiz"
+**AI Response**: "Thêm AuditDetails.describeDenial (action, actorRole) trong audit.contract, dùng ở GroupAccess, GradingAccess, QuizAudit, PracticeAccess và AcademicsService. Test các unit liên quan đạt; 4 test integration cần Docker không chạy được vì Docker chưa bật."
+**Context**: Construction, U02 Audit, tiếp nối yêu cầu nhật ký chi tiết.
+
+---

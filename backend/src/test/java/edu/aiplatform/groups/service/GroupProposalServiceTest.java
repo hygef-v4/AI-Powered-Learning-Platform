@@ -177,6 +177,7 @@ class GroupProposalServiceTest {
         ArgumentCaptor<AuditEvent> denied = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(denied.capture());
         assertThat(denied.getValue().action()).isEqualTo("ACCESS_DENIED");
+        assertThat(denied.getValue().details()).containsEntry("actorRole", "STUDENT");
 
         assertCode(() -> service.renameProposal(leader, draft.id(), new RenameProposalCommand("B", 7L)),
                 "PROPOSAL_VERSION_CONFLICT");

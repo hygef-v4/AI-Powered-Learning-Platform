@@ -1,6 +1,7 @@
 package edu.aiplatform.grading.service;
 
 import edu.aiplatform.academics.contract.IClassAccess;
+import edu.aiplatform.audit.contract.AuditDetails;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -11,7 +12,6 @@ import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -65,7 +65,7 @@ public class GradingAccess {
         if (!enrolled) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "ACCESS_DENIED",
                     "CLASS", String.valueOf(classId), AuditResult.DENIED, "ENROLLMENT_REQUIRED",
-                    Map.of("action", Actions.MY_GRADE_READ), clock.instant()));
+                    AuditDetails.describeDenial(actor, Actions.MY_GRADE_READ), clock.instant()));
             throw ApiException.createNotFound("GRADE_NOT_FOUND");
         }
     }
@@ -85,7 +85,7 @@ public class GradingAccess {
         if (!decision.allowed()) {
             audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
                     "ACCESS_DENIED", "CLASS", String.valueOf(classId), AuditResult.DENIED,
-                    "GRADING_SCOPE", Map.of("action", action), clock.instant()));
+                    "GRADING_SCOPE", AuditDetails.describeDenial(actor, action), clock.instant()));
             throw ApiException.createNotFound("GRADE_NOT_FOUND");
         }
     }

@@ -21,7 +21,7 @@ Việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết
 | BR-U02-04 | Ghi audit lỗi (ví dụ DB lỗi) thì thao tác nghiệp vụ cùng transaction cũng rollback; audit bắt buộc không bị mất âm thầm. | Quyết định 2026-09-26 |
 | BR-U02-05 | `details` không chứa mật khẩu, OTP, token, số điện thoại; unit gọi chịu trách nhiệm che, U02 từ chối lưu nếu phát hiện khóa thuộc danh sách cấm (`password`, `otp`, `token`, `secret`, `phone`); danh sách và `ForbiddenKeyGuard` nằm ở `shared/` (khung dự án) để U03 dùng chung cho payload việc nền. | SEC-005 |
 | BR-U02-06 | Audit giữ vĩnh viễn. | Câu 6 |
-| BR-U02-07 | Chỉ Admin tra cứu audit. AuditQueryService ghi sự kiện xem khi recordView=true (mở trang); filter/paging recordView=false không ghi thêm sự kiện xem. Đây là policy giao diện/source hiện tại, không hứa audit mọi HTTP query. | Câu 7, UC 13 |
+| BR-U02-07 | Chỉ Admin tra cứu audit. Tra cứu không ghi audit (yêu cầu 2026-11-25: nhật ký chỉ giữ sự kiện quan trọng); dòng `AUDIT_QUERIED` ghi trước đó bị ẩn khỏi màn Log. Bị từ chối vẫn ghi `ACCESS_DENIED`. | Câu 7, UC 13 |
 | BR-U02-08 | Lọc theo actorId hoặc actor text, action, object, result, thời gian, mới nhất trước, page tối đa100. Backend resolves actor text qua IAccountLookup; frontend không tự gọi account lookup để đổi email sang ID. | US-AUD-001 S1, UC 13 |
 | BR-U02-09 | Kết quả tra cứu hiện email người thực hiện, lấy qua `IAccountLookup` của U01 lúc đọc (không lưu email vào `audit_logs`); `actor_id` rỗng là hệ thống hoặc worker. | UC 13, contract `audit.yaml` (`actorEmail`) |
 

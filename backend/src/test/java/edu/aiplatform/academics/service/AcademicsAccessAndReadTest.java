@@ -136,7 +136,8 @@ class AcademicsAccessAndReadTest {
         else when(authorization.authorize(any(),anyString(),any())).thenThrow(new IllegalStateException("upstream secret"));
         assertProblem(() -> academicsService.listClasses(actor(Role.STUDENT),"student",null,null,null,null,1,20),status,code);
         verifyNoInteractions(courseClassRepository,enrollmentRepository,academicsReadRepository,subjectQuery,scope);
-        verify(audit).record(argThat(e -> e.result()==(status==503?AuditResult.FAILURE:AuditResult.DENIED) && e.details().isEmpty()));
+        verify(audit).record(argThat(e -> e.result()==(status==503?AuditResult.FAILURE:AuditResult.DENIED)
+                && (status==503 ? e.details().isEmpty() : e.details().equals(Map.of("audience","student","action","CLASS_LIST","actorRole","STUDENT")))));
     }
 
     @ParameterizedTest
@@ -482,6 +483,23 @@ class AcademicsAccessAndReadTest {
         });
     }
     private void assertDenialAudit() {
-        verify(audit).record(argThat(e -> e.action().equals("ACCESS_DENIED") && e.result()==AuditResult.DENIED && e.details().isEmpty()));
+        verify(audit).record(argThat(e -> e.action().equals("ACCESS_DENIED") && e.result()==AuditResult.DENIED
+                && e.details().containsKey("action")
+                && Set.of("action","actorRole","audience","subjectId").containsAll(e.details().keySet())));
+    }
+
+    @Test
+    void deniedManagerScreenRecordsTheBlockedOperationAndCallerRole() {
+        assertProblem(() -> academicsService.listManagedSubjects(actor(Role.TEACHER)),403,"ROLE_DENIED");
+        verify(audit).record(argThat(e -> e.objectType().equals("COURSE_CLASS")
+                && "MANAGED_SUBJECTS_VIEW".equals(e.details().get("action"))
+                && "TEACHER".equals(e.details().get("actorRole"))));
+    }
+
+    @Test
+    void deniedSubjectScreenIsRecordedOnTheSubject() {
+        UUID subject=UUID.randomUUID();
+        assertProblem(() -> academicsService.loadManagedSubject(actor(Role.TEACHER),subject),403,"ROLE_DENIED");
+        verify(audit).record(argThat(e -> e.objectType().equals("SUBJECT") && subject.toString().equals(e.objectId())));
     }
 }

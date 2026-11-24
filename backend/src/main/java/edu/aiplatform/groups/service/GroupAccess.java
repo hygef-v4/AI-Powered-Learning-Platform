@@ -3,6 +3,7 @@ package edu.aiplatform.groups.service;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
+import edu.aiplatform.audit.contract.AuditDetails;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -13,7 +14,6 @@ import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -115,13 +115,15 @@ public class GroupAccess {
     /** Đề xuất nhóm không thuộc phạm vi của người gọi: ghi audit và trả {@code 404} (BR-U12-91). */
     public ApiException denyProposal(Actor actor, UUID proposalId, String reason) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
-                "GROUP_PROPOSAL", String.valueOf(proposalId), AuditResult.DENIED, reason, Map.of(), clock.instant()));
+                "GROUP_PROPOSAL", String.valueOf(proposalId), AuditResult.DENIED, reason,
+                AuditDetails.describeDenial(actor, null), clock.instant()));
         return ApiException.createNotFound("GROUP_PROPOSAL_NOT_FOUND");
     }
 
     private void deny(Actor actor, UUID classId, String action, String reason) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED", "CLASS",
-                String.valueOf(classId), AuditResult.DENIED, reason, Map.of("action", action), clock.instant()));
+                String.valueOf(classId), AuditResult.DENIED, reason, AuditDetails.describeDenial(actor, action),
+                clock.instant()));
         throw createNotFoundError();
     }
 

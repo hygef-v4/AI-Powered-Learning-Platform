@@ -1,5 +1,8 @@
 package edu.aiplatform.audit.service;
 
+import edu.aiplatform.academics.contract.ClassRef;
+import edu.aiplatform.academics.contract.ClassStatus;
+import edu.aiplatform.academics.contract.IClassAccess;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -155,29 +158,12 @@ class AuditQueryServiceTest {
     }
 
     @Test
-    void everyQueryIsAuditedWithTheFilterButNoEmail() {
-        UUID target = UUID.randomUUID();
+    void queryIsNotAudited() {
         when(repository.count(any())).thenReturn(0L);
 
-        service.query(admin, new AuditFilter(target, " ROLE_CHANGED ", "", null, AuditResult.DENIED,
+        service.query(admin, new AuditFilter(UUID.randomUUID(), " ROLE_CHANGED ", "", null, AuditResult.DENIED,
                 NOW.minusSeconds(3600), NOW), PageRequest.of(0, 50));
-
-        ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit).record(event.capture());
-        assertThat(event.getValue().action()).isEqualTo("AUDIT_QUERIED");
-        assertThat(event.getValue().result()).isEqualTo(AuditResult.SUCCESS);
-        assertThat(event.getValue().actorId()).isEqualTo(admin.accountId());
-        assertThat(event.getValue().occurredAt()).isEqualTo(NOW);
-        assertThat(event.getValue().details()).containsEntry("actorId", target.toString())
-                .containsEntry("action", "ROLE_CHANGED").containsEntry("result", "DENIED")
-                .doesNotContainKey("objectType");
-    }
-
-    @Test
-    void filterOrPagingWithoutRecordViewIsNotAudited() {
-        when(repository.count(any())).thenReturn(0L);
-
-        service.query(admin, new AuditFilter(null, null, null, null, null, null, null), PageRequest.of(1, 50), false);
+        service.query(admin, NO_FILTER, PageRequest.of(1, 50));
 
         verify(audit, never()).record(any());
     }
@@ -204,10 +190,33 @@ class AuditQueryServiceTest {
         AuditQueryService withNames = new AuditQueryService(repository, authorization, accounts, audit,
                 JsonMapper.builder().findAndAddModules().build(), Clock.fixed(NOW, ZoneOffset.UTC), subjects, null);
 
-        List<AuditLogView> items = withNames.query(admin, null, PageRequest.of(0, 50), false).getContent();
+        List<AuditLogView> items = withNames.query(admin, null, PageRequest.of(0, 50)).getContent();
 
         assertThat(items).extracting(AuditLogView::objectLabel)
                 .containsExactly("sv@fpt.edu.vn", "SWD392 · Kiến trúc phần mềm", null);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void objectLabelShowsClassCodeForCourseClassRows() {
+        UUID classId = UUID.randomUUID();
+        IClassAccess classAccess = mock(IClassAccess.class);
+        ObjectProvider<IClassAccess> classes = mock(ObjectProvider.class);
+        when(classes.getIfAvailable()).thenReturn(classAccess);
+        ClassRef ref = new ClassRef(classId, UUID.randomUUID(), "SE1801", "SE1801", ClassStatus.OPEN, null, false,
+                "SWD392");
+        when(classAccess.getClassRef(classId)).thenReturn(Optional.of(ref));
+        AuditRow denied = new AuditRow(UUID.randomUUID(), null, "ACCESS_DENIED", "COURSE_CLASS", classId.toString(),
+                "DENIED", "ROLE_DENIED", "{\"action\":\"CLASS_VIEW\"}", NOW);
+        when(repository.count(any())).thenReturn(1L);
+        when(repository.findRows(any(), anyLong(), anyInt())).thenReturn(List.of(denied));
+        AuditQueryService withNames = new AuditQueryService(repository, authorization, accounts, audit,
+                JsonMapper.builder().findAndAddModules().build(), Clock.fixed(NOW, ZoneOffset.UTC), null, classes);
+
+        AuditLogView item = withNames.query(admin, null, PageRequest.of(0, 50)).getContent().get(0);
+
+        assertThat(item.objectLabel()).isEqualTo("SWD392 · SE1801");
+        assertThat(item.event().details()).containsEntry("action", "CLASS_VIEW");
     }
 
     @Test
@@ -219,7 +228,7 @@ class AuditQueryServiceTest {
         when(repository.count(any())).thenReturn(0L);
 
         service.query(admin, new AuditFilter(null, null, null, null, null, null, null, " phong ", null),
-                PageRequest.of(0, 50), false);
+                PageRequest.of(0, 50));
 
         ArgumentCaptor<AuditFilter> used = ArgumentCaptor.forClass(AuditFilter.class);
         verify(repository).count(used.capture());

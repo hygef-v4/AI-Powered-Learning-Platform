@@ -43,7 +43,9 @@ class GradingAccessTest {
         var access = new GradingAccess(auth, mock(IClassAccess.class), audit, Clock.systemUTC());
         assertThatThrownBy(() -> access.requireTeacher(actor, UUID.randomUUID(), Actions.GRADING_WRITE))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(404));
-        verify(audit).record(argThat(event -> event.result() == AuditResult.DENIED));
+        verify(audit).record(argThat(event -> event.result() == AuditResult.DENIED
+                && Actions.GRADING_WRITE.equals(event.details().get("action"))
+                && "TEACHER".equals(event.details().get("actorRole"))));
     }
 
     @Test

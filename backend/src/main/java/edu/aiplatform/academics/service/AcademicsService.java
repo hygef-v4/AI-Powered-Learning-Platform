@@ -27,6 +27,8 @@ public class AcademicsService {
     /** Khóa dòng môn của U04 tới cuối transaction: U04 lưu trữ môn và U05 ghi lớp, ghi danh trong cùng môn chạy lần lượt. */
     private final ISubjectMutationGuard subjectMutationGuard;
     private static final Duration SUBJECT_LOCK_WAIT = Duration.ofSeconds(1);
+    /** Thao tác nhận id môn (không phải id lớp). */
+    private static final Set<String> SUBJECT_ID_ACTIONS = Set.of("MANAGED_SUBJECT_VIEW", "CLASS_CREATED");
     private final IAccountLookup accountLookup;
     private final ISubjectQuery subjectQuery;
     private final ISubjectScope scope;
@@ -66,7 +68,7 @@ public class AcademicsService {
      */
     public List<ClassView> listClasses(Actor actor, String audience, UUID subjectId, String query,
             ClassStatus status, String term, int page, int size) {
-        return executeGuarded(actor, "CLASS_LIST", null, () -> {
+        return executeGuarded(actor, "CLASS_LIST", null, describeRequest(audience, subjectId), () -> {
             requireAudience(actor, audience);
             validatePage(page, size);
             validateQuery(query);
@@ -96,7 +98,7 @@ public class AcademicsService {
      * Loads a single class details view after checking caller audience authorization.
      */
     public ClassView loadClass(Actor actor, String audience, UUID id) {
-        return executeGuarded(actor, "CLASS_VIEW", id, () -> {
+        return executeGuarded(actor, "CLASS_VIEW", id, describeRequest(audience, null), () -> {
             requireAudience(actor, audience);
             return mapClassView(requireClassAccess(actor, audience, id));
         });
@@ -106,7 +108,7 @@ public class AcademicsService {
      * Lists paginated students enrolled in a class for teachers or subject managers.
      */
     public List<Student> listStudents(Actor actor, String audience, UUID id, int page, int size) {
-        return executeGuarded(actor, "CLASS_STUDENTS_VIEW", id, () -> {
+        return executeGuarded(actor, "CLASS_STUDENTS_VIEW", id, describeRequest(audience, null), () -> {
             requireAudience(actor, audience);
             if (audience.equals("student"))
                 throw ApiException.createForbidden("ROLE_DENIED");
@@ -593,8 +595,13 @@ public class AcademicsService {
 
     private void recordAudit(Actor actor, String action, UUID id, AuditResult result, String reason,
             Map<String, Object> details) {
+        recordAudit(actor, action, "COURSE_CLASS", id, result, reason, details);
+    }
+
+    private void recordAudit(Actor actor, String action, String objectType, UUID id,
+            AuditResult result, String reason, Map<String, Object> details) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
-                action, "COURSE_CLASS", id == null ? null : id.toString(), result, reason, details,
+                action, objectType, id == null ? null : id.toString(), result, reason, details,
                 clock.instant()));
     }
 
@@ -604,22 +611,48 @@ public class AcademicsService {
     }
 
     private <T> T executeGuarded(Actor actor, String action, UUID id, Supplier<T> work) {
+        return executeGuarded(actor, action, id, Map.of(), work);
+    }
+
+    /**
+     * Lỗi được audit; lần bị từ chối ghi thêm thao tác bị chặn, vai trò người gọi và {@code request} (góc nhìn,
+     * môn đang lọc) để Admin biết ai bị chặn ở đâu. Id là môn thì ghi loại {@code SUBJECT} để tra được tên môn.
+     */
+    private <T> T executeGuarded(Actor actor, String action, UUID id, Map<String, Object> request,
+            Supplier<T> work) {
         try {
             return work.get();
         } catch (RuntimeException failure) {
             ApiException problem = mapFailure(failure);
             boolean denied = problem.readStatus().value() == 401 || problem.readStatus().value() == 403
                     || problem.readStatus().value() == 404;
+            Map<String, Object> details = denied ? describeDenial(actor, action, request) : Map.of();
             try {
-                recordAudit(actor, denied ? "ACCESS_DENIED" : action, id,
-                        denied ? AuditResult.DENIED : AuditResult.FAILURE, problem.readCode(),
-                        Map.of());
+                recordAudit(actor, denied ? "ACCESS_DENIED" : action,
+                        SUBJECT_ID_ACTIONS.contains(action) ? "SUBJECT" : "COURSE_CLASS", id,
+                        denied ? AuditResult.DENIED : AuditResult.FAILURE, problem.readCode(), details);
             } catch (RuntimeException auditFailure) {
                 throw ApiException.createUnavailable("AUDIT_UNAVAILABLE",
                         "Không thể ghi nhật ký an toàn");
             }
             throw problem;
         }
+    }
+
+    private static Map<String, Object> describeDenial(Actor actor, String action,
+            Map<String, Object> request) {
+        Map<String, Object> details = new LinkedHashMap<>(request);
+        details.putAll(AuditDetails.describeDenial(actor, action));
+        return details;
+    }
+
+    private static Map<String, Object> describeRequest(String audience, UUID subjectId) {
+        Map<String, Object> request = new LinkedHashMap<>();
+        if (audience != null)
+            request.put("audience", audience);
+        if (subjectId != null)
+            request.put("subjectId", subjectId.toString());
+        return request;
     }
 
     private ApiException mapFailure(RuntimeException failure) {

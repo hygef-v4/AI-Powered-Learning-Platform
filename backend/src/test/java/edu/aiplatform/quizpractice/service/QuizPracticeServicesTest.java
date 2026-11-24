@@ -216,6 +216,7 @@ class QuizPracticeServicesTest {
         Actor stranger = new Actor(UUID.randomUUID(), Role.STUDENT);
         assertThat(api(() -> attemptsService.start(stranger, quizId, classA)).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCESS_DENIED");
+        assertThat(audits.get(0).details()).containsEntry("actorRole", "STUDENT").containsKey("action");
         assertThat(api(() -> attemptsService.start(teacher, quizId, classA)).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         quizStatus = QuizStatus.RETIRED;
         assertThat(api(() -> attemptsService.start(student, quizId, classA)).readCode()).isEqualTo("QUIZ_NOT_OPEN");

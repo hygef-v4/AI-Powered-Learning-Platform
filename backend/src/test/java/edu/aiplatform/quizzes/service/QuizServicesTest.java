@@ -235,6 +235,7 @@ class QuizServicesTest {
 
         assertThat(failure.readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCESS_DENIED");
+        assertThat(audits.get(0).details()).containsEntry("actorRole", "TEACHER").containsKey("action");
     }
 
     @Test
