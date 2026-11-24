@@ -22,5 +22,12 @@ infra/docker-compose.override.yml
 
 team_db_key
 
+# Local-only dev helpers
+scripts/run-backend.bat
+scripts/maven-local-cache-settings.xml
+
 PRODUCT.md
 .impeccable
+
+.vscode/
+uml/

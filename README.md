@@ -13,7 +13,7 @@ Dự án đã có implementation của 15 unit theo quy trình AI-DLC. Backend v
 | `infra/` | Docker Compose (Nginx, PostgreSQL 16, Redis, RabbitMQ, Mailpit khi chạy local), cấu hình Nginx, script role PostgreSQL |
 | `aidlc-docs/` | Tài liệu AI-DLC: [requirements](aidlc-docs/inception/requirements/requirements.md), [stories](aidlc-docs/inception/user-stories/stories.md), [unit of work](aidlc-docs/inception/application-design/unit-of-work.md), [thiết kế từng unit](aidlc-docs/construction/README.md), [tổng hợp 15 unit](aidlc-docs/construction/unit-summary.md) |
 | `docs/` | [Bảng use case](docs/usecase_table.md), sơ đồ Draw.io, [hướng dẫn](docs/guides/) (kết nối MCP, khóa AI, người dùng) và [runbook](docs/runbooks/) (deploy, khôi phục, mã hóa khóa AI) |
-| `scripts/` | Chạy backend local, kiểm tra MCP, [E2E](scripts/e2e/README.md), đánh giá chấm AI |
+| `scripts/` | Kiểm tra MCP, [E2E](scripts/e2e/README.md), đánh giá chấm AI |
 
 ## Unit và package
 
@@ -68,7 +68,7 @@ docker compose -f infra/docker-compose.yml -f infra/docker-compose.local.yml --e
 
 Giữ PostgreSQL, Redis, RabbitMQ và Mailpit trong Docker, dừng container `backend` và `worker` rồi chạy:
 
-- Backend: `scripts\run-backend.bat` (Windows). Script nạp `infra/.env.local`, chạy API cùng worker với profile `local,worker` ở cổng 8080 và từ chối chạy khi cổng đã bị chiếm.
+- Backend: `mvn spring-boot:run` trong `backend/` với profile `local,worker` (API cùng worker, cổng 8080), biến môi trường lấy từ `infra/.env.local` và các host dịch vụ trỏ về `localhost`.
 - Frontend: `npm install` rồi `npm run dev` trong `frontend/`, mở <http://localhost:3000>. Next chuyển `/api/v1/*` và `/mcp` sang `BACKEND_URL` (mặc định `http://localhost:8080`).
 
 ## Kiểm thử
