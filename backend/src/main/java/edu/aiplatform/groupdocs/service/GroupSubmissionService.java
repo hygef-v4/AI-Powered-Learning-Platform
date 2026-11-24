@@ -10,9 +10,6 @@ import edu.aiplatform.assignments.contract.IDocumentModel;
 import edu.aiplatform.assignments.contract.IDocx;
 import edu.aiplatform.assignments.contract.ValidationIssue;
 import edu.aiplatform.assignments.contract.ValidationResult;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.grading.contract.IGroupEvaluation;
 import edu.aiplatform.groupdocs.contract.ISseHub;
 import edu.aiplatform.groupdocs.model.GroupDocument;
@@ -56,14 +53,13 @@ public class GroupSubmissionService {
     private final IDocx docx;
     private final IGroupEvaluation evaluation;
     private final ISseHub sse;
-    private final IAudit audit;
     private final IEventPublisher events;
     private final ObjectMapper json;
     private final Clock clock;
 
     public GroupSubmissionService(GroupDocumentRepository documents, GroupRepository groups, GroupDocAccess access,
                                   IAssignmentQuery assignments, IDocumentModel documentModel, IDocx docx,
-                                  IGroupEvaluation evaluation, ISseHub sse, IAudit audit, IEventPublisher events,
+                                  IGroupEvaluation evaluation, ISseHub sse, IEventPublisher events,
                                   ObjectMapper json, Clock clock) {
         this.documents = documents;
         this.groups = groups;
@@ -73,7 +69,6 @@ public class GroupSubmissionService {
         this.docx = docx;
         this.evaluation = evaluation;
         this.sse = sse;
-        this.audit = audit;
         this.events = events;
         this.clock = clock;
         this.json = json;
@@ -209,8 +204,6 @@ public class GroupSubmissionService {
         details.put("mode", mode.name());
         details.put("late", late);
         details.put("receiptHash", hash);
-        audit.record(new AuditEvent(UUID.randomUUID(), by, "GROUP_SUBMITTED", "GROUP_DOCUMENT", document.id().toString(),
-                AuditResult.SUCCESS, null, details, now));
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("classId", document.classId().toString());
         payload.put("assignmentId", document.assignmentId().toString());

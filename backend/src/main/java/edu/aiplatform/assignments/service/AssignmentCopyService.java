@@ -37,19 +37,17 @@ public class AssignmentCopyService {
     private final RubricService rubricService;
     private final AssignmentAccess access;
     private final AssignmentSupport support;
-    private final AssignmentAudit audit;
     private final IClassScope classScope;
     private final IReferenceMaterial materials;
     private final Clock clock;
 
     public AssignmentCopyService(AssignmentRepository assignments, RubricService rubricService, AssignmentAccess access,
-                                 AssignmentSupport support, AssignmentAudit audit, IClassScope classScope,
+                                 AssignmentSupport support, IClassScope classScope,
                                  IReferenceMaterial materials, Clock clock) {
         this.assignments = assignments;
         this.rubricService = rubricService;
         this.access = access;
         this.support = support;
-        this.audit = audit;
         this.classScope = classScope;
         this.materials = materials;
         this.clock = clock;
@@ -63,7 +61,6 @@ public class AssignmentCopyService {
         requireGroupSupport(source, source.classId());
         Assignment copy = insertCopy(actor, source, source.classId(), source.subjectId(), AssignmentOrigin.CLONE, 1,
                 source.title(), source.referenceMaterialIds());
-        audit.recordSuccess(actor, "ASSIGNMENT_CLONED", copy.id(), AssignmentAudit.collectDetails("sourceAssignmentId", source.id()));
         return support.buildDetail(actor, copy, List.of());
     }
 
@@ -86,8 +83,6 @@ public class AssignmentCopyService {
         } catch (DuplicateKeyException e) {
             throw ApiException.createConflict("VERSION_ALREADY_OPEN", "Bài này đã có một version đang soạn");
         }
-        audit.recordSuccess(actor, "ASSIGNMENT_VERSION_CREATED", copy.id(), AssignmentAudit.collectDetails(
-                "sourceAssignmentId", source.id(), "versionNo", copy.versionNo()));
         return support.buildDetail(actor, copy, List.of());
     }
 
@@ -134,11 +129,10 @@ public class AssignmentCopyService {
         if (sourceAssignmentId == null) {
             throw ApiException.createBadRequest("SOURCE_REQUIRED", "Chọn bài để copy");
         }
-        Assignment source = assignments.findAssignment(sourceAssignmentId).orElseThrow(() -> access.deny(actor,
-                "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, sourceAssignmentId, "NOT_FOUND"));
+        Assignment source = assignments.findAssignment(sourceAssignmentId).orElseThrow(() -> access.notFound());
         if (source.scope() == AssignmentScope.SUBJECT) {
             if (!source.subjectId().equals(subjectId)) {
-                throw access.deny(actor, "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, source.id(), "OTHER_SUBJECT");
+                throw access.notFound();
             }
         } else {
             access.requireClassManager(actor, source.classId(), "ASSIGNMENT_COPIED");
@@ -147,8 +141,6 @@ public class AssignmentCopyService {
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();
         Assignment copy = insertCopy(actor, source.changeModes(submissionMode, gradingMode), null, subjectId,
                 AssignmentOrigin.CLASS_COPY, 1, copyTitle(title, source), kept);
-        audit.recordSuccess(actor, "ASSIGNMENT_COPIED", copy.id(), AssignmentAudit.collectDetails("sourceAssignmentId", source.id(),
-                "targetSubjectId", subjectId));
         return support.buildDetail(actor, copy, List.of());
     }
 
@@ -199,13 +191,11 @@ public class AssignmentCopyService {
         if (sourceAssignmentId == null) {
             throw ApiException.createBadRequest("SOURCE_REQUIRED", "Chọn bài để copy");
         }
-        Assignment source = assignments.findAssignment(sourceAssignmentId).orElseThrow(() -> access.deny(actor,
-                "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, sourceAssignmentId, "NOT_FOUND"));
+        Assignment source = assignments.findAssignment(sourceAssignmentId).orElseThrow(() -> access.notFound());
         if (source.scope() == AssignmentScope.SUBJECT) {
             // Đề mẫu của cùng môn (yêu cầu 2026-11-09: bài của môn không còn phát hành cho các lớp).
             if (!source.subjectId().equals(target.subjectId()) || !isSubjectTemplate(source)) {
-                throw access.deny(actor, "ASSIGNMENT_COPIED", AssignmentAudit.OBJECT_ASSIGNMENT, source.id(),
-                        "OUT_OF_ASSIGNMENT_SCOPE");
+                throw access.notFound();
             }
         } else {
             access.requireClassManager(actor, source.classId(), "ASSIGNMENT_COPIED");
@@ -219,10 +209,6 @@ public class AssignmentCopyService {
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();
         Assignment copy = insertCopy(actor, source, targetClassId, target.subjectId(), AssignmentOrigin.CLASS_COPY, 1,
                 copyTitle(title, source), kept);
-        audit.recordSuccess(actor, "ASSIGNMENT_COPIED", copy.id(), source.classId() == null
-                ? AssignmentAudit.collectDetails("sourceAssignmentId", source.id(), "targetClassId", targetClassId)
-                : AssignmentAudit.collectDetails("sourceAssignmentId", source.id(), "sourceClassId", source.classId(),
-                        "targetClassId", targetClassId));
         return support.buildDetail(actor, copy, List.of());
     }
 

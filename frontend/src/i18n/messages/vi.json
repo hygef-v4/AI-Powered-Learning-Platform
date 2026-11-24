@@ -1649,6 +1649,12 @@
       }
     },
     "model": {
+      "docxMerge": {
+        "untitledPart": "Phần chưa đặt tên",
+        "unexpectedPart": "Tệp DOCX có phần “{title}” không có trong đề, nằm ngoài các phần làm bài. Hãy nhập tệp tải về từ chính bài làm này.",
+        "notThisAssignment": "Tệp DOCX không phải bài làm của bài tập này. Hãy tải bài làm về dạng DOCX, viết tiếp trong tệp đó rồi nhập lại.",
+        "structureMismatch": "Tệp DOCX không cùng cấu trúc với bài làm: thiếu phần “{title}” hoặc sai thứ tự. Hãy tải bài làm về dạng DOCX, viết tiếp trong tệp đó rồi nhập lại."
+      },
       "attemptResult": {
         "assignment": "Bài"
       },
@@ -1700,6 +1706,8 @@
         "workNotSaved": "Bài chưa lưu",
         "importDocxIntoPart": "Nhập DOCX vào phần “{value}”",
         "importDocxIntoTheLast": "Nhập DOCX vào phần cuối của bài",
+        "importedIntoParts": "Đã nhập bài mới vào {count} phần: {parts}",
+        "nothingNewToImport": "Tệp không có bài mới để nhập.",
         "restoredTheUnsavedVersionOn": "Đã khôi phục bản chưa lưu trên thiết bị này"
       },
       "StudentAssignmentDetailPage": {
@@ -1777,7 +1785,7 @@
       }
     },
     "register": {
-      "assignment": "Bài tập"
+      "assignment": "Tất cả bài tập"
     }
   },
   "audit": {

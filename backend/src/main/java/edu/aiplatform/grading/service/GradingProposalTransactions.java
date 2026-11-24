@@ -126,9 +126,6 @@ public class GradingProposalTransactions {
         proposal.status = "READY";
         proposal.completedAt = clock.instant();
         gradingProposalRepository.saveProposal(proposal);
-        if (existing == null) {
-            gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
-        }
         log.info("AI grading proposal completed immediately for empty submission evaluationId={} proposalId={}",
                 evaluation.id, proposal.id);
         return new Prepared(proposal, null, false, null, 0);
@@ -136,7 +133,6 @@ public class GradingProposalTransactions {
 
     private GradingProposal saveRequestedProposal(Actor actor, Evaluation evaluation, AiRequest request) {
         var proposal = gradingProposalRepository.saveProposal(createProposal(actor, evaluation, request));
-        gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
         return proposal;
     }
 
@@ -483,7 +479,6 @@ public class GradingProposalTransactions {
         }
         var proposal = buildMcpProposal(actor, evaluationId, hash, requestRef, reviewed,
                 agentLabel, evaluation);
-        gradingService.recordAudit(actor, evaluation, "AI_GRADING_REQUESTED", null);
         return gradingProposalRepository.saveProposal(proposal);
     }
 

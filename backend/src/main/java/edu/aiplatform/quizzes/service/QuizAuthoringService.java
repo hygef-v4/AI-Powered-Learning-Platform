@@ -57,18 +57,16 @@ public class QuizAuthoringService {
     private final IQuestionRepository questions;
     private final QuizSupport support;
     private final QuizAccess access;
-    private final QuizAudit audit;
     private final Clock clock;
     private final ObjectProvider<IQuizLifecycleListener> listeners;
 
     public QuizAuthoringService(IQuizRepository quizzes, IQuestionRepository questions, QuizSupport support,
-                                QuizAccess access, QuizAudit audit, Clock clock,
+                                QuizAccess access, Clock clock,
                                 ObjectProvider<IQuizLifecycleListener> listeners) {
         this.quizzes = quizzes;
         this.questions = questions;
         this.support = support;
         this.access = access;
-        this.audit = audit;
         this.clock = clock;
         this.listeners = listeners;
     }
@@ -88,7 +86,7 @@ public class QuizAuthoringService {
 
     @Transactional(readOnly = true)
     public QuizPage listSubject(Actor actor, UUID subjectId, QuizStatus status, String text, Integer page, Integer size) {
-        access.requireSubject(actor, Actions.QUIZ_SUBJECT_MANAGE, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUIZ_SUBJECT_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
         int p = page == null ? 0 : page;
         int s = size == null ? DEFAULT_PAGE_SIZE : size;
         if (p < 0 || s < 1 || s > MAX_PAGE_SIZE) {
@@ -102,7 +100,7 @@ public class QuizAuthoringService {
     /** Tab Đánh giá: Quiz của lớp và Quiz đã phát hành của môn chứa lớp (nhãn "Của môn", chỉ xem) (F5 bước 2). */
     @Transactional(readOnly = true)
     public List<QuizRow> listClass(Actor actor, UUID classId) {
-        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS", classId, "CLASS_NOT_FOUND");
+        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS_NOT_FOUND");
         ClassRef ref = support.loadClassRef(classId);
         List<QuizRow> rows = new ArrayList<>();
         quizzes.listClassQuizzes(classId).forEach(s -> rows.add(QuizRow.createQuizRow(s, false)));
@@ -114,13 +112,13 @@ public class QuizAuthoringService {
 
     @Transactional
     public QuizDetail createForSubject(Actor actor, UUID subjectId, String title) {
-        access.requireSubject(actor, Actions.QUIZ_SUBJECT_MANAGE, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUIZ_SUBJECT_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
         return createQuiz(actor, Quiz.createQuiz(QuizScope.SUBJECT, null, subjectId, title, actor.accountId(), clock.instant()));
     }
 
     @Transactional
     public QuizDetail createForClass(Actor actor, UUID classId, String title) {
-        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS", classId, "CLASS_NOT_FOUND");
+        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS_NOT_FOUND");
         ClassRef ref = support.loadClassRef(classId);
         return createQuiz(actor, Quiz.createQuiz(QuizScope.CLASS, classId, ref.subjectId(), title, actor.accountId(),
                 clock.instant()));
@@ -130,7 +128,6 @@ public class QuizAuthoringService {
         support.requireContainerActive(quiz);
         reject(QuizRules.validateDetails(quiz.title(), null, quiz.settings(), null));
         quizzes.insert(quiz);
-        audit.recordSuccess(actor, "QUIZ_CREATED", QuizSupport.OBJECT, quiz.id(), Map.of("scope", quiz.scope().name()));
         return support.buildDetail(quiz, true);
     }
 
@@ -298,7 +295,6 @@ public class QuizAuthoringService {
         if (!quizzes.deleteQuiz(id, version)) {
             throw QuizSupport.createVersionConflictError();
         }
-        audit.recordSuccess(actor, "QUIZ_DELETED", QuizSupport.OBJECT, id, Map.of("scope", quiz.scope().name()));
     }
 
     private Question loadInline(UUID quizId, UUID questionId) {

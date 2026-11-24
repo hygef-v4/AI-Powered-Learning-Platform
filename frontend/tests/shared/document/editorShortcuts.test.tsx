@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { DocumentEditor } from "@/shared/document/DocumentEditor";
 import type { DocumentBlock, DocumentModel } from "@/shared/document";
 
@@ -14,19 +14,19 @@ const START: DocumentModel = { blocks: [
   paragraph("p3", "Dòng ba"),
 ] };
 
-let current: DocumentModel = START;
+/** Bản mới nhất trình soạn gửi lên trang. */
+const changes = vi.fn<(next: DocumentModel) => void>();
 function Page() {
   const [doc, setDoc] = useState<DocumentModel>(START);
-  current = doc;
   return <>
     <button type="button" data-testid="outside">Mục lục</button>
-    <DocumentEditor document={doc} onChange={setDoc} mode="author" diagramEnabled={false} />
+    <DocumentEditor document={doc} onChange={(next) => { changes(next); setDoc(next); }} mode="author" diagramEnabled={false} />
   </>;
 }
 
 const field = (blockId: string) => screen.getByTestId(`block-${blockId}`).querySelector<HTMLElement>("[contenteditable]")!;
 const editor = () => screen.getByTestId("document-editor");
-const texts = () => current.blocks.map((block) => (block.type === "PARAGRAPH" ? block.content.runs.map((run) => run.text).join("") : block.id));
+const texts = () => (changes.mock.lastCall?.[0] ?? START).blocks.map((block) => (block.type === "PARAGRAPH" ? block.content.runs.map((run) => run.text).join("") : block.id));
 
 it("Ctrl+A chọn cả văn bản của câu đang viết, không lan sang câu khác; Delete xóa cả nhóm và Ctrl+Z trả lại", () => {
   render(<Page />);

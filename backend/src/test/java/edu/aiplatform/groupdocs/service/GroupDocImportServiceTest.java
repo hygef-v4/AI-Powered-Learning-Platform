@@ -24,7 +24,6 @@ import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.IDocx;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.model.GroupDocument;
 import edu.aiplatform.groupdocs.model.GroupSection;
 import edu.aiplatform.groupdocs.model.GroupSection.Status;
@@ -62,10 +61,9 @@ class GroupDocImportServiceTest {
     private final IClassAccess classes = mock(IClassAccess.class);
     private final IAssignmentQuery assignments = mock(IAssignmentQuery.class);
     private final IDocx docx = mock(IDocx.class);
-    private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final GroupDocAccess access = new GroupDocAccess(documents, groups,
-            new GroupAccess(authorization, classes, audit, clock), assignments, clock);
+            new GroupAccess(authorization, classes), assignments, clock);
     private final GroupDocImportService imports = new GroupDocImportService(documents, access, assignments, docx);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", leader.accountId(), null, NOW,
             NOW, List.of(leader.accountId(), member.accountId()));

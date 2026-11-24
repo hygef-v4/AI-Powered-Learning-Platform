@@ -72,7 +72,6 @@ public class QuizAiDraftService {
     private final QuizReferenceMaterials materials;
     private final IAiTask ai;
     private final IPromptGuardrail promptGuardrail;
-    private final QuizAudit audit;
     private final QuestionDuplicates duplicates;
     private final TransactionOperations transactions;
     private final Clock clock;
@@ -81,7 +80,6 @@ public class QuizAiDraftService {
     public QuizAiDraftService(IQuizAiDraftRepository drafts, IQuizRepository quizzes, IQuestionRepository questions,
                               QuizSupport support, QuizAccess access, ActiveSubjects activeSubjects,
                               QuizReferenceMaterials materials, IAiTask ai, IPromptGuardrail promptGuardrail,
-                              QuizAudit audit,
                               QuestionDuplicates duplicates, TransactionOperations transactions, Clock clock, QuizSourceRetry sourceRetry) {
         this.drafts = drafts;
         this.quizzes = quizzes;
@@ -92,7 +90,6 @@ public class QuizAiDraftService {
         this.materials = materials;
         this.ai = ai;
         this.promptGuardrail = promptGuardrail;
-        this.audit = audit;
         this.duplicates = duplicates;
         this.transactions = transactions;
         this.clock = clock;
@@ -141,8 +138,7 @@ public class QuizAiDraftService {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public AiDraftView requestForBank(Actor actor, UUID subjectId, DraftRequest request) {
         Prepared prepared = transactions.execute(status -> {
-            access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId,
-                    "SUBJECT_NOT_FOUND");
+            access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
             activeSubjects.require(subjectId);
             validate(request);
             promptGuardrail.requireValid(QuizDraftPrompt.buildUserInput(actor, request));
@@ -298,8 +294,6 @@ public class QuizAiDraftService {
         quizzes.replaceItems(quizId, items);
         QuizDetail detail = support.buildDetail(support.saveQuiz(quiz.markEdited(clock.instant())), true);
         close(draft, DraftStatus.ACCEPTED);
-        audit.recordSuccess(actor, "QUIZ_AI_DRAFT_ACCEPTED", QuizSupport.OBJECT, quizId, Map.of("draftId",
-                draft.id().toString(), "origin", draft.origin().name(), "count", picked.size()));
         return detail;
     }
 
@@ -318,8 +312,6 @@ public class QuizAiDraftService {
             created.add(q.id());
         }
         QuizAiDraft closed = close(draft, DraftStatus.ACCEPTED);
-        audit.recordSuccess(actor, "QUIZ_AI_DRAFT_ACCEPTED", OBJECT, draft.id(), Map.of("subjectId", subjectId.toString(),
-                "origin", draft.origin().name(), "count", picked.size()));
         return new BankAcceptResult(AiDraftView.createDraftView(closed), created);
     }
 
@@ -402,8 +394,7 @@ public class QuizAiDraftService {
     // ---- Phụ ----
 
     private void requireBankManager(Actor actor, UUID subjectId) {
-        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId,
-                "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
     }
 
     private QuizAiDraft loadQuizDraft(UUID quizId, UUID draftId) {

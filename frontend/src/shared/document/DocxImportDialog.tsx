@@ -20,6 +20,8 @@ type Props = {
   /** Người dùng chọn "Thay khung" ({@code replace}) hoặc "Thêm vào cuối". */
   onImport: (document: DocumentModel, mode: "replace" | "append") => Promise<void> | void;
   allowReplace: boolean;
+  /** false: không hiện cách nhập (trang tự ghép vào đúng chỗ, ví dụ bài làm của sinh viên ghép theo từng phần). */
+  showMode?: boolean;
   onClose: () => void;
 };
 
@@ -31,7 +33,7 @@ const RESTORED: Record<string, string> = {
 };
 
 /** t13e Nhập DOCX (F5, F7; BR-U07-61, 62): xem trước các mục, cách khôi phục sơ đồ, nội dung bị bỏ. */
-export function DocxImportDialog({ title = msg("shared.document.DocxImportDialog.importDocx"), preview, onImport, allowReplace, onClose }: Props) {
+export function DocxImportDialog({ title = msg("shared.document.DocxImportDialog.importDocx"), preview, onImport, allowReplace, showMode = true, onClose }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<DocxPreview | null>(null);
   const [mode, setMode] = useState<"replace" | "append">(allowReplace ? "replace" : "append");
@@ -115,7 +117,7 @@ export function DocxImportDialog({ title = msg("shared.document.DocxImportDialog
             </Alert>
           )}
           {others.map((warning, index) => <Alert key={index} tone="warning">{warning.message}</Alert>)}
-          <Field label={msg("shared.document.DocxImportDialog.importMethod")}>
+          {showMode && <Field label={msg("shared.document.DocxImportDialog.importMethod")}>
             <div className="flex flex-col gap-1 text-[13px]">
               {allowReplace && (
                 <label className="flex items-center gap-2">
@@ -124,7 +126,7 @@ export function DocxImportDialog({ title = msg("shared.document.DocxImportDialog
               <label className="flex items-center gap-2">
                 <input type="radio" name="docx-mode" checked={mode === "append"} onChange={() => setMode("append")} />{msg("shared.document.DocxImportDialog.addToTheEnd")}</label>
             </div>
-          </Field>
+          </Field>}
         </div>
       )}
     </Dialog>

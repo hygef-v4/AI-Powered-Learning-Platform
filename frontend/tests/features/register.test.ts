@@ -22,7 +22,7 @@ describe("menu bên do các unit đăng ký", () => {
       "Ngân hàng câu hỏi",
     ]);
     expect(menu("TEACHER")).toEqual(["Lớp được phân công", "Tất cả thông báo"]);
-    expect(menu("STUDENT")).toEqual(["Lớp của tôi", "Bài tập", "Tất cả thông báo"]);
+    expect(menu("STUDENT")).toEqual(["Lớp của tôi", "Tất cả bài tập", "Tất cả thông báo"]);
   });
 
   it("Admin không có nút Kết nối AI", () => {

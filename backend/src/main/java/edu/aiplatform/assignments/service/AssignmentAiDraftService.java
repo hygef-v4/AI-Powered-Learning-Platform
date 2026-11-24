@@ -88,7 +88,6 @@ public class AssignmentAiDraftService {
     private final RubricService rubricService;
     private final AssignmentSupport support;
     private final AssignmentAccess access;
-    private final AssignmentAudit audit;
     private final IAiTask aiTasks;
     private final IPromptGuardrail promptGuardrail;
     private final IReferenceMaterial materials;
@@ -102,7 +101,7 @@ public class AssignmentAiDraftService {
     private AssignmentImportService assignmentImportService;
 
     public AssignmentAiDraftService(AssignmentRepository assignments, AiDraftRepository drafts, RubricService rubricService,
-                                    AssignmentSupport support, AssignmentAccess access, AssignmentAudit audit,
+                                    AssignmentSupport support, AssignmentAccess access,
                                     IAiTask aiTasks, IPromptGuardrail promptGuardrail,
                                     IReferenceMaterial materials, ObjectMapper json,
                                     IArtifact artifacts, IAssignmentSourceTextExtractor sourceTextExtractor,
@@ -113,7 +112,6 @@ public class AssignmentAiDraftService {
         this.rubricService = rubricService;
         this.support = support;
         this.access = access;
-        this.audit = audit;
         this.aiTasks = aiTasks;
         this.promptGuardrail = promptGuardrail;
         this.materials = materials;
@@ -487,10 +485,6 @@ public class AssignmentAiDraftService {
             if (drafts.markApplied(draft.id(), now) != 1) {
                 throw ApiException.createConflict("AI_DRAFT_NOT_READY", "Đề xuất đã được xử lý");
             }
-            audit.recordSuccess(actor, "ASSIGNMENT_AI_DRAFT_APPLIED", saved.id(), AssignmentAudit.collectDetails(
-                    "draftId", draft.id(), "origin", draft.origin(), "provenance", summarizeProvenance(draft.provenance()),
-                    "partCount", parts.size(), "replacedInstructions", command.replaceInstructions(),
-                    "replacedTitle", command.replaceTitle()));
             return support.buildDetail(actor, saved, List.of());
         });
     }
@@ -541,10 +535,6 @@ public class AssignmentAiDraftService {
         if (drafts.markApplied(draft.id(), now) != 1) {
             throw ApiException.createConflict("AI_DRAFT_NOT_READY", "Đề xuất đã được xử lý");
         }
-        audit.recordSuccess(actor, "ASSIGNMENT_AI_DRAFT_APPLIED", saved.id(), AssignmentAudit.collectDetails(
-                "draftId", draft.id(), "origin", draft.origin(), "mode", AssignmentDraftRevision.MODE,
-                "provenance", summarizeProvenance(draft.provenance()), "partCount", parts.size(),
-                "replacedInstructions", command.replaceInstructions(), "replacedTitle", replaceTitle));
         return support.buildDetail(actor, saved, List.of());
     }
 
@@ -843,16 +833,6 @@ public class AssignmentAiDraftService {
             safe.set("sourceFiles", visible);
         }
         return safe;
-    }
-
-    private static Map<String, Object> summarizeProvenance(JsonNode provenance) {
-        Map<String, Object> out = new HashMap<>();
-        provenance.fields().forEachRemaining(e -> {
-            if (e.getValue().isValueNode()) {
-                out.put(e.getKey(), e.getValue().asText());
-            }
-        });
-        return out;
     }
 
     static UUID draftId(String targetRef) {

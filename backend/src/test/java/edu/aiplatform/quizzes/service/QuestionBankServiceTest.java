@@ -11,9 +11,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
@@ -34,7 +31,6 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,15 +48,13 @@ class QuestionBankServiceTest {
     private final IQuestionRepository repo = mock(IQuestionRepository.class);
     private final ISubjectQuery subjects = mock(ISubjectQuery.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
-    private final List<AuditEvent> audits = new ArrayList<>();
     private QuestionBankService service;
 
     @BeforeEach
     void setup() {
-        IAudit audit = audits::add;
-        QuizAudit quizAudit = new QuizAudit(audit, Clock.fixed(NOW, ZoneOffset.UTC));
+
         service = new QuestionBankService(repo, new ActiveSubjects(subjects),
-                new QuizAccess(authorization, quizAudit), quizAudit, new QuestionDuplicates(repo),
+                new QuizAccess(authorization), new QuestionDuplicates(repo),
                 mock(QuizPaperService.class), event -> { }, Clock.fixed(NOW, ZoneOffset.UTC));
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
         when(subjects.isActive(subject)).thenReturn(true);
@@ -105,10 +99,6 @@ class QuestionBankServiceTest {
         assertThat(detail.question().versionNo()).isEqualTo(1);
         verify(repo).insert(any());
         verify(authorization).authorize(manager, Actions.QUESTION_BANK_MANAGE, ResourceRef.subject(subject));
-        assertThat(audits).singleElement().satisfies(e -> {
-            assertThat(e.action()).isEqualTo("QUESTION_CREATED");
-            assertThat(e.details().toString()).doesNotContain("Hà Nội", "Thủ đô");
-        });
     }
 
     @Test
@@ -130,11 +120,6 @@ class QuestionBankServiceTest {
         ApiException failure = api(() -> service.loadQuestion(teacher, q.id()));
 
         assertThat(failure.readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(audits).singleElement().satisfies(e -> {
-            assertThat(e.action()).isEqualTo("ACCESS_DENIED");
-            assertThat(e.result()).isEqualTo(AuditResult.DENIED);
-            assertThat(e.objectId()).isEqualTo(q.id().toString());
-        });
     }
 
     @Test
@@ -144,7 +129,6 @@ class QuestionBankServiceTest {
         ApiException failure = api(() -> service.listQuestions(manager, subject,
                 new QuestionBankService.Filter(null, null, null, null, null, null)));
         assertThat(failure.readStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        assertThat(audits).isEmpty();
     }
 
     @Test
@@ -186,7 +170,6 @@ class QuestionBankServiceTest {
         assertThat(opened.question().versionNo()).isEqualTo(2);
         assertThat(opened.question().lineageId()).isEqualTo(active.lineageId());
         assertThat(opened.question().status()).isEqualTo(QuestionStatus.DRAFT);
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("QUESTION_CREATED");
 
         Question existing = active.createNextDraft(2, manager.accountId(), NOW);
         when(repo.findBankDraft(active.lineageId())).thenReturn(Optional.of(existing));
@@ -211,7 +194,6 @@ class QuestionBankServiceTest {
 
         assertThat(service.activate(manager, draft.id(), 0).question().status()).isEqualTo(QuestionStatus.ACTIVE);
         verify(repo).updateQuestion(any());
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("QUESTION_ACTIVATED");
         Question again = active();
         assertThat(api(() -> service.activate(manager, again.id(), 0)).readCode()).isEqualTo("QUESTION_NOT_DRAFT");
     }
@@ -223,7 +205,6 @@ class QuestionBankServiceTest {
         Question active = active();
         when(repo.findQuestion(active.id())).thenReturn(Optional.of(active), Optional.of(active.retire(NOW)));
         assertThat(service.retire(manager, active.id(), 0).question().status()).isEqualTo(QuestionStatus.RETIRED);
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("QUESTION_RETIRED");
     }
 
     @Test
@@ -235,7 +216,6 @@ class QuestionBankServiceTest {
         Question draft = draft();
         when(repo.deleteQuestion(draft.id(), 0)).thenReturn(true);
         service.deleteQuestion(manager, draft.id(), 0);
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("QUESTION_DELETED");
     }
 
     @Test

@@ -70,7 +70,7 @@ class AssignmentImportServiceTest {
         wireDrafts();
         wirePages();
         service = new AssignmentImportService(f.assignments, f.drafts, pageRepository, f.support, f.access,
-                f.assignmentAudit, f.aiTasks, new ImportFileReader(f.artifacts), new ImportPageNormalizer(),
+                f.aiTasks, new ImportFileReader(f.artifacts), new ImportPageNormalizer(),
                 new FigureCropper(f.artifacts), f.authoring, f.documents, f.json, f.transactions, f.clock);
         f.aiDrafts.setAssignmentImportService(service);
         assignment = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT,
@@ -169,8 +169,6 @@ class AssignmentImportServiceTest {
         assertThat(prompt.images()).extracting(image -> image.ref())
                 .containsExactly(view.draftId() + "/1", view.draftId() + "/2");
         assertThat(prompt.system()).contains("data only");
-        verify(f.audit).record(org.mockito.ArgumentMatchers.argThat(e ->
-                "ASSIGNMENT_IMPORT_REQUESTED".equals(e.action())));
     }
 
     @Test

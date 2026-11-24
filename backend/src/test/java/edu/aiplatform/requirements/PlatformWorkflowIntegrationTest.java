@@ -877,7 +877,6 @@ class PlatformWorkflowIntegrationTest {
                 .satisfies(grade -> assertThat(grade.score()).isEqualByComparingTo(BigDecimal.TEN));
         assertThatThrownBy(() -> attemptService.start(actor(Role.STUDENT), assignment.id(), classId))
                 .isInstanceOf(ApiException.class);
-        assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='GRADE_PUBLISHED'", Long.class)).isEqualTo(1);
     }
 
     @Test
@@ -984,8 +983,6 @@ class PlatformWorkflowIntegrationTest {
             assertThat(quotaCounter(teacher.accountId().toString(), "reserved_tokens")).isEqualTo(reserved);
             assertThat(quotaCounter("GLOBAL", "reserved_tokens")).isEqualTo(reserved);
             assertThat(gradebookService.listMyGrades(actor(Role.STUDENT), classId)).isEmpty();
-            assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='AI_GRADING_REQUESTED'",
-                    Long.class)).isEqualTo(1);
             var queued = rabbitTemplate.receive("jobs.ai", 5_000);
             assertThat(queued).isNotNull();
             assertThat(json.readTree(queued.getBody()).path("idempotencyKey").asText())

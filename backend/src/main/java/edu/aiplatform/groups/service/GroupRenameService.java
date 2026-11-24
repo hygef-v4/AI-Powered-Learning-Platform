@@ -1,9 +1,6 @@
 package edu.aiplatform.groups.service;
 
 import edu.aiplatform.academics.contract.ClassRef;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
 import edu.aiplatform.groups.model.GroupSetRules;
@@ -28,13 +25,11 @@ public class GroupRenameService {
 
     private final GroupRepository groups;
     private final GroupAccess access;
-    private final IAudit audit;
     private final Clock clock;
 
-    public GroupRenameService(GroupRepository groups, GroupAccess access, IAudit audit, Clock clock) {
+    public GroupRenameService(GroupRepository groups, GroupAccess access, Clock clock) {
         this.groups = groups;
         this.access = access;
-        this.audit = audit;
         this.clock = clock;
     }
 
@@ -72,8 +67,6 @@ public class GroupRenameService {
         details.put("classId", group.classId().toString());
         details.put("before", group.name());
         details.put("after", next);
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GROUP_RENAMED", "CLASS_GROUP",
-                group.id().toString(), AuditResult.SUCCESS, null, details, now));
         return new Renamed(group.id(), next);
     }
 

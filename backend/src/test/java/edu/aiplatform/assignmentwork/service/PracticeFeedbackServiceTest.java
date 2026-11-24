@@ -168,6 +168,5 @@ class PracticeFeedbackServiceTest {
         PracticeFeedback saved = f.feedbackService.recordFromAgent(f.student, a.id(), a.receiptHash(), body, "agent");
         assertThat(saved.status()).isEqualTo(PracticeFeedback.Status.READY);
         assertThat(saved.origin()).isEqualTo(PracticeFeedback.Origin.MCP);
-        verify(f.audit).record(argThat(e -> e.action().equals("PRACTICE_FEEDBACK_REQUESTED")));
     }
 }

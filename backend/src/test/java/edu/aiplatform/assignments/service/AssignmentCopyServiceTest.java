@@ -53,7 +53,6 @@ class AssignmentCopyServiceTest {
             assertThat(r.complete()).isTrue();
         });
         assertThat(rubrics.get(0).id()).isNotIn(f.rubricsOf(open.id()).stream().map(AssignmentRubric::id).toList());
-        verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_CLONED")));
     }
 
     @Test

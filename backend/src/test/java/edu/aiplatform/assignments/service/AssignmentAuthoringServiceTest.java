@@ -30,7 +30,6 @@ import edu.aiplatform.assignments.contract.ValidationIssue;
 import edu.aiplatform.assignments.model.Assignment;
 import edu.aiplatform.assignments.model.AssignmentRubric;
 import edu.aiplatform.assignments.model.PartCalculator;
-import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
@@ -70,7 +69,6 @@ class AssignmentAuthoringServiceTest {
         assertThat(code(() -> f.authoring.createForClass(f.teacher, f.classId,
                 new AssignmentCommands.Create(SubmissionMode.INDIVIDUAL, GradingMode.GRADED, false, null))))
                 .isEqualTo("ASSIGNMENT_NOT_FOUND");
-        verify(f.audit).record(argThat(e -> e.result() == AuditResult.DENIED && e.action().equals("ACCESS_DENIED")));
         assertThat(f.store).isEmpty();
     }
 
@@ -83,7 +81,6 @@ class AssignmentAuthoringServiceTest {
         assertThat(created.versionNo()).isEqualTo(1);
         assertThat(created.parts()).singleElement().satisfies(p -> assertThat(p.partId()).isEqualTo(PartCalculator.WHOLE_DOCUMENT));
         assertThat(f.rubricsOf(created.id())).singleElement().satisfies(r -> assertThat(r.criteria()).isEmpty());
-        verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_CREATED") && e.result() == AuditResult.SUCCESS));
     }
 
     @Test
@@ -102,7 +99,6 @@ class AssignmentAuthoringServiceTest {
                 .isEqualTo("ASSIGNMENT_READ_ONLY");
         assertThat(f.store).containsOnlyKeys(original.id());
         assertThat(f.store.get(original.id())).isEqualTo(original);
-        verify(f.audit, never()).record(argThat(e -> e.result() == AuditResult.SUCCESS));
     }
 
     @Test
@@ -223,7 +219,6 @@ class AssignmentAuthoringServiceTest {
                 .extracting(ValidationIssue::code).contains("RUBRIC_MISSING");
         Assignment ready = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), true);
         assertThat(f.authoring.review(f.teacher, ready.id(), ready.version()).status()).isEqualTo(AssignmentStatus.REVIEWED);
-        verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_REVIEWED")));
     }
 
     @Test
@@ -313,7 +308,6 @@ class AssignmentAuthoringServiceTest {
         Assignment draft = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
         f.authoring.deleteAssignment(f.teacher, draft.id(), draft.version());
         assertThat(f.store).doesNotContainKey(draft.id());
-        verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_DELETED")));
     }
 
     @Test

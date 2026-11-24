@@ -23,7 +23,6 @@ import edu.aiplatform.quizzes.contract.LeavePenalty;
 import edu.aiplatform.assignmentwork.contract.ActivityKind;
 import edu.aiplatform.assignmentwork.contract.IActivityQuery;
 import edu.aiplatform.assignmentwork.contract.IActivityWrite;
-import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.identity.contract.AccountContact;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actions;
@@ -58,7 +57,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -87,7 +85,6 @@ class QuizPracticeServicesTest {
     private final Actor other = new Actor(UUID.randomUUID(), Role.STUDENT);
     private final Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
     private final MutableClock clock = new MutableClock(Instant.parse("2026-10-20T08:00:00Z"));
-    private final List<AuditEvent> audits = new ArrayList<>();
     private final InMemoryAttempts store = new InMemoryAttempts();
     private final IQuizQuery quizzes = mock(IQuizQuery.class);
     private final IQuizScoring scoring = mock(IQuizScoring.class);
@@ -139,7 +136,7 @@ class QuizPracticeServicesTest {
         });
         lookups = accounts;
 
-        PracticeAccess access = new PracticeAccess(authorization, audits::add, clock);
+        PracticeAccess access = new PracticeAccess(authorization);
         PracticeSupport support = new PracticeSupport(store, quizzes, scoring, classes, access,
                 new AttemptActivityAssessor(activityQuery), clock);
         attemptsService = new QuizAttemptService(store, support, access, clock);
@@ -204,7 +201,6 @@ class QuizPracticeServicesTest {
         submitFresh(student);
         ApiException noMore = api(() -> attemptsService.start(student, quizId, classA));
         assertThat(noMore.readCode()).isEqualTo("NO_ATTEMPTS_LEFT");
-        assertThat(audits).extracting(AuditEvent::action).contains("QUIZ_SUBMIT_REJECTED");
         assertThat(queries.loadQuiz(student, quizId, classA).blockedReason()).contains("2/2");
 
         settings = new QuizSettings(false, false, null, null, true, true);
@@ -215,8 +211,6 @@ class QuizPracticeServicesTest {
     void onlyEnrolledStudentsOfTheQuizClassCanStart() {
         Actor stranger = new Actor(UUID.randomUUID(), Role.STUDENT);
         assertThat(api(() -> attemptsService.start(stranger, quizId, classA)).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("ACCESS_DENIED");
-        assertThat(audits.get(0).details()).containsEntry("actorRole", "STUDENT").containsKey("action");
         assertThat(api(() -> attemptsService.start(teacher, quizId, classA)).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         quizStatus = QuizStatus.RETIRED;
         assertThat(api(() -> attemptsService.start(student, quizId, classA)).readCode()).isEqualTo("QUIZ_NOT_OPEN");
@@ -311,7 +305,6 @@ class QuizPracticeServicesTest {
                 .readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(api(() -> attemptsService.submit(student, taking.attemptId())).readStatus()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(store.byId.get(taking.attemptId()).hasInProgressStatus()).isTrue();
-        assertThat(audits).extracting(AuditEvent::action).contains("ACCESS_DENIED");
     }
 
     @Test
@@ -328,8 +321,6 @@ class QuizPracticeServicesTest {
         assertThat(result.questions().get(1).correctOptionIds()).containsExactlyInAnyOrder("1", "2");
         assertThat(store.byId.get(taking.attemptId()).submitMode()).isEqualTo(SubmitMode.MANUAL);
         assertThat(attemptsService.submit(student, taking.attemptId()).score()).isEqualByComparingTo("1");
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("QUIZ_ATTEMPT_SUBMITTED");
-        assertThat(audits.get(0).details().toString()).doesNotContain("[1]");
     }
 
     @Test
@@ -349,7 +340,6 @@ class QuizPracticeServicesTest {
         assertThat(stored.score()).as("điểm chấm trên câu trả lời đã lưu sau cùng").isEqualByComparingTo("3");
         assertThat(result.score()).isEqualByComparingTo("3");
         assertThat(result.correctCount()).isEqualTo(2);
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("QUIZ_ATTEMPT_SUBMITTED");
     }
 
     @Test
@@ -429,7 +419,6 @@ class QuizPracticeServicesTest {
         assertThat(result.attemptId()).isEqualTo(attemptId);
         assertThat(result.score()).isEqualByComparingTo("1");
         assertThat(result.canRetry()).isFalse();
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("QUIZ_ATTEMPT_SUBMITTED");
     }
 
     @Test
@@ -468,8 +457,7 @@ class QuizPracticeServicesTest {
         } else if (failure.equals("QUIZ_THROW")) {
             when(quizzes.loadQuiz(quizId)).thenThrow(new IllegalStateException("private provider detail"));
         }
-        List<AuditEvent> guardAudits = new ArrayList<>();
-        PracticeAccess access = new PracticeAccess(provider, guardAudits::add, clock);
+        PracticeAccess access = new PracticeAccess(provider);
         var guarded = new QuizAttemptService(store,
                 new PracticeSupport(store, quizzes, scoring, classes, access, new AttemptActivityAssessor(activityQuery), clock),
                 access, clock);
@@ -478,7 +466,6 @@ class QuizPracticeServicesTest {
 
         assertThat(rejected.readStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
         assertThat(rejected.getMessage()).doesNotContain("private provider detail");
-        assertThat(guardAudits).isEmpty();
         assertThat(store.byId.get(attemptId).status()).isEqualTo(AttemptStatus.SUBMITTED);
     }
 
@@ -498,7 +485,6 @@ class QuizPracticeServicesTest {
         assertThat(done.status()).isEqualTo(AttemptStatus.SUBMITTED);
         assertThat(done.submitMode()).isEqualTo(SubmitMode.AUTO_TIME_LIMIT);
         assertThat(done.score()).isEqualByComparingTo("1");
-        assertThat(audits).filteredOn(e -> e.action().equals("QUIZ_ATTEMPT_SUBMITTED")).hasSize(1);
     }
 
     @Test

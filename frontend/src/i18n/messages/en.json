@@ -1649,6 +1649,12 @@
       }
     },
     "model": {
+      "docxMerge": {
+        "untitledPart": "Untitled part",
+        "unexpectedPart": "This DOCX has a part “{title}” that is not in the assignment, outside the parts you write in. Import the DOCX downloaded from this work.",
+        "notThisAssignment": "This DOCX is not your work for this assignment. Download your work as DOCX, write in that file, then import it again.",
+        "structureMismatch": "This DOCX does not match the structure of your work: part “{title}” is missing or out of order. Download your work as DOCX, write in that file, then import it again."
+      },
       "attemptResult": {
         "assignment": "Assignment"
       },
@@ -1700,6 +1706,8 @@
         "workNotSaved": "Work not saved",
         "importDocxIntoPart": "Import DOCX into part “{value}”",
         "importDocxIntoTheLast": "Import DOCX into the last part",
+        "importedIntoParts": "Imported new work into {count} parts: {parts}",
+        "nothingNewToImport": "The file has no new work to import.",
         "restoredTheUnsavedVersionOn": "Restored the unsaved version on this device"
       },
       "StudentAssignmentDetailPage": {
@@ -1777,7 +1785,7 @@
       }
     },
     "register": {
-      "assignment": "Assignment"
+      "assignment": "All assignments"
     }
   },
   "audit": {

@@ -9,13 +9,9 @@ import edu.aiplatform.ai.service.McpCredentialService.McpPrincipal;
 import edu.aiplatform.ai.contract.McpToolDefinition;
 import edu.aiplatform.ai.contract.McpToolKind;
 import edu.aiplatform.ai.contract.McpToolResult;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.shared.error.ApiException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -51,17 +47,15 @@ public class McpServer {
     private final IMcpRateLimiter rateLimiter;
     private final JsonSchemaChecker schemas;
     private final AiUsageService aiUsageService;
-    private final IAudit audit;
     private final ObjectMapper json;
     private final Clock clock;
 
     public McpServer(McpToolRegistry registry, IMcpRateLimiter rateLimiter, JsonSchemaChecker schemas,
-                     AiUsageService aiUsageService, IAudit audit, ObjectMapper json, Clock clock) {
+                     AiUsageService aiUsageService, ObjectMapper json, Clock clock) {
         this.registry = registry;
         this.rateLimiter = rateLimiter;
         this.schemas = schemas;
         this.aiUsageService = aiUsageService;
-        this.audit = audit;
         this.json = json;
         this.clock = clock;
     }
@@ -163,12 +157,10 @@ public class McpServer {
         } catch (RuntimeException e) {
             // Fail closed (BR-U06-53), but say why: an unreachable Redis is not the caller's fault.
             log.error("Không kiểm được giới hạn lời gọi MCP; từ chối lời gọi", e);
-            record(accountId, name, AuditResult.DENIED, "RATE_LIMIT_UNAVAILABLE");
             return buildError(id, RATE_LIMIT_UNAVAILABLE,
                     "Hệ thống tạm không kiểm được giới hạn lời gọi; hãy thử lại sau");
         }
         if (!allowed) {
-            record(accountId, name, AuditResult.DENIED, "RATE_LIMITED");
             return buildError(id, RATE_LIMITED, "Vượt 60 lời gọi mỗi phút; hãy thử lại sau");
         }
 
@@ -176,24 +168,20 @@ public class McpServer {
         Optional<McpToolRegistry.Entry> entry = registry.findTool(name, principal.actor().role(),
                 principal.credential().access());
         if (entry.isEmpty()) {
-            recordDenied(accountId, name);
             return buildError(id, INVALID_PARAMS, "Không có tool này");
         }
 
         // Step 4: Validate arguments object size (max 64 KB) and JSON schema compliance
         JsonNode args = params.has("arguments") ? params.get("arguments") : json.createObjectNode();
         if (!args.isObject()) {
-            record(accountId, name, AuditResult.DENIED, "INVALID_ARGS");
             return buildError(id, INVALID_PARAMS, "arguments phải là object");
         }
         if (countBytes(args.toString()) > MAX_ARGS_BYTES) {
-            record(accountId, name, AuditResult.DENIED, "ARGS_TOO_LARGE");
             return buildError(id, INVALID_PARAMS, "Tham số vượt 64 KB");
         }
         Optional<String> invalid = schemas.validateToolArguments(entry.get().definition().parameterSchema(), args);
         if (invalid.isPresent()) {
             // Reason code only: the validator message can echo agent-supplied property names.
-            record(accountId, name, AuditResult.DENIED, "INVALID_ARGS");
             return buildError(id, INVALID_PARAMS, "Tham số không đúng schema: " + invalid.get());
         }
         Long inputTokens = readReportedTokens(params.path("_meta").path("inputTokens"));
@@ -211,21 +199,18 @@ public class McpServer {
                     : entry.get().provider().call(principal.actor(), name, map);
         } catch (ApiException e) {
             if (e.readStatus().value() == 403 || e.readStatus().value() == 404) {
-                recordDenied(accountId, name);
                 aiUsageService.recordMcp(accountId, credentialId, name, "DENIED", inputTokens, outputTokens);
                 return buildResult(id, buildToolResult("Không tìm thấy hoặc không có quyền", true));
             }
             aiUsageService.recordMcp(accountId, credentialId, name, "ERROR", inputTokens, outputTokens);
-            record(accountId, name, AuditResult.FAILURE, e.readCode());
             return buildResult(id, buildToolResult(renderText(Map.of("code", e.readCode(), "message", e.getMessage())), true));
         } catch (RuntimeException e) {
             log.warn("Tool MCP {} lỗi: {}", name, e.getClass().getName());
             aiUsageService.recordMcp(accountId, credentialId, name, "ERROR", inputTokens, outputTokens);
-            record(accountId, name, AuditResult.FAILURE, "TOOL_ERROR");
             return buildResult(id, buildToolResult("Tool gặp lỗi; hãy thử lại sau", true));
         }
 
-        // Step 6: Verify result size limit (max 256 KB) and record usage and audit metrics
+        // Step 6: Verify result size limit (max 256 KB) and record usage
         boolean isError = result == null || result.error();
         Object content = result == null ? null : result.content();
         String text = renderText(content);
@@ -234,7 +219,6 @@ public class McpServer {
             text = "{\"code\":\"MCP_RESULT_TOO_LARGE\",\"complete\":false,\"message\":\"Reduce page size or use continuation\"}";
         }
         aiUsageService.recordMcp(accountId, credentialId, name, isError ? "ERROR" : "OK", inputTokens, outputTokens);
-        record(accountId, name, isError ? AuditResult.FAILURE : AuditResult.SUCCESS, null);
         return buildResult(id, buildToolResult(text, isError));
     }
 
@@ -274,19 +258,6 @@ public class McpServer {
         } catch (JsonProcessingException | RuntimeException e) {
             return json.createObjectNode().put("type", "object");
         }
-    }
-
-    private void recordDenied(UUID accountId, String tool) {
-        audit.record(new AuditEvent(UUID.randomUUID(), accountId, "ACCESS_DENIED", "MCP_TOOL", tool,
-                AuditResult.DENIED, "MCP", Map.of(), clock.instant()));
-    }
-
-    private void record(UUID accountId, String tool, AuditResult result, String reason) {
-        Map<String, Object> details = new LinkedHashMap<>();
-        details.put("tool", tool);
-        details.put("result", result.name());
-        audit.record(new AuditEvent(UUID.randomUUID(), accountId, "MCP_TOOL_CALLED", "MCP_TOOL", tool, result, reason,
-                details, clock.instant()));
     }
 
     private ObjectNode buildResult(JsonNode id, JsonNode result) {

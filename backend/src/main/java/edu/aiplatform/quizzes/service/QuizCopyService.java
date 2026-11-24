@@ -40,17 +40,15 @@ public class QuizCopyService {
     private final IClassScope classScope;
     private final QuizSupport support;
     private final QuizAccess access;
-    private final QuizAudit audit;
     private final Clock clock;
 
     public QuizCopyService(IQuizRepository quizzes, IQuestionRepository questions, IClassScope classScope,
-                           QuizSupport support, QuizAccess access, QuizAudit audit, Clock clock) {
+                           QuizSupport support, QuizAccess access, Clock clock) {
         this.quizzes = quizzes;
         this.questions = questions;
         this.classScope = classScope;
         this.support = support;
         this.access = access;
-        this.audit = audit;
         this.clock = clock;
     }
 
@@ -60,7 +58,6 @@ public class QuizCopyService {
         Quiz source = support.loadManaged(actor, id);
         support.requireContainerActive(source);
         Quiz copy = copy(actor, source, QuizOrigin.CLONE, 1, source.classId());
-        audit.recordSuccess(actor, "QUIZ_CLONED", QuizSupport.OBJECT, copy.id(), Map.of("sourceQuizId", id.toString()));
         return support.buildDetail(copy, true);
     }
 
@@ -79,15 +76,13 @@ public class QuizCopyService {
         } catch (DuplicateKeyException exists) {
             throw ApiException.createConflict("QUIZ_VERSION_EXISTS", "Quiz này đã có một version mới đang soạn");
         }
-        audit.recordSuccess(actor, "QUIZ_VERSION_CREATED", QuizSupport.OBJECT, copy.id(),
-                Map.of("sourceQuizId", id.toString(), "versionNo", copy.versionNo()));
         return support.buildDetail(copy, true);
     }
 
     /** Quiz của các lớp khác cùng môn mà giảng viên đang dạy (nguồn copy). */
     @Transactional(readOnly = true)
     public List<QuizRow> copySources(Actor actor, UUID classId) {
-        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS", classId, "CLASS_NOT_FOUND");
+        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS_NOT_FOUND");
         ClassRef target = support.loadClassRef(classId);
         List<UUID> sameSubject = new ArrayList<>();
         for (UUID taught : listTaughtClasses(actor)) {
@@ -101,21 +96,18 @@ public class QuizCopyService {
     /** Copy Quiz của lớp khác sang lớp này: giảng viên phải dạy cả hai lớp, hai lớp cùng môn. */
     @Transactional
     public QuizDetail copyToClass(Actor actor, UUID classId, UUID sourceQuizId) {
-        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS", classId, "CLASS_NOT_FOUND");
+        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS_NOT_FOUND");
         Quiz source = support.loadQuiz(sourceQuizId);
         if (source.scope() != QuizScope.CLASS || source.classId().equals(classId)) {
             throw ApiException.createNotFound(QuizSupport.NOT_FOUND);
         }
-        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, source.classId(), QuizSupport.OBJECT, sourceQuizId,
-                QuizSupport.NOT_FOUND);
+        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, source.classId(), QuizSupport.NOT_FOUND);
         ClassRef target = support.loadClassRef(classId);
         if (!target.subjectId().equals(source.subjectId())) {
             throw ApiException.createConflict("QUIZ_COPY_SUBJECT_MISMATCH", "Chỉ copy quiz giữa các lớp cùng môn");
         }
         Quiz copy = copy(actor, source, QuizOrigin.CLASS_COPY, 1, classId);
         support.requireContainerActive(copy);
-        audit.recordSuccess(actor, "QUIZ_COPIED", QuizSupport.OBJECT, copy.id(),
-                Map.of("sourceQuizId", sourceQuizId.toString(), "classId", classId.toString()));
         return support.buildDetail(copy, true);
     }
 

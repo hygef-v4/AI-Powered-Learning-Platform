@@ -75,8 +75,7 @@ class QuizRework2026Test {
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
         IAuthorization authorization = mock(IAuthorization.class);
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
-        QuizAudit audit = new QuizAudit(event -> { }, clock);
-        QuizAccess access = new QuizAccess(authorization, audit);
+        QuizAccess access = new QuizAccess(authorization);
         ISubjectQuery subjects = mock(ISubjectQuery.class);
         when(subjects.isActive(subject)).thenReturn(true);
         when(subjects.getSubject(subject)).thenReturn(Optional.of(
@@ -89,15 +88,15 @@ class QuizRework2026Test {
         papers = new QuizPaperService(store.quizRepository, store.questionRepository, support, clock);
         ObjectProvider<edu.aiplatform.quizzes.contract.IQuizLifecycleListener> listeners = mock(ObjectProvider.class);
         when(listeners.orderedStream()).thenAnswer(call -> java.util.stream.Stream.empty());
-        publication = new QuizPublicationService(store.quizRepository, support, papers, listeners, events::add, audit, clock);
-        authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit, clock, listeners);
+        publication = new QuizPublicationService(store.quizRepository, support, papers, listeners, events::add, clock);
+        authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, clock, listeners);
         query = new QuizQueryService(store.quizRepository, store.questionRepository, classes, papers);
         scorer = new QuizScorer(store.quizRepository, store.questionRepository);
         QuestionDuplicates duplicates = new QuestionDuplicates(store.questionRepository);
-        bank = new QuestionBankService(store.questionRepository, active, access, audit, duplicates, papers, events::add, clock);
+        bank = new QuestionBankService(store.questionRepository, active, access, duplicates, papers, events::add, clock);
         proposals = new QuestionProposalService(store.questionRepository, support, access, active, duplicates, subjects,
-                events::add, audit, clock);
-        importer = new QuestionImporter(store.questionRepository, active, access, audit, duplicates, clock);
+                events::add, clock);
+        importer = new QuestionImporter(store.questionRepository, active, access, duplicates, clock);
     }
 
     private static QuestionContent content(String stem, String... tags) {

@@ -64,8 +64,7 @@ public class QuizSourceRetry {
                     support.requireNoAttemptsWhenOpen(quiz);
                     scope = QuizReferenceMaterials.resolveScope(quiz);
                 } else {
-                    access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, draft.subjectId(), "SUBJECT",
-                            draft.subjectId(), "SUBJECT_NOT_FOUND");
+                    access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, draft.subjectId(), "SUBJECT_NOT_FOUND");
                     activeSubjects.require(draft.subjectId());
                     scope = ResourceRef.subject(draft.subjectId());
                 }
