@@ -10,6 +10,13 @@ export const SITE_HOST = new URL(SITE_URL).host;
 
 /** Tên thương hiệu ngắn, khớp tên miền; dùng cho dữ liệu cấu trúc và nội dung landing để tìm "ALAP" ra đúng trang. */
 export const SITE_BRAND = "ALAP";
+/**
+ * Tên đầy đủ khớp tên miền alapedu.online. Viết liền "ALAPEdu" ở tiêu đề, H1 và chân trang để Google ghép đúng truy vấn
+ * "alapedu" với trang này thay vì sửa chính tả sang một thương hiệu khác.
+ */
+export const SITE_BRAND_FULL = "ALAPEdu";
+/** Các cách người dùng có thể gõ tên thương hiệu; khai trong `alternateName` của dữ liệu cấu trúc. */
+export const SITE_BRAND_ALIASES = ["ALAP", "ALAP Edu", "alapedu", "alapedu.online"] as const;
 /** Chỉ production đặt `SEO_INDEXABLE=true`; local, staging và mọi môi trường khác không cho máy tìm kiếm index. */
 export const SEO_INDEXABLE = process.env.SEO_INDEXABLE === "true";
 /** Mã xác minh Google Search Console (thẻ meta); rỗng thì không xuất thẻ. */
