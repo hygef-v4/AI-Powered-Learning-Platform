@@ -28,7 +28,7 @@ import org.springframework.transaction.support.TransactionOperations;
  * </ul>
  * Mỗi lượt một transaction: một lượt chấm lỗi chỉ để lại lượt đó cho lần chạy sau, không rollback cả lô. Nộp có
  * điều kiện trạng thái nên chạy lại hoặc chạy song song không nộp hai lần. U05 không trả lời thì bỏ qua lớp đó, không
- * nộp oan.
+ * nộp oan. Mỗi lần chạy nộp tối đa {@link #BATCH} lượt mỗi loại (quá hạn, mất quyền làm); phần còn lại để lần chạy sau.
  */
 @Component
 public class QuizAutoSubmitScanner implements IScheduledScanner {
@@ -40,13 +40,20 @@ public class QuizAutoSubmitScanner implements IScheduledScanner {
     private final IClassAccess classes;
     private final PracticeSupport support;
     private final TransactionOperations transactions;
+    private final int batch;
 
     QuizAutoSubmitScanner(IQuizAttemptRepository attempts, IClassAccess classes, PracticeSupport support,
                           TransactionOperations transactions) {
+        this(attempts, classes, support, transactions, BATCH);
+    }
+
+    QuizAutoSubmitScanner(IQuizAttemptRepository attempts, IClassAccess classes, PracticeSupport support,
+                          TransactionOperations transactions, int batch) {
         this.attempts = attempts;
         this.classes = classes;
         this.support = support;
         this.transactions = transactions;
+        this.batch = batch;
     }
 
     @Override
@@ -56,21 +63,33 @@ public class QuizAutoSubmitScanner implements IScheduledScanner {
 
     @Override
     public void scan(Instant now) {
-        for (QuizAttempt overdue : attempts.findOverdue(now.minus(QuizAttempt.GRACE), BATCH)) {
+        for (QuizAttempt overdue : attempts.findOverdue(now.minus(QuizAttempt.GRACE), batch)) {
             submitIf(overdue.id(), attempt -> attempt.isOverdueAt(now), SubmitMode.AUTO_TIME_LIMIT);
         }
+        int budget = batch;
         for (UUID classId : attempts.listClassesWithInProgress()) {
-            submitStranded(classId);
+            if (budget <= 0) {
+                return;
+            }
+            budget -= submitStranded(classId, budget);
         }
     }
 
-    /** Lượt đang làm của lớp mà người học không còn làm tiếp được. */
-    private void submitStranded(UUID classId) {
+    /**
+     * Nộp tối đa {@code limit} lượt đang làm của lớp mà người học không còn làm tiếp được; trả số lượt đã thử nộp.
+     * Đọc lượt đang làm trước rồi mới đọc lớp và ghi danh: lượt bắt đầu sau khi chụp danh sách ghi danh sẽ không bị
+     * nộp oan, vì lúc đó nó chưa nằm trong danh sách lượt.
+     */
+    private int submitStranded(UUID classId, int limit) {
+        List<QuizAttempt> inProgress = attempts.listInProgressByClass(classId);
+        if (inProgress.isEmpty()) {
+            return 0;
+        }
         Predicate<UUID> stranded;
         try {
             Optional<ClassRef> ref = classes.getClassRef(classId);
             if (ref.isEmpty()) {
-                return;
+                return 0;
             }
             if (ref.get().status() != ClassStatus.OPEN) {
                 stranded = accountId -> true;
@@ -80,14 +99,19 @@ public class QuizAutoSubmitScanner implements IScheduledScanner {
             }
         } catch (RuntimeException unavailable) {
             log.warn("Chưa kiểm được lớp {} để tự nộp lượt quiz: {}", classId, unavailable.getClass().getSimpleName());
-            return;
+            return 0;
         }
-        List<QuizAttempt> inProgress = attempts.listInProgressByClass(classId);
+        int tried = 0;
         for (QuizAttempt attempt : inProgress) {
+            if (tried >= limit) {
+                break;
+            }
             if (stranded.test(attempt.accountId())) {
                 submitIf(attempt.id(), QuizAttempt::hasInProgressStatus, SubmitMode.AUTO_ACCESS_LOST);
+                tried++;
             }
         }
+        return tried;
     }
 
     private void submitIf(UUID attemptId, Predicate<QuizAttempt> condition, SubmitMode mode) {

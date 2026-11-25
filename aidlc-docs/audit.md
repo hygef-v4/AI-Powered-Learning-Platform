@@ -15291,3 +15291,12 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, U11, Auto-fix PR #137
 
 ---
+
+## Construction - U11 Quiz Practice Auto-fix review
+**Timestamp**: 2026-11-26T00:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) PR #137 có review comment 7170130266: race condition khi đọc ghi danh trước lượt đang làm trong QuizAutoSubmitScanner, quét lượt treo không chia lô, thiếu test frontend cho AUTO_ACCESS_LOST và giữ version ở QuizDetailPage."
+**AI Response**: "QuizAutoSubmitScanner đọc lượt đang làm của lớp trước, bỏ qua lớp không có lượt, rồi mới đọc lớp và ghi danh; nộp AUTO_ACCESS_LOST tối đa BATCH (100) lượt mỗi lần chạy. Thêm test backend (lượt bắt đầu sau khi đọc ghi danh không bị nộp, chia lô) và frontend (nhãn AUTO_ACCESS_LOST, lưu điểm lỗi sau khi lưu cấu hình thì thử lại không xung đột). Cập nhật F6. QuizPracticeServicesTest 43/43, frontend quiz 127/127, tsc đạt."
+**Context**: Construction, U11, Auto-fix PR #137
+
+---

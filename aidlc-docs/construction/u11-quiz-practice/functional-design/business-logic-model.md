@@ -62,7 +62,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F6 - Tự nộp
 1. `IScheduledScanner` của U11 chạy mỗi phút: lượt `IN_PROGRESS` có `deadlineAt` cộng 30 giây đã qua được nộp bằng câu trả lời đã lưu, `AUTO_TIME_LIMIT`, chấm như F5 bước 4.
 2. U10 ngưng Quiz hoặc phát hành version mới thì gọi `onRetired` của U11: trong cùng transaction nộp và chấm mọi lượt `IN_PROGRESS` của Quiz đó với `AUTO_RETIRED`.
-3. Cùng scanner: lượt `IN_PROGRESS` của lớp không còn `OPEN`, hoặc của người học không còn ghi danh lớp, được nộp bằng câu trả lời đã lưu với `AUTO_ACCESS_LOST` (BR-U11-14). Lưu và nộp tay đều cần lớp mở và còn ghi danh, nên thiếu bước này thì lượt không giới hạn giờ treo mãi. U05 lỗi thì bỏ qua lớp đó.
+3. Cùng scanner: lượt `IN_PROGRESS` của lớp không còn `OPEN`, hoặc của người học không còn ghi danh lớp, được nộp bằng câu trả lời đã lưu với `AUTO_ACCESS_LOST` (BR-U11-14). Lưu và nộp tay đều cần lớp mở và còn ghi danh, nên thiếu bước này thì lượt không giới hạn giờ treo mãi. Đọc lượt đang làm của lớp trước rồi mới đọc trạng thái lớp và ghi danh, để lượt vừa bắt đầu sau khi chụp danh sách ghi danh không bị nộp oan. Mỗi lần chạy nộp tối đa 100 lượt loại này, phần còn lại để lần sau. U05 lỗi thì bỏ qua lớp đó.
 4. Câu lệnh nộp có điều kiện trạng thái nên chạy lại không nộp hai lần.
 
 ### F7 - Xem kết quả (UC 52)

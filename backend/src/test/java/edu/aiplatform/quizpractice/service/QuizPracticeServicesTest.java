@@ -99,6 +99,7 @@ class QuizPracticeServicesTest {
     private QuizAttemptService attemptsService;
     private QuizPracticeQueryService queries;
     private TeacherQuizAttemptService teacherService;
+    private PracticeSupport support;
     private QuizAutoSubmitScanner scanner;
     private QuizRetiredHandler retired;
     private QuizActivityService activity;
@@ -137,7 +138,7 @@ class QuizPracticeServicesTest {
         lookups = accounts;
 
         PracticeAccess access = new PracticeAccess(authorization);
-        PracticeSupport support = new PracticeSupport(store, quizzes, scoring, classes, access,
+        support = new PracticeSupport(store, quizzes, scoring, classes, access,
                 new AttemptActivityAssessor(activityQuery), clock);
         attemptsService = new QuizAttemptService(store, support, access, clock);
         queries = new QuizPracticeQueryService(store, quizzes, classes, support, access);
@@ -514,6 +515,39 @@ class QuizPracticeServicesTest {
 
         assertThat(store.byId.get(mine.attemptId()).submitMode()).isEqualTo(SubmitMode.AUTO_ACCESS_LOST);
         assertThat(store.byId.get(theirs.attemptId()).hasInProgressStatus()).as("còn học lớp thì làm tiếp").isTrue();
+    }
+
+    @Test
+    void scannerDoesNotSubmitAnAttemptStartedAfterItReadTheRoster() {
+        var mine = attemptsService.start(student, quizId, classA);
+        when(classes.listActiveStudents(classA)).thenAnswer(call -> {
+            attemptsService.start(other, quizId, classA);
+            return List.of(student.accountId());
+        });
+
+        scanner.scan(clock.instant());
+
+        assertThat(store.byId.values()).filteredOn(a -> a.accountId().equals(other.accountId()))
+                .singleElement().as("lượt bắt đầu sau khi đọc danh sách lượt chờ lần chạy sau")
+                .satisfies(a -> assertThat(a.hasInProgressStatus()).isTrue());
+        assertThat(store.byId.get(mine.attemptId()).hasInProgressStatus()).isTrue();
+    }
+
+    @Test
+    void scannerSubmitsStrandedAttemptsInBatches() {
+        var mine = attemptsService.start(student, quizId, classA);
+        var theirs = attemptsService.start(other, quizId, classA);
+        when(classes.getClassRef(classA)).thenReturn(Optional.of(classRef(classA, ClassStatus.ARCHIVED)));
+        QuizAutoSubmitScanner small = new QuizAutoSubmitScanner(store, classes, support,
+                TransactionOperations.withoutTransaction(), 1);
+
+        small.scan(clock.instant());
+        assertThat(List.of(mine.attemptId(), theirs.attemptId())).filteredOn(id -> store.byId.get(id).hasInProgressStatus())
+                .as("mỗi lần chạy nộp tối đa một lô").hasSize(1);
+
+        small.scan(clock.instant());
+        assertThat(store.byId.get(mine.attemptId()).submitMode()).isEqualTo(SubmitMode.AUTO_ACCESS_LOST);
+        assertThat(store.byId.get(theirs.attemptId()).submitMode()).isEqualTo(SubmitMode.AUTO_ACCESS_LOST);
     }
 
     @Test
