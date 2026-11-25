@@ -1520,7 +1520,7 @@
         "someCriteriaAreMissingContent": "Some criteria are missing content or points",
         "theAssignmentNeedsATitle": "The assignment needs a title",
         "theAssignmentHasNoGrading": "The assignment has no grading rubric yet",
-        "rubricsHavePointErrors": "{length} rubrics have point errors",
+        "rubricsHavePointErrors": "{length, plural, one {# rubric has point errors} other {# rubrics have point errors}}",
         "theAssignmentStillHasErrors": "The assignment still has errors",
         "notSaved": "Not saved: {POINTS_INVALID}",
         "notSaved2": "Not saved: {value}",
@@ -3996,7 +3996,7 @@
         "points4": " points) "
       },
       "MaterialSourceSelect": {
-        "documentsSelected": "{length} documents selected",
+        "documentsSelected": "{length, plural, one {# document selected} other {# documents selected}}",
         "chooseSourceDocuments": "Choose source documents",
         "sourceDocumentsForTheAi": "Source documents for the AI",
         "findSourceDocuments": "Find source documents",
