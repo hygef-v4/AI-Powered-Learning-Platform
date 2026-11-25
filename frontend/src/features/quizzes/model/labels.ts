@@ -1,6 +1,6 @@
 import { ApiError } from "@/shared/api/client";
 import type { Tone } from "@/shared/ui";
-import type { Difficulty, QuestionStatus, QuestionType, QuizStatus } from "./types";
+import type { Difficulty, QuestionStatus, QuestionType, QuizStatus, Violation } from "./types";
 import { msg } from "@/i18n/msg";
 
 export const TYPE_LABELS: Record<QuestionType, string> = { MCQ_SINGLE: msg("quizzes.model.labels.singleAnswer"), MCQ_MULTI: msg("quizzes.model.labels.multipleAnswers") };
@@ -38,8 +38,24 @@ const ERROR_LABELS: Record<string, string> = {
   MATERIAL_SERVICE_UNAVAILABLE: msg("quizzes.model.labels.couldNotGetTheSource"),
   AI_SERVICE_UNAVAILABLE: msg("quizzes.model.labels.couldNotSendTheAi"),
   AI_OUTPUT_INVALID: msg("quizzes.model.labels.theAiResultIsNot"),
+  QUIZ_PUBLISH_FAILED: msg("quizzes.model.labels.quizNotReadyToPublish"),
   SYSTEM_BUSY,
 };
+
+/** Lỗi phát hành theo `field` và `code`; mã chưa có nhãn thì hiện thông điệp của máy chủ (KAN-223). */
+export function describeViolation(violation: Violation): string {
+  const position = /^items\[(\d+)\]$/.exec(violation.field)?.[1];
+  switch (`${position ? "items[]" : violation.field}:${violation.code}`) {
+    case "title:REQUIRED": return msg("quizzes.model.labels.violationTitleRequired");
+    case "items:ITEMS_REQUIRED": return msg("quizzes.model.labels.violationItemsRequired");
+    case "items:ITEM_COUNT": return msg("quizzes.model.labels.violationItemsTooMany");
+    case "activityNotice:ACTIVITY_NOTICE_REQUIRED": return msg("quizzes.model.labels.violationActivityNoticeRequired");
+    case "settings.leavePenalty:PENALTY_NEEDS_MONITORING": return msg("quizzes.model.labels.violationPenaltyNeedsMonitoring");
+    case "items[]:QUESTION_MISSING": return msg("quizzes.model.labels.violationQuestionMissing", { position: String(position) });
+    case "items[]:QUESTION_NOT_ACTIVE": return msg("quizzes.model.labels.violationQuestionNotActive", { position: String(position) });
+    default: return violation.message;
+  }
+}
 
 /** Lý do đề xuất lỗi: nhãn theo mã, không có thì thông điệp an toàn của U06. */
 export function describeFailure(code: string | null, message: string | null): string {

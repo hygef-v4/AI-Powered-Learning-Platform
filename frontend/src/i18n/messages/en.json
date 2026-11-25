@@ -4128,7 +4128,15 @@
         "theAiResultIsNot": "The AI result is not in a valid question format; please send the request again.",
         "theAiCouldNotWrite": "The AI could not write a proposal.",
         "open": "Open",
-        "archived": "Archived"
+        "archived": "Archived",
+        "quizNotReadyToPublish": "The quiz is not ready to publish; fix the listed items.",
+        "violationTitleRequired": "The quiz title is required.",
+        "violationItemsRequired": "A quiz needs at least 1 question.",
+        "violationItemsTooMany": "A quiz can have at most 200 questions.",
+        "violationActivityNoticeRequired": "Add a notice for students when activity monitoring is on.",
+        "violationPenaltyNeedsMonitoring": "Turn on activity monitoring to suggest a leave-page penalty.",
+        "violationQuestionMissing": "Question {position} no longer exists.",
+        "violationQuestionNotActive": "Question {position} comes from the bank and is no longer in use; remove or replace it."
       },
       "questionForm": {
         "theQuestionContentCannotBe": "The question content cannot be empty",

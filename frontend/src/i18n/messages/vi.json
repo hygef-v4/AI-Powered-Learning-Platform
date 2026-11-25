@@ -4128,7 +4128,15 @@
         "theAiResultIsNot": "Kết quả AI không đúng định dạng câu hỏi; hãy gửi lại yêu cầu.",
         "theAiCouldNotWrite": "AI chưa soạn được đề xuất.",
         "open": "Đang mở",
-        "archived": "Lưu trữ"
+        "archived": "Lưu trữ",
+        "quizNotReadyToPublish": "Quiz chưa đủ điều kiện; hãy sửa các mục được nêu.",
+        "violationTitleRequired": "Tên quiz không được để trống.",
+        "violationItemsRequired": "Quiz cần ít nhất 1 câu.",
+        "violationItemsTooMany": "Quiz tối đa 200 câu.",
+        "violationActivityNoticeRequired": "Cần lời báo cho sinh viên khi bật ghi nhận hoạt động.",
+        "violationPenaltyNeedsMonitoring": "Cần bật ghi nhận hoạt động thì mới gợi ý trừ điểm khi rời trang được.",
+        "violationQuestionMissing": "Câu {position} không còn tồn tại.",
+        "violationQuestionNotActive": "Câu {position} lấy từ ngân hàng đã ngưng dùng; hãy bỏ hoặc thay câu khác."
       },
       "questionForm": {
         "theQuestionContentCannotBe": "Nội dung câu hỏi không được để trống",

@@ -220,7 +220,8 @@ describe("QuizDetailPage", () => {
 
     fireEvent.click(await screen.findByTestId("quiz-detail-publish"));
     fireEvent.click(await screen.findByTestId("quiz-detail-publish-confirm"));
-    expect(await screen.findByText("Câu 1 lấy từ ngân hàng đã ngưng dùng")).toBeInTheDocument();
+    // Lỗi theo mã được dịch theo ngôn ngữ đang chọn, không hiện nguyên câu của máy chủ (KAN-223).
+    expect(await screen.findByText("Câu 1 lấy từ ngân hàng đã ngưng dùng; hãy bỏ hoặc thay câu khác.")).toBeInTheDocument();
 
     vi.mocked(publishQuiz).mockRejectedValue(new ApiError({ status: 409, code: "QUIZ_VERSION_CONFLICT" }));
     fireEvent.click(screen.getByTestId("quiz-detail-publish"));
