@@ -329,6 +329,8 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
     : draft.source === "PERSONAL"
       ? draft.provider ? msg("quizzes.components.AiDrafts.personal", { value: String(PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider) }) : msg("quizzes.components.AiDrafts.personalApi")
       : msg("quizzes.components.AiDrafts.theSystemPicksTheAi");
+  // Nguồn AI thực dùng kèm model (FR-006, KAN-231).
+  const originLabel = draft.model ? `${origin} · ${draft.model}` : origin;
   const updateEntry = (index: number, change: Partial<ProposalEntry>) =>
     onEntries(entries.map((entry, i) => (i === index ? { ...entry, ...change } : entry)));
   const accept = (index: number) => {
@@ -345,7 +347,7 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
         <ul className="list-disc pl-4">{draft.sourceWarnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
       </Alert>}
       <p className="text-[12px] text-muted">
-        {origin} {msg("quizzes.components.AiDrafts.sentAt")}{formatDateTime(draft.createdAt)}
+        {originLabel} {msg("quizzes.components.AiDrafts.sentAt")}{formatDateTime(draft.createdAt)}
         {draft.materials.length > 0 && <> {msg("quizzes.components.AiDrafts.documents")}{draft.materials.map((m) => m.title).join(", ")}</>}
       </p>
       {draft.status === "PENDING" && (

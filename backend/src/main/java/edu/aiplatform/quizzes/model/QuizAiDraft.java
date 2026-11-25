@@ -18,6 +18,9 @@ public record QuizAiDraft(UUID id, DraftTarget target, UUID quizId, UUID subject
     public static final String REQUEST_REF = "requestRef";
     public static final String FAILURE_CODE = "failureCode";
     public static final String FAILURE_MESSAGE = "failureMessage";
+    public static final String RESOLVED_SOURCE = "resolvedSource";
+    public static final String RESOLVED_PROVIDER = "resolvedProvider";
+    public static final String RESOLVED_MODEL = "resolvedModel";
 
     public QuizAiDraft {
         proposal = proposal == null ? List.of() : List.copyOf(proposal);
@@ -86,6 +89,27 @@ public record QuizAiDraft(UUID id, DraftTarget target, UUID quizId, UUID subject
     public QuizAiDraft recordDecision(DraftStatus decision, Instant now) {
         return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, decision, proposal, provenance,
                 baseVersion, createdBy, createdAt, now);
+    }
+
+
+    /** Nguồn AI mà U06 thực dùng (FR-006): giữ nguyên nguồn đã yêu cầu để lượt tạo lại vẫn theo lựa chọn ban đầu. */
+    public QuizAiDraft recordResolvedSource(String source, String provider, String model) {
+        Map<String, Object> resolved = new LinkedHashMap<>();
+        putIfPresent(resolved, RESOLVED_SOURCE, source);
+        putIfPresent(resolved, RESOLVED_PROVIDER, provider);
+        putIfPresent(resolved, RESOLVED_MODEL, model);
+        return new QuizAiDraft(id, target, quizId, subjectId, origin, taskId, status, proposal,
+                mergeProvenance(resolved), baseVersion, createdBy, createdAt, decidedAt);
+    }
+
+    public boolean hasResolvedSource() {
+        return provenance.get(RESOLVED_SOURCE) != null;
+    }
+
+    private static void putIfPresent(Map<String, Object> target, String key, String value) {
+        if (value != null && !value.isBlank()) {
+            target.put(key, value);
+        }
     }
 
     private Map<String, Object> mergeProvenance(Map<String, Object> extra) {
