@@ -297,7 +297,7 @@ class DriveStorageIntegrationTest {
     }
 
     @Test
-    void abusiveDriveFileIsReportedAsUnavailableAndAudited() throws Exception {
+    void abusiveDriveFileIsReportedAsUnavailableWithoutAudit() throws Exception {
         var student = actor(Role.STUDENT);
         String fileId = uploadPng(student, "flagged.png", createPng(Color.MAGENTA));
         DRIVE.failNext("GET /download/drive/v3/files/" + fileId + " alt=media", 403, "cannotDownloadAbusiveFile", 1);
@@ -306,8 +306,8 @@ class DriveStorageIntegrationTest {
         mvc.perform(get(url).cookie(loginCookie(student)))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.code").value("FILE_UNAVAILABLE"));
-        assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='FILE_DOWNLOAD' and result='FAILURE' "
-                + "and reason='DRIVE_ABUSE_BLOCKED' and actor_id=?", Long.class, student.accountId())).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='FILE_DOWNLOAD' and actor_id=?",
+                Long.class, student.accountId())).isZero();
         assertThat(DRIVE.item(fileId)).isPresent();
     }
 

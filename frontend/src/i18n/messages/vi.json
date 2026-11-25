@@ -1997,7 +1997,26 @@
         "denied2": "Bị từ chối",
         "wrongKey": "Sai khóa",
         "quotaExhausted": "Hết hạn mức",
-        "timedOut": "Quá giờ"
+        "timedOut": "Quá giờ",
+        "createSubjectCode": "Tạo môn {code}",
+        "archiveSubjectCode": "Lưu trữ môn {code}",
+        "reopenSubjectCode": "Mở lại môn {code}",
+        "createClassCode": "Tạo lớp {code}",
+        "openClassCode": "Mở lớp {code}",
+        "archiveClassCode": "Lưu trữ lớp {code}",
+        "reopenClassCode": "Mở lại lớp {code}",
+        "openClass": "Mở lớp",
+        "archiveClass": "Lưu trữ lớp",
+        "reopenClass": "Mở lại lớp",
+        "rejectRoleChange": "Từ chối đổi vai trò",
+        "uploadFile": "Tải tệp lên",
+        "downloadFile": "Tải tệp xuống",
+        "viewMcpAgentToken": "Xem token agent MCP",
+        "file": "Tệp",
+        "aiSettings": "Cấu hình AI",
+        "adminDashboard": "Bảng điều khiển quản trị",
+        "mcpAgentToken": "Token agent MCP",
+        "quiz": "Quiz"
       },
       "details": {
         "ui": {

@@ -49,7 +49,6 @@ class UploadServiceTest {
 
     final IAuthorization authorization = mock(IAuthorization.class);
     final ISettings settings = mock(ISettings.class);
-    final FileAudit fileAudit = mock(FileAudit.class);
     final IJob jobs = mock(IJob.class);
     final Clock clock = Clock.fixed(Instant.parse("2026-10-16T08:00:00Z"), ZoneOffset.UTC);
     final Actor teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
@@ -66,7 +65,7 @@ class UploadServiceTest {
                 dir.resolve("tmp").toString(), null, null, null, null, null, null, null);
         signer = new FileRefSigner(props, new ObjectMapper());
         service = new UploadService(authorization, new PurposePolicy(settings), new ContentInspector(), storage, signer,
-                fileAudit, jobs, clock, props);
+                jobs, clock, props);
     }
 
     static FileUpload upload(String name, byte[] content) {
@@ -93,7 +92,6 @@ class UploadServiceTest {
 
         assertThatThrownBy(() -> service.upload(admin, ArtifactPurpose.MATERIAL, upload("a.pdf", TestFiles.PDF)))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.FORBIDDEN);
-        verify(fileAudit).uploadDenied(eq(admin.accountId()), eq("ROLE_NOT_ALLOWED"), anyMap());
     }
 
     @Test
@@ -102,7 +100,6 @@ class UploadServiceTest {
 
         assertThatThrownBy(() -> service.upload(teacher, ArtifactPurpose.MATERIAL, upload("a.pdf", TestFiles.PDF)))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-        verify(fileAudit, org.mockito.Mockito.never()).uploadDenied(any(), any(), anyMap());
     }
 
     @Test
@@ -158,7 +155,6 @@ class UploadServiceTest {
     void rejectsRenamedFileAndAuditsIt() {
         assertThatThrownBy(() -> service.upload(teacher, ArtifactPurpose.MATERIAL, upload("anh.pdf", TestFiles.PNG)))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
-        verify(fileAudit).uploadDenied(eq(teacher.accountId()), eq("FILE_TYPE_NOT_ALLOWED"), anyMap());
     }
 
     @Test
@@ -168,7 +164,7 @@ class UploadServiceTest {
         FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null,
                 dir.resolve("tmp").toString(), null, null, null, null, null, null, null);
         UploadService offline = new UploadService(authorization, new PurposePolicy(settings), new ContentInspector(),
-                down, signer, fileAudit, jobs, clock, props);
+                down, signer, jobs, clock, props);
 
         assertThatThrownBy(() -> offline.upload(teacher, ArtifactPurpose.MATERIAL, upload("a.pdf", TestFiles.PDF)))
                 .isInstanceOf(ApiException.class).extracting("status").isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);

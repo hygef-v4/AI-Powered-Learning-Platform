@@ -33,10 +33,9 @@ class DownloadGrantExpiryIntegrationTest {
             var redis = new StringRedisTemplate(connectionFactory);
             var tokenService = new DownloadTokenService(redis, new ObjectMapper());
             var storage = mock(IStorage.class);
-            var fileAudit = mock(FileAudit.class);
             var policy = mock(edu.aiplatform.files.contract.IArtifactDownloadPolicy.class);
             when(policy.purpose()).thenReturn(ArtifactPurpose.MATERIAL);
-            var downloadService = new DownloadService(tokenService, storage, fileAudit, List.of(policy));
+            var downloadService = new DownloadService(tokenService, storage, List.of(policy));
             Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
             String token = tokenService.issue("material-file", student.accountId());
             assertThat(redis.getExpire(DownloadTokenService.buildKey(token))).isBetween(299L, 300L);

@@ -65,7 +65,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U03-40 | Audit: upload bị từ chối, Drive từ chối trả tệp vì abuse, dùng token sai người, sửa cài đặt, backup thành công và thất bại. Không audit từng lần tải thành công. | FR-014, SEC-005 |
+| BR-U03-40 | Audit: sửa cài đặt, backup thành công và thất bại. Tải tệp lên, tải xuống (kể cả bị từ chối, abuse, token sai người) không ghi audit (yêu cầu 2026-11-26). | FR-014, SEC-005 |
 | BR-U03-41 | Drive không khả dụng thì upload và tải về trả "tạm thời không khả dụng", không để lại dữ liệu dở dang. | REL-003 |
 
 ## 6. Việc nền

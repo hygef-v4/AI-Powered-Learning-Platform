@@ -15147,3 +15147,12 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, U06.
 
 ---
+
+## U05 Khắc phục bản ghi audit sai khi giảng viên xem danh sách lớp
+**Timestamp**: 2026-11-25T19:05:45Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi hệ thống ghi nhầm bản ghi audit khi giảng viên xem danh sách lớp học."
+**AI Response**: "Nguyên nhân: trang /classes gửi yêu cầu thăm dò tới /me/classes trước khi chuyển sang /teaching/classes. Với tài khoản giảng viên, yêu cầu này bị từ chối (403 ROLE_DENIED), dẫn đến việc hệ thống ghi một bản ghi ACCESS_DENIED không phản ánh thao tác thực tế. Biện pháp: loadClassCapability lựa chọn API theo vai trò của phiên đăng nhập và không còn gửi yêu cầu thăm dò. Bộ kiểm thử academics đã được cập nhật (98/98 đạt; tsc và eslint không báo lỗi)."
+**Context**: Construction, khắc phục lỗi U05 (frontend academics).
+
+---

@@ -3,10 +3,19 @@ import {afterEach,it,expect,vi} from "vitest";
 import {ClassesRoute,ClassDetailRoute} from "@/features/academics/pages/ClassRoutes";
 vi.mock("next/navigation",()=>({useRouter:()=>({push:vi.fn()}),useSearchParams:()=>new URLSearchParams(window.location.search)}));
 vi.mock("@/shared/auth/useCurrentUser",()=>({useCurrentUser:()=>({displayName:"User"})}));
-afterEach(()=>vi.unstubAllGlobals());
-it("routes an empty authorized teacher list through server capability",async()=>{
- const fn=vi.fn().mockImplementation((url:string)=>Promise.resolve(url.includes("/me/")?Response.json({}, {status:403}):Response.json([])));vi.stubGlobal("fetch",fn);
- render(<ClassesRoute/>);expect(await screen.findByRole("heading",{name:"Lớp được phân công"})).toBeInTheDocument();expect(fn).toHaveBeenCalledTimes(2);
+const session=vi.hoisted(()=>({role:"TEACHER"}));
+vi.mock("@/features/identity/hooks/SessionProvider",()=>({useSession:()=>({status:"authenticated",profile:{role:session.role}})}));
+afterEach(()=>{vi.unstubAllGlobals();session.role="TEACHER";});
+it("loads a teacher's classes by session role without probing the student endpoint",async()=>{
+ const fn=vi.fn().mockImplementation(()=>Promise.resolve(Response.json([])));vi.stubGlobal("fetch",fn);
+ render(<ClassesRoute/>);expect(await screen.findByRole("heading",{name:"Lớp được phân công"})).toBeInTheDocument();
+ expect(fn.mock.calls.map(([url])=>url)).toEqual(["/api/v1/teaching/classes?page=1&size=100"]);
+});
+it("loads a student's classes from the student endpoint only",async()=>{
+ session.role="STUDENT";
+ const fn=vi.fn().mockImplementation(()=>Promise.resolve(Response.json([])));vi.stubGlobal("fetch",fn);
+ render(<ClassesRoute/>);await waitFor(()=>expect(fn).toHaveBeenCalledTimes(1));
+ expect(String(fn.mock.calls[0]?.[0])).toContain("/api/v1/me/classes?");
 });
 it("reloads a conflicting manager mutation and retains its actionable error",async()=>{
  const course={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Class",description:"",startsOn:"2027-01-10",term:"SP27",status:"DRAFT",teacher:{id:"t",name:"Teacher",email:"t@test.test"},version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};

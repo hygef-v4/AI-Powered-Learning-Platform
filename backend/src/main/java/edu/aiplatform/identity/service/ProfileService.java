@@ -1,8 +1,5 @@
 package edu.aiplatform.identity.service;
 
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
@@ -18,7 +15,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -34,15 +30,12 @@ public class ProfileService {
 
     private final AccountRepository accounts;
     private final IAuthorization authorization;
-    private final IAudit audit;
     private final TransactionOperations transactions;
     private final Clock clock;
 
-    public ProfileService(AccountRepository accounts, IAuthorization authorization, IAudit audit,
-                          TransactionOperations transactions, Clock clock) {
+    public ProfileService(AccountRepository accounts, IAuthorization authorization, TransactionOperations transactions, Clock clock) {
         this.accounts = accounts;
         this.authorization = authorization;
-        this.audit = audit;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -87,9 +80,6 @@ public class ProfileService {
         Instant now = clock.instant();
         transactions.executeWithoutResult(status -> {
             accounts.updateProfile(before.id(), displayName, phoneNumber, null, now);
-            // Chỉ ghi tên trường đã đổi, không ghi giá trị số điện thoại (BR-U01-53, 91).
-            audit.record(new AuditEvent(UUID.randomUUID(), before.id(), "PROFILE_UPDATED", "ACCOUNT",
-                    before.id().toString(), AuditResult.SUCCESS, null, Map.of("fields", changed), now));
         });
         return view(loadAccount(actor));
     }

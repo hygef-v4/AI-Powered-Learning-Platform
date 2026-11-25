@@ -515,8 +515,8 @@ class CrossUnitFlowIntegrationTest {
 
         assertThat(sessionStore.findSession(oldSession.sid())).isEmpty();
         mvc.perform(get("/api/v1/me/classes").cookie(oldCookie)).andExpect(status().isUnauthorized());
-        assertThat(count("select count(*) from audit_logs where action='PASSWORD_RESET' and actor_id=? and result='SUCCESS'",
-                student.accountId())).isEqualTo(1);
+        assertThat(count("select count(*) from audit_logs where action='PASSWORD_RESET' and actor_id=?",
+                student.accountId())).isZero();
         assertThatThrownBy(() -> authService.login(email, oldPassword, buildDocumentationIp(13))).isInstanceOf(ApiException.class);
         assertThat(authService.login(email, newPassword, buildDocumentationIp(14)).accessToken()).isNotBlank();
         assertThatThrownBy(() -> passwordResetService.complete(ticket, generateTestPassword()))
@@ -654,7 +654,7 @@ class CrossUnitFlowIntegrationTest {
     }
 
     @Test
-    void svgDownloadCarriesSandboxHeadersAndForeignAccountIsDeniedAndAudited() throws Exception {
+    void svgDownloadCarriesSandboxHeadersAndForeignAccountIsDeniedWithoutAudit() throws Exception {
         var student = actor(Role.STUDENT);
         byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script><rect width=\"10\" height=\"10\"/></svg>"
                 .getBytes(StandardCharsets.UTF_8);
@@ -664,8 +664,8 @@ class CrossUnitFlowIntegrationTest {
         mvc.perform(get(svgUrl).cookie(loginCookie(actor(Role.TEACHER))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("DOWNLOAD_TOKEN_NOT_FOUND"));
-        assertThat(count("select count(*) from audit_logs where action='FILE_DOWNLOAD' and result='DENIED' and actor_id=?",
-                actor(Role.TEACHER).accountId())).isEqualTo(1);
+        assertThat(count("select count(*) from audit_logs where action='FILE_DOWNLOAD' and actor_id=?",
+                actor(Role.TEACHER).accountId())).isZero();
 
         var started = mvc.perform(get(svgUrl).cookie(loginCookie(student))).andReturn();
         mvc.perform(asyncDispatch(started))

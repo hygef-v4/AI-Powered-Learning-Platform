@@ -1997,7 +1997,26 @@
         "denied2": "Denied",
         "wrongKey": "Wrong key",
         "quotaExhausted": "Quota exhausted",
-        "timedOut": "Timed out"
+        "timedOut": "Timed out",
+        "createSubjectCode": "Create subject {code}",
+        "archiveSubjectCode": "Archive subject {code}",
+        "reopenSubjectCode": "Reopen subject {code}",
+        "createClassCode": "Create class {code}",
+        "openClassCode": "Open class {code}",
+        "archiveClassCode": "Archive class {code}",
+        "reopenClassCode": "Reopen class {code}",
+        "openClass": "Open class",
+        "archiveClass": "Archive class",
+        "reopenClass": "Reopen class",
+        "rejectRoleChange": "Role change rejected",
+        "uploadFile": "Upload file",
+        "downloadFile": "Download file",
+        "viewMcpAgentToken": "View MCP agent token",
+        "file": "File",
+        "aiSettings": "AI settings",
+        "adminDashboard": "Admin dashboard",
+        "mcpAgentToken": "MCP agent token",
+        "quiz": "Quiz"
       },
       "details": {
         "ui": {

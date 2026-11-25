@@ -106,7 +106,7 @@ Một màn Password Reset gồm ba bước: nhập email → nhập OTP → đ�
 3. Luôn trả `Accepted` trung tính (US-IAM-003 S1).
 4. Người dùng nhập `otpCode`: xác minh như F2 bước 1-3 (mục đích `PASSWORD_RESET`), nhận `otpTicket`.
 5. Người dùng nhập `newPassword` kèm ticket: kiểm như F2 bước 4-5.
-6. Lưu mật khẩu mới, xóa **mọi phiên** của tài khoản (BR-U01-34), xóa `failedLoginCount` và `lockedUntil`, ghi audit `PASSWORD_RESET`.
+6. Lưu mật khẩu mới, xóa **mọi phiên** của tài khoản (BR-U01-34), xóa `failedLoginCount` và `lockedUntil`; không ghi audit (BR-U01-90).
 
 ### F6 - Đổi mật khẩu
 
@@ -117,7 +117,7 @@ Màn Password Change, mở từ User Profile.
 1. Sai mật khẩu hiện tại → từ chối, không đổi gì (US-IAM-006 S2).
 2. Kiểm chính sách (BR-U01-30, 31).
 3. Lưu, xóa mọi phiên khác của tài khoản, giữ phiên hiện tại (BR-U01-34).
-4. Ghi audit `PASSWORD_CHANGED`.
+4. Không ghi audit (BR-U01-90).
 
 ## 4. Hồ sơ
 
@@ -128,7 +128,7 @@ Màn User Profile, mở từ khung sau đăng nhập; hiện email, tên, số �
 1. Chỉ thao tác trên `accountId` của phiên; định danh khác bị từ chối (BR-U01-54).
 2. Sửa `displayName`, `phoneNumber` theo ràng buộc; email, role, trạng thái không sửa được (BR-U01-51).
 3. DTO chỉ nhận tên/số điện thoại; avatar/email/role/status hoặc ID người khác bị từ chối trước ghi.
-4. Ghi audit `PROFILE_UPDATED` với tên trường đã đổi, không ghi giá trị số điện thoại.
+4. Không ghi audit (BR-U01-90).
 
 ## 5. Quản trị tài khoản
 
@@ -217,7 +217,6 @@ Phạm vi môn/lớp đọc ở backend tại thời điểm request, không suy
 |---|---|
 | `ACCOUNT_CREATED`, `ACCOUNTS_IMPORTED`, `ACCOUNT_ACTIVATED`, `ACCOUNT_UPDATED`, `ROLE_CHANGED`, `ACCOUNT_DISABLED`, `ACCOUNT_ENABLED` | U02 audit (U15 đếm tài khoản qua `IAccountLookup`, không nghe sự kiện này) |
 | `LOGIN_FAILED`, `LOGIN_BLOCKED_LOCKED`, `ACCOUNT_TEMP_LOCKED`, `ACCESS_DENIED` | U02 audit |
-| `PASSWORD_CHANGED`, `PASSWORD_RESET`, `PROFILE_UPDATED` | U02 audit |
 | `OTP_DELIVERY_REQUESTED` | Job U03 → handler mail của U01 |
 
 ## Quy tắc tích hợp revision hiện hành

@@ -125,8 +125,8 @@ class SubjectAuditTest {
     }
 
     @Test
-    void successPayloadsAreAllowlistedAndKeepExplicitNullForUnassignment() {
-        Subject before =
+    void successActionsCarryTheSubjectCodeAndAllowlistedPayloads() {
+        Subject subject =
                 Subject.createSubject(
                         id,
                         "ABC",
@@ -134,18 +134,18 @@ class SubjectAuditTest {
                         "secret-description",
                         UUID.randomUUID(),
                         NOW.minusSeconds(10));
-        Subject edited = before.updateInformation("New", "new-secret-description", NOW);
-        subjectAuditRecorder.recordInformationUpdated(admin, before, edited);
-        var update = event();
-        assertThat(update.details()).containsOnlyKeys("changedFields");
-        assertThat(update.details()).containsEntry("changedFields", List.of("name", "description"));
-        assertThat(update.details().toString()).doesNotContain("secret-description");
+        subjectAuditRecorder.recordCreated(admin, subject);
+        var created = event();
+        assertThat(created.action()).isEqualTo("SUBJECT_ABC_CREATED");
+        assertThat(created.details()).containsOnlyKeys("code", "managerId");
+        assertThat(created.details().toString()).doesNotContain("secret-description");
         clearInvocations(audit);
-        Subject unassigned = before.changeManager(null, NOW);
-        subjectAuditRecorder.recordManagerChanged(admin, before, unassigned);
-        assertThat(event().details())
-                .containsOnlyKeys("oldManagerId", "newManagerId")
-                .containsEntry("newManagerId", null);
+        Subject archived = subject.archive(NOW);
+        subjectAuditRecorder.recordStatusChanged(admin, subject, archived);
+        assertThat(event().action()).isEqualTo("SUBJECT_ABC_ARCHIVED");
+        clearInvocations(audit);
+        subjectAuditRecorder.recordStatusChanged(admin, archived, archived.reopen(NOW));
+        assertThat(event().action()).isEqualTo("SUBJECT_ABC_REOPENED");
     }
 
     private AuditEvent event() {

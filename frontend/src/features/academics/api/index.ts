@@ -1,4 +1,5 @@
-import { ApiError, fetchApi } from "@/shared/api/client";
+import { fetchApi } from "@/shared/api/client";
+import type { Role } from "@/shared/auth/roles";
 import { ENROLLMENT_RESULT_LABELS } from "../model/types";
 import type {
   ClassInfoInput,
@@ -120,17 +121,16 @@ export const academicsApi = {
     ),
 };
 
-/** Resolve display mode only through successful, session-authorized endpoints. */
-export async function loadClassCapability(signal?: AbortSignal) {
-  try {
+/**
+ * Chọn danh sách lớp theo role của phiên. Không gọi thử `/me/classes` rồi lùi về `/teaching/classes`:
+ * lần gọi thử bị 403 làm backend ghi nhầm ACCESS_DENIED cho giảng viên chỉ mở danh sách lớp.
+ */
+export async function loadClassCapability(role: Role, signal?: AbortSignal) {
+  if (role === "STUDENT") {
     return {
       audience: "student" as const,
       classes: await academicsApi.listClasses("me", {}, signal),
     };
-  } catch (error) {
-    if (!(error instanceof ApiError) || ![403, 404].includes(error.problem.status)) {
-      throw error;
-    }
   }
   return {
     audience: "teacher" as const,

@@ -200,10 +200,7 @@ public class AcademicsService {
             CourseClass value = CourseClass.createClass(UUID.randomUUID(), subjectId, code, name,
                     description, startsOn, teacherId, clock.instant());
             courseClassRepository.insert(value);
-            recordSuccess(actor, "CLASS_CREATED", value.id(), Map.of());
-            if (teacherId != null)
-                recordSuccess(actor, "CLASS_TEACHER_CHANGED", value.id(),
-                        buildTeacherDetails(null, teacherId));
+            recordClassEvent(actor, value, "CREATED", Map.of());
             return mapClassView(value);
         });
     }
@@ -218,7 +215,6 @@ public class AcademicsService {
             CourseClass changed = current.updateInfo(name, description, startsOn,
                     clock.instant());
             courseClassRepository.updateClass(changed, version);
-            recordSuccess(actor, "CLASS_UPDATED", id, Map.of());
             return mapClassView(changed);
         });
     }
@@ -236,8 +232,6 @@ public class AcademicsService {
             CourseClass current = loadLockedClass(actor, id, version);
             CourseClass changed = current.assignTeacher(teacherId, clock.instant());
             courseClassRepository.updateClass(changed, version);
-            recordSuccess(actor, "CLASS_TEACHER_CHANGED", id,
-                    buildTeacherDetails(current.teacherId(), teacherId));
             return mapClassView(changed);
         });
     }
@@ -270,8 +264,10 @@ public class AcademicsService {
             CourseClass changed = current.changeStatus(status, subjectActive, false,
                     clock.instant());
             courseClassRepository.updateClass(changed, version);
-            recordSuccess(actor, "CLASS_STATUS_CHANGED", id,
-                    Map.of("before", current.status().name(), "after", status.name()));
+            String statusEvent = resolveStatusEvent(current.status(), status);
+            if (statusEvent != null)
+                recordClassEvent(actor, changed, statusEvent,
+                        Map.of("before", current.status().name(), "after", status.name()));
             // Mở lớp lần đầu hay mở lại lớp đã lưu trữ: sinh viên đang ghi danh đều được báo lớp đã mở.
             if (status == ClassStatus.OPEN) {
                 for (int offset = 0;; offset += 100) {
@@ -374,8 +370,6 @@ public class AcademicsService {
             if (old.status() == EnrollmentStatus.ACTIVE) {
                 enrollmentRepository.updateEnrollment(old.removeEnrollment(clock.instant()),
                         EnrollmentStatus.ACTIVE);
-                recordSuccess(actor, "STUDENT_REMOVED", id,
-                        Map.of("accountId", accountId.toString()));
             }
             return EnrollmentResult.ALREADY_ENROLLED;
         });
@@ -402,8 +396,6 @@ public class AcademicsService {
                 enrollmentRepository.insert(value);
             else
                 enrollmentRepository.updateEnrollment(value, EnrollmentStatus.REMOVED);
-            recordSuccess(actor, "STUDENT_ENROLLED", current.id(),
-                    Map.of("accountId", account.accountId().toString(), "result", result.name()));
             if (current.status() == ClassStatus.OPEN)
                 publishEnrollmentActivation(current, account.accountId());
         }
@@ -573,13 +565,6 @@ public class AcademicsService {
                 account.studentCode());
     }
 
-    private Map<String, Object> buildTeacherDetails(UUID before, UUID after) {
-        var details = new HashMap<String, Object>();
-        details.put("before", before == null ? "" : before.toString());
-        details.put("after", after == null ? "" : after.toString());
-        return details;
-    }
-
     private void publishEnrollmentActivation(CourseClass courseClass, UUID accountId) {
         eventPublisher
                 .publish(new DomainEvent(1, UUID.randomUUID(), EventTypes.ENROLLMENT_ACTIVATED,
@@ -589,13 +574,25 @@ public class AcademicsService {
                                 accountId.toString())));
     }
 
-    private void recordSuccess(Actor actor, String action, UUID id, Map<String, Object> details) {
-        recordAudit(actor, action, id, AuditResult.SUCCESS, null, details);
+    /**
+     * Lớp chỉ ghi tạo, mở, lưu trữ, mở lại (yêu cầu 2026-11-26); mã hành động kèm mã lớp như
+     * {@code CLASS_SE1801_CREATED}. Sửa thông tin, đổi giảng viên, ghi danh không ghi.
+     */
+    private void recordClassEvent(Actor actor, CourseClass courseClass, String event,
+            Map<String, Object> details) {
+        recordAudit(actor, AuditActions.buildObjectAction("CLASS", courseClass.code(), event),
+                "COURSE_CLASS", courseClass.id(), AuditResult.SUCCESS, null, details);
     }
 
-    private void recordAudit(Actor actor, String action, UUID id, AuditResult result, String reason,
-            Map<String, Object> details) {
-        recordAudit(actor, action, "COURSE_CLASS", id, result, reason, details);
+    /** DRAFT → OPEN là mở lớp, ARCHIVED → OPEN là mở lại, sang ARCHIVED là lưu trữ; chuyển khác không ghi. */
+    static String resolveStatusEvent(ClassStatus before, ClassStatus after) {
+        if (after == ClassStatus.ARCHIVED && before != ClassStatus.ARCHIVED)
+            return "ARCHIVED";
+        if (after == ClassStatus.OPEN && before == ClassStatus.DRAFT)
+            return "OPENED";
+        if (after == ClassStatus.OPEN && before == ClassStatus.ARCHIVED)
+            return "REOPENED";
+        return null;
     }
 
     private void recordAudit(Actor actor, String action, String objectType, UUID id,
@@ -615,8 +612,9 @@ public class AcademicsService {
     }
 
     /**
-     * Lỗi được audit; lần bị từ chối ghi thêm thao tác bị chặn, vai trò người gọi và {@code request} (góc nhìn,
-     * môn đang lọc) để Admin biết ai bị chặn ở đâu. Id là môn thì ghi loại {@code SUBJECT} để tra được tên môn.
+     * Chỉ lần bị từ chối (401, 403, 404) được audit, kèm thao tác bị chặn, vai trò người gọi và {@code request} (góc
+     * nhìn, môn đang lọc) để Admin biết ai bị chặn ở đâu. Lỗi nghiệp vụ khác không ghi (yêu cầu 2026-11-26). Id là môn
+     * thì ghi loại {@code SUBJECT} để tra được tên môn.
      */
     private <T> T executeGuarded(Actor actor, String action, UUID id, Map<String, Object> request,
             Supplier<T> work) {
@@ -626,11 +624,12 @@ public class AcademicsService {
             ApiException problem = mapFailure(failure);
             boolean denied = problem.readStatus().value() == 401 || problem.readStatus().value() == 403
                     || problem.readStatus().value() == 404;
-            Map<String, Object> details = denied ? describeDenial(actor, action, request) : Map.of();
+            if (!denied)
+                throw problem;
             try {
-                recordAudit(actor, denied ? "ACCESS_DENIED" : action,
+                recordAudit(actor, "ACCESS_DENIED",
                         SUBJECT_ID_ACTIONS.contains(action) ? "SUBJECT" : "COURSE_CLASS", id,
-                        denied ? AuditResult.DENIED : AuditResult.FAILURE, problem.readCode(), details);
+                        AuditResult.DENIED, problem.readCode(), describeDenial(actor, action, request));
             } catch (RuntimeException auditFailure) {
                 throw ApiException.createUnavailable("AUDIT_UNAVAILABLE",
                         "Không thể ghi nhật ký an toàn");

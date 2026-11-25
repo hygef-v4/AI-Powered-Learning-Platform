@@ -115,6 +115,7 @@ class AcademicsContractAdapterTest {
         verify(courseClassRepository).updateClass(argThat(c -> c.id().equals(draft.id()) && c.status()==ClassStatus.ARCHIVED), eq(0L));
         verify(courseClassRepository).updateClass(argThat(c -> c.id().equals(open.id()) && c.status()==ClassStatus.ARCHIVED), eq(3L));
         verify(courseClassRepository, never()).updateClass(argThat(c -> c.id().equals(archived.id())), anyLong());
-        verify(audit, times(2)).record(argThat(e -> e.action().equals("CLASS_STATUS_CHANGED") && e.actorId().equals(admin.accountId())));
+        verify(audit).record(argThat(e -> e.action().equals("CLASS_D1_ARCHIVED") && e.actorId().equals(admin.accountId())));
+        verify(audit).record(argThat(e -> e.action().equals("CLASS_O1_ARCHIVED") && e.actorId().equals(admin.accountId())));
     }
 }

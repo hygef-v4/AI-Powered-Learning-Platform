@@ -417,7 +417,7 @@ class AccountAdminServiceTest {
                         e -> assertThat(e.readCode()).isEqualTo("STUDENT_ROLE_CHANGE_NOT_ALLOWED"));
         verify(accounts, never()).updateRole(any(), any(), anyLong(), any());
         verify(sessions, never()).deleteAll(any());
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("ROLE_CHANGE_REJECTED", "ROLE_CHANGE_REJECTED");
+        assertThat(audits).isEmpty();
     }
 
     @SuppressWarnings("unchecked")

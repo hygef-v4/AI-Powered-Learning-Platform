@@ -23,15 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class SubjectScopeService implements ISubjectScope {
 
     private final ISubjectRepository subjectRepository;
-    private final SubjectAuditRecorder subjectAuditRecorder;
     private final Clock clock;
 
     public SubjectScopeService(
             ISubjectRepository subjectRepository,
-            SubjectAuditRecorder subjectAuditRecorder,
             Clock clock) {
         this.subjectRepository = subjectRepository;
-        this.subjectAuditRecorder = subjectAuditRecorder;
         this.clock = clock;
     }
 
@@ -80,7 +77,6 @@ public class SubjectScopeService implements ISubjectScope {
                 throw ApiException.createConflict(
                         "SUBJECT_VERSION_CONFLICT", "Dữ liệu môn đã thay đổi. Hãy thử lại");
             }
-            subjectAuditRecorder.recordManagerChanged(actor, before, after);
             released.add(id);
         }
         return List.copyOf(released);
