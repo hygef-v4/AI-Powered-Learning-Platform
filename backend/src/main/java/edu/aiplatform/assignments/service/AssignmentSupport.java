@@ -47,23 +47,20 @@ class AssignmentSupport {
 
     /** Bài tồn tại và người gọi đọc được; không thì 404 kèm audit. */
     Assignment loadReadable(Actor actor, UUID id, String action) {
-        Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.deny(actor, action,
-                AssignmentAudit.OBJECT_ASSIGNMENT, id, "NOT_FOUND"));
+        Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.notFound());
         access.requireRead(actor, assignment, action);
         return assignment;
     }
 
     Assignment loadManageable(Actor actor, UUID id, String action) {
-        Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.deny(actor, action,
-                AssignmentAudit.OBJECT_ASSIGNMENT, id, "NOT_FOUND"));
+        Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.notFound());
         access.requireManage(actor, assignment, action);
         return assignment;
     }
 
     /** Khóa dòng, kiểm quyền soạn, lớp hoặc môn chưa lưu trữ, {@code version} khớp (BR-U07-04, 70). */
     Assignment lock(Actor actor, UUID id, long version, String action) {
-        Assignment assignment = assignments.findForUpdate(id).orElseThrow(() -> access.deny(actor, action,
-                AssignmentAudit.OBJECT_ASSIGNMENT, id, "NOT_FOUND"));
+        Assignment assignment = assignments.findForUpdate(id).orElseThrow(() -> access.notFound());
         access.requireManage(actor, assignment, action);
         access.requireOwnerWritable(assignment);
         requireVersion(assignment, version);

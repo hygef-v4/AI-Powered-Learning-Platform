@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test;
 class GradingServiceTest {
     final IEvaluationRepository evaluationRepository = mock(IEvaluationRepository.class);
     final IAuthorization auth = mock(IAuthorization.class);
-    final IAudit audit = mock(IAudit.class);
     final IEventPublisher eventPublisher = mock(IEventPublisher.class);
     final ISubmissionQuery submissionQuery = mock(ISubmissionQuery.class);
     final IClassAccess classAccess = mock(IClassAccess.class);
@@ -60,8 +59,7 @@ class GradingServiceTest {
         when(submissionQuery.listSubmissions(assignmentId, classId))
                 .thenReturn(List.of(new StudentSubmissionStatus(studentId, evaluation.attemptId, 1,
                         AttemptStatus.SUBMITTED, Instant.now(), false)));
-        gradingService = new GradingService(evaluationRepository, new GradingAccess(auth, classAccess, audit, Clock.systemUTC()), audit, eventPublisher,
-                submissionQuery, assignmentQuery, objectMapper, Clock.systemUTC(), groupProvider);
+        gradingService = new GradingService(evaluationRepository, new GradingAccess(auth, classAccess), eventPublisher, submissionQuery, assignmentQuery, objectMapper, Clock.systemUTC(), groupProvider);
         when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(assignmentView(AssignmentStatus.CLOSED)));
         when(groupProvider.getIfAvailable()).thenReturn(groupSource);
         when(groupSource.getGroupSubmission(any())).thenAnswer(inv -> Optional.of(
@@ -289,7 +287,7 @@ class GradingServiceTest {
                 .isInstanceOfSatisfying(ApiException.class,
                         ex -> assertThat(ex.readStatus().value()).isEqualTo(409));
         verify(evaluationRepository, never()).saveEvaluation(any());
-        verifyNoInteractions(audit, eventPublisher);
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
@@ -609,9 +607,6 @@ class GradingServiceTest {
             assertThat(member.adjustmentReason).isEqualTo("Hoàn thành API");
             assertThat(member.score).isEqualByComparingTo("2");
         }
-        verify(audit).record(argThat(event -> event.action().equals("GRADE_CHANGED")
-                && event.details().get("previousContributionLevel").equals("MEETS_EXPECTATIONS")
-                && event.details().get("contributionLevel").equals("PARTIALLY_MEETS")));
         assertThatThrownBy(() -> gradingService.saveMemberGrade(teacher, evaluation.id, studentId,
                 new MemberSave(99, BigDecimal.ONE, "stale", ContributionLevel.MEETS_EXPECTATIONS)))
                 .isInstanceOfSatisfying(ApiException.class,

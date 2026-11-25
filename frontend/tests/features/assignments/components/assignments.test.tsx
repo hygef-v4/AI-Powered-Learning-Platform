@@ -103,11 +103,10 @@ describe("CreateAssignmentDialog", () => {
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: false }} onClose={vi.fn()} onCreated={onCreated} />);
     expect(screen.queryByRole("tab")).toBeNull();
-    // Loại đứng trên Cách tạo; mặc định là Đề có sẵn (yêu cầu 2026-11-12).
+    // Loại đứng trên Cách tạo; mặc định là Đề mới (yêu cầu 2026-11-25).
     expect(screen.getAllByRole("radio").map((radio) => radio.closest("label")?.textContent))
       .toEqual(["Cá nhân", "Nhóm", "Luyện tập", "Đề có sẵn", "Đề mới", "Tạo từ AI"]);
-    expect(screen.getByRole("radio", { name: "Đề có sẵn" })).toBeChecked();
-    fireEvent.click(screen.getByRole("radio", { name: "Đề mới" }));
+    expect(screen.getByRole("radio", { name: "Đề mới" })).toBeChecked();
     // Tiêu đề không có chữ gợi ý; Đề mới chỉ có Mẫu đề (tệp DOCX), không có copy.
     expect(screen.getByTestId("create-assignment-title")).not.toHaveAttribute("placeholder");
     expect(screen.queryByRole("combobox")).toBeNull();
@@ -193,7 +192,8 @@ describe("CreateAssignmentDialog", () => {
     const copy = vi.spyOn(assignmentsApi, "copyToSubject").mockResolvedValue(created);
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "subject", subjectId: "s1" }} onClose={vi.fn()} onCreated={onCreated} />);
-    // Đề có sẵn là mặc định và cũng chọn được Loại.
+    // Đề có sẵn cũng chọn được Loại.
+    fireEvent.click(screen.getByRole("radio", { name: "Đề có sẵn" }));
     expect(screen.getByRole("radio", { name: "Đề có sẵn" })).toBeChecked();
     expect(screen.getByRole("radiogroup", { name: "Loại" })).toBeInTheDocument();
     const search = screen.getByRole("combobox", { name: "Đề có sẵn" });
@@ -253,6 +253,7 @@ describe("CreateAssignmentDialog", () => {
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: true }} onClose={vi.fn()} onCreated={onCreated} />);
     expect(screen.getByRole("radiogroup", { name: "Loại" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: "Đề có sẵn" }));
     expect(screen.queryByTestId("create-docx")).toBeNull();
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Lab 1" } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));

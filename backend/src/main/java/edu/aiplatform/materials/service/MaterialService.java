@@ -21,7 +21,6 @@ public class MaterialService {
     private final MaterialAccessPolicy materialAccessPolicy;
     private final IArtifact artifact;
     private final IJob job;
-    private final IAudit audit;
     private final Clock clock;
 
     public MaterialService(
@@ -30,14 +29,12 @@ public class MaterialService {
             MaterialAccessPolicy materialAccessPolicy,
             IArtifact artifact,
             IJob job,
-            IAudit audit,
             Clock clock) {
         this.materialRepository = materialRepository;
         this.materialModuleRepository = materialModuleRepository;
         this.materialAccessPolicy = materialAccessPolicy;
         this.artifact = artifact;
         this.job = job;
-        this.audit = audit;
         this.clock = clock;
     }
 
@@ -72,7 +69,6 @@ public class MaterialService {
         MaterialVersion version = buildVersion(actor, material, 1, input.source());
         materialRepository.insertMaterial(material, version);
         enqueueTextExtraction(version);
-        recordAudit(actor, "MATERIAL_CREATED", material);
         return material;
     }
 
@@ -101,7 +97,6 @@ public class MaterialService {
                                 clock.instant())
                         .changePresentation(enabled, document);
         saveMaterial(next, m.version());
-        recordAudit(actor, "MATERIAL_UPDATED", next);
         return next;
     }
 
@@ -119,7 +114,6 @@ public class MaterialService {
         saveMaterial(next, m.version());
         materialRepository.insertVersion(version);
         enqueueTextExtraction(version);
-        recordAudit(actor, "MATERIAL_VERSION_CREATED", next);
         return next;
     }
 
@@ -134,7 +128,6 @@ public class MaterialService {
                         Material.Status.ARCHIVED,
                         clock.instant());
         saveMaterial(next, m.version());
-        recordAudit(actor, "MATERIAL_ARCHIVED", next);
         return next;
     }
 
@@ -169,7 +162,6 @@ public class MaterialService {
                             m.status(),
                             clock.instant());
             saveMaterial(next, m.version());
-            recordAudit(actor, "MATERIAL_UPDATED", next);
         }
     }
 
@@ -267,21 +259,4 @@ public class MaterialService {
                     "material:" + version.materialId() + ":" + version.versionNo());
     }
 
-    private void recordAudit(Actor actor, String action, Material material) {
-        audit.record(
-                new AuditEvent(
-                        UUID.randomUUID(),
-                        actor.accountId(),
-                        action,
-                        "MATERIAL",
-                        material.id().toString(),
-                        AuditResult.SUCCESS,
-                        null,
-                        Map.of(
-                                "versionNo",
-                                material.currentVersionNo(),
-                                "version",
-                                material.version()),
-                        clock.instant()));
-    }
 }

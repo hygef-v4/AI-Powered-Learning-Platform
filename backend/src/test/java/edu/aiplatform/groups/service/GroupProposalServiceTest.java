@@ -15,8 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.model.GroupFormationSettings;
 import edu.aiplatform.groups.model.GroupProposal;
@@ -64,15 +62,12 @@ class GroupProposalServiceTest {
     private final GroupRepository groups = mock(GroupRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
-    private final IAudit audit = mock(IAudit.class);
     private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final GroupAccess access = new GroupAccess(authorization, classes, audit, clock);
+    private final GroupAccess access = new GroupAccess(authorization, classes);
     private final GroupProposalCleanup cleanup = new GroupProposalCleanup(proposals);
     private final IAccountLookup accounts = mock(IAccountLookup.class);
-    private final GroupProposalService service = new GroupProposalService(proposals, groups,
-            new GroupFormationService(proposals, access, audit, clock), cleanup, access, classes,
-            accounts, audit, events, clock);
+    private final GroupProposalService service = new GroupProposalService(proposals, groups, new GroupFormationService(proposals, access, clock), cleanup, access, classes, accounts, events, clock);
     private final GroupProposal draft = GroupProposal.draft(UUID.randomUUID(), classId, "Nhóm Mây", leader.accountId(),
             NOW.minusSeconds(60));
 
@@ -174,10 +169,6 @@ class GroupProposalServiceTest {
         assertThatThrownBy(() -> service.renameProposal(invitee, draft.id(), new RenameProposalCommand("B", 0L)))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("GROUP_PROPOSAL_NOT_FOUND"));
-        ArgumentCaptor<AuditEvent> denied = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit).record(denied.capture());
-        assertThat(denied.getValue().action()).isEqualTo("ACCESS_DENIED");
-        assertThat(denied.getValue().details()).containsEntry("actorRole", "STUDENT");
 
         assertCode(() -> service.renameProposal(leader, draft.id(), new RenameProposalCommand("B", 7L)),
                 "PROPOSAL_VERSION_CONFLICT");

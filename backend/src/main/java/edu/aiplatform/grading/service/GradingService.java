@@ -14,9 +14,6 @@ import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.RubricView;
 import edu.aiplatform.assignmentwork.contract.ISubmissionQuery;
 import edu.aiplatform.assignmentwork.contract.SubmissionView;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.grading.service.GradingCommands.ItemVersion;
 import edu.aiplatform.grading.service.GradingCommands.MemberSave;
 import edu.aiplatform.grading.service.GradingCommands.Save;
@@ -54,7 +51,6 @@ public class GradingService {
             "Bài còn nhận bài nộp. Chỉ được chấm và công bố điểm sau khi đóng nhận bài.";
     private final IEvaluationRepository evaluationRepository;
     private final GradingAccess gradingAccess;
-    private final IAudit audit;
     private final IEventPublisher eventPublisher;
     private final ISubmissionQuery submissionQuery;
     private final IAssignmentQuery assignmentQuery;
@@ -64,13 +60,11 @@ public class GradingService {
     private final ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider;
 
     /** Creates the grading service with evaluation, authorization, and audit dependencies. */
-    public GradingService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess,
-            IAudit audit, IEventPublisher eventPublisher, ISubmissionQuery submissionQuery,
+    public GradingService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess, IEventPublisher eventPublisher, ISubmissionQuery submissionQuery,
             IAssignmentQuery assignmentQuery, ObjectMapper objectMapper, Clock clock,
             ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider) {
         this.evaluationRepository = evaluationRepository;
         this.gradingAccess = gradingAccess;
-        this.audit = audit;
         this.eventPublisher = eventPublisher;
         this.submissionQuery = submissionQuery;
         this.assignmentQuery = assignmentQuery;
@@ -228,7 +222,6 @@ public class GradingService {
         // Step 6: Propagate grade to all group members (if group submission), persist to DB, and record audit event
         propagateGroupGrade(evaluation, actor, GroupOperation.SAVE, input.changeReason());
         evaluationRepository.saveEvaluation(evaluation);
-        recordAudit(actor, evaluation, "GRADE_SAVED", null);
         return evaluation;
     }
 
@@ -247,7 +240,6 @@ public class GradingService {
         // Legacy validation must not introduce a new locked state.
         evaluation.finalizeGrade(actor.accountId(), clock.instant());
         evaluationRepository.saveEvaluation(evaluation);
-        recordAudit(actor, evaluation, "GRADE_REVIEWED", null);
         return evaluation;
     }
 
@@ -270,7 +262,6 @@ public class GradingService {
         if (evaluation.kind == EvaluationKind.ATTEMPT)
             recipients = List.of(evaluation.accountId);
         evaluationRepository.saveEvaluation(evaluation);
-        recordAudit(actor, evaluation, "GRADE_PUBLISHED", null);
 
         // Step 3: Broadcast domain event to notify students
         eventPublisher.publish(new DomainEvent(1, UUID.randomUUID(), EventTypes.GRADE_PUBLISHED,
@@ -312,21 +303,14 @@ public class GradingService {
         var member = evaluationRepository.lockById(candidate.id).orElseThrow();
         member.checkVersion(input.version());
 
-        // Step 3: Set overridden member score, save to DB, and record audit event
+        // Step 3: Set overridden member score and save to DB
         var groupRubricScore = RubricScoring.calculateScore(
                 GradingJson.readRubrics(objectMapper, root.rubricSnapshot),
                 GradingJson.readChecks(objectMapper, root.rubricChecks), root.rubricItemScores);
-        var previousLevel = member.contributionLevel;
         member.overrideMemberScore(input.score(), groupRubricScore, input.reason(), actor.accountId(),
                 clock.instant());
         member.contributionLevel = input.contributionLevel();
         evaluationRepository.saveEvaluation(member);
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADE_CHANGED", "EVALUATION",
-                member.id.toString(), AuditResult.SUCCESS, input.reason(),
-                Map.of("classId", member.classId.toString(),
-                        "previousContributionLevel", previousLevel == null ? "UNASSESSED" : previousLevel.name(),
-                        "contributionLevel", member.contributionLevel == null
-                                ? "UNASSESSED" : member.contributionLevel.name()), clock.instant()));
         return member;
     }
 
@@ -620,12 +604,4 @@ public class GradingService {
         return recipients;
     }
 
-    /**
-     * Logs an audit record for grading operations.
-     */
-    void recordAudit(Actor actor, Evaluation evaluation, String action, String reason) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), action, "EVALUATION",
-                evaluation.id.toString(), AuditResult.SUCCESS, reason,
-                Map.of("classId", evaluation.classId.toString()), clock.instant()));
-    }
 }

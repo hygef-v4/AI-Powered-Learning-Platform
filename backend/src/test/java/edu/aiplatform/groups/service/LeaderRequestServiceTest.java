@@ -15,7 +15,6 @@ import static org.mockito.Mockito.when;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
 import edu.aiplatform.groups.model.LeaderChangeRequest;
@@ -50,11 +49,9 @@ class LeaderRequestServiceTest {
     private final GroupRepository groups = mock(GroupRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
-    private final IAudit audit = mock(IAudit.class);
     private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final LeaderRequestService service = new LeaderRequestService(groups,
-            new GroupAccess(authorization, classes, audit, clock), classes, audit, events, clock);
+    private final LeaderRequestService service = new LeaderRequestService(groups, new GroupAccess(authorization, classes), classes, events, clock);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", leader.accountId(), null, NOW,
             NOW, List.of(leader.accountId(), member.accountId()));
 
@@ -165,7 +162,7 @@ class LeaderRequestServiceTest {
         assertThatThrownBy(() -> service.submit(member, group.id(), "   ", null))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_REQUEST_PENDING"));
 
-        verifyNoInteractions(events, audit);
+        verifyNoInteractions(events);
     }
 
     @Test
@@ -177,7 +174,7 @@ class LeaderRequestServiceTest {
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("LEADER_REQUEST_CLOSED"));
 
         verify(groups, never()).updateRequest(any());
-        verifyNoInteractions(events, audit);
+        verifyNoInteractions(events);
     }
 
     @Test
@@ -192,7 +189,7 @@ class LeaderRequestServiceTest {
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_CLASS_ARCHIVED"));
         verify(groups, never()).setLeader(any(), any(), any());
         verify(groups, never()).updateRequest(any());
-        verifyNoInteractions(events, audit);
+        verifyNoInteractions(events);
     }
 
     @Test

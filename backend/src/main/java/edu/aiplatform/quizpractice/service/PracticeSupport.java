@@ -111,7 +111,7 @@ class PracticeSupport {
     QuizAttempt loadOwnAttempt(Actor actor, UUID attemptId, String action) {
         QuizAttempt attempt = attempts.findAttempt(attemptId).orElseThrow(() -> ApiException.createNotFound(ATTEMPT_NOT_FOUND));
         if (actor == null || !attempt.accountId().equals(actor.accountId())) {
-            throw access.deny(actor, action, PracticeAccess.OBJECT, attemptId, ATTEMPT_NOT_FOUND);
+            throw access.notFound(ATTEMPT_NOT_FOUND);
         }
         return attempt;
     }
@@ -119,7 +119,7 @@ class PracticeSupport {
     /** Như {@link #loadOwnAttempt} và người gọi còn học lớp đang mở của lượt (R5, như U08): làm bài, lưu, nộp, ghi hoạt động. */
     QuizAttempt loadOwnActiveAttempt(Actor actor, UUID attemptId, String action) {
         QuizAttempt attempt = loadOwnAttempt(actor, attemptId, action);
-        access.requireClass(actor, action, attempt.classId(), PracticeAccess.OBJECT, attemptId, ATTEMPT_NOT_FOUND);
+        access.requireClass(actor, action, attempt.classId(), ATTEMPT_NOT_FOUND);
         if (loadClassRef(attempt.classId()).status() != ClassStatus.OPEN) {
             throw ApiException.createForbidden("CLASS_NOT_OPEN");
         }
@@ -136,8 +136,6 @@ class PracticeSupport {
         for (int tries = 0; tries < SUBMIT_TRIES; tries++) {
             QuizAttempt submitted = scoreAttempt(current, mode);
             if (attempts.submit(submitted)) {
-                access.recordSuccess(actor, "QUIZ_ATTEMPT_SUBMITTED", current.id(), Map.of("mode", mode.name(),
-                        "quizId", current.quizId().toString()));
                 return submitted;
             }
             current = attempts.findAttempt(attempt.id()).orElseThrow(() -> ApiException.createNotFound(ATTEMPT_NOT_FOUND));

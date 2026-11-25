@@ -9,7 +9,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
@@ -51,13 +50,11 @@ class QuestionImporterTest {
     private final IQuestionRepository repo = mock(IQuestionRepository.class);
     private final ISubjectQuery subjects = mock(ISubjectQuery.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
-    private final List<AuditEvent> audits = new ArrayList<>();
     private QuestionImporter importer;
 
     @BeforeEach
     void setup() {
-        QuizAudit audit = new QuizAudit(audits::add, Clock.fixed(NOW, ZoneOffset.UTC));
-        importer = new QuestionImporter(repo, new ActiveSubjects(subjects), new QuizAccess(authorization, audit), audit,
+        importer = new QuestionImporter(repo, new ActiveSubjects(subjects), new QuizAccess(authorization),
                 new QuestionDuplicates(repo), Clock.fixed(NOW, ZoneOffset.UTC));
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
         when(subjects.isActive(subject)).thenReturn(true);
@@ -103,10 +100,6 @@ class QuestionImporterTest {
         assertThat(second.content().type()).isEqualTo(QuestionType.MCQ_MULTI);
         assertThat(second.content().correctOptionIds()).containsExactly("1", "3");
         assertThat(second.content().difficulty()).isEqualTo(Difficulty.HARD);
-        assertThat(audits).singleElement().satisfies(e -> {
-            assertThat(e.action()).isEqualTo("QUESTIONS_IMPORTED");
-            assertThat(e.details()).containsEntry("created", 2).containsEntry("failed", 2);
-        });
     }
 
     @Test
@@ -116,7 +109,6 @@ class QuestionImporterTest {
         assertThat(result.valid()).isEqualTo(1);
         assertThat(result.created()).isZero();
         verify(repo, never()).insert(any());
-        assertThat(audits).isEmpty();
     }
 
     @Test

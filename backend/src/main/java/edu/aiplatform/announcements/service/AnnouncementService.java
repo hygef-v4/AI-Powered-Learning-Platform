@@ -20,7 +20,6 @@ public class AnnouncementService {
     private final AnnouncementAccessPolicy announcementAccessPolicy;
     private final IClassAccess classAccess;
     private final IAccountLookup accountLookup;
-    private final IAudit audit;
     private final IEventPublisher eventPublisher;
     private final Clock clock;
 
@@ -29,14 +28,12 @@ public class AnnouncementService {
             AnnouncementAccessPolicy announcementAccessPolicy,
             IClassAccess classAccess,
             IAccountLookup accountLookup,
-            IAudit audit,
             IEventPublisher eventPublisher,
             Clock clock) {
         this.announcementRepository = announcementRepository;
         this.announcementAccessPolicy = announcementAccessPolicy;
         this.classAccess = classAccess;
         this.accountLookup = accountLookup;
-        this.audit = audit;
         this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
@@ -105,7 +102,6 @@ public class AnnouncementService {
                         input.sendEmail(),
                         clock.instant());
         announcementRepository.insertAnnouncement(announcement);
-        recordAudit(actor, "ANNOUNCEMENT_CREATED", announcement, buildAuditMetadata(announcement));
         eventPublisher.publish(
                 new DomainEvent(
                         1,
@@ -134,14 +130,8 @@ public class AnnouncementService {
         var courseClass =
                 announcementAccessPolicy.requireClassAccess(actor, announcement.classId, true);
         requireVersion(announcement, input.version());
-        var before = buildAuditMetadata(announcement);
         announcement.edit(input.title(), input.body(), actor.accountId(), clock.instant());
         saveAnnouncement(announcement, input.version());
-        recordAudit(
-                actor,
-                "ANNOUNCEMENT_UPDATED",
-                announcement,
-                Map.of("before", before, "after", buildAuditMetadata(announcement)));
         return buildItemView(actor, announcement, courseClass);
     }
 
@@ -151,7 +141,6 @@ public class AnnouncementService {
         requireVersion(announcement, version);
         announcement.markDeleted(actor.accountId(), clock.instant());
         saveAnnouncement(announcement, version);
-        recordAudit(actor, "ANNOUNCEMENT_DELETED", announcement, buildAuditMetadata(announcement));
     }
 
     private Announcement loadAnnouncement(Actor actor, UUID id) {
@@ -194,53 +183,5 @@ public class AnnouncementService {
                 announcement.version,
                 actor.role() != Role.STUDENT
                         && Objects.equals(courseClass.teacherId(), actor.accountId()));
-    }
-
-    private Map<String, Object> buildAuditMetadata(Announcement announcement) {
-        return Map.of(
-                "classId",
-                announcement.classId.toString(),
-                "titleLength",
-                announcement.title.length(),
-                "bodyLength",
-                announcement.body.length(),
-                "contentHash",
-                hashText(announcement.title + "\n" + announcement.body),
-                "important",
-                announcement.important,
-                "sendEmail",
-                announcement.sendEmail,
-                "version",
-                announcement.version,
-                "status",
-                announcement.status.name());
-    }
-
-    private String hashText(String text) {
-        try {
-            return HexFormat.of()
-                    .formatHex(
-                            java.security.MessageDigest.getInstance("SHA-256")
-                                    .digest(
-                                            text.getBytes(
-                                                    java.nio.charset.StandardCharsets.UTF_8)));
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private void recordAudit(
-            Actor actor, String action, Announcement announcement, Map<String, Object> details) {
-        audit.record(
-                new AuditEvent(
-                        UUID.randomUUID(),
-                        actor.accountId(),
-                        action,
-                        "ANNOUNCEMENT",
-                        announcement.id.toString(),
-                        AuditResult.SUCCESS,
-                        null,
-                        details,
-                        clock.instant()));
     }
 }

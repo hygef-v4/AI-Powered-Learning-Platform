@@ -17,8 +17,6 @@ import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.service.GroupDocumentService;
 import edu.aiplatform.groupdocs.service.IGroupDocStreams;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
@@ -60,14 +58,13 @@ class ClassGroupServiceTest {
     private final IGroupDocStreams streams = mock(IGroupDocStreams.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
-    private final IAudit audit = mock(IAudit.class);
     private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
     private final GroupDocumentService groupDocuments = new GroupDocumentService(documents, groups, assignments,
             classes, clock);
     private final GroupProposalCleanup proposalCleanup = mock(GroupProposalCleanup.class);
     private final ClassGroupService service = new ClassGroupService(groups, documents, groupDocuments, streams,
-            new GroupAccess(authorization, classes, audit, clock), classes, mock(IAccountLookup.class), audit, events, clock,
+            new GroupAccess(authorization, classes), classes, mock(IAccountLookup.class), events, clock,
             new Random(7), proposalCleanup);
     private final List<UUID> students = IntStream.range(0, 7).mapToObj(i -> UUID.randomUUID()).toList();
 
@@ -160,10 +157,6 @@ class ClassGroupServiceTest {
                 edu.aiplatform.notifications.service.RecipientResolver
                         .readId(membership, "groupId")).isEqualTo(b
                         .id());
-        ArgumentCaptor<AuditEvent> audited = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit, org.mockito.Mockito.atLeastOnce()).record(audited.capture());
-        assertThat(audited.getAllValues()).extracting(AuditEvent::action)
-                .contains("GROUP_SECTION_RELEASED", "GROUP_LEADER_CHANGED", "GROUP_UPDATED");
     }
 
     @Test
@@ -203,7 +196,6 @@ class ClassGroupServiceTest {
 
         assertThatThrownBy(() -> service.view(other, classId))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo(GroupAccess.NOT_FOUND));
-        verify(audit).record(any());
     }
 
     @Test
@@ -218,7 +210,7 @@ class ClassGroupServiceTest {
         verify(groups, never()).insertGroup(any());
         verify(groups, never()).removeMembers(any(), any());
         verify(groups, never()).deleteGroup(any());
-        verifyNoInteractions(documents, assignments, streams, events, audit);
+        verifyNoInteractions(documents, assignments, streams, events);
     }
 
     @Test

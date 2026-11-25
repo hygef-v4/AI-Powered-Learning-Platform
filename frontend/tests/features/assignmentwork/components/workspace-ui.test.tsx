@@ -3,13 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AUTOSAVE_MS, AssignmentWorkspacePage } from "@/features/assignmentwork/pages/AssignmentWorkspacePage";
 import { workApi } from "@/features/assignmentwork/api";
 import { ApiError } from "@/shared/api/client";
-import type { Attempt, Saved } from "@/features/assignmentwork/model/types";
+import type { Attempt, Saved } from "@/features/assignmentwork/model/types";
+import { computeParts } from "@/shared/document";
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("@/features/assignmentwork/api", async (loadOriginal) => ({
   ...await loadOriginal<typeof import("@/features/assignmentwork/api")>(),
-  workApi: { attempt: vi.fn(), save: vi.fn(), submit: vi.fn() },
+  workApi: { attempt: vi.fn(), save: vi.fn(), submit: vi.fn(), importDocx: vi.fn() },
   attemptImageUrl: () => () => "/image",
 }));
 const attempt: Attempt = {
@@ -325,6 +326,45 @@ describe("assignment workspace UI", () => {
     finish({ attemptId: "a", contentVersion: 2, lastSavedAt: "2026-10-25T01:00:00Z", content: savedContent });
     await waitFor(() => expect(workApi.submit).toHaveBeenCalledWith("a", 2));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/my-assignments/assignment?classId=class"));
+  });
+
+  it("importing a DOCX is one undoable step: Ctrl+Z goes back to before the import, Ctrl+Y imports again", async () => {
+    vi.mocked(workApi.attempt).mockResolvedValue({ ...attempt, parts: computeParts(attempt.content) });
+    vi.mocked(workApi.importDocx).mockResolvedValue({ document: { blocks: [
+      { id: "x1", origin: "STUDENT", type: "HEADING", content: { style: "H1", text: "Câu 1" } },
+      { id: "x2", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Trả lời" }] } },
+      { id: "x3", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Ý nhập từ Word", bold: true }] } },
+    ] }, warnings: [], imageCount: 0, diagramCount: 0 });
+    render(<AssignmentWorkspacePage attemptId="a" />);
+    const bar = await screen.findByRole("banner");
+    fireEvent.click(within(bar).getByLabelText("Thao tác khác"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Nhập DOCX" }));
+    fireEvent.change(screen.getByTestId("docx-file"), { target: { files: [new File(["docx"], "bai.docx")] } });
+    await screen.findByTestId("docx-preview");
+    fireEvent.click(screen.getByTestId("docx-import-confirm"));
+    const imported = await screen.findByTestId("block-x3");
+    expect(imported).toHaveTextContent("Ý nhập từ Word");
+
+    fireEvent.keyDown(screen.getByTestId("document-editor"), { key: "z", ctrlKey: true });
+    expect(screen.queryByTestId("block-x3")).toBeNull();
+    expect(screen.getByRole("textbox", { name: "Đoạn văn" })).toHaveTextContent("Trả lời");
+    fireEvent.keyDown(screen.getByTestId("document-editor"), { key: "y", ctrlKey: true });
+    expect(screen.getByTestId("block-x3")).toHaveTextContent("Ý nhập từ Word");
+  });
+
+  it("rejects a DOCX that is not this work before anything is imported", async () => {
+    vi.mocked(workApi.attempt).mockResolvedValue({ ...attempt, parts: computeParts(attempt.content) });
+    vi.mocked(workApi.importDocx).mockResolvedValue({ document: { blocks: [
+      { id: "x1", origin: "STUDENT", type: "HEADING", content: { style: "H1", text: "Chương 1. Giới thiệu" } },
+      { id: "x2", origin: "STUDENT", type: "PARAGRAPH", content: { runs: [{ text: "Tài liệu khác" }] } },
+    ] }, warnings: [], imageCount: 0, diagramCount: 0 });
+    render(<AssignmentWorkspacePage attemptId="a" />);
+    const bar = await screen.findByRole("banner");
+    fireEvent.click(within(bar).getByLabelText("Thao tác khác"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Nhập DOCX" }));
+    fireEvent.change(screen.getByTestId("docx-file"), { target: { files: [new File(["docx"], "khac.docx")] } });
+    expect(await screen.findByRole("alert")).toHaveTextContent("không có trong đề");
+    expect(screen.getByTestId("docx-import-confirm")).toBeDisabled();
   });
 
   it("submitted attempt remains read-only", async () => {

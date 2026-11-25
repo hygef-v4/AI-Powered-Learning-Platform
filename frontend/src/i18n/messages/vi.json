@@ -1649,6 +1649,12 @@
       }
     },
     "model": {
+      "docxMerge": {
+        "untitledPart": "Phần chưa đặt tên",
+        "unexpectedPart": "Tệp DOCX có phần “{title}” không có trong đề, nằm ngoài các phần làm bài. Hãy nhập tệp tải về từ chính bài làm này.",
+        "notThisAssignment": "Tệp DOCX không phải bài làm của bài tập này. Hãy tải bài làm về dạng DOCX, viết tiếp trong tệp đó rồi nhập lại.",
+        "structureMismatch": "Tệp DOCX không cùng cấu trúc với bài làm: thiếu phần “{title}” hoặc sai thứ tự. Hãy tải bài làm về dạng DOCX, viết tiếp trong tệp đó rồi nhập lại."
+      },
       "attemptResult": {
         "assignment": "Bài"
       },
@@ -1700,6 +1706,8 @@
         "workNotSaved": "Bài chưa lưu",
         "importDocxIntoPart": "Nhập DOCX vào phần “{value}”",
         "importDocxIntoTheLast": "Nhập DOCX vào phần cuối của bài",
+        "importedIntoParts": "Đã nhập bài mới vào {count} phần: {parts}",
+        "nothingNewToImport": "Tệp không có bài mới để nhập.",
         "restoredTheUnsavedVersionOn": "Đã khôi phục bản chưa lưu trên thiết bị này"
       },
       "StudentAssignmentDetailPage": {
@@ -1777,7 +1785,7 @@
       }
     },
     "register": {
-      "assignment": "Bài tập"
+      "assignment": "Tất cả bài tập"
     }
   },
   "audit": {
@@ -4912,76 +4920,192 @@
   "landing": {
     "pages": {
       "LandingPage": {
-        "home": "Trang chủ ALAP",
+        "home": "Trang chủ ALAPEdu",
         "signIn": "Đăng nhập",
-        "metaTitle": "ALAP – Bài tập sơ đồ UML, chấm điểm có AI hỗ trợ",
-        "metaDescription": "ALAP là nền tảng học tập cho các môn Kỹ thuật phần mềm: vẽ sơ đồ UML ngay trên trình duyệt, nộp bài cá nhân hoặc nhóm, luyện quiz và nhận đề xuất chấm điểm theo rubric từ AI, được giảng viên duyệt lại.",
-        "eyebrow": "Nền tảng học tập cho môn thiết kế phần mềm",
-        "headline": "Vẽ sơ đồ UML. AI đề xuất điểm, giảng viên quyết định.",
-        "intro": "ALAP gom lớp học, tài liệu, bài tập sơ đồ, quiz và chấm điểm vào một nơi cho sinh viên và giảng viên Kỹ thuật phần mềm. AI đọc từng bài nộp theo rubric rồi đề xuất điểm và nhận xét; điểm chính thức luôn do giảng viên xem lại và công bố.",
-        "seeFeatures": "Xem tính năng",
-        "accountNote": "Tài khoản do quản trị viên môn học tạo. Hãy xem email trường để lấy mã kích hoạt.",
-        "featuresTitle": "Mọi thứ một môn thiết kế phần mềm cần",
-        "featuresIntro": "Từ buổi học đầu tiên tới lúc công bố điểm, mọi bước của môn học đều diễn ra ở một nơi.",
-        "feature": {
-          "diagrams": {
-            "title": "Bài tập sơ đồ",
-            "body": "Vẽ sơ đồ UML ngay trên trình duyệt bằng trình vẽ diagrams.net tích hợp sẵn và nộp kèm bài làm."
-          },
-          "aiGrading": {
-            "title": "AI đề xuất điểm",
-            "body": "AI đọc bài nộp và rubric rồi đề xuất điểm, nhận xét cho từng tiêu chí. Giảng viên xem lại, chỉnh sửa và công bố điểm chính thức."
-          },
-          "groupWork": {
-            "title": "Bài cá nhân và bài nhóm",
-            "body": "Lập nhóm, cùng viết tài liệu nhóm và nộp chung. Giảng viên duyệt nhóm và có thể chấm riêng từng thành viên."
-          },
-          "quizzes": {
-            "title": "Quiz và luyện tập",
-            "body": "Luyện tập với quiz lấy từ ngân hàng câu hỏi của môn, xem kết quả và lời giải sau khi nộp."
-          },
-          "materials": {
-            "title": "Tài liệu lớp học",
-            "body": "Mở tệp PDF, Word, PowerPoint và Excel ngay trên trình duyệt, sắp xếp theo môn và lớp."
-          },
-          "mcp": {
-            "title": "Kết nối AI agent của bạn",
-            "body": "Dùng MCP để làm việc với AI agent riêng trên dữ liệu mà vai trò của bạn được phép: giảng viên soạn nháp bài tập và quiz, sinh viên xin nhận xét riêng cho bài luyện tập."
-          }
+        "language": "Ngôn ngữ",
+        "metaTitle": "ALAPEdu – Chấm điểm bằng AI, vẽ sơ đồ UML, giao bài và làm bài nhóm",
+        "metaDescription": "ALAPEdu là nền tảng học tập cùng AI: giao bài, vẽ sơ đồ, làm bài nhóm, chấm điểm và tạo đề bằng AI, tất cả trong một nơi.",
+        "metaKeywords": "alapedu, ALAP, ALAPEdu, chấm điểm bằng AI, AI chấm bài, AI tạo đề, vẽ sơ đồ UML, vẽ sơ đồ online, giao bài tập, làm bài nhóm, chấm theo rubric, kỹ thuật phần mềm, nền tảng học tập",
+        "accountNote": "Tài khoản do nhà trường cung cấp.",
+        "privacy": "Chính sách quyền riêng tư",
+        "nav": {
+          "label": "Các phần của trang",
+          "about": "Giới thiệu",
+          "features": "Tính năng",
+          "benefits": "Lợi ích",
+          "faq": "Hỏi đáp"
         },
-        "stepsTitle": "Cách hoạt động",
-        "step": {
-          "publish": {
-            "title": "Giảng viên giao bài",
-            "body": "Giảng viên tạo bài tập có đề bài và rubric, rồi giao cho lớp."
-          },
-          "submit": {
-            "title": "Sinh viên vẽ và nộp",
-            "body": "Sinh viên vẽ sơ đồ, một mình hoặc theo nhóm, và nộp trước hạn."
-          },
-          "review": {
-            "title": "AI đề xuất, giảng viên quyết định",
-            "body": "AI đề xuất điểm theo từng tiêu chí; giảng viên kiểm từng mục, điều chỉnh và công bố điểm."
-          }
+        "hero": {
+          "brandLine": "nền tảng học tập cùng AI",
+          "line1": "Mở khoá tương lai",
+          "line2": "của việc học.",
+          "intro": "Giao bài, vẽ sơ đồ, làm bài nhóm, chấm điểm và tạo đề bằng AI. Tất cả trong một nơi.",
+          "cta": "Bắt đầu",
+          "seeFeatures": "Khám phá",
+          "chipAi": "AI đã chấm xong",
+          "chipScore": "9,0 / 10",
+          "chipGroup": "Nhóm 4 đã nộp bài"
         },
-        "rolesTitle": "Dành cho mọi vai trò trong môn học",
+        "about": {
+          "title": "Giới thiệu ALAPEdu",
+          "statement": "Chúng tôi tin vào sức mạnh của công nghệ trong việc đổi mới cách dạy và học."
+        },
         "role": {
           "students": {
             "title": "Sinh viên",
-            "body": "Nộp bài, luyện quiz, làm việc nhóm và theo dõi điểm, thông báo của từng lớp."
+            "body": "Học, luyện tập và làm bài theo cách của bạn."
           },
           "lecturers": {
             "title": "Giảng viên",
-            "body": "Tạo bài tập và quiz, chấm theo rubric với đề xuất từ AI, và công bố điểm cho lớp."
+            "body": "Giao bài và chấm điểm nhanh hơn."
           },
           "subjectManagers": {
             "title": "Chủ nhiệm môn",
-            "body": "Quản lý môn học, tài liệu dùng chung, đề mẫu và ngân hàng câu hỏi cho các lớp."
+            "body": "Quản lý môn học ở một nơi."
           }
         },
-        "ctaTitle": "Sẵn sàng vào lớp?",
-        "ctaBody": "Đăng nhập bằng tài khoản quản trị viên môn học đã tạo cho bạn.",
-        "privacy": "Chính sách quyền riêng tư",
+        "features": {
+          "title": "Đổi mới lớp học: khám phá các tính năng của ALAP",
+          "cta": "Dùng thử"
+        },
+        "feature": {
+          "assign": {
+            "title": "Giao bài dễ dàng",
+            "body": "Đơn giản hoá việc giao và thu bài tập.",
+            "tags": "Đề bài|Hạn nộp|Cả lớp"
+          },
+          "diagrams": {
+            "title": "Vẽ sơ đồ trực tuyến",
+            "body": "Vẽ và nộp sơ đồ ngay trên trình duyệt.",
+            "tags": "Use case|Sơ đồ lớp|ERD"
+          },
+          "aiGrading": {
+            "title": "Chấm điểm bằng AI",
+            "body": "Chấm nhanh hơn, nhất quán hơn với sự hỗ trợ của AI.",
+            "tags": "Gợi ý điểm|Nhận xét|Giảng viên duyệt"
+          },
+          "aiDrafting": {
+            "title": "Tạo đề bằng AI",
+            "body": "Soạn đề trong vài giây cùng trợ lý AI.",
+            "tags": "Vài giây|Câu hỏi|Rubric"
+          },
+          "groupWork": {
+            "title": "Làm bài nhóm",
+            "body": "Cùng nhau làm bài, cùng nhau tiến bộ.",
+            "tags": "Cùng soạn|Nộp chung|Đóng góp"
+          }
+        },
+        "visual": {
+          "assign": {
+            "window": "Bài tập · SWD392",
+            "class": "Lớp SE1801",
+            "deadline": "Hạn nộp 23:59, 30/11",
+            "title": "Bài 3: Sơ đồ use case cho hệ thống đặt sân cầu lông",
+            "rubric": {
+              "actors": "Xác định đủ tác nhân",
+              "useCases": "Use case đúng phạm vi",
+              "relations": "Quan hệ include, extend"
+            },
+            "students": "32 sinh viên sẽ nhận bài",
+            "publish": "Giao cho lớp"
+          },
+          "diagram": {
+            "window": "Sơ đồ lớp · bài nộp của bạn",
+            "saved": "Đã tự lưu"
+          },
+          "draft": {
+            "window": "Trợ lý AI · soạn đề",
+            "prompt": "Soạn đề sơ đồ tuần tự cho chức năng đặt sân, 3 câu, có rubric 10 điểm.",
+            "badge": "Bản nháp do AI soạn",
+            "q1": "Vẽ sơ đồ tuần tự cho luồng đặt sân thành công.",
+            "q2": "Bổ sung nhánh sân đã có người đặt.",
+            "q3": "Giải thích vai trò của lớp điều khiển.",
+            "status": "Chờ giảng viên duyệt",
+            "review": "Xem và chỉnh"
+          },
+          "group": {
+            "window": "Tài liệu nhóm · Nhóm 4",
+            "title": "Báo cáo thiết kế hệ thống",
+            "section": "2. Sơ đồ hoạt động",
+            "text": "Khách hàng chọn sân, hệ thống kiểm tra lịch trống rồi",
+            "editing": "Lan đang sửa",
+            "member": {
+              "lan": "Lan Anh",
+              "minh": "Minh Khoa",
+              "tu": "Thanh Tú"
+            },
+            "level": {
+              "high": "Đóng góp nhiều",
+              "fair": "Đóng góp vừa"
+            },
+            "submit": "Nộp chung"
+          }
+        },
+        "benefits": {
+          "titleStart": "Lợi ích nâng tầm",
+          "titleMark": "trải nghiệm dạy học",
+          "body": "Mọi thứ lớp học cần, gọn trong một nơi.",
+          "listLabel": "Lợi ích của ALAP",
+          "pill": {
+            "aiGrading": "Chấm điểm AI",
+            "aiDrafting": "Tạo đề AI",
+            "diagrams": "Vẽ sơ đồ",
+            "assign": "Giao bài",
+            "groupWork": "Làm bài nhóm",
+            "quiz": "Luyện tập",
+            "materials": "Tài liệu",
+            "feedback": "Phản hồi tức thì",
+            "fast": "Nhanh chóng",
+            "smart": "Thông minh",
+            "easy": "Dễ dùng",
+            "together": "Cộng tác",
+            "flexible": "Linh hoạt",
+            "fair": "Nhất quán",
+            "visual": "Trực quan",
+            "anywhere": "Mọi lúc, mọi nơi",
+            "automated": "Tự động",
+            "secure": "An toàn"
+          }
+        },
+        "faqTitle": "Câu hỏi thường gặp về ALAPEdu",
+        "faqBody": "Những điều bạn muốn biết trước khi bắt đầu.",
+        "faq": {
+          "what": {
+            "q": "ALAPEdu là gì?",
+            "a": "ALAPEdu (ALAP) là nền tảng học tập trực tuyến tại alapedu.online, giúp giao bài, vẽ sơ đồ, làm bài nhóm và chấm điểm cùng AI."
+          },
+          "grading": {
+            "q": "AI chấm điểm như thế nào?",
+            "a": "AI gợi ý điểm và nhận xét, giảng viên là người quyết định điểm cuối cùng."
+          },
+          "drafting": {
+            "q": "AI có tạo đề được không?",
+            "a": "Có. AI soạn đề nháp trong vài giây để giảng viên chỉnh và sử dụng."
+          },
+          "diagrams": {
+            "q": "Có vẽ sơ đồ trực tuyến được không?",
+            "a": "Có. Bạn vẽ sơ đồ ngay trên trình duyệt, không cần cài thêm phần mềm."
+          },
+          "groups": {
+            "q": "Có làm bài nhóm được không?",
+            "a": "Có. Cả nhóm cùng làm trên một tài liệu và nộp chung."
+          },
+          "account": {
+            "q": "Làm sao để có tài khoản?",
+            "a": "Tài khoản do nhà trường cung cấp và được gửi qua email."
+          }
+        },
+        "closing": {
+          "start": "Bắt đầu",
+          "mark": "đổi mới",
+          "circle": "việc học hôm nay",
+          "body": "Cùng ALAP mang công nghệ vào lớp học của bạn.",
+          "cta": "Bắt đầu ngay"
+        },
+        "footer": {
+          "label": "Liên kết cuối trang",
+          "tagline": "Học tập thông minh hơn cùng AI."
+        },
         "reviewSheet": {
           "numberLocale": "vi-VN",
           "title": "Rubric bài 2: sơ đồ lớp",
@@ -4995,6 +5119,10 @@
             "inheritance": "Quan hệ kế thừa",
             "methods": "Phương thức đúng trách nhiệm"
           }
+        },
+        "theme": {
+          "toLight": "Chuyển sang giao diện sáng",
+          "toDark": "Chuyển sang giao diện tối"
         }
       }
     }

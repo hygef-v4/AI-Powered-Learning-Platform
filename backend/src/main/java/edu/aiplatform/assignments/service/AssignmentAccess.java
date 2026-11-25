@@ -31,22 +31,20 @@ class AssignmentAccess {
     private final IClassScope classScope;
     private final IClassAccess classes;
     private final ISubjectQuery subjects;
-    private final AssignmentAudit audit;
 
     AssignmentAccess(IAuthorization authorization, IClassScope classScope, IClassAccess classes,
-                     ISubjectQuery subjects, AssignmentAudit audit) {
+                     ISubjectQuery subjects) {
         this.authorization = authorization;
         this.classScope = classScope;
         this.classes = classes;
         this.subjects = subjects;
-        this.audit = audit;
     }
 
     /** Giảng viên chính của lớp; trả lớp để kiểm trạng thái. */
     ClassRef requireClassManager(Actor actor, UUID classId, String action) {
         requireSignedIn(actor);
         if (!isAllowed(actor, Actions.ASSIGNMENT_CLASS_MANAGE, ResourceRef.courseClass(classId))) {
-            throw deny(actor, action, "COURSE_CLASS", classId, "OUT_OF_CLASS_SCOPE");
+            throw notFound();
         }
         return loadClassRef(classId);
     }
@@ -54,7 +52,7 @@ class AssignmentAccess {
     void requireSubjectManager(Actor actor, UUID subjectId, String action) {
         requireSignedIn(actor);
         if (!isAllowed(actor, Actions.ASSIGNMENT_SUBJECT_MANAGE, ResourceRef.subject(subjectId))) {
-            throw deny(actor, action, "SUBJECT", subjectId, "OUT_OF_SUBJECT_SCOPE");
+            throw notFound();
         }
     }
 
@@ -70,7 +68,7 @@ class AssignmentAccess {
     void requireManage(Actor actor, Assignment assignment, String action) {
         requireSignedIn(actor);
         if (!canManage(actor, assignment)) {
-            throw deny(actor, action, AssignmentAudit.OBJECT_ASSIGNMENT, assignment.id(), "NOT_ASSIGNMENT_AUTHOR");
+            throw notFound();
         }
     }
 
@@ -103,7 +101,7 @@ class AssignmentAccess {
             throw createUnavailableError();
         }
         if (!readable) {
-            throw deny(actor, action, AssignmentAudit.OBJECT_ASSIGNMENT, assignment.id(), "OUT_OF_ASSIGNMENT_SCOPE");
+            throw notFound();
         }
     }
 
@@ -153,12 +151,7 @@ class AssignmentAccess {
         }
     }
 
-    ApiException deny(Actor actor, String action, String objectType, UUID objectId, String reason) {
-        try {
-            audit.recordDenied(actor, action, objectType, objectId, reason);
-        } catch (RuntimeException e) {
-            return ApiException.createUnavailable("AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
-        }
+    ApiException notFound() {
         return ApiException.createNotFound("ASSIGNMENT_NOT_FOUND");
     }
 

@@ -8,9 +8,6 @@ import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignments.contract.IDocumentModel;
 import edu.aiplatform.assignments.contract.ValidationIssue;
 import edu.aiplatform.assignments.contract.ValidationResult;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.files.contract.ArtifactPurpose;
 import edu.aiplatform.files.contract.FileRef;
 import edu.aiplatform.files.contract.IArtifact;
@@ -46,18 +43,16 @@ public class GroupSectionService {
     private final GroupDocAccess access;
     private final IDocumentModel documentModel;
     private final ISseHub sse;
-    private final IAudit audit;
     private final IArtifact artifacts;
     private final ObjectMapper json;
     private final Clock clock;
 
     public GroupSectionService(GroupDocumentRepository documents, GroupDocAccess access, IDocumentModel documentModel,
-                               ISseHub sse, IAudit audit, IArtifact artifacts, ObjectMapper json, Clock clock) {
+                               ISseHub sse, IArtifact artifacts, ObjectMapper json, Clock clock) {
         this.documents = documents;
         this.access = access;
         this.documentModel = documentModel;
         this.sse = sse;
-        this.audit = audit;
         this.artifacts = artifacts;
         this.json = json;
         this.clock = clock;
@@ -285,8 +280,6 @@ public class GroupSectionService {
         details.put("documentId", section.documentId().toString());
         details.put("partId", section.partId());
         details.putAll(extra);
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), action, "GROUP_SECTION", section.id().toString(),
-                AuditResult.SUCCESS, null, details, clock.instant()));
     }
 
     /**

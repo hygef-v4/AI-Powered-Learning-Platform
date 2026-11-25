@@ -63,15 +63,13 @@ public class PracticeFeedbackService {
     private final IAssignmentQuery assignments;
     private final IDocumentModel documents;
     private final IAiTask aiTasks;
-    private final WorkAudit audit;
     private final ObjectMapper json;
     private final TransactionTemplate transaction;
     private final Clock clock;
     private final int perDay;
 
     public PracticeFeedbackService(WorkAccess access, AttemptRepository attempts, PracticeFeedbackRepository feedback,
-                                   IAssignmentQuery assignments, IDocumentModel documents, IAiTask aiTasks,
-                                   WorkAudit audit, ObjectMapper json, PlatformTransactionManager transactions,
+                                   IAssignmentQuery assignments, IDocumentModel documents, IAiTask aiTasks, ObjectMapper json, PlatformTransactionManager transactions,
                                    Clock clock, @Value("${platform.assignment-work.feedback-per-day:20}") int perDay) {
         this.access = access;
         this.attempts = attempts;
@@ -79,7 +77,6 @@ public class PracticeFeedbackService {
         this.assignments = assignments;
         this.documents = documents;
         this.aiTasks = aiTasks;
-        this.audit = audit;
         this.json = json;
         this.transaction = new TransactionTemplate(transactions);
         this.clock = clock;
@@ -124,9 +121,6 @@ public class PracticeFeedbackService {
             } catch (DuplicateKeyException e) {
                 throw ApiException.createConflict("FEEDBACK_PENDING", "Lượt này đang chờ góp ý");
             }
-            audit.recordSuccess(actor.accountId(), "PRACTICE_FEEDBACK_REQUESTED", WorkAudit.OBJECT_ATTEMPT, attemptId,
-                    WorkAudit.collectDetails("feedbackId", created.id(), "origin", "AI_TASK", "provider",
-                            provider == null ? "AUTO" : provider));
             return created;
         });
         if (pending.taskId() != null || pending.status() != PracticeFeedback.Status.PENDING) {
@@ -204,8 +198,6 @@ public class PracticeFeedbackService {
                     PracticeFeedback.Origin.MCP, null, null, PracticeFeedback.Status.READY, attempt.receiptHash(),
                     normalized, provenance, null, now, now);
             feedback.insert(created);
-            audit.recordSuccess(actor.accountId(), "PRACTICE_FEEDBACK_REQUESTED", WorkAudit.OBJECT_ATTEMPT, attemptId,
-                    WorkAudit.collectDetails("feedbackId", created.id(), "origin", "MCP"));
             return created;
         });
     }

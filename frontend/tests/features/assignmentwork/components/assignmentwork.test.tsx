@@ -2,24 +2,9 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatDuration } from "@/shared/activity/ActivityTimeline";
 import { HEARTBEAT_MS, useActivityTracker } from "@/shared/activity/useActivityTracker";
-import { computeParts, type DocumentModel } from "@/shared/document";
-import { insertIntoPart } from "@/features/assignmentwork/pages/AssignmentWorkspacePage";
 import { describeRemaining } from "@/features/assignmentwork/model/format";
 import type { StudentRow } from "@/features/assignmentwork/model/types";
 import { isUpcoming } from "@/features/assignmentwork/hooks/useStudentAssignments";
-
-describe("insertIntoPart", () => {
-  const heading = (id: string, style: "H1" | "H2", text: string): DocumentModel["blocks"][number] => ({ id, origin: "TEACHER", type: "HEADING", content: { style, text } });
-  const para = (id: string): DocumentModel["blocks"][number] => ({ id, origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: id }] } });
-  const content: DocumentModel = { blocks: [heading("a", "H1", "A"), para("a-text"), heading("b", "H1", "B"), para("b-text")] };
-  const parts = computeParts(content);
-  const added = [{ id: "new", origin: "STUDENT" as const, type: "PARAGRAPH" as const, content: { runs: [{ text: "nhập" }] } }];
-
-  it("chèn vào cuối phần đang chọn; không chọn phần thì thêm vào cuối bài", () => {
-    expect(insertIntoPart(content, parts, "a", added).blocks.map((b) => b.id)).toEqual(["a", "a-text", "new", "b", "b-text"]);
-    expect(insertIntoPart(content, parts, null, added).blocks.map((b) => b.id)).toEqual(["a", "a-text", "b", "b-text", "new"]);
-  });
-});
 
 describe("danh sách bài", () => {
   const row = (patch: Partial<StudentRow>): StudentRow => ({

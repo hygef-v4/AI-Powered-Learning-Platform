@@ -103,8 +103,7 @@ class PracticeFeedbackMcpParityTest {
         when(providers.orderedStream()).thenAnswer(call->java.util.stream.Stream.of(tools,new McpCapabilitiesTools()));
         IMcpRateLimiter limiter=mock(IMcpRateLimiter.class);
         when(limiter.tryAcquire(any())).thenReturn(true);
-        var server=new McpServer(new McpToolRegistry(providers),limiter,new JsonSchemaChecker(f.json),
-                mock(AiUsageService.class),f.audit,f.json,f.clock);
+        var server=new McpServer(new McpToolRegistry(providers), limiter, new JsonSchemaChecker(f.json), mock(AiUsageService.class), f.json, f.clock);
         var a=f.attempt(1,AttemptStatus.SUBMITTED,NOW,false);
         var write=new McpCredential(UUID.randomUUID(),f.student.accountId(),"Own practice agent",
                 McpCredential.Access.READ_WRITE,"hash","hint",NOW.plusSeconds(60),null,null,NOW);

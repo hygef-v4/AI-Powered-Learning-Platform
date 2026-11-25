@@ -58,21 +58,19 @@ public class AssignmentAuthoringService {
     private final DocumentModelService documentModelService;
     private final AssignmentAccess access;
     private final AssignmentSupport support;
-    private final AssignmentAudit audit;
     private final IArtifact artifacts;
     private final IReferenceMaterial materials;
     private final Clock clock;
 
     public AssignmentAuthoringService(AssignmentRepository assignments, RubricService rubricService,
                                       DocumentModelService documentModelService, AssignmentAccess access,
-                                      AssignmentSupport support, AssignmentAudit audit, IArtifact artifacts,
+                                      AssignmentSupport support, IArtifact artifacts,
                                       IReferenceMaterial materials, Clock clock) {
         this.assignments = assignments;
         this.rubricService = rubricService;
         this.documentModelService = documentModelService;
         this.access = access;
         this.support = support;
-        this.audit = audit;
         this.artifacts = artifacts;
         this.materials = materials;
         this.clock = clock;
@@ -164,8 +162,6 @@ public class AssignmentAuthoringService {
                 : normalizeInstructions(command.instructions());
         StoredSkeleton stored = storeSkeleton(actor, current, command.skeleton(), instructions, current.title());
         if (command.fromDocx()) {
-            audit.recordSuccess(actor, "ASSIGNMENT_DOCX_IMPORTED", stored.saved().id(), AssignmentAudit.collectDetails(
-                    "blockCount", stored.saved().skeleton().blocks().size(), "partCount", stored.partCount()));
         }
         return support.buildDetail(actor, stored.saved(), stored.warnings());
     }
@@ -214,8 +210,6 @@ public class AssignmentAuthoringService {
         if (assignments.deleteAssignment(current.id(), version) != 1) {
             throw AssignmentSupport.createVersionConflictError();
         }
-        audit.recordSuccess(actor, "ASSIGNMENT_DELETED", current.id(), AssignmentAudit.collectDetails("scope", current.scope(),
-                "classId", current.classId(), "subjectId", current.subjectId(), "status", current.status()));
     }
 
     /**
@@ -233,7 +227,6 @@ public class AssignmentAuthoringService {
             throw AssignmentProblem.createIssuesProblem(HttpStatus.CONFLICT, "ASSIGNMENT_NOT_READY", "Bài chưa đủ để hoàn tất", issues);
         }
         Assignment saved = assignments.saveAssignment(current.changeStatus(AssignmentStatus.REVIEWED, clock.instant()));
-        audit.recordSuccess(actor, "ASSIGNMENT_REVIEWED", saved.id(), AssignmentAudit.collectDetails("versionNo", saved.versionNo()));
         return support.buildDetail(actor, saved, List.of());
     }
 
@@ -256,11 +249,9 @@ public class AssignmentAuthoringService {
             throw ApiException.createConflict("RUBRIC_LOCKED", "Rubric đã khóa khi phát hành");
         }
         Instant now = clock.instant();
-        AssignmentRubric next = rubricService.saveRubric(rubric.replaceCriteria(
+        rubricService.saveRubric(rubric.replaceCriteria(
                 RubricService.normalize(command.criteria(), current.diagramEnabled()), now));
         Assignment saved = assignments.saveAssignment(current.markTouched(now));
-        audit.recordSuccess(actor, "RUBRIC_UPDATED", saved.id(), AssignmentAudit.collectDetails("partId", part.partId(),
-                "criteriaCount", next.criteria().size(), "totalPoints", next.totalPoints()));
         return buildRubricView(actor, saved, part.partId());
     }
 
@@ -350,9 +341,6 @@ public class AssignmentAuthoringService {
                 null, null, actor.accountId(), now, now, 0);
         assignments.insert(assignment);
         rubricService.syncParts(assignment.id(), parts, now);
-        audit.recordSuccess(actor, "ASSIGNMENT_CREATED", assignment.id(), AssignmentAudit.collectDetails("scope", scope,
-                "classId", classId, "subjectId", subjectId, "submissionMode", command.submissionMode(),
-                "gradingMode", command.gradingMode()));
         return support.buildDetail(actor, assignment, List.of());
     }
 

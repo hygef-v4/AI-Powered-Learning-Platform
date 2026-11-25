@@ -67,7 +67,6 @@ public class AssignmentImportService {
     private final ImportPageRepository importPages;
     private final AssignmentSupport support;
     private final AssignmentAccess access;
-    private final AssignmentAudit audit;
     private final IAiTask aiTasks;
     private final ImportFileReader importFileReader;
     private final ImportPageNormalizer importPageNormalizer;
@@ -80,7 +79,7 @@ public class AssignmentImportService {
 
     public AssignmentImportService(AssignmentRepository assignments, AiDraftRepository drafts,
                                    ImportPageRepository importPages, AssignmentSupport support,
-                                   AssignmentAccess access, AssignmentAudit audit, IAiTask aiTasks,
+                                   AssignmentAccess access, IAiTask aiTasks,
                                    ImportFileReader importFileReader, ImportPageNormalizer importPageNormalizer,
                                    FigureCropper figureCropper, AssignmentAuthoringService assignmentAuthoringService,
                                    DocumentModelService documentModelService, ObjectMapper json,
@@ -90,7 +89,6 @@ public class AssignmentImportService {
         this.importPages = importPages;
         this.support = support;
         this.access = access;
-        this.audit = audit;
         this.aiTasks = aiTasks;
         this.importFileReader = importFileReader;
         this.importPageNormalizer = importPageNormalizer;
@@ -146,9 +144,6 @@ public class AssignmentImportService {
         transaction.executeWithoutResult(status -> {
             drafts.insert(draft);
             importPages.insertPages(draftId, normalized.pages(), now);
-            audit.recordSuccess(actor, "ASSIGNMENT_IMPORT_REQUESTED", id, AssignmentAudit.collectDetails("draftId", draftId,
-                    "fileKind", checked.kind().name(), "pageCount", normalized.pages().size(),
-                    "totalBytes", checked.totalBytes()));
         });
         AiTaskView task = null;
         AiSourceChoice picked = null;
@@ -337,10 +332,6 @@ public class AssignmentImportService {
                 if (drafts.markApplied(draftId, clock.instant()) != 1) {
                     throw ApiException.createConflict("AI_DRAFT_NOT_READY", "Đề xuất đã được xử lý");
                 }
-                audit.recordSuccess(actor, "ASSIGNMENT_IMPORT_APPLIED", id, AssignmentAudit.collectDetails("draftId", draftId,
-                        "placement", placement, "blockCount", imported.blocks().size(),
-                        "imageCount", draft.proposal().path("counts").path("images").asInt(0),
-                        "replacedTitle", title != null && !title.isBlank()));
                 return detail;
             });
         } catch (ApiException e) {

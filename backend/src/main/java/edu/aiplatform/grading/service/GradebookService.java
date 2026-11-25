@@ -16,9 +16,6 @@ import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignmentwork.contract.AttemptStatus;
 import edu.aiplatform.assignmentwork.contract.ISubmissionQuery;
 import edu.aiplatform.assignmentwork.contract.StudentSubmissionStatus;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.grading.dto.GradingViews.AssignmentColumn;
 import edu.aiplatform.grading.dto.GradingViews.GradeCell;
 import edu.aiplatform.grading.dto.GradingViews.GradebookPage;
@@ -42,7 +39,6 @@ import edu.aiplatform.identity.contract.IAccountLookup;
 import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,14 +69,11 @@ public class GradebookService {
     private final IClassAccess classAccess;
     private final IAccountLookup accountLookup;
     private final IRubric rubric;
-    private final IAudit audit;
-    private final Clock clock;
 
     /** Connects gradebook queries to evaluation, submission, access, and audit services. */
     public GradebookService(IEvaluationRepository evaluationRepository, GradingAccess gradingAccess,
             IAssignmentQuery assignmentQuery, ISubmissionQuery submissionQuery,
-            IClassAccess classAccess, IAccountLookup accountLookup, IRubric rubric, IAudit audit,
-            Clock clock, ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider,
+            IClassAccess classAccess, IAccountLookup accountLookup, IRubric rubric, ObjectProvider<IGroupSubmissionSource> groupSubmissionSourceProvider,
             GradeDistributionVisibilityRepository gradeDistributionVisibilityRepository) {
         this.gradeDistributionVisibilityRepository = gradeDistributionVisibilityRepository;
         this.groupSubmissionSourceProvider = groupSubmissionSourceProvider;
@@ -91,8 +84,6 @@ public class GradebookService {
         this.classAccess = classAccess;
         this.accountLookup = accountLookup;
         this.rubric = rubric;
-        this.audit = audit;
-        this.clock = clock;
     }
 
     /** Returns a page of gradebook rows after filtering active students by name or email. */
@@ -449,9 +440,6 @@ public class GradebookService {
         }
 
         // Step 4: Record audit log event for gradebook export
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GRADEBOOK_EXPORTED",
-                "CLASS", classId.toString(), AuditResult.SUCCESS, null, Map.of("format", format),
-                clock.instant()));
         String title = selectedColumns.size() == 1 ? selectedColumns.get(0).title() : null;
         return new GradebookExport(output, title);
     }

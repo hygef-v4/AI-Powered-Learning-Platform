@@ -614,6 +614,12 @@ export function DocumentEditor({
   const addPartFrom = useRef<(parentId: string | null) => void>(() => {});
   const latestBlocks = useRef<DocumentBlock[]>([]);
   const [history, setHistory] = useState({ past: 0, future: 0 });
+  /**
+   * Ctrl+A chọn cả phần đang viết (yêu cầu 2026-11-25): mỗi đoạn là một ô riêng nên vùng chọn của trình duyệt chỉ ôm được
+   * một dòng; trình soạn tự giữ các khối được chọn, tô nền, rồi xử lý xóa, gõ đè, chép, cắt, dán và định dạng cho cả nhóm.
+   */
+  const [allSelected, setAllSelected] = useState<{ key: string; ids: string[] } | null>(null);
+  const root = useRef<HTMLDivElement>(null);
   const paper = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const measureToolbar = useCallback((toolbar: HTMLDivElement | null) => {
@@ -823,6 +829,26 @@ export function DocumentEditor({
     setHistory({ past: past.current.length, future: future.current.length });
     restore(next);
   }
+  // Con trỏ ở ngoài trình soạn (bấm Mục lục, đóng popup nhập đề, khối vừa hoàn tác biến mất): Ctrl+Z, Ctrl+Y vẫn chạy
+  // (yêu cầu 2026-11-25); ô nhập khác và popup giữ phím của riêng chúng.
+  const historyKeys = useRef({ undo: undoChange, redo: redoChange });
+  historyKeys.current = { undo: undoChange, redo: redoChange };
+  useEffect(() => {
+    if (readOnly) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.altKey) return;
+      const key = event.key.toLowerCase();
+      if (key !== "z" && key !== "y") return;
+      const target = event.target as HTMLElement | null;
+      if (target && (root.current?.contains(target) || target.closest("input, textarea, select, [contenteditable], [role=dialog]"))) return;
+      if (globalThis.document.querySelector("[role=dialog]")) return;
+      event.preventDefault();
+      if (key === "z" && !event.shiftKey) historyKeys.current.undo();
+      else historyKeys.current.redo();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [readOnly]);
   function replace(id: string, block: DocumentBlock, focus?: FocusTarget) {
     updateBlocks(blocks.map((b) => (b.id === id ? block : b)), focus);
   }
@@ -1002,6 +1028,12 @@ export function DocumentEditor({
   }
   /** Định dạng chữ (yêu cầu 2026-10-22): có vùng bôi đen trong ô thì chỉ đổi phần bôi đen, không thì cả đoạn. */
   function formatText(range: (runs: Run[], start: number, end: number) => Run[], whole: (block: DocumentBlock) => DocumentBlock) {
+    if (allSelected) {
+      // Cả phần đang được chọn (Ctrl+A): định dạng mọi đoạn văn, danh sách trong phần.
+      const ids = new Set(allSelected.ids);
+      updateBlocks(blocks.map((b) => (ids.has(b.id) && (b.type === "PARAGRAPH" || b.type === "LIST") ? whole(b) : b)));
+      return;
+    }
     if (!target || !formatTarget) return;
     const selection = readSelection(paper.current);
     if (target.type === "TABLE") {
@@ -1031,12 +1063,12 @@ export function DocumentEditor({
   }
   function toggle(flag: RunFlag) {
     if (titleOn) return formatTitle((runs, start, end) => toggleFlagRange(runs, start, end, flag));
-    if (tailStyle) return setTail((style) => ({ ...style, format: { ...style.format, [flag]: !style.format[flag] || undefined } }));
+    if (tailStyle && !allSelected) return setTail((style) => ({ ...style, format: { ...style.format, [flag]: !style.format[flag] || undefined } }));
     formatText((runs, start, end) => toggleFlagRange(runs, start, end, flag), (block) => toggleFlag(block, flag));
   }
   function paint(key: "color" | "highlight", value: string | undefined) {
     if (titleOn) return formatTitle((runs, start, end) => colorRange(runs, start, end, key, value));
-    if (tailStyle) return setTail((style) => ({ ...style, format: { ...style.format, [key]: value } }));
+    if (tailStyle && !allSelected) return setTail((style) => ({ ...style, format: { ...style.format, [key]: value } }));
     formatText((runs, start, end) => colorRange(runs, start, end, key, value), (block) => setRunColor(block, key, value));
   }
   /** Danh sách: đoạn văn, danh sách đổi kiểu; ô bảng thêm/bỏ dấu đầu dòng từng dòng; dòng cuối đặt sẵn kiểu cho chữ sắp gõ. */
@@ -1132,6 +1164,7 @@ export function DocumentEditor({
         className={cx("group/block relative -mx-1 rounded px-1 py-0.5 outline-none",
           fullWidth && (block.type === "PARAGRAPH" || block.type === "LIST") && "[&_.text-sm]:text-base [&_.text-sm]:leading-7",
           muted && "opacity-70", muted && !readOnly && "cursor-not-allowed",
+          selectedIds.has(block.id) && "bg-primary-soft",
           blockIssues.length > 0 && "shadow-[inset_3px_0_0_var(--color-danger)]")}>
         {/* Ảnh, sơ đồ: nút ✕ luôn hiện mờ ở góc (rê vào thì rõ), để xóa được cả khung chưa vẽ (yêu cầu 2026-11-04). */}
         {removeLabel && <CornerDelete always label={removeLabel} onClick={() => removeBlock(block.id)} />}
@@ -1523,16 +1556,113 @@ export function DocumentEditor({
   };
   mapSections(tree);
   const cursorSection = cursorLine ? sectionByKey.get(cursorLine.sectionKey) : focused ? sectionOfBlock.get(focused.id) : undefined;
+  const selectedIds = new Set(allSelected?.ids.filter((id) => blocks.some((b) => b.id === id)) ?? []);
+
+  /**
+   * Ctrl+A ở đoạn văn, danh sách hay dòng cuối: chọn cả văn bản của phần (không gồm tiêu đề mục và mục con). Tên bài, tiêu
+   * đề mục, ô bảng, hay phần chỉ có đúng đoạn đang viết thì để trình duyệt tự chọn hết ô. Trả false nếu không xử lý.
+   */
+  function selectPart(): boolean {
+    if (inHeader) return false;
+    if (!cursorLine && (!focused || focused.type === "HEADING" || focused.type === "TABLE")) return false;
+    const section = cursorSection;
+    if (!section) return false;
+    const own = [...section.blocks, ...section.after].filter((b) => !isBlockLocked(b));
+    if (own.length === 0) return false;
+    if (!cursorLine && own.length === 1 && own[0]!.id === focused?.id && focused.type === "PARAGRAPH") return false;
+    setAllSelected({ key: section.heading?.id ?? "DOCUMENT", ids: own.map((b) => b.id) });
+    globalThis.document.getSelection()?.removeAllRanges();
+    paper.current?.focus({ preventScroll: true });
+    return true;
+  }
+  function selectedText(): string {
+    return blocks.filter((b) => selectedIds.has(b.id)).map(blockText).filter(Boolean).join("\n");
+  }
+  /**
+   * Thay cả phần đang chọn bằng một đoạn chữ {@code text} (gõ đè, dán); null là xóa. Người soạn xóa hết thì con trỏ về dòng
+   * cuối của phần; người học (không có dòng cuối) còn lại một đoạn trống để viết tiếp. Hoàn tác được.
+   */
+  function replaceSelected(text: string | null) {
+    const section = allSelected ? sectionByKey.get(allSelected.key) : undefined;
+    setAllSelected(null);
+    if (!section || selectedIds.size === 0) return;
+    const at = blocks.findIndex((b) => selectedIds.has(b.id));
+    const under = findUnderLevel(blocks[at]!);
+    const tailKey = section.children.length === 0 ? `tail-${allSelected!.key}`
+      : section.after.some((b) => selectedIds.has(b.id)) ? `tail-end-${allSelected!.key}` : null;
+    if (text === null && authoring && tailKey) {
+      let next = blocks;
+      selectedIds.forEach((id) => { next = removeFromList(next, id); });
+      updateBlocks(next, { id: tailKey, at: "start" });
+      return;
+    }
+    const line: DocumentBlock = { id: generateId(), origin, type: "PARAGRAPH",
+      content: { runs: text ? [{ text }] : EMPTY_RUNS, ...(under !== null ? { under } : {}) } };
+    const rest = blocks.filter((b) => !selectedIds.has(b.id));
+    setFocusedId(line.id);
+    updateBlocks([...rest.slice(0, at), line, ...rest.slice(at)], { id: line.id, at: "end" });
+  }
+  /** Phím khi cả phần đang được chọn; trả true nếu đã xử lý. */
+  function handleSelectedKey(event: KeyboardEvent<HTMLDivElement>): boolean {
+    const key = event.key;
+    const command = event.ctrlKey || event.metaKey;
+    if (key === "Delete" || key === "Backspace") {
+      event.preventDefault();
+      replaceSelected(null);
+      return true;
+    }
+    if (!command && !event.altKey && key.length === 1) {
+      event.preventDefault();
+      replaceSelected(key);
+      return true;
+    }
+    if (command && key.toLowerCase() === "a") {
+      event.preventDefault();
+      return true;
+    }
+    if (key === "Escape" || key === "Enter" || key.startsWith("Arrow") || key === "Home" || key === "End" || key === "PageUp" || key === "PageDown") {
+      event.preventDefault();
+      const ordered = blocks.filter((b) => selectedIds.has(b.id));
+      const toStart = key === "ArrowUp" || key === "ArrowLeft" || key === "Home" || key === "PageUp";
+      const edge = toStart ? ordered[0] : ordered.at(-1);
+      setAllSelected(null);
+      if (edge) focusField(paper.current, { id: edge.id, at: toStart ? "start" : "end" });
+      return true;
+    }
+    // Ctrl+Z, Ctrl+Y bỏ vùng chọn rồi hoàn tác như thường; Ctrl+C, X, V đi qua sự kiện chép, cắt, dán.
+    if (command && (key.toLowerCase() === "z" || key.toLowerCase() === "y")) setAllSelected(null);
+    return false;
+  }
 
 
   return (
-    <div className="flex flex-col gap-3" data-testid="document-editor"
+    <div ref={root} className="flex flex-col gap-3" data-testid="document-editor"
+      onCopyCapture={(event) => {
+        if (!allSelected) return;
+        event.preventDefault();
+        event.clipboardData.setData("text/plain", selectedText());
+      }}
+      onCutCapture={(event) => {
+        if (!allSelected || readOnly) return;
+        event.preventDefault();
+        event.clipboardData.setData("text/plain", selectedText());
+        replaceSelected(null);
+      }}
+      onPasteCapture={(event) => {
+        if (!allSelected || readOnly) return;
+        event.preventDefault();
+        event.stopPropagation();
+        replaceSelected(event.clipboardData.getData("text/plain").replace(/\r\n?/g, "\n"));
+      }}
       onKeyDownCapture={(event) => {
-        if (readOnly || !(event.ctrlKey || event.metaKey)) return;
+        if (readOnly) return;
+        if (allSelected && handleSelectedKey(event)) return;
+        if (!(event.ctrlKey || event.metaKey)) return;
         const key = event.key.toLowerCase();
-        if (key === "z" && !event.shiftKey) { event.preventDefault(); undoChange(); }
+        if (key === "a" && !event.shiftKey && !event.altKey) { if (selectPart()) event.preventDefault(); }
+        else if (key === "z" && !event.shiftKey) { event.preventDefault(); undoChange(); }
         else if (key === "y" || (key === "z" && event.shiftKey)) { event.preventDefault(); redoChange(); }
-        else if ((key === "b" || key === "i" || key === "u") && formatTarget) {
+        else if ((key === "b" || key === "i" || key === "u") && (formatTarget || allSelected)) {
           event.preventDefault();
           toggle(key === "b" ? "bold" : key === "i" ? "italic" : "underline");
         }
@@ -1622,8 +1752,11 @@ export function DocumentEditor({
       )}
 
       <div className={rail ? cx("grid items-start gap-5", fullWidth ? "grid-cols-[minmax(0,1fr)_300px]" : "grid-cols-[minmax(0,816px)_300px] justify-center") : cx("mx-auto w-full", !fullWidth && "max-w-[816px]")}>
-        <div ref={paper} data-testid="document-paper" onMouseLeave={stopHover} onMouseOver={stopHover}
+        <div ref={paper} data-testid="document-paper" tabIndex={-1} onMouseLeave={stopHover} onMouseOver={stopHover}
+          onMouseDownCapture={() => { if (allSelected) setAllSelected(null); }}
+          onFocusCapture={(event) => { if (allSelected && event.target !== paper.current) setAllSelected(null); }}
           onBlurCapture={(event) => {
+            if (event.target === paper.current && allSelected) setAllSelected(null);
             // Con trỏ rời trang (bấm ra ngoài): không còn chỗ con trỏ, "+ Câu hỏi" thêm xuống cuối (yêu cầu 2026-11-10). Nút trên
             // thanh công cụ giữ con trỏ (chặn mousedown) nên không làm mất chỗ con trỏ.
             // Cửa sổ mất focus (mở hộp chọn tệp khi chèn ảnh) thì giữ chỗ con trỏ: kiểm sau khi focus đã chuyển xong.
@@ -1637,7 +1770,7 @@ export function DocumentEditor({
           }}
           onDragOver={(event) => { if (dragKey && dropAt) event.preventDefault(); }}
           onDrop={(event) => { if (!dragKey) return; event.preventDefault(); commitDrop(); }}
-          className={cx("min-h-[60vh] min-w-0 rounded-lg border border-line bg-surface px-5 pt-10 pb-4 shadow-[var(--shadow-lift)] sm:pt-12", fullWidth ? "sm:px-8" : "sm:px-14")}>
+          className={cx("min-h-[60vh] min-w-0 rounded-lg border outline-none border-line bg-surface px-5 pt-10 pb-4 shadow-[var(--shadow-lift)] sm:pt-12", fullWidth ? "sm:px-8" : "sm:px-14")}>
           {/* Khung bọc nội dung (không có min-height) để cột ghi chú biết khi nào block đổi chỗ. */}
           {stepping && stepNav("top")}
           <div ref={content}>

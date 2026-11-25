@@ -2,9 +2,6 @@ package edu.aiplatform.groups.service;
 
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.model.GroupFormationSettings;
 import edu.aiplatform.groups.model.GroupFormationSettings.ClosedReason;
@@ -53,13 +50,12 @@ public class GroupProposalService {
     private final GroupAccess access;
     private final IClassAccess classes;
     private final IAccountLookup accounts;
-    private final IAudit audit;
     private final IEventPublisher events;
     private final Clock clock;
 
     public GroupProposalService(GroupProposalRepository proposalRepository, GroupRepository groupRepository,
                                 GroupFormationService groupFormationService, GroupProposalCleanup groupProposalCleanup,
-                                GroupAccess access, IClassAccess classes, IAccountLookup accounts, IAudit audit,
+                                GroupAccess access, IClassAccess classes, IAccountLookup accounts,
                                 IEventPublisher events, Clock clock) {
         this.proposalRepository = proposalRepository;
         this.groupRepository = groupRepository;
@@ -68,7 +64,6 @@ public class GroupProposalService {
         this.access = access;
         this.classes = classes;
         this.accounts = accounts;
-        this.audit = audit;
         this.events = events;
         this.clock = clock;
     }
@@ -206,7 +201,7 @@ public class GroupProposalService {
     public MyProposalView leaveProposal(Actor actor, UUID proposalId) {
         Locked locked = lockForStudent(actor, proposalId);
         ProposalMember membership = locked.findMember(actor.accountId()).filter(ProposalMember::isActiveMember)
-                .orElseThrow(() -> access.denyProposal(actor, proposalId, "NOT_MEMBER"));
+                .orElseThrow(() -> access.createProposalNotFoundError());
         if (locked.proposal().isLeader(actor.accountId())) {
             throw ApiException.createConflict("PROPOSAL_LEADER_CANNOT_LEAVE", "Trưởng nhóm hủy đề xuất thay vì rời");
         }
@@ -246,8 +241,6 @@ public class GroupProposalService {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("classId", ctx.ref().classId().toString());
         details.put("members", members);
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GROUP_PROPOSAL_SUBMITTED",
-                "GROUP_PROPOSAL", proposalId.toString(), AuditResult.SUCCESS, null, details, now));
         if (ctx.ref().teacherId() != null) {
             publish(EventTypes.GROUP_PROPOSAL_SUBMITTED, submitted, List.of(ctx.ref().teacherId()));
         }
@@ -268,7 +261,7 @@ public class GroupProposalService {
 
     private Locked lockForStudent(Actor actor, UUID proposalId) {
         GroupProposal proposal = proposalRepository.lockProposal(proposalId)
-                .orElseThrow(() -> access.denyProposal(actor, proposalId, "NOT_FOUND"));
+                .orElseThrow(() -> access.createProposalNotFoundError());
         Context ctx = loadContext(actor, proposal.classId());
         return new Locked(proposal, ctx, proposalRepository.listMembers(proposalId));
     }
@@ -279,7 +272,7 @@ public class GroupProposalService {
         }
         Locked locked = lockForStudent(actor, proposalId);
         if (!locked.proposal().isLeader(actor.accountId())) {
-            throw access.denyProposal(actor, proposalId, "NOT_LEADER");
+            throw access.createProposalNotFoundError();
         }
         if (locked.proposal().version() != version) {
             throw ApiException.createConflict("PROPOSAL_VERSION_CONFLICT", "Đề xuất vừa thay đổi, hãy tải lại");
@@ -290,7 +283,7 @@ public class GroupProposalService {
     private Locked lockAsInvitee(Actor actor, UUID proposalId) {
         Locked locked = lockForStudent(actor, proposalId);
         locked.findMember(actor.accountId()).filter(ProposalMember::isInvited)
-                .orElseThrow(() -> access.denyProposal(actor, proposalId, "NOT_INVITED"));
+                .orElseThrow(() -> access.createProposalNotFoundError());
         return locked;
     }
 

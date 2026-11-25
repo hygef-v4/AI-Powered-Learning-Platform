@@ -52,14 +52,13 @@ class AnnouncementServiceTest {
                 .thenReturn(AuthorizationDecision.allow());
         when(accountLookup.getContact(any())).thenReturn(Optional.empty());
         announcementAccessPolicy =
-                new AnnouncementAccessPolicy(authorization, classAccess, audit, clock);
+                new AnnouncementAccessPolicy(authorization, classAccess);
         announcementService =
                 new AnnouncementService(
                         announcementRepository,
                         announcementAccessPolicy,
                         classAccess,
                         accountLookup,
-                        audit,
                         eventPublisher,
                         clock);
     }
@@ -94,12 +93,6 @@ class AnnouncementServiceTest {
                                         e.eventType().equals(EventTypes.CLASS_ANNOUNCEMENT_POSTED)
                                                 && !e.payload().containsKey("body")
                                                 && e.payload().get("sendEmail").equals(true)));
-        verify(audit)
-                .record(
-                        argThat(
-                                e ->
-                                        e.action().equals("ANNOUNCEMENT_CREATED")
-                                                && !e.details().toString().contains("Nội dung")));
     }
 
     @Test
@@ -115,16 +108,10 @@ class AnnouncementServiceTest {
         assertThat(edited.sendEmail()).isTrue();
         assertThat(edited.version()).as("version mới sau UPDATE").isEqualTo(1);
         verifyNoInteractions(eventPublisher);
-        verify(audit)
-                .record(
-                        argThat(
-                                e ->
-                                        e.details().containsKey("before")
-                                                && e.details().containsKey("after")));
     }
 
     @Test
-    void consecutiveEditsUseReturnedVersionAndAuditExactMetadataWithoutContent() {
+    void consecutiveEditsUseReturnedVersion() {
         var announcement = item();
         when(announcementRepository.updateAnnouncement(eq(announcement), anyLong()))
                 .thenAnswer(call -> {
@@ -140,19 +127,6 @@ class AnnouncementServiceTest {
         assertThat(second.createdAt()).isEqualTo(now.minusSeconds(60));
         assertThat(announcement.updatedBy).isEqualTo(teacherId);
         assertThat(announcement.updatedAt).isEqualTo(now);
-        var captured = org.mockito.ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit, times(2)).record(captured.capture());
-        for (int index = 0; index < 2; index++) {
-            var event = captured.getAllValues().get(index);
-            assertThat(event.action()).isEqualTo("ANNOUNCEMENT_UPDATED");
-            assertThat(event.actorId()).isEqualTo(teacherId);
-            assertThat(event.objectId()).isEqualTo(announcement.id.toString());
-            assertThat(event.occurredAt()).isEqualTo(now);
-            assertThat(event.result()).isEqualTo(AuditResult.SUCCESS);
-            assertThat(((Map<?, ?>) event.details().get("before")).get("version")).isEqualTo((long) index);
-            assertThat(((Map<?, ?>) event.details().get("after")).get("version")).isEqualTo((long) index + 1);
-            assertThat(event.details().toString()).doesNotContain("private-body-sentinel", "Second body");
-        }
         verify(announcementRepository).updateAnnouncement(announcement, 0);
         verify(announcementRepository).updateAnnouncement(announcement, 1);
         verifyNoInteractions(eventPublisher);
@@ -180,7 +154,6 @@ class AnnouncementServiceTest {
         when(announcementRepository.updateAnnouncement(a, 0)).thenReturn(false);
         assertThatThrownBy(() -> announcementService.deleteAnnouncement(teacher, a.id, 0))
                 .isInstanceOf(ApiException.class);
-        verify(audit, never()).record(argThat(e -> e.result() == AuditResult.SUCCESS));
     }
 
     @Test
@@ -191,9 +164,6 @@ class AnnouncementServiceTest {
         assertThat(a.status).isEqualTo(Announcement.Status.DELETED);
         assertThat(a.deletedBy).isEqualTo(teacherId);
         assertThat(a.deletedAt).isEqualTo(now);
-        verify(audit).record(argThat(e -> e.action().equals("ANNOUNCEMENT_DELETED")
-                && e.actorId().equals(teacherId) && e.objectId().equals(a.id.toString())
-                && e.details().get("status").equals("DELETED")));
         verifyNoInteractions(eventPublisher);
     }
 
@@ -208,7 +178,6 @@ class AnnouncementServiceTest {
                     assertThat(e.readStatus().value()).isEqualTo(404);
                     assertThat(e.readCode()).isEqualTo("ANNOUNCEMENT_NOT_FOUND");
                 });
-        verify(audit).record(argThat(e -> e.result() == AuditResult.DENIED));
     }
 
     @Test
@@ -265,7 +234,6 @@ class AnnouncementServiceTest {
         assertThatThrownBy(
                 () -> announcementAccessPolicy.requireClassAccess(teacher, classId, true))
                 .isInstanceOf(ApiException.class);
-        verify(audit).record(argThat(e -> e.action().equals("ACCESS_DENIED")));
     }
 
     @Test

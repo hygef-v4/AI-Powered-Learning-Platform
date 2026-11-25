@@ -24,6 +24,7 @@ Việc nền, worker và sự kiện thông báo đã chuyển sang U03 (quyết
 | BR-U02-07 | Chỉ Admin tra cứu audit. Tra cứu không ghi audit (yêu cầu 2026-11-25: nhật ký chỉ giữ sự kiện quan trọng); dòng `AUDIT_QUERIED` ghi trước đó bị ẩn khỏi màn Log. Bị từ chối vẫn ghi `ACCESS_DENIED`. | Câu 7, UC 13 |
 | BR-U02-08 | Lọc theo actorId hoặc actor text, action, object, result, thời gian, mới nhất trước, page tối đa100. Backend resolves actor text qua IAccountLookup; frontend không tự gọi account lookup để đổi email sang ID. | US-AUD-001 S1, UC 13 |
 | BR-U02-09 | Kết quả tra cứu hiện email người thực hiện, lấy qua `IAccountLookup` của U01 lúc đọc (không lưu email vào `audit_logs`); `actor_id` rỗng là hệ thống hoặc worker. | UC 13, contract `audit.yaml` (`actorEmail`) |
+| BR-U02-10 | Phạm vi ghi audit (yêu cầu 2026-11-25): chỉ ghi sự kiện của tài khoản (U01), môn (U04), lớp và ghi danh (U05), cài đặt, sao lưu, tệp bị chặn (U03) và cấu hình AI chung của hệ thống (khóa AI của trường, kiểm tra khóa đó, hạn mức AI; từ chối ở phần quản trị AI). Không ghi audit, kể cả khi bị từ chối, cho bài tập (U07), làm bài (U08), chấm điểm (U09), nhóm và tài liệu nhóm (U12), quiz và luyện quiz (U10, U11), học liệu (U13), thông báo, khóa AI cá nhân của giảng viên, quyền truy cập MCP và lời gọi tool MCP. Quy tắc audit riêng của các unit này không còn hiệu lực. | Yêu cầu 2026-11-25 |
 
 ## 2. Lỗi
 

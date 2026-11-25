@@ -2,9 +2,6 @@ package edu.aiplatform.groups.service;
 
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
 import edu.aiplatform.groups.model.LeaderChangeRequest;
@@ -36,16 +33,14 @@ public class LeaderRequestService {
     private final GroupRepository groups;
     private final GroupAccess access;
     private final IClassAccess classes;
-    private final IAudit audit;
     private final IEventPublisher events;
     private final Clock clock;
 
-    public LeaderRequestService(GroupRepository groups, GroupAccess access, IClassAccess classes, IAudit audit,
+    public LeaderRequestService(GroupRepository groups, GroupAccess access, IClassAccess classes,
                                 IEventPublisher events, Clock clock) {
         this.groups = groups;
         this.access = access;
         this.classes = classes;
-        this.audit = audit;
         this.events = events;
         this.clock = clock;
     }
@@ -80,7 +75,6 @@ public class LeaderRequestService {
         }
         Map<String, Object> details = collectDetails(group);
         details.put("proposedLeaderId", proposedLeaderId == null ? null : proposedLeaderId.toString());
-        record(actor, "LEADER_REQUEST_SUBMITTED", request.id(), details);
         publish(EventTypes.GROUP_LEADER_CHANGE_REQUESTED, group, request.id(),
                 ref.teacherId() == null ? List.of() : List.of(ref.teacherId()));
         return RequestResult.createRequestResult(request);
@@ -98,7 +92,6 @@ public class LeaderRequestService {
         requirePending(request);
         LeaderChangeRequest cancelled = request.decide(Status.CANCELLED, null, actor.accountId(), null, clock.instant());
         groups.updateRequest(cancelled);
-        record(actor, "LEADER_REQUEST_CANCELLED", requestId, collectDetails(group));
         return RequestResult.createRequestResult(cancelled);
     }
 
@@ -125,8 +118,6 @@ public class LeaderRequestService {
         Map<String, Object> change = collectDetails(group);
         change.put("before", group.leaderId() == null ? null : group.leaderId().toString());
         change.put("after", leader.toString());
-        record(actor, "LEADER_REQUEST_APPROVED", requestId, change);
-        record(actor, "GROUP_LEADER_CHANGED", group.id(), change);
         publish(EventTypes.GROUP_LEADER_CHANGED, group, requestId, group.memberIds());
         return RequestResult.createRequestResult(approved);
     }
@@ -147,7 +138,6 @@ public class LeaderRequestService {
         groups.updateRequest(rejected);
         Map<String, Object> details = collectDetails(group);
         details.put("reason", why);
-        record(actor, "LEADER_REQUEST_REJECTED", requestId, details);
         publish(EventTypes.GROUP_LEADER_REQUEST_REJECTED, group, requestId, List.of(request.requestedBy()));
         return RequestResult.createRequestResult(rejected);
     }
@@ -175,11 +165,6 @@ public class LeaderRequestService {
         details.put("classId", group.classId().toString());
         details.put("groupId", group.id().toString());
         return details;
-    }
-
-    private void record(Actor actor, String action, UUID objectId, Map<String, Object> details) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), action, "LEADER_CHANGE_REQUEST",
-                objectId.toString(), AuditResult.SUCCESS, null, details, clock.instant()));
     }
 
     private void publish(String type, ClassGroup group, UUID requestId, List<UUID> recipients) {

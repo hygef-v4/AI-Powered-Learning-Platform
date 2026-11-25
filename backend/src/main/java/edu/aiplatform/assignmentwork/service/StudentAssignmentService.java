@@ -64,8 +64,7 @@ public class StudentAssignmentService {
     @Transactional(readOnly = true)
     public List<WorkViews.Row> listAssignments(Actor actor, UUID classId) {
         if (actor == null || actor.accountId() == null || actor.role() != Role.STUDENT) {
-            throw access.deny(actor, "STUDENT_ASSIGNMENT_LIST", "ACCOUNT", actor == null ? null : actor.accountId(),
-                    "NOT_STUDENT");
+            throw access.notFound();
         }
         List<ClassRef> refs;
         if (classId != null) {

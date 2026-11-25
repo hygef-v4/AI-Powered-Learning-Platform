@@ -120,7 +120,7 @@ class QuizAttemptRepositoryIntegrationTest {
                 + " values (:id, :subject, 'SE1801', 'Lớp', 'DRAFT', DATE '2026-11-14', now(), now())")
                 .param("id", classId).param("subject", subject).update();
         admin.sql("insert into quizzes (id, scope, class_id, subject_id, title, settings, created_by, created_at,"
-                        + " updated_at) values (:id, 'CLASS', :classId, :subject, 'Quiz', '{}'::jsonb, :author, now(), now())")
+                        + " updated_at) values (:id, 'CLASS', :classId, :subject, 'Quiz', '{}'::jsonb, :author, now() - interval '1 day', now() - interval '1 day')")
                 .param("id", quizId).param("classId", classId).param("subject", subject).param("author", student).update();
     }
 
@@ -187,7 +187,7 @@ class QuizAttemptRepositoryIntegrationTest {
                 return present;
             });
             for (String name : List.of("quizzes.service.QuizAuthoringService", "quizzes.service.QuizSupport",
-                    "quizzes.service.QuizAccess", "quizzes.service.QuizAudit", "quizzes.service.ActiveSubjects",
+                    "quizzes.service.QuizAccess", "quizzes.service.ActiveSubjects",
                     "quizzes.service.QuizQueryService", "quizzes.service.QuizPaperService", "quizzes.service.QuizScorer",
                     "quizpractice.service.QuizAttemptService", "quizpractice.service.PracticeSupport",
                     "quizpractice.service.PracticeAccess", "quizpractice.service.AttemptActivityAssessor")) {

@@ -1649,6 +1649,12 @@
       }
     },
     "model": {
+      "docxMerge": {
+        "untitledPart": "Untitled part",
+        "unexpectedPart": "This DOCX has a part “{title}” that is not in the assignment, outside the parts you write in. Import the DOCX downloaded from this work.",
+        "notThisAssignment": "This DOCX is not your work for this assignment. Download your work as DOCX, write in that file, then import it again.",
+        "structureMismatch": "This DOCX does not match the structure of your work: part “{title}” is missing or out of order. Download your work as DOCX, write in that file, then import it again."
+      },
       "attemptResult": {
         "assignment": "Assignment"
       },
@@ -1700,6 +1706,8 @@
         "workNotSaved": "Work not saved",
         "importDocxIntoPart": "Import DOCX into part “{value}”",
         "importDocxIntoTheLast": "Import DOCX into the last part",
+        "importedIntoParts": "Imported new work into {count} parts: {parts}",
+        "nothingNewToImport": "The file has no new work to import.",
         "restoredTheUnsavedVersionOn": "Restored the unsaved version on this device"
       },
       "StudentAssignmentDetailPage": {
@@ -1777,7 +1785,7 @@
       }
     },
     "register": {
-      "assignment": "Assignment"
+      "assignment": "All assignments"
     }
   },
   "audit": {
@@ -4912,76 +4920,192 @@
   "landing": {
     "pages": {
       "LandingPage": {
-        "home": "ALAP home page",
+        "home": "ALAPEdu home page",
         "signIn": "Sign in",
-        "metaTitle": "ALAP – UML diagram assignments with AI-assisted grading",
-        "metaDescription": "ALAP is a learning platform for Software Engineering courses: draw UML diagrams in the browser, submit individual or group assignments, practise quizzes and get rubric-based AI grading proposals reviewed by your lecturer.",
-        "eyebrow": "Learning platform for software design courses",
-        "headline": "Draw your UML diagrams. AI proposes the grade, your lecturer makes the call.",
-        "intro": "ALAP brings classes, materials, diagram assignments, quizzes and grading together for Software Engineering students and lecturers. The AI reads each submission against the rubric and proposes points and feedback; official grades are always reviewed and published by the lecturer.",
-        "seeFeatures": "See features",
-        "accountNote": "Accounts are created by your course administrator. Check your school email for the activation code.",
-        "featuresTitle": "Everything a software design course needs",
-        "featuresIntro": "From the first lecture to published grades, every step of the course happens in one place.",
-        "feature": {
-          "diagrams": {
-            "title": "Diagram assignments",
-            "body": "Draw UML diagrams right in the browser with the built-in diagrams.net editor and submit them together with your answers."
-          },
-          "aiGrading": {
-            "title": "AI grading proposals",
-            "body": "The AI reads the submission and the rubric, then proposes points and feedback for each criterion. Lecturers review, edit and publish the official grade."
-          },
-          "groupWork": {
-            "title": "Individual and group work",
-            "body": "Form groups, write shared group documents and submit together. Lecturers approve groups and can grade each member."
-          },
-          "quizzes": {
-            "title": "Quizzes and practice",
-            "body": "Practise with quizzes built from the subject question bank and review your results and explanations after submitting."
-          },
-          "materials": {
-            "title": "Class materials",
-            "body": "Open PDF, Word, PowerPoint and Excel files directly in the browser, organised by subject and class."
-          },
-          "mcp": {
-            "title": "Connect your AI agent",
-            "body": "Use MCP to work with your own AI agent on the data your role allows: lecturers draft assignments and quizzes, students ask for private feedback on practice work."
-          }
+        "language": "Language",
+        "metaTitle": "ALAPEdu – AI grading, UML diagrams, assignments and group work",
+        "metaDescription": "ALAPEdu is an AI learning platform: assignments, online diagrams, group work, AI grading and AI-generated assignments, all in one place.",
+        "metaKeywords": "alapedu, ALAP, ALAPEdu, AI grading, AI assignment generator, UML diagram editor, online diagrams, assignments, group work, rubric grading, software engineering, learning platform",
+        "accountNote": "Accounts are provided by your school.",
+        "privacy": "Privacy policy",
+        "nav": {
+          "label": "Page sections",
+          "about": "About",
+          "features": "Features",
+          "benefits": "Benefits",
+          "faq": "FAQ"
         },
-        "stepsTitle": "How it works",
-        "step": {
-          "publish": {
-            "title": "Lecturer publishes",
-            "body": "The lecturer creates an assignment with a brief and a rubric, then gives it to the class."
-          },
-          "submit": {
-            "title": "Students draw and submit",
-            "body": "Students draw their diagrams, alone or as a group, and submit before the deadline."
-          },
-          "review": {
-            "title": "AI proposes, lecturer decides",
-            "body": "The AI proposes points per criterion; the lecturer checks each one, adjusts and publishes the grades."
-          }
+        "hero": {
+          "brandLine": "the AI learning platform",
+          "line1": "Unlock the future",
+          "line2": "of learning.",
+          "intro": "Assignments, diagrams, group work, AI grading and AI-drafted exercises. All in one place.",
+          "cta": "Get started",
+          "seeFeatures": "Explore",
+          "chipAi": "AI grading done",
+          "chipScore": "9.0 / 10",
+          "chipGroup": "Group 4 submitted"
         },
-        "rolesTitle": "Built for every role in the course",
+        "about": {
+          "title": "About ALAPEdu",
+          "statement": "We believe in the potential of technology to reshape the way we teach and learn."
+        },
         "role": {
           "students": {
             "title": "Students",
-            "body": "Submit assignments, practise quizzes, collaborate in groups and follow grades and announcements for each class."
+            "body": "Learn, practise and work your way."
           },
           "lecturers": {
             "title": "Lecturers",
-            "body": "Create assignments and quizzes, grade with a rubric and AI proposals, and publish grades to your classes."
+            "body": "Assign and grade faster."
           },
           "subjectManagers": {
             "title": "Subject managers",
-            "body": "Manage subjects, shared materials, template assignments and the question bank across classes."
+            "body": "Manage every subject in one place."
           }
         },
-        "ctaTitle": "Ready for class?",
-        "ctaBody": "Sign in with the account your course administrator created for you.",
-        "privacy": "Privacy policy",
+        "features": {
+          "title": "Innovate your classroom: explore ALAP's features",
+          "cta": "Try it"
+        },
+        "feature": {
+          "assign": {
+            "title": "Easy assignments",
+            "body": "Simplify the homework workflow.",
+            "tags": "Brief|Deadline|Whole class"
+          },
+          "diagrams": {
+            "title": "Online diagrams",
+            "body": "Draw and submit diagrams right in the browser.",
+            "tags": "Use case|Class diagram|ERD"
+          },
+          "aiGrading": {
+            "title": "AI grading",
+            "body": "Grade faster and more consistently with AI.",
+            "tags": "Suggested score|Feedback|Lecturer review"
+          },
+          "aiDrafting": {
+            "title": "AI-drafted assignments",
+            "body": "Create exercises in seconds with an AI assistant.",
+            "tags": "Seconds|Questions|Rubric"
+          },
+          "groupWork": {
+            "title": "Group work",
+            "body": "Work together, grow together.",
+            "tags": "Co-editing|One submission|Contribution"
+          }
+        },
+        "visual": {
+          "assign": {
+            "window": "Assignment · SWD392",
+            "class": "Class SE1801",
+            "deadline": "Due 23:59, 30 Nov",
+            "title": "Assignment 3: Use case diagram for a badminton court booking system",
+            "rubric": {
+              "actors": "All actors identified",
+              "useCases": "Use cases fit the scope",
+              "relations": "Include and extend relations"
+            },
+            "students": "32 students will receive it",
+            "publish": "Give to class"
+          },
+          "diagram": {
+            "window": "Class diagram · your submission",
+            "saved": "Saved automatically"
+          },
+          "draft": {
+            "window": "AI assistant · drafting",
+            "prompt": "Draft a sequence diagram assignment for court booking, 3 questions, 10-point rubric.",
+            "badge": "Draft written by AI",
+            "q1": "Draw the sequence diagram for a successful booking.",
+            "q2": "Add the branch where the court is already booked.",
+            "q3": "Explain the role of the control class.",
+            "status": "Awaiting lecturer review",
+            "review": "Review and edit"
+          },
+          "group": {
+            "window": "Group document · Group 4",
+            "title": "System design report",
+            "section": "2. Activity diagram",
+            "text": "The customer picks a court, the system checks free slots and",
+            "editing": "Lan is editing",
+            "member": {
+              "lan": "Lan Anh",
+              "minh": "Minh Khoa",
+              "tu": "Thanh Tu"
+            },
+            "level": {
+              "high": "High contribution",
+              "fair": "Fair contribution"
+            },
+            "submit": "Submit together"
+          }
+        },
+        "benefits": {
+          "titleStart": "Benefits that elevate your",
+          "titleMark": "teaching experience",
+          "body": "Everything your class needs, in one place.",
+          "listLabel": "ALAP benefits",
+          "pill": {
+            "aiGrading": "AI grading",
+            "aiDrafting": "AI drafting",
+            "diagrams": "Diagrams",
+            "assign": "Assignments",
+            "groupWork": "Group work",
+            "quiz": "Practice",
+            "materials": "Materials",
+            "feedback": "Instant feedback",
+            "fast": "Fast",
+            "smart": "Smart",
+            "easy": "Easy to use",
+            "together": "Collaborative",
+            "flexible": "Flexible",
+            "fair": "Consistent",
+            "visual": "Visual",
+            "anywhere": "Anytime, anywhere",
+            "automated": "Automated",
+            "secure": "Secure"
+          }
+        },
+        "faqTitle": "Frequently asked questions about ALAPEdu",
+        "faqBody": "What you may want to know before you start.",
+        "faq": {
+          "what": {
+            "q": "What is ALAPEdu?",
+            "a": "ALAPEdu (ALAP) is an online learning platform at alapedu.online for assignments, diagrams, group work and AI grading."
+          },
+          "grading": {
+            "q": "How does AI grading work?",
+            "a": "The AI suggests points and feedback, and the lecturer makes the final call."
+          },
+          "drafting": {
+            "q": "Can the AI create assignments?",
+            "a": "Yes. The AI drafts an assignment in seconds for the lecturer to edit and use."
+          },
+          "diagrams": {
+            "q": "Can I draw diagrams online?",
+            "a": "Yes. Draw diagrams right in the browser with nothing to install."
+          },
+          "groups": {
+            "q": "Does it support group work?",
+            "a": "Yes. The whole group works on one document and submits together."
+          },
+          "account": {
+            "q": "How do I get an account?",
+            "a": "Accounts are provided by your school and sent by email."
+          }
+        },
+        "closing": {
+          "start": "Start",
+          "mark": "innovating",
+          "circle": "learning today",
+          "body": "Bring technology into your classroom with ALAP.",
+          "cta": "Get started"
+        },
+        "footer": {
+          "label": "Footer links",
+          "tagline": "Smarter learning with AI."
+        },
         "reviewSheet": {
           "numberLocale": "en-US",
           "title": "Rubric: class diagram, assignment 2",
@@ -4995,6 +5119,10 @@
             "inheritance": "Inheritance",
             "methods": "Methods fit responsibilities"
           }
+        },
+        "theme": {
+          "toLight": "Switch to light mode",
+          "toDark": "Switch to dark mode"
         }
       }
     }

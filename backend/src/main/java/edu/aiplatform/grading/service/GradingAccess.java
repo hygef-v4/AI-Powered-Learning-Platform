@@ -1,17 +1,12 @@
 package edu.aiplatform.grading.service;
 
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.AuditDetails;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.shared.error.ApiException;
-import java.time.Clock;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -19,15 +14,11 @@ import org.springframework.stereotype.Component;
 public class GradingAccess {
     private final IAuthorization auth;
     private final IClassAccess classAccess;
-    private final IAudit audit;
-    private final Clock clock;
 
     /** Creates the authorization helper with access, audit, and time dependencies. */
-    public GradingAccess(IAuthorization auth, IClassAccess classAccess, IAudit audit, Clock clock) {
+    public GradingAccess(IAuthorization auth, IClassAccess classAccess) {
         this.auth = auth;
         this.classAccess = classAccess;
-        this.audit = audit;
-        this.clock = clock;
     }
 
     /** Requires the actor to have the requested permission for the class. */
@@ -63,9 +54,6 @@ public class GradingAccess {
                     "Enrollment service unavailable");
         }
         if (!enrolled) {
-            audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "ACCESS_DENIED",
-                    "CLASS", String.valueOf(classId), AuditResult.DENIED, "ENROLLMENT_REQUIRED",
-                    AuditDetails.describeDenial(actor, Actions.MY_GRADE_READ), clock.instant()));
             throw ApiException.createNotFound("GRADE_NOT_FOUND");
         }
     }
@@ -83,9 +71,6 @@ public class GradingAccess {
             throw ApiException.createUnavailable("GRADING_DEPENDENCY_UNAVAILABLE",
                     "Access service unavailable");
         if (!decision.allowed()) {
-            audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
-                    "ACCESS_DENIED", "CLASS", String.valueOf(classId), AuditResult.DENIED,
-                    "GRADING_SCOPE", AuditDetails.describeDenial(actor, action), clock.instant()));
             throw ApiException.createNotFound("GRADE_NOT_FOUND");
         }
     }

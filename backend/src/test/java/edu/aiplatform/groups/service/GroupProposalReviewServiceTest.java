@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.model.GroupFormationSettings;
 import edu.aiplatform.groups.model.GroupProposal;
@@ -59,13 +58,10 @@ class GroupProposalReviewServiceTest {
     private final GroupProposalCleanup cleanup = mock(GroupProposalCleanup.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
-    private final IAudit audit = mock(IAudit.class);
     private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final GroupAccess access = new GroupAccess(authorization, classes, audit, clock);
-    private final GroupProposalReviewService service = new GroupProposalReviewService(proposals, groups,
-            classGroupService, new GroupFormationService(proposals, access, audit, clock), cleanup, access, classes,
-            mock(IAccountLookup.class), audit, events, clock);
+    private final GroupAccess access = new GroupAccess(authorization, classes);
+    private final GroupProposalReviewService service = new GroupProposalReviewService(proposals, groups, classGroupService, new GroupFormationService(proposals, access, clock), cleanup, access, classes, mock(IAccountLookup.class), events, clock);
 
     @BeforeEach
     void setUp() {

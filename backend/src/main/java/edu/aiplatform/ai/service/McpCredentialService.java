@@ -3,9 +3,6 @@ package edu.aiplatform.ai.service;
 import edu.aiplatform.ai.model.McpCredential;
 import edu.aiplatform.ai.model.McpCredential.Access;
 import edu.aiplatform.ai.repository.McpCredentialRepository;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.AccountContact;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actions;
@@ -23,9 +20,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.EnumSet;
 import java.util.HexFormat;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -48,16 +43,14 @@ public class McpCredentialService {
     private final McpCredentialRepository repository;
     private final IAccountLookup accounts;
     private final AiAccess access;
-    private final IAudit audit;
     private final Clock clock;
     private final SecureRandom random = new SecureRandom();
 
-    public McpCredentialService(McpCredentialRepository repository, IAccountLookup accounts, AiAccess access, IAudit audit,
+    public McpCredentialService(McpCredentialRepository repository, IAccountLookup accounts, AiAccess access,
                                 Clock clock) {
         this.repository = repository;
         this.accounts = accounts;
         this.access = access;
-        this.audit = audit;
         this.clock = clock;
     }
 
@@ -88,12 +81,6 @@ public class McpCredentialService {
         McpCredential credential = new McpCredential(UUID.randomUUID(), actor.accountId(), name, accessLevel, hash(token),
                 token.substring(token.length() - 4), now.plus(Duration.ofDays(validity)), null, null, now);
         repository.insert(credential);
-        Map<String, Object> details = new LinkedHashMap<>();
-        details.put("label", name);
-        details.put("access", accessLevel.name());
-        details.put("days", validity);
-        details.put("tokenHint", credential.tokenHint());
-        record(actor.accountId(), "MCP_CREDENTIAL_CREATED", credential.id(), details);
         return new Created(view(credential, now), token);
     }
 
@@ -114,11 +101,6 @@ public class McpCredentialService {
                     "Không nâng được agent chỉ đọc lên đọc và ghi; hãy tạo agent mới với quyền đọc và ghi");
         }
         repository.updateCredential(id, name, accessLevel);
-        Map<String, Object> details = new LinkedHashMap<>();
-        details.put("label", name);
-        details.put("access", accessLevel.name());
-        details.put("tokenHint", credential.tokenHint());
-        record(actor.accountId(), "MCP_CREDENTIAL_UPDATED", id, details);
         McpCredential next = new McpCredential(id, credential.accountId(), name, accessLevel, credential.tokenHash(),
                 credential.tokenHint(), credential.expiresAt(), credential.revokedAt(), credential.lastUsedAt(),
                 credential.createdAt());
@@ -144,7 +126,6 @@ public class McpCredentialService {
         access.require(actor, Actions.MCP_SELF);
         McpCredential credential = repository.findOwn(actor.accountId(), id).orElseThrow(AiAccess::createNotFoundError);
         if (repository.revoke(id, clock.instant()) == 1) {
-            record(actor.accountId(), "MCP_REVOKED", credential.id(), Map.of("tokenHint", credential.tokenHint()));
         }
     }
 
@@ -190,11 +171,6 @@ public class McpCredentialService {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    private void record(UUID actorId, String action, UUID credentialId, Map<String, Object> details) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actorId, action, "MCP_CREDENTIAL", credentialId.toString(),
-                AuditResult.SUCCESS, null, details, clock.instant()));
     }
 
     static CredentialView view(McpCredential c, Instant now) {

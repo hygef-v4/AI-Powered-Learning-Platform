@@ -2,9 +2,6 @@ package edu.aiplatform.groups.service;
 
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.service.GroupDocumentService;
 import edu.aiplatform.groupdocs.service.IGroupDocStreams;
 import edu.aiplatform.groupdocs.model.GroupDocument;
@@ -56,7 +53,6 @@ public class ClassGroupService {
     private final GroupAccess access;
     private final IClassAccess classes;
     private final IAccountLookup accounts;
-    private final IAudit audit;
     private final IEventPublisher events;
     private final Clock clock;
     private final RandomGenerator random;
@@ -64,16 +60,14 @@ public class ClassGroupService {
 
     @Autowired
     public ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocumentService,
-                             IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts,
-                             IAudit audit, IEventPublisher events, Clock clock,
+                             IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts, IEventPublisher events, Clock clock,
                              GroupProposalCleanup groupProposalCleanup) {
-        this(groups, documents, groupDocumentService, streams, access, classes, accounts, audit, events, clock, new SecureRandom(),
+        this(groups, documents, groupDocumentService, streams, access, classes, accounts, events, clock, new SecureRandom(),
                 groupProposalCleanup);
     }
 
     ClassGroupService(GroupRepository groups, GroupDocumentRepository documents, GroupDocumentService groupDocumentService,
-                      IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts,
-                      IAudit audit, IEventPublisher events, Clock clock, RandomGenerator random,
+                      IGroupDocStreams streams, GroupAccess access, IClassAccess classes, IAccountLookup accounts, IEventPublisher events, Clock clock, RandomGenerator random,
                       GroupProposalCleanup groupProposalCleanup) {
         this.groupProposalCleanup = groupProposalCleanup;
         this.groups = groups;
@@ -83,7 +77,6 @@ public class ClassGroupService {
         this.access = access;
         this.classes = classes;
         this.accounts = accounts;
-        this.audit = audit;
         this.events = events;
         this.clock = clock;
         this.random = random;
@@ -279,7 +272,6 @@ public class ClassGroupService {
         for (ClassGroup g : deleted) {
             groups.cancelPendingOf(g.id(), actor.accountId(), "Nhóm đã bị xóa", now);
             groups.deleteGroup(g.id());
-            record(actor, "GROUP_DELETED", g.id(), Map.of("classId", classId.toString(), "name", g.name()));
         }
         // Đổi tên tạm các nhóm giữ lại để hai nhóm đổi tên cho nhau không vướng unique.
         drafts.stream().filter(d -> d.id() != null && !byId.get(d.id()).name().equals(d.name()))
@@ -292,7 +284,6 @@ public class ClassGroupService {
             if (d.id() == null) {
                 createdGroups.add(id);
                 groups.insertGroup(new ClassGroup(id, classId, d.name(), d.leaderId(), actor.accountId(), now, now, List.of()));
-                record(actor, "GROUP_CREATED", id, collectDetails(classId, d));
             } else {
                 ClassGroup old = byId.get(d.id());
                 boolean renamed = !old.name().equals(d.name());
@@ -309,12 +300,10 @@ public class ClassGroupService {
                     change.put("classId", classId.toString());
                     change.put("before", old.leaderId() == null ? null : old.leaderId().toString());
                     change.put("after", d.leaderId().toString());
-                    record(actor, "GROUP_LEADER_CHANGED", id, change);
                 } else if (membersChanged) {
                     cancelOrphanedRequest(id, d.memberIds(), actor, now);
                 }
                 if (renamed || membersChanged) {
-                    record(actor, "GROUP_UPDATED", id, collectDetails(classId, d));
                 }
             }
         }
@@ -367,7 +356,6 @@ public class ClassGroupService {
                 details.put("documentId", section.documentId().toString());
                 details.put("holder", member.toString());
                 details.put("cause", "MEMBER_REMOVED");
-                record(actor, "GROUP_SECTION_RELEASED", section.id(), details);
             }
         }
     }
@@ -380,20 +368,6 @@ public class ClassGroupService {
         } catch (RuntimeException e) {
             throw ApiException.createUnavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
         }
-    }
-
-    private static Map<String, Object> collectDetails(UUID classId, Draft d) {
-        Map<String, Object> details = new LinkedHashMap<>();
-        details.put("classId", classId.toString());
-        details.put("name", d.name());
-        details.put("leaderId", d.leaderId().toString());
-        details.put("members", d.memberIds().stream().map(UUID::toString).toList());
-        return details;
-    }
-
-    private void record(Actor actor, String action, UUID objectId, Map<String, Object> details) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), action, "CLASS_GROUP", objectId.toString(),
-                AuditResult.SUCCESS, null, details, clock.instant()));
     }
 
     private void publish(String type, UUID classId, UUID groupId, List<UUID> recipients) {

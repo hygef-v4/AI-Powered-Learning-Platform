@@ -19,7 +19,6 @@ import edu.aiplatform.assignmentwork.contract.ActivityKind;
 import edu.aiplatform.assignmentwork.contract.IActivityWrite;
 import edu.aiplatform.assignmentwork.contract.WorkKind;
 import edu.aiplatform.assignmentwork.contract.WorkRef;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.model.GroupDocument;
 import edu.aiplatform.groupdocs.model.GroupDocument.SectionAuthor;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
@@ -54,7 +53,7 @@ class GroupWorkQueryServiceTest {
     private final IClassAccess classes = mock(IClassAccess.class);
     private final IActivityWrite activity = mock(IActivityWrite.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final GroupAccess access = new GroupAccess(authorization, classes, mock(IAudit.class), clock);
+    private final GroupAccess access = new GroupAccess(authorization, classes);
     private final GroupWorkQueryService service = new GroupWorkQueryService(documents, groups,
             new GroupDocAccess(documents, groups, access, mock(IAssignmentQuery.class), clock), access, activity,
             mock(IAssignmentQuery.class));

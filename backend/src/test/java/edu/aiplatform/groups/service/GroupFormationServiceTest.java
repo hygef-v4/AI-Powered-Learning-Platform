@@ -13,8 +13,6 @@ import static org.mockito.Mockito.when;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.GroupFormationSettings;
 import edu.aiplatform.groups.repository.GroupProposalRepository;
 import edu.aiplatform.groups.service.GroupFormationService.FormationView;
@@ -41,10 +39,8 @@ class GroupFormationServiceTest {
     private final GroupProposalRepository proposals = mock(GroupProposalRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
-    private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final GroupFormationService service = new GroupFormationService(proposals,
-            new GroupAccess(authorization, classes, audit, clock), audit, clock);
+    private final GroupFormationService service = new GroupFormationService(proposals, new GroupAccess(authorization, classes), clock);
 
     @BeforeEach
     void setUp() {
@@ -86,9 +82,6 @@ class GroupFormationServiceTest {
         assertThat(saved.getValue().updatedBy()).isEqualTo(teacher.accountId());
         assertThat(view.open()).isTrue();
         verify(proposals).expireInvitations(classId, NOW);
-        ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit).record(event.capture());
-        assertThat(event.getValue().action()).isEqualTo("GROUP_FORMATION_UPDATED");
     }
 
     @Test

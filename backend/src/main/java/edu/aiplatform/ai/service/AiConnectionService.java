@@ -204,9 +204,12 @@ public class AiConnectionService {
         details.put("scope", scope.name());
         details.put("ok", result.ok());
         details.put("draft", true);
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AI_CONNECTION_TESTED", "AI_CONNECTION",
-                probe.id().toString(), result.ok() ? AuditResult.SUCCESS : AuditResult.FAILURE,
-                result.ok() ? null : result.message(), details, now));
+        // Chỉ ghi audit cho khóa AI của hệ thống (yêu cầu 2026-11-25); khóa cá nhân của giảng viên thì không.
+        if (scope == Scope.INSTITUTIONAL) {
+            audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AI_CONNECTION_TESTED", "AI_CONNECTION",
+                    probe.id().toString(), result.ok() ? AuditResult.SUCCESS : AuditResult.FAILURE,
+                    result.ok() ? null : result.message(), details, now));
+        }
         return new TestResult(result.ok(), result.message());
     }
 
@@ -273,9 +276,11 @@ public class AiConnectionService {
         details.put("provider", connection.provider().name());
         details.put("scope", connection.scope().name());
         details.put("ok", result.ok());
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AI_CONNECTION_TESTED", "AI_CONNECTION",
-                connection.id().toString(), result.ok() ? AuditResult.SUCCESS : AuditResult.FAILURE,
-                result.ok() ? null : result.message(), details, now));
+        if (connection.scope() == Scope.INSTITUTIONAL) {
+            audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AI_CONNECTION_TESTED", "AI_CONNECTION",
+                    connection.id().toString(), result.ok() ? AuditResult.SUCCESS : AuditResult.FAILURE,
+                    result.ok() ? null : result.message(), details, now));
+        }
         return view(connection.provider(), connection.recordTest(result.message(), now));
     }
 
@@ -293,7 +298,11 @@ public class AiConnectionService {
                 result.ok() ? "OK" : "FAILED", usage, null);
     }
 
+    /** Chỉ khóa AI của hệ thống vào audit (yêu cầu 2026-11-25). */
     private void auditChange(Actor actor, AiConnection connection, String change) {
+        if (connection.scope() != Scope.INSTITUTIONAL) {
+            return;
+        }
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("change", change);
         details.put("provider", connection.provider().name());

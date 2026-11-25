@@ -41,7 +41,6 @@ class MaterialModuleServiceTest {
                         materialModuleRepository,
                         materialAccessPolicy,
                         quizQuery,
-                        audit,
                         Clock.fixed(now, ZoneOffset.UTC));
         module =
                 new MaterialModule(
@@ -102,7 +101,6 @@ class MaterialModuleServiceTest {
         assertThat(stored).hasSize(1);
         assertThat(stored.get(0).title()).isEqualTo("Module 1");
         verify(materialModuleRepository).insertModule(any());
-        verify(audit).record(argThat(e -> e.action().equals("MATERIAL_MODULE_CREATED")));
     }
 
     @Test
@@ -129,7 +127,6 @@ class MaterialModuleServiceTest {
         when(materialModuleRepository.listModules(subject)).thenReturn(List.of());
         assertThat(materialModuleService.listClassModules(teacher, classId, false)).isEmpty();
         verify(materialModuleRepository, never()).insertModule(any());
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -178,19 +175,13 @@ class MaterialModuleServiceTest {
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_QUIZ_NOT_FOUND"));
         verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
-        verify(audit).record(argThat(event -> event.action().equals("ACCESS_DENIED")
-                && event.result() == edu.aiplatform.audit.contract.AuditResult.DENIED));
-        clearInvocations(audit);
         when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(true);
         when(materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)).thenReturn(false);
         assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
-        verifyNoInteractions(audit);
         when(materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)).thenReturn(true);
         materialModuleService.detachQuiz(manager, moduleId, quizId);
-        verify(audit).record(argThat(event -> event.action().equals("MATERIAL_MODULE_QUIZ_DETACHED")
-                && event.actorId().equals(manager.accountId()) && event.objectId().equals(moduleId.toString())));
     }
 
     @Test
@@ -204,14 +195,12 @@ class MaterialModuleServiceTest {
         materialModuleService.attachQuiz(manager, moduleId, quizId);
         verify(materialModuleRepository, never()).linkQuiz(any());
         verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
-        verifyNoInteractions(audit);
         when(quizQuery.loadQuiz(quizId)).thenReturn(Optional.of(
                 quiz(quizId, QuizScope.SUBJECT, UUID.randomUUID(), null, QuizStatus.DRAFT)));
         assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_QUIZ_INVALID"));
         verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -261,7 +250,6 @@ class MaterialModuleServiceTest {
                         });
         verify(materialModuleRepository, never()).linkQuiz(any());
         verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -356,7 +344,6 @@ class MaterialModuleServiceTest {
 
         verify(materialModuleRepository, never()).moveArchivedMaterials(any(), any());
         verify(materialModuleRepository, never()).deleteModule(any(), anyLong());
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -366,7 +353,6 @@ class MaterialModuleServiceTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -381,7 +367,6 @@ class MaterialModuleServiceTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -436,7 +421,6 @@ class MaterialModuleServiceTest {
                         ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
         verify(materialModuleRepository, never()).updateModule(any(), anyLong());
-        verifyNoInteractions(audit);
     }
 
     @Test

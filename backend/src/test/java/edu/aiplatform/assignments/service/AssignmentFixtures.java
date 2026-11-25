@@ -38,7 +38,6 @@ import edu.aiplatform.assignments.repository.AssignmentRepository;
 import edu.aiplatform.assignments.model.AssignmentRubric;
 import edu.aiplatform.assignments.model.PartCalculator;
 import edu.aiplatform.assignments.repository.RubricRepository;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.files.contract.IArtifact;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
@@ -88,7 +87,6 @@ final class AssignmentFixtures {
     final IClassScope classScope = mock(IClassScope.class);
     final IClassAccess classes = mock(IClassAccess.class);
     final ISubjectQuery subjects = mock(ISubjectQuery.class);
-    final IAudit audit = mock(IAudit.class);
     final IGroupAssignmentSupport groups = mock(IGroupAssignmentSupport.class);
     final ISettings settings = mock(ISettings.class);
     final IArtifact artifacts = mock(IArtifact.class);
@@ -102,20 +100,17 @@ final class AssignmentFixtures {
     final PlatformTransactionManager transactions = mock(PlatformTransactionManager.class);
     final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
 
-    final AssignmentAudit assignmentAudit = new AssignmentAudit(audit, clock);
-    final AssignmentAccess access = new AssignmentAccess(authorization, classScope, classes, subjects, assignmentAudit);
+    final AssignmentAccess access = new AssignmentAccess(authorization, classScope, classes, subjects);
     final AssignmentSupport support = new AssignmentSupport(assignments, rubricRepository, access, groups, subjects);
     final DocumentModelService documents = new DocumentModelService(json);
     final RubricService rubrics = new RubricService(rubricRepository, assignments);
     final AssignmentLifecycle lifecycle = new AssignmentLifecycle(assignments, listeners, events);
     final AssignmentAuthoringService authoring = new AssignmentAuthoringService(assignments, rubrics, documents, access,
-            support, assignmentAudit, artifacts, materials, clock);
+            support, artifacts, materials, clock);
     final AssignmentPublicationService publication = new AssignmentPublicationService(assignments, authoring, rubrics,
-            access, support, lifecycle, assignmentAudit, subjects, clock);
-    final AssignmentCopyService copies = new AssignmentCopyService(assignments, rubrics, access, support,
-            assignmentAudit, classScope, materials, clock);
-    final AssignmentAiDraftService aiDrafts = new AssignmentAiDraftService(assignments, drafts, rubrics, support, access,
-            assignmentAudit, aiTasks, new edu.aiplatform.ai.service.PromptGuardrailService(), materials, json, artifacts, sourceTexts, documents, transactions, clock);
+            access, support, lifecycle, subjects, clock);
+    final AssignmentCopyService copies = new AssignmentCopyService(assignments, rubrics, access, support, classScope, materials, clock);
+    final AssignmentAiDraftService aiDrafts = new AssignmentAiDraftService(assignments, drafts, rubrics, support, access, aiTasks, new edu.aiplatform.ai.service.PromptGuardrailService(), materials, json, artifacts, sourceTexts, documents, transactions, clock);
 
     AssignmentFixtures() {
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());

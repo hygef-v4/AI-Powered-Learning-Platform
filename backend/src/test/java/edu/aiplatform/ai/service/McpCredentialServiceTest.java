@@ -39,8 +39,7 @@ class McpCredentialServiceTest {
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final McpCredentialService service = new McpCredentialService(repository, accounts,
-            new AiAccess(authorization, audit, clock), audit, clock);
+    private final McpCredentialService service = new McpCredentialService(repository, accounts, new AiAccess(authorization, audit, clock), clock);
     private final Actor staff = new Actor(UUID.randomUUID(), Role.TEACHER);
 
     @Test
@@ -59,9 +58,6 @@ class McpCredentialServiceTest {
         assertThat(saved.getValue().expiresAt()).isEqualTo(NOW.plus(Duration.ofDays(30)));
         assertThat(created.toString()).doesNotContain(token);
         ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit).record(event.capture());
-        assertThat(event.getValue().action()).isEqualTo("MCP_CREDENTIAL_CREATED");
-        assertThat(event.getValue().details().toString()).doesNotContain(token);
     }
 
     @Test
@@ -164,8 +160,6 @@ class McpCredentialServiceTest {
         service.revoke(staff, credential.id());
 
         ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit).record(event.capture());
-        assertThat(event.getValue().action()).isEqualTo("MCP_REVOKED");
         UUID other = UUID.randomUUID();
         when(repository.findOwn(staff.accountId(), other)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.revoke(staff, other))

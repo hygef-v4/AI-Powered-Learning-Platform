@@ -33,16 +33,14 @@ class AttemptSubmitter {
     private final IAssignmentQuery assignments;
     private final IDocumentModel documents;
     private final ObjectProvider<ISubmissionListener> listeners;
-    private final WorkAudit audit;
     private final ObjectMapper json;
 
     AttemptSubmitter(AttemptRepository attempts, IAssignmentQuery assignments, IDocumentModel documents,
-                     ObjectProvider<ISubmissionListener> listeners, WorkAudit audit, ObjectMapper json) {
+                     ObjectProvider<ISubmissionListener> listeners, ObjectMapper json) {
         this.attempts = attempts;
         this.assignments = assignments;
         this.documents = documents;
         this.listeners = listeners;
-        this.audit = audit;
         this.json = json;
     }
 
@@ -60,9 +58,6 @@ class AttemptSubmitter {
             return false;
         }
         listeners.orderedStream().forEach(listener -> listener.onSubmitted(attempt.id()));
-        audit.recordSuccess(actorId, "ASSIGNMENT_SUBMITTED", WorkAudit.OBJECT_ATTEMPT, attempt.id(), WorkAudit.collectDetails(
-                "assignmentId", attempt.assignmentId(), "classId", attempt.classId(), "accountId", attempt.accountId(),
-                "attemptNo", attempt.attemptNo(), "submitMode", mode, "late", late, "warningCount", warnings.size()));
         return true;
     }
 

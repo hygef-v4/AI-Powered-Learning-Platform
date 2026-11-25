@@ -263,7 +263,7 @@ class CrossUnitFlowIntegrationTest {
     }
 
     void enroll(UUID accountId, UUID courseClassId) {
-        jdbc.update("insert into enrollments(class_id,account_id,status,source,enrolled_at) values (?,?,'ACTIVE','MANUAL',now())",
+        jdbc.update("insert into enrollments(class_id,account_id,status,source,enrolled_at) values (?,?,'ACTIVE','MANUAL',now() - interval '1 day')",
                 courseClassId, accountId);
     }
 
@@ -330,7 +330,7 @@ class CrossUnitFlowIntegrationTest {
     UUID insertMaterial(String scope, UUID courseClassId, String title) {
         UUID id = UUID.randomUUID();
         jdbc.update("insert into materials(id,scope,subject_id,class_id,module_id,kind,title,order_no,status,current_version_no,"
-                + "created_by,created_at,updated_at) values (?,?,?,?,?,'FILE',?,0,'ACTIVE',1,?,now(),now())",
+                + "created_by,created_at,updated_at) values (?,?,?,?,?,'FILE',?,0,'ACTIVE',1,?,now() - interval '1 day',now() - interval '1 day')",
                 id, scope, subjectId, courseClassId, moduleId, title, actor(Role.TEACHER).accountId());
         jdbc.update("insert into material_versions(material_id,version_no,file_id,file_name,mime_type,byte_size,text_status,"
                 + "extracted_text,created_by,created_at) values (?,1,'test-only-file','source.pdf','application/pdf',100,'EXTRACTED',"
@@ -710,8 +710,10 @@ class CrossUnitFlowIntegrationTest {
             return modules;
         }).when(repository).listModules(subjectId);
         var moduleService = new MaterialModuleService(
-                repository, policy, mock(IQuizQuery.class),
-                mock(IAudit.class), java.time.Clock.systemUTC());
+                repository,
+                policy,
+                mock(IQuizQuery.class),
+                java.time.Clock.systemUTC());
         var transaction = new TransactionTemplate(
                 new DataSourceTransactionManager(jdbc.getDataSource()));
         var pool = Executors.newFixedThreadPool(2);

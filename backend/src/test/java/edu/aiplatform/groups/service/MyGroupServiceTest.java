@@ -16,7 +16,6 @@ import edu.aiplatform.assignments.contract.AssignmentView;
 import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.SubmissionMode;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
@@ -46,7 +45,7 @@ class MyGroupServiceTest {
     private final IClassAccess classes = mock(IClassAccess.class);
     private final IAssignmentQuery assignments = mock(IAssignmentQuery.class);
     private final MyGroupService service = new MyGroupService(groups, documents,
-            new GroupAccess(authorization, classes, mock(IAudit.class), Clock.fixed(NOW, ZoneOffset.UTC)), assignments,
+            new GroupAccess(authorization, classes), assignments,
             mock(IAccountLookup.class));
 
     @BeforeEach
