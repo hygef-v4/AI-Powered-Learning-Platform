@@ -15030,3 +15030,84 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction - system test WF03/WF04, commit
 
 ---
+
+## System test WF05 - Rà soát test case và chạy Round 1
+**Timestamp**: 2026-11-25T11:00:00Z
+**Requested by:** Hải Nam
+**User Input**: "giờ hãy check xem các test case của wf05 xem có case nào đang sai do requirements không đủ hay không rõ ràng hay không, sau đó thực hiện test giúp tôi wf05"
+**AI Response**: "Đối chiếu 9 case tab WF05_Material_Learning (Report-5.3) với FR-004/005/011/013/023, SEC-002, BR-U13, BR-U14 và dữ liệu systest; sau đó chạy WF05 Round 1 trên stack systest bằng giao diện tiếng Anh, chụp bằng chứng và cập nhật sheet."
+**Context**: Construction - system test WF05, review và thực thi
+
+---
+
+## System test WF05 - Hoàn tất Round 1
+**Timestamp**: 2026-11-25T09:45:00Z
+**Requested by:** Hải Nam
+**User Input**: "giờ hãy check xem các test case của wf05 xem có case nào đang sai do requirements không đủ hay không rõ ràng hay không, sau đó thực hiện test giúp tôi wf05"
+**AI Response**: "Chạy 9 case WF05 trên systest (giao diện tiếng Anh): 001 Failed (Material Detail không hiện phiên bản/lịch sử, BR-U13-12), 003 Failed (lý do từ server hiện tiếng Việt trên giao diện tiếng Anh), 002 và 004–009 Passed. Cập nhật sheet tab WF05_Material_Learning (F, G, H, O, P), chụp 56 ảnh kèm _README.txt, cập nhật aidlc-state. Báo các case lệch requirements: 005 (403 so với 404), 008 (email theo tùy chọn, audit bị bỏ theo BR-U02-10), tiền điều kiện 001, 007 (token 5 phút), 003 (giới hạn dung lượng), 006/009 (404). Chưa tạo Jira, chưa sửa test case, chưa commit."
+**Context**: Construction - system test WF05 Round 1 hoàn tất
+
+---
+
+## System test WF05 - Đề xuất sửa test case và code
+**Timestamp**: 2026-11-25T09:55:00Z
+**Requested by:** Hải Nam
+**User Input**: "đề xuất chỉnh sửa test case hay code chi tiết bằng tiếng việt"
+**AI Response**: "Xem mã liên quan hai defect WF05 (lịch sử phiên bản học liệu, lỗi server chưa dịch) và các lỗi nhỏ, rồi đề xuất chi tiết bằng tiếng Việt cách sửa test case, BR và code; chưa sửa gì."
+**Context**: Construction - system test WF05, đề xuất sửa
+
+---
+
+## System test WF05 - Câu hỏi thống nhất BR
+**Timestamp**: 2026-11-25T10:05:00Z
+**Requested by:** Hải Nam
+**User Input**: "hỏi những câu hỏi bạn cần hỏi để thống nhất br bằng tiếng việt cho tôi"
+**AI Response**: "Tạo aidlc-docs/construction/plans/system-test-wf05-br-questions.md gồm 9 câu (audit U13/U14 so với BR-U02-10, 404 hay 403, lịch sử phiên bản học liệu bị bỏ ở commit 22a5a400, ngôn ngữ lỗi server, ngôn ngữ email, định dạng số và ngày giờ, nhận dạng XLSX, 413 của nginx, sửa câu chữ test case). Chờ người dùng trả lời; chưa sửa BR, test case hay code."
+**Context**: Construction - system test WF05, thống nhất BR
+
+---
+
+## System test WF05 - Đề xuất cho câu hỏi thống nhất BR
+**Timestamp**: 2026-11-25T10:10:00Z
+**Requested by:** Hải Nam
+**User Input**: "bạn có đề xuất gì với những câu hỏi đó"
+**AI Response**: "Đề xuất: Câu 1 A (theo BR-U02-10), Câu 2 A (luôn 404), Câu 3 A (khôi phục bảng lịch sử cho staff, có tải bản cũ), Câu 4 A (frontend dịch theo code, câu chung theo status), Câu 5 B (email song ngữ), Câu 6 A (số theo ngôn ngữ, ngày giờ giữ dd/mm/yyyy), Câu 7 B (giữ, ghi giới hạn), Câu 8 A (chấp nhận, ghi BR-U03), Câu 9 A (sửa toàn bộ test case). Chờ người dùng xác nhận trong file câu hỏi."
+**Context**: Construction - system test WF05, thống nhất BR
+
+---
+
+## System test WF05 - Trả lời câu hỏi thống nhất BR
+**Timestamp**: 2026-11-25T10:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "tất cả các câu sửa theo đề xuất ngoại trừ các câu: câu 3, bạn cho tôi biết hiện frontend đang xử lý như nào"
+**AI Response**: "Ghi câu trả lời theo đề xuất cho câu 1, 2, 4, 5, 6, 7, 8, 9; câu 3 để chờ, xem và giải thích cách frontend đang xử lý phiên bản học liệu; bắt đầu sửa BR và code theo các câu đã chốt."
+**Context**: Construction - system test WF05, thống nhất BR
+
+---
+
+## System test WF05 - Sửa BR, code và Round 2
+**Timestamp**: 2026-11-25T10:50:00Z
+**Requested by:** Hải Nam
+**User Input**: "tất cả các câu sửa theo đề xuất ngoại trừ các câu: câu 3, bạn cho tôi biết hiện frontend đang xử lý như nào"
+**AI Response**: "Giải thích câu 3: backend trả versions (staff đủ, sinh viên chỉ bản hiện hành) và nhận versionNo khi cấp token; trang học liệu chỉ hiện bản hiện hành, bảng lịch sử bị bỏ ở commit 22a5a400. Sửa BR U03, U13, U14 và quy ước mã nguồn; code dịch lỗi theo code (frontend), email song ngữ (backend), số theo ngôn ngữ; test đạt; build lại systest, Round 2 003, 008, 009 Passed; sửa câu chữ test case và cập nhật sheet. Câu 3 chờ người dùng chọn; chưa commit."
+**Context**: Construction - system test WF05, sửa theo BR đã thống nhất
+
+---
+
+## System test WF05 - Trả lời câu 3 và Round 2 cho 001, 002
+**Timestamp**: 2026-11-25T11:30:00Z
+**Requested by:** Hải Nam
+**User Input**: "C: chỉ số bản"
+**AI Response**: "Ghi câu 3 = C vào file câu hỏi; sửa BR-U13-12 (hiện Phiên bản N, không có bảng lịch sử). Thêm nhãn phiên bản dưới tên trên trang học liệu cùng test; frontend 1246 test đạt. Build lại frontend systest, Round 2 001 và 002 Passed; cập nhật kỳ vọng, kết quả Round 2 và cột Defect trên sheet. Chưa commit."
+**Context**: Construction - system test WF05, câu 3 BR-U13-12
+
+---
+
+## System test WF05 - Chia commit
+**Timestamp**: 2026-11-25T11:45:00Z
+**Requested by:** Hải Nam
+**User Input**: "chia thành các commit nhỏ lên branch"
+**AI Response**: "Chia thay đổi WF05 thành các commit nhỏ trên system-test: BR và quy ước, dịch lỗi server theo code, số theo ngôn ngữ, email song ngữ, nhãn phiên bản học liệu, nhật ký aidlc. Mục audit của phiên khác giữ nguyên, không đưa vào commit. Chưa push."
+**Context**: Construction - system test WF05, commit
+
+---
