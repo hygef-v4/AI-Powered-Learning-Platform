@@ -14961,3 +14961,21 @@ used by CI or deployment. Replace README references with a plain
 **Context**: Construction, U11, sửa CI.
 
 ---
+
+## Construction - U11 Quiz Practice tài liệu audit
+**Timestamp**: 2026-11-25T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa BR-U11-33 và BR-U11-41 cho khớp BR-U02-10"
+**AI Response**: "BR-U11-33: quyết định trừ điểm không còn ghi audit QUIZ_PENALTY_*, quyết định và lý do lưu trên lượt. BR-U11-41: ngoài phạm vi trả 404, không ghi ACCESS_DENIED. Bỏ nhắc audit còn sót ở F5 (business-logic-model), IAudit trong domain-entities, code-summary (F5, quyền, bảng truy vết BR-U11-40/41), logical-components, as-built-baseline và chú thích PracticeSupport, TeacherQuizAttemptService. Không đổi hành vi code."
+**Context**: Construction, U11, đồng bộ tài liệu với BR-U02-10
+
+---
+
+## Construction - U11 Quiz Practice commit tài liệu audit
+**Timestamp**: 2026-11-25T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit và push"
+**AI Response**: "Commit các thay đổi đồng bộ tài liệu U11 với BR-U02-10 (không gồm .claude/launch.json) và push lên chi-cuongg/quiz-small-fixes (PR #137)."
+**Context**: Construction, U11, commit và push
+
+---

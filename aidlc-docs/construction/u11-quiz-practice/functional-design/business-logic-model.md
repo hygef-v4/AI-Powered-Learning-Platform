@@ -56,7 +56,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. Bấm Nộp, xác nhận (báo số câu chưa trả lời); frontend lưu lần cuối rồi gọi `POST /api/v1/quiz-attempts/{attemptId}/submit`.
 2. Lượt đã nộp thì trả kết quả cũ.
 3. Kiểm chủ lượt, còn học lớp `OPEN`, `IN_PROGRESS`. Đã quá `deadlineAt` cộng 30 giây thì vẫn nộp ngay bằng câu trả lời đã lưu với `AUTO_TIME_LIMIT`, không trả lỗi (BR-U11-13, KAN-211).
-4. Một transaction: `SUBMITTED`, `submittedAt`, `submitMode = MANUAL` (hoặc `AUTO_TIME_LIMIT` theo bước 3); gọi `IQuizScoring.score` và lưu điểm, đúng sai từng câu (BR-U11-15); audit `QUIZ_ATTEMPT_SUBMITTED`.
+4. Một transaction: `SUBMITTED`, `submittedAt`, `submitMode = MANUAL` (hoặc `AUTO_TIME_LIMIT` theo bước 3); gọi `IQuizScoring.score` và lưu điểm, đúng sai từng câu (BR-U11-15); không ghi audit (BR-U02-10).
 5. Mở Quiz Result.
 
 ### F6 - Tự nộp

@@ -68,7 +68,6 @@ stateDiagram-v2
 | Interface | Unit | Dùng để |
 |---|---|---|
 | `IAuthorization` | U01 | Kiểm R5, R3/R4 |
-| `IAudit` | U02 | Audit |
 | `IClassAccess` | U05 | Ghi danh, lớp đang mở của người học |
 | `IActivityWrite`, `IActivityQuery`; `useActivityTracker`, `ActivityTimeline` | U08 | Ghi và xem dữ liệu rời trang của lượt Quiz |
 | `IQuizQuery`, `IQuizScoring` | U10 | Quiz, đề không có đáp án, chấm, đáp án sau khi nộp |

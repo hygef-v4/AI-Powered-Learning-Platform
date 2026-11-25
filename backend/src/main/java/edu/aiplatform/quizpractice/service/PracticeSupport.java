@@ -107,7 +107,7 @@ class PracticeSupport {
                 : call(() -> quizzes.getPaper(attempt.quizId(), points)).orElseThrow(() -> ApiException.createNotFound(QUIZ_NOT_FOUND));
     }
 
-    /** Lượt của chính người gọi; của người khác thì 404 và audit (BR-U11-22). Kết quả cũ vẫn xem được sau khi rời lớp. */
+    /** Lượt của chính người gọi; của người khác thì 404 (BR-U11-22). Kết quả cũ vẫn xem được sau khi rời lớp. */
     QuizAttempt loadOwnAttempt(Actor actor, UUID attemptId, String action) {
         QuizAttempt attempt = attempts.findAttempt(attemptId).orElseThrow(() -> ApiException.createNotFound(ATTEMPT_NOT_FOUND));
         if (actor == null || !attempt.accountId().equals(actor.accountId())) {
