@@ -85,6 +85,16 @@ class ProfileAndPasswordChangeTest {
     }
 
     @Test
+    void profileOfSubjectManagerPointsToManagerDashboard() {
+        Account manager = IdentityTestData.account(Role.SUBJECT_MANAGER, AccountStatus.ACTIVE, null);
+        when(accounts.findById(manager.id())).thenReturn(Optional.of(manager));
+
+        ProfileService.ProfileView view = profiles.loadProfile(new Actor(manager.id(), Role.SUBJECT_MANAGER));
+
+        assertThat(view.homePath()).isEqualTo(HomePaths.MANAGER_DASHBOARD);
+    }
+
+    @Test
     void updateTrimsNameAndAuditsFieldNamesOnly() {
         profiles.updateProfile(actor, "  Vũ Minh Tài Mới ", " 0912345678 ");
 
