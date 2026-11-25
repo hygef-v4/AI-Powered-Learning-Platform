@@ -3671,7 +3671,8 @@
         "theLecturerDecidedNotTo": "{leaves} · giảng viên quyết định không trừ điểm: {decisionReason}",
         "noPointsDeductedYetThe": "{leaves} · chưa bị trừ điểm, giảng viên sẽ xem xét.",
         "autoSubmittedWhenTimeRan": "Tự nộp khi hết giờ",
-        "autoSubmittedWhenTheQuiz": "Tự nộp khi quiz bị ngưng"
+        "autoSubmittedWhenTheQuiz": "Tự nộp khi quiz bị ngưng",
+        "autoSubmittedWhenClassAccessEnded": "Tự nộp khi lớp đóng hoặc bạn rời lớp"
       }
     },
     "pages": {

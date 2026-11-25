@@ -145,7 +145,7 @@ class QuizPracticeServicesTest {
         attemptsService = new QuizAttemptService(store, support, access, clock);
         queries = new QuizPracticeQueryService(store, quizzes, classes, support, access);
         teacherService = new TeacherQuizAttemptService(store, classes, accounts, activityQuery, support, access, clock);
-        scanner = new QuizAutoSubmitScanner(store, support, TransactionOperations.withoutTransaction());
+        scanner = new QuizAutoSubmitScanner(store, classes, support, TransactionOperations.withoutTransaction());
         retired = new QuizRetiredHandler(store, support);
         activity = new QuizActivityService(activityWrite, support, clock);
     }
@@ -499,6 +499,46 @@ class QuizPracticeServicesTest {
         assertThat(done.submitMode()).isEqualTo(SubmitMode.AUTO_TIME_LIMIT);
         assertThat(done.score()).isEqualByComparingTo("1");
         assertThat(audits).filteredOn(e -> e.action().equals("QUIZ_ATTEMPT_SUBMITTED")).hasSize(1);
+    }
+
+    @Test
+    void scannerSubmitsAttemptsOfAClassThatIsNoLongerOpen() {
+        var mine = attemptsService.start(student, quizId, classA);
+        attemptsService.saveAnswers(student, mine.attemptId(), Map.of(q1, List.of("1")), 0);
+        var theirs = attemptsService.start(other, quizId, classA);
+        when(classes.getClassRef(classA)).thenReturn(Optional.of(classRef(classA, ClassStatus.ARCHIVED)));
+
+        scanner.scan(clock.instant());
+        scanner.scan(clock.instant());
+
+        QuizAttempt done = store.byId.get(mine.attemptId());
+        assertThat(done.status()).isEqualTo(AttemptStatus.SUBMITTED);
+        assertThat(done.submitMode()).isEqualTo(SubmitMode.AUTO_ACCESS_LOST);
+        assertThat(done.score()).as("chấm bằng câu trả lời đã lưu").isEqualByComparingTo("1");
+        assertThat(store.byId.get(theirs.attemptId()).submitMode()).isEqualTo(SubmitMode.AUTO_ACCESS_LOST);
+        assertThat(audits).filteredOn(e -> e.action().equals("QUIZ_ATTEMPT_SUBMITTED")).hasSize(2);
+    }
+
+    @Test
+    void scannerSubmitsOnlyTheAttemptOfAStudentWhoLeftTheClass() {
+        var mine = attemptsService.start(student, quizId, classA);
+        var theirs = attemptsService.start(other, quizId, classA);
+        when(classes.listActiveStudents(classA)).thenReturn(List.of(other.accountId()));
+
+        scanner.scan(clock.instant());
+
+        assertThat(store.byId.get(mine.attemptId()).submitMode()).isEqualTo(SubmitMode.AUTO_ACCESS_LOST);
+        assertThat(store.byId.get(theirs.attemptId()).hasInProgressStatus()).as("còn học lớp thì làm tiếp").isTrue();
+    }
+
+    @Test
+    void scannerLeavesAttemptsAloneWhenClassesCannotBeChecked() {
+        var mine = attemptsService.start(student, quizId, classA);
+        when(classes.getClassRef(classA)).thenThrow(new IllegalStateException("U05 lỗi"));
+
+        scanner.scan(clock.instant());
+
+        assertThat(store.byId.get(mine.attemptId()).hasInProgressStatus()).as("không nộp oan khi U05 lỗi").isTrue();
     }
 
     @Test
@@ -914,6 +954,17 @@ class QuizPracticeServicesTest {
         public List<QuizAttempt> findOverdue(Instant cutoff, int limit) {
             return byId.values().stream().filter(a -> a.hasInProgressStatus() && a.deadlineAt() != null
                     && a.deadlineAt().isBefore(cutoff)).limit(limit).toList();
+        }
+
+        @Override
+        public List<UUID> listClassesWithInProgress() {
+            return byId.values().stream().filter(QuizAttempt::hasInProgressStatus).map(QuizAttempt::classId)
+                    .distinct().toList();
+        }
+
+        @Override
+        public List<QuizAttempt> listInProgressByClass(UUID classId) {
+            return byId.values().stream().filter(a -> a.classId().equals(classId) && a.hasInProgressStatus()).toList();
         }
 
         @Override

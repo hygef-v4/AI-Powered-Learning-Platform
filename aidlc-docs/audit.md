@@ -14871,3 +14871,30 @@ used by CI or deployment. Replace README references with a plain
 **Context**: Construction, sửa nhỏ U10/U11, không đổi API, schema hay hành vi nghiệp vụ.
 
 ---
+
+## Kiểm tra luồng nghiệp vụ Quiz U10, U11
+**Timestamp**: 2026-11-25T09:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra lại businessflow cho tôi"
+**AI Response**: "Đối chiếu business-logic-model và business-rules của U11 (và phần phát hành, ngưng, version của U10) với code. Phát hiện: (1) lượt không giới hạn giờ bị treo IN_PROGRESS khi lớp không còn OPEN hoặc sinh viên rời lớp; (2) version mới là quizId mới nên số lượt về 0, tài liệu chưa nói; tài liệu lệch code ở F5 bước 3, F3, BR-U11-40 (QUIZ_SUBMIT_REJECTED khi quá giờ, lý do QUIZ_NOT_OPEN, thiếu QUIZ_PENALTY_*). Không sửa code."
+**Context**: Rà soát, không thuộc stage AI-DLC.
+
+---
+
+## Sửa lượt Quiz bị treo khi lớp đóng hoặc rời lớp
+**Timestamp**: 2026-11-25T10:02:10Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa lỗi 1"
+**AI Response**: "Bộ quét quiz-auto-submit thêm bước tự nộp lượt IN_PROGRESS của lớp không còn OPEN hoặc của sinh viên không còn ghi danh lớp, bằng câu trả lời đã lưu, chế độ mới AUTO_ACCESS_LOST (migration mở rộng check constraint); U05 lỗi thì bỏ qua lớp đó, không nộp. Frontend thêm nhãn cho chế độ mới; cập nhật BR-U11-14, F6, domain-entities, code-summary. Backend: QuizPracticeServicesTest 41 (thêm 3), QuizAttemptTest, QuizPracticeControllerTest, AttemptActivityAssessorTest đạt; QuizAttemptRepositoryIntegrationTest 10 đạt trên Postgres Testcontainers (thêm 1, kiểm migration). Frontend tsc và 39 test quizpractice đạt. Không chạy toàn bộ mvn verify, chưa commit."
+**Context**: Construction, sửa lỗi U11; đổi schema (check constraint submit_mode) và thêm giá trị enum SubmitMode.
+
+---
+
+## Commit sửa lượt Quiz bị treo
+**Timestamp**: 2026-11-25T10:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Commit toàn bộ thay đổi sửa lượt Quiz bị treo (AUTO_ACCESS_LOST) lên nhánh chi-cuongg/quiz-small-fixes; không push."
+**Context**: Construction, U11, commit.
+
+---

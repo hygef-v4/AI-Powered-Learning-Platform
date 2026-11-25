@@ -30,7 +30,7 @@ U11 không sở hữu: Quiz, câu, đáp án (U10), dữ liệu hoạt động (
 | `answers` | JSON | Câu → danh sách lựa chọn |
 | `answerVersion` | số | Tăng mỗi lần lưu |
 | `status` | enum | `IN_PROGRESS`, `SUBMITTED` |
-| `submitMode` | enum | `MANUAL`, `AUTO_TIME_LIMIT`, `AUTO_RETIRED` |
+| `submitMode` | enum | `MANUAL`, `AUTO_TIME_LIMIT`, `AUTO_RETIRED`, `AUTO_ACCESS_LOST` (từ 2026-11-25) |
 | `startedAt`, `deadlineAt`, `lastSavedAt`, `submittedAt` | thời gian | `deadlineAt` trống khi Quiz không giới hạn giờ |
 | `score`, `maxScore`, `correctCount` | số | Có sau khi nộp |
 | `result` | JSON | Đúng sai, điểm từng câu |
