@@ -15273,3 +15273,21 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, U11, Auto-fix PR #137
 
 ---
+
+## U01 Chủ nhiệm môn đăng nhập vào /manager
+**Timestamp**: 2026-11-25T17:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "lúc đăng nhập vào subject manager tôi nghĩ nên chuyển đến trang https://alapedu.online/manager chứ k hải trang lớp như teacher"
+**AI Response**: "Đổi `HomePaths.resolveHomePath` cho SUBJECT_MANAGER từ `/teaching/classes` sang `/manager` (hằng `MANAGER_DASHBOARD` đã có), bỏ hằng `TEACHING_CLASSES` không còn dùng, sửa `AuthServiceTest`. Frontend dùng `homePath` do backend trả nên không đổi."
+**Context**: Construction, U01 F15 (BR-U01-48), sửa nhỏ, không đổi schema hay API.
+
+---
+
+## Construction - U11 Quiz Practice Auto-fix xung đột lần 2
+**Timestamp**: 2026-11-26T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) PR #137 có xung đột merge với staging tại 7c259ac9."
+**AI Response**: "Merge origin/staging vào chi-cuongg/quiz-small-fixes. Chỉ audit.md xung đột: hai bên cùng thêm mục cuối file, giữ cả hai. Staging chỉ đổi U01 (HomePaths), không chạm file của PR; chạy lại test identity bị ảnh hưởng."
+**Context**: Construction, U11, Auto-fix PR #137
+
+---
