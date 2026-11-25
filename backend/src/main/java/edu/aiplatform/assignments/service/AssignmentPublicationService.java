@@ -16,7 +16,6 @@ import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.contract.ISubjectQuery;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,13 +34,12 @@ public class AssignmentPublicationService {
     private final AssignmentAccess access;
     private final AssignmentSupport support;
     private final AssignmentLifecycle lifecycle;
-    private final AssignmentAudit audit;
     private final ISubjectQuery subjects;
     private final Clock clock;
 
     public AssignmentPublicationService(AssignmentRepository assignments, AssignmentAuthoringService assignmentAuthoringService,
                                         RubricService rubricService, AssignmentAccess access, AssignmentSupport support,
-                                        AssignmentLifecycle lifecycle, AssignmentAudit audit, ISubjectQuery subjects,
+                                        AssignmentLifecycle lifecycle, ISubjectQuery subjects,
                                         Clock clock) {
         this.assignments = assignments;
         this.assignmentAuthoringService = assignmentAuthoringService;
@@ -49,7 +47,6 @@ public class AssignmentPublicationService {
         this.access = access;
         this.support = support;
         this.lifecycle = lifecycle;
-        this.audit = audit;
         this.subjects = subjects;
         this.clock = clock;
     }
@@ -90,9 +87,6 @@ public class AssignmentPublicationService {
         Assignment saved = assignments.saveAssignment(current.applySchedule(AssignmentStatus.SCHEDULED, opensAt,
                 command.closesAt(), command.lateUntil(), maxAttempts, now));
         rubricService.lockAll(saved.id(), now);
-        audit.recordSuccess(actor, "ASSIGNMENT_PUBLISHED", saved.id(), AssignmentAudit.collectDetails("scope", saved.scope(),
-                "classId", saved.classId(), "subjectId", saved.subjectId(), "opensAt", opensAt,
-                "closesAt", saved.closesAt(), "lateUntil", saved.lateUntil(), "maxAttempts", saved.maxAttempts()));
         if (!opensAt.isAfter(now)) {
             lifecycle.open(saved.id(), now);
         }
@@ -131,8 +125,6 @@ public class AssignmentPublicationService {
         }
         Assignment saved = assignments.saveAssignment(current.applySchedule(current.status(), opensAt, closesAt, lateUntil,
                 maxAttempts, now));
-        audit.recordSuccess(actor, "ASSIGNMENT_SCHEDULE_CHANGED", saved.id(), AssignmentAudit.collectDetails(
-                "before", schedule(current), "after", schedule(saved)));
         return support.buildDetail(actor, saved, List.of());
     }
 
@@ -149,9 +141,6 @@ public class AssignmentPublicationService {
         Instant now = clock.instant();
         lifecycle.closeAssignment(id, now, false);
         Assignment closed = assignments.findAssignment(id).orElseThrow();
-        audit.recordSuccess(actor, "ASSIGNMENT_CLOSED", id, AssignmentAudit.collectDetails(
-                "early", current.calculateFinalDeadline() != null && now.isBefore(current.calculateFinalDeadline()),
-                "closesAt", current.closesAt(), "lateUntil", current.lateUntil()));
         return support.buildDetail(actor, closed, List.of());
     }
 
@@ -162,8 +151,7 @@ public class AssignmentPublicationService {
         if (reason.isEmpty() || reason.length() > Assignment.REASON_MAX) {
             throw ApiException.createBadRequest("RETIRE_REASON_INVALID", "Nhập lý do ngưng giao, tối đa 500 ký tự");
         }
-        Assignment current = assignments.findForUpdate(id).orElseThrow(() -> access.deny(actor, "ASSIGNMENT_RETIRED",
-                AssignmentAudit.OBJECT_ASSIGNMENT, id, "NOT_FOUND"));
+        Assignment current = assignments.findForUpdate(id).orElseThrow(() -> access.notFound());
         access.requireManage(actor, current, "ASSIGNMENT_RETIRED");
         AssignmentSupport.requireVersion(current, command.version());
         if (current.status() != AssignmentStatus.SCHEDULED && current.status() != AssignmentStatus.OPEN) {
@@ -171,8 +159,6 @@ public class AssignmentPublicationService {
         }
         Assignment saved = assignments.saveAssignment(current.markRetired(reason, clock.instant()));
         lifecycle.markRetired(saved.id());
-        audit.recordSuccess(actor, "ASSIGNMENT_RETIRED", saved.id(), AssignmentAudit.collectDetails("reason", reason,
-                "previousStatus", current.status()));
         return support.buildDetail(actor, saved, List.of());
     }
 
@@ -243,12 +229,4 @@ public class AssignmentPublicationService {
         }
     }
 
-    private static Map<String, Object> schedule(Assignment a) {
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("opensAt", a.opensAt() == null ? null : a.opensAt().toString());
-        out.put("closesAt", a.closesAt() == null ? null : a.closesAt().toString());
-        out.put("lateUntil", a.lateUntil() == null ? "" : a.lateUntil().toString());
-        out.put("maxAttempts", a.maxAttempts());
-        return out;
-    }
 }

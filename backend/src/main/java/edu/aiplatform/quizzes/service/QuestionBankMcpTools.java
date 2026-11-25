@@ -69,7 +69,7 @@ public class QuestionBankMcpTools implements IMcpToolProvider {
         String action = "save_question_bank_draft".equals(name)
                 ? Actions.QUESTION_BANK_MANAGE
                 : Actions.QUESTION_BANK_VIEW;
-        access.requireSubject(actor, action, id, "SUBJECT", id, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, action, id, "SUBJECT_NOT_FOUND");
         return new McpToolResult(false, switch (name) {
             case "read_question_bank_context" -> loadContext(actor, id, in);
             case "list_bank_questions" -> questionBankService.listQuestions(actor, id,

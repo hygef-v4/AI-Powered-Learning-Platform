@@ -87,9 +87,9 @@ class QuizSupport {
     /** Quiz của môn: Chủ nhiệm môn của môn (R2); Quiz của lớp: giảng viên của lớp (R3/R4). Không đạt → 404. */
     void requireManage(Actor actor, Quiz quiz) {
         if (quiz.scope() == QuizScope.SUBJECT) {
-            access.requireSubject(actor, Actions.QUIZ_SUBJECT_MANAGE, quiz.subjectId(), OBJECT, quiz.id(), NOT_FOUND);
+            access.requireSubject(actor, Actions.QUIZ_SUBJECT_MANAGE, quiz.subjectId(), NOT_FOUND);
         } else {
-            access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, quiz.classId(), OBJECT, quiz.id(), NOT_FOUND);
+            access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, quiz.classId(), NOT_FOUND);
         }
     }
 
@@ -125,7 +125,7 @@ class QuizSupport {
     boolean requireView(Actor actor, Quiz quiz, UUID classId) {
         if (quiz.scope() == QuizScope.SUBJECT && classId != null
                 && !access.allows(actor, Actions.QUIZ_SUBJECT_MANAGE, ResourceRef.subject(quiz.subjectId()))) {
-            access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, OBJECT, quiz.id(), NOT_FOUND);
+            access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, NOT_FOUND);
             ClassRef ref = loadClassRef(classId);
             if (!ref.subjectId().equals(quiz.subjectId())
                     || (quiz.status() != QuizStatus.OPEN

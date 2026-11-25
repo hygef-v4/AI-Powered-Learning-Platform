@@ -6,7 +6,6 @@ import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.materials.model.Material;
 import edu.aiplatform.shared.error.ApiException;
 import edu.aiplatform.subjects.contract.*;
-import java.time.Clock;
 import java.util.*;
 import java.util.function.Supplier;
 import org.springframework.stereotype.Component;
@@ -17,22 +16,16 @@ public class MaterialAccessPolicy {
     private final ISubjectQuery subjectQuery;
     private final IClassAccess classAccess;
     private final IClassScope classScope;
-    private final IAudit audit;
-    private final Clock clock;
 
     public MaterialAccessPolicy(
             IAuthorization authorization,
             ISubjectQuery subjectQuery,
             IClassAccess classAccess,
-            IClassScope classScope,
-            IAudit audit,
-            Clock clock) {
+            IClassScope classScope) {
         this.authorization = authorization;
         this.subjectQuery = subjectQuery;
         this.classAccess = classAccess;
         this.classScope = classScope;
-        this.audit = audit;
-        this.clock = clock;
     }
 
     private <T> T callDependency(Supplier<T> operation) {
@@ -197,17 +190,6 @@ public class MaterialAccessPolicy {
     }
 
     private void denyAccess(Actor actor, UUID id) {
-        audit.record(
-                new AuditEvent(
-                        UUID.randomUUID(),
-                        actor == null ? null : actor.accountId(),
-                        "ACCESS_DENIED",
-                        "MATERIAL",
-                        id.toString(),
-                        AuditResult.DENIED,
-                        "OUT_OF_SCOPE",
-                        Map.of(),
-                        clock.instant()));
         throw ApiException.createNotFound("MATERIAL_NOT_FOUND");
     }
 }

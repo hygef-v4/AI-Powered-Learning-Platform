@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
 import edu.aiplatform.identity.contract.Actor;
@@ -39,10 +38,8 @@ class GroupRenameServiceTest {
     private final GroupRepository groups = mock(GroupRepository.class);
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
-    private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final GroupRenameService service = new GroupRenameService(groups,
-            new GroupAccess(authorization, classes, audit, clock), audit, clock);
+    private final GroupRenameService service = new GroupRenameService(groups, new GroupAccess(authorization, classes), clock);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", leader.accountId(), null, NOW,
             NOW, List.of(leader.accountId(), member.accountId()));
     private final ClassGroup other = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 2", null, null, NOW, NOW, List.of());
@@ -64,7 +61,6 @@ class GroupRenameServiceTest {
         assertThat(renamed.name()).isEqualTo("Nhóm Sao Băng");
         verify(groups).updateGroup(group.id(), "Nhóm Sao Băng", leader.accountId(), NOW);
         verify(groups).bumpSetVersion(classId, 4L, NOW);
-        verify(audit).record(org.mockito.ArgumentMatchers.argThat(e -> e.action().equals("GROUP_RENAMED")));
     }
 
     @Test

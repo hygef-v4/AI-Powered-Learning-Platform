@@ -89,7 +89,7 @@ public class QuizPracticeQueryService {
     /** Quiz Practice Detail (BR-U11-03): chỉ sinh viên đang học lớp; Quiz đã ngưng chỉ xem khi mình đã có lượt. */
     @Transactional(readOnly = true)
     public PracticeQuizDetail loadQuiz(Actor actor, UUID quizId, UUID classId) {
-        access.requireClass(actor, Actions.QUIZ_PRACTICE, classId, "QUIZ", quizId, PracticeSupport.QUIZ_NOT_FOUND);
+        access.requireClass(actor, Actions.QUIZ_PRACTICE, classId, PracticeSupport.QUIZ_NOT_FOUND);
         ClassRef ref = support.loadClassRef(classId);
         QuizView quiz = support.loadQuizInClass(quizId, ref);
         List<QuizAttempt> own = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()

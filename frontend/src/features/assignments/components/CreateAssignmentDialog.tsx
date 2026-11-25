@@ -54,7 +54,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * t21b Tạo bài tập (F3, F13), một popup: Tiêu đề bắt buộc ở trên cùng, rồi Loại bài (Cá nhân, Nhóm, Luyện tập) dùng cho
- * cả ba cách tạo, rồi Cách tạo (yêu cầu 2026-11-10; 2026-11-12: Loại đứng trên Cách tạo, mặc định là Đề có sẵn):
+ * cả ba cách tạo, rồi Cách tạo (yêu cầu 2026-11-10; 2026-11-12: Loại đứng trên Cách tạo; 2026-11-25: mặc định là Đề mới):
  * - Đề có sẵn: copy đề mẫu của môn hay bài ở lớp mình dạy; bài copy theo Loại đã chọn (chọn bài nguồn thì Loại nhảy theo
  *   bài đó, vẫn đổi được).
  * - Đề mới: Mẫu đề là tệp DOCX (nhập luôn vào khung), không copy.
@@ -65,7 +65,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const [title, setTitle] = useState("");
   const [titleError, setTitleError] = useState<string | null>(null);
-  const [method, setMethod] = useState<Method>("EXISTING");
+  const [method, setMethod] = useState<Method>("NEW");
   /** Mẫu đề của Đề mới: 1 DOCX (nhập ngay), hoặc ảnh/PDF đề cũ (trang soạn bài nhờ AI đọc, BR-U07-87). */
   const [templateFiles, setTemplateFiles] = useState<File[]>([]);
   const file = templateFiles[0] ?? null;
@@ -351,7 +351,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     <Dialog open title={isClass ? msg("assignments.components.CreateAssignmentDialog.newAssignment") : msg("assignments.components.CreateAssignmentDialog.newTemplate")} size="lg" onClose={() => void close()} dismissible={!busy}
       footer={<>
         {created && <Button onClick={() => onCreated(created)} disabled={busy}>{msg("assignments.components.CreateAssignmentDialog.openAssignment")}</Button>}
-        <Button variant="primary" onClick={() => void submit()} disabled={busy} data-testid="create-assignment-submit">
+        <Button variant="primary" onClick={() => void submit()} loading={busy} data-testid="create-assignment-submit">
           {created || aiCreated ? msg("assignments.components.CreateAssignmentDialog.retry") : msg("assignments.components.CreateAssignmentDialog.create")}
         </Button>
       </>}>

@@ -167,7 +167,6 @@ class AssignmentAiDraftServiceTest {
         assertThat(rubrics).filteredOn(r -> !r.criteria().isEmpty()).hasSize(2)
                 .extracting(AssignmentRubric::totalPoints).containsExactlyInAnyOrder(
                         new java.math.BigDecimal("2.00"), new java.math.BigDecimal("3.00"));
-        verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_AI_DRAFT_APPLIED")));
     }
 
     @Test

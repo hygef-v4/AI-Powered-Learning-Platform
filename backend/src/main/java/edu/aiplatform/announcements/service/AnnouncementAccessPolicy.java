@@ -4,7 +4,6 @@ import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.audit.contract.*;
 import edu.aiplatform.identity.contract.*;
 import edu.aiplatform.shared.error.ApiException;
-import java.time.Clock;
 import java.util.*;
 import org.springframework.stereotype.Service;
 
@@ -12,15 +11,11 @@ import org.springframework.stereotype.Service;
 public class AnnouncementAccessPolicy {
     private final IAuthorization authorization;
     private final IClassAccess classAccess;
-    private final IAudit audit;
-    private final Clock clock;
 
     public AnnouncementAccessPolicy(
-            IAuthorization authorization, IClassAccess classAccess, IAudit audit, Clock clock) {
+            IAuthorization authorization, IClassAccess classAccess) {
         this.authorization = authorization;
         this.classAccess = classAccess;
-        this.audit = audit;
-        this.clock = clock;
     }
 
     public ClassRef requireClassAccess(Actor actor, UUID id, boolean write) {
@@ -70,17 +65,6 @@ public class AnnouncementAccessPolicy {
     }
 
     public ApiException rejectAccess(Actor actor, UUID id) {
-        audit.record(
-                new AuditEvent(
-                        UUID.randomUUID(),
-                        actor == null ? null : actor.accountId(),
-                        "ACCESS_DENIED",
-                        "ANNOUNCEMENT",
-                        id == null ? null : id.toString(),
-                        AuditResult.DENIED,
-                        "OUT_OF_SCOPE",
-                        Map.of(),
-                        clock.instant()));
         return ApiException.createNotFound("ANNOUNCEMENT_NOT_FOUND");
     }
 }

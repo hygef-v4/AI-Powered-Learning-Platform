@@ -28,8 +28,7 @@ function readInitialFilter(params: URLSearchParams | null): AuditFilterForm {
 /**
  * Màn #14 Audit Log (UC 13): chỉ đọc, mặc định 7 ngày gần nhất; mở từ Account Detail thì điền sẵn Người thực hiện là
  * email của tài khoản đó.
- * Đổi bộ lọc là tra cứu luôn (không có nút Lọc). Chỉ lần mở màn ghi một lần xem audit; lọc, xóa lọc, chuyển
- * trang gửi `recordView: false`.
+ * Đổi bộ lọc là tra cứu luôn (không có nút Lọc). Tra cứu không được ghi vào nhật ký.
  */
 export function AuditLogPage() {
   const params = useSearchParams();
@@ -79,10 +78,10 @@ export function AuditLogPage() {
     );
   };
 
-  /** Mở màn: tra cứu bộ lọc mặc định (và đối tượng trên URL) một lần; đây là lần duy nhất được ghi audit. */
+  /** Mở màn: tra cứu bộ lọc mặc định (và đối tượng trên URL) một lần. */
   useEffect(() => {
     // Mở từ Account Detail: ô Người thực hiện điền sẵn email, kèm actorId nên không phải tra lại.
-    const query = { ...buildQuery(readInitialFilter(params), params?.get("actorId") ?? undefined, 0, PAGE_SIZE), recordView: true };
+    const query = buildQuery(readInitialFilter(params), params?.get("actorId") ?? undefined, 0, PAGE_SIZE);
     const id = ++request.current;
     applied.current = query;
     getAuditLogs(query).then(
@@ -96,7 +95,7 @@ export function AuditLogPage() {
   const search = (filter: AuditFilterForm) => {
     if (filter.fromDate && filter.toDate && filter.fromDate > filter.toDate) return;
     setLoading(true);
-    void loadLogs({ ...buildQuery(filter, undefined, 0, PAGE_SIZE), recordView: false });
+    void loadLogs(buildQuery(filter, undefined, 0, PAGE_SIZE));
   };
 
   /** Mỗi lần đổi bộ lọc (sau lần mở màn) thì tra cứu lại sau một nhịp ngắn. */
@@ -115,7 +114,7 @@ export function AuditLogPage() {
   const changePage = (page: number) => {
     if (!applied.current) return;
     setLoading(true);
-    void loadLogs({ ...applied.current, page, recordView: false });
+    void loadLogs({ ...applied.current, page });
   };
 
   return (

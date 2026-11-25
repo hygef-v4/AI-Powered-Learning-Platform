@@ -50,10 +50,7 @@ public class AuditController {
     public record AuditLogPage(List<AuditLogItem> items, int page, int size, long totalElements, int totalPages) {
     }
 
-    /**
-     * {@code actor} dựng phía server từ phiên đăng nhập, không lấy từ request; quyền do {@link IAuditQuery} kiểm.
-     * Màn Audit Log gửi {@code recordView=false} khi lọc, xóa lọc hay chuyển trang để chỉ lần mở màn được ghi.
-     */
+    /** {@code actor} dựng phía server từ phiên đăng nhập, không lấy từ request; quyền do {@link IAuditQuery} kiểm. */
     @GetMapping
     public AuditLogPage listAuditLogs(@AuthenticationPrincipal Actor actor,
                              @RequestParam(required = false) UUID actorId,
@@ -65,14 +62,13 @@ public class AuditController {
                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
                              @RequestParam(defaultValue = "0") int page,
-                             @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) int size,
-                             @RequestParam(defaultValue = "true") boolean recordView) {
+                             @RequestParam(defaultValue = "" + DEFAULT_PAGE_SIZE) int size) {
         if (page < 0 || size < 1) {
             throw ApiException.createBadRequest("AUDIT_FILTER_INVALID", "Số trang hoặc kích thước trang không hợp lệ");
         }
         Page<AuditLogView> found = auditQuery.query(actor,
-                new AuditFilter(actorId, action, objectType, objectId, result, from, to, actorText, null), PageRequest.of(page, size),
-                recordView);
+                new AuditFilter(actorId, action, objectType, objectId, result, from, to, actorText, null),
+                PageRequest.of(page, size));
         return new AuditLogPage(found.getContent().stream().map(AuditLogItem::mapAuditLogItem).toList(), found.getNumber(),
                 found.getSize(), found.getTotalElements(), found.getTotalPages());
     }

@@ -138,20 +138,18 @@ class GroupProposalFlowIntegrationTest {
         IEventPublisher events = mock(IEventPublisher.class);
         IAccountLookup accounts = mock(IAccountLookup.class);
         Clock clock = Clock.systemUTC();
-        GroupAccess access = new GroupAccess(authorization, classes, audit, clock);
+        GroupAccess access = new GroupAccess(authorization, classes);
 
         groupRepository = new GroupRepository(app);
         proposalRepository = new GroupProposalRepository(app);
         GroupProposalCleanup cleanup = new GroupProposalCleanup(proposalRepository);
         classGroupService = new ClassGroupService(groupRepository,
                 new GroupDocumentRepository(app, JsonMapper.builder().findAndAddModules().build()),
-                mock(GroupDocumentService.class), mock(IGroupDocStreams.class), access, classes, accounts, audit,
+                mock(GroupDocumentService.class), mock(IGroupDocStreams.class), access, classes, accounts,
                 events, clock, cleanup);
-        formationService = new GroupFormationService(proposalRepository, access, audit, clock);
-        proposalService = new GroupProposalService(proposalRepository, groupRepository, formationService, cleanup,
-                access, classes, accounts, audit, events, clock);
-        reviewService = new GroupProposalReviewService(proposalRepository, groupRepository, classGroupService,
-                formationService, cleanup, access, classes, accounts, audit, events, clock);
+        formationService = new GroupFormationService(proposalRepository, access, clock);
+        proposalService = new GroupProposalService(proposalRepository, groupRepository, formationService, cleanup, access, classes, accounts, events, clock);
+        reviewService = new GroupProposalReviewService(proposalRepository, groupRepository, classGroupService, formationService, cleanup, access, classes, accounts, events, clock);
         formationService.updateFormation(teacher, classId, new UpdateFormationCommand(true, 2, 3, null, 0L));
     }
 

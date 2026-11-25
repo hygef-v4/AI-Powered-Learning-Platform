@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.assignments.contract.*;
 import edu.aiplatform.assignmentwork.contract.ISubmissionQuery;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.grading.model.*;
 import edu.aiplatform.grading.repository.*;
 import edu.aiplatform.identity.contract.*;
@@ -36,7 +35,6 @@ class GradeDistributionPrivacyTest {
         var actor = new Actor(students.get(0), Role.STUDENT);
         var auth = mock(IAuthorization.class);
         var classes = mock(IClassAccess.class);
-        var audit = mock(IAudit.class);
         var assignments = mock(IAssignmentQuery.class);
         var evaluations = mock(IEvaluationRepository.class);
         var visibility = mock(GradeDistributionVisibilityRepository.class);
@@ -53,9 +51,7 @@ class GradeDistributionPrivacyTest {
                 false, AssignmentStatus.OPEN, null, null, null, 1, false, null, List.of())));
         when(evaluations.findForAssignmentAndClass(assignmentId, classId)).thenReturn(values);
         when(visibility.findVisibility(any(), eq(assignmentId))).thenReturn(new GradeDistributionVisibilityRepository.Visibility(false, 0));
-        var service = new GradebookService(evaluations, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
-                assignments, mock(ISubmissionQuery.class), classes, mock(IAccountLookup.class), mock(IRubric.class),
-                audit, Clock.systemUTC(), mock(ObjectProvider.class), visibility);
+        var service = new GradebookService(evaluations, new GradingAccess(auth, classes), assignments, mock(ISubmissionQuery.class), classes, mock(IAccountLookup.class), mock(IRubric.class), mock(ObjectProvider.class), visibility);
         assertThat(service.loadDistribution(actor, classId, assignmentId, true)).isEmpty();
         when(visibility.findVisibility(classId, assignmentId)).thenReturn(new GradeDistributionVisibilityRepository.Visibility(true, 1));
         assertThat(service.loadDistribution(actor, classId, assignmentId, true)).singleElement()

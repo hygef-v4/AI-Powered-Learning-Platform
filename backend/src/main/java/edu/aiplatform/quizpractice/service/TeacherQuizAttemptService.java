@@ -67,7 +67,7 @@ public class TeacherQuizAttemptService {
 
     @Transactional(readOnly = true)
     public ClassAttempts listAttempts(Actor actor, UUID classId, UUID quizId) {
-        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "QUIZ", quizId, PracticeSupport.QUIZ_NOT_FOUND);
+        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, PracticeSupport.QUIZ_NOT_FOUND);
         ClassRef ref = support.loadClassRef(classId);
         QuizView quiz = support.loadQuizInClass(quizId, ref);
         Map<UUID, List<QuizAttempt>> byStudent = attempts.listByQuizAndClass(quizId, classId).stream()
@@ -101,8 +101,7 @@ public class TeacherQuizAttemptService {
 
     @Transactional(readOnly = true)
     public TeacherAttemptDetail loadAttempt(Actor actor, UUID classId, UUID attemptId) {
-        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, PracticeAccess.OBJECT, attemptId,
-                PracticeSupport.ATTEMPT_NOT_FOUND);
+        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, PracticeSupport.ATTEMPT_NOT_FOUND);
         QuizAttempt attempt = attempts.findAttempt(attemptId)
                 .filter(a -> a.classId().equals(classId))
                 .orElseThrow(() -> ApiException.createNotFound(PracticeSupport.ATTEMPT_NOT_FOUND));
@@ -137,8 +136,7 @@ public class TeacherQuizAttemptService {
     @Transactional
     public TeacherAttemptDetail decidePenalty(Actor actor, UUID classId, UUID attemptId, PenaltyDecision decision,
                                               BigDecimal points, String reason) {
-        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, PracticeAccess.OBJECT, attemptId,
-                PracticeSupport.ATTEMPT_NOT_FOUND);
+        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, PracticeSupport.ATTEMPT_NOT_FOUND);
         ActivityOutcome outcome = attempts.findAttempt(attemptId).filter(a -> a.classId().equals(classId))
                 .orElseThrow(() -> ApiException.createNotFound(PracticeSupport.ATTEMPT_NOT_FOUND)).outcome();
         String clean = reason == null ? "" : reason.strip();
@@ -158,9 +156,6 @@ public class TeacherQuizAttemptService {
         if (!attempts.decidePenalty(attemptId, decision, applied, actor.accountId(), clock.instant(), clean)) {
             throw createNotDecidableError();
         }
-        access.recordSuccess(actor, apply ? "QUIZ_PENALTY_APPLIED" : "QUIZ_PENALTY_DISMISSED", attemptId,
-                Map.of("classId", classId.toString(), "points", applied.toPlainString(),
-                        "suggestedPenalty", outcome.suggestedPenalty().toPlainString()));
         return loadAttempt(actor, classId, attemptId);
     }
 

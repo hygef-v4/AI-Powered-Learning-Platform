@@ -33,15 +33,13 @@ class WorkAccess {
     private final IClassAccess classes;
     private final IAssignmentQuery assignments;
     private final AttemptRepository attempts;
-    private final WorkAudit audit;
 
     WorkAccess(IAuthorization authorization, IClassAccess classes, IAssignmentQuery assignments,
-               AttemptRepository attempts, WorkAudit audit) {
+               AttemptRepository attempts) {
         this.authorization = authorization;
         this.classes = classes;
         this.assignments = assignments;
         this.attempts = attempts;
-        this.audit = audit;
     }
 
     /** Người học đang học lớp OPEN (R5). */
@@ -51,11 +49,11 @@ class WorkAccess {
             throw ApiException.createBadRequest("CLASS_REQUIRED", "Thiếu lớp");
         }
         if (actor.role() != Role.STUDENT || !isAllowed(actor, Actions.ASSIGNMENT_WORK, ResourceRef.courseClass(classId))) {
-            throw deny(actor, action, "COURSE_CLASS", classId, "NOT_ENROLLED");
+            throw notFound();
         }
         ClassRef ref = call(() -> classes.getClassRef(classId)).orElse(null);
         if (ref == null || ref.status() != ClassStatus.OPEN) {
-            throw deny(actor, action, "COURSE_CLASS", classId, "CLASS_NOT_OPEN");
+            throw notFound();
         }
         return ref;
     }
@@ -64,7 +62,7 @@ class WorkAccess {
     AssignmentView requireVisible(Actor actor, ClassRef ref, UUID assignmentId, String action) {
         AssignmentView view = call(() -> assignments.loadAssignment(assignmentId)).orElse(null);
         if (view == null || !belongsToClass(view, ref) || !isVisible(view, actor.accountId())) {
-            throw deny(actor, action, WorkAudit.OBJECT_ASSIGNMENT, assignmentId, "ASSIGNMENT_NOT_VISIBLE");
+            throw notFound();
         }
         return view;
     }
@@ -90,7 +88,7 @@ class WorkAccess {
                 .filter(ref -> isActiveStudent(actor.accountId(), ref.classId()))
                 .map(ClassRef::classId).distinct().limit(2).toList();
         if (!subjectId.equals(target.subjectId()) || !eligible.equals(List.of(classId))) {
-            throw deny(actor, "ATTEMPT_STARTED", "COURSE_CLASS", classId, "DRAFT_TRANSFER_DESTINATION");
+            throw notFound();
         }
     }
 
@@ -99,7 +97,7 @@ class WorkAccess {
         requireSignedIn(actor);
         AssignmentAttempt attempt = attempts.findAttempt(attemptId).orElse(null);
         if (attempt == null || !attempt.accountId().equals(actor.accountId())) {
-            throw deny(actor, action, WorkAudit.OBJECT_ATTEMPT, attemptId, "NOT_ATTEMPT_OWNER");
+            throw notFound();
         }
         requireStudentOfClass(actor, attempt.classId(), action);
         return attempt;
@@ -131,19 +129,14 @@ class WorkAccess {
                 && isAllowed(actor, Actions.ASSIGNMENT_ATTEMPT_REVIEW, ResourceRef.courseClass(attempt.classId()))) {
             return attempt;
         }
-        throw deny(actor, action, WorkAudit.OBJECT_ATTEMPT, attemptId, "OUT_OF_ATTEMPT_SCOPE");
+        throw notFound();
     }
 
     boolean isActiveStudent(UUID accountId, UUID classId) {
         return call(() -> classes.isActiveStudent(accountId, classId));
     }
 
-    ApiException deny(Actor actor, String action, String objectType, UUID objectId, String reason) {
-        try {
-            audit.recordDenied(actor, action, objectType, objectId, reason);
-        } catch (RuntimeException e) {
-            return ApiException.createUnavailable("AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
-        }
+    ApiException notFound() {
         return ApiException.createNotFound("NOT_FOUND");
     }
 

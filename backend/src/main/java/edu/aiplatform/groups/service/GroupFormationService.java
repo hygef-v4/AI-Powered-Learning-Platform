@@ -1,9 +1,6 @@
 package edu.aiplatform.groups.service;
 
 import edu.aiplatform.academics.contract.ClassRef;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.GroupFormationSettings;
 import edu.aiplatform.groups.model.GroupFormationSettings.ClosedReason;
 import edu.aiplatform.groups.repository.GroupProposalRepository;
@@ -23,14 +20,12 @@ public class GroupFormationService {
 
     private final GroupProposalRepository proposalRepository;
     private final GroupAccess access;
-    private final IAudit audit;
     private final Clock clock;
 
-    public GroupFormationService(GroupProposalRepository proposalRepository, GroupAccess access, IAudit audit,
+    public GroupFormationService(GroupProposalRepository proposalRepository, GroupAccess access,
                                  Clock clock) {
         this.proposalRepository = proposalRepository;
         this.access = access;
-        this.audit = audit;
         this.clock = clock;
     }
 
@@ -77,8 +72,6 @@ public class GroupFormationService {
         details.put("classId", classId.toString());
         details.put("before", snapshot(before));
         details.put("after", snapshot(after));
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "GROUP_FORMATION_UPDATED", "CLASS",
-                classId.toString(), AuditResult.SUCCESS, null, details, now));
         return FormationView.createFormationView(after, ref, now);
     }
 

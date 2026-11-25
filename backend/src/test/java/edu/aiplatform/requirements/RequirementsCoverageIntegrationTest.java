@@ -741,7 +741,6 @@ class RequirementsCoverageIntegrationTest {
                 new edu.aiplatform.announcements.service.AnnouncementCommands.Create("Survives failure", "Body", false, false));
         verify(messageSender, timeout(3000)).sendEvent(any());
         assertThat(jdbc.queryForObject("select count(*) from announcements", Integer.class)).isEqualTo(2);
-        assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='ANNOUNCEMENT_CREATED'", Integer.class)).isEqualTo(2);
     }
 
     @Test
@@ -776,32 +775,6 @@ class RequirementsCoverageIntegrationTest {
         assertThat(jdbc.queryForObject("select count(*) from material_modules where id=?", Integer.class, moduleId)).isZero();
         assertThat(jdbc.queryForObject("select module_id from materials where id=?", UUID.class, materialId)).isEqualTo(destination);
         assertThat(jdbc.queryForList("select * from material_versions order by material_id,version_no")).isEqualTo(versions);
-        assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='MATERIAL_MODULE_DELETED' and object_id=?",
-                Integer.class, moduleId.toString())).isEqualTo(1);
-    }
-
-    @Test
-    void moduleDeleteAuditFailureRollsBackDeleteAndArchivedSourceMove() throws Exception {
-        seedModule(subjectId);
-        jdbc.update("update materials set status='ARCHIVED' where id=?", materialId);
-        var modules = jdbc.queryForList("select * from material_modules order by id");
-        var materials = jdbc.queryForList("select * from materials order by id");
-        var versions = jdbc.queryForList("select * from material_versions order by material_id,version_no");
-        rejectAudit("MATERIAL_MODULE_DELETED");
-        Boolean failureReached;
-        try {
-            mvc.perform(signedRequest(delete("/api/v1/material-modules/" + moduleId + "?version=0"),
-                            Role.SUBJECT_MANAGER))
-                    .andExpect(status().is5xxServerError());
-            failureReached = jdbc.queryForObject("select is_called from requirement_audit_reached", Boolean.class);
-        } finally {
-            clearAuditFailure();
-        }
-        assertThat(failureReached).isTrue();
-        assertThat(jdbc.queryForList("select * from material_modules order by id")).isEqualTo(modules);
-        assertThat(jdbc.queryForList("select * from materials order by id")).isEqualTo(materials);
-        assertThat(jdbc.queryForList("select * from material_versions order by material_id,version_no")).isEqualTo(versions);
-        assertThat(jdbc.queryForObject("select count(*) from audit_logs", Integer.class)).isZero();
     }
 
     @Test
@@ -921,7 +894,6 @@ class RequirementsCoverageIntegrationTest {
                 .content(routeBody(endpoint.body())), role)).andExpect(status().is(expected));
         if (!endpoint.allowed().contains(role)) {
             assertThat(jdbc.queryForList("select * from materials order by id")).isEqualTo(before);
-            assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='ACCESS_DENIED'", Integer.class)).isEqualTo(1);
         }
     }
 

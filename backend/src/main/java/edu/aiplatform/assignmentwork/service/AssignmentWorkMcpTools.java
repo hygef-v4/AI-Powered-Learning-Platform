@@ -90,7 +90,7 @@ public class AssignmentWorkMcpTools implements IMcpToolProvider {
     /** F10 bước 4: giảng viên chính của lớp ghi trên lượt, lượt đã nộp; không có dữ liệu người khác. */
     private Map<String, Object> loadSubmission(Actor actor, UUID attemptId) {
         if (actor.role() == Role.STUDENT) {
-            throw access.deny(actor, READ_SUBMISSION, WorkAudit.OBJECT_ATTEMPT, attemptId, "ROLE_NOT_ALLOWED");
+            throw access.notFound();
         }
         AssignmentAttempt attempt = access.requireReadableAttempt(actor, attemptId, READ_SUBMISSION);
         Map<String, Object> out = new LinkedHashMap<>();

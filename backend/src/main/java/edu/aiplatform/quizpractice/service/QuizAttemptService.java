@@ -58,12 +58,11 @@ public class QuizAttemptService {
      */
     @Transactional
     public TakingView start(Actor actor, UUID quizId, UUID classId) {
-        access.requireClass(actor, Actions.QUIZ_PRACTICE, classId, "QUIZ", quizId, PracticeSupport.QUIZ_NOT_FOUND);
+        access.requireClass(actor, Actions.QUIZ_PRACTICE, classId, PracticeSupport.QUIZ_NOT_FOUND);
         ClassRef ref = support.loadClassRef(classId);
         attempts.lockStart(quizId, actor.accountId());
         QuizView quiz = support.loadQuizInClass(quizId, ref);
         if (ref.status() != ClassStatus.OPEN || quiz.status() != QuizStatus.OPEN) {
-            access.recordRejected(actor, "QUIZ_SUBMIT_REJECTED", null, "QUIZ_NOT_OPEN");
             throw ApiException.createConflict("QUIZ_NOT_OPEN", "Quiz đã ngưng hoặc lớp không còn mở");
         }
         var existing = attempts.findInProgress(quizId, actor.accountId(), classId);
@@ -77,7 +76,6 @@ public class QuizAttemptService {
         int used = attempts.countAttempts(quizId, actor.accountId(), classId);
         Integer max = quiz.settings().maxAttempts();
         if (max != null && used >= max) {
-            access.recordRejected(actor, "QUIZ_SUBMIT_REJECTED", null, "NO_ATTEMPTS_LEFT");
             throw ApiException.createConflict("NO_ATTEMPTS_LEFT", "Bạn đã dùng hết " + max + "/" + max + " lượt làm quiz này");
         }
         Set<UUID> seen = attempts.listByAccount(actor.accountId(), List.of(quizId)).stream()

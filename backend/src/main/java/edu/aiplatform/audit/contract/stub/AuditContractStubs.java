@@ -28,7 +28,7 @@ public class AuditContractStubs {
     @Bean
     @ConditionalOnMissingBean
     IAuditQuery auditQueryStub() {
-        return Stubs.announce(IAuditQuery.class, (actor, filter, page, recordView) -> Page.empty(page));
+        return Stubs.announce(IAuditQuery.class, (actor, filter, page) -> Page.empty(page));
     }
 
     @Bean

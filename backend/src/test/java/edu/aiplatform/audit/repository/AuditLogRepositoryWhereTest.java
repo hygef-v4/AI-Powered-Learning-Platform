@@ -59,4 +59,11 @@ class AuditLogRepositoryWhereTest {
         assertThat(where.sql()).isEqualTo(" where action = :action");
         assertThat(where.params()).containsEntry("action", "x' or '1'='1");
     }
+
+    @Test
+    void oldAuditQueriesAreHiddenFromTheListing() {
+        assertThat(AuditLogRepository.hideOldQueries("")).isEqualTo(" where action <> 'AUDIT_QUERIED'");
+        assertThat(AuditLogRepository.hideOldQueries(" where result = :result"))
+                .isEqualTo(" where result = :result and action <> 'AUDIT_QUERIED'");
+    }
 }

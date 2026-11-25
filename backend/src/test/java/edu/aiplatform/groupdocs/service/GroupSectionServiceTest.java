@@ -23,8 +23,6 @@ import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.IDocumentModel;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.assignments.contract.ValidationResult;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.files.contract.ArtifactPurpose;
 import edu.aiplatform.files.contract.FileRef;
 import edu.aiplatform.files.contract.IArtifact;
@@ -70,12 +68,9 @@ class GroupSectionServiceTest {
     private final IAssignmentQuery assignments = mock(IAssignmentQuery.class);
     private final IDocumentModel documentModel = mock(IDocumentModel.class);
     private final ISseHub sse = mock(ISseHub.class);
-    private final IAudit audit = mock(IAudit.class);
     private final IArtifact artifacts = mock(IArtifact.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final GroupSectionService service = new GroupSectionService(documents,
-            new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes, audit, clock), assignments, clock),
-            documentModel, sse, audit, artifacts, new ObjectMapper(), clock);
+    private final GroupSectionService service = new GroupSectionService(documents, new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes), assignments, clock), documentModel, sse, artifacts, new ObjectMapper(), clock);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", leader.accountId(), null, NOW,
             NOW, List.of(leader.accountId(), member.accountId()));
     private final GroupDocument document = GroupDocument.createDocument(UUID.randomUUID(), group.id(), assignmentId, classId,
@@ -131,10 +126,6 @@ class GroupSectionServiceTest {
 
         assertThat(view.holderId()).isEqualTo(member.accountId());
         assertThat(view.assignedBy()).isEqualTo(leader.accountId());
-        ArgumentCaptor<AuditEvent> events = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit, org.mockito.Mockito.times(2)).record(events.capture());
-        assertThat(events.getAllValues()).extracting(AuditEvent::action)
-                .containsExactly("GROUP_SECTION_RELEASED", "GROUP_SECTION_ASSIGNED");
         assertThatThrownBy(() -> service.assign(member, document.id(), sectionId, member.accountId(), true))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_LEADER_ONLY"));
     }
@@ -143,7 +134,6 @@ class GroupSectionServiceTest {
     void releaseGoesBackToDoneWhenPublishedOrOpenOtherwise() {
         section(Status.CLAIMED, member.accountId(), List.of(block()), 3);
         assertThat(service.release(teacher, document.id(), sectionId).status()).isEqualTo(Status.DONE);
-        verify(audit).record(any());
 
         section(Status.CLAIMED, member.accountId(), null, 3);
         assertThat(service.release(member, document.id(), sectionId).status()).isEqualTo(Status.OPEN);
@@ -224,10 +214,7 @@ class GroupSectionServiceTest {
         GroupSection held = new GroupSection(sectionId, document.id(), "p1", first.id(), List.of(), 1, "1. Phân tích",
                 Status.CLAIMED, member.accountId(), NOW, null, null, null, null, null, 2);
         when(documents.lockSection(document.id(), sectionId)).thenReturn(Optional.of(held));
-        GroupSectionService real = new GroupSectionService(documents,
-                new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes, audit, clock), assignments, clock),
-                new edu.aiplatform.assignments.service.DocumentModelService(new ObjectMapper()), sse, audit,
-                artifacts, new ObjectMapper(), clock);
+        GroupSectionService real = new GroupSectionService(documents, new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes), assignments, clock), new edu.aiplatform.assignments.service.DocumentModelService(new ObjectMapper()), sse, artifacts, new ObjectMapper(), clock);
 
         var saved = real.saveDraft(member, document.id(), sectionId, 2L, List.of(paragraph("Bài làm của nhóm")));
 

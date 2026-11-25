@@ -39,18 +39,15 @@ public class QuizPublicationService {
     private final QuizPaperService quizPaperService;
     private final ObjectProvider<IQuizLifecycleListener> listeners;
     private final IEventPublisher events;
-    private final QuizAudit audit;
     private final Clock clock;
 
     public QuizPublicationService(IQuizRepository quizzes, QuizSupport support, QuizPaperService quizPaperService,
-                                  ObjectProvider<IQuizLifecycleListener> listeners, IEventPublisher events,
-                                  QuizAudit audit, Clock clock) {
+                                  ObjectProvider<IQuizLifecycleListener> listeners, IEventPublisher events, Clock clock) {
         this.quizzes = quizzes;
         this.support = support;
         this.quizPaperService = quizPaperService;
         this.listeners = listeners;
         this.events = events;
-        this.audit = audit;
         this.clock = clock;
     }
 
@@ -74,7 +71,6 @@ public class QuizPublicationService {
         Instant now = clock.instant();
         quizzes.findOpenInVersionChain(id).ifPresent(old -> retire(actor, old, "Đã phát hành version " + quiz.versionNo(), now));
         Quiz published = support.saveQuiz(quiz.markPublished(now));
-        audit.recordSuccess(actor, "QUIZ_PUBLISHED", QuizSupport.OBJECT, id, Map.of("versionNo", quiz.versionNo()));
         Map<String, Object> payload = new HashMap<>();
         payload.put("quizId", id.toString());
         payload.put("scope", quiz.scope().name());
@@ -124,14 +120,12 @@ public class QuizPublicationService {
                     "Đang có version khác của quiz này mở; ngưng version đó trước khi mở lại version này");
         }
         Quiz reopened = support.saveQuiz(quiz.markReopened(clock.instant()));
-        audit.recordSuccess(actor, "QUIZ_REOPENED", QuizSupport.OBJECT, quiz.id(), Map.of("status", reopened.status().name()));
         return support.buildDetail(reopened, true);
     }
 
     private Quiz retire(Actor actor, Quiz quiz, String reason, Instant now) {
         Quiz retired = support.saveQuiz(quiz.markRetired(reason, now));
         listeners.orderedStream().forEach(listener -> listener.onRetired(quiz.id()));
-        audit.recordSuccess(actor, "QUIZ_RETIRED", QuizSupport.OBJECT, quiz.id(), Map.of("reason", reason));
         return retired;
     }
 

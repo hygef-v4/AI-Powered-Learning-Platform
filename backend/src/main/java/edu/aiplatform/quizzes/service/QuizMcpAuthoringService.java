@@ -72,11 +72,9 @@ public class QuizMcpAuthoringService implements IMcpToolProvider {
         boolean forClass = in.has("classId");
         UUID target = in.readUuid(forClass ? "classId" : "subjectId");
         if (forClass) {
-            access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, target, "CLASS", target,
-                    "CLASS_NOT_FOUND");
+            access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, target, "CLASS_NOT_FOUND");
         } else {
-            access.requireSubject(actor, Actions.QUIZ_SUBJECT_MANAGE, target, "SUBJECT", target,
-                    "SUBJECT_NOT_FOUND");
+            access.requireSubject(actor, Actions.QUIZ_SUBJECT_MANAGE, target, "SUBJECT_NOT_FOUND");
         }
         JsonNode questions = json.valueToTree(in.readValue("questions"));
         requireValidQuestions(questions);

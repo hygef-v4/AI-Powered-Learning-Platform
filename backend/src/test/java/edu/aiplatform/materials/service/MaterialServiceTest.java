@@ -103,7 +103,6 @@ class MaterialServiceTest {
                         materialAccessPolicy,
                         artifact,
                         job,
-                        audit,
                         Clock.fixed(now, ZoneOffset.UTC));
         material =
                 new Material(
@@ -164,7 +163,6 @@ class MaterialServiceTest {
                         eq(JobTypes.MATERIAL_TEXT_EXTRACT),
                         eq(Map.of("materialId", m.id().toString(), "versionNo", 1)),
                         eq("material:" + m.id() + ":1"));
-        verify(audit).record(argThat(e -> e.action().equals("MATERIAL_CREATED")));
     }
 
     @Test
@@ -207,7 +205,7 @@ class MaterialServiceTest {
                 "t".repeat(200), "d".repeat(2000), 0, 0L, null));
         assertThat(next.title()).hasSize(200);
         assertThat(next.description()).hasSize(2000);
-        clearInvocations(materialRepository, audit);
+        clearInvocations(materialRepository);
         for (var input : List.of(
                 new MaterialCommands.Update("t".repeat(201), "", 0, 0L, null),
                 new MaterialCommands.Update("Title", "d".repeat(2001), 0, 0L, null),
@@ -216,7 +214,7 @@ class MaterialServiceTest {
                     .isInstanceOf(IllegalArgumentException.class);
         }
         verify(materialRepository, never()).updateMaterial(any(), anyLong());
-        verifyNoInteractions(audit, artifact, job);
+        verifyNoInteractions(artifact, job);
     }
 
     @Test
@@ -229,9 +227,6 @@ class MaterialServiceTest {
                 new MaterialCommands.Replace(0L, new MaterialCommands.Source("signed", null)));
         materialService.archiveMaterial(actor, id, 0L);
         var events = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit, times(3)).record(events.capture());
-        assertThat(events.getAllValues()).extracting(AuditEvent::action)
-                .containsExactly("MATERIAL_UPDATED", "MATERIAL_VERSION_CREATED", "MATERIAL_ARCHIVED");
         assertThat(events.getAllValues()).allSatisfy(event -> {
             assertThat(event.actorId()).isEqualTo(actor.accountId());
             assertThat(event.objectId()).isEqualTo(id.toString());
@@ -239,13 +234,11 @@ class MaterialServiceTest {
             assertThat(event.occurredAt()).isEqualTo(now);
             assertThat(event.details()).containsEntry("version", 1L);
         });
-        clearInvocations(audit);
         when(materialRepository.updateMaterial(any(), anyLong())).thenReturn(false);
         assertThatThrownBy(() -> materialService.updateMaterial(actor, id,
                 new MaterialCommands.Update("Rejected", "", 0, 0L, null)))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -278,7 +271,7 @@ class MaterialServiceTest {
                                                 8L, new MaterialCommands.Source("signed", null))))
                 .isInstanceOfSatisfying(
                         ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(409));
-        verifyNoInteractions(artifact, job, audit);
+        verifyNoInteractions(artifact, job);
         verify(materialRepository, never()).updateMaterial(any(), anyLong());
     }
 
@@ -294,7 +287,7 @@ class MaterialServiceTest {
                                                 0L, new MaterialCommands.Source("signed", null))))
                 .isInstanceOf(ApiException.class);
         verify(materialRepository, never()).insertVersion(any());
-        verifyNoInteractions(job, audit);
+        verifyNoInteractions(job);
     }
 
     @Test
@@ -310,7 +303,7 @@ class MaterialServiceTest {
                                         new MaterialCommands.Replace(
                                                 0L, new MaterialCommands.Source("signed", null))))
                 .isInstanceOf(ApiException.class);
-        verifyNoInteractions(artifact, job, audit);
+        verifyNoInteractions(artifact, job);
         verify(materialRepository, never()).updateMaterial(any(), anyLong());
     }
 
@@ -480,7 +473,7 @@ class MaterialServiceTest {
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_MODULE_INVALID"));
         verify(materialRepository, never()).insertMaterial(any(), any());
         verify(materialRepository, never()).updateMaterial(any(), anyLong());
-        verifyNoInteractions(artifact, job, audit);
+        verifyNoInteractions(artifact, job);
     }
 
     @Test
@@ -514,7 +507,7 @@ class MaterialServiceTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
-        verifyNoInteractions(artifact, job, audit);
+        verifyNoInteractions(artifact, job);
         when(materialRepository.updateMaterial(any(), anyLong())).thenReturn(false);
         assertThatThrownBy(
                         () ->
@@ -527,6 +520,6 @@ class MaterialServiceTest {
                         ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
         verify(materialRepository, never()).insertVersion(any());
-        verifyNoInteractions(job, audit);
+        verifyNoInteractions(job);
     }
 }

@@ -4,8 +4,8 @@ import { headers } from "next/headers";
 import { connection } from "next/server";
 import { GOOGLE_SITE_VERIFICATION, NO_INDEX, SEO_INDEXABLE, SITE_URL } from "@/shared/siteMetadata";
 import { LocaleGate } from "@/i18n/LocaleGate";
-import { DEFAULT_LOCALE, OG_LOCALES } from "@/i18n/locales";
-import { requestLocale, loadServerTranslator } from "@/i18n/server";
+import { OG_LOCALES } from "@/i18n/locales";
+import { clientLocaleDiffers, requestLocale, loadServerTranslator } from "@/i18n/server";
 import { THEME_BOOT_SCRIPT } from "@/shared/themeBoot";
 import { Toaster } from "@/shared/ui/Toast";
 import "../shared/styles/globals.css";
@@ -51,7 +51,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         ))}
       </head>
       <body>
-        <LocaleGate deferred={locale !== DEFAULT_LOCALE}>{children}</LocaleGate>
+        <LocaleGate deferred={await clientLocaleDiffers()}>{children}</LocaleGate>
         <Toaster />
       </body>
     </html>

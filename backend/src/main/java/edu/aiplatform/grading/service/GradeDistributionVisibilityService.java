@@ -5,15 +5,10 @@ import edu.aiplatform.academics.contract.IClassAccess;
 import edu.aiplatform.assignments.contract.AssignmentScope;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.grading.repository.GradeDistributionVisibilityRepository;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.shared.error.ApiException;
-import java.time.Clock;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,20 +23,15 @@ public class GradeDistributionVisibilityService {
     private final GradingAccess gradingAccess;
     private final IClassAccess classAccess;
     private final IAssignmentQuery assignmentQuery;
-    private final IAudit audit;
-    private final Clock clock;
 
     /** Creates the visibility service with its access and persistence dependencies. */
     public GradeDistributionVisibilityService(
             GradeDistributionVisibilityRepository gradeDistributionVisibilityRepository,
-            GradingAccess gradingAccess, IClassAccess classAccess, IAssignmentQuery assignmentQuery,
-            IAudit audit, Clock clock) {
+            GradingAccess gradingAccess, IClassAccess classAccess, IAssignmentQuery assignmentQuery) {
         this.gradeDistributionVisibilityRepository = gradeDistributionVisibilityRepository;
         this.gradingAccess = gradingAccess;
         this.classAccess = classAccess;
         this.assignmentQuery = assignmentQuery;
-        this.audit = audit;
-        this.clock = clock;
     }
 
     /** Loads grade distribution visibility and whether the actor can edit it. */
@@ -73,10 +63,6 @@ public class GradeDistributionVisibilityService {
                     "Visibility changed; reload and retry");
 
         // Step 3: Record audit trail event for visibility toggle
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(),
-                "GRADE_DISTRIBUTION_VISIBILITY_CHANGED", "ASSIGNMENT", assignmentId.toString(),
-                AuditResult.SUCCESS, null,
-                Map.of("classId", classId.toString(), "enabled", enabled), clock.instant()));
         return new View(enabled, version + 1, true);
     }
 

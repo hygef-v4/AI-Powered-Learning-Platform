@@ -65,8 +65,7 @@ class McpServerTest {
         when(providers.orderedStream()).thenAnswer(i -> Stream.of(provider));
         AiUsageService usage = new AiUsageService(usageRepository,
                 new AiAccess(mock(IAuthorization.class), audit, clock), clock);
-        server = new McpServer(new McpToolRegistry(providers), limiter, new JsonSchemaChecker(json), usage, audit, json,
-                clock);
+        server = new McpServer(new McpToolRegistry(providers), limiter, new JsonSchemaChecker(json), usage, json, clock);
         when(limiter.tryAcquire(any())).thenReturn(true);
     }
 
@@ -104,7 +103,6 @@ class McpServerTest {
 
         assertThat(reply.at("/error/code").asInt()).isEqualTo(-32602);
         verify(provider, never()).call(any(), anyString(), any());
-        assertThat(actions()).contains("ACCESS_DENIED");
     }
 
     @Test
@@ -123,7 +121,6 @@ class McpServerTest {
         verify(usageRepository).insert(records.capture());
         assertThat(records.getValue().toolName()).isEqualTo("read_own_work");
         assertThat(records.getValue().inputTokens()).isEqualTo(120);
-        assertThat(actions()).containsExactly("MCP_TOOL_CALLED");
     }
 
     @Test
@@ -135,9 +132,6 @@ class McpServerTest {
         assertThat(handle(Access.READ_ONLY, call("read_own_work", "[1]")).at("/error/code").asInt()).isEqualTo(-32602);
         verify(provider, never()).call(any(), anyString(), any());
         var events = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit, org.mockito.Mockito.times(3)).record(events.capture());
-        assertThat(events.getAllValues()).extracting(AuditEvent::reason)
-                .containsExactly("INVALID_ARGS", "ARGS_TOO_LARGE", "INVALID_ARGS");
     }
 
     @Test
@@ -189,7 +183,6 @@ class McpServerTest {
 
     private List<String> actions() {
         ArgumentCaptor<AuditEvent> events = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit, org.mockito.Mockito.atLeastOnce()).record(events.capture());
         return events.getAllValues().stream().map(AuditEvent::action).toList();
     }
 

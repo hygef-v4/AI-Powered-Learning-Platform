@@ -66,16 +66,14 @@ public class QuestionImporter {
     private final IQuestionRepository questions;
     private final ActiveSubjects activeSubjects;
     private final QuizAccess access;
-    private final QuizAudit audit;
     private final QuestionDuplicates duplicates;
     private final Clock clock;
 
-    public QuestionImporter(IQuestionRepository questions, ActiveSubjects activeSubjects, QuizAccess access, QuizAudit audit,
+    public QuestionImporter(IQuestionRepository questions, ActiveSubjects activeSubjects, QuizAccess access,
                             QuestionDuplicates duplicates, Clock clock) {
         this.questions = questions;
         this.activeSubjects = activeSubjects;
         this.access = access;
-        this.audit = audit;
         this.duplicates = duplicates;
         this.clock = clock;
     }
@@ -88,7 +86,7 @@ public class QuestionImporter {
 
     @Transactional
     public ImportResult importFile(Actor actor, UUID subjectId, byte[] bytes, boolean dryRun) {
-        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
         activeSubjects.require(subjectId);
         if (bytes == null || bytes.length == 0) {
             throw ApiException.createBadRequest("IMPORT_FILE_EMPTY", "Tệp rỗng");
@@ -129,8 +127,6 @@ public class QuestionImporter {
         }
         if (!dryRun) {
             valid.forEach(questions::insert);
-            audit.recordSuccess(actor, "QUESTIONS_IMPORTED", "SUBJECT", subjectId, Map.of(
-                    "total", rows.size(), "created", valid.size(), "failed", rows.size() - valid.size()));
         }
         return new ImportResult(dryRun, rows.size(), valid.size(), rows.size() - valid.size(),
                 dryRun ? 0 : valid.size(), results);

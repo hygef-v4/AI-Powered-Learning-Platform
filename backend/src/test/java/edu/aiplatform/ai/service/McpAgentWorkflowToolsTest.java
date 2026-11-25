@@ -63,8 +63,7 @@ class McpAgentWorkflowToolsTest {
         ObjectProvider<IMcpToolProvider> source=mock(ObjectProvider.class);
         when(source.orderedStream()).thenAnswer(call -> java.util.stream.Stream.of(provider,new McpCapabilitiesTools()));
         var limiter=mock(IMcpRateLimiter.class);when(limiter.tryAcquire(any())).thenReturn(true);
-        var server=new McpServer(new McpToolRegistry(source),limiter,new JsonSchemaChecker(json),
-                mock(AiUsageService.class),mock(edu.aiplatform.audit.contract.IAudit.class),json,Clock.systemUTC());
+        var server=new McpServer(new McpToolRegistry(source), limiter, new JsonSchemaChecker(json), mock(AiUsageService.class), json, Clock.systemUTC());
         var now=Instant.now();var credential=new McpCredential(UUID.randomUUID(),teacher.accountId(),"fixture",
                 McpCredential.Access.READ_ONLY,"hash","test",now.plusSeconds(60),null,null,now);
         var principal=new McpCredentialService.McpPrincipal(credential,teacher);

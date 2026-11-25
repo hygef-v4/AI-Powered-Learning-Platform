@@ -20,7 +20,6 @@ export const ACTION_LABELS: Record<string, string> = {
   BACKUP_COMPLETED: msg("audit.model.labels.backUpData"),
   BACKUP_FAILED: msg("audit.model.labels.backupFailed"),
   GRADE_PUBLISHED: msg("audit.model.labels.publishGrades"),
-  AUDIT_QUERIED: msg("audit.model.labels.searchAuditLog"),
   // U06 Kết nối AI
   AI_CONNECTION_CHANGED: msg("audit.model.labels.changeAiApiKey"),
   AI_CONNECTION_TESTED: msg("audit.model.labels.checkAiApiKey"),

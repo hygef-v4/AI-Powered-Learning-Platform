@@ -387,14 +387,6 @@
       "boundary": "Real material/version services, PostgreSQL and transactions. Artifact attach is a controlled port; remote storage/extraction job delivery is not claimed."
     },
     {
-      "id": "IT-U13-003",
-      "requirements": "BR-U13-11",
-      "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",
-      "method": "moduleDeleteAuditFailureRollsBackDeleteAndArchivedSourceMove",
-      "source": "backend/src/test/java/edu/aiplatform/requirements/RequirementsCoverageIntegrationTest.java",
-      "boundary": "Real module/material repositories, owner services, PostgreSQL and audit fault injection."
-    },
-    {
       "id": "IT-U14-001",
       "requirements": "BR-U14-01, BR-U14-04, BR-U14-05",
       "suite": "edu.aiplatform.requirements.RequirementsCoverageIntegrationTest",

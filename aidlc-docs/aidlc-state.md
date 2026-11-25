@@ -1,5 +1,17 @@
 # AI-DLC State Tracking
 
+## U02: Nhật ký chi tiết hơn, bỏ ghi tra cứu audit · 2026-11-25
+
+Người dùng: "kiểm tra phần Log và làm chi tiết hơn cho tôi (chẳng hạn tôi thấy Truy cập bị từ chối, đối tượng là lớp nhưng không biết là lớp nào, lý do cũng đang quá chung chung. Ngoài ra chỉ cần log các sự kiện cần thiết và quan trọng, không log hành động tra cứu audit".
+
+- [x] Nguyên nhân: U05 ghi `ACCESS_DENIED` với loại `COURSE_CLASS` nhưng bộ tra tên chỉ hiểu `CLASS`; thao tác theo môn ghi id môn dưới loại lớp; details rỗng nên không biết thao tác bị chặn; giao diện rút lý do còn 2–3 chữ.
+- [x] Backend: bỏ ghi `AUDIT_QUERIED` (bỏ tham số `recordView` khỏi `IAuditQuery` và API), ẩn các dòng cũ; tra tên lớp cho `COURSE_CLASS`; `AcademicsService` ghi kèm `action`, `actorRole`, `audience`, `subjectId` khi bị từ chối và ghi loại `SUBJECT` cho `MANAGED_SUBJECT_VIEW`, `CLASS_CREATED`.
+- [x] Frontend màn Log: dòng phụ "thao tác bị chặn" dưới Hành động, lý do thành câu đầy đủ (kèm vai trò khi sai vai trò), bấm STT mở dòng chi tiết (mã đối tượng, thao tác, vai trò, màn, mã lý do, khóa details khác). Chuỗi vi/en dưới `audit.model.details`.
+- [x] Kiểm tra: 246 test backend (Audit*, Academics*, ContractStubsTest, AdminDashboard*) đạt; frontend 26 test audit, 4 test i18n, typecheck và lint sạch.
+- [x] Đợt 2 ("làm tiếp vai trò lúc đó cho nhóm, chấm điểm và quiz"): thêm `AuditDetails.describeDenial` trong `audit.contract` (khóa `action`, `actorRole`); dùng ở `GroupAccess` (lớp và đề xuất nhóm), `GradingAccess`, `QuizAudit`, `PracticeAccess` và `AcademicsService`. Màn Log đã hiện sẵn "Vai trò lúc đó" nên không đổi frontend.
+- [x] Kiểm tra đợt 2: 864 test backend (audit, U05, chấm điểm, nhóm, quiz, luyện tập, `ArchitectureTest`) không lỗi; 4 test integration cần Docker không chạy được vì Docker chưa bật.
+- [ ] Chưa chạy lại trên backend local (đang chạy bản cũ ở 8080) nên chưa xem màn thật; các dòng cũ đã ghi trước khi sửa vẫn thiếu thao tác bị chặn. Chưa commit.
+
 ## Chấm điểm bài cá nhân và bài nhóm · Round 1 · 2026-11-24
 
 - [x] Tạo fixture PE với Context Diagram, Use Case Diagram và Conceptual ERD theo COMET. Chạy seed và kiểm tra batch thực qua API bằng `scripts/e2e/wf01-wf02-grading.mjs`.

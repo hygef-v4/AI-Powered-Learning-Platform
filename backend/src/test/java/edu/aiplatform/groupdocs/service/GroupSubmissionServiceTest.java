@@ -35,7 +35,6 @@ import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
 import edu.aiplatform.assignments.contract.ValidationIssue;
 import edu.aiplatform.assignments.contract.ValidationResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.grading.contract.IGroupEvaluation;
 import edu.aiplatform.groupdocs.contract.ISseHub;
 import edu.aiplatform.groupdocs.model.GroupDocument;
@@ -77,14 +76,10 @@ class GroupSubmissionServiceTest {
     private final IAssignmentQuery assignments = mock(IAssignmentQuery.class);
     private final IDocumentModel documentModel = mock(IDocumentModel.class);
     private final IGroupEvaluation evaluation = mock(IGroupEvaluation.class);
-    private final IAudit audit = mock(IAudit.class);
     private final ISseHub sse = mock(ISseHub.class);
     private final IEventPublisher events = mock(IEventPublisher.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final GroupSubmissionService service = new GroupSubmissionService(documents, groups,
-            new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes, audit, clock), assignments, clock),
-            assignments, documentModel, mock(IDocx.class), evaluation, sse, audit,
-            events, new ObjectMapper().findAndRegisterModules(), clock);
+    private final GroupSubmissionService service = new GroupSubmissionService(documents, groups, new GroupDocAccess(documents, groups, new GroupAccess(authorization, classes), assignments, clock), assignments, documentModel, mock(IDocx.class), evaluation, sse, events, new ObjectMapper().findAndRegisterModules(), clock);
     private final ClassGroup group = new ClassGroup(UUID.randomUUID(), classId, "Nhóm 1", leader.accountId(), null, NOW,
             NOW, List.of(leader.accountId(), member.accountId()));
     private final UUID heading1 = UUID.randomUUID();
@@ -158,7 +153,7 @@ class GroupSubmissionServiceTest {
         locked.verify(assignments).loadAssignment(assignmentId);
         verify(documents, never()).lockSections(any());
         verify(documents, never()).updateDocument(any());
-        verifyNoInteractions(evaluation, events, audit, sse);
+        verifyNoInteractions(evaluation, events, sse);
     }
 
     @Test
@@ -237,7 +232,7 @@ class GroupSubmissionServiceTest {
         verify(documents).updateDocument(saved.capture());
         assertThat(saved.getValue().status()).isEqualTo(GroupDocument.Status.CLOSED);
         assertThat(saved.getValue().submittedAt()).isNull();
-        verifyNoInteractions(evaluation, events, audit);
+        verifyNoInteractions(evaluation, events);
     }
 
     @Test
@@ -257,7 +252,7 @@ class GroupSubmissionServiceTest {
         stubSchedule(AssignmentStatus.CLOSED, NOW.plusSeconds(60), null);
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(touchedLater));
         when(documents.lockSections(document.id())).thenReturn(List.of(heldWithDraft));
-        clearInvocations(documents, evaluation, events, audit, sse);
+        clearInvocations(documents, evaluation, events, sse);
         assertThat(service.submitAutomatically(document.id())).isEmpty();
         verify(documents).updateSection(argThat(s -> s.status() == Status.DONE && s.claimedBy() == null
                 && s.publishedBlocks().equals(heldWithDraft.draftBlocks())));
@@ -268,7 +263,7 @@ class GroupSubmissionServiceTest {
         assertThat(saved.getValue().submittedDocument()).isEqualTo(submitted.submittedDocument());
         assertThat(saved.getValue().receiptHash()).isEqualTo(receipt.receiptHash());
         assertThat(saved.getValue().submitMode()).isEqualTo(GroupDocument.SubmitMode.MANUAL);
-        verifyNoInteractions(evaluation, events, audit);
+        verifyNoInteractions(evaluation, events);
     }
 
     @Test
@@ -278,7 +273,7 @@ class GroupSubmissionServiceTest {
                         e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_VERSION_CONFLICT"));
         verify(documents, never()).updateDocument(any());
         verify(documents, never()).listSections(any());
-        verifyNoInteractions(documentModel, evaluation, events, sse, audit);
+        verifyNoInteractions(documentModel, evaluation, events, sse);
     }
 
     @Test
@@ -290,7 +285,7 @@ class GroupSubmissionServiceTest {
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("GROUP_DOC_VERSION_CONFLICT"));
 
-        verifyNoInteractions(evaluation, events, sse, audit);
+        verifyNoInteractions(evaluation, events, sse);
     }
 
     @Test
@@ -333,7 +328,7 @@ class GroupSubmissionServiceTest {
         stubSchedule(AssignmentStatus.CLOSED, NOW.plusSeconds(60), null);
         when(documents.lockDocument(document.id())).thenReturn(Optional.of(submitted));
         when(documents.lockSections(document.id())).thenReturn(List.of());
-        clearInvocations(documents, evaluation, events, audit, sse);
+        clearInvocations(documents, evaluation, events, sse);
 
         assertThat(service.submitAutomatically(document.id())).isEmpty();
 
@@ -342,7 +337,7 @@ class GroupSubmissionServiceTest {
         assertThat(saved.getValue().submittedDocument()).isEqualTo(submitted.submittedDocument());
         assertThat(saved.getValue().receiptHash()).isEqualTo(receipt.receiptHash());
         assertThat(saved.getValue().submitMode()).isEqualTo(GroupDocument.SubmitMode.MANUAL);
-        verifyNoInteractions(evaluation, events, audit);
+        verifyNoInteractions(evaluation, events);
         verify(sse).publish(eq(GroupSectionService.buildChannel(document.id())),
                 eq(java.util.Map.of("type", "document.closed", "documentId", document.id().toString())));
     }
@@ -359,7 +354,7 @@ class GroupSubmissionServiceTest {
 
         assertThat(service.submitAutomatically(document.id())).isEmpty();
 
-        verifyNoInteractions(evaluation, events, audit, sse);
+        verifyNoInteractions(evaluation, events, sse);
     }
 
     private void stubSchedule(AssignmentStatus status, Instant closesAt, Instant lateUntil) {

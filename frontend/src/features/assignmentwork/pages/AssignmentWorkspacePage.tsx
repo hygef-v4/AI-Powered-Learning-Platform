@@ -16,8 +16,9 @@ import {
   type DocumentPart,
   type ValidationIssue,
 } from "@/shared/document";
-import { Alert, Button, Dialog, Menu, MenuItem, Pill, showErrorToast } from "@/shared/ui";
+import { Alert, Button, Dialog, Menu, MenuItem, Pill, showErrorToast, showToast } from "@/shared/ui";
 import { attemptImageUrl, downloadAttemptDocx, workApi } from "../api";
+import { checkDocxStructure, mergeImportedWork } from "../model/docxMerge";
 import { readErrorCode, describeError, formatDateTime, formatTime, readProblemIssues, describeRemaining } from "../model/format";
 
 import type { Attempt } from "../model/types";
@@ -39,18 +40,6 @@ export function mergeSaved(local: DocumentModel, saved: DocumentModel): Document
     blocks: local.blocks.map((block): DocumentBlock => block.type === "IMAGE" && block.content.fileRef && persisted.has(block.id)
       ? { ...block, content: { ...block.content, fileRef: undefined, hasFile: true } } : block),
   };
-}
-
-/**
- * Chèn các block (nhập DOCX) vào cuối phần {@code partId}; không có phần (hoặc không tìm thấy) thì thêm vào cuối bài,
- * chỗ luôn thuộc phần cuối của đề (yêu cầu 2026-10-21: người học chỉ viết trong các phần).
- */
-export function insertIntoPart(content: DocumentModel, parts: DocumentPart[], partId: string | null, added: DocumentBlock[]): DocumentModel {
-  const sections = numberSections(content, parts);
-  let at = -1;
-  if (partId) content.blocks.forEach((block, index) => { if (sections.get(block.id) === partId) at = index; });
-  if (at < 0) return { blocks: [...content.blocks, ...added] };
-  return { blocks: [...content.blocks.slice(0, at + 1), ...added, ...content.blocks.slice(at + 1)] };
 }
 
 /** Lý do dừng tự lưu: lệch phiên bản, lượt đã đóng (chờ tải lại); bài không hợp lệ (chờ người học sửa). */
@@ -77,6 +66,8 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   /** Kiểm nộp của bản đã lưu do server trả (biết bản đề gốc); null khi chưa có, lúc đó tự kiểm sơ bộ. */
   const [dialog, setDialog] = useState<"submit" | "docx" | null>(null);
+  /** Nhập DOCX là một bước trong lịch sử của trình soạn: Ctrl+Z quay về bản trước khi nhập, Ctrl+Y nhập lại. */
+  const [importEdit, setImportEdit] = useState<{ id: number; before: DocumentModel } | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [offset, setOffset] = useState(0);
   const [viewSlot, setViewSlot] = useState<HTMLElement | null>(null);
@@ -325,6 +316,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         imageUrl={attemptImageUrl(attempt.attemptId)} issues={issues}
         uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
         onChange={edit}
+        externalEdit={importEdit}
         titleField={{ text: attempt.title, readOnly: true, onText: NOOP }}
         header={header}
         highlightBlockId={null}
@@ -343,11 +335,27 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
           }} />
       )}
       {dialog === "docx" && (
-        <DocxImportDialog allowReplace={false}
-          title={active ? msg("assignmentwork.pages.AssignmentWorkspacePage.importDocxIntoPart", { value: String(active.title.split(" › ").at(-1)) }) : msg("assignmentwork.pages.AssignmentWorkspacePage.importDocxIntoTheLast")}
-          preview={(file) => workApi.importDocx(attempt.attemptId, file)}
+        // Nhập DOCX (yêu cầu 2026-11-25): tệp phải cùng cấu trúc với bài; mỗi phần chỉ thêm bài mới, giữ định dạng.
+        <DocxImportDialog allowReplace={false} showMode={false}
+          title={msg("assignmentwork.pages.AssignmentWorkspacePage.importDocx")}
+          preview={async (file) => {
+            const result = await workApi.importDocx(attempt.attemptId, file);
+            checkDocxStructure(latest.current.content, result.document, attempt.title);
+            return result;
+          }}
           onClose={() => setDialog(null)}
-          onImport={(document) => edit(insertIntoPart(latest.current.content, attempt.parts, activePart, document.blocks))} />
+          onImport={(document) => {
+            const before = latest.current.content;
+            const merged = mergeImportedWork(before, attempt.parts, document, attempt.title);
+            if (merged.updatedParts.length === 0) {
+              showToast(msg("assignmentwork.pages.AssignmentWorkspacePage.nothingNewToImport"), "warning");
+              return;
+            }
+            setImportEdit((current) => ({ id: (current?.id ?? 0) + 1, before }));
+            edit(merged.content);
+            showToast(msg("assignmentwork.pages.AssignmentWorkspacePage.importedIntoParts", {
+              count: String(merged.updatedParts.length), parts: merged.updatedParts.map((title) => title.split(" › ").at(-1)).join(", ") }));
+          }} />
       )}
     </div>
   );
