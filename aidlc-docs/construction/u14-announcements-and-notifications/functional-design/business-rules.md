@@ -18,8 +18,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | BR-U14-01 | Giảng viên chính của lớp (R3/R4) tạo, sửa, xóa thông báo của lớp `OPEN`; người học đang ghi danh và giảng viên của lớp đọc. Người học không đăng; Admin không vào lớp. | FR-023, UC 63, 64 |
 | BR-U14-02 | Thông báo có tiêu đề văn bản thuần (≤ 200) và nội dung Markdown (≤ 5.000 ký tự đầu vào). Tạo/sửa loại thẻ HTML, thuộc tính sự kiện và nội dung script/style bằng parser trước lưu, giữ Markdown hợp lệ; từ chối nếu rỗng sau làm sạch. Hiển thị tiếp tục chặn HTML thô, ảnh và URL nguy hiểm. Không tệp đính kèm, không bình luận. Phương án A được duyệt ngày 2026-10-23. | FR-023, SEC-003 |
 | BR-U14-03 | Khi tạo, giảng viên có thể đánh dấu quan trọng và chọn gửi email. Tạo mới thì phát `class.announcement-posted` sau commit: người học đang ghi danh nhận thông báo trong app; thông báo quan trọng có chọn email thì gửi email theo tùy chọn của người nhận. | UC 64, FR-011 |
-| BR-U14-04 | Sửa kiểm `version` và trả `version` mới (đã tăng) để lần sửa tiếp không bị 409, giữ tác giả và thời điểm gốc, ghi người sửa và audit trước, sau; không gửi lại thông báo hay email. | US-CNT-004 S4 |
-| BR-U14-05 | Xóa là xóa mềm: loại khỏi danh sách, giữ người xóa, thời điểm, tham chiếu và audit. | US-CNT-004 S5 |
+| BR-U14-04 | Sửa kiểm `version` và trả `version` mới (đã tăng) để lần sửa tiếp không bị 409, giữ tác giả và thời điểm gốc, ghi người sửa; không gửi lại thông báo hay email. Không ghi audit (BR-U02-10). | US-CNT-004 S4 |
+| BR-U14-05 | Xóa là xóa mềm: loại khỏi danh sách, giữ người xóa (`deleted_by`), thời điểm (`deleted_at`) và tham chiếu; không ghi audit (BR-U02-10). | US-CNT-004 S5 |
 | BR-U14-06 | Class Announcements mở từ Class Dashboard: thông báo của mọi lớp `OPEN` mình học hoặc dạy, mới nhất trước, lọc theo lớp; mở từ một lớp thì lọc sẵn lớp đó. Student Class Detail hiện vài thông báo mới nhất của lớp. | US-CNT-004 S2 |
 
 ## 2. Thông báo trong app (UC 65)
@@ -41,7 +41,7 @@ Refinement approved 2026-10-24: mô tả trong chuông dùng lời dẫn hành �
 | BR-U14-20 | Email Student: `ENROLLED`, `ASSIGNMENT_OPENED`, `GRADE_PUBLISHED`, `DEADLINE_REMINDER`, `ANNOUNCEMENT_IMPORTANT` (thông báo lớp quan trọng có chọn email). Teacher: `LEADER_CHANGE_REQUESTED`, `QUESTION_REVIEWED`. Subject Manager: các loại Teacher và `QUESTION_PROPOSED`. Admin: `BACKUP_FAILED`. Các loại khác chỉ trong app; không mở rộng người nhận sự kiện. | FR-011; sửa lỗi 2026-11-02 |
 | BR-U14-21 | Mọi vai trò có cài đặt email trong popup; UI hiển thị các loại backend trả về theo role hiện hành. Student mặc định bật năm loại học tập; các loại email staff phù hợp role mặc định bật khi chưa có tùy chọn lưu; không ghi đè lựa chọn đã lưu. Chỉ cập nhật tùy chọn của chính mình và loại phù hợp role. Tắt thì email mới `SKIPPED`, thông báo trong app vẫn có. Admin thấy `BACKUP_FAILED` luôn bật, bị khóa và có giải thích cảnh báo bắt buộc; server từ chối tắt kể cả gọi API trực tiếp. | US-NTF-001, FR-011; sửa lỗi 2026-11-02 |
 | BR-U14-22 | Trần 300 email thông báo mỗi ngày (giờ Việt Nam, đặt bằng biến môi trường); vượt thì `DEFERRED` sang ngày sau theo thứ tự ưu tiên `BACKUP_FAILED` > `DEADLINE_REMINDER` > `ANNOUNCEMENT_IMPORTANT` > `ASSIGNMENT_OPENED` > `GRADE_PUBLISHED` > `ENROLLED` và ba loại staff mới (cùng mức thấp nhất). Email OTP của U01 không tính. | FR-011 |
-| BR-U14-23 | Gửi qua job `EMAIL_SEND` (queue `jobs.email` của U03) bằng `IMail` của U01; lỗi thử lại theo U03 tối đa 5 lần rồi `FAILED`; không gửi trùng. `SENT` chỉ nghĩa là nhà cung cấp đã nhận. Nội dung tối thiểu kèm link cần đăng nhập. | US-NTF-001 S2, S4 |
+| BR-U14-23 | Gửi qua job `EMAIL_SEND` (queue `jobs.email` của U03) bằng `IMail` của U01; lỗi thử lại theo U03 tối đa 5 lần rồi `FAILED`; không gửi trùng. `SENT` chỉ nghĩa là nhà cung cấp đã nhận. Nội dung tối thiểu kèm link cần đăng nhập. Tiêu đề và nội dung song ngữ: phần tiếng Việt trước, phần tiếng Anh sau trong cùng một email (hệ thống chưa lưu ngôn ngữ ưa thích theo tài khoản; quyết định system test WF05 2026-11-25). | US-NTF-001 S2, S4 |
 | BR-U14-24 | Email nhắc hạn đã bị hoãn mà tới lúc gửi đã qua hạn thì `SKIPPED`. | Thiết kế |
 
 ## 4. Nhắc hạn nộp (FR-019)
@@ -56,8 +56,8 @@ Refinement approved 2026-10-24: mô tả trong chuông dùng lời dẫn hành �
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U14-40 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. | SEC-002 |
-| BR-U14-41 | Audit: `ANNOUNCEMENT_CREATED`, `ANNOUNCEMENT_UPDATED` (trước, sau), `ANNOUNCEMENT_DELETED`. Không audit từng thông báo, từng email. | FR-014 |
+| BR-U14-40 | Mọi API kiểm quyền phía server. Mọi trường hợp không có quyền đều trả `404`: ngoài phạm vi (không học, không dạy lớp) và trong phạm vi nhưng sai vai trò (người học đăng, sửa, xóa). Không ghi audit theo BR-U02-10. | SEC-002; quyết định system test WF05 2026-11-25 |
+| BR-U14-41 | Không ghi audit cho thông báo lớp, thông báo trong app và email (BR-U02-10, yêu cầu 2026-11-25). Dòng `ANNOUNCEMENT_*` ghi trước ngày này giữ nguyên. | FR-014; BR-U02-10 |
 | BR-U14-42 | U01, U05 không trả lời khi xử lý sự kiện thì thử lại theo U03; mất sự kiện chỉ mất thông báo, không ảnh hưởng nghiệp vụ. | BR-U03-70 |
 
 ## Delta 2026-11-01
