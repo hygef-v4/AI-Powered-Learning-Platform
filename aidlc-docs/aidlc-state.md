@@ -1593,3 +1593,9 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 - [x] Frontend: `vitest.config.mts` đặt `testTimeout` 15 giây. Năm test UI nặng (grading workspace, bulk selection, authoring flow) chỉ mất 0,25–1,2 giây khi chạy riêng nhưng vượt 5 giây khi 24 worker jsdom chạy song song. Toàn bộ 1213 test đạt hai lần liên tiếp; typecheck và lint sạch.
 - [x] E2E trên backend worktree (`local,worker`, cổng 8081): `wf01-wf02-grading.mjs` PASS (2 ca), `wf01-mcp-client.mjs read` đọc đủ 7 block, `record` trả đề xuất READY.
 - [x] Đã xóa 2 đề nháp thử `[MCP test]`/`[MCP smoke]` qua API của giảng viên. Ba đề xuất chấm thử trên bài nhóm SE_JS không có API xóa nên được giữ lại; không đổi điểm chính thức.
+
+## U06 Dọn wrapper MCP cục bộ
+
+- [x] Xác nhận phạm vi đã được duyệt và tìm nơi tham chiếu các file wrapper.
+- [x] Xóa hai wrapper và ca test đọc chúng.
+- [x] Maven package đạt 109 test được chọn. JAR chứa đủ hai workflow soạn Assignment và chấm rubric.
