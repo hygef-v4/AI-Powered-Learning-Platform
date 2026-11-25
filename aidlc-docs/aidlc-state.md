@@ -1,5 +1,14 @@
 # AI-DLC State Tracking
 
+## U01: Chủ nhiệm môn đăng nhập vào /manager · 2026-11-25
+
+Người dùng: "lúc đăng nhập vào subject manager tôi nghĩ nên chuyển đến trang /manager chứ k hải trang lớp như teacher".
+
+- [x] `HomePaths.resolveHomePath`: SUBJECT_MANAGER về `/manager` (trước là `/teaching/classes`); bỏ hằng `TEACHING_CLASSES`. Frontend dùng `homePath` từ backend nên không đổi.
+- [x] `AuthServiceTest` cập nhật kỳ vọng `/manager`.
+- [x] `homePath` do `ProfileService` tính lại ở mỗi lần gọi `/me/profile`, nên người đang đăng nhập nhận `/manager` ở lần tải hoặc làm mới trang kế tiếp; chỉ tab đang mở chưa làm mới còn giữ giá trị cũ trong bộ nhớ.
+- [x] Thêm test `profileOfSubjectManagerPointsToManagerDashboard` trong `ProfileAndPasswordChangeTest`. Chưa có test trình duyệt đăng nhập bằng SUBJECT_MANAGER.
+
 ## System test WF05 (Material Learning): rà soát test case và Round 1 · 2026-11-25
 
 Người dùng: "giờ hãy check xem các test case của wf05 xem có case nào đang sai do requirements không đủ hay không rõ ràng hay không, sau đó thực hiện test giúp tôi wf05".

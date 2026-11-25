@@ -15111,3 +15111,12 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction - system test WF05, commit
 
 ---
+
+## U01 Chủ nhiệm môn đăng nhập vào /manager
+**Timestamp**: 2026-11-25T17:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "lúc đăng nhập vào subject manager tôi nghĩ nên chuyển đến trang https://alapedu.online/manager chứ k hải trang lớp như teacher"
+**AI Response**: "Đổi `HomePaths.resolveHomePath` cho SUBJECT_MANAGER từ `/teaching/classes` sang `/manager` (hằng `MANAGER_DASHBOARD` đã có), bỏ hằng `TEACHING_CLASSES` không còn dùng, sửa `AuthServiceTest`. Frontend dùng `homePath` do backend trả nên không đổi."
+**Context**: Construction, U01 F15 (BR-U01-48), sửa nhỏ, không đổi schema hay API.
+
+---
