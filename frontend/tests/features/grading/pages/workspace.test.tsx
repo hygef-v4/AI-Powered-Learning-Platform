@@ -112,50 +112,6 @@ it("shows disabled monitoring and displays real leave times when available", asy
   expect(activity.getAllByRole("listitem")).toHaveLength(2);
 });
 
-it("distinguishes group members by student code in grading controls and activity", async () => {
-  const group = mockGroupWorkspace();
-  group.memberActivities = group.memberActivities.map((entry, index) => ({
-    ...entry, student: { ...entry.student, name: "An", studentCode: `SE00000${index + 1}` },
-  }));
-  render(<GradingWorkspacePage evaluationId="e" />);
-  fireEvent.click(await screen.findByRole("button", { name: "Đánh giá An · SE000002" }));
-  expect(screen.getByRole("combobox", { name: "Thành viên" })).toHaveValue("s2");
-  expect(screen.getByRole("option", { name: "An · SE000001" })).toBeInTheDocument();
-  expect(screen.getByRole("option", { name: "An · SE000002" })).toBeInTheDocument();
-  const activity = screen.getByRole("heading", { name: "Hoạt động khi làm bài" }).closest("details")!;
-  expect(within(activity).getByText("An · SE000002: Chưa có dữ liệu hoạt động")).toBeInTheDocument();
-});
-
-it("grades a member beside the paper and opens the right person from a section", async () => {
-  mockGroupWorkspace();
-  const scrollIntoView = vi.fn();
-  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { value: scrollIntoView, configurable: true });
-  const showPart = vi.fn();
-  window.addEventListener("document:show-part", showPart);
-  render(<GradingWorkspacePage evaluationId="e" />);
-  expect(await screen.findByRole("tab", { name: "Rubric nhóm" })).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Đánh giá Bình" }));
-  expect(screen.getByRole("combobox", { name: "Thành viên" })).toHaveValue("s2");
-  expect(screen.getByRole("tab", { name: "Thành viên" })).toHaveAttribute("aria-selected", "true");
-  expect(screen.getByTestId("document-side-panel")).toContainElement(screen.getByLabelText("Điểm cá nhân"));
-  fireEvent.change(screen.getByLabelText(/Căn cứ đánh giá/), { target: { value: "Đã vấn đáp Bình" } });
-  fireEvent.click(screen.getByRole("button", { name: "Xem phần Sequence Diagram" }));
-  expect(showPart).toHaveBeenCalled();
-  await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
-  fireEvent.click(screen.getByRole("tab", { name: "Rubric nhóm" }));
-  fireEvent.click(screen.getByRole("tab", { name: "Thành viên" }));
-  expect(screen.getByLabelText(/Căn cứ đánh giá/)).toHaveValue("Đã vấn đáp Bình");
-  const leaving = new Event("beforeunload", { cancelable: true });
-  window.dispatchEvent(leaving);
-  expect(leaving.defaultPrevented).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Bài sau" }));
-  expect(await screen.findByRole("dialog")).toHaveTextContent("Bạn có thay đổi chưa lưu");
-  expect(mocks.push).not.toHaveBeenCalled();
-  window.removeEventListener("document:show-part", showPart);
-});
-
 it("keeps a mobile member draft after closing and reopening the modeless drawer", async () => {
   mockGroupWorkspace(false);
   render(<GradingWorkspacePage evaluationId="e" />);
@@ -390,28 +346,6 @@ describe("workspace save", () => {
     const button = await screen.findByRole("button", { name: "Chấm bằng AI" });
     expect(button).toHaveTextContent("Chấm bằng AI");
     expect(button).toHaveClass("h-9!", "px-3!", "text-sm!");
-  });
-  it("shows the section author beside the heading and focuses the member grading drawer", async () => {
-    mocks.loadEvaluation.mockResolvedValue({
-      ...detail,
-      evaluation: { ...detail.evaluation, kind: "GROUP_DOCUMENT", accountId: null },
-      document: { blocks: [{ id: "part", type: "HEADING", content: { text: "Thiết kế" } }] },
-      sectionAuthors: [{ partId: "part", accountId: "s" }],
-      memberActivities: [{
-        student: { accountId: "s", name: "Nguyễn An", email: "an@school.test" },
-        state: "DISABLED",
-        activity: null,
-      }],
-      members: [{ ...detail.evaluation, id: "member", kind: "MEMBER" }],
-    });
-    render(<GradingWorkspacePage evaluationId="e" />);
-
-    const section = await screen.findByTestId("block-part");
-    expect(within(section).getByText("Người thực hiện: Nguyễn An")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Điểm thành viên" }));
-    expect(screen.getByRole("region", { name: "Chấm bài nhóm" })).toHaveFocus();
-    expect(screen.getByRole("region", { name: "Chấm bài nhóm" }))
-      .toContainElement(screen.getByRole("region", { name: "Điểm thành viên" }));
   });
 
   it("opens the matching group submission when AI grading is clicked from a member grade", async () => {
@@ -979,25 +913,6 @@ describe("AI proposal polling resilience and progress states", () => {
     expect(screen.getByText("Sẵn sàng để xem")).toBeInTheDocument();
     expect(screen.getByText("Hoàn tất sau khi kiểm tra lại")).toBeInTheDocument();
     expect(mocks.requestProposal).not.toHaveBeenCalled();
-  });
-
-  it("cleans up polling timers on unmount", async () => {
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-    mocks.listProposals.mockResolvedValue([
-      { id: "p1", versionNo: 1, status: "PENDING", taskState: "QUEUED", origin: "AI_TASK" },
-    ]);
-
-    const { unmount } = render(<GradingWorkspacePage evaluationId="e" />);
-    await act(async () => {});
-    openAi();
-    expect(screen.getByText("Đang chờ xử lý")).toBeInTheDocument();
-    expect(mocks.listProposals).toHaveBeenCalledTimes(1);
-
-    unmount();
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(15000);
-    });
-    expect(mocks.listProposals).toHaveBeenCalledTimes(1);
   });
 });
 

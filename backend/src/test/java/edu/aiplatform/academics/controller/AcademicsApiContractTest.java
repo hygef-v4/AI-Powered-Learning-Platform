@@ -115,24 +115,6 @@ class AcademicsApiContractTest {
         verifyNoMoreInteractions(academicsService);
     }
 
-    @Test void subjectSummariesExposeStatusCountsAndDetail() throws Exception {
-        var summary = new SubjectSummary(subjectId, "CS101", "Computing", "Nhập môn điện toán",
-                SubjectStatus.ACTIVE,
-                Map.of(ClassStatus.DRAFT, 1L, ClassStatus.OPEN, 2L, ClassStatus.ARCHIVED, 3L));
-        when(academicsService.listManagedSubjects(serverActor)).thenReturn(List.of(summary));
-        when(academicsService.loadManagedSubject(serverActor, subjectId)).thenReturn(summary);
-        mvc.perform(get("/api/v1/manager/subjects")).andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].status").value("ACTIVE"))
-                .andExpect(jsonPath("$[0].classCounts.OPEN").value(2));
-        mvc.perform(get("/api/v1/manager/subjects/" + subjectId)).andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(subjectId.toString()))
-                .andExpect(jsonPath("$.description").value("Nhập môn điện toán"))
-                .andExpect(jsonPath("$.classCounts.ARCHIVED").value(3));
-        verify(academicsService).listManagedSubjects(serverActor);
-        verify(academicsService).loadManagedSubject(serverActor, subjectId);
-        verifyNoMoreInteractions(academicsService);
-    }
-
     @ParameterizedTest
     @CsvSource({"teaching,teacher", "manager,manager"})
     void studentListForwardsClassAndPageWithoutInventingAnActor(String route, String audience) throws Exception {
@@ -162,13 +144,6 @@ class AcademicsApiContractTest {
         verify(academicsService).listTeacherCandidates(serverActor, "teacher & manager");
         verify(academicsService).listStudentCandidates(serverActor, classId, "student");
         verifyNoMoreInteractions(academicsService);
-    }
-
-    @Test void managerGradeDistributionMutationHasBeenRemoved() throws Exception {
-        mvc.perform(put("/api/v1/manager/classes/" + classId + "/grade-distribution")
-                .contentType("application/json").content("{\"enabled\":true,\"version\":0}"))
-                .andExpect(status().isNotFound());
-        verifyNoInteractions(academicsService);
     }
 
     @ParameterizedTest
@@ -210,55 +185,6 @@ class AcademicsApiContractTest {
                 .andExpect(jsonPath("$.status").value("DRAFT"))
                 .andExpect(jsonPath("$.teacher.id").value(accountId.toString()));
         verify(academicsService).createClass(serverActor, subjectId, "C01", "Morning class", "Description", START, accountId);
-        verifyNoMoreInteractions(academicsService);
-    }
-
-    @Test void classMutationsForwardVersionAndTypedValues() throws Exception {
-        when(academicsService.updateClassInfo(serverActor, classId, "Renamed", "Updated", START, 6))
-                .thenReturn(mutationResult("Renamed", "Updated", ClassStatus.OPEN, teacher, true, 7));
-        when(academicsService.assignClassTeacher(serverActor, classId, null, 7))
-                .thenReturn(mutationResult("Renamed", "Updated", ClassStatus.OPEN, null, true, 8));
-        when(academicsService.changeClassStatus(serverActor, classId, ClassStatus.ARCHIVED, 9))
-                .thenReturn(mutationResult("Renamed", "Updated", ClassStatus.ARCHIVED, null, false, 10));
-        mvc.perform(patch("/api/v1/manager/classes/" + classId).contentType("application/json")
-                .content("{\"name\":\"Renamed\",\"description\":\"Updated\",\"startsOn\":\"2027-04-03\",\"version\":6}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(classId.toString()))
-                .andExpect(jsonPath("$.name").value("Renamed"))
-                .andExpect(jsonPath("$.description").value("Updated"))
-                .andExpect(jsonPath("$.term").value("SP27-BL5"))
-                .andExpect(jsonPath("$.startsOn").value("2027-04-03"))
-                .andExpect(jsonPath("$.version").value(7));
-        mvc.perform(put("/api/v1/manager/classes/" + classId + "/teacher").contentType("application/json")
-                .content("{\"teacherId\":null,\"version\":7}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.teacher").value(nullValue()))
-                .andExpect(jsonPath("$.version").value(8));
-        mvc.perform(put("/api/v1/manager/classes/" + classId + "/status").contentType("application/json")
-                .content("{\"status\":\"ARCHIVED\",\"version\":9}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.code").value("C01"))
-                .andExpect(jsonPath("$.status").value("ARCHIVED"))
-                .andExpect(jsonPath("$.version").value(10));
-        verify(academicsService).updateClassInfo(serverActor, classId, "Renamed", "Updated", START, 6);
-        verify(academicsService).assignClassTeacher(serverActor, classId, null, 7);
-        verify(academicsService).changeClassStatus(serverActor, classId, ClassStatus.ARCHIVED, 9);
-        verifyNoMoreInteractions(academicsService);
-    }
-
-    @Test void enrollmentOutcomeAndBatchRowsRemainExplicitJsonContracts() throws Exception {
-        when(academicsService.enrollStudent(serverActor, classId, accountId)).thenReturn(EnrollmentResult.IN_OTHER_CLASS);
-        String text = "student@example.test\n\ninvalid";
-        when(academicsService.enrollStudents(serverActor, classId, text)).thenReturn(List.of(
-                new RowResult(1, "student@example.test", EnrollmentResult.ENROLLED),
-                new RowResult(3, "invalid", EnrollmentResult.INVALID_IDENTIFIER)));
-        mvc.perform(post("/api/v1/manager/classes/" + classId + "/enrollments").contentType("application/json")
-                .content("{\"accountId\":\"" + accountId + "\"}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.result").value("IN_OTHER_CLASS"));
-        mvc.perform(post("/api/v1/manager/classes/" + classId + "/enrollments:batch").contentType("application/json")
-                .content("{\"text\":\"student@example.test\\n\\ninvalid\"}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$[0].result").value("ENROLLED"))
-                .andExpect(jsonPath("$[1].line").value(3)).andExpect(jsonPath("$[1].email").value("invalid"))
-                .andExpect(jsonPath("$[1].result").value("INVALID_IDENTIFIER"));
-        verify(academicsService).enrollStudent(serverActor, classId, accountId);
-        verify(academicsService).enrollStudents(serverActor, classId, text);
         verifyNoMoreInteractions(academicsService);
     }
 

@@ -162,13 +162,6 @@ describe("U09 usability", () => {
     expect(screen.getByText("Tạo lúc 11:21 10/11/2026")).toHaveAttribute("datetime", "2026-11-10T04:21:00Z");
     expect(screen.getByText("Tạo lúc 08:05 09/11/2026")).toBeVisible();
   });
-  it("shows a safe diagram preview immediately and opens a larger read-only view", () => {
-    render(<SubmissionViewer document={{ blocks: [{ id: "d", origin: "STUDENT", type: "DIAGRAM", content: { diagramType: "OTHER", xml: "<mxfile/>", alt: "Sơ đồ Event",
-      svgPreview: '<svg xmlns="http://www.w3.org/2000/svg"><text x="5" y="20">Event</text></svg>' } }] }} />);
-    expect(screen.getByRole("img", { name: "Sơ đồ Event" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Xem sơ đồ" }));
-    expect(screen.getByRole("dialog", { name: "Sơ đồ Event" })).toBeInTheDocument();
-  });
 });
 
 

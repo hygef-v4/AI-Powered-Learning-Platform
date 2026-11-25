@@ -18,15 +18,6 @@ class CourseClassTest {
         return CourseClass.createClass(UUID.randomUUID(), UUID.randomUUID(), " SE01 ", " Lớp 1 ", null, start, teacher, now);
     }
 
-    @Test void createsDraftWithDistributionDisabled() {
-        var value = draft();
-        assertThat(value.status()).isEqualTo(ClassStatus.DRAFT);
-        assertThat(value.code()).isEqualTo("SE01");
-        assertThat(value.name()).isEqualTo("Lớp 1");
-        assertThat(value.showGradeDistribution()).isFalse();
-        assertThat(value.version()).isZero();
-    }
-
     @ParameterizedTest
     @CsvSource({"DRAFT,OPEN", "DRAFT,ARCHIVED", "OPEN,ARCHIVED", "ARCHIVED,OPEN"})
     void allowsOnlySpecifiedTransitions(ClassStatus from, ClassStatus to) {

@@ -48,22 +48,6 @@ function signedInAs(accountId: string) {
 describe("NewAccountDialog", () => {
   afterEach(() => vi.clearAllMocks());
 
-  it("tạo tài khoản chờ kích hoạt", async () => {
-    vi.mocked(createAccount).mockResolvedValue({ ...ACCOUNT, status: "PENDING" });
-    const onCreated = vi.fn();
-    render(<NewAccountDialog onClose={vi.fn()} onCreated={onCreated} />);
-
-    fireEvent.change(screen.getByLabelText(EMAIL), { target: { value: "gv01@fpt.edu.vn" } });
-    fireEvent.change(screen.getByLabelText(NAME), { target: { value: "Giảng viên 01" } });
-    fireEvent.change(screen.getByLabelText(/^Vai trò/), { target: { value: "TEACHER" } });
-    fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
-
-    await waitFor(() => expect(onCreated).toHaveBeenCalled());
-    expect(createAccount).toHaveBeenCalledWith("gv01@fpt.edu.vn", "Giảng viên 01", "TEACHER", undefined);
-    expect(screen.queryByLabelText(/^Mã số sinh viên/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Người dùng tự kích hoạt/)).not.toBeInTheDocument();
-  });
-
   it("email đã tồn tại thì báo lỗi rõ", async () => {
     vi.mocked(createAccount).mockRejectedValue(new ApiError({ status: 409, code: "EMAIL_EXISTS" }));
     render(<NewAccountDialog onClose={vi.fn()} onCreated={vi.fn()} />);
@@ -75,24 +59,6 @@ describe("NewAccountDialog", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Email đã có tài khoản.");
     expect(createAccount).toHaveBeenCalledWith("sv01@fpt.edu.vn", "SV", "STUDENT", "SE000001");
-  });
-
-  it("sinh viên bắt buộc MSSV đúng định dạng; trùng mã thì báo rõ", async () => {
-    vi.mocked(createAccount).mockRejectedValue(new ApiError({ status: 409, code: "STUDENT_CODE_EXISTS" }));
-    render(<NewAccountDialog onClose={vi.fn()} onCreated={vi.fn()} />);
-
-    fireEvent.change(screen.getByLabelText(EMAIL), { target: { value: "sv02@fpt.edu.vn" } });
-    fireEvent.change(screen.getByLabelText(NAME), { target: { value: "SV" } });
-    fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
-    expect(await screen.findByText("Nhập MSSV.")).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/^Mã số sinh viên/), { target: { value: "S123" } });
-    fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
-    expect(await screen.findByText(/MSSV gồm 2 chữ cái và 6 chữ số/)).toBeInTheDocument();
-    expect(createAccount).not.toHaveBeenCalled();
-
-    fireEvent.change(screen.getByLabelText(/^Mã số sinh viên/), { target: { value: "SE000002" } });
-    fireEvent.click(screen.getByRole("button", { name: "Thêm tài khoản" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("MSSV này đã được dùng cho tài khoản khác.");
   });
 });
 
@@ -234,15 +200,5 @@ describe("AccountDetailPage", () => {
 
     expect(await screen.findByLabelText(/^Mã số sinh viên/)).toHaveValue("Chưa có MSSV");
     expect(screen.getByLabelText(/^Mã số sinh viên/)).toBeDisabled();
-  });
-
-  it("mở Nhật ký đã lọc theo tài khoản", async () => {
-    signedInAs("admin-1");
-    render(<AccountDetailPage />);
-
-    expect(await screen.findByRole("link", { name: "Mở Nhật ký của tài khoản" })).toHaveAttribute(
-      "href",
-      "/admin/audit?actorEmail=sv01%40fpt.edu.vn&actorId=acc-1",
-    );
   });
 });

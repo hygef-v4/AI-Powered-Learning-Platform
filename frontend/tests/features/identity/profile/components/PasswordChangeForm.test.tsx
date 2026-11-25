@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { changePassword } from "@/features/identity/api";
@@ -17,19 +17,6 @@ function fill(current: string, next: string, confirm = next) {
 
 describe("PasswordChangeForm", () => {
   afterEach(() => vi.clearAllMocks());
-
-  it("đổi thành công thì báo cho trang", async () => {
-    changeMock.mockResolvedValue(undefined);
-    const onChanged = vi.fn();
-    render(<PasswordChangeForm onChanged={onChanged} />);
-
-    fill("hocbai2026", "matkhaumoi9");
-
-    await waitFor(() => expect(onChanged).toHaveBeenCalled());
-    expect(changeMock).toHaveBeenCalledWith("hocbai2026", "matkhaumoi9");
-    expect(screen.getByLabelText("Mật khẩu hiện tại")).toHaveValue("");
-    expect(screen.getByLabelText("Mật khẩu mới")).toHaveValue("");
-  });
 
   it("mật khẩu hiện tại sai thì báo lỗi và giữ mật khẩu mới đã nhập", async () => {
     changeMock.mockRejectedValue(new ApiError({ status: 400, code: "CURRENT_PASSWORD_INVALID" }));

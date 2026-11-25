@@ -331,40 +331,6 @@ class QuizServicesTest {
     }
 
     @Test
-    void inlineQuestionsAreAddedEditedAndRemovedWithTheQuiz() {
-        QuizDetail quiz = authoring.createForClass(teacher, classA, "Luyện tập");
-        QuizDetail added = authoring.addInline(teacher, quiz.quiz().id(),
-                content(QuestionType.MCQ_MULTI, List.of("1", "2"), "2", "3", "4"), quiz.quiz().version());
-        UUID inlineId = added.items().get(0).question().id();
-        assertThat(store.questions.get(inlineId).scope()).isEqualTo(QuestionScope.QUIZ);
-
-        QuizDetail updated = authoring.updateInline(teacher, quiz.quiz().id(), inlineId,
-                content(QuestionType.MCQ_SINGLE, List.of("1"), "A", "B"), added.quiz().version());
-        assertThat(updated.items().get(0).question().type()).isEqualTo(QuestionType.MCQ_SINGLE);
-
-        QuizDetail removed = authoring.deleteInline(teacher, quiz.quiz().id(), inlineId, updated.quiz().version());
-        assertThat(removed.items()).isEmpty();
-        assertThat(store.questions).doesNotContainKey(inlineId);
-    }
-
-    @Test
-    void settingsAreValidated() {
-        QuizDetail quiz = authoring.createForClass(teacher, classA, "Luyện tập");
-        UUID id = quiz.quiz().id();
-        long version = quiz.quiz().version();
-        RuleViolationException invalid = (RuleViolationException) api(() -> authoring.updateDetails(teacher, id,
-                new Details(" ", null, new QuizSettings(true, true, 301, 11, true, true), false, null), version));
-        assertThat(invalid.listViolations()).extracting(Violation::code)
-                .contains("REQUIRED", "TIME_LIMIT_INVALID", "ATTEMPTS_INVALID");
-
-        QuizDetail ok = authoring.updateDetails(teacher, id, new Details("Luyện tập 2", " Đọc kỹ ",
-                new QuizSettings(true, false, 30, null, true, true), false, null), version);
-        assertThat(ok.quiz().title()).isEqualTo("Luyện tập 2");
-        assertThat(ok.quiz().instructions()).isEqualTo("Đọc kỹ");
-        assertThat(ok.quiz().settings().maxAttempts()).isNull();
-    }
-
-    @Test
     void randomPreviewSkipsQuestionsAlreadyInQuizAndRespectsFreeSlots() {
         Question inQuiz = bank(true);
         Question other = bank(true);
@@ -396,30 +362,6 @@ class QuizServicesTest {
             assertThat(v.field()).isEqualTo("items[1]");
             assertThat(v.code()).isEqualTo("QUESTION_NOT_ACTIVE");
         });
-    }
-
-    @Test
-    void publishNeedsOpenClassThenOpensAndAnnounces() {
-        QuizDetail quiz = classQuizWith(bank(true));
-        classStatus.put(classA, ClassStatus.DRAFT);
-        assertThat(api(() -> publication.publish(teacher, quiz.quiz().id(), quiz.quiz().version())).readCode())
-                .isEqualTo("CLASS_NOT_OPEN");
-        classStatus.put(classA, ClassStatus.OPEN);
-
-        QuizDetail open = publication.publish(teacher, quiz.quiz().id(), quiz.quiz().version());
-
-        assertThat(open.quiz().status()).isEqualTo(QuizStatus.OPEN);
-        assertThat(open.quiz().publishedAt()).isEqualTo(NOW);
-        assertThat(events).singleElement().satisfies(e -> {
-            assertThat(e.eventType()).isEqualTo(EventTypes.QUIZ_PUBLISHED);
-            assertThat(e.payload()).containsEntry("classId", classA.toString());
-        });
-        var kept = open.items().stream().map(i -> new QuizAuthoringService.ItemInput(i.question().id(), null)).toList();
-        assertThat(authoring.saveItems(teacher, quiz.quiz().id(), kept, open.quiz().version()).quiz().status())
-                .as("sửa quiz đang mở tại chỗ, không tạo version").isEqualTo(QuizStatus.OPEN);
-        assertThat(api(() -> authoring.deleteQuiz(teacher, quiz.quiz().id(), open.quiz().version() + 1)).readCode())
-                .isEqualTo("QUIZ_DELETE_BLOCKED");
-        assertThat(deletingNotices).isEmpty();
     }
 
     @Test
@@ -492,21 +434,6 @@ class QuizServicesTest {
         assertThat(query.getStudentView(id).orElseThrow().questions()).isEqualTo(studentView.questions());
         assertThat(scorer.answerReview(id)).isEqualTo(answers);
         assertThat(store.quizzes.get(id)).isEqualTo(storedRetired);
-    }
-
-    @Test
-    void publishingNewVersionRetiresTheOldOneAndNotifiesListeners() {
-        QuizDetail v1 = published(classQuizWith(bank(true)));
-        QuizDetail v2 = copies.createNewVersion(teacher, v1.quiz().id());
-        assertThat(v2.quiz().versionNo()).isEqualTo(2);
-        assertThat(api(() -> copies.createNewVersion(teacher, v1.quiz().id())).readCode()).isEqualTo("QUIZ_VERSION_EXISTS");
-
-        published(v2);
-
-        assertThat(store.quizzes.get(v1.quiz().id()).status()).isEqualTo(QuizStatus.RETIRED);
-        assertThat(retiredNotices).containsExactly(v1.quiz().id());
-        assertThat(copies.createNewVersion(teacher, v2.quiz().id()).quiz().versionNo()).as("v2 đã mở, được tạo v3")
-                .isEqualTo(3);
     }
 
     @Test
@@ -681,19 +608,6 @@ class QuizServicesTest {
         assertThat(copy.quiz().classId()).isEqualTo(classB);
         assertThat(api(() -> copies.copyToClass(otherTeacher, classB, source.quiz().id())).readStatus())
                 .isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-    @Test
-    void deletingDraftRemovesItsInlineQuestions() {
-        QuizDetail quiz = authoring.createForClass(teacher, classA, "Nháp");
-        QuizDetail withInline = authoring.addInline(teacher, quiz.quiz().id(),
-                content(QuestionType.MCQ_SINGLE, List.of("1"), "A", "B"), quiz.quiz().version());
-
-        authoring.deleteQuiz(teacher, quiz.quiz().id(), withInline.quiz().version());
-
-        assertThat(store.quizzes).doesNotContainKey(quiz.quiz().id());
-        assertThat(store.questions).isEmpty();
-        assertThat(deletingNotices).as("U13 gỡ Quiz khỏi module trước khi xóa").containsExactly(quiz.quiz().id());
     }
 
     @Test

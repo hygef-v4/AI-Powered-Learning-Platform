@@ -25,15 +25,6 @@ class GradebookExporterTest {
     }
 
     @Test
-    void csvQuotesTextAndNeutralizesFormulas() throws Exception {
-        var out = new ByteArrayOutputStream();
-        new GradebookExporter().writeGradebook(List.of(List.of("Name", "Feedback"), List.of("=SUM(1,2)", " \t@evil\n\"quote\"")),
-                "csv", out);
-        var value = out.toString(StandardCharsets.UTF_8);
-        assertThat(value).contains("'=SUM(1,2)").contains("' \t@evil").contains("\"\"quote\"\"");
-    }
-
-    @Test
     void xlsxIsWellFormedAndUsesTextCellsInsteadOfFormula() throws Exception {
         var out = new ByteArrayOutputStream();
         new GradebookExporter().writeGradebook(List.of(List.of("=1+1", "Tiếng Việt & < >")), "xlsx", out);

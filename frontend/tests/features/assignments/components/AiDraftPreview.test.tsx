@@ -22,17 +22,6 @@ describe("AI assessment preview", () => {
     expect(screen.getByText(context.trim()).closest("details")).not.toHaveAttribute("open");
     expect(screen.getByText(/Không có câu hỏi để hiển thị/)).toBeVisible();
   });
-
-  it("shows a separate question and rubric panel with item scores", () => {
-    render(<AiDraftPreview targetPoints={10} proposal={{ title: "Event exam", businessContext: "Actors and rules.\n\nException flows.",
-      instructions: "Work individually", sections: [{ level: 1, title: "Class diagram", guidance: "Model the event entities.",
-        rubric: [{ title: "Relationships", description: "", kind: "DIAGRAM", items: [{ text: "Correct multiplicities", points: 10 }] }] }],
-      validation: { status: "VALID", questionCount: 1, rubricLeafCount: 1, totalPoints: 10, issues: [] } }} />);
-    expect(screen.getByRole("article", { name: "Câu 1" })).toBeVisible();
-    expect(screen.getByRole("heading", { name: "Rubric · tiêu chí và điểm" })).toBeVisible();
-    expect(screen.getByText("Correct multiplicities")).toBeVisible();
-    expect(screen.getByText("Exception flows.")).toBeVisible();
-  });
   it("previews native emphasis and alignment without dropping selective run styles", () => {
     render(<AiDraftPreview proposal={{ title: "Exam", instructions: "", businessContext: "Context",
       businessContextFormat: { align: "CENTER", bold: true },

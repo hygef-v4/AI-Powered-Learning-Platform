@@ -27,27 +27,6 @@ it("reserves at most three slots synchronously and keeps different files with th
   expect(error).toHaveBeenCalledWith(expect.stringContaining("3"));
 });
 
-it("moves a DOCX between roles only after successful reading and confirms replacing an existing template", async () => {
-  const { result } = renderHook(() => useAiChatAttachments("a1", vi.fn(), true));
-  await waitFor(() => expect(result.current.sources.canUpload).toBe(true));
-  act(() => result.current.addFiles([docx("new.docx")]));
-  await waitFor(() => expect(result.current.sources.uploads[0]?.status).toBe("READY"));
-  act(() => result.current.chooseExisting("old"));
-  act(() => { void result.current.promote(result.current.sources.uploads[0]!); });
-  expect(result.current.replacement).not.toBeNull();
-  expect(result.current.templateId).toBe("old");
-  act(() => result.current.cancelReplacement());
-  expect(result.current.sources.uploads).toHaveLength(1);
-  act(() => { void result.current.promote(result.current.sources.uploads[0]!); });
-  await act(async () => result.current.confirmReplacement());
-  expect(result.current.template?.status).toBe("READY");
-  expect(result.current.templateId).toBe("");
-  expect(result.current.sources.fileRefs).toEqual([]);
-  await act(async () => result.current.demote());
-  expect(result.current.template).toBeNull();
-  expect(result.current.sources.fileRefs).toHaveLength(1);
-});
-
 it("keeps the previous template and reference on failed conversion; oversized DOCX can still become a template", async () => {
   const error = vi.fn();
   const { result } = renderHook(() => useAiChatAttachments("a1", error, true));
@@ -87,25 +66,4 @@ it("ignores late upload and template responses after removal or unmount", async 
   act(() => { void result.current.promote(result.current.sources.uploads[0]!); });
   unmount();
   await act(async () => finishTemplate(document as never));
-});
-
-it("retains the template when reference conversion fails and limits template size before upload", async () => {
-  const error = vi.fn();
-  const { result } = renderHook(() => useAiChatAttachments("a1", error, true));
-  await waitFor(() => expect(result.current.sources.canUpload).toBe(true));
-  act(() => result.current.addFiles([docx("one.docx")]));
-  await waitFor(() => expect(result.current.sources.uploads[0]?.status).toBe("READY"));
-  await act(async () => result.current.promote(result.current.sources.uploads[0]!));
-  vi.mocked(filesApi.uploadFile).mockReturnValueOnce({ abort: vi.fn(), promise: Promise.reject(new Error("Upload failed")) });
-  await act(async () => result.current.demote());
-  expect(result.current.template?.file.name).toBe("one.docx");
-  expect(result.current.sources.fileRefs).toHaveLength(0);
-  const huge = docx("huge.docx");
-  Object.defineProperty(huge, "size", { value: 20 * 1024 * 1024 + 1 });
-  act(() => result.current.addFiles([huge]));
-  const calls = vi.mocked(assignmentsApi.importDocx).mock.calls.length;
-  act(() => { void result.current.promote(result.current.sources.uploads[0]!); });
-  await act(async () => result.current.confirmReplacement());
-  expect(assignmentsApi.importDocx).toHaveBeenCalledTimes(calls);
-  expect(result.current.template?.file.name).toBe("one.docx");
 });

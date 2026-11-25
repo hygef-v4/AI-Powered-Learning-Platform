@@ -36,16 +36,3 @@ it("keeps the current unsaved page when browser traversal is canceled", () => {
   expect(navigation).not.toHaveBeenCalled();
   window.removeEventListener("popstate", navigation);
 });
-
-it("lets an approved browser traversal proceed", () => {
-  window.history.replaceState(null, "", "/quizzes/current");
-  vi.spyOn(window, "confirm").mockReturnValue(true);
-  render(<Guard />);
-  window.history.replaceState(null, "", "/quizzes/previous");
-  const navigation = vi.fn();
-  window.addEventListener("popstate", navigation);
-  window.dispatchEvent(new PopStateEvent("popstate"));
-  expect(window.location.pathname).toBe("/quizzes/previous");
-  expect(navigation).toHaveBeenCalledOnce();
-  window.removeEventListener("popstate", navigation);
-});

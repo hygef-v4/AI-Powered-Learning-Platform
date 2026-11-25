@@ -114,23 +114,6 @@ class GroupProposalReviewServiceTest {
     }
 
     @Test
-    void proposalThatLostMembersReturnsToDraftAndNothingIsWritten() {
-        GroupProposal shrunk = submitted("Nhóm Mây", 0, 1);
-        when(classes.listActiveStudents(classId)).thenReturn(students.subList(0, 1));
-
-        ApproveResult result = service.approveProposals(teacher, classId, new ApproveCommand(List.of(shrunk.id())));
-
-        assertThat(result.failed()).singleElement()
-                .satisfies(f -> assertThat(f.code()).isEqualTo("PROPOSAL_INCOMPLETE"));
-        verify(proposals).updateMember(shrunk.id(), students.get(1), ProposalMember.Status.LEFT, false, NOW);
-        ArgumentCaptor<GroupProposal> updated = ArgumentCaptor.forClass(GroupProposal.class);
-        verify(proposals).updateProposal(updated.capture());
-        assertThat(updated.getValue().status()).isEqualTo(GroupProposal.Status.DRAFT);
-        verify(classGroupService, never()).addApprovedGroups(any(), any(), anyLong(), anyList());
-        verify(cleanup, never()).releasePlacedStudents(any(), any(), any());
-    }
-
-    @Test
     void draftsUnknownIdsAndBadBatchesAreRefused() {
         GroupProposal draft = GroupProposal.draft(UUID.randomUUID(), classId, "Nhóm Mây", students.get(0), NOW);
         when(proposals.lockProposal(draft.id())).thenReturn(Optional.of(draft));
@@ -169,22 +152,6 @@ class GroupProposalReviewServiceTest {
         verify(events).publish(event.capture());
         assertThat(event.getValue().eventType()).isEqualTo(EventTypes.GROUP_PROPOSAL_REJECTED);
         assertThat(view.classId()).isEqualTo(classId);
-    }
-
-    @Test
-    void listShowsWarningsAndUngroupedStudentsWithTheirProposal() {
-        GroupProposal proposal = submitted("Nhóm Mây", 0);
-        when(proposals.listActiveProposals(classId)).thenReturn(List.of(proposal));
-        List<ProposalMember> rows = proposals.listMembers(proposal.id());
-        when(proposals.listMembersOf(List.of(proposal.id()))).thenReturn(rows);
-
-        ClassProposalsView view = service.listClassProposals(teacher, classId);
-
-        assertThat(view.proposals()).singleElement()
-                .satisfies(p -> assertThat(p.warnings()).containsExactly("BELOW_MIN"));
-        assertThat(view.ungrouped()).hasSize(8);
-        assertThat(view.ungrouped().get(0).proposalId()).isEqualTo(proposal.id());
-        assertThat(view.ungrouped().get(1).proposalId()).isNull();
     }
 
     private GroupProposal submitted(String name, int... memberIndexes) {

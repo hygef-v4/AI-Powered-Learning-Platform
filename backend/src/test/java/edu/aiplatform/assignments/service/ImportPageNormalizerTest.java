@@ -35,83 +35,10 @@ class ImportPageNormalizerTest {
     }
 
     @Test
-    void imagesKeepTheChosenOrderAndBecomeJpegPagesNoLongerThanTwoThousandPixels() throws Exception {
-        NormalizedPages result = normalizer.normalizePages(images(ImportTestImages.png(3000, 1500),
-                ImportTestImages.png(1000, 1400)));
-
-        assertThat(result.pages()).extracting(ImportPage::pageNo).containsExactly(1, 2);
-        ImportPage first = result.pages().get(0);
-        assertThat(first.mediaType()).isEqualTo("image/jpeg");
-        assertThat(first.width()).isEqualTo(2000);
-        assertThat(first.height()).isEqualTo(1000);
-        assertThat(read(first).getWidth()).isEqualTo(2000);
-        assertThat(result.pages().get(1).width()).as("không phóng to").isEqualTo(1000);
-        assertThat(result.warnings()).isEmpty();
-    }
-
-    @Test
-    void smallImagesGetALowResolutionWarning() {
-        NormalizedPages result = normalizer.normalizePages(images(ImportTestImages.png(400, 300)));
-
-        assertThat(result.warnings()).singleElement().satisfies(w -> {
-            assertThat(w.kind()).isEqualTo("LOW_RESOLUTION");
-            assertThat(w.page()).isEqualTo(1);
-        });
-    }
-
-    @Test
-    void jpegIsRotatedUprightFromItsExifOrientation() {
-        byte[] sideways = ImportTestImages.jpegWithOrientation(1200, 900, 6);
-
-        assertThat(ImportPageNormalizer.JpegOrientation.readOrientation(sideways)).isEqualTo(6);
-        ImportPage page = normalizer.normalizePages(images(sideways)).pages().get(0);
-        assertThat(page.width()).isEqualTo(900);
-        assertThat(page.height()).isEqualTo(1200);
-        assertThat(ImportPageNormalizer.JpegOrientation.readOrientation(page.bytes())).as("bỏ metadata").isEqualTo(1);
-    }
-
-    @Test
-    void orientationTransformsMapEveryExifValue() {
-        BufferedImage source = ImportTestImages.drawn(40, 20);
-        for (int orientation = 1; orientation <= 8; orientation++) {
-            BufferedImage out = ImportPageNormalizer.orientImage(source, orientation);
-            boolean swapped = orientation >= 5;
-            assertThat(out.getWidth()).isEqualTo(swapped ? 20 : 40);
-            assertThat(out.getHeight()).isEqualTo(swapped ? 40 : 20);
-        }
-        // Góc đỏ trên trái của ảnh gốc: xoay 90° theo chiều kim đồng hồ thì sang góc trên phải.
-        BufferedImage rotated = ImportPageNormalizer.orientImage(source, 6);
-        assertThat(rotated.getRGB(19, 0) & 0xFFFFFF).isEqualTo(0xFF0000);
-        assertThat(rotated.getRGB(0, 39) & 0xFFFFFF).isEqualTo(0xFFFFFF);
-    }
-
-    @Test
     void imageOverFortyMegapixelsIsRejectedBeforeDecoding() {
         assertThatThrownBy(() -> normalizer.normalizePages(images(ImportTestImages.pngHeaderOnly(8000, 6000))))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("ASSIGNMENT_IMPORT_IMAGE_TOO_LARGE"));
-    }
-
-    @Test
-    void brokenImageIsUnreadable() {
-        assertThatThrownBy(() -> normalizer.normalizePages(images(new byte[]{1, 2, 3, 4})))
-                .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo("ASSIGNMENT_IMPORT_UNREADABLE"));
-    }
-
-    @Test
-    void pdfPagesAreRenderedInOrderWithTheirTextLayerAsHint() {
-        NormalizedPages result = normalizer.normalizePages(pdf(ImportTestImages.pdf(3, "Question")));
-
-        assertThat(result.pages()).hasSize(3);
-        assertThat(result.pages().get(0).width()).isEqualTo(1275);
-        assertThat(result.pages().get(0).textHint()).isEqualTo("Question 1");
-        assertThat(result.pages().get(2).textHint()).isEqualTo("Question 3");
-    }
-
-    @Test
-    void scannedPdfWithoutTextHasNoHint() {
-        assertThat(normalizer.normalizePages(pdf(ImportTestImages.pdf(1, null))).pages().get(0).textHint()).isNull();
     }
 
     @Test

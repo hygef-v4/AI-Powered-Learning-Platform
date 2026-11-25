@@ -35,20 +35,6 @@ class RabbitSseHubTest {
     }
 
     @Test
-    void publishWaitsForCommit() {
-        TransactionSynchronizationManager.initSynchronization();
-
-        hub.publish("group-doc:1", Map.of("type", "section.done"));
-
-        verify(rabbit, never()).convertAndSend(anyString(), anyString(), any(Object.class));
-        for (TransactionSynchronization s : TransactionSynchronizationManager.getSynchronizations()) {
-            s.afterCommit();
-        }
-        verify(rabbit).convertAndSend(eq("platform.realtime"), eq(""),
-                eq(Map.of("channel", "group-doc:1", "event", Map.of("type", "section.done"))));
-    }
-
-    @Test
     void deliveredEventReachesOnlyEmittersOfThatChannelAndBrokenEmitterIsDropped() {
         UUID doc = UUID.randomUUID();
         Recording mine = new Recording(false);

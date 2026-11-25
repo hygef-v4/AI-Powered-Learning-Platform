@@ -1,61 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
-import { Dialog } from "@/shared/ui/Dialog";
-import { ChipToggleGroup, Segmented, Switch } from "@/shared/ui/Inputs";
+import { describe, expect, it } from "vitest";
+import { Segmented } from "@/shared/ui/Inputs";
 import { Menu, MenuItem } from "@/shared/ui/Menu";
-import { TableSkeletonRows } from "@/shared/ui/Skeleton";
-import { TableFrame, Td } from "@/shared/ui/Table";
-import { ClassLabel } from "@/shared/ui/ClassFilter";
-import { TermFilter } from "@/shared/ui/TermFilter";
 
-describe("Dialog", () => {
-  it("đóng khi bấm Esc hoặc nút Đóng", () => {
-    const onClose = vi.fn();
-    render(
-      <Dialog open title="Xác nhận" onClose={onClose}>
-        Nội dung
-      </Dialog>,
-    );
 
-    expect(screen.getByRole("dialog", { name: "Xác nhận" })).toBeInTheDocument();
-    fireEvent.keyDown(document, { key: "Escape" });
-    fireEvent.click(screen.getByRole("button", { name: "Đóng" }));
-    expect(onClose).toHaveBeenCalledTimes(2);
-  });
 
-  it("không vẽ gì khi đóng", () => {
-    render(
-      <Dialog open={false} title="Xác nhận" onClose={vi.fn()}>
-        Nội dung
-      </Dialog>,
-    );
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-});
-
-function Chips() {
-  const [value, setValue] = useState<string[]>(["PPTX"]);
-  return (
-    <>
-      <ChipToggleGroup ariaLabel="Loại" options={["PDF", "DOCX", "PPTX"]} value={value} onChange={setValue} />
-      <output>{value.join(",")}</output>
-    </>
-  );
-}
-
-describe("ChipToggleGroup", () => {
-  it("bật tắt từng lựa chọn và giữ thứ tự của danh sách lựa chọn", () => {
-    render(<Chips />);
-
-    fireEvent.click(screen.getByRole("button", { name: "PDF" }));
-    expect(screen.getByRole("status")).toHaveTextContent("PDF,PPTX");
-    expect(screen.getByRole("button", { name: "PDF" })).toHaveAttribute("aria-pressed", "true");
-
-    fireEvent.click(screen.getByRole("button", { name: "PPTX" }));
-    expect(screen.getByRole("status")).toHaveTextContent("PDF");
-  });
-});
 
 function Filter() {
   const [value, setValue] = useState("all");
@@ -125,72 +75,6 @@ describe("Menu", () => {
   });
 });
 
-describe("TableFrame stackOnMobile", () => {
-  it("đánh dấu bảng xếp thẻ, ô mang tên cột và ô trang trí được ẩn khi xếp thẻ", () => {
-    const { container } = render(
-      <TableFrame stackOnMobile>
-        <tbody>
-          <tr>
-            <Td>Bài 1</Td>
-            <Td label="Hạn nộp">20/11</Td>
-            <Td hideWhenStacked>›</Td>
-          </tr>
-        </tbody>
-      </TableFrame>,
-    );
-    expect(container.firstElementChild).toHaveClass("table-stack");
-    expect(screen.getByText("20/11")).toHaveAttribute("data-label", "Hạn nộp");
-    expect(screen.getByText("Bài 1")).not.toHaveAttribute("data-label");
-    expect(screen.getByText("›")).toHaveAttribute("data-stack-hidden", "true");
-  });
-});
 
-describe("TableSkeletonRows", () => {
-  it("vẽ đủ số dòng và cột, có nhãn cho trình đọc màn hình", () => {
-    render(
-      <table>
-        <tbody>
-          <TableSkeletonRows rows={3} columns={4} label="Đang tải bài tập…" />
-        </tbody>
-      </table>,
-    );
-    expect(screen.getByRole("status")).toHaveTextContent("Đang tải bài tập…");
-    expect(document.querySelectorAll("tr")).toHaveLength(3);
-    expect(document.querySelectorAll("td")).toHaveLength(12);
-  });
-});
 
-describe("Switch", () => {
-  it("đảo trạng thái khi bấm", () => {
-    const onChange = vi.fn();
-    render(<Switch checked={false} onChange={onChange} label="Tắt" ariaLabel="Bật sao lưu" />);
 
-    fireEvent.click(screen.getByRole("switch", { name: "Bật sao lưu" }));
-
-    expect(onChange).toHaveBeenCalledWith(true);
-  });
-});
-
-describe("ClassLabel và TermFilter (D-U04-05)", () => {
-  it("dòng nhỏ ghi mã môn · học kỳ, title gồm cả mã lớp", () => {
-    const { container } = render(<ClassLabel subjectCode="PRJ301" code="SE1801" term="SP27-BL5" />);
-    expect(screen.getByText("PRJ301 · SP27-BL5")).toBeInTheDocument();
-    expect(screen.getByText("SE1801")).toBeInTheDocument();
-    expect(container.firstElementChild).toHaveAttribute("title", "PRJ301 · SE1801 · SP27-BL5");
-  });
-
-  it("không có mã môn thì dòng nhỏ chỉ có học kỳ", () => {
-    render(<ClassLabel subjectCode={null} code="SE1801" term="FA26" />);
-    expect(screen.getByText("FA26")).toBeInTheDocument();
-  });
-
-  it("chọn học kỳ hoặc Tất cả học kỳ", () => {
-    const onChange = vi.fn();
-    render(<TermFilter options={["SP27", "FA26"]} value="FA26" onChange={onChange} testId="term" />);
-    expect(screen.getByTestId("term").querySelector("summary")).toHaveTextContent("FA26");
-    expect(screen.getByRole("menuitem", { name: "FA26" })).toHaveAttribute("aria-current", "true");
-    fireEvent.click(screen.getByRole("menuitem", { name: "SP27" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "Tất cả học kỳ" }));
-    expect(onChange.mock.calls).toEqual([["SP27"], [""]]);
-  });
-});

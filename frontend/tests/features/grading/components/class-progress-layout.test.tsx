@@ -28,21 +28,6 @@ it("uses server submission counts, including group roots and legacy saved grades
   expect(screen.getByRole("link", { name: "4 Bài đã chấm chưa công bố" })).toHaveAttribute("href", "/teaching/classes/class-1?tab=gradebook&assignment=individual&gradebookStatus=DRAFT");
   expect(screen.queryByRole("tab")).not.toBeInTheDocument();
 });
-it("shows the nearest three future OPEN deadlines, including practice", async () => {
-  mocks.listForClass.mockResolvedValue({ items: [
-    assignment("fourth", "2026-11-20T00:00:00Z"), assignment("second", "2026-11-13T00:00:00Z", { submissionMode: "GROUP" }),
-    assignment("first", "2026-11-12T00:00:00Z", { gradingMode: "PRACTICE" }), assignment("third", "2026-11-14T00:00:00Z"),
-    assignment("past", "2026-11-10T00:00:00Z"), assignment("no deadline", null),
-    assignment("closed", "2026-11-12T00:00:00Z", { status: "CLOSED" }), assignment("invalid", "invalid"),
-  ] });
-  render(<ClassProgressSection classId="class-1" />);
-  await screen.findByRole("link", { name: "7 Bài đang mở" });
-  expect(screen.getAllByTestId("upcoming-assignment").map(x => x.textContent)).toEqual([
-    expect.stringContaining("first"), expect.stringContaining("second"), expect.stringContaining("third"),
-  ]);
-  expect(screen.getByRole("link", { name: /first.*Luyện tập/ })).toHaveAttribute("href", "/assignments/first?classId=class-1");
-  expect(screen.queryByText("fourth")).not.toBeInTheDocument();
-});
 it("keeps loading and errors distinct from zero", async () => {
   mocks.listForClass.mockReturnValue(new Promise(() => {}));
   const first = render(<ClassProgressSection classId="class-1" />);

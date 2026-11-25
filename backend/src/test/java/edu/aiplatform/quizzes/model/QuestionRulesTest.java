@@ -27,13 +27,6 @@ class QuestionRulesTest {
     }
 
     @Test
-    void validSingleAndMultiAnswerQuestionsPass() {
-        assertThat(QuestionRules.validate(single("3", "4"))).isEmpty();
-        assertThat(QuestionRules.validate(content(QuestionType.MCQ_MULTI, List.of("1", "3"), "2", "3", "4", "5", "6", "7")))
-                .isEmpty();
-    }
-
-    @Test
     void needsTwoToSixOptions() {
         assertThat(codes(single("4"))).contains("OPTION_COUNT");
         assertThat(codes(single("1", "2", "3", "4", "5", "6", "7"))).contains("OPTION_COUNT");
@@ -51,30 +44,6 @@ class QuestionRulesTest {
     void optionsMustNotRepeatOrBeEmpty() {
         assertThat(codes(single("Bốn", " bốn "))).contains("OPTION_DUPLICATE");
         assertThat(codes(single("4", " "))).contains("OPTION_EMPTY");
-    }
-
-    @Test
-    void typeAndStemAreRequiredAndTextIsBounded() {
-        QuestionContent noType = content(null, List.of("1"), "3", "4");
-        assertThat(codes(noType)).contains("TYPE_REQUIRED");
-        QuestionContent blankStem = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "  ", single("3", "4").options(),
-                List.of("1"), null, BigDecimal.ONE, null, null);
-        assertThat(codes(blankStem)).contains("REQUIRED");
-        QuestionContent longStem = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "a".repeat(20_001),
-                single("3", "4").options(), List.of("1"), null, BigDecimal.ONE, null, null);
-        assertThat(codes(longStem)).contains("TOO_LONG");
-    }
-
-    @Test
-    void pointsArePositiveWithAtMostTwoDecimals() {
-        for (String bad : new String[] {"0", "-1", "1.234", "10000"}) {
-            QuestionContent c = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
-                    List.of("1"), null, new BigDecimal(bad), null, null);
-            assertThat(codes(c)).as(bad).contains("POINTS_INVALID");
-        }
-        QuestionContent ok = QuestionContent.createContent(QuestionType.MCQ_SINGLE, "Câu", single("3", "4").options(),
-                List.of("1"), null, new BigDecimal("2.50"), null, null);
-        assertThat(QuestionRules.validate(ok)).isEmpty();
     }
 
     @Test

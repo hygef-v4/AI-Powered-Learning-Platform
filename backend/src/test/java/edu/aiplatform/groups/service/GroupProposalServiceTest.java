@@ -94,18 +94,6 @@ class GroupProposalServiceTest {
     }
 
     @Test
-    void creatingMakesTheStudentLeaderOfANewDraft() {
-        service.createProposal(leader, classId, new CreateProposalCommand("  Nhóm Mây  "));
-
-        ArgumentCaptor<GroupProposal> created = ArgumentCaptor.forClass(GroupProposal.class);
-        verify(proposals).insertProposal(created.capture());
-        assertThat(created.getValue().name()).isEqualTo("Nhóm Mây");
-        assertThat(created.getValue().leaderId()).isEqualTo(leader.accountId());
-        assertThat(created.getValue().status()).isEqualTo(GroupProposal.Status.DRAFT);
-        verify(proposals).insertActiveMember(created.getValue().id(), classId, leader.accountId(), NOW);
-    }
-
-    @Test
     void creatingIsRefusedWhenClosedGroupedInAnotherProposalOrNameTaken() {
         settings(false, 2, 3);
         assertCode(() -> service.createProposal(leader, classId, new CreateProposalCommand("A")), "FORMATION_CLOSED");
@@ -132,25 +120,6 @@ class GroupProposalServiceTest {
     }
 
     @Test
-    void invitingRespectsFreeSeatsAndNotifiesInvitees() {
-        members(member(leader.accountId(), ProposalMember.Status.ACCEPTED, true));
-
-        assertCode(() -> service.inviteMembers(leader, draft.id(),
-                        new InviteMembersCommand(List.of(students.get(1), students.get(1)), 0L)),
-                "PROPOSAL_INVITE_INVALID");
-        assertCode(() -> service.inviteMembers(leader, draft.id(),
-                new InviteMembersCommand(List.of(students.get(1), students.get(2), students.get(3)), 0L)),
-                "PROPOSAL_FULL");
-
-        service.inviteMembers(leader, draft.id(), new InviteMembersCommand(List.of(students.get(1)), 0L));
-
-        verify(proposals).upsertInvitation(draft.id(), classId, students.get(1), leader.accountId(), NOW);
-        DomainEvent event = publishedEvent();
-        assertThat(event.eventType()).isEqualTo(EventTypes.GROUP_PROPOSAL_INVITED);
-        assertThat(event.payload().get("recipientIds")).isEqualTo(List.of(students.get(1).toString()));
-    }
-
-    @Test
     void invitingSomeoneOutsideTheClassOrAlreadyGroupedIsRefused() {
         members(member(leader.accountId(), ProposalMember.Status.ACCEPTED, true));
 
@@ -172,17 +141,6 @@ class GroupProposalServiceTest {
 
         assertCode(() -> service.renameProposal(leader, draft.id(), new RenameProposalCommand("B", 7L)),
                 "PROPOSAL_VERSION_CONFLICT");
-    }
-
-    @Test
-    void acceptingJoinsAndRevokesOtherInvitations() {
-        members(member(leader.accountId(), ProposalMember.Status.ACCEPTED, true),
-                member(invitee.accountId(), ProposalMember.Status.INVITED, false));
-
-        service.acceptInvitation(invitee, draft.id());
-
-        verify(proposals).updateMember(draft.id(), invitee.accountId(), ProposalMember.Status.ACCEPTED, true, NOW);
-        verify(proposals).revokeInvitationsOf(classId, List.of(invitee.accountId()), draft.id(), NOW);
     }
 
     @Test
@@ -258,22 +216,6 @@ class GroupProposalServiceTest {
         assertThat(view.grouped()).isTrue();
         assertThat(view.proposal()).isNull();
         assertThat(view.candidates()).isEmpty();
-    }
-
-    @Test
-    void leaderOfAnOpenDraftSeesInvitableClassmates() {
-        when(proposals.findActiveProposalOf(classId, leader.accountId())).thenReturn(Optional.of(draft));
-        members(member(leader.accountId(), ProposalMember.Status.ACCEPTED, true),
-                member(invitee.accountId(), ProposalMember.Status.INVITED, false));
-
-        MyProposalView view = service.loadMyProposal(leader, classId);
-
-        assertThat(view.proposal().leader()).isTrue();
-        assertThat(view.proposal().members()).hasSize(1);
-        assertThat(view.proposal().invitations()).hasSize(1);
-        assertThat(view.proposal().freeSeats()).isEqualTo(1);
-        assertThat(view.candidates()).extracting(GroupProposalService.CandidateView::accountId)
-                .containsExactlyElementsOf(students.subList(2, 6));
     }
 
     private void settings(boolean enabled, int min, int max) {

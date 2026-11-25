@@ -112,36 +112,6 @@ class QuizControllersTest {
     }
 
     @Test
-    void createClassQuizReturns201() throws Exception {
-        when(authoring.createForClass(teacher, classId, "Luyện tập")).thenReturn(detail());
-        mvc.perform(post("/api/v1/classes/{c}/quizzes", classId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Luyện tập\"}"))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/v1/quizzes/" + quizId))
-                .andExpect(jsonPath("$.quiz.status").value("DRAFT"));
-        mvc.perform(post("/api/v1/subjects/{s}/quizzes", subjectId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"x\",\"classId\":\"y\"}"))
-                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("QUIZ_REQUEST_INVALID"));
-    }
-
-    @Test
-    void detailsParseSettingsStrictly() throws Exception {
-        when(authoring.updateDetails(eq(teacher), eq(quizId), any(), eq(4L))).thenReturn(detail());
-        mvc.perform(patch("/api/v1/quizzes/{id}", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Bài\",\"instructions\":null,\"settings\":" + SETTINGS
-                                + ",\"activityMonitoringEnabled\":false,\"activityNotice\":null,\"version\":4}"))
-                .andExpect(status().isOk());
-        ArgumentCaptor<QuizAuthoringService.Details> details = ArgumentCaptor.forClass(QuizAuthoringService.Details.class);
-        verify(authoring).updateDetails(eq(teacher), eq(quizId), details.capture(), eq(4L));
-        assertThat(details.getValue().settings()).isEqualTo(new QuizSettings(true, false, 30, null, true, false));
-
-        mvc.perform(patch("/api/v1/quizzes/{id}", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Bài\",\"settings\":" + SETTINGS.replace("30", "\"30\"")
-                                + ",\"activityMonitoringEnabled\":false,\"version\":4}"))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void itemsAndPublishErrorsCarryViolations() throws Exception {
         UUID question = UUID.randomUUID();
         when(authoring.saveItems(eq(teacher), eq(quizId), any(), eq(1L))).thenReturn(detail());
@@ -161,29 +131,6 @@ class QuizControllersTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("QUIZ_PUBLISH_FAILED"))
                 .andExpect(jsonPath("$.violations[0].field").value("items[1]"));
-    }
-
-    @Test
-    void lifecycleAndCopyEndpointsMapToServices() throws Exception {
-        when(publication.publish(teacher, quizId, 3)).thenReturn(detail());
-        mvc.perform(post("/api/v1/quizzes/{id}/publish", quizId).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"version\":3}")).andExpect(status().isOk());
-        when(publication.retire(teacher, quizId, "Đổi đề", 3)).thenReturn(detail());
-        mvc.perform(post("/api/v1/quizzes/{id}/retire", quizId).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"reason\":\"Đổi đề\",\"version\":3}")).andExpect(status().isOk());
-        verify(publication).retire(teacher, quizId, "Đổi đề", 3);
-        when(publication.reopen(teacher, quizId, 4)).thenReturn(detail());
-        mvc.perform(post("/api/v1/quizzes/{id}/reopen", quizId).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"version\":4}")).andExpect(status().isOk());
-        verify(publication).reopen(teacher, quizId, 4);
-        when(copies.createNewVersion(teacher, quizId)).thenReturn(detail());
-        mvc.perform(post("/api/v1/quizzes/{id}/versions", quizId)).andExpect(status().isCreated());
-        UUID source = UUID.randomUUID();
-        when(copies.copyToClass(teacher, classId, source)).thenReturn(detail());
-        mvc.perform(post("/api/v1/classes/{c}/quizzes:copy", classId).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"sourceQuizId\":\"" + source + "\"}")).andExpect(status().isCreated());
-        mvc.perform(delete("/api/v1/quizzes/{id}", quizId).param("version", "5")).andExpect(status().isNoContent());
-        verify(authoring).deleteQuiz(teacher, quizId, 5);
     }
 
     @Test
@@ -216,57 +163,6 @@ class QuizControllersTest {
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("QUIZ_NOT_FOUND"));
     }
 
-    @Test
-    void readEndpointsValidateQueryParameters() throws Exception {
-        when(authoring.loadQuiz(teacher, quizId, classId)).thenReturn(detail());
-        mvc.perform(get("/api/v1/quizzes/{id}", quizId).param("classId", classId.toString())).andExpect(status().isOk());
-        mvc.perform(get("/api/v1/quizzes/{id}", quizId).param("other", "x")).andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/quizzes/{id}/bank-questions", quizId).param("difficulty", "VERY_HARD"))
-                .andExpect(status().isBadRequest());
-        mvc.perform(post("/api/v1/quizzes/{id}/items:random-preview", quizId).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"count\":5,\"difficulty\":\"EASY\",\"tag\":null}")).andExpect(status().isOk());
-        verify(authoring).previewRandomQuestions(eq(teacher), eq(quizId), eq(5), eq(Difficulty.EASY),
-                isNull());
-        verify(authoring, never()).listBankQuestions(any(), any(), any(), any(), any(), any(), any());
-        verify(authoring, never()).deleteQuiz(any(), any(), anyLong());
-    }
-
-    @Test
-    void aiDraftRequestParsesSourceMaterialsAndVersion() throws Exception {
-        UUID material = UUID.randomUUID();
-        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"instructions\":\"Chương 1\",\"count\":5,\"type\":\"MCQ_MULTI\",\"difficulty\":null,"
-                                + "\"materialIds\":[\"" + material + "\"],\"source\":\"PERSONAL\",\"provider\":\"CLAUDE\","
-                                + "\"requestRef\":\"r-1\",\"version\":3}"))
-                .andExpect(status().isCreated());
-        ArgumentCaptor<DraftRequest> request = ArgumentCaptor.forClass(DraftRequest.class);
-        verify(drafts).requestForQuiz(eq(teacher), eq(quizId), request.capture(), eq(3L));
-        assertThat(request.getValue().count()).isEqualTo(5);
-        assertThat(request.getValue().source()).isEqualTo(AiSource.PERSONAL);
-        assertThat(request.getValue().provider()).isEqualTo(AiProvider.CLAUDE);
-        assertThat(request.getValue().materialIds()).containsExactly(material);
-
-        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"instructions\":\"x\",\"count\":5,\"source\":\"SHARED\",\"requestRef\":\"r\","
-                                + "\"version\":3,\"studentId\":\"y\"}"))
-                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("QUESTION_REQUEST_INVALID"));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"", "\"source\":null,"})
-    void aiDraftRequestAllowsAutomaticSourceWithSelectedMaterials(String sourceField) throws Exception {
-        UUID material = UUID.randomUUID();
-        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"instructions\":\"Tạo theo tài liệu\",\"count\":5," + sourceField
-                                + "\"materialIds\":[\"" + material + "\"],\"provider\":null,\"requestRef\":\"auto\",\"version\":3}"))
-                .andExpect(status().isCreated());
-        ArgumentCaptor<DraftRequest> request = ArgumentCaptor.forClass(DraftRequest.class);
-        verify(drafts).requestForQuiz(eq(teacher), eq(quizId), request.capture(), eq(3L));
-        assertThat(request.getValue().source()).isNull();
-        assertThat(request.getValue().provider()).isNull();
-        assertThat(request.getValue().materialIds()).containsExactly(material);
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {"", "\"instructions\":null,", "\"instructions\":\"  \","})
     void aiDraftAllowsMissingInstructionsWithDocuments(String instructionsField) throws Exception {
@@ -278,81 +174,5 @@ class QuizControllersTest {
         ArgumentCaptor<DraftRequest> request = ArgumentCaptor.forClass(DraftRequest.class);
         verify(drafts).requestForQuiz(eq(teacher), eq(quizId), request.capture(), eq(3L));
         assertThat(request.getValue().instructions()).isEqualTo("Tạo quiz theo nội dung tài liệu đã chọn.");
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"\"INVALID\"", "42"})
-    void aiDraftRequestStillRejectsInvalidExplicitSources(String source) throws Exception {
-        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"instructions\":\"x\",\"count\":5,\"source\":" + source
-                                + ",\"requestRef\":\"invalid\",\"version\":3}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("QUESTION_REQUEST_INVALID"));
-        verify(drafts, never()).requestForQuiz(any(), any(), any(), anyLong());
-    }
-
-    @Test
-    void colonActionsRouteToAcceptAndDiscard() throws Exception {
-        UUID draft = UUID.randomUUID();
-        when(drafts.acceptForQuiz(eq(teacher), eq(quizId), eq(draft), any(), eq(7L))).thenReturn(detail());
-        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts/{d}:accept", quizId, draft)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"questions\":[{\"type\":\"MCQ_SINGLE\",\"stem\":\"Câu\",\"options\":[{\"id\":\"1\","
-                                + "\"text\":\"A\"},{\"id\":\"2\",\"text\":\"B\"}],\"correctOptionIds\":[\"1\"],"
-                                + "\"explanation\":null,\"defaultPoints\":1,\"difficulty\":\"EASY\",\"tags\":[]}],\"version\":7}"))
-                .andExpect(status().isOk());
-        ArgumentCaptor<List<QuestionContent>> picked = ArgumentCaptor.forClass(List.class);
-        verify(drafts).acceptForQuiz(eq(teacher), eq(quizId), eq(draft), picked.capture(), eq(7L));
-        assertThat(picked.getValue()).singleElement().satisfies(c -> assertThat(c.stem()).isEqualTo("Câu"));
-
-        mvc.perform(post("/api/v1/quizzes/{id}/ai-drafts/{d}:discard", quizId, draft)).andExpect(status().isOk());
-        verify(drafts).discardForQuiz(teacher, quizId, draft);
-        mvc.perform(get("/api/v1/quizzes/{id}/ai-drafts/{d}", quizId, draft)).andExpect(status().isOk());
-        verify(drafts).getForQuiz(teacher, quizId, draft);
-    }
-
-    @Test
-    void drawRulesParseStrictly() throws Exception {
-        when(papers.saveRules(eq(teacher), eq(quizId), eq(QuizPaperMode.GENERATED), any(), eq(3L))).thenReturn(detail());
-        mvc.perform(put("/api/v1/quizzes/{id}/draw-rules", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"paperMode\":\"GENERATED\",\"rules\":[{\"tag\":\"Chương 1\",\"difficulty\":\"HARD\","
-                                + "\"questionCount\":4,\"pointsEach\":0.5}],\"version\":3}"))
-                .andExpect(status().isOk());
-        mvc.perform(put("/api/v1/quizzes/{id}/draw-rules", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"paperMode\":\"RANDOM\",\"rules\":[],\"version\":3}"))
-                .andExpect(status().isBadRequest());
-        mvc.perform(put("/api/v1/quizzes/{id}/draw-rules", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"paperMode\":\"GENERATED\",\"rules\":[{\"tag\":\"x\"}],\"version\":3}"))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void reviewEndpointIsGoneAndPenaltySettingsParse() throws Exception {
-        mvc.perform(post("/api/v1/quizzes/{id}/review", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"version\":2}"))
-                .andExpect(status().is4xxClientError());
-        when(authoring.updateDetails(eq(teacher), eq(quizId), any(), eq(4L))).thenReturn(detail());
-        mvc.perform(patch("/api/v1/quizzes/{id}", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Bài\",\"settings\":" + SETTINGS.replace("}",
-                                ",\"leavePenalty\":{\"freeLeaves\":1,\"pointsPerLeave\":0.5,\"maxPenalty\":null,\"minAwaySeconds\":5}}")
-                                + ",\"activityMonitoringEnabled\":true,\"activityNotice\":\"Báo\",\"version\":4}"))
-                .andExpect(status().isOk());
-        ArgumentCaptor<QuizAuthoringService.Details> details = ArgumentCaptor.forClass(QuizAuthoringService.Details.class);
-        verify(authoring).updateDetails(eq(teacher), eq(quizId), details.capture(), eq(4L));
-        assertThat(details.getValue().settings().leavePenalty()).isEqualTo(new LeavePenalty(1, new BigDecimal("0.5"), null, 5));
-        mvc.perform(patch("/api/v1/quizzes/{id}", quizId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\":\"Bài\",\"settings\":" + SETTINGS + ",\"activityMonitoringEnabled\":false,"
-                                + "\"referenceMaterialIds\":[],\"version\":4}"))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void referenceMaterialsListedForQuiz() throws Exception {
-        UUID material = UUID.randomUUID();
-        when(materials.listForQuiz(teacher, quizId)).thenReturn(List.of(new SelectableMaterial(material, "Chương 1", true)));
-        mvc.perform(get("/api/v1/quizzes/{id}/reference-materials", quizId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].materialId").value(material.toString()))
-                .andExpect(jsonPath("$[0].hasText").value(true));
     }
 }

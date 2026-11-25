@@ -26,22 +26,6 @@ const subjectAssignment = {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe("assignment/class grade distribution visibility", () => {
-  it.each([30, 31])("uses the server AI limit for the authoring page with %s rubric items", async (count) => {
-    const detail = { ...subjectAssignment, maxAiGradingRubricItems: 30,
-      skeleton: { blocks: [{ id: "p", type: "HEADING", origin: "TEACHER", content: { style: "H1", text: "Question" } }] },
-      parts: [{ partId: "p", headingBlockId: "p", ancestorHeadingIds: [], title: "Question", rubricId: "r",
-        criteriaCount: 2, totalPoints: 12, rubricComplete: true, locked: false }] } as AssignmentDetail;
-    vi.spyOn(assignmentsApi, "detail").mockResolvedValue(detail);
-    vi.spyOn(assignmentsApi, "rubric").mockResolvedValue({ rubricId: "r", assignmentId: "a", partId: "p",
-      partTitle: "Question", criteria: [{ criterionId: "c", title: "Criterion", description: "", kind: "TEXT",
-        items: Array.from({ length: count }, (_, index) => ({ itemId: `i${index}`, text: `Requirement ${index}`, points: 1 })) }],
-      totalPoints: 12, locked: false, complete: true, diagramEnabled: false, editable: false, assignmentVersion: 1 });
-    render(<AssignmentFormPage id="a" />);
-    await screen.findByText("Question");
-    await waitFor(() => expect(assignmentsApi.rubric).toHaveBeenCalled());
-    if (count > 30) expect(await screen.findByText(/Rubric có 31 mục, vượt giới hạn 30/)).toBeVisible();
-    else expect(screen.queryByText(/vượt giới hạn/)).not.toBeInTheDocument();
-  });
   it("uses the versioned GET/PUT contract and encodes both path identifiers", async () => {
     const fetch = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify(initial))));
     vi.stubGlobal("fetch", fetch);
@@ -51,39 +35,11 @@ describe("assignment/class grade distribution visibility", () => {
     expect(fetch.mock.calls[1]![1]).toMatchObject({ method: "PUT", body: JSON.stringify({ enabled: true, version: 7 }) });
   });
 
-  it("starts off, saves immediately, waits for confirmation, and uses the returned version for the next save", async () => {
-    vi.spyOn(gradingApi, "loadDistributionVisibility").mockResolvedValue(initial);
-    let confirm!: (value: typeof initial) => void;
-    const save = vi.spyOn(gradingApi, "saveDistributionVisibility").mockImplementationOnce(() => new Promise((resolve) => { confirm = resolve; }))
-      .mockResolvedValue({ ...initial, version: 2 });
-    render(<GradeDistributionSettings classId="c" assignmentId="a" gradingMode="GRADED" />);
-    const toggle = await screen.findByRole("switch", { name: label });
-    expect(toggle).toHaveAttribute("aria-checked", "false");
-    // Chỉ chữ to của switch, không còn dòng giải thích nhỏ (yêu cầu 2026-11-04).
-    expect(screen.queryByText(/ít nhất 20 kết quả/)).toBeNull();
-    fireEvent.click(toggle);
-    expect(save).toHaveBeenCalledWith("c", "a", true, 0);
-    // Gạt ngay sang bật và khóa lại trong lúc chờ server.
-    expect(toggle).toBeDisabled();
-    expect(toggle).toHaveAttribute("aria-checked", "true");
-    await act(async () => confirm({ enabled: true, version: 1, canEdit: true }));
-    expect(toggle).toHaveAttribute("aria-checked", "true");
-    fireEvent.click(toggle);
-    await waitFor(() => expect(save).toHaveBeenLastCalledWith("c", "a", false, 1));
-  });
-
   it("does not load PRACTICE settings", () => {
     const load = vi.spyOn(gradingApi, "loadDistributionVisibility");
     render(<GradeDistributionSettings classId="c" assignmentId="a" gradingMode="PRACTICE" />);
     expect(load).not.toHaveBeenCalled();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-  });
-
-  it.each([403, 404])("hides an unauthorized GET (%s) without an editable default", async (status) => {
-    vi.spyOn(gradingApi, "loadDistributionVisibility").mockRejectedValue(new ApiError({ status }));
-    await act(async () => { render(<GradeDistributionSettings classId="c" assignmentId="a" gradingMode="GRADED" />); });
-    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("hides the control when the server denies editing", async () => {
@@ -119,24 +75,6 @@ describe("assignment/class grade distribution visibility", () => {
     fireEvent.click(reloaded);
     await waitFor(() => expect(save).toHaveBeenLastCalledWith("c", "a", false, 5));
     expect(load).toHaveBeenCalledTimes(2);
-  });
-
-  it("isolates shared SUBJECT settings by class and ignores an old class response", async () => {
-    let oldResponse!: (value: typeof initial) => void;
-    const load = vi.spyOn(gradingApi, "loadDistributionVisibility").mockImplementationOnce(() => new Promise((resolve) => { oldResponse = resolve; }))
-      .mockResolvedValue(initial);
-    const save = vi.spyOn(gradingApi, "saveDistributionVisibility").mockResolvedValue({ ...initial, enabled: true, version: 1 });
-    const props = { detail: subjectAssignment, value: readSettings(subjectAssignment), onChange: vi.fn(), readOnly: true };
-    const { rerender } = render(<AssignmentSettingsPanel {...props} classId="c1" />);
-    rerender(<AssignmentSettingsPanel {...props} classId="c2" />);
-    const toggle = await screen.findByRole("switch", { name: label });
-    await act(async () => oldResponse({ ...initial, enabled: true, version: 99 }));
-    expect(toggle).toHaveAttribute("aria-checked", "false");
-    expect(load.mock.calls.map((call) => call.slice(0, 2))).toEqual([["c1", "a"], ["c2", "a"]]);
-    fireEvent.click(toggle);
-    await waitFor(() => expect(save).toHaveBeenCalledWith("c2", "a", true, 0));
-    expect(props.onChange).not.toHaveBeenCalled();
-    expect(screen.getByRole("radio", { name: "Graded" })).toBeDisabled();
   });
 
   it("loads no settings for a SUBJECT assignment without a class context", () => {

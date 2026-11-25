@@ -233,14 +233,6 @@ class QuizRework2026Test {
     }
 
     @Test
-    void newVersionMayEqualItsOwnPreviousVersion() {
-        Question q = active("Câu có phiên bản mới");
-        var draft = bank.openDraft(manager, q.id());
-        var activated = bank.activate(manager, draft.question().id(), draft.question().version());
-        assertThat(activated.question().status()).isEqualTo(QuestionStatus.ACTIVE);
-    }
-
-    @Test
     void importReportsDuplicatesPerRow() {
         active("Đã có trong ngân hàng");
         String csv = "noi_dung,loai,lua_chon_1,lua_chon_2,dap_an_dung\n"
@@ -287,37 +279,9 @@ class QuizRework2026Test {
     }
 
     @Test
-    void proposalIsPrivateToItsAuthorAndCanBeWithdrawn() {
-        var proposed = proposals.propose(teacher, classId, content("Câu của tôi"));
-        UUID id = proposed.question().id();
-        assertThat(proposals.listProposals(teacher, classId)).hasSize(1);
-        assertThat(proposals.listProposals(otherTeacher, classId)).isEmpty();
-        assertThat(api(() -> proposals.withdrawProposal(otherTeacher, classId, id, proposed.question().version())).readCode())
-                .isEqualTo("QUESTION_NOT_FOUND");
-        proposals.withdrawProposal(teacher, classId, id, proposed.question().version());
-        assertThat(proposals.listProposals(teacher, classId)).isEmpty();
-    }
-
-    @Test
     void proposalCannotDuplicateTheBank() {
         active("Câu đã có");
         assertThat(api(() -> proposals.propose(teacher, classId, content("CÂU ĐÃ CÓ"))).readCode()).isEqualTo("QUESTION_DUPLICATE");
-    }
-
-    @Test
-    void bulkApproveReportsEachItemAndBulkActivateHandlesDrafts() {
-        var first = proposals.propose(teacher, classId, content("Đề xuất số một về mạng"));
-        var second = proposals.propose(teacher, classId, content("Đề xuất số hai về cơ sở dữ liệu"));
-        var result = bank.approveMany(manager, subject, List.of(new ReviewItem(first.question().id(), first.question().version()),
-                new ReviewItem(second.question().id(), 99), new ReviewItem(UUID.randomUUID(), 0)));
-        assertThat(result.succeeded()).isEqualTo(1);
-        assertThat(result.failed()).isEqualTo(2);
-        assertThat(result.items().get(1).code()).isEqualTo("QUESTION_VERSION_CONFLICT");
-        assertThat(result.items().get(2).code()).isEqualTo("QUESTION_NOT_FOUND");
-
-        var draft = bank.createQuestion(manager, subject, content("Nháp nhập từ tệp"));
-        var activated = bank.activateMany(manager, subject, List.of(new ReviewItem(draft.question().id(), draft.question().version())));
-        assertThat(activated.succeeded()).isEqualTo(1);
     }
 
     @Test

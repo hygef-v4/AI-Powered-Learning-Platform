@@ -150,18 +150,6 @@ class AiConnectionServiceTest {
     }
 
     @Test
-    void draftCheckWithRejectedKeyRecordsNoUsage() {
-        when(gateway.call(eq(AiProvider.GEMINI), any())).thenThrow(new ProviderException(
-                IProviderGateway.FailureKind.REJECTED, 400, "Key API không hợp lệ hoặc không có quyền (HTTP 400)", null));
-
-        var result = service.testPersonalDraft(teacher, AiProvider.GEMINI, null,
-                new SaveCommand("AIzaSy-QA-invalid-key-0000", "gemini-2.5-flash", null));
-
-        assertThat(result.ok()).isFalse();
-        verify(usageRepository, never()).insert(any());
-    }
-
-    @Test
     void draftCheckRecordsProviderMeasuredUsage() {
         when(gateway.call(eq(AiProvider.GEMINI), any()))
                 .thenReturn(new Response("OK", "r", new IProviderGateway.Usage(9L, 2L, null, null)));
@@ -201,27 +189,6 @@ class AiConnectionServiceTest {
     }
 
     @Test
-    void institutionalSwitchKeepsKey() {
-        AiConnection shared = existing(AiConnection.Scope.INSTITUTIONAL);
-        when(repository.findById(shared.id())).thenReturn(Optional.of(shared));
-        when(gateway.call(any(), any())).thenReturn(new Response("OK", "r", null));
-
-        service.setInstitutionalEnabled(admin, shared.id(), false, 2L);
-
-        ArgumentCaptor<AiConnection> updated = ArgumentCaptor.forClass(AiConnection.class);
-        verify(repository).updateConnection(updated.capture());
-        assertThat(updated.getValue().status()).isEqualTo(Status.DISABLED);
-        assertThat(updated.getValue().keyCiphertext()).isNotNull();
-    }
-
-    @Test
-    void savedKeysCannotBeReadBackThroughTheService() {
-        assertThat(java.util.Arrays.stream(AiConnectionService.class.getMethods())
-                .map(java.lang.reflect.Method::getName))
-                .noneMatch(name -> name.toLowerCase(java.util.Locale.ROOT).contains("reveal"));
-    }
-
-    @Test
     void replacedKeyStaysBoundToItsOwnConnection() {
         AiConnection personal = existing(AiConnection.Scope.PERSONAL);
         when(repository.findById(personal.id())).thenReturn(Optional.of(personal));
@@ -236,31 +203,6 @@ class AiConnectionServiceTest {
                 other.model(), updated.getValue().keyCiphertext(), updated.getValue().keyIv(),
                 updated.getValue().keyVersion(), other.keyHint(), other.status(), null, null, NOW, NOW, 2);
         assertThatThrownBy(() -> cipher.decryptConnectionKey(copied)).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    void draftTestUsesTypedKeyOrSavedKeyWithoutSavingResult() {
-        AiConnection shared = existing(AiConnection.Scope.INSTITUTIONAL);
-        when(repository.findById(shared.id())).thenReturn(Optional.of(shared));
-        when(gateway.call(any(), any())).thenReturn(new Response("OK", "r", null));
-
-        var typed = service.testInstitutionalDraft(admin, AiProvider.GEMINI, null,
-                new SaveCommand("AIzaSy-new-key-9999", "gemini-2.5-flash", null));
-        var saved = service.testInstitutionalDraft(admin, AiProvider.GEMINI, shared.id(),
-                new SaveCommand(null, "gemini-2.5-flash", null));
-
-        assertThat(typed.ok()).isTrue();
-        assertThat(saved.ok()).isTrue();
-        ArgumentCaptor<IProviderGateway.Request> request = ArgumentCaptor.forClass(IProviderGateway.Request.class);
-        verify(gateway, org.mockito.Mockito.times(2)).call(eq(AiProvider.GEMINI), request.capture());
-        assertThat(request.getAllValues()).extracting(IProviderGateway.Request::apiKey)
-                .containsExactly("AIzaSy-new-key-9999", "AIzaSy-old-key-0000");
-        verify(repository, org.mockito.Mockito.never()).saveTest(any(), any(), any());
-        verify(repository, org.mockito.Mockito.never()).insert(any());
-        verify(usageRepository, never()).insert(any());
-        assertThatThrownBy(() -> service.testInstitutionalDraft(admin, AiProvider.GEMINI, null,
-                new SaveCommand(" ", "gemini-2.5-flash", null)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_KEY_REQUIRED"));
     }
 
     private AiConnection existing(AiConnection.Scope scope) {

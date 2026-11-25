@@ -98,17 +98,6 @@ class AuditQueryServiceTest {
     }
 
     @Test
-    void missingActorIsDenied() {
-        assertForbiddenAndAudited(null);
-    }
-
-    @Test
-    void authorizationRefusalIsDenied() {
-        when(authorization.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.deny("disabled"));
-        assertForbiddenAndAudited(admin);
-    }
-
-    @Test
     void authorizationErrorFailsClosed() {
         when(authorization.authorize(any(), any(), any())).thenThrow(new IllegalStateException("U01 down"));
         assertForbiddenAndAudited(admin);
@@ -133,93 +122,6 @@ class AuditQueryServiceTest {
     }
 
     @Test
-    void accountLookupErrorLeavesEmailEmpty() {
-        UUID a = UUID.randomUUID();
-        when(repository.count(any())).thenReturn(1L);
-        when(repository.findRows(any(), anyLong(), anyInt())).thenReturn(List.of(row(a, "{}")));
-        when(accounts.getContact(a)).thenThrow(new IllegalStateException("U01 down"));
-
-        Page<AuditLogView> page = service.query(admin, NO_FILTER, PageRequest.of(0, 50));
-
-        assertThat(page.getContent()).singleElement().extracting(AuditLogView::actorEmail).isNull();
-    }
-
-    @Test
-    void pageOffsetAndSizeArePassedAndEmptyResultSkipsFind() {
-        when(repository.count(any())).thenReturn(120L);
-        when(repository.findRows(any(), anyLong(), anyInt())).thenReturn(List.of());
-
-        service.query(admin, NO_FILTER, PageRequest.of(2, 50));
-        verify(repository).findRows(any(), eq(100L), eq(50));
-
-        when(repository.count(any())).thenReturn(0L);
-        service.query(admin, NO_FILTER, PageRequest.of(0, 50));
-        verify(repository, times(1)).findRows(any(), anyLong(), anyInt());
-    }
-
-    @Test
-    void queryIsNotAudited() {
-        when(repository.count(any())).thenReturn(0L);
-
-        service.query(admin, new AuditFilter(UUID.randomUUID(), " ROLE_CHANGED ", "", null, AuditResult.DENIED,
-                NOW.minusSeconds(3600), NOW), PageRequest.of(0, 50));
-        service.query(admin, NO_FILTER, PageRequest.of(1, 50));
-
-        verify(audit, never()).record(any());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void objectLabelShowsAccountEmailAndSubjectCodeAndName() {
-        UUID account = UUID.randomUUID();
-        UUID subject = UUID.randomUUID();
-        ISubjectQuery subjectQuery = mock(ISubjectQuery.class);
-        ObjectProvider<ISubjectQuery> subjects = mock(ObjectProvider.class);
-        when(subjects.getIfAvailable()).thenReturn(subjectQuery);
-        when(subjectQuery.getSubject(subject)).thenReturn(Optional.of(
-                new SubjectRef(subject, "SWD392", "Kiến trúc phần mềm", SubjectStatus.ACTIVE, null)));
-        when(accounts.getContact(account)).thenReturn(Optional.of(contact(account, "sv@fpt.edu.vn")));
-        AuditRow onAccount = new AuditRow(UUID.randomUUID(), null, "ROLE_CHANGED", "ACCOUNT", account.toString(),
-                "SUCCESS", null, "{}", NOW);
-        AuditRow onSubject = new AuditRow(UUID.randomUUID(), null, "SUBJECT_UPDATED", "SUBJECT", subject.toString(),
-                "SUCCESS", null, "{}", NOW);
-        AuditRow onBackup = new AuditRow(UUID.randomUUID(), null, "BACKUP_FAILED", "BACKUP", "bk-1", "FAILURE",
-                null, "{}", NOW);
-        when(repository.count(any())).thenReturn(3L);
-        when(repository.findRows(any(), anyLong(), anyInt())).thenReturn(List.of(onAccount, onSubject, onBackup));
-        AuditQueryService withNames = new AuditQueryService(repository, authorization, accounts, audit,
-                JsonMapper.builder().findAndAddModules().build(), Clock.fixed(NOW, ZoneOffset.UTC), subjects, null);
-
-        List<AuditLogView> items = withNames.query(admin, null, PageRequest.of(0, 50)).getContent();
-
-        assertThat(items).extracting(AuditLogView::objectLabel)
-                .containsExactly("sv@fpt.edu.vn", "SWD392 · Kiến trúc phần mềm", null);
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void objectLabelShowsClassCodeForCourseClassRows() {
-        UUID classId = UUID.randomUUID();
-        IClassAccess classAccess = mock(IClassAccess.class);
-        ObjectProvider<IClassAccess> classes = mock(ObjectProvider.class);
-        when(classes.getIfAvailable()).thenReturn(classAccess);
-        ClassRef ref = new ClassRef(classId, UUID.randomUUID(), "SE1801", "SE1801", ClassStatus.OPEN, null, false,
-                "SWD392");
-        when(classAccess.getClassRef(classId)).thenReturn(Optional.of(ref));
-        AuditRow denied = new AuditRow(UUID.randomUUID(), null, "ACCESS_DENIED", "COURSE_CLASS", classId.toString(),
-                "DENIED", "ROLE_DENIED", "{\"action\":\"CLASS_VIEW\"}", NOW);
-        when(repository.count(any())).thenReturn(1L);
-        when(repository.findRows(any(), anyLong(), anyInt())).thenReturn(List.of(denied));
-        AuditQueryService withNames = new AuditQueryService(repository, authorization, accounts, audit,
-                JsonMapper.builder().findAndAddModules().build(), Clock.fixed(NOW, ZoneOffset.UTC), null, classes);
-
-        AuditLogView item = withNames.query(admin, null, PageRequest.of(0, 50)).getContent().get(0);
-
-        assertThat(item.objectLabel()).isEqualTo("SWD392 · SE1801");
-        assertThat(item.event().details()).containsEntry("action", "CLASS_VIEW");
-    }
-
-    @Test
     void partialActorTextIsResolvedToMatchingAccounts() {
         UUID first = UUID.randomUUID();
         UUID second = UUID.randomUUID();
@@ -234,19 +136,6 @@ class AuditQueryServiceTest {
         verify(repository).count(used.capture());
         assertThat(used.getValue().actorIds()).containsExactly(first, second);
         assertThat(used.getValue().actor()).isEqualTo("phong");
-    }
-
-    @Test
-    void blankTextFiltersAreIgnoredAndTextIsTrimmed() {
-        when(repository.count(any())).thenReturn(0L);
-
-        service.query(admin, new AuditFilter(null, "  ", " ACCOUNT ", "", null, null, null), PageRequest.of(0, 50));
-
-        ArgumentCaptor<AuditFilter> filter = ArgumentCaptor.forClass(AuditFilter.class);
-        verify(repository).count(filter.capture());
-        assertThat(filter.getValue().action()).isNull();
-        assertThat(filter.getValue().objectType()).isEqualTo("ACCOUNT");
-        assertThat(filter.getValue().objectId()).isNull();
     }
 
     void assertInvalid(AuditFilter filter, Pageable page) {

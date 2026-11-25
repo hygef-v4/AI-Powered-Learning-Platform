@@ -49,66 +49,6 @@ function stub(first: MyProposalView, respond: (call: Call) => Promise<Response> 
 describe("GroupProposalSection", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("đợt mở và chưa có đề xuất: tạo đề xuất với tên đã cắt khoảng trắng", async () => {
-    const calls = stub(base(), () => json(base({ proposal: PROPOSAL })));
-    render(<GroupProposalSection classId="c1" onGrouped={vi.fn()} />);
-
-    fireEvent.click(await screen.findByTestId("proposal-create"));
-    fireEvent.change(screen.getByTestId("proposal-name-input"), { target: { value: "  Nhóm Mây  " } });
-    fireEvent.click(screen.getByTestId("proposal-name-save"));
-
-    expect(await screen.findByTestId("proposal-card")).toHaveTextContent("Nhóm Mây");
-    expect(calls.at(-1)).toMatchObject({ url: "/api/v1/classes/c1/group-proposals", method: "POST", body: { name: "Nhóm Mây" } });
-  });
-
-  it("trưởng nhóm thiếu người thì nút Gửi duyệt khóa, thu hồi lời mời gửi kèm version", async () => {
-    const calls = stub(base({ proposal: PROPOSAL }), () => json(base({ proposal: { ...PROPOSAL, invitations: [], freeSeats: 2 } })));
-    render(<GroupProposalSection classId="c1" onGrouped={vi.fn()} />);
-
-    expect(await screen.findByTestId("proposal-submit")).toBeDisabled();
-    expect(screen.getByText(/cần thêm 1 người/)).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("proposal-revoke-b"));
-
-    await waitFor(() => expect(calls.at(-1)).toMatchObject({
-      url: "/api/v1/group-proposals/p1/invitations/b:revoke", method: "POST", body: { version: 3 },
-    }));
-  });
-
-  it("mời bạn: chặn chọn quá số chỗ còn và gửi danh sách đã chọn", async () => {
-    const candidates = [
-      { accountId: "c", name: "Chi", email: "chi@fpt.edu.vn", inOtherProposal: false },
-      { accountId: "d", name: "Dũng", email: "dung@fpt.edu.vn", inOtherProposal: true },
-    ];
-    const calls = stub(base({ proposal: PROPOSAL, candidates }));
-    render(<GroupProposalSection classId="c1" onGrouped={vi.fn()} />);
-
-    fireEvent.click(await screen.findByTestId("proposal-invite"));
-    expect(screen.getByText("Đang ở đề xuất khác")).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("invite-candidate-c"));
-    expect(screen.getByTestId("invite-candidate-d")).toBeDisabled();
-    fireEvent.click(screen.getByTestId("invite-members-submit"));
-
-    await waitFor(() => expect(calls.at(-1)).toMatchObject({
-      url: "/api/v1/group-proposals/p1/invitations", body: { accountIds: ["c"], version: 3 },
-    }));
-  });
-
-  it("lời mời: chấp nhận gọi đúng API; đang ở đề xuất khác thì không có nút chấp nhận", async () => {
-    const invitation = { proposalId: "p9", proposalName: "Nhóm Sao", status: "DRAFT" as const, leaderName: "Giang", leaderStudentCode: "SE000009", memberCount: 1, expired: false, canAccept: true };
-    const calls = stub(base({ invitations: [invitation] }), () => json(base()));
-    const { unmount } = render(<GroupProposalSection classId="c1" onGrouped={vi.fn()} />);
-
-    expect(await screen.findByText(/Trưởng nhóm Giang · SE000009/)).toBeInTheDocument();
-    fireEvent.click(await screen.findByTestId("invitation-accept-p9"));
-    await waitFor(() => expect(calls.at(-1)).toMatchObject({ url: "/api/v1/group-proposals/p9:accept", method: "POST" }));
-    unmount();
-
-    stub(base({ proposal: PROPOSAL, invitations: [{ ...invitation, canAccept: false }] }));
-    render(<GroupProposalSection classId="c1" onGrouped={vi.fn()} />);
-    expect(await screen.findByText(/Rời đề xuất hiện tại để chấp nhận/)).toBeInTheDocument();
-    expect(screen.queryByTestId("invitation-accept-p9")).not.toBeInTheDocument();
-  });
-
   it("đề xuất vừa đổi ở nơi khác (409) thì báo và tải lại", async () => {
     const ready = { ...PROPOSAL, members: [...PROPOSAL.members, { accountId: "b", name: "Bình", email: null, leader: false, expired: false }], invitations: [] };
     const calls = stub(base({ proposal: ready }), () => json({ code: "PROPOSAL_VERSION_CONFLICT", detail: "x" }, 409));

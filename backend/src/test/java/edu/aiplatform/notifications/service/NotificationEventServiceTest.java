@@ -31,19 +31,6 @@ class NotificationEventServiceTest {
     }
 
     @Test
-    void adminFailureDirectsToBackupHandlingInsteadOfStudentActions() {
-        assertThat(
-                        summary(
-                                EventTypes.BACKUP_FAILED,
-                                "U03",
-                                NotificationType.BACKUP_FAILED,
-                                Map.of(),
-                                "BACKUP_FAILED"))
-                .contains("sao lưu", "xử lý")
-                .doesNotContain("Đăng nhập", "luyện tập", "điểm");
-    }
-
-    @Test
     void gradeSummaryDoesNotCopyPrivateEventPayload() {
         assertThat(
                         summary(

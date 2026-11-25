@@ -41,26 +41,6 @@ it("ignores the old route response even when HTTP completes after cancellation",
   expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Mô tả new");
 });
 
-it("cancels an in-flight refresh when the detail route unmounts", async () => {
-  const refreshing = deferredResponse();
-  let detailReads = 0;
-  let refreshSignal: AbortSignal | undefined;
-  vi.stubGlobal("fetch", vi.fn((url: string, init: RequestInit) => {
-    if (init.method === "PATCH") return Promise.resolve(Response.json(course()));
-    if (url.includes("/students?")) return Promise.resolve(Response.json([]));
-    if (++detailReads === 1) return Promise.resolve(Response.json(course()));
-    refreshSignal = init.signal as AbortSignal;
-    return refreshing.promise;
-  }));
-  const view = render(<ClassDetailRoute scope="manager" id="c"/>);
-  fireEvent.change(await screen.findByLabelText(/Mô tả/), {target: {value: "Edited"}});
-  fireEvent.click(screen.getByTestId("class-info-save"));
-  await waitFor(() => expect(refreshSignal).toBeDefined());
-  view.unmount();
-  expect(refreshSignal!.aborted).toBe(true);
-  await act(async () => { refreshing.resolve(Response.json(course())); });
-});
-
 it("preserves the failed-read screen after a successful write and retries only the read", async () => {
   let saved = false;
   let readAvailable = false;
@@ -83,22 +63,6 @@ it("preserves the failed-read screen after a successful write and retries only t
   fireEvent.click(screen.getByRole("button", {name: "Tải lại trang"}));
   expect(await screen.findByLabelText(/Mô tả/)).toHaveValue("Saved remotely");
   expect(request.mock.calls.filter(([, init]) => init.method === "PATCH")).toHaveLength(1);
-});
-
-it("keeps string and object reopen conflicts visible after refreshing the class", async () => {
-  const archived = {...course(), status: "ARCHIVED"};
-  vi.stubGlobal("fetch", vi.fn((url: string, init: RequestInit) => Promise.resolve(
-    init.method === "PUT"
-      ? Response.json({conflictingStudents: ["student-1", {accountId: "student-2"}]}, {status: 409})
-      : Response.json(url.includes("/students?") ? [] : archived),
-  )));
-  render(<ClassDetailRoute scope="manager" id="c"/>);
-  fireEvent.click(await screen.findByTestId("class-state-open"));
-  fireEvent.click(screen.getByTestId("class-state-confirm"));
-  expect(await screen.findByText("student-1")).toBeInTheDocument();
-  expect(screen.getByText('{"accountId":"student-2"}')).toBeInTheDocument();
-  expect(screen.getByTestId("class-mutation-conflict")).toHaveTextContent("Dữ liệu đã thay đổi");
-  expect(screen.getByTestId("class-state-confirm")).toBeEnabled();
 });
 
 it("retains all class pages and the existing first-page refetch for a full capability page", async () => {

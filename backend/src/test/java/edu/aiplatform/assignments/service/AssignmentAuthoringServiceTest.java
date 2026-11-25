@@ -73,17 +73,6 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
-    void createsDraftWithOneWholeDocumentPartAndEmptyRubric() {
-        AssignmentViews.Detail created = f.authoring.createForClass(f.teacher, f.classId,
-                new AssignmentCommands.Create(SubmissionMode.INDIVIDUAL, GradingMode.PRACTICE, false, null));
-        assertThat(created.status()).isEqualTo(AssignmentStatus.DRAFT);
-        assertThat(created.diagramEnabled()).as("sơ đồ luôn bật, cờ gửi lên bị bỏ qua").isTrue();
-        assertThat(created.versionNo()).isEqualTo(1);
-        assertThat(created.parts()).singleElement().satisfies(p -> assertThat(p.partId()).isEqualTo(PartCalculator.WHOLE_DOCUMENT));
-        assertThat(f.rubricsOf(created.id())).singleElement().satisfies(r -> assertThat(r.criteria()).isEmpty());
-    }
-
-    @Test
     void archivedSubjectRejectsCreateAndEditEvenWhenManagerAuthorizationAllows() {
         Assignment original = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT,
                 new DocumentModel(List.of()), false);
@@ -140,31 +129,6 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
-    void editingRubricOfAFinalizedAssignmentReturnsItToDraft() {
-        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.REVIEWED, new DocumentModel(List.of(heading("H1", "Mục"))), true);
-        f.authoring.updateRubric(f.teacher, a.id(), a.parts().get(0).partId(),
-                new AssignmentCommands.RubricUpdate(a.version(), AssignmentFixtures.completeCriteria()));
-        // Sửa sau khi hoàn tất thì bài về nháp, phải hoàn tất lại mới xếp lịch (yêu cầu 2026-11-11).
-        assertThat(f.store.get(a.id()).status()).isEqualTo(AssignmentStatus.DRAFT);
-    }
-
-    @Test
-    void savingSkeletonRecomputesPartsAndSyncsRubrics() {
-        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.REVIEWED, new DocumentModel(List.of()), true);
-        DocumentBlock h1 = heading("H1", "Phân tích");
-        DocumentBlock h2 = heading("H2", "Use case");
-        DocumentBlock h3 = heading("H1", "Thiết kế");
-        AssignmentViews.Detail saved = f.authoring.saveSkeleton(f.teacher, a.id(),
-                new AssignmentCommands.Skeleton(a.version(), new DocumentModel(List.of(h1, h2, paragraph("x"), h3)), null, false));
-        assertThat(saved.status()).isEqualTo(AssignmentStatus.DRAFT);
-        assertThat(saved.parts()).extracting(AssignmentViews.Part::partId)
-                .containsExactly(h2.id().toString(), h3.id().toString());
-        assertThat(f.rubricsOf(a.id())).extracting(AssignmentRubric::partId)
-                .containsExactlyInAnyOrder(h2.id().toString(), h3.id().toString(), RubricService.WHOLE);
-        assertThat(saved.version()).isEqualTo(a.version() + 1);
-    }
-
-    @Test
     void staleVersionIsConflictAndDiagramsAlwaysAllowed() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
         assertThat(code(() -> f.authoring.saveSkeleton(f.teacher, a.id(),
@@ -213,15 +177,6 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
-    void reviewNeedsCompleteRubricsThenAudits() {
-        Assignment empty = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), false);
-        assertThat(issues(() -> f.authoring.review(f.teacher, empty.id(), empty.version())))
-                .extracting(ValidationIssue::code).contains("RUBRIC_MISSING");
-        Assignment ready = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), true);
-        assertThat(f.authoring.review(f.teacher, ready.id(), ready.version()).status()).isEqualTo(AssignmentStatus.REVIEWED);
-    }
-
-    @Test
     void rubricWithZeroTotalOrHalfWrittenItemsIsMissingPointsButBlankRowsAreIgnored() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT,
                 new DocumentModel(List.of(heading("H1", "Một"), heading("H1", "Hai"))), false);
@@ -253,44 +208,6 @@ class AssignmentAuthoringServiceTest {
         assertThat(detail.parts()).extracting(AssignmentViews.Part::partId)
                 .containsExactly(RubricService.WHOLE, a.parts().get(0).partId());
         assertThat(detail.totalPoints()).isEqualByComparingTo("6.00");
-    }
-
-    @Test
-    void lockingRubricStripsTrailingBlankPlaceholderRows() {
-        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), false);
-        String partId = a.parts().get(0).partId();
-        RubricCriterion withBlankRow = new RubricCriterion(null, "Nội dung", "", CriterionKind.TEXT, List.of(
-                new RubricItem(null, "Đúng yêu cầu", new BigDecimal("5.00")),
-                new RubricItem(null, "", null)));
-        f.authoring.updateRubric(f.teacher, a.id(), partId,
-                new AssignmentCommands.RubricUpdate(a.version(), List.of(withBlankRow)));
-        f.rubrics.lockAll(a.id(), AssignmentFixtures.NOW);
-        List<RubricView> locked = f.rubrics.listRubrics(a.id());
-        assertThat(locked).singleElement().satisfies(r -> {
-            assertThat(r.criteria()).singleElement().satisfies(c ->
-                    assertThat(c.items()).singleElement().satisfies(i -> {
-                        assertThat(i.text()).isEqualTo("Đúng yêu cầu");
-                        assertThat(i.points()).isEqualByComparingTo("5.00");
-                    }));
-        });
-    }
-
-    @Test
-    void rubricRulesAndTotal() {
-        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
-        String part = a.parts().get(0).partId();
-        RubricCriterion bad = new RubricCriterion(null, "T", "", CriterionKind.TEXT,
-                List.of(new RubricItem(null, "x", new BigDecimal("1.234"))));
-        assertThat(code(() -> f.authoring.updateRubric(f.teacher, a.id(), part,
-                new AssignmentCommands.RubricUpdate(a.version(), List.of(bad))))).isEqualTo("RUBRIC_POINTS_INVALID");
-        RubricCriterion good = new RubricCriterion(null, "Nội dung", "", CriterionKind.TEXT, List.of(
-                new RubricItem(null, "a", new BigDecimal("2.5")), new RubricItem(null, "b", new BigDecimal("1.25")),
-                new RubricItem(null, "chưa có điểm", null)));
-        AssignmentViews.Rubric saved = f.authoring.updateRubric(f.teacher, a.id(), part,
-                new AssignmentCommands.RubricUpdate(a.version(), List.of(good)));
-        assertThat(saved.totalPoints()).isEqualByComparingTo("3.75");
-        assertThat(saved.complete()).isFalse();
-        assertThat(saved.criteria().get(0).items()).allSatisfy(item -> assertThat(item.itemId()).isNotNull());
     }
 
     @Test

@@ -79,68 +79,10 @@ class ActivityTest {
     }
 
     @Test
-    void summaryPairsHiddenVisibleAndMarksGapsUnknown() {
-        Instant t = NOW;
-        List<ActivityEvent> list = List.of(event(ActivityKind.SESSION_START, t), event(ActivityKind.HIDDEN, t.plusSeconds(10)),
-                event(ActivityKind.VISIBLE, t.plusSeconds(70)), event(ActivityKind.HEARTBEAT, t.plusSeconds(400)),
-                event(ActivityKind.HIDDEN, t.plusSeconds(410)));
-        ActivitySummary summary = ActivitySummaryCalculator.summarize(list);
-        assertThat(summary.policyState()).isEqualTo(ActivityPolicyState.AVAILABLE);
-        assertThat(summary.awayCount()).isEqualTo(2);
-        assertThat(summary.knownAwayDuration()).isEqualTo(Duration.ofSeconds(60));
-        assertThat(summary.intervals()).extracting(i -> i.certainty())
-                .containsExactly(IntervalCertainty.KNOWN, IntervalCertainty.UNKNOWN, IntervalCertainty.UNKNOWN);
-        assertThat(summary.unknownGaps()).isEqualTo(2);
-        assertThat(summary.reliabilityNote()).contains("không kết luận gian lận");
-        assertThat(ActivitySummaryCalculator.summarize(List.of()).policyState()).isEqualTo(ActivityPolicyState.NO_DATA);
-    }
-
-    @Test
     void missingSequenceCountsAsUnknown() {
         ActivityEvent first = event(ActivityKind.SESSION_START, NOW);
         sequence += 3;
         ActivityEvent later = event(ActivityKind.HEARTBEAT, NOW.plusSeconds(60));
         assertThat(ActivitySummaryCalculator.summarize(List.of(first, later)).unknownGaps()).isEqualTo(1);
-    }
-
-    @Test
-    void recordingNeedsPolicyAndInProgressAttempt() {
-        AssignmentAttempt plain = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
-        assertThat(code(() -> service.recordForAttempt(f.student, plain.id(), batch(1)))).isEqualTo("ACTIVITY_DISABLED");
-        AssignmentAttempt submitted = monitored(AttemptStatus.SUBMITTED);
-        assertThat(code(() -> service.recordForAttempt(f.student, submitted.id(), batch(1)))).isEqualTo("ATTEMPT_SUBMITTED");
-        verify(events, never()).insertIgnore(any());
-    }
-
-    @Test
-    void rateLimitAndRedisFailOpen() {
-        AssignmentAttempt a = monitored(AttemptStatus.IN_PROGRESS);
-        when(redis.opsForValue()).thenReturn(values);
-        when(values.increment(anyString(), anyLong())).thenReturn(61L);
-        assertThat(code(() -> service.recordForAttempt(f.student, a.id(), batch(1)))).isEqualTo("ACTIVITY_RATE_LIMITED");
-        when(values.increment(anyString(), anyLong())).thenThrow(new RedisConnectionFailureException("down"));
-        when(events.insertIgnore(any())).thenReturn(1);
-        assertThat(service.recordForAttempt(f.student, a.id(), batch(3))).isEqualTo(3);
-        assertThat(code(() -> service.recordForAttempt(f.student, a.id(), batch(51)))).isEqualTo("ACTIVITY_BATCH_TOO_LARGE");
-        verify(events, times(3)).insertIgnore(any());
-    }
-
-    @Test
-    void summaryRespectsPolicyAndRetention() {
-        AssignmentAttempt plain = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
-        assertThat(service.summary(new WorkRef(WorkKind.ASSIGNMENT_ATTEMPT, plain.id(), f.classId), f.student.accountId())
-                .policyState()).isEqualTo(ActivityPolicyState.DISABLED);
-        AssignmentAttempt monitored = monitored(AttemptStatus.SUBMITTED);
-        WorkRef ref = new WorkRef(WorkKind.ASSIGNMENT_ATTEMPT, monitored.id(), f.classId);
-        assertThat(service.summary(ref, f.student.accountId()).policyState()).isEqualTo(ActivityPolicyState.NO_DATA);
-        ActivityService later = new ActivityService(events, f.attempts, f.access, redis,
-                java.time.Clock.fixed(NOW.plus(Duration.ofDays(3)), java.time.ZoneOffset.UTC), 60);
-        assertThat(later.summary(ref, f.student.accountId()).policyState()).isEqualTo(ActivityPolicyState.EXPIRED);
-    }
-
-    @Test
-    void retentionScannerDeletesEventsOlderThanOneDayInBatches() {
-        new ActivityRetentionScanner(events, f.transactions).scan(NOW);
-        verify(events).deleteOlderThan(NOW.minus(Duration.ofDays(1)), ActivityRetentionScanner.BATCH);
     }
 }

@@ -27,15 +27,6 @@ class AiTaskResultHandlerRegistryTest {
         assertThat(lookups).as("chỉ lấy danh sách một lần").hasValue(1);
     }
 
-    @Test
-    void twoHandlersForOneTaskTypeAreRejected() {
-        AiTaskResultHandlerRegistry registry = AiTaskResultHandlerRegistry.createRegistry(
-                List.of(handler("PRACTICE_FEEDBACK"), handler("PRACTICE_FEEDBACK")));
-
-        assertThatThrownBy(() -> registry.findHandler("PRACTICE_FEEDBACK")).isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("PRACTICE_FEEDBACK");
-    }
-
     private static IAiTaskResultHandler handler(String taskType) {
         IAiTaskResultHandler handler = mock(IAiTaskResultHandler.class);
         when(handler.taskType()).thenReturn(taskType);

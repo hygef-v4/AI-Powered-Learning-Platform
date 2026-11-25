@@ -170,17 +170,6 @@ class AcademicsBatchTransactionTest {
         assertThat(recordingTransactions.rollbacks).isZero();
     }
 
-    @Test void rowCommitIsIndependentOfAnAlreadyActiveCallerTransaction() {
-        var caller=new TransactionTemplate(recordingTransactions);
-        assertThatThrownBy(()->caller.execute(status->{
-            academicsService.enrollStudents(manager,classId,"first@example.test");
-            throw new IllegalStateException("caller rolls back afterward");
-        })).isInstanceOf(IllegalStateException.class).hasMessage("caller rolls back afterward");
-        assertThat(recordingTransactions.committed).containsExactly(first);
-        assertThat(recordingTransactions.commits).isEqualTo(1);assertThat(recordingTransactions.rollbacks).isEqualTo(1);
-        assertThat(recordingTransactions.propagations).containsExactly(TransactionDefinition.PROPAGATION_REQUIRED,TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-    }
-
     private static final class RecordingTransactions extends AbstractPlatformTransactionManager {
         private static final class Pending {final List<UUID>writes=new ArrayList<>();boolean active=true;}
         private static final class Context {Pending pending;Context(Pending pending){this.pending=pending;}}

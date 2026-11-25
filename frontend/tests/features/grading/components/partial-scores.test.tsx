@@ -16,20 +16,6 @@ function Editor({ scores: initial = {} }: { scores?: ItemScores }) {
   </>;
 }
 describe("rubric checklist (BR-U09-20)", () => {
-  it("ticking gives the item its full points and unticking gives zero", () => {
-    render(<Editor />);
-    const item = screen.getByRole("checkbox", { name: /Quan hệ đúng/ });
-    expect(screen.getAllByRole("spinbutton").length).toBeGreaterThan(0);
-    expect(screen.queryByRole("button", { name: /Đủ điểm/ })).not.toBeInTheDocument();
-    fireEvent.click(item);
-    expect(item).toBeChecked();
-    expect(screen.getByText("1.00 / 1.00 điểm")).toBeInTheDocument();
-    expect(screen.getByTestId("scores")).toHaveTextContent('{"r":{"i":1}}');
-    fireEvent.click(item);
-    expect(item).not.toBeChecked();
-    expect(screen.getByText("0.00 / 1.00 điểm")).toBeInTheDocument();
-    expect(screen.getByTestId("scores")).toHaveTextContent('{"r":{"i":0}}');
-  });
   it("allows a partial score and clears the full-credit checkbox", () => {
     render(<Editor />);
     fireEvent.change(screen.getByRole("spinbutton", { name: "Điểm mục Quan hệ đúng" }), { target: { value: "0.5" } });

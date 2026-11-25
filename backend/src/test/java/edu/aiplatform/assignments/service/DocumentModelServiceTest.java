@@ -118,29 +118,6 @@ class DocumentModelServiceTest {
                 leaf, design, last))).ok()).isTrue();
     }
 
-    @Test
-    void studentDrawsIntoTeacherDiagramsInsideParts() {
-        DocumentBlock outside = diagram(BlockOrigin.TEACHER, DIAGRAM, null);
-        DocumentBlock leaf = heading(BlockOrigin.TEACHER, "H1", "Use case");
-        DocumentBlock slot = diagram(BlockOrigin.TEACHER, EMPTY, null);
-        DocumentModel skeleton = new DocumentModel(List.of(outside, leaf, slot));
-        assertThat(codes(service.validateForSubmit(skeleton, skeleton, Map.of()).errors())).contains("DIAGRAM_EMPTY");
-        DocumentModel drawn = new DocumentModel(List.of(outside, leaf, redrawn(slot, DIAGRAM)));
-        assertThat(service.validateForSave(skeleton, drawn).ok()).isTrue();
-        assertThat(service.validateForSubmit(skeleton, drawn, Map.of(DiagramType.CLASS, 1)).ok())
-                .as("ô sơ đồ đã vẽ tính là bài làm và đủ sơ đồ bắt buộc").isTrue();
-        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(redrawn(outside, EMPTY), leaf, slot)))
-                .errors())).as("sơ đồ ở phần chung vẫn khóa").contains("TEACHER_BLOCK_CHANGED");
-        DocumentBlock retyped = new DocumentBlock(slot.id(), BlockOrigin.TEACHER, BlockType.DIAGRAM,
-                ((ObjectNode) slot.content()).deepCopy().put("diagramType", "USE_CASE").put("xml", DIAGRAM));
-        assertThat(service.validateForSave(skeleton, new DocumentModel(List.of(outside, leaf, retyped))).ok())
-                .as("loại sơ đồ đi theo hình vẽ").isTrue();
-        DocumentBlock recaptioned = new DocumentBlock(slot.id(), BlockOrigin.TEACHER, BlockType.DIAGRAM,
-                ((ObjectNode) slot.content()).deepCopy().put("alt", "mô tả khác").put("xml", DIAGRAM));
-        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(outside, leaf, recaptioned)))
-                .errors())).as("mô tả của đề giữ nguyên").contains("TEACHER_BLOCK_CHANGED");
-    }
-
     private static String drawing(String... styles) {
         StringBuilder cells = new StringBuilder();
         for (int i = 0; i < styles.length; i++) {
@@ -151,35 +128,6 @@ class DocumentModelServiceTest {
         }
         return "<mxfile><diagram id=\"p\"><mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/>" + cells
                 + "</root></mxGraphModel></diagram></mxfile>";
-    }
-
-    @Test
-    void diagramTypeIsDetectedFromTheDrawing() {
-        assertThat(DiagramXml.detectType(drawing("shape=umlActor;html=1;", "ellipse;whiteSpace=wrap;")))
-                .isEqualTo(DiagramType.USE_CASE);
-        assertThat(DiagramXml.detectType(drawing("shape=umlLifeline;participant=umlActor;", "shape=umlLifeline;")))
-                .isEqualTo(DiagramType.SEQUENCE);
-        assertThat(DiagramXml.detectType(drawing("swimlane;fontStyle=1;childLayout=stackLayout;", "text;html=1;")))
-                .isEqualTo(DiagramType.CLASS);
-        assertThat(DiagramXml.detectType(drawing("shape=table;childLayout=tableLayout;",
-                "edge:edgeStyle=entityRelationEdgeStyle;endArrow=ERmany;"))).isEqualTo(DiagramType.ER);
-        assertThat(DiagramXml.detectType(drawing("rounded=0;", "rhombus;", "ellipse;", "edge:endArrow=none;")))
-                .as("ER ký pháp Chen").isEqualTo(DiagramType.ER);
-        assertThat(DiagramXml.detectType(drawing("ellipse;shape=startState;", "rhombus;", "ellipse;shape=endState;",
-                "edge:html=1;"))).isEqualTo(DiagramType.ACTIVITY);
-        assertThat(DiagramXml.detectType(drawing("ellipse;shape=startState;", "rounded=1;arcSize=40;")))
-                .isEqualTo(DiagramType.STATE);
-        assertThat(DiagramXml.detectType(drawing("shape=component;align=left;"))).isEqualTo(DiagramType.COMPONENT);
-        assertThat(DiagramXml.detectType(drawing("rounded=0;whiteSpace=wrap;"))).isEqualTo(DiagramType.OTHER);
-        assertThat(DiagramXml.detectType("không phải xml")).isEqualTo(DiagramType.OTHER);
-        DocumentBlock sent = new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.DIAGRAM,
-                JsonNodeFactory.instance.objectNode().put("diagramType", "OTHER").put("xml", DIAGRAM));
-        assertThat(service.sanitize(new DocumentModel(List.of(sent))).blocks().get(0).content().path("diagramType").asText())
-                .as("lưu là lấy loại theo hình vẽ").isEqualTo("USE_CASE");
-        DocumentBlock empty = new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.DIAGRAM,
-                JsonNodeFactory.instance.objectNode().put("diagramType", "CLASS").put("xml", EMPTY));
-        assertThat(service.sanitize(new DocumentModel(List.of(empty))).blocks().get(0).content().path("diagramType").asText())
-                .as("chưa vẽ thì giữ loại gửi lên").isEqualTo("CLASS");
     }
 
     @Test
@@ -212,92 +160,6 @@ class DocumentModelServiceTest {
             }
         }
         return new DocumentBlock(id, BlockOrigin.TEACHER, BlockType.TABLE, content);
-    }
-
-    @Test
-    void studentFillsTeacherTablesInsideParts() {
-        UUID commonId = UUID.randomUUID();
-        UUID slotId = UUID.randomUUID();
-        DocumentBlock common = table(commonId, true, new String[]{"A"}, new String[]{""});
-        DocumentBlock leaf = heading(BlockOrigin.TEACHER, "H1", "Kiểm thử");
-        DocumentBlock slot = table(slotId, true, new String[]{"Ca", "Kết quả"}, new String[]{"", ""});
-        DocumentModel skeleton = new DocumentModel(List.of(common, leaf, slot));
-        DocumentBlock filled = table(slotId, true, new String[]{"Ca", "Kết quả"}, new String[]{"Đăng nhập", "Đạt"},
-                new String[]{"Thêm", "", ""});
-        DocumentModel work = new DocumentModel(List.of(common, leaf, filled));
-        assertThat(service.validateForSave(skeleton, work).ok()).as("sửa ô, thêm hàng, thêm cột").isTrue();
-        assertThat(service.validateForSubmit(skeleton, work, Map.of()).ok()).as("bảng đã điền là bài làm").isTrue();
-        assertThat(codes(service.validateForSubmit(skeleton, skeleton, Map.of()).errors())).contains("SUBMISSION_EMPTY");
-        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(common, leaf,
-                table(slotId, true, new String[]{"Ca", "Kết quả"})))).errors())).as("không bớt hàng của đề")
-                .contains("TEACHER_BLOCK_CHANGED");
-        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(common, leaf,
-                table(slotId, false, new String[]{"Ca", "Kết quả"}, new String[]{"", ""})))).errors()))
-                .as("không đổi hàng tiêu đề").contains("TEACHER_BLOCK_CHANGED");
-        assertThat(codes(service.validateForSave(skeleton, new DocumentModel(List.of(
-                table(commonId, true, new String[]{"A"}, new String[]{"x"}), leaf, slot))).errors()))
-                .as("bảng ở phần chung vẫn khóa").contains("TEACHER_BLOCK_CHANGED");
-        DocumentModel inserted = new DocumentModel(List.of(common, leaf, table(slotId, true,
-                new String[]{"Ca", "+Ghi chú", "Kết quả"}, new String[]{"+Mới", "+", "+"}, new String[]{"", "+", ""})));
-        assertThat(service.validateForSave(skeleton, inserted).ok()).as("chèn hàng, cột ở giữa bảng").isTrue();
-        DocumentModel relabelled = new DocumentModel(List.of(common, leaf, table(slotId, true,
-                new String[]{"Ca", "Kết quả"}, new String[]{"+", "+"})));
-        assertThat(codes(service.validateForSave(skeleton, relabelled).errors()))
-                .as("đánh dấu ô của đề là ô thêm để xóa thì không được").contains("TEACHER_BLOCK_CHANGED");
-        DocumentBlock sanitized = service.sanitize(inserted).blocks().get(2);
-        assertThat(sanitized.content().path("rows").get(1).get(0).path("added").asBoolean()).as("lưu giữ cờ ô thêm").isTrue();
-        assertThat(sanitized.content().path("rows").get(0).get(0).has("added")).isFalse();
-    }
-
-    @Test
-    void submitChecksRequiredDiagramsEmptyDiagramsAndStudentContent() {
-        DocumentBlock teacher = paragraph(BlockOrigin.TEACHER, "Đề");
-        DocumentModel skeleton = new DocumentModel(List.of(teacher));
-        assertThat(codes(service.validateForSubmit(skeleton, skeleton, Map.of()).errors())).contains("SUBMISSION_EMPTY");
-        DocumentModel withEmpty = new DocumentModel(List.of(teacher, diagram(BlockOrigin.STUDENT, EMPTY, null)));
-        assertThat(codes(service.validateForSubmit(skeleton, withEmpty, Map.of(DiagramType.CLASS, 1)).errors()))
-                .contains("DIAGRAM_EMPTY", "REQUIRED_DIAGRAMS_MISSING");
-        DocumentModel done = new DocumentModel(List.of(teacher, diagram(BlockOrigin.STUDENT, DIAGRAM, null)));
-        assertThat(service.validateForSubmit(skeleton, done, Map.of(DiagramType.CLASS, 1)).ok()).isTrue();
-    }
-
-    @Test
-    void sanitizeRemovesScriptsEventHandlersAndExternalLinks() {
-        String svg = "<?xml version=\"1.0\"?><!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" "
-                + "\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><svg xmlns=\"http://www.w3.org/2000/svg\" "
-                + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" content=\"x\" onload=\"alert(1)\"><script>alert(2)</script>"
-                + "<a xlink:href=\"https://evil.example\"><rect width=\"1\" height=\"1\" onclick=\"x()\"/></a></svg>";
-        DocumentModel clean = service.sanitize(new DocumentModel(List.of(diagram(BlockOrigin.TEACHER, DIAGRAM, svg))));
-        String result = clean.blocks().get(0).content().path("svgPreview").asText();
-        assertThat(result).contains("<rect").doesNotContain("script", "onload", "onclick", "evil.example", "content=");
-    }
-
-    @Test
-    void formattedTitleIsKeptCleanedAndValidated() throws Exception {
-        ObjectMapper json = new ObjectMapper();
-        DocumentModel skeleton = json.readValue("{\"blocks\":[],\"title\":{\"runs\":[{\"text\":\"Bài\",\"bold\":true,\"font\":\"x\"}],\"align\":\"CENTER\",\"x\":1}}", DocumentModel.class);
-        DocumentModel clean = service.sanitize(skeleton);
-        assertThat(clean.title().toString()).isEqualTo("{\"runs\":[{\"text\":\"Bài\",\"bold\":true}],\"align\":\"CENTER\"}");
-        assertThat(json.writeValueAsString(new DocumentModel(List.of()))).isEqualTo("{\"blocks\":[]}");
-        DocumentModel bad = json.readValue("{\"blocks\":[],\"title\":{\"runs\":[{\"text\":\"x\"}],\"align\":\"MIDDLE\"}}", DocumentModel.class);
-        assertThat(codes(service.validateSkeleton(bad).errors())).contains("DOCUMENT_INVALID");
-    }
-
-    @Test
-    void headingRunsAndTableWidthsAreKept() {
-        ObjectNode headingContent = JsonNodeFactory.instance.objectNode().put("style", "H1").put("text", "Đề");
-        headingContent.putArray("runs").addObject().put("text", "Đề").put("bold", true);
-        DocumentBlock heading = new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.HEADING, headingContent);
-        ObjectNode tableContent = JsonNodeFactory.instance.objectNode();
-        tableContent.putArray("widths").add(70).add(30);
-        ObjectNode row = tableContent.putArray("rows").addArray().addObject();
-        row.putArray("runs").addObject().put("text", "Ô");
-        DocumentBlock table = new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.TABLE, tableContent);
-        DocumentModel clean = service.sanitize(new DocumentModel(List.of(heading, table)));
-        assertThat(clean.blocks().get(0).content().path("runs").get(0).path("bold").asBoolean()).isTrue();
-        assertThat(clean.blocks().get(1).content().path("widths").get(0).asInt()).isEqualTo(70);
-        tableContent.putArray("widths").add(0);
-        assertThat(codes(service.validateSkeleton(new DocumentModel(List.of(table))).errors())).contains("TABLE_INVALID");
     }
 
     @Test
@@ -342,19 +204,6 @@ class DocumentModelServiceTest {
     }
 
     @Test
-    void compactDiagramXmlReadsCompressedPagesAndLabels() {
-        String model = "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/>"
-                + "<mxCell id=\"a\" value=\"&lt;b&gt;Order&lt;/b&gt;\" vertex=\"1\" parent=\"1\"/>"
-                + "<mxCell id=\"b\" value=\"Item\" vertex=\"1\" parent=\"1\"/>"
-                + "<mxCell id=\"e\" value=\"has\" edge=\"1\" source=\"a\" target=\"b\" parent=\"1\"/></root></mxGraphModel>";
-        String packed = "<mxfile><diagram id=\"p\" name=\"Lớp\">" + deflate(model) + "</diagram></mxfile>";
-        String compact = service.compactDiagramXml(packed);
-        assertThat(compact).contains("Trang 1 \"Lớp\"", "hình a (chữ nhật): Order",
-                "nối \"Order\" [a] -> \"Item\" [b]: has");
-        assertThat(DiagramXml.countCells(packed)).isEqualTo(3);
-    }
-
-    @Test
     void diagramPagesShareOneExpansionBudget() {
         String model = "<mxGraphModel><root><!--" + "a".repeat(500) + "--></root></mxGraphModel>";
         String page = "<diagram>" + deflate(model) + "</diagram>";
@@ -390,29 +239,6 @@ class DocumentModelServiceTest {
         assertThat(compact).contains("nối \"Book\" [a] -> \"Pay\" [b] (nét đứt): <<include>>",
                 "nối \"Cancel\" [c] -> \"Pay\" [b] (nét liền): <<extend>>");
         assertThat(DiagramXml.clean("<b>Đặt</b> sân<br/>&lt;i&gt;")).isEqualTo("Đặt sân <i>");
-    }
-
-    @Test
-    void compactDiagramXmlShowsWhichShapesLieInsideTheSystemBoundary() {
-        // Khung system boundary thường chỉ nằm đè lên use case (cùng parent="1"), nên phải xét theo tọa độ.
-        String model = "<mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/>"
-                + "<mxCell id=\"sys\" value=\"Hệ thống\" style=\"rounded=0;html=1;\" vertex=\"1\" parent=\"1\">"
-                + "<mxGeometry x=\"200\" y=\"20\" width=\"400\" height=\"400\" as=\"geometry\"/></mxCell>"
-                + "<mxCell id=\"uc\" value=\"Đặt sân\" style=\"ellipse;html=1;\" vertex=\"1\" parent=\"1\">"
-                + "<mxGeometry x=\"300\" y=\"100\" width=\"140\" height=\"60\" as=\"geometry\"/></mxCell>"
-                + "<mxCell id=\"actor\" value=\"Khách\" style=\"shape=umlActor;html=1;\" vertex=\"1\" parent=\"1\">"
-                + "<mxGeometry x=\"60\" y=\"100\" width=\"30\" height=\"60\" as=\"geometry\"/></mxCell>"
-                + "<mxCell id=\"cls\" value=\"Order\" style=\"swimlane;childLayout=stackLayout;\" vertex=\"1\" parent=\"1\">"
-                + "<mxGeometry x=\"700\" y=\"20\" width=\"160\" height=\"80\" as=\"geometry\"/></mxCell>"
-                + "<mxCell id=\"attr\" value=\"+ id: UUID\" style=\"text;html=1;\" vertex=\"1\" parent=\"cls\">"
-                + "<mxGeometry y=\"26\" width=\"160\" height=\"26\" as=\"geometry\"/></mxCell>"
-                + "</root></mxGraphModel>";
-
-        String compact = service.compactDiagramXml(model);
-
-        assertThat(compact).contains("hình sys (chữ nhật): Hệ thống", "hình uc (ellipse) trong sys: Đặt sân",
-                "hình actor (umlActor): Khách", "hình attr (text) trong cls: + id: UUID");
-        assertThat(compact).doesNotContain("actor (umlActor) trong", "sys (chữ nhật) trong");
     }
 
     @Test

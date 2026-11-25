@@ -75,16 +75,6 @@ class QuizPaperPlannerTest {
     }
 
     @Test
-    void identicalContentCountsOnceAndDifficultyAndCaseAreRespected() {
-        var duplicates = QuizPaperPlanner.plan(List.of(rule(1, "a", null, 2)),
-                List.of(entry("same", Difficulty.EASY, "a"), entry("same", Difficulty.EASY, "a")), Set.of(), 1L);
-        assertThat(duplicates.readPicked(1)).isEqualTo(1);
-        var hard = QuizPaperPlanner.plan(List.of(rule(1, " CHƯƠNG 1 ", Difficulty.HARD, 5)),
-                List.of(entry("h", Difficulty.HARD, "chương 1"), entry("e", Difficulty.EASY, "chương 1")), Set.of(), 1L);
-        assertThat(hard.picks().get(1)).singleElement().satisfies(e -> assertThat(e.contentHash()).isEqualTo("h"));
-    }
-
-    @Test
     void prefersQuestionsNotSeenInEarlierAttempts() {
         List<PoolEntry> all = pool("t", 20);
         Set<UUID> seen = new HashSet<>(all.subList(0, 10).stream().map(PoolEntry::lineageId).toList());

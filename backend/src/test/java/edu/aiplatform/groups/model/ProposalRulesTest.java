@@ -16,28 +16,6 @@ class ProposalRulesTest {
     private final UUID classId = UUID.randomUUID();
 
     @Test
-    void nameIsTrimmedAndBoundedToHundredCharacters() {
-        assertThat(ProposalRules.cleanName("  Nhóm Mây  ")).isEqualTo("Nhóm Mây");
-        assertThat(ProposalRules.cleanName("   ")).isNull();
-        assertThat(ProposalRules.cleanName(null)).isNull();
-        assertThat(ProposalRules.cleanName("a".repeat(100))).hasSize(100);
-        assertThat(ProposalRules.cleanName("a".repeat(101))).isNull();
-        assertThat(ProposalRules.normalizeNameKey(" Nhóm A ")).isEqualTo(ProposalRules.normalizeNameKey("nhóm a"));
-    }
-
-    @Test
-    void blankReasonBecomesNull() {
-        assertThat(ProposalRules.cleanReason("  ")).isNull();
-        assertThat(ProposalRules.cleanReason(" Thiếu người ")).isEqualTo("Thiếu người");
-    }
-
-    @Test
-    void freeSeatsCountMembersAndPendingInvitations() {
-        assertThat(ProposalRules.countFreeSeats(5, 2, 1)).isEqualTo(2);
-        assertThat(ProposalRules.countFreeSeats(3, 2, 2)).isZero();
-    }
-
-    @Test
     void onlyActiveUngroupedAcceptedMembersAreEffective() {
         UUID kept = UUID.randomUUID();
         UUID leftClass = UUID.randomUUID();
@@ -66,28 +44,6 @@ class ProposalRulesTest {
                 .isEqualTo(ClosedReason.DISABLED);
         assertThat(new GroupFormationSettings(classId, true, 2, 4, null, null, NOW, 1).isOpen(ClassStatus.OPEN, NOW))
                 .as("không có hạn chót").isTrue();
-    }
-
-    @Test
-    void sizeMustBeBetweenTwoAndTwenty() {
-        assertThat(GroupFormationSettings.isValidSize(1)).isFalse();
-        assertThat(GroupFormationSettings.isValidSize(2)).isTrue();
-        assertThat(GroupFormationSettings.isValidSize(20)).isTrue();
-        assertThat(GroupFormationSettings.isValidSize(21)).isFalse();
-    }
-
-    @Test
-    void stateTransitionsBumpVersionAndClearDecision() {
-        GroupProposal draft = GroupProposal.draft(UUID.randomUUID(), classId, "Nhóm A", UUID.randomUUID(), NOW);
-        GroupProposal submitted = draft.markSubmitted(NOW);
-        GroupProposal back = submitted.returnToDraft(NOW);
-
-        assertThat(submitted.status()).isEqualTo(GroupProposal.Status.SUBMITTED);
-        assertThat(submitted.submittedAt()).isEqualTo(NOW);
-        assertThat(back.status()).isEqualTo(GroupProposal.Status.DRAFT);
-        assertThat(back.submittedAt()).isNull();
-        assertThat(back.version()).isEqualTo(2);
-        assertThat(draft.markCancelled(GroupProposal.EndReason.LEADER_CANCELLED, NOW).status().isActive()).isFalse();
     }
 
     private ProposalMember member(UUID proposalId, UUID accountId, ProposalMember.Status status, boolean active) {

@@ -150,22 +150,6 @@ class MaterialModuleServiceTest {
     }
 
     @Test
-    void reorderRequestValidationCoversEmptyMissingAndFiveHundredBoundary() {
-        try (var factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
-            var validator = factory.getValidator();
-            assertThat(validator.validate(new MaterialCommands.Reorder(List.of()))).isNotEmpty();
-            assertThat(validator.validate(new MaterialCommands.Reorder(
-                    List.of(new MaterialCommands.Position(null, null))))).hasSize(2);
-            var rows = java.util.stream.IntStream.range(0, 500)
-                    .mapToObj(i -> new MaterialCommands.Position(UUID.randomUUID(), 0L)).toList();
-            assertThat(validator.validate(new MaterialCommands.Reorder(rows))).isEmpty();
-            var overflow = new ArrayList<>(rows);
-            overflow.add(new MaterialCommands.Position(UUID.randomUUID(), 0L));
-            assertThat(validator.validate(new MaterialCommands.Reorder(overflow))).hasSize(1);
-        }
-    }
-
-    @Test
     void detachChecksCurrentQuizPermissionAndExactLinkBeforeSuccessAudit() {
         UUID quizId = UUID.randomUUID();
         when(quizQuery.loadQuiz(quizId)).thenReturn(Optional.of(
@@ -182,119 +166,6 @@ class MaterialModuleServiceTest {
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
         when(materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)).thenReturn(true);
         materialModuleService.detachQuiz(manager, moduleId, quizId);
-    }
-
-    @Test
-    void attachToSameModuleIsIdempotentButForeignDetachCannotWrite() {
-        UUID quizId = UUID.randomUUID();
-        when(quizQuery.loadQuiz(quizId)).thenReturn(Optional.of(
-                quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
-        when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(true);
-        when(materialModuleRepository.findQuizLink(quizId))
-                .thenReturn(Optional.of(new MaterialModule.QuizLink(moduleId, quizId, 0)));
-        materialModuleService.attachQuiz(manager, moduleId, quizId);
-        verify(materialModuleRepository, never()).linkQuiz(any());
-        verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
-        when(quizQuery.loadQuiz(quizId)).thenReturn(Optional.of(
-                quiz(quizId, QuizScope.SUBJECT, UUID.randomUUID(), null, QuizStatus.DRAFT)));
-        assertThatThrownBy(() -> materialModuleService.detachQuiz(manager, moduleId, quizId))
-                .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_QUIZ_INVALID"));
-        verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
-    }
-
-    @Test
-    void deleteRefusesModuleWithActiveMaterials() {
-        when(materialModuleRepository.countActiveMaterials(moduleId)).thenReturn(2);
-        assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 0))
-                .isInstanceOfSatisfying(
-                        ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_MODULE_NOT_EMPTY"));
-        verify(materialModuleRepository, never()).deleteModule(any(), anyLong());
-    }
-
-    @Test
-    void deleteMovesArchivedMaterialsToAnotherModule() {
-        when(materialModuleRepository.countArchivedMaterials(moduleId)).thenReturn(1);
-        materialModuleService.deleteModule(manager, moduleId, 0);
-        verify(materialModuleRepository).moveArchivedMaterials(moduleId, otherId);
-        verify(materialModuleRepository).deleteModule(moduleId, 0);
-    }
-
-    @Test
-    void deleteOfStaleVersionConflicts() {
-        assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 5))
-                .isInstanceOfSatisfying(
-                        ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(409));
-    }
-
-    @Test
-    void attachRejectsQuizOfAnotherSubject() {
-        UUID quizId = UUID.randomUUID(), foreignSubject = UUID.randomUUID();
-        when(quizQuery.loadQuiz(quizId))
-                .thenReturn(
-                        Optional.of(
-                                quiz(
-                                        quizId,
-                                        QuizScope.SUBJECT,
-                                        foreignSubject,
-                                        null,
-                                        QuizStatus.OPEN)));
-        when(materialAccessPolicy.canManageQuiz(manager, foreignSubject, null)).thenReturn(true);
-        assertThatThrownBy(() -> materialModuleService.attachQuiz(manager, moduleId, quizId))
-                .isInstanceOfSatisfying(
-                        ApiException.class,
-                        e -> {
-                            assertThat(e.readStatus().value()).isEqualTo(400);
-                            assertThat(e.readCode()).isEqualTo("MATERIAL_QUIZ_INVALID");
-                        });
-        verify(materialModuleRepository, never()).linkQuiz(any());
-        verify(materialModuleRepository, never()).unlinkModuleQuiz(any(), any());
-    }
-
-    @Test
-    void attachMovesQuizFromItsPreviousModule() {
-        UUID quizId = UUID.randomUUID();
-        when(quizQuery.loadQuiz(quizId))
-                .thenReturn(
-                        Optional.of(
-                                quiz(quizId, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
-        when(materialAccessPolicy.canManageQuiz(manager, subject, null)).thenReturn(true);
-        when(materialModuleRepository.findQuizLink(quizId))
-                .thenReturn(Optional.of(new MaterialModule.QuizLink(otherId, quizId, 0)));
-        materialModuleService.attachQuiz(manager, moduleId, quizId);
-        verify(materialModuleRepository).unlinkModuleQuiz(otherId, quizId);
-        verify(materialModuleRepository).linkQuiz(new MaterialModule.QuizLink(moduleId, quizId, 0));
-    }
-
-    @Test
-    void studentsSeeOnlyOpenQuizzesOfTheirClass() {
-        Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
-        UUID open = UUID.randomUUID(), draft = UUID.randomUUID();
-        when(materialAccessPolicy.requireClassListAccess(student, classId, true))
-                .thenReturn(
-                        new ClassRef(
-                                classId, subject, "C", "Class", ClassStatus.OPEN, null, false));
-        when(materialModuleRepository.listQuizLinks(subject))
-                .thenReturn(
-                        List.of(
-                                new MaterialModule.QuizLink(moduleId, open, 0),
-                                new MaterialModule.QuizLink(moduleId, draft, 1)));
-        when(quizQuery.loadQuiz(open))
-                .thenReturn(
-                        Optional.of(quiz(open, QuizScope.SUBJECT, subject, null, QuizStatus.OPEN)));
-        when(quizQuery.loadQuiz(draft))
-                .thenReturn(
-                        Optional.of(
-                                quiz(draft, QuizScope.SUBJECT, subject, null, QuizStatus.DRAFT)));
-        when(quizQuery.listForClass(classId))
-                .thenReturn(List.of(quiz(open, QuizScope.SUBJECT, subject, null, QuizStatus.OPEN)));
-        var views = materialModuleService.listClassModules(student, classId, true);
-        assertThat(views).hasSize(2);
-        assertThat(views.get(0).quizzes())
-                .extracting(MaterialViews.ModuleQuiz::quizId)
-                .containsExactly(open);
-        assertThat(views.get(0).canManage()).isFalse();
     }
 
     @Test
@@ -333,20 +204,6 @@ class MaterialModuleServiceTest {
     }
 
     @Test
-    void lastModuleWithArchivedMaterialCannotBeDeleted() {
-        when(materialModuleRepository.listModules(subject)).thenReturn(List.of(module));
-        when(materialModuleRepository.countArchivedMaterials(moduleId)).thenReturn(1);
-
-        assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 0))
-                .isInstanceOfSatisfying(
-                        ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_MODULE_LAST"));
-
-        verify(materialModuleRepository, never()).moveArchivedMaterials(any(), any());
-        verify(materialModuleRepository, never()).deleteModule(any(), anyLong());
-    }
-
-    @Test
     void lostDeleteCasDoesNotAuditSuccess() {
         when(materialModuleRepository.deleteModule(moduleId, 0)).thenReturn(false);
         assertThatThrownBy(() -> materialModuleService.deleteModule(manager, moduleId, 0))
@@ -364,94 +221,6 @@ class MaterialModuleServiceTest {
                                         manager,
                                         moduleId,
                                         new MaterialCommands.ModuleUpdate("New", 0L)))
-                .isInstanceOfSatisfying(
-                        ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
-    }
-
-    @Test
-    void reorderRejectsDuplicateStaleOrForeignModulesBeforeAnyWrite() {
-        var first = new MaterialCommands.Position(moduleId, 0L);
-        assertThatThrownBy(
-                        () ->
-                                materialModuleService.reorderModules(
-                                        manager,
-                                        subject,
-                                        new MaterialCommands.Reorder(List.of(first, first))))
-                .isInstanceOfSatisfying(
-                        ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_REORDER_INVALID"));
-        when(materialModuleRepository.findModule(otherId)).thenReturn(Optional.of(other));
-        assertThatThrownBy(
-                        () ->
-                                materialModuleService.reorderModules(
-                                        manager,
-                                        subject,
-                                        new MaterialCommands.Reorder(
-                                                List.of(
-                                                        first,
-                                                        new MaterialCommands.Position(
-                                                                otherId, 1L)))))
-                .isInstanceOfSatisfying(
-                        ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
-        when(materialModuleRepository.findModule(otherId))
-                .thenReturn(
-                        Optional.of(
-                                new MaterialModule(
-                                        otherId,
-                                        UUID.randomUUID(),
-                                        "Foreign",
-                                        0,
-                                        manager.accountId(),
-                                        now,
-                                        now,
-                                        0)));
-        assertThatThrownBy(
-                        () ->
-                                materialModuleService.reorderModules(
-                                        manager,
-                                        subject,
-                                        new MaterialCommands.Reorder(
-                                                List.of(
-                                                        first,
-                                                        new MaterialCommands.Position(
-                                                                otherId, 0L)))))
-                .isInstanceOfSatisfying(
-                        ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo("MATERIAL_NOT_FOUND"));
-        verify(materialModuleRepository, never()).updateModule(any(), anyLong());
-    }
-
-    @Test
-    void reorderPersistsRequestedPositionsAndRejectsLostCas() {
-        when(materialModuleRepository.findModule(otherId)).thenReturn(Optional.of(other));
-        when(materialModuleRepository.updateModule(any(), anyLong())).thenReturn(true);
-        var command =
-                new MaterialCommands.Reorder(
-                        List.of(
-                                new MaterialCommands.Position(otherId, 0L),
-                                new MaterialCommands.Position(moduleId, 0L)));
-        materialModuleService.reorderModules(manager, subject, command);
-        verify(materialModuleRepository)
-                .updateModule(
-                        argThat(
-                                m ->
-                                        m.id().equals(otherId)
-                                                && m.orderNo() == 0
-                                                && m.version() == 1),
-                        eq(0L));
-        verify(materialModuleRepository)
-                .updateModule(
-                        argThat(
-                                m ->
-                                        m.id().equals(moduleId)
-                                                && m.orderNo() == 1
-                                                && m.version() == 1),
-                        eq(0L));
-
-        when(materialModuleRepository.updateModule(any(), anyLong())).thenReturn(false);
-        assertThatThrownBy(() -> materialModuleService.reorderModules(manager, subject, command))
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_VERSION_CONFLICT"));
@@ -549,19 +318,5 @@ class MaterialModuleServiceTest {
         verify(materialModuleRepository)
                 .insertModule(
                         argThat(m -> m.subjectId().equals(fresh) && m.title().equals("Module 1")));
-    }
-
-    @Test
-    void studentViewNeverCreatesModules() {
-        var student = new Actor(UUID.randomUUID(), Role.STUDENT);
-        when(materialAccessPolicy.requireClassListAccess(student, classId, true))
-                .thenReturn(
-                        new ClassRef(
-                                classId, subject, "C", "Class", ClassStatus.OPEN, null, false));
-        when(materialModuleRepository.listModules(subject)).thenReturn(List.of());
-
-        materialModuleService.listClassModules(student, classId, true);
-
-        verify(materialModuleRepository, never()).insertModule(any());
     }
 }

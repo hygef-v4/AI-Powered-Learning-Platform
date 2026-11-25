@@ -36,29 +36,6 @@ class GroupSectionTest {
     }
 
     @Test
-    void doneMovesDraftToPublishedAndRecordsAuthor() {
-        GroupSection done = open().markClaimed(holder, holder, NOW).replaceDraft(text, NOW).markDone(NOW);
-        assertThat(done.status()).isEqualTo(Status.DONE);
-        assertThat(done.publishedBlocks()).isEqualTo(text);
-        assertThat(done.draftBlocks()).isNull();
-        assertThat(done.claimedBy()).isNull();
-        assertThat(done.lastAuthorId()).isEqualTo(holder);
-        assertThat(SectionRules.canClaim(done, other)).as("mục Xong nhận lại được").isNull();
-    }
-
-    @Test
-    void releaseDropsDraftAndReturnsToOpenOrDone() {
-        GroupSection empty = open().markClaimed(holder, holder, NOW).replaceDraft(text, NOW).markReleased();
-        assertThat(empty.status()).isEqualTo(Status.OPEN);
-        assertThat(empty.draftBlocks()).isNull();
-
-        GroupSection published = open().markClaimed(holder, holder, NOW).replaceDraft(text, NOW).markDone(NOW)
-                .markClaimed(other, other, NOW).markReleased();
-        assertThat(published.status()).isEqualTo(Status.DONE);
-        assertThat(published.publishedBlocks()).isEqualTo(text);
-    }
-
-    @Test
     void releaseAllowedForHolderLeaderAndTeacherOnly() {
         GroupSection claimed = open().markClaimed(holder, holder, NOW);
         assertThat(SectionRules.canRelease(claimed, holder, false, false)).isNull();

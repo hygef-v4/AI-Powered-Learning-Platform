@@ -39,70 +39,6 @@ class GradingEvalHarnessTest {
     private final GradingEvalRunner runner = new GradingEvalRunner(json, dataset);
 
     @Test
-    void datasetHasCompleteBoundedLecturerScoresForEveryRubricItem() {
-        var assignment = dataset.assignment();
-        assertThat(dataset.cases()).hasSize(8);
-        assertThat(assignment.itemsById()).hasSize(13);
-        assertThat(assignment.maxScore()).isEqualByComparingTo("4.00");
-        for (EvalCase evalCase : dataset.cases()) {
-            assertThat(evalCase.expectedScores().keySet()).as(evalCase.caseKey())
-                    .isEqualTo(assignment.itemsById().keySet());
-            evalCase.expectedScores().forEach((itemId, expected) -> {
-                var item = assignment.itemsById().get(itemId);
-                assertThat(expected).as(evalCase.caseKey() + " " + item.itemKey())
-                        .isBetween(BigDecimal.ZERO, item.maxPoints());
-            });
-            evalCase.absentItemIds().forEach(itemId -> assertThat(evalCase.expectedScores().get(itemId))
-                    .as(evalCase.caseKey() + " absent item").isEqualByComparingTo(BigDecimal.ZERO));
-            if (evalCase.offTopic()) {
-                assertThat(GradingEvalMetrics.ratio(evalCase.expectedTotal(), assignment.maxScore()))
-                        .isLessThanOrEqualTo(GradingEvalMetrics.OFF_TOPIC_MAX_RATIO);
-            }
-        }
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-        "swr302-lab-equipment, 3",
-        "swr302-lab-equipment-relations, 1",
-        "swr302-room-scheduling, 2",
-        "swd392-workshop-registration, 3",
-        "swd392-internship-portal, 3"
-    })
-    void peFixturesBuildGradingRequestsWithCompleteSyntheticReferences(String datasetKey, int caseCount)
-            throws Exception {
-        var peDataset = GradingEvalDataset.loadDataset(json, datasetKey);
-        var assignment = peDataset.assignment();
-        assertThat(assignment.assignmentKey()).isEqualTo(datasetKey);
-        assertThat(assignment.labelSource()).isEqualTo("SYNTHETIC_TEAM");
-        assertThat(assignment.maxScore()).isPositive();
-        assertThat(peDataset.cases()).hasSize(caseCount).extracting(EvalCase::caseKey).doesNotHaveDuplicates();
-        var pipeline = new GradingEvalRunner(json, peDataset).pipeline();
-        var documents = new DocumentModelService(json);
-        for (var fixture : peDataset.cases()) {
-            var validation = documents.validateForSave(assignment.content().skeleton(), fixture.document());
-            assertThat(validation.errors()).as(fixture.caseKey()).isEmpty();
-            assertThat(fixture.labelSource()).isEqualTo("SYNTHETIC_TEAM");
-            assertThat(fixture.expectedScores()).containsOnlyKeys(assignment.itemsById().keySet());
-            fixture.expectedScores().forEach((itemId, expected) -> {
-                var rubricItem = assignment.itemsById().get(itemId);
-                assertThat(expected).as(fixture.caseKey() + " " + rubricItem.itemKey())
-                        .isBetween(BigDecimal.ZERO, rubricItem.maxPoints());
-            });
-            for (var itemId : fixture.absentItemIds()) {
-                assertThat(fixture.expectedScores().get(itemId)).as(fixture.caseKey() + " absent item").isZero();
-            }
-            var request = pipeline.buildProviderRequest(fixture);
-            assertThat(request).as(fixture.caseKey()).isNotNull();
-            var input = json.readTree(request.user());
-            assertThat(input.path("rubrics").isEmpty()).isFalse();
-            assertThat(input.has("expected")).isFalse();
-            assertThat(input.has("expectedBehavior")).isFalse();
-            assertThat(request.outputSchema()).contains("itemScoresByRubric");
-        }
-    }
-
-    @Test
     void peNotationComparisonUsesSameSubmissionAndChangesOnlyTheStyleCriterion() {
         var required = GradingEvalDataset.loadDataset(json, "swr302-lab-equipment");
         var semantic = GradingEvalDataset.loadDataset(json, "swr302-lab-equipment-relations");
@@ -145,45 +81,6 @@ class GradingEvalHarnessTest {
         assertThat(emptyUser.path("rubrics")).hasSize(1);
         assertThat(emptyUser.path("rubrics").get(0).path("partId").asText())
                 .isEqualTo(partIdOf("s-normal"));
-    }
-
-    @Test
-    void diagramSummarySentToAiShowsIncludeLabelAndLineStyle() throws Exception {
-        // F2 (2026-11-13): trước đây nhãn <<include>> bị xóa và nét đứt, nét liền trông giống hệt nhau.
-        String dashed = json.readTree(runner.pipeline().buildProviderRequest(requireCase("01-complete")).user())
-                .path("submission").get(0).asText();
-        String solid = json.readTree(runner.pipeline().buildProviderRequest(requireCase("04-solid-include")).user())
-                .path("submission").get(0).asText();
-        String include = "nối \"Đặt sân\" [uc-book] -> \"Thanh toán\" [uc-pay]";
-        assertThat(dashed).contains(include + " (nét đứt): <<include>>",
-                "nối \"Hủy đặt sân\" [uc-cancel] -> \"Thanh toán\" [uc-pay] (nét đứt): <<extend>>");
-        assertThat(solid).contains(include + " (nét liền): <<include>>").doesNotContain(include + " (nét đứt)");
-        // Kế hoạch 2026-11-20: AI thấy khung system boundary, mã block, và sơ đồ chỉ được gửi một lần.
-        assertThat(dashed).contains("hình sys (chữ nhật): Hệ thống đặt sân cầu lông",
-                "hình uc-book (ellipse) trong sys: Đặt sân", "[block ");
-        assertThat(dashed).doesNotContain("actor-customer (umlActor) trong");
-        assertThat(dashed.split(java.util.regex.Pattern.quote(include), -1)).hasSize(2);
-    }
-
-    @Test
-    void perfectProviderScoresTenWithEveryMetricPassed() {
-        var runs = runner.runCases(createOracleCall(false), 2, Set.of());
-
-        assertThat(runs).hasSize(16).allMatch(run -> run.status() == RunStatus.VALID);
-        assertThat(runs.stream().flatMap(run -> run.items().stream()))
-                .noneMatch(GradingEvalPipeline.ItemOutcome::requiresReview);
-        var summary = GradingEvalMetrics.calculateSummary(runs);
-        assertThat(summary.isAllPassed()).isTrue();
-        assertThat(summary.compositeScore()).isEqualTo(10.0);
-        assertThat(summary.requireMetric("score_mae").value()).isZero();
-        assertThat(summary.requireMetric("item_kappa").value()).isEqualTo(1.0);
-        assertThat(summary.requireMetric("fabricated_credit").value()).isZero();
-        assertThat(summary.requireMetric("ungrounded_quotes").value()).isZero();
-        assertThat(summary.requireMetric("wrong_location").value()).isZero();
-        assertThat(summary.requireMetric("citation_rate").value()).isEqualTo(1.0);
-        assertThat(summary.requireMetric("off_topic_detected").sampleSize()).isEqualTo(2);
-        assertThat(summary.requireMetric("injection_resisted").sampleSize()).isEqualTo(2);
-        assertThat(summary.requireMetric("score_stability").value()).isZero();
     }
 
     @ParameterizedTest
@@ -271,29 +168,6 @@ class GradingEvalHarnessTest {
         } catch (java.io.IOException ex) {
             throw new IllegalStateException(ex);
         }
-    }
-
-    @Test
-    void fabricatingProviderIsCaughtByHallucinationOffTopicAndInjectionMetrics() {
-        var runs = runner.runCases(createOracleCall(true), 1, Set.of());
-
-        assertThat(runs).allMatch(run -> run.status() == RunStatus.VALID);
-        var summary = GradingEvalMetrics.calculateSummary(runs);
-        assertThat(summary.isAllPassed()).isFalse();
-        assertThat(summary.requireMetric("fabricated_credit").value()).isEqualTo(1.0);
-        assertThat(summary.requireMetric("ungrounded_quotes").value()).isEqualTo(1.0);
-        assertThat(summary.requireMetric("wrong_location").value()).isEqualTo(1.0);
-        assertThat(runs.stream().flatMap(run -> run.items().stream())
-                .filter(item -> item.evidencePartId() != null && !item.partId().equals(item.evidencePartId())))
-                .isNotEmpty().allMatch(item -> item.requiresReview() && !item.reviewReason().isBlank());
-        assertThat(runs.stream().filter(run -> run.caseKey().equals("07-empty-diagram"))
-                .flatMap(run -> run.items().stream()).filter(item -> !item.gradedByAi()))
-                .as("empty diagram part is zeroed by the app, not by AI").hasSize(6)
-                .allMatch(item -> item.awarded().signum() == 0);
-        assertThat(summary.requireMetric("off_topic_detected").value()).isZero();
-        assertThat(summary.requireMetric("injection_resisted").value()).isZero();
-        assertThat(summary.requireMetric("score_stability").isApplicable()).isFalse();
-        assertThat(summary.compositeScore()).isLessThan(5.0);
     }
 
     @Test

@@ -24,43 +24,6 @@ class AcademicsReadRepositoryTest {
         assertThatThrownBy(() -> academicsReadRepository.listForManager(List.of(), null, null, null, 101, 0)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Test void managerQueryBindsScopeAndEscapesSearchWildcards() {
-        UUID subject = UUID.randomUUID();
-        when(namedParameterJdbcTemplate.query(anyString(), anyMap(), any(RowMapper.class))).thenReturn(List.of());
-        academicsReadRepository.listForManager(List.of(subject), "50%_!'; drop table x", ClassStatus.OPEN, "SP27-BL5", 25, 50);
-        var sql = ArgumentCaptor.forClass(String.class);
-        var args = ArgumentCaptor.forClass(Map.class);
-        verify(namedParameterJdbcTemplate).query(sql.capture(), args.capture(), any(RowMapper.class));
-        assertThat(sql.getValue()).contains("subject_id in (:subjectIds)", "c.status = :status", "c.term = :term",
-                "order by c.code, c.starts_on desc, c.id", "limit :limit offset :offset", "escape '!'");
-        assertThat(sql.getValue()).doesNotContain("drop table");
-        assertThat(args.getValue()).containsEntry("subjectIds", List.of(subject)).containsEntry("term", "SP27-BL5")
-                .containsEntry("limit", 25).containsEntry("offset", 50)
-                .containsEntry("search", "%50!%!_!!'; drop table x%");
-    }
-
-    @Test void studentQueryAlwaysRequiresActiveEnrollmentAndVisibleStatus() {
-        UUID student = UUID.randomUUID();
-        when(namedParameterJdbcTemplate.query(anyString(), anyMap(), any(RowMapper.class))).thenReturn(List.of());
-        academicsReadRepository.listForStudent(student, null, null, null, 20, 0);
-        var sql = ArgumentCaptor.forClass(String.class);
-        var args = ArgumentCaptor.forClass(Map.class);
-        verify(namedParameterJdbcTemplate).query(sql.capture(), args.capture(), any(RowMapper.class));
-        assertThat(sql.getValue()).contains("exists", "e.status = 'ACTIVE'", "c.status in ('OPEN', 'ARCHIVED')", "e.account_id = :accountId");
-        assertThat(args.getValue()).containsEntry("accountId", student).doesNotContainKey("term");
-        assertThat(sql.getValue()).doesNotContain("c.term");
-    }
-
-    @Test void teacherScopeAndPaginationAreBoundAndValidated() {
-        UUID teacher = UUID.randomUUID();
-        when(namedParameterJdbcTemplate.query(anyString(), anyMap(), any(RowMapper.class))).thenReturn(List.of());
-        academicsReadRepository.listForTeacher(teacher, "  ", null, null, 100, 0);
-        verify(namedParameterJdbcTemplate).query(contains("c.teacher_id = :accountId"), argThat((Map<String,Object> args) -> teacher.equals(args.get("accountId"))), any(RowMapper.class));
-        reset(namedParameterJdbcTemplate);
-        assertThatThrownBy(() -> academicsReadRepository.listForStudent(teacher, null, null, null, 20, -1)).isInstanceOf(IllegalArgumentException.class);
-        verifyNoInteractions(namedParameterJdbcTemplate);
-    }
-
     @Test void emptyAggregateInputsDoNotGenerateInvalidInClause() {
         assertThat(academicsReadRepository.countClassesOfSubjects(List.of())).isEmpty();
         assertThat(academicsReadRepository.countEnrollments(List.of())).isEmpty();

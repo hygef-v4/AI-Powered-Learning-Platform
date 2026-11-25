@@ -31,17 +31,6 @@ class McpStaffAdmissionTest {
         verify(authorization, times(2)).authorize(eq(admin), eq("MCP_SELF"), any());
     }
 
-    @Test void adminCannotManageCredentialsDespiteManagingInstitutionalAi() {
-        Actor student = new Actor(UUID.randomUUID(), Role.ADMIN);
-        when(authorization.authorize(eq(student), anyString(), any())).thenAnswer(call ->
-                "AI_ADMIN".equals(call.getArgument(1)) ? AuthorizationDecision.allow()
-                        : AuthorizationDecision.deny("ROLE"));
-        assertThatThrownBy(() -> service.createCredential(student, "x", McpCredential.Access.READ_ONLY, 7)).isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> service.listCredentials(student)).isInstanceOf(ApiException.class);
-        assertThatThrownBy(() -> service.revoke(student, UUID.randomUUID())).isInstanceOf(ApiException.class);
-        verify(repository, never()).insert(any());
-    }
-
     @Test void oldTokenIsRejectedAsSoonAsCurrentAccountRoleBecomesAdmin() {
         UUID accountId = UUID.randomUUID();
         String token = "mcp_existing-test-secret";

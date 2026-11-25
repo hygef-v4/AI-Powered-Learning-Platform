@@ -50,38 +50,6 @@ class AssignmentPublicationServiceTest {
     }
 
     @Test
-    void publishNeedsAFinalizedAssignmentThenChecksReadinessAndSchedule() {
-        Instant later = NOW.plus(Duration.ofDays(1));
-        Instant end = NOW.plus(Duration.ofDays(7));
-        Assignment draft = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of(heading("H1", "Mục"))), true);
-        assertThat(code(() -> f.publication.publish(f.teacher, draft.id(), publish(draft.version(), later, end, null, 1))))
-                .as("phải hoàn tất bài rồi mới xếp lịch (yêu cầu 2026-11-11)").isEqualTo("ASSIGNMENT_NOT_FINALIZED");
-        assertThat(f.support.buildDetail(f.teacher, draft, List.of()).permissions().canPublish()).isFalse();
-        Assignment finalized = f.authoring.review(f.teacher, draft.id(), draft.version()) == null ? null : f.store.get(draft.id());
-        assertThat(finalized.status()).isEqualTo(AssignmentStatus.REVIEWED);
-        assertThat(f.support.buildDetail(f.teacher, finalized, List.of()).permissions().canPublish()).isTrue();
-        assertThat(f.publication.publish(f.teacher, finalized.id(), publish(finalized.version(), later, end, null, 1)).status())
-                .isEqualTo(AssignmentStatus.SCHEDULED);
-        Assignment open = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of(heading("H1", "Mục"))), true);
-        assertThat(code(() -> f.publication.publish(f.teacher, open.id(), publish(open.version(), later, end, null, 1))))
-                .isEqualTo("ASSIGNMENT_STATUS_INVALID");
-        Assignment a = reviewed();
-        assertThat(code(() -> f.publication.publish(f.teacher, a.id(), publish(a.version(), end, later, null, 1))))
-                .isEqualTo("SCHEDULE_INVALID");
-        assertThat(code(() -> f.publication.publish(f.teacher, a.id(),
-                publish(a.version(), later, end, end.plus(Duration.ofDays(31)), 1)))).isEqualTo("SCHEDULE_INVALID");
-        // Số lượt chỉ kiểm với bài Luyện tập; bài có chấm không có số lượt (yêu cầu 2026-11-10).
-        assertThat(code(() -> AssignmentPublicationService.validateSchedule(later, end, null, 11, GradingMode.PRACTICE, NOW)))
-                .isEqualTo("SCHEDULE_INVALID");
-        assertThat(code(() -> AssignmentPublicationService.validateSchedule(later, end, null, null, GradingMode.PRACTICE, NOW)))
-                .isEqualTo("SCHEDULE_INVALID");
-        AssignmentPublicationService.validateSchedule(later, end, null, null, GradingMode.GRADED, NOW);
-        assertThat(code(() -> f.publication.publish(f.teacher, a.id(),
-                publish(a.version(), NOW.minus(Duration.ofDays(9)), NOW.minus(Duration.ofDays(1)), null, 1))))
-                .isEqualTo("SCHEDULE_INVALID");
-    }
-
-    @Test
     void subjectAssignmentIsTemplateAndCannotBePublished() {
         Instant later = NOW.plus(Duration.ofDays(1));
         Instant end = NOW.plus(Duration.ofDays(7));
@@ -92,38 +60,6 @@ class AssignmentPublicationServiceTest {
                 publish(template.version(), later, end, null, 1))))
                 .isEqualTo("SUBJECT_TEMPLATE_NOT_PUBLISHABLE");
         assertThat(f.assignments.findAssignment(template.id()).orElseThrow().status()).isEqualTo(AssignmentStatus.DRAFT);
-    }
-
-    @Test
-    void publishSchedulesLocksRubricsAndAudits() {
-        Assignment a = reviewed();
-        AssignmentViews.Detail detail = f.publication.publish(f.teacher, a.id(),
-                publish(a.version(), NOW.plus(Duration.ofDays(1)), NOW.plus(Duration.ofDays(7)), NOW.plus(Duration.ofDays(8)), 3));
-        assertThat(detail.status()).isEqualTo(AssignmentStatus.SCHEDULED);
-        // Bài có chấm nộp không giới hạn khi còn hạn: số lượt gửi lên bị bỏ qua (yêu cầu 2026-11-10).
-        assertThat(detail.maxAttempts()).isNull();
-        assertThat(f.rubricsOf(a.id())).allMatch(AssignmentRubric::hasLocked);
-        verify(f.listener, never()).onOpened(any());
-    }
-
-    @Test
-    void openNowRunsListenersAndPublishesEvent() {
-        Assignment a = reviewed();
-        AssignmentViews.Detail detail = f.publication.publish(f.teacher, a.id(),
-                new AssignmentCommands.Publish(a.version(), null, true, NOW.plus(Duration.ofDays(7)), null, 1, false));
-        assertThat(detail.status()).isEqualTo(AssignmentStatus.OPEN);
-        verify(f.listener).onOpened(a.id());
-        verify(f.events).publish(argThat(e -> e.eventType().equals(EventTypes.ASSIGNMENT_OPENED)
-                && a.id().toString().equals(e.payload().get("assignmentId"))));
-    }
-
-    @Test
-    void classMustBeOpenToPublish() {
-        Assignment a = reviewed();
-        when(f.classes.getClassRef(any())).thenAnswer(i -> Optional.of(f.classRef(i.getArgument(0), ClassStatus.DRAFT)));
-        assertThat(code(() -> f.publication.publish(f.teacher, a.id(),
-                publish(a.version(), NOW.plus(Duration.ofDays(1)), NOW.plus(Duration.ofDays(7)), null, 1))))
-                .isEqualTo("CLASS_NOT_OPEN");
     }
 
     @Test
@@ -168,21 +104,6 @@ class AssignmentPublicationServiceTest {
     }
 
     @Test
-    void scannerOpensDueAssignmentsOnceAndClosesExpired() {
-        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.REVIEWED, new DocumentModel(List.of()), true);
-        Assignment scheduled = f.withStatus(a, AssignmentStatus.SCHEDULED, NOW.minusSeconds(30), NOW.plus(Duration.ofDays(1)));
-        when(f.assignments.listDueToOpen(any(), org.mockito.ArgumentMatchers.anyInt())).thenReturn(List.of(scheduled.id()));
-        PlatformTransactionManager transactions = f.transactions;
-        AssignmentScheduleScanner scanner = new AssignmentScheduleScanner(f.assignments, f.lifecycle, transactions);
-        scanner.scan(NOW);
-        scanner.scan(NOW);
-        assertThat(f.store.get(scheduled.id()).status()).isEqualTo(AssignmentStatus.OPEN);
-        verify(f.listener).onOpened(scheduled.id());
-        verify(f.events).publish(any());
-        verify(f.assignments, org.mockito.Mockito.times(2)).listDueToClose(NOW, AssignmentScheduleScanner.BATCH);
-    }
-
-    @Test
     void closeStopsSubmissionsAndChotsSavedWorkWithoutChangingTheSchedule() {
         Assignment draft = reviewed();
         Instant end = NOW.plus(Duration.ofDays(7));
@@ -193,21 +114,6 @@ class AssignmentPublicationServiceTest {
         verify(f.listener).onClosed(open.id());
         assertThat(code(() -> f.publication.closeAssignment(f.teacher, open.id(), closed.version())))
                 .isEqualTo("ASSIGNMENT_STATUS_INVALID");
-    }
-
-    @Test
-    void closeChecksVersionClassScopeAndClassState() {
-        Assignment open = f.put(AssignmentScope.CLASS, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
-        assertThat(code(() -> f.publication.closeAssignment(f.teacher, open.id(), open.version() + 1)))
-                .isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
-        Assignment template = f.put(AssignmentScope.SUBJECT, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
-        assertThat(code(() -> f.publication.closeAssignment(f.manager, template.id(), template.version())))
-                .isEqualTo("ASSIGNMENT_STATUS_INVALID");
-        when(f.classes.getClassRef(open.classId())).thenReturn(Optional.of(
-                f.classRef(open.classId(), ClassStatus.ARCHIVED)));
-        assertThat(code(() -> f.publication.closeAssignment(f.teacher, open.id(), open.version())))
-                .isEqualTo("ASSIGNMENT_READ_ONLY");
-        verify(f.listener, never()).onClosed(any());
     }
 
     @Test

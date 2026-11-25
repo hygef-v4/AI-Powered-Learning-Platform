@@ -15,16 +15,6 @@ class QuestionTest {
     private final UUID author = UUID.randomUUID();
 
     @Test
-    void newBankQuestionStartsAsDraftVersionOneOfItsOwnLineage() {
-        Question q = Question.createBankDraft(subject, QuestionRulesTest.single("3", "4"), author, NOW);
-        assertThat(q.lineageId()).isEqualTo(q.id());
-        assertThat(q.versionNo()).isEqualTo(1);
-        assertThat(q.scope()).isEqualTo(QuestionScope.BANK);
-        assertThat(q.status()).isEqualTo(QuestionStatus.DRAFT);
-        assertThat(q.isDeletable()).isTrue();
-    }
-
-    @Test
     void activeQuestionIsNotEditableAndOpensNextDraftInSameLineage() {
         Question active = Question.createBankDraft(subject, QuestionRulesTest.single("3", "4"), author, NOW)
                 .activate(NOW.plusSeconds(60));

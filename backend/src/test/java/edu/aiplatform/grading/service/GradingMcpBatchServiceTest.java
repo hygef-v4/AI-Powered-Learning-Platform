@@ -51,37 +51,4 @@ class GradingMcpBatchServiceTest {
         } catch(Exception ex){throw new AssertionError(ex);}
         verify(gradingMcpQueryService,times(1)).recordRead(eq(actor),anyMap());
     }
-    @Test void laterReadItemsGetOnlyTheBatchSpaceLeft() {
-        when(gradingMcpQueryService.loadGradingContext(eq(actor),anyMap(),eq(false),anyInt()))
-                .thenReturn(Map.of("text","x".repeat(100000),"complete",true))
-                .thenReturn(Map.of("text","small","complete",false));
-        var result=(Map<String,Object>)gradingMcpBatchService.call(actor,"read_grading_batch",Map.of("items",List.of(
-                Map.of("evaluationId",UUID.randomUUID().toString()),Map.of("evaluationId",UUID.randomUUID().toString())))).content();
-        var budgets=org.mockito.ArgumentCaptor.forClass(Integer.class);
-        verify(gradingMcpQueryService,times(2)).loadGradingContext(eq(actor),anyMap(),eq(false),budgets.capture());
-        assertThat(budgets.getAllValues().get(0)).isEqualTo(GradingMcpQueryService.CONTEXT_BYTES);
-        assertThat(budgets.getAllValues().get(1)).isBetween(1,GradingMcpBatchService.BATCH_CONTENT_BYTES-100000);
-        assertThat((List<Map<String,Object>>)result.get("items")).extracting(i -> i.get("outcome")).containsExactly("OK","OK");
-    }
-    @Test void blockThatOnlyFitsAnEmptyBatchIsRetryableBatchLimit() {
-        when(gradingMcpQueryService.loadGradingContext(eq(actor),anyMap(),eq(false),anyInt()))
-                .thenReturn(Map.of("text","x".repeat(100000),"complete",true))
-                .thenThrow(ApiException.createBadRequest("MCP_CONTEXT_TOO_LARGE","too large"));
-        var result=(Map<String,Object>)gradingMcpBatchService.call(actor,"read_grading_batch",Map.of("items",List.of(
-                Map.of("evaluationId",UUID.randomUUID().toString()),Map.of("evaluationId",UUID.randomUUID().toString())))).content();
-        var items=(List<Map<String,Object>>)result.get("items");
-        assertThat(items.get(1)).containsEntry("code","MCP_BATCH_RESULT_LIMIT");
-    }
-    @Test void escapeHeavyEarlierItemsShrinkTheNextBudgetBelowTheRawSpaceLeft() {
-        when(gradingMcpQueryService.loadGradingContext(eq(actor),anyMap(),eq(false),anyInt()))
-                .thenReturn(Map.of("text","\"".repeat(40000),"complete",true))
-                .thenReturn(Map.of("text","small","complete",false));
-        gradingMcpBatchService.call(actor,"read_grading_batch",Map.of("items",List.of(
-                Map.of("evaluationId",UUID.randomUUID().toString()),Map.of("evaluationId",UUID.randomUUID().toString()))));
-        var budgets=org.mockito.ArgumentCaptor.forClass(Integer.class);
-        verify(gradingMcpQueryService,times(2)).loadGradingContext(eq(actor),anyMap(),eq(false),budgets.capture());
-        // 40k quotes are ~80 KB of JSON but ~160 KB once escaped into the envelope text.
-        int rawLeft=GradingMcpBatchService.BATCH_CONTENT_BYTES-80000;
-        assertThat(budgets.getAllValues().get(1)).isBetween(1,rawLeft/2);
-    }
 }

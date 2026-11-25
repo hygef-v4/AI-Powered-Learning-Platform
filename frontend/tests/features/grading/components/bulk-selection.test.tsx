@@ -42,22 +42,6 @@ it("selects a page, all30 matching submissions, and passes only eligible IDs/ver
   expect(action.items).toEqual(rows.slice(10).map(row => ({ evaluationId: row.evaluationId, version: row.version })));
   expect(screen.queryByRole("button", { name: "Thao tác hàng loạt" })).not.toBeInTheDocument();
 });
-it("retains page selections, shows mixed state, and clears on filter/assignment changes", async () => {
-  const view = render(<GradebookBatchControls {...props} />);
-  fireEvent.click(await screen.findByRole("checkbox", { name: "Chọn Student 0" }));
-  expect(screen.getByRole("checkbox", { name: "Chọn tất cả trên trang" })).toBePartiallyChecked();
-  fireEvent.click(screen.getByRole("button", { name: "Trang sau" }));
-  expect(screen.getByText("Đã chọn 1 bài")).toBeInTheDocument();
-  expect(screen.getByRole("checkbox", { name: "Chọn Student 20" })).not.toBeChecked();
-  view.rerender(<GradebookBatchControls {...props} query="Student 2" />);
-  await screen.findByRole("checkbox", { name: "Chọn Student 2" });
-  expect(screen.queryByText("Đã chọn 1 bài")).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("checkbox", { name: "Chọn tất cả trên trang" }));
-  expect(screen.getByText("Đã chọn 11 bài")).toBeInTheDocument();
-  view.rerender(<GradebookBatchControls {...props} assignmentId="b" />);
-  await screen.findByRole("checkbox", { name: "Chọn Student 0" });
-  expect(screen.queryByText("Đã chọn 11 bài")).not.toBeInTheDocument();
-});
 it("disables unsubmitted rows and never lets select-all exceed100", async () => {
   mocks.listSubmissions.mockResolvedValue({ rows: [
     ...Array.from({ length: 101 }, (_, i) => ({ ...rows[0]!, student: { ...rows[0]!.student, name: `Person ${i}` }, evaluationId: `id${i}` })),

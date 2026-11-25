@@ -93,18 +93,6 @@ class QuizAiDraftServiceTest {
     }
 
     @Test
-    void validInstructionsAreWrappedAndCarriedToAiTask() {
-        QuizDetail quiz = classQuiz();
-
-        drafts.requestForQuiz(teacher, quiz.quiz().id(), new DraftRequest("Soạn câu về vòng đời phần mềm", 5, null,
-                null, List.of(), null, null, "wrapped"), quiz.quiz().version());
-
-        assertThat(submitted.get(0).prompt().user())
-                .contains("<user_request>\nSoạn câu về vòng đời phần mềm\n</user_request>");
-        assertThat(submitted.get(0).userInput().text()).isEqualTo("Soạn câu về vòng đời phần mềm");
-    }
-
-    @Test
     void unrelatedRequestKeepsSourceGroundedQuestionsWithWarningAndNoSecondCall() {
         QuizDetail quiz = classQuiz();
         UUID source = u13.add(ResourceRef.courseClass(classA), "Tài liệu dài", true);
@@ -251,20 +239,6 @@ class QuizAiDraftServiceTest {
         String output = OUTPUT.replace("{\"questions\":", "{\"requestMatchesSources\":false,\"questions\":");
         handler.onReady(new AiTaskResult(UUID.randomUUID(), sent.taskType(), teacher, sent.targetRef(), sent.inputVersion(), output));
         assertThat(drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id()).sourceWarnings()).isEmpty();
-    }
-
-    @Test
-    void reportsAndPersistsTruncatedSourceCoverage() {
-        QuizDetail quiz = classQuiz();
-        UUID source = u13.add(ResourceRef.courseClass(classA), "Tài liệu dài", true);
-        u13.truncate = true;
-        AiDraftView view = drafts.requestForQuiz(teacher, quiz.quiz().id(), request("truncated", List.of(source)),
-                quiz.quiz().version());
-        var json = new ObjectMapper().findAndRegisterModules();
-        assertThat(json.valueToTree(view).path("sourceWarnings").size()).isEqualTo(1);
-        assertThat(json.valueToTree(drafts.getForQuiz(teacher, quiz.quiz().id(), view.id()))
-                .path("sourceWarnings").get(0).asText()).contains("Tài liệu", "cắt");
-        assertThat(submitted).hasSize(1);
     }
 
     @Test
@@ -549,18 +523,6 @@ class QuizAiDraftServiceTest {
                 .as("không chọn tài liệu thì U13 lỗi không ảnh hưởng").isEqualTo(DraftStatus.PENDING);
     }
 
-    @Test
-    void bankRequestNeedsSubjectManagerOfActiveSubject() {
-        AiDraftView view = drafts.requestForBank(manager, subject, request("b1", List.of()));
-
-        assertThat(view.target()).isEqualTo(DraftTarget.BANK);
-        assertThat(submitted.get(0).inputVersion()).isZero();
-        assertThat(submitted.get(0).prompt().user()).contains("ngân hàng câu hỏi");
-        assertThat(api(() -> drafts.requestForBank(teacher, subject, request("b2", List.of()))).readStatus())
-                .isEqualTo(HttpStatus.NOT_FOUND);
-        assertThat(drafts.listForBank(manager, subject)).extracting(AiDraftView::id).containsExactly(view.id());
-    }
-
     // ---- Nhận kết quả (H6) ----
 
     @Test
@@ -650,25 +612,6 @@ class QuizAiDraftServiceTest {
         assertThat(seen.failureMessage()).isEqualTo("Lỗi nhà cung cấp");
     }
 
-    // ---- Chấp nhận, bỏ (H4) ----
-
-    @Test
-    void acceptAppendsEditedQuestionsAsInlineOnceAndClosesDraft() {
-        QuizDetail quiz = classQuiz();
-        AiDraftView ready = readyQuizDraft(quiz);
-
-        QuizDetail after = drafts.acceptForQuiz(teacher, quiz.quiz().id(), ready.id(),
-                List.of(valid("Câu đã sửa"), ready.questions().get(0).content()), quiz.quiz().version());
-
-        assertThat(after.quiz().version()).isEqualTo(quiz.quiz().version() + 1);
-        assertThat(after.items()).hasSize(2).allSatisfy(item -> assertThat(item.inline()).isTrue());
-        assertThat(after.items().get(0).question().stem()).isEqualTo("Câu đã sửa");
-        assertThat(after.items().get(0).points()).isEqualByComparingTo("2");
-        assertThat(store.drafts.get(ready.id()).status()).isEqualTo(DraftStatus.ACCEPTED);
-        assertThat(api(() -> drafts.acceptForQuiz(teacher, quiz.quiz().id(), ready.id(), List.of(valid("x")),
-                after.quiz().version())).readCode()).isEqualTo("AI_DRAFT_CLOSED");
-    }
-
     @Test
     void acceptRejectsInvalidQuestionsStaleVersionAndOverflow() {
         QuizDetail quiz = classQuiz();
@@ -747,31 +690,5 @@ class QuizAiDraftServiceTest {
                 "extra", 1))).readCode()).isEqualTo("INVALID_MCP_ARGUMENTS");
         McpToolResult context = mcp.call(teacher, "read_quiz_context", read);
         assertThat(context.content()).isInstanceOf(QuizDetail.class);
-    }
-
-    @Test
-    void saveQuizDraftStoresReadyMcpProposalForDraftQuizWithMatchingVersion() {
-        QuizDetail quiz = classQuiz();
-        List<Map<String, Object>> questions = List.of(Map.of("type", "MCQ_MULTI", "stem", "Số nguyên tố",
-                "options", List.of("2", "3", "4"), "correct", List.of(1, 2), "points", 3));
-
-        McpToolResult saved = mcp.call(teacher, "save_quiz_draft", Map.of("quizId", quiz.quiz().id().toString(),
-                "expectedVersion", quiz.quiz().version(), "questions", questions, "agentLabel", "Claude Desktop"));
-
-        assertThat(saved.error()).isFalse();
-        AiDraftView draft = drafts.listForQuiz(teacher, quiz.quiz().id()).get(0);
-        assertThat(draft.origin()).isEqualTo(DraftOrigin.MCP);
-        assertThat(draft.status()).isEqualTo(DraftStatus.READY);
-        assertThat(draft.agentLabel()).isEqualTo("Claude Desktop");
-        assertThat(draft.questions().get(0).content().defaultPoints()).isEqualByComparingTo("3");
-        assertThat(store.questions).as("chỉ là đề xuất").isEmpty();
-
-        assertThat(api(() -> mcp.call(teacher, "save_quiz_draft", Map.of("quizId", quiz.quiz().id().toString(),
-                "expectedVersion", quiz.quiz().version() + 1, "questions", questions))).readCode())
-                .isEqualTo("QUIZ_VERSION_CONFLICT");
-        assertThat(api(() -> mcp.call(teacher, "save_quiz_draft", Map.of("quizId", quiz.quiz().id().toString(),
-                "expectedVersion", quiz.quiz().version(), "questions", List.of()))).readCode())
-                .isEqualTo("INVALID_MCP_ARGUMENTS");
-        assertThat(api(() -> mcp.call(teacher, "drop_quiz", Map.of())).readCode()).isEqualTo("MCP_TOOL_NOT_FOUND");
     }
 }

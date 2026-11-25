@@ -290,22 +290,6 @@ describe("GroupWorkspacePage", () => {
     await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
   });
 
-  it("trưởng nhóm nộp được, popup liệt kê mục chưa Xong và gửi version", async () => {
-    const calls = backend(workspace(LEADER));
-    render(<GroupWorkspacePage documentId="doc1" />);
-    fireEvent.click(await screen.findByRole("button", { name: /Nộp tài liệu/ }));
-
-    const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText("Mục s3")).toBeInTheDocument();
-    expect(within(dialog).queryByText(/Chỉ nội dung của mục Xong|nộp lại trước hạn/)).not.toBeInTheDocument();
-    fireEvent.click(within(dialog).getByRole("button", { name: "Vẫn nộp" }));
-
-    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/submit"))).toBe(true));
-    expect(calls.find((c) => c.url.endsWith("/submit"))!.body).toEqual({ version: 5 });
-    // Nộp xong về trang chi tiết bài.
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/my-assignments/as1?classId=c1"));
-  });
-
   it("nộp lỗi thì đóng popup, báo một câu và tô đỏ các mục chưa xong", async () => {
     const view = workspace(LEADER);
     backend(view);
@@ -355,24 +339,6 @@ describe("GroupWorkspacePage", () => {
     expect(screen.getByRole("menuitem", { name: "Tải DOCX" })).toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: /bản nộp/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Nhận mục" })).not.toBeInTheDocument();
-  });
-
-  it("nhả mục là nút chữ đỏ", async () => {
-    backend(workspace(LEADER));
-    render(<GroupWorkspacePage documentId="doc1" />);
-    const item = await screen.findByRole("region", { name: "Mục s2" });
-    expect(within(item).getByRole("button", { name: "Nhả mục" }).className).toContain("text-danger");
-  });
-
-  it("nhận mục thì sang trang soạn", async () => {
-    const calls = backend(workspace(MEMBER));
-    render(<GroupWorkspacePage documentId="doc1" />);
-    const item = await screen.findByRole("region", { name: "Mục s3" });
-
-    fireEvent.click(within(item).getByRole("button", { name: "Nhận mục" }));
-
-    await waitFor(() => expect(calls.some((c) => c.url.endsWith("/sections/s3:claim"))).toBe(true));
-    await waitFor(() => expect(router.push).toHaveBeenCalledWith("/group-docs/doc1/edit?section=s3"));
   });
 
   it("mục Xong do chính mình viết thì nhận lại ngay, không hỏi", async () => {

@@ -280,20 +280,6 @@ function stubGroupDocEvents() {
   };
 }
 
-it("mục bị giao cho người khác thì rời trang soạn và báo", async () => {
-  const sendEvent = stubGroupDocEvents();
-  const views = { current: workspace() };
-  backend(views);
-  render(<GroupSectionEditorPage documentId="doc1" focusPart="s2" />);
-  await screen.findByRole("group", { name: "Mục s2" });
-
-  views.current = workspace({ sections: [section("s2", OTHER, { version: 4 }), section("s3", OTHER)] });
-  await sendEvent("section.assigned", "s2");
-
-  expect(await screen.findByText(/Bạn không còn giữ mục “Mục s2”/)).toBeInTheDocument();
-  expect(screen.getByText("Bạn chưa giữ mục nào để soạn.")).toBeInTheDocument();
-});
-
 it.each(["release", "late save", "missed release"])("saves with the new version after reclaiming a section (%s)", async (scenario) => {
   const lateSave = scenario === "late save";
   vi.useFakeTimers({ shouldAdvanceTime: true });

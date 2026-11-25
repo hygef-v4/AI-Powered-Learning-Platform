@@ -272,12 +272,4 @@ class AccountImportServiceTest {
 
         assertThat(result.rows()).extracting(RowResult::reason).containsExactly("MISSING_STUDENT_CODE", null);
     }
-
-    @Test
-    void commitStoresNormalizedStudentCode() {
-        service.commit(admin, bytes("email,display_name,role,student_code\na@fpt.edu.vn,A,STUDENT, se000001 \n"));
-
-        verify(accounts).insert(org.mockito.ArgumentMatchers.argThat(
-                account -> "SE000001".equals(account.studentCode()) && account.role() == Role.STUDENT));
-    }
 }

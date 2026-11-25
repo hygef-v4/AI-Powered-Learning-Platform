@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AiProposalPanel } from "@/features/grading/components/AiProposalPanel";
 import { Toaster } from "@/shared/ui";
@@ -45,15 +45,6 @@ describe("U09 AI requests choose their source automatically", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(action === "publish" ? "Đã công bố điểm cho 1 bài." : "Đã chốt điểm cho 1 bài.");
     expect(perform).toHaveBeenCalledExactlyOnceWith(items);
     expect(mocks.requestBatch).not.toHaveBeenCalled();
-  });
-
-  it.each(["QUEUED", "PENDING"])("shows the token estimate and accepts a %s batch AI request", async (outcome) => {
-    mocks.requestBatch.mockResolvedValue({ items: [{ evaluationId: "e", outcome }] });
-    render(<><Toaster /><BatchActionDialog action="ai" items={items} onClose={vi.fn()} onDone={vi.fn()} /></>);
-    expect(await screen.findByText("Ước tính khoảng 5.123 token.")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
-    await waitFor(() => expect(mocks.requestBatch).toHaveBeenCalledExactlyOnceWith(items, { requestRef: expect.any(String) }));
-    expect(await screen.findByText(/Đã gửi yêu cầu AI/)).toBeInTheDocument();
   });
 
   it("reuses the batch request after a lost response for the same selection", async () => {

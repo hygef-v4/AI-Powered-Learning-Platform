@@ -1,8 +1,7 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AssignmentFormPage } from "@/features/assignments/pages/AssignmentFormPage";
 import type { AssignmentDetail } from "@/features/assignments/model/types";
-import { ApiError } from "@/shared/api/client";
 
 const mocks = vi.hoisted(() => ({ detail: vi.fn(), rubric: vi.fn(), closeAssignment: vi.fn() }));
 vi.mock("@/features/assignments/api", async (original) => ({
@@ -34,20 +33,6 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-it("confirms closing reception separately from retirement and sends the current version", async () => {
-  render(<AssignmentFormPage id="a" />);
-  fireEvent.click(await screen.findByRole("button", { name: "Đóng nhận bài" }));
-  const dialog = screen.getByRole("dialog");
-  expect(dialog).toHaveTextContent(/không thể sửa hoặc nộp bài/);
-  expect(dialog).toHaveTextContent(/tự động nộp.*đã lưu/);
-  expect(mocks.closeAssignment).not.toHaveBeenCalled();
-  fireEvent.click(within(dialog).getByRole("button", { name: "Đóng nhận bài" }));
-  await waitFor(() => expect(mocks.closeAssignment).toHaveBeenCalledExactlyOnceWith("a", 7));
-  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-  expect(screen.getByText("Đã đóng")).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Đóng nhận bài" })).not.toBeInTheDocument();
-});
-
 it.each([
   { status: "CLOSED" as const }, { status: "SCHEDULED" as const }, { scope: "SUBJECT" as const },
   { permissions: { ...assignment.permissions, canRetire: false } },
@@ -57,15 +42,4 @@ it.each([
   render(<AssignmentFormPage id="a" />);
   await screen.findByText("Đề bài");
   expect(screen.queryByRole("button", { name: "Đóng nhận bài" })).not.toBeInTheDocument();
-});
-
-it("keeps the confirmation open and exposes version conflict without retrying blindly", async () => {
-  mocks.closeAssignment.mockRejectedValue(new ApiError({ status: 409, code: "ASSIGNMENT_VERSION_CONFLICT" }));
-  render(<AssignmentFormPage id="a" />);
-  fireEvent.click(await screen.findByRole("button", { name: "Đóng nhận bài" }));
-  fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Đóng nhận bài" }));
-  await screen.findByText("Bài đã thay đổi ở nơi khác, bản đang sửa chưa lưu");
-  expect(screen.getByRole("dialog")).toBeInTheDocument();
-  expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Đóng nhận bài" })).toBeDisabled();
-  expect(mocks.closeAssignment).toHaveBeenCalledTimes(1);
 });

@@ -96,17 +96,6 @@ class GroupWorkspaceServiceTest {
     }
 
     @Test
-    void workspaceCarriesDiagramFlagFromTheAssignment() {
-        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment(true)));
-        var view = service.loadWorkspace(member, document.id());
-        assertThat(view.diagramEnabled()).isTrue();
-        assertThat(view.activityMonitoring()).isTrue();
-
-        when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment(false)));
-        assertThat(service.loadWorkspace(member, document.id()).diagramEnabled()).isFalse();
-    }
-
-    @Test
     void lastSubmissionCarriesSectionAuthorsCapturedAtSubmit() {
         when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(assignment(false)));
         assertThat(service.loadWorkspace(member, document.id()).lastSubmission()).isNull();

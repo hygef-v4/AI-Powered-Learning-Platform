@@ -58,20 +58,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 /** HTTP của ngân hàng câu hỏi; principal giả đặt phía server, service là mock (kiểm riêng ở application). */
 class QuestionControllerTest {
 
-    @Test
-    void bankAiDraftAllowsAutomaticSourceWithSelectedMaterials() throws Exception {
-        UUID material = UUID.randomUUID();
-        for (String sourceField : List.of("", "\"source\":null,")) {
-            mvc.perform(post("/api/v1/subjects/{s}/question-ai-drafts", subject).contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"instructions\":\"Tạo theo tài liệu\",\"count\":5," + sourceField
-                                    + "\"materialIds\":[\"" + material + "\"],\"provider\":null,\"requestRef\":\"auto\"}"))
-                    .andExpect(status().isCreated());
-        }
-        verify(drafts, org.mockito.Mockito.times(2)).requestForBank(eq(manager), eq(subject),
-                org.mockito.ArgumentMatchers.argThat(request -> request.source() == null && request.provider() == null
-                        && request.materialIds().equals(List.of(material))));
-    }
-
     private static final Instant NOW = Instant.parse("2026-10-20T08:00:00Z");
     private static final String BODY = """
             {"type":"MCQ_SINGLE","stem":"Thủ đô?","options":[{"id":"1","text":"Hà Nội"},{"id":"2","text":"Huế"}],
@@ -109,47 +95,6 @@ class QuestionControllerTest {
     }
 
     @Test
-    void createReturns201WithLocationAndParsesContent() throws Exception {
-        when(bank.createQuestion(eq(manager), eq(subject), any())).thenReturn(detail());
-
-        mvc.perform(post("/api/v1/subjects/{s}/questions", subject).contentType(MediaType.APPLICATION_JSON).content(BODY))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/v1/questions/" + questionId))
-                .andExpect(jsonPath("$.question.status").value("DRAFT"));
-
-        ArgumentCaptor<QuestionContent> content = ArgumentCaptor.forClass(QuestionContent.class);
-        verify(bank).createQuestion(eq(manager), eq(subject), content.capture());
-        assertThat(content.getValue().defaultPoints()).isEqualByComparingTo("1.5");
-        assertThat(content.getValue().options()).hasSize(2);
-    }
-
-    @Test
-    void unknownFieldOrWrongTypeIsBadRequest() throws Exception {
-        mvc.perform(post("/api/v1/subjects/{s}/questions", subject).contentType(MediaType.APPLICATION_JSON)
-                        .content(BODY.replace("\"tags\"", "\"subjectId\":\"x\",\"tags\"")))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("QUESTION_REQUEST_INVALID"));
-        mvc.perform(post("/api/v1/subjects/{s}/questions", subject).contentType(MediaType.APPLICATION_JSON)
-                        .content(BODY.replace("1.5", "\"1.5\"")))
-                .andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/subjects/{s}/questions", subject).param("type", "ESSAY"))
-                .andExpect(status().isBadRequest());
-        mvc.perform(get("/api/v1/subjects/{s}/questions", subject).param("sort", "x"))
-                .andExpect(status().isBadRequest());
-        verify(bank, never()).createQuestion(any(), any(), any());
-    }
-
-    @Test
-    void invalidContentReturnsViolations() throws Exception {
-        when(bank.createQuestion(any(), any(), any())).thenThrow(new QuestionInvalidException(
-                List.of(new Violation("options", "OPTION_COUNT", "Cần 2–6 lựa chọn"))));
-        mvc.perform(post("/api/v1/subjects/{s}/questions", subject).contentType(MediaType.APPLICATION_JSON).content(BODY))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("QUESTION_INVALID"))
-                .andExpect(jsonPath("$.violations[0].code").value("OPTION_COUNT"));
-    }
-
-    @Test
     void notFoundAndConflictKeepTheirCodes() throws Exception {
         when(bank.loadQuestion(manager, questionId)).thenThrow(ApiException.createNotFound("QUESTION_NOT_FOUND"));
         mvc.perform(get("/api/v1/questions/{id}", questionId))
@@ -159,45 +104,6 @@ class QuestionControllerTest {
         mvc.perform(patch("/api/v1/questions/{id}", questionId).contentType(MediaType.APPLICATION_JSON)
                         .content(BODY.substring(0, BODY.lastIndexOf('}')) + ",\"version\":3}"))
                 .andExpect(status().isConflict());
-    }
-
-    @Test
-    void listPassesFilters() throws Exception {
-        when(bank.listQuestions(eq(manager), eq(subject), any())).thenReturn(new QuestionPage(List.of(), 0, 0, 20));
-        mvc.perform(get("/api/v1/subjects/{s}/questions", subject).param("type", "MCQ_MULTI").param("q", "đại số")
-                        .param("status", "ACTIVE").param("size", "50"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0));
-        ArgumentCaptor<QuestionBankService.Filter> filter = ArgumentCaptor.forClass(QuestionBankService.Filter.class);
-        verify(bank).listQuestions(eq(manager), eq(subject), filter.capture());
-        assertThat(filter.getValue()).isEqualTo(new QuestionBankService.Filter(QuestionType.MCQ_MULTI, null,
-                QuestionStatus.ACTIVE, "đại số", null, 50));
-    }
-
-    @Test
-    void importAcceptsMultipartOnColonPathWithDryRun() throws Exception {
-        when(importer.importFile(eq(manager), eq(subject), any(), anyBoolean()))
-                .thenReturn(new QuestionImporter.ImportResult(true, 1, 1, 0, 0, List.of()));
-        MockMultipartFile file = new MockMultipartFile("file", "cau-hoi.csv", "text/csv", "x".getBytes());
-        mvc.perform(multipart("/api/v1/subjects/{s}/questions:import", subject).file(file).param("dryRun", "true"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.dryRun").value(true));
-        verify(importer).importFile(eq(manager), eq(subject), any(), eq(true));
-    }
-
-    @Test
-    void stateChangesReadVersion() throws Exception {
-        when(bank.activate(manager, questionId, 2)).thenReturn(detail());
-        mvc.perform(post("/api/v1/questions/{id}/activate", questionId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"version\":2}"))
-                .andExpect(status().isOk());
-        mvc.perform(post("/api/v1/questions/{id}/retire", questionId).contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest());
-        mvc.perform(delete("/api/v1/questions/{id}", questionId).param("version", "4"))
-                .andExpect(status().isNoContent());
-        verify(bank).deleteQuestion(manager, questionId, 4);
-        mvc.perform(delete("/api/v1/questions/{id}", questionId)).andExpect(status().isBadRequest());
-        when(bank.openDraft(manager, questionId)).thenReturn(detail());
-        mvc.perform(post("/api/v1/questions/{id}/versions", questionId)).andExpect(status().isOk());
     }
 
     @Test

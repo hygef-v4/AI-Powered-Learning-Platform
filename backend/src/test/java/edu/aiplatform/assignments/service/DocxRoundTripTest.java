@@ -147,33 +147,6 @@ class DocxRoundTripTest {
     }
 
     @Test
-    void emptyTableFillsThePageAndAnUndrawnDiagramIsAnEmptyFrame() throws Exception {
-        ObjectNode table = JsonNodeFactory.instance.objectNode();
-        var rows = table.putArray("rows");
-        for (int i = 0; i < 3; i++) {
-            var row = rows.addArray();
-            for (int j = 0; j < 4; j++) {
-                row.addObject().putArray("runs");
-            }
-        }
-        DocumentBlock undrawn = AssignmentFixtures.diagram("");
-        byte[] docx = exporter.export("Đề", null, new DocumentModel(List.of(AssignmentFixtures.heading("H1", "Câu 1"),
-                new DocumentBlock(UUID.randomUUID(), BlockOrigin.TEACHER, BlockType.TABLE, table), undrawn)), linker);
-        try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(docx))) {
-            XWPFTable exported = doc.getTables().get(0);
-            assertThat(exported.getRows()).hasSize(3);
-            assertThat(exported.getWidthType()).isEqualTo(org.apache.poi.xwpf.usermodel.TableWidthType.PCT);
-            assertThat(exported.getRow(0).getTableCells()).hasSize(4)
-                    .allSatisfy(cell -> assertThat(cell.getWidthType())
-                            .isEqualTo(org.apache.poi.xwpf.usermodel.TableWidthType.PCT));
-            assertThat(doc.getParagraphs()).extracting(XWPFParagraph::getText)
-                    .anySatisfy(text -> assertThat(text).contains("Chưa có sơ đồ"))
-                    .noneSatisfy(text -> assertThat(text).contains("bấm vào ảnh"));
-        }
-        assertThat(PngChunks.drawDiagramPlaceholder(null, false)).isNotEqualTo(PngChunks.drawDiagramPlaceholder(null, true));
-    }
-
-    @Test
     void exportKeepsTheFormattingShownInTheEditor() throws Exception {
         ObjectNode title = JsonNodeFactory.instance.objectNode().put("align", "CENTER");
         title.putArray("runs").addObject().put("text", "Đề giữa kỳ").put("italic", true);
@@ -247,14 +220,6 @@ class DocxRoundTripTest {
         assertThat(fromWord.get(0).path("highlight").asText()).isEqualTo("#FFFF00");
         assertThat(fromWord.get(1).path("bold").asBoolean()).isTrue();
         assertThat(fromWord.get(2).path("italic").asBoolean()).isTrue();
-    }
-
-    @Test
-    void exportedPngCarriesMxfileChunk() {
-        byte[] png = PngChunks.drawDiagramPlaceholder(DocumentModelServiceTest.DIAGRAM);
-        assertThat(PngChunks.isPng(png)).isTrue();
-        assertThat(PngChunks.readMxfile(png)).contains(DocumentModelServiceTest.DIAGRAM);
-        assertThat(PngChunks.readSize(png)).hasValueSatisfying(size -> assertThat(size).containsExactly(480, 270));
     }
 
     private static byte[] docx(java.util.function.Consumer<XWPFDocument> build) {

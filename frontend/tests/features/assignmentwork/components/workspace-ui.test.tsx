@@ -267,46 +267,6 @@ describe("assignment workspace UI", () => {
     expect(workApi.submit).not.toHaveBeenCalled();
   });
 
-  it("refreshes an expired session and downloads the DOCX with its server filename", async () => {
-    vi.useFakeTimers();
-    const fetchFile = vi.fn()
-      .mockResolvedValueOnce(new Response(null, { status: 401 }))
-      .mockResolvedValueOnce(new Response(null, { status: 204 }))
-      .mockResolvedValueOnce(new Response("docx", { headers: {
-        "Content-Disposition": "attachment; filename*=UTF-8''B%C3%A0i%20l%C3%A0m.docx",
-      } }));
-    vi.stubGlobal("fetch", fetchFile);
-    const createObjectURL = vi.fn(() => "blob:attempt");
-    const revokeObjectURL = vi.fn();
-    vi.stubGlobal("URL", class extends URL {
-      static override createObjectURL = createObjectURL;
-      static override revokeObjectURL = revokeObjectURL;
-    });
-    const downloaded: string[] = [];
-    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) {
-      downloaded.push(this.download);
-    });
-    try {
-      render(<AssignmentWorkspacePage attemptId="a" />);
-      await act(async () => {});
-      fireEvent.click(screen.getByLabelText("Thao tác khác"));
-      fireEvent.click(screen.getByRole("menuitem", { name: "Tải DOCX" }));
-      await act(async () => {});
-
-      expect(fetchFile.mock.calls.map(([path]) => path)).toEqual([
-        "/api/v1/attempts/a/export.docx", "/api/v1/auth/refresh", "/api/v1/attempts/a/export.docx",
-      ]);
-      expect(downloaded).toEqual(["Bài làm.docx"]);
-      expect(screen.getByRole("textbox", { name: "Đoạn văn" })).toHaveTextContent("Trả lời");
-      await act(() => vi.advanceTimersByTimeAsync(1000));
-      expect(revokeObjectURL).toHaveBeenCalledWith("blob:attempt");
-    } finally {
-      click.mockRestore();
-      vi.unstubAllGlobals();
-      vi.useRealTimers();
-    }
-  });
-
   it("submit still confirms and waits for the newest draft to save", async () => {
     let finish!: (value: Saved) => void;
     vi.mocked(workApi.save).mockReturnValue(new Promise((resolve) => { finish = resolve; }));

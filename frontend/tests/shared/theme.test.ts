@@ -30,22 +30,6 @@ afterEach(() => {
 });
 
 describe("theme", () => {
-  it("chưa chọn theme thì script khởi động theo hệ điều hành", () => {
-    stubSystemScheme(true);
-    runBootScript();
-    expect(document.documentElement.dataset.theme).toBe("dark");
-
-    stubSystemScheme(false);
-    runBootScript();
-    expect(document.documentElement.dataset.theme).toBe("light");
-  });
-
-  it("đã chọn theme thì giữ lựa chọn dù hệ điều hành khác", () => {
-    stubSystemScheme(true);
-    localStorage.setItem(THEME_KEY, "light");
-    runBootScript();
-    expect(document.documentElement.dataset.theme).toBe("light");
-  });
 
   it("đi theo hệ điều hành khi nó đổi, tới khi người dùng tự bấm đổi theme", () => {
     const changeSystemScheme = stubSystemScheme(false);

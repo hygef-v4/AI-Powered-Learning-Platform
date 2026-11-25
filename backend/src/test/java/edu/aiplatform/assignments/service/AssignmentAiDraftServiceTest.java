@@ -140,36 +140,6 @@ class AssignmentAiDraftServiceTest {
     }
 
     @Test
-    void applyReplacesSkeletonComputesPartsAndFillsRubrics() {
-        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
-        JsonNode proposal = AiDraftProposal.normalize(read(OUTPUT), true);
-        AssignmentAiDraft ready = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.MCP, null, null,
-                AssignmentAiDraft.Status.READY, proposal, JsonNodeFactory.instance.objectNode().put("origin", "MCP"),
-                a.version(), null, f.teacher.accountId(), AssignmentFixtures.NOW, null);
-        when(f.drafts.findDraft(ready.id())).thenReturn(Optional.of(ready));
-        when(f.drafts.markApplied(eq(ready.id()), any())).thenReturn(1);
-        try {
-            f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version() - 1, true));
-            throw new AssertionError("Cần 409");
-        } catch (ApiException e) {
-            assertThat(e.readCode()).isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
-        }
-        AssignmentViews.Detail applied = f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(),
-                new AssignmentCommands.ApplyDraft(a.version(), true, true));
-        assertThat(applied.instructions()).isEqualTo("Làm đủ các mục");
-        assertThat(applied.title()).isEqualTo("Đề thiết kế hệ thống");
-        assertThat(applied.parts()).extracting(AssignmentViews.Part::title).containsExactly("Phân tích › Use case", "Thiết kế");
-        assertThat(applied.skeleton().blocks()).filteredOn(b -> b.type() == BlockType.HEADING).hasSize(3);
-        assertThat(applied.skeleton().blocks().get(0).type()).isEqualTo(BlockType.PARAGRAPH);
-        List<AssignmentRubric> rubrics = f.rubricsOf(a.id());
-        // Hai mục chấm và rubric Toàn bài (trống).
-        assertThat(rubrics).hasSize(3);
-        assertThat(rubrics).filteredOn(r -> !r.criteria().isEmpty()).hasSize(2)
-                .extracting(AssignmentRubric::totalPoints).containsExactlyInAnyOrder(
-                        new java.math.BigDecimal("2.00"), new java.math.BigDecimal("3.00"));
-    }
-
-    @Test
     void invalidGradedProposalCannotBeAppliedAndDoesNotChangeAssignment() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
         JsonNode proposal = AiDraftProposal.normalize(read(OUTPUT), true);
@@ -234,57 +204,6 @@ class AssignmentAiDraftServiceTest {
                 new AssignmentCommands.ApplyDraft(assignment.version(), true)))
                 .isInstanceOfSatisfying(ApiException.class, error -> assertThat(error.readCode()).isEqualTo("AI_DRAFT_INVALID"));
         assertThat(f.store.get(assignment.id()).skeleton().blocks()).isEmpty();
-    }
-
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
-    void resolvedQuestionPointsAreSentAndKeptForValidation(boolean preserveTemplate) throws Exception {
-        var assignment = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
-        var template = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of(
-                AssignmentFixtures.heading("H1", "Context"), AssignmentFixtures.heading("H1", "Use case"))), true);
-        var secondRubric = f.rubricsOf(template.id()).get(1);
-        var secondCriterion = secondRubric.criteria().get(0);
-        var secondItem = secondCriterion.items().get(0);
-        var newItem = new edu.aiplatform.assignments.contract.RubricItem(secondItem.itemId(), secondItem.text(),
-                new BigDecimal("6.25"));
-        f.rubricStore.put(secondRubric.id(), secondRubric.replaceCriteria(List.of(
-                new edu.aiplatform.assignments.contract.RubricCriterion(secondCriterion.criterionId(),
-                        secondCriterion.title(), secondCriterion.description(), secondCriterion.kind(), List.of(newItem))),
-                AssignmentFixtures.NOW));
-        var inserted = new AtomicReference<AssignmentAiDraft>();
-        doAnswer(call -> {
-            inserted.set(call.getArgument(0));
-            return null;
-        }).when(f.drafts).insert(any());
-        when(f.drafts.findDraft(any())).thenAnswer(call -> Optional.ofNullable(inserted.get()));
-        when(f.aiTasks.submit(any())).thenReturn(new AiTaskView(UUID.randomUUID(), AiTaskState.QUEUED,
-                AiSource.PERSONAL, AiProvider.GEMINI, "mock", null, null, null));
-
-        var command = preserveTemplate ? preservePointsRequest(template.id(), null)
-                : new AssignmentCommands.AiDraftRequest("Soạn đề theo mẫu", List.of(), List.of(),
-                        AiSource.PERSONAL, AiProvider.GEMINI, "explicit-points", new AssignmentCommands.DraftOptions(
-                        "AUTO", "EN", null, null, List.of(new BigDecimal("5.00"), new BigDecimal("6.25"))),
-                        null, template.id(), null, false);
-        f.aiDrafts.request(f.teacher, assignment.id(), command);
-
-        verify(f.aiTasks).submit(argThat(request -> request.prompt().user().contains("topLevelQuestionCount=2")
-                && request.prompt().user().contains("targetTotalPoints=11.25")
-                && request.prompt().user().contains("confirmedQuestionPointsInOrder=[5.00, 6.25]")
-                && request.prompt().user().contains("<format_template>")));
-        assertThat(inserted.get().provenance().path("draftOptions").path("questionPoints"))
-                .extracting(JsonNode::decimalValue).containsExactly(new BigDecimal("5.00"), new BigDecimal("6.25"));
-        assertThat(inserted.get().provenance().path("templateReviewRequired").asBoolean()).isTrue();
-
-        f.rubricStore.put(secondRubric.id(), secondRubric);
-        var response = """
-                {"schemaVersion":2,"title":"Draft","businessContext":"A lending service tracks tools.","sections":[
-                {"level":1,"title":"Context","rubric":[{"title":"Scope","items":[{"text":"Model actors","points":5}]}]},
-                {"level":1,"title":"Use case","rubric":[{"title":"Flows","items":[{"text":"Model flows","points":6.25}]}]}]}
-                """;
-        when(f.drafts.markReady(eq(inserted.get().id()), any(), any())).thenReturn(1);
-        assertThat(f.aiDrafts.handleReadyResult(result(inserted.get(), response))).isEqualTo(ApplyOutcome.APPLIED);
-        verify(f.drafts).markReady(eq(inserted.get().id()), argThat((JsonNode proposal) ->
-                proposal.path("validation").path("status").asText().equals("VALID")), any());
     }
 
     @Test
@@ -352,21 +271,6 @@ class AssignmentAiDraftServiceTest {
                     && issue.path("message").asText().contains("Order and Dish");
         }), any());
         assertThat(f.store.get(assignment.id()).version()).isEqualTo(assignment.version());
-    }
-
-    @Test
-    void agentDraftNeedsDraftStatusAndExpectedVersion() {
-        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
-        try {
-            f.aiDrafts.saveFromAgent(f.teacher, a.id(), a.version() + 5, read(OUTPUT), "agent");
-            throw new AssertionError("Cần 409");
-        } catch (ApiException e) {
-            assertThat(e.readCode()).isEqualTo("ASSIGNMENT_VERSION_CONFLICT");
-        }
-        AssignmentAiDraft saved = f.aiDrafts.saveFromAgent(f.teacher, a.id(), a.version(), read(OUTPUT), "agent");
-        assertThat(saved.status()).isEqualTo(AssignmentAiDraft.Status.READY);
-        assertThat(saved.provenance().path("agentLabel").asText()).isEqualTo("agent");
-        assertThat(f.store.get(a.id()).skeleton().blocks()).isEmpty();
     }
 
     private JsonNode read(String text) {

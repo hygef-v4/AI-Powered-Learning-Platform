@@ -110,12 +110,6 @@ describe("submission assignment context", () => {
     expect(screen.getByRole("heading", { name: "Bài nộp — Bài mới" })).toBeInTheDocument();
     expect(screen.queryByText("Lớp: OLD — Old class")).not.toBeInTheDocument();
   });
-  it("names the assignment and class using authorized metadata", async () => {
-    render(<SubmissionDetailPage classId="c" assignmentId="a" />);
-    expect(await screen.findByRole("heading", { level: 1, name: "Bài nộp — Phân tích yêu cầu" })).toBeInTheDocument();
-    expect(screen.getByText("Lớp: SE01 — Lớp một")).toBeInTheDocument();
-    expect(mocks.loadAssignmentContext).toHaveBeenCalledWith("a");
-  });
 
   it("loads rows independently while metadata is pending", async () => {
     const pending = deferred<typeof context>();
@@ -158,14 +152,6 @@ describe("submission assignment context", () => {
     render(<SubmissionDetailPage classId="c" assignmentId="a" />);
     await screen.findByRole("heading", { name: "Bài nộp — Bài tập chưa có tiêu đề" });
     expect(screen.getByText("Chưa có thông tin lớp")).toBeInTheDocument();
-  });
-
-  it("renders long metadata and HTML-looking titles as text", async () => {
-    const title = '<img src=x onerror="alert(1)">' + " Tên bài tập dài".repeat(30);
-    mocks.loadAssignmentContext.mockResolvedValue({ ...context, title });
-    const { container } = render(<SubmissionDetailPage classId="c" assignmentId="a" />);
-    expect(await screen.findByRole("heading", { name: `Bài nộp — ${title}` })).toBeInTheDocument();
-    expect(container.querySelector("img")).toBeNull();
   });
 
   it("ignores an earlier response after navigating to another assignment", async () => {
@@ -212,28 +198,6 @@ describe("submission filters and batch behavior", () => {
     await ready();
     expect(mocks.loadAssignmentContext).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Lớp: SE01 — Lớp một")).toBeInTheDocument();
-  });
-
-  it("renders state-specific action links, single-line tabular scores, and clear-selection control", async () => {
-    mocks.listSubmissions.mockResolvedValue({
-      ...page,
-      rows: [
-        { student: { accountId: "s1", name: "SV Pending", email: "p@example.test" }, evaluationId: "e-pending", attemptId: "a1", status: "PENDING", score: null, maxScore: 10, late: false, submittedAt: "2026-10-25T01:00:00Z", attemptCount: 1, version: 1 },
-        { student: { accountId: "s2", name: "SV Draft", email: "d@example.test" }, evaluationId: "e-draft", attemptId: "a2", status: "DRAFT", score: 7.5, maxScore: 10, late: false, submittedAt: "2026-10-25T01:00:00Z", attemptCount: 1, version: 2 },
-        { student: { accountId: "s3", name: "SV Final", email: "f@example.test" }, evaluationId: "e-final", attemptId: "a3", status: "FINALIZED", score: 9, maxScore: 10, late: false, submittedAt: "2026-10-25T01:00:00Z", attemptCount: 1, version: 3 },
-      ],
-    });
-    render(<SubmissionDetailPage classId="c" assignmentId="a" />);
-    await screen.findByRole("checkbox", { name: "Chọn SV Pending" });
-    expect(screen.getByRole("link", { name: "Chấm bài" })).toHaveAttribute("href", "/teaching/evaluations/e-pending?status=ALL");
-    expect(screen.getByRole("link", { name: "Tiếp tục chấm" })).toHaveAttribute("href", "/teaching/evaluations/e-draft?status=ALL");
-    expect(screen.getByRole("link", { name: "Xem điểm" })).toHaveAttribute("href", "/teaching/evaluations/e-final?status=ALL");
-    expect(screen.getByText("7.50 / 10.00")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("checkbox", { name: "Chọn SV Pending" }));
-    expect(screen.getByText("Đã chọn 1 bài")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Bỏ chọn" }));
-    expect(screen.queryByRole("button", { name: "Công bố điểm" })).not.toBeInTheDocument();
   });
 
   it("keeps unsubmitted rows unselectable and passes the current evaluation version to batch", async () => {

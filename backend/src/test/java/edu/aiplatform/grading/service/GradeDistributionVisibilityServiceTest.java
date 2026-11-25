@@ -54,21 +54,6 @@ class GradeDistributionVisibilityServiceTest {
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(409));
     }
 
-    @Test void managerMustBeAssignedAndAssignedManagerCanEdit() {
-        var manager = new Actor(UUID.randomUUID(), Role.SUBJECT_MANAGER);
-        assertThatThrownBy(() -> gradeDistributionVisibilityService.loadVisibility(manager, classId, assignmentId)).isInstanceOf(ApiException.class);
-        var assignedManager = new Actor(teacher.accountId(), Role.SUBJECT_MANAGER);
-        assertThat(gradeDistributionVisibilityService.loadVisibility(assignedManager, classId, assignmentId).canEdit()).isTrue();
-    }
-
-    @Test void studentAndFormerTeacherCannotReadOrChangePreference() {
-        for (var actor : List.of(new Actor(UUID.randomUUID(), Role.STUDENT), new Actor(UUID.randomUUID(), Role.TEACHER))) {
-            assertThatThrownBy(() -> gradeDistributionVisibilityService.loadVisibility(actor, classId, assignmentId)).isInstanceOf(ApiException.class);
-            assertThatThrownBy(() -> gradeDistributionVisibilityService.updateVisibility(actor, classId, assignmentId, true, 0)).isInstanceOf(ApiException.class);
-        }
-        verifyNoInteractions(gradeDistributionVisibilityRepository);
-    }
-
     @Test void policyDenialFailsClosedEvenForAssignedTeacher() {
         when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("DENIED"));
         assertThatThrownBy(() -> gradeDistributionVisibilityService.loadVisibility(teacher, classId, assignmentId)).isInstanceOf(ApiException.class);

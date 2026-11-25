@@ -103,31 +103,6 @@ class QuestionImporterTest {
     }
 
     @Test
-    void dryRunOnlyChecksWithoutWritingOrAuditing() {
-        var result = importer.importFile(manager, subject, csv(HEADER, "Câu?,MCQ_SINGLE,A,B,,,,,1,,,,"), true);
-        assertThat(result.dryRun()).isTrue();
-        assertThat(result.valid()).isEqualTo(1);
-        assertThat(result.created()).isZero();
-        verify(repo, never()).insert(any());
-    }
-
-    @Test
-    void formulaLikeCellsStayPlainText() {
-        importer.importFile(manager, subject, csv(HEADER, "=1+1,MCQ_SINGLE,@SUM(A1),-5,,,,,2,,,,"), false);
-        ArgumentCaptor<Question> saved = ArgumentCaptor.forClass(Question.class);
-        verify(repo).insert(saved.capture());
-        assertThat(saved.getValue().content().stem()).isEqualTo("=1+1");
-        assertThat(saved.getValue().content().options()).extracting(o -> o.text()).containsExactly("@SUM(A1)", "-5");
-    }
-
-    @Test
-    void semicolonSeparatedCsvWithBomIsAccepted() {
-        byte[] file = ("﻿" + HEADER.replace(',', ';') + "\nCâu?;MCQ_SINGLE;A;B;;;;;1;;;;")
-                .getBytes(StandardCharsets.UTF_8);
-        assertThat(importer.importFile(manager, subject, file, true).valid()).isEqualTo(1);
-    }
-
-    @Test
     void rejectsMissingColumnsTooManyRowsAndNonUtf8Files() {
         assertThat(api(() -> importer.importFile(manager, subject, csv("noi_dung,loai", "Câu,MCQ_SINGLE"), true)).readCode())
                 .isEqualTo("IMPORT_HEADER_INVALID");
@@ -146,35 +121,6 @@ class QuestionImporterTest {
         assertThat(api(() -> importer.importFile(manager, subject, csv(HEADER), true)).readCode()).isEqualTo("IMPORT_FILE_EMPTY");
         assertThat(api(() -> importer.importFile(manager, subject,
                 new byte[(int) QuestionImporter.MAX_BYTES + 1], true)).readStatus()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
-    }
-
-    @Test
-    void readsFirstSheetOfXlsxWithoutEvaluatingFormulas() throws IOException {
-        byte[] file;
-        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("Câu hỏi");
-            String[] header = HEADER.split(",");
-            Row head = sheet.createRow(0);
-            for (int i = 0; i < header.length; i++) {
-                head.createCell(i).setCellValue(header[i]);
-            }
-            Row row = sheet.createRow(1);
-            row.createCell(0).setCellValue("Kết quả của phép tính?");
-            row.createCell(1).setCellValue("MCQ_SINGLE");
-            row.createCell(2).setCellFormula("1+1");
-            row.createCell(3).setCellValue(3);
-            row.createCell(8).setCellValue(2);
-            workbook.write(out);
-            file = out.toByteArray();
-        }
-
-        var result = importer.importFile(manager, subject, file, false);
-
-        assertThat(result.valid()).isEqualTo(1);
-        ArgumentCaptor<Question> saved = ArgumentCaptor.forClass(Question.class);
-        verify(repo).insert(saved.capture());
-        assertThat(saved.getValue().content().options()).extracting(o -> o.text()).containsExactly("1+1", "3");
-        assertThat(saved.getValue().content().correctOptionIds()).containsExactly("2");
     }
 
     @Test

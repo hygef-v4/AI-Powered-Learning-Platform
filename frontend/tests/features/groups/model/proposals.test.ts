@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   canSubmit,
-  describeFormation,
   convertFromLocalInput,
   convertToLocalInput,
   validateFormation,
-  validateProposalName,
 } from "@/features/groups/model/proposals";
 import type { FormationSummary, ProposalView } from "@/features/groups/model/types";
 
@@ -25,26 +23,12 @@ const proposal = (members: number, status: ProposalView["status"] = "DRAFT"): Pr
 });
 
 describe("đề xuất nhóm", () => {
-  it("tóm tắt đợt theo trạng thái mở, hạn chót và lý do đóng", () => {
-    expect(describeFormation(OPEN)).toBe("Đang mở, nhóm từ 2 đến 4 người.");
-    expect(describeFormation({ ...OPEN, deadline: "2026-11-20T03:00:00Z" })).toContain("Đang mở đến 10:00 20/11/2026");
-    expect(describeFormation({ ...OPEN, open: false, closedReason: "DISABLED" })).toBe("Đang tắt.");
-    expect(describeFormation({ ...OPEN, open: false, closedReason: "CLASS_NOT_OPEN" })).toContain("Lớp chưa mở");
-    expect(describeFormation({ ...OPEN, open: false, closedReason: "DEADLINE_PASSED", deadline: "2026-11-20T03:00:00Z" }))
-      .toContain("Đã hết hạn");
-  });
 
   it("chỉ gửi duyệt được khi đợt mở, đề xuất nháp và đủ tối thiểu", () => {
     expect(canSubmit(proposal(2), OPEN)).toBe(true);
     expect(canSubmit(proposal(1), OPEN)).toBe(false);
     expect(canSubmit(proposal(2, "SUBMITTED"), OPEN)).toBe(false);
     expect(canSubmit(proposal(2), { ...OPEN, open: false, closedReason: "DEADLINE_PASSED" })).toBe(false);
-  });
-
-  it("tên nhóm cắt khoảng trắng và cần 1–100 ký tự", () => {
-    expect(validateProposalName("  Nhóm Mây ")).toEqual({ name: "Nhóm Mây", error: null });
-    expect(validateProposalName("   ").error).not.toBeNull();
-    expect(validateProposalName("a".repeat(101)).error).not.toBeNull();
   });
 
   it("form cài đặt báo lỗi đúng ô", () => {

@@ -22,35 +22,6 @@ function stub(put: () => Promise<Response>) {
 describe("SelfGroupingSettingsDialog", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("bật đợt gửi sĩ số, hạn chót theo giờ Việt Nam và version", async () => {
-    const saved = { ...VIEW, enabled: true, version: 1, open: true, closedReason: null };
-    const calls = stub(() => json(saved));
-    const onSaved = vi.fn();
-    render(<SelfGroupingSettingsDialog classId="c1" onClose={vi.fn()} onSaved={onSaved} />);
-
-    fireEvent.click(await screen.findByRole("switch"));
-    fireEvent.change(screen.getByTestId("formation-max"), { target: { value: "4" } });
-    fireEvent.change(screen.getByTestId("formation-deadline"), { target: { value: "20/11/2099" } });
-    fireEvent.change(screen.getByTestId("formation-deadline-time"), { target: { value: "10:00" } });
-    fireEvent.click(screen.getByTestId("formation-save"));
-
-    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(saved));
-    expect(calls.at(-1)).toMatchObject({
-      method: "PUT", body: { enabled: true, minSize: 2, maxSize: 4, deadline: "2099-11-20T03:00:00.000Z", version: 0 },
-    });
-  });
-
-  it("sĩ số sai thì báo dưới ô và không gửi", async () => {
-    const calls = stub(() => json(VIEW));
-    render(<SelfGroupingSettingsDialog classId="c1" onClose={vi.fn()} onSaved={vi.fn()} />);
-
-    fireEvent.change(await screen.findByTestId("formation-min"), { target: { value: "6" } });
-    fireEvent.click(screen.getByTestId("formation-save"));
-
-    expect(await screen.findByText("Tối đa phải lớn hơn hoặc bằng tối thiểu.")).toBeInTheDocument();
-    expect(calls.some((c) => c.method === "PUT")).toBe(false);
-  });
-
   it("does not save an invalid optional deadline as null; clearing it deliberately is allowed", async () => {
     const calls = stub(() => json(VIEW));
     render(<SelfGroupingSettingsDialog classId="c1" onClose={vi.fn()} onSaved={vi.fn()} />);

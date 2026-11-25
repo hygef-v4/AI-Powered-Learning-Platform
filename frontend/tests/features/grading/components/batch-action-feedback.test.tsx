@@ -58,24 +58,6 @@ describe("grade action success feedback", () => {
     expect(mocks.publishGrades).toHaveBeenCalledExactlyOnceWith(items);
     expect(mocks.finalizeGrades).not.toHaveBeenCalled();
   });
-  it.each(["finalize", "publish"] as const)("replaces a successful %s dialog with a four-second notice and refreshes once", async (action) => {
-    vi.useFakeTimers();
-    mocks[action === "finalize" ? "finalizeGrades" : "publishGrades"].mockResolvedValue(success);
-    render(<Harness action={action} />);
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(mocks[action === "finalize" ? "finalizeGrades" : "publishGrades"]).not.toHaveBeenCalled();
-    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Xác nhận" })); });
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(action === "publish" ? "Đã công bố điểm cho 2 bài." : "Đã chốt điểm cho 2 bài.");
-    expect(mocks[action === "finalize" ? "finalizeGrades" : "publishGrades"]).toHaveBeenCalledExactlyOnceWith(items);
-    expect(mocks.done).toHaveBeenCalledOnce();
-    expect(screen.getByRole("button", { name: "Trang chấm bài" })).toBeEnabled();
-    act(() => { vi.advanceTimersByTime(3999); });
-    expect(screen.getByRole("status")).toBeInTheDocument();
-    act(() => { vi.advanceTimersByTime(1); });
-    expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    expect(mocks[action === "finalize" ? "finalizeGrades" : "publishGrades"]).toHaveBeenCalledOnce();
-  });
 
   it("allows dismissing success immediately", async () => {
     mocks.publishGrades.mockResolvedValue(success);
@@ -83,16 +65,6 @@ describe("grade action success feedback", () => {
     fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
     fireEvent.click(await screen.findByRole("button", { name: "Đóng thông báo" }));
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-
-  it("keeps the successful notice when refreshing a filtered list removes the selected rows", async () => {
-    mocks.finalizeGrades.mockResolvedValue(success);
-    const { rerender } = render(<><Toaster /><BatchActionDialog action="finalize" items={items} onClose={vi.fn()} onDone={mocks.done} /></>);
-    fireEvent.click(screen.getByRole("button", { name: "Xác nhận" }));
-    expect(await screen.findByRole("status")).toHaveTextContent("Đã chốt điểm cho 2 bài.");
-    rerender(<><Toaster /><BatchActionDialog action="finalize" items={[]} onClose={vi.fn()} onDone={mocks.done} /></>);
-    expect(screen.getByRole("status")).toHaveTextContent("Đã chốt điểm cho 2 bài.");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 

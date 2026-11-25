@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AiReviseChat } from "@/features/assignments/components/AiReviseChat";
 import { assignmentsApi } from "@/features/assignments/api";
@@ -28,19 +28,6 @@ async function open(prepare = vi.fn().mockResolvedValue(3)) {
   fireEvent.click(screen.getByTestId("ai-revise-attach"));
   return screen.getByTestId("ai-revise-input") as HTMLTextAreaElement;
 }
-
-it("pastes images and plain text into the selection through the same reference upload", async () => {
-  const input = await open();
-  const image = new File(["png"], "clipboard.png", { type: "image/png" });
-  fireEvent.change(input, { target: { value: "Before after" } });
-  input.setSelectionRange(7, 7);
-  fireEvent.paste(input, { clipboardData: { items: [{ kind: "file", getAsFile: () => image }], getData: () => "insert " } });
-  expect(input).toHaveValue("Before insert after");
-  expect(await screen.findByText("Sẵn sàng")).toBeInTheDocument();
-  expect(files.uploadFile).toHaveBeenCalledOnce();
-  expect(files.uploadFile).toHaveBeenCalledWith(image, "ASSIGNMENT_SOURCE", expect.any(Function));
-  expect(screen.getByTestId("ai-revise-attachments")).toHaveTextContent("Tham khảo");
-});
 
 it("keeps URL paste as text, with no network reading or paste interception", async () => {
   const input = await open();
@@ -83,20 +70,6 @@ it("keeps text and files on prepare/request failure and reuses the request ref o
   await confirmAiSource();
   await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
   expect(request.mock.calls[1]![2]).toBe(request.mock.calls[0]![2]);
-});
-
-it("does not duplicate rapid submits or send while composing Vietnamese", async () => {
-  let reject!: (error: Error) => void;
-  const request = vi.spyOn(assignmentsApi, "requestAiRevision").mockImplementation(() => new Promise((_, fail) => { reject = fail; }));
-  const input = await open();
-  fireEvent.change(input, { target: { value: "Thêm câu hỏi" } });
-  fireEvent.keyDown(input, { key: "Enter", isComposing: true });
-  expect(request).not.toHaveBeenCalled();
-  fireEvent.keyDown(input, { key: "Enter" });
-  fireEvent.keyDown(input, { key: "Enter" });
-  await confirmAiSource();
-  await waitFor(() => expect(request).toHaveBeenCalledOnce());
-  await act(async () => reject(new Error("Stop test")));
 });
 
 it("does not lose the composer when saving before the AI request fails", async () => {

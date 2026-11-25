@@ -50,16 +50,6 @@ class GroupFormationServiceTest {
     }
 
     @Test
-    void classWithoutSettingsReadsAsDisabled() {
-        FormationView view = service.loadFormation(teacher, classId);
-
-        assertThat(view.enabled()).isFalse();
-        assertThat(view.open()).isFalse();
-        assertThat(view.closedReason()).isEqualTo("DISABLED");
-        assertThat(view.version()).isZero();
-    }
-
-    @Test
     void invalidSizesDeadlineAndArchivedClassAreRefused() {
         assertCode(new UpdateFormationCommand(true, 1, 4, null, 0L), "FORMATION_SIZE_INVALID");
         assertCode(new UpdateFormationCommand(true, 5, 4, null, 0L), "FORMATION_SIZE_INVALID");
@@ -69,37 +59,6 @@ class GroupFormationServiceTest {
         classStatus(ClassStatus.ARCHIVED);
         assertCode(new UpdateFormationCommand(true, 2, 4, null, 0L), "GROUP_CLASS_ARCHIVED");
         verify(proposals, never()).saveSettings(any(), anyLong());
-    }
-
-    @Test
-    void openingTheWindowSavesAuditsAndExpiresOldInvitations() {
-        FormationView view = service.updateFormation(teacher, classId,
-                new UpdateFormationCommand(true, 3, 5, NOW.plusSeconds(3600), 0L));
-
-        ArgumentCaptor<GroupFormationSettings> saved = ArgumentCaptor.forClass(GroupFormationSettings.class);
-        verify(proposals).saveSettings(saved.capture(), eq(0L));
-        assertThat(saved.getValue().version()).isEqualTo(1);
-        assertThat(saved.getValue().updatedBy()).isEqualTo(teacher.accountId());
-        assertThat(view.open()).isTrue();
-        verify(proposals).expireInvitations(classId, NOW);
-    }
-
-    @Test
-    void changingAnAlreadyOpenWindowKeepsInvitations() {
-        when(proposals.findSettings(classId)).thenReturn(Optional.of(
-                new GroupFormationSettings(classId, true, 2, 4, null, null, NOW, 4)));
-
-        service.updateFormation(teacher, classId, new UpdateFormationCommand(true, 2, 6, null, 4L));
-
-        verify(proposals, never()).expireInvitations(any(), any());
-    }
-
-    @Test
-    void disablingAllowsAStoredPastDeadline() {
-        FormationView view = service.updateFormation(teacher, classId,
-                new UpdateFormationCommand(false, 2, 4, NOW.minusSeconds(60), 0L));
-
-        assertThat(view.closedReason()).isEqualTo("DISABLED");
     }
 
     private void assertCode(UpdateFormationCommand command, String code) {

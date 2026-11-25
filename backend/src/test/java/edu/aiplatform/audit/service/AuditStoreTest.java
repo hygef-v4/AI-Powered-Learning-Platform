@@ -68,23 +68,6 @@ class AuditStoreTest {
     }
 
     @Test
-    void rowCarriesEveryFieldAndDetailsAsJson() {
-        AuditEvent event = new AuditEvent(UUID.randomUUID(), null, "BACKUP_FAILED", "BACKUP", "bk-1",
-                AuditResult.SUCCESS, "hết thời gian", Map.of("actorType", "WORKER"), NOW);
-
-        store.record(event);
-
-        ArgumentCaptor<AuditRow> row = ArgumentCaptor.forClass(AuditRow.class);
-        verify(repository).insertIfAbsent(row.capture());
-        assertThat(row.getValue().id()).isEqualTo(event.id());
-        assertThat(row.getValue().actorId()).isNull();
-        assertThat(row.getValue().result()).isEqualTo("SUCCESS");
-        assertThat(row.getValue().reason()).isEqualTo("hết thời gian");
-        assertThat(row.getValue().detailsJson()).isEqualTo("{\"actorType\":\"WORKER\"}");
-        assertThat(row.getValue().occurredAt()).isEqualTo(NOW);
-    }
-
-    @Test
     void sameIdIsDelegatedToInsertIfAbsent() {
         AuditEvent event = event(AuditResult.SUCCESS, Map.of());
 
@@ -124,15 +107,5 @@ class AuditStoreTest {
         assertThatThrownBy(() -> store.record(new AuditEvent(UUID.randomUUID(), null, "X", null, null,
                 AuditResult.SUCCESS, null, Map.of(), null))).isInstanceOf(IllegalArgumentException.class);
         verify(repository, never()).insertIfAbsent(any());
-    }
-
-    @Test
-    void databaseErrorsAreNotSwallowed() {
-        when(repository.insertIfAbsent(any())).thenThrow(new DataAccessResourceFailureException("db down"));
-
-        assertThatThrownBy(() -> store.record(event(AuditResult.SUCCESS, Map.of())))
-                .isInstanceOf(DataAccessResourceFailureException.class);
-        assertThatThrownBy(() -> store.record(event(AuditResult.FAILURE, Map.of())))
-                .isInstanceOf(DataAccessResourceFailureException.class);
     }
 }

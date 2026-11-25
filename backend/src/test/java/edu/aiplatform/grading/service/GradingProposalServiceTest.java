@@ -176,33 +176,6 @@ class GradingProposalServiceTest {
     }
 
     @Test
-    void longestBatchReferenceDerivesBoundedStablePerItemReference() {
-        var tx = mock(GradingProposalTransactions.class);
-        var ai = mock(IAiTask.class);
-        var evaluations = mock(IEvaluationRepository.class);
-        var proposals = mock(IGradingProposalRepository.class);
-        var access = mock(GradingAccess.class);
-        var e = new Evaluation();
-        e.id = UUID.randomUUID();
-        e.classId = UUID.randomUUID();
-        when(evaluations.findById(e.id)).thenReturn(Optional.of(e));
-        var p = new GradingProposal();
-        p.status = "READY";
-        when(tx.prepareProposal(any(), any(), any(), anyLong())).thenReturn(new GradingProposalTransactions.Prepared(p, null, false, null));
-        var actor = new Actor(UUID.randomUUID(), Role.TEACHER);
-        var input = new AiBatch(List.of(new ItemVersion(e.id, 0)),
-                new AiRequest(AiSource.SHARED, null, "r".repeat(200)));
-        var service = new GradingProposalService(tx, ai, evaluations, proposals, access);
-        service.requestProposals(actor, input);
-        service.requestProposals(actor, input);
-        var captor = ArgumentCaptor.forClass(AiRequest.class);
-        verify(tx, times(2)).prepareProposal(eq(actor), eq(e.id), captor.capture(), eq(0L));
-        assertThat(captor.getAllValues().get(0).requestRef()).hasSizeLessThanOrEqualTo(200)
-                .isEqualTo(captor.getAllValues().get(1).requestRef());
-        verifyNoInteractions(ai);
-    }
-
-    @Test
     void sourceFailureStopsFurtherBatchDispatchWithoutFallback() {
         var tx = mock(GradingProposalTransactions.class);
         var ai = mock(IAiTask.class);

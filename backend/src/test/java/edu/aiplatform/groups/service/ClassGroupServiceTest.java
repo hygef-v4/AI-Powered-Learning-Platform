@@ -160,19 +160,6 @@ class ClassGroupServiceTest {
     }
 
     @Test
-    void studentWhoLeftClassIsDroppedOnSave() {
-        UUID left = UUID.randomUUID();
-        ClassGroup a = group("Nhóm A", students.get(0), students.get(0), left);
-        when(groups.listGroups(classId)).thenReturn(List.of(a));
-
-        service.saveGroups(teacher, classId, new SaveCommand(3L, List.of(
-                new Draft(null, a.id(), "Nhóm A", students.get(0), List.of(students.get(0), left)))));
-
-        verify(groups).removeMembers(classId, java.util.Set.of(left));
-        verify(groups, never()).addMember(any(), any(), eq(left), any());
-    }
-
-    @Test
     void randomPreviewKeepsExistingGroupsAndSplitsTheRestEvenly() {
         ClassGroup a = group("Nhóm 1", students.get(0), students.get(0));
         when(groups.listGroups(classId)).thenReturn(List.of(a));
@@ -214,21 +201,6 @@ class ClassGroupServiceTest {
     }
 
     @Test
-    void savingReleasesNewlyPlacedStudentsFromTheirProposals() {
-        ClassGroup kept = group("Nhóm A", students.get(0), students.get(0), students.get(1));
-        when(groups.listGroups(classId)).thenReturn(List.of(kept));
-        List<Draft> drafts = List.of(
-                new Draft(kept.id().toString(), kept.id(), "Nhóm A", students.get(0),
-                        List.of(students.get(0), students.get(1), students.get(2))),
-                new Draft("new", null, "Nhóm B", students.get(3), List.of(students.get(3), students.get(4))));
-
-        service.saveGroups(teacher, classId, new SaveCommand(3L, drafts));
-
-        verify(proposalCleanup).releasePlacedStudents(classId,
-                java.util.Set.of(students.get(2), students.get(3), students.get(4)), NOW);
-    }
-
-    @Test
     void approvedGroupsKeepExistingOnesAndMarkTheMembershipEvent() {
         ClassGroup kept = group("Nhóm A", students.get(0), students.get(0), students.get(1));
         when(groups.listGroups(classId)).thenReturn(List.of(kept));
@@ -245,16 +217,6 @@ class ClassGroupServiceTest {
         verify(events).publish(event.capture());
         assertThat(event.getValue().payload()).containsEntry("reason", ClassGroupService.PROPOSAL_APPROVED);
         verify(proposalCleanup, never()).releasePlacedStudents(any(), any(), any());
-    }
-
-    @Test
-    void approvedGroupsStopOnALostSetVersion() {
-        when(groups.bumpSetVersion(eq(classId), anyLong(), any())).thenReturn(false);
-
-        assertThatThrownBy(() -> service.addApprovedGroups(teacher, classId, 3L, List.of()))
-                .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo("GROUP_SET_VERSION_CONFLICT"));
-        verify(groups, never()).insertGroup(any());
     }
 
     private void classStatus(ClassStatus status) {

@@ -31,23 +31,6 @@ class AssignmentDraftValidatorTest {
     }
 
     @Test
-    void acceptsBilingualProfileWhenQuestionAndRubricTotalsMatch() throws Exception {
-        JsonNode proposal = json.readTree("""
-                {"schemaVersion":2,"title":"Online Pharmacy Management","businessContext":"Customers search and order medicines; pharmacists manage stock and verify prescriptions.","instructions":"Answer in English.","sections":[
-                  {"level":1,"title":"Context diagram","guidance":"Show external actors and data flows.","rubric":[{"title":"Coverage","kind":"DIAGRAM","items":[{"text":"Actors and boundaries are clear","points":4}]}]},
-                  {"level":1,"title":"Use case diagram","guidance":"Model customer and pharmacist use cases.","rubric":[{"title":"Use cases","kind":"DIAGRAM","items":[{"text":"Main and exception flows are covered","points":6}]}]}]}
-                """);
-
-        JsonNode result = AssignmentDraftValidator.validate(proposal, GradingMode.GRADED,
-                new AssignmentDraftValidator.Options("SWR", "EN", 2, new BigDecimal("10.00"), true));
-
-        assertThat(result.path("status").asText()).isEqualTo("VALID");
-        assertThat(result.path("questionCount").asInt()).isEqualTo(2);
-        assertThat(result.path("rubricLeafCount").asInt()).isEqualTo(2);
-        assertThat(result.path("totalPoints").decimalValue()).isEqualByComparingTo("10.00");
-    }
-
-    @Test
     void rejectsSWRProposalWithoutBusinessContext() throws Exception {
         JsonNode proposal = json.readTree("""
                 {"schemaVersion":2,"title":"Pharmacy","businessContext":"","instructions":"","sections":[

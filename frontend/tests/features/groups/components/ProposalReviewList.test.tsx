@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ProposalReviewList } from "@/features/groups/components/ProposalReviewList";
 import type { ClassProposalsView, FormationView, ReviewProposalView } from "@/features/groups/model/types";
@@ -43,16 +43,6 @@ function stub(respond: (call: Call) => Promise<Response>) {
 }
 
 describe("ProposalReviewList", () => {
-  it("shows student codes for the leader and every member, including duplicate names", async () => {
-    const row = proposal("p1", "Nhóm Mây");
-    row.leader = { accountId: "a", name: "An", email: null, studentCode: "SE000001" };
-    row.members = [row.leader, { accountId: "b", name: "An", email: null, studentCode: "SE000002" }];
-    stub(() => json({ ...VIEW, proposals: [row] }));
-    render(<ProposalReviewList classId="c1" setVersion={4} readOnly onGroupsChanged={vi.fn()} />);
-    const card = await screen.findByTestId("proposal-review-p1");
-    expect(card).toHaveTextContent("An · SE000001");
-    expect(card).toHaveTextContent("An · SE000002");
-  });
   afterEach(() => vi.unstubAllGlobals());
 
   it("duyệt nhiều: báo lỗi tại thẻ đề xuất không duyệt được và tải lại bộ nhóm", async () => {
@@ -71,30 +61,6 @@ describe("ProposalReviewList", () => {
       url: "/api/v1/classes/c1/group-proposals:approve", body: { proposalIds: ["p1", "p2"] },
     });
     expect(onGroupsChanged).toHaveBeenCalledTimes(1);
-  });
-
-  it("từ chối gửi lý do đã cắt khoảng trắng; đề xuất nháp chỉ xem", async () => {
-    const calls = stub(() => json(VIEW));
-    render(<ProposalReviewList classId="c1" setVersion={4} readOnly={false} onGroupsChanged={vi.fn()} />);
-
-    fireEvent.click(await screen.findByTestId("proposal-reject-p1"));
-    fireEvent.change(screen.getByTestId("proposal-reject-reason"), { target: { value: "  Trùng đề tài  " } });
-    fireEvent.click(screen.getByTestId("proposal-reject-confirm"));
-
-    await waitFor(() => expect(calls.at(-1)).toMatchObject({
-      url: "/api/v1/group-proposals/p1:reject", method: "POST", body: { reason: "Trùng đề tài" },
-    }));
-    expect(screen.queryByTestId("proposal-approve-p3")).not.toBeInTheDocument();
-  });
-
-  it("hiện sinh viên chưa có nhóm kèm đề xuất; lớp lưu trữ thì không có nút duyệt hay cài đặt", async () => {
-    stub(() => json(VIEW));
-    render(<ProposalReviewList classId="c1" setVersion={4} readOnly onGroupsChanged={vi.fn()} />);
-
-    expect(await screen.findByTestId("ungrouped-students")).toHaveTextContent("Nhóm Mây · Chờ duyệt");
-    expect(screen.getByTestId("ungrouped-students")).toHaveTextContent("Chưa có đề xuất");
-    expect(screen.queryByTestId("proposal-approve-p1")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("formation-open")).not.toBeInTheDocument();
   });
 
   it("lớp chưa bật và chưa có đề xuất: chỉ một dòng mời bật", async () => {

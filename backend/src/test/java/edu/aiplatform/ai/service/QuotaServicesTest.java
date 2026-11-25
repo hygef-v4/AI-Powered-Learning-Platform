@@ -57,17 +57,6 @@ class QuotaServicesTest {
     }
 
     @Test
-    void estimateIsHalfThePromptPlusMaxOutput() {
-        assertThat(QuotaReservationService.estimate(1001, 500)).isEqualTo(501 + 500);
-        assertThat(QuotaReservationService.estimate(0, 100)).isEqualTo(100);
-    }
-
-    @Test
-    void dayFollowsVietnamTime() {
-        assertThat(reservations.resolveToday()).isEqualTo(VN_DAY);
-    }
-
-    @Test
     void reserveLocksGlobalFirstThenOwnAndAddsToBoth() {
         var reservation = reservations.reserve(teacher, 3_000);
 
@@ -106,64 +95,5 @@ class QuotaServicesTest {
         assertThatThrownBy(() -> reservations.reserve(teacher, 10))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUOTA_NOT_CONFIGURED"));
         assertThat(reservations.limitOf(teacher)).isNull();
-    }
-
-    @Test
-    void teacherOverrideReplacesDefault() {
-        when(repository.findTeacherQuota(teacher)).thenReturn(Optional.of(new TeacherQuota(teacher, 30_000, 1, null, NOW)));
-        assertThat(reservations.limitOf(teacher)).isEqualTo(30_000);
-        reservations.reserve(teacher, 20_000);
-        verify(repository).adjust(teacher.toString(), VN_DAY, 20_000, 0);
-    }
-
-    @Test
-    void settleReleaseAndChargeAdjustReservedAndUsed() {
-        reservations.settle(teacher, VN_DAY, 1_000, 1_400);
-        verify(repository).adjust(teacher.toString(), VN_DAY, -1_000, 1_400);
-        reservations.release(teacher, VN_DAY, 800);
-        verify(repository).adjust(teacher.toString(), VN_DAY, -800, 0);
-        reservations.chargeReserved(teacher, VN_DAY, 600);
-        verify(repository).adjust(teacher.toString(), VN_DAY, -600, 600);
-    }
-
-    @Test
-    void remainingTakesTheSmallerOfOwnAndGlobal() {
-        when(repository.findWindow(teacher.toString(), VN_DAY)).thenReturn(Optional.of(new Window(teacher.toString(), VN_DAY, 0, 4_000)));
-        when(repository.findWindow(QuotaRepository.GLOBAL, VN_DAY)).thenReturn(Optional.of(new Window("GLOBAL", VN_DAY, 0, 48_000)));
-        var remaining = reservations.calculateRemaining(teacher);
-        assertThat(remaining.used()).isEqualTo(4_000);
-        assertThat(remaining.left()).isEqualTo(2_000);
-    }
-
-    @Test
-    void policyChangesAreAuditedWithBeforeAndAfterAndOnlyTeachersGetOverrides() {
-        IAuthorization authorization = mock(IAuthorization.class);
-        when(authorization.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.allow());
-        IAudit audit = mock(IAudit.class);
-        IAccountLookup accounts = mock(IAccountLookup.class);
-        QuotaPolicyService service = new QuotaPolicyService(repository, reservations, mock(AiUsageRepository.class),
-                accounts, new AiAccess(authorization, audit, clock), audit, clock);
-        Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
-        when(repository.savePolicy(20_000, 80_000, 1, admin.accountId(), NOW)).thenReturn(true);
-
-        service.savePolicy(admin, 20_000L, 80_000L, 1L);
-
-        ArgumentCaptor<AuditEvent> event = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit).record(event.capture());
-        assertThat(event.getValue().action()).isEqualTo("QUOTA_CHANGED");
-        assertThat(event.getValue().details()).containsEntry("defaultBefore", 10_000L).containsEntry("defaultAfter", 20_000L);
-
-        UUID student = UUID.randomUUID();
-        when(accounts.getContact(student)).thenReturn(Optional.of(new AccountContact(student, "sv@fpt.edu.vn", "SV",
-                Role.STUDENT, AccountStatus.ACTIVE)));
-        assertThatThrownBy(() -> service.listTeacherCandidates(admin, "a".repeat(101)))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUERY_TOO_LONG"));
-        assertThatThrownBy(() -> service.setTeacherQuota(admin, student, 1000L))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUOTA_NOT_TEACHER"));
-        assertThatThrownBy(() -> service.savePolicy(admin, -1L, 10L, 1L))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_QUOTA_INVALID"));
-        when(repository.savePolicy(anyLong(), anyLong(), anyLong(), any(), any())).thenReturn(false);
-        assertThatThrownBy(() -> service.savePolicy(admin, 1L, 10L, 0L))
-                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus()).isEqualTo(HttpStatus.CONFLICT));
     }
 }

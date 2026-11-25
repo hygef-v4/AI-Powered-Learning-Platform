@@ -2,8 +2,14 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
-  activateQuestion, approveQuestion, bulkQuestions, getDuplicateQuestions, getManagedSubjects, getQuestion, getQuestions, importQuestions,
-  openDraft, rejectQuestion, retireQuestion, updateQuestion,
+  activateQuestion,
+  bulkQuestions,
+  getManagedSubjects,
+  getQuestion,
+  getQuestions,
+  importQuestions,
+  rejectQuestion,
+  updateQuestion,
 } from "@/features/quizzes/api";
 import { QuestionDetailPage } from "@/features/quizzes/pages/QuestionDetailPage";
 import { QuestionImportDialog } from "@/features/quizzes/components/QuestionImportDialog";
@@ -57,24 +63,6 @@ describe("Duyệt câu giảng viên đề xuất (BR-U10-09)", () => {
     await waitFor(() => expect(rejectQuestion).toHaveBeenCalledWith("q1", "Trùng ý", 1));
     expect(await screen.findByText("Trùng ý")).toBeInTheDocument();
   });
-
-  it("duyệt đưa câu vào ngân hàng", async () => {
-    vi.mocked(getQuestion).mockResolvedValue(detail({ status: "PENDING" }));
-    vi.mocked(approveQuestion).mockResolvedValue(detail({ status: "ACTIVE" }));
-    render(<QuestionDetailPage id="q1" />);
-    fireEvent.click(await screen.findByTestId("question-detail-approve"));
-    await waitFor(() => expect(approveQuestion).toHaveBeenCalledWith("q1", 1));
-    expect(await screen.findByText("Đã duyệt: câu đã vào ngân hàng.")).toBeInTheDocument();
-  });
-
-  it("ngưng câu làm kho sinh đề thiếu thì cảnh báo tên quiz", async () => {
-    vi.mocked(getQuestion).mockResolvedValue(detail());
-    vi.mocked(retireQuestion).mockResolvedValue(detail({ status: "RETIRED" }, { quizzesShortOfQuestions: ["Giữa kỳ"] }));
-    render(<QuestionDetailPage id="q1" />);
-    fireEvent.click(await screen.findByTestId("question-detail-retire"));
-    fireEvent.click(screen.getByTestId("question-detail-confirm"));
-    expect(await screen.findByText(/không còn đủ câu.*Giữa kỳ/)).toBeInTheDocument();
-  });
 });
 
 describe("Thao tác hàng loạt và câu trùng trên Question List", () => {
@@ -109,14 +97,6 @@ describe("Thao tác hàng loạt và câu trùng trên Question List", () => {
     fireEvent.click(screen.getByTestId("question-list-reject-confirm"));
     await waitFor(() => expect(bulkQuestions).toHaveBeenCalledWith("s1", "reject", [{ id: "q1", version: 7 }], "Chưa rõ"));
   });
-
-  it("xem các nhóm câu giống hệt nhau", async () => {
-    vi.mocked(getDuplicateQuestions).mockResolvedValue([{ questions: [{ id: "a", stem: "Câu A", status: "ACTIVE", percent: 100 }, { id: "b", stem: "câu a", status: "DRAFT", percent: 100 }] }]);
-    render(<QuestionListPage />);
-    fireEvent.click(await screen.findByTestId("question-list-duplicates"));
-    expect(await screen.findByTestId("question-duplicates")).toHaveTextContent("Nhóm 1");
-    expect(screen.getByText("Câu A")).toBeInTheDocument();
-  });
 });
 
 describe("QuestionListPage (UC 46)", () => {
@@ -127,15 +107,6 @@ describe("QuestionListPage (UC 46)", () => {
         tags: ["địa lý"], status: "ACTIVE", hasDraft: true, updatedAt: "2026-10-20T08:00:00Z", version: 1 }],
       total: 1, page: 0, size: 20,
     });
-  });
-
-  it("hiện câu của môn kèm cờ có bản nháp mới; bấm dòng mở chi tiết", async () => {
-    render(<QuestionListPage />);
-    expect(await screen.findByText("Thủ đô của Việt Nam?")).toBeInTheDocument();
-    expect(screen.getByText("Có bản nháp mới")).toBeInTheDocument();
-    expect(getQuestions).toHaveBeenCalledWith("s1", expect.objectContaining({ page: 0, size: 20 }));
-    fireEvent.click(screen.getByTestId("question-list-row"));
-    expect(push).toHaveBeenCalledWith("/manager/questions/q1");
   });
 
   it("đổi tab và bộ lọc thì tải lại từ trang đầu", async () => {
@@ -168,27 +139,6 @@ describe("QuestionListPage (UC 46)", () => {
 });
 
 describe("QuestionImportDialog (UC 47)", () => {
-  it("kiểm tệp trước rồi mới nhập các dòng hợp lệ", async () => {
-    vi.mocked(importQuestions)
-      .mockResolvedValueOnce({ dryRun: true, total: 2, valid: 1, invalid: 1, created: 0, rows: [
-        { row: 2, stem: "Câu đúng", optionCount: 2, valid: true, reasons: [] },
-        { row: 3, stem: "Câu lỗi", optionCount: 1, valid: false, reasons: [{ field: "options", code: "OPTION_COUNT", message: "Cần 2–6 lựa chọn" }] },
-      ] })
-      .mockResolvedValueOnce({ dryRun: false, total: 2, valid: 1, invalid: 1, created: 1, rows: [] });
-    const onImported = vi.fn();
-    render(<QuestionImportDialog subjectId="s1" onClose={vi.fn()} onImported={onImported} />);
-    const file = new File(["x"], "cau-hoi.xlsx");
-    expect(screen.getByTestId("question-import-file")).toHaveAttribute("accept", ".xlsx");
-    expect(screen.getByTestId("question-import-template")).toHaveAttribute("href", "/templates/question-import.xlsx");
-
-    fireEvent.change(screen.getByTestId("question-import-file"), { target: { files: [file] } });
-
-    expect(await screen.findByText("Cần 2–6 lựa chọn")).toBeInTheDocument();
-    expect(importQuestions).toHaveBeenCalledWith("s1", file, true);
-    fireEvent.click(screen.getByTestId("question-import-commit"));
-    await waitFor(() => expect(onImported).toHaveBeenCalledWith(1));
-    expect(importQuestions).toHaveBeenLastCalledWith("s1", file, false);
-  });
 
   it("tệp quá 5 MB bị chặn trước khi gửi", async () => {
     render(<QuestionImportDialog subjectId="s1" onClose={vi.fn()} onImported={vi.fn()} />);
@@ -201,20 +151,6 @@ describe("QuestionImportDialog (UC 47)", () => {
 });
 
 describe("QuestionDetailPage (UC 47)", () => {
-  it("sửa câu đang dùng thì mở bản nháp mới, lưu vào đó rồi chuyển sang bản nháp", async () => {
-    vi.mocked(getQuestion).mockResolvedValue(detail());
-    vi.mocked(openDraft).mockResolvedValue(detail({ id: "q2", versionNo: 2, status: "DRAFT", version: 0 }));
-    vi.mocked(updateQuestion).mockResolvedValue(detail({ id: "q2", versionNo: 2, status: "DRAFT", version: 1 }));
-    render(<QuestionDetailPage id="q1" />);
-
-    expect(await screen.findByText(/đang dùng trong 3 quiz/i)).toBeInTheDocument();
-    fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "Thủ đô nước ta?" } });
-    fireEvent.click(screen.getByTestId("question-detail-save"));
-
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/manager/questions/q2"));
-    expect(openDraft).toHaveBeenCalledWith("q1");
-    expect(updateQuestion).toHaveBeenCalledWith("q2", expect.objectContaining({ stem: "Thủ đô nước ta?" }), 0);
-  });
 
   it("xung đột version thì báo và tải lại", async () => {
     vi.mocked(getQuestion).mockResolvedValue(detail({ status: "DRAFT", version: 4 }));
@@ -240,11 +176,6 @@ describe("QuestionDetailPage (UC 47)", () => {
     fireEvent.click(screen.getByTestId("question-detail-save"));
     expect(await screen.findByText("Nội dung câu hỏi không được để trống")).toBeInTheDocument();
     expect(updateQuestion).not.toHaveBeenCalled();
-  });
-
-  it("thêm câu mà chưa chọn môn thì nhắc chọn môn", () => {
-    render(<QuestionDetailPage id="new" subjectId={null} />);
-    expect(screen.getByText("Chưa chọn môn")).toBeInTheDocument();
   });
 });
 

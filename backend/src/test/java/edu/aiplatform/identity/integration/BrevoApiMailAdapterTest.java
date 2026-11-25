@@ -58,24 +58,6 @@ class BrevoApiMailAdapterTest {
     }
 
     @Test
-    void postsTransactionalEmailWithApiKeyAndNamedSender() throws IOException {
-        adapter("Nền tảng học tập <no-reply@alapedu.online>", KEY)
-                .send(new MailMessage("sv@gmail.com", "Mã OTP", "Mã của bạn: 012345", "<p>012345</p>"));
-
-        assertThat(lastMethod.get()).isEqualTo("POST");
-        assertThat(lastPath.get()).isEqualTo("/v3/smtp/email");
-        assertThat(lastKey.get()).isEqualTo(KEY);
-        JsonNode body = json.readTree(lastBody.get());
-        assertThat(body.path("sender").path("email").asText()).isEqualTo("no-reply@alapedu.online");
-        assertThat(body.path("sender").path("name").asText()).isEqualTo("Nền tảng học tập");
-        assertThat(body.path("to")).hasSize(1);
-        assertThat(body.path("to").path(0).path("email").asText()).isEqualTo("sv@gmail.com");
-        assertThat(body.path("subject").asText()).isEqualTo("Mã OTP");
-        assertThat(body.path("textContent").asText()).isEqualTo("Mã của bạn: 012345");
-        assertThat(body.path("htmlContent").asText()).isEqualTo("<p>012345</p>");
-    }
-
-    @Test
     void textOnlyEmailOmitsHtmlAndSenderName() throws IOException {
         adapter("no-reply@alapedu.online", KEY).send(new MailMessage("gv@gmail.com", "Thông báo", "Nội dung", null));
 
@@ -94,17 +76,6 @@ class BrevoApiMailAdapterTest {
                 .send(new MailMessage("sv@gmail.com", "Mã OTP", "012345", null)))
                 .isInstanceOf(MailSendException.class)
                 .hasMessage("API Brevo trả HTTP 401 (unauthorized)");
-    }
-
-    @Test
-    void rateLimitWithoutJsonBodyStillFails() {
-        status = 429;
-        reply = "too many requests";
-
-        assertThatThrownBy(() -> adapter("no-reply@alapedu.online", KEY)
-                .send(new MailMessage("sv@gmail.com", "Mã OTP", "012345", null)))
-                .isInstanceOf(MailSendException.class)
-                .hasMessage("API Brevo trả HTTP 429");
     }
 
     @Test

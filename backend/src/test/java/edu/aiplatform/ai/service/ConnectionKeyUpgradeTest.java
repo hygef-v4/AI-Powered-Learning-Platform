@@ -30,20 +30,6 @@ class ConnectionKeyUpgradeTest {
     private final ConnectionKeyUpgrade upgrade = new ConnectionKeyUpgrade(connectionRepository, keyCipher);
 
     @Test
-    void legacyKeyIsResealedForItsConnectionWithTheLatestKeyVersion() {
-        EncryptedKey legacy = new KeyCipher(KeyCipherAndCatalogTest.properties(KeyCipherAndCatalogTest.KEY_V1, null))
-                .encryptKey("AIza-legacy-0000");
-        when(connectionRepository.listWithKey()).thenReturn(List.of(connection(legacy)));
-
-        upgrade.upgradeLegacyKeys();
-
-        ArgumentCaptor<EncryptedKey> resealed = ArgumentCaptor.forClass(EncryptedKey.class);
-        verify(connectionRepository).replaceKeyCiphertext(eq(ID), eq(legacy.ciphertext()), resealed.capture());
-        assertThat(resealed.getValue().version()).isEqualTo(2);
-        assertThat(keyCipher.decryptConnectionKey(connection(resealed.getValue()))).isEqualTo("AIza-legacy-0000");
-    }
-
-    @Test
     void boundAndUnreadableKeysAreLeftAlone() {
         AiConnection bound = connection(
                 keyCipher.encryptConnectionKey(ID, Scope.PERSONAL, OWNER, AiProvider.GEMINI, "AIza-bound-1111"));

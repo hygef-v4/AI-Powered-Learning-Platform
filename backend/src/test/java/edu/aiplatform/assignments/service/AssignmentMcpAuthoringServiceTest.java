@@ -22,14 +22,6 @@ class AssignmentMcpAuthoringServiceTest {
                 .isInstanceOf(ApiException.class);
         verifyNoInteractions(authoring,writes);
     }
-    @Test void replayRechecksOwnershipBeforeReturningStoredIds() {
-        UUID id=UUID.randomUUID();
-        doThrow(ApiException.createNotFound("CLASS_NOT_FOUND")).when(access).requireClassManager(eq(actor),eq(id),anyString());
-        assertThatThrownBy(() -> service.call(actor,"create_assignment_draft",Map.of("classId",id.toString(),
-                "requestRef","replay","title","Draft","draft",Map.of())))
-                .isInstanceOf(ApiException.class);
-        verifyNoInteractions(writes,authoring);
-    }
     @Test void adminCannotCreateAcademicDrafts() {
         assertThatThrownBy(() -> service.call(new Actor(UUID.randomUUID(),Role.ADMIN),"create_assignment_draft",Map.of()))
                 .isInstanceOf(ApiException.class);

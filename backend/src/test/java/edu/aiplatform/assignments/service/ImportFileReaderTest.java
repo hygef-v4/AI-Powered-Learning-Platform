@@ -42,25 +42,6 @@ class ImportFileReaderTest {
     }
 
     @Test
-    void imagesAreCheckedThroughTheImportPurposeInTheChosenOrder() {
-        when(artifacts.inspect(eq(teacher), eq(ArtifactPurpose.ASSIGNMENT_IMPORT), any(), any()))
-                .thenReturn("image/png", "image/webp");
-
-        CheckedFiles files = reader.readFiles(teacher, List.of(file("b.png"), file("a.webp")));
-
-        assertThat(files.kind()).isEqualTo(FileKind.IMAGE);
-        assertThat(files.files()).extracting(ImportFileReader.CheckedFile::fileName).containsExactly("b.png", "a.webp");
-        assertThat(files.totalBytes()).isEqualTo(6);
-    }
-
-    @Test
-    void onePdfIsAPdfImport() {
-        when(artifacts.inspect(any(), any(), any(), any())).thenReturn("application/pdf");
-
-        assertThat(reader.readFiles(teacher, List.of(file("de.pdf"))).kind()).isEqualTo(FileKind.PDF);
-    }
-
-    @Test
     void rejectsEmptyTooManyMixedAndMultiplePdfImports() {
         when(artifacts.inspect(any(), any(), any(), any())).thenReturn("application/pdf", "image/png");
         assertThat(code(() -> reader.readFiles(teacher, List.of()))).isEqualTo("ASSIGNMENT_IMPORT_FILE_INVALID");

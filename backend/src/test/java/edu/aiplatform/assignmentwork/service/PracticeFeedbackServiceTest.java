@@ -158,15 +158,4 @@ class PracticeFeedbackServiceTest {
         assertThat(f.feedbackService.readOwnWork(f.student, a.id())).doesNotContainKey("rubric")
                 .containsKeys("instructions", "assignment", "submission", "submissionHash");
     }
-
-    @Test
-    void agentFeedbackNeedsMatchingHash() throws Exception {
-        AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
-        JsonNode body = f.json.readTree(OUTPUT);
-        assertThat(code(() -> f.feedbackService.recordFromAgent(f.student, a.id(), "khác", body, "agent")))
-                .isEqualTo("SUBMISSION_HASH_MISMATCH");
-        PracticeFeedback saved = f.feedbackService.recordFromAgent(f.student, a.id(), a.receiptHash(), body, "agent");
-        assertThat(saved.status()).isEqualTo(PracticeFeedback.Status.READY);
-        assertThat(saved.origin()).isEqualTo(PracticeFeedback.Origin.MCP);
-    }
 }

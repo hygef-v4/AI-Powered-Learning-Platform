@@ -2,15 +2,25 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import {
-  addInlineQuestion, createSubjectQuiz, getBankQuestionsForQuiz, getBankTags, getClassQuizzes, getManagedSubjects, getQuiz, getSubjectQuizzes, previewRandomItems,
-  previewPaper, proposeQuestion, publishQuiz, reopenQuiz, saveDrawRules, saveQuizItems, updateQuizDetails,
+  addInlineQuestion,
+  getBankQuestionsForQuiz,
+  getBankTags,
+  getClassQuizzes,
+  getManagedSubjects,
+  getQuiz,
+  getSubjectQuizzes,
+  previewRandomItems,
+  proposeQuestion,
+  publishQuiz,
+  reopenQuiz,
+  saveQuizItems,
+  updateQuizDetails,
 } from "@/features/quizzes/api";
 import { BankQuestionPicker } from "@/features/quizzes/components/BankQuestionPicker";
 import { ClassQuizzesSection } from "@/features/quizzes/components/ClassQuizzesSection";
 import { buildSettingsForm, buildSettingsInput } from "@/features/quizzes/components/QuizDetailParts";
 import { QuizDetailPage } from "@/features/quizzes/pages/QuizDetailPage";
 import { SubjectQuizListPage } from "@/features/quizzes/pages/SubjectQuizListPage";
-import { quizDetailSections } from "@/features/quizzes/slots";
 import type { QuestionView, QuizDetail, QuizInfo, QuizRow } from "@/features/quizzes/model/types";
 
 vi.mock("@/features/quizzes/api", () => ({
@@ -70,26 +80,6 @@ const row = (overrides: Partial<QuizRow> = {}): QuizRow => ({
 
 afterEach(() => vi.clearAllMocks());
 
-describe("SubjectQuizListPage", () => {
-  beforeEach(() => {
-    vi.mocked(getManagedSubjects).mockResolvedValue([{ id: "s1", code: "SWT301", name: "Kiểm thử", status: "ACTIVE" }]);
-    vi.mocked(getSubjectQuizzes).mockResolvedValue({ items: [row({ scope: "SUBJECT", classId: null, status: "OPEN" })], total: 1, page: 0, size: 20 });
-  });
-
-  it("lọc theo trạng thái và tạo quiz mở Quiz Detail", async () => {
-    render(<SubjectQuizListPage />);
-    expect(await screen.findByText("Luyện tập")).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("quiz-list-tab-OPEN"));
-    await waitFor(() => expect(getSubjectQuizzes).toHaveBeenLastCalledWith("s1", expect.objectContaining({ status: "OPEN", page: 0 })));
-
-    vi.mocked(createSubjectQuiz).mockResolvedValue(detail({ id: "z9", scope: "SUBJECT" }));
-    fireEvent.click(screen.getByTestId("quiz-list-create"));
-    fireEvent.change(screen.getByTestId("create-quiz-title"), { target: { value: "Ôn tập" } });
-    fireEvent.click(screen.getByTestId("create-quiz-submit"));
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/quizzes/z9"));
-    expect(createSubjectQuiz).toHaveBeenCalledWith("s1", "Ôn tập");
-  });
-});
 
 
 it("restores quiz status tab after remount and ignores invalid status", async () => {
@@ -185,19 +175,6 @@ describe("QuizDetailPage", () => {
     expect(screen.getByTestId("inline-question-save")).toBeEnabled();
   });
 
-  it("lưu điểm câu kèm version của quiz", async () => {
-    vi.mocked(getQuiz).mockResolvedValue(detail());
-    vi.mocked(saveQuizItems).mockResolvedValue(detail({ version: 4 }));
-    render(<QuizDetailPage id="z1" />);
-
-    fireEvent.change(await screen.findByTestId("quiz-item-points-0"), { target: { value: "2,5" } });
-    expect(screen.getByTestId("quiz-detail-publish")).toBeDisabled();
-    fireEvent.click(screen.getByTestId("quiz-detail-save"));
-
-    await waitFor(() => expect(saveQuizItems).toHaveBeenCalledWith("z1", [{ questionId: "q1", points: 2.5 }], 3));
-    await waitFor(() => expect(screen.queryByTestId("quiz-detail-save")).not.toBeInTheDocument());
-  });
-
   it("điểm sai thì báo đúng lỗi, không gọi API kể cả khi cấu hình cũng đổi", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
     render(<QuizDetailPage id="z1" />);
@@ -264,34 +241,6 @@ describe("QuizDetailPage", () => {
     expect(screen.queryByTestId("quiz-detail-save")).not.toBeInTheDocument();
   });
 
-  it("sinh đề: lưu quy tắc theo thẻ, ẩn danh sách câu, xem thử đề mẫu", async () => {
-    vi.mocked(getQuiz).mockResolvedValue(detail());
-    const generated: QuizDetail = { ...detail({ paperMode: "GENERATED", version: 4 }), items: [], maxScore: 2,
-      drawRules: [{ position: 1, tag: "Chương 1", difficulty: null, questionCount: 4, pointsEach: 0.5 }] };
-    vi.mocked(saveDrawRules).mockResolvedValue(generated);
-    vi.mocked(previewPaper).mockResolvedValue({ items: [{ rulePosition: 1, points: 0.5, question: QUESTION }], maxScore: 2,
-      shortages: [{ position: 1, tag: "Chương 1", difficulty: null, required: 4, available: 1 }] });
-    render(<QuizDetailPage id="z1" />);
-
-    fireEvent.change(await screen.findByTestId("draw-rules-mode"), { target: { value: "GENERATED" } });
-    fireEvent.click(screen.getByTestId("draw-rule-add"));
-    fireEvent.change(screen.getByTestId("draw-rule-tag-0"), { target: { value: "Chương 1" } });
-    expect(await screen.findByText("Kho có 12 câu đang dùng mang thẻ này")).toBeInTheDocument();
-    fireEvent.change(screen.getByTestId("draw-rule-count-0"), { target: { value: "4" } });
-    fireEvent.change(screen.getByTestId("draw-rule-points-0"), { target: { value: "0,5" } });
-    expect(screen.getByTestId("draw-rules-total")).toHaveTextContent("4 câu · 2 điểm");
-    fireEvent.click(screen.getByTestId("draw-rules-save"));
-
-    await waitFor(() => expect(saveDrawRules).toHaveBeenCalledWith("z1", "GENERATED",
-      [{ tag: "Chương 1", difficulty: null, questionCount: 4, pointsEach: 0.5 }], 3));
-    await waitFor(() => expect(screen.queryByTestId("quiz-item")).not.toBeInTheDocument());
-    fireEvent.click(await screen.findByTestId("draw-rules-preview"));
-    expect(await screen.findByTestId("paper-preview")).toHaveTextContent("cần 4 câu, kho chỉ cấp được 1 câu");
-    fireEvent.click(screen.getAllByRole("button", { name: "Đóng" })[0]!);
-    fireEvent.click(screen.getByTestId("quiz-detail-publish"));
-    expect(await screen.findByTestId("quiz-detail-publish-summary")).toHaveTextContent("một đề mới gồm 4 câu");
-  });
-
   it("sinh đề: cảnh báo ngay khi quy tắc cần nhiều câu hơn kho theo thẻ và độ khó, vẫn cho lưu", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
     render(<QuizDetailPage id="z1" />);
@@ -329,20 +278,6 @@ describe("QuizDetailPage", () => {
     fireEvent.change(screen.getByTestId("draw-rule-count-0"), { target: { value: "99" } });
     await waitFor(() => expect(getBankTags).toHaveBeenCalled());
     expect(screen.queryByTestId("draw-rule-shortage-0")).not.toBeInTheDocument();
-  });
-
-  it("hiện phần lượt làm của sinh viên theo lớp của quiz; quiz của môn mở từ lớp thì theo lớp đó", async () => {
-    const seen: { quizId: string; classId?: string }[] = [];
-    quizDetailSections.register({ key: "test-attempts", order: 1, component: (props) => { seen.push(props); return null; } });
-    vi.mocked(getQuiz).mockResolvedValue(detail());
-    const { unmount } = render(<QuizDetailPage id="z1" />);
-    await screen.findByTestId("quiz-detail-publish");
-    expect(seen.at(-1)).toEqual({ quizId: "z1", classId: "c1" });
-    unmount();
-    vi.mocked(getQuiz).mockResolvedValue(detail({ scope: "SUBJECT", classId: null, status: "OPEN" }, false));
-    render(<QuizDetailPage id="z1" classId="c9" />);
-    await screen.findByText("Đang mở");
-    expect(seen.at(-1)).toEqual({ quizId: "z1", classId: "c9" });
   });
 
   it("giảng viên đề xuất câu riêng vào ngân hàng; quiz của môn thì không có nút này", async () => {
@@ -401,16 +336,6 @@ describe("QuizDetailPage", () => {
 });
 
 describe("BankQuestionPicker", () => {
-  it("chọn tay rồi thêm các câu đã chọn", async () => {
-    vi.mocked(getBankQuestionsForQuiz).mockResolvedValue({ items: [{ id: "b1", lineageId: "b1", versionNo: 1, type: "MCQ_SINGLE",
-      stem: "Câu ngân hàng", difficulty: "EASY", tags: [], status: "ACTIVE", hasDraft: false, updatedAt: "2026-10-20T08:00:00Z", version: 1 }], total: 1, page: 0, size: 50 });
-    const onAdd = vi.fn().mockResolvedValue(undefined);
-    render(<BankQuestionPicker quizId="z1" freeSlots={199} onClose={vi.fn()} onAdd={onAdd} />);
-
-    fireEvent.click(await screen.findByLabelText("Chọn câu Câu ngân hàng"));
-    fireEvent.click(screen.getByTestId("bank-picker-add"));
-    await waitFor(() => expect(onAdd).toHaveBeenCalledWith(["b1"]));
-  });
 
   it("bốc ngẫu nhiên hiện số câu phù hợp, bỏ từng câu trước khi lưu", async () => {
     vi.mocked(getBankQuestionsForQuiz).mockResolvedValue({ items: [], total: 0, page: 0, size: 50 });

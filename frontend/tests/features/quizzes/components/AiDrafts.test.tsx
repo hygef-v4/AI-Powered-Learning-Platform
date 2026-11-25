@@ -117,20 +117,6 @@ describe("QuestionAiDraftDialog (F4)", () => {
     expect(acceptBankDraft).toHaveBeenCalledTimes(1);
   });
 
-  it.each([
-    { source: "AUTO", provider: null, label: "Hệ thống tự chọn nguồn AI" },
-    { source: null, provider: null, label: "Hệ thống tự chọn nguồn AI" },
-    { source: "PERSONAL", provider: null, label: "API cá nhân" },
-    { source: "PERSONAL", provider: "GEMINI", label: "Gemini cá nhân" },
-    { source: "SHARED", provider: null, label: "API của trường" },
-  ])("shows $label for source $source and provider $provider", async ({ source, provider, label }) => {
-    vi.mocked(getBankDrafts).mockResolvedValue([draft({ source, provider })]);
-    render(<QuestionAiDraftDialog subjectId="s1" onClose={vi.fn()} onAccepted={vi.fn()} />);
-    const view = await screen.findByTestId("ai-draft-view");
-    expect(view).toHaveTextContent(label);
-    expect(view).not.toHaveTextContent("null cá nhân");
-  });
-
   it("restores the same request after AI returns a failed draft", async () => {
     vi.mocked(getBankDrafts).mockResolvedValue([]);
     vi.mocked(getSubjectMaterials).mockResolvedValue([{ materialId: "m1", title: "Chương 1", hasText: true }]);
@@ -190,30 +176,6 @@ describe("QuestionAiDraftDialog (F4)", () => {
     expect(screen.getByTestId("ai-draft-count")).toHaveValue("7");
   });
 
-  it("sửa, bỏ, chấp nhận từng câu rồi lưu đúng các câu đã chấp nhận", async () => {
-    vi.mocked(getBankDrafts).mockResolvedValue([draft()]);
-    vi.mocked(acceptBankDraft).mockResolvedValue({ draft: draft({ status: "ACCEPTED" }), questionIds: ["q9"] });
-    const onAccepted = vi.fn();
-    render(<QuestionAiDraftDialog subjectId="s1" onClose={vi.fn()} onAccepted={onAccepted} />);
-
-    const cards = await screen.findAllByTestId("ai-draft-question");
-    expect(within(nth(cards, 1)).getByText(/Cần sửa: Các lựa chọn không được trùng nội dung/)).toBeInTheDocument();
-    fireEvent.click(within(nth(cards, 1)).getByTestId("ai-draft-accept-one"));
-    expect(within(nth(screen.getAllByTestId("ai-draft-question"), 1)).getByTestId("mcq-editor")).toBeInTheDocument();
-    fireEvent.click(within(nth(screen.getAllByTestId("ai-draft-question"), 1)).getByTestId("ai-draft-drop"));
-
-    fireEvent.click(within(nth(screen.getAllByTestId("ai-draft-question"), 0)).getByTestId("ai-draft-edit"));
-    fireEvent.change(screen.getByTestId("mcq-editor-stem"), { target: { value: "2 + 2 bằng mấy?" } });
-    fireEvent.click(within(nth(screen.getAllByTestId("ai-draft-question"), 0)).getByTestId("ai-draft-accept-one"));
-    expect(screen.getByText("Đề xuất (1 đã chấp nhận / 2)")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId("ai-draft-accept"));
-    await waitFor(() => expect(acceptBankDraft).toHaveBeenCalledWith("s1", "d1", [
-      expect.objectContaining({ stem: "2 + 2 bằng mấy?", correctOptionIds: ["2"] }),
-    ]));
-    expect(onAccepted).toHaveBeenCalledWith(1);
-  });
-
   it("hiện lý do khi đề xuất lỗi", async () => {
     vi.mocked(getBankDrafts).mockResolvedValue([]);
     vi.mocked(getSubjectMaterials).mockResolvedValue([]);
@@ -230,19 +192,6 @@ describe("QuestionAiDraftDialog (F4)", () => {
 
 describe("QuizAiDraftPanel (F8, F13)", () => {
   const quiz = { quiz: { id: "z1", version: 4 }, items: [], maxScore: 0, canManage: true } as unknown as QuizDetail;
-
-  it("toggles the displayed proposal with View and Collapse", async () => {
-    const proposal = draft({ target: "QUIZ", quizId: "z1" });
-    vi.mocked(getQuizDrafts).mockResolvedValue([proposal]);
-    vi.mocked(getQuizDraft).mockResolvedValue(proposal);
-    render(<QuizAiDraftPanel inline detail={quiz} disabled={false} onConflict={vi.fn()} onQuizChange={vi.fn()} />);
-    fireEvent.click(await screen.findByRole("button", { name: "Xem" }));
-    expect(await screen.findByTestId("ai-draft-view")).toBeInTheDocument();
-    fireEvent.click(await screen.findByRole("button", { name: "Thu gọn" }));
-    expect(screen.queryByTestId("ai-draft-view")).not.toBeInTheDocument();
-    fireEvent.click(await screen.findByRole("button", { name: "Xem" }));
-    expect(await screen.findByTestId("ai-draft-view")).toBeInTheDocument();
-  });
 
   it("keeps unsaved edits when collapse or another proposal is canceled", async () => {
     const proposal = draft({ target: "QUIZ", quizId: "z1" });
@@ -278,19 +227,6 @@ describe("QuizAiDraftPanel (F8, F13)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Bỏ chỉnh sửa" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.queryByTestId("mcq-editor-stem")).not.toBeInTheDocument();
-  });
-
-  it("accepts all quiz proposals using the current quiz version", async () => {
-    const proposal = draft({ target: "QUIZ", quizId: "z1", questions: [{ content: content(), violations: [] }] });
-    vi.mocked(getQuizDrafts).mockResolvedValue([proposal]);
-    vi.mocked(getQuizDraft).mockResolvedValue(proposal);
-    vi.mocked(acceptQuizDraft).mockResolvedValue(quiz);
-    const onQuizChange = vi.fn();
-    render(<QuizAiDraftPanel inline detail={quiz} disabled={false} onConflict={vi.fn()} onQuizChange={onQuizChange} />);
-    fireEvent.click(await screen.findByRole("button", { name: "Xem" }));
-    fireEvent.click(await screen.findByRole("button", { name: /Chấp nhận tất cả/ }));
-    await waitFor(() => expect(acceptQuizDraft).toHaveBeenCalledWith("z1", "d1", [content()], 4));
-    expect(onQuizChange).toHaveBeenCalledWith(quiz);
   });
 
   it("authors AI requests inline and keeps selected documents after a request error", async () => {

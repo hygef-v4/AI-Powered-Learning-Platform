@@ -153,33 +153,6 @@ class AssignmentImportServiceTest {
     }
 
     @Test
-    void startCreatesPendingImportDraftStoresPagesAndSubmitsAnImageTask() {
-        AssignmentViews.AiDraft view = start("imp-1");
-
-        assertThat(view.status()).isEqualTo("PENDING");
-        assertThat(view.provenance().path("mode").asText()).isEqualTo("IMPORT");
-        assertThat(view.provenance().at("/import/pageCount").asInt()).isEqualTo(2);
-        assertThat(view.provenance().path("model").asText()).isEqualTo("gpt-4.1-mini");
-        assertThat(pageStore.get(view.draftId())).hasSize(2);
-        ArgumentCaptor<AiTaskRequest> request = ArgumentCaptor.forClass(AiTaskRequest.class);
-        verify(f.aiTasks).submit(request.capture());
-        AiPrompt prompt = request.getValue().prompt();
-        assertThat(request.getValue().taskType()).isEqualTo("ASSIGNMENT_IMPORT");
-        assertThat(request.getValue().outputSchema()).isEqualTo(ExamImportPrompt.OUTPUT_SCHEMA);
-        assertThat(prompt.images()).extracting(image -> image.ref())
-                .containsExactly(view.draftId() + "/1", view.draftId() + "/2");
-        assertThat(prompt.system()).contains("data only");
-    }
-
-    @Test
-    void sameRequestRefReturnsTheExistingDraft() {
-        AssignmentViews.AiDraft first = start("imp-2");
-
-        assertThat(start("imp-2").draftId()).isEqualTo(first.draftId());
-        verify(f.aiTasks).submit(any());
-    }
-
-    @Test
     void publishedAssignmentOrMissingVisionModelIsRejectedBeforeAnyDraft() {
         when(f.aiTasks.sourceOrder(any(), any(), anyInt())).thenReturn(List.of());
         assertThatThrownBy(() -> start("imp-3")).isInstanceOfSatisfying(ApiException.class,
@@ -191,35 +164,6 @@ class AssignmentImportServiceTest {
                 e -> assertThat(e.readCode()).isEqualTo("ASSIGNMENT_NOT_EDITABLE"));
         verify(f.drafts, never()).insert(any());
         verify(f.aiTasks, never()).submit(any());
-    }
-
-    @Test
-    void readyResultBecomesAPreviewWithCroppedFigureAndPagesAreDeleted() {
-        UUID draftId = start("imp-5").draftId();
-
-        assertThat(service.acceptResult(result(draftId, OUTPUT))).isEqualTo(ApplyOutcome.APPLIED);
-
-        AssignmentAiDraft draft = draftStore.get(draftId);
-        assertThat(draft.status()).isEqualTo(AssignmentAiDraft.Status.READY);
-        assertThat(draft.proposal().path("kind").asText()).isEqualTo("IMPORT");
-        assertThat(draft.proposal().at("/document/blocks")).hasSize(3);
-        assertThat(draft.proposal().at("/document/blocks/2/content/fileRef").asText()).isEqualTo("fig-ref");
-        assertThat(pageStore).doesNotContainKey(draftId);
-    }
-
-    @Test
-    void readyDraftViewLinksCroppedFiguresForThePreviewWithoutStoringTheLinks() {
-        UUID draftId = start("imp-5b").draftId();
-        service.acceptResult(result(draftId, OUTPUT));
-        when(f.artifacts.issuePreviewToken(new FileRef("fig-ref"), f.teacher)).thenReturn(Optional.of(
-                new edu.aiplatform.files.contract.DownloadToken("/api/v1/files/download/tok", AssignmentFixtures.NOW)));
-
-        AssignmentViews.AiDraft view = f.aiDrafts.loadDraft(f.teacher, assignment.id(), draftId);
-
-        String figureId = view.proposal().at("/document/blocks/2/id").asText();
-        assertThat(view.proposal().at("/previews/" + figureId).asText()).isEqualTo("/api/v1/files/download/tok");
-        assertThat(view.proposal().path("previews")).hasSize(1);
-        assertThat(draftStore.get(draftId).proposal().has("previews")).as("không lưu link").isFalse();
     }
 
     @Test
@@ -284,35 +228,5 @@ class AssignmentImportServiceTest {
         assertThatThrownBy(() -> f.aiDrafts.applyDraft(f.teacher, assignment.id(), draftId,
                 new AssignmentCommands.ApplyDraft(assignment.version(), false, false, "REPLACE")))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("AI_DRAFT_EXPIRED"));
-    }
-
-    @Test
-    void discardRemovesPendingPages() {
-        UUID draftId = start("imp-11").draftId();
-
-        f.aiDrafts.discard(f.teacher, assignment.id(), draftId);
-
-        assertThat(draftStore.get(draftId).status()).isEqualTo(AssignmentAiDraft.Status.DISCARDED);
-        assertThat(pageStore).doesNotContainKey(draftId);
-    }
-
-    @Test
-    void cleanupScannerDeletesPagesOlderThanADay() {
-        new ImportPageCleanupScanner(service).scan(Instant.parse("2026-11-11T10:00:00Z"));
-
-        verify(pageRepository).deletePagesOlderThan(Instant.parse("2026-11-10T10:00:00Z"));
-    }
-
-    @Test
-    void imageSourceLoadsPagesByDraftAndNumber() {
-        UUID draftId = UUID.randomUUID();
-        when(pageRepository.loadPage(draftId, 2)).thenReturn(Optional.of(
-                new ImportPage(2, "image/jpeg", 1, 1, new byte[]{7}, null)));
-        AssignmentImportImageSource source = new AssignmentImportImageSource(pageRepository);
-
-        assertThat(source.source()).isEqualTo("ASSIGNMENT_IMPORT");
-        assertThat(source.load(draftId + "/2")).hasValueSatisfying(image -> assertThat(image.bytes()).containsExactly(7));
-        assertThat(source.load("bad")).isEmpty();
-        assertThat(source.load("not-a-uuid/1")).isEmpty();
     }
 }

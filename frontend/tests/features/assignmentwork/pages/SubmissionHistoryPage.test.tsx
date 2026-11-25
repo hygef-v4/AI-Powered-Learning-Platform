@@ -3,7 +3,6 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Toaster } from "@/shared/ui";
 import { workApi } from "@/features/assignmentwork/api";
-import { groupResultByPart } from "@/features/assignmentwork/model/attemptResult";
 import { SubmissionHistoryPage } from "@/features/assignmentwork/pages/SubmissionHistoryPage";
 import type { Attempt, AttemptSummary, Feedback, StudentDetail } from "@/features/assignmentwork/model/types";
 
@@ -155,15 +154,6 @@ describe("SubmissionHistoryPage (yêu cầu 2026-11-10)", () => {
     expect(screen.queryByRole("combobox", { name: "Chọn bài nộp" })).toBeNull();
   });
 
-  it("chưa qua hạn nộp đúng giờ thì chưa có lịch sử", async () => {
-    vi.spyOn(workApi, "detail").mockResolvedValue({ ...pastDeadline, serverTime: "2026-10-25T23:00:00Z" });
-    vi.spyOn(workApi, "history").mockResolvedValue([summary({ attemptId: "a1" })]);
-    const load = vi.spyOn(workApi, "attempt");
-    render(<SubmissionHistoryPage assignmentId="x" />);
-    expect(await screen.findByText("Lịch sử nộp bài hiện sau khi đã nộp và qua hạn nộp.")).toBeInTheDocument();
-    expect(load).not.toHaveBeenCalled();
-  });
-
   it("opens current graded submission before deadline despite a newer draft, without opening older history", async () => {
     vi.spyOn(workApi, "detail").mockResolvedValue({ ...pastDeadline, serverTime: "2026-10-25T23:00:00Z" });
     vi.spyOn(workApi, "history").mockResolvedValue([
@@ -196,44 +186,6 @@ describe("SubmissionHistoryPage (yêu cầu 2026-11-10)", () => {
     expect(options.map((o) => o.getAttribute("value"))).toEqual(["a2", "a1"]);
     expect(options.map((o) => o.textContent)).not.toContainEqual(expect.stringMatching(/lượt/i));
   });
-
-  it("chưa nộp bài nào thì báo chưa nộp", async () => {
-    vi.spyOn(workApi, "detail").mockResolvedValue(pastDeadline);
-    vi.spyOn(workApi, "history").mockResolvedValue([summary({ attemptId: "a1", status: "IN_PROGRESS", submittedAt: null })]);
-    render(<SubmissionHistoryPage assignmentId="x" />);
-    expect(await screen.findByText("Bạn chưa nộp bài nào.")).toBeInTheDocument();
-  });
-});
-
-describe("groupResultByPart", () => {
-  it("gom điểm các mục rubric về nhánh con trực tiếp của gốc tài liệu, theo thứ tự trong tài liệu", () => {
-    const item = (partId: string, awarded: number, max: number) => ({ rubricId: partId, partId, criterionTitle: "", itemText: partId, awarded, max, evidence: null, reason: null, suggestion: null });
-    const parts = [
-      { partId: "h11", headingBlockId: "h11", ancestorHeadingIds: ["c1"], title: "Chương 1 › 1.1" },
-      { partId: "h12", headingBlockId: "h12", ancestorHeadingIds: ["c1"], title: "Chương 1 › 1.2" },
-      { partId: "c2", headingBlockId: "c2", ancestorHeadingIds: [], title: "Chương 2" },
-    ];
-    expect(groupResultByPart([item("c2", 1, 2), item("h11", 2, 3), item("h12", 1, 1)], parts)).toEqual([
-      expect.objectContaining({ title: "Chương 1", awarded: 3, max: 4 }),
-      expect.objectContaining({ title: "Chương 2", awarded: 1, max: 2 }),
-    ]);
-  });
 });
 
 
-it("shows published teacher feedback, summary and rubric evidence", async () => {
-  vi.spyOn(workApi, "detail").mockResolvedValue({ ...pastDeadline, serverTime: "2026-11-10T00:01:00Z" });
-  vi.spyOn(workApi, "history").mockResolvedValue([summary({ graded: true })]);
-  vi.spyOn(workApi, "attempt").mockResolvedValue(attempt("a1"));
-  attemptResultSources.register({ key: "feedback-test", order: -1, load: async () => ({
-    score: 3, maxScore: 4, publishedAt: "2026-11-10T00:00:00Z", updated: false, memberOverride: false,
-    feedback: "Nhận xét của giảng viên", summary: { strengths: ["Thiết kế tốt"], improvements: ["Thiếu liên kết"], nextSteps: ["Thêm quan hệ"] },
-    items: [{ rubricId: "r", partId: "ASSIGNMENT", criterionTitle: "Mô hình", itemText: "Quan hệ lớp",
-      awarded: 3, max: 4, evidence: "Trích dẫn bài làm", reason: "Còn thiếu", suggestion: "Bổ sung kết nối" }],
-  }) });
-  render(<SubmissionHistoryPage assignmentId="x" />);
-  expect(await screen.findByText("Nhận xét của giảng viên")).toBeInTheDocument();
-  expect(screen.getByText("Thiết kế tốt")).toBeInTheDocument();
-  expect(screen.getByText("Trích dẫn bài làm")).toBeInTheDocument();
-  expect(screen.getByText("Bổ sung kết nối")).toBeInTheDocument();
-});

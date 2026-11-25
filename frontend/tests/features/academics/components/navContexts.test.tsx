@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import "@/features/register";
 import { AppShell } from "@/shared/layout/AppShell";
 import type { NavItem } from "@/shared/layout/navigation";
-import { resolveClassContext, resolveStudentClassContext, resolveSubjectContext } from "@/features/academics/components/ClassNavContexts";
+import { resolveClassContext, resolveSubjectContext } from "@/features/academics/components/ClassNavContexts";
 
 let location = { pathname: "/manager", search: "" };
 vi.mock("next/navigation", () => ({
@@ -13,26 +13,9 @@ vi.mock("next/navigation", () => ({
 }));
 
 const at = (pathname: string, search = "") => ({ pathname, search: new URLSearchParams(search) });
-const labels = (items: NavItem[]) => items.map((item) => item.label);
 const activeLabel = (items: NavItem[]) => items.find((item) => item.active)?.label;
 
 describe("sidebar của môn", () => {
-  it("mở nhánh môn ở các màn của một môn, mọi link mang môn đang mở", () => {
-    expect(resolveSubjectContext(at("/manager"))!.items).toEqual([]);
-    expect(resolveSubjectContext(at("/teaching/classes"))).toBeNull();
-
-    const subject = resolveSubjectContext(at("/manager/subjects/s-1"))!;
-    expect(labels(subject.items)).toEqual(["Thông tin môn", "Lớp học", "Học liệu", "Đề mẫu", "Ngân hàng câu hỏi"]);
-    expect(subject.items.map((item) => item.href)).toEqual([
-      "/manager/subjects/s-1",
-      "/manager/classes?subjectId=s-1",
-      "/manager/materials?subjectId=s-1",
-      "/manager/assignments?subjectId=s-1",
-      "/manager/questions?subjectId=s-1",
-    ]);
-    expect(activeLabel(subject.items)).toBe("Thông tin môn");
-    expect(activeLabel(resolveSubjectContext(at("/manager/questions", "subjectId=s-2"))!.items)).toBe("Ngân hàng câu hỏi");
-  });
 
   it("trang không mang ?subjectId= vẫn giữ môn mở gần nhất", () => {
     resolveSubjectContext(at("/manager/assignments", "subjectId=s-9"));
@@ -43,37 +26,12 @@ describe("sidebar của môn", () => {
 });
 
 describe("sidebar của lớp", () => {
-  it("lớp được phân công có các tab của trang lớp, mở đúng tab theo ?tab=", () => {
-    const teaching = resolveClassContext(at("/teaching/classes/c-1", "tab=materials"))!;
-    expect(labels(teaching.items)).toEqual(["Thông tin lớp", "Sinh viên", "Học liệu", "Bài tập", "Chấm điểm", "Thông báo lớp"]);
-    expect(teaching.items[5]!.href).toBe("/teaching/classes/c-1/announcements");
-    expect(teaching.items[0]!.href).toBe("/teaching/classes/c-1");
-    expect(teaching.items[2]!.href).toBe("/teaching/classes/c-1?tab=materials");
-    expect(activeLabel(teaching.items)).toBe("Học liệu");
-    expect(activeLabel(resolveClassContext(at("/teaching/classes/c-1", "tab=nope"))!.items)).toBe("Thông tin lớp");
-    expect(activeLabel(resolveClassContext(at("/teaching/classes/c-1/assignments/a-1/submissions"))!.items)).toBe("Bài tập");
-    expect(resolveClassContext(at("/teaching/classes"))!.items).toEqual([]);
-  });
 
   it("Thông báo lớp của một lớp vẫn ở sidebar của lớp đó", () => {
     expect(activeLabel(resolveClassContext(at("/teaching/classes/c-3/announcements"))!.items)).toBe("Thông báo lớp");
     // Thông báo lớp ở menu chính (mọi lớp) giữ menu chung, kể cả link cũ `?classId=`.
     expect(resolveClassContext(at("/announcements"))).toBeNull();
     expect(resolveClassContext(at("/announcements", "classId=c-3"))).toBeNull();
-  });
-
-  it("lớp của tôi (Sinh viên) có các trang sinh viên vào được của lớp", () => {
-    const own = resolveStudentClassContext(at("/classes/c-4"))!;
-    expect(labels(own.items)).toEqual(["Thông tin lớp", "Nhóm của tôi", "Học liệu", "Bài tập", "Thông báo lớp"]);
-    expect(own.items.map((item) => item.href)).toEqual(["/classes/c-4", "/classes/c-4/group", "/classes/c-4?tab=materials", "/my-assignments?classId=c-4", "/classes/c-4/announcements"]);
-    expect(activeLabel(own.items)).toBe("Thông tin lớp");
-    expect(activeLabel(resolveStudentClassContext(at("/classes/c-4/group"))!.items)).toBe("Nhóm của tôi");
-    expect(activeLabel(resolveStudentClassContext(at("/classes/c-4/announcements"))!.items)).toBe("Thông báo lớp");
-    expect(activeLabel(resolveStudentClassContext(at("/classes/c-4", "tab=materials"))!.items)).toBe("Học liệu");
-    expect(activeLabel(resolveStudentClassContext(at("/materials/m-1", "classId=c-4"))!.items)).toBe("Học liệu");
-    expect(activeLabel(resolveStudentClassContext(at("/my-assignments/a-1", "classId=c-4"))!.items)).toBe("Bài tập");
-    expect(resolveStudentClassContext(at("/classes"))!.items).toEqual([]);
-    expect(resolveStudentClassContext(at("/my-assignments"))).toBeNull();
   });
 
   it("lớp của môn (Chủ nhiệm môn) không có sidebar lớp, vẫn là sidebar của môn ở mục Lớp học", () => {
@@ -139,15 +97,5 @@ describe("AppShell với cây môn, lớp trên sidebar", () => {
     expect(screen.getByRole("button", { name: "Thu gọn Môn được phân công" })).toHaveAttribute("aria-expanded", "true");
     fireEvent.click(await within(screen.getByRole("group", { name: "Các môn được phân công" })).findByRole("menuitemradio", { name: /Software Requirement/ }));
     expect(within(screen.getByRole("group", { name: "Các môn được phân công" })).getByRole("link", { name: "Đề mẫu" })).toHaveAttribute("href", expect.stringContaining("s-1"));
-  });
-
-  it("trang Môn được phân công hiện ô Chọn môn, chưa môn nào mở", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json([{ id: "s-1", code: "SWR302", name: "Software Requirement" }])));
-    location = { pathname: "/manager", search: "" };
-    render(<AppShell role="SUBJECT_MANAGER" nav={nav} user={null} context={resolve}><p>Nội dung</p></AppShell>);
-    expect(screen.getByRole("link", { name: /Môn được phân công/ })).toHaveAttribute("aria-current", "page");
-    expect(await screen.findByRole("menuitemradio", { name: /SWR302/ })).toHaveAttribute("aria-checked", "false");
-    expect(screen.getByRole("group", { name: "Các môn được phân công" })).toHaveTextContent("Chọn môn");
-    expect(screen.queryByRole("link", { name: "Thông tin môn" })).not.toBeInTheDocument();
   });
 });

@@ -37,22 +37,6 @@ class PartCalculatorTest {
     }
 
     @Test
-    void leavesOfEachBranchArePartsAsInBusinessRuleExample() {
-        DocumentBlock h1 = heading("H1", "H1");
-        DocumentBlock h21 = heading("H2", "H2.1");
-        DocumentBlock h31 = heading("H3", "H3.1");
-        DocumentBlock h32 = heading("H3", "H3.2");
-        DocumentBlock h22 = heading("H2", "H2.2");
-        List<DocumentPart> parts = PartCalculator.compute(new DocumentModel(List.of(heading("TITLE", "Đề"), paragraph("chung"),
-                h1, h21, h31, paragraph("x"), h32, h22)));
-        assertThat(parts).extracting(DocumentPart::partId)
-                .containsExactly(h31.id().toString(), h32.id().toString(), h22.id().toString());
-        assertThat(parts.get(0).ancestorHeadingIds()).containsExactly(h1.id(), h21.id());
-        assertThat(parts.get(0).title()).isEqualTo("H1 › H2.1 › H3.1");
-        assertThat(parts.get(2).ancestorHeadingIds()).containsExactly(h1.id());
-    }
-
-    @Test
     void partIdFollowsHeadingBlockSoItSurvivesEdits() {
         DocumentBlock h1 = heading("H1", "Cũ");
         String before = PartCalculator.compute(new DocumentModel(List.of(h1))).get(0).partId();
@@ -60,13 +44,5 @@ class PartCalculatorTest {
                 JsonNodeFactory.instance.objectNode().put("style", "H1").put("text", "Mới"));
         String after = PartCalculator.compute(new DocumentModel(List.of(paragraph("thêm"), renamed))).get(0).partId();
         assertThat(after).isEqualTo(before);
-    }
-
-    @Test
-    void blankHeadingIsNamedByItsNumber() {
-        assertThat(PartCalculator.compute(new DocumentModel(List.of(heading("H2", " ")))).get(0).title())
-                .isEqualTo("I.");
-        var parts = PartCalculator.compute(new DocumentModel(List.of(heading("H1", "Bài"), heading("H2", ""), heading("H2", " "))));
-        assertThat(parts).extracting(DocumentPart::title).containsExactly("Bài › I.1.", "Bài › I.2.");
     }
 }

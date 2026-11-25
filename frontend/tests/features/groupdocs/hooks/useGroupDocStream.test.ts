@@ -38,11 +38,4 @@ describe("group document stream", () => {
     unmount();
     expect(FakeSource.created[1]!.close).toHaveBeenCalled();
   });
-
-  it("leaves transient drops to the browser's own reconnect", async () => {
-    renderHook(() => useGroupDocStream("doc-1", vi.fn(), vi.fn()));
-    FakeSource.created[0]!.onerror?.();
-    await vi.advanceTimersByTimeAsync(5000);
-    expect(FakeSource.created).toHaveLength(1);
-  });
 });

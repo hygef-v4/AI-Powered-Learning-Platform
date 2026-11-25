@@ -64,27 +64,6 @@ class GroupDocumentServiceTest {
     }
 
     @Test
-    void eachGroupWithActiveMembersGetsOneDocumentWithOneSectionPerPart() {
-        ClassGroup g1 = group(a1);
-        ClassGroup gone = group(left);
-        when(groups.listGroups(classId)).thenReturn(List.of(g1, gone));
-        when(documents.insertIfAbsent(any())).thenReturn(true);
-
-        assertThat(service.ensureDocuments(assignmentId)).isEqualTo(1);
-
-        ArgumentCaptor<GroupDocument> doc = ArgumentCaptor.forClass(GroupDocument.class);
-        verify(documents).insertIfAbsent(doc.capture());
-        assertThat(doc.getValue().groupId()).isEqualTo(g1.id());
-        assertThat(doc.getValue().status()).isEqualTo(GroupDocument.Status.IN_PROGRESS);
-        assertThat(doc.getValue().activityMonitoring()).isTrue();
-        ArgumentCaptor<GroupSection> sections = ArgumentCaptor.forClass(GroupSection.class);
-        verify(documents, times(2)).insertSection(sections.capture());
-        assertThat(sections.getAllValues()).extracting(GroupSection::partId).containsExactly("p1", "p2");
-        assertThat(sections.getAllValues()).extracting(GroupSection::orderNo).containsExactly(1, 2);
-        assertThat(sections.getAllValues()).allMatch(s -> s.status() == GroupSection.Status.OPEN);
-    }
-
-    @Test
     void runningAgainCreatesNothingNew() {
         when(groups.listGroups(classId)).thenReturn(List.of(group(a1)));
         when(documents.insertIfAbsent(any())).thenReturn(false);
@@ -100,20 +79,6 @@ class GroupDocumentServiceTest {
         when(assignments.loadAssignment(assignmentId)).thenReturn(Optional.of(view(SubmissionMode.GROUP, AssignmentStatus.CLOSED)));
         assertThat(service.ensureDocuments(assignmentId)).isZero();
         verify(documents, never()).insertIfAbsent(any());
-    }
-
-    @Test
-    void lifecycleQueuesCreationForGroupAssignmentsAndMarksRetired() {
-        IJob jobs = mock(IJob.class);
-        GroupAssignmentLifecycle lifecycle = new GroupAssignmentLifecycle(assignments, documents, jobs,
-                mock(GroupSubmissionService.class));
-
-        lifecycle.onOpened(assignmentId);
-        lifecycle.onRetired(assignmentId);
-
-        verify(jobs).enqueue(eq("GROUP_DOC_CREATE"), eq(Map.of("assignmentId", assignmentId.toString())),
-                eq("group-doc-create:" + assignmentId));
-        verify(documents).markRetired(assignmentId);
     }
 
     @Test

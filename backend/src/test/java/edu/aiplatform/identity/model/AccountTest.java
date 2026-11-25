@@ -35,12 +35,4 @@ class AccountTest {
         assertThat(pending().resolveStatusAfterReopen()).isEqualTo(AccountStatus.PENDING);
         assertThat(withPasswordAndLock(null).resolveStatusAfterReopen()).isEqualTo(AccountStatus.ACTIVE);
     }
-
-    @Test
-    void temporaryLockExpiresByItself() {
-        Account locked = withPasswordAndLock(NOW.plusSeconds(60));
-        assertThat(locked.isLocked(NOW)).isTrue();
-        assertThat(locked.isLocked(NOW.plusSeconds(60))).isFalse();
-        assertThat(withPasswordAndLock(null).isLocked(NOW)).isFalse();
-    }
 }

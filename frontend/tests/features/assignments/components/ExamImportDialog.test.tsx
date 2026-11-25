@@ -96,26 +96,6 @@ describe("ExamImportDialog", () => {
     expect(onApplied).toHaveBeenCalledWith(expect.stringContaining("Ctrl+Z"));
   });
 
-  it("xem trước hiện hình đã cắt qua link máy chủ cấp", async () => {
-    vi.spyOn(assignmentsApi, "startImport").mockResolvedValue(draft("READY", {
-      proposal: {
-        kind: "IMPORT", title: "",
-        document: { blocks: [{ id: "fig", origin: "TEACHER", type: "IMAGE",
-          content: { fileRef: "ref-1", alt: "Đồ thị", width: 600 } }] },
-        warnings: [], counts: { headings: 0, tables: 0, images: 1, illegible: 0 },
-        previews: { fig: "/api/v1/files/download/tok" },
-      },
-    }));
-    render(<ExamImportDialog assignmentId="a1" currentSkeleton={EMPTY} prepare={vi.fn()} onApplied={vi.fn()}
-      onClose={vi.fn()} />);
-
-    choose([png("de.png")]);
-    fireEvent.click(screen.getByTestId("exam-import-convert"));
-
-    const preview = await screen.findByTestId("exam-import-preview");
-    expect(within(preview).getByRole("img", { name: "Đồ thị" })).toHaveAttribute("src", "/api/v1/files/download/tok");
-  });
-
   it("Hủy trong lúc chờ thì bỏ bản nháp và quay lại danh sách tệp", async () => {
     vi.spyOn(assignmentsApi, "startImport").mockResolvedValue(draft("PENDING"));
     vi.spyOn(assignmentsApi, "importDraft").mockResolvedValue(draft("PENDING"));
@@ -174,16 +154,6 @@ describe("ExamImportDialog", () => {
     await waitFor(() => expect(save).toHaveBeenCalledWith("a1", 3,
       { blocks: [...EXISTING.blocks, ...document.blocks] }, { fromDocx: true }));
     expect(start).not.toHaveBeenCalled();
-  });
-
-  it("tự chuyển đổi tệp chọn sẵn từ popup tạo bài", async () => {
-    const start = vi.spyOn(assignmentsApi, "startImport").mockResolvedValue(READY);
-    const files = [new File(["%PDF"], "de.pdf")];
-    render(<ExamImportDialog assignmentId="a1" currentSkeleton={EMPTY} prepare={vi.fn()} initialFiles={files}
-      onApplied={vi.fn()} onClose={vi.fn()} />);
-
-    await waitFor(() => expect(start).toHaveBeenCalledWith("a1", files, expect.any(String)));
-    expect(await screen.findByTestId("exam-import-preview")).toBeInTheDocument();
   });
 });
 

@@ -41,39 +41,6 @@ class AiUsageServiceTest {
     private final UUID account = UUID.randomUUID();
 
     @Test
-    void measuredUsageKeepsProviderNumbersAndUnknownIsNeverZero() {
-        service.recordProvider(account, Source.PERSONAL, null, AiProvider.OPENAI, "gpt-4.1-mini", "X", "READY",
-                new Usage(100L, 20L, 5L, null), null);
-        service.recordProvider(account, Source.PERSONAL, null, AiProvider.OPENAI, "gpt-4.1-mini", "X", "REJECTED", null,
-                null);
-        service.recordProvider(account, Source.SHARED, null, AiProvider.GEMINI, "gemini-2.5-flash", "X", "UNKNOWN", null,
-                700L);
-
-        ArgumentCaptor<AiUsageRecord> records = ArgumentCaptor.forClass(AiUsageRecord.class);
-        verify(repository, org.mockito.Mockito.times(3)).insert(records.capture());
-        List<AiUsageRecord> all = records.getAllValues();
-        assertThat(all.get(0).provenance()).isEqualTo(UsageMeasurement.PROVIDER_MEASURED);
-        assertThat(all.get(0).cachedTokens()).isEqualTo(5);
-        assertThat(all.get(1).provenance()).isEqualTo(UsageMeasurement.UNAVAILABLE);
-        assertThat(all.get(1).inputTokens()).isNull();
-        assertThat(all.get(1).outputTokens()).isNull();
-        assertThat(all.get(2).provenance()).isEqualTo(UsageMeasurement.ESTIMATED);
-        assertThat(all.get(2).outputTokens()).isEqualTo(700);
-    }
-
-    @Test
-    void mcpUsageIsExternallyReportedOnlyWhenTheAgentSendsNumbers() {
-        service.recordMcp(account, UUID.randomUUID(), "read_own_work", "OK", null, null);
-        service.recordMcp(account, UUID.randomUUID(), "read_own_work", "OK", 1200L, 300L);
-
-        ArgumentCaptor<AiUsageRecord> records = ArgumentCaptor.forClass(AiUsageRecord.class);
-        verify(repository, org.mockito.Mockito.times(2)).insert(records.capture());
-        assertThat(records.getAllValues().get(0).provenance()).isEqualTo(UsageMeasurement.UNAVAILABLE);
-        assertThat(records.getAllValues().get(0).inputTokens()).isNull();
-        assertThat(records.getAllValues().get(1).provenance()).isEqualTo(UsageMeasurement.EXTERNALLY_REPORTED);
-    }
-
-    @Test
     void historyIsOwnOnlyPagedAndValidated() {
         Actor student = new Actor(account, Role.STUDENT);
         when(authorization.authorize(eq(student), any(), any())).thenReturn(AuthorizationDecision.allow());

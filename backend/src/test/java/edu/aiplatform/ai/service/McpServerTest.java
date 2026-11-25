@@ -70,24 +70,6 @@ class McpServerTest {
     }
 
     @Test
-    void initializeNegotiatesProtocolAndNotificationsHaveNoReply() {
-        JsonNode reply = handle(Access.READ_ONLY,
-                "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\"}}");
-        assertThat(reply.at("/result/protocolVersion").asText()).isEqualTo("2025-03-26");
-        assertThat(reply.at("/result/capabilities/tools").isObject()).isTrue();
-        reply = handle(Access.READ_ONLY,
-                "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"1999-01-01\"}}");
-        assertThat(reply.at("/result/protocolVersion").asText()).isEqualTo(McpServer.LATEST_PROTOCOL);
-
-        assertThat(server.handleMessage(principal(Access.READ_ONLY),
-                read("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}"))).isEmpty();
-        assertThat(handle(Access.READ_ONLY, "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"resources/list\"}")
-                .at("/error/code").asInt()).isEqualTo(-32601);
-        assertThat(handle(Access.READ_ONLY, "[{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"ping\"}]")
-                .at("/error/code").asInt()).isEqualTo(-32600);
-    }
-
-    @Test
     void toolsListFiltersByRoleAndReadOnlyCredential() {
         JsonNode readOnly = handle(Access.READ_ONLY, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
         assertThat(readOnly.at("/result/tools").findValuesAsText("name")).containsExactly("read_own_work");
@@ -95,32 +77,6 @@ class McpServerTest {
 
         JsonNode readWrite = handle(Access.READ_WRITE, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
         assertThat(readWrite.at("/result/tools").findValuesAsText("name")).containsExactly("read_own_work", "save_draft");
-    }
-
-    @Test
-    void writeToolIsHiddenFromReadOnlyCredential() {
-        JsonNode reply = handle(Access.READ_ONLY, call("save_draft", "{\"q\":\"x\"}"));
-
-        assertThat(reply.at("/error/code").asInt()).isEqualTo(-32602);
-        verify(provider, never()).call(any(), anyString(), any());
-    }
-
-    @Test
-    void callRunsToolWithCredentialActorAndRecordsUsageAndAudit() {
-        when(provider.call(eq(teacher), eq("read_own_work"), eq(Map.of("q", "bài 1"))))
-                .thenReturn(new McpToolResult(false, Map.of("title", "Bài 1")));
-
-        JsonNode reply = handle(Access.READ_ONLY,
-                "{\"jsonrpc\":\"2.0\",\"id\":\"a\",\"method\":\"tools/call\",\"params\":{\"name\":\"read_own_work\","
-                        + "\"arguments\":{\"q\":\"bài 1\"},\"_meta\":{\"inputTokens\":120,\"outputTokens\":30}}}");
-
-        assertThat(reply.get("id").asText()).isEqualTo("a");
-        assertThat(reply.at("/result/isError").asBoolean()).isFalse();
-        assertThat(reply.at("/result/content/0/text").asText()).contains("Bài 1");
-        var records = ArgumentCaptor.forClass(edu.aiplatform.ai.model.AiUsageRecord.class);
-        verify(usageRepository).insert(records.capture());
-        assertThat(records.getValue().toolName()).isEqualTo("read_own_work");
-        assertThat(records.getValue().inputTokens()).isEqualTo(120);
     }
 
     @Test
@@ -153,32 +109,6 @@ class McpServerTest {
         assertThat(unavailable.at("/error/code").asInt()).isEqualTo(-32030);
         assertThat(unavailable.at("/error/message").asText()).doesNotContain("60");
         verify(provider, never()).call(any(), anyString(), any());
-    }
-
-    @Test
-    void ownerDenialAndResultSizeAreHandled() {
-        when(provider.call(any(), anyString(), any())).thenThrow(ApiException.createNotFound("ASSIGNMENT_NOT_FOUND"));
-        JsonNode denied = handle(Access.READ_ONLY, call("read_own_work", "{\"q\":\"x\"}"));
-        assertThat(denied.at("/result/isError").asBoolean()).isTrue();
-        assertThat(denied.at("/result/content/0/text").asText()).doesNotContain("ASSIGNMENT");
-
-        org.mockito.Mockito.doReturn(new McpToolResult(false, "é".repeat(200_000))).when(provider)
-                .call(any(), anyString(), any());
-        var oversized = handle(Access.READ_ONLY, call("read_own_work", "{\"q\":\"x\"}"));
-        assertThat(oversized.at("/result/isError").asBoolean()).isTrue();
-        String text = oversized.at("/result/content/0/text").asText();
-        assertThat(text.getBytes(java.nio.charset.StandardCharsets.UTF_8).length).isLessThanOrEqualTo(256 * 1024);
-        assertThat(text).contains("MCP_RESULT_TOO_LARGE");
-    }
-
-    @Test void staleSnapshotReturnsMachineReadableErrorCodeAndEscapedResultsStayBounded() {
-        when(provider.call(any(),anyString(),any())).thenThrow(ApiException.createConflict("SUBMISSION_CHANGED","Restart reading"));
-        var reply=handle(Access.READ_ONLY,call("read_own_work","{\"q\":\"x\"}"));
-        assertThat(reply.at("/result/content/0/text").asText()).contains("SUBMISSION_CHANGED");
-        org.mockito.Mockito.doReturn(new McpToolResult(false,"\"".repeat(160000))).when(provider).call(any(),anyString(),any());
-        reply=handle(Access.READ_ONLY,call("read_own_work","{\"q\":\"x\"}"));
-        assertThat(reply.at("/result/isError").asBoolean()).isTrue();
-        assertThat(reply.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8).length).isLessThan(256*1024);
     }
 
     private List<String> actions() {

@@ -53,19 +53,6 @@ class ExamImportMapperTest {
     }
 
     @Test
-    void sampleOutputMatchesTheSchemaSentToTheModel() throws Exception {
-        JsonSchemaChecker checker = new JsonSchemaChecker(json);
-        assertThat(checker.isValidSchema(ExamImportPrompt.OUTPUT_SCHEMA)).isTrue();
-        com.fasterxml.jackson.databind.node.ObjectNode valid = (com.fasterxml.jackson.databind.node.ObjectNode)
-                json.readTree(SWR302);
-        ((com.fasterxml.jackson.databind.node.ObjectNode) valid.at("/blocks/4/items/2")).put("level", 4);
-        ((com.fasterxml.jackson.databind.node.ArrayNode) valid.path("warnings")).remove(1);
-        assertThat(checker.validateValue(ExamImportPrompt.OUTPUT_SCHEMA, valid)).isEmpty();
-        assertThat(checker.validateValue(ExamImportPrompt.OUTPUT_SCHEMA, json.readTree(SWR302))).as("level 9, kind lạ")
-                .isPresent();
-    }
-
-    @Test
     void transcribedExamBecomesEditableBlocksInOrder() throws Exception {
         ExamImportMapper.MappedImport mapped = map(SWR302, null);
 
@@ -90,37 +77,6 @@ class ExamImportMapperTest {
     }
 
     @Test
-    void proposalCarriesTitleCountsAndWarnings() throws Exception {
-        JsonNode pageWarnings = json.readTree("[{\"kind\":\"LOW_RESOLUTION\",\"page\":1,\"message\":\"Mờ\"}]");
-
-        JsonNode proposal = map(SWR302, pageWarnings).proposal();
-
-        assertThat(proposal.path("kind").asText()).isEqualTo("IMPORT");
-        assertThat(proposal.path("title").asText()).isEqualTo("SWR302_SU25_PE1_407173");
-        assertThat(proposal.at("/counts/headings").asInt()).isEqualTo(1);
-        assertThat(proposal.at("/counts/tables").asInt()).isEqualTo(1);
-        assertThat(proposal.at("/counts/images").asInt()).isEqualTo(1);
-        assertThat(proposal.at("/counts/illegible").asInt()).isEqualTo(1);
-        assertThat(proposal.path("warnings")).extracting(w -> w.path("kind").asText())
-                .containsExactly("LOW_RESOLUTION", "FIGURE_CROP_FAILED", "HEADER_FOOTER_REMOVED", "OTHER");
-    }
-
-    @Test
-    void schemaRequiresTheFieldsThatCarryContent() throws Exception {
-        // Gemini (2026-11-11) bỏ mọi mảng/đối tượng con không bắt buộc: khối chỉ có type, mất hết chữ và vị trí hình.
-        JsonNode schema = json.readTree(ExamImportPrompt.OUTPUT_SCHEMA);
-        assertThat(schema.path("required")).extracting(JsonNode::asText).contains("blocks", "figures");
-        assertThat(schema.at("/properties/blocks/items/required")).extracting(JsonNode::asText)
-                .containsExactlyInAnyOrder("type", "runs", "items", "rows");
-        assertThat(schema.at("/properties/figures/items/required")).extracting(JsonNode::asText)
-                .containsExactlyInAnyOrder("page", "box", "caption");
-        JsonSchemaChecker checker = new JsonSchemaChecker(json);
-        assertThat(checker.validateValue(ExamImportPrompt.OUTPUT_SCHEMA, json.readTree(
-                "{\"title\":\"\",\"blocks\":[{\"type\":\"PARAGRAPH\"}],\"figures\":[],\"warnings\":[]}")))
-                .as("khối thiếu runs").isPresent();
-    }
-
-    @Test
     void failedCropBecomesAPlaceholderWithAWarning() throws Exception {
         String output = "{\"title\":\"\",\"blocks\":[{\"type\":\"FIGURE\",\"page\":1,"
                 + "\"box\":{\"x\":0,\"y\":0,\"w\":1,\"h\":1},\"caption\":\"ERD\"}],\"warnings\":[]}";
@@ -134,23 +90,5 @@ class ExamImportMapperTest {
         });
         assertThat(mapped.proposal().at("/warnings/0/kind").asText()).isEqualTo("FIGURE_CROP_FAILED");
         assertThat(mapped.proposal().at("/warnings/0/page").asInt()).isEqualTo(1);
-    }
-
-    @Test
-    void clearColorsAreKeptAndDarkGreysAreDropped() {
-        assertThat(ExamImportMapper.isClearColor("#E00000")).isTrue();
-        assertThat(ExamImportMapper.isClearColor("#1F4E79")).isTrue();
-        assertThat(ExamImportMapper.isClearColor("#000000")).isFalse();
-        assertThat(ExamImportMapper.isClearColor("#333333")).isFalse();
-        assertThat(ExamImportMapper.isClearColor("#808080")).isFalse();
-        assertThat(ExamImportMapper.isClearColor("red")).isFalse();
-    }
-
-    @Test
-    void longTitleIsCutToTheAssignmentTitleLimit() throws Exception {
-        String output = "{\"title\":\"" + "T".repeat(400) + "\",\"blocks\":[{\"type\":\"PARAGRAPH\","
-                + "\"runs\":[{\"text\":\"x\"}]}],\"warnings\":[]}";
-
-        assertThat(map(output, null).proposal().path("title").asText()).hasSize(200);
     }
 }

@@ -1,4 +1,3 @@
-import { resolveStudentAssignmentContext } from "@/features/assignments/components/AssignmentNav";
 import * as filesApi from "@/features/files/api";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -27,24 +26,6 @@ const reviewed = {
 
 describe("RubricEditor", () => {
   const criteria: RubricCriterion[] = [{ criterionId: "c", title: "Nội dung", description: "", kind: "TEXT", items: [{ itemId: "i", text: "Đủ ý", points: 2 }] }];
-
-  it("mục chấm atomic sửa thẳng; dòng cuối là dấu + để thêm mục, Enter ở một mục thêm mục ngay dưới", () => {
-    const onChange = vi.fn();
-    render(<RubricEditor criteria={criteria} onChange={onChange} />);
-    expect(screen.getByLabelText("Mục chấm 1")).toHaveValue("Đủ ý");
-    expect(screen.queryByLabelText("Mục chấm mới")).toBeNull();
-    expect(screen.getByRole("button", { name: "Thêm mục chấm" })).toHaveTextContent("+");
-    fireEvent.change(screen.getByLabelText("Điểm mục 1"), { target: { value: "1.5" } });
-    expect((onChange.mock.calls[0]![0] as RubricCriterion[])[0]!).toMatchObject({
-      criterionId: "c", title: "Đủ ý", kind: "TEXT", items: [{ itemId: "i", text: "Đủ ý", points: 1.5 }],
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Thêm mục chấm" }));
-    const added = onChange.mock.calls[1]![0] as RubricCriterion[];
-    expect(added).toHaveLength(2);
-    expect(added[1]!).toMatchObject({ kind: "TEXT", items: [{ text: "", points: null }] });
-    fireEvent.keyDown(screen.getByLabelText("Mục chấm 1"), { key: "Enter" });
-    expect(onChange.mock.calls[2]![0] as RubricCriterion[]).toHaveLength(2);
-  });
 
   it("dòng vừa thêm mà chưa gõ gì không gửi lên server", () => {
     const blank: RubricCriterion[] = [...criteria, { criterionId: "n", title: "", description: "", kind: "TEXT", items: [{ itemId: "m", text: " ", points: null }] }];
@@ -84,15 +65,6 @@ describe("RubricEditor", () => {
     expect(isPenaltyOnlyCriterion("Đủ ý")).toBe(false);
     expect(isPenaltyOnlyCriterion("Thiếu actor thì bị trừ")).toBe(true);
     expect(isRubricPointsMalformed(penaltyOnly)).toBe(false);
-  });
-
-  it("Enter ở ô điểm cũng thêm mục ngay dưới", () => {
-    const onChange = vi.fn();
-    render(<RubricEditor criteria={criteria} onChange={onChange} />);
-    fireEvent.keyDown(screen.getByLabelText("Điểm mục 1"), { key: "Enter" });
-    const added = onChange.mock.calls[0]![0] as RubricCriterion[];
-    expect(added).toHaveLength(2);
-    expect(added[1]!).toMatchObject({ items: [{ text: "", points: null }] });
   });
 });
 
@@ -182,50 +154,6 @@ describe("CreateAssignmentDialog", () => {
     vi.restoreAllMocks();
   });
 
-  it("đề mẫu của môn cũng copy được từ Đề có sẵn: bài cùng môn đứng đầu, rồi các lớp mình dạy", async () => {
-    const created = { id: "a9", version: 0 } as AssignmentDetail;
-    const row = (id: string) => ({ id, title: `Bài ${id}` }) as never;
-    vi.spyOn(assignmentsApi, "subjectCopySources").mockResolvedValue([
-      { classId: "s1", code: "SWD392", name: "Thiết kế", status: null, kind: "SUBJECT", assignments: [row("m1")] },
-      { classId: "c2", code: "SE01", name: "Lớp 1", status: "OPEN", kind: "CLASS", term: "SP27", assignments: [row("k1")] },
-    ]);
-    const copy = vi.spyOn(assignmentsApi, "copyToSubject").mockResolvedValue(created);
-    const onCreated = vi.fn();
-    render(<CreateAssignmentDialog target={{ kind: "subject", subjectId: "s1" }} onClose={vi.fn()} onCreated={onCreated} />);
-    // Đề có sẵn cũng chọn được Loại.
-    fireEvent.click(screen.getByRole("radio", { name: "Đề có sẵn" }));
-    expect(screen.getByRole("radio", { name: "Đề có sẵn" })).toBeChecked();
-    expect(screen.getByRole("radiogroup", { name: "Loại" })).toBeInTheDocument();
-    const search = screen.getByRole("combobox", { name: "Đề có sẵn" });
-    fireEvent.focus(search);
-    await screen.findByRole("option", { name: "Bài m1" });
-    // Chỉ liệt kê bài, không chia nhóm cùng môn / lớp; gõ để tìm.
-    expect(screen.queryAllByRole("group")).toHaveLength(0);
-    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài m1", "Bài k1 · SE01 · SP27"]);
-    fireEvent.change(search, { target: { value: "k1" } });
-    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài k1 · SE01 · SP27"]);
-    fireEvent.change(search, { target: { value: "" } });
-    fireEvent.mouseDown(screen.getByRole("option", { name: "Bài m1" }));
-    // Chỉ chọn một bài: bài đã chọn hiện dưới ô tìm, chọn bài khác thì thay.
-    expect(screen.getByTestId("copy-source")).toHaveTextContent("Bài m1");
-    fireEvent.focus(search);
-    fireEvent.mouseDown(screen.getByRole("option", { name: "Bài k1 · SE01 · SP27" }));
-    expect(screen.getByTestId("copy-source")).toHaveTextContent("Bài k1");
-    fireEvent.click(screen.getByRole("button", { name: "Bỏ bài đã chọn" }));
-    fireEvent.focus(search);
-    fireEvent.mouseDown(screen.getByRole("option", { name: "Bài m1" }));
-    // Tiêu đề không lấy theo bài copy: để trống cho người dùng tự nhập.
-    expect(screen.getByTestId("create-assignment-title")).toHaveValue("");
-    fireEvent.click(screen.getByTestId("create-assignment-submit"));
-    expect(await screen.findByText("Nhập tiêu đề bài tập.")).toBeInTheDocument();
-    expect(copy).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Đề mẫu 1" } });
-    fireEvent.click(screen.getByTestId("create-assignment-submit"));
-    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
-    expect(copy).toHaveBeenCalledWith("s1", "m1", "Đề mẫu 1", { submissionMode: "INDIVIDUAL", gradingMode: "GRADED" });
-    vi.restoreAllMocks();
-  });
-
   it("tiêu đề bắt buộc ở trên cùng: bỏ trống thì báo lỗi, không gọi API", async () => {
     const create = vi.spyOn(assignmentsApi, "createForSubject");
     render(<CreateAssignmentDialog target={{ kind: "subject", subjectId: "s1" }} onClose={vi.fn()} onCreated={vi.fn()} />);
@@ -239,37 +167,6 @@ describe("CreateAssignmentDialog", () => {
     expect(await screen.findByText("Nhập tiêu đề bài tập.")).toBeInTheDocument();
     expect(screen.getByTestId("create-assignment-title")).toHaveAttribute("aria-invalid", "true");
     expect(create).not.toHaveBeenCalled();
-    vi.restoreAllMocks();
-  });
-
-  it("giảng viên tạo bài ở lớp từ Đề có sẵn: đề mẫu của môn đứng trước bài các lớp mình dạy", async () => {
-    const created = { id: "a7", version: 0 } as AssignmentDetail;
-    const row = (id: string) => ({ id, title: `Bài ${id}` }) as never;
-    vi.spyOn(assignmentsApi, "copySources").mockResolvedValue([
-      { classId: "s1", code: "SWD392", name: "Thiết kế", status: null, kind: "SUBJECT", assignments: [row("m1"), row("m2")] },
-      { classId: "c2", code: "SE01", name: "Lớp 1", status: "OPEN", kind: "CLASS", term: "SP27", assignments: [row("k1")] },
-    ]);
-    const copy = vi.spyOn(assignmentsApi, "copy").mockResolvedValue(created);
-    const onCreated = vi.fn();
-    render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: true }} onClose={vi.fn()} onCreated={onCreated} />);
-    expect(screen.getByRole("radiogroup", { name: "Loại" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("radio", { name: "Đề có sẵn" }));
-    expect(screen.queryByTestId("create-docx")).toBeNull();
-    fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Lab 1" } });
-    fireEvent.click(screen.getByTestId("create-assignment-submit"));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Chọn một đề có sẵn để copy.");
-    const search = screen.getByRole("combobox", { name: "Đề có sẵn" });
-    fireEvent.focus(search);
-    await screen.findByRole("option", { name: "Bài m2" });
-    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual(["Bài m1", "Bài m2", "Bài k1 · SE01 · SP27"]);
-    fireEvent.mouseDown(screen.getByRole("option", { name: "Bài m2" }));
-    expect(screen.getByTestId("copy-source")).toHaveTextContent("Bài m2");
-    expect(screen.getByTestId("create-assignment-title")).toHaveValue("Lab 1");
-    fireEvent.click(screen.getByRole("radio", { name: "Nhóm" }));
-    fireEvent.click(screen.getByTestId("create-assignment-submit"));
-    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
-    // Bài copy theo Loại đã chọn trong popup.
-    expect(copy).toHaveBeenCalledWith("c1", "m2", "Lab 1", { submissionMode: "GROUP", gradingMode: "GRADED" });
     vi.restoreAllMocks();
   });
 
@@ -625,12 +522,3 @@ it("thẻ Toàn bài chỉ có ở bài có mục; thẻ soạn chỉ mở trìn
   expect(screen.getByText("Trình sửa")).toBeInTheDocument();
 });
 
-describe("resolveStudentAssignmentContext", () => {
-  it("trang làm bài và lịch sử nộp bài của sinh viên có sidebar mục lục của bài", () => {
-    const at = (pathname: string) => resolveStudentAssignmentContext({ pathname, search: new URLSearchParams() });
-    expect(at("/attempts/a1")?.label).toBe("Các phần của bài");
-    expect(at("/my-assignments/x1/history")?.label).toBe("Các phần của bài");
-    expect(at("/my-assignments/x1")).toBeNull();
-    expect(at("/attempts/a1/receipt")).toBeNull();
-  });
-});

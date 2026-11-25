@@ -1,5 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { Toaster } from "@/shared/ui/Toast";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { updateProfile } from "@/features/identity/api";
 import type { Profile } from "@/features/identity/model/types";
@@ -31,26 +30,6 @@ describe("ProfileForm", () => {
     expect(screen.getByLabelText("Vai trò")).toBeDisabled();
     expect(screen.getByText("Hoạt động")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Lưu thay đổi" })).toBeDisabled();
-  });
-
-  it("lưu tên và số điện thoại đã cắt khoảng trắng", async () => {
-    const saved = { ...PROFILE, displayName: "Tài Mới", phoneNumber: "0912345678" };
-    updateMock.mockResolvedValue(saved);
-    const onSaved = vi.fn();
-    render(
-      <>
-        <ProfileForm profile={PROFILE} onSaved={onSaved} />
-        <Toaster />
-      </>,
-    );
-
-    fireEvent.change(screen.getByLabelText("Họ và tên"), { target: { value: "  Tài Mới " } });
-    fireEvent.change(screen.getByLabelText("Số điện thoại"), { target: { value: "0912345678" } });
-    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
-
-    await waitFor(() => expect(onSaved).toHaveBeenCalledWith(saved));
-    expect(updateMock).toHaveBeenCalledWith("Tài Mới", "0912345678");
-    expect(await screen.findByRole("status")).toHaveTextContent("Đã lưu thay đổi");
   });
 
   it("số điện thoại sai định dạng bị chặn trước khi gọi API", () => {

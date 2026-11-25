@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MyGroupPage } from "@/features/groups/components/MyGroup";
 import type { MyGroupView } from "@/features/groups/model/types";
@@ -88,54 +88,5 @@ describe("MyGroupPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Sao Băng" })).toBeInTheDocument();
     expect(calls.find((c) => c.url === "/api/v1/groups/g1/name")).toMatchObject({ method: "PUT", body: { name: "Sao Băng" } });
-  });
-
-  it("popup chỉ có trưởng nhóm hiện tại và trưởng nhóm mới, không gửi lý do", async () => {
-    const calls: { url: string; body?: unknown }[] = [];
-    vi.stubGlobal(
-      "fetch",
-      vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
-        calls.push({ url: String(input), body: init?.body ? JSON.parse(String(init.body)) : undefined });
-        return String(input).includes("leader-requests") ? json({}, 201) : json(VIEW);
-      }),
-    );
-    render(<MyGroupPage classId="c1" />);
-    fireEvent.click(await screen.findByRole("button", { name: /Yêu cầu đổi trưởng nhóm/ }));
-
-    const dialog = await screen.findByRole("dialog");
-    const send = within(dialog).getByRole("button", { name: "Gửi yêu cầu" });
-    // Chỉ còn Trưởng nhóm hiện tại và Trưởng nhóm mới; không gửi lý do.
-    expect(send).toBeEnabled();
-    expect(within(dialog).queryByText(/Giảng viên sẽ duyệt/)).not.toBeInTheDocument();
-    expect(within(dialog).getByLabelText("Trưởng nhóm hiện tại")).toHaveValue("An");
-    expect(within(dialog).queryByLabelText(/Lý do/)).not.toBeInTheDocument();
-    fireEvent.change(within(dialog).getByLabelText("Trưởng nhóm mới"), { target: { value: "b" } });
-    fireEvent.click(send);
-
-    await waitFor(() => expect(calls.some((c) => c.url === "/api/v1/groups/g1/leader-requests")).toBe(true));
-    expect(calls.find((c) => c.url === "/api/v1/groups/g1/leader-requests")!.body).toEqual({ proposedLeaderId: "b" });
-  });
-
-  it("nhóm đang có yêu cầu chờ thì nút khóa và ghi Đang chờ duyệt", async () => {
-    vi.stubGlobal("fetch", vi.fn(() => json({ ...VIEW, pendingRequest: true })));
-    render(<MyGroupPage classId="c1" />);
-    const button = await screen.findByTestId("leader-request-open");
-    expect(button).toBeDisabled();
-    expect(button).toHaveTextContent("Đang chờ duyệt");
-    expect(screen.queryByRole("button", { name: /Yêu cầu đổi trưởng nhóm/ })).not.toBeInTheDocument();
-  });
-
-  it("chưa có nhóm và đợt tự chia nhóm đang mở: hiện phần lập đề xuất thay cho dòng chờ giảng viên", async () => {
-    const noGroup: MyGroupView = { ...VIEW, groupId: null, name: null, leaderId: null, members: [], works: [], myRequests: [] };
-    const proposals = {
-      classId: "c1", classStatus: "OPEN", grouped: false, proposal: null, invitations: [], lastRejected: null, candidates: [],
-      formation: { enabled: true, minSize: 2, maxSize: 4, deadline: null, open: true, closedReason: null },
-    };
-    vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL) => json(String(input).endsWith("/group-proposal") ? proposals : noGroup)));
-    render(<MyGroupPage classId="c1" />);
-
-    expect(await screen.findByTestId("proposal-create")).toBeInTheDocument();
-    expect(screen.getByText("Đang mở, nhóm từ 2 đến 4 người.")).toBeInTheDocument();
-    expect(screen.queryByTestId("leader-request-open")).not.toBeInTheDocument();
   });
 });

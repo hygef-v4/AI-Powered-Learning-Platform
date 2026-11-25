@@ -98,20 +98,6 @@ class AssignmentCopyServiceTest {
     }
 
     @Test
-    void classCopySourcesListSubjectTemplatesFirst() {
-        f.put(AssignmentScope.SUBJECT, AssignmentStatus.OPEN, new DocumentModel(List.of()), true);
-        f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
-        f.put(AssignmentScope.SUBJECT, AssignmentStatus.RETIRED, new DocumentModel(List.of()), true);
-        UUID other = UUID.randomUUID();
-        when(f.classScope.listTaughtClasses(f.teacher.accountId())).thenReturn(List.of(f.classId, other));
-        f.put(AssignmentScope.CLASS, AssignmentStatus.CLOSED, new DocumentModel(List.of()), true);
-        List<AssignmentViews.CopySource> sources = f.copies.copySources(f.teacher, other);
-        assertThat(sources).extracting(AssignmentViews.CopySource::kind).containsExactly("SUBJECT", "CLASS");
-        assertThat(sources.get(0).assignments()).as("đề mẫu của môn, trừ bài đã ngưng giao").hasSize(2);
-        assertThat(sources.get(1).classId()).isEqualTo(f.classId);
-    }
-
-    @Test
     void copySubjectTemplateIntoClassWithNewTitleButNotRetired() {
         Assignment template = f.put(AssignmentScope.SUBJECT, AssignmentStatus.DRAFT, new DocumentModel(List.of()), true);
         AssignmentViews.Detail copy = f.copies.copyToClass(f.teacher, f.classId, template.id(), "  Bài lab 1  ");

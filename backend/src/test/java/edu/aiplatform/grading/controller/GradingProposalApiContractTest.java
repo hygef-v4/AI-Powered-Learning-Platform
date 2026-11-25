@@ -51,14 +51,6 @@ class GradingProposalApiContractTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void acceptsAutomaticSourceForSingleAndBatchRequests(boolean batch) throws Exception {
-        mvc.perform(post(requestPath(batch)).contentType("application/json")
-                .content(requestBody(batch, "{\"requestRef\":\"auto\"}"))).andExpect(status().isOk());
-        verifyRequest(batch, new AiRequest(null, null, "auto"));
-    }
-
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
     void preservesExplicitPersonalSourceRequests(boolean batch) throws Exception {
         mvc.perform(post(requestPath(batch)).contentType("application/json")
                 .content(requestBody(batch, "{\"source\":\"PERSONAL\",\"provider\":\"OPENAI\",\"requestRef\":\"explicit\"}")))

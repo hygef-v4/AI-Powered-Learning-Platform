@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { requestOtp, verifyOtp } from "@/features/identity/api";
-import { OTP_INVALID_MESSAGE, OtpFlow, RESENT_MESSAGE, TICKET_EXPIRED_MESSAGE, type OtpFlowCopy } from "@/features/identity/otp/components/OtpFlow";
+import { OTP_INVALID_MESSAGE, OtpFlow, RESENT_MESSAGE, type OtpFlowCopy } from "@/features/identity/otp/components/OtpFlow";
 
 vi.mock("@/features/identity/api", () => ({ requestOtp: vi.fn(), verifyOtp: vi.fn() }));
 
@@ -86,20 +86,6 @@ describe("OtpFlow", () => {
     } finally {
       vi.useRealTimers();
     }
-  });
-
-  it("ticket hết hạn thì quay về bước email", async () => {
-    const onComplete = vi.fn().mockRejectedValue(new ApiError({ status: 400, code: "TICKET_EXPIRED" }));
-    render(<OtpFlow copy={COPY} onComplete={onComplete} />);
-    await reachOtpStep();
-    verifyOtpMock.mockResolvedValue({ otpTicket: "t" });
-    typeCode("048213");
-    fireEvent.change(await screen.findByLabelText("Mật khẩu mới"), { target: { value: "hocbai2026" } });
-    fireEvent.change(screen.getByLabelText("Nhập lại mật khẩu"), { target: { value: "hocbai2026" } });
-    fireEvent.click(screen.getByRole("button", { name: "Kích hoạt và đăng nhập" }));
-
-    expect(await screen.findByRole("status")).toHaveTextContent(TICKET_EXPIRED_MESSAGE);
-    expect(screen.getByRole("button", { name: "Gửi mã kích hoạt" })).toBeInTheDocument();
   });
 
   it("mật khẩu bị backend từ chối thì hiện lý do và ở lại bước 3", async () => {

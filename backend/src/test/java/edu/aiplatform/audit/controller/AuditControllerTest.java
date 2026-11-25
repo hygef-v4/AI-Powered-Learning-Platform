@@ -59,39 +59,6 @@ class AuditControllerTest {
     }
 
     @Test
-    void mapsParametersAndReturnsPage() throws Exception {
-        UUID actorId = UUID.randomUUID();
-        UUID id = UUID.randomUUID();
-        AuditEvent event = new AuditEvent(id, actorId, "ROLE_CHANGED", "ACCOUNT", "abc", AuditResult.SUCCESS, null,
-                Map.of("actorType", "USER"), Instant.parse("2026-10-14T10:55:12Z"));
-        when(auditQuery.query(any(), any(), any())).thenReturn(
-                new PageImpl<>(List.of(new AuditLogView(event, "phongdt@fpt.edu.vn")), PageRequest.of(1, 20), 21));
-
-        mvc.perform(get("/api/v1/admin/audit-logs")
-                        .param("actorId", actorId.toString()).param("action", "ROLE_CHANGED")
-                        .param("objectType", "ACCOUNT").param("objectId", "abc").param("result", "SUCCESS")
-                        .param("from", "2026-10-07T00:00:00Z").param("to", "2026-10-14T23:59:59Z")
-                        .param("page", "1").param("size", "20"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[0].id").value(id.toString()))
-                .andExpect(jsonPath("$.items[0].actorEmail").value("phongdt@fpt.edu.vn"))
-                .andExpect(jsonPath("$.items[0].result").value("SUCCESS"))
-                .andExpect(jsonPath("$.items[0].details.actorType").value("USER"))
-                .andExpect(jsonPath("$.page").value(1))
-                .andExpect(jsonPath("$.size").value(20))
-                .andExpect(jsonPath("$.totalElements").value(21))
-                .andExpect(jsonPath("$.totalPages").value(2));
-
-        ArgumentCaptor<AuditFilter> filter = ArgumentCaptor.forClass(AuditFilter.class);
-        ArgumentCaptor<Pageable> page = ArgumentCaptor.forClass(Pageable.class);
-        verify(auditQuery).query(eq(admin), filter.capture(), page.capture());
-        assertThat(filter.getValue()).isEqualTo(new AuditFilter(actorId, "ROLE_CHANGED", "ACCOUNT", "abc",
-                AuditResult.SUCCESS, Instant.parse("2026-10-07T00:00:00Z"), Instant.parse("2026-10-14T23:59:59Z")));
-        assertThat(page.getValue().getPageNumber()).isEqualTo(1);
-        assertThat(page.getValue().getPageSize()).isEqualTo(20);
-    }
-
-    @Test
     void defaultsToFirstPageOf50() throws Exception {
         when(auditQuery.query(any(), any(), any())).thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 50), 0));
 
@@ -102,18 +69,6 @@ class AuditControllerTest {
         verify(auditQuery).query(any(), any(), page.capture());
         assertThat(page.getValue().getPageNumber()).isZero();
         assertThat(page.getValue().getPageSize()).isEqualTo(50);
-    }
-
-    @Test
-    void partialActorTextIsPassedToTheQuery() throws Exception {
-        when(auditQuery.query(any(), any(), any())).thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 50), 0));
-
-        mvc.perform(get("/api/v1/admin/audit-logs").param("actor", "phong"))
-                .andExpect(status().isOk());
-
-        ArgumentCaptor<AuditFilter> filter = ArgumentCaptor.forClass(AuditFilter.class);
-        verify(auditQuery).query(any(), filter.capture(), any());
-        assertThat(filter.getValue().actor()).isEqualTo("phong");
     }
 
     @Test

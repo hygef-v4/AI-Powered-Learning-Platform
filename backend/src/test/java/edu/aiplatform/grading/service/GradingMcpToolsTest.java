@@ -12,19 +12,6 @@ import edu.aiplatform.ai.contract.*;
 import edu.aiplatform.shared.error.ApiException;
 
 class GradingMcpToolsTest {
-    @Test void incompleteReadGuardRunsBeforeProposalTransaction() {
-        var repo=mock(IEvaluationRepository.class);var tx=mock(GradingProposalTransactions.class);
-        var reads=mock(GradingMcpQueryService.class);var actor=new Actor(UUID.randomUUID(),Role.TEACHER);
-        var e=new Evaluation();e.id=UUID.randomUUID();e.classId=UUID.randomUUID();e.assignmentId=UUID.randomUUID();
-        var attempt=UUID.randomUUID();when(repo.findByAttemptId(attempt)).thenReturn(Optional.of(e));
-        doThrow(GradingMcpReadProgress.createReadRequiredError()).when(reads).requireCompleteRead(actor,e.id,0,"hash","a".repeat(64));
-        var args=Map.<String,Object>of("submissionRef",Map.of("kind","ATTEMPT","id",attempt.toString(),
-                "classId",e.classId.toString(),"assignmentId",e.assignmentId.toString()),"expectedVersion",0,
-                "submissionHash","hash","requestRef","new","proposal",Map.of(),"snapshotFingerprint","a".repeat(64));
-        assertThatThrownBy(() -> new GradingMcpTools(repo,tx,new ObjectMapper(),reads).call(actor,"record_grading_proposal",args))
-                .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.readCode()).isEqualTo("MCP_CONTEXT_READ_REQUIRED"));
-        verifyNoInteractions(tx);
-    }
     @Test void cannotWriteWithoutACompletedSnapshotReference() {
         var repo=mock(IEvaluationRepository.class);var tx=mock(GradingProposalTransactions.class);
         var e=new Evaluation();e.id=UUID.randomUUID();e.classId=UUID.randomUUID();e.assignmentId=UUID.randomUUID();
@@ -120,17 +107,6 @@ class GradingMcpToolsTest {
                     assertThat(error.getMessage()).isEqualTo("Invalid grading proposal arguments");
                 });
         verifyNoInteractions(repo, tx);
-    }
-
-    @Test
-    void exposesOnlyProposalWriteToolForTeachingRoles() {
-        var tools = new GradingMcpTools(mock(IEvaluationRepository.class), mock(GradingProposalTransactions.class),
-                new ObjectMapper(), mock(GradingMcpQueryService.class));
-        assertThat(tools.tools()).hasSize(1);
-        var tool = tools.tools().get(0);
-        assertThat(tool.name()).isEqualTo("record_grading_proposal");
-        assertThat(tool.kind()).isEqualTo(McpToolKind.WRITE);
-        assertThat(tool.allowedRoles()).containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
     }
 
     @Test

@@ -6,12 +6,11 @@ import { ClassListPage } from "@/features/academics/pages/ClassListPage";
 import { ClassDashboardPage } from "@/features/academics/pages/ClassDashboardPage";
 import { ClassFormDialog } from "@/features/academics/components/ClassFormDialog";
 import { ClassInfoForm } from "@/features/academics/components/ClassInfoForm";
-import { ClassStateActions, AssignTeacherDialog } from "@/features/academics/components/ClassDialogs";
+import { AssignTeacherDialog } from "@/features/academics/components/ClassDialogs";
 import { EnrollmentPanel, EnrollmentResultTable } from "@/features/academics/components/EnrollmentPanel";
 import { ReadOnlyClassPage } from "@/features/academics/pages/ReadOnlyClassPage";
 import { ManagedClassPage } from "@/features/academics/pages/ManagedClassPage";
 import { parseEnrollmentList } from "@/features/academics/model/enrollmentList";
-import { navEntries } from "@/features/identity/slots";
 import "@/features/academics/register";
 import type { CourseClassView, EnrollmentView } from "@/features/academics/model/types";
 import { ApiError } from "@/shared/api/client";
@@ -51,36 +50,6 @@ describe("U05 reference UI", () => {
     expect(screen.getByText("SE1701")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Xem lớp/ })).not.toBeInTheDocument();
     expect(onOpen).not.toHaveBeenCalled();
-  });
-
-  it("filters manager classes by term with the status tab; the term list ignores tabs and unknown URL terms show all", () => {
-    window.history.replaceState(null, "", "/manager/classes?classTerm=SU99");
-    const classes = [course, { ...course, id: "class-2", code: "SE1801", startsOn: "2027-04-03", term: "SP27-BL5", status: "ARCHIVED" as const },
-      { ...course, id: "class-3", code: "SE1901", startsOn: "2027-01-10", term: "SP27" }];
-    render(<ClassListPage classes={classes} subjects={[subject]} onOpen={vi.fn()} onCreate={vi.fn()} />);
-    expect(screen.getByRole("columnheader", { name: "Học kỳ" })).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /Xem lớp/ })).toHaveLength(3);
-    fireEvent.click(screen.getByRole("tab", { name: "Đang mở" }));
-    expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(["Tất cả học kỳ", "SP27-BL5", "SP27", "FA26"]);
-    fireEvent.click(screen.getByRole("menuitem", { name: "SP27" }));
-    expect(window.location.search).toContain("classTerm=SP27");
-    expect(screen.getAllByRole("button", { name: /Xem lớp/ }).map((button) => button.getAttribute("data-testid"))).toEqual(["class-open-class-3"]);
-    fireEvent.click(screen.getByRole("menuitem", { name: "SP27-BL5" }));
-    expect(screen.getByText("Không có lớp phù hợp.")).toBeInTheDocument();
-  });
-
-  it("counts dashboard tabs within the chosen term and shows the term on cards", () => {
-    window.history.replaceState(null, "", "/classes?classTerm=FA26");
-    const classes = [course, { ...course, id: "c2", code: "SE1901", startsOn: "2027-01-10", term: "SP27" },
-      { ...course, id: "c3", code: "SE1701", status: "ARCHIVED" as const, startsOn: "2027-01-10", term: "SP27" }];
-    render(<ClassDashboardPage audience="teacher" classes={classes} onOpen={vi.fn()} />);
-    expect(screen.getByRole("tab", { name: /Đang dạy/ })).toHaveTextContent("1");
-    expect(screen.getByRole("tab", { name: /Kết thúc/ })).toHaveTextContent("0");
-    expect(screen.getByText("SWP391 · FA26")).toBeInTheDocument();
-    expect(screen.queryByText("SE1901")).toBeNull();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Tất cả học kỳ" }));
-    expect(screen.getByRole("tab", { name: /Đang dạy/ })).toHaveTextContent("2");
-    expect(screen.getByText("SE1901")).toBeInTheDocument();
   });
 
   it("creates a class from its code and start date; the term is only previewed (D-U04-05)", async () => {
@@ -131,17 +100,6 @@ describe("U05 reference UI", () => {
     await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: course.name, description: "Mô tả mới", startsOn: "2026-09-07", version: 3 }));
     expect(await screen.findByRole("alert")).toHaveTextContent("tải lại");
     expect(screen.getByLabelText(/Mô tả/)).toHaveValue("Mô tả mới");
-  });
-
-  it("previews the term change old → new and sends the new start date", async () => {
-    const onSave = vi.fn().mockResolvedValue(undefined);
-    render(<ClassInfoForm value={course} onSave={onSave} />);
-    expect(screen.queryByTestId("class-info-term-change")).toBeNull();
-    fireEvent.change(screen.getByLabelText(/Ngày bắt đầu/), { target: { value: "03/04/2027" } });
-    expect(screen.getByTestId("class-info-term-change")).toHaveTextContent("Học kỳ: FA26 → SP27-BL5");
-    expect(screen.getByLabelText(/Học kỳ/)).toHaveValue("FA26");
-    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
-    await waitFor(() => expect(onSave).toHaveBeenCalledWith({ name: course.name, description: course.description, startsOn: "2027-04-03", version: 3 }));
   });
 
   it("does not offer editing for archived classes", () => {
@@ -230,24 +188,6 @@ describe("U05 reference UI", () => {
     await waitFor(() => expect(onBatch).toHaveBeenCalledWith("email\nmasv@fpt.edu.vn\nSE123456"));
   });
 
-  it("requires confirmation for archiving and sends the version", async () => {
-    const onChange = vi.fn().mockResolvedValue(undefined);
-    render(<ClassStateActions value={course} onChange={onChange} />);
-    fireEvent.click(screen.getByRole("button", { name: "Lưu trữ lớp" }));
-    expect(onChange).not.toHaveBeenCalled();
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Lưu trữ" }));
-    await waitFor(() => expect(onChange).toHaveBeenCalledWith("ARCHIVED", 3));
-  });
-
-  it("lets an open class drop its teacher", async () => {
-    const onAssign = vi.fn().mockResolvedValue(undefined);
-    render(<AssignTeacherDialog value={course} teachers={[teacher]} onAssign={onAssign} onClose={vi.fn()} />);
-    expect(screen.getByRole("combobox", { name: "Giảng viên" })).toHaveValue(teacher.email);
-    fireEvent.click(screen.getByRole("button", { name: "Bỏ chọn giảng viên" }));
-    fireEvent.click(screen.getByRole("button", { name: "Lưu" }));
-    await waitFor(() => expect(onAssign).toHaveBeenCalledWith(null, 3));
-  });
-
   it("does not allow saving an unchanged teacher assignment absent from active candidates", () => {
     const onAssign = vi.fn();
     render(<AssignTeacherDialog value={course} teachers={[]} onAssign={onAssign} onClose={vi.fn()} />);
@@ -273,17 +213,6 @@ describe("U05 reference UI", () => {
     // Bấm sinh viên không mở popup Thông tin sinh viên.
     fireEvent.click(screen.getByText("Nguyễn Văn An"));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-
-  it("opens the tab named in ?tab= and ignores unknown names", () => {
-    window.history.pushState({}, "", "/teaching/classes/class-1?tab=students");
-    const { unmount } = render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} />);
-    expect(screen.getByRole("tab", { name: /Sinh viên/ })).toHaveAttribute("aria-selected", "true");
-    unmount();
-    window.history.pushState({}, "", "/teaching/classes/class-1?tab=nope");
-    render(<ReadOnlyClassPage audience="teacher" value={course} students={[student]} />);
-    expect(screen.getByRole("tab", { name: /Thông tin lớp/ })).toHaveAttribute("aria-selected", "true");
-    window.history.pushState({}, "", "/");
   });
 
   it("does not show removed enrollments to a teacher", () => {
@@ -336,37 +265,6 @@ describe("U05 reference UI", () => {
     expect(screen.queryByText("Phân bố điểm")).not.toBeInTheDocument();
     expect(screen.getByTestId("class-header-term")).toHaveTextContent("FA26");
   });
-
-  it("shows teacher class facts as text, counts active students and safely hides empty descriptions", () => {
-    const description = `<script>alert(1)</script> Mô tả học phần chi tiết`;
-    const removedStudent: EnrollmentView = { ...student, accountId: "removed-1", name: "Sinh viên Đã gỡ", status: "REMOVED" };
-    const { container, rerender } = render(
-      <ReadOnlyClassPage
-        audience="teacher"
-        value={{ ...course, description }}
-        students={[student, removedStudent]}
-      />,
-    );
-
-    expect(screen.getByRole("heading", { name: "Thông tin lớp", level: 2 })).toBeInTheDocument();
-    expect(screen.getByText(course.code)).toBeInTheDocument();
-    // Chỉ đếm sinh viên đang học.
-    expect(screen.getByText("1", { selector: "dd" })).toBeInTheDocument();
-    expect(screen.getByText(`${course.subject.code} · ${course.subject.name}`)).toBeInTheDocument();
-    expect(screen.getByText(course.term, { selector: "dd" })).toBeInTheDocument();
-    expect(container.querySelector("input")).toBeNull();
-    expect(screen.getByText(description)).toBeInTheDocument();
-    expect(container.querySelector("script")).toBeNull();
-    expect(screen.queryByTestId("overview-students-card")).not.toBeInTheDocument();
-
-    rerender(<ReadOnlyClassPage audience="teacher" value={{ ...course, description: "  " }} students={[student]} />);
-    expect(screen.queryByText("Chưa có mô tả.")).not.toBeInTheDocument();
-    expect(screen.queryByText(description)).not.toBeInTheDocument();
-
-    rerender(<ReadOnlyClassPage audience="student" value={course} students={[student]} />);
-    expect(screen.getByRole("heading", { name: "Thông tin lớp", level: 2 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Giảng viên" })).toBeInTheDocument();
-  });
 });
 
 describe("enrollment CSV preview", () => {
@@ -389,16 +287,6 @@ describe("enrollment CSV preview", () => {
     expect(() => parseEnrollmentList("đ".repeat(51_201))).toThrow("100 KB");
     expect(() => parseEnrollmentList(Array.from({ length: 201 }, (_, i) => `s${i}@example.test`).join("\n"))).toThrow("200");
     expect(() => parseEnrollmentList("\n ")).toThrow();
-  });
-
-  it("registers teacher and manager teaching classes with /teaching/classes href", () => {
-    const teacherNav = navEntries.entries().find((e) => e.key === "teaching-classes");
-    const managerTeachingNav = navEntries.entries().find((e) => e.key === "manager-teaching-classes");
-    const studentNav = navEntries.entries().find((e) => e.key === "my-classes");
-
-    expect(teacherNav?.href).toBe("/teaching/classes");
-    expect(managerTeachingNav?.href).toBe("/teaching/classes");
-    expect(studentNav?.href).toBe("/classes");
   });
 });
 

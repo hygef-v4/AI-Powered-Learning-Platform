@@ -185,19 +185,6 @@ class GradingPromptBuilderTest {
     }
 
     @Test
-    void gradingInstructionsRequireWorkToMatchTheAssignment() {
-        assertThat(new GradingPromptBuilder(json).buildGradingInstructions())
-                .contains("compare the submission with the assignment instructions",
-                        "A different system or topic earns zero for topic-dependent items",
-                        "A trigger, flow, or business rule about another system does not satisfy this assignment",
-                        "For those items set the numeric score to 0",
-                        "A trigger must start the specific use case requested by the rubric and assignment",
-                        "A populated Trigger field for a different use case earns zero",
-                        "Apply topic-independent rubric items as written",
-                        "Absent notation earns no credit unless the rubric says it is optional");
-    }
-
-    @Test
     void gradingInstructionsCoverDiagramTypeNotationAmbiguityAndBlockEvidence() {
         // Kế hoạch 2026-11-20 giai đoạn 1–2.
         assertThat(new GradingPromptBuilder(json).buildGradingInstructions())

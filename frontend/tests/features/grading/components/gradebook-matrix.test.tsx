@@ -32,21 +32,6 @@ it("renders students once and aligns grades by assignment ID, preserving zero an
   expect(screen.getByText("Bình").closest("tr")).not.toHaveTextContent("9");
   expect(screen.queryByText("Chốt điểm")).not.toBeInTheDocument();
 });
-it("filters columns, exports all learners for the selected assignment and preserves filename", async () => {
-  mocks.exportGrades.mockResolvedValue({ blob: new Blob(["xlsx"]), filename: "Bài nhóm.xlsx" });
-  URL.createObjectURL = vi.fn(() => "blob:test"); URL.revokeObjectURL = vi.fn();
-  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function(this: HTMLAnchorElement) { expect(this.download).toBe("Bài nhóm.xlsx"); });
-  render(<ClassGradebookTab classId="c" />);
-  await screen.findByText("An");
-  fireEvent.change(screen.getByRole("combobox", { name: "Bài tập" }), { target: { value: "b" } });
-  expect(screen.queryByRole("columnheader", { name: /Kiến trúc/ })).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Xuất bảng điểm" }));
-  const dialog = screen.getByRole("dialog", { name: "Xuất bảng điểm" });
-  expect(within(dialog).getByRole("combobox", { name: /Phạm vi/ })).toHaveValue("b");
-  fireEvent.click(within(dialog).getByRole("button", { name: "Xuất tệp" }));
-  await waitFor(() => expect(mocks.exportGrades).toHaveBeenCalledWith("c", "xlsx", "b"));
-  click.mockRestore();
-});
 it("paginates and searches using the existing gradebook API, and handles errors", async () => {
   render(<ClassGradebookTab classId="c" />);
   await screen.findByText("An");

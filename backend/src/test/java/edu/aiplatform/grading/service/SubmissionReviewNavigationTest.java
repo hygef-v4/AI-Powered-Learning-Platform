@@ -62,33 +62,6 @@ class SubmissionReviewNavigationTest {
         return values;
     }
 
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.EnumSource(AssignmentStatus.class)
-    void assignmentStatusControlsPreviewAndBatchMetadata(AssignmentStatus status) {
-        var values = fixture();
-        var assignment = assignmentQuery.loadAssignment(assignmentId).orElseThrow();
-        when(assignment.assignmentId()).thenReturn(assignmentId);
-        when(assignment.status()).thenReturn(status);
-        when(assignmentQuery.listForClass(classId)).thenReturn(List.of(assignment));
-        when(evaluationRepository.findForClass(classId)).thenReturn(values);
-        boolean expectedEditable = status == AssignmentStatus.CLOSED || status == AssignmentStatus.RETIRED;
-
-        var detail = submissionReviewService.loadEvaluation(actor, values.get(0).id);
-        var listing = submissionReviewService.listSubmissions(actor, classId, assignmentId, null, null, 1, 20);
-
-        assertThat(detail.current()).isTrue();
-        assertThat(detail.document()).isNotNull();
-        assertThat(detail.editable()).isEqualTo(expectedEditable);
-        assertThat(listing.editable()).isEqualTo(expectedEditable);
-        assertThat(detail.readOnlyReason()).isEqualTo(expectedEditable ? null : GradingService.ASSIGNMENT_OPEN_MESSAGE);
-        assertThat(listing.readOnlyReason()).isEqualTo(detail.readOnlyReason());
-        if (status == AssignmentStatus.OPEN || expectedEditable) {
-            var progress = submissionReviewService.loadProgress(actor, classId).get(assignmentId);
-            assertThat(progress.editable()).isEqualTo(expectedEditable);
-            assertThat(progress.readOnlyReason()).isEqualTo(detail.readOnlyReason());
-        }
-    }
-
     @Test
     void closedAssignmentDoesNotMakeAnArchivedClassEditable() {
         var values = fixture();

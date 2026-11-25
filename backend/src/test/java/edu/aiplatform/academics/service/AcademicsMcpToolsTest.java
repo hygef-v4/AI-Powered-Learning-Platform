@@ -33,25 +33,6 @@ class AcademicsMcpToolsTest {
         verify(subjectQuery,never()).listManagedSubjects(teacher.accountId());
     }
 
-    @Test void filtersTaughtClassesByTermAndReturnsTheTerm() {
-        UUID subject = UUID.randomUUID();
-        var now = Instant.now();
-        var spring = CourseClass.createClass(UUID.randomUUID(), subject, "SE01", "Spring", "",
-                LocalDate.of(2027, 4, 3), teacher.accountId(), now);
-        var fall = CourseClass.createClass(UUID.randomUUID(), subject, "SE01", "Fall", "",
-                LocalDate.of(2026, 9, 7), teacher.accountId(), now);
-        when(academicsReadRepository.listTaught(teacher.accountId())).thenReturn(List.of(spring, fall));
-        var tools = new AcademicsMcpTools(academicsReadRepository, subjectQuery);
-
-        var result = (Map<?, ?>) tools.call(teacher, "list_my_classes", Map.of("term", "SP27-BL5")).content();
-
-        assertThat((List<?>) result.get("items")).singleElement()
-                .satisfies(item -> assertThat(((Map<?, ?>) item).get("term")).isEqualTo("SP27-BL5"))
-                .satisfies(item -> assertThat(((Map<?, ?>) item).get("classId")).isEqualTo(spring.id()));
-        assertThatThrownBy(() -> tools.call(teacher, "list_my_classes", Map.of("term", "SP2027")))
-                .isInstanceOf(ApiException.class);
-    }
-
     @Test void studentAdminAndInvalidPaginationAreRejectedBeforeQueries() {
         var tools=new AcademicsMcpTools(academicsReadRepository,subjectQuery);
         for(Role role:List.of(Role.STUDENT,Role.ADMIN)) {

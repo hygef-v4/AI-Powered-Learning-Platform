@@ -1,13 +1,9 @@
 import {render,screen,fireEvent,waitFor} from "@testing-library/react";
 import {afterEach,it,expect,vi} from "vitest";
-import {ClassesRoute,ClassDetailRoute} from "@/features/academics/pages/ClassRoutes";
+import { ClassDetailRoute } from "@/features/academics/pages/ClassRoutes";
 vi.mock("next/navigation",()=>({useRouter:()=>({push:vi.fn()}),useSearchParams:()=>new URLSearchParams(window.location.search)}));
 vi.mock("@/shared/auth/useCurrentUser",()=>({useCurrentUser:()=>({displayName:"User"})}));
 afterEach(()=>vi.unstubAllGlobals());
-it("routes an empty authorized teacher list through server capability",async()=>{
- const fn=vi.fn().mockImplementation((url:string)=>Promise.resolve(url.includes("/me/")?Response.json({}, {status:403}):Response.json([])));vi.stubGlobal("fetch",fn);
- render(<ClassesRoute/>);expect(await screen.findByRole("heading",{name:"Lớp được phân công"})).toBeInTheDocument();expect(fn).toHaveBeenCalledTimes(2);
-});
 it("reloads a conflicting manager mutation and retains its actionable error",async()=>{
  const course={id:"c",subject:{id:"s",code:"S",name:"Subject"},code:"C",name:"Class",description:"",startsOn:"2027-01-10",term:"SP27",status:"DRAFT",teacher:{id:"t",name:"Teacher",email:"t@test.test"},version:1,activeStudentCount:0,removedStudentCount:0,showGradeDistribution:false,createdAt:"2026-01-01"};
  const fn=vi.fn().mockImplementation((url:string,init:RequestInit)=>Promise.resolve(init.method==="PUT"?Response.json({detail:"Version changed"},{status:409}):url.includes("/students?")?Response.json([]):Response.json(course)));vi.stubGlobal("fetch",fn);

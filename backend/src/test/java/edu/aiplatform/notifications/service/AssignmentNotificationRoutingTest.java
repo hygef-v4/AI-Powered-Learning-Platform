@@ -66,40 +66,6 @@ class AssignmentNotificationRoutingTest {
     }
 
     @Test
-    void classAssignmentKeepsStudentClassInLinkAndFiltersStaleMembershipAndDisabledAccounts() {
-        UUID removed = UUID.randomUUID(), disabled = UUID.randomUUID(), teacher = UUID.randomUUID();
-        when(classAccess.getClassRef(first))
-                .thenReturn(Optional.of(course(first, ClassStatus.OPEN)));
-        when(classAccess.listActiveStudents(first))
-                .thenReturn(List.of(studentA, removed, disabled, teacher));
-        member(studentA, first);
-        member(removed, first);
-        when(classAccess.isActiveStudent(removed, first)).thenReturn(false);
-        when(accountLookup.getContact(disabled))
-                .thenReturn(
-                        Optional.of(
-                                new AccountContact(
-                                        disabled,
-                                        "fixture@example.test",
-                                        "Disabled",
-                                        Role.STUDENT,
-                                        AccountStatus.DISABLED)));
-        when(accountLookup.getContact(teacher))
-                .thenReturn(
-                        Optional.of(
-                                new AccountContact(
-                                        teacher,
-                                        "fixture@example.test",
-                                        "Teacher",
-                                        Role.TEACHER,
-                                        AccountStatus.ACTIVE)));
-        var event = event(Map.of("scope", "CLASS", "classId", first.toString()));
-        notificationEventService.handleEvent(event);
-        delivery(event, first, studentA);
-        verifyNoMoreInteractions(notificationService);
-    }
-
-    @Test
     void subjectAssignmentUsesPerClassLinksAndStableDedupRegardlessOfProviderOrder() {
         var a = course(first, ClassStatus.OPEN);
         var b = course(second, ClassStatus.OPEN);

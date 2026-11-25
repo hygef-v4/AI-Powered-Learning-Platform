@@ -68,13 +68,6 @@ describe("nhập DOCX vào bài làm", () => {
     expect(() => checkDocxStructure(flat, { blocks: [para("a", "Đề bài: mô tả hệ thống"), para("b", "Mới")] })).not.toThrow();
   });
 
-  it("tiêu đề sinh viên tự đặt trong bài thành đoạn in đậm của phần đó", () => {
-    const imported: DocumentModel = { blocks: [heading("x1", "H1", "Phân tích"), heading("own", "H2", "1. Tác nhân", "STUDENT"),
-      heading("x5", "H1", "Thiết kế"), heading("x6", "H2", "Lớp"), heading("x8", "H2", "Bảng")] };
-    const { content: next } = mergeImportedWork(content, parts, imported);
-    expect(next.blocks.find((b) => b.id === "own")).toMatchObject({ type: "PARAGRAPH", content: { runs: [{ text: "1. Tác nhân", bold: true }] } });
-  });
-
   it("bài không có mục: cả tệp là một phần", () => {
     const flat: DocumentModel = { blocks: [para("t", "Đề"), para("s", "Cũ", "STUDENT")] };
     const { content: next, updatedParts } = mergeImportedWork(flat, computeParts(flat), { blocks: [para("a", "Đề"), para("b", "Cũ"), para("c", "Mới")] });

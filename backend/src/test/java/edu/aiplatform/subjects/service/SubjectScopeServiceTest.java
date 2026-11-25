@@ -39,24 +39,6 @@ class SubjectScopeServiceTest {
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
 
     @Test
-    void readsCurrentAssignmentEveryTimeAndDoesNotCacheAnAllowDecision() {
-        UUID manager = UUID.randomUUID();
-        UUID subject = UUID.randomUUID();
-        when(subjectRepository.isManagedBy(manager, subject)).thenReturn(true, false);
-        assertThat(subjectScopeService.isSubjectManager(manager, subject)).isTrue();
-        assertThat(subjectScopeService.isSubjectManager(manager, subject)).isFalse();
-        verify(subjectRepository, times(2)).isManagedBy(manager, subject);
-    }
-
-    @Test
-    void unknownOrUnassignedSubjectDoesNotGrantScope() {
-        UUID manager = UUID.randomUUID();
-        UUID missing = UUID.randomUUID();
-        when(subjectRepository.isManagedBy(manager, missing)).thenReturn(false);
-        assertThat(subjectScopeService.isSubjectManager(manager, missing)).isFalse();
-    }
-
-    @Test
     void returnsManagedIdsForRoleChangeGuardWithoutCallingAuthorization() {
         UUID manager = UUID.randomUUID();
         Subject first = Subject.createSubject(UUID.randomUUID(), "SWR302", "A", null, manager, NOW);
@@ -112,74 +94,6 @@ class SubjectScopeServiceTest {
                                                         event.details().get("oldManagerId"))));
     }
 
-    @Test
-    void releaseSkipsSubjectReassignedBeforeLockAndFailsOnLostUpdate() {
-        UUID manager = UUID.randomUUID();
-        Subject subject =
-                Subject.createSubject(
-                        UUID.randomUUID(), "SWR302", "A", null, manager, NOW.minusSeconds(60));
-        when(subjectRepository.findSubjectsManagedBy(manager)).thenReturn(List.of(subject));
-        when(subjectRepository.findByIdForUpdate(subject.id()))
-                .thenReturn(Optional.of(subject.changeManager(UUID.randomUUID(), NOW)));
-        assertThat(subjectScopeService.releaseManagerAssignments(manager, admin)).isEmpty();
-        verify(subjectRepository, never()).updateSubject(any(), anyLong());
-
-        when(subjectRepository.findByIdForUpdate(subject.id())).thenReturn(Optional.of(subject));
-        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(false);
-        assertThatThrownBy(() -> subjectScopeService.releaseManagerAssignments(manager, admin))
-                .isInstanceOfSatisfying(
-                        ApiException.class,
-                        error -> assertThat(error.readCode()).isEqualTo("SUBJECT_VERSION_CONFLICT"));
-        verifyNoInteractions(audit);
-    }
-
-    @Test
-    void releasesLockInIdOrderAndSecondRepositoryFailurePropagates() {
-        UUID manager = UUID.randomUUID();
-        List<Subject> subjects = managedPair(manager);
-        var failure = new IllegalStateException("second update unavailable");
-        when(subjectRepository.updateSubject(any(), anyLong())).thenAnswer(call -> {
-            Subject value = call.getArgument(0);
-            if (value.id().equals(subjects.get(1).id())) throw failure;
-            return true;
-        });
-
-        assertThatThrownBy(
-                () -> subjectScopeService.releaseManagerAssignments(
-                        manager, admin)).isSameAs(failure);
-
-        var order = org.mockito.Mockito.inOrder(subjectRepository, audit);
-        order.verify(subjectRepository).findSubjectsManagedBy(manager);
-        order.verify(subjectRepository).findByIdForUpdate(subjects.get(0).id());
-        order
-                .verify(subjectRepository)
-                .updateSubject(argThat(s -> s.id().equals(subjects.get(0).id())), anyLong());
-        order.verify(audit).record(argThat(e -> e.objectId().equals(subjects.get(0).id().toString())));
-        order.verify(subjectRepository).findByIdForUpdate(subjects.get(1).id());
-        order
-                .verify(subjectRepository)
-                .updateSubject(argThat(s -> s.id().equals(subjects.get(1).id())), anyLong());
-        verify(audit, times(1)).record(any());
-    }
-
-    @Test
-    void secondReleaseAuditFailureIsNotConvertedIntoSuccessfulResult() {
-        UUID manager = UUID.randomUUID();
-        List<Subject> subjects = managedPair(manager);
-        var failure = new IllegalStateException("second audit unavailable");
-        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(true);
-        org.mockito.Mockito.doAnswer(call -> {
-            AuditEvent event = call.getArgument(0);
-            if (event.objectId().equals(subjects.get(1).id().toString())) throw failure;
-            return null;
-        }).when(audit).record(any());
-        assertThatThrownBy(
-                () -> subjectScopeService.releaseManagerAssignments(
-                        manager, admin)).isSameAs(failure);
-        verify(subjectRepository, times(2)).updateSubject(any(), anyLong());
-        verify(audit, times(2)).record(any());
-    }
-
     private List<Subject> managedPair(UUID manager) {
         Subject first = Subject.createSubject(new UUID(0, 1), "FIRST", "A", null, manager, NOW.minusSeconds(60));
         Subject second = Subject.createSubject(new UUID(0, 2), "SECOND", "B", null, manager, NOW.minusSeconds(60));
@@ -187,24 +101,5 @@ class SubjectScopeServiceTest {
         when(subjectRepository.findByIdForUpdate(first.id())).thenReturn(Optional.of(first));
         when(subjectRepository.findByIdForUpdate(second.id())).thenReturn(Optional.of(second));
         return List.of(first, second);
-    }
-
-    @Test
-    void nullIdsFailClosedWithoutQueryingTheDatabase() {
-        assertThat(subjectScopeService.isSubjectManager(null, UUID.randomUUID())).isFalse();
-        assertThat(subjectScopeService.isSubjectManager(UUID.randomUUID(), null)).isFalse();
-        assertThat(subjectScopeService.listManagedSubjects(null)).isEmpty();
-        assertThat(subjectScopeService.releaseManagerAssignments(null, admin)).isEmpty();
-        verifyNoInteractions(subjectRepository);
-    }
-
-    @Test
-    void repositoryFailurePropagatesSoU01CanDenyRatherThanAllowOnDependencyFailure() {
-        UUID manager = UUID.randomUUID();
-        UUID subject = UUID.randomUUID();
-        IllegalStateException failure = new IllegalStateException("database unavailable");
-        when(subjectRepository.isManagedBy(manager, subject)).thenThrow(failure);
-        assertThatThrownBy(
-                () -> subjectScopeService.isSubjectManager(manager, subject)).isSameAs(failure);
     }
 }

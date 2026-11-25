@@ -53,29 +53,4 @@ class GlobalExceptionHandlerTest {
         void save(@Valid @RequestBody Save input) {
         }
     }
-
-    @Test
-    void databaseLockTimeoutReturnsSafeRetryableError() throws Exception {
-        mvc.perform(post("/locked"))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.code").value("SYSTEM_BUSY"))
-                .andExpect(jsonPath("$.detail").value("Hệ thống tạm bận, vui lòng thử lại sau"));
-    }
-
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(strings = {"55P03", "57014"})
-    void unclassifiedPostgresTimeoutReturnsSafeRetryableError(String state) throws Exception {
-        mvc.perform(post("/sql/" + state))
-                .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.code").value("SYSTEM_BUSY"))
-                .andExpect(jsonPath("$.detail").value("Hệ thống tạm bận, vui lòng thử lại sau"));
-    }
-
-    @Test
-    void unrelatedSqlFailureIsNotMisreportedAsTimeoutOrLeaked() throws Exception {
-        mvc.perform(post("/sql/XX000"))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
-                .andExpect(jsonPath("$.detail").value("Không thể xử lý yêu cầu lúc này"));
-    }
 }

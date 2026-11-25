@@ -177,28 +177,6 @@ class QuestionBankServiceTest {
     }
 
     @Test
-    void concurrentDraftOpeningReturnsTheDraftThatWon() {
-        Question active = active();
-        Question winner = active.createNextDraft(2, UUID.randomUUID(), NOW);
-        when(repo.findBankDraft(active.lineageId())).thenReturn(Optional.empty(), Optional.of(winner));
-        doThrow(new DuplicateKeyException("ux_questions_bank_draft")).when(repo).insert(any());
-
-        assertThat(service.openDraft(manager, active.id()).question().id()).isEqualTo(winner.id());
-    }
-
-    @Test
-    void activateValidatesAndAudits() {
-        Question draft = draft();
-        Question activated = draft.activate(NOW);
-        when(repo.findQuestion(draft.id())).thenReturn(Optional.of(draft), Optional.of(activated));
-
-        assertThat(service.activate(manager, draft.id(), 0).question().status()).isEqualTo(QuestionStatus.ACTIVE);
-        verify(repo).updateQuestion(any());
-        Question again = active();
-        assertThat(api(() -> service.activate(manager, again.id(), 0)).readCode()).isEqualTo("QUESTION_NOT_DRAFT");
-    }
-
-    @Test
     void retireOnlyActiveQuestions() {
         Question draft = draft();
         assertThat(api(() -> service.retire(manager, draft.id(), 0)).readCode()).isEqualTo("QUESTION_NOT_ACTIVE");

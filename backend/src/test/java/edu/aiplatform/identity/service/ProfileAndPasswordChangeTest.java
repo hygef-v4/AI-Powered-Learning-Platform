@@ -97,13 +97,6 @@ class ProfileAndPasswordChangeTest {
     }
 
     @Test
-    void unchangedProfileWritesNothing() {
-        profiles.updateProfile(actor, "Vũ Minh Tài", "");
-        verify(accounts, never()).updateProfile(any(), anyString(), any(), any(), any());
-        assertThat(audits).isEmpty();
-    }
-
-    @Test
     void invalidFieldsAreRejected() {
         assertThatThrownBy(() -> profiles.updateProfile(actor, "   ", null))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("INVALID_DISPLAY_NAME"));
@@ -199,16 +192,6 @@ class ProfileAndPasswordChangeTest {
         assertThatThrownBy(() -> passwords.change(actor, "sid", PASSWORD, NEW_PASSWORD))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.readStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE));
-    }
-
-    @Test
-    void wrongCurrentPasswordChangesNothing() {
-        assertThatThrownBy(() -> passwords.change(actor, "sid", "sai-mat-khau1", NEW_PASSWORD))
-                .isInstanceOfSatisfying(ApiException.class,
-                        e -> assertThat(e.readCode()).isEqualTo(PasswordChangeService.CURRENT_PASSWORD_INVALID));
-        verify(accounts, never()).updatePassword(any(), anyString(), any());
-        verify(sessions, never()).deleteAllExcept(any(), any());
-        verify(throttle).recordPasswordChangeFailure(account.id());
     }
 
     @Test

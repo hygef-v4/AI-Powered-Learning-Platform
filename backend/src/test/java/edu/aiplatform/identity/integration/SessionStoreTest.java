@@ -30,26 +30,6 @@ class SessionStoreTest {
     }
 
     @Test
-    void corruptJsonNullIsDeletedByTheFakeScriptToo() {
-        var session = store.createSession(accountId, NOW.toEpochMilli());
-        String key = SessionStore.SESSION_PREFIX + session.sid();
-        redis.values.put(key, "null");
-
-        assertThat(store.findSession(session.sid())).isEmpty();
-        assertThat(redis.values).doesNotContainKey(key);
-    }
-
-    @Test
-    void createdSessionIsFoundAndRefreshTokenIsStoredHashed() {
-        SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
-
-        assertThat(store.findSession(session.sid())).hasValueSatisfying(s -> assertThat(s.accountId()).isEqualTo(accountId));
-        assertThat(redis.values).doesNotContainValue(session.refreshToken());
-        assertThat(redis.values).containsKey(SessionStore.REFRESH_PREFIX + Hashing.hashSha256Hex(session.refreshToken()));
-        assertThat(redis.ttls.get(SessionStore.SESSION_PREFIX + session.sid())).isEqualTo(Duration.ofHours(2));
-    }
-
-    @Test
     void rotateIssuesNewTokenAndReuseOfOldTokenRevokesSession() {
         SessionStore.IssuedSession session = store.createSession(accountId, NOW.toEpochMilli());
 

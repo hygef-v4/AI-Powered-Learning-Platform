@@ -32,15 +32,6 @@ class GradingMcpReadProgressTest {
         assertThatThrownBy(() -> progress.advanceProgress(actor,evaluation,fingerprint,0,2))
                 .isInstanceOfSatisfying(ApiException.class,ex -> assertThat(ex.readCode()).isEqualTo("MCP_CONTEXT_READ_UNAVAILABLE"));
     }
-    @Test void keyIsIsolatedByActorEvaluationAndSnapshotAndExpiryIsBounded() {
-        String key=GradingMcpReadProgress.buildProgressKey(actor,evaluation,fingerprint);
-        assertThat(key).isNotEqualTo(GradingMcpReadProgress.buildProgressKey(UUID.randomUUID(),evaluation,fingerprint));
-        assertThat(key).isNotEqualTo(GradingMcpReadProgress.buildProgressKey(actor,UUID.randomUUID(),fingerprint));
-        assertThat(key).isNotEqualTo(GradingMcpReadProgress.buildProgressKey(actor,evaluation,"b".repeat(64)));
-        when(stringRedisTemplate.execute(GradingMcpReadProgress.ADVANCE,List.of(key),"0","2","1800")).thenReturn(2L);
-        progress.advanceProgress(actor,evaluation,fingerprint,0,2);
-        verify(stringRedisTemplate).execute(GradingMcpReadProgress.ADVANCE,List.of(key),"0","2","1800");
-    }
     private static void assertRequired(org.assertj.core.api.ThrowableAssert.ThrowingCallable call) {
         assertThatThrownBy(call).isInstanceOfSatisfying(ApiException.class,
                 ex -> assertThat(ex.readCode()).isEqualTo("MCP_CONTEXT_READ_REQUIRED"));

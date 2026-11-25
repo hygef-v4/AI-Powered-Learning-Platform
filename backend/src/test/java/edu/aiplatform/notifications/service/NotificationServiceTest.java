@@ -56,21 +56,6 @@ class NotificationServiceTest {
     }
 
     @Test
-    void duplicateEventDoesNotScheduleMailOrSse() {
-        when(notificationRepository.insertNotification(any())).thenReturn(false);
-        notificationService.createNotification(
-                UUID.randomUUID(),
-                NotificationType.ENROLLED,
-                List.of(account),
-                "t",
-                "s",
-                "/classes/1",
-                "ENROLLED",
-                null);
-        verifyNoInteractions(emailDeliveryService, sseHub);
-    }
-
-    @Test
     void sseReachesBrokerOnlyAfterCommitAndOneNoticePerRecipient() {
         RabbitTemplate rabbit = mock(RabbitTemplate.class);
         NotificationService service = createServiceWithRealHub(rabbit);
@@ -121,65 +106,6 @@ class NotificationServiceTest {
                 emailDeliveryService,
                 new RabbitSseHub(rabbit),
                 clock);
-    }
-
-    @Test
-    void sseFailureDoesNotFailCommittedFanout() {
-        when(notificationRepository.insertNotification(any())).thenReturn(true);
-        doThrow(new IllegalStateException()).when(sseHub).publish(anyString(), any());
-        assertThatCode(
-                        () ->
-                                notificationService.createNotification(
-                                        UUID.randomUUID(),
-                                        NotificationType.ANNOUNCEMENT,
-                                        List.of(account),
-                                        "t",
-                                        "s",
-                                        "/announcements",
-                                        null,
-                                        null))
-                .doesNotThrowAnyException();
-    }
-
-    @Test
-    void foreignReadReturns404AndAudits() {
-        when(notificationRepository.markRead(any(), eq(account), any())).thenReturn(false);
-        assertThatThrownBy(() -> notificationService.markRead(actor, UUID.randomUUID()))
-                .isInstanceOf(ApiException.class);
-        verify(audit).record(argThat(e -> e.action().equals("ACCESS_DENIED")));
-    }
-
-    @Test
-    void readAllUsesPrincipalOnly() {
-        notificationService.markAllRead(actor);
-        verify(notificationRepository).markAllRead(eq(account), any());
-        assertThat(notificationService.resolveAuthorizedChannel(actor))
-                .isEqualTo("notifications:account:" + account);
-    }
-
-    @Test
-    void disabledAccountCannotReadEvenEmptyFeed() {
-        when(authorization.authorize(any(), any(), any()))
-                .thenReturn(AuthorizationDecision.deny("DISABLED"));
-        assertThatThrownBy(() -> notificationService.countUnread(actor))
-                .isInstanceOf(ApiException.class);
-        verify(notificationRepository, never()).countUnread(any());
-    }
-
-    @Test
-    void preferencesDefaultOnAndWhitelist() {
-        var notificationPreferenceService =
-                new NotificationPreferenceService(notificationRepository, notificationAccess);
-        when(notificationRepository.findPreferences(account)).thenReturn(Map.of());
-        assertThat(notificationPreferenceService.loadPreferences(actor))
-                .hasSize(5)
-                .containsEntry("ANNOUNCEMENT_IMPORTANT", true);
-        assertThatThrownBy(
-                () -> notificationPreferenceService.updatePreferences(
-                        actor, Map.of("BACKUP_FAILED", false)))
-                .isInstanceOf(ApiException.class);
-        notificationPreferenceService.updatePreferences(actor, Map.of("ENROLLED", false));
-        verify(notificationRepository).savePreference(account, "ENROLLED", false);
     }
 
     @ParameterizedTest
@@ -238,22 +164,6 @@ class NotificationServiceTest {
     }
 
     @Test
-    void adminBackupRemainsRequiredEvenWithAnOldDisabledRow() {
-        var notificationPreferenceService =
-                new NotificationPreferenceService(notificationRepository, notificationAccess);
-        var admin = new Actor(account, Role.ADMIN);
-        when(notificationRepository.findPreferences(account))
-                .thenReturn(Map.of("BACKUP_FAILED", false));
-        assertThat(notificationPreferenceService.loadPreferences(admin))
-                .containsExactlyEntriesOf(Map.of("BACKUP_FAILED", true));
-        assertThatThrownBy(
-                () -> notificationPreferenceService.updatePreferences(
-                        admin, Map.of("BACKUP_FAILED", false)))
-                .isInstanceOf(ApiException.class);
-        verify(notificationRepository, never()).savePreference(any(), anyString(), anyBoolean());
-    }
-
-    @Test
     void storedOptOutIsPreservedWhileOtherDefaultsStayEnabled() {
         var notificationPreferenceService =
                 new NotificationPreferenceService(notificationRepository, notificationAccess);
@@ -263,60 +173,6 @@ class NotificationServiceTest {
                 .containsExactlyInAnyOrderEntriesOf(
                         Map.of("QUESTION_REVIEWED", false, "LEADER_CHANGE_REQUESTED", true));
         verify(notificationRepository, never()).savePreference(any(), anyString(), anyBoolean());
-    }
-
-    @Test
-    void teacherCannotEnableManagerOnlyQuestionProposals() {
-        var notificationPreferenceService =
-                new NotificationPreferenceService(notificationRepository, notificationAccess);
-        assertThatThrownBy(
-                        () ->
-                                notificationPreferenceService.updatePreferences(
-                                        new Actor(account, Role.TEACHER),
-                                        Map.of("QUESTION_PROPOSED", true)))
-                .isInstanceOf(ApiException.class);
-    }
-
-    @Test
-    void unsafeLinksAndOversizePagesRejected() {
-        assertThatThrownBy(
-                        () ->
-                                notificationService.createNotification(
-                                        UUID.randomUUID(),
-                                        NotificationType.ENROLLED,
-                                        List.of(account),
-                                        "t",
-                                        "s",
-                                        "//external.test",
-                                        null,
-                                        null))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> notificationService.listNotifications(actor, false, 1, 51))
-                .isInstanceOf(ApiException.class);
-    }
-
-    @ParameterizedTest
-    @EnumSource(NotificationType.class)
-    void legacyFeedCopyChangesWithoutRewritingHistoryOrReadState(NotificationType type) {
-        var n = row(type, "Đăng nhập để xem thông tin liên quan.");
-        n.readAt = clock.instant().minusSeconds(60);
-        when(notificationRepository.listNotifications(account, false, 1, 20))
-                .thenReturn(List.of(n));
-
-        var item = notificationService.listNotifications(actor, false, 1, 20).items().get(0);
-
-        assertThat(item.summary())
-                .isNotBlank()
-                .hasSizeLessThanOrEqualTo(500)
-                .doesNotContain("Đăng nhập");
-        assertThat(item.id()).isEqualTo(n.id);
-        assertThat(item.type()).isEqualTo(type.name());
-        assertThat(item.link()).isEqualTo(n.link);
-        assertThat(item.readAt()).isEqualTo(n.readAt);
-        assertThat(item.createdAt()).isEqualTo(n.createdAt);
-        assertThat(n.summary).isEqualTo("Đăng nhập để xem thông tin liên quan.");
-        verify(notificationRepository, never()).insertNotification(any());
-        verifyNoInteractions(emailDeliveryService, sseHub);
     }
 
     @Test

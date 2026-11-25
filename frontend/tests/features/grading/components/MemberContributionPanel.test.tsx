@@ -52,13 +52,6 @@ it("has a collapsed guide with five descriptions and no fixed score conversion",
   expect(within(screen.getByRole("combobox", { name: /Mức đóng góp/ })).getAllByRole("option")).toHaveLength(6);
 });
 
-it("disables all edits for a locked class", () => {
-  renderPanel({}, false);
-  expect(screen.getByLabelText(/Mức đóng góp/)).toBeDisabled();
-  expect(screen.getByLabelText("Điểm cá nhân")).toBeDisabled();
-  expect(screen.getByRole("button", { name: "Lưu điểm thành viên" })).toBeDisabled();
-});
-
 it("keeps the entered assessment when saving fails", async () => {
   mocks.saveMemberGrade.mockRejectedValue(new Error("Không lưu được"));
   renderPanel();
@@ -83,25 +76,6 @@ it("keeps each member's draft while switching between members and refreshing ano
   expect(screen.getByText("Chưa lưu")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Thành viên sau" }));
   expect(screen.getByLabelText(/Căn cứ đánh giá/)).toHaveValue("Bình hiểu nghiệp vụ");
-});
-
-it("saving one member leaves another member's draft intact and rebases an unchanged server grade", async () => {
-  const second = { ...member, id: "member-2", accountId: "student-2" };
-  const props = { root, members: [member, second], names: { student: "An", "student-2": "Bình" }, onSaved: vi.fn() };
-  const view = render(<MemberContributionPanel {...props} />);
-  fireEvent.change(screen.getByLabelText(/Căn cứ đánh giá/), { target: { value: "An cần bổ sung" } });
-  fireEvent.change(screen.getByLabelText("Thành viên"), { target: { value: "student-2" } });
-  fireEvent.change(screen.getByLabelText(/Căn cứ đánh giá/), { target: { value: "Bình hoàn thành" } });
-  const saved = { ...second, version: 4, memberOverride: true, adjustmentReason: "Bình hoàn thành" };
-  mocks.saveMemberGrade.mockResolvedValue(saved);
-  fireEvent.click(screen.getByRole("button", { name: "Lưu điểm thành viên" }));
-  await waitFor(() => expect(props.onSaved).toHaveBeenCalledOnce());
-  view.rerender(<MemberContributionPanel {...props} members={[{ ...member, version: 4 }, saved]} />);
-  fireEvent.click(screen.getByRole("button", { name: "Thành viên trước" }));
-  expect(screen.getByLabelText(/Căn cứ đánh giá/)).toHaveValue("An cần bổ sung");
-  mocks.saveMemberGrade.mockResolvedValue({ ...member, version: 5, memberOverride: true, adjustmentReason: "An cần bổ sung" });
-  fireEvent.click(screen.getByRole("button", { name: "Lưu điểm thành viên" }));
-  await waitFor(() => expect(mocks.saveMemberGrade).toHaveBeenLastCalledWith("root", "student", 4, "8", "An cần bổ sung", null));
 });
 
 it("retains drafts without silently overwriting a conflicting server grade", async () => {

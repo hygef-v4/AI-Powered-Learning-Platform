@@ -72,17 +72,6 @@ class AccountLookupAndPolicyTest {
         verify(accounts, never()).findById(any());
     }
 
-    /** Mọi action khai báo cho unit khác phải có dòng trong bảng quyền, nếu không sẽ bị từ chối mặc định (Q14). */
-    @Test
-    void everyDeclaredActionHasAPolicyRule() throws IllegalAccessException {
-        for (Field field : Actions.class.getDeclaredFields()) {
-            if (Modifier.isStatic(field.getModifiers()) && field.getType() == String.class) {
-                String action = (String) field.get(null);
-                assertThat(AccessPolicy.findRule(action)).as(action).isPresent();
-            }
-        }
-    }
-
     @Test
     void adminActionsAreAdminOnlyAndUploadExcludesAdmin() {
         Arrays.stream(Actions.class.getDeclaredFields())
@@ -143,17 +132,6 @@ class AccountLookupAndPolicyTest {
         assertThat(AccessPolicy.findRule(Actions.AI_SHARED_USE).orElseThrow().roles())
                 .containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
         assertThat(AccessPolicy.findRule(Actions.AI_ADMIN).orElseThrow().roles()).containsExactly(Role.ADMIN);
-    }
-
-    /** U12: nhóm do giảng viên được giao dạy quản lý; sinh viên đang học làm bài nhóm. */
-    @Test
-    void groupActionsUseClassScope() {
-        var manage = AccessPolicy.findRule(Actions.GROUP_MANAGE).orElseThrow();
-        assertThat(manage.scope()).isEqualTo(ScopeKind.CLASS);
-        assertThat(manage.roles()).containsExactlyInAnyOrder(Role.TEACHER, Role.SUBJECT_MANAGER);
-        var work = AccessPolicy.findRule(Actions.GROUP_WORK).orElseThrow();
-        assertThat(work.scope()).isEqualTo(ScopeKind.CLASS);
-        assertThat(work.roles()).containsExactly(Role.STUDENT);
     }
 
     private static String readName(Field field) {

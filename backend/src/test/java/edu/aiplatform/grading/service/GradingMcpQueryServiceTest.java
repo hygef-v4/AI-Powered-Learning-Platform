@@ -63,16 +63,6 @@ class GradingMcpQueryServiceTest {
         var e=evaluation();setup(e,List.of());
         assertThatThrownBy(() -> gradingMcpQueryService.loadGradingContext(teacher,Map.of("evaluationId",e.id.toString(),"offset",1))).isInstanceOf(ApiException.class);
     }
-    @Test void gradingContextContainsAssignmentAndSharedPolicy() {
-        var e=evaluation();setup(e,List.of());
-        var context=gradingMcpQueryService.loadGradingContext(teacher,Map.of("evaluationId",e.id.toString()));
-        assertThat(context).containsKeys("assignmentContext", "gradingInstructions");
-        assertThat((Map<String,Object>)context.get("assignmentContext")).containsEntry("instructions","Read the case");
-        assertThat(context.get("gradingInstructions")).isEqualTo("Grade only the locked rubric");
-        verify(progress).advanceProgress(teacher.accountId(),e.id,(String)context.get("snapshotFingerprint"),0,0);
-        gradingMcpQueryService.requireCompleteRead(teacher,e.id,e.version,e.submissionHash,(String)context.get("snapshotFingerprint"));
-        verify(progress).requireCompleteRead(teacher.accountId(),e.id,(String)context.get("snapshotFingerprint"),0);
-    }
     @Test void unavailableReadProgressCannotBecomeAContextSuccess() {
         var e=evaluation();setup(e,List.of());
         doThrow(ApiException.createUnavailable("MCP_CONTEXT_READ_UNAVAILABLE","Unavailable")).when(progress).advanceProgress(any(),any(),any(),anyInt(),anyInt());

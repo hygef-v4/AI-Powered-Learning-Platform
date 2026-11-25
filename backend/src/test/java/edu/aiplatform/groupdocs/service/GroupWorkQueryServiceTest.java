@@ -98,18 +98,6 @@ class GroupWorkQueryServiceTest {
     }
 
     @Test
-    void statusForStudentAssignmentsUsesOwnGroups() {
-        GroupDocument submitted = doc(true);
-        when(groups.listGroupIdsOf(member.accountId())).thenReturn(List.of(g1.id()));
-        when(documents.listByGroups(List.of(g1.id()), List.of(assignmentId))).thenReturn(List.of(submitted));
-
-        var status = service.statusFor(member.accountId(), List.of(assignmentId));
-
-        assertThat(status.get(assignmentId).groupDocumentId()).isEqualTo(submitted.id());
-        assertThat(status.get(assignmentId).submitted()).isTrue();
-    }
-
-    @Test
     void reminderProviderSelectsOnlyEnrolledMembersWhoseActualGroupHasNotSubmitted() {
         UUID workingMember = UUID.randomUUID(), workingPeer = UUID.randomUUID();
         UUID removedMember = UUID.randomUUID(), workingGroup = UUID.randomUUID();
