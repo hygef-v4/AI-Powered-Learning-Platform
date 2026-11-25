@@ -49,7 +49,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U11-40 | Audit: `QUIZ_ATTEMPT_SUBMITTED` (tay hoặc tự); `QUIZ_SUBMIT_REJECTED` khi bắt đầu lượt bị từ chối, lý do `NO_ATTEMPTS_LEFT` (hết lượt) hoặc `QUIZ_NOT_OPEN` (lớp hoặc Quiz không còn mở) — nộp khi quá giờ không bị từ chối mà tự nộp (BR-U11-13); `QUIZ_PENALTY_APPLIED`, `QUIZ_PENALTY_DISMISSED` khi giảng viên quyết định (BR-U11-33). Không audit từng lần lưu và từng sự kiện hoạt động. | FR-014, sửa 2026-11-25 |
+| BR-U11-40 | Không còn hiệu lực từ 2026-11-25: U11 không ghi audit, kể cả khi bị từ chối (BR-U02-10). Trước đó: `QUIZ_ATTEMPT_SUBMITTED`, `QUIZ_SUBMIT_REJECTED` khi bắt đầu lượt bị từ chối, `QUIZ_PENALTY_APPLIED`, `QUIZ_PENALTY_DISMISSED`. | FR-014, BR-U02-10 |
 | BR-U11-41 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. U01, U05, U10 không trả lời thì từ chối (fail closed). | SEC-002 |
 
 ## Scoring/privacy remediation — 2026-11-10

@@ -502,7 +502,6 @@ class QuizPracticeServicesTest {
         assertThat(done.submitMode()).isEqualTo(SubmitMode.AUTO_ACCESS_LOST);
         assertThat(done.score()).as("chấm bằng câu trả lời đã lưu").isEqualByComparingTo("1");
         assertThat(store.byId.get(theirs.attemptId()).submitMode()).isEqualTo(SubmitMode.AUTO_ACCESS_LOST);
-        assertThat(audits).filteredOn(e -> e.action().equals("QUIZ_ATTEMPT_SUBMITTED")).hasSize(2);
     }
 
     @Test

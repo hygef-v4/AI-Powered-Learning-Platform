@@ -41,9 +41,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F3 - Bắt đầu hoặc tiếp tục lượt (UC 51)
 1. Bấm Làm Quiz (hoặc Tiếp tục); frontend gọi `POST /api/v1/quizzes/{quizId}/attempts` kèm `classId`.
-2. Kiểm ghi danh (R5); khóa theo (Quiz, người học); kiểm lớp `OPEN` và Quiz `OPEN` của lớp hoặc môn chứa lớp. Không đạt thì `409 QUIZ_NOT_OPEN` và audit `QUIZ_SUBMIT_REJECTED` (BR-U11-10, BR-U11-40).
+2. Kiểm ghi danh (R5); khóa theo (Quiz, người học); kiểm lớp `OPEN` và Quiz `OPEN` của lớp hoặc môn chứa lớp. Không đạt thì `409 QUIZ_NOT_OPEN` (BR-U11-10).
 3. Đã có lượt `IN_PROGRESS` trong lớp này thì trả lượt đó; lượt đã quá `deadlineAt` cộng 30 giây thì tự nộp trước (`AUTO_TIME_LIMIT`) và Quiz Taking chuyển sang kết quả (KAN-212).
-4. Chưa có lượt đang làm: hết lượt trong lớp thì `409 NO_ATTEMPTS_LEFT` và audit `QUIZ_SUBMIT_REJECTED`; còn lượt thì tạo lượt: `attemptNo` kế tiếp trong lớp, chụp theo BR-U11-11, sinh seed, `deadlineAt`.
+4. Chưa có lượt đang làm: hết lượt trong lớp thì `409 NO_ATTEMPTS_LEFT`; còn lượt thì tạo lượt: `attemptNo` kế tiếp trong lớp, chụp theo BR-U11-11, sinh seed, `deadlineAt`.
 5. Mở Quiz Taking.
 
 ### F4 - Làm Quiz và tự lưu (UC 51)

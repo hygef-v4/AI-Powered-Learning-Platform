@@ -14952,3 +14952,12 @@ used by CI or deployment. Replace README references with a plain
 **Context**: Construction, U10/U11, commit và push.
 
 ---
+
+## Auto-fix: CI backend lỗi trên PR #137
+**Timestamp**: 2026-11-25T11:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) CI check \"backend\" failed at head 9e7749dd09"
+**AI Response**: "Nguyên nhân: staging (c964df45, BR-U02-10) bỏ audit của U11 nên test mới dùng biến audits không biên dịch được trên bản merge. Merge origin/staging vào nhánh, bỏ dòng kiểm audit trong test mới, ghi BR-U11-40 không còn hiệu lực và bỏ nhắc audit ở F3, code-summary. Test quizpractice (66) đạt trên bản đã merge, gồm test tích hợp Postgres."
+**Context**: Construction, U11, sửa CI.
+
+---
