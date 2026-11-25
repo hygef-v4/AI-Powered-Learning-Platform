@@ -1630,7 +1630,7 @@
         "byPart": "By part",
         "theAiIsStillProcessing": "The AI is still processing. ",
         "checkFeedbackAgain": "Check feedback again",
-        "youCanManageYourPersonal": "You can manage your personal API keys in",
+        "youCanManageYourPersonal": "Feedback uses your personal API key or a connected MCP agent. Manage both in",
         "aiConnection": "AI connection",
         "getFeedbackAgain": "Get feedback again",
         "getAiFeedback": "Get AI feedback"
