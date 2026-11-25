@@ -14898,3 +14898,21 @@ used by CI or deployment. Replace README references with a plain
 **Context**: Construction, U11, commit.
 
 ---
+
+## Sửa tài liệu U11 cho khớp code (mục 3–6)
+**Timestamp**: 2026-11-25T10:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa tài liệu cho các mục 3–6"
+**AI Response**: "Sửa business-logic-model F3 (kiểm lớp, Quiz OPEN trước khi trả lượt đang làm; lượt quá hạn tự nộp), F5 bước 3 (quá hạn cộng 30 giây thì tự nộp AUTO_TIME_LIMIT, không trả lỗi), BR-U11-40 (QUIZ_SUBMIT_REJECTED chỉ khi bắt đầu lượt bị từ chối: NO_ATTEMPTS_LEFT, QUIZ_NOT_OPEN; thêm QUIZ_PENALTY_APPLIED, QUIZ_PENALTY_DISMISSED). Chỉ sửa tài liệu, không đổi code."
+**Context**: Construction, U11, đồng bộ tài liệu với code.
+
+---
+
+## Commit sửa tài liệu U11
+**Timestamp**: 2026-11-25T10:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi tài liệu"
+**AI Response**: "Commit các thay đổi tài liệu U11 (F3, F5, BR-U11-40, code-summary) và audit.md lên nhánh chi-cuongg/quiz-small-fixes; không push."
+**Context**: Construction, U11, commit.
+
+---

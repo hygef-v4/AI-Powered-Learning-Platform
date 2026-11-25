@@ -41,9 +41,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F3 - Bắt đầu hoặc tiếp tục lượt (UC 51)
 1. Bấm Làm Quiz (hoặc Tiếp tục); frontend gọi `POST /api/v1/quizzes/{quizId}/attempts` kèm `classId`.
-2. Đã có lượt `IN_PROGRESS` thì trả lượt đó.
-3. Khóa hàng theo (Quiz, người học); kiểm ghi danh, Quiz `OPEN` của lớp hoặc môn chứa lớp, còn lượt (BR-U11-10).
-4. Tạo lượt: `attemptNo` kế tiếp, chụp theo BR-U11-11, sinh seed, `deadlineAt`.
+2. Kiểm ghi danh (R5); khóa theo (Quiz, người học); kiểm lớp `OPEN` và Quiz `OPEN` của lớp hoặc môn chứa lớp. Không đạt thì `409 QUIZ_NOT_OPEN` và audit `QUIZ_SUBMIT_REJECTED` (BR-U11-10, BR-U11-40).
+3. Đã có lượt `IN_PROGRESS` trong lớp này thì trả lượt đó; lượt đã quá `deadlineAt` cộng 30 giây thì tự nộp trước (`AUTO_TIME_LIMIT`) và Quiz Taking chuyển sang kết quả (KAN-212).
+4. Chưa có lượt đang làm: hết lượt trong lớp thì `409 NO_ATTEMPTS_LEFT` và audit `QUIZ_SUBMIT_REJECTED`; còn lượt thì tạo lượt: `attemptNo` kế tiếp trong lớp, chụp theo BR-U11-11, sinh seed, `deadlineAt`.
 5. Mở Quiz Taking.
 
 ### F4 - Làm Quiz và tự lưu (UC 51)
@@ -55,8 +55,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F5 - Nộp và chấm (UC 51)
 1. Bấm Nộp, xác nhận (báo số câu chưa trả lời); frontend lưu lần cuối rồi gọi `POST /api/v1/quiz-attempts/{attemptId}/submit`.
 2. Lượt đã nộp thì trả kết quả cũ.
-3. Kiểm chủ lượt, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây; quá giờ thì audit `QUIZ_SUBMIT_REJECTED` (scanner sẽ tự nộp).
-4. Một transaction: `SUBMITTED`, `submittedAt`, `submitMode = MANUAL`; gọi `IQuizScoring.score` và lưu điểm, đúng sai từng câu (BR-U11-15); audit `QUIZ_ATTEMPT_SUBMITTED`.
+3. Kiểm chủ lượt, còn học lớp `OPEN`, `IN_PROGRESS`. Đã quá `deadlineAt` cộng 30 giây thì vẫn nộp ngay bằng câu trả lời đã lưu với `AUTO_TIME_LIMIT`, không trả lỗi (BR-U11-13, KAN-211).
+4. Một transaction: `SUBMITTED`, `submittedAt`, `submitMode = MANUAL` (hoặc `AUTO_TIME_LIMIT` theo bước 3); gọi `IQuizScoring.score` và lưu điểm, đúng sai từng câu (BR-U11-15); audit `QUIZ_ATTEMPT_SUBMITTED`.
 5. Mở Quiz Result.
 
 ### F6 - Tự nộp

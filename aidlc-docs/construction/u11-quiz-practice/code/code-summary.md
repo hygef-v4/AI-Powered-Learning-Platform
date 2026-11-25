@@ -12,7 +12,7 @@ Code viết ngày 2026-10-20 trên nhánh `quiz-practice` (tách từ `quiz-auth
 |---|---|
 | F1 Lịch sử | `QuizPracticeQueryService.history` (lớp `OPEN` đang học qua `IClassAccess`, Quiz đang mở qua `IQuizQuery.listForClass`, cộng Quiz đã làm kể cả đã ngưng; điểm ẩn khi Quiz không hiện điểm) |
 | F2 Chi tiết | `QuizPracticeQueryService.detail` (số lượt đã dùng/còn lại, điểm cao nhất, lý do không làm được) |
-| F3 Bắt đầu | `QuizAttemptService.start` (R5, lớp `OPEN`, Quiz `OPEN` của lớp hoặc môn chứa lớp, khóa theo (Quiz, người học), mở lại lượt đang làm, hết lượt `409 NO_ATTEMPTS_LEFT` + audit `QUIZ_SUBMIT_REJECTED`, chụp snapshot có seed và thứ tự trộn — G5) |
+| F3 Bắt đầu | `QuizAttemptService.start` (R5, lớp `OPEN`, Quiz `OPEN` của lớp hoặc môn chứa lớp, khóa theo (Quiz, người học), mở lại lượt đang làm, lớp hoặc Quiz không mở `409 QUIZ_NOT_OPEN`, hết lượt `409 NO_ATTEMPTS_LEFT`, cả hai kèm audit `QUIZ_SUBMIT_REJECTED`, chụp snapshot có seed và thứ tự trộn — G5) |
 | F4 Làm, tự lưu | `QuizAttemptService.get`, `.saveAnswers` (`answerVersion`, câu/lựa chọn phải thuộc đề, hạn + 30 giây ân hạn) |
 | F5 Nộp, chấm | `QuizAttemptService.submit` → `PracticeSupport.submit` (chấm bằng `IQuizScoring`, nộp có điều kiện `IN_PROGRESS`, nộp lặp trả kết quả cũ, audit `QUIZ_ATTEMPT_SUBMITTED`) |
 | F6 Tự nộp | `QuizAutoSubmitScanner` (`IScheduledScanner`, mỗi phút ở worker, `AUTO_TIME_LIMIT`; lớp không còn `OPEN` hoặc đã rời lớp thì `AUTO_ACCESS_LOST`, từ 2026-11-25), `QuizRetiredHandler` (`IQuizLifecycleListener`, `AUTO_RETIRED`, trong transaction của U10) |
