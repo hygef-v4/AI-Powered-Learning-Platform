@@ -23,19 +23,16 @@ public class MaterialModuleService {
     private final IMaterialModuleRepository materialModuleRepository;
     private final MaterialAccessPolicy materialAccessPolicy;
     private final IQuizQuery quizQuery;
-    private final IAudit audit;
     private final Clock clock;
 
     public MaterialModuleService(
             IMaterialModuleRepository materialModuleRepository,
             MaterialAccessPolicy materialAccessPolicy,
             IQuizQuery quizQuery,
-            IAudit audit,
             Clock clock) {
         this.materialModuleRepository = materialModuleRepository;
         this.materialAccessPolicy = materialAccessPolicy;
         this.quizQuery = quizQuery;
-        this.audit = audit;
         this.clock = clock;
     }
 
@@ -92,7 +89,6 @@ public class MaterialModuleService {
                         now,
                         0);
         materialModuleRepository.insertModule(module);
-        recordAudit(actor, "MATERIAL_MODULE_CREATED", module);
     }
 
     public MaterialViews.Module createModule(
@@ -111,7 +107,6 @@ public class MaterialModuleService {
                         now,
                         0);
         materialModuleRepository.insertModule(module);
-        recordAudit(actor, "MATERIAL_MODULE_CREATED", module);
         return new MaterialViews.Module(
                 module.id(), module.title(), module.orderNo(), module.version(), true, List.of());
     }
@@ -122,7 +117,6 @@ public class MaterialModuleService {
         if (
                 !materialModuleRepository.updateModule(
                         next, module.version())) throw createVersionConflict();
-        recordAudit(actor, "MATERIAL_MODULE_UPDATED", next);
     }
 
     /** Chỉ xóa module không còn học liệu đang dùng; học liệu đã lưu trữ dời sang module đầu tiên còn lại của môn. */
@@ -145,7 +139,6 @@ public class MaterialModuleService {
             materialModuleRepository.moveArchivedMaterials(id, other.id());
         }
         if (!materialModuleRepository.deleteModule(id, expected)) throw createVersionConflict();
-        recordAudit(actor, "MATERIAL_MODULE_DELETED", module);
     }
 
     public void reorderModules(Actor actor, UUID subjectId, MaterialCommands.Reorder input) {
@@ -192,7 +185,6 @@ public class MaterialModuleService {
                                 .count();
         materialModuleRepository.linkQuiz(
                 new MaterialModule.QuizLink(moduleId, quiz.quizId(), order));
-        recordAudit(actor, "MATERIAL_MODULE_QUIZ_ATTACHED", module);
     }
 
     public void detachQuiz(Actor actor, UUID moduleId, UUID quizId) {
@@ -202,7 +194,6 @@ public class MaterialModuleService {
         requireManageableQuiz(actor, module, quizId);
         if (!materialModuleRepository.unlinkModuleQuiz(moduleId, quizId)) throw ApiException
                 .createNotFound("MATERIAL_NOT_FOUND");
-        recordAudit(actor, "MATERIAL_MODULE_QUIZ_DETACHED", module);
     }
 
     private QuizView requireManageableQuiz(Actor actor, MaterialModule module, UUID quizId) {
@@ -214,9 +205,6 @@ public class MaterialModuleService {
                     "MATERIAL_QUIZ_INVALID", "Quiz không thuộc môn của module");
         if (!materialAccessPolicy.canManageQuiz(
                 actor, quiz.subjectId(), quiz.scope() == QuizScope.CLASS ? quiz.classId() : null)) {
-            audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
-                    "ACCESS_DENIED", "MATERIAL_MODULE", module.id().toString(), AuditResult.DENIED,
-                    "QUIZ_MANAGE_DENIED", Map.of("quizId", quizId.toString()), clock.instant()));
             throw ApiException.createNotFound("MATERIAL_QUIZ_NOT_FOUND");
         }
         return quiz;
@@ -286,17 +274,4 @@ public class MaterialModuleService {
                 "MATERIAL_VERSION_CONFLICT", "Module đã thay đổi, vui lòng tải lại");
     }
 
-    private void recordAudit(Actor actor, String action, MaterialModule module) {
-        audit.record(
-                new AuditEvent(
-                        UUID.randomUUID(),
-                        actor.accountId(),
-                        action,
-                        "MATERIAL_MODULE",
-                        module.id().toString(),
-                        AuditResult.SUCCESS,
-                        null,
-                        Map.of("subjectId", module.subjectId().toString()),
-                        clock.instant()));
-    }
 }

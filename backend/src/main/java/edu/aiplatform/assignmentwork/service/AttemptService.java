@@ -2,7 +2,6 @@ package edu.aiplatform.assignmentwork.service;
 
 import edu.aiplatform.assignmentwork.dto.WorkViews;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.assignments.contract.AssignmentContent;
@@ -59,13 +58,11 @@ public class AttemptService {
     private final IDocumentModel documents;
     private final IDocx docx;
     private final IArtifact artifacts;
-    private final WorkAudit audit;
     private final Clock clock;
     private final String publicUrl;
 
     public AttemptService(WorkAccess access, AttemptRepository attempts, AttemptSubmitter submitter,
-                          IAssignmentQuery assignments, IDocumentModel documents, IDocx docx, IArtifact artifacts,
-                          WorkAudit audit, Clock clock,
+                          IAssignmentQuery assignments, IDocumentModel documents, IDocx docx, IArtifact artifacts, Clock clock,
                           @Value("${platform.assignments.public-url:http://localhost:8088}") String publicUrl) {
         this.access = access;
         this.attempts = attempts;
@@ -74,7 +71,6 @@ public class AttemptService {
         this.documents = documents;
         this.docx = docx;
         this.artifacts = artifacts;
-        this.audit = audit;
         this.clock = clock;
         this.publicUrl = publicUrl.endsWith("/") ? publicUrl.substring(0, publicUrl.length() - 1) : publicUrl;
     }
@@ -103,13 +99,13 @@ public class AttemptService {
         Instant now = clock.instant();
         SubmissionWindow window = WorkAccess.call(() -> assignments.submissionWindow(assignmentId, now));
         if (window == SubmissionWindow.CLOSED) {
-            throw reject(actor, assignmentId, "SUBMISSION_CLOSED", "Bài đã hết hạn nhận bài");
+            throw ApiException.createConflict("SUBMISSION_CLOSED", "Bài đã hết hạn nhận bài");
         }
         int used = attempts.findMaxAttemptNo(assignmentId, actor.accountId());
         // Bài có chấm nộp bao nhiêu lần cũng được khi còn hạn; chỉ bài Luyện tập giới hạn lượt (yêu cầu 2026-11-10).
         int max = view.maxAttempts() == null ? 1 : view.maxAttempts();
         if (view.gradingMode() == GradingMode.PRACTICE && used >= max) {
-            throw reject(actor, assignmentId, "ATTEMPTS_EXHAUSTED", "Bạn đã dùng hết số lượt nộp");
+            throw ApiException.createConflict("ATTEMPTS_EXHAUSTED", "Bạn đã dùng hết số lượt nộp");
         }
         AssignmentContent content = WorkAccess.call(() -> assignments.getContent(assignmentId))
                 .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
@@ -138,7 +134,7 @@ public class AttemptService {
             throw ApiException.createConflict("ATTEMPT_SUBMITTED", "Lượt đã nộp, không sửa được");
         }
         if (view.scope() != AssignmentScope.SUBJECT || view.submissionMode() != SubmissionMode.INDIVIDUAL) {
-            throw access.deny(actor, "ATTEMPT_STARTED", WorkAudit.OBJECT_ATTEMPT, attemptId, "DRAFT_TRANSFER_SCOPE");
+            throw access.notFound();
         }
         if (access.isActiveStudent(actor.accountId(), draft.classId())) {
             access.requireStudentOfClass(actor, draft.classId(), "ATTEMPT_STARTED");
@@ -146,7 +142,7 @@ public class AttemptService {
         }
         access.requireUniqueDraftDestination(actor, classId, view.subjectId());
         if (WorkAccess.call(() -> assignments.submissionWindow(view.assignmentId(), clock.instant())) == SubmissionWindow.CLOSED) {
-            throw reject(actor, view.assignmentId(), "SUBMISSION_CLOSED", "Bài đã hết hạn nhận bài");
+            throw ApiException.createConflict("SUBMISSION_CLOSED", "Bài đã hết hạn nhận bài");
         }
         return attempts.transferDraft(attemptId, draft.classId(), classId)
                 .orElseThrow(AttemptService::createVersionConflictError);
@@ -189,10 +185,10 @@ public class AttemptService {
         AssignmentView view = WorkAccess.call(() -> assignments.loadAssignment(current.assignmentId()))
                 .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
         if (!WorkAccess.openForStudents(view)) {
-            throw reject(actor, current.assignmentId(), "SUBMISSION_CLOSED", "Bài đã đóng nhận bài");
+            throw ApiException.createConflict("SUBMISSION_CLOSED", "Bài đã đóng nhận bài");
         }
         if (!now.isBefore(calculateEffectiveDeadline(current, view).plus(AssignmentAttempt.GRACE))) {
-            throw reject(actor, current.assignmentId(), "DEADLINE_PASSED", "Đã quá hạn nộp bài");
+            throw ApiException.createConflict("DEADLINE_PASSED", "Đã quá hạn nộp bài");
         }
         if (current.contentVersion() != contentVersion) {
             throw createVersionConflictError();
@@ -219,10 +215,9 @@ public class AttemptService {
         AssignmentAttempt attempt = loadWritable(actor, attemptId, "ATTEMPT_DOCX_IMPORTED");
         DocxImportPreview preview = docx.importPreview(actor, file, BlockOrigin.STUDENT,
                 attempt.snapshot().diagramEnabled(), ref -> resolve(actor, attempt, ref));
-        List<DocumentBlock> blocks = new ArrayList<>();
-        for (DocumentBlock block : preview.document().blocks()) {
-            blocks.add(block.type() == BlockType.HEADING ? convertHeadingToParagraph(block) : block);
-        }
+        // Giữ tiêu đề (yêu cầu 2026-11-25): trang làm bài so các tiêu đề với mục của đề để ghép bài vào đúng phần; tiêu đề
+        // không khớp mục nào thì trang đổi thành đoạn in đậm.
+        List<DocumentBlock> blocks = preview.document().blocks();
         int images = (int) blocks.stream().filter(b -> b.type() == BlockType.IMAGE).count();
         int diagrams = (int) blocks.stream().filter(b -> b.type() == BlockType.DIAGRAM).count();
         return new WorkViews.ImportPreview(new DocumentModel(List.copyOf(blocks)), preview.warnings(), images, diagrams);
@@ -432,21 +427,6 @@ public class AttemptService {
     }
 
     /** Người học không thêm tiêu đề mục (BR-U07-15): tiêu đề trong DOCX thành đoạn chữ đậm. */
-    private static DocumentBlock convertHeadingToParagraph(DocumentBlock block) {
-        ObjectNode content = JsonNodeFactory.instance.objectNode();
-        content.putArray("runs").addObject().put("text", block.content().path("text").asText("")).put("bold", true);
-        return new DocumentBlock(block.id(), block.origin(), BlockType.PARAGRAPH, content);
-    }
-
-    private ApiException reject(Actor actor, UUID assignmentId, String code, String message) {
-        try {
-            audit.recordRejected(actor, "SUBMIT_REJECTED", WorkAudit.OBJECT_ASSIGNMENT, assignmentId, code, Map.of());
-        } catch (RuntimeException e) {
-            return ApiException.createUnavailable("AUDIT_UNAVAILABLE", "Chưa ghi nhận được yêu cầu, vui lòng thử lại");
-        }
-        return ApiException.createConflict(code, message);
-    }
-
     private static ApiException createVersionConflictError() {
         return ApiException.createConflict("CONTENT_VERSION_CONFLICT", "Bài đang mở ở nơi khác. Hãy tải lại");
     }

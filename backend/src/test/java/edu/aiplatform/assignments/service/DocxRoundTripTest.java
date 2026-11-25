@@ -214,6 +214,42 @@ class DocxRoundTripTest {
     }
 
     @Test
+    void importKeepsBoldItalicAndHighlightOfExportedAndWordFormattedText() {
+        ObjectNode paragraph = JsonNodeFactory.instance.objectNode();
+        var runs = paragraph.putArray("runs");
+        runs.addObject().put("text", "Đậm tô nền").put("bold", true).put("highlight", "#FFF2CC");
+        runs.addObject().put("text", " thường");
+        DocumentModel model = new DocumentModel(List.of(AssignmentFixtures.heading("H1", "Phân tích"),
+                new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.PARAGRAPH, paragraph)));
+        List<DocumentBlock> exported = importer.preview(teacher, exporter.export("Đề 1", "", model, linker), BlockOrigin.STUDENT,
+                true, ref -> Optional.empty()).document().blocks();
+        var back = exported.stream().filter(b -> b.type() == BlockType.PARAGRAPH
+                && b.content().path("runs").get(0).path("text").asText().equals("Đậm tô nền")).findFirst().orElseThrow();
+        assertThat(back.content().path("runs").get(0).path("bold").asBoolean()).isTrue();
+        assertThat(back.content().path("runs").get(0).path("highlight").asText()).isEqualTo("#FFF2CC");
+        assertThat(back.content().path("runs").get(1).has("highlight")).isFalse();
+
+        // Tệp viết trong Word: bút highlight và kiểu ký tự Strong, Emphasis.
+        byte[] word = docx(doc -> {
+            XWPFParagraph p = doc.createParagraph();
+            var marked = p.createRun();
+            marked.setText("Vàng");
+            marked.getCTR().addNewRPr().addNewHighlight().setVal(org.openxmlformats.schemas.wordprocessingml.x2006.main.STHighlightColor.YELLOW);
+            var strong = p.createRun();
+            strong.setText(" mạnh");
+            strong.setStyle("Strong");
+            var emphasis = p.createRun();
+            emphasis.setText(" nghiêng");
+            emphasis.setStyle("Emphasis");
+        });
+        var fromWord = importer.preview(teacher, word, BlockOrigin.STUDENT, true, ref -> Optional.empty()).document().blocks()
+                .get(0).content().path("runs");
+        assertThat(fromWord.get(0).path("highlight").asText()).isEqualTo("#FFFF00");
+        assertThat(fromWord.get(1).path("bold").asBoolean()).isTrue();
+        assertThat(fromWord.get(2).path("italic").asBoolean()).isTrue();
+    }
+
+    @Test
     void exportedPngCarriesMxfileChunk() {
         byte[] png = PngChunks.drawDiagramPlaceholder(DocumentModelServiceTest.DIAGRAM);
         assertThat(PngChunks.isPng(png)).isTrue();

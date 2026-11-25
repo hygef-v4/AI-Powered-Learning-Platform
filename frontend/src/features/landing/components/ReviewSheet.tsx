@@ -96,7 +96,7 @@ export function ReviewSheet({ tr }: { tr: Translate }) {
 }
 
 /** Ba lớp: `Person` là lớp cha, `Lecturer` và `Student` kế thừa qua mũi tên tổng quát hóa (tam giác rỗng). */
-function ClassDiagram({ className }: { className?: string }) {
+export function ClassDiagram({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 440 300" aria-hidden="true" className={className} fontFamily="var(--font-mono)">
       <g className="animate-pop" style={delay(0.1)}>

@@ -11,7 +11,7 @@ Code viết ngày 2026-10-18 theo [plan](../../plans/code-generation-plan/u02-au
 | Luồng | Class chính |
 |---|---|
 | A1 Ghi audit | `AuditStore` (cài `IAudit`, thay bản tạm): kiểm `id`, `action`, `result`, `occurredAt`; `ForbiddenKeyGuard` chặn khóa cấm kể cả lồng nhau (BR-U02-05); `SUCCESS` ghi trong transaction của unit gọi, `DENIED`/`FAILURE` qua `TransactionTemplate` `REQUIRES_NEW` (BR-U02-02); lỗi DB ném tiếp để nghiệp vụ rollback (BR-U02-04) |
-| A2 Tra cứu | `AuditQueryService` (cài `IAuditQuery`): chỉ `ADMIN` và `IAuthorization.authorize(actor, "AUDIT_READ")`; U01 lỗi thì từ chối (BR-U02-50) và ghi `ACCESS_DENIED`; chuỗi lọc rỗng bỏ qua, quá độ dài cột hoặc `from` sau `to` trả `400 AUDIT_FILTER_INVALID`; trang 1–100 dòng; email lấy qua `IAccountLookup.getContact` mỗi người một lần, lỗi thì để trống (BR-U02-09); ghi `AUDIT_QUERIED` kèm bộ lọc (chỉ id, không email) |
+| A2 Tra cứu | `AuditQueryService` (cài `IAuditQuery`): chỉ `ADMIN` và `IAuthorization.authorize(actor, "AUDIT_READ")`; U01 lỗi thì từ chối (BR-U02-50) và ghi `ACCESS_DENIED`; chuỗi lọc rỗng bỏ qua, quá độ dài cột hoặc `from` sau `to` trả `400 AUDIT_FILTER_INVALID`; trang 1–100 dòng; email lấy qua `IAccountLookup.getContact` mỗi người một lần, lỗi thì để trống (BR-U02-09); không ghi audit khi tra cứu và ẩn dòng `AUDIT_QUERIED` cũ (2026-11-25); tên đối tượng tra cho `ACCOUNT`, `SUBJECT`, `CLASS` và `COURSE_CLASS` |
 
 ## API
 

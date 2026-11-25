@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import edu.aiplatform.academics.contract.*;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.files.contract.ArtifactPurpose;
 import edu.aiplatform.files.service.*;
 import edu.aiplatform.identity.contract.*;
@@ -73,9 +72,7 @@ class MaterialDownloadPolicyTest {
                         authorization,
                         subjectQuery,
                         classAccess,
-                        mock(IClassScope.class),
-                        mock(IAudit.class),
-                        Clock.fixed(now, ZoneOffset.UTC));
+                        mock(IClassScope.class));
         var tokens = mock(DownloadTokenService.class);
         when(tokens.resolve("student-token")).thenReturn(Optional.of(new DownloadTokenService.Grant("file", student.accountId())));
         when(tokens.resolve("staff-token")).thenReturn(Optional.of(new DownloadTokenService.Grant("file", managerId)));

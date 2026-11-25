@@ -31,7 +31,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md). Base
 4. Kiểm bộ lọc hợp lệ (`from` ≤ `to`, `result` đúng giá trị), trang ≤ 100.
 5. Truy vấn, sắp xếp `occurred_at` giảm dần.
 6. Lấy email của các người thực hiện trong trang qua `IAccountLookup.getContact` (U01); `actor_id` rỗng hiện là hệ thống (BR-U02-09).
-7. Ghi audit `AUDIT_QUERIED` với bộ lọc đã dùng.
+7. Không ghi audit cho lần tra cứu (từ 2026-11-25); dòng `AUDIT_QUERIED` cũ không hiện.
 
 ## Quy tắc tích hợp revision hiện hành
 

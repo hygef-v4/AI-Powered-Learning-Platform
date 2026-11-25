@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.assignments.contract.*;
 import edu.aiplatform.assignmentwork.contract.*;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.grading.model.*;
 import edu.aiplatform.grading.repository.*;
 import edu.aiplatform.identity.contract.*;
@@ -74,7 +73,6 @@ class GradebookAssemblyTest {
         assertThatThrownBy(() -> gradebookService.buildExport(actor, classId, UUID.randomUUID(), "xlsx"))
                 .isInstanceOfSatisfying(ApiException.class,
                         error -> assertThat(error.readCode()).isEqualTo("ASSIGNMENT_NOT_FOUND"));
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -83,7 +81,7 @@ class GradebookAssemblyTest {
                 .requireTeacher(actor, classId, Actions.GRADEBOOK_EXPORT);
         assertThatThrownBy(() -> gradebookService.buildExport(actor, classId, null, "xlsx"))
                 .isInstanceOf(ApiException.class);
-        verifyNoInteractions(evaluationRepository, assignmentQuery, classAccess, accountLookup, audit);
+        verifyNoInteractions(evaluationRepository, assignmentQuery, classAccess, accountLookup);
     }
 
     final UUID classId = UUID.randomUUID(), assignmentId = UUID.randomUUID();
@@ -94,12 +92,9 @@ class GradebookAssemblyTest {
     final ISubmissionQuery submissionQuery = mock(ISubmissionQuery.class);
     final IAccountLookup accountLookup = mock(IAccountLookup.class);
     final IRubric rubric = mock(IRubric.class);
-    final IAudit audit = mock(IAudit.class);
     final ObjectProvider<edu.aiplatform.grading.contract.IGroupSubmissionSource> groupSubmissionSourceProvider = mock(ObjectProvider.class);
     final GradingAccess gradingAccess = mock(GradingAccess.class);
-    final GradebookService gradebookService = new GradebookService(evaluationRepository, gradingAccess, assignmentQuery,
-            submissionQuery, classAccess, accountLookup, rubric, audit, Clock.systemUTC(), groupSubmissionSourceProvider,
-            mock(GradeDistributionVisibilityRepository.class));
+    final GradebookService gradebookService = new GradebookService(evaluationRepository, gradingAccess, assignmentQuery, submissionQuery, classAccess, accountLookup, rubric, groupSubmissionSourceProvider, mock(GradeDistributionVisibilityRepository.class));
 
     List<Evaluation> fixture(int size) {
         var assignment = mock(AssignmentView.class);

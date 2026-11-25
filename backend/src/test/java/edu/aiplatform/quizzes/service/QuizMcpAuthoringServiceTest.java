@@ -17,7 +17,7 @@ class QuizMcpAuthoringServiceTest {
     final QuizMcpAuthoringService service=new QuizMcpAuthoringService(authoring,drafts,access,writes,new ObjectMapper());
     @Test void ownershipLossPreventsReplay() {
         Actor actor=new Actor(UUID.randomUUID(),Role.TEACHER); UUID id=UUID.randomUUID();
-        doThrow(ApiException.createNotFound("CLASS_NOT_FOUND")).when(access).requireClass(eq(actor),anyString(),eq(id),anyString(),eq(id),anyString());
+        doThrow(ApiException.createNotFound("CLASS_NOT_FOUND")).when(access).requireClass(eq(actor),anyString(),eq(id),anyString());
         assertThatThrownBy(() -> service.call(actor,"create_quiz_draft",Map.of("classId",id.toString(),"requestRef","retry",
                 "title","Quiz","questions",List.of()))) .isInstanceOf(ApiException.class);
         verifyNoInteractions(authoring,writes);

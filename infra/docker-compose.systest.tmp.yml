@@ -1,0 +1,21 @@
+# Isolated system-test stack: own project, own volumes, own ports (18088 app, 18025 Mailpit)
+services:
+  nginx:
+    ports: !override
+      - "18088:80"
+  frontend:
+    image: platform-frontend:systest
+  backend:
+    image: platform-backend:systest
+    ports: !override []
+  worker:
+    image: platform-backend:systest
+  postgres:
+    ports: !override []
+  redis:
+    ports: !override []
+  rabbitmq:
+    ports: !override []
+  mailpit:
+    ports: !override
+      - "18025:8025"

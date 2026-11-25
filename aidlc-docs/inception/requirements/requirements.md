@@ -487,7 +487,7 @@ Construction current docs: [README](../../construction/README.md). Stage approva
 
 - FR-003: create lớp vẫn DRAFT; OPEN được phép teacher null. Nếu có teacher phải ACTIVE/đúng role; không cấp teaching scope cho người chưa được gán.
 - FR-007/028: Quiz edit OPEN giữ OPEN, retire mọi trạng thái chưa RETIRED với lý do mặc định Lưu trữ, và reopen theo publishedAt. Quiz đủ điều kiện phát hành trực tiếp từ DRAFT. Assignment có bước hoàn tất riêng.
-- FR-012/034/035: nhiều institutional keys/provider, chọn theo repository (ACTIVE ưu tiên rồi created_at/id); API key chỉ ghi theo D15. Chủ credential MCP đủ điều kiện có thể xem lại token nếu còn bản mã giải mã được.
+- FR-012/034/035: nhiều institutional keys/provider, chọn theo repository (ACTIVE ưu tiên rồi created_at/id); API key chỉ ghi theo D15. Token MCP chỉ hiện một lần lúc tạo, không lưu bản mã giải mã được và không hỗ trợ xem lại (D05 đóng 2026-11-23); sửa credential chỉ cho hạ quyền, không nâng `READ_ONLY` lên `READ_WRITE`.
 - FR-025: leader request/reject reason tùy chọn, tối đa 1.000 ký tự.
 - FR-024: U15 activity projection riêng, ngày VN, counts/backup vẫn có; từng nguồn có availability.
 

@@ -103,7 +103,6 @@ class AssignmentPublicationServiceTest {
         // Bài có chấm nộp không giới hạn khi còn hạn: số lượt gửi lên bị bỏ qua (yêu cầu 2026-11-10).
         assertThat(detail.maxAttempts()).isNull();
         assertThat(f.rubricsOf(a.id())).allMatch(AssignmentRubric::hasLocked);
-        verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_PUBLISHED")));
         verify(f.listener, never()).onOpened(any());
     }
 
@@ -138,7 +137,6 @@ class AssignmentPublicationServiceTest {
         AssignmentViews.Detail extended = f.publication.changeSchedule(f.teacher, open.id(), new AssignmentCommands.Schedule(
                 open.version(), null, open.closesAt().plus(Duration.ofDays(2)), null, null));
         assertThat(extended.closesAt()).isEqualTo(open.closesAt().plus(Duration.ofDays(2)));
-        verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_SCHEDULE_CHANGED")));
     }
 
     @Test
@@ -164,7 +162,6 @@ class AssignmentPublicationServiceTest {
         assertThat(retired.status()).isEqualTo(AssignmentStatus.RETIRED);
         assertThat(retired.retiredReason()).isEqualTo("Đề sai");
         verify(f.listener).onRetired(open.id());
-        verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_RETIRED") && "Đề sai".equals(e.details().get("reason"))));
         Assignment closed = f.put(AssignmentScope.CLASS, AssignmentStatus.CLOSED, new DocumentModel(List.of()), true);
         assertThat(code(() -> f.publication.retire(f.teacher, closed.id(), new AssignmentCommands.Retire(closed.version(), "x"))))
                 .isEqualTo("ASSIGNMENT_STATUS_INVALID");
@@ -194,7 +191,6 @@ class AssignmentPublicationServiceTest {
         assertThat(closed.status()).isEqualTo(AssignmentStatus.CLOSED);
         assertThat(closed.closesAt()).isEqualTo(end);
         verify(f.listener).onClosed(open.id());
-        verify(f.audit).record(argThat(event -> event.action().equals("ASSIGNMENT_CLOSED")));
         assertThat(code(() -> f.publication.closeAssignment(f.teacher, open.id(), closed.version())))
                 .isEqualTo("ASSIGNMENT_STATUS_INVALID");
     }

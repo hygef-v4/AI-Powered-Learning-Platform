@@ -163,9 +163,8 @@ class PracticeFeedbackConcurrencyIntegrationTest {
         when(ai.submit(any())).thenAnswer(call -> new AiTaskView(UUID.randomUUID(), AiTaskState.QUEUED,
                 AiSource.PERSONAL, AiProvider.GEMINI, "fixture-model", null, null, null));
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-        WorkAudit audit = new WorkAudit(mock(IAudit.class), clock);
-        WorkAccess access = new WorkAccess(authorization, classes, assignments, attempts, audit);
-        return new PracticeFeedbackService(access, attempts, feedback, assignments, documents, ai, audit, JSON,
+        WorkAccess access = new WorkAccess(authorization, classes, assignments, attempts);
+        return new PracticeFeedbackService(access, attempts, feedback, assignments, documents, ai, JSON,
                 new DataSourceTransactionManager(appSource), clock, perDay);
     }
 

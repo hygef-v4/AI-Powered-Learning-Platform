@@ -54,19 +54,16 @@ public class QuestionBankService {
     private final IQuestionRepository questions;
     private final ActiveSubjects activeSubjects;
     private final QuizAccess access;
-    private final QuizAudit audit;
     private final QuestionDuplicates duplicates;
     private final QuizPaperService quizPaperService;
     private final IEventPublisher events;
     private final Clock clock;
 
-    public QuestionBankService(IQuestionRepository questions, ActiveSubjects activeSubjects, QuizAccess access,
-                               QuizAudit audit, QuestionDuplicates duplicates, QuizPaperService quizPaperService,
+    public QuestionBankService(IQuestionRepository questions, ActiveSubjects activeSubjects, QuizAccess access, QuestionDuplicates duplicates, QuizPaperService quizPaperService,
                                IEventPublisher events, Clock clock) {
         this.questions = questions;
         this.activeSubjects = activeSubjects;
         this.access = access;
-        this.audit = audit;
         this.duplicates = duplicates;
         this.quizPaperService = quizPaperService;
         this.events = events;
@@ -83,7 +80,7 @@ public class QuestionBankService {
 
     @Transactional(readOnly = true)
     public QuestionPage listQuestions(Actor actor, UUID subjectId, Filter filter) {
-        access.requireSubject(actor, Actions.QUESTION_BANK_VIEW, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUESTION_BANK_VIEW, subjectId, "SUBJECT_NOT_FOUND");
         int page = filter.page() == null ? 0 : filter.page();
         int size = filter.size() == null ? DEFAULT_PAGE_SIZE : filter.size();
         if (page < 0 || size < 1 || size > MAX_PAGE_SIZE) {
@@ -102,20 +99,18 @@ public class QuestionBankService {
     @Transactional(readOnly = true)
     public QuestionDetail loadQuestion(Actor actor, UUID id) {
         Question q = loadQuestion(id);
-        access.requireSubject(actor, Actions.QUESTION_BANK_VIEW, q.subjectId(), OBJECT, id, NOT_FOUND);
+        access.requireSubject(actor, Actions.QUESTION_BANK_VIEW, q.subjectId(), NOT_FOUND);
         return buildDetail(q);
     }
 
     @Transactional
     public QuestionDetail createQuestion(Actor actor, UUID subjectId, QuestionContent content) {
-        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
         activeSubjects.require(subjectId);
         validate(content);
         duplicates.requireUnique(subjectId, content, null);
         Question q = Question.createBankDraft(subjectId, content, actor.accountId(), clock.instant());
         questions.insert(q);
-        audit.recordSuccess(actor, "QUESTION_CREATED", OBJECT, q.id(), Map.of("subjectId", subjectId.toString(),
-                "versionNo", q.versionNo()));
         return buildDetail(q);
     }
 
@@ -155,8 +150,6 @@ public class QuestionBankService {
             // Người khác vừa mở bản nháp của cùng lineage (unique một nháp mỗi lineage).
             return buildDetail(questions.findBankDraft(q.lineageId()).orElseThrow(() -> concurrent));
         }
-        audit.recordSuccess(actor, "QUESTION_CREATED", OBJECT, draft.id(), Map.of("subjectId", q.subjectId().toString(),
-                "versionNo", draft.versionNo(), "fromQuestionId", q.id().toString()));
         return buildDetail(draft);
     }
 
@@ -175,13 +168,12 @@ public class QuestionBankService {
         validate(q.content());
         duplicates.requireUnique(q.subjectId(), q.content(), q.lineageId());
         saveQuestion(q.activate(clock.instant()));
-        audit.recordSuccess(actor, "QUESTION_ACTIVATED", OBJECT, id, Map.of("versionNo", q.versionNo()));
     }
 
     /** Kích hoạt hàng loạt câu nháp của môn (ví dụ sau khi nhập tệp); câu lỗi không chặn các câu khác. */
     @Transactional
     public BulkResult activateMany(Actor actor, UUID subjectId, List<ReviewItem> items) {
-        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
         return applyBulk(subjectId, items, item -> activateOne(actor, item.id(), item.version()));
     }
 
@@ -201,13 +193,13 @@ public class QuestionBankService {
 
     @Transactional
     public BulkResult approveMany(Actor actor, UUID subjectId, List<ReviewItem> items) {
-        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
         return applyBulk(subjectId, items, item -> approveOne(actor, item.id(), item.version()));
     }
 
     @Transactional
     public BulkResult rejectMany(Actor actor, UUID subjectId, List<ReviewItem> items, String reason) {
-        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
         String clean = cleanReason(reason);
         return applyBulk(subjectId, items, item -> rejectOne(actor, item.id(), clean, item.version()));
     }
@@ -215,7 +207,7 @@ public class QuestionBankService {
     /** Các nhóm câu giống hệt nhau đang có trong ngân hàng, thường là dữ liệu từ trước khi có chống trùng. */
     @Transactional(readOnly = true)
     public List<DuplicateGroup> duplicateGroups(Actor actor, UUID subjectId) {
-        access.requireSubject(actor, Actions.QUESTION_BANK_VIEW, subjectId, "SUBJECT", subjectId, "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUESTION_BANK_VIEW, subjectId, "SUBJECT_NOT_FOUND");
         return questions.duplicateGroups(subjectId).stream()
                 .map(group -> new DuplicateGroup(group.stream()
                         .map(e -> new SimilarQuestion(e.id(), e.stem(), e.status(), 100)).toList()))
@@ -246,7 +238,6 @@ public class QuestionBankService {
         Instant now = clock.instant();
         saveQuestion(q.markApproved(now));
         questions.insertReview(new QuestionReview(UUID.randomUUID(), id, "APPROVED", null, actor.accountId(), now));
-        audit.recordSuccess(actor, "QUESTION_APPROVED", OBJECT, id, Map.of("subjectId", q.subjectId().toString()));
         notifyProposer(q, "APPROVED", now);
     }
 
@@ -255,7 +246,6 @@ public class QuestionBankService {
         Instant now = clock.instant();
         saveQuestion(q.markRejected(now));
         questions.insertReview(new QuestionReview(UUID.randomUUID(), id, "REJECTED", reason, actor.accountId(), now));
-        audit.recordSuccess(actor, "QUESTION_REJECTED", OBJECT, id, Map.of("subjectId", q.subjectId().toString()));
         notifyProposer(q, "REJECTED", now);
     }
 
@@ -301,7 +291,6 @@ public class QuestionBankService {
         }
         requireVersion(q, version);
         saveQuestion(q.retire(clock.instant()));
-        audit.recordSuccess(actor, "QUESTION_RETIRED", OBJECT, id, Map.of("versionNo", q.versionNo()));
         QuestionDetail detail = buildDetail(reload(id));
         return new QuestionDetail(detail.question(), detail.versions(), detail.usedInQuizzes(), detail.draftId(),
                 detail.similar(), detail.review(), quizPaperService.openQuizzesShortOfQuestions(q.subjectId()));
@@ -319,12 +308,11 @@ public class QuestionBankService {
         if (!questions.deleteQuestion(id, version)) {
             throw createVersionConflictError();
         }
-        audit.recordSuccess(actor, "QUESTION_DELETED", OBJECT, id, Map.of("versionNo", q.versionNo()));
     }
 
     private Question loadForChange(Actor actor, UUID id) {
         Question q = loadQuestion(id);
-        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, q.subjectId(), OBJECT, id, NOT_FOUND);
+        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, q.subjectId(), NOT_FOUND);
         activeSubjects.require(q.subjectId());
         return q;
     }

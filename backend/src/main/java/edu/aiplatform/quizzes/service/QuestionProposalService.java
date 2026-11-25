@@ -42,12 +42,11 @@ public class QuestionProposalService {
     private final QuestionDuplicates duplicates;
     private final ISubjectQuery subjects;
     private final IEventPublisher events;
-    private final QuizAudit audit;
     private final Clock clock;
 
     public QuestionProposalService(IQuestionRepository questions, QuizSupport support, QuizAccess access,
                                    ActiveSubjects activeSubjects, QuestionDuplicates duplicates, ISubjectQuery subjects,
-                                   IEventPublisher events, QuizAudit audit, Clock clock) {
+                                   IEventPublisher events, Clock clock) {
         this.questions = questions;
         this.support = support;
         this.access = access;
@@ -55,7 +54,6 @@ public class QuestionProposalService {
         this.duplicates = duplicates;
         this.subjects = subjects;
         this.events = events;
-        this.audit = audit;
         this.clock = clock;
     }
 
@@ -76,8 +74,6 @@ public class QuestionProposalService {
         Question q = Question.createProposal(ref.subjectId(), content, actor.accountId(), now);
         questions.insert(q);
         questions.insertProposal(q.id(), classId, now);
-        audit.recordSuccess(actor, "QUESTION_PROPOSED", QuestionBankService.OBJECT, q.id(),
-                Map.of("subjectId", ref.subjectId().toString(), "classId", classId.toString()));
         notifyManager(q, now);
         return view(q);
     }
@@ -94,8 +90,6 @@ public class QuestionProposalService {
         if (!questions.updateQuestion(changed)) {
             throw createVersionConflictError();
         }
-        audit.recordSuccess(actor, "QUESTION_PROPOSED", QuestionBankService.OBJECT, id,
-                Map.of("subjectId", q.subjectId().toString(), "classId", classId.toString(), "resubmitted", true));
         notifyManager(changed, now);
         return view(questions.findQuestion(id).orElseThrow(() -> ApiException.createNotFound(NOT_FOUND)));
     }
@@ -103,12 +97,10 @@ public class QuestionProposalService {
     /** Rút đề xuất chưa được duyệt. */
     @Transactional
     public void withdrawProposal(Actor actor, UUID classId, UUID id, long version) {
-        Question q = loadOwnProposal(actor, classId, id, version);
+        loadOwnProposal(actor, classId, id, version);
         if (!questions.deleteProposal(id, version)) {
             throw createVersionConflictError();
         }
-        audit.recordSuccess(actor, "QUESTION_DELETED", QuestionBankService.OBJECT, id,
-                Map.of("subjectId", q.subjectId().toString(), "withdrawn", true));
     }
 
     private Question loadOwnProposal(Actor actor, UUID classId, UUID id, long version) {
@@ -127,7 +119,7 @@ public class QuestionProposalService {
     }
 
     private void requireClass(Actor actor, UUID classId) {
-        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS", classId, "CLASS_NOT_FOUND");
+        access.requireClass(actor, Actions.QUIZ_CLASS_MANAGE, classId, "CLASS_NOT_FOUND");
     }
 
     private ProposalView view(Question q) {

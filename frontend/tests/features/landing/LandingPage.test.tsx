@@ -2,7 +2,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/client";
 import { getProfile } from "@/features/identity/api";
-import { LandingPage } from "@/features/landing/pages/LandingPage";
+import { LandingPage, landingFaqs } from "@/features/landing/pages/LandingPage";
 import { SignedInRedirect } from "@/features/landing/components/SignedInRedirect";
 import { buildStructuredData, serializeStructuredData } from "@/features/landing/structuredData";
 import { buildTranslator } from "@/i18n/msg";
@@ -13,49 +13,61 @@ vi.mock("@/features/identity/api", () => ({ getProfile: vi.fn() }));
 
 const getProfileMock = vi.mocked(getProfile);
 
-function renderLanding(locale: "en" | "vi" = "en") {
+function renderLanding(locale: "en" | "vi" = "vi") {
   getProfileMock.mockRejectedValue(new ApiError({ status: 401, code: "UNAUTHENTICATED" }));
-  const data = serializeStructuredData(buildStructuredData({ name: "Learning Platform", description: "Mô tả", language: locale }));
-  return render(<LandingPage t={buildTranslator(locale)} structuredData={data} nonce="n1" />);
+  const t = buildTranslator(locale);
+  const data = serializeStructuredData(
+    buildStructuredData({ name: "Learning Platform", description: "Mô tả", language: locale, faqs: landingFaqs(t) }),
+  );
+  return render(<LandingPage t={t} locale={locale} structuredData={data} nonce="n1" />);
 }
 
 describe("LandingPage", () => {
   afterEach(() => vi.clearAllMocks());
 
-  it("có tiêu đề chính, các phần tính năng và nút đăng nhập trỏ tới /login", () => {
+  it("H1 có tên ALAPEdu; mọi nút bắt đầu và đăng nhập trỏ tới /login", () => {
     renderLanding();
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Draw your UML diagrams.");
-    for (const title of ["Diagram assignments", "AI grading proposals", "Quizzes and practice", "Connect your AI agent"]) {
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1).toHaveTextContent("ALAPEdu");
+    expect(h1).toHaveTextContent("Mở khoá tương lai của việc học.");
+    const signIns = screen.getAllByRole("link", { name: /Đăng nhập|Bắt đầu|Dùng thử/ });
+    expect(signIns.length).toBeGreaterThanOrEqual(3);
+    for (const link of signIns) expect(link).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("link", { name: "Chính sách quyền riêng tư" })).toHaveAttribute("href", "/privacy");
+  });
+
+  it("có đủ năm tính năng chính, đúng các từ khóa giao bài, vẽ sơ đồ, chấm điểm, tạo đề, làm bài nhóm", () => {
+    renderLanding();
+    for (const title of ["Giao bài dễ dàng", "Vẽ sơ đồ trực tuyến", "Chấm điểm bằng AI", "Tạo đề bằng AI", "Làm bài nhóm"]) {
       expect(screen.getByRole("heading", { level: 3, name: title })).toBeInTheDocument();
     }
-    const signIns = screen.getAllByRole("link", { name: "Sign in" });
-    expect(signIns.length).toBeGreaterThanOrEqual(2);
-    for (const link of signIns) expect(link).toHaveAttribute("href", "/login");
-    expect(screen.getByRole("link", { name: "Privacy policy" })).toHaveAttribute("href", "/privacy");
   });
 
   it("dịch theo ngôn ngữ của lượt tải trang", () => {
-    renderLanding("vi");
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Vẽ sơ đồ UML.");
-    expect(screen.getAllByRole("link", { name: "Đăng nhập" })[0]).toHaveAttribute("href", "/login");
+    renderLanding("en");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Unlock the future of learning.");
+    expect(screen.getAllByRole("link", { name: "Sign in" })[0]).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("phiếu rubric mẫu cho thấy điểm AI đề xuất và điểm giảng viên chốt, định dạng số theo ngôn ngữ", () => {
-    renderLanding("vi");
-    const rubric = screen.getByRole("table", { name: "Rubric bài 2: sơ đồ lớp" });
-    const inheritance = within(rubric).getByRole("row", { name: /Quan hệ kế thừa/ });
-    expect(inheritance).toHaveTextContent("Giảng viên đã nâng điểm");
-    expect(within(inheritance).getAllByRole("cell").map((cell) => cell.textContent)).toEqual(["2,0", "2,5"]);
-    const total = within(rubric).getByRole("row", { name: /Tổng điểm/ });
-    expect(within(total).getAllByRole("cell").map((cell) => cell.textContent)).toEqual(["9,0", "9,5/10"]);
+  it("nhãn lợi ích là một danh sách thật; trang không còn phần đánh giá", () => {
+    renderLanding();
+    const pills = screen.getByRole("list", { name: "Lợi ích của ALAP" });
+    expect(within(pills).getAllByRole("listitem")).toHaveLength(18);
+    expect(document.getElementById("reviews")).toBeNull();
   });
 
-  it("chèn JSON-LD có nonce, không đóng được thẻ script", () => {
+  it("chèn JSON-LD có nonce, có hỏi đáp FAQPage và không có đánh giá", () => {
     const { container } = renderLanding();
     const script = container.querySelector('script[type="application/ld+json"]');
     expect(script).toHaveAttribute("nonce", "n1");
     const data = JSON.parse(script!.textContent!);
-    expect(data["@graph"].map((node: { "@type": string }) => node["@type"])).toEqual(["Organization", "WebSite", "SoftwareApplication"]);
+    const types = data["@graph"].map((node: { "@type": string }) => node["@type"]);
+    expect(types).toEqual(["Organization", "WebSite", "SoftwareApplication", "FAQPage"]);
+    expect(data["@graph"][0].name).toBe("ALAPEdu");
+    expect(data["@graph"][0].alternateName).toContain("alapedu");
+    expect(data["@graph"][3].mainEntity[0].name).toBe("ALAPEdu là gì?");
+    expect(JSON.stringify(data)).not.toMatch(/Review|AggregateRating/);
     expect(serializeStructuredData({ text: "</script><b>" })).not.toContain("<");
   });
 });

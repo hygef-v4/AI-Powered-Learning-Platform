@@ -3,6 +3,7 @@ package edu.aiplatform.ai.service;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
+import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
@@ -33,8 +34,11 @@ public class AiAccess {
 
     public void require(Actor actor, String action) {
         if (!canPerform(actor, action)) {
-            audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
-                    "AI", null, AuditResult.DENIED, action, Map.of(), clock.instant()));
+            // Chỉ ghi từ chối ở phần cấu hình AI của hệ thống (yêu cầu 2026-11-25).
+            if (Actions.AI_ADMIN.equals(action)) {
+                audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
+                        "AI", null, AuditResult.DENIED, action, Map.of(), clock.instant()));
+            }
             throw createNotFoundError();
         }
     }

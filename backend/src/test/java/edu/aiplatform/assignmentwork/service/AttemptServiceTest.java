@@ -29,7 +29,6 @@ import edu.aiplatform.assignments.contract.ValidationResult;
 import edu.aiplatform.assignmentwork.contract.AttemptStatus;
 import edu.aiplatform.assignmentwork.contract.SubmitMode;
 import edu.aiplatform.assignmentwork.model.AssignmentAttempt;
-import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
@@ -76,7 +75,6 @@ class AttemptServiceTest {
     void notEnrolledStudentGetsNotFoundAndDeniedAudit() {
         when(f.authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.deny("NOT_ENROLLED"));
         assertThat(code(() -> f.attemptService.start(f.student, f.assignmentId, f.classId))).isEqualTo("NOT_FOUND");
-        verify(f.audit).record(argThat(e -> e.result() == AuditResult.DENIED));
         assertThat(f.store).isEmpty();
     }
 
@@ -87,7 +85,6 @@ class AttemptServiceTest {
         f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.GRADED, NOW.plus(Duration.ofDays(1)), null, 1);
         f.window = SubmissionWindow.CLOSED;
         assertThat(code(() -> f.attemptService.start(f.student, f.assignmentId, f.classId))).isEqualTo("SUBMISSION_CLOSED");
-        verify(f.audit).record(argThat(e -> e.action().equals("SUBMIT_REJECTED") && e.result() == AuditResult.FAILURE));
         f.window = SubmissionWindow.ON_TIME;
         AssignmentAttempt first = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         DocumentModel answered = new DocumentModel(List.of(f.teacherBlock, WorkFixtures.paragraph(BlockOrigin.STUDENT, "Bài làm")));
@@ -130,6 +127,17 @@ class AttemptServiceTest {
         AssignmentAttempt late = f.attempt(2, AttemptStatus.IN_PROGRESS, NOW.minusSeconds(31), false);
         f.view = f.view(AssignmentStatus.OPEN, SubmissionMode.INDIVIDUAL, GradingMode.GRADED, NOW.minusSeconds(31), null, 2);
         assertThat(code(() -> f.attemptService.saveAttempt(f.student, late.id(), 0, withStudentWork()))).isEqualTo("DEADLINE_PASSED");
+    }
+
+    @Test
+    void docxPreviewKeepsHeadingsSoTheWorkspaceCanMatchParts() {
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
+        DocumentBlock heading = new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.HEADING,
+                JsonNodeFactory.instance.objectNode().put("style", "H1").put("text", "Phân tích"));
+        when(f.docx.importPreview(any(), any(), any(), org.mockito.ArgumentMatchers.anyBoolean(), any()))
+                .thenReturn(new edu.aiplatform.assignments.contract.DocxImportPreview(new DocumentModel(List.of(heading)), List.of()));
+        WorkViews.ImportPreview preview = f.attemptService.importPreview(f.student, a.id(), new byte[] {1});
+        assertThat(preview.document().blocks()).containsExactly(heading);
     }
 
     @Test
@@ -190,7 +198,6 @@ class AttemptServiceTest {
         WorkViews.Receipt again = f.attemptService.submit(f.student, a.id(), 7);
         assertThat(again.receiptHash()).isEqualTo(receipt.receiptHash());
         verify(f.listener, times(1)).onSubmitted(a.id());
-        verify(f.audit).record(argThat(e -> e.action().equals("ASSIGNMENT_SUBMITTED")));
     }
 
     @Test

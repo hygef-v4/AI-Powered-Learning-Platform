@@ -24,7 +24,6 @@ import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.contract.SubmissionWindow;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groupdocs.model.GroupDocument;
 import edu.aiplatform.groupdocs.model.GroupDocument.SectionAuthor;
 import edu.aiplatform.groupdocs.model.GroupDocument.SubmitMode;
@@ -61,9 +60,8 @@ class GroupWorkspaceServiceTest {
     private final IAuthorization authorization = mock(IAuthorization.class);
     private final IClassAccess classes = mock(IClassAccess.class);
     private final IAssignmentQuery assignments = mock(IAssignmentQuery.class);
-    private final IAudit audit = mock(IAudit.class);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final GroupAccess groupAccess = new GroupAccess(authorization, classes, audit, clock);
+    private final GroupAccess groupAccess = new GroupAccess(authorization, classes);
     private final IAccountLookup accounts = mock(IAccountLookup.class);
     private final GroupWorkspaceService service = new GroupWorkspaceService(documents, groups,
             new GroupDocAccess(documents, groups, groupAccess, assignments, clock), groupAccess,

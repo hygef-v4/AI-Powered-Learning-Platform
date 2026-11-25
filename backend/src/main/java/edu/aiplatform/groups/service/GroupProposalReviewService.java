@@ -2,9 +2,6 @@ package edu.aiplatform.groups.service;
 
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.model.GroupFormationSettings;
 import edu.aiplatform.groups.model.GroupProposal;
@@ -58,14 +55,13 @@ public class GroupProposalReviewService {
     private final GroupAccess access;
     private final IClassAccess classes;
     private final IAccountLookup accounts;
-    private final IAudit audit;
     private final IEventPublisher events;
     private final Clock clock;
 
     public GroupProposalReviewService(GroupProposalRepository proposalRepository, GroupRepository groupRepository,
                                       ClassGroupService classGroupService, GroupFormationService groupFormationService,
                                       GroupProposalCleanup groupProposalCleanup, GroupAccess access,
-                                      IClassAccess classes, IAccountLookup accounts, IAudit audit,
+                                      IClassAccess classes, IAccountLookup accounts,
                                       IEventPublisher events, Clock clock) {
         this.proposalRepository = proposalRepository;
         this.groupRepository = groupRepository;
@@ -75,7 +71,6 @@ public class GroupProposalReviewService {
         this.access = access;
         this.classes = classes;
         this.accounts = accounts;
-        this.audit = audit;
         this.events = events;
         this.clock = clock;
     }
@@ -203,7 +198,6 @@ public class GroupProposalReviewService {
                 details.put("classId", classId.toString());
                 details.put("groupId", groupId.toString());
                 details.put("members", a.draft().memberIds().size());
-                record(actor, "GROUP_PROPOSAL_APPROVED", proposal.id(), details, now);
                 publish(EventTypes.GROUP_PROPOSAL_APPROVED, proposal, a.draft().memberIds());
                 approved.add(new Approved(proposal.id(), groupId));
             }
@@ -218,7 +212,7 @@ public class GroupProposalReviewService {
     @Transactional
     public ClassProposalsView rejectProposal(Actor actor, UUID proposalId, RejectProposalCommand command) {
         GroupProposal proposal = proposalRepository.lockProposal(proposalId)
-                .orElseThrow(() -> access.denyProposal(actor, proposalId, "NOT_FOUND"));
+                .orElseThrow(() -> access.createProposalNotFoundError());
         ClassRef ref = access.requireTeacher(actor, proposal.classId());
         GroupAccess.requireEditable(ref);
         if (proposal.status() != Status.SUBMITTED) {
@@ -236,7 +230,6 @@ public class GroupProposalReviewService {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("classId", proposal.classId().toString());
         details.put("hasReason", reason != null);
-        record(actor, "GROUP_PROPOSAL_REJECTED", proposalId, details, now);
         publish(EventTypes.GROUP_PROPOSAL_REJECTED, proposal, members);
         return listClassProposals(actor, proposal.classId());
     }
@@ -264,11 +257,6 @@ public class GroupProposalReviewService {
         } catch (RuntimeException e) {
             throw ApiException.createUnavailable("GROUP_DEPENDENCY_UNAVAILABLE", "Hệ thống tạm bận, vui lòng thử lại sau");
         }
-    }
-
-    private void record(Actor actor, String action, UUID proposalId, Map<String, Object> details, Instant now) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), action, "GROUP_PROPOSAL",
-                proposalId.toString(), AuditResult.SUCCESS, null, details, now));
     }
 
     private void publish(String type, GroupProposal proposal, Collection<UUID> recipients) {

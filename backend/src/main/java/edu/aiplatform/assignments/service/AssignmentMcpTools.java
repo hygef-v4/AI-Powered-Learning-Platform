@@ -102,11 +102,10 @@ public class AssignmentMcpTools implements IMcpToolProvider {
     }
 
     private Map<String, Object> readAssignment(Actor actor, UUID id) {
-        Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.deny(actor, READ,
-                AssignmentAudit.OBJECT_ASSIGNMENT, id, "NOT_FOUND"));
+        Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.notFound());
         boolean teacher = actor.role() != Role.STUDENT && access.canRead(actor, assignment);
         if (!teacher && !(actor.role() == Role.STUDENT && canStudentRead(actor, assignment))) {
-            throw access.deny(actor, READ, AssignmentAudit.OBJECT_ASSIGNMENT, id, "OUT_OF_ASSIGNMENT_SCOPE");
+            throw access.notFound();
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("assignmentId", assignment.id().toString());

@@ -42,7 +42,6 @@ import edu.aiplatform.assignmentwork.model.AssignmentAttempt;
 import edu.aiplatform.assignmentwork.repository.AttemptRepository;
 import edu.aiplatform.assignmentwork.model.AttemptSnapshot;
 import edu.aiplatform.assignmentwork.repository.PracticeFeedbackRepository;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.files.contract.IArtifact;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
@@ -92,7 +91,6 @@ final class WorkFixtures {
     final IDocumentModel documents = mock(IDocumentModel.class);
     final IDocx docx = mock(IDocx.class);
     final IArtifact artifacts = mock(IArtifact.class);
-    final IAudit audit = mock(IAudit.class);
     final IAiTask aiTasks = mock(IAiTask.class);
     final IGroupWorkStatus groupWork = mock(IGroupWorkStatus.class);
     final ISubmissionListener listener = mock(ISubmissionListener.class);
@@ -101,7 +99,6 @@ final class WorkFixtures {
     final PlatformTransactionManager transactions = mock(PlatformTransactionManager.class);
     final ObjectMapper json = new ObjectMapper().findAndRegisterModules();
 
-    final WorkAudit workAudit;
     final WorkAccess access;
     final AttemptSubmitter submitter;
     final AttemptService attemptService;
@@ -109,15 +106,13 @@ final class WorkFixtures {
     final PracticeFeedbackService feedbackService;
 
     WorkFixtures() {
-        workAudit = new WorkAudit(audit, clock);
-        access = new WorkAccess(authorization, classes, assignments, attempts, workAudit);
-        submitter = new AttemptSubmitter(attempts, assignments, documents, listeners, workAudit, json);
-        attemptService = new AttemptService(access, attempts, submitter, assignments, documents, docx, artifacts, workAudit,
+        access = new WorkAccess(authorization, classes, assignments, attempts);
+        submitter = new AttemptSubmitter(attempts, assignments, documents, listeners, json);
+        attemptService = new AttemptService(access, attempts, submitter, assignments, documents, docx, artifacts,
                 clock, "http://localhost:8088");
         studentAssignments = new StudentAssignmentService(access, classes, assignments, groupWork, attempts, feedback,
                 clock);
-        feedbackService = new PracticeFeedbackService(access, attempts, feedback, assignments, documents, aiTasks,
-                workAudit, json, transactions, clock, 20);
+        feedbackService = new PracticeFeedbackService(access, attempts, feedback, assignments, documents, aiTasks, json, transactions, clock, 20);
         when(authorization.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
         when(classes.getClassRef(classId)).thenReturn(Optional.of(classRef(ClassStatus.OPEN)));
         when(classes.isActiveStudent(any(), any())).thenReturn(true);

@@ -54,8 +54,10 @@ class MaterialAccessPolicyTest {
         audit = mock(IAudit.class);
         materialAccessPolicy =
                 new MaterialAccessPolicy(
-                        authorization, subjectQuery, classAccess, classScope, audit, Clock.fixed(
-                                now, ZoneOffset.UTC));
+                        authorization,
+                        subjectQuery,
+                        classAccess,
+                        classScope);
         when(authorization.authorize(any(), anyString(), any()))
                 .thenReturn(AuthorizationDecision.allow());
         when(subjectQuery.getSubject(subject))
@@ -103,7 +105,6 @@ class MaterialAccessPolicyTest {
         var m = material(true, Material.Status.ACTIVE);
         materialAccessPolicy.requireReadAccess(actor, m, classId);
         materialAccessPolicy.requireWriteAccess(actor, m);
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -146,7 +147,6 @@ class MaterialAccessPolicyTest {
                 new Actor(account, Role.STUDENT), material(false, Material.Status.ACTIVE), classId);
         materialAccessPolicy.requireReadAccess(
                 new Actor(account, Role.STUDENT), material(true, Material.Status.ACTIVE), classId);
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -220,7 +220,6 @@ class MaterialAccessPolicyTest {
         assertThatThrownBy(() -> materialAccessPolicy.requireModuleManagement(manager, subject))
                 .isInstanceOfSatisfying(ApiException.class,
                         e -> assertThat(e.readCode()).isEqualTo("MATERIAL_SCOPE_READ_ONLY"));
-        verifyNoInteractions(audit);
     }
 
     @Test
@@ -296,7 +295,6 @@ class MaterialAccessPolicyTest {
         assertThat(materialAccessPolicy.canManageModules(manager, subject)).isTrue();
         verify(authorization, atLeastOnce())
                 .authorize(manager, Actions.MATERIAL_SUBJECT_MANAGE, ResourceRef.subject(subject));
-        verifyNoInteractions(audit);
 
         when(
                 authorization.authorize(
@@ -321,11 +319,5 @@ class MaterialAccessPolicyTest {
         assertThatThrownBy(call::run)
                 .isInstanceOfSatisfying(
                         ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(404));
-        verify(audit)
-                .record(
-                        argThat(
-                                event ->
-                                        event.action().equals("ACCESS_DENIED")
-                                                && event.result() == AuditResult.DENIED));
     }
 }

@@ -25,6 +25,9 @@ public class AuditLogRepository {
     private static final String COLUMNS = "id, actor_id, action, object_type, object_id, result, reason, "
             + "details::text as details, occurred_at";
 
+    /** Tra cứu audit cũ (trước 2026-11-25 mỗi lần mở màn Log đều ghi); không còn ghi và không hiện trên màn Log. */
+    static final String HIDDEN_ACTION = "AUDIT_QUERIED";
+
     private final JdbcClient jdbc;
 
     public AuditLogRepository(JdbcClient jdbc) {
@@ -44,7 +47,7 @@ public class AuditLogRepository {
 
     public long count(AuditFilter filter) {
         Where where = Where.buildWhere(filter);
-        return jdbc.sql("select count(*) from audit_logs" + where.sql()).params(where.params())
+        return jdbc.sql("select count(*) from audit_logs" + hideOldQueries(where.sql())).params(where.params())
                 .query(Long.class).single();
     }
 
@@ -75,9 +78,14 @@ public class AuditLogRepository {
         Map<String, Object> params = new LinkedHashMap<>(where.params());
         params.put("offset", offset);
         params.put("limit", limit);
-        return jdbc.sql("select " + COLUMNS + " from audit_logs" + where.sql()
+        return jdbc.sql("select " + COLUMNS + " from audit_logs" + hideOldQueries(where.sql())
                         + " order by occurred_at desc, id desc offset :offset limit :limit")
                 .params(params).query(AuditLogRepository::map).list();
+    }
+
+    static String hideOldQueries(String whereSql) {
+        String condition = "action <> '" + HIDDEN_ACTION + "'";
+        return whereSql.isEmpty() ? " where " + condition : whereSql + " and " + condition;
     }
 
     private static AuditRow map(ResultSet rs, int rowNum) throws SQLException {

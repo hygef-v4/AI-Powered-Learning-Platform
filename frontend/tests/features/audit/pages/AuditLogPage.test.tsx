@@ -63,7 +63,7 @@ describe("AuditLogPage", () => {
     expect(url.searchParams.get("size")).toBe("50");
     expect(url.searchParams.get("page")).toBe("0");
     expect(url.searchParams.has("actorId")).toBe(false);
-    expect(url.searchParams.get("recordView")).toBe("true");
+    expect(url.searchParams.get("recordView")).toBeNull();
   });
 
   it("bảng có cột STT, thời gian ghi giờ phút ngày tháng năm, không còn dòng Hiển thị", async () => {
@@ -95,13 +95,13 @@ describe("AuditLogPage", () => {
     await waitFor(() => expect(auditCalls(fetchMock)).toHaveLength(2));
     const filtered = new URL(auditCalls(fetchMock)[1]!, "http://x").searchParams;
     expect(filtered.get("result")).toBe("DENIED");
-    expect(filtered.get("recordView")).toBe("false");
+    expect(filtered.get("recordView")).toBeNull();
 
     fireEvent.click(screen.getByTestId("audit-filters-clear-button"));
     await waitFor(() => expect(auditCalls(fetchMock)).toHaveLength(3));
     const cleared = new URL(auditCalls(fetchMock)[2]!, "http://x").searchParams;
     expect(cleared.has("result")).toBe(false);
-    expect(cleared.get("recordView")).toBe("false");
+    expect(cleared.get("recordView")).toBeNull();
   });
 
   it("cột đối tượng hiện email hoặc tên thay cho loại đối tượng; không có tên thì hiện loại", async () => {
@@ -221,6 +221,32 @@ describe("AuditLogPage", () => {
     const second = new URL(auditCalls(fetchMock)[1]!, "http://x").searchParams;
     expect(second.get("page")).toBe("1");
     expect(second.get("from")).toBe(first.get("from"));
-    expect(second.get("recordView")).toBe("false");
+    expect(second.get("recordView")).toBeNull();
+  });
+
+  it("lần bị từ chối hiện lớp, thao tác bị chặn, lý do đầy đủ và mở được chi tiết", async () => {
+    const denied: AuditLogItem = {
+      ...ADMIN_ROW,
+      id: "9f21c9e4-0b8d-4a51-a2c3-118e5f0d9b79",
+      action: "ACCESS_DENIED",
+      objectType: "COURSE_CLASS",
+      objectId: "6f1c2a7d-11e0-4b9b-8f3a-6c2d0a5e1e81",
+      objectLabel: "SWD392 · SE1801",
+      result: "DENIED",
+      reason: "ROLE_DENIED",
+      details: { audience: "manager", action: "CLASS_VIEW", actorRole: "TEACHER" },
+    };
+    vi.stubGlobal("fetch", vi.fn(() => json(page([denied]))));
+    render(<AuditLogPage />);
+
+    const row = await screen.findByTestId(`audit-table-row-${denied.id}`);
+    expect(within(row).getByText("SWD392 · SE1801")).toBeInTheDocument();
+    expect(within(row).getByTestId("audit-table-operation")).toHaveTextContent("Xem lớp");
+    expect(within(row).getByText("Vai trò Giảng viên không được dùng chức năng này")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId(`audit-table-toggle-${denied.id}`));
+    const detail = screen.getByTestId(`audit-table-detail-${denied.id}`);
+    expect(within(detail).getByText(denied.objectId!)).toBeInTheDocument();
+    expect(within(detail).getByText("ROLE_DENIED")).toBeInTheDocument();
   });
 });

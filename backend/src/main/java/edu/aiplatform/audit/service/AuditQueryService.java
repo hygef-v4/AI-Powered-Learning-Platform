@@ -26,7 +26,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,8 +41,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cài {@link IAuditQuery} (A2, UC 13): chỉ {@code ADMIN}, kiểm quyền lỗi thì từ chối (BR-U02-07, 50); lọc, mới nhất
- * trước, tối đa 100 dòng mỗi trang (BR-U02-08); email người thực hiện lấy lúc đọc (BR-U02-09); mọi lần tra cứu được
- * audit {@code AUDIT_QUERIED}.
+ * trước, tối đa 100 dòng mỗi trang (BR-U02-08); email người thực hiện lấy lúc đọc (BR-U02-09). Tra cứu không ghi audit
+ * (yêu cầu 2026-11-25); dòng {@code AUDIT_QUERIED} ghi trước đó bị ẩn khỏi kết quả.
  */
 @Service
 public class AuditQueryService implements IAuditQuery, IAuditStats {
@@ -94,8 +93,8 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
     }
 
     @Override
-    @Transactional
-    public Page<AuditLogView> query(Actor actor, AuditFilter filter, Pageable page, boolean recordView) {
+    @Transactional(readOnly = true)
+    public Page<AuditLogView> query(Actor actor, AuditFilter filter, Pageable page) {
         requireAdmin(actor);
         AuditFilter normalized = resolveActorMatches(normalize(filter));
         validatePage(page);
@@ -109,10 +108,6 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
                         labels.computeIfAbsent(row.objectType() + ":" + row.objectId(), key -> resolveObjectLabel(row))
                                 .orElse(null)))
                 .toList();
-        if (recordView) {
-            audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "AUDIT_QUERIED", OBJECT_TYPE, null,
-                    AuditResult.SUCCESS, null, describe(normalized, page), clock.instant()));
-        }
         return new PageImpl<>(items, page, total);
     }
 
@@ -228,7 +223,7 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
                 case "SUBJECT" -> subjects == null ? Optional.empty()
                         : Optional.ofNullable(subjects.getIfAvailable()).flatMap(q -> q.getSubject(id))
                                 .map(AuditQueryService::formatSubjectLabel);
-                case "CLASS" -> classes == null ? Optional.empty()
+                case "CLASS", "COURSE_CLASS" -> classes == null ? Optional.empty()
                         : Optional.ofNullable(classes.getIfAvailable()).flatMap(q -> q.getClassRef(id))
                                 .map(AuditQueryService::formatClassLabel);
                 default -> Optional.empty();
@@ -267,29 +262,6 @@ public class AuditQueryService implements IAuditQuery, IAuditStats {
             return objectMapper.readValue(json, MAP);
         } catch (Exception e) {
             return Map.of();
-        }
-    }
-
-    /** Bộ lọc đã dùng, ghi vào {@code AUDIT_QUERIED}; chỉ id, không có email. */
-    private static Map<String, Object> describe(AuditFilter filter, Pageable page) {
-        Map<String, Object> details = new LinkedHashMap<>();
-        if (filter.actorId() != null) {
-            details.put("actorId", filter.actorId().toString());
-        }
-        putIfPresent(details, "action", filter.action());
-        putIfPresent(details, "objectType", filter.objectType());
-        putIfPresent(details, "objectId", filter.objectId());
-        putIfPresent(details, "result", filter.result() == null ? null : filter.result().name());
-        putIfPresent(details, "from", filter.from() == null ? null : filter.from().toString());
-        putIfPresent(details, "to", filter.to() == null ? null : filter.to().toString());
-        details.put("page", page.getPageNumber());
-        details.put("size", page.getPageSize());
-        return details;
-    }
-
-    private static void putIfPresent(Map<String, Object> details, String key, String value) {
-        if (value != null) {
-            details.put(key, value);
         }
     }
 }

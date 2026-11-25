@@ -44,12 +44,7 @@ class GradebookServiceTest {
         other.adjustmentReason = "Private other member";
         other.state = EvaluationStatus.PUBLISHED;
         when(repo.findForClass(classId)).thenReturn(List.of(mine, other));
-        var service = new GradebookService(repo,
-                new GradingAccess(auth, classes, audit, Clock.systemUTC()),
-                mock(IAssignmentQuery.class), mock(ISubmissionQuery.class), classes,
-                mock(IAccountLookup.class), mock(IRubric.class), audit, Clock.systemUTC(),
-                mock(org.springframework.beans.factory.ObjectProvider.class),
-                mock(GradeDistributionVisibilityRepository.class));
+        var service = new GradebookService(repo, new GradingAccess(auth, classes), mock(IAssignmentQuery.class), mock(ISubmissionQuery.class), classes, mock(IAccountLookup.class), mock(IRubric.class), mock(org.springframework.beans.factory.ObjectProvider.class), mock(GradeDistributionVisibilityRepository.class));
         assertThat(service.listMyGrades(actor, classId)).isEmpty();
         mine.state = EvaluationStatus.PUBLISHED;
         assertThat(service.listMyGrades(actor, classId)).singleElement().satisfies(grade -> {
@@ -87,9 +82,7 @@ class GradebookServiceTest {
         other.score = BigDecimal.TEN;
         other.state = EvaluationStatus.PUBLISHED;
         when(repo.findForClass(cid)).thenReturn(List.of(mine, other));
-        var service = new GradebookService(repo, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
-                assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(),
-                mock(org.springframework.beans.factory.ObjectProvider.class), mock(GradeDistributionVisibilityRepository.class));
+        var service = new GradebookService(repo, new GradingAccess(auth, classes), assignments, subs, classes, contacts, rubric, mock(org.springframework.beans.factory.ObjectProvider.class), mock(GradeDistributionVisibilityRepository.class));
         assertThat(service.listMyGrades(actor, cid)).isEmpty();
         mine.score = BigDecimal.ONE;
         mine.state = EvaluationStatus.FINALIZED;
@@ -154,9 +147,7 @@ class GradebookServiceTest {
         mine.publishedAt = Instant.now();
 
         when(repo.findByAttemptId(mine.attemptId)).thenReturn(Optional.of(mine));
-        var service = new GradebookService(repo, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
-                assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(),
-                mock(org.springframework.beans.factory.ObjectProvider.class), mock(GradeDistributionVisibilityRepository.class));
+        var service = new GradebookService(repo, new GradingAccess(auth, classes), assignments, subs, classes, contacts, rubric, mock(org.springframework.beans.factory.ObjectProvider.class), mock(GradeDistributionVisibilityRepository.class));
 
         var view = service.loadAttemptGrade(actor, mine.attemptId);
         assertThat(view.score()).isEqualByComparingTo("1.25");
@@ -228,9 +219,7 @@ class GradebookServiceTest {
         when(provider.listGroupSubmissions(aid, cid))
                 .thenReturn(List.of(new edu.aiplatform.grading.contract.GroupSubmissionStatus(doc, UUID.randomUUID(),
                         "Group", true, submittedAt, true)));
-        var service = new GradebookService(repo, new GradingAccess(auth, classes, audit, Clock.systemUTC()),
-                assignments, subs, classes, contacts, rubric, audit, Clock.systemUTC(), groups,
-                mock(GradeDistributionVisibilityRepository.class));
+        var service = new GradebookService(repo, new GradingAccess(auth, classes), assignments, subs, classes, contacts, rubric, groups, mock(GradeDistributionVisibilityRepository.class));
         var cell = service.listGrades(new Actor(UUID.randomUUID(), Role.TEACHER), cid, null, 1, 20).rows().get(0).grades()
                 .get(0);
         assertThat(cell.late()).isTrue();

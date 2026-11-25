@@ -5,7 +5,6 @@ import static org.mockito.Mockito.*;
 
 import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.assignments.contract.*;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.grading.repository.GradeDistributionVisibilityRepository;
 import edu.aiplatform.grading.repository.GradeDistributionVisibilityRepository.Visibility;
 import edu.aiplatform.identity.contract.*;
@@ -21,10 +20,8 @@ class GradeDistributionVisibilityServiceTest {
     final IClassAccess classAccess = mock(IClassAccess.class);
     final IAssignmentQuery assignmentQuery = mock(IAssignmentQuery.class);
     final IAuthorization auth = mock(IAuthorization.class);
-    final IAudit audit = mock(IAudit.class);
     final GradeDistributionVisibilityRepository gradeDistributionVisibilityRepository = mock(GradeDistributionVisibilityRepository.class);
-    final GradeDistributionVisibilityService gradeDistributionVisibilityService = new GradeDistributionVisibilityService(gradeDistributionVisibilityRepository,
-            new GradingAccess(auth, classAccess, audit, Clock.systemUTC()), classAccess, assignmentQuery, audit, Clock.systemUTC());
+    final GradeDistributionVisibilityService gradeDistributionVisibilityService = new GradeDistributionVisibilityService(gradeDistributionVisibilityRepository, new GradingAccess(auth, classAccess), classAccess, assignmentQuery);
 
     @BeforeEach void setup() {
         when(auth.authorize(any(), anyString(), any())).thenReturn(AuthorizationDecision.allow());
@@ -50,13 +47,11 @@ class GradeDistributionVisibilityServiceTest {
         when(gradeDistributionVisibilityRepository.updateVisibility(classId, assignmentId, true, 0)).thenReturn(true);
         assertThat(gradeDistributionVisibilityService.updateVisibility(teacher, classId, assignmentId, true, 0).version()).isEqualTo(1);
         verify(auth, atLeastOnce()).authorize(eq(teacher), eq(Actions.GRADING_WRITE), any());
-        verify(audit).record(argThat(e -> e.action().equals("GRADE_DISTRIBUTION_VISIBILITY_CHANGED")));
     }
 
     @Test void staleVersionCannotOverwriteAndDoesNotAuditSuccess() {
         assertThatThrownBy(() -> gradeDistributionVisibilityService.updateVisibility(teacher, classId, assignmentId, true, 3))
                 .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readStatus().value()).isEqualTo(409));
-        verifyNoInteractions(audit);
     }
 
     @Test void managerMustBeAssignedAndAssignedManagerCanEdit() {

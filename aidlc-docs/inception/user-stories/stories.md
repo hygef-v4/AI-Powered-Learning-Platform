@@ -1600,7 +1600,7 @@ Mỗi story có Given/When/Then; baseline scope và UC owner ở requirements/us
 
 ## Current acceptance deltas — 2026-10-30
 
-US-AIC-002: Student own-Practice MCP restored, Admin credentials/tools denied (including old tokens), wrong owner/expired/revoked deny; owner token reveal requires ACTIVE and ciphertext. US-AIC-003: multiple institutional keys per provider. Saved provider keys are write-only (D15). Class lifecycle, Quiz reopen, optional leader reasons and material modules inherit the code-derived UC clarifications without new story IDs. Source behavior is documented; fresh acceptance is pending.
+US-AIC-002: Student own-Practice MCP restored, Admin credentials/tools denied (including old tokens), wrong owner/expired/revoked deny; token is shown once at creation only (D05 closed 2026-11-23, no token reveal or stored ciphertext) and editing cannot upgrade READ_ONLY to READ_WRITE. US-AIC-003: multiple institutional keys per provider. Saved provider keys are write-only (D15). Class lifecycle, Quiz reopen, optional leader reasons and material modules inherit the code-derived UC clarifications without new story IDs. Source behavior is documented; fresh acceptance is pending.
 
 ## MCP correction and audit remediation — 2026-10-30
 

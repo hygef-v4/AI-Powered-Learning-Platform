@@ -46,8 +46,7 @@ public class QuizReferenceMaterials {
     /** Tài liệu của môn cho popup AI của ngân hàng câu hỏi. */
     @Transactional(readOnly = true)
     public List<SelectableMaterial> listForSubject(Actor actor, UUID subjectId) {
-        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT", subjectId,
-                "SUBJECT_NOT_FOUND");
+        access.requireSubject(actor, Actions.QUESTION_BANK_MANAGE, subjectId, "SUBJECT_NOT_FOUND");
         return listMaterials(actor, ResourceRef.subject(subjectId));
     }
 

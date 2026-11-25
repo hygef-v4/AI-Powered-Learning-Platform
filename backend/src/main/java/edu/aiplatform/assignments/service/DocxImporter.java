@@ -83,6 +83,14 @@ final class DocxImporter {
                     + "|(?<dec>\\d{1,2})[.)]|(?<letter>[A-Za-z])[.)])(?:\\s+(?<rest>\\S.*))?$");
     static final int MAX_LEVEL = edu.aiplatform.assignments.model.SectionNumbering.MAX_DEPTH;
     private static final int MAX_MARKED_CHARS = 200;
+    private static final String W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+    /** Màu bút highlight có sẵn của Word. */
+    private static final Map<String, String> HIGHLIGHTS = Map.ofEntries(
+            Map.entry("yellow", "#FFFF00"), Map.entry("green", "#00FF00"), Map.entry("cyan", "#00FFFF"),
+            Map.entry("magenta", "#FF00FF"), Map.entry("blue", "#0000FF"), Map.entry("red", "#FF0000"),
+            Map.entry("darkBlue", "#000080"), Map.entry("darkCyan", "#008080"), Map.entry("darkGreen", "#008000"),
+            Map.entry("darkMagenta", "#800080"), Map.entry("darkRed", "#800000"), Map.entry("darkYellow", "#808000"),
+            Map.entry("darkGray", "#808080"), Map.entry("lightGray", "#C0C0C0"), Map.entry("black", "#000000"));
     private static final Map<String, String> UNSUPPORTED = Map.of("txbxContent", "hộp văn bản", "oMath", "công thức",
             "oMathPara", "công thức", "smartArt", "SmartArt", "chart", "biểu đồ");
 
@@ -403,8 +411,10 @@ final class DocxImporter {
             if (text == null || text.isEmpty()) {
                 return;
             }
-            boolean bold = run.isBold();
-            boolean italic = run.isItalic();
+            // Định dạng đặt bằng kiểu ký tự của Word (Strong, Emphasis) cũng giữ lại (yêu cầu 2026-11-25).
+            String charStyle = run.getStyle();
+            boolean bold = run.isBold() || "Strong".equalsIgnoreCase(charStyle);
+            boolean italic = run.isItalic() || "Emphasis".equalsIgnoreCase(charStyle);
             boolean underline = run.getUnderline() != null && run.getUnderline() != UnderlinePatterns.NONE;
             String font = run.getFontFamily();
             boolean code = font != null && MONO.contains(font.toLowerCase(Locale.ROOT));
@@ -412,13 +422,15 @@ final class DocxImporter {
             String rawColor = run.getColor();
             String color = rawColor != null && rawColor.matches("[0-9a-fA-F]{6}") && !rawColor.equals("000000")
                     ? "#" + rawColor.toUpperCase(Locale.ROOT) : null;
+            String highlight = readHighlight(run);
             if (!runs.isEmpty()) {
                 ObjectNode last = (ObjectNode) runs.get(runs.size() - 1);
                 if (last.path("bold").asBoolean(false) == bold && last.path("italic").asBoolean(false) == italic
                         && last.path("underline").asBoolean(false) == underline
                         && last.path("code").asBoolean(false) == code
                         && last.path("strike").asBoolean(false) == strike
-                        && java.util.Objects.equals(last.path("color").asText(null), color)) {
+                        && java.util.Objects.equals(last.path("color").asText(null), color)
+                        && java.util.Objects.equals(last.path("highlight").asText(null), highlight)) {
                     last.put("text", last.path("text").asText("") + text);
                     return;
                 }
@@ -443,6 +455,40 @@ final class DocxImporter {
             if (color != null) {
                 next.put("color", color);
             }
+            if (highlight != null) {
+                next.put("highlight", highlight);
+            }
+        }
+
+        /** Màu tô nền của chữ: tô bằng shading (tệp xuất từ nền tảng) hoặc bút highlight của Word; không tô thì null. */
+        private static String readHighlight(XWPFRun run) {
+            org.w3c.dom.Node rPr = null;
+            for (org.w3c.dom.Node child = run.getCTR().getDomNode().getFirstChild(); child != null; child = child.getNextSibling()) {
+                if ("rPr".equals(child.getLocalName())) {
+                    rPr = child;
+                }
+            }
+            if (rPr == null) {
+                return null;
+            }
+            for (org.w3c.dom.Node child = rPr.getFirstChild(); child != null; child = child.getNextSibling()) {
+                if (!(child instanceof org.w3c.dom.Element element)) {
+                    continue;
+                }
+                if ("shd".equals(element.getLocalName())) {
+                    String fill = element.getAttributeNS(W_NS, "fill");
+                    if (fill.matches("[0-9a-fA-F]{6}") && !fill.equalsIgnoreCase("FFFFFF")) {
+                        return "#" + fill.toUpperCase(Locale.ROOT);
+                    }
+                }
+                if ("highlight".equals(element.getLocalName())) {
+                    String named = HIGHLIGHTS.get(element.getAttributeNS(W_NS, "val"));
+                    if (named != null) {
+                        return named;
+                    }
+                }
+            }
+            return null;
         }
 
         private void readPictures(XWPFParagraph p) {

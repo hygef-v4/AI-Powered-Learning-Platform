@@ -20,7 +20,6 @@ import edu.aiplatform.ai.contract.AiTaskView;
 import edu.aiplatform.ai.contract.ApplyOutcome;
 import edu.aiplatform.ai.contract.IAiTask;
 import edu.aiplatform.ai.contract.McpToolResult;
-import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
@@ -303,7 +302,6 @@ class QuizAiDraftServiceTest {
     private final Actor otherTeacher = new Actor(UUID.randomUUID(), Role.TEACHER);
     private final Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
     private final Map<UUID, Boolean> revoked = new HashMap<>();
-    private final List<AuditEvent> audits = new ArrayList<>();
     private final List<AiTaskRequest> submitted = new ArrayList<>();
     private final Map<UUID, AiTaskView> tasks = new HashMap<>();
     private Function<AiTaskRequest, AiTaskView> aiAnswer;
@@ -363,21 +361,20 @@ class QuizAiDraftServiceTest {
             }
         };
 
-        QuizAudit audit = new QuizAudit(audits::add, clock);
-        QuizAccess access = new QuizAccess(authorization, audit);
+        QuizAccess access = new QuizAccess(authorization);
         mcpAccess = access;
         ActiveSubjects active = new ActiveSubjects(subjects);
         QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access, active);
         QuizReferenceMaterials materials = new QuizReferenceMaterials(u13, support, access);
-        authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access, audit,
+        authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access,
                 clock, listeners);
         publication = new QuizPublicationService(store.quizRepository, support,
                 new QuizPaperService(store.quizRepository, store.questionRepository, support, clock), listeners,
-                event -> { }, audit, clock);
+                event -> { }, clock);
         sourceRetry = new QuizSourceRetry(store.draftRepository, support, access, active, materials, ai,
                 TransactionOperations.withoutTransaction(), clock);
         drafts = new QuizAiDraftService(store.draftRepository, store.quizRepository, store.questionRepository, support,
-                access, active, materials, ai, new edu.aiplatform.ai.service.PromptGuardrailService(), audit,
+                access, active, materials, ai, new edu.aiplatform.ai.service.PromptGuardrailService(),
                 new QuestionDuplicates(store.questionRepository),
                 TransactionOperations.withoutTransaction(), clock, sourceRetry);
         handler = new QuizDraftResultHandler(store.draftRepository, store.quizRepository, support, access, active,
@@ -609,7 +606,6 @@ class QuizAiDraftServiceTest {
         revoked.put(teacher.accountId(), true);
         assertThat(handler.onReady(new AiTaskResult(UUID.randomUUID(), secondSent.taskType(), teacher,
                 secondSent.targetRef(), 0, OUTPUT))).isEqualTo(ApplyOutcome.REJECTED);
-        assertThat(audits).extracting(AuditEvent::action).doesNotContain("ACCESS_DENIED");
     }
 
     @Test
@@ -660,7 +656,6 @@ class QuizAiDraftServiceTest {
     void acceptAppendsEditedQuestionsAsInlineOnceAndClosesDraft() {
         QuizDetail quiz = classQuiz();
         AiDraftView ready = readyQuizDraft(quiz);
-        audits.clear();
 
         QuizDetail after = drafts.acceptForQuiz(teacher, quiz.quiz().id(), ready.id(),
                 List.of(valid("Câu đã sửa"), ready.questions().get(0).content()), quiz.quiz().version());
@@ -670,10 +665,6 @@ class QuizAiDraftServiceTest {
         assertThat(after.items().get(0).question().stem()).isEqualTo("Câu đã sửa");
         assertThat(after.items().get(0).points()).isEqualByComparingTo("2");
         assertThat(store.drafts.get(ready.id()).status()).isEqualTo(DraftStatus.ACCEPTED);
-        assertThat(audits).singleElement().satisfies(e -> {
-            assertThat(e.action()).isEqualTo("QUIZ_AI_DRAFT_ACCEPTED");
-            assertThat(e.details()).containsEntry("count", 2).doesNotContainKey("stem");
-        });
         assertThat(api(() -> drafts.acceptForQuiz(teacher, quiz.quiz().id(), ready.id(), List.of(valid("x")),
                 after.quiz().version())).readCode()).isEqualTo("AI_DRAFT_CLOSED");
     }
@@ -722,7 +713,6 @@ class QuizAiDraftServiceTest {
         assertThat(created.scope()).isEqualTo(QuestionScope.BANK);
         assertThat(created.status()).isEqualTo(QuestionStatus.DRAFT);
         assertThat(result.draft().status()).isEqualTo(DraftStatus.ACCEPTED);
-        assertThat(audits).extracting(AuditEvent::action).contains("QUIZ_AI_DRAFT_ACCEPTED");
     }
 
     @Test

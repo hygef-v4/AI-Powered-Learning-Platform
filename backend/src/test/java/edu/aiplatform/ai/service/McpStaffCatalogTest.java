@@ -72,7 +72,7 @@ class McpStaffCatalogTest {
         ObjectProvider<IMcpToolProvider> source=mock(ObjectProvider.class);when(source.orderedStream()).thenAnswer(call -> java.util.stream.Stream.of(fixture));
         var registry=new McpToolRegistry(source);var limiter=mock(IMcpRateLimiter.class);when(limiter.tryAcquire(any())).thenReturn(true);
         var usage=mock(AiUsageService.class);var audit=mock(edu.aiplatform.audit.contract.IAudit.class);
-        var server=new McpServer(registry,limiter,new JsonSchemaChecker(json),usage,audit,json,java.time.Clock.systemUTC());
+        var server=new McpServer(registry, limiter, new JsonSchemaChecker(json), usage, json, java.time.Clock.systemUTC());
         for(var role:Role.values())for(var access:Access.values()) {
             var actor=new Actor(UUID.randomUUID(),role);var now=java.time.Instant.now();
             var principal=new McpCredentialService.McpPrincipal(new edu.aiplatform.ai.model.McpCredential(UUID.randomUUID(),actor.accountId(),

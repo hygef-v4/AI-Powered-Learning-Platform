@@ -3,23 +3,18 @@ package edu.aiplatform.groups.service;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.academics.contract.ClassStatus;
 import edu.aiplatform.academics.contract.IClassAccess;
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.shared.error.ApiException;
-import java.time.Clock;
-import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
  * Kiểm quyền chung của U12 qua U01 và U05: giảng viên chính của lớp (R3/R4, BR-U12-01) hoặc sinh viên đang học
- * (R5). Ngoài phạm vi trả {@code 404} và ghi audit {@code ACCESS_DENIED}; U01, U05 lỗi thì từ chối (BR-U12-62).
+ * (R5). Ngoài phạm vi trả {@code 404} (không ghi audit từ 2026-11-25); U01, U05 lỗi thì từ chối (BR-U12-62).
  */
 @Component
 public class GroupAccess {
@@ -28,14 +23,10 @@ public class GroupAccess {
 
     private final IAuthorization authorization;
     private final IClassAccess classes;
-    private final IAudit audit;
-    private final Clock clock;
 
-    public GroupAccess(IAuthorization authorization, IClassAccess classes, IAudit audit, Clock clock) {
+    public GroupAccess(IAuthorization authorization, IClassAccess classes) {
         this.authorization = authorization;
         this.classes = classes;
-        this.audit = audit;
-        this.clock = clock;
     }
 
     /** Giảng viên chính của lớp; trả thông tin lớp. */
@@ -54,7 +45,7 @@ public class GroupAccess {
             throw createUnavailableError();
         }
         if (!active) {
-            deny(actor, classId, Actions.GROUP_WORK, "ENROLLMENT_REQUIRED");
+            throw createNotFoundError();
         }
         return loadClassRef(classId);
     }
@@ -108,21 +99,13 @@ public class GroupAccess {
             throw createUnavailableError();
         }
         if (!decision.allowed()) {
-            deny(actor, classId, action, decision.reason());
+            throw createNotFoundError();
         }
     }
 
-    /** Đề xuất nhóm không thuộc phạm vi của người gọi: ghi audit và trả {@code 404} (BR-U12-91). */
-    public ApiException denyProposal(Actor actor, UUID proposalId, String reason) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED",
-                "GROUP_PROPOSAL", String.valueOf(proposalId), AuditResult.DENIED, reason, Map.of(), clock.instant()));
+    /** Đề xuất nhóm không thuộc phạm vi của người gọi: trả {@code 404} (BR-U12-91). */
+    public ApiException createProposalNotFoundError() {
         return ApiException.createNotFound("GROUP_PROPOSAL_NOT_FOUND");
-    }
-
-    private void deny(Actor actor, UUID classId, String action, String reason) {
-        audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(), "ACCESS_DENIED", "CLASS",
-                String.valueOf(classId), AuditResult.DENIED, reason, Map.of("action", action), clock.instant()));
-        throw createNotFoundError();
     }
 
     private static ApiException createUnavailableError() {
