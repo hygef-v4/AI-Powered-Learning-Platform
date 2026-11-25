@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cx } from "./cx";
 import { Icon } from "./Icon";
 import { msg } from "@/i18n/msg";
+import { NUMBER_LOCALE } from "@/i18n/number";
 
 type Props = {
   /** Trang hiện tại, bắt đầu từ 0. */
@@ -18,7 +19,7 @@ type Props = {
   testId?: string;
 };
 
-const NUMBER = new Intl.NumberFormat("vi-VN");
+const NUMBER = new Intl.NumberFormat(NUMBER_LOCALE);
 
 /** Các trang cần hiện: đầu, cuối, quanh trang hiện tại; khoảng trống thành "…". */
 export function listPageItems(current: number, count: number): (number | "gap")[] {
