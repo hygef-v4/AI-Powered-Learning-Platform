@@ -155,10 +155,8 @@ public class EmailDeliveryService {
             mail.send(
                     new MailMessage(
                             contact.email(),
-                            notification.title,
-                            "Bạn có thông báo mới trên nền tảng học tập. Đăng nhập để xem: "
-                                    + baseUrl
-                                    + notification.link,
+                            NotificationEmailText.buildSubject(notification.type, notification.title),
+                            NotificationEmailText.buildBody(baseUrl + notification.link),
                             null));
         } catch (RuntimeException failure) {
             throw new RetryableJobException("NOTIFICATION_MAIL_UNAVAILABLE");
