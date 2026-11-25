@@ -222,6 +222,31 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
+    void practiceAssignmentWithoutRubricCanBeReviewedButHalfWrittenRubricStillBlocks() {
+        Assignment practice = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT,
+                new DocumentModel(List.of(heading("H1", "Mục"))), false, GradingMode.PRACTICE);
+        assertThat(f.authoring.review(f.teacher, practice.id(), practice.version()).status())
+                .isEqualTo(AssignmentStatus.REVIEWED);
+        Assignment half = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT,
+                new DocumentModel(List.of(heading("H1", "Một"), heading("H1", "Hai"))), false, GradingMode.PRACTICE);
+        f.authoring.updateRubric(f.teacher, half.id(), half.parts().get(0).partId(),
+                new AssignmentCommands.RubricUpdate(half.version(), AssignmentFixtures.completeCriteria()));
+        RubricCriterion zero = new RubricCriterion(null, "Đủ", "", CriterionKind.TEXT,
+                List.of(new RubricItem(null, "Có", BigDecimal.ZERO)));
+        f.authoring.updateRubric(f.teacher, half.id(), half.parts().get(1).partId(),
+                new AssignmentCommands.RubricUpdate(f.store.get(half.id()).version(), List.of(zero)));
+        assertThat(issues(() -> f.authoring.review(f.teacher, half.id(), f.store.get(half.id()).version())))
+                .extracting(ValidationIssue::code).containsExactly("RUBRIC_POINTS_MISSING");
+        // Chỉ một thẻ 0 điểm: tổng bằng 0 nhưng thẻ đã ghi vẫn bị chặn (retest systest 2026-11-25).
+        Assignment zeroOnly = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT,
+                new DocumentModel(List.of(heading("H1", "Một"))), false, GradingMode.PRACTICE);
+        f.authoring.updateRubric(f.teacher, zeroOnly.id(), zeroOnly.parts().get(0).partId(),
+                new AssignmentCommands.RubricUpdate(zeroOnly.version(), List.of(zero)));
+        assertThat(issues(() -> f.authoring.review(f.teacher, zeroOnly.id(), f.store.get(zeroOnly.id()).version())))
+                .extracting(ValidationIssue::code).containsExactly("RUBRIC_POINTS_MISSING");
+    }
+
+    @Test
     void rubricWithZeroTotalOrHalfWrittenItemsIsMissingPointsButBlankRowsAreIgnored() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT,
                 new DocumentModel(List.of(heading("H1", "Một"), heading("H1", "Hai"))), false);
