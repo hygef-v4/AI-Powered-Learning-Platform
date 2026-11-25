@@ -131,7 +131,7 @@ export function ImportAccountsPanel({ onImported, onClose }: { onImported: (crea
                 <Th>Email</Th>
                 <Th>{msg("identity.admin.components.ImportAccountsPanel.fullName")}</Th>
                 <Th>{msg("identity.admin.components.ImportAccountsPanel.role")}</Th>
-                <Th>MSSV</Th>
+                <Th>{msg("identity.admin.components.ImportAccountsPanel.studentCode")}</Th>
                 <Th>{msg("identity.admin.components.ImportAccountsPanel.checkResults")}</Th>
               </tr>
             </thead>

@@ -134,8 +134,13 @@ final class AssignmentFixtures {
 
     /** Bài lưu sẵn trong kho giả; rubric tạo theo phần, đầy đủ nếu {@code completeRubrics}. */
     Assignment put(AssignmentScope scope, AssignmentStatus status, DocumentModel skeleton, boolean completeRubrics) {
+        return put(scope, status, skeleton, completeRubrics, GradingMode.GRADED);
+    }
+
+    Assignment put(AssignmentScope scope, AssignmentStatus status, DocumentModel skeleton, boolean completeRubrics,
+                   GradingMode gradingMode) {
         Assignment a = new Assignment(UUID.randomUUID(), scope, scope == AssignmentScope.CLASS ? classId : null,
-                subjectId, null, AssignmentOrigin.MANUAL, 1, SubmissionMode.INDIVIDUAL, true, GradingMode.GRADED,
+                subjectId, null, AssignmentOrigin.MANUAL, 1, SubmissionMode.INDIVIDUAL, true, gradingMode,
                 "Bài 1", "Hướng dẫn", skeleton, PartCalculator.compute(skeleton), Map.of(), List.of(), false, null,
                 status, status == AssignmentStatus.DRAFT || status == AssignmentStatus.REVIEWED ? null : NOW.minusSeconds(3600),
                 status == AssignmentStatus.DRAFT || status == AssignmentStatus.REVIEWED ? null : NOW.plusSeconds(86_400),

@@ -5,12 +5,16 @@
 
 import { CSRF_HEADER, readCsrfToken } from "./csrf";
 import { msg } from "@/i18n/msg";
+import { describeApiProblem } from "./errorMessages";
 
 export type ApiProblem = {
   status: number;
   title?: string;
+  /** Câu báo lỗi theo ngôn ngữ giao diện ({@link describeApiProblem}). */
   detail?: string;
   code?: string;
+  /** `detail` gốc của server (tiếng Việt), giữ để ghi log hoặc test. */
+  serverDetail?: string;
 };
 
 export class ApiError extends Error {
@@ -109,9 +113,9 @@ async function fetchResponse(path: string, init: RequestInit = {}): Promise<Resp
     try {
       problem = { ...(await response.json()), status: response.status };
     } catch {
-      // Body không phải JSON: giữ mã HTTP.
+      // Body không phải JSON (ví dụ trang 413 của nginx): giữ mã HTTP.
     }
-    throw new ApiError(problem);
+    throw new ApiError({ ...problem, serverDetail: problem.detail, detail: describeApiProblem(problem) });
   }
   return response;
 }

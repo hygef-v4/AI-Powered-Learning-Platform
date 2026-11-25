@@ -81,6 +81,24 @@ class QuizAiDraftServiceTest {
     }
 
     @Test
+    void autoRequestRecordsTheSourceProviderAndModelUsedByAi() {
+        QuizDetail quiz = classQuiz();
+        aiAnswer = request -> new AiTaskView(UUID.randomUUID(), AiTaskState.QUEUED, AiSource.PERSONAL,
+                AiProvider.GEMINI, "gemini-test", null, null, null);
+
+        AiDraftView pending = drafts.requestForQuiz(teacher, quiz.quiz().id(), new DraftRequest("Soạn câu", 5, null,
+                null, List.of(), null, null, "auto-source"), quiz.quiz().version());
+
+        assertThat(submitted.get(0).source()).isNull();
+        assertThat(pending.source()).isEqualTo("PERSONAL");
+        assertThat(pending.provider()).isEqualTo("GEMINI");
+        assertThat(pending.model()).isEqualTo("gemini-test");
+        AiDraftView reopened = drafts.getForQuiz(teacher, quiz.quiz().id(), pending.id());
+        assertThat(reopened.source()).isEqualTo("PERSONAL");
+        assertThat(reopened.model()).isEqualTo("gemini-test");
+    }
+
+    @Test
     void guardrailRejectsInjectedInstructionsBeforeDraftOrAiCall() {
         QuizDetail quiz = classQuiz();
 

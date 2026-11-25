@@ -9,6 +9,7 @@ import { readGradingAiAccount, readGradingAiSessionRevision, resumeGradingPollin
 import { formatErrorMessage } from "../model/format";
 import type { BatchResult, ItemVersion } from "../model/types";
 import { msg } from "@/i18n/msg";
+import { formatNumber } from "@/i18n/number";
 
 const OUTCOME_CODE_MESSAGES: Record<string, string> = {
   ALREADY_FINALIZED: msg("grading.components.BatchActionDialog.thisSubmissionsGradeWasAlready"),
@@ -154,7 +155,7 @@ export function BatchActionDialog({
       {action === "ai" && (
         <p className="text-xs text-muted">
           {estimateState === "loading" ? msg("grading.components.BatchActionDialog.estimatingTokens") : estimateState === "ready" && estimate.tokens != null
-            ? msg("grading.components.BatchActionDialog.estimatedAboutTokens", { value: String(estimate.tokens.toLocaleString("vi-VN")) }) : msg("grading.components.BatchActionDialog.couldNotEstimateTokens")}
+            ? msg("grading.components.BatchActionDialog.estimatedAboutTokens", { value: String(formatNumber(estimate.tokens)) }) : msg("grading.components.BatchActionDialog.couldNotEstimateTokens")}
         </p>
       )}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}

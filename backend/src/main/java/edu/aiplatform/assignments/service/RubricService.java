@@ -2,6 +2,7 @@ package edu.aiplatform.assignments.service;
 
 import edu.aiplatform.assignments.contract.CriterionKind;
 import edu.aiplatform.assignments.contract.DocumentPart;
+import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.IRubric;
 import edu.aiplatform.assignments.contract.RubricCriterion;
 import edu.aiplatform.assignments.contract.RubricItem;
@@ -253,7 +254,8 @@ public class RubricService implements IRubric {
     /**
      * Lỗi chặn phát hành về rubric (yêu cầu 2026-11-05):
      * <ul>
-     * <li>Cả bài tổng điểm bằng 0: chỉ báo "Bài làm chưa có rubric chấm điểm", không tô đỏ thẻ nào (kể cả Toàn bài).</li>
+     * <li>Cả bài tổng điểm bằng 0: chỉ báo "Bài làm chưa có rubric chấm điểm", không tô đỏ thẻ nào (kể cả Toàn bài).
+     * Bài Luyện tập không bắt buộc rubric nên không báo lỗi này.</li>
      * <li>Thẻ có mục chấm mà tổng điểm không quá 0, hoặc có mục ghi chữ chưa ghi điểm hay ghi điểm chưa ghi chữ: "Rubric
      * thiếu điểm" trên thẻ đó.</li>
      * <li>Dòng không chữ không điểm bỏ qua; thẻ chỉ có dòng như vậy coi như chưa có rubric.</li>
@@ -275,7 +277,9 @@ public class RubricService implements IRubric {
             }
         }
         BigDecimal total = cards.stream().map(card -> sumPoints(card.rubric())).reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (total.signum() <= 0) {
+        // Bài Luyện tập không được chấm (BR-U09-03) nên không bắt buộc rubric, nhưng thẻ đã ghi vẫn kiểm như dưới
+        // (BR-U07-32, KAN-225); thẻ trống không báo lỗi.
+        if (total.signum() <= 0 && assignment.gradingMode() != GradingMode.PRACTICE) {
             issues.add(new ValidationIssue(MISSING, null, "Bài làm chưa có rubric chấm điểm"));
             return issues;
         }

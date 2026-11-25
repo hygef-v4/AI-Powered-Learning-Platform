@@ -31,7 +31,7 @@ export function ResultQuestions({ questions, showScore, index, onIndex }: {
       <Card as="section" className="text-[13px]" aria-label={msg("quizpractice.components.ResultQuestions.question", { value: String(current + 1) })}>
         <p className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted">
           <span className="font-bold text-ink">{msg("quizpractice.components.ResultQuestions.question2")}{current + 1} / {questions.length}</span>
-          {blank ? <Pill>{msg("quizpractice.components.ResultQuestions.unanswered")}</Pill> : q.correct ? <Pill tone="success">{msg("quizpractice.components.ResultQuestions.correct")}</Pill> : <Pill tone="danger">Sai</Pill>}
+          {blank ? <Pill>{msg("quizpractice.components.ResultQuestions.unanswered")}</Pill> : q.correct ? <Pill tone="success">{msg("quizpractice.components.ResultQuestions.correct")}</Pill> : <Pill tone="danger">{msg("quizpractice.components.ResultQuestions.wrong")}</Pill>}
           {showScore && q.points !== null && <span>{formatPoints(q.points)} / {formatPoints(q.maxPoints)} {msg("quizpractice.components.ResultQuestions.points")}</span>}
         </p>
         <p className="mb-3 whitespace-pre-wrap text-[14px] text-ink">{q.stem}</p>

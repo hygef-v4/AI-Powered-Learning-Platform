@@ -296,6 +296,10 @@ class EmailDeliveryServiceTest {
                                                 && m.textBody()
                                                         .contains(
                                                                 "Đăng nhập để xem: https://learning.example.test/classes/1")
+                                                && m.textBody()
+                                                        .contains(
+                                                                "Sign in to view it: https://learning.example.test/classes/1")
+                                                && m.subject().contains(" / ")
                                                 && !m.textBody().contains("9.5")
                                                 && !m.textBody()
                                                         .contains("PRIVATE_GRADE_COMMENT")));

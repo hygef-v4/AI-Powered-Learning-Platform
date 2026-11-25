@@ -24,6 +24,7 @@ export function useMaterialScope(
 /**
  * Trang chi tiết một học liệu (trang riêng): tên module nhỏ phía trên tên học liệu, trình xem rộng hết trang, mô tả, rồi
  * mục trước / sau trong danh sách module. Người quản lý có Sửa (cùng popup Tạo học liệu) và Xóa như ở danh sách.
+ * Dưới tên hiện số phiên bản hiện hành; không hiện lịch sử phiên bản (BR-U13-12).
  */
 export function LearningMaterialPage({ id, classId }: { id: string; classId?: string }) {
   const router = useRouter();
@@ -61,6 +62,11 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
     <div className="flex min-w-0 flex-col gap-5">
       <PageHeader
         title={<span className="min-w-0 [overflow-wrap:anywhere]">{m.title}</span>}
+        subtitle={
+          <span data-testid="material-version">
+            {msg("materials.pages.LearningMaterialPage.versionLabel", { value: String(m.currentVersionNo) })}
+          </span>
+        }
         breadcrumb={
           place.moduleTitle ? [{ label: place.moduleTitle }, { label: m.title }] : undefined
         }

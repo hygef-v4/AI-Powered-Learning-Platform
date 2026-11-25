@@ -65,7 +65,7 @@ export function QuizResultPage({ attemptId }: { attemptId: string }) {
       {result.showScore ? (
         <Section title={msg("quizpractice.pages.QuizResultPage.score")} icon="check_circle">
           <p className="text-2xl font-bold text-ink" data-testid="result-score">{formatPoints(result.score)} / {formatPoints(result.maxScore)}</p>
-          <p className="text-[13px] text-body">{msg("quizpractice.pages.QuizResultPage.correct")}{result.correctCount} · Sai {result.wrongCount} {msg("quizpractice.pages.QuizResultPage.unanswered")}{result.blankCount}</p>
+          <p className="text-[13px] text-body">{msg("quizpractice.pages.QuizResultPage.correct")}{result.correctCount}{msg("quizpractice.pages.QuizResultPage.wrong")}{result.wrongCount}{msg("quizpractice.pages.QuizResultPage.unanswered")}{result.blankCount}</p>
           {result.penalty && describePenaltyResult(result.penalty) && (
             <p className="text-[13px] text-body" data-testid="result-penalty">{describePenaltyResult(result.penalty)}</p>
           )}

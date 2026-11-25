@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { cx } from "@/shared/ui";
 import { msg } from "@/i18n/msg";
+import { NUMBER_LOCALE } from "@/i18n/number";
 
 /** Một chuỗi số trên biểu đồ: tên (chú thích, tooltip) và màu (token CSS). */
 export type Series = { name: string; color: string };
 
-const NUMBER = new Intl.NumberFormat("vi-VN");
-const COMPACT = new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 });
+const NUMBER = new Intl.NumberFormat(NUMBER_LOCALE);
+const COMPACT = new Intl.NumberFormat(NUMBER_LOCALE, { notation: "compact", maximumFractionDigits: 1 });
 export const formatNumber = (value: number) => NUMBER.format(value);
 
 /**

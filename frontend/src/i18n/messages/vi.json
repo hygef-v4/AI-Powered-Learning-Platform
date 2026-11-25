@@ -421,7 +421,9 @@
         "errors": " lỗi",
         "checkResults": "Kết quả kiểm tra",
         "valid2": "Hợp lệ",
-        "addStudents2": "Thêm {valid} sinh viên"
+        "addStudents2": "Thêm {valid} sinh viên",
+        "studentCode": "MSSV",
+        "rowNumber": "STT"
       },
       "PersonPicker": {
         "typeANameOrEmail": "Gõ tên hoặc email",
@@ -949,7 +951,8 @@
         "overloaded": "Quá tải",
         "timedOut": "Quá giờ",
         "connectionLost": "Mất kết nối",
-        "failed": "Không đạt"
+        "failed": "Không đạt",
+        "done": "Xong"
       },
       "mcpGuide": {
         "discoveryAndGuidance": "Khám phá và hướng dẫn",
@@ -1629,7 +1632,7 @@
         "byPart": "Theo từng phần",
         "theAiIsStillProcessing": "AI vẫn đang xử lý. ",
         "checkFeedbackAgain": "Kiểm tra lại góp ý",
-        "youCanManageYourPersonal": "Bạn có thể quản lý khóa API cá nhân tại",
+        "youCanManageYourPersonal": "Nhận xét dùng khóa API cá nhân hoặc agent MCP đã kết nối. Bạn quản lý cả hai tại",
         "aiConnection": "Kết nối AI",
         "getFeedbackAgain": "Nhận góp ý lại",
         "getAiFeedback": "Nhận góp ý AI"
@@ -1810,7 +1813,8 @@
         "object": "Đối tượng",
         "result": "Kết quả",
         "reason": "Lý do",
-        "noMatchingRecords": "Không có bản ghi nào phù hợp."
+        "noMatchingRecords": "Không có bản ghi nào phù hợp.",
+        "rowNumber": "STT"
       }
     },
     "model": {
@@ -2347,7 +2351,9 @@
         "points": " điểm",
         "notSubmitted": "Chưa nộp",
         "noMatchingStudents": "Không có sinh viên phù hợp.",
-        "students": "sinh viên"
+        "students": "sinh viên",
+        "studentCode": "MSSV",
+        "rowNumber": "STT"
       },
       "GradeDistributionSettings": {
         "couldNotLoadTheGrade": "Không tải được cài đặt phổ điểm. Vui lòng tải lại để thử lại.",
@@ -2809,7 +2815,8 @@
         "delete2": "Xóa {name}?",
         "deleteGroup": "Xóa nhóm",
         "areYouSureYouWant": "Bạn có chắc muốn xóa ",
-        "text": " không?"
+        "text": " không?",
+        "studentCode": "MSSV"
       },
       "GroupFormDialog": {
         "enterAGroupName": "Nhập tên nhóm",
@@ -3123,7 +3130,8 @@
           "valid2": "Hợp lệ",
           "rows2": "dòng",
           "cancel": "Hủy",
-          "importAccounts": "Nhập {validCount} tài khoản"
+          "importAccounts": "Nhập {validCount} tài khoản",
+          "studentCode": "MSSV"
         },
         "NewAccountDialog": {
           "invalidEmail": "Email không hợp lệ.",
@@ -3214,7 +3222,8 @@
           "open": "Mở",
           "loading": "Đang tải…",
           "noMatchingAccounts": "Không có tài khoản phù hợp.",
-          "accountAdded": "Đã thêm tài khoản"
+          "accountAdded": "Đã thêm tài khoản",
+          "studentCode": "MSSV"
         }
       }
     },
@@ -3535,7 +3544,8 @@
         "edit": "Sửa",
         "delete": "Xóa",
         "description": "Mô tả",
-        "learningMaterialDeleted": "Đã xóa học liệu"
+        "learningMaterialDeleted": "Đã xóa học liệu",
+        "versionLabel": "Phiên bản {value}"
       }
     },
     "register": {
@@ -3588,6 +3598,44 @@
         "questionProposalsAwaitingApproval": "Đề xuất câu hỏi chờ duyệt",
         "questionReviewResults": "Kết quả duyệt câu hỏi",
         "backupFailed": "Sao lưu thất bại"
+      },
+      "labels": {
+        "enrolledTitle": "Bạn đã được ghi danh vào lớp",
+        "enrolledSummary": "Xem thông tin lớp và các hoạt động học tập.",
+        "assignmentOpenedTitle": "Có bài tập mới mở",
+        "assignmentOpenedSummary": "Xem nội dung và hạn nộp bài.",
+        "quizPublishedTitle": "Có Quiz mới",
+        "quizPublishedSummary": "Mở Quiz để xem và bắt đầu luyện tập.",
+        "gradePublishedTitle": "Bạn có điểm mới",
+        "gradePublishedSummary": "Xem kết quả chấm bài của bạn.",
+        "deadlineReminderTitle": "Bài tập sắp đến hạn",
+        "deadlineReminderSummary": "Hạn nộp bài còn dưới 24 giờ.",
+        "announcementTitle": "Có thông báo mới của lớp",
+        "announcementSummary": "Xem nội dung thông báo từ giảng viên.",
+        "backupFailedTitle": "Sao lưu hệ thống thất bại",
+        "backupFailedSummary": "Xem chi tiết lần sao lưu thất bại để kiểm tra và xử lý.",
+        "leaderChangeRequestedTitle": "Có yêu cầu đổi trưởng nhóm",
+        "leaderChangeRequestedSummary": "Xem yêu cầu để phê duyệt hoặc từ chối.",
+        "leaderChangedTitle": "Trưởng nhóm đã thay đổi",
+        "leaderChangedSummary": "Xem thông tin trưởng nhóm mới.",
+        "leaderRequestRejectedTitle": "Yêu cầu đổi trưởng nhóm bị từ chối",
+        "leaderRequestRejectedSummary": "Xem trạng thái yêu cầu trong nhóm của bạn.",
+        "groupMembershipChangedTitle": "Thành viên nhóm đã thay đổi",
+        "groupMembershipChangedSummary": "Xem danh sách thành viên mới nhất.",
+        "groupSubmittedTitle": "Nhóm đã nộp bài",
+        "groupSubmittedSummary": "Xem trạng thái nộp bài của nhóm.",
+        "groupProposalInvitedTitle": "Bạn được mời vào nhóm",
+        "groupProposalInvitedSummary": "Mở Nhóm của tôi để chấp nhận hoặc từ chối lời mời.",
+        "groupProposalSubmittedTitle": "Có đề xuất nhóm chờ duyệt",
+        "groupProposalSubmittedSummary": "Mở tab Sinh viên của lớp để duyệt hoặc từ chối.",
+        "groupProposalApprovedTitle": "Đề xuất nhóm được duyệt",
+        "groupProposalApprovedSummary": "Nhóm của bạn đã thành nhóm chính thức của lớp.",
+        "groupProposalRejectedTitle": "Đề xuất nhóm bị từ chối",
+        "groupProposalRejectedSummary": "Xem lý do trong Nhóm của tôi và lập đề xuất khác.",
+        "questionProposedTitle": "Có câu hỏi chờ duyệt",
+        "questionProposedSummary": "Mở ngân hàng câu hỏi để duyệt hoặc từ chối.",
+        "questionReviewedTitle": "Câu hỏi đề xuất đã được xử lý",
+        "questionReviewedSummary": "Xem kết quả duyệt câu hỏi bạn đề xuất."
       }
     }
   },
@@ -3607,7 +3655,8 @@
         "correctAnswer": "Đáp án đúng",
         "yourChoice": "Bạn chọn",
         "explanation": "Giải thích:",
-        "questionList": "Danh sách câu"
+        "questionList": "Danh sách câu",
+        "wrong": "Sai"
       },
       "TeacherQuizSections": {
         "originalScore": "Điểm gốc ",
@@ -3648,7 +3697,8 @@
         "activityTimeline": "Dòng thời gian hoạt động",
         "noActivityDataForThis": "Không có dữ liệu hoạt động cho lượt này.",
         "signalsAreSelfReportedBy": "Tín hiệu do trình duyệt tự báo, có thể sai hoặc bị chặn: chỉ là dấu hiệu, nền tảng không kết luận gian lận.",
-        "studentsAttempted": " sinh viên đã làm"
+        "studentsAttempted": " sinh viên đã làm",
+        "studentCode": "MSSV"
       }
     },
     "model": {
@@ -3722,7 +3772,8 @@
         "noPracticeQuizzesYet": "Chưa có quiz luyện tập.",
         "practice": "Luyện tập",
         "notAttempted": "Chưa làm",
-        "start": "Bắt đầu"
+        "start": "Bắt đầu",
+        "view": "Xem"
       },
       "QuizResultPage": {
         "loadingResult": "Đang tải kết quả…",
@@ -3739,7 +3790,8 @@
         "practiceNotCountedInThe": "Practice · không tính vào sổ điểm",
         "submitted": "Đã nộp bài",
         "thisQuizDoesNotShow": "Quiz này không hiện điểm sau khi nộp.",
-        "thisQuizDoesNotShow2": "Quiz này không hiện đáp án sau khi nộp."
+        "thisQuizDoesNotShow2": "Quiz này không hiện đáp án sau khi nộp.",
+        "wrong": " · Sai "
       },
       "QuizTakingPage": {
         "lessThan5MinutesLeft": "Còn dưới 5 phút.",
@@ -3832,7 +3884,8 @@
         "accept": "Chấp nhận",
         "correctAnswer": " (đáp án đúng)",
         "explanation": "Giải thích: ",
-        "needsFixing": "Cần sửa: "
+        "needsFixing": "Cần sửa: ",
+        "done": "Xong"
       },
       "AiDraftTargets": {
         "theAiIsWriting": "AI đang soạn",
@@ -3849,7 +3902,8 @@
         "questions": "{value} câu · {value2}",
         "discardUnsavedEditsToView": "Bỏ các chỉnh sửa chưa lưu để xem đề xuất khác?",
         "collapse": "Thu gọn",
-        "aiProposal": "Đề xuất AI"
+        "aiProposal": "Đề xuất AI",
+        "view": "Xem"
       },
       "BankQuestionPicker": {
         "numberOfQuestionsFrom1": "Số câu từ 1 đến {freeSlots}.",
@@ -4129,7 +4183,17 @@
         "theAiResultIsNot": "Kết quả AI không đúng định dạng câu hỏi; hãy gửi lại yêu cầu.",
         "theAiCouldNotWrite": "AI chưa soạn được đề xuất.",
         "open": "Đang mở",
-        "archived": "Lưu trữ"
+        "archived": "Lưu trữ",
+        "quizNotReadyToPublish": "Quiz chưa đủ điều kiện; hãy sửa các mục được nêu.",
+        "violationTitleRequired": "Tên quiz không được để trống.",
+        "violationItemsRequired": "Quiz cần ít nhất 1 câu.",
+        "violationItemsTooMany": "Quiz tối đa 200 câu.",
+        "violationActivityNoticeRequired": "Cần lời báo cho sinh viên khi bật ghi nhận hoạt động.",
+        "violationPenaltyNeedsMonitoring": "Cần bật ghi nhận hoạt động thì mới gợi ý trừ điểm khi rời trang được.",
+        "violationQuestionMissing": "Câu {position} không còn tồn tại.",
+        "violationQuestionNotActive": "Câu {position} lấy từ ngân hàng đã ngưng dùng; hãy bỏ hoặc thay câu khác.",
+        "sourceRetried": "Câu hỏi AI tạo có thể không bám tài liệu đã chọn. Hệ thống bỏ prompt bổ sung và tạo lại một lần chỉ theo tài liệu nguồn.",
+        "requestNotMatchingSources": "Yêu cầu của bạn có thể không liên quan đến tài liệu đã chọn; câu hỏi được tạo theo tài liệu nguồn."
       },
       "questionForm": {
         "theQuestionContentCannotBe": "Nội dung câu hỏi không được để trống",
@@ -4558,7 +4622,9 @@
         "leftThePage": "Rời trang ",
         "timesTotalKnownTime": " lần · tổng thời gian đã biết ",
         "leftThePage2": "Rời trang",
-        "unknown": "Không rõ"
+        "unknown": "Không rõ",
+        "reliabilityNote": "Dữ liệu chỉ là dấu hiệu rời trang, không kết luận gian lận.",
+        "unknownGaps": "Có {count} chỗ thiếu hoặc lệch dữ liệu, ghi là không rõ."
       }
     },
     "ai": {
@@ -4601,7 +4667,8 @@
         "loadingStatus": "Đang tải trạng thái...",
         "theProviderDidNotReturn": "Nhà cung cấp không trả kết quả rõ ràng; kiểm tra lại trước khi gửi lần nữa.",
         "theDataChangedWhileWaiting": "Dữ liệu đã đổi trong lúc chờ, kết quả không được áp dụng.",
-        "cancel": "Hủy"
+        "cancel": "Hủy",
+        "done": "Xong"
       }
     },
     "api": {
@@ -4610,6 +4677,29 @@
       },
       "messages": {
         "couldNotLoadDataPlease": "Không thể tải dữ liệu. Vui lòng thử lại."
+      },
+      "errorMessages": {
+        "notFound": "Không tìm thấy hoặc bạn không có quyền truy cập.",
+        "invalidRequest": "Yêu cầu không hợp lệ. Kiểm tra thông tin rồi thử lại.",
+        "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+        "conflict": "Dữ liệu vừa thay đổi. Tải lại trang rồi thử lại.",
+        "fileTooLarge": "Tệp vượt dung lượng cho phép.",
+        "fileTooLargeMb": "Tệp vượt {value} MB.",
+        "fileTypeNotAllowed": "Loại tệp không được phép.",
+        "fileRefExpired": "Tệp đã tải lên đã hết hạn. Hãy tải tệp lên lại.",
+        "fileRefInvalid": "Tệp đã tải lên không hợp lệ. Hãy tải tệp lên lại.",
+        "fileUnavailable": "Tệp không còn khả dụng.",
+        "uploadFailed": "Không nhận được tệp. Vui lòng thử lại.",
+        "materialYoutubeInvalid": "Chỉ nhận link của một video YouTube.",
+        "materialArchived": "Học liệu này đã bị xóa.",
+        "materialSourceInvalid": "Chọn tệp đã tải lên.",
+        "materialModuleInvalid": "Chọn module của môn.",
+        "materialFileInvalid": "Tệp này không dùng được làm học liệu.",
+        "announcementInvalid": "Kiểm tra tiêu đề (văn bản thuần, tối đa 200 ký tự) và nội dung (tối đa 5.000 ký tự).",
+        "announcementEmailInvalid": "Chỉ thông báo quan trọng mới gửi được email.",
+        "tooManyRequests": "Quá nhiều yêu cầu. Đợi một lát rồi thử lại.",
+        "systemBusy": "Hệ thống đang bận, vui lòng thử lại sau.",
+        "requestFailed": "Không thực hiện được yêu cầu. Vui lòng thử lại."
       }
     },
     "dateTime": {

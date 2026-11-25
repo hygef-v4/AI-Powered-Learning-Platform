@@ -107,9 +107,10 @@ export function QuizAttemptsSection({ quizId, classId }: { quizId: string; class
       {!data && !error && <p role="status" className="text-[13px] text-muted">{msg("quizpractice.components.TeacherQuizSections.loadingAttempts")}</p>}
       {data && <>
         {/* Cùng kiểu các bảng khác: hàng tiêu đề tô nền, bấm cả dòng để mở (mũi tên cuối dòng), phân trang dưới bảng. */}
-        <TableFrame filledHead className="[&_table]:min-w-[660px] [&_table]:table-fixed">
-          <colgroup><col className="w-[104px]" /><col /><col className="w-[72px]" /><col className="w-[96px]" /><col className="w-[96px]" /><col className="w-[40px]" /></colgroup>
-          <thead><tr><Th>MSSV</Th><Th>{msg("quizpractice.components.TeacherQuizSections.student")}</Th><Th>{msg("quizpractice.components.TeacherQuizSections.attempts")}</Th><Th>{msg("quizpractice.components.TeacherQuizSections.highestScore")}</Th><Th>{msg("quizpractice.components.TeacherQuizSections.leftPage")}</Th><Th><span className="sr-only">{msg("quizpractice.components.TeacherQuizSections.open")}</span></Th></tr></thead>
+        {/* Cột tiêu đề đủ rộng cho chữ hoa giãn cách và được xuống dòng, không chồng nhau (KAN-229). */}
+        <TableFrame filledHead className="[&_table]:min-w-[720px] [&_table]:table-fixed">
+          <colgroup><col className="w-[104px]" /><col /><col className="w-[88px]" /><col className="w-[128px]" /><col className="w-[112px]" /><col className="w-[40px]" /></colgroup>
+          <thead><tr><Th>{msg("quizpractice.components.TeacherQuizSections.studentCode")}</Th><Th>{msg("quizpractice.components.TeacherQuizSections.student")}</Th><Th className="whitespace-normal!">{msg("quizpractice.components.TeacherQuizSections.attempts")}</Th><Th className="whitespace-normal!">{msg("quizpractice.components.TeacherQuizSections.highestScore")}</Th><Th className="whitespace-normal!">{msg("quizpractice.components.TeacherQuizSections.leftPage")}</Th><Th><span className="sr-only">{msg("quizpractice.components.TeacherQuizSections.open")}</span></Th></tr></thead>
           <tbody>
             {data.students.length === 0 && <tr><Td colSpan={6} className="py-6 text-center! text-muted">{msg("quizpractice.components.TeacherQuizSections.theClassHasNoStudents")}</Td></tr>}
             {data.students.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((s) => (

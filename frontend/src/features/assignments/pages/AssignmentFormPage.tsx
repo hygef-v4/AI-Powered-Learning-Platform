@@ -124,11 +124,15 @@ export function filterCardIssues(issues: ValidationIssue[], part: DocumentPart):
 /**
  * Lỗi rubric khi xếp lịch (yêu cầu 2026-11-05, cùng luật với server): cả bài tổng điểm bằng 0 thì chỉ báo "Bài làm chưa có
  * rubric chấm điểm", không tô đỏ thẻ nào; còn lại thẻ có mục chấm mà tổng không quá 0, hoặc mục ghi dở, thì viền đỏ và ghi
- * rõ lý do; thẻ chỉ có dòng trống bỏ qua.
+ * rõ lý do; thẻ chỉ có dòng trống bỏ qua. Bài Luyện tập không được chấm nên không bắt buộc rubric (BR-U07-32).
  */
-export function listRubricIssues(cards: DocumentPart[], criteria: Record<string, RubricCriterion[]>): ValidationIssue[] {
+export function listRubricIssues(cards: DocumentPart[], criteria: Record<string, RubricCriterion[]>,
+  rubricRequired = true): ValidationIssue[] {
   const total = cards.reduce((sum, part) => sum + sumRubricTotal(criteria[part.partId] ?? []), 0);
-  if (total <= 0) return [{ code: RUBRIC_MISSING, blockId: null, message: msg("assignments.pages.AssignmentFormPage.theAssignmentHasNoGrading") }];
+  // Bài Luyện tập bỏ qua lỗi thiếu rubric nhưng thẻ đã ghi vẫn kiểm như dưới; thẻ trống không báo (KAN-225).
+  if (total <= 0 && rubricRequired) {
+    return [{ code: RUBRIC_MISSING, blockId: null, message: msg("assignments.pages.AssignmentFormPage.theAssignmentHasNoGrading") }];
+  }
   return cards.flatMap((part) => {
     const list = criteria[part.partId] ?? [];
     if (!isRubricPointsMissing(list)) return [];
@@ -565,7 +569,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     const found: ValidationIssue[] = [];
     if (!title.trim()) found.push({ code: "TITLE_REQUIRED", blockId: null, message: msg("assignments.pages.AssignmentFormPage.theAssignmentNeedsATitle") });
     const cards = hasWholePart(parts) ? [WHOLE_PART, ...parts] : parts;
-    found.push(...listRubricIssues(cards, criteria));
+    found.push(...listRubricIssues(cards, criteria, settings?.gradingMode !== "PRACTICE"));
     return found;
   }
 

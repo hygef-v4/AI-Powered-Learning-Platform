@@ -90,7 +90,9 @@ public class QuizSourceRetry {
                 if (task.taskId() == null || task.state() == AiTaskState.FAILED || task.state() == AiTaskState.CANCELLED) {
                     throw ApiException.createUnavailable("AI_SOURCE_RETRY_FAILED", "Không gửi được lượt tạo lại theo tài liệu.");
                 }
-                QuizAiDraft next = draft.attachSourceRetryTask(task.taskId());
+                QuizAiDraft next = draft.attachSourceRetryTask(task.taskId()).recordResolvedSource(
+                        task.source() == null ? null : task.source().name(),
+                        task.provider() == null ? null : task.provider().name(), task.model());
                 if (!drafts.transitionDraft(next, DraftStatus.PENDING)) {
                     throw ApiException.createConflict("AI_DRAFT_CLOSED", "Đề xuất đã thay đổi.");
                 }

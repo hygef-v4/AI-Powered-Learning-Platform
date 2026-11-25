@@ -26,21 +26,29 @@ public final class AiDraftViews {
     public record MaterialRef(UUID id, String title) {
     }
 
-    /** {@code taskId}: task AI của U06 để frontend hiện {@code AiTaskStatus} khi đang chờ (M3); trống với MCP. */
+    /**
+     * {@code taskId}: task AI của U06 để frontend hiện {@code AiTaskStatus} khi đang chờ (M3); trống với MCP.
+     * {@code source}/{@code provider}: nguồn U06 thực dùng khi đã biết, nếu chưa thì là nguồn đã yêu cầu; {@code model}
+     * chỉ có khi U06 đã chọn (FR-006, BR-U10-40).
+     */
     public record AiDraftView(UUID id, DraftTarget target, UUID quizId, UUID subjectId, DraftOrigin origin, UUID taskId,
                               DraftStatus status, List<DraftQuestion> questions, Integer requestedCount, String source,
                               String provider, List<MaterialRef> materials, String agentLabel, Long baseVersion,
                               String failureCode, String failureMessage, UUID createdBy, Instant createdAt,
-                              Instant decidedAt, List<String> sourceWarnings) {
+                              Instant decidedAt, List<String> sourceWarnings, String model) {
 
         static AiDraftView createDraftView(QuizAiDraft d) {
             Map<String, Object> p = d.provenance();
             Object count = p.get(REQUESTED_COUNT);
+            String source = readString(p, QuizAiDraft.RESOLVED_SOURCE);
+            String provider = source == null ? readString(p, PROVIDER) : readString(p, QuizAiDraft.RESOLVED_PROVIDER);
             return new AiDraftView(d.id(), d.target(), d.quizId(), d.subjectId(), d.origin(), d.taskId(), d.status(),
-                    d.proposal(), count instanceof Number n ? n.intValue() : null, readString(p, SOURCE), readString(p, PROVIDER),
+                    d.proposal(), count instanceof Number n ? n.intValue() : null,
+                    source == null ? readString(p, SOURCE) : source, provider,
                     readMaterials(p.get(MATERIALS)), readString(p, AGENT_LABEL), d.baseVersion(),
                     readString(p, QuizAiDraft.FAILURE_CODE), readString(p, QuizAiDraft.FAILURE_MESSAGE), d.createdBy(),
-                    d.createdAt(), d.decidedAt(), readWarnings(p.get("sourceWarnings")));
+                    d.createdAt(), d.decidedAt(), readWarnings(p.get("sourceWarnings")),
+                    readString(p, QuizAiDraft.RESOLVED_MODEL));
         }
 
         private static List<String> readWarnings(Object value) {

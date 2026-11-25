@@ -112,3 +112,12 @@ Quy ước được review bằng checklist; chưa có lint rule tự động b�
 ## 8. Persistence bằng JDBC
 
 Toàn bộ unit dùng Spring JDBC (`JdbcTemplate`, `NamedParameterJdbcTemplate` hoặc `JdbcClient`) cho persistence PostgreSQL theo [quy định persistence chung](persistence-conventions.md). Không thêm JPA/Hibernate/Spring Data JPA/EntityManager cho truy cập DB mới, kể cả chạy native SQL qua JPA. SQL/binding/row mapping thuộc repository; giữ transaction, khóa, CAS/version, schema, JSONB và public contract. Các unit còn JPA là khoảng cách migration được ghi rõ trong quy định, không phải ngoại lệ cho phát triển mới.
+
+## 9. Ngôn ngữ giao diện
+
+Quyết định system test WF05 ngày 2026-11-25, áp dụng cho `frontend/src`.
+
+- Chữ trên giao diện lấy từ `msg(...)` (vi, en). Không hiện nguyên văn `detail` của lỗi server, vì server trả tiếng Việt. Dịch lỗi theo `code` qua bảng dùng chung `shared/api/errorMessages.ts`. Mã chưa có trong bảng thì hiện câu chung theo HTTP status bằng ngôn ngữ giao diện. Hàm mô tả lỗi riêng của feature được dùng câu riêng theo `code` hoặc status, nhưng phần còn lại phải đi qua bảng dùng chung.
+- Số (điểm, số đếm, dung lượng, bộ đếm ký tự, phân trang) viết theo ngôn ngữ giao diện bằng `formatNumber` hoặc `NUMBER_LOCALE` trong `i18n/number.ts`, không cố định `"vi-VN"`.
+- Ngày giờ giữ dạng Việt Nam cho cả hai ngôn ngữ: dd/mm/yyyy, 24 giờ, múi giờ Asia/Ho_Chi_Minh (`shared/dateTime.ts`).
+- Email và câu do server sinh (thông báo, prompt AI) không thuộc mục này; email theo BR-U14-23.
