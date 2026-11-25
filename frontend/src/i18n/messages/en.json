@@ -4189,7 +4189,9 @@
         "violationActivityNoticeRequired": "Add a notice for students when activity monitoring is on.",
         "violationPenaltyNeedsMonitoring": "Turn on activity monitoring to suggest a leave-page penalty.",
         "violationQuestionMissing": "Question {position} no longer exists.",
-        "violationQuestionNotActive": "Question {position} comes from the bank and is no longer in use; remove or replace it."
+        "violationQuestionNotActive": "Question {position} comes from the bank and is no longer in use; remove or replace it.",
+        "sourceRetried": "The AI questions may not follow the selected documents. The system dropped the extra request and generated again once from the source documents only.",
+        "requestNotMatchingSources": "Your request may not relate to the selected documents; the questions were created from the source documents."
       },
       "questionForm": {
         "theQuestionContentCannotBe": "The question content cannot be empty",

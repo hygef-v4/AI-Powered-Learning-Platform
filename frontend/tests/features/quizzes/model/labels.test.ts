@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { describeViolation } from "@/features/quizzes/model/labels";
+import { buildTranslator } from "@/i18n/msg";
+import { describeSourceWarning, describeViolation } from "@/features/quizzes/model/labels";
 import { describeReliability } from "@/shared/activity/ActivityTimeline";
 
 // Test chạy với tiếng Việt (tests/locale.setup.ts): câu dịch lấy từ vi.json, không dùng câu của máy chủ (KAN-223).
@@ -20,5 +21,15 @@ describe("describeReliability", () => {
   it("ghép số chỗ không rõ vào ghi chú độ tin cậy", () => {
     expect(describeReliability(0)).toBe("Dữ liệu chỉ là dấu hiệu rời trang, không kết luận gian lận.");
     expect(describeReliability(2)).toBe("Có 2 chỗ thiếu hoặc lệch dữ liệu, ghi là không rõ. Dữ liệu chỉ là dấu hiệu rời trang, không kết luận gian lận.");
+  });
+});
+
+describe("describeSourceWarning", () => {
+  it("dịch hai cảnh báo nguồn tài liệu cố định, câu lạ giữ nguyên", () => {
+    const retried = "Câu hỏi AI tạo có thể không bám tài liệu đã chọn. Hệ thống bỏ prompt bổ sung và tạo lại một lần chỉ theo tài liệu nguồn.";
+    expect(describeSourceWarning(retried)).toBe(retried);
+    expect(buildTranslator("en")("quizzes.model.labels.requestNotMatchingSources"))
+      .toBe("Your request may not relate to the selected documents; the questions were created from the source documents.");
+    expect(describeSourceWarning("Cảnh báo khác")).toBe("Cảnh báo khác");
   });
 });

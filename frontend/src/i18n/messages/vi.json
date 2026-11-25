@@ -4189,7 +4189,9 @@
         "violationActivityNoticeRequired": "Cần lời báo cho sinh viên khi bật ghi nhận hoạt động.",
         "violationPenaltyNeedsMonitoring": "Cần bật ghi nhận hoạt động thì mới gợi ý trừ điểm khi rời trang được.",
         "violationQuestionMissing": "Câu {position} không còn tồn tại.",
-        "violationQuestionNotActive": "Câu {position} lấy từ ngân hàng đã ngưng dùng; hãy bỏ hoặc thay câu khác."
+        "violationQuestionNotActive": "Câu {position} lấy từ ngân hàng đã ngưng dùng; hãy bỏ hoặc thay câu khác.",
+        "sourceRetried": "Câu hỏi AI tạo có thể không bám tài liệu đã chọn. Hệ thống bỏ prompt bổ sung và tạo lại một lần chỉ theo tài liệu nguồn.",
+        "requestNotMatchingSources": "Yêu cầu của bạn có thể không liên quan đến tài liệu đã chọn; câu hỏi được tạo theo tài liệu nguồn."
       },
       "questionForm": {
         "theQuestionContentCannotBe": "Nội dung câu hỏi không được để trống",

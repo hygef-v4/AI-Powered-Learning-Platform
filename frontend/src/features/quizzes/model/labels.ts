@@ -57,6 +57,18 @@ export function describeViolation(violation: Violation): string {
   }
 }
 
+/** Cảnh báo nguồn tài liệu do U10 ghi cố định bằng tiếng Việt (QuizDraftResultHandler); câu lạ giữ nguyên. */
+const SOURCE_WARNING_LABELS: Record<string, string> = {
+  "Câu hỏi AI tạo có thể không bám tài liệu đã chọn. Hệ thống bỏ prompt bổ sung và tạo lại một lần chỉ theo tài liệu nguồn.":
+    msg("quizzes.model.labels.sourceRetried"),
+  "Yêu cầu của bạn có thể không liên quan đến tài liệu đã chọn; câu hỏi được tạo theo tài liệu nguồn.":
+    msg("quizzes.model.labels.requestNotMatchingSources"),
+};
+
+export function describeSourceWarning(warning: string): string {
+  return SOURCE_WARNING_LABELS[warning] ?? warning;
+}
+
 /** Lý do đề xuất lỗi: nhãn theo mã, không có thì thông điệp an toàn của U06. */
 export function describeFailure(code: string | null, message: string | null): string {
   return (code && ERROR_LABELS[code]) || message || msg("quizzes.model.labels.theAiCouldNotWrite");

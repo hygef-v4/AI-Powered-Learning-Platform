@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AiTaskStatus, PROVIDER_LABEL, type AiProvider, type SourceChoice } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, Textarea, TextInput, useConfirmDialog } from "@/shared/ui";
-import { DIFFICULTY_LABELS, describeError, describeFailure, formatDateTime, TYPE_LABELS } from "../model/labels";
+import { DIFFICULTY_LABELS, describeError, describeFailure, describeSourceWarning, formatDateTime, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
 import { MaterialSourceSelect } from "./MaterialSourceSelect";
 import { buildFormFrom, convertToContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
@@ -344,7 +344,7 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
   return (
     <div className="flex flex-col gap-3" data-testid="ai-draft-view">
       {!!draft.sourceWarnings?.length && <Alert tone="warning" role="status">
-        <ul className="list-disc pl-4">{draft.sourceWarnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
+        <ul className="list-disc pl-4">{draft.sourceWarnings.map((warning, index) => <li key={index}>{describeSourceWarning(warning)}</li>)}</ul>
       </Alert>}
       <p className="text-[12px] text-muted">
         {originLabel} {msg("quizzes.components.AiDrafts.sentAt")}{formatDateTime(draft.createdAt)}
