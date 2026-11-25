@@ -45,8 +45,8 @@ export const PROVENANCE_LABEL: Record<Provenance, string> = {
 };
 
 export const OUTCOME_LABEL: Record<string, { text: string; tone: Tone }> = {
-  READY: { text: "Xong", tone: "success" },
-  OK: { text: "Xong", tone: "success" },
+  READY: { text: msg("ai.model.labels.done"), tone: "success" },
+  OK: { text: msg("ai.model.labels.done"), tone: "success" },
   REJECTED: { text: msg("ai.model.labels.rejected"), tone: "danger" },
   FAILED: { text: msg("ai.model.labels.error"), tone: "danger" },
   ERROR: { text: msg("ai.model.labels.error"), tone: "danger" },

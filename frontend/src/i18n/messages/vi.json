@@ -949,7 +949,8 @@
         "overloaded": "Quá tải",
         "timedOut": "Quá giờ",
         "connectionLost": "Mất kết nối",
-        "failed": "Không đạt"
+        "failed": "Không đạt",
+        "done": "Xong"
       },
       "mcpGuide": {
         "discoveryAndGuidance": "Khám phá và hướng dẫn",
@@ -3607,7 +3608,8 @@
         "correctAnswer": "Đáp án đúng",
         "yourChoice": "Bạn chọn",
         "explanation": "Giải thích:",
-        "questionList": "Danh sách câu"
+        "questionList": "Danh sách câu",
+        "wrong": "Sai"
       },
       "TeacherQuizSections": {
         "originalScore": "Điểm gốc ",
@@ -3721,7 +3723,8 @@
         "noPracticeQuizzesYet": "Chưa có quiz luyện tập.",
         "practice": "Luyện tập",
         "notAttempted": "Chưa làm",
-        "start": "Bắt đầu"
+        "start": "Bắt đầu",
+        "view": "Xem"
       },
       "QuizResultPage": {
         "loadingResult": "Đang tải kết quả…",
@@ -3738,7 +3741,8 @@
         "practiceNotCountedInThe": "Practice · không tính vào sổ điểm",
         "submitted": "Đã nộp bài",
         "thisQuizDoesNotShow": "Quiz này không hiện điểm sau khi nộp.",
-        "thisQuizDoesNotShow2": "Quiz này không hiện đáp án sau khi nộp."
+        "thisQuizDoesNotShow2": "Quiz này không hiện đáp án sau khi nộp.",
+        "wrong": " · Sai "
       },
       "QuizTakingPage": {
         "lessThan5MinutesLeft": "Còn dưới 5 phút.",
@@ -3831,7 +3835,8 @@
         "accept": "Chấp nhận",
         "correctAnswer": " (đáp án đúng)",
         "explanation": "Giải thích: ",
-        "needsFixing": "Cần sửa: "
+        "needsFixing": "Cần sửa: ",
+        "done": "Xong"
       },
       "AiDraftTargets": {
         "theAiIsWriting": "AI đang soạn",
@@ -3848,7 +3853,8 @@
         "questions": "{value} câu · {value2}",
         "discardUnsavedEditsToView": "Bỏ các chỉnh sửa chưa lưu để xem đề xuất khác?",
         "collapse": "Thu gọn",
-        "aiProposal": "Đề xuất AI"
+        "aiProposal": "Đề xuất AI",
+        "view": "Xem"
       },
       "BankQuestionPicker": {
         "numberOfQuestionsFrom1": "Số câu từ 1 đến {freeSlots}.",
@@ -4565,7 +4571,9 @@
         "leftThePage": "Rời trang ",
         "timesTotalKnownTime": " lần · tổng thời gian đã biết ",
         "leftThePage2": "Rời trang",
-        "unknown": "Không rõ"
+        "unknown": "Không rõ",
+        "reliabilityNote": "Dữ liệu chỉ là dấu hiệu rời trang, không kết luận gian lận.",
+        "unknownGaps": "Có {count} chỗ thiếu hoặc lệch dữ liệu, ghi là không rõ."
       }
     },
     "ai": {
@@ -4608,7 +4616,8 @@
         "loadingStatus": "Đang tải trạng thái...",
         "theProviderDidNotReturn": "Nhà cung cấp không trả kết quả rõ ràng; kiểm tra lại trước khi gửi lần nữa.",
         "theDataChangedWhileWaiting": "Dữ liệu đã đổi trong lúc chờ, kết quả không được áp dụng.",
-        "cancel": "Hủy"
+        "cancel": "Hủy",
+        "done": "Xong"
       }
     },
     "api": {

@@ -949,7 +949,8 @@
         "overloaded": "Overloaded",
         "timedOut": "Timed out",
         "connectionLost": "Connection lost",
-        "failed": "Failed"
+        "failed": "Failed",
+        "done": "Done"
       },
       "mcpGuide": {
         "discoveryAndGuidance": "Discovery and guidance",
@@ -3607,7 +3608,8 @@
         "correctAnswer": "Correct answer",
         "yourChoice": "Your choice",
         "explanation": "Explanation:",
-        "questionList": "Question list"
+        "questionList": "Question list",
+        "wrong": "Wrong"
       },
       "TeacherQuizSections": {
         "originalScore": "Original score ",
@@ -3721,7 +3723,8 @@
         "noPracticeQuizzesYet": "No practice quizzes yet.",
         "practice": "Practice",
         "notAttempted": "Not attempted",
-        "start": "Start"
+        "start": "Start",
+        "view": "View"
       },
       "QuizResultPage": {
         "loadingResult": "Loading result…",
@@ -3738,7 +3741,8 @@
         "practiceNotCountedInThe": "Practice · not counted in the gradebook",
         "submitted": "Submitted",
         "thisQuizDoesNotShow": "This quiz does not show the score after submission.",
-        "thisQuizDoesNotShow2": "This quiz does not show answers after submission."
+        "thisQuizDoesNotShow2": "This quiz does not show answers after submission.",
+        "wrong": " · Wrong "
       },
       "QuizTakingPage": {
         "lessThan5MinutesLeft": "Less than 5 minutes left.",
@@ -3831,7 +3835,8 @@
         "accept": "Accept",
         "correctAnswer": " (correct answer)",
         "explanation": "Explanation: ",
-        "needsFixing": "Needs fixing: "
+        "needsFixing": "Needs fixing: ",
+        "done": "Done"
       },
       "AiDraftTargets": {
         "theAiIsWriting": "The AI is writing",
@@ -3848,7 +3853,8 @@
         "questions": "{value} questions · {value2}",
         "discardUnsavedEditsToView": "Discard unsaved edits to view another proposal?",
         "collapse": "Collapse",
-        "aiProposal": "AI proposal"
+        "aiProposal": "AI proposal",
+        "view": "View"
       },
       "BankQuestionPicker": {
         "numberOfQuestionsFrom1": "Number of questions from 1 to {freeSlots}.",
@@ -4565,7 +4571,9 @@
         "leftThePage": "Left the page ",
         "timesTotalKnownTime": " times · total known time ",
         "leftThePage2": "Left the page",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "reliabilityNote": "This data only signals leaving the page; it does not prove cheating.",
+        "unknownGaps": "{count} gaps are missing or inconsistent and marked as unknown."
       }
     },
     "ai": {
@@ -4608,7 +4616,8 @@
         "loadingStatus": "Loading status...",
         "theProviderDidNotReturn": "The provider did not return a clear result; check before sending again.",
         "theDataChangedWhileWaiting": "The data changed while waiting; the result was not applied.",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "done": "Done"
       }
     },
     "api": {

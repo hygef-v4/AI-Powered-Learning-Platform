@@ -395,7 +395,7 @@ function ProposalCard({ index, entry, onChange, onAccept }: {
         <span className="ml-auto flex gap-1.5">
           {state !== "dropped" && (
             <Button size="sm" onClick={() => onChange({ editing: !entry.editing, state: "open" })} data-testid="ai-draft-edit">
-              {entry.editing ? "Xong" : msg("quizzes.components.AiDrafts.edit")}
+              {entry.editing ? msg("quizzes.components.AiDrafts.done") : msg("quizzes.components.AiDrafts.edit")}
             </Button>
           )}
           <Button size="sm" onClick={() => onChange({ state: state === "dropped" ? "open" : "dropped", editing: false })}

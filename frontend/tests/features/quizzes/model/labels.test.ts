@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { describeViolation } from "@/features/quizzes/model/labels";
+import { describeReliability } from "@/shared/activity/ActivityTimeline";
 
 // Test chạy với tiếng Việt (tests/locale.setup.ts): câu dịch lấy từ vi.json, không dùng câu của máy chủ (KAN-223).
 describe("describeViolation", () => {
@@ -12,5 +13,12 @@ describe("describeViolation", () => {
 
   it("mã chưa có nhãn thì giữ thông điệp của máy chủ", () => {
     expect(describeViolation({ field: "items[2]", code: "OPTION_COUNT", message: "Câu 2: thiếu lựa chọn" })).toBe("Câu 2: thiếu lựa chọn");
+  });
+});
+
+describe("describeReliability", () => {
+  it("ghép số chỗ không rõ vào ghi chú độ tin cậy", () => {
+    expect(describeReliability(0)).toBe("Dữ liệu chỉ là dấu hiệu rời trang, không kết luận gian lận.");
+    expect(describeReliability(2)).toBe("Có 2 chỗ thiếu hoặc lệch dữ liệu, ghi là không rõ. Dữ liệu chỉ là dấu hiệu rời trang, không kết luận gian lận.");
   });
 });
