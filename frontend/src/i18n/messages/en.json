@@ -3544,7 +3544,8 @@
         "edit": "Edit",
         "delete": "Delete",
         "description": "Description",
-        "learningMaterialDeleted": "Learning material deleted"
+        "learningMaterialDeleted": "Learning material deleted",
+        "versionLabel": "Version {value}"
       }
     },
     "register": {

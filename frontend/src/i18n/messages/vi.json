@@ -3544,7 +3544,8 @@
         "edit": "Sửa",
         "delete": "Xóa",
         "description": "Mô tả",
-        "learningMaterialDeleted": "Đã xóa học liệu"
+        "learningMaterialDeleted": "Đã xóa học liệu",
+        "versionLabel": "Phiên bản {value}"
       }
     },
     "register": {
