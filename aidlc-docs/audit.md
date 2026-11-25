@@ -15300,3 +15300,39 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, U11, Auto-fix PR #137
 
 ---
+
+## U06 Dọn wrapper MCP cục bộ
+**Timestamp**: 2026-11-25T17:33:03Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi xóa folder skill và sửa lại test"
+**AI Response**: "Thực hiện phạm vi đã chốt: xóa hai wrapper trong agent-skills, bỏ ca test kiểm tra wrapper, sau đó chạy test MCP và xác nhận hai workflow vẫn có trong JAR."
+**Context**: Construction, bảo trì U06 sau kiểm tra ảnh hưởng. Security và Resiliency giữ cấu hình đã duyệt. PBT tắt theo cấu hình dự án.
+
+---
+
+## U06 Kiểm thử sau khi dọn wrapper MCP
+**Timestamp**: 2026-11-25T17:35:20Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi xóa folder skill và sửa lại test"
+**AI Response**: "Đã xóa agent-skills và bỏ hai ca kiểm tra wrapper. Maven package đạt 109 test được chọn. JAR chứa cả hai workflow của backend. Chưa chạy toàn bộ bộ test backend."
+**Context**: Construction, Build and Test U06.
+
+---
+
+## U06 Yêu cầu commit dọn wrapper MCP
+**Timestamp**: 2026-11-25T17:37:01Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Đưa phần xóa hai wrapper, cập nhật test và ghi nhận AI-DLC vào cùng một thay đổi cục bộ."
+**Context**: Construction, U06.
+
+---
+
+## Construction - U11 Quiz Practice Auto-fix xung đột lần 3
+**Timestamp**: 2026-11-26T01:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) PR #137 có xung đột merge với staging tại 7f594c22."
+**AI Response**: "Merge origin/staging vào chi-cuongg/quiz-small-fixes. Chỉ audit.md xung đột: hai bên cùng thêm mục cuối file, giữ cả hai. Staging chỉ đổi U06 (wrapper MCP), agent-skills và uml, không chạm file của PR."
+**Context**: Construction, U11, Auto-fix PR #137
+
+---
