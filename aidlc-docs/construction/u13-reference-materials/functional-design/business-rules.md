@@ -23,9 +23,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U13-10 | Hai loại: `FILE` (PDF, DOCX, PPTX, XLSX qua U03 purpose `MATERIAL`; danh sách định dạng cố định, Admin chỉ chỉnh dung lượng qua Settings, mặc định ≤ 50 MB; kiểm theo nội dung tệp) và `YOUTUBE_LINK` (một video thuộc host YouTube cho phép: watch, youtu.be, Shorts, embed, live, bản mobile/music/nocookie). Nhận HTTP hoặc thiếu scheme và ngữ cảnh list/index, chuẩn hóa về URL HTTPS của một video. Không nhận playlist-only, host giả, userinfo/port khác chuẩn, ID sai hoặc nhiều tham số v. | FR-004, UC59/61; đồng bộ staging 2026-11-02 |
+| BR-U13-10 | Hai loại: `FILE` (PDF, DOCX, PPTX, XLSX qua U03 purpose `MATERIAL`; danh sách định dạng cố định, Admin chỉ chỉnh dung lượng qua Settings, mặc định ≤ 50 MB; kiểm theo nội dung tệp; XLSX phải được nhận dạng là bảng tính OOXML thường, tệp do công cụ ghi khác chuẩn Excel mà bị nhận là XLSB/XLSM thì bị từ chối `415`, người dùng lưu lại bằng Excel; quyết định system test WF05 2026-11-25) và `YOUTUBE_LINK` (một video thuộc host YouTube cho phép: watch, youtu.be, Shorts, embed, live, bản mobile/music/nocookie). Nhận HTTP hoặc thiếu scheme và ngữ cảnh list/index, chuẩn hóa về URL HTTPS của một video. Không nhận playlist-only, host giả, userinfo/port khác chuẩn, ID sai hoặc nhiều tham số v. | FR-004, UC59/61; đồng bộ staging 2026-11-02 |
 | BR-U13-11 | Mỗi tài liệu có tiêu đề (≤ 200), mô tả (≤ 2.000) và thứ tự trong danh sách. Có module cơ bản của môn; Lesson nâng cao và tiến độ học chưa thuộc scope implementation này. | FR-004, FR-005 |
-| BR-U13-12 | Sửa tiêu đề, mô tả, thứ tự không tạo phiên bản. Thay tệp hoặc link tạo phiên bản mới; phiên bản cũ giữ lại để các tham chiếu cũ (provenance của AI) vẫn đọc được; người học luôn thấy phiên bản mới nhất. Material Detail hiện lịch sử phiên bản. | UC 58, US-CNT-001 |
+| BR-U13-12 | Sửa tiêu đề, mô tả, thứ tự không tạo phiên bản. Thay tệp hoặc link tạo phiên bản mới; phiên bản cũ giữ lại để các tham chiếu cũ (provenance của AI) vẫn đọc được; người học luôn thấy phiên bản mới nhất. Trang học liệu hiện nhãn "Phiên bản N" của bản hiện hành cho mọi người xem; không hiện bảng lịch sử và không tải bản cũ trên giao diện, lịch sử chỉ giữ trong dữ liệu (yêu cầu 2026-11-25). | UC 58, US-CNT-001 |
 | BR-U13-13 | Xóa là lưu trữ: tài liệu ẩn với người học, không chọn được làm nguồn AI hay gắn vào Quiz mới; tham chiếu cũ vẫn giữ. Teacher/Subject Manager còn quyền hợp lệ vẫn xem/tải được, kể cả đọc học liệu môn kế thừa qua lớp; kiểm phân công hiện hành mỗi lần. Danh sách Đang dùng chỉ hiện ACTIVE không làm mất quyền truy cập trực tiếp của staff. Không cho sửa học liệu ARCHIVED. | FR-004 |
 | BR-U13-14 | Thêm tài liệu không tự gọi AI, không tóm tắt, không tạo embedding. Tóm tắt, phụ đề, embedding, RAG là phần mở rộng US-CNT-005. | FR-004, US-CNT-005 |
 
@@ -50,8 +50,8 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U13-40 | Mọi API kiểm quyền phía server; ngoài phạm vi trả `404` và ghi audit `ACCESS_DENIED`. Sửa kèm `version`; lệch thì `409`. | SEC-002 |
-| BR-U13-41 | Audit: `MATERIAL_CREATED`, `MATERIAL_UPDATED`, `MATERIAL_VERSION_CREATED`, `MATERIAL_ARCHIVED`. Không audit từng lần xem, tải. | FR-014 |
+| BR-U13-40 | Mọi API kiểm quyền phía server. Mọi trường hợp không có quyền đều trả `404` (không lộ học liệu hay lớp có tồn tại): ngoài phạm vi (không học, không dạy, không quản lý) và trong phạm vi nhưng sai vai trò (ví dụ người học tạo, sửa, xóa). Không ghi audit theo BR-U02-10. Sửa kèm `version`; lệch thì `409`. | SEC-002; quyết định system test WF05 2026-11-25 |
+| BR-U13-41 | Không ghi audit cho học liệu và module, kể cả tạo, sửa, thay phiên bản, xóa và bị từ chối (BR-U02-10, yêu cầu 2026-11-25). Lịch sử thay đổi nằm ở phiên bản (BR-U13-12) và các cột người tạo, thời điểm. | FR-014; BR-U02-10 |
 | BR-U13-42 | U01, U04, U05 không trả lời thì từ chối (fail closed); trích chữ lỗi không ảnh hưởng việc xem, tải. | BR-U01-93 |
 
 ## Module rules — AS-BUILT 2026-10-30

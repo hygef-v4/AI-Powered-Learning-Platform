@@ -13,7 +13,7 @@ import { addInlineQuestion, getQuiz, proposeQuestion, reopenQuiz, publishQuiz, s
 import { QuizAiDraftPanel } from "../components/AiDraftTargets";
 import { BankQuestionPicker } from "../components/BankQuestionPicker";
 import { DrawRulesPanel } from "../components/DrawRulesPanel";
-import { readErrorCode, describeError, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
+import { readErrorCode, describeError, describeViolation, formatPoints, QUIZ_STATUS_LABELS, QUIZ_STATUS_TONES } from "../model/labels";
 import { quizDetailSections } from "../slots";
 import {
   InlineQuestionDialog, QuizItemList, QuizPreviewDialog, QuizSettingsPanel, buildSettingsForm, buildSettingsInput, type DraftItem,
@@ -224,7 +224,7 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
       {error && <Alert tone="danger" role="alert">{error}</Alert>}
       {violations.length > 0 && (
         <Alert tone="danger" title={msg("quizzes.pages.QuizDetailPage.needsFixingBeforePublishing")}>
-          <ul className="list-disc pl-4" data-testid="quiz-detail-violations">{violations.map((v, i) => <li key={i}>{v.message}</li>)}</ul>
+          <ul className="list-disc pl-4" data-testid="quiz-detail-violations">{violations.map((v, i) => <li key={i}>{describeViolation(v)}</li>)}</ul>
         </Alert>
       )}
       {/* Cột phải rộng theo màn hình (bảng lượt làm cần chỗ), tối thiểu 360px. */}

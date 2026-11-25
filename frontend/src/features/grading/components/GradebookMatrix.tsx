@@ -62,9 +62,9 @@ export function GradebookMatrix({ classId, headerActions }: { classId: string; h
       <TableFrame filledHead className="max-h-[68vh] rounded-xl border border-line bg-surface [&_table]:w-max [&_table]:min-w-full [&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-20">
         <caption className="sr-only">{msg("grading.components.GradebookMatrix.scoresByStudentAndAssignment")}</caption>
         <thead><tr>
-          <Th className="left-0 z-30! w-12">STT</Th>
+          <Th className="left-0 z-30! w-12">{msg("grading.components.GradebookMatrix.rowNumber")}</Th>
           {/* Màn hẹp: MSSV gộp vào ô Sinh viên để các cột cố định không chiếm hết bề ngang. */}
-          <Th className="left-12 z-30! hidden w-28 sm:table-cell">MSSV</Th>
+          <Th className="left-12 z-30! hidden w-28 sm:table-cell">{msg("grading.components.GradebookMatrix.studentCode")}</Th>
           <Th className="left-12 z-30! min-w-44 sm:left-40 sm:min-w-60">{msg("grading.components.GradebookMatrix.student")}</Th>
           {columns.map(column => <Th key={column.id} className="whitespace-normal! normal-case! tracking-normal!">
             <span className="block w-44 break-words" title={column.title}>{column.title}</span>

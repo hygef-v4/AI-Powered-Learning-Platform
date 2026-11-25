@@ -198,7 +198,8 @@ public class QuizAiDraftService {
             if (task.taskId() != null) {
                 drafts.attachTask(draft.id(), task.taskId());
             }
-            QuizAiDraft current = drafts.findDraft(draft.id()).orElseThrow(() -> ApiException.createNotFound(NOT_FOUND));
+            QuizAiDraft current = recordResolvedSource(drafts.findForUpdate(draft.id())
+                    .orElseThrow(() -> ApiException.createNotFound(NOT_FOUND)), task);
             if (task.state() != null && TERMINAL_FAILURES.contains(task.state())) {
                 current = failIfPending(current, resolveFailureCode(task.state()), task.safeError());
             }
@@ -265,10 +266,27 @@ public class QuizAiDraftService {
         } catch (RuntimeException unavailable) {
             return draft;
         }
-        if (task.isPresent() && task.get().state() != null && TERMINAL_FAILURES.contains(task.get().state())) {
-            return failIfPending(draft, resolveFailureCode(task.get().state()), task.get().safeError());
+        if (task.isEmpty()) {
+            return draft;
         }
-        return draft;
+        QuizAiDraft current = draft.hasResolvedSource() ? draft : recordResolvedSource(draft, task.get());
+        if (task.get().state() != null && TERMINAL_FAILURES.contains(task.get().state())) {
+            return failIfPending(current, resolveFailureCode(task.get().state()), task.get().safeError());
+        }
+        return current;
+    }
+
+    /**
+     * Ghi nguồn, nhà cung cấp và model U06 thực dùng vào provenance (FR-006, BR-U10-40, KAN-231). Đề xuất đã
+     * chuyển trạng thái giữa chừng thì giữ bản đang có.
+     */
+    private QuizAiDraft recordResolvedSource(QuizAiDraft draft, AiTaskView task) {
+        if (task.source() == null) {
+            return draft;
+        }
+        QuizAiDraft next = draft.recordResolvedSource(task.source().name(),
+                task.provider() == null ? null : task.provider().name(), task.model());
+        return drafts.transitionDraft(next, draft.status()) ? next : draft;
     }
 
     // ---- Chấp nhận, bỏ ----

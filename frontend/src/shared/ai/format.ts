@@ -1,4 +1,5 @@
 import type { AiProvider } from "./types";
+import { formatNumber } from "@/i18n/number";
 
 export const PROVIDERS: AiProvider[] = ["GEMINI", "OPENAI", "CLAUDE"];
 
@@ -8,9 +9,9 @@ export const PROVIDER_LABEL: Record<AiProvider, string> = {
   CLAUDE: "Claude",
 };
 
-/** "12.500" theo cách viết số Việt Nam. */
+/** Số token theo cách viết số của ngôn ngữ giao diện ("12,500" hoặc "12.500"). */
 export function formatTokens(value: number): string {
-  return new Intl.NumberFormat("vi-VN").format(value);
+  return formatNumber(value);
 }
 
 /** Token có thể không có số liệu: hiện "—", không bao giờ đổi thành 0 (BR-U06-40). */

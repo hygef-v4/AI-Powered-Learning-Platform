@@ -6,7 +6,7 @@ import type { Material } from "@/features/materials/model/types";
 
 const { context } = vi.hoisted(() => ({ context: { student: false } }));
 const material = { id: "m", subjectId: "s", moduleId: "module", title: "Chương 1", status: "ACTIVE", enabled: true,
-  canManage: true, version: 3, description: "Nội dung chính",
+  canManage: true, version: 3, currentVersionNo: 2, description: "Nội dung chính",
   descriptionDocument: { blocks: [{ type: "UL", align: "LEFT", indent: 0, runs: [{ text: "Nội dung chính", bold: true }] }] },
 } as Material;
 vi.mock("@/shared/api/client", async (original) => ({ ...(await original<typeof import("@/shared/api/client")>()), fetchApi: vi.fn() }));
@@ -35,4 +35,11 @@ it("does not expose management controls to a student", () => {
   render(<LearningMaterialPage id="m" classId="c" />);
   expect(screen.queryByRole("switch")).not.toBeInTheDocument();
   expect(screen.queryByTestId("material-edit-open")).not.toBeInTheDocument();
+});
+
+it("shows the current version number to staff and students without a history table", () => {
+  context.student = true;
+  render(<LearningMaterialPage id="m" classId="c" />);
+  expect(screen.getByTestId("material-version")).toHaveTextContent("Phiên bản 2");
+  expect(screen.queryByRole("table")).not.toBeInTheDocument();
 });

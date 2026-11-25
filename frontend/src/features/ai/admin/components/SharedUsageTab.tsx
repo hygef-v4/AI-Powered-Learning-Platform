@@ -6,8 +6,9 @@ import { Alert, SettingsCard, SettingsGroup, TableFrame, Td, Th, cx } from "@/sh
 import { getUsageSummary, type UsageSummary } from "../api";
 import { Big, CountCard, TokenCard } from "../../components/UsageCards";
 import { msg } from "@/i18n/msg";
+import { NUMBER_LOCALE } from "@/i18n/number";
 
-const COMPACT = new Intl.NumberFormat("vi-VN", { notation: "compact", maximumFractionDigits: 1 });
+const COMPACT = new Intl.NumberFormat(NUMBER_LOCALE, { notation: "compact", maximumFractionDigits: 1 });
 
 function formatDayLabel(day: string) {
   const [, month, date] = day.split("-");

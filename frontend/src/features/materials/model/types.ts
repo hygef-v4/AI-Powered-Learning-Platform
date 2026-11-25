@@ -1,5 +1,6 @@
 import type { FormattedText } from "@/shared/document/formattedText";
 import { msg } from "@/i18n/msg";
+import { NUMBER_LOCALE } from "@/i18n/number";
 
 export type MaterialKind = "FILE" | "YOUTUBE_LINK";
 export type TextStatus = "PENDING" | "EXTRACTED" | "NO_TEXT" | "FAILED";
@@ -82,7 +83,7 @@ export function describeFile(m: Material): string {
   const bytes = m.current.byteSize;
   if (bytes && bytes < 1024 * 1024) return `${type} · ${Math.max(1, Math.round(bytes / 1024))} KB`;
   return bytes
-    ? `${type} · ${(bytes / 1024 / 1024).toLocaleString("vi-VN", { maximumFractionDigits: 1 })} MB`
+    ? `${type} · ${(bytes / 1024 / 1024).toLocaleString(NUMBER_LOCALE, { maximumFractionDigits: 1 })} MB`
     : type;
 }
 export function buildMaterialHref(id: string, classId?: string, view = false) {

@@ -10,6 +10,7 @@ import { Glyph } from "./Glyph";
 import { ToolbarButton } from "./ToolbarButton";
 import type { Align, Run } from "./types";
 import { msg } from "@/i18n/msg";
+import { NUMBER_LOCALE } from "@/i18n/number";
 
 export function FormattedTextEditor({ value, plainText, onChange, maxLength, disabled, "aria-label": label }: {
   value?: FormattedText | null;
@@ -43,7 +44,7 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
     if (text.length > maxLength || next.blocks.length > 100
       || next.blocks.some((item) => item.runs.length > 200)
       || next.blocks.reduce((count, item) => count + item.runs.length, 0) > 1000) {
-      setError(text.length > maxLength ? msg("shared.document.FormattedTextEditor.canBeAtMostCharacters", { label: String(label), value: String(maxLength.toLocaleString("vi-VN")) }) : msg("shared.document.FormattedTextEditor.theContentHasTooMany"));
+      setError(text.length > maxLength ? msg("shared.document.FormattedTextEditor.canBeAtMostCharacters", { label: String(label), value: String(maxLength.toLocaleString(NUMBER_LOCALE)) }) : msg("shared.document.FormattedTextEditor.theContentHasTooMany"));
       const current = findField(selected);
       focusAfter.current = { index: selected, at: current ? getCaret(current).start : 0 };
       setRevision((number) => number + 1);
@@ -144,6 +145,6 @@ export function FormattedTextEditor({ value, plainText, onChange, maxLength, dis
         </div>)}
       </div>}
     {error && <p role="alert" className="px-3 pb-2 text-xs text-danger">{error}</p>}
-    <p className="px-3 pb-2 text-right text-xs text-muted">{convertFormattedTextToPlain(document).length.toLocaleString("vi-VN")} / {maxLength.toLocaleString("vi-VN")}</p>
+    <p className="px-3 pb-2 text-right text-xs text-muted">{convertFormattedTextToPlain(document).length.toLocaleString(NUMBER_LOCALE)} / {maxLength.toLocaleString(NUMBER_LOCALE)}</p>
   </div>;
 }

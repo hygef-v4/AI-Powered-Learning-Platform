@@ -1,5 +1,69 @@
 # AI-DLC State Tracking
 
+## System test WF05 (Material Learning): rà soát test case và Round 1 · 2026-11-25
+
+Người dùng: "giờ hãy check xem các test case của wf05 xem có case nào đang sai do requirements không đủ hay không rõ ràng hay không, sau đó thực hiện test giúp tôi wf05".
+
+- [x] Rà soát 9 case tab `WF05_Material_Learning` với FR-004/005/011/013/023, SEC-002, BR-U13, BR-U14, BR-U02-10 và dữ liệu systest. Case lệch hoặc chưa rõ:
+  - ST-WF05-005 kỳ vọng HTTP 403, trong khi BR-U13-40 và `scripts/e2e/u04-u13-u14.mjs` yêu cầu 404 khi ngoài phạm vi.
+  - ST-WF05-008: email phụ thuộc tùy chọn người nhận (BR-U14-03/21), người đăng không nhận (BR-U14-11). "audit keeps the record" đã lỗi thời vì BR-U02-10 (2026-11-25) bỏ audit U13/U14.
+  - ST-WF05-001: tiền điều kiện "sv1 chỉ học SE-ST1" sai (sv1 học 10 lớp) và mâu thuẫn với 008.
+  - ST-WF05-007: cần mở link đã chép trong 5 phút (token hết hạn).
+  - ST-WF05-003: cần nêu giới hạn (mặc định 50 MB).
+  - ST-WF05-006/009: "denied" nên ghi rõ 404.
+  - BR-U13-40, BR-U14-04/05/40 còn ghi audit, mâu thuẫn BR-U02-10.
+- [x] Round 1 trên systest (giao diện tiếng Anh): 001 Failed, 002 Passed, 003 Failed, 004–009 Passed. Script `.tmp/systemtest/wf05/`, kết quả `results-a.json`, `results-b.json`. Bằng chứng 56 ảnh PNG kèm `_README.txt` ở `.tmp/systemtest/proof-2026-11-25/system test proof/WF05_Material_Learning - Round 1 (UI, 2026-11-25)/`.
+- [x] Sheet Report-5.3: cột F, G, H, O, P của 9 case.
+- [x] Thống nhất BR (người dùng: "tất cả các câu sửa theo đề xuất ngoại trừ các câu: câu 3, bạn cho tôi biết hiện frontend đang xử lý như nào"). Câu trả lời ở `aidlc-docs/construction/plans/system-test-wf05-br-questions.md`: 1A, 2A, 4A, 5B, 6A, 7B, 8A, 9A.
+  - BR: BR-U13-10 (giới hạn XLSX), BR-U13-40/41 và BR-U14-04/05/40/41 (luôn 404, không audit theo BR-U02-10), BR-U14-23 (email song ngữ), BR-U03-02 (trang 413 của nginx).
+  - Quy ước: thêm mục 9 "Ngôn ngữ giao diện" vào `code-conventions.md`.
+- [x] Code:
+  - Câu 4: `frontend/src/shared/api/errorMessages.ts` dịch lỗi theo `code`, mã chưa có thì theo status; gắn vào `shared/api/client.ts` (`detail` đã dịch, `serverDetail` giữ câu gốc) và `features/files/api` (tải tệp). Thêm khóa `shared.api.errorMessages.*` (vi, en).
+  - Câu 5: `notifications/service/NotificationEmailText.java` tạo tiêu đề "vi / en" và nội dung tiếng Việt trước, tiếng Anh sau; dùng ở `EmailDeliveryService`.
+  - Câu 6: bộ đếm mô tả, điểm rubric, phân trang, dung lượng tệp học liệu dùng `NUMBER_LOCALE`.
+- [x] Kiểm tra:
+  - Frontend 1239 test đạt (trước khi thêm test mới); `tests/shared/api/errorMessages.test.ts` (7 test) cùng test api, i18n, files đạt (35); typecheck và lint sạch.
+  - Backend: `NotificationEmailTextTest` mới; các test notifications đều đạt, gồm `EmailDeliveryServiceTest` có kiểm phần tiếng Anh.
+- [x] Build lại systest (backend, worker, frontend), chạy Round 2:
+  - 003 Passed: "This file type is not allowed.", không còn câu tiếng Việt.
+  - 008 Passed: email "Có thông báo mới của lớp / New class announcement", song ngữ.
+  - 009 Passed: "Not found or you do not have access.".
+  - Bộ đếm "0 / 2,000".
+  - Bằng chứng ở `WF05_Material_Learning - Round 2 (UI, 2026-11-25)/`.
+- [x] Sheet: sửa câu chữ test case 001 (tiền điều kiện), 003, 005, 006, 007, 008, 009; Round 2 cho 003, 008, 009; cột O của 003 ghi đã sửa, không tạo Jira.
+- [x] Câu 3 = C (người dùng: "C: chỉ số bản"). BR-U13-12: trang học liệu hiện "Phiên bản N" của bản hiện hành cho mọi người, không có bảng lịch sử, không tải bản cũ trên giao diện. `LearningMaterialPage` hiện nhãn dưới tên (khóa `materials.pages.LearningMaterialPage.versionLabel`), thêm test; frontend 1246 test đạt, typecheck và lint sạch.
+- [x] Build lại frontend systest, Round 2 001 Passed (PDF "Version 1" với sm1, sv1) và 002 Passed (DOCX "Version 2" với t1, sv1). Ảnh WF05-001_02..03, WF05-002_01..02 trong thư mục Round 2. Sheet: sửa kỳ vọng D12, D14; Round 2 của 001, 002; O12 ghi đã sửa, không tạo Jira.
+- [x] Chia thành các commit nhỏ trên nhánh `system-test` (người dùng: "chia thành các commit nhỏ lên branch"), chưa push.
+
+## System test WF03/WF04: sửa defect còn lại và bổ sung BR · 2026-11-25
+
+Người dùng: "sửa các lỗi còn lại, sửa các br trong aidlc-docs tương ứng còn thiếu".
+
+- [x] KAN-225 (U07): bài Luyện tập không bắt buộc rubric khi hoàn tất hoặc phát hành; thẻ rubric ghi dở vẫn bị chặn. Sửa `RubricService.listReadinessIssues` và `listRubricIssues` ở `AssignmentFormPage`.
+- [x] KAN-231 (U10): đề xuất AI ghi `resolvedSource`, `resolvedProvider`, `resolvedModel` ngay sau khi gửi task (và khi tạo lại theo tài liệu, hoặc bù lúc đối soát task); `AiDraftView` trả nguồn thực dùng và thêm trường `model`; `AiDrafts` hiện nguồn kèm model.
+- [x] KAN-223 (U10, U11, U08): dịch "Sai", "Xem", "Xong" trên màn quiz và trạng thái AI; lỗi phát hành dịch theo `field` và `code` (`describeViolation`), Quiz chưa có câu đổi mã thành `ITEMS_REQUIRED`; ghi chú độ tin cậy hoạt động dựng ở giao diện (`describeReliability`).
+- [x] KAN-227 (U08): thẻ nhận xét AI nêu cả khóa API cá nhân và agent MCP.
+- [x] KAN-229 (U11): bảng lượt làm của giảng viên nới cột Lượt, Điểm cao nhất, Rời trang và cho tiêu đề xuống dòng.
+- [x] BR: BR-U07-32, BR-U08-11, BR-U08-41, BR-U08-53, BR-U10-15, BR-U10-21, BR-U10-40, BR-U11-10 ghi theo quyết định system test 2026-11-25 (KAN-224, KAN-230, WF04-006).
+- [x] Kiểm tra: 431 test backend (quizzes, assignments, quizpractice) đạt, có test mới cho KAN-225 và KAN-231; frontend 355 test (quizzes, quizpractice, assignmentwork, shared, i18n) cùng test assignments đạt, typecheck và lint sạch. Phải `npm install` lại vì `node_modules` thiếu `next-intl`.
+- [x] Kiểm trên systest (người dùng: "Kiểm trên systest"), build lại backend, worker, frontend từ mã đang sửa, giao diện tiếng Anh:
+  - KAN-225: lần kiểm đầu lộ lỗ hổng, bài Luyện tập chỉ có một thẻ 0 điểm vẫn hoàn tất được (tổng 0 nên bỏ qua kiểm thẻ). Đã sửa `RubricService` và `listRubricIssues` để vẫn kiểm thẻ đã ghi, thêm test; build lại rồi kiểm: bài không rubric hoàn tất và phát hành được (UI hiện Finalized, Schedule), thẻ 0 điểm bị chặn (409 `ASSIGNMENT_NOT_READY`, UI báo trên thẻ).
+  - KAN-231: yêu cầu AI không chọn nguồn trả `PERSONAL` · `OPENAI` · `gpt-6-luna` ngay khi PENDING và khi READY; khung đề xuất hiện "Personal OpenAI · gpt-6-luna".
+  - KAN-223: "View" ở danh sách Quiz practice, "Correct 2 · Wrong 1" và nhãn "Wrong" ở kết quả, nút "Done" khi sửa đề xuất, lỗi phát hành "The quiz is not ready to publish…" và "A quiz needs at least 1 question.", ghi chú hoạt động tiếng Anh; không còn câu tiếng Việt ở hộp thoại lượt làm.
+  - KAN-227: thẻ nhận xét AI hiện "Feedback uses your personal API key or a connected MCP agent" kèm link AI connection.
+  - KAN-229: tiêu đề Attempts, Highest score, Left page nằm trong ô, không chồng nhau ("Highest score" xuống dòng).
+- [x] Jira (người dùng: "Cập nhật Jira và sheet"): KAN-223, KAN-225, KAN-227, KAN-229, KAN-231 có comment kết quả retest và chuyển Done.
+- [x] Bằng chứng (người dùng: "các ảnh chụp bằng chứng đang bị mờ…", chọn "Round 2 + chụp lại Round 1"): chạy lại các bước Round 1 trên dữ liệu mới, chụp PNG 2880x1800 (1440x900, mật độ 2x) vào `.tmp/systemtest/proof-2026-11-25/system test proof/`. Round 1 (recaptured 2026-11-25) chụp lại 47/51 ảnh cùng tên; 4 ảnh lỗi đã sửa thay bằng Round 2: WF03 3 ảnh (KAN-225, KAN-227), WF04 7 ảnh (KAN-223, KAN-229, KAN-231). Mỗi thư mục có `_README.txt`. Script: `.tmp/systemtest/wf0304/shoot*.mjs`, `wf04lib.mjs`.
+- [x] Sheet Report-5.3: Round 2 Passed 2026-11-25 cho WF03-001, WF03-002, WF04-001, WF04-002, WF04-004, WF04-005, WF04-006; cột Note thêm dòng Round 2 kèm tên thư mục bằng chứng. Các ca khác giữ Pending.
+- [x] Dịch nốt (người dùng: "sửa nốt các chỗ chưa dịch còn lại"), chỉ sửa frontend, không đổi API:
+  - Tiêu đề bảng "MSSV", "STT" viết cứng ở 7 bảng (lượt làm quiz, ghi danh, sổ điểm, nhóm lớp, nhập tài khoản, danh sách tài khoản, Log) dùng khóa i18n ("Student ID", "No.").
+  - Thông báo trên chuông dịch theo `type` (`notifications/model/labels.ts`, `describeNotification`); câu tiếng Việt trùng câu U14 lưu, loại lạ giữ câu server.
+  - Hai cảnh báo nguồn tài liệu của đề xuất AI dịch theo câu cố định (`describeSourceWarning`), áp cả đề xuất cũ.
+  - Số theo ngôn ngữ giao diện (`i18n/number.ts`: `NUMBER_LOCALE`, `formatNumber`): điểm quiz, token, dung lượng tệp, biểu đồ dashboard.
+  - Số ít, số nhiều tiếng Anh bằng ICU plural cho "rubric(s) have point errors", "document(s) selected".
+- [x] Kiểm tra: frontend 1239 test đạt (thêm test thông báo, cảnh báo AI, plural, định dạng số), typecheck và lint sạch. Build lại frontend systest, kiểm giao diện tiếng Anh: chuông "A new quiz is available", điểm "3.5 / 4", cột "Student ID", "1 rubric has point errors", "1 document selected", cảnh báo AI tiếng Anh. Ảnh ở `.tmp/systemtest/proof-2026-11-25/_i18n-verify/`.
+- [ ] Còn tồn ngoài giao diện: nội dung câu hỏi do AI viết và email thông báo vẫn tiếng Việt (prompt và email ở server). KAN-226 cần xóa tay trên Jira; người dùng tự đẩy ảnh lên Drive. Đã chia thành các commit nhỏ trên nhánh `system-test` (người dùng: "chia thành các commit nhỏ lên branch"), đã push và mở PR hygef-v4/AI-Powered-Learning-Platform#136 vào `staging`.
+
 ## U02: Nhật ký chi tiết hơn, bỏ ghi tra cứu audit · 2026-11-25
 
 Người dùng: "kiểm tra phần Log và làm chi tiết hơn cho tôi (chẳng hạn tôi thấy Truy cập bị từ chối, đối tượng là lớp nhưng không biết là lớp nào, lý do cũng đang quá chung chung. Ngoài ra chỉ cần log các sự kiện cần thiết và quan trọng, không log hành động tra cứu audit".

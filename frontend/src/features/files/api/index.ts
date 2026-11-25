@@ -2,6 +2,7 @@ import { fetchApi, refreshSession } from "@/shared/api/client";
 import { CSRF_HEADER, readCsrfToken } from "@/shared/api/csrf";
 import type { ArtifactPurpose, PurposePolicy, UploadResult } from "../model/purposes";
 import { msg } from "@/i18n/msg";
+import { describeApiProblem } from "@/shared/api/errorMessages";
 
 export function getPolicies(): Promise<PurposePolicy[]> {
   return fetchApi<PurposePolicy[]>("/api/v1/files/policies");
@@ -47,8 +48,8 @@ export function uploadFile(file: File, purpose: ArtifactPurpose, onProgress: (pe
       if (outcome !== "expired") xhr = await sendRequest();
     }
     if (xhr.status >= 200 && xhr.status < 300) return xhr.response as UploadResult;
-    const detail = (xhr.response as { detail?: string } | null)?.detail;
-    throw new Error(detail ?? msg("files.api.index.uploadFailed"));
+    const problem = xhr.response as { code?: string; detail?: string } | null;
+    throw new Error(describeApiProblem({ status: xhr.status, code: problem?.code, detail: problem?.detail }));
   })();
   return {
     promise,

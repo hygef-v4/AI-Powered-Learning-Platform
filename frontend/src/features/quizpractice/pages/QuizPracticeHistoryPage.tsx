@@ -78,7 +78,7 @@ export function QuizPracticeHistoryPage() {
                 <Td className="whitespace-nowrap">
                   {row.attemptsUsed === 0 && row.canStart
                     ? <Button size="sm" variant="primary" disabled={busy} onClick={() => void start(row)} data-testid="practice-history-start">{msg("quizpractice.pages.QuizPracticeHistoryPage.start")}</Button>
-                    : <Button size="sm" onClick={() => router.push(buildDetailHref(row))} data-testid="practice-history-view">Xem</Button>}
+                    : <Button size="sm" onClick={() => router.push(buildDetailHref(row))} data-testid="practice-history-view">{msg("quizpractice.pages.QuizPracticeHistoryPage.view")}</Button>}
                 </Td>
               </tr>
             ))}

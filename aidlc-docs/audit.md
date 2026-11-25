@@ -14844,3 +14844,270 @@ used by CI or deployment. Replace README references with a plain
 **Context**: Construction, U02 Audit, tiếp nối yêu cầu nhật ký chi tiết.
 
 ---
+
+## System test WF03/WF04 — sửa defect còn lại và bổ sung BR
+**Timestamp**: 2026-11-25T02:50:00Z
+**Requested by:** Hải Nam
+**User Input**: "sửa các lỗi còn lại, sửa các br trong aidlc-docs tương ứng còn thiếu"
+**AI Response**: "Sửa các defect còn mở từ system test WF03/WF04: KAN-225 (bài Practice không cần rubric khi hoàn tất), KAN-231 (bản nháp AI quiz ghi nguồn AI thực tế), KAN-223 (chuỗi tiếng Việt trong màn quiz tiếng Anh), KAN-227 (thẻ góp ý nhắc cả agent MCP), KAN-229 (tiêu đề cột chồng nhau). Bổ sung BR theo các quyết định ngày 2026-11-25: giới hạn lượt tính riêng từng phiên bản quiz, hết lượt chỉ hiện số lượt và ẩn nút bắt đầu, lời báo giám sát kiểm khi lưu, bài Practice không bắt buộc rubric, provenance nguồn AI thực tế. KAN-226 người dùng tự xóa trên Jira; KAN-224, KAN-228, KAN-230 đã đóng không phải lỗi."
+**Context**: Construction, sửa lỗi nhỏ theo system test Report 5.3 (U07, U08, U10, U11).
+
+---
+
+## System test WF03/WF04 — kiểm lại các defect đã sửa trên systest
+**Timestamp**: 2026-11-25T03:30:00Z
+**Requested by:** Hải Nam
+**User Input**: "Kiểm trên systest"
+**AI Response**: "Build lại image backend và frontend của stack systest từ mã đang sửa, khởi động lại rồi kiểm trên trình duyệt KAN-225, KAN-231, KAN-223, KAN-227 và KAN-229; ghi kết quả vào aidlc-state."
+**Context**: Construction, kiểm lại sau sửa lỗi system test Report 5.3 (U07, U08, U10, U11).
+
+---
+
+## Construction — Đối chiếu phương pháp integration test với slide 26–27
+**Timestamp**: 2026-11-25T03:38:19Z
+**Requested by:** Hải Nam
+**User Input**: "https://docs.google.com/presentation/d/18MkFJVR2GJLI9XUhyW98r2HGNoGCPnUu/edit?slide=id.p26#slide=id.p26 check slide 26 và 27, hiện tại integration test của nhóm đang được làm theo phương pháp nào"
+**AI Response**: "Đọc slide 26 (Big Bang, Incremental, Top-down, Bottom-up, Thread-based, Functional) và slide 27 (mẫu bảng case có cột Modules, Input Data, Test Steps, chạy bằng Postman ở mức API). Đối chiếu với aidlc-docs/inception/application-design/2026-11-08-integration-test-design.md và Manual-Integration-Cases.md: nhóm làm Incremental theo nhóm unit theo thứ tự phụ thuộc (U01–U05 trước, rồi U06–U09, U10–U12, U13–U15), gần Bottom-up (test JUnit gọi thẳng service làm driver, hạ tầng thật bằng Testcontainers, chỉ giả lập dịch vụ ngoài trả phí), và 43 case manual theo kiểu Thread-based qua giao diện. Lưu ý: case manual chạy end-to-end qua UI nên dễ bị xem là system test; mẫu của giảng viên có cột Modules và Input Data mà workbook chưa tách riêng. Chỉ đọc, không sửa file."
+**Context**: Tư vấn trình bày phương pháp integration test với giảng viên.
+
+---
+
+## Construction — Kỹ thuật tích hợp trong ví dụ slide 27
+**Timestamp**: 2026-11-25T03:41:13Z
+**Requested by:** Hải Nam
+**User Input**: "slide 27 đang là theo kỹ thuật nào, có phải functional ko"
+**AI Response**: "Slide 27 không ghi tên kỹ thuật. Bốn case ghép từng cặp module dọc một luồng đặt chỗ: LoginService + BookingService (IT2_001, IT2_002) rồi BookingService + PaymentService (IT2_003, IT2_004), gọi API bằng Postman với service thật, không có stub hay driver. Cách đọc hợp nhất là Incremental đi theo một luồng xử lý (Thread-based: đăng nhập → đặt chỗ → thanh toán); không hẳn là Functional vì case chia theo cặp module chứ không theo từng tính năng hoàn chỉnh. Gợi ý hỏi giảng viên nếu cần gọi tên chính xác."
+**Context**: Giải thích ví dụ trong slide; không thay đổi file.
+
+---
+
+## Construction — Kỹ thuật integration test nên dùng cho dự án
+**Timestamp**: 2026-11-25T03:42:42Z
+**Requested by:** Hải Nam
+**User Input**: "trong các kỹ thuật đó thì kỹ thuật nào nên được sử dụng với dự án của chúng tôi"
+**AI Response**: "Dựa trên bảng phụ thuộc trong unit-of-work.md (U02, U03 không phụ thuộc; U01 → U02, U03; U04 → U01; U05 → U01, U04; các unit iter 2–3 dựa trên U05), đề xuất Incremental theo Bottom-up cho test tự động (đi từ unit nền lên, JUnit làm driver, hạ tầng thật bằng Testcontainers, chỉ giả lập dịch vụ ngoài trả phí) kết hợp Thread-based cho case manual (mỗi case một luồng đi qua chuỗi unit). Không chọn Big Bang (15 unit, khó khoanh vùng lỗi), Top-down (phải viết stub cho các unit nền vốn đã có sẵn) và Functional (trùng với system test Report-5.3 theo luồng nghiệp vụ BF-01…05). Đây là cách nhóm đang làm; gợi ý ghi rõ chuỗi module trong từng case."
+**Context**: Tư vấn chọn kỹ thuật integration test; không thay đổi file.
+
+---
+
+## System test WF03/WF04 — cập nhật Jira và sheet sau kiểm lại
+**Timestamp**: 2026-11-25T04:10:00Z
+**Requested by:** Hải Nam
+**User Input**: "Cập nhật Jira và sheet"
+**AI Response**: "Ghi kết quả kiểm lại trên systest vào KAN-223, KAN-225, KAN-227, KAN-229, KAN-231 rồi chuyển sang Done; ghi kết quả Round 2 cho các ca WF03/WF04 liên quan trên Google Sheet Report-5.3."
+**Context**: Construction, đóng defect system test Report 5.3 (U07, U08, U10, U11).
+
+---
+
+## System test WF03/WF04 — chụp lại ảnh bằng chứng rõ nét
+**Timestamp**: 2026-11-25T04:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "các ảnh chụp bằng chứng đang bị mờ. bạn hãy chụp lại các ảnh rõ nét rồi lưu vào 1 thư mục trong ổ E tho format của folder proof trên drive để tôi tự đẩy lên"
+**AI Response**: "Chụp lại ảnh bằng chứng Round 2 ở độ phân giải cao bằng trình duyệt headless, đặt tên và chia thư mục theo định dạng thư mục system test proof trên Drive, lưu trong ổ E để người dùng tự tải lên."
+**Context**: Construction, bằng chứng kiểm lại system test Report 5.3 (WF03, WF04).
+
+---
+
+## Construction — Drive credentials, cập nhật sheet online và xuất evidence 5.2 theo định dạng Drive
+**Timestamp**: 2026-11-25T03:57:19Z
+**Requested by:** Hải Nam
+**User Input**: "GOOGLE_DRIVE_OAUTH_CLIENT_ID=[redacted]
+GOOGLE_DRIVE_OAUTH_CLIENT_SECRET=[redacted]
+GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN=[redacted]
+GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
+
+đây là các key drive, giúp tôi test nốt cho các case kết nối drive. Sau đó cập nhật trên sheet https://docs.google.com/spreadsheets/d/15y1zabBozEpM3N6nbSCetiT8pWJQO9lvtyZHVS9PE3E/edit?gid=436554701#gid=436554701. 
+Đồng thời dựa vào format của folder system test proof mà tổ chức lại các folder evidence 5.2 chỉ bao gồm ảnh và json để tôi đẩy lên drive https://drive.google.com/drive/u/0/folders/1BDjuKiB0wKyRPmMbkZiPBbJ1G0uWgtCT"
+**AI Response**: "Giá trị secret trong input đã được thay bằng [redacted] để không ghi secret vào repo. Bộ OAuth này trùng với bộ production đã dán ngày 21/11 (cùng client ID, thư mục 'AI Learning Platform'); điều kiện tiên quyết của IT-U03-M03/M04 trong workbook cấm dùng credential production, nên không chạy hai case này và không ghi secret vào file nào; đề nghị dùng tài khoản Google và thư mục riêng cho test và thu hồi refresh token đã dán. Sheet online đã ở v1.5 (đọc Cover, U03, U05), chưa sửa gì vì phần Drive còn chờ. Xuất evidence ra E:/FPTUni/sem9_fa26/test_report/Report-5.2_Integration_Test_Proof theo định dạng thư mục system test proof: '<sheet unit> - Round N (UI, ngày)/<Case ID>_<tiêu đề ngắn>/' chỉ gồm ảnh (NN_tên, detail_ cho ảnh phụ) và result.json; 22 thư mục round, 50 lượt case (43 case cộng 7 Round 1 cũ), 245 file, 15 MB; quét json không thấy secret thật, email hộp thư đã che. Script: .tmp/systemtest/export52-drive.mjs."
+**Context**: Drive cases còn Blocked chờ credential test; evidence sẵn sàng để người dùng tải lên Drive.
+
+---
+
+## System test WF03/WF04 — duyệt ảnh mẫu, chụp nốt bằng chứng
+**Timestamp**: 2026-11-25T04:40:00Z
+**Requested by:** Hải Nam
+**User Input**: "Rõ, chụp nốt"
+**AI Response**: "Chạy lại các bước Round 1 WF03/WF04 trên dữ liệu mới để chụp lại 51 ảnh PNG 2880x1800 cùng tên, chụp ảnh Round 2 cho các lỗi đã sửa, lưu theo cấu trúc thư mục system test proof trong .tmp/systemtest/proof-2026-11-25, kèm README; sau đó ghi Round 2 lên sheet."
+**Context**: Construction, bằng chứng system test Report 5.3 (WF03, WF04).
+
+---
+
+## Construction — Chuẩn bị Drive thử nghiệm cho IT-U03-M03/M04
+**Timestamp**: 2026-11-25T04:00:32Z
+**Requested by:** Hải Nam
+**User Input**: "I'll set up test Drive"; tiếp theo: "chỉ tôi cách lấy key"
+**AI Response**: "Thêm vào .tmp/systemtest/ext-test.override.yml các biến GOOGLE_DRIVE_OAUTH_CLIENT_ID/SECRET/REFRESH_TOKEN và GOOGLE_DRIVE_FOLDER_NAME (lấy từ EXT_*), thêm chỗ trống tương ứng vào ext-test.env (gitignored) với tên thư mục 'AI Learning Platform TEST'; không đọc hay in giá trị secret nào. Hướng dẫn người dùng tạo tài khoản Google thử nghiệm, OAuth client (Web application) với redirect URI của OAuth Playground, thêm test user, lấy refresh token scope drive.file qua OAuth Playground và tự điền vào ext-test.env. Đề xuất đổi bước 'cắt quyền' của M03 sang dùng refresh token sai rồi khôi phục, vì Drive cá nhân không có service account."
+**Context**: Chờ người dùng điền credential Drive thử nghiệm.
+
+---
+
+## Construction — Hướng dẫn tạo project Google Cloud cho Drive thử nghiệm
+**Timestamp**: 2026-11-25T04:03:48Z
+**Requested by:** Hải Nam
+**User Input**: "tiếp tục ở đâu" (kèm ảnh chụp trang chào mừng Google Cloud Console, chưa chọn project)
+**AI Response**: "Hướng dẫn: bỏ qua Free Trial (không cần billing cho Drive API), tạo project mới qua 'Select a project → New project', bật Google Drive API, cấu hình OAuth consent screen (External, thêm test user), tạo OAuth client Web application với redirect URI của OAuth Playground."
+**Context**: Người dùng đang tạo credential Drive thử nghiệm.
+
+---
+
+## Construction — Hướng dẫn lấy refresh token trên OAuth Playground
+**Timestamp**: 2026-11-25T04:12:53Z
+**Requested by:** Hải Nam
+**User Input**: "tiếp theo thế nào" (kèm ảnh chụp OAuth 2.0 Playground, Step 1)
+**AI Response**: "Hướng dẫn: bánh răng → Use your own OAuth credentials (Client ID, secret của client test) → nhập scope https://www.googleapis.com/auth/drive.file → Authorize APIs bằng Gmail test → Exchange authorization code for tokens → chép refresh token → tự điền vào ext-test.env, không dán vào chat."
+**Context**: Người dùng đang lấy credential Drive thử nghiệm.
+
+---
+
+## System test WF03/WF04 — Hoàn tất chụp lại bằng chứng và cập nhật sheet Round 2
+**Timestamp**: 2026-11-25T04:20:03Z
+**Requested by:** Hải Nam
+**User Input**: "Rõ, chụp nốt"
+**AI Response**: "Đã chạy lại các bước Round 1 trên dữ liệu mới và chụp 57 ảnh PNG 2880x1800 vào .tmp/systemtest/proof-2026-11-25/system test proof/ (Round 1 recaptured: WF03 16, WF04 31; Round 2: WF03 3, WF04 7; mỗi thư mục có _README.txt). Cập nhật sheet Report-5.3 Round 2 Passed cho WF03-001, WF03-002, WF04-001, WF04-002, WF04-004, WF04-005, WF04-006 và thêm dòng Round 2 ở cột Note. Cập nhật aidlc-state. Chưa commit; người dùng tự đẩy ảnh lên Drive."
+**Context**: Construction — system test WF03/WF04, bằng chứng và báo cáo Round 2.
+
+---
+
+## System test WF03/WF04 — Dịch nốt các chuỗi còn lại
+**Timestamp**: 2026-11-25T04:25:00Z
+**Requested by:** Hải Nam
+**User Input**: "sửa nốt các chỗ chưa dịch còn lại"
+**AI Response**: "Bắt đầu: tìm nguồn các chuỗi chưa dịch (MSSV, thông báo chuông, cảnh báo nguồn AI, số thập phân dấu phẩy, số nhiều) rồi sửa, test và kiểm trên systest."
+**Context**: Construction — sửa i18n sau system test WF03/WF04.
+
+---
+
+## System test WF03/WF04 — Hoàn tất dịch nốt các chuỗi còn lại
+**Timestamp**: 2026-11-25T04:46:50Z
+**Requested by:** Hải Nam
+**User Input**: "sửa nốt các chỗ chưa dịch còn lại"
+**AI Response**: "Frontend: dịch tiêu đề MSSV/STT ở 7 bảng, thông báo chuông theo loại, hai cảnh báo nguồn tài liệu AI, số theo ngôn ngữ giao diện (i18n/number.ts), số ít/số nhiều tiếng Anh. 1239 test frontend đạt, typecheck và lint sạch; build lại frontend systest và kiểm giao diện tiếng Anh đạt 6/6. Còn tồn: nội dung câu hỏi AI và email thông báo vẫn tiếng Việt (do server). Chưa commit."
+**Context**: Construction — sửa i18n sau system test WF03/WF04.
+
+---
+
+## Manual Integration Test - Test Drive OAuth set-up
+**Timestamp**: 2026-11-25T04:10:00Z
+**Requested by:** Hải Nam
+**User Input**: "tôi đã điền rồi, bước này có phải làm không"
+**AI Response**: "Explained that OAuth Playground Step 3 is not needed; only the refresh token from Step 2 is used. Checked that the test Drive values in the gitignored .tmp/systemtest/ext-test.env are present (values not printed)."
+**Context**: Construction - Report-5.2 manual integration tests, Round 2 of IT-U03-M03/M04 on a separate test Google Drive
+
+---
+
+## Manual Integration Test - Evidence format feedback
+**Timestamp**: 2026-11-25T05:15:00Z
+**Requested by:** Hải Nam
+**User Input**: "evidence test không cần làm pdf nữa, tôi sẽ up folder test proof lên thôi"
+**AI Response**: "Stopped producing the evidence PDF; the sheet notes reference the proof folder Report-5.2_Integration_Test_Proof instead."
+**Context**: Construction - Report-5.2 evidence export
+
+---
+
+## Manual Integration Test - JSON only for external systems
+**Timestamp**: 2026-11-25T05:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "tôi không muốn test case nào cũng cần json trong proof, chỉ những case nào cần observe khi kết nối với hệ thống ngoài thôi"
+**AI Response**: "Changed .tmp/systemtest/export52-drive.mjs so only the 9 cases that observe an outside system (Brevo IT-U01-M04; Google Drive IT-U03-M03/M04; AI provider IT-U06-M01/M03/M04, IT-U08-M02; MCP IT-U06-M02/M05) get a slim <system>-observation.json; all other case folders hold screenshots only."
+**Context**: Construction - Report-5.2 evidence export
+
+---
+
+## Manual Integration Test - Drive cases Round 2, sheet and proof results
+**Timestamp**: 2026-11-25T05:40:00Z
+**Requested by:** Hải Nam
+**User Input**: "(continuation of the Drive test request: test the Drive cases, update the online sheet, reorganise evidence 5.2 to images and json only for upload to Drive)"
+**AI Response**: "Revised IT-U03-M03 and IT-U03-M04 to personal Google Drive through OAuth (the platform's Drive mode) and ran them in Round 2 on the isolated systest stack with a separate test Google account and OAuth client (production credentials not used; values redacted): IT-U03-M03 Passed (upload, Drive file and SHA-256 match, download, HTTP 503 STORAGE_UNAVAILABLE without access, no partial file, recovery); IT-U03-M04 Passed (scheduled run 25/11/2026 11:29, archive 404,272 bytes not readable without the key, isolated restore in 19 s, 9 table counts and 2 sample accounts equal at snapshot time). Stack restored to local storage. Online sheet v1.6: U03_Jobs_Settings rows 29-30 (B-E revised, Round 2 Passed 25/11/2026, notes), Cover version/date and record of change 1.6; seven Round 2 date cells formatted dd/mm/yyyy. Proof folder E:/FPTUni/sem9_fa26/test_report/Report-5.2_Integration_Test_Proof regenerated: 52 case/round folders, 213 files (images plus 12 observation json files), secret scan 0 hits."
+**Context**: Construction - Report-5.2 manual integration tests, IT-U03-M03/M04 Round 2
+
+---
+
+## System test WF03/WF04 - Chia commit
+**Timestamp**: 2026-11-25T10:30:00Z
+**Requested by:** Hải Nam
+**User Input**: "chia thành các commit nhỏ lên branch"
+**AI Response**: "Chia các thay đổi chưa commit trên branch system-test thành các commit nhỏ theo từng lỗi Jira (KAN-225, KAN-231, KAN-223, KAN-227, KAN-229), từng phần dịch giao diện (MSSV/STT, thông báo, cảnh báo nguồn AI, định dạng số, số nhiều) và tài liệu AI-DLC; không push."
+**Context**: Construction - system test WF03/WF04, commit
+
+---
+
+## System test WF05 - Rà soát test case và chạy Round 1
+**Timestamp**: 2026-11-25T11:00:00Z
+**Requested by:** Hải Nam
+**User Input**: "giờ hãy check xem các test case của wf05 xem có case nào đang sai do requirements không đủ hay không rõ ràng hay không, sau đó thực hiện test giúp tôi wf05"
+**AI Response**: "Đối chiếu 9 case tab WF05_Material_Learning (Report-5.3) với FR-004/005/011/013/023, SEC-002, BR-U13, BR-U14 và dữ liệu systest; sau đó chạy WF05 Round 1 trên stack systest bằng giao diện tiếng Anh, chụp bằng chứng và cập nhật sheet."
+**Context**: Construction - system test WF05, review và thực thi
+
+---
+
+## System test WF05 - Hoàn tất Round 1
+**Timestamp**: 2026-11-25T09:45:00Z
+**Requested by:** Hải Nam
+**User Input**: "giờ hãy check xem các test case của wf05 xem có case nào đang sai do requirements không đủ hay không rõ ràng hay không, sau đó thực hiện test giúp tôi wf05"
+**AI Response**: "Chạy 9 case WF05 trên systest (giao diện tiếng Anh): 001 Failed (Material Detail không hiện phiên bản/lịch sử, BR-U13-12), 003 Failed (lý do từ server hiện tiếng Việt trên giao diện tiếng Anh), 002 và 004–009 Passed. Cập nhật sheet tab WF05_Material_Learning (F, G, H, O, P), chụp 56 ảnh kèm _README.txt, cập nhật aidlc-state. Báo các case lệch requirements: 005 (403 so với 404), 008 (email theo tùy chọn, audit bị bỏ theo BR-U02-10), tiền điều kiện 001, 007 (token 5 phút), 003 (giới hạn dung lượng), 006/009 (404). Chưa tạo Jira, chưa sửa test case, chưa commit."
+**Context**: Construction - system test WF05 Round 1 hoàn tất
+
+---
+
+## System test WF05 - Đề xuất sửa test case và code
+**Timestamp**: 2026-11-25T09:55:00Z
+**Requested by:** Hải Nam
+**User Input**: "đề xuất chỉnh sửa test case hay code chi tiết bằng tiếng việt"
+**AI Response**: "Xem mã liên quan hai defect WF05 (lịch sử phiên bản học liệu, lỗi server chưa dịch) và các lỗi nhỏ, rồi đề xuất chi tiết bằng tiếng Việt cách sửa test case, BR và code; chưa sửa gì."
+**Context**: Construction - system test WF05, đề xuất sửa
+
+---
+
+## System test WF05 - Câu hỏi thống nhất BR
+**Timestamp**: 2026-11-25T10:05:00Z
+**Requested by:** Hải Nam
+**User Input**: "hỏi những câu hỏi bạn cần hỏi để thống nhất br bằng tiếng việt cho tôi"
+**AI Response**: "Tạo aidlc-docs/construction/plans/system-test-wf05-br-questions.md gồm 9 câu (audit U13/U14 so với BR-U02-10, 404 hay 403, lịch sử phiên bản học liệu bị bỏ ở commit 22a5a400, ngôn ngữ lỗi server, ngôn ngữ email, định dạng số và ngày giờ, nhận dạng XLSX, 413 của nginx, sửa câu chữ test case). Chờ người dùng trả lời; chưa sửa BR, test case hay code."
+**Context**: Construction - system test WF05, thống nhất BR
+
+---
+
+## System test WF05 - Đề xuất cho câu hỏi thống nhất BR
+**Timestamp**: 2026-11-25T10:10:00Z
+**Requested by:** Hải Nam
+**User Input**: "bạn có đề xuất gì với những câu hỏi đó"
+**AI Response**: "Đề xuất: Câu 1 A (theo BR-U02-10), Câu 2 A (luôn 404), Câu 3 A (khôi phục bảng lịch sử cho staff, có tải bản cũ), Câu 4 A (frontend dịch theo code, câu chung theo status), Câu 5 B (email song ngữ), Câu 6 A (số theo ngôn ngữ, ngày giờ giữ dd/mm/yyyy), Câu 7 B (giữ, ghi giới hạn), Câu 8 A (chấp nhận, ghi BR-U03), Câu 9 A (sửa toàn bộ test case). Chờ người dùng xác nhận trong file câu hỏi."
+**Context**: Construction - system test WF05, thống nhất BR
+
+---
+
+## System test WF05 - Trả lời câu hỏi thống nhất BR
+**Timestamp**: 2026-11-25T10:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "tất cả các câu sửa theo đề xuất ngoại trừ các câu: câu 3, bạn cho tôi biết hiện frontend đang xử lý như nào"
+**AI Response**: "Ghi câu trả lời theo đề xuất cho câu 1, 2, 4, 5, 6, 7, 8, 9; câu 3 để chờ, xem và giải thích cách frontend đang xử lý phiên bản học liệu; bắt đầu sửa BR và code theo các câu đã chốt."
+**Context**: Construction - system test WF05, thống nhất BR
+
+---
+
+## System test WF05 - Sửa BR, code và Round 2
+**Timestamp**: 2026-11-25T10:50:00Z
+**Requested by:** Hải Nam
+**User Input**: "tất cả các câu sửa theo đề xuất ngoại trừ các câu: câu 3, bạn cho tôi biết hiện frontend đang xử lý như nào"
+**AI Response**: "Giải thích câu 3: backend trả versions (staff đủ, sinh viên chỉ bản hiện hành) và nhận versionNo khi cấp token; trang học liệu chỉ hiện bản hiện hành, bảng lịch sử bị bỏ ở commit 22a5a400. Sửa BR U03, U13, U14 và quy ước mã nguồn; code dịch lỗi theo code (frontend), email song ngữ (backend), số theo ngôn ngữ; test đạt; build lại systest, Round 2 003, 008, 009 Passed; sửa câu chữ test case và cập nhật sheet. Câu 3 chờ người dùng chọn; chưa commit."
+**Context**: Construction - system test WF05, sửa theo BR đã thống nhất
+
+---
+
+## System test WF05 - Trả lời câu 3 và Round 2 cho 001, 002
+**Timestamp**: 2026-11-25T11:30:00Z
+**Requested by:** Hải Nam
+**User Input**: "C: chỉ số bản"
+**AI Response**: "Ghi câu 3 = C vào file câu hỏi; sửa BR-U13-12 (hiện Phiên bản N, không có bảng lịch sử). Thêm nhãn phiên bản dưới tên trên trang học liệu cùng test; frontend 1246 test đạt. Build lại frontend systest, Round 2 001 và 002 Passed; cập nhật kỳ vọng, kết quả Round 2 và cột Defect trên sheet. Chưa commit."
+**Context**: Construction - system test WF05, câu 3 BR-U13-12
+
+---
+
+## System test WF05 - Chia commit
+**Timestamp**: 2026-11-25T11:45:00Z
+**Requested by:** Hải Nam
+**User Input**: "chia thành các commit nhỏ lên branch"
+**AI Response**: "Chia thay đổi WF05 thành các commit nhỏ trên system-test: BR và quy ước, dịch lỗi server theo code, số theo ngôn ngữ, email song ngữ, nhãn phiên bản học liệu, nhật ký aidlc. Mục audit của phiên khác giữ nguyên, không đưa vào commit. Chưa push."
+**Context**: Construction - system test WF05, commit
+
+---

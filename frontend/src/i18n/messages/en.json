@@ -421,7 +421,9 @@
         "errors": " errors",
         "checkResults": "Check results",
         "valid2": "Valid",
-        "addStudents2": "Add {valid} students"
+        "addStudents2": "Add {valid} students",
+        "studentCode": "Student ID",
+        "rowNumber": "No."
       },
       "PersonPicker": {
         "typeANameOrEmail": "Type a name or email",
@@ -949,7 +951,8 @@
         "overloaded": "Overloaded",
         "timedOut": "Timed out",
         "connectionLost": "Connection lost",
-        "failed": "Failed"
+        "failed": "Failed",
+        "done": "Done"
       },
       "mcpGuide": {
         "discoveryAndGuidance": "Discovery and guidance",
@@ -1517,7 +1520,7 @@
         "someCriteriaAreMissingContent": "Some criteria are missing content or points",
         "theAssignmentNeedsATitle": "The assignment needs a title",
         "theAssignmentHasNoGrading": "The assignment has no grading rubric yet",
-        "rubricsHavePointErrors": "{length} rubrics have point errors",
+        "rubricsHavePointErrors": "{length, plural, one {# rubric has point errors} other {# rubrics have point errors}}",
         "theAssignmentStillHasErrors": "The assignment still has errors",
         "notSaved": "Not saved: {POINTS_INVALID}",
         "notSaved2": "Not saved: {value}",
@@ -1629,7 +1632,7 @@
         "byPart": "By part",
         "theAiIsStillProcessing": "The AI is still processing. ",
         "checkFeedbackAgain": "Check feedback again",
-        "youCanManageYourPersonal": "You can manage your personal API keys in",
+        "youCanManageYourPersonal": "Feedback uses your personal API key or a connected MCP agent. Manage both in",
         "aiConnection": "AI connection",
         "getFeedbackAgain": "Get feedback again",
         "getAiFeedback": "Get AI feedback"
@@ -1810,7 +1813,8 @@
         "object": "Object",
         "result": "Result",
         "reason": "Reason",
-        "noMatchingRecords": "No matching records."
+        "noMatchingRecords": "No matching records.",
+        "rowNumber": "No."
       }
     },
     "model": {
@@ -2347,7 +2351,9 @@
         "points": " points",
         "notSubmitted": "Not submitted",
         "noMatchingStudents": "No matching students.",
-        "students": "students"
+        "students": "students",
+        "studentCode": "Student ID",
+        "rowNumber": "No."
       },
       "GradeDistributionSettings": {
         "couldNotLoadTheGrade": "Could not load the grade distribution settings. Please reload to try again.",
@@ -2809,7 +2815,8 @@
         "delete2": "Delete {name}?",
         "deleteGroup": "Delete group",
         "areYouSureYouWant": "Are you sure you want to delete ",
-        "text": "?"
+        "text": "?",
+        "studentCode": "Student ID"
       },
       "GroupFormDialog": {
         "enterAGroupName": "Enter a group name",
@@ -3123,7 +3130,8 @@
           "valid2": "Valid",
           "rows2": "rows",
           "cancel": "Cancel",
-          "importAccounts": "Import {validCount} accounts"
+          "importAccounts": "Import {validCount} accounts",
+          "studentCode": "Student ID"
         },
         "NewAccountDialog": {
           "invalidEmail": "Invalid email.",
@@ -3214,7 +3222,8 @@
           "open": "Open",
           "loading": "Loading…",
           "noMatchingAccounts": "No matching accounts.",
-          "accountAdded": "Account added"
+          "accountAdded": "Account added",
+          "studentCode": "Student ID"
         }
       }
     },
@@ -3535,7 +3544,8 @@
         "edit": "Edit",
         "delete": "Delete",
         "description": "Description",
-        "learningMaterialDeleted": "Learning material deleted"
+        "learningMaterialDeleted": "Learning material deleted",
+        "versionLabel": "Version {value}"
       }
     },
     "register": {
@@ -3588,6 +3598,44 @@
         "questionProposalsAwaitingApproval": "Question proposals awaiting approval",
         "questionReviewResults": "Question review results",
         "backupFailed": "Backup failed"
+      },
+      "labels": {
+        "enrolledTitle": "You have been enrolled in a class",
+        "enrolledSummary": "View the class information and learning activities.",
+        "assignmentOpenedTitle": "A new assignment is open",
+        "assignmentOpenedSummary": "View the content and the due date.",
+        "quizPublishedTitle": "A new quiz is available",
+        "quizPublishedSummary": "Open the quiz to view it and start practicing.",
+        "gradePublishedTitle": "You have a new grade",
+        "gradePublishedSummary": "View the grading result of your work.",
+        "deadlineReminderTitle": "An assignment is due soon",
+        "deadlineReminderSummary": "Less than 24 hours left to submit.",
+        "announcementTitle": "New class announcement",
+        "announcementSummary": "View the announcement from your lecturer.",
+        "backupFailedTitle": "System backup failed",
+        "backupFailedSummary": "View the failed backup to check and fix it.",
+        "leaderChangeRequestedTitle": "A group leader change is requested",
+        "leaderChangeRequestedSummary": "View the request to approve or reject it.",
+        "leaderChangedTitle": "The group leader has changed",
+        "leaderChangedSummary": "View the new group leader.",
+        "leaderRequestRejectedTitle": "The group leader change was rejected",
+        "leaderRequestRejectedSummary": "View the request status in your group.",
+        "groupMembershipChangedTitle": "Group members have changed",
+        "groupMembershipChangedSummary": "View the latest member list.",
+        "groupSubmittedTitle": "Your group has submitted",
+        "groupSubmittedSummary": "View the submission status of your group.",
+        "groupProposalInvitedTitle": "You are invited to a group",
+        "groupProposalInvitedSummary": "Open My group to accept or decline the invitation.",
+        "groupProposalSubmittedTitle": "A group proposal is awaiting approval",
+        "groupProposalSubmittedSummary": "Open the Students tab of the class to approve or reject it.",
+        "groupProposalApprovedTitle": "Group proposal approved",
+        "groupProposalApprovedSummary": "Your group is now an official group of the class.",
+        "groupProposalRejectedTitle": "Group proposal rejected",
+        "groupProposalRejectedSummary": "See the reason in My group and make another proposal.",
+        "questionProposedTitle": "A question is awaiting approval",
+        "questionProposedSummary": "Open the question bank to approve or reject it.",
+        "questionReviewedTitle": "Your proposed question has been reviewed",
+        "questionReviewedSummary": "View the review result of the question you proposed."
       }
     }
   },
@@ -3607,7 +3655,8 @@
         "correctAnswer": "Correct answer",
         "yourChoice": "Your choice",
         "explanation": "Explanation:",
-        "questionList": "Question list"
+        "questionList": "Question list",
+        "wrong": "Wrong"
       },
       "TeacherQuizSections": {
         "originalScore": "Original score ",
@@ -3648,7 +3697,8 @@
         "activityTimeline": "Activity timeline",
         "noActivityDataForThis": "No activity data for this attempt.",
         "signalsAreSelfReportedBy": "Signals are self-reported by the browser and may be wrong or blocked: they are only indicators, and the platform does not conclude cheating.",
-        "studentsAttempted": " students attempted"
+        "studentsAttempted": " students attempted",
+        "studentCode": "Student ID"
       }
     },
     "model": {
@@ -3721,7 +3771,8 @@
         "noPracticeQuizzesYet": "No practice quizzes yet.",
         "practice": "Practice",
         "notAttempted": "Not attempted",
-        "start": "Start"
+        "start": "Start",
+        "view": "View"
       },
       "QuizResultPage": {
         "loadingResult": "Loading result…",
@@ -3738,7 +3789,8 @@
         "practiceNotCountedInThe": "Practice · not counted in the gradebook",
         "submitted": "Submitted",
         "thisQuizDoesNotShow": "This quiz does not show the score after submission.",
-        "thisQuizDoesNotShow2": "This quiz does not show answers after submission."
+        "thisQuizDoesNotShow2": "This quiz does not show answers after submission.",
+        "wrong": " · Wrong "
       },
       "QuizTakingPage": {
         "lessThan5MinutesLeft": "Less than 5 minutes left.",
@@ -3831,7 +3883,8 @@
         "accept": "Accept",
         "correctAnswer": " (correct answer)",
         "explanation": "Explanation: ",
-        "needsFixing": "Needs fixing: "
+        "needsFixing": "Needs fixing: ",
+        "done": "Done"
       },
       "AiDraftTargets": {
         "theAiIsWriting": "The AI is writing",
@@ -3848,7 +3901,8 @@
         "questions": "{value} questions · {value2}",
         "discardUnsavedEditsToView": "Discard unsaved edits to view another proposal?",
         "collapse": "Collapse",
-        "aiProposal": "AI proposal"
+        "aiProposal": "AI proposal",
+        "view": "View"
       },
       "BankQuestionPicker": {
         "numberOfQuestionsFrom1": "Number of questions from 1 to {freeSlots}.",
@@ -3943,7 +3997,7 @@
         "points4": " points) "
       },
       "MaterialSourceSelect": {
-        "documentsSelected": "{length} documents selected",
+        "documentsSelected": "{length, plural, one {# document selected} other {# documents selected}}",
         "chooseSourceDocuments": "Choose source documents",
         "sourceDocumentsForTheAi": "Source documents for the AI",
         "findSourceDocuments": "Find source documents",
@@ -4128,7 +4182,17 @@
         "theAiResultIsNot": "The AI result is not in a valid question format; please send the request again.",
         "theAiCouldNotWrite": "The AI could not write a proposal.",
         "open": "Open",
-        "archived": "Archived"
+        "archived": "Archived",
+        "quizNotReadyToPublish": "The quiz is not ready to publish; fix the listed items.",
+        "violationTitleRequired": "The quiz title is required.",
+        "violationItemsRequired": "A quiz needs at least 1 question.",
+        "violationItemsTooMany": "A quiz can have at most 200 questions.",
+        "violationActivityNoticeRequired": "Add a notice for students when activity monitoring is on.",
+        "violationPenaltyNeedsMonitoring": "Turn on activity monitoring to suggest a leave-page penalty.",
+        "violationQuestionMissing": "Question {position} no longer exists.",
+        "violationQuestionNotActive": "Question {position} comes from the bank and is no longer in use; remove or replace it.",
+        "sourceRetried": "The AI questions may not follow the selected documents. The system dropped the extra request and generated again once from the source documents only.",
+        "requestNotMatchingSources": "Your request may not relate to the selected documents; the questions were created from the source documents."
       },
       "questionForm": {
         "theQuestionContentCannotBe": "The question content cannot be empty",
@@ -4557,7 +4621,9 @@
         "leftThePage": "Left the page ",
         "timesTotalKnownTime": " times · total known time ",
         "leftThePage2": "Left the page",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "reliabilityNote": "This data only signals leaving the page; it does not prove cheating.",
+        "unknownGaps": "{count} gaps are missing or inconsistent and marked as unknown."
       }
     },
     "ai": {
@@ -4600,7 +4666,8 @@
         "loadingStatus": "Loading status...",
         "theProviderDidNotReturn": "The provider did not return a clear result; check before sending again.",
         "theDataChangedWhileWaiting": "The data changed while waiting; the result was not applied.",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "done": "Done"
       }
     },
     "api": {
@@ -4609,6 +4676,29 @@
       },
       "messages": {
         "couldNotLoadDataPlease": "Could not load data. Please try again."
+      },
+      "errorMessages": {
+        "notFound": "Not found or you do not have access.",
+        "invalidRequest": "The request is not valid. Check the information and try again.",
+        "forbidden": "You do not have permission to do this.",
+        "conflict": "The data has just changed. Reload the page and try again.",
+        "fileTooLarge": "The file is larger than allowed.",
+        "fileTooLargeMb": "The file exceeds {value} MB.",
+        "fileTypeNotAllowed": "This file type is not allowed.",
+        "fileRefExpired": "The uploaded file has expired. Upload it again.",
+        "fileRefInvalid": "The uploaded file is not valid. Upload it again.",
+        "fileUnavailable": "The file is no longer available.",
+        "uploadFailed": "The file could not be received. Please try again.",
+        "materialYoutubeInvalid": "Only a link to a single YouTube video is accepted.",
+        "materialArchived": "This learning material has been deleted.",
+        "materialSourceInvalid": "Choose an uploaded file.",
+        "materialModuleInvalid": "Choose a module of the subject.",
+        "materialFileInvalid": "This file cannot be used as a learning material.",
+        "announcementInvalid": "Check the title (plain text, up to 200 characters) and the content (up to 5,000 characters).",
+        "announcementEmailInvalid": "Only important announcements can be sent by e-mail.",
+        "tooManyRequests": "Too many requests. Wait a moment and try again.",
+        "systemBusy": "The system is busy, please try again later.",
+        "requestFailed": "Could not complete the request. Please try again."
       }
     },
     "dateTime": {

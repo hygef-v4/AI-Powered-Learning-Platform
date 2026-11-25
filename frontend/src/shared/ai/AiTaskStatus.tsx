@@ -12,7 +12,7 @@ const FINAL: AiTaskState[] = ["READY", "FAILED", "UNKNOWN", "CANCELLED"];
 const LABEL: Record<AiTaskState, { text: string; tone: Tone }> = {
   QUEUED: { text: msg("shared.ai.AiTaskStatus.pending"), tone: "neutral" },
   RUNNING: { text: msg("shared.ai.AiTaskStatus.running"), tone: "info" },
-  READY: { text: "Xong", tone: "success" },
+  READY: { text: msg("shared.ai.AiTaskStatus.done"), tone: "success" },
   FAILED: { text: msg("shared.ai.AiTaskStatus.error"), tone: "danger" },
   UNKNOWN: { text: msg("shared.ai.AiTaskStatus.unknownResult"), tone: "warning" },
   CANCELLED: { text: msg("shared.ai.AiTaskStatus.cancelled"), tone: "neutral" },

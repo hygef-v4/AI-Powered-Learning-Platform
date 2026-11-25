@@ -161,7 +161,7 @@ export function QuizAiDraftPanel({ detail, onQuizChange, onConflict, disabled, o
                 }
                 viewDraft();
               }}
-                data-testid="quiz-ai-draft-view">{expanded ? msg("quizzes.components.AiDraftTargets.collapse") : "Xem"}</Button>
+                data-testid="quiz-ai-draft-view">{expanded ? msg("quizzes.components.AiDraftTargets.collapse") : msg("quizzes.components.AiDraftTargets.view")}</Button>
             </li>
             );
           })}

@@ -6,6 +6,7 @@ import { handleTabListKey } from "@/shared/ui/tabKeys";
 import { notificationsApi, sanitizeNotificationLink } from "../api";
 import { EmailPreferencePanel } from "./EmailPreferencePanel";
 import type { NotificationItem } from "../model/types";
+import { describeNotification } from "../model/labels";
 import styles from "../styles/notifications.module.css";
 import { formatDateTime, formatRelativeTime } from "@/shared/dateTime";
 import { msg } from "@/i18n/msg";
@@ -255,8 +256,8 @@ export function NotificationPopup({
                 <Icon name="notifications" size={19} />
               </span>
               <span className={styles.text}>
-                <strong>{item.title}</strong>
-                <p>{item.summary}</p>
+                <strong>{describeNotification(item).title}</strong>
+                <p>{describeNotification(item).summary}</p>
                 <p><time dateTime={item.createdAt} title={formatDateTime(item.createdAt)}>{formatRelativeTime(item.createdAt)}</time></p>
               </span>
               {!item.readAt && <span className={styles.dot} />}
