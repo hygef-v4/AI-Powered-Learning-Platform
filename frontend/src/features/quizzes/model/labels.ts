@@ -2,6 +2,7 @@ import { ApiError } from "@/shared/api/client";
 import type { Tone } from "@/shared/ui";
 import type { Difficulty, QuestionStatus, QuestionType, QuizStatus, Violation } from "./types";
 import { msg } from "@/i18n/msg";
+import { NUMBER_LOCALE } from "@/i18n/number";
 
 export const TYPE_LABELS: Record<QuestionType, string> = { MCQ_SINGLE: msg("quizzes.model.labels.singleAnswer"), MCQ_MULTI: msg("quizzes.model.labels.multipleAnswers") };
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = { EASY: msg("quizzes.model.labels.easy"), MEDIUM: msg("quizzes.model.labels.medium"), HARD: msg("quizzes.model.labels.hard") };
@@ -78,7 +79,7 @@ export const QUIZ_STATUS_LABELS: Record<QuizStatus, string> = { DRAFT: msg("quiz
 export const QUIZ_STATUS_TONES: Record<QuizStatus, Tone> = { DRAFT: "warning", OPEN: "success", RETIRED: "danger" };
 
 export function formatPoints(value: number): string {
-  return Number(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 });
+  return Number(value).toLocaleString(NUMBER_LOCALE, { maximumFractionDigits: 2 });
 }
 
 /** Thông điệp cho người dùng: ưu tiên nhãn theo mã, sau đó thông điệp an toàn của server. */

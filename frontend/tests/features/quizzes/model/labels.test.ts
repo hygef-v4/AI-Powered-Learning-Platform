@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildTranslator } from "@/i18n/msg";
-import { describeSourceWarning, describeViolation } from "@/features/quizzes/model/labels";
+import { NUMBER_LOCALE } from "@/i18n/number";
+import { describeSourceWarning, describeViolation, formatPoints } from "@/features/quizzes/model/labels";
 import { describeReliability } from "@/shared/activity/ActivityTimeline";
 
 // Test chạy với tiếng Việt (tests/locale.setup.ts): câu dịch lấy từ vi.json, không dùng câu của máy chủ (KAN-223).
@@ -31,5 +32,12 @@ describe("describeSourceWarning", () => {
     expect(buildTranslator("en")("quizzes.model.labels.requestNotMatchingSources"))
       .toBe("Your request may not relate to the selected documents; the questions were created from the source documents.");
     expect(describeSourceWarning("Cảnh báo khác")).toBe("Cảnh báo khác");
+  });
+});
+
+describe("formatPoints", () => {
+  it("viết số thập phân theo ngôn ngữ giao diện", () => {
+    expect(NUMBER_LOCALE).toBe("vi-VN");
+    expect(formatPoints(3.5)).toBe("3,5");
   });
 });
