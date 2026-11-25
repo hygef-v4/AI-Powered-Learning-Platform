@@ -15120,3 +15120,30 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, U01 F15 (BR-U01-48), sửa nhỏ, không đổi schema hay API.
 
 ---
+
+## U06 Dọn wrapper MCP cục bộ
+**Timestamp**: 2026-11-25T17:33:03Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi xóa folder skill và sửa lại test"
+**AI Response**: "Thực hiện phạm vi đã chốt: xóa hai wrapper trong agent-skills, bỏ ca test kiểm tra wrapper, sau đó chạy test MCP và xác nhận hai workflow vẫn có trong JAR."
+**Context**: Construction, bảo trì U06 sau kiểm tra ảnh hưởng. Security và Resiliency giữ cấu hình đã duyệt. PBT tắt theo cấu hình dự án.
+
+---
+
+## U06 Kiểm thử sau khi dọn wrapper MCP
+**Timestamp**: 2026-11-25T17:35:20Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi xóa folder skill và sửa lại test"
+**AI Response**: "Đã xóa agent-skills và bỏ hai ca kiểm tra wrapper. Maven package đạt 109 test được chọn. JAR chứa cả hai workflow của backend. Chưa chạy toàn bộ bộ test backend."
+**Context**: Construction, Build and Test U06.
+
+---
+
+## U06 Yêu cầu commit dọn wrapper MCP
+**Timestamp**: 2026-11-25T17:37:01Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Đưa phần xóa hai wrapper, cập nhật test và ghi nhận AI-DLC vào cùng một thay đổi cục bộ."
+**Context**: Construction, U06.
+
+---
