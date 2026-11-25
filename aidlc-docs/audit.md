@@ -15336,3 +15336,12 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, U11, Auto-fix PR #137
 
 ---
+
+## Construction - U11 Quiz Practice Auto-fix CI backend
+**Timestamp**: 2026-11-26T01:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) PR #137: CI backend lỗi tại b50859ce."
+**AI Response**: "Nguyên nhân: QuizAutoSubmitScanner có hai constructor (thêm constructor nhận batch cho test) nên Spring không chọn được, context test tích hợp không khởi động. Đánh dấu @Autowired cho constructor chính. CrossUnitFlowIntegrationTest 9/9 và QuizPracticeServicesTest 43/43 đạt."
+**Context**: Construction, U11, Auto-fix PR #137
+
+---
