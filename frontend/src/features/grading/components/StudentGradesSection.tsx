@@ -5,6 +5,7 @@ import { useResource } from "../hooks/useResource";
 import { formatPoints, GRADE_STATUS_LABELS } from "../model/types";
 import { formatDateTime } from "@/shared/dateTime";
 import { msg } from "@/i18n/msg";
+// Ghép điểm sinh viên được chọn với thông tin bài tập trong lớp.
 export function StudentGradesSection({
   classId,
   studentId,
@@ -12,6 +13,7 @@ export function StudentGradesSection({
   classId: string;
   studentId: string;
 }) {
+  // Đọc hàng điểm và danh mục bài cùng lúc để hiển thị tên bài bên cạnh điểm.
   const load = useCallback(async () => {
     const [row, gradebook] = await Promise.all([
       gradingApi.loadStudentGrades(classId, studentId),

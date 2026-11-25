@@ -54,6 +54,7 @@ public class GradingProposalRepository implements IGradingProposalRepository {
                 Map.of("id", id), GradingProposalRepository::mapProposal);
     }
 
+    // Đọc đề xuất theo lô ID bản chấm và bỏ truy vấn khi danh sách trống.
     public List<GradingProposal> findForEvaluations(List<UUID> evaluationIds) {
         if (evaluationIds.isEmpty()) return List.of();
         return namedParameterJdbcTemplate.query(

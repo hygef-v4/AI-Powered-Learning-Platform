@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 public class EnrollmentRepository implements IEnrollmentRepository {
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
+    // Nhận JDBC template có tên tham số để dùng chung trong thao tác ghi danh.
     public EnrollmentRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
     }
@@ -104,6 +105,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
                     "Ghi danh đã thay đổi. Hãy tải lại");
     }
 
+    // Đổi bản ghi ghi danh thành tham số JDBC gồm khóa lớp, tài khoản, nguồn và mốc thời gian.
     private static Map<String, Object> bindEnrollmentParams(Enrollment value) {
         var args = new HashMap<String, Object>();
         args.put("classId", value.classId());
@@ -115,6 +117,7 @@ public class EnrollmentRepository implements IEnrollmentRepository {
         return args;
     }
 
+    // Dựng bản ghi nghiệp vụ từ hàng SQL, giữ thời điểm rời lớp rỗng khi chưa có.
     private static Enrollment mapEnrollment(ResultSet rs, int row) throws SQLException {
         Timestamp removed = rs.getTimestamp("removed_at");
         return new Enrollment(rs.getObject("class_id", UUID.class),

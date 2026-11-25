@@ -41,6 +41,7 @@ export function PersonPicker({ label, value, onChange, people = [], loader, clea
 
   useEffect(() => {
     if (!open) return;
+    // Đo nút mở để đặt bảng lựa chọn ngay dưới nó theo tọa độ viewport.
     const updatePosition = () => {
       const rect = anchorRef.current?.getBoundingClientRect();
       if (rect) setPlace({ top: rect.bottom + 4, left: rect.left, width: rect.width });
@@ -55,6 +56,7 @@ export function PersonPicker({ label, value, onChange, people = [], loader, clea
     };
   }, [open]);
 
+  // Chuyển người được chọn cho caller, sau đó đóng hộp chọn và xóa từ khóa.
   function choose(person: PersonView | null) {
     onChange(person);
     setSearch("");

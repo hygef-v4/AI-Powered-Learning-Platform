@@ -14,9 +14,11 @@ import java.util.UUID;
 
 /** Package-private helper for updating proposal dispatch, failure, and rejection state. */
 final class GradingProposalCallbackSupport {
+    // Ngăn tạo đối tượng cho lớp chỉ cung cấp các hàm tĩnh.
     private GradingProposalCallbackSupport() {
     }
 
+    // Chỉ tách UUID từ target của tác vụ GRADING_PROPOSAL đúng tiền tố.
     static UUID parseEvaluationTarget(String targetRef, String taskType) {
         if (!"GRADING_PROPOSAL".equals(taskType)
                 || targetRef == null || !targetRef.startsWith("evaluation:")) {
@@ -29,6 +31,7 @@ final class GradingProposalCallbackSupport {
         }
     }
 
+    // Ghi metadata tác vụ hoặc chuyển đề xuất đang chờ sang thất bại nếu gửi tác vụ lỗi.
     static void applyDispatchState(GradingProposal proposal, AiTaskView task, String error,
             ObjectMapper objectMapper, Clock clock) {
         if (task == null) {
@@ -53,6 +56,7 @@ final class GradingProposalCallbackSupport {
         transitionProposalFromTaskView(proposal, task, clock);
     }
 
+    // Gắn ID, mô hình và thông tin sử dụng vào đề xuất để theo dõi tác vụ.
     private static void attachTaskMetadata(GradingProposal proposal, AiTaskView task,
             ObjectMapper objectMapper) {
         proposal.taskId = task.taskId();
@@ -65,6 +69,7 @@ final class GradingProposalCallbackSupport {
         }
     }
 
+    // Đồng bộ lỗi kết thúc từ tác vụ mà vẫn bảo toàn kết quả đề xuất đã xử lý.
     private static void transitionProposalFromTaskView(GradingProposal proposal, AiTaskView task,
             Clock clock) {
         if (("PENDING".equals(proposal.status) || isLegacyFailure(proposal))
@@ -95,6 +100,7 @@ final class GradingProposalCallbackSupport {
         }
     }
 
+    // Ghép callback lỗi bằng ID tác vụ hoặc version khi ID chưa kịp lưu.
     static boolean matchesFailureTarget(GradingProposal proposal, AiTaskFailure failure) {
         boolean matchesTask = Objects.equals(proposal.taskId, failure.taskId())
                 || (proposal.taskId == null && failure.inputVersion() != null
@@ -104,6 +110,7 @@ final class GradingProposalCallbackSupport {
         return "PENDING".equals(proposal.status) && matchesTask && matchesActor;
     }
 
+    // Đánh dấu đề xuất không dùng được và phân biệt lỗi tác vụ với kết quả bị từ chối.
     static void applyFailure(GradingProposal proposal, AiTaskFailure failure, Clock clock) {
         proposal.taskId = failure.taskId();
         proposal.status = failure.state() == AiTaskState.READY ? "REJECTED" : "FAILED";
@@ -112,6 +119,7 @@ final class GradingProposalCallbackSupport {
         proposal.completedAt = clock.instant();
     }
 
+    // Đổi xung đột thành STALE, còn payload không hợp lệ thành REJECTED.
     static void applyRejectionFromException(GradingProposal proposal, UUID taskId,
             ApiException ex, Clock clock) {
         proposal.status = ex.readStatus().value() == 409 ? "STALE" : "REJECTED";
@@ -123,12 +131,14 @@ final class GradingProposalCallbackSupport {
         proposal.completedAt = clock.instant();
     }
 
+    // Nhận diện bản lỗi cũ bằng trạng thái và các thông báo chung từng được lưu.
     static boolean isLegacyFailure(GradingProposal proposal) {
         return "FAILED".equals(proposal.status) && (proposal.safeError == null
                 || Set.of("AI task failed", "AI task unavailable or failed")
                         .contains(proposal.safeError));
     }
 
+    // Chọn thông báo an toàn cho giảng viên từ mã lỗi hoặc dùng câu mặc định.
     static String formatTaskError(String diagnostic) {
         String fallback = "Không thể tạo đề xuất AI. Hãy thử lại hoặc chấm thủ công.";
         if (diagnostic == null || diagnostic.isBlank()) return fallback;

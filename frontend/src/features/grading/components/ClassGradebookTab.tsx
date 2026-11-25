@@ -20,6 +20,7 @@ type Mode = "assignment" | "student";
 /** Trạng thái lọc được trên bảng điểm, theo thứ tự công việc của giảng viên. */
 const STATUS_FILTERS = ["NOT_SUBMITTED", "PENDING", "DRAFT", "PUBLISHED"] as const;
 
+// Chọn màu theo trạng thái người dạy cần nhận diện trong bảng.
 function resolveStatusTone(status: string): Tone {
   if (status === "PUBLISHED") return "success";
   if (status === "DRAFT" || status === "FINALIZED") return "info";
@@ -27,6 +28,7 @@ function resolveStatusTone(status: string): Tone {
   return "neutral";
 }
 
+// Chọn nhãn chấm hoặc xem dựa trên bài đã nộp và trạng thái bản chấm.
 function describeAction(status: string, evaluated: boolean) {
   if (!evaluated) return msg("grading.components.ClassGradebookTab.notSubmitted");
   if (status === "PENDING") return msg("grading.components.ClassGradebookTab.grade");
@@ -34,9 +36,11 @@ function describeAction(status: string, evaluated: boolean) {
   return msg("grading.components.ClassGradebookTab.viewGrade");
 }
 
+// Chuyển kiểu nộp nhóm hoặc cá nhân thành nhãn đã dịch.
 const describeKind = (assignment: Assignment) => (assignment.submissionMode === "GROUP" ? msg("grading.components.ClassGradebookTab.group") : msg("grading.components.ClassGradebookTab.individual"));
 /** Số điểm bỏ số 0 thừa ở cuối: 8.50 → 8.5, 10.00 → 10. */
 const trim = (value: Decimal) => String(Number(Number(value).toFixed(2)));
+// Gộp các trạng thái nội bộ vào nhóm trạng thái hiển thị trong sổ điểm.
 const resolveCellStatus = (grade: GradeCell | undefined) => {
   const raw = grade?.status ?? "NOT_SUBMITTED";
   if (raw === "IN_PROGRESS" || raw === "NOT_SUBMITTED") return "NOT_SUBMITTED";
@@ -44,6 +48,7 @@ const resolveCellStatus = (grade: GradeCell | undefined) => {
   return raw;
 };
 
+// Chọn bảng ma trận hoặc chế độ sổ điểm mặc định theo URL.
 export function ClassGradebookTab({ classId, headerActions }: { classId: string; headerActions?: HTMLElement | null }) {
   const params = useSearchParams();
   if (params?.get("gradebookView") === "matrix") return <GradebookMatrix key={classId} classId={classId} headerActions={headerActions} />;
@@ -64,6 +69,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   const [groupQuery, setGroupQuery] = useState("");
   const [pageValue, setPageValue] = useUrlState<string>("gradebookPage", "1", undefined, "replace");
   const page = /^[1-9]\d*$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 1;
+  // Lưu số trang vào trạng thái URL để giữ bộ lọc hiện hành.
   const setPage = (page: number) => setPageValue(String(page));
   const [mode, setMode] = useUrlState<Mode>("gradebookMode", params?.get("student") ? "student" : "assignment", ["assignment", "student"]);
   const [selectedAssignmentId, setSelectedAssignmentId] = useUrlState<string>("assignment", "");
@@ -77,6 +83,7 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
     const timer = setTimeout(() => setSearch(query.trim()), 300);
     return () => clearTimeout(timer);
   }, [query]);
+  // Tải trang sổ điểm theo lớp, tìm kiếm và trang đang chọn.
   const load = useCallback(() => gradingApi.loadGradebook(classId, search, page), [classId, search, page]);
   const resource = useResource(load);
   // Giữ bảng đang hiện trong lúc tải kết quả mới, để ô tìm không bị dựng lại giữa chừng.
@@ -88,7 +95,9 @@ function GradebookContent({ classId, headerActions }: { classId: string; headerA
   const activeStudent = data?.rows.find((row) => row.student.accountId === selectedStudentId) ?? data?.rows[0] ?? null;
   const aq = assignmentQuery.toLocaleLowerCase("vi").trim();
   const shownAssignments = assignments.filter((item) => item.title.toLocaleLowerCase("vi").includes(aq));
+  // Tra ô điểm theo ID bài tập trong hàng của sinh viên.
   const gradeOf = (cells: GradeCell[], assignmentId: string) => cells.find((cell) => cell.assignmentId === assignmentId);
+  // Giữ ô điểm khi không lọc hoặc trạng thái hiển thị khớp bộ lọc.
   const keep = (grade: GradeCell | undefined) => !status || resolveCellStatus(grade) === status;
 
   const matrixParams = new URLSearchParams(params?.toString());
@@ -231,6 +240,7 @@ function GradeTable({ first, children }: { first: string; children: ReactNode })
   );
 }
 
+// Hiển thị thông báo trống trong một hàng phủ toàn bảng.
 function EmptyRow({ text }: { text: string }) {
   return <tr><Td colSpan={4} className="py-10 text-center! text-muted">{text}</Td></tr>;
 }

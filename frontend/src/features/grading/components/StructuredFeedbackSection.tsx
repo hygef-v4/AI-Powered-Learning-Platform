@@ -8,11 +8,13 @@ import type {
 } from "../model/types";
 import { msg } from "@/i18n/msg";
 
+// Bỏ tiền tố gợi ý lặp với nhãn UI khi tiêu chí đã đạt điểm tối đa.
 function cleanSuggestionText(suggestion: string, isFullMarks: boolean): string {
   if (!isFullMarks) return suggestion;
   return suggestion.replace(/^Gợi ý thêm\s*\(không trừ điểm\)\s*:\s*/i, "");
 }
 
+// Cho nhập danh sách phản hồi, vẫn có một dòng nhập khi danh sách ban đầu trống.
 function FeedbackSummaryList({ label, items, disabled, onChange }: {
   label: string;
   items: string[];
@@ -45,6 +47,7 @@ function FeedbackSummaryList({ label, items, disabled, onChange }: {
   </fieldset>;
 }
 
+// Hiện bản tổng hợp và mở trường sửa nếu caller cấp quyền chỉnh.
 export function GradingFeedbackSummary({
   summary,
   title = msg("grading.components.StructuredFeedbackSection.summaryOfStructuredFeedback"),
@@ -111,6 +114,7 @@ export function GradingFeedbackSummary({
   );
 }
 
+// Hiện bằng chứng, lý do và gợi ý của tiêu chí hoặc khởi tạo mục sửa khi được phép.
 export function RubricItemFeedback({
   rubricId,
   itemId,

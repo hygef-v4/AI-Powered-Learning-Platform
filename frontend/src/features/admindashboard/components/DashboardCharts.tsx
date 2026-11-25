@@ -10,6 +10,7 @@ export type Series = { name: string; color: string };
 
 const NUMBER = new Intl.NumberFormat(NUMBER_LOCALE);
 const COMPACT = new Intl.NumberFormat(NUMBER_LOCALE, { notation: "compact", maximumFractionDigits: 1 });
+// Dùng cùng định dạng số cho nhãn biểu đồ và tooltip.
 export const formatNumber = (value: number) => NUMBER.format(value);
 
 /**
@@ -21,10 +22,12 @@ export function Reveal({ label, className, children }: { label: string; classNam
   const [shown, setShown] = useState(false);
   useEffect(() => {
     if (!shown) return;
+    // Đóng tooltip khi người dùng bấm ngoài phần tử đang giữ nó.
     const hide = (event: PointerEvent) => { if (!ref.current?.contains(event.target as Node)) setShown(false); };
     document.addEventListener("pointerdown", hide);
     return () => document.removeEventListener("pointerdown", hide);
   }, [shown]);
+  // Mở tooltip bằng Enter hoặc Space và đóng bằng Escape.
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setShown(true); }
     if (event.key === "Escape") setShown(false);
@@ -71,6 +74,7 @@ function drawTopRounded(x: number, y: number, w: number, h: number, r: number) {
   return `M${x},${y + h}V${y + rr}Q${x},${y} ${x + rr},${y}H${x + w - rr}Q${x + w},${y} ${x + w},${y + rr}V${y + h}Z`;
 }
 
+// Làm tròn trần trục để các vạch chia dễ đọc mà vẫn chứa điểm lớn nhất.
 function roundNiceMax(value: number) {
   if (value <= 4) return 4;
   const step = 10 ** Math.floor(Math.log10(value));
@@ -95,6 +99,7 @@ export function StackedColumns({ days, series, shown, height = 200 }: {
   const max = roundNiceMax(Math.max(1, ...days.map((d) => d.values.reduce((a, b) => a + b, 0))));
   const band = (width - left - right) / Math.max(1, days.length);
   const barW = Math.min(24, band * 0.5);
+  // Đổi giá trị số sang tọa độ SVG, nơi trục dọc tăng từ trên xuống.
   const scaleY = (v: number) => top + plotH - (v / max) * plotH;
   const ticks = [0, max / 4, max / 2, (3 * max) / 4, max];
   return (
@@ -169,8 +174,10 @@ export function Donut({ items, shown, size = 132 }: { items: (Series & { value: 
     arcs.push({ item: visible[i]!, start: angle, end: angle + sweep, mid: angle + sweep / 2 });
     angle += sweep;
   }
+  // Tính tọa độ điểm trên vòng tròn từ góc và bán kính.
   const computePoint = (a: number, radius: number) => [c + radius * Math.cos(a), c + radius * Math.sin(a)] as const;
   const gap = visible.length > 1 ? 0.035 : 0;
+  // Giãn thời điểm chạy hiệu ứng giữa các phần của biểu đồ.
   const drawDelay = (i: number) => `${150 + i * 140}ms`;
   return (
     <svg width={size} height={size} className="block shrink-0 overflow-visible" onMouseLeave={() => setHover(null)}>

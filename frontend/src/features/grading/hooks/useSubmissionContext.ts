@@ -14,6 +14,7 @@ export function useSubmissionContext(classId: string, assignmentId: string) {
   const key = JSON.stringify([classId, assignmentId]);
   const [state, setState] = useState<ContextState>({ key, value: null, error: "" });
   const sequence = useRef(0);
+  // Tải ngữ cảnh của đúng bài hiện tại và bỏ phản hồi khi khóa yêu cầu đã thay đổi.
   const refresh = useCallback(async () => {
     const current = ++sequence.current;
     setState({ key, value: null, error: "" });

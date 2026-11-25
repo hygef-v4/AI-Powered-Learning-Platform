@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MyGradeController {
     private final GradebookService gradebookService;
 
+    // Dùng service sổ điểm để các endpoint sinh viên áp cùng quy tắc đọc điểm.
     public MyGradeController(GradebookService gradebookService) {
         this.gradebookService = gradebookService;
     }

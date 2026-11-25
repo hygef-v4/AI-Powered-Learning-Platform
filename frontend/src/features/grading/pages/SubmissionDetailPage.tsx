@@ -26,6 +26,7 @@ const STATUS_TONES: Record<string, Tone> = {
   IN_PROGRESS: "neutral",
 };
 
+// Hiện nút chấm mới, chấm tiếp hoặc xem dựa trên trạng thái hàng.
 function describeRowAction(status: string): string {
   if (status === "PENDING") return msg("grading.pages.SubmissionDetailPage.grade");
   if (status === "DRAFT") return msg("grading.pages.SubmissionDetailPage.continueGrading");
@@ -49,9 +50,11 @@ export function SubmissionDetailPage({
   const [late, setLate] = useUrlState<string>("late", "", ["", "false", "true"]);
   const [pageValue, setPageValue] = useUrlState<string>("page", "1", undefined, "replace");
   const page = /^[1-9]\d{0,4}$/.test(pageValue) ? Number(pageValue) : 1;
+  // Lưu chỉ số trang mới vào URL để giữ bộ lọc của danh sách bài nộp.
   const setPage = (next: number) => setPageValue(String(next));
   const [selected, setSelected] = useState<string[]>([]);
   const [action, setAction] = useState<"ai" | "publish" | null>(null);
+  // Tải trang bài nộp của lớp và bài theo bộ lọc hiện tại.
   const load = useCallback(
     () => gradingApi.listSubmissions(classId, assignmentId, filter, page, late),
     [classId, assignmentId, filter, page, late],

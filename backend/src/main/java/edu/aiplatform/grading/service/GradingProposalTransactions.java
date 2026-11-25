@@ -73,6 +73,7 @@ public class GradingProposalTransactions {
 
     public record Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch,
             String outputSchema, int maxOutputTokens) {
+        // Dùng ngân sách mặc định khi caller chưa tính riêng theo rubric.
         public Prepared(GradingProposal proposal, AiPrompt prompt, boolean dispatch,
                 String outputSchema) {
             this(proposal, prompt, dispatch, outputSchema, 4096);
@@ -85,6 +86,7 @@ public class GradingProposalTransactions {
         return prepareProposal(actor, evaluationId, request, null);
     }
 
+    // Khóa bản chấm, kiểm quyền và snapshot để quyết định dùng lại, trả điểm 0 hay gửi AI.
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Prepared prepareProposal(Actor actor, UUID evaluationId, AiRequest request,
             Long expectedVersion) {         // kiểm tra phiên bản bài nộp
@@ -119,6 +121,7 @@ public class GradingProposalTransactions {
                 prompt, true, outputSchema, maxOutputTokens);
     }
 
+    // Lưu đề xuất sẵn sàng có điểm 0 mà không tạo tác vụ AI cho bài trống.
     private Prepared completeZeroProposal(Actor actor, Evaluation evaluation, AiRequest request,
             List<RubricView> rubrics, GradingProposal existing) {
         var proposal = existing == null ? createProposal(actor, evaluation, request) : existing;
@@ -131,6 +134,7 @@ public class GradingProposalTransactions {
         return new Prepared(proposal, null, false, null, 0);
     }
 
+    // Tạo và lưu đề xuất đang chờ trước khi gửi tác vụ bên ngoài giao dịch.
     private GradingProposal saveRequestedProposal(Actor actor, Evaluation evaluation, AiRequest request) {
         var proposal = gradingProposalRepository.saveProposal(createProposal(actor, evaluation, request));
         return proposal;
@@ -159,6 +163,7 @@ public class GradingProposalTransactions {
         return AiTokenEstimate.estimate(promptChars, maxOutputTokens);
     }
 
+    // Chỉ nhận bản chấm còn đủ điều kiện, với bài nhóm phải dùng tài liệu gốc của nhóm.
     private void requireGradableTarget(Evaluation evaluation, String stateMessage) {
         if (evaluation.kind == EvaluationKind.MEMBER) {
             throw ApiException.createBadRequest("GROUP_ROOT_REQUIRED", "Use the group document");
@@ -171,6 +176,7 @@ public class GradingProposalTransactions {
         }
     }
 
+    // Đọc nội dung bài tập và kiểm rubric còn khớp với bản đã khóa khi nộp.
     private AssignmentContent loadValidatedAssignmentContent(Evaluation evaluation) {
         var content = assignmentQuery.getContent(evaluation.assignmentId)
                 .orElseThrow(() -> ApiException.createUnavailable("ASSIGNMENT_UNAVAILABLE",
@@ -183,6 +189,7 @@ public class GradingProposalTransactions {
         return content;
     }
 
+    // Kiểm requestRef và chỉ chấp nhận chỉ định provider khi nguồn là PERSONAL.
     private void requireAiSource(AiRequest request) {
         if (request == null || Evaluation.isBlankText(request.requestRef())
                 || request.requestRef().length() > 200
@@ -191,6 +198,7 @@ public class GradingProposalTransactions {
         }
     }
 
+    // Chỉ dùng lại mã yêu cầu cho cùng người, bản chấm và nội dung yêu cầu tương ứng.
     private void requireSameRequest(Actor actor, Evaluation evaluation, AiRequest request,
             GradingProposal proposal) {
         if (!proposal.requesterId.equals(actor.accountId())
@@ -204,19 +212,23 @@ public class GradingProposalTransactions {
         }
     }
 
+    // Đối chiếu hash bài nộp và rubric để xác định đề xuất còn cùng ảnh chụp dữ liệu.
     private static boolean matchesEvaluationSnapshot(GradingProposal proposal, Evaluation evaluation) {
         return Objects.equals(proposal.submissionHash, evaluation.submissionHash)
                 && Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot);
     }
 
+    // Coi đề xuất đã cũ nếu bản chấm bị thay thế hoặc hash/rubric thay đổi.
     private static boolean hasStaleSnapshot(GradingProposal proposal, Evaluation evaluation) {
         return evaluation.state == EvaluationStatus.SUPERSEDED || !matchesEvaluationSnapshot(proposal, evaluation);
     }
 
+    // Chỉ gửi tác vụ khi đề xuất còn PENDING và chưa gắn ID tác vụ.
     private static boolean canDispatchProposal(GradingProposal proposal) {
         return "PENDING".equals(proposal.status) && proposal.taskId == null;
     }
 
+    // Khởi tạo đề xuất gắn với người yêu cầu, requestRef và snapshot đang chấm.
     private GradingProposal createProposal(Actor actor, Evaluation evaluation, AiRequest request) {
         var proposal = new GradingProposal();
         proposal.id = UUID.randomUUID();
@@ -297,6 +309,7 @@ public class GradingProposalTransactions {
         return validateAndStoreCallbackPayload(result, evaluation, proposal);
     }
 
+    // Kiểm tác vụ, người yêu cầu và trạng thái hiện tại trước khi nhận callback.
     private ApplyOutcome precheckProposalCallback(AiTaskResult result, Evaluation evaluation,
             GradingProposal proposal) {
         if (proposal.taskId != null && !proposal.taskId.equals(result.taskId())) {
@@ -333,6 +346,7 @@ public class GradingProposalTransactions {
         return null;
     }
 
+    // Kiểm lại quyền và snapshot rồi xác thực nội dung trả về trước khi lưu đề xuất.
     private ApplyOutcome validateAndStoreCallbackPayload(AiTaskResult result,
             Evaluation evaluation, GradingProposal proposal) {
         try {
@@ -375,6 +389,7 @@ public class GradingProposalTransactions {
         }
     }
 
+    // Đọc tài liệu bài nộp đủ quyền để kiểm bằng chứng, trả null khi không có nguồn.
     private DocumentModel loadProposalDocument(Actor actor, Evaluation evaluation) {
         if (submissionReviewService == null) {
             return null;
@@ -396,6 +411,7 @@ public class GradingProposalTransactions {
         }
     }
 
+    // Đóng đề xuất cũ, xóa trạng thái tác vụ và lưu thời điểm hoàn tất.
     private void markProposalStale(GradingProposal proposal) {
         proposal.status = "STALE";
         proposal.taskState = null;
@@ -418,6 +434,7 @@ public class GradingProposalTransactions {
         }
     }
 
+    // Dùng chung quy tắc nhận diện trạng thái lỗi cũ với luồng callback.
     static boolean isLegacyFailure(GradingProposal proposal) {
         return GradingProposalCallbackSupport.isLegacyFailure(proposal);
     }
@@ -482,6 +499,7 @@ public class GradingProposalTransactions {
         return gradingProposalRepository.saveProposal(proposal);
     }
 
+    // Chặn dùng lại requestRef cho người, bài nộp hoặc rubric khác.
     private void requireSameMcpProposalTarget(Actor actor, Evaluation evaluation, GradingProposal proposal) {
         if (!Objects.equals(proposal.rubricFingerprint, evaluation.rubricSnapshot)) {
             throw ApiException.createConflict("STALE_PROPOSAL", "Rubric snapshot changed");
@@ -493,6 +511,7 @@ public class GradingProposalTransactions {
         }
     }
 
+    // Tạo bản READY có phiên bản riêng và liên kết hash bài nộp để chờ giảng viên duyệt.
     private GradingProposal buildMcpProposal(Actor actor, UUID evaluationId, String hash,
             String requestRef, JsonNode payload, String agentLabel, Evaluation evaluation) {
         var proposal = new GradingProposal();
