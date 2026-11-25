@@ -104,7 +104,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
       {error && !removing && <p role="alert" className="text-sm text-danger">{error}</p>}
       <TableFrame filledHead className="[&_table]:min-w-[740px] [&_table]:table-fixed">
         <colgroup>{numbered && <col className="w-[60px]" />}<col className="w-[110px]" /><col /><col className="w-[28%]" />{groupNames !== undefined && <col className="w-[130px]" />}<col className="w-[120px]" />{actions && <col className="w-[56px]" />}</colgroup><thead><tr>
-          {numbered && <Th className="w-12">STT</Th>}<Th>MSSV</Th><Th>{msg("academics.components.EnrollmentPanel.fullName")}</Th><Th>Email</Th>
+          {numbered && <Th className="w-12">{msg("academics.components.EnrollmentPanel.rowNumber")}</Th>}<Th>{msg("academics.components.EnrollmentPanel.studentCode")}</Th><Th>{msg("academics.components.EnrollmentPanel.fullName")}</Th><Th>Email</Th>
           {groupNames !== undefined && <Th>{msg("academics.components.EnrollmentPanel.group")}</Th>}
           <Th>{msg("academics.components.EnrollmentPanel.joined")}</Th>
           {actions && <Th className="w-12"><span className="sr-only">{msg("academics.components.EnrollmentPanel.actions")}</span></Th>}

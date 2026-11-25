@@ -43,7 +43,7 @@ export function AuditTable({ data, onPageChange }: Props) {
           </colgroup>
           <thead>
             <tr>
-              <th scope="col" className={cx(HEAD, "text-right")}>STT</th>
+              <th scope="col" className={cx(HEAD, "text-right")}>{msg("audit.components.AuditTable.rowNumber")}</th>
               <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.time")}</th>
               <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.actor")}</th>
               <th scope="col" className={HEAD}>{msg("audit.components.AuditTable.action")}</th>

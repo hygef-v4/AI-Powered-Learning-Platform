@@ -161,7 +161,7 @@ export function AccountListPage() {
             <colgroup><col className="w-[110px]" /><col /><col className="w-[30%]" /><col className="w-[140px]" /><col className="w-[120px]" /><col className="w-[48px]" /></colgroup>
             <thead>
               <tr>
-                <Th>MSSV</Th>
+                <Th>{msg("identity.admin.pages.AccountListPage.studentCode")}</Th>
                 <Th>{msg("identity.admin.pages.AccountListPage.fullName")}</Th>
                 <Th>Email</Th>
                 <Th>{msg("identity.admin.pages.AccountListPage.role")}</Th>

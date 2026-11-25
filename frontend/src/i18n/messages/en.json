@@ -421,7 +421,9 @@
         "errors": " errors",
         "checkResults": "Check results",
         "valid2": "Valid",
-        "addStudents2": "Add {valid} students"
+        "addStudents2": "Add {valid} students",
+        "studentCode": "Student ID",
+        "rowNumber": "No."
       },
       "PersonPicker": {
         "typeANameOrEmail": "Type a name or email",
@@ -1811,7 +1813,8 @@
         "object": "Object",
         "result": "Result",
         "reason": "Reason",
-        "noMatchingRecords": "No matching records."
+        "noMatchingRecords": "No matching records.",
+        "rowNumber": "No."
       }
     },
     "model": {
@@ -2348,7 +2351,9 @@
         "points": " points",
         "notSubmitted": "Not submitted",
         "noMatchingStudents": "No matching students.",
-        "students": "students"
+        "students": "students",
+        "studentCode": "Student ID",
+        "rowNumber": "No."
       },
       "GradeDistributionSettings": {
         "couldNotLoadTheGrade": "Could not load the grade distribution settings. Please reload to try again.",
@@ -2810,7 +2815,8 @@
         "delete2": "Delete {name}?",
         "deleteGroup": "Delete group",
         "areYouSureYouWant": "Are you sure you want to delete ",
-        "text": "?"
+        "text": "?",
+        "studentCode": "Student ID"
       },
       "GroupFormDialog": {
         "enterAGroupName": "Enter a group name",
@@ -3124,7 +3130,8 @@
           "valid2": "Valid",
           "rows2": "rows",
           "cancel": "Cancel",
-          "importAccounts": "Import {validCount} accounts"
+          "importAccounts": "Import {validCount} accounts",
+          "studentCode": "Student ID"
         },
         "NewAccountDialog": {
           "invalidEmail": "Invalid email.",
@@ -3215,7 +3222,8 @@
           "open": "Open",
           "loading": "Loading…",
           "noMatchingAccounts": "No matching accounts.",
-          "accountAdded": "Account added"
+          "accountAdded": "Account added",
+          "studentCode": "Student ID"
         }
       }
     },
@@ -3650,7 +3658,8 @@
         "activityTimeline": "Activity timeline",
         "noActivityDataForThis": "No activity data for this attempt.",
         "signalsAreSelfReportedBy": "Signals are self-reported by the browser and may be wrong or blocked: they are only indicators, and the platform does not conclude cheating.",
-        "studentsAttempted": " students attempted"
+        "studentsAttempted": " students attempted",
+        "studentCode": "Student ID"
       }
     },
     "model": {

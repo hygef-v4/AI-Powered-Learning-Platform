@@ -201,7 +201,7 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
           </div>
           <TableFrame filledHead className="[&_table]:min-w-[980px] [&_table]:table-fixed">
             <colgroup><col className="w-[112px]" /><col className="w-[220px]" /><col className="w-[28%]" /><col /><col className="w-[120px]" /><col className="w-[104px]" /></colgroup>
-            <thead><tr><Th>MSSV</Th><Th>{msg("groups.components.ClassGroupsPanel.fullName")}</Th><Th>Email</Th><Th>{msg("groups.components.ClassGroupsPanel.groups")}</Th><Th>{msg("groups.components.ClassGroupsPanel.joined")}</Th><Th><span className="sr-only">{msg("groups.components.ClassGroupsPanel.gradebook")}</span></Th></tr></thead>
+            <thead><tr><Th>{msg("groups.components.ClassGroupsPanel.studentCode")}</Th><Th>{msg("groups.components.ClassGroupsPanel.fullName")}</Th><Th>Email</Th><Th>{msg("groups.components.ClassGroupsPanel.groups")}</Th><Th>{msg("groups.components.ClassGroupsPanel.joined")}</Th><Th><span className="sr-only">{msg("groups.components.ClassGroupsPanel.gradebook")}</span></Th></tr></thead>
             <tbody>
               {rows.map((p) => {
                 const g = groupOf(p.accountId);

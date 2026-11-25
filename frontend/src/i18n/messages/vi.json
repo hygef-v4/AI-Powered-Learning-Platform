@@ -421,7 +421,9 @@
         "errors": " lỗi",
         "checkResults": "Kết quả kiểm tra",
         "valid2": "Hợp lệ",
-        "addStudents2": "Thêm {valid} sinh viên"
+        "addStudents2": "Thêm {valid} sinh viên",
+        "studentCode": "MSSV",
+        "rowNumber": "STT"
       },
       "PersonPicker": {
         "typeANameOrEmail": "Gõ tên hoặc email",
@@ -1811,7 +1813,8 @@
         "object": "Đối tượng",
         "result": "Kết quả",
         "reason": "Lý do",
-        "noMatchingRecords": "Không có bản ghi nào phù hợp."
+        "noMatchingRecords": "Không có bản ghi nào phù hợp.",
+        "rowNumber": "STT"
       }
     },
     "model": {
@@ -2348,7 +2351,9 @@
         "points": " điểm",
         "notSubmitted": "Chưa nộp",
         "noMatchingStudents": "Không có sinh viên phù hợp.",
-        "students": "sinh viên"
+        "students": "sinh viên",
+        "studentCode": "MSSV",
+        "rowNumber": "STT"
       },
       "GradeDistributionSettings": {
         "couldNotLoadTheGrade": "Không tải được cài đặt phổ điểm. Vui lòng tải lại để thử lại.",
@@ -2810,7 +2815,8 @@
         "delete2": "Xóa {name}?",
         "deleteGroup": "Xóa nhóm",
         "areYouSureYouWant": "Bạn có chắc muốn xóa ",
-        "text": " không?"
+        "text": " không?",
+        "studentCode": "MSSV"
       },
       "GroupFormDialog": {
         "enterAGroupName": "Nhập tên nhóm",
@@ -3124,7 +3130,8 @@
           "valid2": "Hợp lệ",
           "rows2": "dòng",
           "cancel": "Hủy",
-          "importAccounts": "Nhập {validCount} tài khoản"
+          "importAccounts": "Nhập {validCount} tài khoản",
+          "studentCode": "MSSV"
         },
         "NewAccountDialog": {
           "invalidEmail": "Email không hợp lệ.",
@@ -3215,7 +3222,8 @@
           "open": "Mở",
           "loading": "Đang tải…",
           "noMatchingAccounts": "Không có tài khoản phù hợp.",
-          "accountAdded": "Đã thêm tài khoản"
+          "accountAdded": "Đã thêm tài khoản",
+          "studentCode": "MSSV"
         }
       }
     },
@@ -3650,7 +3658,8 @@
         "activityTimeline": "Dòng thời gian hoạt động",
         "noActivityDataForThis": "Không có dữ liệu hoạt động cho lượt này.",
         "signalsAreSelfReportedBy": "Tín hiệu do trình duyệt tự báo, có thể sai hoặc bị chặn: chỉ là dấu hiệu, nền tảng không kết luận gian lận.",
-        "studentsAttempted": " sinh viên đã làm"
+        "studentsAttempted": " sinh viên đã làm",
+        "studentCode": "MSSV"
       }
     },
     "model": {
