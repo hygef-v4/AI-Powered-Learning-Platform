@@ -4675,6 +4675,29 @@
       },
       "messages": {
         "couldNotLoadDataPlease": "Không thể tải dữ liệu. Vui lòng thử lại."
+      },
+      "errorMessages": {
+        "notFound": "Không tìm thấy hoặc bạn không có quyền truy cập.",
+        "invalidRequest": "Yêu cầu không hợp lệ. Kiểm tra thông tin rồi thử lại.",
+        "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+        "conflict": "Dữ liệu vừa thay đổi. Tải lại trang rồi thử lại.",
+        "fileTooLarge": "Tệp vượt dung lượng cho phép.",
+        "fileTooLargeMb": "Tệp vượt {value} MB.",
+        "fileTypeNotAllowed": "Loại tệp không được phép.",
+        "fileRefExpired": "Tệp đã tải lên đã hết hạn. Hãy tải tệp lên lại.",
+        "fileRefInvalid": "Tệp đã tải lên không hợp lệ. Hãy tải tệp lên lại.",
+        "fileUnavailable": "Tệp không còn khả dụng.",
+        "uploadFailed": "Không nhận được tệp. Vui lòng thử lại.",
+        "materialYoutubeInvalid": "Chỉ nhận link của một video YouTube.",
+        "materialArchived": "Học liệu này đã bị xóa.",
+        "materialSourceInvalid": "Chọn tệp đã tải lên.",
+        "materialModuleInvalid": "Chọn module của môn.",
+        "materialFileInvalid": "Tệp này không dùng được làm học liệu.",
+        "announcementInvalid": "Kiểm tra tiêu đề (văn bản thuần, tối đa 200 ký tự) và nội dung (tối đa 5.000 ký tự).",
+        "announcementEmailInvalid": "Chỉ thông báo quan trọng mới gửi được email.",
+        "tooManyRequests": "Quá nhiều yêu cầu. Đợi một lát rồi thử lại.",
+        "systemBusy": "Hệ thống đang bận, vui lòng thử lại sau.",
+        "requestFailed": "Không thực hiện được yêu cầu. Vui lòng thử lại."
       }
     },
     "dateTime": {

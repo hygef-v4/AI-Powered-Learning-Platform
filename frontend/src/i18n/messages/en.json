@@ -4675,6 +4675,29 @@
       },
       "messages": {
         "couldNotLoadDataPlease": "Could not load data. Please try again."
+      },
+      "errorMessages": {
+        "notFound": "Not found or you do not have access.",
+        "invalidRequest": "The request is not valid. Check the information and try again.",
+        "forbidden": "You do not have permission to do this.",
+        "conflict": "The data has just changed. Reload the page and try again.",
+        "fileTooLarge": "The file is larger than allowed.",
+        "fileTooLargeMb": "The file exceeds {value} MB.",
+        "fileTypeNotAllowed": "This file type is not allowed.",
+        "fileRefExpired": "The uploaded file has expired. Upload it again.",
+        "fileRefInvalid": "The uploaded file is not valid. Upload it again.",
+        "fileUnavailable": "The file is no longer available.",
+        "uploadFailed": "The file could not be received. Please try again.",
+        "materialYoutubeInvalid": "Only a link to a single YouTube video is accepted.",
+        "materialArchived": "This learning material has been deleted.",
+        "materialSourceInvalid": "Choose an uploaded file.",
+        "materialModuleInvalid": "Choose a module of the subject.",
+        "materialFileInvalid": "This file cannot be used as a learning material.",
+        "announcementInvalid": "Check the title (plain text, up to 200 characters) and the content (up to 5,000 characters).",
+        "announcementEmailInvalid": "Only important announcements can be sent by e-mail.",
+        "tooManyRequests": "Too many requests. Wait a moment and try again.",
+        "systemBusy": "The system is busy, please try again later.",
+        "requestFailed": "Could not complete the request. Please try again."
       }
     },
     "dateTime": {
