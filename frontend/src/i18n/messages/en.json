@@ -4404,7 +4404,7 @@
     "model": {
       "types": {
         "files": "Files",
-        "limitsWhenUploadingLearningMaterials": "Limits when uploading learning materials and images in documents",
+        "limitsWhenUploadingLearningMaterials": "Size limits for uploaded documents and images",
         "backup": "Backup",
         "backUpTheDatabaseTo": "Back up the database to Google Drive · kept for 7 days (fixed)",
         "workActivity": "Work activity",
@@ -4413,7 +4413,15 @@
         "onOff": "on / off",
         "hourMinute": "hour:minute",
         "singleChoice": "single choice",
-        "multipleChoice": "multiple choice"
+        "multipleChoice": "multiple choice",
+        "materialMaxSize": "Maximum document size",
+        "materialMaxSizeDescription": "Maximum size of each document file.",
+        "imageMaxSize": "Maximum image size",
+        "imageMaxSizeDescription": "Maximum size of each image in a document.",
+        "backupEnabled": "Enable backup",
+        "backupEnabledDescription": "Back up the database every day.",
+        "backupDailyAt": "Daily run time",
+        "backupDailyAtDescription": "Backup time, in Vietnam time."
       },
       "validation": {
         "thisFieldMustHaveA": "This field must have a value",

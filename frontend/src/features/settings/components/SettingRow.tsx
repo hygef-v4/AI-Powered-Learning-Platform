@@ -6,7 +6,7 @@ import { Button } from "@/shared/ui/Button";
 import { ChipToggleGroup, Select, Switch, TextInput } from "@/shared/ui/Inputs";
 import { SettingLine } from "@/shared/ui/SettingsCard";
 import { updateSetting } from "../api";
-import type { SettingItem, SettingValue } from "../model/types";
+import { readSettingDescription, readSettingName, type SettingItem, type SettingValue } from "../model/types";
 import { listOptions, readUnit, validateSettingValue } from "../model/validation";
 import { msg } from "@/i18n/msg";
 
@@ -62,7 +62,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
     case "BOOLEAN":
       control = (
         <Switch
-          ariaLabel={item.name}
+          ariaLabel={readSettingName(item)}
           checked={item.value === true}
           disabled={locked}
           label=""
@@ -120,7 +120,7 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
     case "ENUM_SET":
       control = (
         <ChipToggleGroup
-          ariaLabel={item.name}
+          ariaLabel={readSettingName(item)}
           options={listOptions(item)}
           value={Array.isArray(draft) ? draft : []}
           disabled={locked}
@@ -132,9 +132,9 @@ export function SettingRow({ item, disabled = false, onSaved, onConflict }: Prop
 
   return (
     <SettingLine
-      label={item.name}
+      label={readSettingName(item)}
       htmlFor={item.type === "BOOLEAN" || item.type === "ENUM_SET" ? undefined : id}
-      info={item.description || undefined}
+      info={readSettingDescription(item) || undefined}
       muted={disabled}
       control={control}
       error={error}

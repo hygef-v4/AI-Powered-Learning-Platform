@@ -15156,3 +15156,12 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, khắc phục lỗi U05 (frontend academics).
 
 ---
+
+## U03, U02 Bản địa hóa trang Cài đặt và chuẩn hóa bộ lọc màn hình Log
+**Timestamp**: 2026-11-25T22:40:14Z
+**Requested by:** max2min
+**User Input**: "Hiển thị tên và mô tả các mục trên trang Cài đặt theo ngôn ngữ giao diện đang chọn. Nhóm Tệp chỉ giữ hai mục: Tài liệu tối đa và Ảnh tối đa. Bộ lọc Hành động và Đối tượng trên màn hình Log chỉ liệt kê các mã mà hệ thống hiện còn ghi nhận."
+**AI Response**: "Nguyên nhân: tên và mô tả của mục cài đặt do backend trả về bằng tiếng Việt cố định, nên giao diện tiếng Anh vẫn hiển thị tiếng Việt; danh sách lựa chọn của bộ lọc Log bao gồm cả các mã đã ngừng ghi. Các thay đổi đã thực hiện: (1) Frontend hiển thị tên và mô tả của bốn mục cài đặt theo khóa, có bản dịch tiếng Việt và tiếng Anh. (2) Nhóm Tệp chỉ còn files.material.maxSizeMb (Tài liệu tối đa) và files.documentImage.maxSizeMb (Ảnh tối đa); tệp nguồn soạn bài AI và tệp nhập đề áp dụng trần cứng lần lượt 2 MB và 10 MB. (3) Bộ lọc Hành động chỉ còn 24 mã đang được ghi nhận, bộ lọc Đối tượng chỉ còn 12 loại; nhãn của các mã cũ được giữ lại để hiển thị bản ghi lịch sử. (4) Danh sách hành động bảo mật của Tổng quan bỏ AUTH_FAILED và MCP_TOKEN_REVEALED do không còn được ghi. Cập nhật BR-U03-87 và BR-U03-99. Kết quả kiểm thử: frontend 1263/1263 ca đạt, tsc và eslint không báo lỗi; các bộ kiểm thử backend liên quan (Audit, Setting, PurposePolicy, UploadService, AdminDashboard) đều đạt."
+**Context**: Construction, điều chỉnh U03 (cài đặt, tệp) và U02 (màn hình Log).
+
+---

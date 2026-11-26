@@ -47,9 +47,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuditQueryService implements IAuditQuery, IAuditStats {
 
-    /** Ngoài mọi lần bị từ chối: các việc liên quan đăng nhập, khóa, vô hiệu hóa tài khoản và token MCP. */
+    /** Ngoài mọi lần bị từ chối: đăng nhập lỗi, đăng nhập bị chặn, khóa tạm và vô hiệu hóa tài khoản. */
     static final List<String> SECURITY_ACTIONS = List.of("LOGIN_FAILED", "LOGIN_BLOCKED_LOCKED", "ACCOUNT_TEMP_LOCKED",
-            "AUTH_FAILED", "ACCOUNT_DISABLED", "MCP_TOKEN_REVEALED");
+            "ACCOUNT_DISABLED");
 
     public static final String READ_ACTION = "AUDIT_READ";
     public static final String OBJECT_TYPE = "AUDIT_LOG";

@@ -134,8 +134,7 @@ class UploadServiceTest {
 
     @Test
     void inspectRejectsWrongTypeAndOversizedExamImports() {
-        when(settings.get(PurposePolicy.ASSIGNMENT_IMPORT_MAX_MB)).thenReturn(Optional.of(1));
-        byte[] big = new byte[1024 * 1024 + 1];
+        byte[] big = new byte[10 * 1024 * 1024 + 1];
         System.arraycopy(TestFiles.PNG, 0, big, 0, TestFiles.PNG.length);
 
         assertThatThrownBy(() -> service.inspectFile(teacher, ArtifactPurpose.ASSIGNMENT_IMPORT, "a.png", TestFiles.TEXT))

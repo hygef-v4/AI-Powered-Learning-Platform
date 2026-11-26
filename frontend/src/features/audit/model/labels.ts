@@ -9,11 +9,11 @@ export const RESULT_LABELS: Record<AuditResult, { label: string; tone: Tone }> =
 };
 
 /**
- * Nhãn hành động thường gặp, cũng là các lựa chọn của ô lọc; mã chưa có nhãn hiện nguyên mã. Mã có dấu {@code *} lọc theo
- * mẫu: môn và lớp ghi kèm mã của nó, ví dụ {@code SUBJECT_CS101_CREATED} (yêu cầu 2026-11-26).
+ * Hành động hệ thống còn ghi, cũng là các lựa chọn của ô lọc (rà lại 2026-11-26). Mã có dấu {@code *} lọc theo mẫu: môn
+ * và lớp ghi kèm mã của nó, ví dụ {@code SUBJECT_CS101_CREATED}.
  */
 export const ACTION_LABELS: Record<string, string> = {
-  // U04, U05: "SUBJECT_*CREATED" khớp cả SUBJECT_CREATED cũ lẫn SUBJECT_CS101_CREATED mới.
+  // U04, U05 Môn và lớp: "SUBJECT_*CREATED" khớp cả SUBJECT_CREATED cũ lẫn SUBJECT_CS101_CREATED mới.
   "SUBJECT_*CREATED": msg("audit.model.labels.createSubject"),
   "SUBJECT_*ARCHIVED": msg("audit.model.labels.archiveSubject"),
   "SUBJECT_*REOPENED": msg("audit.model.labels.reopenSubject"),
@@ -21,24 +21,38 @@ export const ACTION_LABELS: Record<string, string> = {
   "CLASS_*_OPENED": msg("audit.model.labels.openClass"),
   "CLASS_*_ARCHIVED": msg("audit.model.labels.archiveClass"),
   "CLASS_*_REOPENED": msg("audit.model.labels.reopenClass"),
-  LOGIN: msg("audit.model.labels.signIn"),
+  // Từ chối truy cập (mọi unit); U01 Tài khoản và đăng nhập
   ACCESS_DENIED: msg("audit.model.labels.accessDenied"),
-  ROLE_CHANGED: msg("audit.model.labels.changeRole"),
   ACCOUNT_CREATED: msg("audit.model.labels.createAccount"),
   ACCOUNT_UPDATED: msg("audit.model.labels.editAccount"),
-  ACCOUNT_STATUS_CHANGED: msg("audit.model.labels.changeAccountStatus"),
+  ROLE_CHANGED: msg("audit.model.labels.changeRole"),
+  ACCOUNT_DISABLED: msg("audit.model.labels.disableAccount"),
+  ACCOUNT_ENABLED: msg("audit.model.labels.reEnableAccount"),
+  ACCOUNTS_IMPORTED: msg("audit.model.labels.importAccountList"),
+  ACCOUNT_ACTIVATED: msg("audit.model.labels.activateAccount"),
+  LOGIN_FAILED: msg("audit.model.labels.failedSignIn"),
+  LOGIN_BLOCKED_LOCKED: msg("audit.model.labels.signInBlockedByTemporary"),
+  ACCOUNT_TEMP_LOCKED: msg("audit.model.labels.temporarilyLockAccount"),
+  // U03 Cài đặt và sao lưu
   SETTING_UPDATED: msg("audit.model.labels.editSettings"),
   BACKUP_COMPLETED: msg("audit.model.labels.backUpData"),
   BACKUP_FAILED: msg("audit.model.labels.backupFailed"),
-  GRADE_PUBLISHED: msg("audit.model.labels.publishGrades"),
   // U06 Kết nối AI
   AI_CONNECTION_CHANGED: msg("audit.model.labels.changeAiApiKey"),
   AI_CONNECTION_TESTED: msg("audit.model.labels.checkAiApiKey"),
   QUOTA_CHANGED: msg("audit.model.labels.changeAiQuota"),
+};
+
+/**
+ * Mã hệ thống đã thôi ghi: còn nhãn để đọc bản ghi cũ, không đưa vào ô lọc.
+ */
+const LEGACY_ACTION_LABELS: Record<string, string> = {
+  LOGIN: msg("audit.model.labels.signIn"),
+  ACCOUNT_STATUS_CHANGED: msg("audit.model.labels.changeAccountStatus"),
+  GRADE_PUBLISHED: msg("audit.model.labels.publishGrades"),
   MCP_CREDENTIAL_CREATED: msg("audit.model.labels.createMcpAgentToken"),
   MCP_REVOKED: msg("audit.model.labels.revokeMcpAgentToken"),
   MCP_TOOL_CALLED: msg("audit.model.labels.mcpAgentToolCall"),
-  // U12 Nhóm và bài nhóm
   GROUP_CREATED: msg("audit.model.labels.createGroup"),
   GROUP_RENAMED: msg("audit.model.labels.renameGroup"),
   GROUP_UPDATED: msg("audit.model.labels.editGroup"),
@@ -76,20 +90,10 @@ export const ACTION_LABELS: Record<string, string> = {
   QUIZ_COPIED: msg("audit.model.labels.copyQuiz"),
   QUIZ_VERSION_CREATED: msg("audit.model.labels.createQuizVersion"),
   QUIZ_AI_DRAFT_ACCEPTED: msg("audit.model.labels.acceptAiProposalForQuiz"),
-  // U01 Tài khoản
-  ACCOUNT_ACTIVATED: msg("audit.model.labels.activateAccount"),
-  ACCOUNT_DISABLED: msg("audit.model.labels.disableAccount"),
-  ACCOUNT_ENABLED: msg("audit.model.labels.reEnableAccount"),
-  ACCOUNT_TEMP_LOCKED: msg("audit.model.labels.temporarilyLockAccount"),
-  ACCOUNTS_IMPORTED: msg("audit.model.labels.importAccountList"),
-  LOGIN_FAILED: msg("audit.model.labels.failedSignIn"),
-  LOGIN_BLOCKED_LOCKED: msg("audit.model.labels.signInBlockedByTemporary"),
   AUTH_FAILED: msg("audit.model.labels.authenticationFailed"),
-  // U06 Khóa AI và token agent
   AI_CONNECTION_KEY_REVEALED: msg("audit.model.labels.viewAiApiKey"),
   MCP_CREDENTIAL_UPDATED: msg("audit.model.labels.editMcpAgentToken"),
   MCP_TOKEN_REVEALED: msg("audit.model.labels.viewMcpAgentToken"),
-  // U07 Soạn bài tập
   ASSIGNMENT_CREATED: msg("audit.model.labels.createAssignment"),
   ASSIGNMENT_UPDATED: msg("audit.model.labels.editAssignment"),
   ASSIGNMENT_DELETED: msg("audit.model.labels.deleteAssignment"),
@@ -108,7 +112,6 @@ export const ACTION_LABELS: Record<string, string> = {
   ASSIGNMENT_AI_DRAFT_APPLIED: msg("audit.model.labels.applyAiProposalToAssignment"),
   ASSIGNMENT_AI_DRAFT_DISCARDED: msg("audit.model.labels.discardAiProposalForAssignment"),
   RUBRIC_UPDATED: msg("audit.model.labels.editRubric"),
-  // U08 Làm bài
   ATTEMPT_STARTED: msg("audit.model.labels.startWork"),
   ATTEMPT_SAVED: msg("audit.model.labels.saveWork"),
   ASSIGNMENT_SUBMITTED: msg("audit.model.labels.submitWork"),
@@ -116,13 +119,11 @@ export const ACTION_LABELS: Record<string, string> = {
   ATTEMPT_DOCX_IMPORTED: msg("audit.model.labels.importWorkFromDocx"),
   ATTEMPT_DOCX_EXPORTED: msg("audit.model.labels.exportWorkToDocx"),
   PRACTICE_FEEDBACK_REQUESTED: msg("audit.model.labels.requestPracticeFeedback"),
-  // U09 Chấm điểm
   GRADE_SAVED: msg("audit.model.labels.saveGrade"),
   GRADE_CHANGED: msg("audit.model.labels.changeOfficialGrade"),
   GRADE_FINALIZED: msg("audit.model.labels.finalizeGrades"),
   GRADE_DISTRIBUTION_VISIBILITY_CHANGED: msg("audit.model.labels.changeGradeDistributionVisibility"),
   GRADEBOOK_EXPORTED: msg("audit.model.labels.exportGradebook"),
-  // U12 Tài liệu nhóm
   GROUP_DOC_IMPORTED: msg("audit.model.labels.importGroupDocument"),
   GROUP_ASSIGNMENT_LOCKED: msg("audit.model.labels.lockGroupDocumentAssignments"),
   GROUP_ASSIGNMENT_UNLOCKED: msg("audit.model.labels.unlockGroupDocumentAssignments"),
@@ -130,7 +131,6 @@ export const ACTION_LABELS: Record<string, string> = {
   GROUP_SECTION_UNLOCKED: msg("audit.model.labels.unlockGroupDocumentSection"),
   GROUP_SECTION_RESTORED: msg("audit.model.labels.restoreGroupDocumentSection"),
   GROUP_SECTION_TAKEN_OVER: msg("audit.model.labels.reclaimGroupDocumentSection"),
-  // U13 Học liệu
   MATERIAL_CREATED: msg("audit.model.labels.createLearningMaterial"),
   MATERIAL_UPDATED: msg("audit.model.labels.editLearningMaterial"),
   MATERIAL_ARCHIVED: msg("audit.model.labels.archiveLearningMaterial"),
@@ -140,13 +140,8 @@ export const ACTION_LABELS: Record<string, string> = {
   MATERIAL_MODULE_DELETED: msg("audit.model.labels.deleteModule"),
   MATERIAL_MODULE_QUIZ_ATTACHED: msg("audit.model.labels.attachQuizToModule"),
   MATERIAL_MODULE_QUIZ_DETACHED: msg("audit.model.labels.removeQuizFromModule"),
-  // U14 Thông báo
   ANNOUNCEMENT_UPDATED: msg("audit.model.labels.editAnnouncement"),
   ANNOUNCEMENT_DELETED: msg("audit.model.labels.deleteAnnouncement"),
-};
-
-/** Mã hệ thống đã thôi ghi từ 2026-11-26: còn nhãn để đọc bản ghi cũ, không đưa vào ô lọc. */
-const LEGACY_ACTION_LABELS: Record<string, string> = {
   PASSWORD_CHANGED: msg("audit.model.labels.changePassword"),
   PASSWORD_RESET: msg("audit.model.labels.resetPassword"),
   PROFILE_UPDATED: msg("audit.model.labels.editProfile"),
@@ -178,27 +173,34 @@ const CODED_ACTION_LABELS: Record<string, (code: string) => string> = {
   CLASS_REOPENED: (code) => msg("audit.model.labels.reopenClassCode", { code }),
 };
 
+/** Loại đối tượng hệ thống còn ghi, cũng là các lựa chọn của ô lọc. */
 export const OBJECT_TYPE_LABELS: Record<string, string> = {
   ACCOUNT: msg("audit.model.labels.account"),
+  SUBJECT: msg("audit.model.labels.subject"),
+  COURSE_CLASS: msg("audit.model.labels.class"),
   SETTING: msg("audit.model.labels.setting"),
   SETTINGS: msg("audit.model.labels.settingsPage"),
-  BACKUP: msg("audit.model.labels.backup"),
-  SUBJECT: msg("audit.model.labels.subject"),
-  CLASS: msg("audit.model.labels.class"),
-  COURSE_CLASS: msg("audit.model.labels.class"),
   BACKUP_RUN: msg("audit.model.labels.backupRun"),
+  AI_CONNECTION: msg("audit.model.labels.aiApiKey"),
+  AI_QUOTA: msg("audit.model.labels.aiQuota"),
+  AI: msg("audit.model.labels.aiSettings"),
+  ADMIN_DASHBOARD: msg("audit.model.labels.adminDashboard"),
+  NOTIFICATION: msg("audit.model.labels.personalNotification"),
+  AUDIT_LOG: msg("audit.model.labels.auditLog"),
+};
+
+/** Loại đối tượng chỉ còn trong bản ghi cũ. */
+const LEGACY_OBJECT_TYPE_LABELS: Record<string, string> = {
+  BACKUP: msg("audit.model.labels.backup"),
+  CLASS: msg("audit.model.labels.class"),
   MATERIAL: msg("audit.model.labels.learningMaterial"),
   MATERIAL_MODULE: msg("audit.model.labels.materialModule"),
-  NOTIFICATION: msg("audit.model.labels.personalNotification"),
   QUESTION: msg("audit.model.labels.question"),
   QUIZ_AI_DRAFT: msg("audit.model.labels.aiProposalForQuiz"),
   QUIZ_ATTEMPT: msg("audit.model.labels.quizAttempt"),
   ASSIGNMENT_ATTEMPT: msg("audit.model.labels.assignmentAttempt"),
   ASSIGNMENT: msg("audit.model.labels.assignment"),
   SUBMISSION: msg("audit.model.labels.submission"),
-  AUDIT_LOG: msg("audit.model.labels.auditLog"),
-  AI_CONNECTION: msg("audit.model.labels.aiApiKey"),
-  AI_QUOTA: msg("audit.model.labels.aiQuota"),
   QUOTA_POLICY: msg("audit.model.labels.sharedAiQuota"),
   MCP_CREDENTIAL: msg("audit.model.labels.mcpAgentToken"),
   MCP_TOOL: msg("audit.model.labels.mcpTool"),
@@ -209,8 +211,6 @@ export const OBJECT_TYPE_LABELS: Record<string, string> = {
   ANNOUNCEMENT: msg("audit.model.labels.announcement"),
   QUIZ: msg("audit.model.labels.quiz"),
   FILE: msg("audit.model.labels.file"),
-  AI: msg("audit.model.labels.aiSettings"),
-  ADMIN_DASHBOARD: msg("audit.model.labels.adminDashboard"),
   ATTEMPT: msg("audit.model.labels.attempt"),
 };
 
@@ -221,7 +221,7 @@ export function describeAction(code: string): string {
   const describeCoded = coded ? CODED_ACTION_LABELS[`${coded[1]}_${coded[3]}`] : undefined;
   return coded && describeCoded ? describeCoded(coded[2]!) : code;
 }
-export const describeObjectType = (code: string) => OBJECT_TYPE_LABELS[code] ?? code;
+export const describeObjectType = (code: string) => OBJECT_TYPE_LABELS[code] ?? LEGACY_OBJECT_TYPE_LABELS[code] ?? code;
 
 /** Mã dài (UUID) rút gọn "3f9c2a…e81" trong bảng; popup chi tiết hiện đầy đủ. */
 export function shortenId(id: string): string {

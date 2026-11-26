@@ -64,6 +64,34 @@ export function groupMeta(group: string): GroupMeta {
   return GROUP_META[group] ?? { label: group, description: "", icon: "tune", tone: "neutral" };
 }
 
+/** Tên và mô tả theo ngôn ngữ giao diện; backend chỉ trả một bản tiếng Việt. Khóa lạ thì dùng chữ backend trả. */
+const SETTING_TEXT: Record<string, { name: string; description: string }> = {
+  "files.material.maxSizeMb": {
+    name: msg("settings.model.types.materialMaxSize"),
+    description: msg("settings.model.types.materialMaxSizeDescription"),
+  },
+  "files.documentImage.maxSizeMb": {
+    name: msg("settings.model.types.imageMaxSize"),
+    description: msg("settings.model.types.imageMaxSizeDescription"),
+  },
+  "backup.enabled": {
+    name: msg("settings.model.types.backupEnabled"),
+    description: msg("settings.model.types.backupEnabledDescription"),
+  },
+  "backup.dailyAt": {
+    name: msg("settings.model.types.backupDailyAt"),
+    description: msg("settings.model.types.backupDailyAtDescription"),
+  },
+};
+
+export function readSettingName(item: Pick<SettingItem, "key" | "name">): string {
+  return SETTING_TEXT[item.key]?.name ?? item.name;
+}
+
+export function readSettingDescription(item: Pick<SettingItem, "key" | "description">): string {
+  return SETTING_TEXT[item.key]?.description ?? item.description;
+}
+
 export const TYPE_LABELS: Record<SettingType, string> = {
   INTEGER: msg("settings.model.types.integer"),
   BOOLEAN: msg("settings.model.types.onOff"),

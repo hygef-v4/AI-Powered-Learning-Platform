@@ -4404,7 +4404,7 @@
     "model": {
       "types": {
         "files": "Tệp",
-        "limitsWhenUploadingLearningMaterials": "Giới hạn khi tải học liệu và ảnh trong tài liệu",
+        "limitsWhenUploadingLearningMaterials": "Giới hạn dung lượng khi tải tài liệu và ảnh",
         "backup": "Sao lưu",
         "backUpTheDatabaseTo": "Sao lưu cơ sở dữ liệu lên Google Drive · giữ 7 ngày (cố định)",
         "workActivity": "Hoạt động làm bài",
@@ -4413,7 +4413,15 @@
         "onOff": "bật / tắt",
         "hourMinute": "giờ:phút",
         "singleChoice": "chọn một",
-        "multipleChoice": "chọn nhiều"
+        "multipleChoice": "chọn nhiều",
+        "materialMaxSize": "Tài liệu tối đa",
+        "materialMaxSizeDescription": "Dung lượng tối đa của mỗi tệp tài liệu.",
+        "imageMaxSize": "Ảnh tối đa",
+        "imageMaxSizeDescription": "Dung lượng tối đa của mỗi ảnh trong tài liệu.",
+        "backupEnabled": "Bật sao lưu",
+        "backupEnabledDescription": "Sao lưu cơ sở dữ liệu hằng ngày.",
+        "backupDailyAt": "Giờ chạy hằng ngày",
+        "backupDailyAtDescription": "Giờ sao lưu, theo giờ Việt Nam."
       },
       "validation": {
         "thisFieldMustHaveA": "Mục này phải có giá trị",
