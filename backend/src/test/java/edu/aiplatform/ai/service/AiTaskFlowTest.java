@@ -574,6 +574,21 @@ class AiTaskFlowTest {
     }
 
     @Test
+    void outputWrappedAsTextOrFenceIsRecoveredBeforeTheSchemaCheck() {
+        AiTaskView view = service.submit(request(teacher, AiSource.SHARED, null, "r1"));
+        when(gateway.call(any(), any())).thenReturn(new Response("\"{\\\"score\\\":8}\"", "req",
+                new Usage(10L, 5L, null, null)));
+
+        worker.handle(message(view.taskId()));
+
+        AiTask task = tasks.rows.get(view.taskId());
+        assertThat(task.state()).isEqualTo(AiTaskState.READY);
+        ArgumentCaptor<AiTaskResult> delivered = ArgumentCaptor.forClass(AiTaskResult.class);
+        verify(handler).onReady(delivered.capture());
+        assertThat(delivered.getValue().output()).isEqualTo("{\"score\":8}");
+    }
+
+    @Test
     void rejectedCallReleasesQuotaAndUnknownCallChargesEstimate() {
         // Mọi khóa đều lỗi: thử API chung rồi khóa cá nhân, hết khóa mới kết thúc task.
         AiTaskView rejected = service.submit(request(teacher, AiSource.SHARED, null, "r1"));

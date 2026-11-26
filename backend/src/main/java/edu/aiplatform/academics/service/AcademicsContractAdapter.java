@@ -3,6 +3,7 @@ package edu.aiplatform.academics.service;
 import edu.aiplatform.academics.contract.*;
 import edu.aiplatform.academics.model.*;
 import edu.aiplatform.academics.repository.*;
+import edu.aiplatform.audit.contract.AuditActions;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -177,7 +178,8 @@ public class AcademicsContractAdapter implements IClassAccess, IClassScope, ISub
             CourseClass changed = current.changeStatus(ClassStatus.ARCHIVED, true, false, now);
             courseClassRepository.updateClass(changed, current.version());
             audit.record(
-                    new AuditEvent(UUID.randomUUID(), actor.accountId(), "CLASS_STATUS_CHANGED",
+                    new AuditEvent(UUID.randomUUID(), actor.accountId(),
+                            AuditActions.buildObjectAction("CLASS", current.code(), "ARCHIVED"),
                             "COURSE_CLASS", current.id().toString(), AuditResult.SUCCESS, null,
                             Map.of("before", current.status().name(), "after",
                                     ClassStatus.ARCHIVED.name(), "cause", "SUBJECT_ARCHIVED"),

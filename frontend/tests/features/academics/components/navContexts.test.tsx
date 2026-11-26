@@ -22,7 +22,7 @@ describe("sidebar của môn", () => {
     expect(resolveSubjectContext(at("/teaching/classes"))).toBeNull();
 
     const subject = resolveSubjectContext(at("/manager/subjects/s-1"))!;
-    expect(labels(subject.items)).toEqual(["Thông tin môn", "Lớp học", "Học liệu", "Đề mẫu", "Ngân hàng câu hỏi"]);
+    expect(labels(subject.items)).toEqual(["Thông tin môn", "Lớp học", "Học liệu môn", "Đề mẫu", "Ngân hàng câu hỏi"]);
     expect(subject.items.map((item) => item.href)).toEqual([
       "/manager/subjects/s-1",
       "/manager/classes?subjectId=s-1",

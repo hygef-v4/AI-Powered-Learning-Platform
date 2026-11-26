@@ -21,7 +21,7 @@ export function SubjectMaterialListPage({ initialSubjectId = "" }: { initialSubj
     );
   return (
     <>
-      <PageHeader title={msg("materials.components.MaterialList.learningMaterials")} />
+      <PageHeader title={msg("materials.components.MaterialList.subjectMaterials")} />
       {subjects.loading && (
         <p role="status" className="py-10 text-center text-sm text-muted">
           {msg("materials.components.MaterialList.loadingSubjects")}</p>

@@ -92,7 +92,7 @@ class AcademicsServiceTest {
         assertThat(result.code()).isEqualTo("C");
         var order = inOrder(courseClassRepository,subjectMutationGuard);
         order.verify(courseClassRepository).findClass(classId); order.verify(subjectMutationGuard).lockActive(org.mockito.ArgumentMatchers.eq(subjectId),org.mockito.ArgumentMatchers.any()); order.verify(courseClassRepository).findClass(classId);
-        verify(audit).record(argThat(e -> e.action().equals("CLASS_UPDATED") && e.result()==AuditResult.SUCCESS));
+        verifyNoInteractions(audit);
     }
     @Test void dependencyFailureIsUnavailableAndWritesNothing() {
         when(scope.isSubjectManager(managerId,subjectId)).thenThrow(new IllegalStateException("internal secret"));
@@ -216,7 +216,7 @@ class AcademicsServiceTest {
         verify(enrollmentRepository,never()).insert(any());
         verify(enrollmentRepository,never()).updateEnrollment(any(),any());
     }
-    @Test void createStartsDraftAndAuditsTeacherAssignmentInTransaction() {
+    @Test void createStartsDraftAndAuditsCreationWithClassCodeInTransaction() {
         doAnswer(invocation -> {
             AuditEvent event=invocation.getArgument(0);
             if(event.result()==AuditResult.SUCCESS) assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
@@ -226,8 +226,15 @@ class AcademicsServiceTest {
         assertThat(result.status()).isEqualTo(ClassStatus.DRAFT);
         assertThat(result.version()).isZero();
         verify(courseClassRepository).insert(argThat(c -> c.code().equals("NEW") && !c.showGradeDistribution()));
-        verify(audit).record(argThat(e -> e.action().equals("CLASS_CREATED")));
-        verify(audit).record(argThat(e -> e.action().equals("CLASS_TEACHER_CHANGED")));
+        verify(audit).record(argThat(e -> e.action().equals("CLASS_NEW_CREATED")));
+        verify(audit, times(1)).record(any());
+    }
+    @Test void statusAuditNamesOpeningArchivingAndReopeningOnly() {
+        assertThat(AcademicsService.resolveStatusEvent(ClassStatus.DRAFT,ClassStatus.OPEN)).isEqualTo("OPENED");
+        assertThat(AcademicsService.resolveStatusEvent(ClassStatus.ARCHIVED,ClassStatus.OPEN)).isEqualTo("REOPENED");
+        assertThat(AcademicsService.resolveStatusEvent(ClassStatus.OPEN,ClassStatus.ARCHIVED)).isEqualTo("ARCHIVED");
+        assertThat(AcademicsService.resolveStatusEvent(ClassStatus.DRAFT,ClassStatus.ARCHIVED)).isEqualTo("ARCHIVED");
+        assertThat(AcademicsService.resolveStatusEvent(ClassStatus.OPEN,ClassStatus.OPEN)).isNull();
     }
     @Test void createStoresStartDateAndDerivesTerm() {
         var result = academicsService.createClass(manager, subjectId, "NEW", "New class", null,
@@ -280,17 +287,12 @@ class AcademicsServiceTest {
         assertThatThrownBy(() -> academicsService.changeEnrollmentStatus(manager,classId,studentId,EnrollmentStatus.REMOVED)).isInstanceOfSatisfying(ApiException.class,e -> assertThat(e.readCode()).isEqualTo("CLASS_ARCHIVED"));
         verify(enrollmentRepository,never()).updateEnrollment(any(),any());
     }
-    @Test void removedEnrollmentIsPreservedAndFailureAuditRunsAfterRollback() {
+    @Test void removedEnrollmentIsPreservedWithoutAudit() {
         when(enrollmentRepository.findEnrollment(classId,studentId)).thenReturn(Optional.of(Enrollment.createEnrollment(classId,studentId,EnrollmentSource.MANUAL,now.minusSeconds(10))));
         academicsService.changeEnrollmentStatus(manager,classId,studentId,EnrollmentStatus.REMOVED);
         verify(enrollmentRepository).updateEnrollment(argThat(e -> e.status()==EnrollmentStatus.REMOVED && e.enrolledAt().equals(now.minusSeconds(10))),eq(EnrollmentStatus.ACTIVE));
-        doAnswer(invocation -> {
-            AuditEvent event=invocation.getArgument(0);
-            if(event.result()==AuditResult.FAILURE) assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
-            return null;
-        }).when(audit).record(any());
         assertThatThrownBy(() -> academicsService.updateClassInfo(manager,classId,"New",null,LocalDate.of(2027, 1, 10),99)).isInstanceOf(ApiException.class);
-        verify(audit).record(argThat(e -> e.result()==AuditResult.FAILURE));
+        verifyNoInteractions(audit);
     }
     @Test void reopeningDoesNotDuplicateOriginalActivationNotifications() {
         when(courseClassRepository.findClass(classId)).thenReturn(Optional.of(course(ClassStatus.ARCHIVED,0)));
@@ -307,27 +309,17 @@ class AcademicsServiceTest {
         verify(enrollmentRepository,never()).insert(any());
     }
     @Test
-    void updatingClassPreservesVersionAndAuditsInsideTheTransaction() {
-        doAnswer(invocation -> {
-            AuditEvent event = invocation.getArgument(0);
-            if (event.result() == AuditResult.SUCCESS) {
-                assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isTrue();
-            }
-            return null;
-        }).when(audit).record(any());
-
+    void updatingClassPreservesVersionWithoutAudit() {
         var result = academicsService.updateClassInfo(manager, classId, "Updated", "Description", LocalDate.of(2027, 1, 10), 0);
 
         assertThat(result.name()).isEqualTo("Updated");
         assertThat(result.version()).isEqualTo(1);
-        var order = inOrder(subjectMutationGuard, courseClassRepository, audit);
+        var order = inOrder(subjectMutationGuard, courseClassRepository);
         order.verify(subjectMutationGuard).lockActive(subjectId, Duration.ofSeconds(1));
         order.verify(courseClassRepository).updateClass(argThat(value -> value.name().equals("Updated")
                 && value.description().equals("Description")
                 && value.version() == 1), eq(0L));
-        order.verify(audit).record(argThat(event -> event.action().equals("CLASS_UPDATED")
-                && event.result() == AuditResult.SUCCESS && event.details().isEmpty()));
-        verifyNoInteractions(eventPublisher);
+        verifyNoInteractions(eventPublisher, audit);
     }
 
     @Test

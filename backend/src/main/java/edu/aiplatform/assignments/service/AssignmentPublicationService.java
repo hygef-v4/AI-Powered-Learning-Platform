@@ -79,6 +79,9 @@ public class AssignmentPublicationService {
         requireOwnerOpen(current);
         Instant now = clock.instant();
         Instant opensAt = command.openNow() ? now : command.opensAt();
+        if (!command.openNow()) {
+            requireNotPast(opensAt, now);
+        }
         Integer maxAttempts = resolveAttempts(current, command.maxAttempts());
         validateSchedule(opensAt, command.closesAt(), command.lateUntil(), maxAttempts, current.gradingMode(), now);
         if (current.submissionMode() == SubmissionMode.GROUP) {
@@ -103,7 +106,13 @@ public class AssignmentPublicationService {
         Instant closesAt = command.closesAt() == null ? current.closesAt() : command.closesAt();
         Instant lateUntil = command.lateUntil();
         switch (current.status()) {
-            case SCHEDULED -> validateSchedule(opensAt, closesAt, lateUntil, maxAttempts, current.gradingMode(), now);
+            case SCHEDULED -> {
+                // Đổi ngày mở thì ngày mới không được ở quá khứ; bỏ hẹn giờ (mở ngay) gửi thời điểm hiện tại.
+                if (command.opensAt() != null && !command.opensAt().equals(current.opensAt())) {
+                    requireNotPast(command.opensAt(), now);
+                }
+                validateSchedule(opensAt, closesAt, lateUntil, maxAttempts, current.gradingMode(), now);
+            }
             case OPEN -> {
                 if (!opensAt.equals(current.opensAt()) || (Assignment.limitsAttempts(current.gradingMode())
                         && !Objects.equals(maxAttempts, current.maxAttempts()))) {
@@ -216,6 +225,15 @@ public class AssignmentPublicationService {
             throw ApiException.createBadRequest("SCHEDULE_INVALID", "Hạn nộp phải ở tương lai");
         }
     }
+
+    /** Ngày mở hẹn giờ không ở quá khứ (yêu cầu 2026-11-26); chừa 2 phút cho độ trễ mạng và đồng hồ máy. */
+    static void requireNotPast(Instant opensAt, Instant now) {
+        if (opensAt != null && opensAt.isBefore(now.minus(OPENS_AT_TOLERANCE))) {
+            throw ApiException.createBadRequest("SCHEDULE_INVALID", "Ngày mở phải ở tương lai");
+        }
+    }
+
+    static final java.time.Duration OPENS_AT_TOLERANCE = java.time.Duration.ofMinutes(2);
 
     private static void validateOrder(Instant opensAt, Instant closesAt, Instant lateUntil) {
         if (opensAt == null || closesAt == null) {

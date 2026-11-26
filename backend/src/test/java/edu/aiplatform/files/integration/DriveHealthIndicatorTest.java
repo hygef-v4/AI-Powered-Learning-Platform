@@ -83,8 +83,7 @@ class DriveHealthIndicatorTest {
     @Test
     void unconfiguredStorageDoesNotCallDrive() {
         when(properties.hasDrive()).thenReturn(false);
-        when(properties.requireDrive()).thenReturn(true);
-        assertThat(indicator.health().getDetails()).containsEntry("drive", "NOT_CONFIGURED");
+        assertThat(indicator.health().getDetails()).containsEntry("drive", "LOCAL");
         verifyNoInteractions(clients, folders);
     }
 }

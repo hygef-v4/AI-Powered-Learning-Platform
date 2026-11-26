@@ -159,7 +159,8 @@
       },
       "materials": {
         "page": {
-          "learningMaterials": "Học liệu"
+          "learningMaterials": "Học liệu",
+          "subjectMaterials": "Học liệu môn"
         }
       },
       "page": {
@@ -1316,7 +1317,8 @@
         "subject": "Môn",
         "class": "Lớp",
         "loadingAssignments": "Đang tải bài tập…",
-        "noMatchingAssignments": "Không có bài tập phù hợp."
+        "noMatchingAssignments": "Không có bài tập phù hợp.",
+        "template": "Đề mẫu"
       },
       "assignmentNav": {
         "assignmentParts": "Các phần của bài",
@@ -1338,7 +1340,8 @@
         "mode": "Chế độ",
         "activityMonitoring": "Ghi nhận hoạt động",
         "recordsWhenStudentsLeaveThe": "Ghi lại khi sinh viên rời trang lúc làm bài.",
-        "noticeToStudents": "Lời báo cho sinh viên"
+        "noticeToStudents": "Lời báo cho sinh viên",
+        "templateHasNoType": "Đề mẫu của môn không có loại và không giao cho sinh viên. Giảng viên chọn loại khi tạo bài ở lớp từ đề mẫu này."
       },
       "ClassAssignmentsSection": {
         "createAssignment": "Tạo bài tập"
@@ -1458,7 +1461,9 @@
         "publishAnyway": "Vẫn phát hành",
         "schedule": "Xếp lịch",
         "publishNow": "Phát hành ngay",
-        "saveSchedule": "Lưu lịch"
+        "saveSchedule": "Lưu lịch",
+        "openingDateInThePast": "Ngày giờ mở đã qua. Chọn thời điểm trong tương lai.",
+        "deadlineInThePast": "Hạn nộp đã qua. Chọn thời điểm trong tương lai."
       },
       "SearchPicker": {
         "noResults": "Không có kết quả.",
@@ -1586,7 +1591,8 @@
         "areYouSureYouWant": "Bạn có chắc muốn xóa bản nháp này không?",
         "withdrawAssignment": "Ngưng giao bài",
         "areYouSureYouWant2": "Bạn có chắc muốn ngưng giao bài này không?",
-        "reason": "Lý do"
+        "reason": "Lý do",
+        "template": "Đề mẫu"
       },
       "SubjectAssignmentListPage": {
         "assignmentTemplates": "Đề mẫu bài tập",
@@ -2005,7 +2011,26 @@
         "denied2": "Bị từ chối",
         "wrongKey": "Sai khóa",
         "quotaExhausted": "Hết hạn mức",
-        "timedOut": "Quá giờ"
+        "timedOut": "Quá giờ",
+        "createSubjectCode": "Tạo môn {code}",
+        "archiveSubjectCode": "Lưu trữ môn {code}",
+        "reopenSubjectCode": "Mở lại môn {code}",
+        "createClassCode": "Tạo lớp {code}",
+        "openClassCode": "Mở lớp {code}",
+        "archiveClassCode": "Lưu trữ lớp {code}",
+        "reopenClassCode": "Mở lại lớp {code}",
+        "openClass": "Mở lớp",
+        "archiveClass": "Lưu trữ lớp",
+        "reopenClass": "Mở lại lớp",
+        "rejectRoleChange": "Từ chối đổi vai trò",
+        "uploadFile": "Tải tệp lên",
+        "downloadFile": "Tải tệp xuống",
+        "viewMcpAgentToken": "Xem token agent MCP",
+        "file": "Tệp",
+        "aiSettings": "Cấu hình AI",
+        "adminDashboard": "Bảng điều khiển quản trị",
+        "mcpAgentToken": "Token agent MCP",
+        "quiz": "Quiz"
       },
       "details": {
         "ui": {
@@ -3458,12 +3483,17 @@
         "learningMaterial": "học liệu",
         "areYouSureYouWant": "Bạn có chắc muốn ",
         "text": " không?",
-        "theDraftQuizWillBe": " Quiz nháp sẽ bị xóa vĩnh viễn, không khôi phục được."
+        "theDraftQuizWillBe": " Quiz nháp sẽ bị xóa vĩnh viễn, không khôi phục được.",
+        "subjectMaterialAdded": "Đã thêm học liệu môn",
+        "createSubjectMaterial": "Tạo học liệu môn",
+        "editSubjectMaterial": "Sửa học liệu môn",
+        "learningMaterialArchived": "Đã lưu trữ học liệu"
       },
       "MaterialList": {
         "learningMaterials": "Học liệu",
         "loadingSubjects": "Đang tải môn học…",
-        "youHaveNotBeenAssigned": "Bạn chưa được phân công môn học."
+        "youHaveNotBeenAssigned": "Bạn chưa được phân công môn học.",
+        "subjectMaterials": "Học liệu môn"
       },
       "MaterialPreview": {
         "download": "Tải xuống",
@@ -3510,7 +3540,14 @@
         "edit": "Sửa {title}",
         "save": "Lưu",
         "moduleName": "Tên module",
-        "enterTheModuleName": "Nhập tên module."
+        "enterTheModuleName": "Nhập tên module.",
+        "subjectMaterials": "Học liệu môn",
+        "createSubjectMaterial": "Tạo học liệu môn",
+        "noSubjectMaterialsYet": "Chưa có học liệu môn",
+        "noModulesForClass": "Môn chưa có module. Nhờ chủ nhiệm môn tạo module trước khi thêm học liệu.",
+        "noModulesForSubject": "Chưa có module. Tạo module trước khi thêm học liệu môn.",
+        "archived": "Đã lưu trữ",
+        "materialRestored": "Đã khôi phục học liệu"
       },
       "ModuleNav": {
         "moduleList": "Danh sách module",
@@ -3527,7 +3564,14 @@
         "reopen": "Mở lại {value}",
         "quizReopened": "Đã mở lại quiz",
         "couldNotReopenTheQuiz": "Không mở lại được quiz",
-        "edit": "Sửa {value}"
+        "edit": "Sửa {value}",
+        "subjectMaterials": "Học liệu môn",
+        "createSubjectMaterial": "Tạo học liệu môn",
+        "createSubjectMaterialIn": "Tạo học liệu môn trong {title}",
+        "noSubjectMaterialsYet": "Chưa có học liệu môn",
+        "restore": "Khôi phục {value}",
+        "materialRestored": "Đã khôi phục học liệu",
+        "couldNotRestoreMaterial": "Không khôi phục được học liệu, vui lòng thử lại."
       },
       "ModulePlace": {
         "previousAndNextMaterialsTop": "Học liệu trước và sau (đầu trang)",
@@ -3557,11 +3601,17 @@
         "delete": "Xóa",
         "description": "Mô tả",
         "learningMaterialDeleted": "Đã xóa học liệu",
-        "versionLabel": "Phiên bản {value}"
+        "versionLabel": "Phiên bản {value}",
+        "archive": "Lưu trữ",
+        "learningMaterialArchived": "Đã lưu trữ học liệu",
+        "archived": "Đã lưu trữ",
+        "restore": "Khôi phục",
+        "materialRestored": "Đã khôi phục học liệu"
       }
     },
     "register": {
-      "learningMaterial": "Học liệu"
+      "learningMaterial": "Học liệu",
+      "subjectMaterial": "Học liệu môn"
     }
   },
   "notifications": {
@@ -4398,7 +4448,7 @@
     "model": {
       "types": {
         "files": "Tệp",
-        "limitsWhenUploadingLearningMaterials": "Giới hạn khi tải học liệu và ảnh trong tài liệu",
+        "limitsWhenUploadingLearningMaterials": "Giới hạn dung lượng khi tải tài liệu và ảnh",
         "backup": "Sao lưu",
         "backUpTheDatabaseTo": "Sao lưu cơ sở dữ liệu lên Google Drive · giữ 7 ngày (cố định)",
         "workActivity": "Hoạt động làm bài",
@@ -4407,7 +4457,15 @@
         "onOff": "bật / tắt",
         "hourMinute": "giờ:phút",
         "singleChoice": "chọn một",
-        "multipleChoice": "chọn nhiều"
+        "multipleChoice": "chọn nhiều",
+        "materialMaxSize": "Tài liệu tối đa",
+        "materialMaxSizeDescription": "Dung lượng tối đa của mỗi tệp tài liệu.",
+        "imageMaxSize": "Ảnh tối đa",
+        "imageMaxSizeDescription": "Dung lượng tối đa của mỗi ảnh trong tài liệu.",
+        "backupEnabled": "Bật sao lưu",
+        "backupEnabledDescription": "Sao lưu cơ sở dữ liệu hằng ngày.",
+        "backupDailyAt": "Giờ chạy hằng ngày",
+        "backupDailyAtDescription": "Giờ sao lưu, theo giờ Việt Nam."
       },
       "validation": {
         "thisFieldMustHaveA": "Mục này phải có giá trị",

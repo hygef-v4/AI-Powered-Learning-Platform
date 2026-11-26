@@ -9,6 +9,7 @@ import edu.aiplatform.backup.config.*;
 import edu.aiplatform.backup.service.*;
 import edu.aiplatform.backup.contract.BackupState;
 import edu.aiplatform.backup.repository.BackupRunRepository;
+import edu.aiplatform.backup.repository.WalSegmentRepository;
 import edu.aiplatform.jobs.contract.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,7 +54,7 @@ class BackupConcurrentDeliveryIntegrationTest {
             CountDownLatch duplicateDump = new CountDownLatch(1);
             CountDownLatch releaseDump = new CountDownLatch(1);
             AtomicInteger dumps = new AtomicInteger();
-            IDumpRunner dump = target -> {
+            IBaseBackupRunner dump = target -> {
                 int delivery = dumps.incrementAndGet();
                 if (delivery == 1) firstDump.countDown(); else duplicateDump.countDown();
                 try {
@@ -67,7 +68,7 @@ class BackupConcurrentDeliveryIntegrationTest {
             generator.initialize(2048);
             String key = Base64.getEncoder().encodeToString(generator.generateKeyPair().getPublic().getEncoded());
             BackupProperties props = new BackupProperties(null, key, "localhost", 5432, "platform", "reader",
-                    "", dir.resolve("tmp").toString(), null);
+                    "", dir.resolve("tmp").toString(), null, null);
             LocalBackupStore store = new LocalBackupStore(dir.resolve("archives"));
             Instant oldSnapshot = now.minus(Duration.ofDays(10));
             var oldRun = runs.createIfAbsent(LocalDate.of(2026, 10, 20), oldSnapshot).orElseThrow();
@@ -79,7 +80,8 @@ class BackupConcurrentDeliveryIntegrationTest {
             context.register(Transactions.class);
             context.registerBean("transactionManager", DataSourceTransactionManager.class,
                     () -> new DataSourceTransactionManager(pool));
-            context.registerBean(BackupRetentionService.class, () -> new BackupRetentionService(runs, store));
+            context.registerBean(BackupRetentionService.class, () -> new BackupRetentionService(runs, store,
+                    new WalSegmentRepository(JdbcClient.create(pool))));
             context.registerBean(BackupJobHandler.class, () -> new BackupJobHandler(runs, dump, store,
                     context.getBean(BackupRetentionService.class), mock(IAudit.class), mock(IEventPublisher.class),
                     mock(IJob.class), props, Clock.fixed(now, ZoneOffset.UTC)));

@@ -17,7 +17,7 @@ describe("menu bên do các unit đăng ký", () => {
     expect(subjectNavEntries.entries().map((entry) => entry.title)).toEqual([
       "Thông tin môn",
       "Lớp học",
-      "Học liệu",
+      "Học liệu môn",
       "Đề mẫu",
       "Ngân hàng câu hỏi",
     ]);

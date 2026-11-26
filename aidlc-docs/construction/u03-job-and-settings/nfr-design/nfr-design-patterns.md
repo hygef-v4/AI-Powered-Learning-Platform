@@ -61,7 +61,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 ## P16 - Pipeline backup
 1. Scanner tạo `backup_runs` với `scheduled_for` duy nhất rồi gửi `BACKUP_RUN`.
 2. Handler chuyển `CREATED` → `RUNNING` bằng cập nhật có điều kiện.
-3. `pg_dump --format=custom` bằng role `backup_reader` ra volume tạm.
+3. `pg_basebackup --format=tar --wal-method=fetch --gzip` bằng role `backup_replicator` ra volume tạm (từ 2026-11-26; WAL đẩy riêng mỗi phút, xem `infrastructure-design/2026-11-26-wal-backup-design.md`).
 4. Mã hóa dump khi có khóa công khai (P17), upload vào `backup/{runId}`, kiểm kích thước và checksum; không chép tệp Drive.
 5. Ghi `SUCCESS`, audit, rồi chạy retention (P18).
 6. Lỗi: thử lại theo P9; hết lượt thì `FAILED`, dọn thư mục của lần chạy qua `DRIVE_CLEANUP`, phát `backup.failed`.

@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Cấu hình tệp: khóa ký {@code FileRef}, Drive, thư mục local khi chạy không có Drive. Drive có hai cách: Shared Drive
  * với service account (Google Workspace), hoặc Drive cá nhân (Gmail) với OAuth refresh token của chính chủ tài khoản.
  *
- * @param requireDrive production đặt {@code true}: thiếu Drive thì không lưu tệp vào container
  * @param driveOauthRefreshToken refresh token cấp cho scope {@code drive.file} của tài khoản Gmail chứa tệp
  * @param driveFolderName tên thư mục gốc app tự tạo trong My Drive (Drive cá nhân); bỏ trống dùng
  *     {@value #DEFAULT_FOLDER_NAME}
@@ -14,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     thư mục tạo tay); không truy cập được thì quay về tìm hoặc tạo theo tên
  */
 @ConfigurationProperties(prefix = "platform.files")
-public record FilesProperties(String filerefSecret, boolean requireDrive, String localStorageDir, String uploadTmpDir,
+public record FilesProperties(String filerefSecret, String localStorageDir, String uploadTmpDir,
                               String driveServiceAccountKey, String sharedDriveId, String driveOauthClientId,
                               String driveOauthClientSecret, String driveOauthRefreshToken, String driveFolderName,
                               String driveFolderId) {

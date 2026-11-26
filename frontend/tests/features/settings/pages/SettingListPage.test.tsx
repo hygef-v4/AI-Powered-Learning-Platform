@@ -76,7 +76,7 @@ describe("SettingListPage", () => {
     expect(await screen.findByText("Dung lượng tối đa")).toBeInTheDocument();
     expect(screen.queryByText("Phòng Đào tạo")).not.toBeInTheDocument();
     expect(screen.queryByText(/Sao lưu cơ sở dữ liệu lên Google Drive/)).not.toBeInTheDocument();
-    expect(screen.getAllByRole("tooltip")[0]).toHaveTextContent("Sao lưu cơ sở dữ liệu mỗi ngày");
+    expect(screen.getAllByRole("tooltip")[0]).toHaveTextContent("Sao lưu cơ sở dữ liệu hằng ngày.");
     expect(screen.getAllByText("Cài đặt AI")).toHaveLength(1);
     expect(screen.getByRole("link", { name: /Cài đặt AI/ })).toHaveAttribute("href", "/admin/settings/sections/ai-connections");
     const titles = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);

@@ -704,7 +704,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {/* Tên bài do trình soạn vẽ ngay trên dòng này (định dạng được, lưu trong khung đề). */}
       {/* Dòng cuối chỉ ghi loại bài (yêu cầu 2026-11-02): Luyện tập, hoặc Cá nhân / Nhóm. */}
       <p className="text-[13px] text-muted" data-testid="assignment-kind">
-        {settings.gradingMode === "PRACTICE" ? msg("assignments.pages.AssignmentFormPage.practice") : submissionLabels[detail.submissionMode]}
+        {detail.gradingMode === "TEMPLATE" ? msg("assignments.pages.AssignmentFormPage.template")
+          : settings.gradingMode === "PRACTICE" ? msg("assignments.pages.AssignmentFormPage.practice") : submissionLabels[detail.submissionMode]}
       </p>
     </div>
   );

@@ -14,7 +14,7 @@ import { FADE_LABEL, type NavContext, type NavLocation } from "@/shared/layout/n
 import { Card, showErrorToast, showToast } from "@/shared/ui";
 import { cx } from "@/shared/ui/cx";
 import { Icon } from "@/shared/ui/Icon";
-import { buildContextQuery, buildMaterialPath } from "../api";
+import { buildContextQuery, buildMaterialPath, materialApi } from "../api";
 import { ArchiveItemDialog, ModuleItemDialog, resolveRemovalAction, describeRemoval } from "./MaterialDialogs";
 import { CollapseBody, canEditItem, reopen } from "./ModuleBoard";
 import { useModuleCollapse } from "../model/moduleCollapse";
@@ -137,6 +137,7 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
   const { collapsed, toggle } = useModuleCollapse("nav");
   const back = scope ? buildBoardHref(scope) : "/manager/materials";
   const staff = scope && scope.kind !== "student" ? scope : null;
+  const subjectScope = scope?.kind === "subject";
   const isActive = (item: OutlineItem) =>
     item.kind === "material"
       ? pathname.startsWith(`/materials/${encodeURIComponent(item.material.id)}`)
@@ -147,11 +148,11 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
       <div className="mb-3 shrink-0 border-b border-line pb-3.5">
         <BackLink
           href={back}
-          title={msg("materials.components.ModuleNav.learningMaterials")}
+          title={subjectScope ? msg("materials.components.ModuleNav.subjectMaterials") : msg("materials.components.ModuleNav.learningMaterials")}
           className="inline-flex max-w-full items-center gap-2.5 rounded-md px-2.5 py-1 text-xs font-semibold whitespace-nowrap text-muted transition-colors hover:text-ink"
         >
           <Icon name="arrow_back" size={17} className="shrink-0" />
-          <span className={FADE_LABEL}>{msg("materials.components.ModuleNav.learningMaterials")}</span>
+          <span className={FADE_LABEL}>{subjectScope ? msg("materials.components.ModuleNav.subjectMaterials") : msg("materials.components.ModuleNav.learningMaterials")}</span>
         </BackLink>
       </div>
       <nav
@@ -185,8 +186,8 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                       <SidebarToolButton
                         icon="add"
                         iconSize={15}
-                        label={msg("materials.components.ModuleNav.createLearningMaterialIn", { title: String(module.title) })}
-                        title={msg("materials.components.ModuleNav.createLearningMaterial")}
+                        label={subjectScope ? msg("materials.components.ModuleNav.createSubjectMaterialIn", { title: String(module.title) }) : msg("materials.components.ModuleNav.createLearningMaterialIn", { title: String(module.title) })}
+                        title={subjectScope ? msg("materials.components.ModuleNav.createSubjectMaterial") : msg("materials.components.ModuleNav.createLearningMaterial")}
                         onClick={(event) => {
                           event.stopPropagation();
                           setDialog({ type: "item", module });
@@ -215,16 +216,17 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                     <div className="flex flex-col gap-0.5 pb-0.5">
                       {items.length === 0 && (
                         <span className={cx("px-2.5 py-1 text-[12.5px] text-faint", FADE_LABEL)}>
-                          {msg("materials.components.ModuleNav.noLearningMaterialsYet")}</span>
+                          {subjectScope ? msg("materials.components.ModuleNav.noSubjectMaterialsYet") : msg("materials.components.ModuleNav.noLearningMaterialsYet")}</span>
                       )}
                       {items.map((item) => {
                         const active = isActive(item);
-                        const editable = !!staff && canEditItem(item);
+                        const editable = !!staff && canEditItem(item) && !(item.kind === "material" && item.material.status === "ARCHIVED");
+                        // Quiz đã ngưng mở lại được; học liệu đã lưu trữ khôi phục được (yêu cầu 2026-11-26).
                         const reopenable =
                           !!staff &&
-                          item.kind === "quiz" &&
-                          item.quiz.canManage &&
-                          item.quiz.status === "RETIRED";
+                          (item.kind === "quiz"
+                            ? item.quiz.canManage && item.quiz.status === "RETIRED"
+                            : item.material.canManage && item.material.status === "ARCHIVED");
                         return (
                           <div key={buildItemKey(item)} className="group/item relative">
                             <Link
@@ -255,15 +257,25 @@ function ModuleNav({ source, classId }: { source: Source; classId?: string }) {
                               <span className="absolute top-1/2 right-1.5 hidden -translate-y-1/2 items-center group-hover/item:flex group-focus-within/item:flex">
                                 <SidebarToolButton
                                   icon="lock_open"
-                                  label={msg("materials.components.ModuleNav.reopen", { value: String(resolveItemTitle(item)) })}
+                                  label={item.kind === "material"
+                                    ? msg("materials.components.ModuleNav.restore", { value: String(resolveItemTitle(item)) })
+                                    : msg("materials.components.ModuleNav.reopen", { value: String(resolveItemTitle(item)) })}
                                   onClick={() =>
-                                    void reopen(item.quiz.quizId, scope).then(
-                                      () => {
-                                        showToast(msg("materials.components.ModuleNav.quizReopened"));
-                                        notifyOutlineChanged();
-                                      },
-                                      () => showErrorToast(msg("materials.components.ModuleNav.couldNotReopenTheQuiz")),
-                                    )
+                                    item.kind === "material"
+                                      ? void materialApi.restoreMaterial(item.material).then(
+                                        () => {
+                                          showToast(msg("materials.components.ModuleNav.materialRestored"));
+                                          notifyOutlineChanged();
+                                        },
+                                        () => showErrorToast(msg("materials.components.ModuleNav.couldNotRestoreMaterial")),
+                                      )
+                                      : void reopen(item.quiz.quizId, scope).then(
+                                        () => {
+                                          showToast(msg("materials.components.ModuleNav.quizReopened"));
+                                          notifyOutlineChanged();
+                                        },
+                                        () => showErrorToast(msg("materials.components.ModuleNav.couldNotReopenTheQuiz")),
+                                      )
                                   }
                                 />
                               </span>

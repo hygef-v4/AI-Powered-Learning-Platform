@@ -52,6 +52,15 @@ class AuditLogRepositoryWhereTest {
     }
 
     @Test
+    void wildcardActionMatchesCodedObjectActionsWithEscapedLiterals() {
+        AuditLogRepository.Where where = AuditLogRepository.Where.buildWhere(
+                new AuditFilter(null, "SUBJECT_*_CREATED", null, null, null, null, null));
+
+        assertThat(where.sql()).isEqualTo(" where action like :action escape '\\'");
+        assertThat(where.params()).containsEntry("action", "SUBJECT\\_%\\_CREATED");
+    }
+
+    @Test
     void valuesAreBoundNotConcatenated() {
         AuditLogRepository.Where where = AuditLogRepository.Where.buildWhere(
                 new AuditFilter(null, "x' or '1'='1", null, null, null, null, null));

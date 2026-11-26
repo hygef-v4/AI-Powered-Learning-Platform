@@ -215,7 +215,7 @@ export function ModuleItemDialog({
           source: content === "FILE" ? { fileRef } : { videoUrl: url.trim() },
           moduleId,
         });
-        onSaved(msg("materials.components.MaterialDialogs.learningMaterialAdded"));
+        onSaved(scope.kind === "subject" ? msg("materials.components.MaterialDialogs.subjectMaterialAdded") : msg("materials.components.MaterialDialogs.learningMaterialAdded"));
       }
     } catch (e) {
       setError(describeMaterialError(e));
@@ -229,7 +229,7 @@ export function ModuleItemDialog({
     <Dialog
       open
       size="lg"
-      title={editing ? msg("materials.components.MaterialDialogs.editLearningMaterial") : msg("materials.components.MaterialDialogs.createLearningMaterial")}
+      title={scope.kind === "subject" ? (editing ? msg("materials.components.MaterialDialogs.editSubjectMaterial") : msg("materials.components.MaterialDialogs.createSubjectMaterial")) : editing ? msg("materials.components.MaterialDialogs.editLearningMaterial") : msg("materials.components.MaterialDialogs.createLearningMaterial")}
       onClose={onClose}
       dismissible={!busy}
       footer={
@@ -264,7 +264,8 @@ export function ModuleItemDialog({
             }}
           />
         </Field>
-        {content !== "QUIZ" && <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Tạo mới luôn bật; công tắc chỉ còn khi sửa (yêu cầu 2026-11-26). */}
+        {editing && content !== "QUIZ" && <div className="flex flex-wrap items-center justify-between gap-2">
           <Switch checked={enabled} onChange={setEnabled} ariaLabel={msg("materials.components.MaterialDialogs.enableLearningMaterial")} disabled={busy}
             label={enabled ? msg("materials.components.MaterialDialogs.on") : msg("materials.components.MaterialDialogs.off")} />
           <span className="text-xs text-muted">{msg("materials.components.MaterialDialogs.turnOffToHideIt")}</span>
@@ -369,12 +370,15 @@ export function isQuizDeletable(quiz: ModuleQuiz) {
 export function resolveRemovalAction(item: OutlineItem) {
   return item.kind === "quiz" && !isQuizDeletable(item.quiz)
     ? { icon: "archive" as const, label: msg("materials.components.MaterialDialogs.archive") }
-    : { icon: "trash" as const, label: msg("materials.components.MaterialDialogs.delete") };
+    : item.kind === "material"
+      ? { icon: "archive" as const, label: msg("materials.components.MaterialDialogs.archive") }
+      : { icon: "trash" as const, label: msg("materials.components.MaterialDialogs.delete") };
 }
 
 /** Thông báo sau khi gỡ mục: học liệu bị ẩn, Quiz nháp bị xóa, Quiz khác bị lưu trữ. */
 export function describeRemoval(item: OutlineItem) {
-  if (item.kind === "material") return msg("materials.components.MaterialDialogs.learningMaterialDeleted");
+  // Học liệu lưu trữ vẫn nằm trong module (hiện nhãn Đã lưu trữ), không còn biến mất như bị xóa.
+  if (item.kind === "material") return msg("materials.components.MaterialDialogs.learningMaterialArchived");
   return isQuizDeletable(item.quiz) ? msg("materials.components.MaterialDialogs.quizDeleted") : msg("materials.components.MaterialDialogs.quizArchived");
 }
 
@@ -399,7 +403,8 @@ export function ArchiveItemDialog({
   const isQuiz = "quiz" in item;
   const deletesQuiz = isQuiz && isQuizDeletable(item.quiz);
   const title = isQuiz ? item.quiz.title : item.material.title;
-  const action = isQuiz && !deletesQuiz ? msg("materials.components.MaterialDialogs.archive") : msg("materials.components.MaterialDialogs.delete");
+  // Học liệu luôn lưu trữ (dữ liệu vẫn giữ); chỉ Quiz nháp bị xóa hẳn.
+  const action = deletesQuiz ? msg("materials.components.MaterialDialogs.delete") : msg("materials.components.MaterialDialogs.archive");
   const noun = isQuiz ? "quiz" : msg("materials.components.MaterialDialogs.learningMaterial");
   async function handleRemove() {
     if (lock.current) return;
@@ -412,7 +417,7 @@ export function ArchiveItemDialog({
         if (deletesQuiz) await deleteQuiz(item.quiz.quizId, detail.quiz.version);
         else await retireQuiz(item.quiz.quizId, "", detail.quiz.version);
       } else await materialApi.archiveMaterial(item.material);
-      onSaved(!isQuiz || deletesQuiz);
+      onSaved(deletesQuiz);
     } catch (e) {
       setError(describeMaterialError(e));
     } finally {

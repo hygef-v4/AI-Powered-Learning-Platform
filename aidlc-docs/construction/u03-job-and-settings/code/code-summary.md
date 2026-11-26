@@ -44,7 +44,7 @@ Code viết ngày 2026-10-16 theo [plan](../../plans/code-generation-plan/u03-jo
 ## Hạ tầng
 
 - Image backend cài `postgresql16-client`; compose truyền thư mục tạm upload, backup; role `backup_reader` chỉ `SELECT`.
-- Chạy local không có Drive: tệp ở volume `files-local`, backup ở `backups-local`.
+- Chạy không có Drive: tệp ở volume `files-local`, không có backup database (backup chỉ lưu trên Drive).
 - Runbook `docs/runbooks/restore-isolated.md`, script `infra/scripts/restore-isolated.sh`.
 
 ## Unit test
@@ -73,4 +73,4 @@ User approved additive IBackupDashboardStatus plus metadata/summary records. Bac
 
 - Thư mục gốc của Drive cá nhân cấu hình được: `GOOGLE_DRIVE_FOLDER_NAME` (tên, mặc định `AI Learning Platform`) hoặc `GOOGLE_DRIVE_FOLDER_ID` (thư mục do ứng dụng tạo từ trước; không truy cập được thì quay về theo tên).
 - `U03_BACKUP_PUBLIC_KEY` là tùy chọn: để trống thì `BackupJobHandler` ghi cảnh báo và lưu bản dump không mã hóa; `BackupDecryptTool` nhận ra archive không mã hóa và chép nguyên trạng. `nfr-design-patterns.md` (P16, P17), `logical-components.md` và BR-U03-93 đã cập nhật theo hành vi này (2026-11-17).
-- `StorageConfig` dùng Drive mỗi khi có cấu hình Drive, không xét `U03_REQUIRE_DRIVE`; biến này chỉ quyết định hành vi khi không có Drive. Cấu hình vận hành: [deploy-vps.md](../../../../docs/runbooks/deploy-vps.md) mục 6.
+- `StorageConfig` dùng Drive mỗi khi có cấu hình Drive, không có thì lưu tệp vào thư mục local; `BackupConfig` chỉ dùng Drive, không có Drive thì `BackupScheduleScanner` bỏ qua (biến `U03_REQUIRE_DRIVE` đã bỏ từ 2026-11-26). Cấu hình vận hành: [deploy-vps.md](../../../../docs/runbooks/deploy-vps.md) mục 6.

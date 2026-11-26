@@ -86,7 +86,7 @@ class AcademicsBatchTransactionTest {
         verify(enrollmentRepository,never()).insert(argThat(value->value.accountId().equals(third)));
         verify(eventPublisher).publish(argThat(event->event.payload().get("accountId").equals(first.toString())));
         verify(eventPublisher,times(1)).publish(any());
-        verify(audit).record(argThat(event->event.result()==AuditResult.FAILURE));
+        verifyNoInteractions(audit);
     }
 
     @Test void retryAfterPartialSuccessDoesNotRepublishOrRewriteAlreadyEnrolledStudent() {
@@ -115,12 +115,10 @@ class AcademicsBatchTransactionTest {
         verify(accountLookup).findByEmails(List.of("first@example.test","missing@example.test","third@example.test"));
     }
 
-    @Test void successAuditFailureRollsBackThePendingEnrollmentAndSuppressesActivation() {
-        doAnswer(call->{AuditEvent event=call.getArgument(0);if(event.result()==AuditResult.SUCCESS)throw new IllegalStateException("audit down");return null;}).when(audit).record(any());
-        assertThatThrownBy(()->academicsService.enrollStudents(manager,classId,"first@example.test")).isInstanceOfSatisfying(ApiException.class,error->assertThat(error.readStatus().value()).isEqualTo(503));
-        assertThat(recordingTransactions.committed).isEmpty();assertThat(recordingTransactions.rollbacks).isEqualTo(1);assertThat(recordingTransactions.commits).isZero();
-        verifyNoInteractions(eventPublisher);
-        verify(audit).record(argThat(event->event.result()==AuditResult.FAILURE));
+    @Test void enrollmentWritesNoAudit() {
+        academicsService.enrollStudents(manager,classId,"first@example.test");
+        assertThat(recordingTransactions.committed).containsExactly(first);
+        verifyNoInteractions(audit);
     }
 
     @Test void authorityRevokedBetweenRowsKeepsPriorCommitButRejectsTheRemainingBatch() {

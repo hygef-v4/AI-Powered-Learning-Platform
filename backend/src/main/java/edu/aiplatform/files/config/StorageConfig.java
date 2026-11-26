@@ -4,7 +4,6 @@ import edu.aiplatform.files.integration.DriveClientFactory;
 import edu.aiplatform.files.integration.DriveFolders;
 import edu.aiplatform.files.integration.GoogleDriveStorageAdapter;
 import edu.aiplatform.files.integration.LocalFolderStorageAdapter;
-import edu.aiplatform.files.integration.UnconfiguredStorageAdapter;
 
 import edu.aiplatform.files.service.IStorage;
 import java.nio.file.Path;
@@ -27,10 +26,6 @@ public class StorageConfig {
             log.info("Lưu tệp trên Google Drive ({})",
                     properties.hasSharedDrive() ? "Shared Drive" : "Drive cá nhân");
             return new GoogleDriveStorageAdapter(driveClients, folders);
-        }
-        if (properties.requireDrive()) {
-            log.warn("Chưa cấu hình Google Drive: upload và tải tệp báo tạm thời không khả dụng");
-            return new UnconfiguredStorageAdapter();
         }
         String dir = properties.localStorageDir() == null || properties.localStorageDir().isBlank()
                 ? Path.of(System.getProperty("java.io.tmpdir"), "platform-files").toString()
