@@ -1,9 +1,11 @@
 "use client";
 
 import { AiChatAttachments } from "./AiChatAttachments";
+import { AiRequestLength, MAX_AI_REQUEST_LENGTH } from "./AiRequestLength";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import { useAiChatAttachments } from "../hooks/useAiChatAttachments";
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ClipboardEvent, type DragEvent } from "react";
-import { AiSourcePicker, AiTaskStatus, type SourceChoice } from "@/shared/ai";
+import { AiSourcePicker, AiTaskStatus, PROVIDER_LABEL, type SourceChoice } from "@/shared/ai";
 import { Button, Dialog, Icon, IconButton, MenuItem, cx, showErrorToast, type IconName } from "@/shared/ui";
 import { assignmentsApi } from "../api";
 import { describeError, requestRef } from "../model/format";
@@ -11,7 +13,6 @@ import type { AiDraft, Material } from "../model/types";
 import { msg } from "@/i18n/msg";
 
 const POLL_MS = 2000;
-const MAX_REQUEST = 4000;
 const MAX_WARNINGS = 3;
 const MAX_WAIT_MS = 3 * 60 * 1000;
 const MAX_MATERIALS = 10;
@@ -48,8 +49,11 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   const [opened, setOpened] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const requestTooLong = input.length > MAX_AI_REQUEST_LENGTH;
   const [busy, setBusy] = useState(false);
-  const [pickingSource, setPickingSource] = useState(false);
+  const [sourcePicker, setSourcePicker] = useState<"send" | "choose" | null>(null);
+  const [nextSource, setNextSource] = useState<SourceChoice | null>(null);
+  const [previousSource, setPreviousSource] = useState<SourceChoice | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [menu, setMenu] = useState<AttachMenu | null>(null);
   const [query, setQuery] = useState("");
@@ -68,6 +72,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   const referenceInput = useRef<HTMLInputElement>(null);
   const attach = useRef<HTMLDivElement>(null);
   const field = useRef<HTMLTextAreaElement>(null);
+  const composerBusy = busy || sourcePicker !== null;
 
   useEffect(() => {
     alive.current = true;
@@ -117,11 +122,12 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   }, [menu]);
 
   function toggle() {
+    if (open) {
+      closeChat();
+      return;
+    }
     setOpened(true);
-    setOpen(value => !value);
-    dragDepth.current = 0;
-    setDragging(false);
-    setMenu(null);
+    setOpen(true);
   }
 
   function showMenu(next: AttachMenu | null) {
@@ -138,18 +144,29 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   const hasTemplate = Boolean(template || pickedTemplate);
   const hasReferences = pickedMaterials.length > 0 || sources.uploads.length > 0;
 
-  function chooseSource(event?: FormEvent) {
+  function handleSend(event?: FormEvent) {
     event?.preventDefault();
-    if (pickingSource || submitting.current || !input.trim()) return;
+    if (sourcePicker || submitting.current || !input.trim() || requestTooLong) return;
     if (attachments.pending) { showErrorToast(msg("assignments.components.AiReviseChat.waitForUploadsToFinish")); return; }
     setMenu(null);
-    setPickingSource(true);
+    setSourcePicker("send");
+  }
+
+  function handleChooseSource(choice: SourceChoice) {
+    if (sourcePicker === "choose") {
+      setNextSource(choice);
+      setSourcePicker(null);
+    } else {
+      // An unconfirmed request can be retried with the same selected source and request reference.
+      if (nextSource) setNextSource(choice);
+      void sendMessage(choice);
+    }
   }
 
   async function sendMessage(choice: SourceChoice) {
-    setPickingSource(false);
+    setSourcePicker(null);
     const text = input.trim();
-    if (!text || submitting.current) return;
+    if (!text || submitting.current || requestTooLong) return;
     if (attachments.pending) { showErrorToast(msg("assignments.components.AiReviseChat.waitForUploadsToFinish")); return; }
     const snapshot = attachments.snapshot();
     const materialIds = [...chosen];
@@ -183,6 +200,8 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       if (!alive.current) return;
       accepted = true;
       pendingRequest.current = null;
+      setNextSource(null);
+      setPreviousSource(choice);
       addMessage({ role: "user", text, template: templateName, references });
       setInput("");
       attachments.clear();
@@ -191,7 +210,9 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       draft = await waitForResult(assignmentId, requested, () => alive.current);
       if (!alive.current) return;
       if (draft.status !== "READY" || !draft.proposal) {
-        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.theAssignmentWasNotChanged", { value: String(draft.safeError ?? msg("assignments.components.AiReviseChat.theAiReturnedNoResult")) }), tone: "danger", recover });
+        const failure = draft.safeError ? describeAiFailure(draft.safeError)
+          : msg("assignments.components.AiReviseChat.theAiReturnedNoResult");
+        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.theAssignmentWasNotChanged", { value: failure }), tone: "danger", recover });
         return;
       }
       if (draft.proposal.unchanged) {
@@ -201,7 +222,10 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       }
       const validation = draft.proposal.validation;
       if (validation?.status === "INVALID") {
-        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.couldNotApply", { value: String(validation.issues.map(issue => issue.message).join(" ")) }), tone: "danger", recover });
+        const detail = validation.issues.map(issue => issue.message).join(" ");
+        addMessage({ role: "ai", text: msg("assignments.components.AiReviseChat.couldNotApply", {
+          value: describeAiFailure(`[AI_OUTPUT_INVALID] ${detail}`),
+        }), tone: "danger", recover });
         void assignmentsApi.discardAiDraft(assignmentId, draft.draftId).catch(() => {});
         return;
       }
@@ -233,7 +257,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   }
 
   function addFiles(files: File[]) {
-    if (!busy && !attachments.processing) attachments.addFiles(files);
+    if (!composerBusy && !attachments.processing) attachments.addFiles(files);
   }
 
   function pasteImages(event: ClipboardEvent<HTMLTextAreaElement>) {
@@ -241,21 +265,21 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       .map(item => item.getAsFile()).filter((file): file is File => !!file && file.type.startsWith("image/"));
     if (!files.length) return;
     event.preventDefault();
-    if (busy) return;
+    if (composerBusy) return;
     if (attachments.processing) showErrorToast(msg("assignments.components.AiReviseChat.waitUntilTheFileRole"));
     else addFiles(files);
     const text = event.clipboardData.getData("text/plain");
     if (text) {
       const start = event.currentTarget.selectionStart;
       const end = event.currentTarget.selectionEnd;
-      setInput(current => (current.slice(0, start) + text + current.slice(end)).slice(0, MAX_REQUEST));
+      setInput(current => current.slice(0, start) + text + current.slice(end));
     }
   }
 
   function dragFiles(event: DragEvent<HTMLElement>, entering: boolean) {
     if (!Array.from(event.dataTransfer.types).includes("Files")) return;
     event.preventDefault();
-    if (busy || attachments.processing) return;
+    if (composerBusy || attachments.processing) return;
     dragDepth.current = Math.max(0, dragDepth.current + (entering ? 1 : -1));
     setDragging(dragDepth.current > 0);
   }
@@ -276,12 +300,18 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
     addFiles(files);
   }
 
-  function closeChat() { setOpen(false); dragDepth.current = 0; setDragging(false); }
+  function closeChat() {
+    setOpen(false);
+    setSourcePicker(null);
+    setMenu(null);
+    dragDepth.current = 0;
+    setDragging(false);
+  }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
-      chooseSource();
+      handleSend();
     }
     if (event.key === "Escape") closeChat();
   }
@@ -290,13 +320,17 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
   const matches = (title: string) => !needle || title.toLocaleLowerCase("vi").includes(needle);
   const templateChoices = templates.filter((item) => item.assignmentId !== templateId && matches(item.title));
   const materialChoices = materials.filter((item) => !chosen.includes(item.materialId) && matches(item.title));
+  const sourceLabel = msg("assignments.components.AiReviseChat.changeAiSource");
+  const nextSourceName = nextSource?.source === "SHARED" ? msg("shared.ai.AiSourcePicker.schoolApi")
+    : nextSource?.provider ? PROVIDER_LABEL[nextSource.provider] : null;
+  const sourceHint = nextSourceName ? msg("assignments.components.AiReviseChat.nextAiSource", { source: nextSourceName }) : undefined;
 
   return (
     <>
       {/* Popup giữ nguyên khi đóng (chỉ ẩn) để cuộc trò chuyện và lượt AI đang chạy không mất. */}
       <section id="ai-revise-panel" aria-label={msg("assignments.components.AiReviseChat.editAssignmentWithAi")} data-testid="ai-revise-chat" hidden={!open}
         onDragEnter={event => dragFiles(event, true)} onDragLeave={event => dragFiles(event, false)}
-        onDragOver={event => { if (Array.from(event.dataTransfer.types).includes("Files")) { event.preventDefault(); event.dataTransfer.dropEffect = busy ? "none" : "copy"; } }}
+        onDragOver={event => { if (Array.from(event.dataTransfer.types).includes("Files")) { event.preventDefault(); event.dataTransfer.dropEffect = composerBusy ? "none" : "copy"; } }}
         onDrop={dropFiles}
         className={cx("fixed right-4 bottom-20 z-40 w-[min(22rem,calc(100vw-2rem))] flex-col rounded-2xl border",
           "border-line bg-surface shadow-[var(--shadow-float)] h-[min(30rem,calc(100dvh-9.5rem))]",
@@ -313,7 +347,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
               message.role === "user" ? "self-end bg-primary text-on-primary"
                 : message.tone === "danger" ? "self-start bg-danger-soft text-danger" : "self-start bg-sunken text-ink")}>
               <p className="whitespace-pre-line">{message.text}</p>
-              {message.recover && <button type="button" disabled={busy || !!input || hasTemplate || hasReferences}
+              {message.recover && <button type="button" disabled={composerBusy || !!input || hasTemplate || hasReferences}
                 onClick={message.recover} className="mt-1 text-[11px] font-semibold underline disabled:opacity-40">{msg("assignments.components.AiReviseChat.restoreRequest")}</button>}
               {(message.template || (message.references?.length ?? 0) > 0) && (
                 <ul className="mt-1.5 flex flex-col gap-0.5 border-t border-white/30 pt-1.5 text-[11px]" aria-label={msg("assignments.components.AiReviseChat.attachedFiles")}>
@@ -329,10 +363,10 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
         </div>
         <div className="flex shrink-0 flex-col gap-2 border-t border-line px-3 py-2.5">
           <AiChatAttachments attachments={attachments} templateName={template?.file.name ?? pickedTemplate?.title}
-            materials={pickedMaterials} disabled={busy} onUnchoose={id => setChosen(current => current.filter(value => value !== id))} />
-          <form onSubmit={chooseSource} className="flex items-end gap-1.5">
+            materials={pickedMaterials} disabled={composerBusy} onUnchoose={id => setChosen(current => current.filter(value => value !== id))} />
+          <form onSubmit={handleSend} aria-busy={busy || sourcePicker === "send"} className="flex items-end gap-1.5">
             <div ref={attach} className="relative shrink-0">
-              <IconButton icon="add" label={msg("assignments.components.AiReviseChat.addATemplateOrReferences")} data-testid="ai-revise-attach" disabled={busy || attachments.processing}
+              <IconButton icon="add" label={msg("assignments.components.AiReviseChat.addATemplateOrReferences")} data-testid="ai-revise-attach" disabled={composerBusy || attachments.processing}
                 aria-haspopup="menu" aria-expanded={menu !== null} onClick={() => showMenu(menu ? null : "root")}
                 className="border border-line-strong" />
               {menu && (
@@ -372,21 +406,35 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
                 </div>
               )}
             </div>
-            <textarea ref={field} aria-label={msg("assignments.components.AiReviseChat.editRequest")} data-testid="ai-revise-input" rows={1} maxLength={MAX_REQUEST}
-              value={input} disabled={busy} onPaste={pasteImages} onChange={(event) => setInput(event.target.value)} onKeyDown={handleKeyDown}
+            <IconButton icon="swap_horiz" label={sourceLabel} aria-haspopup="dialog" disabled={composerBusy}
+              aria-description={sourceHint} title={sourceHint ?? sourceLabel}
+              className={cx("border border-line-strong", nextSource && "bg-primary-soft text-primary-ink")}
+              onClick={() => {
+                setMenu(null);
+                setSourcePicker("choose");
+              }} />
+            <textarea ref={field} aria-label={msg("assignments.components.AiReviseChat.editRequest")} data-testid="ai-revise-input" rows={1}
+              aria-describedby={input.length > 0 ? "revision-ai-request-length" : undefined}
+              aria-invalid={requestTooLong || undefined}
+              value={input} disabled={composerBusy} onPaste={pasteImages} onChange={(event) => setInput(event.target.value)} onKeyDown={handleKeyDown}
               placeholder={msg("assignments.components.AiReviseChat.exampleTranslateTheWholeAssignment")}
-              className="min-h-8 flex-1 resize-none rounded-lg border border-field bg-surface px-2.5 py-1.5 text-xs leading-4 text-ink outline-none focus:outline-2 focus:outline-focus disabled:opacity-60" />
+              className={cx("min-h-8 min-w-0 flex-1 resize-none rounded-lg border bg-surface px-2.5 py-1.5 text-xs leading-4 text-ink outline-none focus:outline-2 focus:outline-focus disabled:opacity-60",
+                requestTooLong ? "border-danger" : "border-field")} />
             <IconButton type="submit" icon="arrow_forward" label={msg("assignments.components.AiReviseChat.sendRequest")} data-testid="ai-revise-send"
-              disabled={busy || !input.trim() || attachments.pending} className="bg-primary text-on-primary hover:bg-primary-strong hover:text-on-primary" />
+              disabled={composerBusy || !input.trim() || attachments.pending || requestTooLong} className="bg-primary text-on-primary hover:bg-primary-strong hover:text-on-primary" />
           </form>
+          {input.length > 0 && <AiRequestLength id="revision-ai-request-length" length={input.length} />}
           <input ref={referenceInput} type="file" multiple accept=".docx,.pdf,.txt,.png,.jpg,.jpeg,.webp" hidden aria-label={msg("assignments.components.AiReviseChat.uploadAFileFromComputer")}
             data-testid="ai-revise-reference-file"
             onChange={event => { addFiles(Array.from(event.target.files ?? [])); event.target.value = ""; }} />
         </div>
       </section>
-      {pickingSource && <AiSourcePicker open requireConfirmation
+      {sourcePicker && <AiSourcePicker open hideUntilSelectionNeeded hideNotes requireConfirmation={sourcePicker === "choose"}
+        nextChoice={nextSource} submitNextChoiceIfAvailable={sourcePicker === "send"}
+        previousChoice={sourcePicker === "choose" ? previousSource : null}
+        confirmLabel={sourcePicker === "choose" ? msg("assignments.components.AiReviseChat.useSourceForNextRequest") : undefined}
         task={msg("assignments.components.AiReviseChat.editAssignmentWithAi")}
-        onCancel={() => setPickingSource(false)} onSubmit={(choice) => void sendMessage(choice)} />}
+        onCancel={() => setSourcePicker(null)} onSubmit={handleChooseSource} />}
       <Dialog open={attachments.replacement !== null} title={msg("assignments.components.AiReviseChat.replaceTemplate")} onClose={attachments.cancelReplacement}
         footer={<Button variant="primary" onClick={() => void attachments.confirmReplacement()}>{msg("assignments.components.AiReviseChat.replaceTemplate2")}</Button>}>
         <p>{msg("assignments.components.AiReviseChat.theNewTemplateReplacesThe")}</p>

@@ -107,8 +107,9 @@ final class PromptRuleScanner {
         }
         String cleaned = PromptTextNormalizer.clean(raw).strip();
         int length = PromptTextNormalizer.countCodePoints(cleaned);
-        if (length > policy.calculateMaxChars()) {
-            return reject(GuardrailCategory.OFF_TOPIC, "T1_LENGTH_MAX", policy.describeTooLong());
+        int limit = policy.calculateMaxChars(input.action());
+        if (length > limit) {
+            return reject(GuardrailCategory.OFF_TOPIC, "T1_LENGTH_MAX", PromptContextPolicy.describeTooLong(limit));
         }
         if (input.action() != null && input.action().isTextRequired() && length < PromptContextPolicy.MIN_TEXT_CHARS) {
             return reject(GuardrailCategory.OFF_TOPIC, "T1_LENGTH_MIN", policy.describeTooShort());

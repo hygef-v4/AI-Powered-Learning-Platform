@@ -26,6 +26,27 @@ const CODE_KEYS: Record<string, string> = {
   ANNOUNCEMENT_INVALID: "announcementInvalid",
   ANNOUNCEMENT_EMAIL_INVALID: "announcementEmailInvalid",
   ANNOUNCEMENT_STALE: "conflict",
+  AI_REQUEST_TOO_LONG: "aiRequestTooLong",
+  AI_PROMPT_TOO_LARGE: "aiPromptTooLarge",
+  AI_SOURCE_UNAVAILABLE: "aiSourceUnavailable",
+  AI_PROVIDER_DNS_FAILED: "aiProviderDnsFailed",
+  AI_PROVIDER_CONNECT_FAILED: "aiProviderConnectFailed",
+  AI_PROVIDER_TIMEOUT: "aiProviderTimeout",
+  AI_PROVIDER_CONNECTION_LOST: "aiProviderConnectionLost",
+  AI_PROVIDER_INTERRUPTED: "aiProviderInterrupted",
+  AI_PROVIDER_RESULT_UNKNOWN: "aiProviderResultUnknown",
+  AI_PROVIDER_AUTH_FAILED: "aiProviderAuthFailed",
+  AI_PROVIDER_MODEL_UNAVAILABLE: "aiProviderModelUnavailable",
+  AI_PROVIDER_QUOTA_EXHAUSTED: "aiProviderQuotaExhausted",
+  AI_PROVIDER_RATE_LIMITED: "aiProviderRateLimited",
+  AI_PROVIDER_RATE_OR_QUOTA: "aiProviderRateOrQuota",
+  AI_PROVIDER_OVERLOADED: "aiProviderOverloaded",
+  AI_PROVIDER_REQUEST_REJECTED: "aiProviderRequestRejected",
+  AI_PROVIDER_ERROR: "aiProviderError",
+  AI_IMAGES_UNSUPPORTED: "aiImagesUnsupported",
+  AI_OUTPUT_LIMIT: "aiOutputLimit",
+  AI_OUTPUT_INVALID: "aiOutputInvalid",
+  AI_OUTPUT_UNUSABLE: "aiOutputUnusable",
 };
 
 const STATUS_KEYS: Record<number, string> = {
@@ -51,6 +72,8 @@ function findMessageKey({ status, code }: ProblemText): string {
  * ngôn ngữ khác dịch theo `code`, không có thì theo status, không bao giờ hiện câu tiếng Việt của server.
  */
 export function describeApiProblem(problem: ProblemText): string {
+  const aiError = describeAiCode(problem.code, problem.detail);
+  if (aiError) return aiError;
   if (LOCALE === "vi" && problem.detail) return problem.detail;
   const key = findMessageKey(problem);
   if (key === "fileTooLarge") {
@@ -58,4 +81,16 @@ export function describeApiProblem(problem: ProblemText): string {
     if (limitMb) return msg("shared.api.errorMessages.fileTooLargeMb", { value: limitMb });
   }
   return msg(`shared.api.errorMessages.${key}`);
+}
+
+function describeAiCode(code: string | undefined, detail?: string): string | undefined {
+  if (!code?.startsWith("AI_") || !CODE_KEYS[code]) return undefined;
+  const text = LOCALE === "vi" && detail ? detail : msg(`shared.api.errorMessages.${CODE_KEYS[code]}`);
+  return `[${code}] ${text}`;
+}
+
+/** Kết quả tác vụ cũ có thể chỉ có thông báo, kết quả mới kèm mã trong safeError. */
+export function describeAiFailure(value: string): string {
+  const match = /^\[(AI_[A-Z_]+)\]\s+([\s\S]*)$/.exec(value);
+  return match ? describeAiCode(match[1], match[2]) ?? value : value;
 }

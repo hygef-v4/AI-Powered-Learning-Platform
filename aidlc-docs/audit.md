@@ -15381,3 +15381,67 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, Build and Test U03.
 
 ---
+
+## U07 Nguồn AI của chat sửa đề
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1]
+giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại cái phần mỗi lần bấm gửi AI thì nó lại hiện ra cái bảng này[Image #1]  mặc dù tôi đã chọn mặc định api ai rồi, tôi nghĩ nên thêm nút đổi api nhỏ ở cạnh chỗ tải file ấy khi nào muốn đổi thì bấm, còn mặc định thì nó theo cáu hình ở ai setting."
+**AI Response**: "Xác định chat luôn bật requireConfirmation từ f8b4523e. Đề xuất sửa bị chặn khi kết quả sau gộp và chuẩn hóa có blocks rỗng. Nguồn mặc định sẽ được đọc từ danh sách nguồn khả dụng."
+**Context**: Construction, chẩn đoán U07.
+
+---
+
+## U07 Tiếp tục đổi nguồn AI
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "làm tiếp"
+**AI Response**: "Triển khai nút Đổi nguồn AI cạnh nút đính kèm và giữ lựa chọn riêng cho lần gửi tiếp theo. Kiểm thử hồi quy tái hiện popup ở mã cũ."
+**Context**: Construction, Code Generation U07.
+
+---
+
+## U07 Ghi chú bộ chọn nguồn
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] k cần cái ghi chú này đâu"
+**AI Response**: "Ẩn ghi chú ước tính và đoạn hướng dẫn nguồn ở bộ chọn của chat. Giữ bên chịu phí, hạn mức và lý do nguồn chưa khả dụng."
+**Context**: Construction, Code Generation U07.
+
+---
+
+## U07 Tô nguồn đang chọn
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] với đang dùng cái nào thì tô đang chọn vào đấy"
+**AI Response**: "Tô nguồn cho lần tiếp theo. Khi không có lựa chọn riêng, dùng nguồn mặc định khả dụng hoặc nguồn vừa dùng trong chat khi chưa đặt mặc định."
+**Context**: Construction, Code Generation U07.
+
+---
+
+## U07 Yêu cầu commit và mở PR
+**Timestamp**: 2026-11-26T07:53:54Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit change rồi tạo pr lên staging"
+**AI Response**: "Commit thay đổi đã kiểm thử của chat Sửa đề bằng AI và mở pull request từ audit-staging vào staging."
+**Context**: Construction, bàn giao U07.
+
+---
+
+## U07 Giới hạn yêu cầu và mã lỗi AI
+**Timestamp**: 2026-11-26T08:22:59Z
+**Requested by:** Quang Hung
+**User Input**: "h them ma loi ro rang va nang ki tu len max 10000 ki tu co the nang output len cho phu hop, neu input qua ki tu phai dua ra ghi chu"
+**AI Response**: "Đồng bộ mức 10.000 ở giao diện, service và lớp kiểm tra tạo và sửa đề. Giữ văn bản vượt ngưỡng với bộ đếm và cảnh báo. Yêu cầu tạo đề dài hơn 4.000 ký tự xin ngân sách đầu ra 12.000 token. Hiện mã lỗi có thể tra cứu."
+**Context**: Construction, U06 và U07.
+
+---
+
+## U09 Ảnh hưởng tới chấm điểm
+**Timestamp**: 2026-11-26T08:22:59Z
+**Requested by:** Quang Hung
+**User Input**: "thay doi nhu vay thi ci anh huong gi den cham diem hien tai ko"
+**AI Response**: "Giữ cách chấm, trần 30 mục và công thức tối đa 8.192 token. Luồng chấm nhận chẩn đoán rõ hơn cho lỗi AI. Tạo đề dài có thể giữ nhiều quota API trường hơn và làm giảm số token còn lại dành cho chấm trên nguồn dùng chung."
+**Context**: Construction, U09.
+
+---
