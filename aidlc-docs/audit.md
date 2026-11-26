@@ -14845,6 +14845,159 @@ used by CI or deployment. Replace README references with a plain
 
 ---
 
+## Hướng dẫn đọc code U01, U10, U11 (mentor)
+**Timestamp**: 2026-11-24T18:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tôi cần hiểu code các phần tôi đảm nhiệm, đóng vai trò như 1 mentor, kiểm tra và giải thích chi tiết cho tôi để tôi có thể hiểu (coi tôi như 1 người mới chưa biết gì)."
+**AI Response**: "Xác định Người 1 phụ trách U01, U10, U11 theo unit-of-work.md; giải thích backend (đăng nhập, phiên Redis, JWT, phân quyền, vòng đời Quiz, phiên bản câu, phát hành, chấm, lượt làm, tự lưu, tự nộp, hiện kết quả) và nêu 5 điểm nhỏ cần dọn. Không sửa code."
+**Context**: Giải thích code, không thuộc stage AI-DLC.
+
+---
+
+## Giải thích frontend U01, U10, U11
+**Timestamp**: 2026-11-24T18:40:30Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Giải thích frontend"
+**AI Response**: "Giải thích API client (CSRF, refresh dùng chung, 409 concurrent), SessionProvider, chống open redirect, RoleGuard, proxy CSP, slot registry, trang soạn Quiz và trang làm Quiz (debounce, flush tuần tự, keepalive, gộp ba bên khi xung đột, lệch đồng hồ, nộp). Xác minh điểm 5 lần trước là ổn; phát hiện lưu nửa chừng ở QuizDetailPage.saveSettings."
+**Context**: Giải thích code, không thuộc stage AI-DLC.
+
+---
+
+## Sửa các điểm nhỏ U10, U11
+**Timestamp**: 2026-11-24T18:56:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa các điểm nhỏ"
+**AI Response**: "Gộp hai Javadoc của Quiz.DEFAULT_SETTINGS cho khớp code; sửa link Javadoc #ownAttempt thành #loadOwnAttempt trong PracticeSupport; QuizAttemptService.start gọi listByAccount một lần; QuizAttempt.replaceAnswers và markSubmitted giữ outcome; QuizDetailPage.saveSettings cập nhật version ngay sau khi lưu cấu hình để lưu điểm câu lỗi không gây xung đột version. Backend 58 test liên quan đạt (QuizAttemptTest, QuizPracticeServicesTest, AttemptActivityAssessorTest, QuizPracticeControllerTest, QuizTest); frontend typecheck, eslint và 82 test quizzes đạt. Không chạy toàn bộ mvn verify, chưa commit."
+**Context**: Construction, sửa nhỏ U10/U11, không đổi API, schema hay hành vi nghiệp vụ.
+
+---
+
+## Kiểm tra luồng nghiệp vụ Quiz U10, U11
+**Timestamp**: 2026-11-25T09:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra lại businessflow cho tôi"
+**AI Response**: "Đối chiếu business-logic-model và business-rules của U11 (và phần phát hành, ngưng, version của U10) với code. Phát hiện: (1) lượt không giới hạn giờ bị treo IN_PROGRESS khi lớp không còn OPEN hoặc sinh viên rời lớp; (2) version mới là quizId mới nên số lượt về 0, tài liệu chưa nói; tài liệu lệch code ở F5 bước 3, F3, BR-U11-40 (QUIZ_SUBMIT_REJECTED khi quá giờ, lý do QUIZ_NOT_OPEN, thiếu QUIZ_PENALTY_*). Không sửa code."
+**Context**: Rà soát, không thuộc stage AI-DLC.
+
+---
+
+## Sửa lượt Quiz bị treo khi lớp đóng hoặc rời lớp
+**Timestamp**: 2026-11-25T10:02:10Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa lỗi 1"
+**AI Response**: "Bộ quét quiz-auto-submit thêm bước tự nộp lượt IN_PROGRESS của lớp không còn OPEN hoặc của sinh viên không còn ghi danh lớp, bằng câu trả lời đã lưu, chế độ mới AUTO_ACCESS_LOST (migration mở rộng check constraint); U05 lỗi thì bỏ qua lớp đó, không nộp. Frontend thêm nhãn cho chế độ mới; cập nhật BR-U11-14, F6, domain-entities, code-summary. Backend: QuizPracticeServicesTest 41 (thêm 3), QuizAttemptTest, QuizPracticeControllerTest, AttemptActivityAssessorTest đạt; QuizAttemptRepositoryIntegrationTest 10 đạt trên Postgres Testcontainers (thêm 1, kiểm migration). Frontend tsc và 39 test quizpractice đạt. Không chạy toàn bộ mvn verify, chưa commit."
+**Context**: Construction, sửa lỗi U11; đổi schema (check constraint submit_mode) và thêm giá trị enum SubmitMode.
+
+---
+
+## Commit sửa lượt Quiz bị treo
+**Timestamp**: 2026-11-25T10:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi trong cây làm việc với thông điệp hợp lý."
+**AI Response**: "Commit toàn bộ thay đổi sửa lượt Quiz bị treo (AUTO_ACCESS_LOST) lên nhánh chi-cuongg/quiz-small-fixes; không push."
+**Context**: Construction, U11, commit.
+
+---
+
+## Sửa tài liệu U11 cho khớp code (mục 3–6)
+**Timestamp**: 2026-11-25T10:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa tài liệu cho các mục 3–6"
+**AI Response**: "Sửa business-logic-model F3 (kiểm lớp, Quiz OPEN trước khi trả lượt đang làm; lượt quá hạn tự nộp), F5 bước 3 (quá hạn cộng 30 giây thì tự nộp AUTO_TIME_LIMIT, không trả lỗi), BR-U11-40 (QUIZ_SUBMIT_REJECTED chỉ khi bắt đầu lượt bị từ chối: NO_ATTEMPTS_LEFT, QUIZ_NOT_OPEN; thêm QUIZ_PENALTY_APPLIED, QUIZ_PENALTY_DISMISSED). Chỉ sửa tài liệu, không đổi code."
+**Context**: Construction, U11, đồng bộ tài liệu với code.
+
+---
+
+## Commit sửa tài liệu U11
+**Timestamp**: 2026-11-25T10:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit các thay đổi tài liệu"
+**AI Response**: "Commit các thay đổi tài liệu U11 (F3, F5, BR-U11-40, code-summary) và audit.md lên nhánh chi-cuongg/quiz-small-fixes; không push."
+**Context**: Construction, U11, commit.
+
+---
+
+## Push nhánh quiz-small-fixes
+**Timestamp**: 2026-11-25T10:45:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Push nhánh lên remote"
+**AI Response**: "Push chi-cuongg/quiz-small-fixes lên origin (nhánh mới, đặt upstream); chưa tạo PR."
+**Context**: Construction, U10/U11, push.
+
+---
+
+## Tạo PR quiz-small-fixes
+**Timestamp**: 2026-11-25T10:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tạo PR"
+**AI Response**: "Tạo PR #137 từ chi-cuongg/quiz-small-fixes vào staging (theo cách các nhánh tính năng khác vào staging): sửa lượt Quiz bị treo (AUTO_ACCESS_LOST), tài liệu U11, sửa nhỏ từ review."
+**Context**: Construction, U10/U11, pull request.
+
+---
+
+## Bật Auto-fix cho PR #137
+**Timestamp**: 2026-11-25T10:55:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Bật Auto-fix"
+**AI Response**: "Bật Auto-fix cho PR #137: app báo phiên này khi CI lỗi, xung đột merge hoặc có góp ý review."
+**Context**: Construction, U10/U11, theo dõi pull request.
+
+---
+
+## Commit audit.md và push lên PR #137
+**Timestamp**: 2026-11-25T11:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit audit.md và push lên PR"
+**AI Response**: "Commit các mục audit (push, tạo PR, Auto-fix, lần commit này) và push lên chi-cuongg/quiz-small-fixes."
+**Context**: Construction, U10/U11, commit và push.
+
+---
+
+## Auto-fix: CI backend lỗi trên PR #137
+**Timestamp**: 2026-11-25T11:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) CI check \"backend\" failed at head 9e7749dd09"
+**AI Response**: "Nguyên nhân: staging (c964df45, BR-U02-10) bỏ audit của U11 nên test mới dùng biến audits không biên dịch được trên bản merge. Merge origin/staging vào nhánh, bỏ dòng kiểm audit trong test mới, ghi BR-U11-40 không còn hiệu lực và bỏ nhắc audit ở F3, code-summary. Test quizpractice (66) đạt trên bản đã merge, gồm test tích hợp Postgres."
+**Context**: Construction, U11, sửa CI.
+
+---
+
+## Construction - U11 Quiz Practice tài liệu audit
+**Timestamp**: 2026-11-25T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa BR-U11-33 và BR-U11-41 cho khớp BR-U02-10"
+**AI Response**: "BR-U11-33: quyết định trừ điểm không còn ghi audit QUIZ_PENALTY_*, quyết định và lý do lưu trên lượt. BR-U11-41: ngoài phạm vi trả 404, không ghi ACCESS_DENIED. Bỏ nhắc audit còn sót ở F5 (business-logic-model), IAudit trong domain-entities, code-summary (F5, quyền, bảng truy vết BR-U11-40/41), logical-components, as-built-baseline và chú thích PracticeSupport, TeacherQuizAttemptService. Không đổi hành vi code."
+**Context**: Construction, U11, đồng bộ tài liệu với BR-U02-10
+
+---
+
+## Construction - U11 Quiz Practice commit tài liệu audit
+**Timestamp**: 2026-11-25T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit và push"
+**AI Response**: "Commit các thay đổi đồng bộ tài liệu U11 với BR-U02-10 (không gồm .claude/launch.json) và push lên chi-cuongg/quiz-small-fixes (PR #137)."
+**Context**: Construction, U11, commit và push
+
+---
+
+## Construction - U11 Quiz Practice mô tả PR
+**Timestamp**: 2026-11-25T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Cập nhật mô tả PR #137"
+**AI Response**: "Thêm vào mục Tài liệu U11 khớp code của PR #137 dòng BR-U11-33, BR-U11-41 khớp BR-U02-10 (không còn ghi audit QUIZ_PENALTY_*, ACCESS_DENIED); các phần khác giữ nguyên."
+**Context**: Construction, U11, cập nhật PR
+
+---
+
+## Construction - U11 Quiz Practice commit audit
+**Timestamp**: 2026-11-25T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit audit.md và push lên PR"
+**AI Response**: "Commit audit.md và push lên chi-cuongg/quiz-small-fixes (PR #137)."
+**Context**: Construction, U11, commit và push
+
+---
+
 ## System test WF03/WF04 — sửa defect còn lại và bổ sung BR
 **Timestamp**: 2026-11-25T02:50:00Z
 **Requested by:** Hải Nam
@@ -15112,12 +15265,39 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 
 ---
 
+## Construction - U11 Quiz Practice Auto-fix xung đột
+**Timestamp**: 2026-11-25T16:35:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) PR #137 có xung đột merge với staging tại ec85dcb7."
+**AI Response**: "Merge origin/staging vào chi-cuongg/quiz-small-fixes. Chỉ audit.md xung đột: hai bên cùng thêm mục cuối file, giữ cả hai. Test quizpractice và quizzes backend (258) đạt, frontend tsc và 126 test quiz đạt."
+**Context**: Construction, U11, Auto-fix PR #137
+
+---
+
 ## U01 Chủ nhiệm môn đăng nhập vào /manager
 **Timestamp**: 2026-11-25T17:00:00Z
 **Requested by:** Quang Hung
 **User Input**: "lúc đăng nhập vào subject manager tôi nghĩ nên chuyển đến trang https://alapedu.online/manager chứ k hải trang lớp như teacher"
 **AI Response**: "Đổi `HomePaths.resolveHomePath` cho SUBJECT_MANAGER từ `/teaching/classes` sang `/manager` (hằng `MANAGER_DASHBOARD` đã có), bỏ hằng `TEACHING_CLASSES` không còn dùng, sửa `AuthServiceTest`. Frontend dùng `homePath` do backend trả nên không đổi."
 **Context**: Construction, U01 F15 (BR-U01-48), sửa nhỏ, không đổi schema hay API.
+
+---
+
+## Construction - U11 Quiz Practice Auto-fix xung đột lần 2
+**Timestamp**: 2026-11-26T00:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) PR #137 có xung đột merge với staging tại 7c259ac9."
+**AI Response**: "Merge origin/staging vào chi-cuongg/quiz-small-fixes. Chỉ audit.md xung đột: hai bên cùng thêm mục cuối file, giữ cả hai. Staging chỉ đổi U01 (HomePaths), không chạm file của PR; chạy lại test identity bị ảnh hưởng."
+**Context**: Construction, U11, Auto-fix PR #137
+
+---
+
+## Construction - U11 Quiz Practice Auto-fix review
+**Timestamp**: 2026-11-26T00:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) PR #137 có review comment 7170130266: race condition khi đọc ghi danh trước lượt đang làm trong QuizAutoSubmitScanner, quét lượt treo không chia lô, thiếu test frontend cho AUTO_ACCESS_LOST và giữ version ở QuizDetailPage."
+**AI Response**: "QuizAutoSubmitScanner đọc lượt đang làm của lớp trước, bỏ qua lớp không có lượt, rồi mới đọc lớp và ghi danh; nộp AUTO_ACCESS_LOST tối đa BATCH (100) lượt mỗi lần chạy. Thêm test backend (lượt bắt đầu sau khi đọc ghi danh không bị nộp, chia lô) và frontend (nhãn AUTO_ACCESS_LOST, lưu điểm lỗi sau khi lưu cấu hình thì thử lại không xung đột). Cập nhật F6. QuizPracticeServicesTest 43/43, frontend quiz 127/127, tsc đạt."
+**Context**: Construction, U11, Auto-fix PR #137
 
 ---
 
@@ -15145,5 +15325,23 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **User Input**: "giúp tôi commit"
 **AI Response**: "Đưa phần xóa hai wrapper, cập nhật test và ghi nhận AI-DLC vào cùng một thay đổi cục bộ."
 **Context**: Construction, U06.
+
+---
+
+## Construction - U11 Quiz Practice Auto-fix xung đột lần 3
+**Timestamp**: 2026-11-26T01:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) PR #137 có xung đột merge với staging tại 7f594c22."
+**AI Response**: "Merge origin/staging vào chi-cuongg/quiz-small-fixes. Chỉ audit.md xung đột: hai bên cùng thêm mục cuối file, giữ cả hai. Staging chỉ đổi U06 (wrapper MCP), agent-skills và uml, không chạm file của PR."
+**Context**: Construction, U11, Auto-fix PR #137
+
+---
+
+## Construction - U11 Quiz Practice Auto-fix CI backend
+**Timestamp**: 2026-11-26T01:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "(Auto-fix) PR #137: CI backend lỗi tại b50859ce."
+**AI Response**: "Nguyên nhân: QuizAutoSubmitScanner có hai constructor (thêm constructor nhận batch cho test) nên Spring không chọn được, context test tích hợp không khởi động. Đánh dấu @Autowired cho constructor chính. CrossUnitFlowIntegrationTest 9/9 và QuizPracticeServicesTest 43/43 đạt."
+**Context**: Construction, U11, Auto-fix PR #137
 
 ---

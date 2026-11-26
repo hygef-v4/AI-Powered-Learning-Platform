@@ -30,7 +30,7 @@ U11 không sở hữu: Quiz, câu, đáp án (U10), dữ liệu hoạt động (
 | `answers` | JSON | Câu → danh sách lựa chọn |
 | `answerVersion` | số | Tăng mỗi lần lưu |
 | `status` | enum | `IN_PROGRESS`, `SUBMITTED` |
-| `submitMode` | enum | `MANUAL`, `AUTO_TIME_LIMIT`, `AUTO_RETIRED` |
+| `submitMode` | enum | `MANUAL`, `AUTO_TIME_LIMIT`, `AUTO_RETIRED`, `AUTO_ACCESS_LOST` (từ 2026-11-25) |
 | `startedAt`, `deadlineAt`, `lastSavedAt`, `submittedAt` | thời gian | `deadlineAt` trống khi Quiz không giới hạn giờ |
 | `score`, `maxScore`, `correctCount` | số | Có sau khi nộp |
 | `result` | JSON | Đúng sai, điểm từng câu |
@@ -68,7 +68,6 @@ stateDiagram-v2
 | Interface | Unit | Dùng để |
 |---|---|---|
 | `IAuthorization` | U01 | Kiểm R5, R3/R4 |
-| `IAudit` | U02 | Audit |
 | `IClassAccess` | U05 | Ghi danh, lớp đang mở của người học |
 | `IActivityWrite`, `IActivityQuery`; `useActivityTracker`, `ActivityTimeline` | U08 | Ghi và xem dữ liệu rời trang của lượt Quiz |
 | `IQuizQuery`, `IQuizScoring` | U10 | Quiz, đề không có đáp án, chấm, đáp án sau khi nộp |

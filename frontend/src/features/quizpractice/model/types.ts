@@ -8,7 +8,7 @@ export type ActivitySignal = "DISABLED" | "OK" | "NO_SIGNAL" | "SIGNAL_LOST" | "
 export type LeavePenalty = { freeLeaves: number; pointsPerLeave: number; maxPenalty: number | null; minAwaySeconds: number };
 export type QuestionType = "MCQ_SINGLE" | "MCQ_MULTI";
 export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED";
-export type SubmitMode = "MANUAL" | "AUTO_TIME_LIMIT" | "AUTO_RETIRED";
+export type SubmitMode = "MANUAL" | "AUTO_TIME_LIMIT" | "AUTO_RETIRED" | "AUTO_ACCESS_LOST";
 
 export type PracticeQuizRow = {
   quizId: string;

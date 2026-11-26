@@ -11,7 +11,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Source | Trách nhiệm |
 |---|---|
 | [quizpractice/controller](../../../../backend/src/main/java/edu/aiplatform/quizpractice/controller) | HTTP endpoints, request/response và lỗi HTTP. |
-| [quizpractice/service](../../../../backend/src/main/java/edu/aiplatform/quizpractice/service) | Use case, phân quyền, transaction/audit và contract implementation. |
+| [quizpractice/service](../../../../backend/src/main/java/edu/aiplatform/quizpractice/service) | Use case, phân quyền, transaction và contract implementation. |
 | [quizpractice/repository](../../../../backend/src/main/java/edu/aiplatform/quizpractice/repository) | Repository interface/implementation, SQL và persistence mapping; JDBC là chuẩn đích toàn dự án. |
 | [quizpractice/model](../../../../backend/src/main/java/edu/aiplatform/quizpractice/model) | Đối tượng, enum và quy tắc nghiệp vụ. |
 | [quizpractice/dto](../../../../backend/src/main/java/edu/aiplatform/quizpractice/dto) | Kiểu dữ liệu request/response riêng. |
