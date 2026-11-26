@@ -228,6 +228,33 @@ it("waits for a successful group refresh before asking the teacher to publish", 
   expect(screen.getByRole("dialog", { name: "Công bố điểm" })).toBeVisible();
 });
 
+it.each(["old submission", "read-only evaluation", "superseded evaluation"] as const)(
+  "blocks group publication when refresh returns a %s",
+  async (state) => {
+    const group = mockGroupWorkspace();
+    const saved = { ...group.evaluation, version: 3, feedback: "Saved group grade" };
+    mocks.saveEvaluation.mockResolvedValue(saved);
+    mocks.loadEvaluation.mockResolvedValueOnce(group).mockResolvedValue({
+      ...group,
+      current: state !== "old submission",
+      editable: state !== "read-only evaluation",
+      evaluation: {
+        ...saved,
+        state: state === "superseded evaluation" ? "SUPERSEDED" : "DRAFT",
+        feedback: "Refreshed group grade",
+      },
+    });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const feedback = await screen.findByRole("textbox", { name: "Nhận xét chung" });
+    fireEvent.change(feedback, { target: { value: saved.feedback } });
+    fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+    await waitFor(() => expect(feedback).toHaveValue("Refreshed group grade"));
+    expect(mocks.saveEvaluation).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+    expect(mocks.publishGrades).not.toHaveBeenCalled();
+  },
+);
+
 it("keeps every recorded author on a shared section and only lists their known parts", async () => {
   const group = mockGroupWorkspace();
   group.sectionAuthors.push({ partId: "p", accountId: "s2" });
@@ -620,7 +647,7 @@ describe("workspace save", () => {
     expect(mocks.publishGrades).not.toHaveBeenCalled();
   });
 
-  it("lets the teacher confirm unflagged feedback after changing its score before publication", async () => {
+  function createReviewedGrade(): Detail {
     const structuredFeedback = {
       schemaVersion: 1,
       summary: { strengths: [], improvements: [], nextSteps: [] },
@@ -629,7 +656,7 @@ describe("workspace save", () => {
         suggestion: null, evidenceBlockId: null, requiresReview: false, reviewReason: null,
       }],
     };
-    const source: Detail = {
+    return {
       ...detail,
       evaluation: {
         ...detail.evaluation, score: 1, structuredFeedback,
@@ -639,6 +666,10 @@ describe("workspace save", () => {
         criteria: [{ criterionId: "c", title: "Design", items: [{ itemId: "i", text: "Test criterion", points: 2 }] }],
       }],
     };
+  }
+
+  it("lets the teacher confirm unflagged feedback after changing its score before publication", async () => {
+    const source = createReviewedGrade();
     const saved = { ...source.evaluation, version: 3, score: 0.7, rubricItemScores: { r: { i: 0.7 } },
       reviewedItemScores: { r: { i: 0.7 } }, acknowledgedReviewItems: { r: ["i"] } };
     mocks.loadEvaluation.mockResolvedValue(source);
@@ -669,6 +700,44 @@ describe("workspace save", () => {
     }));
     fireEvent.click(within(confirm).getByRole("button", { name: "Xác nhận" }));
     await waitFor(() => expect(mocks.publishGrades).toHaveBeenCalledWith([{ evaluationId: "e", version: 3 }]));
+  });
+
+  it("publishes when a draft score is restored to the previously reviewed score", async () => {
+    const source = createReviewedGrade();
+    const changed = { ...source.evaluation, version: 3, score: 0.7, rubricItemScores: { r: { i: 0.7 } } };
+    const restored = { ...source.evaluation, version: 4 };
+    mocks.loadEvaluation.mockResolvedValue(source);
+    mocks.saveEvaluation.mockResolvedValueOnce(changed).mockResolvedValueOnce(restored);
+    mocks.publishGrades.mockResolvedValue({ items: [{ evaluationId: "e", outcome: "SUCCESS" }] });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const scoreInputName = { name: "Điểm mục Test criterion" };
+    fireEvent.change(await screen.findByRole("spinbutton", scoreInputName), { target: { value: "0.7" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    await waitFor(() => expect(screen.getByTestId("save-state")).toHaveTextContent(/Đã lưu/));
+
+    fireEvent.change(screen.getByRole("spinbutton", scoreInputName), { target: { value: "1" } });
+    expect(screen.queryByLabelText("Đã kiểm tra và xác nhận giải thích: Test criterion")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+    const confirm = await screen.findByRole("dialog", { name: "Công bố điểm" });
+    expect(mocks.saveEvaluation).toHaveBeenNthCalledWith(2, "e", expect.objectContaining({
+      version: 3, itemScoresByRubric: { r: { i: 1 } }, reviewedItemScores: { r: { i: 1 } },
+    }));
+    expect(mocks.saveEvaluation.mock.calls[1]?.[1]).not.toHaveProperty("acknowledgedReviewItems");
+    fireEvent.click(within(confirm).getByRole("button", { name: "Xác nhận" }));
+    await waitFor(() => expect(mocks.publishGrades).toHaveBeenCalledWith([{ evaluationId: "e", version: 4 }]));
+  });
+
+  it("shows a review warning before saving corrections to a published grade", async () => {
+    const source = createReviewedGrade();
+    mocks.loadEvaluation.mockResolvedValue({ ...source, evaluation: { ...source.evaluation, state: "PUBLISHED" } });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    fireEvent.change(await screen.findByRole("spinbutton", { name: "Điểm mục Test criterion" }), {
+      target: { value: "0.7" },
+    });
+    const warning = "Còn tiêu chí cần kiểm tra trước khi lưu thay đổi của bài đã công bố.";
+    expect(screen.getByText(new RegExp(warning))).toBeVisible();
+    fireEvent.click(screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Test criterion"));
+    expect(screen.queryByText(new RegExp(warning))).not.toBeInTheDocument();
   });
   it("names the current student and searches all pages before switching submissions", async () => {
     mocks.listSubmissions.mockResolvedValueOnce({ rows: [
@@ -1194,6 +1263,20 @@ describe("AI grading request lifecycle", () => {
   }
 
   const readyProposal = { ...pending, status: "READY", taskState: undefined, proposal: { checks: { r1: ["i1"] }, itemScoresByRubric: { r1: { i1: 1 } }, score: 1, feedback: "AI xong" } };
+  const readyProposalWithReview = {
+    ...readyProposal,
+    proposal: {
+      ...readyProposal.proposal,
+      structuredFeedback: {
+        schemaVersion: 1,
+        summary: { strengths: [], improvements: [], nextSteps: [] },
+        items: [{
+          rubricId: "r1", itemId: "i1", evidence: "Visible model", reason: "Identifies the main entities",
+          suggestion: null, evidenceBlockId: null, requiresReview: true, reviewReason: "Check the diagram",
+        }],
+      },
+    },
+  };
 
   it("fills the form when AI becomes READY and lets the teacher undo or keep it", async () => {
     mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([readyProposal]);
@@ -1264,22 +1347,45 @@ describe("AI grading request lifecycle", () => {
     expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
   });
 
-  it("asks before replacing unsaved manual edits with the AI proposal", async () => {
-    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([readyProposal]);
+  it("asks before replacing unsaved edits and acknowledges flagged items when applying", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending])
+      .mockResolvedValue([readyProposalWithReview]);
     await requestAiGrade();
-    fireEvent.click(screen.getByRole("checkbox", { name: /Thực thể chính/ }));
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
-    fireEvent.click(screen.getByRole("checkbox", { name: /Thực thể chính/ }));
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    const checkbox = { name: "Thực thể chính" };
+    fireEvent.click(screen.getByRole("checkbox", checkbox));
+    expect(screen.getByRole("checkbox", checkbox)).toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", checkbox));
+    expect(screen.getByRole("checkbox", checkbox)).not.toBeChecked();
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", checkbox)).not.toBeChecked();
     fireEvent.click(screen.getByRole("button", { name: "Áp dụng đề xuất" }));
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", checkbox)).toBeChecked();
+    expect(screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Thực thể chính")).toBeChecked();
     fireEvent.click(screen.getByRole("button", { name: "Hoàn tác" }));
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", checkbox)).not.toBeChecked();
+  });
+
+  it("keeps reviewing a flagged score edited after AI prefill when the teacher keeps the proposal", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending])
+      .mockResolvedValue([readyProposalWithReview]);
+    await requestAiGrade();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    const review = screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Thực thể chính");
+    expect(review).not.toBeChecked();
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Điểm mục Thực thể chính" }), {
+      target: { value: "0.7" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Giữ đề xuất" }));
+    expect(review).not.toBeChecked();
+    expect(screen.getByRole("spinbutton", { name: "Điểm mục Thực thể chính" })).toHaveValue(0.7);
+    fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+    expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+    expect(mocks.publishGrades).not.toHaveBeenCalled();
   });
 
   it("reports a proposal that FAILED while polling and lets the teacher request again", async () => {

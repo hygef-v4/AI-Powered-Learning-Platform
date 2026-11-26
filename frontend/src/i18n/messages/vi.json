@@ -2581,6 +2581,7 @@
         "aiGradingSentYouCan": "Đã gửi chấm AI. Bạn có thể tiếp tục làm việc.",
         "youHaveUnsavedMemberAssessments": "Bạn có đánh giá thành viên chưa lưu. Hãy lưu điểm thành viên trước khi công bố.",
         "reviewFeedbackBeforePublishing": "Còn tiêu chí cần kiểm tra trước khi công bố điểm. Hãy mở nhận xét của từng tiêu chí được đánh dấu và tích Đã kiểm tra nhận xét và điểm.",
+        "reviewFeedbackBeforeSavingPublishedGrade": "Còn tiêu chí cần kiểm tra trước khi lưu thay đổi của bài đã công bố. Hãy mở nhận xét của từng tiêu chí được đánh dấu và đối chiếu với điểm hiện tại.",
         "saveGradeBeforePublishing": "Hãy chấm và lưu điểm trước khi công bố.",
         "groupWork": "Bài làm nhóm",
         "studentWork": "Bài làm sinh viên",

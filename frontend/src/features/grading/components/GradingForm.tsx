@@ -253,15 +253,14 @@ export function buildProposalDraftPatch(
   };
 }
 
-export function buildProposalReviewPatch(
-  form: GradingFormValues,
-  feedback?: StructuredFeedback | null,
-): Partial<GradingFormValues> {
+export function buildProposalReviewPatch(form: GradingFormValues): Partial<GradingFormValues> {
   const acknowledgedReviewItems = { ...form.acknowledgedReviewItems };
-  for (const { rubricId, itemId, requiresReview } of feedback?.items ?? []) {
+  for (const { rubricId, itemId, requiresReview } of form.structuredFeedback?.items ?? []) {
     const score = form.itemScores?.[rubricId]?.[itemId];
+    const reviewedScore = form.reviewedItemScores?.[rubricId]?.[itemId];
     const acknowledged = acknowledgedReviewItems[rubricId] ?? [];
-    if (!requiresReview || score === undefined || acknowledged.includes(itemId)) continue;
+    if (!requiresReview || score === undefined || reviewedScore === undefined
+      || Number(score) !== Number(reviewedScore) || acknowledged.includes(itemId)) continue;
     acknowledgedReviewItems[rubricId] = [...acknowledged, itemId];
   }
   return { acknowledgedReviewItems };

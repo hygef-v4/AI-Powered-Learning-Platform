@@ -345,8 +345,8 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       itemScores,
       structuredFeedback,
     );
-    const review = options.acceptReview
-      ? buildProposalReviewPatch({ ...form, ...patch }, structuredFeedback)
+    const review = options.acceptReview && structuredFeedback
+      ? buildProposalReviewPatch({ ...form, ...patch })
       : {};
     setAiBackup((backup) => backup ?? { form, dirty });
     setForm((current) => ({ ...current, ...patch, ...review }));
@@ -372,9 +372,10 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   }
 
   /** Chốt bản AI đã điền (chưa lưu): bỏ khả năng hoàn tác và cho autosave chạy lại. */
-  function keepProposal(structuredFeedback?: StructuredFeedback | null) {
-    if (structuredFeedback?.items.some((item) => item.requiresReview)) {
-      updateForm(buildProposalReviewPatch(form, structuredFeedback));
+  function keepProposal() {
+    const applied = proposals.find((proposal) => proposal.id === form.usedProposalId);
+    if (applied?.proposal?.structuredFeedback && form.structuredFeedback?.items.some((item) => item.requiresReview)) {
+      updateForm(buildProposalReviewPatch(form));
     } else {
       setAiAutoApplied(false);
     }

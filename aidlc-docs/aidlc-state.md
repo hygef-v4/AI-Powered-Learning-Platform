@@ -1644,3 +1644,8 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 
 - [x] Hiện ô xác nhận khi điểm khác điểm gắn với nhận xét. Bài nhóm phải tải lại thành công sau lưu. Bài chưa chấm được nhắc chấm và lưu trước khi công bố.
 - [x] Kiểm tra 244 ca backend và 236 ca frontend, TypeScript và lint phạm vi. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publish-guards.md).
+
+## 2026-11-26 — U09 phản hồi review PR 146
+
+- [x] Giữ đề xuất chỉ tự xác nhận các tiêu chí có điểm khớp với điểm gắn với nhận xét hiện tại. Hiện cảnh báo khi lưu thay đổi của bài đã công bố.
+- [x] 242 kiểm thử frontend U09, TypeScript và ESLint phạm vi đạt. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publication-review-followup.md).

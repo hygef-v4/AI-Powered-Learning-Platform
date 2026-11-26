@@ -264,7 +264,9 @@ function Workspace({
       requiresReview && !form.acknowledgedReviewItems?.[rubricId]?.includes(itemId),
   );
   const feedbackReviewMessage = msg(
-    "grading.pages.GradingWorkspacePage.reviewFeedbackBeforePublishing",
+    evaluation.state === "PUBLISHED"
+      ? "grading.pages.GradingWorkspacePage.reviewFeedbackBeforeSavingPublishedGrade"
+      : "grading.pages.GradingWorkspacePage.reviewFeedbackBeforePublishing",
   );
 
   // Chỉ task còn QUEUED mới hủy được; RUNNING đã gửi tới nhà cung cấp, tự kết thúc khi hết thời gian chờ.
@@ -719,7 +721,7 @@ function Workspace({
           {msg("grading.pages.GradingWorkspacePage.theAssignmentHasNoUsable")}
         </Alert>
       )}
-      {needsFeedbackReview && evaluation.state !== "PUBLISHED" && (
+      {needsFeedbackReview && (
         <Alert tone="warning" role="status">{feedbackReviewMessage}</Alert>
       )}
 
@@ -733,7 +735,7 @@ function Workspace({
             setOfferedProposalId(null);
           }}
           onSkip={() => setOfferedProposalId(null)}
-          onKeep={() => keepProposal(draftProposal.proposal?.structuredFeedback)}
+          onKeep={keepProposal}
           onUndo={discardProposal}
           onDetails={() => setAiOpen(true)}
         />

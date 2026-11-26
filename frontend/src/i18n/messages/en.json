@@ -2581,6 +2581,7 @@
         "aiGradingSentYouCan": "AI grading sent. You can keep working.",
         "youHaveUnsavedMemberAssessments": "You have unsaved member assessments. Save member scores before publishing.",
         "reviewFeedbackBeforePublishing": "Some criteria need review before publishing grades. Open the feedback for each flagged criterion and select Feedback and score checked.",
+        "reviewFeedbackBeforeSavingPublishedGrade": "Some criteria need review before saving changes to this published grade. Open the feedback for each highlighted criterion and verify it against the current score.",
         "saveGradeBeforePublishing": "Grade and save this submission before publishing.",
         "groupWork": "Group work",
         "studentWork": "Student work",
