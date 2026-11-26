@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.assignments.contract.AssignmentContent;
 import edu.aiplatform.assignments.contract.AssignmentScope;
+import edu.aiplatform.assignments.contract.DiagramPngs;
 import edu.aiplatform.assignments.contract.AssignmentView;
 import edu.aiplatform.assignments.contract.BlockOrigin;
 import edu.aiplatform.assignments.contract.BlockType;
@@ -226,11 +227,16 @@ public class AttemptService {
     /** F5 xuất: chủ lượt hoặc giảng viên chính của lớp; sơ đồ kèm mã {@code attempt/attemptId/blockId}. */
     @Transactional(readOnly = true)
     public Export export(Actor actor, UUID attemptId) {
+        return export(actor, attemptId, Map.of());
+    }
+
+    /** {@code diagramPngs}: ảnh sơ đồ trình duyệt vẽ cho sơ đồ chưa có ảnh lưu sẵn (yêu cầu 2026-11-27). */
+    public Export export(Actor actor, UUID attemptId, Map<String, String> diagramPngs) {
         AssignmentAttempt attempt = access.requireReadableAttempt(actor, attemptId, "ATTEMPT_DOCX_EXPORTED");
         // Bài có chấm không còn khái niệm lượt (yêu cầu 2026-11-10): tên tệp chỉ có tên bài; bài Luyện tập vẫn ghi lượt.
         String title = attempt.snapshot().gradingMode() == GradingMode.PRACTICE
                 ? attempt.snapshot().title() + " – Lượt " + attempt.attemptNo() : attempt.snapshot().title();
-        byte[] bytes = docx.export(attempt.content(), title, createLinker(attempt.id()));
+        byte[] bytes = docx.export(DiagramPngs.fillMissing(attempt.content(), diagramPngs), title, createLinker(attempt.id()));
         return new Export(buildFileName(title), bytes);
     }
 
@@ -295,10 +301,12 @@ public class AttemptService {
         ObjectNode content = original.content().deepCopy();
         content.set("xml", block.content().path("xml").deepCopy());
         content.set("diagramType", block.content().path("diagramType").deepCopy());
-        if (block.content().hasNonNull("svgPreview")) {
-            content.set("svgPreview", block.content().get("svgPreview").deepCopy());
-        } else {
-            content.remove("svgPreview");
+        for (String preview : List.of("svgPreview", "pngPreview", "studentEdited")) {
+            if (block.content().hasNonNull(preview)) {
+                content.set(preview, block.content().get(preview).deepCopy());
+            } else {
+                content.remove(preview);
+            }
         }
         return new DocumentBlock(original.id(), original.origin(), original.type(), content);
     }

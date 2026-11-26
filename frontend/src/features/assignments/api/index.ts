@@ -1,5 +1,6 @@
-import { downloadApiFileToDisk, fetchApi } from "@/shared/api/client";
-import type { DocumentModel, RubricCriterion } from "@/shared/document";
+import { buildDiagramPngsRequest, downloadApiFileToDisk, fetchApi } from "@/shared/api/client";
+import type { DocumentBlock, DocumentModel, RubricCriterion } from "@/shared/document";
+import { renderMissingDiagramPngs } from "@/shared/document/diagramPngRenderer";
 import type {
   AiDraft,
   AiSourcePreview,
@@ -148,6 +149,8 @@ export function buildDocxUrl(assignmentId: string, what: "skeleton" | "rubric") 
  * Tải tệp DOCX của đề hoặc rubric về máy (yêu cầu 2026-11-12): gọi qua apiFetch nên phiên hết hạn được làm mới, lỗi trả về
  * dạng ApiError để trang báo, không còn chuyển cả trang sang địa chỉ tệp (lỗi là mất trang soạn).
  */
-export function downloadDocx(assignmentId: string, what: "skeleton" | "rubric", fallbackName: string) {
-  return downloadApiFileToDisk(buildDocxUrl(assignmentId, what), fallbackName);
+export async function downloadDocx(assignmentId: string, what: "skeleton" | "rubric", fallbackName: string, blocks: DocumentBlock[] = []) {
+  if (what === "rubric") return downloadApiFileToDisk(buildDocxUrl(assignmentId, what), fallbackName);
+  // Sơ đồ chưa có ảnh lưu sẵn được trình duyệt dựng ảnh trước khi tải (yêu cầu 2026-11-27).
+  return downloadApiFileToDisk(buildDocxUrl(assignmentId, what), fallbackName, buildDiagramPngsRequest(await renderMissingDiagramPngs(blocks)));
 }

@@ -12,11 +12,17 @@ const clampWidth = (value: number) => Math.round(Math.min(window.innerWidth * 2 
 type Props = {
   xml: string;
   title: string;
-  onSave: (xml: string, svg: string | null) => void;
+  /** {@code png}: data URI PNG Draw.io xuất (kèm XML), dùng khi tải DOCX; null nếu Draw.io không xuất được. */
+  onSave: (xml: string, svg: string | null, png: string | null) => void;
   onClose: () => void;
 };
 
 type DrawioMessage = { event?: string; xml?: string; data?: string; format?: string };
+
+/** Data URI PNG Draw.io trả khi xuất {@code xmlpng}; dạng khác thì null. */
+export function readPngDataUri(data: string | undefined): string | null {
+  return data && data.startsWith("data:image/png;base64,") ? data : null;
+}
 
 /** Giải data URI SVG (base64 hoặc mã hóa URL) mà Draw.io trả khi xuất {@code xmlsvg}. */
 export function decodeSvgDataUri(data: string | undefined): string | null {
@@ -41,11 +47,12 @@ export function decodeSvgDataUri(data: string | undefined): string | null {
  * Draw.io nhúng từ embed.diagrams.net (NFR-U07-32) trong cột bên phải kéo giãn được, đẩy trang sang trái thay vì che
  * trang (yêu cầu 2026-10-22, theo bản demo): {@code html.drawio-panel-open} và biến {@code --drawio-panel-width} cho
  * lề phải của body (globals.css). Chỉ nhận message đúng origin và đúng iframe; Lưu thì xuất {@code xmlsvg} để có XML
- * đầy đủ và SVG xem trước (backend làm sạch SVG khi lưu).
+ * đầy đủ và SVG xem trước (backend làm sạch SVG khi lưu), rồi xuất {@code xmlpng} để tải DOCX có đúng ảnh sơ đồ
+ * (yêu cầu 2026-11-27).
  */
 export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
   const frame = useRef<HTMLIFrameElement>(null);
-  const pending = useRef<string | null>(null);
+  const pending = useRef<{ xml: string; svg: string | null; stage: "svg" | "png" } | null>(null);
   const [ready, setReady] = useState(false);
   const [width, setWidth] = useState(() => (typeof window === "undefined" ? 800 : Math.round(window.innerWidth / 2)));
   const [dragging, setDragging] = useState(false);
@@ -102,11 +109,18 @@ export function DiagramEditor({ xml, title, onSave, onClose }: Props) {
         setReady(true);
         post({ action: "load", xml: handlers.current.xml, autosave: 0, title });
       } else if (message.event === "save" && message.xml) {
-        pending.current = message.xml;
+        pending.current = { xml: message.xml, svg: null, stage: "svg" };
         post({ action: "export", format: "xmlsvg", xml: message.xml, spinKey: "saving" });
       } else if (message.event === "export") {
-        const saved = message.xml ?? pending.current;
-        if (saved) handlers.current.onSave(saved, decodeSvgDataUri(message.data));
+        const current = pending.current;
+        if (current?.stage === "svg") {
+          pending.current = { xml: message.xml ?? current.xml, svg: decodeSvgDataUri(message.data), stage: "png" };
+          post({ action: "export", format: "xmlpng", xml: pending.current.xml, spinKey: "saving" });
+          return;
+        }
+        pending.current = null;
+        const saved = current?.xml ?? message.xml;
+        if (saved) handlers.current.onSave(saved, current?.svg ?? decodeSvgDataUri(message.data), readPngDataUri(message.data));
         handlers.current.onClose();
       } else if (message.event === "exit") {
         handlers.current.onClose();

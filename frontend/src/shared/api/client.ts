@@ -133,9 +133,19 @@ export async function downloadApi(path: string, init: RequestInit = {}): Promise
   return (await fetchResponse(path, { ...init, headers })).blob();
 }
 
+/**
+ * Tải DOCX kèm ảnh PNG của các sơ đồ chưa có ảnh lưu sẵn (yêu cầu 2026-11-27): trình duyệt dựng ảnh bằng Draw.io ẩn rồi
+ * gửi POST cùng đường dẫn; không có sơ đồ nào cần dựng thì vẫn POST với thân trống.
+ */
+export function buildDiagramPngsRequest(diagramPngs: Record<string, string>): RequestInit {
+  return { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ diagramPngs }) };
+}
+
 /** Keeps the server's Unicode filename together with the authenticated download. */
-export async function downloadApiFile(path: string): Promise<{ blob: Blob; filename: string | null }> {
-  const response = await fetchResponse(path, { headers: { Accept: "application/octet-stream" } });
+export async function downloadApiFile(path: string, init: RequestInit = {}): Promise<{ blob: Blob; filename: string | null }> {
+  const headers = new Headers(init.headers);
+  headers.set("Accept", "application/octet-stream");
+  const response = await fetchResponse(path, { ...init, headers });
   const disposition = response.headers.get("Content-Disposition") ?? "";
   const encodedName = /filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1];
   const plainName = /filename="([^"]*)"/i.exec(disposition)?.[1];
@@ -150,8 +160,8 @@ export async function downloadApiFile(path: string): Promise<{ blob: Blob; filen
   return { blob: await response.blob(), filename };
 }
 
-export async function downloadApiFileToDisk(path: string, fallbackName: string): Promise<void> {
-  const { blob, filename } = await downloadApiFile(path);
+export async function downloadApiFileToDisk(path: string, fallbackName: string, init: RequestInit = {}): Promise<void> {
+  const { blob, filename } = await downloadApiFile(path, init);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

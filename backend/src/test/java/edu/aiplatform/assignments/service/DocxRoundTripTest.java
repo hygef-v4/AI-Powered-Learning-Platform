@@ -89,6 +89,25 @@ class DocxRoundTripTest {
     }
 
     @Test
+    void importKeepsTheRealDiagramPngButNotTheGeneratedPlaceholder() {
+        DocumentBlock placeholder = AssignmentFixtures.diagram(DocumentModelServiceTest.DIAGRAM);
+        DocumentBlock real = AssignmentFixtures.diagram(DocumentModelServiceTest.DIAGRAM);
+        // Ảnh thật của sơ đồ (ở đây là ảnh trắng 480x270 không trùng ảnh hệ thống tự dựng vì không có chunk mxfile).
+        byte[] saved = PngChunks.drawDiagramPlaceholder(null, false);
+        ((ObjectNode) real.content()).put("pngPreview", "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(saved));
+
+        List<DocumentBlock> fromPlaceholder = importer.preview(teacher, exporter.export("Đề", null, skeleton(placeholder), linker),
+                BlockOrigin.TEACHER, true, ref -> Optional.empty()).document().blocks();
+        List<DocumentBlock> fromReal = importer.preview(teacher, exporter.export("Đề", null, skeleton(real), linker),
+                BlockOrigin.TEACHER, true, ref -> Optional.empty()).document().blocks();
+
+        assertThat(fromPlaceholder).filteredOn(b -> b.type() == BlockType.DIAGRAM).singleElement()
+                .satisfies(b -> assertThat(b.content().has("pngPreview")).isFalse());
+        assertThat(fromReal).filteredOn(b -> b.type() == BlockType.DIAGRAM).singleElement()
+                .satisfies(b -> assertThat(b.content().path("pngPreview").asText()).startsWith("data:image/png;base64,"));
+    }
+
+    @Test
     void withoutAccessToSourceTheDiagramComesFromThePngChunk() {
         DocumentBlock diagram = AssignmentFixtures.diagram(DocumentModelServiceTest.DIAGRAM);
         byte[] docx = exporter.export("Đề", null, skeleton(diagram), linker);
@@ -171,6 +190,35 @@ class DocxRoundTripTest {
                     .noneSatisfy(text -> assertThat(text).contains("bấm vào ảnh"));
         }
         assertThat(PngChunks.drawDiagramPlaceholder(null, false)).isNotEqualTo(PngChunks.drawDiagramPlaceholder(null, true));
+    }
+
+    @Test
+    void exportUsesTheSavedDiagramPngAndAWhiteImageForAnEmptyDiagram() throws Exception {
+        byte[] saved = PngChunks.drawDiagramPlaceholder(null, false);
+        DocumentBlock drawn = AssignmentFixtures.diagram(DocumentModelServiceTest.DIAGRAM);
+        ((ObjectNode) drawn.content()).put("pngPreview",
+                "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(saved));
+        DocumentBlock empty = AssignmentFixtures.diagram(
+                "<mxfile><diagram id=\"p\"><mxGraphModel><root><mxCell id=\"0\"/><mxCell id=\"1\" parent=\"0\"/>"
+                        + "</root></mxGraphModel></diagram></mxfile>");
+        // Draw.io xuất SVG cả khi sơ đồ trống: không vì thế mà dùng hình đại diện.
+        ((ObjectNode) empty.content()).put("svgPreview", "<svg xmlns=\"http://www.w3.org/2000/svg\"/>");
+
+        byte[] docx = exporter.export("Đề", null, new DocumentModel(List.of(drawn, empty)), linker);
+
+        try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(docx))) {
+            List<byte[]> pictures = doc.getAllPictures().stream()
+                    .map(org.apache.poi.xwpf.usermodel.XWPFPictureData::getData).toList();
+            assertThat(pictures).hasSize(2);
+            assertThat(PngChunks.readMxfile(pictures.get(0))).contains(DocumentModelServiceTest.DIAGRAM);
+            assertThat(pictures.get(0)).hasSizeGreaterThan(saved.length);
+            assertThat(java.util.Arrays.equals(pictures.get(0), PngChunks.drawDiagramPlaceholder(DocumentModelServiceTest.DIAGRAM)))
+                    .isFalse();
+            assertThat(pictures.get(1)).isNotEqualTo(PngChunks.drawDiagramPlaceholder(null, false));
+            assertThat(PngChunks.readMxfile(pictures.get(1))).isPresent();
+        }
+        assertThat(PngChunks.readPngDataUri("data:image/png;base64,bm90IGEgcG5n")).isEmpty();
+        assertThat(PngChunks.readPngDataUri("data:image/svg+xml;base64,AAAA")).isEmpty();
     }
 
     @Test
