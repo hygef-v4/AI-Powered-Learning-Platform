@@ -15684,3 +15684,12 @@ kiểm tra xem đúng không và gửi tôi hướng giải quyết" — sau đ�
 **Context**: Construction, Build and Test — rà soát báo cáo kiểm thử NFR (System Test Report 5.4).
 
 ---
+
+## Bug fix — trình soạn bài làm: khung đề chỉ có phần gốc
+**Timestamp**: 2026-11-26T17:37:14Z
+**Requested by:** max2min
+**User Input**: "phần tạo đề nếu ko có ndoe thì cx ko sửa đc, sửa lại là nếu chỉ có root thì sẽ thêm một cái phần làm của bạn vào dưới root"
+**AI Response**: "Sửa `frontend/src/shared/document/DocumentEditor.tsx`: khi khung đề chỉ có phần gốc và chưa có khối nào, người học có ô 'Bài làm của bạn' ngay dưới gốc để viết (trước đây không có chỗ viết). Áp dụng khi người học được viết phần 'Toàn bài' (bài cá nhân, hoặc bài nhóm đang giữ phần đó); chế độ chỉ xem và người soạn không đổi. Thêm test trong `frontend/tests/shared/document/document.test.tsx`. Vitest 50 file / 516 test qua; tsc không lỗi. Chưa commit."
+**Context**: Construction, sửa lỗi trình soạn tài liệu dùng chung (U07/U08/U12).
+
+---

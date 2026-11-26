@@ -56,6 +56,22 @@ describe("DocumentEditor", () => {
     expect(within(screen.getByTestId("answer-t1")).getByTestId("write-part-t1")).toHaveTextContent("Viết câu trả lời…");
   });
 
+  it("workspace: a skeleton with only the root still gives the student an answer box under it", () => {
+    const onChange = vi.fn();
+    const empty: DocumentModel = { blocks: [] };
+    const { rerender } = render(<DocumentEditor document={empty} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance />);
+    expect(within(screen.getByTestId("answer-DOCUMENT")).getByText("Bài làm của bạn")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("write-part-DOCUMENT"));
+    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks[0]).toMatchObject({ origin: "STUDENT", type: "PARAGRAPH" });
+    // Bài nhóm: chỉ người giữ phần "Toàn bài" mới có ô viết; chỉ xem thì không có.
+    rerender(<DocumentEditor document={empty} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance writableParts={new Set<string>()} />);
+    expect(screen.queryByTestId("write-part-DOCUMENT")).toBeNull();
+    rerender(<DocumentEditor document={empty} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance readOnly />);
+    expect(screen.queryByTestId("write-part-DOCUMENT")).toBeNull();
+    rerender(<DocumentEditor document={empty} onChange={onChange} mode="student" diagramEnabled={false} />);
+    expect(screen.getByTestId("write-part-DOCUMENT")).toBeInTheDocument();
+  });
+
   it("workspace: guidance is opt-in and cannot enable editing for read-only or author mode", () => {
     const onChange = vi.fn();
     const { rerender } = render(<DocumentEditor document={doc} onChange={onChange} mode="student" diagramEnabled answerGuidance readOnly />);
