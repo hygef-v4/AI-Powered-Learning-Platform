@@ -15509,6 +15509,49 @@ giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại 
 
 ---
 
+## U05, U13, U07 Ô lọc học kỳ, học liệu môn và đề mẫu không có loại
+**Timestamp**: 2026-11-26T12:45:48Z
+**Requested by:** max2min
+**User Input**: "Khắc phục popup chọn học kỳ trên trang Classes bị lệch. Môn mới tạo không tự có module học liệu. Học liệu do Chủ nhiệm môn tạo đổi tên thành Subject material, hiển thị cho mọi lớp thuộc môn; giảng viên không sửa và không lưu trữ được. Nút xóa học liệu của giảng viên và Chủ nhiệm môn đổi thành nút lưu trữ. Bỏ công tắc bật/tắt trong hộp thoại tạo học liệu. Đề mẫu bài tập của Chủ nhiệm môn không giao cho sinh viên, không có loại và được lưu với loại TEMPLATE; khi giảng viên tạo bài từ đề mẫu, bài mới giữ loại giảng viên đang chọn."
+**AI Response**: "Các thay đổi đã thực hiện: (1) Popup chọn học kỳ lệch do khung danh sách có độ rộng tối thiểu 208 px và căn theo mép phải của ô chọn rộng 176 px; Menu nhận thêm menuClassName, TermFilter cho khung danh sách rộng đúng bằng ô chọn. (2) MaterialModuleService không còn tự tạo Module 1; trang học liệu hiển thị hướng dẫn tạo module (Chủ nhiệm môn) hoặc chờ môn có module (giảng viên). (3) Giao diện của Chủ nhiệm môn dùng tên Subject material / Học liệu môn cho menu, tiêu đề trang, nút tạo và hộp thoại; quyền hiện có đã bảo đảm học liệu môn hiển thị cho mọi lớp và chỉ Chủ nhiệm môn được sửa hoặc lưu trữ. (4) Nút gỡ học liệu đổi thành Lưu trữ với biểu tượng archive trên danh sách module, trang chi tiết và hộp thoại xác nhận. (5) Hộp thoại tạo học liệu bỏ công tắc bật/tắt, học liệu mới luôn được bật. (6) Thêm GradingMode.TEMPLATE: đề mẫu của môn luôn lưu TEMPLATE và Cá nhân, giao diện của Chủ nhiệm môn không còn ô Loại; bài của lớp không được mang TEMPLATE (MODE_INVALID và ràng buộc ck_assignments_template_scope); migration chỉ đổi đề mẫu chưa từng giao, giữ nguyên bài của môn cũ đã giao để không ảnh hưởng lượt làm và điểm. Đề mẫu vẫn giữ thang điểm và rubric khi dùng với AI. Khi giảng viên chọn đề mẫu, loại bài không thay đổi và bài mới mang loại giảng viên đã chọn. Cập nhật BR-U13-M02, bổ sung BR-U13-90 đến 92, BR-U07-85 và 86. Kết quả kiểm thử: frontend 1270/1270 ca đạt, tsc và eslint không báo lỗi; các bộ kiểm thử backend của học liệu, bài tập và hai bộ kiểm thử tích hợp liên quan đều đạt."
+**Context**: Construction, điều chỉnh U05 (giao diện lớp), U13 (học liệu) và U07 (đề mẫu bài tập).
+
+---
+
+## U13 Khắc phục lưu trữ học liệu hiển thị như xóa
+**Timestamp**: 2026-11-26T13:11:03Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi lưu trữ học liệu làm học liệu biến mất như bị xóa; học liệu phải được lưu trữ và vẫn còn trong hệ thống."
+**AI Response**: "Nguyên nhân: backend lưu trữ đúng (chuyển trạng thái ARCHIVED, giữ dữ liệu và phiên bản), nhưng danh sách module ở frontend chỉ lấy học liệu ACTIVE và trang chi tiết chuyển về danh sách sau khi lưu trữ, nên học liệu biến mất như bị xóa. Biện pháp: (1) Danh sách module của giảng viên và Chủ nhiệm môn hiển thị học liệu đã lưu trữ với nhãn Đã lưu trữ, không cho sửa hoặc lưu trữ lại; sinh viên vẫn chỉ thấy học liệu ACTIVE. (2) Thêm API POST /materials/{id}/restore (MaterialService.restoreMaterial) đưa học liệu về ACTIVE mà không tạo phiên bản mới; nút khôi phục có trên danh sách module và trang chi tiết. (3) Trang chi tiết ở lại sau khi lưu trữ và hiển thị trạng thái đã lưu trữ. Cập nhật BR-U13-91. Kết quả kiểm thử: bộ kiểm thử học liệu frontend (58 ca) và backend MaterialServiceTest, MaterialModuleServiceTest (42 ca) đều đạt, tsc và eslint không báo lỗi."
+**Context**: Construction, khắc phục lỗi U13 (học liệu).
+
+---
+
+## U07 Bỏ tab Đã đóng trên danh sách đề mẫu của môn
+**Timestamp**: 2026-11-26T13:19:57Z
+**Requested by:** max2min
+**User Input**: "Bỏ tab Đã đóng trên danh sách đề mẫu của Chủ nhiệm môn, vì đề mẫu không có trạng thái đóng."
+**AI Response**: "AssignmentListCard chỉ hiển thị tab Đã đóng ở danh sách bài tập của lớp; trang đề mẫu của môn còn các tab Đang mở, Bản nháp và Đã hoàn tất. Kết quả kiểm thử: bộ kiểm thử bài tập frontend (104 ca) đạt, eslint không báo lỗi."
+**Context**: Construction, điều chỉnh giao diện U07 (đề mẫu của môn).
+
+---
+
+## U13 Khắc phục không khôi phục được học liệu đã lưu trữ
+**Timestamp**: 2026-11-26T13:29:34Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi không khôi phục được học liệu đã lưu trữ."
+**AI Response**: "Nguyên nhân: (1) MaterialQueryService trả canManage = false cho mọi học liệu ARCHIVED nên giao diện không hiển thị nút khôi phục; (2) MaterialService.restoreMaterial dùng chung bước kiểm tra quyền ghi, vốn từ chối học liệu ARCHIVED (MATERIAL_ARCHIVED). Kiểm thử đơn vị trước đó dùng quyền giả lập nên không phát hiện. Biện pháp: canManage không còn phụ thuộc trạng thái lưu trữ; MaterialAccessPolicy tách requireRestoreAccess (cùng quyền và phạm vi như sửa, chấp nhận học liệu ARCHIVED) khỏi requireWriteAccess (vẫn từ chối sửa và lưu trữ lại học liệu ARCHIVED); thanh điều hướng module không cho sửa học liệu đã lưu trữ. Bổ sung kiểm tra với quyền thật trong CrossUnitFlowIntegrationTest: giảng viên thấy học liệu đã lưu trữ với canManage, lưu trữ lại bị từ chối, khôi phục thành công và sinh viên thấy lại học liệu. Kết quả kiểm thử: 122 ca kiểm thử backend liên quan và 58 ca kiểm thử học liệu frontend đều đạt."
+**Context**: Construction, khắc phục lỗi U13 (học liệu).
+
+---
+
+## U13 Bổ sung nút khôi phục học liệu trên thanh điều hướng module
+**Timestamp**: 2026-11-26T13:35:53Z
+**Requested by:** max2min
+**User Input**: "Bổ sung nút khôi phục học liệu đã lưu trữ trên thanh điều hướng bên của trang học liệu."
+**AI Response**: "Nguyên nhân: thanh điều hướng module (ModuleNav) chỉ có nút mở lại cho Quiz đã ngưng, chưa có thao tác cho học liệu đã lưu trữ. Biện pháp: học liệu ARCHIVED mà người xem quản lý được hiển thị nút Khôi phục trên thanh điều hướng, gọi POST /materials/{id}/restore, thông báo kết quả và cập nhật danh sách module. Bổ sung kiểm thử cho thanh điều hướng. Kết quả kiểm thử: 59 ca kiểm thử học liệu frontend đạt, tsc và eslint không báo lỗi."
+**Context**: Construction, khắc phục lỗi U13 (học liệu).
+
 ## U09 Xác nhận đề xuất và công bố điểm
 **Timestamp**: 2026-11-26T14:02:42Z
 **Requested by:** Quang Hung
@@ -15542,5 +15585,41 @@ giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại 
 **User Input**: "giúp tôi sửa lại theo comment"
 **AI Response**: "Chỉ tự xác nhận tiêu chí còn khớp điểm đã rà soát và hiện cảnh báo cho bản chấm đã công bố khi sửa điểm. Bổ sung các ca kiểm thử được nêu trong review."
 **Context**: Construction, U09. [Review](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/146#issuecomment-7195336960). [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publication-review-followup.md).
+
+---
+
+## U13 Ẩn học liệu môn đã lưu trữ với giảng viên
+**Timestamp**: 2026-11-26T16:32:04Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi học liệu môn đã lưu trữ vẫn hiển thị trong danh sách học liệu của giảng viên."
+**AI Response**: "Nguyên nhân: sau khi cho học liệu đã lưu trữ tiếp tục hiển thị để khôi phục, danh sách module hiển thị mọi học liệu ARCHIVED cho cả giảng viên, kể cả học liệu môn mà giảng viên không quản lý. Biện pháp: học liệu đã lưu trữ chỉ hiển thị với người khôi phục được (canManage), áp dụng ở MaterialQueryService.listClassMaterials và ở danh sách module phía frontend; tra cứu theo id (tài liệu tham khảo của bài) giữ nguyên theo BR-U13-13. Cập nhật BR-U13-91. Kết quả kiểm thử: CrossUnitFlowIntegrationTest bổ sung trường hợp giảng viên không thấy học liệu môn đã lưu trữ; 122 ca kiểm thử backend liên quan và 60 ca kiểm thử học liệu frontend đều đạt."
+**Context**: Construction, khắc phục lỗi U13 (học liệu).
+
+---
+
+## U07 Chặn chọn thời điểm đã qua khi xếp lịch bài tập
+**Timestamp**: 2026-11-26T16:32:04Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi ô chọn thời gian khi xếp lịch bài tập vẫn cho chọn thời điểm trong quá khứ."
+**AI Response**: "Nguyên nhân: ô ngày và ô giờ của ScheduleForm không giới hạn giá trị nhỏ nhất, và backend chấp nhận ngày mở hẹn giờ ở quá khứ (mở ngay lập tức). Biện pháp: (1) ô ngày không nhận ngày trước hôm nay, ô giờ của hôm nay không nhận giờ đã qua, ô có thời điểm đã qua được tô đỏ; (2) kiểm tra khi lưu báo lỗi nếu ngày giờ mở hoặc hạn nộp đã qua, bài đang mở chỉ cần hạn cuối nhận bài còn ở tương lai; (3) AssignmentPublicationService từ chối ngày mở hẹn giờ ở quá khứ (SCHEDULE_INVALID, chừa 2 phút cho độ trễ) khi phát hành và khi đổi ngày mở của bài đã lên lịch. Bổ sung BR-U07-87. Kết quả kiểm thử: bộ kiểm thử bài tập backend (124 ca) và frontend (107 ca) đều đạt, tsc và eslint không báo lỗi."
+**Context**: Construction, khắc phục lỗi U07 (xếp lịch bài tập).
+
+---
+
+## U06/U08/U09 Khôi phục JSON từ kết quả AI khi chấm bài và góp ý Practice
+**Timestamp**: 2026-11-26T17:14:03Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi góp ý AI cho bài Practice và lỗi chấm bài bằng AI không thực hiện được khi kết quả không theo đúng cấu trúc JSON mà chỉ là văn bản ở gốc."
+**AI Response**: "Nguyên nhân: mô hình AI hoặc agent MCP có lúc trả đúng nội dung nhưng sai lớp bọc: cả JSON bị mã hóa thành một chuỗi văn bản ở gốc, bọc trong khối ```json hoặc kèm chữ dẫn, hay một trường object/array (proposal, feedback, structuredFeedback) được gửi dạng chuỗi. Bước kiểm schema và các bước chuẩn hóa chỉ nhận object nên từ chối toàn bộ kết quả (AI_OUTPUT_INVALID, INVALID_AI_PROPOSAL, FEEDBACK_INVALID). Biện pháp: thêm AiJsonRecovery (ai.contract) đọc lại JSON bên trong chuỗi, bỏ khối ``` và chữ dẫn, đổi chuỗi sang object/array khi schema yêu cầu; nội dung không phải JSON vẫn bị từ chối như trước. Áp dụng tại AiTaskJobHandler trước khi kiểm schema (dùng chung cho chấm bài, góp ý Practice và soạn đề), tại McpServer trước khi kiểm tham số tool, tại GradingProposalTransactions.recordMcpProposal theo schema chấm của rubric, tại GradingProposalValidator.parseProposal và tại PracticeFeedbackService (kết quả AI và tool record_private_feedback). Kết quả kiểm thử: bổ sung AiJsonRecoveryTest và các ca kiểm thử trong AiTaskFlowTest, McpServerTest, PracticeFeedbackServiceTest, GradingPromptBuilderTest; 804 ca kiểm thử backend của các unit ai, assignments, assignmentwork, grading đều đạt."
+**Context**: Construction, khắc phục lỗi U06 (AI), U08 (góp ý Practice), U09 (chấm bài).
+
+---
+
+## U07 Cho phép AI xóa nội dung chữ khi sửa đề
+**Timestamp**: 2026-11-26T17:14:03Z
+**Requested by:** max2min
+**User Input**: "Cho phép AI xóa các nội dung chữ trong bài tập khi sửa đề."
+**AI Response**: "Nguyên nhân: khi sửa đề, hướng dẫn rỗng từ AI luôn được hiểu là giữ nguyên, hướng dẫn AI đã sửa chỉ được áp dụng nếu hướng dẫn hiện tại đang trống, thao tác UPDATE xóa hết chữ để lại khối trống, và đề không còn khối nào bị coi là lỗi chặn áp dụng. Biện pháp: (1) schema sửa đề có thêm trường clearInstructions để AI xóa hướng dẫn một cách tường minh; (2) UPDATE xóa hết chữ của đoạn, danh sách hoặc tiêu đề đang có chữ được xử lý như xóa khối; (3) hướng dẫn AI đã sửa hoặc xóa (khác bản gửi đi) được áp dụng cả khi hướng dẫn hiện tại có chữ; (4) đề không còn nội dung chỉ là cảnh báo PROPOSAL_EMPTY để giảng viên xem lại; (5) prompt nêu rõ cách xóa chữ khi giảng viên yêu cầu. Kết quả kiểm thử: bổ sung các ca kiểm thử trong AssignmentAiRevisionTest; bộ kiểm thử backend nêu trên đều đạt."
+**Context**: Construction, khắc phục lỗi U07 (soạn đề bằng AI).
 
 ---

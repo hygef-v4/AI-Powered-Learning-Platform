@@ -43,6 +43,9 @@ public class MaterialQueryService {
                 .filter(m -> !student || m.status() == Material.Status.ACTIVE && m.enabled())
                 .filter(m -> ids == null || ids.contains(m.id()))
                 .map(m -> buildDetailView(actor, m, false, classId))
+                // Danh sách học liệu: bản đã lưu trữ chỉ hiện với người khôi phục được (yêu cầu 2026-11-26), nên giảng
+                // viên không thấy học liệu môn đã lưu trữ. Tra theo id (tài liệu tham khảo của bài) giữ như cũ (BR-U13-13).
+                .filter(view -> ids != null || view.status() == Material.Status.ACTIVE || view.canManage())
                 .toList();
     }
 
@@ -78,10 +81,11 @@ public class MaterialQueryService {
                 materialRepository
                         .findVersion(material.id(), material.currentVersionNo())
                         .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
+        // Học liệu đã lưu trữ vẫn "quản lý được" để người quản lý khôi phục (yêu cầu 2026-11-26); sửa và lưu trữ lại
+        // vẫn bị chặn ở requireWriteAccess và giao diện không cho sửa học liệu ARCHIVED.
         boolean editable =
                 actor.role() != Role.STUDENT
                         && !(contextClassId != null && material.scope() == Material.Scope.SUBJECT)
-                        && material.status() == Material.Status.ACTIVE
                         && materialAccessPolicy.canManageMaterial(actor, material)
                         && materialAccessPolicy
                                 .requireSubject(material.subjectId())

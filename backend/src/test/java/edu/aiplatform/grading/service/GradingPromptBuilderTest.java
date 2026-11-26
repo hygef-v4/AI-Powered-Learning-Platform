@@ -323,4 +323,11 @@ class GradingPromptBuilderTest {
         var parsed = new GradingProposalValidator(json).parseProposal("{\"score\":2.0000000000000001}");
         assertThat(parsed.path("score").decimalValue()).isEqualByComparingTo("2.0000000000000001");
     }
+
+    @Test
+    void proposalEncodedAsTextAtTheRootIsParsedAsAnObject() {
+        var parsed = new GradingProposalValidator(json).parseProposal("\"{\\\"score\\\":\\\"2.00\\\"}\"");
+        assertThat(parsed.isObject()).isTrue();
+        assertThat(parsed.path("score").asText()).isEqualTo("2.00");
+    }
 }

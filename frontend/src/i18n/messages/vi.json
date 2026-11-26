@@ -159,7 +159,8 @@
       },
       "materials": {
         "page": {
-          "learningMaterials": "Học liệu"
+          "learningMaterials": "Học liệu",
+          "subjectMaterials": "Học liệu môn"
         }
       },
       "page": {
@@ -1316,7 +1317,8 @@
         "subject": "Môn",
         "class": "Lớp",
         "loadingAssignments": "Đang tải bài tập…",
-        "noMatchingAssignments": "Không có bài tập phù hợp."
+        "noMatchingAssignments": "Không có bài tập phù hợp.",
+        "template": "Đề mẫu"
       },
       "assignmentNav": {
         "assignmentParts": "Các phần của bài",
@@ -1338,7 +1340,8 @@
         "mode": "Chế độ",
         "activityMonitoring": "Ghi nhận hoạt động",
         "recordsWhenStudentsLeaveThe": "Ghi lại khi sinh viên rời trang lúc làm bài.",
-        "noticeToStudents": "Lời báo cho sinh viên"
+        "noticeToStudents": "Lời báo cho sinh viên",
+        "templateHasNoType": "Đề mẫu của môn không có loại và không giao cho sinh viên. Giảng viên chọn loại khi tạo bài ở lớp từ đề mẫu này."
       },
       "ClassAssignmentsSection": {
         "createAssignment": "Tạo bài tập"
@@ -1458,7 +1461,9 @@
         "publishAnyway": "Vẫn phát hành",
         "schedule": "Xếp lịch",
         "publishNow": "Phát hành ngay",
-        "saveSchedule": "Lưu lịch"
+        "saveSchedule": "Lưu lịch",
+        "openingDateInThePast": "Ngày giờ mở đã qua. Chọn thời điểm trong tương lai.",
+        "deadlineInThePast": "Hạn nộp đã qua. Chọn thời điểm trong tương lai."
       },
       "SearchPicker": {
         "noResults": "Không có kết quả.",
@@ -1586,7 +1591,8 @@
         "areYouSureYouWant": "Bạn có chắc muốn xóa bản nháp này không?",
         "withdrawAssignment": "Ngưng giao bài",
         "areYouSureYouWant2": "Bạn có chắc muốn ngưng giao bài này không?",
-        "reason": "Lý do"
+        "reason": "Lý do",
+        "template": "Đề mẫu"
       },
       "SubjectAssignmentListPage": {
         "assignmentTemplates": "Đề mẫu bài tập",
@@ -3477,12 +3483,17 @@
         "learningMaterial": "học liệu",
         "areYouSureYouWant": "Bạn có chắc muốn ",
         "text": " không?",
-        "theDraftQuizWillBe": " Quiz nháp sẽ bị xóa vĩnh viễn, không khôi phục được."
+        "theDraftQuizWillBe": " Quiz nháp sẽ bị xóa vĩnh viễn, không khôi phục được.",
+        "subjectMaterialAdded": "Đã thêm học liệu môn",
+        "createSubjectMaterial": "Tạo học liệu môn",
+        "editSubjectMaterial": "Sửa học liệu môn",
+        "learningMaterialArchived": "Đã lưu trữ học liệu"
       },
       "MaterialList": {
         "learningMaterials": "Học liệu",
         "loadingSubjects": "Đang tải môn học…",
-        "youHaveNotBeenAssigned": "Bạn chưa được phân công môn học."
+        "youHaveNotBeenAssigned": "Bạn chưa được phân công môn học.",
+        "subjectMaterials": "Học liệu môn"
       },
       "MaterialPreview": {
         "download": "Tải xuống",
@@ -3529,7 +3540,14 @@
         "edit": "Sửa {title}",
         "save": "Lưu",
         "moduleName": "Tên module",
-        "enterTheModuleName": "Nhập tên module."
+        "enterTheModuleName": "Nhập tên module.",
+        "subjectMaterials": "Học liệu môn",
+        "createSubjectMaterial": "Tạo học liệu môn",
+        "noSubjectMaterialsYet": "Chưa có học liệu môn",
+        "noModulesForClass": "Môn chưa có module. Nhờ chủ nhiệm môn tạo module trước khi thêm học liệu.",
+        "noModulesForSubject": "Chưa có module. Tạo module trước khi thêm học liệu môn.",
+        "archived": "Đã lưu trữ",
+        "materialRestored": "Đã khôi phục học liệu"
       },
       "ModuleNav": {
         "moduleList": "Danh sách module",
@@ -3546,7 +3564,14 @@
         "reopen": "Mở lại {value}",
         "quizReopened": "Đã mở lại quiz",
         "couldNotReopenTheQuiz": "Không mở lại được quiz",
-        "edit": "Sửa {value}"
+        "edit": "Sửa {value}",
+        "subjectMaterials": "Học liệu môn",
+        "createSubjectMaterial": "Tạo học liệu môn",
+        "createSubjectMaterialIn": "Tạo học liệu môn trong {title}",
+        "noSubjectMaterialsYet": "Chưa có học liệu môn",
+        "restore": "Khôi phục {value}",
+        "materialRestored": "Đã khôi phục học liệu",
+        "couldNotRestoreMaterial": "Không khôi phục được học liệu, vui lòng thử lại."
       },
       "ModulePlace": {
         "previousAndNextMaterialsTop": "Học liệu trước và sau (đầu trang)",
@@ -3576,11 +3601,17 @@
         "delete": "Xóa",
         "description": "Mô tả",
         "learningMaterialDeleted": "Đã xóa học liệu",
-        "versionLabel": "Phiên bản {value}"
+        "versionLabel": "Phiên bản {value}",
+        "archive": "Lưu trữ",
+        "learningMaterialArchived": "Đã lưu trữ học liệu",
+        "archived": "Đã lưu trữ",
+        "restore": "Khôi phục",
+        "materialRestored": "Đã khôi phục học liệu"
       }
     },
     "register": {
-      "learningMaterial": "Học liệu"
+      "learningMaterial": "Học liệu",
+      "subjectMaterial": "Học liệu môn"
     }
   },
   "notifications": {

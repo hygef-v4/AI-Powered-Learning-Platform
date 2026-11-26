@@ -1,7 +1,9 @@
 package edu.aiplatform.grading.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.aiplatform.ai.contract.AiJsonRecovery;
 import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.AiSource;
 import edu.aiplatform.ai.contract.AiTaskFailure;
@@ -465,6 +467,8 @@ public class GradingProposalTransactions {
             throw ApiException.createConflict("STALE_PROPOSAL", "Submission changed");
         }
         requireGradableTarget(evaluation, "AI proposals require a pending or draft grade");
+        var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
+        payload = coerceProposalToSchema(payload, rubrics);
         var existing = gradingProposalRepository.findByRequestRef(requestRef).orElse(null);
         if (existing != null) {
             requireSameMcpProposalTarget(actor, evaluation, existing);
@@ -472,7 +476,6 @@ public class GradingProposalTransactions {
                 return existing;
             }
         }
-        var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
         var document = loadProposalDocument(actor, evaluation);
         var validBlockIds = GradingFeedbackValidator.listValidBlockIds(rubrics, document);
         if (existing == null) {
@@ -497,6 +500,22 @@ public class GradingProposalTransactions {
         var proposal = buildMcpProposal(actor, evaluationId, hash, requestRef, reviewed,
                 agentLabel, evaluation);
         return gradingProposalRepository.saveProposal(proposal);
+    }
+
+    /**
+     * Agent có lúc gửi cả đề xuất hoặc một phần (structuredFeedback, checks) dưới dạng chuỗi JSON: đổi lại theo schema
+     * chấm của rubric trước khi kiểm, thay vì từ chối cả đề xuất (yêu cầu 2026-11-27).
+     */
+    private JsonNode coerceProposalToSchema(JsonNode payload, List<RubricView> rubrics) {
+        if (payload == null || gradingPromptBuilder == null) {
+            return payload;
+        }
+        try {
+            JsonNode schema = objectMapper.readTree(gradingPromptBuilder.buildOutputSchema(rubrics));
+            return AiJsonRecovery.coerceToSchema(objectMapper, payload, schema);
+        } catch (JsonProcessingException | RuntimeException ex) {
+            return payload;
+        }
     }
 
     // Chặn dùng lại requestRef cho người, bài nộp hoặc rubric khác.

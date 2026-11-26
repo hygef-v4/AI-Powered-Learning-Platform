@@ -1,14 +1,13 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Alert, Button, PageHeader, Section, Switch, showToast } from "@/shared/ui";
+import { Alert, Button, PageHeader, Pill, Section, Switch, showToast } from "@/shared/ui";
 import { FormattedTextView } from "@/shared/document/FormattedTextView";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { ArchiveItemDialog, ModuleItemDialog } from "../components/MaterialDialogs";
 import { MaterialPreview } from "../components/MaterialPreview";
 import { ModuleNeighbours, useModulePlace, useModuleScope } from "../components/ModulePlace";
 import { buildContextQuery, materialApi, describeMaterialError, buildMaterialPath } from "../api";
-import { buildBoardHref, notifyOutlineChanged, useOutlineChanged } from "../model/outline";
+import { notifyOutlineChanged, useOutlineChanged } from "../model/outline";
 import { useMaterialResource } from "../hooks/useMaterialResource";
 import type { Material, ModuleScope } from "../model/types";
 import { msg } from "@/i18n/msg";
@@ -27,7 +26,6 @@ export function useMaterialScope(
  * Dưới tên hiện số phiên bản hiện hành; không hiện lịch sử phiên bản (BR-U13-12).
  */
 export function LearningMaterialPage({ id, classId }: { id: string; classId?: string }) {
-  const router = useRouter();
   const resource = useMaterialResource<Material>(
     `${buildMaterialPath(id)}/view${buildContextQuery(classId)}`,
   );
@@ -58,6 +56,16 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
     } catch (cause) { setChangeError(describeMaterialError(cause)); }
     finally { setSaving(false); }
   }
+  async function handleRestore() {
+    if (!m || saving) return;
+    setSaving(true); setChangeError("");
+    try {
+      setUpdated(await materialApi.restoreMaterial(m));
+      showToast(msg("materials.pages.LearningMaterialPage.materialRestored"));
+      notifyOutlineChanged();
+    } catch (cause) { setChangeError(describeMaterialError(cause)); }
+    finally { setSaving(false); }
+  }
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <PageHeader
@@ -71,6 +79,13 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
           place.moduleTitle ? [{ label: place.moduleTitle }, { label: m.title }] : undefined
         }
         actions={
+          !student && m.canManage && m.status === "ARCHIVED" ? (
+            <>
+              <Pill tone="warning">{msg("materials.pages.LearningMaterialPage.archived")}</Pill>
+              <Button icon="lock_open" onClick={() => void handleRestore()} data-testid="material-restore" disabled={saving}>
+                {msg("materials.pages.LearningMaterialPage.restore")}</Button>
+            </>
+          ) :
           !student &&
           m.canManage &&
           m.status === "ACTIVE" && (
@@ -86,12 +101,12 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
                 {msg("materials.pages.LearningMaterialPage.edit")}</Button>
               <Button
                 variant="danger"
-                icon="trash"
+                icon="archive"
                 onClick={() => setDialog("archive")}
                 data-testid="material-archive-open"
                 disabled={saving}
               >
-                {msg("materials.pages.LearningMaterialPage.delete")}</Button>
+                {msg("materials.pages.LearningMaterialPage.archive")}</Button>
             </>
           )
         }
@@ -125,9 +140,11 @@ export function LearningMaterialPage({ id, classId }: { id: string; classId?: st
           classId={classId}
           onClose={() => setDialog(null)}
           onSaved={() => {
-            showToast(msg("materials.pages.LearningMaterialPage.learningMaterialDeleted"), "danger");
+            // Lưu trữ không xóa: ở lại trang, hiện nhãn Đã lưu trữ và nút Khôi phục.
+            setDialog(null);
+            showToast(msg("materials.pages.LearningMaterialPage.learningMaterialArchived"), "danger");
             notifyOutlineChanged();
-            router.push(scope ? buildBoardHref(scope) : "/");
+            resource.reload();
           }}
         />
       )}

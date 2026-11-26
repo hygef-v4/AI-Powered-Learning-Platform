@@ -20,6 +20,11 @@ public final class AssignmentCommands {
     }
 
     public record Create(SubmissionMode submissionMode, GradingMode gradingMode, boolean diagramEnabled, String title) {
+
+        /** Đề mẫu của môn không có loại: luôn Cá nhân, {@code TEMPLATE} (yêu cầu 2026-11-26). */
+        public Create asTemplate() {
+            return new Create(SubmissionMode.INDIVIDUAL, GradingMode.TEMPLATE, diagramEnabled, title);
+        }
     }
 
     /** PATCH: trường {@code null} giữ nguyên; {@code activityNotice} rỗng là xóa thông báo. */

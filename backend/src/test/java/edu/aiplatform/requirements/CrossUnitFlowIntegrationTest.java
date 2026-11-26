@@ -579,6 +579,23 @@ class CrossUnitFlowIntegrationTest {
         materialService.archiveMaterial(teacher, classMaterial, materialVersion);
         assertThat(materialQueryService.listClassMaterials(student, classId, true, detail.referenceMaterialIds()))
                 .extracting(MaterialViews.Detail::id).containsExactly(subjectMaterial);
+        // Lưu trữ không xóa (yêu cầu 2026-11-26): giảng viên vẫn thấy, vẫn khôi phục được với quyền thật; sửa thì bị chặn.
+        var archivedView = materialQueryService.listClassMaterials(teacher, classId, false, null).stream()
+                .filter(m -> m.id().equals(classMaterial)).findFirst().orElseThrow();
+        assertThat(archivedView.status()).isEqualTo(edu.aiplatform.materials.model.Material.Status.ARCHIVED);
+        assertThat(archivedView.canManage()).as("nút khôi phục cần canManage").isTrue();
+        long archivedVersion = jdbc.queryForObject("select version from materials where id=?", Long.class, classMaterial);
+        assertThatThrownBy(() -> materialService.archiveMaterial(teacher, classMaterial, archivedVersion))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("MATERIAL_ARCHIVED"));
+        // Học liệu môn đã lưu trữ thì giảng viên không thấy trong danh sách (chỉ Chủ nhiệm môn khôi phục được).
+        long subjectVersion = jdbc.queryForObject("select version from materials where id=?", Long.class, subjectMaterial);
+        materialService.archiveMaterial(actor(Role.SUBJECT_MANAGER), subjectMaterial, subjectVersion);
+        assertThat(materialQueryService.listClassMaterials(teacher, classId, false, null))
+                .extracting(MaterialViews.Detail::id).doesNotContain(subjectMaterial).contains(classMaterial);
+        materialService.restoreMaterial(actor(Role.SUBJECT_MANAGER), subjectMaterial, subjectVersion + 1);
+        materialService.restoreMaterial(teacher, classMaterial, archivedVersion);
+        assertThat(materialQueryService.listClassMaterials(student, classId, true, detail.referenceMaterialIds()))
+                .extracting(MaterialViews.Detail::id).containsExactlyInAnyOrder(subjectMaterial, classMaterial);
 
         academicsService.changeEnrollmentStatus(actor(Role.SUBJECT_MANAGER), classId, student.accountId(),
                 EnrollmentStatus.REMOVED);
@@ -688,7 +705,7 @@ class CrossUnitFlowIntegrationTest {
 
 
     @Test
-    void concurrentFirstOpenCreatesOnlyOneDefaultModule() throws Exception {
+    void concurrentFirstOpenOfANewSubjectCreatesNoModule() throws Exception {
         jdbc.update("delete from material_modules where subject_id = ?", subjectId);
         var manager = actor(Role.SUBJECT_MANAGER);
         var policy = mock(MaterialAccessPolicy.class);
@@ -724,8 +741,9 @@ class CrossUnitFlowIntegrationTest {
         } finally {
             pool.shutdownNow();
         }
+        // Môn mới không tự có module (yêu cầu 2026-11-26), kể cả khi hai người mở trang cùng lúc.
         assertThat(jdbc.queryForList("select title from material_modules where subject_id = ?", String.class, subjectId))
-                .containsExactly("Module 1");
+                .isEmpty();
     }
 
 }

@@ -178,7 +178,7 @@ public class AssignmentAiDraftService {
     // Lấy thang điểm dương theo từng câu cấp 1 nếu đề mẫu đủ điều kiện giữ điểm.
     private List<BigDecimal> loadTemplateQuestionPoints(Assignment template) {
         var parts = PartCalculator.compute(template.skeleton());
-        if (parts.size() > 10 || template.gradingMode() != GradingMode.GRADED) {
+        if (parts.size() > 10 || !template.gradingMode().hasPoints()) {
             throw templatePointsUnavailable();
         }
         var byPart = rubricService.listRubricModels(template.id()).stream()
@@ -281,7 +281,7 @@ public class AssignmentAiDraftService {
             if (existing.isPresent()) {
                 return new Prepared(assignment, existing.get(), false, null, null, draftOptions, List.of());
             }
-            if ((preservePoints || hasExplicitQuestionPoints) && assignment.gradingMode() != GradingMode.GRADED) {
+            if ((preservePoints || hasExplicitQuestionPoints) && !assignment.gradingMode().hasPoints()) {
                 throw ApiException.createBadRequest("AI_OPTIONS_INVALID", "Chỉ đặt điểm từng câu cho bài có chấm điểm");
             }
             // Đề mẫu chọn từ bài của môn; tệp tải lên (formatText) được ưu tiên khi có cả hai.
@@ -562,8 +562,13 @@ public class AssignmentAiDraftService {
         if (!built.wholeRubric().isEmpty()) {
             suggestions.put(wholePart, RubricService.normalize(built.wholeRubric(), current.diagramEnabled()));
         }
-        String instructions = command.replaceInstructions()
-                ? draft.proposal().path("instructions").asText("") : current.instructions();
+        // AI đã sửa hoặc xóa hướng dẫn (khác bản gửi đi) thì áp dụng luôn, kể cả khi hướng dẫn hiện tại có chữ
+        // (yêu cầu 2026-11-27); hướng dẫn AI giữ nguyên thì không ghi đè chữ người soạn sửa sau khi gửi yêu cầu.
+        String proposedInstructions = draft.proposal().path("instructions").asText("");
+        boolean instructionsRevised = draft.provenance().path("snapshot").has("instructions")
+                && !proposedInstructions.equals(draft.provenance().path("snapshot").path("instructions").asText(""));
+        String instructions = command.replaceInstructions() || instructionsRevised
+                ? proposedInstructions : current.instructions();
         String title = replaceTitle ? proposedTitle : current.title();
         Assignment saved = assignments.saveAssignment(current.updateAuthoring(title, instructions, skeleton, parts, now));
         rubricService.replaceAll(saved, suggestions, now);

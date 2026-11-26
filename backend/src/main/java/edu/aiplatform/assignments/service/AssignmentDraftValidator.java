@@ -85,7 +85,7 @@ final class AssignmentDraftValidator {
                 }
                 leafCount++;
                 if (!rubric.isArray() || rubric.isEmpty()) {
-                    if (gradingMode == GradingMode.GRADED) {
+                    if (gradingMode.hasPoints()) {
                         issue(issues, "ERROR", "RUBRIC_REQUIRED", "sections[" + index + "].rubric",
                                 "Mỗi câu được chấm điểm cần có tiêu chí và điểm cho từng tiêu chí.");
                     } else {
@@ -146,7 +146,7 @@ final class AssignmentDraftValidator {
             }
         }
 
-        if (gradingMode == GradingMode.GRADED
+        if (gradingMode.hasPoints()
                 && itemCount > edu.aiplatform.ai.contract.AiGradingLimits.MAX_RUBRIC_ITEMS) {
             issue(issues, "WARNING", "AI_GRADING_RUBRIC_LIMIT", "sections.rubric",
                     "Rubric vượt giới hạn " + edu.aiplatform.ai.contract.AiGradingLimits.MAX_RUBRIC_ITEMS

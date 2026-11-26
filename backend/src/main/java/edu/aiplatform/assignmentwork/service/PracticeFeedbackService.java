@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import edu.aiplatform.ai.contract.AiJsonRecovery;
 import edu.aiplatform.ai.contract.AiPrompt;
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.contract.AiSource;
@@ -183,7 +184,7 @@ public class PracticeFeedbackService {
             if (submissionHash == null || !submissionHash.equals(attempt.receiptHash())) {
                 throw ApiException.createConflict("SUBMISSION_HASH_MISMATCH", "Bài nộp đã khác bản agent đọc");
             }
-            ObjectNode normalized = FeedbackFormat.normalize(raw);
+            ObjectNode normalized = FeedbackFormat.normalize(coerceFeedback(raw));
             if (normalized == null) {
                 throw ApiException.createBadRequest("FEEDBACK_INVALID", "Góp ý không đúng định dạng");
             }
@@ -226,7 +227,9 @@ public class PracticeFeedbackService {
             }
             ObjectNode normalized;
             try {
-                normalized = FeedbackFormat.normalize(json.readTree(result.output()));
+                JsonNode raw = AiJsonRecovery.recoverOutput(json, result.output(),
+                        json.readTree(FeedbackFormat.OUTPUT_SCHEMA));
+                normalized = FeedbackFormat.normalize(raw);
             } catch (JsonProcessingException | RuntimeException e) {
                 normalized = null;
             }
@@ -249,6 +252,15 @@ public class PracticeFeedbackService {
         if (id != null) {
             transaction.executeWithoutResult(status -> feedback.markFailed(id,
                     failure.safeError() == null ? "AI không trả kết quả" : failure.safeError(), clock.instant()));
+        }
+    }
+
+    /** Góp ý agent gửi dạng chuỗi JSON (cả góp ý hoặc từng trường) được đổi lại theo schema trước khi chuẩn hóa. */
+    private JsonNode coerceFeedback(JsonNode raw) {
+        try {
+            return AiJsonRecovery.coerceToSchema(json, raw, json.readTree(FeedbackFormat.OUTPUT_SCHEMA));
+        } catch (JsonProcessingException e) {
+            return raw;
         }
     }
 

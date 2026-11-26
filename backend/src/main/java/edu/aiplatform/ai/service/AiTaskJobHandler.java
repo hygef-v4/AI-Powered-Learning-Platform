@@ -11,6 +11,7 @@ import edu.aiplatform.ai.service.IProviderGateway.Request;
 import edu.aiplatform.ai.service.IProviderGateway.Response;
 import edu.aiplatform.ai.service.IProviderGateway.Usage;
 import edu.aiplatform.ai.contract.AiImage;
+import edu.aiplatform.ai.contract.AiJsonRecovery;
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.contract.AiSource;
 import edu.aiplatform.ai.contract.AiTaskState;
@@ -426,8 +427,11 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         }
         if (outcome.error() == null) {
             Response response = outcome.response();
-            Optional<String> invalid = response.output().length() > MAX_RESULT_CHARS ? Optional.of("quá dài")
-                    : schemas.validateValue(task.outputSchema(), response.output());
+            // Mô hình có lúc bọc JSON trong ```json, chữ dẫn hoặc một chuỗi ở gốc: khôi phục trước khi kiểm schema.
+            String output = response.output().length() > MAX_RESULT_CHARS ? response.output()
+                    : AiJsonRecovery.recoverOutputText(json, response.output(), task.outputSchema());
+            Optional<String> invalid = output.length() > MAX_RESULT_CHARS ? Optional.of("quá dài")
+                    : schemas.validateValue(task.outputSchema(), output);
             settle(task, response.usage(), invalid.isEmpty() ? "READY" : "INVALID_OUTPUT");
             if (invalid.isPresent()) {
                 // Chỉ ghi vị trí lệch schema để chẩn đoán, không ghi nội dung kết quả.
@@ -436,7 +440,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
                 saveTask(task.moveTo(AiTaskState.FAILED, clock.instant()).completeWithResult(null, response.requestId())
                         .failWithError("[AI_OUTPUT_INVALID] Kết quả AI không đúng định dạng yêu cầu"));
             } else {
-                saveTask(task.completeWithResult(response.output(), response.requestId()).moveTo(AiTaskState.READY, clock.instant()));
+                saveTask(task.completeWithResult(output, response.requestId()).moveTo(AiTaskState.READY, clock.instant()));
             }
             return null;
         }

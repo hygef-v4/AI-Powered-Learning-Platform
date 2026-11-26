@@ -259,7 +259,7 @@ export function AiDraftDialog({
   }
 
   const showPreview = proposal !== null && !canAutoApply;
-  const questionPoints = gradingMode === "GRADED" ? parseQuestionPoints(questionPointsText) : [];
+  const questionPoints = gradingMode !== "PRACTICE" ? parseQuestionPoints(questionPointsText) : [];
   const hasQuestionPoints = Boolean(questionPoints?.length);
   const count = hasQuestionPoints ? undefined : parseQuestionCount(questionCount);
   // Số câu hỏi sai hiện đỏ ngay dưới ô; ô trống thì AI tự quyết.
@@ -378,7 +378,7 @@ export function AiDraftDialog({
               onUnchoose={(id) => setChosen((c) => c.filter((item) => item !== id))}
               onUpload={sources.add} onRemoveUpload={sources.remove} onRetryUpload={sources.retry} />
           </Field>
-          {gradingMode === "GRADED" && (
+          {gradingMode !== "PRACTICE" && (
             <QuestionPointsField id="review-ai-question-points" value={questionPointsText}
               onChange={setQuestionPointsText} points={questionPoints} disabled={awaiting} />
           )}

@@ -192,10 +192,10 @@ describe("CreateAssignmentDialog", () => {
     const copy = vi.spyOn(assignmentsApi, "copyToSubject").mockResolvedValue(created);
     const onCreated = vi.fn();
     render(<CreateAssignmentDialog target={{ kind: "subject", subjectId: "s1" }} onClose={vi.fn()} onCreated={onCreated} />);
-    // Đề có sẵn cũng chọn được Loại.
+    // Đề mẫu của môn không có Loại (yêu cầu 2026-11-26).
     fireEvent.click(screen.getByRole("radio", { name: "Đề có sẵn" }));
     expect(screen.getByRole("radio", { name: "Đề có sẵn" })).toBeChecked();
-    expect(screen.getByRole("radiogroup", { name: "Loại" })).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Loại" })).not.toBeInTheDocument();
     const search = screen.getByRole("combobox", { name: "Đề có sẵn" });
     fireEvent.focus(search);
     await screen.findByRole("option", { name: "Bài m1" });
@@ -222,7 +222,7 @@ describe("CreateAssignmentDialog", () => {
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Đề mẫu 1" } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
-    expect(copy).toHaveBeenCalledWith("s1", "m1", "Đề mẫu 1", { submissionMode: "INDIVIDUAL", gradingMode: "GRADED" });
+    expect(copy).toHaveBeenCalledWith("s1", "m1", "Đề mẫu 1", { submissionMode: "INDIVIDUAL", gradingMode: "TEMPLATE" });
     vi.restoreAllMocks();
   });
 
@@ -231,9 +231,9 @@ describe("CreateAssignmentDialog", () => {
     render(<CreateAssignmentDialog target={{ kind: "subject", subjectId: "s1" }} onClose={vi.fn()} onCreated={vi.fn()} />);
     expect(screen.getByRole("dialog")).toHaveTextContent("Đề mẫu mới");
     expect(screen.getByLabelText(/Tiêu đề/)).toBe(screen.getByTestId("create-assignment-title"));
-    // Chủ nhiệm môn tạo đề mẫu: cũng có Cách tạo; có cả loại Nhóm.
+    // Chủ nhiệm môn tạo đề mẫu: có Cách tạo, không có Loại (yêu cầu 2026-11-26).
     expect(screen.getByRole("radiogroup", { name: "Cách tạo" })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: "Nhóm" })).toBeEnabled();
+    expect(screen.queryByRole("radiogroup", { name: "Loại" })).not.toBeInTheDocument();
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "   " } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
     expect(await screen.findByText("Nhập tiêu đề bài tập.")).toBeInTheDocument();
@@ -270,6 +270,26 @@ describe("CreateAssignmentDialog", () => {
     await waitFor(() => expect(onCreated).toHaveBeenCalledWith(created));
     // Bài copy theo Loại đã chọn trong popup.
     expect(copy).toHaveBeenCalledWith("c1", "m2", "Lab 1", { submissionMode: "GROUP", gradingMode: "GRADED" });
+    vi.restoreAllMocks();
+  });
+
+  it("chọn đề mẫu của môn không đổi Loại giảng viên đang chọn", async () => {
+    const created = { id: "a6", version: 0 } as AssignmentDetail;
+    vi.spyOn(assignmentsApi, "copySources").mockResolvedValue([
+      { classId: "s1", code: "SWD392", name: "Thiết kế", status: null, kind: "SUBJECT",
+        assignments: [{ id: "m1", title: "Đề mẫu", gradingMode: "TEMPLATE", submissionMode: "INDIVIDUAL" }] as never },
+    ]);
+    const copy = vi.spyOn(assignmentsApi, "copy").mockResolvedValue(created);
+    render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: true }} onClose={vi.fn()} onCreated={vi.fn()} />);
+    fireEvent.click(screen.getByRole("radio", { name: "Luyện tập" }));
+    fireEvent.click(screen.getByRole("radio", { name: "Đề có sẵn" }));
+    fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Lab 2" } });
+    const search = screen.getByRole("combobox", { name: "Đề có sẵn" });
+    fireEvent.focus(search);
+    fireEvent.mouseDown(await screen.findByRole("option", { name: "Đề mẫu" }));
+    expect(screen.getByRole("radio", { name: "Luyện tập" })).toBeChecked();
+    fireEvent.click(screen.getByTestId("create-assignment-submit"));
+    await waitFor(() => expect(copy).toHaveBeenCalledWith("c1", "m1", "Lab 2", { submissionMode: "INDIVIDUAL", gradingMode: "PRACTICE" }));
     vi.restoreAllMocks();
   });
 
@@ -504,6 +524,23 @@ describe("ScheduleForm", () => {
     fireEvent.click(screen.getByTestId("schedule-submit"));
     expect(submit).not.toHaveBeenCalled();
     expect(screen.getByText("Thiếu hạn nộp")).toBeInTheDocument();
+  });
+
+  it("không hẹn giờ mở vào quá khứ: ngày đã qua không nhận, hôm nay mà giờ đã qua thì báo lỗi", async () => {
+    const submit = vi.fn();
+    const vnDate = (offsetDays: number) => new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Ho_Chi_Minh",
+      day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(Date.now() + offsetDays * 86_400_000));
+    render(<ScheduleForm assignment={reviewed} mode="publish" onSubmit={submit} />);
+    fireEvent.click(screen.getByTestId("schedule-later"));
+    fireEvent.change(screen.getByLabelText("Hạn nộp (ngày)"), { target: { value: "01/01/2099" } });
+    fireEvent.change(screen.getByLabelText("Mở lúc (ngày)"), { target: { value: vnDate(-1) } });
+    fireEvent.click(screen.getByTestId("schedule-submit"));
+    expect(await screen.findByText("Thiếu ngày mở")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Mở lúc (ngày)"), { target: { value: vnDate(0) } });
+    fireEvent.change(screen.getByLabelText("Mở lúc (giờ)"), { target: { value: "00:00" } });
+    fireEvent.click(screen.getByTestId("schedule-submit"));
+    expect(await screen.findByText(/Ngày giờ mở đã qua/)).toBeInTheDocument();
+    expect(submit).not.toHaveBeenCalled();
   });
 
   it("một trang: mở ngay mặc định, tích thì mới hiện ngày giờ; chặn nộp muộn quá 30 ngày", async () => {
