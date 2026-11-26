@@ -61,7 +61,8 @@ public record QuizAttempt(UUID id, UUID quizId, UUID classId, UUID accountId, in
             throw new IllegalStateException("Lượt đã nộp");
         }
         return new QuizAttempt(id, quizId, classId, accountId, attemptNo, snapshot, newAnswers, answerVersion + 1,
-                status, submitMode, startedAt, deadlineAt, now, submittedAt, score, maxScore, correctCount, result);
+                status, submitMode, startedAt, deadlineAt, now, submittedAt, score, maxScore, correctCount, result,
+                outcome);
     }
 
     /** Gắn số liệu rời trang và điểm cuối sau khi chấm (BR-U11-33). */
@@ -78,6 +79,7 @@ public record QuizAttempt(UUID id, UUID quizId, UUID classId, UUID accountId, in
         }
         int correct = (int) results.stream().filter(QuestionResult::correct).count();
         return new QuizAttempt(id, quizId, classId, accountId, attemptNo, snapshot, answers, answerVersion,
-                AttemptStatus.SUBMITTED, mode, startedAt, deadlineAt, lastSavedAt, now, newScore, newMax, correct, results);
+                AttemptStatus.SUBMITTED, mode, startedAt, deadlineAt, lastSavedAt, now, newScore, newMax, correct, results,
+                outcome);
     }
 }

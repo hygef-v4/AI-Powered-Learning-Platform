@@ -3729,7 +3729,8 @@
         "theLecturerDecidedNotTo": "{leaves} · the lecturer decided not to deduct points: {decisionReason}",
         "noPointsDeductedYetThe": "{leaves} · no points deducted yet, the lecturer will review.",
         "autoSubmittedWhenTimeRan": "Auto-submitted when time ran out",
-        "autoSubmittedWhenTheQuiz": "Auto-submitted when the quiz was withdrawn"
+        "autoSubmittedWhenTheQuiz": "Auto-submitted when the quiz was withdrawn",
+        "autoSubmittedWhenClassAccessEnded": "Auto-submitted when the class closed or you left it"
       }
     },
     "pages": {

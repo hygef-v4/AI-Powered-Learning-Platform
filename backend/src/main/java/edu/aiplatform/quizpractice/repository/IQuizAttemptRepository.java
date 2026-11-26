@@ -56,6 +56,12 @@ public interface IQuizAttemptRepository {
     /** Lượt đang làm đã quá hạn cộng ân hạn, hạn sớm trước (scanner); không khóa, mỗi lượt nộp trong transaction riêng. */
     List<QuizAttempt> findOverdue(Instant cutoff, int limit);
 
+    /** Các lớp đang có lượt {@code IN_PROGRESS} (scanner tìm lượt không còn làm được). */
+    List<UUID> listClassesWithInProgress();
+
+    /** Lượt đang làm của một lớp, mọi Quiz; không khóa. */
+    List<QuizAttempt> listInProgressByClass(UUID classId);
+
     /** Lượt đang làm của một Quiz (Quiz bị ngưng hoặc có version mới). */
     List<QuizAttempt> findInProgressByQuiz(UUID quizId);
 

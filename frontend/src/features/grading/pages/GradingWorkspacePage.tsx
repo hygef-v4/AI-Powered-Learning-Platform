@@ -58,12 +58,14 @@ import { setGradingAiLabel } from "../model/gradingAiTasks";
 import { formatErrorMessage } from "../model/format";
 import { msg } from "@/i18n/msg";
 
+// Nạp bản chấm theo URL trước khi khởi tạo workspace theo ID và bộ lọc.
 export function GradingWorkspacePage({
   evaluationId,
   proposalId,
   status,
   late,
 }: { evaluationId: string; proposalId?: string } & NavigationFilters) {
+  // Đọc bản chấm kèm bộ lọc của hàng chờ khi URL có trạng thái hoặc cờ nộp muộn.
   const load = useCallback(
     () =>
       status !== undefined || late !== undefined
@@ -92,6 +94,7 @@ export function GradingWorkspacePage({
   );
 }
 
+// Điều phối bài nộp, form rubric, đề xuất AI và điểm thành viên trong cùng màn hình.
 function Workspace({
   initial,
   refresh,
@@ -152,6 +155,7 @@ function Workspace({
   const [offeredProposalId, setOfferedProposalId] = useState<string | null>(
     null,
   );
+  // Link từ MCP mở phần duyệt đề xuất. Giảng viên vẫn chọn áp dụng hoặc chỉnh điểm.
   const [aiOpen, setAiOpen] = useState(Boolean(proposalId));
   const [aiRequesting, setAiRequesting] = useState(false);
   const aiGenerating =
@@ -162,6 +166,7 @@ function Workspace({
     setAiOpen(Boolean(proposalId));
   }
 
+  // Xin đề xuất cho bản chấm hiện tại hoặc chuyển sang bản chính khi đang xem thành viên.
   const handleAiGrade = async (input?: AiRequest) => {  // Ai chấm bài
     if (disabled || busy || saving) return;
     if (evaluation.kind === "MEMBER") {
@@ -188,6 +193,7 @@ function Workspace({
     }
   };
 
+  // Lấy checklist, điểm và phản hồi của đề xuất đã có nội dung để điền vào form.
   function applyReadyProposal(proposal: Proposal) {
     if (!proposal.proposal) return;
     const { checks, feedback, itemScoresByRubric, structuredFeedback } =
@@ -201,6 +207,7 @@ function Workspace({
     );
   }
 
+  // Chỉ xử lý tự điền cho đề xuất được yêu cầu từ màn hình hiện tại sau khi có kết quả.
   function settleAwaitedProposal() {
     const awaited = proposals.find(
       (proposal) => proposal.id === awaitedProposalId.current,
@@ -244,6 +251,7 @@ function Workspace({
       proposal.taskId &&
       proposal.taskState === "QUEUED",
   );
+  // Hủy tác vụ của đề xuất đang chờ và cập nhật lại trạng thái hiển thị.
   const handleCancelAi = async () => {
     if (!queuedProposal?.taskId) return;
     try {
@@ -257,6 +265,7 @@ function Workspace({
     resumePolling();
   };
 
+  // Chặn công bố khi điểm thành viên chưa lưu và xử lý lưu bản chấm trước khi xác nhận.
   const handlePublish = async () => {
     if (busy || saving || disabled) return;
     if (membersDirty) {
@@ -361,6 +370,7 @@ function Workspace({
   const [viewSlot, setViewSlot] = useState<HTMLElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState(64);
   const headerObserver = useRef<ResizeObserver | null>(null);
+  // Đo chiều cao thanh thao tác để căn workspace và tháo observer khi phần tử đổi.
   const headerRef = useCallback((element: HTMLElement | null) => {
     headerObserver.current?.disconnect();
     headerObserver.current = null;
@@ -394,6 +404,7 @@ function Workspace({
   }, [dirty, aiAutoApplied, disabled, busy, saving, aiOpen, error, form]);
 
   useEffect(() => {
+    // Đổi Ctrl/Cmd+S thành thao tác lưu bản chấm hiện tại.
     const handleShortcutKeys = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
@@ -508,6 +519,7 @@ function Workspace({
   const memberSections: Record<string, { partId: string; title: string }[]> =
     {};
   const unanchoredAuthors = new Set<string>();
+  // Chuyển panel sang thành viên và bỏ mục đang chọn khi nhảy sang tài khoản khác.
   function openMember(accountId?: string) {
     if (accountId) {
       setSelectedMember(accountId);
@@ -754,6 +766,7 @@ function Workspace({
             context.value?.title ||
             msg("grading.pages.GradingWorkspacePage.submittedWork"),
           readOnly: true,
+          // Giữ callback theo hợp đồng thanh tiêu đề vì nhãn bản chấm ở đây chỉ để đọc.
           onText: () => {},
         }}
         header={

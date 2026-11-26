@@ -15,6 +15,7 @@ type Props = { classId: string; assignmentId: string };
  * `partTitles`, thứ tự mục), rồi nhận xét đã duyệt và phân bố điểm. Chưa công bố điểm thì không hiện gì.
  */
 export function StudentPublishedFeedback({ classId, assignmentId, partTitles }: Props & { partTitles?: Readonly<Record<string, string>> }) {
+  // Đọc điểm đã công bố của tài khoản trong lớp hiện tại.
   const load = useCallback(() => gradingApi.listMyGrades(classId), [classId]);
   const { value, error, refresh } = useResource(load);
   const grade = value?.find(g => g.assignmentId === assignmentId);
@@ -29,6 +30,7 @@ export function StudentPublishedFeedback({ classId, assignmentId, partTitles }: 
     part.max += item.max;
     parts.set(item.partId, part);
   }
+  // Đặt mục không thuộc thứ tự ưu tiên xuống sau các mục đã biết thứ tự.
   const rank = (id: string) => (order.indexOf(id) < 0 ? Infinity : order.indexOf(id));
   const rows = [...parts.entries()].sort(([a], [b]) => rank(a) - rank(b));
   const contribution = CONTRIBUTION_LEVELS.find(level => level.value === grade.contributionLevel);
@@ -60,7 +62,9 @@ export function StudentPublishedFeedback({ classId, assignmentId, partTitles }: 
   </Section>;
 }
 
+// Hiển thị phân phối khi API có dữ liệu và xử lý tải hoặc lỗi như nguồn riêng.
 export function StudentGradeDistribution({ classId, assignmentId }: Props) {
+  // Nạp histogram của đúng bài tập và lớp trong góc nhìn sinh viên.
   const load = useCallback(() => gradingApi.loadMyGradeDistribution(classId, assignmentId), [classId, assignmentId]);
   const { value, error, refresh } = useResource(load);
   if (error) return <p role="alert">{msg("grading.components.StudentPublishedFeedback.couldNotLoadTheGrade")}<Button size="sm" onClick={() => void refresh().catch(() => {})}>{msg("grading.components.StudentPublishedFeedback.retry")}</Button></p>;

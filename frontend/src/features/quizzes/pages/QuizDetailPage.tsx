@@ -123,6 +123,10 @@ export function QuizDetailPage({ id, classId }: { id: string; classId?: string |
     }
     let current = detail;
     if (input) current = await updateQuizDetails(current.quiz.id, input, current.quiz.version);
+    if (input && itemsDirty) {
+      // Cấu hình đã lưu: giữ version mới ngay, để lưu câu lỗi thì lần thử lại không bị xung đột version và mất điểm câu.
+      setDetail(current);
+    }
     if (itemsDirty) {
       current = await saveQuizItems(current.quiz.id, items.map((d) => ({ questionId: d.item.question.id,
         points: Number(d.points.replace(",", ".")) })), current.quiz.version);

@@ -30,6 +30,7 @@ public final class EnrollmentListParser {
      */
     public record Row(int lineNumber, String email, String studentCode, EnrollmentResult error) {
 
+        // Tạo kết quả phân tích dòng email cho caller cũ, để trống mã sinh viên.
         public Row(int lineNumber, String email, EnrollmentResult error) {
             this(lineNumber, email, null, error);
         }

@@ -14,6 +14,7 @@ public class AcademicsMcpTools implements IMcpToolProvider {
     private final IAcademicsReadRepository academicsReadRepository;
     private final ISubjectQuery subjectQuery;
 
+    // Dùng nguồn đọc lớp và môn để chỉ trả đích trong phạm vi staff.
     public AcademicsMcpTools(IAcademicsReadRepository academicsReadRepository,
             ISubjectQuery subjectQuery) {
         this.academicsReadRepository = academicsReadRepository;

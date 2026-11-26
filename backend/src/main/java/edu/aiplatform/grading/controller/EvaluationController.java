@@ -31,6 +31,7 @@ public class EvaluationController {
     private final GradingBatchService gradingBatchService;
     private final GradingProposalTransactions gradingProposalTransactions;
 
+    // Nối các endpoint bản chấm với đường xử lý chấm thường, đề xuất và thao tác theo lô.
     public EvaluationController(GradingService gradingService,
             SubmissionReviewService submissionReviewService,
             GradingBatchService gradingBatchService,
@@ -57,6 +58,7 @@ public class EvaluationController {
     @PutMapping("/evaluations/{id}")
     public Evaluation saveEvaluation(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
             @Valid @RequestBody Save input) {
+        // Cùng API lưu điểm, nhưng có đề xuất thì phải kiểm lại trước khi ghi vào bản chấm.
         return input.usedProposalId() == null ? gradingService.saveEvaluation(actor, id, input)
                 : gradingProposalTransactions.saveUsingProposal(actor, id, input);
     }

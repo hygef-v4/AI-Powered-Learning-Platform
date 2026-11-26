@@ -391,6 +391,23 @@ class QuizAttemptRepositoryIntegrationTest {
     }
 
     @Test
+    void inProgressAttemptsAreListedByClassAndCanBeSubmittedAsAccessLost() {
+        QuizAttempt attempt = attempt(1, null);
+        repository.insert(attempt);
+        assertThat(repository.listClassesWithInProgress()).containsExactly(classId);
+        assertThat(repository.listInProgressByClass(classId)).extracting(QuizAttempt::id).containsExactly(attempt.id());
+
+        UUID q = attempt.snapshot().questionOrder().get(0);
+        QuizAttempt submitted = attempt.markSubmitted(SubmitMode.AUTO_ACCESS_LOST, BigDecimal.ZERO, new BigDecimal("2"),
+                List.of(new QuestionResult(q, false, BigDecimal.ZERO, new BigDecimal("2"))), NOW.plusSeconds(9));
+        assertThat(repository.submit(submitted)).as("check constraint nhận chế độ mới").isTrue();
+
+        assertThat(repository.findAttempt(attempt.id()).orElseThrow().submitMode()).isEqualTo(SubmitMode.AUTO_ACCESS_LOST);
+        assertThat(repository.listClassesWithInProgress()).isEmpty();
+        assertThat(repository.listInProgressByClass(classId)).isEmpty();
+    }
+
+    @Test
     void appCannotDeleteAttempts() {
         repository.insert(attempt(1, null));
         JdbcClient app = JdbcClient.create(appDataSource);

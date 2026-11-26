@@ -92,6 +92,7 @@ public final class GradingCommands {
             @NotNull @DecimalMin("0") BigDecimal score, @Size(max = 2000) String reason,
             ContributionLevel contributionLevel)
             implements IStrictInput {
+        // Tạo lệnh lưu điểm thành viên cho caller chưa gửi mức đóng góp.
         public MemberSave(long version, BigDecimal score, String reason) {
             this(version, score, reason, null);
         }

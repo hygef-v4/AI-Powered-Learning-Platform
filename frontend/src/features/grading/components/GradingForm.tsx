@@ -47,14 +47,17 @@ const DRAFT_FIELD_GROUPS = [
   RUBRIC_FIELDS,
 ] as const satisfies readonly (readonly (keyof GradingFormValues)[])[];
 
+// Tạo biểu diễn dùng so sánh một nhóm trường liên quan trong lúc hợp nhất.
 function readDraftFields(form: GradingFormValues, keys: readonly (keyof GradingFormValues)[]) {
   return JSON.stringify(keys.map((key) => form[key]));
 }
 
+// Đưa chuỗi điểm hợp lệ về số để các cách viết tương đương so sánh bằng nhau.
 function comparableScore(value: string | number | undefined) {
   return value !== undefined && /^\d+(?:\.\d+)?$/.test(String(value)) ? Number(value) : value;
 }
 
+// So bản gốc, bản đang sửa và bản server để giữ thay đổi cục bộ và phát hiện trùng trường.
 export function rebaseGradingForm(
   base: GradingFormValues,
   draft: GradingFormValues,
@@ -65,6 +68,7 @@ export function rebaseGradingForm(
   let dirty = false;
   let conflict = false;
 
+  // Giữ giá trị đang sửa của một trường trên bản hợp nhất.
   function keepField<Key extends keyof GradingFormValues>(key: Key) {
     form[key] = draft[key];
   }
@@ -105,6 +109,7 @@ export function rebaseGradingForm(
   return { form, dirty, conflict };
 }
 
+// Tìm điểm tối đa theo đúng rubric và mục, dùng 0 nếu mục không còn tồn tại.
 function findItemMaxPoints(rubrics: Rubric[], rubricId: string, itemId: string): number {
   return Number(
     rubrics
@@ -114,6 +119,7 @@ function findItemMaxPoints(rubrics: Rubric[], rubricId: string, itemId: string):
   );
 }
 
+// Cập nhật điểm và đồng bộ checklist khi mức đạt thay đổi.
 export function buildItemScorePatch(
   rubrics: Rubric[],
   form: GradingFormValues,
@@ -136,6 +142,7 @@ export function buildItemScorePatch(
   };
 }
 
+// Đổi phần tổng hợp và tạo cấu trúc rỗng nếu bản chấm chưa có phản hồi.
 export function buildStructuredSummaryPatch(
   form: GradingFormValues,
   summary: StructuredFeedbackSummary,
@@ -151,6 +158,7 @@ export function buildStructuredSummaryPatch(
   };
 }
 
+// Cập nhật phản hồi của tiêu chí theo cặp ID rubric và mục.
 export function buildStructuredItemPatch(
   rubrics: Rubric[],
   form: GradingFormValues,
@@ -197,6 +205,7 @@ export function buildStructuredItemPatch(
   };
 }
 
+// Đổi trạng thái xác nhận xem lại theo khóa rubric:mục và đồng bộ điểm đã xem.
 export function buildToggleAcknowledgePatch(
   rubrics: Rubric[],
   form: GradingFormValues,
@@ -225,6 +234,7 @@ export function buildToggleAcknowledgePatch(
   };
 }
 
+// Đưa checklist, điểm và phản hồi đề xuất vào form cục bộ, gắn ID để kiểm lúc lưu.
 export function buildProposalDraftPatch(
   rubrics: Rubric[],
   evaluation: Evaluation,
@@ -278,6 +288,7 @@ export function listAiFilledItems(rubrics: Rubric[], form: GradingFormValues, pr
 
 /** Nối checklist với biểu mẫu chấm điểm. */
 export function buildChecklistBindings(values: GradingFormValues, disabled: boolean, onChange: OnChange): ChecklistProps {
+  // Xóa xác nhận xem lại của mục khi người chấm đã thay đổi điểm mục đó.
   function handleScoresChange(
     nextScores: GradingFormValues["itemScores"],
     changedRubricId?: string,
@@ -301,6 +312,7 @@ export function buildChecklistBindings(values: GradingFormValues, disabled: bool
 
   return {
     checks: values.checks,
+    // Chuyển checklist mới thành bản cập nhật từng phần của form.
     onChange: (checks) => onChange({ checks }),
     disabled,
     itemScores: values.itemScores,

@@ -16,6 +16,7 @@ import { msg } from "@/i18n/msg";
 type ClassTab = "info" | "students" | "materials" | "evals" | "gradebook";
 const CLASS_TABS: readonly ClassTab[] = ["info", "students", "materials", "evals", "gradebook"];
 
+// Dựng trang lớp chỉ xem, đồng bộ tab với URL và nạp dữ liệu phụ theo tab.
 export function ReadOnlyClassPage({
   audience,
   value,
@@ -32,6 +33,7 @@ export function ReadOnlyClassPage({
   const [headerActions, setHeaderActions] = useState<HTMLElement | null>(null);
   // U12 dựng bảng sinh viên kèm nhóm thì bảng sinh viên chỉ xem của trang ẩn đi.
   const [groupTable, setGroupTable] = useState(false);
+  // Gắn kết quả nhóm vào ID lớp để kết quả cũ không hiển thị khi đổi lớp.
   const onGroupNamesLoaded = useCallback(
     (names: Record<string, string>, leaders: string[] = []) => setGroupNames({ classId: value.id, names, leaders }),
     [value.id],

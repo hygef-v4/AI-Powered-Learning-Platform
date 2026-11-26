@@ -432,6 +432,11 @@ describe("QuizResultPage (UC 52)", () => {
     expect(await screen.findByText(/Tự nộp khi hết giờ/)).toBeInTheDocument();
     timed.unmount();
 
+    vi.mocked(getResult).mockResolvedValue({ ...RESULT, submitMode: "AUTO_ACCESS_LOST" });
+    const accessLost = render(<QuizResultPage attemptId="a1" />);
+    expect(await screen.findByText(/Tự nộp khi lớp đóng hoặc bạn rời lớp/)).toBeInTheDocument();
+    accessLost.unmount();
+
     vi.mocked(getResult).mockResolvedValue(RESULT);
     render(<QuizResultPage attemptId="a1" />);
     await screen.findByTestId("result-hidden");

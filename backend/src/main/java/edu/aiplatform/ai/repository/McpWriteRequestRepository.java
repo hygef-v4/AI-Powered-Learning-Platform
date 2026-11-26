@@ -13,6 +13,7 @@ public class McpWriteRequestRepository {
 
     private final JdbcClient jdbc;
 
+    // Nhận JDBC client để lưu kết quả có thể phát lại của lệnh ghi.
     public McpWriteRequestRepository(JdbcClient jdbc) {
         this.jdbc = jdbc;
     }
@@ -23,6 +24,7 @@ public class McpWriteRequestRepository {
                 .query((rs, n) -> 1).list();
     }
 
+    // Đọc fingerprint và phản hồi trước theo khóa người gọi, thao tác và mã yêu cầu.
     public Optional<StoredRequest> findRequest(UUID accountId, String operation, String requestRef) {
         return jdbc.sql("select fingerprint, response::text as response from mcp_write_requests "
                         + "where account_id = :accountId and operation = :operation and request_ref = :requestRef")
@@ -31,6 +33,7 @@ public class McpWriteRequestRepository {
                 .optional();
     }
 
+    // Lưu phản hồi JSON cùng fingerprint để trả lại cho yêu cầu lặp phù hợp.
     public void insertRequest(UUID accountId, String operation, String requestRef, String fingerprint,
                               String response) {
         jdbc.sql("insert into mcp_write_requests (account_id, operation, request_ref, fingerprint, response) "
@@ -40,6 +43,7 @@ public class McpWriteRequestRepository {
                 .update();
     }
 
+    // Xóa bản ghi phát lại trước mốc lưu giữ và trả số bản ghi đã xóa.
     public int deleteRequestsOlderThan(Instant cutoff) {
         return jdbc.sql("delete from mcp_write_requests where created_at < :cutoff")
                 .param("cutoff", Timestamp.from(cutoff))

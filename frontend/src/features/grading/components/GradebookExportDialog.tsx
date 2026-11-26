@@ -4,6 +4,7 @@ import { Alert, Button, Dialog, Field, Segmented, Select } from "@/shared/ui";
 import { gradingApi } from "../api";
 import { formatErrorMessage } from "../model/format";
 import { msg } from "@/i18n/msg";
+// Đưa lựa chọn định dạng và phạm vi bài vào hộp thoại xuất sổ điểm.
 export function GradebookExportDialog({
   classId,
   assignments,
@@ -19,6 +20,7 @@ export function GradebookExportDialog({
   const [assignment, setAssignment] = useState(initialAssignmentId);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // Lấy blob cùng tên tệp từ API rồi kích hoạt tải về qua URL tạm.
   async function handleDownload() {
     setBusy(true);
     try {

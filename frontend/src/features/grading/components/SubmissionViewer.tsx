@@ -28,15 +28,18 @@ function readContentRuns(value: unknown): Run[] {
   return [run];
 }
 
+// Chỉ chuyển giá trị căn lề đã biết thành lớp hiển thị tài liệu.
 function resolveAlignmentClass(value: unknown): string {
   return alignClass(typeof value === "string" && ["LEFT", "CENTER", "RIGHT", "JUSTIFY"].includes(value)
     ? value as Align : undefined);
 }
 
+// Đọc mức thụt lề hợp lệ của mục danh sách và dùng mức mặc định khi thiếu.
 function calculateListIndent(item: unknown): number {
   const level = item && typeof item === "object" ? (item as Record<string, unknown>).level : undefined;
   return typeof level === "number" && Number.isInteger(level) && level >= 0 && level <= 4 ? level * 24 : 0;
 }
+// Giữ trạng thái tải của ảnh và xin link qua bản chấm được phép xem.
 function SubmittedImage({
   blockId,
   fileId,
@@ -51,6 +54,7 @@ function SubmittedImage({
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Đổi tham chiếu ảnh bài nộp thành link được cấp cho bản chấm hiện tại.
   async function loadSubmission() {
     setBusy(true);
     setError("");
@@ -88,6 +92,7 @@ function SubmittedImage({
     </figure>
   );
 }
+// Lọc SVG nhận từ bài nộp trước khi đưa bản xem trước vào DOM.
 function sanitizeDiagramPreview(value: unknown): string {
     if (typeof value !== "string" || !value.trim() || typeof DOMParser === "undefined") return "";
     const parsed = new DOMParser().parseFromString(value, "image/svg+xml");
@@ -155,6 +160,7 @@ function sanitizeDiagramPreview(value: unknown): string {
     }
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(new XMLSerializer().serializeToString(parsed))}`;
 }
+// Hiện bản xem trước đã lọc và cho mở rộng sơ đồ khi người chấm cần xem chi tiết.
 function Diagram({ blockId, content }: { blockId: string; content: DiagramContent }) {
   const [expanded, setExpanded] = useState(false);
   const preview = useMemo(() => sanitizeDiagramPreview(content.svgPreview), [content.svgPreview]);
@@ -177,6 +183,7 @@ function Diagram({ blockId, content }: { blockId: string; content: DiagramConten
     </details>
   </figure>;
 }
+// Dựng chế độ chỉ đọc cho các block thuộc bản bài nộp đang chấm.
 export function SubmissionViewer({
   document,
   evaluationId,

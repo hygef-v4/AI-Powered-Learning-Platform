@@ -11,6 +11,7 @@ import { StudentGradeCell } from "./components/StudentGradeCell";
 import { gradingApi } from "./api";
 import { GradeDistributionSettings } from "./components/GradeDistributionSettings";
 
+// Chọn nội dung sổ điểm hoặc tiến độ để gắn vào tab của lớp giảng dạy.
 function TeacherGradingSection({
   classId,
   tab,
@@ -42,6 +43,7 @@ studentAssignmentResults.register({
 attemptResultSources.register({
   key: "u09-attempt-grade",
   order: 90,
+  // Đọc điểm lần nộp và chuyển kiểu số cho contract chấm dùng bên ngoài feature.
   load: async (attemptId) => {
     const grade = await gradingApi.loadAttemptGrade(attemptId);
     return {

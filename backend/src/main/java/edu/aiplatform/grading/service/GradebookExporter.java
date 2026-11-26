@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class GradebookExporter {
+    // Lọc ký tự không hợp lệ và giới hạn độ dài trước khi thêm đuôi định dạng.
     public String buildFilename(String title, String fallback, String format) {
         String name = title == null ? fallback : title.replaceAll("[\\p{Cntrl}<>:\"/\\\\|?*]", "_").strip();
         // Leave room for the extension within common 255-byte filesystem filename limits.
@@ -149,6 +150,7 @@ public class GradebookExporter {
         zip.flush();
     }
 
+    // Đổi chỉ số cột từ 0 sang ký hiệu Excel như A, Z và AA.
     private static String buildColumnName(int index) {
         var name = new StringBuilder();
         for (int column = index + 1; column > 0; column = (column - 1) / 26)

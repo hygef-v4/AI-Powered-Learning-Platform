@@ -1,5 +1,13 @@
 # AI-DLC State Tracking
 
+## U03: Test pipeline email lỗi chập chờn trên PR #140 · 2026-11-26
+
+Người dùng: "giúp tôi check lại pr đang lỗi khi lên main".
+
+- [x] Nguyên nhân: `JobDispatcher` dùng pool 1 luồng + `SynchronousQueue`; `dispatch` gọi liên tiếp có thể rơi vào lúc luồng vừa xong chưa rảnh → `RejectedExecutionException` (backpressure có chủ đích). Cùng SHA `923f7ff4`, run push đạt còn run pull_request lỗi.
+- [x] `RequirementsCoverageIntegrationTest`: thêm `dispatchWhenWorkerFree` (Awaitility bỏ qua rejection, giống `JobDispatcherTest`) cho 3 lần gọi `dispatch`. Không đổi mã chạy thật.
+- [ ] Biên dịch đạt; chưa chạy được integration test ở máy local vì Docker không chạy.
+
 ## U01: Chủ nhiệm môn đăng nhập vào /manager · 2026-11-25
 
 Người dùng: "lúc đăng nhập vào subject manager tôi nghĩ nên chuyển đến trang /manager chứ k hải trang lớp như teacher".

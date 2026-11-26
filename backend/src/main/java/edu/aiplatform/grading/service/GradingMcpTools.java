@@ -95,6 +95,7 @@ public class GradingMcpTools implements IMcpToolProvider {
                     requestRef, root.get("proposal"), root.path("agentLabel").asText("Agent"));
 
             // Step 6: Construct teacher review link and return proposal reference to caller
+            // reviewUrl trỏ đến đề xuất trong màn hình chấm. Công bố điểm là thao tác riêng trên UI.
             return new McpToolResult(false,
                     Map.of("proposalId", proposal.id, "status", proposal.status, "evaluationId",
                             evaluation.id, "reviewUrl",
