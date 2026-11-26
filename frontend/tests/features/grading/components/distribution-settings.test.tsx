@@ -136,7 +136,7 @@ describe("assignment/class grade distribution visibility", () => {
     fireEvent.click(toggle);
     await waitFor(() => expect(save).toHaveBeenCalledWith("c2", "a", true, 0));
     expect(props.onChange).not.toHaveBeenCalled();
-    expect(screen.getByRole("radio", { name: "Graded" })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Cá nhân" })).toBeDisabled();
   });
 
   it("loads no settings for a SUBJECT assignment without a class context", () => {

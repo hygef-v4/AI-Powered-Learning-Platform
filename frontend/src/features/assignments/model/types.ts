@@ -209,6 +209,7 @@ export type DetailsInput = Partial<{
   title: string;
   instructions: string;
   diagramEnabled: boolean;
+  submissionMode: SubmissionMode;
   gradingMode: GradingMode;
   requiredDiagrams: Partial<Record<DiagramType, number>>;
   referenceMaterialIds: string[];

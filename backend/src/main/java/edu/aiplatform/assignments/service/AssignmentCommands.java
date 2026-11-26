@@ -27,10 +27,21 @@ public final class AssignmentCommands {
         }
     }
 
-    /** PATCH: trường {@code null} giữ nguyên; {@code activityNotice} rỗng là xóa thông báo. */
+    /**
+     * PATCH: trường {@code null} giữ nguyên; {@code activityNotice} rỗng là xóa thông báo. {@code submissionMode} cùng
+     * {@code gradingMode} là loại bài, đổi tự do khi bài còn sửa được (yêu cầu 2026-11-27).
+     */
     public record Details(long version, String title, String instructions, Boolean diagramEnabled,
                           GradingMode gradingMode, Map<DiagramType, Integer> requiredDiagrams,
-                          List<UUID> referenceMaterialIds, Boolean activityMonitoringEnabled, String activityNotice) {
+                          List<UUID> referenceMaterialIds, Boolean activityMonitoringEnabled, String activityNotice,
+                          SubmissionMode submissionMode) {
+
+        public Details(long version, String title, String instructions, Boolean diagramEnabled,
+                       GradingMode gradingMode, Map<DiagramType, Integer> requiredDiagrams,
+                       List<UUID> referenceMaterialIds, Boolean activityMonitoringEnabled, String activityNotice) {
+            this(version, title, instructions, diagramEnabled, gradingMode, requiredDiagrams, referenceMaterialIds,
+                    activityMonitoringEnabled, activityNotice, null);
+        }
     }
 
     /** {@code instructions} {@code null} giữ hướng dẫn cũ; {@code fromDocx} để audit việc nhập DOCX. */

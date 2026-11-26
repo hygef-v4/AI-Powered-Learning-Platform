@@ -141,8 +141,14 @@ public class AssignmentAuthoringService {
                 : normalizeInstructions(command.instructions());
         GradingMode grading = current.scope() == AssignmentScope.SUBJECT ? GradingMode.TEMPLATE
                 : command.gradingMode() == null ? current.gradingMode() : command.gradingMode();
+        SubmissionMode submission = current.scope() == AssignmentScope.SUBJECT ? SubmissionMode.INDIVIDUAL
+                : command.submissionMode() == null ? current.submissionMode() : command.submissionMode();
         if (current.scope() == AssignmentScope.CLASS) {
-            validateClassModes(current.submissionMode(), grading);
+            validateClassModes(submission, grading);
+            if (submission == SubmissionMode.GROUP && current.submissionMode() != SubmissionMode.GROUP
+                    && !support.groupSupported(current.classId())) {
+                throw ApiException.createBadRequest("GROUP_NOT_SUPPORTED", "Chưa dùng được bài nhóm cho lớp này");
+            }
         }
         Map<DiagramType, Integer> required = command.requiredDiagrams() == null ? current.requiredDiagrams()
                 : normalizeRequiredDiagrams(command.requiredDiagrams());
@@ -151,8 +157,8 @@ public class AssignmentAuthoringService {
         boolean activity = command.activityMonitoringEnabled() == null ? current.activityMonitoringEnabled()
                 : command.activityMonitoringEnabled();
         String notice = command.activityNotice() == null ? current.activityNotice() : normalizeNotice(command.activityNotice());
-        Assignment saved = assignments.saveAssignment(current.updateDetails(title, instructions, true, grading, required,
-                chosen, activity, notice, clock.instant()));
+        Assignment saved = assignments.saveAssignment(current.changeModes(submission, grading)
+                .updateDetails(title, instructions, true, grading, required, chosen, activity, notice, clock.instant()));
         return support.buildDetail(actor, saved, List.of());
     }
 

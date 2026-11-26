@@ -33,10 +33,10 @@ final class AssignmentRequests {
 
     record Details(Long version, String title, String instructions, Boolean diagramEnabled, GradingMode gradingMode,
                    Map<DiagramType, Integer> requiredDiagrams, List<UUID> referenceMaterialIds,
-                   Boolean activityMonitoringEnabled, String activityNotice) {
+                   Boolean activityMonitoringEnabled, String activityNotice, SubmissionMode submissionMode) {
         AssignmentCommands.Details buildCommand() {
             return new AssignmentCommands.Details(requireVersion(version), title, instructions, diagramEnabled, gradingMode,
-                    requiredDiagrams, referenceMaterialIds, activityMonitoringEnabled, activityNotice);
+                    requiredDiagrams, referenceMaterialIds, activityMonitoringEnabled, activityNotice, submissionMode);
         }
     }
 
