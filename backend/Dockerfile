@@ -19,4 +19,6 @@ USER app
 EXPOSE 8080
 HEALTHCHECK --interval=15s --timeout=3s --start-period=60s --retries=5 \
     CMD wget -qO- http://127.0.0.1:8080/health || exit 1
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]
+# G1 cố định: container dưới 1.792 MB RAM thì JVM tự chọn SerialGC, Full GC dừng cả app tới ~0,9 s khi nhiều người
+# cùng lưu bài lớn (lệnh Redis 500 ms hết hạn, trả 503); G1 dừng tối đa ~0,24 s (TC-PERF-004, KAN-244).
+ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]

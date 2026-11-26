@@ -189,3 +189,6 @@ platform:
   assignment-work:
     feedback-per-day: ${U08_FEEDBACK_PER_DAY:20}
     activity-events-per-minute: ${U08_ACTIVITY_EVENTS_PER_MINUTE:60}
+    # Số lần lưu nháp xử lý cùng lúc (0 = số CPU JVM được cấp) và thời gian chờ tối đa của lần thừa (TC-PERF-004).
+    save-max-concurrent: ${U08_SAVE_MAX_CONCURRENT:0}
+    save-queue-wait: ${U08_SAVE_QUEUE_WAIT:30s}
