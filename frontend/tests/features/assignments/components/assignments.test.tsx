@@ -389,6 +389,13 @@ describe("CreateAssignmentDialog", () => {
     render(<CreateAssignmentDialog target={{ kind: "class", classId: "c1", groupSupported: true }} onClose={onClose} onCreated={vi.fn()} />);
     fireEvent.click(screen.getByRole("radio", { name: "Tạo từ AI" }));
     fireEvent.change(screen.getByTestId("create-assignment-title"), { target: { value: "Lab AI" } });
+    const instruction = screen.getByLabelText("Yêu cầu");
+    fireEvent.change(instruction, { target: { value: "a".repeat(10_001) } });
+    expect(instruction).toHaveAccessibleDescription(/rút ngắn 1 ký tự/);
+    expect(instruction).toHaveValue("a".repeat(10_001));
+    expect(screen.getByTestId("create-assignment-submit")).toBeDisabled();
+    expect(create).not.toHaveBeenCalled();
+    fireEvent.change(instruction, { target: { value: "" } });
     fireEvent.click(screen.getByTestId("create-assignment-submit"));
     await confirmAiSource();
     expect(await screen.findByRole("alert")).toHaveTextContent("Hết hạn mức AI.");

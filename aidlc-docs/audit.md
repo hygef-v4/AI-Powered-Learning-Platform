@@ -15427,3 +15427,21 @@ giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại 
 **Context**: Construction, bàn giao U07.
 
 ---
+
+## U07 Giới hạn yêu cầu và mã lỗi AI
+**Timestamp**: 2026-11-26T08:22:59Z
+**Requested by:** Quang Hung
+**User Input**: "h them ma loi ro rang va nang ki tu len max 10000 ki tu co the nang output len cho phu hop, neu input qua ki tu phai dua ra ghi chu"
+**AI Response**: "Đồng bộ mức 10.000 ở giao diện, service và lớp kiểm tra tạo và sửa đề. Giữ văn bản vượt ngưỡng với bộ đếm và cảnh báo. Yêu cầu tạo đề dài hơn 4.000 ký tự xin ngân sách đầu ra 12.000 token. Hiện mã lỗi có thể tra cứu."
+**Context**: Construction, U06 và U07.
+
+---
+
+## U09 Ảnh hưởng tới chấm điểm
+**Timestamp**: 2026-11-26T08:22:59Z
+**Requested by:** Quang Hung
+**User Input**: "thay doi nhu vay thi ci anh huong gi den cham diem hien tai ko"
+**AI Response**: "Giữ cách chấm, trần 30 mục và công thức tối đa 8.192 token. Luồng chấm nhận chẩn đoán rõ hơn cho lỗi AI. Tạo đề dài có thể giữ nhiều quota API trường hơn và làm giảm số token còn lại dành cho chấm trên nguồn dùng chung."
+**Context**: Construction, U09.
+
+---
