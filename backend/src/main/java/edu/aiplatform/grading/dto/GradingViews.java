@@ -37,9 +37,18 @@ public final class GradingViews {
         }
     }
 
+    /** {@code leftClass}: sinh viên đã bị gỡ khỏi lớp nhưng còn lượt làm, giữ lịch sử theo BR-U05-25. */
     public record SubmissionRow(Person student, UUID evaluationId, UUID attemptId, String status,
             BigDecimal score, BigDecimal maxScore, boolean late, Instant submittedAt,
-            int attemptCount, long version) {
+            int attemptCount, long version, boolean leftClass) {
+
+        // Dựng hàng cho sinh viên đang học hoặc cho nhóm.
+        public SubmissionRow(Person student, UUID evaluationId, UUID attemptId, String status,
+                BigDecimal score, BigDecimal maxScore, boolean late, Instant submittedAt,
+                int attemptCount, long version) {
+            this(student, evaluationId, attemptId, status, score, maxScore, late, submittedAt,
+                    attemptCount, version, false);
+        }
     }
 
     public record SubmissionPage(List<SubmissionRow> rows, int total, int page, int size,

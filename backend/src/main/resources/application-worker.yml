@@ -1,5 +1,9 @@
 # Worker: cùng image với backend, chạy việc nền, sweeper và scanner (U03). Nginx không chuyển request vào worker.
 spring:
+  datasource:
+    hikari:
+      # Worker cần ít kết nối hơn backend; cùng Postgres với backend (20) nên giữ tổng dưới max_connections 100.
+      maximum-pool-size: ${DB_POOL_MAX:10}
   task:
     scheduling:
       pool:

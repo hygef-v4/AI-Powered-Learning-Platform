@@ -119,10 +119,12 @@ class SubmissionReviewNavigationTest {
                 .isInstanceOf(ApiException.class).hasMessageContaining("Unknown status filter");
     }
 
-    @Test void removedStudentsAreExcludedAndDeniedScopeCannotReadNavigation() {
+    // KAN-251: students removed from the class keep their submitted work reachable (BR-U05-25).
+    @Test void removedStudentsWithSubmissionsStayAndDeniedScopeCannotReadNavigation() {
         var values = fixture();
         when(classAccess.listActiveStudents(classId)).thenReturn(List.of(values.get(0).accountId));
-        assertThat(submissionReviewService.loadEvaluation(actor, values.get(0).id, "ALL", null).navigationIds()).containsExactly(values.get(0).id);
+        assertThat(submissionReviewService.loadEvaluation(actor, values.get(0).id, "ALL", null).navigationIds())
+                .containsExactly(values.get(0).id, values.get(1).id, values.get(2).id, values.get(3).id);
         doThrow(ApiException.createNotFound("GRADE_NOT_FOUND")).when(gradingAccess).requireTeacher(actor, classId, Actions.GRADING_REVIEW);
         assertThatThrownBy(() -> submissionReviewService.loadEvaluation(actor, values.get(0).id, "ALL", null)).isInstanceOf(ApiException.class);
     }

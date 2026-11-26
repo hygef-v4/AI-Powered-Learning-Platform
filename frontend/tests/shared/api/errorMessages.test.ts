@@ -68,3 +68,29 @@ describe("fetchApi error text", () => {
     expect((error as Error).message).toBe("Not found or you do not have access.");
   });
 });
+
+describe("describeAiFailure (KAN-232)", () => {
+  it("translates known AI failure reasons in the English UI", async () => {
+    const { describeAiFailure, describeApiProblem } = await loadFor("en");
+    expect(describeAiFailure("Bạn đang có 3 yêu cầu AI chưa xong; chờ hoặc hủy bớt rồi thử lại", "No feedback"))
+      .toBe("You already have 3 AI requests in progress. Wait for one to finish or cancel one, then try again.");
+    expect(describeAiFailure("Người dùng đã hủy", "No feedback")).toBe("You cancelled this request.");
+    // Lỗi API có mã AI_ hiện kèm mã, theo quy ước của describeAiCode.
+    expect(describeApiProblem({ status: 429, code: "AI_TOO_MANY_TASKS", detail: "Bạn đang có 3 yêu cầu AI chưa xong" }))
+      .toBe("[AI_TOO_MANY_TASKS] You already have 3 AI requests in progress. Wait for one to finish or cancel one, then try again.");
+    expect(describeAiFailure("[AI_OUTPUT_INVALID] Kết quả AI không đúng định dạng", "No feedback"))
+      .toMatch(/^\[AI_OUTPUT_INVALID\] [\x00-\x7F]+$/);
+  });
+
+  it("never shows unknown Vietnamese text in the English UI, but keeps English server text", async () => {
+    const { describeAiFailure } = await loadFor("en");
+    expect(describeAiFailure("Lỗi nhà cung cấp chưa biết", "No feedback received")).toBe("No feedback received");
+    expect(describeAiFailure("AI total does not match rubric item scores", "x")).toBe("AI total does not match rubric item scores");
+    expect(describeAiFailure(null, "No feedback received")).toBe("No feedback received");
+  });
+
+  it("keeps the server text in the Vietnamese UI", async () => {
+    const { describeAiFailure } = await loadFor("vi");
+    expect(describeAiFailure("Người dùng đã hủy", "Không có góp ý")).toBe("Người dùng đã hủy");
+  });
+});

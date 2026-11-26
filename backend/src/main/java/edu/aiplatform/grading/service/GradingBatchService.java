@@ -33,6 +33,8 @@ public class GradingBatchService {
         GradingCommands.validateBatchItems(batch.items());
         var outcomes = new ArrayList<ItemResult>();
         Set<UUID> seen = new HashSet<>();
+        // Quyền ghi điểm theo lớp, bài đã đóng và lượt được chấm chỉ đọc một lần cho cả lượt (TC-PERF-011).
+        var checks = GradingService.BatchChecks.forBatch();
 
         // Step 2: Iterate over each evaluation item in the batch
         for (var item : batch.items()) {
@@ -45,8 +47,8 @@ public class GradingBatchService {
             try {
                 // Step 3: Execute finalize or publish inside an isolated transaction per item (REQUIRES_NEW)
                 var evaluation = transactionTemplate
-                        .execute(status -> publish ? gradingService.publishEvaluation(actor, item)
-                                : gradingService.finalizeEvaluation(actor, item));
+                        .execute(status -> publish ? gradingService.publishEvaluation(actor, item, checks)
+                                : gradingService.finalizeEvaluation(actor, item, checks));
                 outcomes.add(
                         new ItemResult(item.evaluationId(), "SUCCESS", null, evaluation.version));
             } catch (ApiException ex) {

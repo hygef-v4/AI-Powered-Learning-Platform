@@ -942,7 +942,7 @@
         "connectionCheck": "Connection check",
         "apiKeyEncryptionIsNot": "API key encryption is not enabled on the system; please contact an administrator.",
         "theDataWasJustChanged": "The data was just changed elsewhere, please reload.",
-        "youAlreadyHave5Active": "You already have 5 active agents; please revoke some.",
+        "youAlreadyHave5Active": "You can have up to 5 active agents. Revoke one to connect another.",
         "passed": "Passed",
         "wrongKey": "Wrong key",
         "tokenLimit": "Token limit",
@@ -2357,6 +2357,7 @@
         "viewGrade": "View grade",
         "select": "Select {name}",
         "late": "Late",
+        "leftClass": "Left class",
         "noMatchingSubmissions": "No matching submissions."
       },
       "GradebookExportDialog": {
@@ -4790,7 +4791,17 @@
         "announcementEmailInvalid": "Only important announcements can be sent by e-mail.",
         "tooManyRequests": "Too many requests. Wait a moment and try again.",
         "systemBusy": "The system is busy, please try again later.",
-        "requestFailed": "Could not complete the request. Please try again."
+        "requestFailed": "Could not complete the request. Please try again.",
+        "aiTooManyTasks": "You already have 3 AI requests in progress. Wait for one to finish or cancel one, then try again.",
+        "aiNotCancellable": "The request has already been sent to the AI provider and cannot be cancelled.",
+        "aiCancelled": "You cancelled this request.",
+        "aiTimedOut": "Cancelled after waiting more than 30 minutes.",
+        "aiConnectionRevoked": "The AI connection was turned off or revoked.",
+        "aiInvalidResult": "The AI result was not in the expected format.",
+        "aiNoResult": "The AI returned no result.",
+        "aiNotReady": "AI is not ready. Check your AI connection.",
+        "aiUnreadable": "The AI returned content that could not be read. Please try again.",
+        "submissionChanged": "The submission has changed."
       }
     },
     "dateTime": {

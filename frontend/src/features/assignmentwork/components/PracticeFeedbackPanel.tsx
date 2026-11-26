@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import { Alert, Button, Card, Icon, Pill } from "@/shared/ui";
 import { workApi } from "../api";
 import { describeError, formatDateTime, requestRef } from "../model/format";
@@ -81,7 +82,7 @@ export function PracticeFeedbackPanel({ attemptId, partTitles }: {
             {item.origin === "MCP" ? <Pill tone="accent">Agent</Pill> : <Pill>{String(item.provenance.provider ?? msg("assignmentwork.components.PracticeFeedbackPanel.personalApi"))}</Pill>}
             {formatDateTime(item.completedAt ?? item.createdAt)}
           </p>
-          {item.status === "FAILED" && <p className="text-xs text-danger">{item.safeError ?? msg("assignmentwork.components.PracticeFeedbackPanel.noFeedbackReceived")}</p>}
+          {item.status === "FAILED" && <p className="text-xs text-danger">{describeAiFailure(item.safeError, msg("assignmentwork.components.PracticeFeedbackPanel.noFeedbackReceived"))}</p>}
           {item.status === "READY" && item.feedback && (
             <>
               <div>

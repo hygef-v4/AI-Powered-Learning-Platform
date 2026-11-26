@@ -44,7 +44,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F2 - Danh sách bài nộp và tiến độ (UC 42)
 1. Giảng viên bấm "Bài nộp" trên dòng bài ở tab Evals (U09 gắn qua slot `AssignmentRowAction` của U07); frontend gọi `GET /api/v1/classes/{classId}/assignments/{assignmentId}/submissions`.
 2. Kiểm giảng viên chính của lớp (BR-U09-01); bài là `GRADED` của lớp hoặc của môn chứa lớp.
-3. Lấy tiến độ từng sinh viên qua `ISubmissionQuery.listSubmissions` (bài nhóm qua `IGroupSubmissionSource`), ghép với đánh giá của lớp.
+3. Lấy tiến độ từng sinh viên qua `ISubmissionQuery.listSubmissions` (bài nhóm qua `IGroupSubmissionSource`), ghép với đánh giá của lớp. Bài cá nhân: một dòng cho mỗi sinh viên đang ghi danh, cộng sinh viên đã bị gỡ khỏi lớp nhưng còn lượt làm, dòng này có `leftClass = true` (BR-U05-25, KAN-251, 2026-11-26).
 4. Trả số đã nộp, đang làm, chưa nộp, nộp trễ, thời gian còn lại và bảng bài nộp (trạng thái chấm, điểm, trễ); lọc theo trạng thái, trễ.
 5. Từ đây: mở một bài (F3), AI chấm hàng loạt (F6), chốt (F8), công bố (F9).
 

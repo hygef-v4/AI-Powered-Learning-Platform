@@ -38,8 +38,8 @@ class GradebookAssemblyTest {
             assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "csv").get(1).get(4))
                     .isEqualTo(state == EvaluationStatus.PENDING ? "" : "7.50");
         }
-        when(evaluationRepository.findForClass(classId)).thenReturn(List.of());
-        when(submissionQuery.listSubmissions(assignmentId, classId)).thenReturn(List.of());
+        when(evaluationRepository.listGradebookEvaluations(eq(classId), anyCollection())).thenReturn(List.of());
+        stubSubmissions(List.of());
         assertThat(gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx").get(1).get(4)).isEmpty();
     }
 
@@ -96,6 +96,16 @@ class GradebookAssemblyTest {
     final GradingAccess gradingAccess = mock(GradingAccess.class);
     final GradebookService gradebookService = new GradebookService(evaluationRepository, gradingAccess, assignmentQuery, submissionQuery, classAccess, accountLookup, rubric, groupSubmissionSourceProvider, mock(GradeDistributionVisibilityRepository.class));
 
+    /** Bảng điểm đọc gộp trạng thái nộp cả lớp; chỉ bài {@code assignmentId} có dữ liệu. */
+    void stubSubmissions(List<StudentSubmissionStatus> statuses) {
+        when(submissionQuery.listSubmissionsByAssignment(anyCollection(), eq(classId))).thenAnswer(invocation -> {
+            Map<UUID, List<StudentSubmissionStatus>> result = new LinkedHashMap<>();
+            for (UUID id : invocation.<Collection<UUID>>getArgument(0))
+                result.put(id, id.equals(assignmentId) ? statuses : List.of());
+            return result;
+        });
+    }
+
     List<Evaluation> fixture(int size) {
         var assignment = mock(AssignmentView.class);
         when(assignment.assignmentId()).thenReturn(assignmentId);
@@ -136,8 +146,8 @@ class GradebookAssemblyTest {
                 if (contacts.containsKey(id)) selected.put(id, contacts.get(id));
             return selected;
         });
-        when(evaluationRepository.findForClass(classId)).thenReturn(values);
-        when(submissionQuery.listSubmissions(assignmentId, classId)).thenReturn(statuses);
+        when(evaluationRepository.listGradebookEvaluations(eq(classId), anyCollection())).thenReturn(values);
+        stubSubmissions(statuses);
         return values;
     }
 
@@ -149,8 +159,8 @@ class GradebookAssemblyTest {
         assertThat(row.student().name()).isEqualTo("Student 500");
         assertThat(row.grades()).hasSize(1);
         assertThat(row.grades().get(0).score()).isEqualByComparingTo("7.50");
-        verify(evaluationRepository).findForClass(classId);
-        verify(submissionQuery).listSubmissions(assignmentId, classId);
+        verify(evaluationRepository).listGradebookEvaluations(eq(classId), anyCollection());
+        verify(submissionQuery).listSubmissionsByAssignment(List.of(assignmentId), classId);
         verify(accountLookup).getContacts(List.of(target));
     }
 
@@ -209,7 +219,7 @@ class GradebookAssemblyTest {
         assertThat(row.grades().get(0).score()).isEqualByComparingTo("8.25");
         assertThat(row.grades().get(0).late()).isTrue();
         verify(source).listGroupSubmissions(assignmentId, classId);
-        verify(submissionQuery, never()).listSubmissions(any(), any());
+        verify(submissionQuery, never()).listSubmissionsByAssignment(any(), any());
         var exported = gradebookService.buildExportRows(actor, classId, assignmentId, "xlsx");
         assertThat(exported.get(2)).containsExactly("2", "SE000001", "Student 1", "s1@school.test", "8.25");
     }
@@ -220,10 +230,23 @@ class GradebookAssemblyTest {
         assertThat(rows).hasSize(202);
         assertThat(rows.subList(1, rows.size())).extracting(row -> row.get(3)).doesNotHaveDuplicates();
         assertThat(rows.get(201)).containsExactly("201", "SE000200", "Student 200", "s200@school.test", "7.50");
-        verify(evaluationRepository, times(1)).findForClass(classId);
-        verify(submissionQuery, times(1)).listSubmissions(assignmentId, classId);
+        verify(evaluationRepository, times(1)).listGradebookEvaluations(eq(classId), anyCollection());
+        verify(submissionQuery, times(1)).listSubmissionsByAssignment(List.of(assignmentId), classId);
         verify(accountLookup, times(1)).getContacts(anyCollection());
         verify(accountLookup, never()).getContact(any());
+    }
+
+    @Test void listReadsEvaluationsOnlyForStudentsOnTheRequestedPage() {
+        var values = fixture(5);
+        var page = gradebookService.listGrades(actor, classId, null, 2, 2);
+        assertThat(page.total()).isEqualTo(5);
+        assertThat(page.rows()).extracting(r -> r.student().accountId())
+                .containsExactly(values.get(2).accountId, values.get(3).accountId);
+        assertThat(page.rows()).allSatisfy(r -> assertThat(r.grades().get(0).score()).isEqualByComparingTo("7.50"));
+        verify(evaluationRepository).listGradebookEvaluations(classId,
+                List.of(values.get(2).accountId, values.get(3).accountId));
+        assertThat(gradebookService.listGrades(actor, classId, "nobody", 1, 10).rows()).isEmpty();
+        verify(evaluationRepository, times(1)).listGradebookEvaluations(eq(classId), anyCollection());
     }
 
     @Test void listUsesLatestReceiptAndPreservesSearchPaginationAndMissingContactFallback() {

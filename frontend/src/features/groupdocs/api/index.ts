@@ -21,8 +21,9 @@ export const assignSection = (id: string, sectionId: string, assigneeId: string,
 export const releaseSection = (id: string, sectionId: string) =>
   fetchApi<SectionView>(`${buildSectionPath(id, sectionId)}:release`, { method: "POST" });
 
-export const saveDraft = (id: string, sectionId: string, version: number, blocks: DocumentBlock[]) =>
-  fetchApi<SectionView>(`${buildSectionPath(id, sectionId)}/draft`, { method: "PUT", body: JSON.stringify({ version, blocks }) });
+/** `keepalive` cho lần lưu lúc rời trang, để yêu cầu vẫn đi khi trang đã đóng (TC-PERF-019). */
+export const saveDraft = (id: string, sectionId: string, version: number, blocks: DocumentBlock[], keepalive = false) =>
+  fetchApi<SectionView>(`${buildSectionPath(id, sectionId)}/draft`, { method: "PUT", body: JSON.stringify({ version, blocks }), keepalive });
 
 export const finishSection = (id: string, sectionId: string) =>
   fetchApi<SectionView>(`${buildSectionPath(id, sectionId)}:done`, { method: "POST" });

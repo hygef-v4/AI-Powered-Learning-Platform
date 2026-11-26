@@ -130,6 +130,33 @@ class AttemptServiceTest {
     }
 
     @Test
+    void saveValidatesBeforeTheWriteTransactionAndRechecksTheVersionUnderLock() {
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
+        // Kiểm tài liệu (CPU) xong rồi mới mở transaction ghi, khóa lượt và lưu (TC-PERF-004).
+        var order = org.mockito.Mockito.inOrder(f.documents, f.transactions, f.attempts);
+        assertThat(f.attemptService.saveAttempt(f.student, a.id(), 0, withStudentWork()).contentVersion()).isEqualTo(1);
+        order.verify(f.documents).validateForSave(any(), any());
+        order.verify(f.transactions).getTransaction(any());
+        order.verify(f.attempts).findForUpdate(a.id());
+        order.verify(f.attempts).saveContent(org.mockito.ArgumentMatchers.eq(a.id()), any(),
+                org.mockito.ArgumentMatchers.eq(0L), any());
+        order.verify(f.transactions).commit(any());
+
+        // Một tab khác lưu trong lúc tab này đang kiểm: bước ghi thấy phiên bản đã đổi dưới khóa, báo xung đột, không ghi đè.
+        var concurrent = new java.util.concurrent.atomic.AtomicBoolean();
+        when(f.documents.validateForSave(any(), any())).thenAnswer(i -> {
+            if (concurrent.compareAndSet(false, true)) {
+                f.attemptService.saveAttempt(f.student, a.id(), 1, withStudentWork());
+            }
+            return new ValidationResult(List.of(), List.of());
+        });
+        assertThat(code(() -> f.attemptService.saveAttempt(f.student, a.id(), 1, withStudentWork())))
+                .isEqualTo("CONTENT_VERSION_CONFLICT");
+        assertThat(f.store.get(a.id()).contentVersion()).isEqualTo(2);
+        verify(f.transactions, times(1)).rollback(any());
+    }
+
+    @Test
     void docxPreviewKeepsHeadingsSoTheWorkspaceCanMatchParts() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
         DocumentBlock heading = new DocumentBlock(UUID.randomUUID(), BlockOrigin.STUDENT, BlockType.HEADING,

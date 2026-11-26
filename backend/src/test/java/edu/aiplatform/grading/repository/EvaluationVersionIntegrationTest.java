@@ -141,6 +141,40 @@ class EvaluationVersionIntegrationTest {
     }
 
     @Test
+    void gradebookProjectionMatchesFullDocumentAndSkipsSupersededGrades() {
+        var created = seed();
+        seed();
+        var saved = transactionTemplate.execute(status -> {
+            var value = evaluationRepository.lockById(created.id).orElseThrow();
+            value.score = new BigDecimal("7.25");
+            value.feedback = "Tốt \"lắm\"";
+            value.state = edu.aiplatform.grading.model.EvaluationStatus.PUBLISHED;
+            value.gradedAt = Instant.parse("2026-10-23T11:05:00.123456789Z");
+            value.publishedAt = Instant.parse("2026-10-23T11:06:00Z");
+            return evaluationRepository.saveEvaluation(value);
+        });
+        var full = evaluationRepository.findForClass(created.classId);
+        assertThat(evaluationRepository.listGradebookEvaluations(created.classId, List.of(created.accountId))).singleElement()
+                .usingRecursiveComparison()
+                .comparingOnlyFields("id", "assignmentId", "classId", "attemptId", "groupDocumentId", "accountId",
+                        "kind", "state", "score", "maxScore", "version", "feedback", "createdAt", "gradedAt",
+                        "publishedAt")
+                .isEqualTo(full.get(0));
+        assertThat(full.get(0).gradedAt).isEqualTo(Instant.parse("2026-10-23T11:05:00.123456789Z"));
+        assertThat(evaluationRepository.listGradebookEvaluations(created.classId, List.of(UUID.randomUUID())))
+                .isEmpty();
+        assertThat(evaluationRepository.listGradebookEvaluations(created.classId, List.of())).isEmpty();
+        transactionTemplate.executeWithoutResult(status -> {
+            var value = evaluationRepository.lockById(saved.id).orElseThrow();
+            value.supersedeEvaluation();
+            evaluationRepository.saveEvaluation(value);
+        });
+        assertThat(evaluationRepository.listGradebookEvaluations(created.classId, List.of(created.accountId))).isEmpty();
+        assertThat(EvaluationRepository.parseEpochInstant("1795664887")).isEqualTo(Instant.ofEpochSecond(1795664887));
+        assertThat(EvaluationRepository.parseEpochInstant(null)).isNull();
+    }
+
+    @Test
     void lookupScopeAndMutationWithoutSaveDoNotWrite() {
         var created = seed();
         var other = seed();
