@@ -464,6 +464,15 @@ describe("listRubricIssues", () => {
     expect(describeMissing(issues)).toBe("Bài làm chưa có rubric chấm điểm");
   });
 
+  it("bài Luyện tập không có rubric thì không báo thiếu; thẻ ghi dở vẫn báo", () => {
+    expect(listRubricIssues(cards, {}, false)).toEqual([]);
+    const issues = listRubricIssues(cards, { p1: rubric({ text: "Đủ actor", points: 2 }), p2: rubric({ text: "", points: 1 }) }, false);
+    expect(issues.map((issue) => issue.code)).toEqual(["RUBRIC_POINTS_MISSING"]);
+    // Chỉ có một thẻ ghi 0 điểm thì tổng là 0 nhưng thẻ đó vẫn bị chặn (retest systest 2026-11-25).
+    const zeroOnly = listRubricIssues(cards, { p1: rubric({ text: "Đủ actor", points: 0 }) }, false);
+    expect(zeroOnly.map((issue) => issue.code)).toEqual(["RUBRIC_POINTS_MISSING"]);
+  });
+
   it("thẻ tổng không quá 0 hoặc mục ghi dở thì thiếu điểm; dòng trống hẳn bỏ qua", () => {
     const issues = listRubricIssues(cards, {
       ASSIGNMENT: rubric({ text: "Trình bày", points: null }),

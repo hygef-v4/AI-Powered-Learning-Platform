@@ -9,10 +9,12 @@ import org.springframework.stereotype.Component;
 public class MaterialMcpQueryTools implements IMcpToolProvider {
     private final MaterialQueryService materialQueryService;
 
+    // Dùng nguồn đọc học liệu chung để giới hạn kết quả theo quyền của người gọi.
     public MaterialMcpQueryTools(MaterialQueryService materialQueryService) {
         this.materialQueryService = materialQueryService;
     }
 
+    // Khai báo bộ lọc và trạng thái văn bản để agent tìm học liệu được phép làm nguồn.
     @Override
     public List<McpToolDefinition> tools() {
         return List.of(
@@ -26,6 +28,7 @@ public class MaterialMcpQueryTools implements IMcpToolProvider {
                                 + McpSchemas.TEXT));
     }
 
+    // Đọc lớp hoặc môn và kết quả tìm kiếm đã phân trang cho giảng viên có quyền.
     @Override
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
         McpInput.requireTeaching(actor);

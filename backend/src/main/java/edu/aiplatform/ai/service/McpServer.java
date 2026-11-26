@@ -50,6 +50,7 @@ public class McpServer {
     private final ObjectMapper json;
     private final Clock clock;
 
+    // Kết nối registry, giới hạn lượt gọi, kiểm schema và ghi nhận sử dụng cho máy chủ JSON-RPC.
     public McpServer(McpToolRegistry registry, IMcpRateLimiter rateLimiter, JsonSchemaChecker schemas,
                      AiUsageService aiUsageService, ObjectMapper json, Clock clock) {
         this.registry = registry;
@@ -60,6 +61,7 @@ public class McpServer {
         this.clock = clock;
     }
 
+    // Kiểm phiên bản giao thức có trong tập phiên bản triển khai.
     public static boolean supports(String protocolVersion) {
         return PROTOCOLS.contains(protocolVersion);
     }
@@ -188,6 +190,7 @@ public class McpServer {
         Long outputTokens = readReportedTokens(params.path("_meta").path("outputTokens"));
 
         // Step 5: Execute domain tool provider call and catch domain/runtime exceptions
+        // Registry kiểm role và quyền token. Provider vẫn kiểm quyền trên lớp, môn hoặc bài cụ thể.
         McpToolResult result;
         try {
             @SuppressWarnings("unchecked")
@@ -222,6 +225,7 @@ public class McpServer {
         return buildResult(id, buildToolResult(text, isError));
     }
 
+    // Đóng gói nội dung văn bản và cờ lỗi tool theo dạng phản hồi MCP.
     private ObjectNode buildToolResult(String text, boolean isError) {
         ObjectNode out = json.createObjectNode();
         out.putArray("content").addObject().put("type", "text").put("text", text);
@@ -229,6 +233,7 @@ public class McpServer {
         return out;
     }
 
+    // Giữ nguyên chuỗi và tuần tự hóa dữ liệu cấu trúc sang văn bản JSON.
     private String renderText(Object content) {
         if (content == null) {
             return "";
@@ -243,6 +248,7 @@ public class McpServer {
         }
     }
 
+    // Tính kích thước theo UTF-8 để kiểm giới hạn truyền dữ liệu.
     private static int countBytes(String s) {
         return s.getBytes(StandardCharsets.UTF_8).length;
     }
@@ -252,6 +258,7 @@ public class McpServer {
         return node.isIntegralNumber() && node.asLong() >= 0 ? node.asLong() : null;
     }
 
+    // Đọc schema của registry để liệt kê cho agent, dùng schema object tối thiểu nếu đọc lỗi.
     private JsonNode parseSchemaNode(String schema) {
         try {
             return json.readTree(schema);
@@ -260,18 +267,21 @@ public class McpServer {
         }
     }
 
+    // Bọc kết quả trong envelope JSON-RPC liên kết với ID yêu cầu.
     private ObjectNode buildResult(JsonNode id, JsonNode result) {
         ObjectNode out = createEnvelope(id);
         out.set("result", result);
         return out;
     }
 
+    // Trả mã lỗi giao thức cùng ID để client ghép về đúng yêu cầu.
     ObjectNode buildError(JsonNode id, int code, String message) {
         ObjectNode out = createEnvelope(id);
         out.putObject("error").put("code", code).put("message", message);
         return out;
     }
 
+    // Tạo phần chung của JSON-RPC 2.0, dùng ID null khi không có ID yêu cầu.
     private ObjectNode createEnvelope(JsonNode id) {
         ObjectNode out = json.createObjectNode();
         out.put("jsonrpc", "2.0");

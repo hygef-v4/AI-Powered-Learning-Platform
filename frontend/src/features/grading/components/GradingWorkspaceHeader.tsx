@@ -53,6 +53,7 @@ export function useSubmissionImages(
   return urls;
 }
 
+// Tạo bản tiêu chí rút gọn phục vụ hiển thị ghi chú theo rubric.
 export function listNoteCriteria(rubric: Rubric): RubricCriterion[] {
   return rubric.criteria.map((criterion) => ({
     criterionId: criterion.criterionId,
@@ -75,6 +76,7 @@ export function TotalCard({ total, maxScore }: { total: number; maxScore: number
   );
 }
 
+// Dựng thanh thao tác cố định với vùng chọn chế độ xem.
 export function TopBar({
   barRef,
   left,
@@ -98,6 +100,7 @@ export function TopBar({
   );
 }
 
+// Mở danh sách chọn bài chấm theo sinh viên và quản lý từ khóa trong hộp chọn.
 export function StudentPickerDropdown({
   evaluationId,
   busy,
@@ -122,6 +125,7 @@ export function StudentPickerDropdown({
 
   useEffect(() => {
     if (!open) return;
+    // Đóng danh sách khi thao tác ngoài vùng chọn bài.
     function handleOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setOpen(false);
@@ -199,6 +203,7 @@ export function StudentPickerDropdown({
   );
 }
 
+// Hiện kiểu bài, phản hồi và điều chỉnh ở phần đầu biểu mẫu chấm.
 export function GradingHeaderSection({
   assignmentKind,
   unanchoredAuthors,

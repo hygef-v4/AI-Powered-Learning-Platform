@@ -2,10 +2,11 @@ import type { ReactNode } from "react";
 import { Pill, TableFrame, Td, Th, cx } from "@/shared/ui";
 import { splitAtomicItems, sumRubricTotal, type RubricCriterion } from "./types";
 import { msg } from "@/i18n/msg";
+import { NUMBER_LOCALE } from "@/i18n/number";
 
 export function formatPoints(points: number | null | undefined): string {
   if (points === null || points === undefined) return "–";
-  return Number(points).toLocaleString("vi-VN", { maximumFractionDigits: 2 });
+  return Number(points).toLocaleString(NUMBER_LOCALE, { maximumFractionDigits: 2 });
 }
 
 /** Bảng rubric chỉ đọc (dành cho giảng viên): mỗi dòng một mục chấm atomic kèm điểm; tổng tự tính. */

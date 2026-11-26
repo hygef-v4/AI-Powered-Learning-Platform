@@ -35,12 +35,14 @@ const STATUS_META: Record<string, { label: string; tone: Tone; icon: string }> =
   REJECTED: { label: msg("grading.components.AiProposalPanel.theProposalIsInvalid"), tone: "danger", icon: "✕" },
 };
 
+// Đổi trạng thái tác vụ thành nhãn của bước xử lý đề xuất.
 function describePendingStage(taskState?: string | null): string {
   if (taskState === "READY") return msg("grading.components.AiProposalPanel.aiResultReceivedProcessingThe");
   if (taskState === "RUNNING") return msg("grading.components.AiProposalPanel.theAiIsGrading");
   return msg("grading.components.AiProposalPanel.waitingToBeProcessed");
 }
 
+// Giải thích giai đoạn agent đang chạy hoặc kết quả đang được hệ thống xử lý.
 function describePendingStageDetail(taskState?: string | null): string {
   if (taskState === "READY") {
     return msg("grading.components.AiProposalPanel.theResultFromTheAi");
@@ -51,6 +53,7 @@ function describePendingStageDetail(taskState?: string | null): string {
   return msg("grading.components.AiProposalPanel.theAiGradingRequestIs");
 }
 
+// Hiển thị đề xuất đang chờ hoặc có nội dung, kể cả mục được mở từ link MCP.
 export function AiProposalPanel({
   proposals,
   selectedProposalId,
@@ -89,6 +92,7 @@ export function AiProposalPanel({
   const visibleProposals = proposals.filter((p) => p.status === "PENDING" || (p.proposal && p.status !== "FAILED" && p.status !== "REJECTED"));
   const latestFailure = proposals[0]?.status === "FAILED" || proposals[0]?.status === "REJECTED" ? proposals[0] : null;
 
+  // Dựng bản so sánh điểm và phản hồi để giảng viên cân nhắc trước khi áp dụng.
   function renderProposalContent(p: Proposal, isLatest: boolean) {
     const aiChecks = p.proposal?.checks ?? {};
     const aiScores = p.proposal?.itemScoresByRubric ?? {};

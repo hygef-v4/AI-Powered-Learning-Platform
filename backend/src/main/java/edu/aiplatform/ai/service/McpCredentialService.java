@@ -46,6 +46,7 @@ public class McpCredentialService {
     private final Clock clock;
     private final SecureRandom random = new SecureRandom();
 
+    // Nhận nơi lưu, nguồn quyền hiện hành và đồng hồ để quản lý vòng đời token.
     public McpCredentialService(McpCredentialRepository repository, IAccountLookup accounts, AiAccess access,
                                 Clock clock) {
         this.repository = repository;
@@ -54,6 +55,7 @@ public class McpCredentialService {
         this.clock = clock;
     }
 
+    // Chỉ liệt kê token của chính tài khoản và tính trạng thái tại thời điểm hiện tại.
     @Transactional(readOnly = true)
     public List<CredentialView> listCredentials(Actor actor) {
         access.require(actor, Actions.MCP_SELF);
@@ -61,6 +63,7 @@ public class McpCredentialService {
         return repository.listOwn(actor.accountId()).stream().map(c -> view(c, now)).toList();
     }
 
+    // Kiểm quyền và hạn dùng, lưu hàm băm và trả token thô khi mới cấp.
     @Transactional
     public Created createCredential(Actor actor, String label, Access accessLevel, Integer days) {
         access.require(actor, Actions.MCP_SELF);
@@ -107,6 +110,7 @@ public class McpCredentialService {
         return view(next, now);
     }
 
+    // Cắt khoảng trắng và buộc nhãn hiển thị dài 1–60 ký tự.
     private static String requireValidLabel(String label) {
         String name = label == null ? "" : label.trim();
         if (name.isEmpty() || name.length() > 60) {
@@ -115,12 +119,14 @@ public class McpCredentialService {
         return name;
     }
 
+    // Yêu cầu người tạo chọn mức truy cập trước khi cấp token.
     private static void requireValidAccess(Access accessLevel) {
         if (accessLevel == null) {
             throw ApiException.createBadRequest("MCP_ACCESS_INVALID", "Cần chọn quyền cho agent");
         }
     }
 
+    // Giới hạn thu hồi theo chủ sở hữu của token.
     @Transactional
     public void revoke(Actor actor, UUID id) {
         access.require(actor, Actions.MCP_SELF);
@@ -164,6 +170,7 @@ public class McpCredentialService {
         return Optional.of(new McpPrincipal(found.get(), new Actor(contact.get().accountId(), contact.get().role())));
     }
 
+    // Tính SHA-256 để kiểm token mà không phải lưu chuỗi gốc.
     static String hash(String token) {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
@@ -173,6 +180,7 @@ public class McpCredentialService {
         }
     }
 
+    // Trả metadata và trạng thái tính theo thời gian, với gợi ý nhận dạng token.
     static CredentialView view(McpCredential c, Instant now) {
         return new CredentialView(c.id(), c.label(), c.access(), c.tokenHint(), c.createdAt(), c.expiresAt(),
                 c.lastUsedAt(), c.resolveStatus(now));
@@ -185,6 +193,7 @@ public class McpCredentialService {
     /** Token rõ chỉ trả lúc tạo; mất token thì tạo agent mới. */
     public record Created(CredentialView credential, String token) {
 
+        // Giữ token thô ngoài chuỗi mô tả của kết quả cấp token.
         @Override
         public String toString() {
             return "Created[credential=" + credential + "]";

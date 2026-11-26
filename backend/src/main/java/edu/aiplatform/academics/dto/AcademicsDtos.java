@@ -15,6 +15,7 @@ public final class AcademicsDtos {
     /** {@code studentCode}: MSSV của sinh viên, rỗng với giảng viên hoặc khi chưa có (BR-U05-60). */
     public record Person(UUID id, String name, String email, String studentCode) {
 
+        // Tạo hồ sơ rút gọn khi nguồn chưa có mã sinh viên.
         public Person(UUID id, String name, String email) {
             this(id, name, email, null);
         }
@@ -30,6 +31,7 @@ public final class AcademicsDtos {
     public record Student(UUID accountId, String name, String email, Instant enrolledAt,
             EnrollmentStatus status, String studentCode) {
 
+        // Tạo bản ghi hiển thị từ dữ liệu ghi danh cũ chưa kèm mã sinh viên.
         public Student(UUID accountId, String name, String email, Instant enrolledAt,
                 EnrollmentStatus status) {
             this(accountId, name, email, enrolledAt, status, null);

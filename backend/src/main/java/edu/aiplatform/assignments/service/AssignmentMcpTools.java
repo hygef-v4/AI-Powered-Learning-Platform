@@ -43,6 +43,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
     private final IClassAccess classes;
     private final ObjectMapper json;
 
+    // Kết nối dữ liệu đề, rubric, quyền xem và đường lưu đề xuất dùng trong MCP.
     public AssignmentMcpTools(AssignmentRepository assignments, AssignmentAccess access, RubricService rubricService,
                               DocumentModelService documentModelService, AssignmentAiDraftService assignmentAiDraftService, IClassAccess classes,
                               ObjectMapper json) {
@@ -55,6 +56,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
         this.json = json;
     }
 
+    // Công bố hợp đồng đọc ngữ cảnh và lưu đề xuất theo từng vai trò.
     @Override
     public List<McpToolDefinition> tools() {
         return List.of(
@@ -72,6 +74,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
                         McpToolKind.WRITE, Set.of(Role.TEACHER, Role.SUBJECT_MANAGER)));
     }
 
+    // Phân nhánh đọc bài với lưu đề xuất, trả lỗi tool có mã khi đầu vào hoặc quyền không hợp lệ.
     @Override
     public McpToolResult call(Actor actor, String toolName, Map<String, Object> args) {
         boolean educator = actor != null && (actor.role() == Role.TEACHER || actor.role() == Role.SUBJECT_MANAGER);
@@ -83,6 +86,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
             return switch (toolName) {
                 case READ -> new McpToolResult(false, readAssignment(actor, id));
                 case SAVE -> {
+                    // Dùng version từ lần đọc context để phát hiện bài đã đổi trong lúc agent soạn.
                     long expected = Long.parseLong(String.valueOf(args.get("expectedVersion")));
                     JsonNode draft = json.valueToTree(args.get("draft"));
                     Object label = args.get("agentLabel");
@@ -101,6 +105,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
         }
     }
 
+    // Chỉ gửi đề, rubric và version đầy đủ khi người dùng có quyền soạn hoặc dạy bài.
     private Map<String, Object> readAssignment(Actor actor, UUID id) {
         Assignment assignment = assignments.findAssignment(id).orElseThrow(() -> access.notFound());
         boolean teacher = actor.role() != Role.STUDENT && access.canRead(actor, assignment);
@@ -131,6 +136,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
         return out;
     }
 
+    // Bổ sung các thời điểm đã xác định vào kết quả ngữ cảnh bài.
     private static void putSchedule(Map<String, Object> out, Assignment assignment) {
         if (assignment.closesAt() != null) {
             out.put("closesAt", assignment.closesAt().toString());
@@ -158,6 +164,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
         return false;
     }
 
+    // Chuyển rubric sang dữ liệu JSON gọn theo mục, tiêu chí và điểm.
     private static Map<String, Object> mapRubric(RubricView view) {
         return Map.of("partId", view.partId(), "maxPoints", view.maxPoints(), "criteria", view.criteria().stream()
                 .map(c -> Map.of("title", c.title(), "kind", c.kind().name(), "items", c.items().stream()
@@ -165,6 +172,7 @@ public class AssignmentMcpTools implements IMcpToolProvider {
                 .toList());
     }
 
+    // Trả mã lỗi nghiệp vụ trong phản hồi tool để agent xử lý được.
     private static McpToolResult buildError(String code, String message) {
         return new McpToolResult(true, Map.of("code", code, "message", message));
     }

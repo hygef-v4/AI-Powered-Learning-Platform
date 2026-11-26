@@ -1,17 +1,21 @@
 import type { Checks, ItemScores, Rubric } from "./types";
 
+// Ưu tiên điểm từng mục đã lưu, dùng checklist để đọc dữ liệu phiên bản cũ.
 export function resolveItemPoints(rubricId: string, itemId: string, max: number, checks: Checks, scores: ItemScores = {}) {
   return scores[rubricId]?.[itemId] ?? ((checks[rubricId] ?? []).includes(itemId) ? max : 0);
 }
+// Chỉ chấp nhận điểm từ 0 đến mức tối đa, với tối đa hai chữ số thập phân.
 export function isValidItemScore(value: string | number, maximum: number) {
   return /^\d+(?:\.\d{1,2})?$/.test(String(value)) && Number(value) >= 0 && Number(value) <= maximum;
 }
+// Quét giá trị đã nhập để chặn lưu nếu có mục vượt quy tắc rubric.
 export function hasInvalidItemScores(rubrics: Rubric[], scores: ItemScores = {}) {
   return rubrics.some((rubric) => rubric.criteria.some((criterion) => criterion.items.some((item) => {
     const value = scores[rubric.rubricId]?.[item.itemId];
     return value !== undefined && !isValidItemScore(value, Number(item.points));
   })));
 }
+// Nhận biết điểm lẻ khi cần xác định máy chủ có hỗ trợ lưu kiểu điểm này.
 export function hasPartialPoints(rubrics: Rubric[], checks: Checks, scores: ItemScores = {}) {
   return rubrics.some((rubric) => rubric.criteria.some((criterion) => criterion.items.some((item) => {
     const value = Number(resolveItemPoints(rubric.rubricId, item.itemId, Number(item.points), checks, scores));

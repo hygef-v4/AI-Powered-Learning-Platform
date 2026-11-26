@@ -27,6 +27,13 @@ describe("ngôn ngữ giao diện", () => {
       .toBe("Grades published for 1234 submissions.");
   });
 
+  it("tiếng Anh chia số ít, số nhiều", () => {
+    const en = buildTranslator("en");
+    expect(en("assignments.pages.AssignmentFormPage.rubricsHavePointErrors", { length: "1" })).toBe("1 rubric has point errors");
+    expect(en("assignments.pages.AssignmentFormPage.rubricsHavePointErrors", { length: "2" })).toBe("2 rubrics have point errors");
+    expect(en("quizzes.components.MaterialSourceSelect.documentsSelected", { length: "1" })).toBe("1 document selected");
+  });
+
   it("mã ngôn ngữ lạ quay về tiếng Anh; menu ghi tên ngôn ngữ bằng chính nó", () => {
     expect(parseLocale("fr")).toBe("en");
     expect(parseLocale(undefined)).toBe("en");

@@ -364,7 +364,7 @@ class AuthServiceTest {
     void homePathFollowsRole() {
         assertThat(HomePaths.resolveHomePath(Role.STUDENT)).isEqualTo("/classes");
         assertThat(HomePaths.resolveHomePath(Role.TEACHER)).isEqualTo("/classes");
-        assertThat(HomePaths.resolveHomePath(Role.SUBJECT_MANAGER)).isEqualTo("/teaching/classes");
+        assertThat(HomePaths.resolveHomePath(Role.SUBJECT_MANAGER)).isEqualTo("/manager");
         assertThat(HomePaths.resolveHomePath(Role.ADMIN)).isEqualTo("/admin");
     }
 }

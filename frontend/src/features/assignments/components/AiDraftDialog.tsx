@@ -77,6 +77,7 @@ export function AiDraftDialog({
   const uploading = sources.pending || template?.status === "READING";
   const templateReady = template?.status === "READY";
 
+  // Cập nhật bản nháp đang hiển thị và làm mới mã yêu cầu sau trạng thái FAILED.
   function receive(next: AiDraft) {
     setDraft(next);
     if (next.status === "FAILED") ref.current = requestRef();
@@ -133,6 +134,7 @@ export function AiDraftDialog({
     setTemplate((current) => (current?.file === file ? read : current));
   }
 
+  // Gửi yêu cầu sinh nháp, cập nhật trạng thái chờ và cho phép thử lại sau lỗi.
   async function submit(input: Parameters<typeof assignmentsApi.requestAiDraft>[1]) {
     setPhase("sending");
     try {
@@ -146,6 +148,7 @@ export function AiDraftDialog({
   }
 
   // Không trường nào bắt buộc (yêu cầu 2026-11-09): bỏ trống thì AI tự quyết; nút Tạo đề không bị khóa.
+  // Kiểm số câu, thang điểm và tệp đính kèm trước khi dựng yêu cầu tạo nháp.
   async function sendRequest(choice?: SourceChoice) {
     if (countError || pointsError || questionPoints === null) {
       setError(countError ?? pointsError ?? msg("assignments.components.QuestionPointsField.invalid"));
@@ -178,6 +181,7 @@ export function AiDraftDialog({
     await submit(input);
   }
 
+  // Chặn thao tác trùng và chốt version dùng để áp dụng đề xuất vào bài.
   async function applyDraft() {
     if (!draft || invalid || applied.current) return;
     applied.current = true;
@@ -211,6 +215,7 @@ export function AiDraftDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposal, canAutoApply]);
 
+  // Bỏ đề xuất hiện tại để chuẩn bị lượt sinh đề xuất mới.
   async function revise() {
     if (!draft) return;
     setBusy(true);
@@ -225,6 +230,7 @@ export function AiDraftDialog({
     }
   }
 
+  // Xóa nguồn đã chọn, thử bỏ bản nháp đang chờ hoặc sẵn sàng rồi đóng hộp thoại.
   async function discard() {
     sources.clear();
     if (draft && (draft.status === "READY" || draft.status === "PENDING")) {
@@ -389,6 +395,7 @@ export function AiProgress({ taskId }: { taskId?: string | null }) {
   );
 }
 
+// Hiện trạng thái đọc mẫu hoặc nút thử lại cho tệp mẫu lỗi.
 function TemplateStatus({ template, onRetry }: { template: Template; onRetry: () => void }) {
   if (template.status === "READING") return <span role="status" className="text-xs text-muted">{msg("assignments.components.AiDraftDialog.reading")}</span>;
   if (template.status === "READY") {
@@ -433,7 +440,7 @@ export function ReferencePicker({ id = "ai-reference", materials, chosen, upload
         emptyText={materials.length === 0 ? msg("assignments.components.AiDraftDialog.noUsableMaterialsYet") : msg("assignments.components.AiDraftDialog.noMaterialsFound")}
         onPick={onChoose}
         footer={{ label: msg("assignments.components.AiDraftDialog.uploadDocuments", { value: String(uploads.length > 0 ? ` (${uploads.length}/${MAX_SOURCE_FILES})` : "") }),
-          icon: "upload_file", disabled: !canUpload, onPick: () => fileInput.current?.click() }}
+          icon: "upload_file", disabled: !canUpload, /* Mở hộp chọn tệp mẫu qua input ẩn. */ onPick: () => fileInput.current?.click() }}
         chips={(picked.length > 0 || uploads.length > 0) && (
           <ul className="contents" aria-label={msg("assignments.components.AiDraftDialog.selectedDocuments")}>
             {picked.map((m) => (

@@ -55,6 +55,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
   const showStatus = editable || includeRemoved;
   const actions = editable && onStatusChange;
   const q = query.toLocaleLowerCase("vi").trim();
+  // Tra nhóm của sinh viên và dùng giá trị riêng cho trường hợp chưa vào nhóm.
   const groupOf = (student: EnrollmentView) => groupNames?.[student.accountId] ?? NO_GROUP;
   const groupOptions = groupNames ? [...new Set(Object.values(groupNames))].sort((a, b) => a.localeCompare(b, "vi", { numeric: true })) : [];
   const visible = students.filter((student) => student.status === (showStatus ? status : "ACTIVE") && matchesPersonQuery(student, q)
@@ -65,6 +66,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
   // Trang giảng viên (chỉ xem) không có cột STT.
   const numbered = editable || includeRemoved;
   const columns = 4 + (numbered ? 1 : 0) + (groupNames !== undefined ? 1 : 0) + (actions ? 1 : 0);
+  // Gửi yêu cầu rời hoặc vào lại lớp và hiển thị phản hồi của thao tác.
   async function handleEnrollmentChange(student: EnrollmentView, next: "ACTIVE" | "REMOVED") {
     if (!onStatusChange || busy) return;
     setBusy(true); setError("");
@@ -104,7 +106,7 @@ export function EnrollmentPanel({ students, groupNames, groupLeaders, editable =
       {error && !removing && <p role="alert" className="text-sm text-danger">{error}</p>}
       <TableFrame filledHead className="[&_table]:min-w-[740px] [&_table]:table-fixed">
         <colgroup>{numbered && <col className="w-[60px]" />}<col className="w-[110px]" /><col /><col className="w-[28%]" />{groupNames !== undefined && <col className="w-[130px]" />}<col className="w-[120px]" />{actions && <col className="w-[56px]" />}</colgroup><thead><tr>
-          {numbered && <Th className="w-12">STT</Th>}<Th>MSSV</Th><Th>{msg("academics.components.EnrollmentPanel.fullName")}</Th><Th>Email</Th>
+          {numbered && <Th className="w-12">{msg("academics.components.EnrollmentPanel.rowNumber")}</Th>}<Th>{msg("academics.components.EnrollmentPanel.studentCode")}</Th><Th>{msg("academics.components.EnrollmentPanel.fullName")}</Th><Th>Email</Th>
           {groupNames !== undefined && <Th>{msg("academics.components.EnrollmentPanel.group")}</Th>}
           <Th>{msg("academics.components.EnrollmentPanel.joined")}</Th>
           {actions && <Th className="w-12"><span className="sr-only">{msg("academics.components.EnrollmentPanel.actions")}</span></Th>}
@@ -156,10 +158,12 @@ function AddStudentDialog({ candidates, students, loadCandidates, onEnroll, onBa
   const rows = options.rows.filter(person => !enrolled.has(person.id) && matchesPersonQuery(person, q));
   const allSelected = rows.length > 0 && rows.every(person => selected.some(item => item.id === person.id));
   const someSelected = rows.some(person => selected.some(item => item.id === person.id));
+  // Bật hoặc tắt chọn cả trang hiện tại, giữ lựa chọn ở những trang khác.
   function toggleAll() {
     setSelected(current => allSelected ? current.filter(person => !rows.some(row => row.id === person.id))
       : [...current, ...rows.filter(person => !current.some(item => item.id === person.id))]);
   }
+  // Gom lựa chọn thành một lượt ghi danh nếu có API batch và giữ lại các mục lỗi để thử lại.
   async function addStudent() {
     if (!selected.length || busy) return;
     setBusy(true); setError(""); setResults([]);
@@ -224,11 +228,14 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const valid = preview?.filter((row) => !row.error).length ?? 0;
+  // Thay nội dung danh sách và xóa bản xem trước, kết quả đã lỗi thời.
   function edit(text: string) { setInput(text); setPreview(null); setResults(null); setError(""); }
+  // Phân tích danh sách ngay tại trình duyệt và đưa bảng xem trước về trang đầu.
   function review(text = input) {
     try { setPreview(parseEnrollmentList(text)); setPage(0); setError(""); }
     catch (cause) { setPreview(null); setError(formatOperationError(cause)); }
   }
+  // Đọc tệp Excel thành cùng dạng văn bản với danh sách dán tay rồi tạo bản xem trước.
   async function choose(next: File | undefined) {
     if (file.current) file.current.value = "";
     if (!next) return;
@@ -241,10 +248,12 @@ function BatchEnrollPanel({ onBatch, onClose }: { onBatch: (text: string) => Pro
     } catch (cause) { setError(formatOperationError(cause)); }
     finally { setBusy(false); }
   }
+  // Gửi danh sách đã xem trước và giữ bảng kết quả nếu có dòng chưa ghi danh được.
   async function handleSubmit() {
     if (busy || !valid) return;
     setBusy(true); setError("");
     try {
+      // Gửi nguyên danh sách để số dòng trong kết quả server khớp với bản xem trước.
       const rows = await onBatch(input);
       const added = rows.filter((row) => OK_RESULTS.has(row.result)).length;
       if (added) showToast(msg("academics.components.EnrollmentPanel.addedStudents", { added: String(added) }));

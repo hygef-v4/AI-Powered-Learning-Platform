@@ -186,6 +186,19 @@ public class QuizAttemptRepository implements IQuizAttemptRepository {
     }
 
     @Override
+    public List<UUID> listClassesWithInProgress() {
+        return jdbc.sql("select distinct class_id from quiz_attempts where status = 'IN_PROGRESS'")
+                .query(UUID.class).list();
+    }
+
+    @Override
+    public List<QuizAttempt> listInProgressByClass(UUID classId) {
+        return jdbc.sql("select " + COLUMNS + " from quiz_attempts where class_id = :classId and status = 'IN_PROGRESS'"
+                        + " order by started_at")
+                .param("classId", classId).query(this::map).list();
+    }
+
+    @Override
     public List<QuizAttempt> findInProgressByQuiz(UUID quizId) {
         return jdbc.sql("select " + COLUMNS + " from quiz_attempts where quiz_id = :quizId and status = 'IN_PROGRESS'"
                         + " for update")

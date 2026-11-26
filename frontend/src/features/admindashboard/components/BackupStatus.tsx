@@ -7,14 +7,17 @@ import { Pagination } from "@/shared/ui/Pagination";
 import { listBackupHistory } from "../api";
 import type { BackupHistoryPage, BackupRunItem, BackupSectionView } from "../model/types";
 import { msg } from "@/i18n/msg";
+import { formatNumber } from "@/i18n/number";
 
 const BACKUP_STATE_LABELS: Record<BackupRunItem["state"], string> = {
   CREATED: msg("admindashboard.components.BackupStatus.pending"), RUNNING: msg("admindashboard.components.BackupStatus.running"), SUCCESS: msg("admindashboard.components.BackupStatus.succeeded"), FAILED: msg("admindashboard.components.BackupStatus.failed"),
 };
+// Định dạng thời điểm sao lưu theo giờ Việt Nam hoặc hiện dấu gạch nếu chưa có.
 const formatDateTime = (value: string | null) => value
   ? new Intl.DateTimeFormat("vi-VN", { timeZone: "Asia/Ho_Chi_Minh", dateStyle: "short", timeStyle: "short" }).format(new Date(value))
   : "—";
-const formatBytes = (value: number | null) => value === null ? "—" : `${new Intl.NumberFormat("vi-VN").format(value)} B`;
+// Hiện kích thước theo đơn vị byte, giữ dấu gạch cho giá trị chưa biết.
+const formatBytes = (value: number | null) => value === null ? "—" : `${formatNumber(value)} B`;
 
 /** Operational metadata is independent of the calendar's available history. */
 export function BackupStatus({ backup }: { backup: BackupSectionView }) {
@@ -46,6 +49,7 @@ export function BackupStatus({ backup }: { backup: BackupSectionView }) {
   );
 }
 
+// Chỉ tải từng trang lịch sử khi phần chi tiết được mở và cho thử lại khi lỗi.
 function BackupHistory() {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);

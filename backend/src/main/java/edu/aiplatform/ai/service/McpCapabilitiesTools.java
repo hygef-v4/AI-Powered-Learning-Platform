@@ -8,13 +8,16 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class McpCapabilitiesTools implements IMcpToolProvider {
+    // Đăng ký điểm tra khả năng mà agent có thể gọi trước khi chọn workflow.
     @Override public List<McpToolDefinition> tools(){return List.of(new McpToolDefinition("get_my_capabilities",
             "Role hiện tại, quyền token và các tool được phép. Quyền đối tượng được kiểm tra khi gọi từng tool.",
             McpSchemas.schema(""),McpToolKind.READ,Set.of(Role.STUDENT,Role.TEACHER,Role.SUBJECT_MANAGER)));}
+    // Từ chối vai trò không được hỗ trợ trước khi trả lời chỉ dẫn phù hợp với người gọi.
     @Override public McpToolResult call(Actor actor,String name,Map<String,Object> args){
         if(actor==null||actor.role()==null||actor.role()==Role.ADMIN||!"get_my_capabilities".equals(name))throw ApiException.createNotFound("MCP_TOOL_NOT_FOUND");
         return new McpToolResult(false,Map.of("role",actor.role(),"workflow",describeWorkflow(actor.role())));
     }
+    // Chọn chỉ dẫn bắt đầu theo vai trò để phân biệt luyện tập cá nhân với công việc giảng dạy.
     static String describeWorkflow(Role role) {
         if(role==Role.STUDENT)return "Start in agent chat. Only submitted own Practice work is eligible for private feedback; no official grading or publication.";
         return "Start and clarify the task in this external agent chat; no platform form or local skill installation is required. "

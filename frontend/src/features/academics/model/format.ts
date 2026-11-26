@@ -1,6 +1,7 @@
 import { ApiError } from "@/shared/api/client";
 import { msg } from "@/i18n/msg";
 
+// Hiển thị lỗi xung đột theo ngôn ngữ UI và tránh lộ chi tiết nội bộ từ API.
 export function formatOperationError(cause: unknown) {
   if (cause instanceof ApiError && cause.problem.status === 409) return msg("academics.model.format.theDataHasChangedPlease");
   // Nội dung server chưa kiểm chứng không được hiển thị SQL/stack trace cho người dùng.

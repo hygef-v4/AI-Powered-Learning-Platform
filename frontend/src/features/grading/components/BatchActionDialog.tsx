@@ -9,6 +9,7 @@ import { readGradingAiAccount, readGradingAiSessionRevision, resumeGradingPollin
 import { formatErrorMessage } from "../model/format";
 import type { BatchResult, ItemVersion } from "../model/types";
 import { msg } from "@/i18n/msg";
+import { formatNumber } from "@/i18n/number";
 
 const OUTCOME_CODE_MESSAGES: Record<string, string> = {
   ALREADY_FINALIZED: msg("grading.components.BatchActionDialog.thisSubmissionsGradeWasAlready"),
@@ -25,10 +26,12 @@ const OUTCOME_CODE_MESSAGES: Record<string, string> = {
     msg("grading.components.BatchActionDialog.someItemsHadTheirPoints"),
 };
 
+// Phân biệt bản đã hoàn tất từ trước với các trường hợp bị bỏ qua khác.
 function isAlreadyCompleted(row: BatchResult["items"][number]) {
   return row.outcome === "SKIPPED" && (row.code === "ALREADY_FINALIZED" || row.code === "ALREADY_PUBLISHED");
 }
 
+// Hiện thao tác theo lô và kết quả riêng cho mỗi bản chấm được chọn.
 export function BatchActionDialog({
   action,
   items,
@@ -66,6 +69,7 @@ export function BatchActionDialog({
       active = false;
     };
   }, [action, items, itemsKey]);
+  // Chạy nhánh được chọn và chỉ theo dõi kết quả AI trong đúng phiên tài khoản.
   async function runBatch(choice?: SourceChoice) {
     if (busy || items.length === 0) return;
     setBusy(true);
@@ -154,7 +158,7 @@ export function BatchActionDialog({
       {action === "ai" && (
         <p className="text-xs text-muted">
           {estimateState === "loading" ? msg("grading.components.BatchActionDialog.estimatingTokens") : estimateState === "ready" && estimate.tokens != null
-            ? msg("grading.components.BatchActionDialog.estimatedAboutTokens", { value: String(estimate.tokens.toLocaleString("vi-VN")) }) : msg("grading.components.BatchActionDialog.couldNotEstimateTokens")}
+            ? msg("grading.components.BatchActionDialog.estimatedAboutTokens", { value: String(formatNumber(estimate.tokens)) }) : msg("grading.components.BatchActionDialog.couldNotEstimateTokens")}
         </p>
       )}
       {error && <Alert tone="danger" role="alert">{error}</Alert>}

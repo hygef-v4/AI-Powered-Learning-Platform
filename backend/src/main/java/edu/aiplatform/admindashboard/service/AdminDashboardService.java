@@ -78,6 +78,7 @@ public class AdminDashboardService {
     public AdminDashboardView loadDashboard(Actor actor) {
         requireAdmin(actor);
         Instant calculatedAt = clock.instant();
+        // Gửi hết các nguồn trước khi chờ. Mỗi nguồn tính hạn từ lúc vào hàng đợi.
         var accountSource = dashboardSourceReader.submitSource(accountLookup::countByRoleAndStatus);
         var subjectSource = dashboardSourceReader.submitSource(subjectQuery::countSubjectsByStatus);
         var classSource = dashboardSourceReader.submitSource(classAccess::countClassesByStatus);

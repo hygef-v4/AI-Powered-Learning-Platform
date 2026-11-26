@@ -78,10 +78,12 @@ export function listRestoredCriteria(
  * thẻ của nó đứng đầu và ghi tổng điểm cả bài. Bài không có mục thì phần duy nhất đã là cả bài.
  */
 export const WHOLE_PART: DocumentPart = { partId: "ASSIGNMENT", headingBlockId: null, ancestorHeadingIds: [], title: msg("assignments.pages.AssignmentFormPage.wholeAssignment") };
+// Nhận biết trường hợp rubric toàn bài không có heading riêng.
 export function hasWholePart(parts: DocumentPart[]): boolean {
   return !(parts.length === 1 && parts[0]!.headingBlockId === null);
 }
 
+// Ghép trạng thái ảnh đã lưu từ server vào các block còn trong bản cục bộ.
 export function mergeSaved(local: DocumentModel, saved: DocumentModel): DocumentModel {
   const persisted = new Set(saved.blocks.filter((b) => b.type === "IMAGE" && b.content.hasFile).map((b) => b.id));
   return {
@@ -124,11 +126,15 @@ export function filterCardIssues(issues: ValidationIssue[], part: DocumentPart):
 /**
  * Lỗi rubric khi xếp lịch (yêu cầu 2026-11-05, cùng luật với server): cả bài tổng điểm bằng 0 thì chỉ báo "Bài làm chưa có
  * rubric chấm điểm", không tô đỏ thẻ nào; còn lại thẻ có mục chấm mà tổng không quá 0, hoặc mục ghi dở, thì viền đỏ và ghi
- * rõ lý do; thẻ chỉ có dòng trống bỏ qua.
+ * rõ lý do; thẻ chỉ có dòng trống bỏ qua. Bài Luyện tập không được chấm nên không bắt buộc rubric (BR-U07-32).
  */
-export function listRubricIssues(cards: DocumentPart[], criteria: Record<string, RubricCriterion[]>): ValidationIssue[] {
+export function listRubricIssues(cards: DocumentPart[], criteria: Record<string, RubricCriterion[]>,
+  rubricRequired = true): ValidationIssue[] {
   const total = cards.reduce((sum, part) => sum + sumRubricTotal(criteria[part.partId] ?? []), 0);
-  if (total <= 0) return [{ code: RUBRIC_MISSING, blockId: null, message: msg("assignments.pages.AssignmentFormPage.theAssignmentHasNoGrading") }];
+  // Bài Luyện tập bỏ qua lỗi thiếu rubric nhưng thẻ đã ghi vẫn kiểm như dưới; thẻ trống không báo (KAN-225).
+  if (total <= 0 && rubricRequired) {
+    return [{ code: RUBRIC_MISSING, blockId: null, message: msg("assignments.pages.AssignmentFormPage.theAssignmentHasNoGrading") }];
+  }
   return cards.flatMap((part) => {
     const list = criteria[part.partId] ?? [];
     if (!isRubricPointsMissing(list)) return [];
@@ -205,6 +211,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const [viewSlot, setViewSlot] = useState<HTMLElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState(64);
   const headerObserver = useRef<ResizeObserver | null>(null);
+  // Theo dõi kích thước header hiện tại và ngắt observer của phần tử cũ.
   const headerRef = useCallback((element: HTMLElement | null) => {
     headerObserver.current?.disconnect();
     headerObserver.current = null;
@@ -223,6 +230,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const conflictRef = useRef(false);
   const fetched = useRef({ epoch: -1, parts: new Set<string>() });
 
+  // Cập nhật version từ server, chỉ thay nội dung form khi caller yêu cầu.
   const apply = useCallback((next: AssignmentDetail, replaceLocal: boolean) => {
     setDetail(next);
     detailRef.current = next;
@@ -292,6 +300,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     };
   }, [id, partsKey, rubricEpoch]);
 
+  // Tuần tự hóa các phần đang sửa và dừng lưu nếu bản hiện tại có xung đột.
   const save = useCallback((): Promise<boolean> => chainTask(queue, async () => {
     const work = dirty.current;
     if (conflictRef.current) return false;
@@ -393,12 +402,14 @@ export function AssignmentFormPage({ id }: { id: string }) {
   }, [tick, save]);
 
   useEffect(() => {
+    // Chuyển Ctrl/Cmd+S sang thao tác lưu của màn soạn.
     const handleShortcutKeys = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
         event.preventDefault();
         void save();
       }
     };
+    // Yêu cầu trình duyệt cảnh báo khi rời trang còn phần chỉnh sửa chưa lưu.
     const leave = (event: BeforeUnloadEvent) => {
       const pending = dirty.current;
       if (pending.details || pending.skeleton || pending.rubrics.size > 0) event.preventDefault();
@@ -411,6 +422,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     };
   }, [save]);
 
+  // Nạp lại bản server qua hàng đợi lưu và xóa trạng thái xung đột khi thành công.
   const reload = useCallback(() => chainTask(queue, async () => {
     try {
       const next = await assignmentsApi.detail(id);
@@ -448,6 +460,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
   const parts = useMemo(() => computeParts(skeleton), [skeleton]);
   const sections = useMemo(() => numberSections(skeleton, parts), [skeleton, parts]);
 
+  // Đánh dấu cần lưu và đưa bản đã duyệt về trạng thái nháp trong UI khi sửa.
   function markChanged() {
     setUnsaved(true);
     setTick((value) => value + 1);
@@ -460,6 +473,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       setDetail(draft);
     }
   }
+  // Cập nhật tiêu đề cục bộ, xóa lỗi thiếu tiêu đề và đánh dấu phần thông tin cần lưu.
   function editTitle(value: string) {
     setTitle(value);
     setIssues((current) => current.filter((issue) => issue.code !== "TITLE_REQUIRED"));
@@ -467,6 +481,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     dirty.current.details = true;
     markChanged();
   }
+  // Đưa cấu hình mới vào bản đang sửa để lượt lưu sau ghi cùng thông tin bài.
   function editSettings(value: Settings) {
     setSettings(value);
     latest.current = { ...latest.current, settings: value };
@@ -487,6 +502,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     Object.keys(restored).forEach((partId) => dirty.current.rubrics.add(partId));
     setIssues((current) => current.filter((issue) => !issue.code.startsWith("RUBRIC")));
   }
+  // Cập nhật tài liệu và giữ dữ liệu cần để hoàn tác phiên bản vừa áp dụng từ AI.
   function editSkeleton(value: DocumentModel) {
     // Hoàn tác, làm lại trả đúng đối tượng đề đã vào lịch sử của trình soạn, nên so sánh theo tham chiếu.
     const revision = aiRevision.current;
@@ -505,6 +521,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     dirty.current.skeleton = true;
     markChanged();
   }
+  // Lưu tiêu chí cục bộ theo ID mục và đánh dấu đúng rubric cần gửi.
   function editRubric(part: DocumentPart, value: RubricCriterion[]) {
     setCriteria((current) => ({ ...current, [part.partId]: value }));
     latest.current = { ...latest.current, criteria: { ...latest.current.criteria, [part.partId]: value } };
@@ -565,7 +582,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     const found: ValidationIssue[] = [];
     if (!title.trim()) found.push({ code: "TITLE_REQUIRED", blockId: null, message: msg("assignments.pages.AssignmentFormPage.theAssignmentNeedsATitle") });
     const cards = hasWholePart(parts) ? [WHOLE_PART, ...parts] : parts;
-    found.push(...listRubricIssues(cards, criteria));
+    found.push(...listRubricIssues(cards, criteria, settings?.gradingMode !== "PRACTICE"));
     return found;
   }
 
@@ -648,6 +665,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
 
   // Thẻ rubric ghi số mục như trong trang: "1.2. Tên", mục chưa đặt tên chỉ có số (yêu cầu 2026-11-04).
   const numberOf = new Map(outlineOf(skeleton.blocks).map((entry) => [entry.id, entry.number]));
+  // Dựng nhãn rubric từ tên mục cuối và số heading tương ứng.
   const resolveRubricTitle = (part: DocumentPart) => {
     const name = part.title.split(" › ").at(-1) ?? part.title;
     const number = part.headingBlockId ? numberOf.get(part.headingBlockId) : undefined;
@@ -753,7 +771,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
         uploadImage={async (file) => (await uploadFile(file, "DOCUMENT_IMAGE", () => {}).promise).fileRef.value}
         onChange={editSkeleton}
         externalEdit={aiEdit}
-        titleField={{ text: title, placeholder: msg("assignments.pages.AssignmentFormPage.assignmentName"), invalid: titleMissing, readOnly: !editable, onText: (value) => editTitle(value.slice(0, 200)) }}
+        titleField={{ text: title, placeholder: msg("assignments.pages.AssignmentFormPage.assignmentName"), invalid: titleMissing, readOnly: !editable, /* Chặn tiêu đề nhập vào vượt 200 ký tự trước khi cập nhật form. */ onText: (value) => editTitle(value.slice(0, 200)) }}
         header={header}
         comments={preview ? undefined : comments}
         activeComment={activePart}
@@ -860,6 +878,7 @@ function buildAssignmentsHref(detail: { scope: string; subjectId: string }, clas
   return classId ? `/teaching/classes/${encodeURIComponent(classId)}?tab=evals` : "/teaching/classes";
 }
 
+// Nhận lý do ngừng sử dụng bài và hiển thị lỗi nếu lệnh xác nhận thất bại.
 function RetireDialog({ onClose, onConfirm }: { onClose: () => void; onConfirm: (reason: string) => Promise<void> }) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);

@@ -211,6 +211,7 @@ public class Evaluation {
     }
 
     /** Returns the current score. */
+    // Trả giá trị điểm hiện lưu trong bản chấm.
     public BigDecimal score() {
         return score;
     }

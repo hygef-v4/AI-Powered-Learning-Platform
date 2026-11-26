@@ -32,6 +32,7 @@ class GradingProposalRow {
     }
 
     /** Deserializes the proposal document. */
+    // Đọc JSON từ hàng lưu trữ thành đề xuất và báo lỗi nếu dữ liệu đã hỏng.
     GradingProposal mapProposal() {
         try {
             return objectMapper.readValue(document, GradingProposal.class);

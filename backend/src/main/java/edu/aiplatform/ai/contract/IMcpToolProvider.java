@@ -10,7 +10,9 @@ import java.util.Map;
  */
 public interface IMcpToolProvider {
 
+    // Cung cấp schema, loại và vai trò của tool để đăng ký trước khi dispatch.
     List<McpToolDefinition> tools();
 
+    // Nhận danh tính, tên tool và tham số đã qua dispatch, rồi trả kết quả của nghiệp vụ.
     McpToolResult call(Actor actor, String toolName, Map<String, Object> args);
 }

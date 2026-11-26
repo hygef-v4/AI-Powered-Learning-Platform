@@ -198,6 +198,31 @@ describe("QuizDetailPage", () => {
     await waitFor(() => expect(screen.queryByTestId("quiz-detail-save")).not.toBeInTheDocument());
   });
 
+  it("cấu hình đã lưu mà lưu điểm câu lỗi thì lần thử lại dùng version mới, không xung đột", async () => {
+    vi.mocked(getQuiz).mockResolvedValue(detail());
+    // Máy chủ đã nhận version 3 thì version 3 lần sau là xung đột.
+    let saved = 3;
+    vi.mocked(updateQuizDetails).mockImplementation(async (_id, _input, version) => {
+      if (version !== saved) throw new ApiError({ status: 409, code: "QUIZ_VERSION_CONFLICT" } as never);
+      saved = version + 1;
+      return detail({ version: saved });
+    });
+    vi.mocked(saveQuizItems).mockRejectedValueOnce(new ApiError({ status: 500, code: "INTERNAL_ERROR" } as never))
+      .mockResolvedValueOnce(detail({ version: 5 }));
+    render(<QuizDetailPage id="z1" />);
+
+    fireEvent.change(await screen.findByTestId("quiz-item-points-0"), { target: { value: "2,5" } });
+    fireEvent.click(screen.getByRole("switch", { name: "Đảo thứ tự câu" }));
+    fireEvent.click(screen.getByTestId("quiz-detail-save"));
+    await waitFor(() => expect(saveQuizItems).toHaveBeenCalledWith("z1", [{ questionId: "q1", points: 2.5 }], 4));
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("quiz-detail-save"));
+    await waitFor(() => expect(saveQuizItems).toHaveBeenCalledTimes(2));
+    expect(vi.mocked(saveQuizItems).mock.calls[1]?.[2]).toBe(saved);
+    expect(screen.queryByText(/xung đột|đã thay đổi/i)).not.toBeInTheDocument();
+  });
+
   it("điểm sai thì báo đúng lỗi, không gọi API kể cả khi cấu hình cũng đổi", async () => {
     vi.mocked(getQuiz).mockResolvedValue(detail());
     render(<QuizDetailPage id="z1" />);
@@ -220,7 +245,8 @@ describe("QuizDetailPage", () => {
 
     fireEvent.click(await screen.findByTestId("quiz-detail-publish"));
     fireEvent.click(await screen.findByTestId("quiz-detail-publish-confirm"));
-    expect(await screen.findByText("Câu 1 lấy từ ngân hàng đã ngưng dùng")).toBeInTheDocument();
+    // Lỗi theo mã được dịch theo ngôn ngữ đang chọn, không hiện nguyên câu của máy chủ (KAN-223).
+    expect(await screen.findByText("Câu 1 lấy từ ngân hàng đã ngưng dùng; hãy bỏ hoặc thay câu khác.")).toBeInTheDocument();
 
     vi.mocked(publishQuiz).mockRejectedValue(new ApiError({ status: 409, code: "QUIZ_VERSION_CONFLICT" }));
     fireEvent.click(screen.getByTestId("quiz-detail-publish"));

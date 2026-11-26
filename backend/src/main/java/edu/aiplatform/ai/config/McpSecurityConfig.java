@@ -16,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class McpSecurityConfig {
 
+    // Tách chính sách HTTP stateless cho /mcp để controller xác thực bằng token MCP.
     @Bean
     @Order(1)
     SecurityFilterChain mcpSecurityFilterChain(HttpSecurity http) throws Exception {

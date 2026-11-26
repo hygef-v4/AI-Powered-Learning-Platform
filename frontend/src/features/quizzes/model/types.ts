@@ -215,6 +215,8 @@ export type AiDraft = {
   requestedCount: number | null;
   source: string | null;
   provider: string | null;
+  /** Model U06 thực dùng (FR-006); trống khi chưa biết hoặc với MCP. */
+  model?: string | null;
   materials: { id: string; title: string | null }[];
   sourceWarnings?: string[];
   agentLabel: string | null;

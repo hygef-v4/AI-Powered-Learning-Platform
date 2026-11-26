@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { AiTaskStatus, PROVIDER_LABEL, type AiProvider, type SourceChoice } from "@/shared/ai";
 import { ApiError } from "@/shared/api/client";
 import { Alert, Button, cx, Dialog, Field, Icon, Pill, Select, Textarea, TextInput, useConfirmDialog } from "@/shared/ui";
-import { DIFFICULTY_LABELS, describeError, describeFailure, formatDateTime, TYPE_LABELS } from "../model/labels";
+import { DIFFICULTY_LABELS, describeError, describeFailure, describeSourceWarning, formatDateTime, TYPE_LABELS } from "../model/labels";
 import { McqEditor } from "./McqEditor";
 import { MaterialSourceSelect } from "./MaterialSourceSelect";
 import { buildFormFrom, convertToContent, validateForm, type FormErrors, type QuestionForm } from "../model/questionForm";
@@ -329,6 +329,8 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
     : draft.source === "PERSONAL"
       ? draft.provider ? msg("quizzes.components.AiDrafts.personal", { value: String(PROVIDER_LABEL[draft.provider as AiProvider] ?? draft.provider) }) : msg("quizzes.components.AiDrafts.personalApi")
       : msg("quizzes.components.AiDrafts.theSystemPicksTheAi");
+  // Nguồn AI thực dùng kèm model (FR-006, KAN-231).
+  const originLabel = draft.model ? `${origin} · ${draft.model}` : origin;
   const updateEntry = (index: number, change: Partial<ProposalEntry>) =>
     onEntries(entries.map((entry, i) => (i === index ? { ...entry, ...change } : entry)));
   const accept = (index: number) => {
@@ -342,10 +344,10 @@ function DraftView({ draft, entries, onEntries, note, onTaskFinished }: {
   return (
     <div className="flex flex-col gap-3" data-testid="ai-draft-view">
       {!!draft.sourceWarnings?.length && <Alert tone="warning" role="status">
-        <ul className="list-disc pl-4">{draft.sourceWarnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
+        <ul className="list-disc pl-4">{draft.sourceWarnings.map((warning, index) => <li key={index}>{describeSourceWarning(warning)}</li>)}</ul>
       </Alert>}
       <p className="text-[12px] text-muted">
-        {origin} {msg("quizzes.components.AiDrafts.sentAt")}{formatDateTime(draft.createdAt)}
+        {originLabel} {msg("quizzes.components.AiDrafts.sentAt")}{formatDateTime(draft.createdAt)}
         {draft.materials.length > 0 && <> {msg("quizzes.components.AiDrafts.documents")}{draft.materials.map((m) => m.title).join(", ")}</>}
       </p>
       {draft.status === "PENDING" && (
@@ -393,7 +395,7 @@ function ProposalCard({ index, entry, onChange, onAccept }: {
         <span className="ml-auto flex gap-1.5">
           {state !== "dropped" && (
             <Button size="sm" onClick={() => onChange({ editing: !entry.editing, state: "open" })} data-testid="ai-draft-edit">
-              {entry.editing ? "Xong" : msg("quizzes.components.AiDrafts.edit")}
+              {entry.editing ? msg("quizzes.components.AiDrafts.done") : msg("quizzes.components.AiDrafts.edit")}
             </Button>
           )}
           <Button size="sm" onClick={() => onChange({ state: state === "dropped" ? "open" : "dropped", editing: false })}

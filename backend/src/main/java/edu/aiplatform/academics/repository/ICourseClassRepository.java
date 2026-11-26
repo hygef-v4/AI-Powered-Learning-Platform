@@ -15,6 +15,7 @@ public interface ICourseClassRepository {
     List<CourseClass> listBySubject(UUID subjectId, int limit, int offset);
 
     /** Inserts a new class. */
+    // Ghi bản lớp mới bằng ID và trạng thái do nghiệp vụ tạo.
     void insert(CourseClass value);
 
     /** Updates a class only when its stored version matches the expected version. */

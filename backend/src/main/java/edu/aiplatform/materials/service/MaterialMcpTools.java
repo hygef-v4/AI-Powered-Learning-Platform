@@ -15,12 +15,14 @@ public class MaterialMcpTools implements IMcpToolProvider {
     private final MaterialQueryService materialQueryService;
     private final IMaterialRepository materialRepository;
 
+    // Ghép quyền đọc học liệu với kho phiên bản để agent đọc đúng dữ liệu được phép.
     public MaterialMcpTools(
             MaterialQueryService materialQueryService, IMaterialRepository materialRepository) {
         this.materialQueryService = materialQueryService;
         this.materialRepository = materialRepository;
     }
 
+    // Khai báo tham số phân trang đoạn văn bản và version cho tool đọc học liệu.
     @Override
     public List<McpToolDefinition> tools() {
         return List.of(
@@ -36,6 +38,7 @@ public class MaterialMcpTools implements IMcpToolProvider {
                         Set.of(Role.SUBJECT_MANAGER, Role.TEACHER)));
     }
 
+    // Kiểm quyền và version trong cùng giao dịch đọc, giữ ranh giới Unicode khi cắt trang.
     @Override
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ, timeout = 10)
     public McpToolResult call(Actor actor, String toolName, Map<String, Object> args) {

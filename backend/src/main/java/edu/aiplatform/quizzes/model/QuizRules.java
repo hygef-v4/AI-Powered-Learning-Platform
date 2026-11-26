@@ -164,7 +164,7 @@ public final class QuizRules {
         List<Violation> violations = new ArrayList<>(validateDetails(quiz.title(), quiz.instructions(),
                 quiz.settings(), quiz.activityNotice()));
         if (items.isEmpty()) {
-            violations.add(new Violation("items", "ITEM_COUNT", "Quiz cần ít nhất 1 câu"));
+            violations.add(new Violation("items", "ITEMS_REQUIRED", "Quiz cần ít nhất 1 câu"));
         }
         violations.addAll(validateItems(items));
         for (QuizItem item : items) {

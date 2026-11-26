@@ -4,6 +4,7 @@ import { ACTIVITY_LABELS, type Detail } from "../model/types";
 import { Card } from "@/shared/ui";
 import { msg } from "@/i18n/msg";
 
+// Hiện dữ liệu hoạt động cá nhân hoặc nhóm để hỗ trợ đối chiếu lúc chấm.
 export function ActivityReview({ detail }: { detail: Detail }) {
   const hasData = Boolean(detail.activity || (detail.memberActivities && detail.memberActivities.length > 0));
   return (

@@ -41,9 +41,9 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F3 - Bắt đầu hoặc tiếp tục lượt (UC 51)
 1. Bấm Làm Quiz (hoặc Tiếp tục); frontend gọi `POST /api/v1/quizzes/{quizId}/attempts` kèm `classId`.
-2. Đã có lượt `IN_PROGRESS` thì trả lượt đó.
-3. Khóa hàng theo (Quiz, người học); kiểm ghi danh, Quiz `OPEN` của lớp hoặc môn chứa lớp, còn lượt (BR-U11-10).
-4. Tạo lượt: `attemptNo` kế tiếp, chụp theo BR-U11-11, sinh seed, `deadlineAt`.
+2. Kiểm ghi danh (R5); khóa theo (Quiz, người học); kiểm lớp `OPEN` và Quiz `OPEN` của lớp hoặc môn chứa lớp. Không đạt thì `409 QUIZ_NOT_OPEN` (BR-U11-10).
+3. Đã có lượt `IN_PROGRESS` trong lớp này thì trả lượt đó; lượt đã quá `deadlineAt` cộng 30 giây thì tự nộp trước (`AUTO_TIME_LIMIT`) và Quiz Taking chuyển sang kết quả (KAN-212).
+4. Chưa có lượt đang làm: hết lượt trong lớp thì `409 NO_ATTEMPTS_LEFT`; còn lượt thì tạo lượt: `attemptNo` kế tiếp trong lớp, chụp theo BR-U11-11, sinh seed, `deadlineAt`.
 5. Mở Quiz Taking.
 
 ### F4 - Làm Quiz và tự lưu (UC 51)
@@ -55,14 +55,15 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 ### F5 - Nộp và chấm (UC 51)
 1. Bấm Nộp, xác nhận (báo số câu chưa trả lời); frontend lưu lần cuối rồi gọi `POST /api/v1/quiz-attempts/{attemptId}/submit`.
 2. Lượt đã nộp thì trả kết quả cũ.
-3. Kiểm chủ lượt, `IN_PROGRESS`, trước `deadlineAt` cộng 30 giây; quá giờ thì audit `QUIZ_SUBMIT_REJECTED` (scanner sẽ tự nộp).
-4. Một transaction: `SUBMITTED`, `submittedAt`, `submitMode = MANUAL`; gọi `IQuizScoring.score` và lưu điểm, đúng sai từng câu (BR-U11-15); audit `QUIZ_ATTEMPT_SUBMITTED`.
+3. Kiểm chủ lượt, còn học lớp `OPEN`, `IN_PROGRESS`. Đã quá `deadlineAt` cộng 30 giây thì vẫn nộp ngay bằng câu trả lời đã lưu với `AUTO_TIME_LIMIT`, không trả lỗi (BR-U11-13, KAN-211).
+4. Một transaction: `SUBMITTED`, `submittedAt`, `submitMode = MANUAL` (hoặc `AUTO_TIME_LIMIT` theo bước 3); gọi `IQuizScoring.score` và lưu điểm, đúng sai từng câu (BR-U11-15); không ghi audit (BR-U02-10).
 5. Mở Quiz Result.
 
 ### F6 - Tự nộp
 1. `IScheduledScanner` của U11 chạy mỗi phút: lượt `IN_PROGRESS` có `deadlineAt` cộng 30 giây đã qua được nộp bằng câu trả lời đã lưu, `AUTO_TIME_LIMIT`, chấm như F5 bước 4.
 2. U10 ngưng Quiz hoặc phát hành version mới thì gọi `onRetired` của U11: trong cùng transaction nộp và chấm mọi lượt `IN_PROGRESS` của Quiz đó với `AUTO_RETIRED`.
-3. Câu lệnh nộp có điều kiện trạng thái nên chạy lại không nộp hai lần.
+3. Cùng scanner: lượt `IN_PROGRESS` của lớp không còn `OPEN`, hoặc của người học không còn ghi danh lớp, được nộp bằng câu trả lời đã lưu với `AUTO_ACCESS_LOST` (BR-U11-14). Lưu và nộp tay đều cần lớp mở và còn ghi danh, nên thiếu bước này thì lượt không giới hạn giờ treo mãi. Đọc lượt đang làm của lớp trước rồi mới đọc trạng thái lớp và ghi danh, để lượt vừa bắt đầu sau khi chụp danh sách ghi danh không bị nộp oan. Mỗi lần chạy nộp tối đa 100 lượt loại này, phần còn lại để lần sau. U05 lỗi thì bỏ qua lớp đó.
+4. Câu lệnh nộp có điều kiện trạng thái nên chạy lại không nộp hai lần.
 
 ### F7 - Xem kết quả (UC 52)
 1. Frontend gọi `GET /api/v1/quiz-attempts/{attemptId}/result`.

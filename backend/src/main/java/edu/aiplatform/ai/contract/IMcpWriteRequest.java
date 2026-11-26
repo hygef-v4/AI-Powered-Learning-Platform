@@ -6,6 +6,8 @@ import java.util.function.Supplier;
 
 /** Caller must reauthorize the current resource before every execute, including replay. */
 public interface IMcpWriteRequest {
+    // Thực thi lệnh ghi theo khóa người gọi, thao tác và requestRef, dùng fingerprint để phân biệt nội
+    // dung.
     Map<String,Object> execute(Actor actor, String operation, String requestRef, String fingerprint,
                               Supplier<Map<String,Object>> mutation);
 }

@@ -3,6 +3,7 @@ import { msg } from "@/i18n/msg";
 /** Đọc sheet đầu của mẫu Excel (một cột email hoặc MSSV); server vẫn kiểm lại từng dòng và quyền ghi danh. */
 const HEADERS = new Set(["email", "student_code", "mssv"]);
 
+// Đọc cột đầu của sheet đầu thành danh sách text trong giới hạn import.
 export async function readEnrollmentWorkbook(file: File): Promise<string> {
   if (file.size > 100 * 1024) throw new Error(msg("academics.model.enrollmentWorkbook.theListCanBeAt"));
   if (!file.name.toLowerCase().endsWith(".xlsx")) throw new Error(msg("academics.model.enrollmentWorkbook.onlyExcelXlsxFilesAre"));

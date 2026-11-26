@@ -16,6 +16,7 @@ type SubjectTab = "ACTIVE" | "ARCHIVED";
 export function ManagerDashboardPage({ subjects, onSubject }: { subjects: ManagedSubject[]; onSubject: (id: string) => void }) {
   const [tab, setTab] = useUrlState<SubjectTab>("subjectStatus", "ACTIVE", ["ACTIVE", "ARCHIVED"]);
   const archived = subjects.filter((subject) => subject.status === "ARCHIVED").length;
+  // Đếm môn lưu trữ hoặc nhóm còn lại để hiển thị bộ lọc.
   const count = (value: SubjectTab) => (value === "ARCHIVED" ? archived : subjects.length - archived);
   const shown = subjects.filter((subject) => (subject.status === "ARCHIVED") === (tab === "ARCHIVED"));
   return <>

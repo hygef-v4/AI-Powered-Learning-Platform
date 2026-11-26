@@ -11,6 +11,7 @@ import { msg } from "@/i18n/msg";
 type MemberPart = { partId: string; title: string };
 type AssessmentValues = { score: string; reason: string; level: ContributionLevel | "" };
 
+// Lấy form điểm thành viên và chỉ điền lý do có sẵn khi có ghi đè.
 function readMemberValues(member: Evaluation): AssessmentValues {
   return {
     score: String(member.score ?? ""),
@@ -19,10 +20,12 @@ function readMemberValues(member: Evaluation): AssessmentValues {
   };
 }
 
+// So điểm, lý do và mức đóng góp để biết form có thay đổi hay không.
 function isSameAssessment(left: AssessmentValues, right: AssessmentValues) {
   return left.score === right.score && left.reason === right.reason && left.level === right.level;
 }
 
+// Quản lý thành viên đang chọn và theo dõi các bản chỉnh sửa chưa lưu.
 export function MemberContributionPanel({
   root,
   members,
@@ -52,10 +55,12 @@ export function MemberContributionPanel({
   const selectedIndex = Math.max(0, members.findIndex(member => member.accountId === (selectedAccountId ?? selected)));
   const current = members[selectedIndex];
   const hasChanges = members.some(member => dirtyMembers[member.id]);
+  // Thông báo đúng thành viên có thay đổi, tránh cập nhật lại trạng thái giống trước.
   const handleDirtyChange = useCallback((id: string, dirty: boolean) => {
     setDirtyMembers(current => current[id] === dirty ? current : { ...current, [id]: dirty });
   }, []);
   useEffect(() => { onDirtyChange?.(hasChanges); }, [hasChanges, onDirtyChange]);
+  // Đổi thành viên đang xem và báo ID lựa chọn cho caller nếu có.
   function handleSelect(accountId: string) {
     setSelected(accountId);
     onSelectMember?.(accountId);
@@ -120,6 +125,7 @@ export function MemberContributionPanel({
     </section>
   );
 }
+// Giữ bản gốc và version của điểm thành viên để so và phát hiện ghi đè.
 function MemberRow({
   rootId,
   locked,
@@ -159,12 +165,14 @@ function MemberRow({
   }
   useEffect(() => { onDirtyChange(member.id, dirty); }, [member.id, dirty, onDirtyChange]);
   const { score, reason, level } = editor.values;
+  // Ghép phần thay đổi vào form thành viên, giữ nguyên bản dùng để so sánh.
   function updateValues(patch: Partial<AssessmentValues>) {
     setEditor(current => ({ ...current, values: { ...current.values, ...patch } }));
   }
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const disabled = locked || busy || member.state === "SUPERSEDED";
+  // Gửi điểm riêng theo version đang sửa và báo bản mới cho màn hình cha.
   async function handleSave() {
     if (disabled) return;
     setError("");

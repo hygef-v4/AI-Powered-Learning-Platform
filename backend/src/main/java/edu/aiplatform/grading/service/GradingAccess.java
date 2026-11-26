@@ -30,6 +30,7 @@ public class GradingAccess {
         }
     }
 
+    // Chỉ coi lớp OPEN là có thể ghi, dùng kết quả này để tính quyền chỉnh sửa.
     public boolean isClassWritable(UUID classId) {
         try {
             return classAccess.getClassRef(classId)

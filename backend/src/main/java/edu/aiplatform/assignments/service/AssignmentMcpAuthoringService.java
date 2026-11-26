@@ -20,6 +20,7 @@ public class AssignmentMcpAuthoringService implements IMcpToolProvider {
     private final IMcpWriteRequest writes;
     private final ObjectMapper json;
 
+    // Ghép lệnh tạo bài với kiểm quyền, lưu đề xuất và phát lại yêu cầu MCP.
     public AssignmentMcpAuthoringService(AssignmentAuthoringService assignmentAuthoringService,
                                          AssignmentAiDraftService assignmentAiDraftService,
                                          AssignmentAccess access, IMcpWriteRequest writes,
@@ -31,6 +32,7 @@ public class AssignmentMcpAuthoringService implements IMcpToolProvider {
         this.json = json;
     }
 
+    // Khai báo đầu vào tạo bài nháp cùng đề xuất từ agent có quyền ghi.
     @Override
     public List<McpToolDefinition> tools() {
         String properties = McpSchemas.SCOPE + ",\"title\":" + McpSchemas.TEXT
@@ -46,6 +48,7 @@ public class AssignmentMcpAuthoringService implements IMcpToolProvider {
                 McpToolKind.WRITE, McpSchemas.STAFF));
     }
 
+    // Kiểm quyền trên lớp hoặc môn, xác thực đề rồi tạo bài và đề xuất trong cùng lệnh.
     @Override
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
         McpInput.requireTeaching(actor);
@@ -80,6 +83,7 @@ public class AssignmentMcpAuthoringService implements IMcpToolProvider {
         semantic.put("submissionMode", submission.name());
         semantic.put("gradingMode", grading.name());
         semantic.put("referenceMaterialIds", materials);
+        // Retry cùng requestRef và cùng nội dung nhận lại kết quả cũ thay vì tạo thêm bài.
         var response = writes.execute(actor, name, in.readText("requestRef", null),
                 McpFingerprint.of(json, semantic), () -> {
                     var command = new AssignmentCommands.Create(submission, grading, true,
@@ -94,6 +98,7 @@ public class AssignmentMcpAuthoringService implements IMcpToolProvider {
                     }
                     var proposal = assignmentAiDraftService.saveFromAgent(actor, created.id(),
                             created.version(), raw, in.readText("agentLabel", null));
+                    // Link mở đề xuất để người soạn duyệt. Bài vẫn ở trạng thái DRAFT.
                     return Map.of("assignmentId", created.id().toString(),
                             "proposalId", proposal.id().toString(),
                             "version", created.version(),
@@ -105,6 +110,7 @@ public class AssignmentMcpAuthoringService implements IMcpToolProvider {
         return new McpToolResult(false, response);
     }
 
+    // Chấp nhận tối đa 20 ID tài liệu, coi tham số vắng mặt là danh sách rỗng.
     private static List<UUID> parseIds(Object value) {
         if (value == null) {
             return List.of();

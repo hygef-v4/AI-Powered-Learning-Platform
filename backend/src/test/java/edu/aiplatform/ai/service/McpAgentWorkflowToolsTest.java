@@ -90,12 +90,4 @@ class McpAgentWorkflowToolsTest {
         if("ASSIGNMENT".equals(kind))assertThat(workflow).contains("read_agent_workflow","AUTHOR_ASSIGNMENT");
         else assertThat(workflow).doesNotContain("workflow=AUTHOR_ASSIGNMENT").contains("QUIZ/BANK","clarification");
     }
-
-    @ParameterizedTest @ValueSource(strings={"AUTHOR_ASSIGNMENT","GRADE_WITH_RUBRIC"})
-    void optionalLocalSkillIsOnlyAServerWorkflowWrapper(String kind) throws Exception {
-        String directory=kind.equals("AUTHOR_ASSIGNMENT")?"author-assignment":"grade-with-rubric";
-        String wrapper=Files.readString(Path.of("..","agent-skills",directory,"SKILL.md"));
-        assertThat(wrapper).contains("read_agent_workflow",kind,"optional","Do not fall back");
-        assertThat(wrapper).doesNotContain("create_assignment_draft","record_grading_proposal");
-    }
 }

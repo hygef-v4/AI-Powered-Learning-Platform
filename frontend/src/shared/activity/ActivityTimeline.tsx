@@ -8,6 +8,7 @@ export type ActivitySummary = {
   knownAwayDuration: string | number;
   intervals: ActivityInterval[];
   unknownGaps: number;
+  /** Câu tiếng Việt của máy chủ; giao diện dựng lại theo ngôn ngữ bằng {@link describeReliability}. */
   reliabilityNote: string;
 };
 
@@ -49,7 +50,15 @@ export function ActivityTimeline({ summary }: { summary: ActivitySummary }) {
           </li>
         ))}
       </ul>
-      <Alert tone="info">{summary.reliabilityNote}</Alert>
+      <Alert tone="info">{describeReliability(summary.unknownGaps)}</Alert>
     </div>
   );
+}
+
+/** Ghi chú độ tin cậy theo ngôn ngữ đang chọn, dựng từ số chỗ không rõ thay vì câu tiếng Việt của máy chủ (KAN-223). */
+export function describeReliability(unknownGaps: number): string {
+  const note = msg("shared.activity.ActivityTimeline.reliabilityNote");
+  return unknownGaps > 0
+    ? `${msg("shared.activity.ActivityTimeline.unknownGaps", { count: String(unknownGaps) })} ${note}`
+    : note;
 }

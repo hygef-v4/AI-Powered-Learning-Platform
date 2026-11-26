@@ -54,6 +54,7 @@ public class GradingProposalService {
         return requestProposal(actor, evaluationId, input, null);
     }
 
+    // Chuẩn bị đề xuất trong giao dịch rồi chỉ gửi tác vụ khi cần kết quả từ AI.
     private GradingProposal requestProposal(Actor actor, UUID evaluationId, AiRequest input,
             Long expectedVersion) {
         var prepared = gradingProposalTransactions.prepareProposal(actor, evaluationId, input,
@@ -77,6 +78,7 @@ public class GradingProposalService {
         }
     }
 
+    // Chuyển lỗi gửi tác vụ thành lỗi có mã để luồng đề xuất có thể lưu trạng thái.
     private AiTaskView submitProposalTask(AiTaskRequest taskRequest) {
         try {
             return aiTask.submit(taskRequest);
@@ -90,12 +92,14 @@ public class GradingProposalService {
     private static final class ProposalDispatchFailure extends RuntimeException {
         private final String code;
 
+        // Giữ mã lỗi cùng nguyên nhân để trả trạng thái an toàn về luồng đề xuất.
         private ProposalDispatchFailure(String code, RuntimeException cause) {
             super(cause);
             this.code = code;
         }
     }
 
+    // Đọc theo lô đề xuất đã lưu cho các ID bản chấm mà caller đã xác minh quyền.
     List<GradingProposal> listStoredProposals(List<UUID> authorizedEvaluationIds) {
         return gradingProposalRepository.findForEvaluations(authorizedEvaluationIds);
     }

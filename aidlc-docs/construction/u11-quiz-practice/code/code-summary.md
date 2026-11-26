@@ -12,14 +12,14 @@ Code viết ngày 2026-10-20 trên nhánh `quiz-practice` (tách từ `quiz-auth
 |---|---|
 | F1 Lịch sử | `QuizPracticeQueryService.history` (lớp `OPEN` đang học qua `IClassAccess`, Quiz đang mở qua `IQuizQuery.listForClass`, cộng Quiz đã làm kể cả đã ngưng; điểm ẩn khi Quiz không hiện điểm) |
 | F2 Chi tiết | `QuizPracticeQueryService.detail` (số lượt đã dùng/còn lại, điểm cao nhất, lý do không làm được) |
-| F3 Bắt đầu | `QuizAttemptService.start` (R5, lớp `OPEN`, Quiz `OPEN` của lớp hoặc môn chứa lớp, khóa theo (Quiz, người học), mở lại lượt đang làm, hết lượt `409 NO_ATTEMPTS_LEFT` + audit `QUIZ_SUBMIT_REJECTED`, chụp snapshot có seed và thứ tự trộn — G5) |
+| F3 Bắt đầu | `QuizAttemptService.start` (R5, lớp `OPEN`, Quiz `OPEN` của lớp hoặc môn chứa lớp, khóa theo (Quiz, người học), mở lại lượt đang làm, lớp hoặc Quiz không mở `409 QUIZ_NOT_OPEN`, hết lượt `409 NO_ATTEMPTS_LEFT`, chụp snapshot có seed và thứ tự trộn — G5) |
 | F4 Làm, tự lưu | `QuizAttemptService.get`, `.saveAnswers` (`answerVersion`, câu/lựa chọn phải thuộc đề, hạn + 30 giây ân hạn) |
-| F5 Nộp, chấm | `QuizAttemptService.submit` → `PracticeSupport.submit` (chấm bằng `IQuizScoring`, nộp có điều kiện `IN_PROGRESS`, nộp lặp trả kết quả cũ, audit `QUIZ_ATTEMPT_SUBMITTED`) |
-| F6 Tự nộp | `QuizAutoSubmitScanner` (`IScheduledScanner`, mỗi phút ở worker, `AUTO_TIME_LIMIT`), `QuizRetiredHandler` (`IQuizLifecycleListener`, `AUTO_RETIRED`, trong transaction của U10) |
+| F5 Nộp, chấm | `QuizAttemptService.submit` → `PracticeSupport.submit` (chấm bằng `IQuizScoring`, nộp có điều kiện `IN_PROGRESS`, nộp lặp trả kết quả cũ) |
+| F6 Tự nộp | `QuizAutoSubmitScanner` (`IScheduledScanner`, mỗi phút ở worker, `AUTO_TIME_LIMIT`; lớp không còn `OPEN` hoặc đã rời lớp thì `AUTO_ACCESS_LOST`, từ 2026-11-25), `QuizRetiredHandler` (`IQuizLifecycleListener`, `AUTO_RETIRED`, trong transaction của U10) |
 | F7 Kết quả | `QuizAttemptService.result` → `PracticeSupport.result` (điểm và đáp án theo cài đặt đã chụp; đáp án qua `answerReview`) |
 | F8 Hoạt động | `QuizActivityService` (chủ lượt, đang làm, chính sách đã chụp bật → `IActivityWrite`; G3) |
 | F9 Giảng viên | `TeacherQuizAttemptService` (giảng viên của lớp; tóm tắt theo sinh viên, chi tiết lượt chỉ đọc kèm `IActivityQuery.summary`) |
-| Quyền, audit | `PracticeAccess` (ngoài phạm vi `404` + `ACCESS_DENIED`, U01 lỗi `503`), `PracticeSupport.ownAttempt` (lượt người khác `404`) |
+| Quyền | `PracticeAccess` (ngoài phạm vi `404`, không audit; U01 lỗi `503`), `PracticeSupport.ownAttempt` (lượt người khác `404`) |
 
 Domain: `QuizAttempt` (hạn, ân hạn 30 giây, lưu, nộp), `AttemptSnapshot` (version, cài đặt, theo dõi, seed, thứ tự câu và lựa chọn), `QuestionResult`, enum `AttemptStatus`, `SubmitMode`; `IQuizAttemptRepository`. Hạ tầng: `QuizAttemptRepository` (`jsonb`; advisory lock khi bắt đầu; `for update skip locked` cho scanner).
 
@@ -64,7 +64,7 @@ Mã lỗi: `QUIZ_NOT_FOUND`, `QUIZ_ATTEMPT_NOT_FOUND`, `QUIZ_NOT_OPEN`, `NO_ATTE
 - `MaterialQuizList` và lọc `materialId` (G4) làm ở giai đoạn 4, xem mục cuối.
 - Số lượt tính theo từng version Quiz (G6).
 - Phần Lượt làm trên Quiz Detail chỉ hiện khi mở từ lớp (G7).
-- Lượt bị từ chối khi bắt đầu (hết lượt, Quiz đã ngưng) ghi `QUIZ_SUBMIT_REJECTED` với lý do.
+- Từ 2026-11-25 U11 không ghi audit (BR-U02-10); trước đó lượt bị từ chối khi bắt đầu ghi `QUIZ_SUBMIT_REJECTED`.
 
 ## Đối chiếu UC 49–52 (bước 3.14)
 
@@ -83,8 +83,7 @@ Mã lỗi: `QUIZ_NOT_FOUND`, `QUIZ_ATTEMPT_NOT_FOUND`, `QUIZ_NOT_OPEN`, `NO_ATTE
 | BR-U11-22 chỉ lượt của mình | `ownAttempt` | `resultFollowsSnapshotSettingsAndIsOwnOnly` |
 | BR-U11-30 hoạt động theo chính sách đã chụp | `QuizActivityService` | `activityNeedsMonitoringEnabledInSnapshot` |
 | BR-U11-31 giảng viên lớp xem, chỉ đọc | `TeacherQuizAttemptService`, `QuizAttemptsSection` | `teacherSeesClassStudentsAttemptsReadOnly`, `QuizAttemptsSection` test |
-| BR-U11-40 audit | `PracticeAccess` | `submitScores…`, `attemptsAreLimited…` |
-| BR-U11-41 `404` + `ACCESS_DENIED`, fail closed | `PracticeAccess` | `onlyEnrolledStudents…` |
+| BR-U11-41 `404`, không audit, fail closed | `PracticeAccess` | `onlyEnrolledStudents…` |
 | NFR-U11-30 không lộ đáp án trước khi nộp | `TakingView` không có đáp án | `startingCreatesOneAttempt…` |
 
 ## Chạy thử end-to-end (2026-10-20, stack Docker local)

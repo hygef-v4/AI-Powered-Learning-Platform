@@ -13,6 +13,7 @@ import java.util.Map;
 
 /** HTTP projections owned by U15; no provider IDs, archive references or private records. */
 public final class AdminDashboardViews {
+    // Chặn khởi tạo lớp chỉ dùng làm không gian tên cho các DTO.
     private AdminDashboardViews() {
     }
 

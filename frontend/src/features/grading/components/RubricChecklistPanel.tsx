@@ -21,6 +21,7 @@ export type ChecklistProps = {
   aiFilledItems?: Set<string>;
 };
 
+// Đánh dấu phần giá trị được điền từ đề xuất AI để người chấm nhận ra nguồn.
 export function AiFilledBadge() {
   return (
     <span title={msg("grading.components.AiDraftBanner.filledByAi")}
@@ -48,6 +49,7 @@ export function RubricChecklist({
   onToggleAcknowledge,
   aiFilledItems,
 }: ChecklistProps & { rubric: Rubric }) {
+  // Đồng bộ mục checklist và điểm tối đa khi đánh dấu đạt hoặc bỏ đánh dấu.
   function awardItem(itemId: string, max: number, achieved: boolean) {
     const selected = new Set(checks[rubric.rubricId] ?? []);
     if (achieved) selected.add(itemId); else selected.delete(itemId);
@@ -55,6 +57,7 @@ export function RubricChecklist({
     onScoresChange?.({ ...itemScores, [rubric.rubricId]: { ...itemScores[rubric.rubricId], [itemId]: achieved ? max : 0 } },
       rubric.rubricId, itemId);
   }
+  // Đọc điểm nhập, bỏ giá trị không phải số và gửi cập nhật cho nhánh chấm phù hợp.
   function handleScoreInput(itemId: string, max: number, rawValue: string) {
     const parsed = rawValue === "" ? 0 : Number(rawValue);
     if (!Number.isFinite(parsed)) return;

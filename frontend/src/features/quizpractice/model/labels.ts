@@ -1,6 +1,7 @@
 import { ApiError } from "@/shared/api/client";
 import type { ActivitySignal, LeavePenalty, PenaltyView, SubmitMode } from "./types";
 import { msg } from "@/i18n/msg";
+import { NUMBER_LOCALE } from "@/i18n/number";
 
 const SYSTEM_BUSY = msg("quizpractice.model.labels.theSystemIsBusyPlease");
 
@@ -35,7 +36,7 @@ export function readErrorCode(error: unknown): string | undefined {
 export { formatDateTime } from "@/shared/dateTime";
 
 export function formatPoints(value: number | null | undefined): string {
-  return value === null || value === undefined ? "—" : Number(value).toLocaleString("vi-VN", { maximumFractionDigits: 2 });
+  return value === null || value === undefined ? "—" : Number(value).toLocaleString(NUMBER_LOCALE, { maximumFractionDigits: 2 });
 }
 
 export function formatDuration(fromIso: string, toIso: string | null): string {
@@ -76,5 +77,14 @@ export function describePenaltyResult(penalty: PenaltyView): string | null {
 
 /** Lượt được hệ thống tự nộp thì ghi rõ lý do (L4); nộp tay thì không có nhãn. */
 export function submitModeText(mode: SubmitMode): string | null {
-  return mode === "AUTO_TIME_LIMIT" ? msg("quizpractice.model.labels.autoSubmittedWhenTimeRan") : mode === "AUTO_RETIRED" ? msg("quizpractice.model.labels.autoSubmittedWhenTheQuiz") : null;
+  switch (mode) {
+    case "AUTO_TIME_LIMIT":
+      return msg("quizpractice.model.labels.autoSubmittedWhenTimeRan");
+    case "AUTO_RETIRED":
+      return msg("quizpractice.model.labels.autoSubmittedWhenTheQuiz");
+    case "AUTO_ACCESS_LOST":
+      return msg("quizpractice.model.labels.autoSubmittedWhenClassAccessEnded");
+    default:
+      return null;
+  }
 }

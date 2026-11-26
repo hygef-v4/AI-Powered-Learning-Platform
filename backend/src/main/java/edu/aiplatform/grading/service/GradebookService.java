@@ -276,6 +276,7 @@ public class GradebookService {
                 .map(this::mapStudentView).toList();
     }
 
+    // Dùng thời điểm tạo khi bản chấm chưa có thời điểm chấm để vẫn sắp xếp được.
     private static Instant gradeTime(Evaluation evaluation) {
         return evaluation.gradedAt == null ? evaluation.createdAt : evaluation.gradedAt;
     }
@@ -407,6 +408,7 @@ public class GradebookService {
 
     public record GradebookExport(List<List<String>> rows, String assignmentTitle) {}
 
+    // Kiểm quyền xuất và định dạng rồi tập hợp dữ liệu cho đúng lớp hoặc bài tập.
     @Transactional
     public GradebookExport buildExport(Actor actor, UUID classId, UUID assignmentId, String format) {
         // Step 1: Check teacher export permission and format parameter (csv or xlsx)
