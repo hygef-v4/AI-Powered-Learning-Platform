@@ -63,7 +63,9 @@ export function AiTaskStatus({ taskId, cancellable = true, intervalMs = 2000, on
       {data.state === "UNKNOWN" && (
         <span className="text-muted">{msg("shared.ai.AiTaskStatus.theProviderDidNotReturn")}</span>
       )}
-      {data.safeError && data.state !== "UNKNOWN" && <span className="text-danger">{describeAiFailure(data.safeError, label.text)}</span>}
+      {data.safeError && (data.state !== "UNKNOWN" || data.safeError.startsWith("[AI_")) && (
+        <span className="text-danger">{describeAiFailure(data.safeError, label.text)}</span>
+      )}
       {data.applyResult === "STALE" && <span className="text-warning">{msg("shared.ai.AiTaskStatus.theDataChangedWhileWaiting")}</span>}
       {cancellable && data.state === "QUEUED" && (
         <Button size="sm" onClick={() => void cancel()} disabled={cancelling}>

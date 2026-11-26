@@ -16,13 +16,16 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.ai.contract.AiTaskResult;
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.ai.contract.AiSource;
+import edu.aiplatform.ai.contract.AiTaskRequest;
 import edu.aiplatform.ai.contract.AiTaskState;
 import edu.aiplatform.ai.contract.AiTaskView;
 import edu.aiplatform.ai.contract.ApplyOutcome;
 import edu.aiplatform.ai.contract.AssignmentSourceText;
+import edu.aiplatform.ai.service.JsonSchemaChecker;
 import edu.aiplatform.files.contract.ArtifactPurpose;
 import edu.aiplatform.files.contract.StoredFileInfo;
 import edu.aiplatform.assignments.contract.AssignmentScope;
@@ -40,6 +43,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 
 /** F6, F15; BR-U07-50…53; P5: đề xuất không sửa thẳng bài; áp dụng cần version khớp. */
 class AssignmentAiDraftServiceTest {
@@ -64,6 +70,142 @@ class AssignmentAiDraftServiceTest {
     }
 
     private final AssignmentFixtures f = new AssignmentFixtures();
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"4000, 8000", "4001, 12000", "10000, 12000"})
+    void sendsCompleteAcceptedPromptWithTheAuthoringOutputBudget(int length, int outputTokens) {
+        Assignment assignment = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        var inserted = new AtomicReference<AssignmentAiDraft>();
+        doAnswer(call -> {
+            inserted.set(call.getArgument(0));
+            return null;
+        }).when(f.drafts).insert(any());
+        when(f.drafts.findDraft(any())).thenAnswer(call -> Optional.ofNullable(inserted.get()));
+        when(f.aiTasks.submit(any())).thenReturn(new AiTaskView(UUID.randomUUID(), AiTaskState.QUEUED,
+                AiSource.PERSONAL, AiProvider.GEMINI, "mock", null, null, null));
+        String request = "a".repeat(length - 3) + "end";
+
+        f.aiDrafts.request(f.teacher, assignment.id(),
+                new AssignmentCommands.AiDraftRequest(request, List.of(), AiSource.PERSONAL, AiProvider.GEMINI, "limits"));
+
+        verify(f.aiTasks).submit(argThat(task -> task.maxOutputTokens() == outputTokens
+                && task.prompt().user().contains(request)));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void rejectsOversizeRequestsBeforeSavingOrCallingAi(boolean revise) {
+        Assignment assignment = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        var command = new AssignmentCommands.AiDraftRequest("a".repeat(10_001), List.of(), List.of(),
+                AiSource.PERSONAL, AiProvider.GEMINI, "oversize", null, null, null, revise ? "REVISE" : null);
+
+        assertThatThrownBy(() -> f.aiDrafts.request(f.teacher, assignment.id(), command))
+                .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_REQUEST_TOO_LONG");
+        verify(f.drafts, never()).insert(any());
+        verify(f.aiTasks, never()).submit(any());
+    }
+
+    @Test
+    void chatOnBlankDraftBuildsFourQuestionsAndAllRubricsFromGeneratedContent() {
+        var skeleton = new DocumentModel(List.of(AssignmentFixtures.paragraph(" ")));
+        Assignment original = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, skeleton, false);
+        Assignment assignment = original.updateSkeleton("", skeleton, original.parts(), AssignmentFixtures.NOW);
+        f.store.put(assignment.id(), assignment);
+
+        AiTaskRequest request = submitChatRequest(assignment);
+        AssignmentAiDraft pending = f.drafts.findDraft(AssignmentAiDraftService.draftId(request.targetRef())).orElseThrow();
+        var output = JsonNodeFactory.instance.objectNode().put("schemaVersion", 2).put("title", "Cinema")
+                .put("businessContext", "Customers reserve seats for a screening.").put("instructions", "Use Draw.io.");
+        var sections = output.putArray("sections");
+        List<List<String>> points = List.of(
+                List.of("0.25", "0.25", "0.25", "0.25", "0.25", "0.25", "0.50"),
+                List.of("0.25", "0.50", "0.50", "0.25", "0.50", "0.50"),
+                List.of("0.50", "0.50", "0.50", "0.50", "0.25", "0.25", "0.50"),
+                List.of("0.25", "0.50", "0.50", "0.50", "0.50", "0.25"));
+        List<String> titles = List.of("Use case", "Domain class", "Sequence", "State machine");
+        for (int index = 0; index < titles.size(); index++) {
+            var rubric = sections.addObject().put("level", 1).put("title", titles.get(index))
+                    .put("guidance", "Draw the diagram.").putArray("rubric");
+            for (String amount : points.get(index)) {
+                rubric.addObject().put("title", "Criterion " + (rubric.size() + 1)).putArray("items").addObject()
+                        .put("text", "Show the required relationship.").put("points", amount);
+            }
+        }
+
+        assertThat(request.prompt().system()).contains("the language requested by the instructor");
+        assertThat(request.outputSchema()).doesNotContain("\"operations\"");
+        var schema = new JsonSchemaChecker(f.json);
+        assertThat(schema.validateValue(request.outputSchema(), output)).isEmpty();
+        ObjectNode invalidOutput = output.deepCopy();
+        ObjectNode invalidItem = (ObjectNode) invalidOutput.at("/sections/0/rubric/0/items/0");
+        invalidItem.put("points", "0.25 điểm");
+        assertThat(schema.validateValue(request.outputSchema(), invalidOutput)).isPresent();
+        var proposal = ArgumentCaptor.forClass(JsonNode.class);
+        when(f.drafts.markReady(eq(pending.id()), any(), any())).thenReturn(1);
+        assertThat(f.aiDrafts.handleReadyResult(result(pending, output.toString()))).isEqualTo(ApplyOutcome.APPLIED);
+        verify(f.drafts).markReady(eq(pending.id()), proposal.capture(), any());
+        assertThat(proposal.getValue().path("validation").path("status").asText()).isEqualTo("VALID");
+        assertThat(proposal.getValue().path("sections").get(0).path("rubric").get(0).path("items")
+                .get(0).path("points").decimalValue()).isEqualByComparingTo("0.25");
+        assertThat(f.store.get(assignment.id())).isEqualTo(assignment);
+
+        var ready = new AssignmentAiDraft(pending.id(), assignment.id(), pending.origin(), pending.taskId(),
+                pending.requestRef(), AssignmentAiDraft.Status.READY, proposal.getValue(), pending.provenance(),
+                pending.baseVersion(), null, pending.createdBy(), pending.createdAt(), null);
+        when(f.drafts.findDraft(ready.id())).thenReturn(Optional.of(ready));
+        when(f.drafts.markApplied(eq(ready.id()), any())).thenReturn(1);
+        AssignmentViews.Detail applied = f.aiDrafts.applyDraft(f.teacher, assignment.id(), ready.id(),
+                new AssignmentCommands.ApplyDraft(assignment.version(), true, true));
+        assertThat(applied.title()).isEqualTo("Cinema");
+        assertThat(applied.instructions()).isEqualTo("Use Draw.io.");
+        assertThat(applied.parts()).extracting(AssignmentViews.Part::title).containsExactlyElementsOf(titles);
+        assertThat(f.rubricsOf(assignment.id())).filteredOn(rubric -> !rubric.criteria().isEmpty())
+                .extracting(rubric -> rubric.criteria().size()).containsExactlyInAnyOrder(7, 6, 7, 6);
+        assertThat(f.rubricsOf(assignment.id())).filteredOn(rubric -> !rubric.criteria().isEmpty())
+                .extracting(AssignmentRubric::totalPoints).containsExactlyInAnyOrder(
+                        new BigDecimal("2.00"), new BigDecimal("2.50"), new BigDecimal("3.00"), new BigDecimal("2.50"));
+        assertThatThrownBy(() -> f.aiDrafts.applyDraft(f.teacher, assignment.id(), ready.id(),
+                new AssignmentCommands.ApplyDraft(applied.version(), true, true)))
+                .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_DRAFT_STALE");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"text", "instructions", "diagram", "rubric"})
+    void chatWithExistingDraftContentKeepsTheRevisionSchema(String content) {
+        var skeleton = new DocumentModel(switch (content) {
+            case "text" -> List.of(AssignmentFixtures.paragraph("Keep this paragraph"));
+            case "diagram" -> List.of(AssignmentFixtures.diagram("<mxGraphModel/>"));
+            default -> List.of();
+        });
+        Assignment original = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, skeleton, content.equals("rubric"));
+        Assignment assignment = original.updateSkeleton(content.equals("instructions") ? "Keep these instructions" : "",
+                skeleton, original.parts(), AssignmentFixtures.NOW);
+        f.store.put(assignment.id(), assignment);
+
+        AiTaskRequest request = submitChatRequest(assignment);
+
+        assertThat(request.outputSchema()).isEqualTo(AssignmentDraftRevision.OUTPUT_SCHEMA);
+        assertThat(request.prompt().user()).contains("Current assessment JSON");
+    }
+
+    private AiTaskRequest submitChatRequest(Assignment assignment) {
+        var inserted = new AtomicReference<AssignmentAiDraft>();
+        doAnswer(call -> {
+            inserted.set(call.getArgument(0));
+            return null;
+        }).when(f.drafts).insert(any());
+        when(f.drafts.findDraft(any())).thenAnswer(call -> Optional.ofNullable(inserted.get()));
+        when(f.aiTasks.submit(any())).thenReturn(new AiTaskView(UUID.randomUUID(), AiTaskState.QUEUED,
+                AiSource.PERSONAL, AiProvider.GEMINI, "mock", null, null, null));
+        var response = f.aiDrafts.request(f.teacher, assignment.id(), new AssignmentCommands.AiDraftRequest(
+                "Create a Cinema Ticket Booking System exam in English.", List.of(), List.of(),
+                AiSource.PERSONAL, AiProvider.GEMINI, "chat-draft", null, null, null, AssignmentDraftRevision.MODE));
+        assertThat(response.provenance().path("mode").asText()).isEqualTo(AssignmentDraftRevision.MODE);
+        assertThat(response.provenance().has("blankRevision")).isFalse();
+        var task = ArgumentCaptor.forClass(AiTaskRequest.class);
+        verify(f.aiTasks).submit(task.capture());
+        return task.getValue();
+    }
 
     @Test
     void templatesAreNonRetiredSubjectAssignmentsOfTheSameSubject() {
@@ -367,6 +509,20 @@ class AssignmentAiDraftServiceTest {
         assertThat(saved.status()).isEqualTo(AssignmentAiDraft.Status.READY);
         assertThat(saved.provenance().path("agentLabel").asText()).isEqualTo("agent");
         assertThat(f.store.get(a.id()).skeleton().blocks()).isEmpty();
+    }
+
+    @Test
+    void mcpProposalCannotReplaceEditsMadeAfterItWasSaved() {
+        Assignment assignment = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        var proposal = f.aiDrafts.saveFromAgent(f.teacher, assignment.id(), assignment.version(), read(OUTPUT), "agent");
+        when(f.drafts.findDraft(proposal.id())).thenReturn(Optional.of(proposal));
+        Assignment edited = f.assignments.saveAssignment(assignment.updateSkeleton("Updated instructions",
+                assignment.skeleton(), assignment.parts(), AssignmentFixtures.NOW));
+
+        assertThatThrownBy(() -> f.aiDrafts.applyDraft(f.teacher, assignment.id(), proposal.id(),
+                new AssignmentCommands.ApplyDraft(edited.version(), true, true)))
+                .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_DRAFT_STALE");
+        assertThat(f.store.get(assignment.id())).isEqualTo(edited);
     }
 
     private JsonNode read(String text) {

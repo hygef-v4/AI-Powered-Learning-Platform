@@ -15382,6 +15382,195 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 
 ---
 
+## U07 Nguồn AI của chat sửa đề
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1]
+giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại cái phần mỗi lần bấm gửi AI thì nó lại hiện ra cái bảng này[Image #1]  mặc dù tôi đã chọn mặc định api ai rồi, tôi nghĩ nên thêm nút đổi api nhỏ ở cạnh chỗ tải file ấy khi nào muốn đổi thì bấm, còn mặc định thì nó theo cáu hình ở ai setting."
+**AI Response**: "Xác định chat luôn bật requireConfirmation từ f8b4523e. Đề xuất sửa bị chặn khi kết quả sau gộp và chuẩn hóa có blocks rỗng. Nguồn mặc định sẽ được đọc từ danh sách nguồn khả dụng."
+**Context**: Construction, chẩn đoán U07.
+
+---
+
+## U07 Tiếp tục đổi nguồn AI
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "làm tiếp"
+**AI Response**: "Triển khai nút Đổi nguồn AI cạnh nút đính kèm và giữ lựa chọn riêng cho lần gửi tiếp theo. Kiểm thử hồi quy tái hiện popup ở mã cũ."
+**Context**: Construction, Code Generation U07.
+
+---
+
+## U07 Ghi chú bộ chọn nguồn
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] k cần cái ghi chú này đâu"
+**AI Response**: "Ẩn ghi chú ước tính và đoạn hướng dẫn nguồn ở bộ chọn của chat. Giữ bên chịu phí, hạn mức và lý do nguồn chưa khả dụng."
+**Context**: Construction, Code Generation U07.
+
+---
+
+## U07 Tô nguồn đang chọn
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] với đang dùng cái nào thì tô đang chọn vào đấy"
+**AI Response**: "Tô nguồn cho lần tiếp theo. Khi không có lựa chọn riêng, dùng nguồn mặc định khả dụng hoặc nguồn vừa dùng trong chat khi chưa đặt mặc định."
+**Context**: Construction, Code Generation U07.
+
+---
+
+## U07 Yêu cầu commit và mở PR
+**Timestamp**: 2026-11-26T07:53:54Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit change rồi tạo pr lên staging"
+**AI Response**: "Commit thay đổi đã kiểm thử của chat Sửa đề bằng AI và mở pull request từ audit-staging vào staging."
+**Context**: Construction, bàn giao U07.
+
+---
+
+## U07 Giới hạn yêu cầu và mã lỗi AI
+**Timestamp**: 2026-11-26T08:22:59Z
+**Requested by:** Quang Hung
+**User Input**: "h them ma loi ro rang va nang ki tu len max 10000 ki tu co the nang output len cho phu hop, neu input qua ki tu phai dua ra ghi chu"
+**AI Response**: "Đồng bộ mức 10.000 ở giao diện, service và lớp kiểm tra tạo và sửa đề. Giữ văn bản vượt ngưỡng với bộ đếm và cảnh báo. Yêu cầu tạo đề dài hơn 4.000 ký tự xin ngân sách đầu ra 12.000 token. Hiện mã lỗi có thể tra cứu."
+**Context**: Construction, U06 và U07.
+
+---
+
+## U09 Ảnh hưởng tới chấm điểm
+**Timestamp**: 2026-11-26T08:22:59Z
+**Requested by:** Quang Hung
+**User Input**: "thay doi nhu vay thi ci anh huong gi den cham diem hien tai ko"
+**AI Response**: "Giữ cách chấm, trần 30 mục và công thức tối đa 8.192 token. Luồng chấm nhận chẩn đoán rõ hơn cho lỗi AI. Tạo đề dài có thể giữ nhiều quota API trường hơn và làm giảm số token còn lại dành cho chấm trên nguồn dùng chung."
+**Context**: Construction, U09.
+
+---
+
+## U07 Tạo nội dung trong chat sửa đề trống
+**Timestamp**: 2026-11-26T10:12:13Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi sửa như vậy"
+**AI Response**: "Dùng cấu trúc tạo đề khi chat nhận bản nháp trống. Backend chuẩn hóa điểm dạng chuỗi số, dựng khung và rubric từ đề xuất hợp lệ rồi kiểm tra phiên bản khi áp dụng."
+**Context**: Construction, Code Generation U07. [Kế hoạch](construction/plans/code-generation-plan/2026-11-26-u07-blank-ai-draft.md).
+
+---
+
+## U07 Kiểm tra chat sửa đề trống
+**Timestamp**: 2026-11-26T10:16:57Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa tiếp"
+**AI Response**: "Giữ chế độ REVISE trong phản hồi và dùng dấu phân loại nội bộ. Kiểm tra 738 ca backend và 28 ca frontend đạt. Một ca đánh giá AI chấm điểm bỏ qua theo cấu hình."
+**Context**: Construction, Build and Test U07.
+
+---
+
+## U07/U09 Đồng bộ giao diện mở link MCP
+**Timestamp**: 2026-11-26T10:35:48Z
+**Requested by:** Quang Hung
+**User Input**: "tôi muốn nó đồng bộ giao diện luôn mở link thì k cần bấm áp dụng nó trả về giao diện giống lúc vừa mới gọi tạo bài ai, hoặc chấm điểm bằng api ai trên web"
+**AI Response**: "Tự điền bản nháp đề hợp lệ khi mở link. Link chấm dùng chung cơ chế điền form AI web, giữ thao tác lưu và công bố điểm của giảng viên."
+**Context**: Construction, U07 và U09. [Kế hoạch](construction/plans/code-generation-plan/2026-11-26-u07-u09-mcp-result-links.md).
+
+---
+
+## U09 Xác nhận đề xuất và công bố điểm
+**Timestamp**: 2026-11-26T14:02:42Z
+**Requested by:** Quang Hung
+**User Input**: "thế thì phải hiện thông báo cho giảng viên chứ, với nếu giảng viên bấm chấp nhận đề xuất rồi thì cái đấy tự động được tick"
+**AI Response**: "Ghi xác nhận tiêu chí khi giảng viên giữ hoặc áp dụng đề xuất, hiện hướng dẫn trước bước công bố nếu còn tiêu chí chưa xác nhận và giữ lỗi từ máy chủ khi tải lại bản chấm. Kiểm tra 233 ca frontend U09, TypeScript và ESLint phạm vi."
+**Context**: Construction, U09. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-proposal-review-publish.md).
+
+---
+
+## U09 Chấm theo rubric và bước điểm tiêu chí
+**Timestamp**: 2026-11-26T14:18:21Z
+**Requested by:** Quang Hung
+**User Input**: "tôi nghĩ đổi 0.25 sang 0.1, tôi duyệt 1,2,3"
+**AI Response**: "Dùng rubric để tính điểm, đưa yêu cầu ngoài rubric vào nhận xét và yêu cầu rà soát khi chưa đủ minh chứng chấm. Đổi bước tăng giảm của ô điểm tiêu chí sang 0,1."
+**Context**: Construction, U09. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-rubric-grading-policy.md).
+
+---
+
+## U09 Xử lý các lỗi công bố điểm
+**Timestamp**: 2026-11-26T14:29:30Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại các lỗi này"
+**AI Response**: "Hiện ô xác nhận ở mục có điểm lệch so với nhận xét. Chỉ mở hộp công bố bài nhóm sau khi tải lại thành công. Báo lưu điểm trước nếu bài chưa chấm."
+**Context**: Construction, U09. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publish-guards.md).
+
+---
+
+## U09 Phản hồi review PR 146
+**Timestamp**: 2026-11-26T14:51:47Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại theo comment"
+**AI Response**: "Chỉ tự xác nhận tiêu chí còn khớp điểm đã rà soát và hiện cảnh báo cho bản chấm đã công bố khi sửa điểm. Bổ sung các ca kiểm thử được nêu trong review."
+**Context**: Construction, U09. [Review](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/146#issuecomment-7195336960). [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publication-review-followup.md).
+
+---
+
+## Main Business Flows — rà soát và sửa sơ đồ
+**Timestamp**: 2026-11-26T07:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi cần thuyết trình cho 5 luồng nghiệp vụ chính (business flow) nữa, hãy kiểm tra xem các sơ đồ hiện tại đã đúng chưa, có sai ở đâu không cho tôi"
+**AI Response**: "Đối chiếu BF-01..BF-05 với code staging 18fe8eff: nghiệp vụ khớp; BF-02 bước 4 lỗi thời sau 89b541fcf (nguồn AI mặc định), BF-03 bước 4 thiếu email; lỗi ký hiệu ở BF-03 (kiểm tra giới hạn góp ý không có hình thoi, thiếu vòng luyện lại), BF-05 (thiếu kiểm tra nội dung, bước giao section tùy chọn bị vẽ bắt buộc, kiểm tra section/nộp bài không có nhánh lỗi), BF-03/04/05 (giờ mở bài chưa là time trigger)."
+**Context**: Inception, Main Business Flows review (Report 3 presentation).
+
+---
+
+## Main Business Flows — sửa và xuất lại
+**Timestamp**: 2026-11-26T07:55:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa và xuất lại"
+**AI Response**: "Đổi nhãn BF-02 bước 4; sinh lại BF-03 (16 bước), BF-04 (thêm Opening time), BF-05 (21 bước) cùng style cũ; dựng lại file gộp (trang BF-01 giữ nguyên); xuất lại PNG 2× BF-02..BF-05 bằng draw.io viewer trong Edge headless; cập nhật bảng hoạt động và bảng góp ý hội đồng trong README. Chưa commit."
+**Context**: Inception, Main Business Flows revision 2026-11-26.
+
+---
+
+## Main Business Flows — bố cục dọc cho tài liệu Word
+**Timestamp**: 2026-11-26T08:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn phóng to các chữ, thu hẹp khoảng cách giữa các step lại tránh để ảnh quá to (do tôi cần chèn ảnh vào doc sao cho giảng viên vẫn có thể nhìn rõ mà không cần zoom). Bố trí lại bố cục cho hợp lý. Ngoài ra không được để 2 step sát như trong ảnh, vẫn phải nhìn được mũi tên (chữ yes đang che hết mũi tên)"
+**AI Response**: "Hỏi cách xử lý luồng dài và khổ trang; người dùng chọn: 'Vẫn giữ 1 ảnh mỗi luồng, chỉ giữ các step quan trọng' và 'A4 dọc (Recommended)'."
+**Context**: Inception, Main Business Flows revision 2026-11-26 (layout).
+
+---
+
+## Main Business Flows — vẽ lại dạng làn dọc
+**Timestamp**: 2026-11-26T08:45:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Vẫn giữ 1 ảnh mỗi luồng, chỉ giữ các step quan trọng; A4 dọc (Recommended)"
+**AI Response**: "Vẽ lại BF-01..BF-05 dạng làn dọc (làn là cột, luồng từ trên xuống), chữ 16-17px, khoảng trống tối thiểu 60px giữa hai ô kề nhau, nhãn Yes/No đặt cạnh mũi tên. Gộp bước phụ: BF-01 7 bước, BF-02 11, BF-03 10, BF-04 13, BF-05 12. Xuất lại PNG 2×, viết lại bảng hoạt động và bảng góp ý hội đồng trong README. Chưa commit."
+**Context**: Inception, Main Business Flows revision 2026-11-26 (layout).
+
+---
+
+## Main Business Flows — bỏ dòng Revision
+**Timestamp**: 2026-11-26T09:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "bỏ dòng Revision đi cho tôi"
+**AI Response**: "Bỏ dòng 'Revision 2026-11-26 · Report 3 (SRS) main business flow...' dưới cả 5 sơ đồ và file gộp, xuất lại PNG BF-01..BF-05. Chưa commit."
+**Context**: Inception, Main Business Flows revision 2026-11-26 (layout).
+
+---
+
+## Main Business Flows — BF-03 bỏ lane AI Provider
+**Timestamp**: 2026-11-26T09:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "BF03 bỏ lane Student's AI Provider"
+**AI Response**: "Bỏ lane Student's AI Provider khỏi BF-03; gộp việc sinh nhận xét vào bước 8 'Get AI feedback with personal key, log usage' (System), bước xem nhận xét thành 9. BF-03 còn 3 lane, 9 bước. Xuất lại BF-03.png, cập nhật README. Chưa commit."
+**Context**: Inception, Main Business Flows revision 2026-11-26 (layout).
+
+---
+
+## System Test — rà soát Report 5.4 (NFR)
+**Timestamp**: 2026-11-26T08:45:10Z
+**Requested by:** Đào Chí Cường
+**User Input**: "https://claude.ai/artifact/W9i1X6s7DDmjra9RnJd97b#0bd2fe34-76c2
+kiểm tra xem đúng không và gửi tôi hướng giải quyết" — sau đó người dùng dán toàn văn "Báo cáo kiểm thử phi chức năng (NFR) – Report 5.4" (78 case: Security 49 Pass/6 Fail, Performance 13 Pass/9 Fail/1 Not Run; toàn văn báo cáo nằm trong hội thoại, không chép lại ở đây vì dài).
+**AI Response**: "Link Claude Docs không đọc được (không được chia sẻ). Đối chiếu báo cáo với code tại staging (be90c802 + 5 commit): xác nhận Hikari maximum-pool-size 10, connection-timeout 3 s; backend giới hạn 2 CPU/1 GiB; bcrypt cost 12; nginx 1.28-alpine không có server_tokens off; log_format ghi nguyên $request (lộ token tải tệp); U03_BACKUP_PUBLIC_KEY trống thì ghi dump thường; GroupSectionEditorPage chỉ có beforeunload; listDueToClose cố ý chờ 30 s ân hạn + chu kỳ quét 60 s; GradebookService tải toàn lớp mỗi trang; GradingBatchService chạy một transaction cho mỗi điểm. Ghi chú: thiếu HSTS trên staging là cố ý (template staging). Gửi hướng giải quyết theo nhóm nguyên nhân. Không sửa code, chưa commit."
+**Context**: Construction, Build and Test — rà soát báo cáo kiểm thử NFR (System Test Report 5.4).
+
 ## System test NFR (Report-5.4) - Đề xuất test case và sửa Report 3
 **Timestamp**: 2026-11-25T16:46:46Z
 **Requested by:** Hải Nam
@@ -15863,5 +16052,14 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **User Input**: "bạn đề xuất nên tách commit rồi commit lên branch trước sau đó chạy các case test hay như nào" then "Đồng ý, làm theo thứ tự đó đi. lưu ý không commit các file có ý nghĩa temperance không có ích cho dự án ví dụ như 3 file bạn nói ở trên"
 **AI Response**: "Order agreed: check each file and hunk against the NFR session's bug map, run mvn verify and frontend checks, split into small local commits on system-test-nfr (no push), rebuild systest from HEAD, then re-run the FR cases. Excluded from commits: backend/.sonar/, .claude/launch.json, aidlc-docs/inception/requirements/2026-11-25-report-3-nfr-review.md and other temporary files."
 **Context**: Construction - commit split and Report 5.3 re-run (the request was passed on through the NFR session and then confirmed by the user in this session)
+
+---
+
+## Report-5.3 - Push, merge staging and open PR
+**Timestamp**: 2026-11-27T00:15:00Z
+**Requested by:** Hải Nam
+**User Input**: "lỗi DriveHealthIndicatorTest là do đâu, do ai gây ra" then "à temporary" then "để nguyên lỗi đó. Sau khi commit thì push lên branch, sau đó merge từ staging vào rồi check xem có lỗi ko. Không lỗi thì tạo pr vào staging."
+**AI Response**: "DriveHealthIndicatorTest waits only 2 s for a probe whose first deep-stub mock creation takes about that long; added in 0c6e3ffb (2026-11-17) and failing on HEAD too; left unchanged as asked. Created 13 commits (messages checked against the diffs), pushed system-test-nfr, merged origin/staging: resolved the describeAiFailure conflict by keeping both the code-prefixed AI errors from staging and the KAN-232 translation of legacy Vietnamese reasons, updated the KAN-232 test to the [AI_CODE] prefix convention, kept both audit blocks. Re-running backend and frontend checks before opening the PR."
+**Context**: Construction - integration of system-test-nfr into staging
 
 ---

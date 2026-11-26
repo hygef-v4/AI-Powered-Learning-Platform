@@ -185,16 +185,18 @@ class GradingPromptBuilderTest {
     }
 
     @Test
-    void gradingInstructionsRequireWorkToMatchTheAssignment() {
+    void gradingInstructionsUseAssignmentContextWithinTheLockedRubric() {
         assertThat(new GradingPromptBuilder(json).buildGradingInstructions())
-                .contains("compare the submission with the assignment instructions",
+                .contains("Use the assignment to interpret the rubric",
+                        "Mention unmet assignment-only requirements in the overall feedback",
+                        "without deducting points or setting requiresReview for them",
                         "A different system or topic earns zero for topic-dependent items",
-                        "A trigger, flow, or business rule about another system does not satisfy this assignment",
-                        "For those items set the numeric score to 0",
-                        "A trigger must start the specific use case requested by the rubric and assignment",
+                        "A clearly observed mismatch is sufficient evidence for the score",
+                        "When a rubric item assesses a trigger",
                         "A populated Trigger field for a different use case earns zero",
                         "Apply topic-independent rubric items as written",
-                        "Absent notation earns no credit unless the rubric says it is optional");
+                        "Absent notation earns no credit unless the rubric says it is optional")
+                .doesNotContain("even if the rubric item only asks whether that element exists");
     }
 
     @Test
@@ -204,14 +206,16 @@ class GradingPromptBuilderTest {
                 .contains("TYPE is guessed by the system from shapes and may be OTHER or wrong",
                         "COMET/UML or Wiegers", "never add notation criteria the rubric does not state",
                         "'hình X trong Y' means shape X lies inside shape Y", "'…(đã cắt)' it is incomplete",
-                        "narrowest interpretation",
                         "'[block <id>]' line directly above the cited text",
                         "Never paste '[block <id>]' lines or raw diagram-summary lines as evidence",
-                        "names, actors and elements match what the instructions require",
+                        "names, actors and elements match what the rubric requires",
                         "a solid <<include>> or <<extend>> edge does not satisfy a dashed-line requirement",
                         "Full credit requires evidence for every mandatory condition",
                         "If the rubric makes an element optional or conditional",
-                        "If absence or partial credit is ambiguous, set requiresReview=true");
+                        "Set requiresReview=true only when the available evidence is insufficient",
+                        "A missing point split alone does not require review",
+                        "another part of the submission")
+                .doesNotContain("If absence or partial credit is ambiguous, set requiresReview=true");
     }
 
     @Test
@@ -222,6 +226,7 @@ class GradingPromptBuilderTest {
                         "A reason that denies all credit must have numeric score 0",
                         "Award full points when the cited evidence satisfies all stated requirements",
                         "Award each explicitly allocated partial score independently",
+                        "award justified partial credit based on the extent of proven fulfillment",
                         "Recognize equivalent behavior even without the exact label",
                         "Add the earned points for the separately scored parts",
                         "Write that sum as the item score in itemScoresByRubric",

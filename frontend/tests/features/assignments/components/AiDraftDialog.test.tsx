@@ -24,19 +24,37 @@ describe("AiDraftDialog", () => {
     vi.unstubAllGlobals();
   });
 
-  it("opens an existing MCP proposal for review without submitting a provider request", async () => {
+  it.each(["ready", "stale", "applied"] as const)(
+    "opens a %s MCP proposal link without submitting a provider request", async (state) => {
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);
     vi.spyOn(filesApi, "getPolicies").mockResolvedValue([]);
     const generate = vi.spyOn(assignmentsApi, "requestAiDraft");
     const load = vi.spyOn(assignmentsApi, "aiDraft").mockResolvedValue({
-      draftId: "mcp-proposal", assignmentId: "a1", origin: "MCP", status: "READY", taskId: null,
+      draftId: "mcp-proposal", assignmentId: "a1", origin: "MCP",
+      status: state === "applied" ? "APPLIED" : "READY", taskId: null,
       proposal: { title: "MCP review title", businessContext: "A QA system", instructions: "Review before applying", sections: [
         { level: 1, title: "MCP section", guidance: "Explain the design", rubric: [] },
-      ] }, provenance: {}, safeError: null, baseVersion: 1, createdAt: "now", decidedAt: null,
+      ], validation: { status: "VALID", questionCount: 1, rubricLeafCount: 1, totalPoints: 1, issues: [] }
+      }, provenance: {}, safeError: null, baseVersion: 1, createdAt: "now", decidedAt: null,
     });
-    render(<AiDraftDialog assignmentId="a1" initialDraftId="mcp-proposal" version={1} currentPartCount={0}
-      currentTitle="" currentInstructions="" gradingMode="GRADED" onClose={vi.fn()} onApplied={vi.fn()} />);
-    expect(await screen.findByText("MCP review title")).toBeInTheDocument();
+    const apply = vi.spyOn(assignmentsApi, "applyAiDraft").mockResolvedValue({} as never);
+    const onApplied = vi.fn();
+    const onClose = vi.fn();
+    render(<AiDraftDialog assignmentId="a1" initialDraftId="mcp-proposal"
+      version={state === "stale" ? 2 : 1} currentPartCount={0} currentTitle="Old title" currentInstructions=""
+      gradingMode="GRADED" onClose={onClose} onApplied={onApplied} />);
+    if (state === "ready") {
+      await waitFor(() => expect(onApplied).toHaveBeenCalledTimes(1));
+      expect(apply).toHaveBeenCalledExactlyOnceWith("a1", "mcp-proposal", 1, true, true);
+    } else {
+      if (state === "stale") {
+        expect(await screen.findByText("MCP review title")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Áp dụng đề xuất" })).toBeDisabled();
+      } else {
+        await waitFor(() => expect(onClose).toHaveBeenCalled());
+      }
+      expect(apply).not.toHaveBeenCalled();
+    }
     expect(load).toHaveBeenCalledWith("a1", "mcp-proposal", expect.any(AbortSignal));
     expect(generate).not.toHaveBeenCalled();
   });
@@ -89,6 +107,13 @@ describe("AiDraftDialog", () => {
     expect(screen.queryByText("hoặc")).toBeNull();
     expect(screen.queryByText("*")).toBeNull();
     expect(screen.queryByLabelText("Nguồn AI")).not.toBeInTheDocument();
+    const instruction = screen.getByLabelText("Yêu cầu");
+    fireEvent.change(instruction, { target: { value: "a".repeat(10_001) } });
+    expect(instruction).toHaveAccessibleDescription(/rút ngắn 1 ký tự/);
+    expect(instruction).toHaveValue("a".repeat(10_001));
+    expect(screen.getByTestId("ai-send")).toBeDisabled();
+    expect(requestAiDraft).not.toHaveBeenCalled();
+    fireEvent.change(instruction, { target: { value: "" } });
     expect(screen.getByTestId("ai-send")).toBeEnabled();
     fireEvent.click(screen.getByTestId("ai-send"));
     expect(requestAiDraft).not.toHaveBeenCalled();

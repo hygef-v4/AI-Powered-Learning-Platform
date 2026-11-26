@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Card, Pill, type Tone } from "@/shared/ui";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import { formatDateTime, type SourceChoice } from "@/shared/ai";
 import { calculateChecklistPoints, hasInvalidItemScores, resolveItemPoints, isValidItemScore } from "../model/rubricScores";
 import { GradingFeedbackSummary, RubricItemFeedback } from "./StructuredFeedbackSection";
@@ -273,7 +274,11 @@ export function AiProposalPanel({
             }}
           >
             {msg("grading.components.AiProposalPanel.applyToDraft")}</button>
-          <span className="text-xs text-muted">{msg("grading.components.AiProposalPanel.onlyPreTicksTheChecklist")}</span>
+          {reviewFlagCount > 0 && (
+            <span className="text-xs text-muted">
+              {msg("grading.components.AiProposalPanel.applyConfirmsReview")}
+            </span>
+          )}
         </div>
       </>
     );
@@ -296,7 +301,8 @@ export function AiProposalPanel({
       </div>
       {latestFailure && <div role="alert" className="mt-3 rounded-lg bg-danger/5 p-3 text-sm">
         <p className="font-semibold text-danger">{msg("grading.components.AiProposalPanel.couldNotCreateAProposal")}</p>
-        <p className="mt-1">{latestFailure.safeError && !/^AI task (failed|unavailable or failed)$/.test(latestFailure.safeError) ? latestFailure.safeError : msg("grading.components.AiProposalPanel.theAiTaskFailedCheck")}</p>
+        <p className="mt-1">{latestFailure.safeError && !/^AI task (failed|unavailable or failed)$/.test(latestFailure.safeError)
+          ? describeAiFailure(latestFailure.safeError) : msg("grading.components.AiProposalPanel.theAiTaskFailedCheck")}</p>
         <p className="mt-1 text-muted">{msg("grading.components.AiProposalPanel.youCanStillGradeManually")}</p>
         <a href="/ai/connection" className="mt-2 inline-block font-semibold text-primary-ink underline underline-offset-2">{msg("grading.components.AiProposalPanel.checkAiConnection")}</a>
       </div>}

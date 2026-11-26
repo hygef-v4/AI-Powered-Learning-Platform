@@ -75,8 +75,11 @@ describe("describeAiFailure (KAN-232)", () => {
     expect(describeAiFailure("Bạn đang có 3 yêu cầu AI chưa xong; chờ hoặc hủy bớt rồi thử lại", "No feedback"))
       .toBe("You already have 3 AI requests in progress. Wait for one to finish or cancel one, then try again.");
     expect(describeAiFailure("Người dùng đã hủy", "No feedback")).toBe("You cancelled this request.");
+    // Lỗi API có mã AI_ hiện kèm mã, theo quy ước của describeAiCode.
     expect(describeApiProblem({ status: 429, code: "AI_TOO_MANY_TASKS", detail: "Bạn đang có 3 yêu cầu AI chưa xong" }))
-      .toBe("You already have 3 AI requests in progress. Wait for one to finish or cancel one, then try again.");
+      .toBe("[AI_TOO_MANY_TASKS] You already have 3 AI requests in progress. Wait for one to finish or cancel one, then try again.");
+    expect(describeAiFailure("[AI_OUTPUT_INVALID] Kết quả AI không đúng định dạng", "No feedback"))
+      .toMatch(/^\[AI_OUTPUT_INVALID\] [\x00-\x7F]+$/);
   });
 
   it("never shows unknown Vietnamese text in the English UI, but keeps English server text", async () => {

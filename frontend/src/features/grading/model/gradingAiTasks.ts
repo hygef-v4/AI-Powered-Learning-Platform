@@ -1,5 +1,6 @@
 "use client";
 import { ApiError } from "@/shared/api/client";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import { showErrorToast, showToast } from "@/shared/ui/Toast";
 import { gradingApi } from "../api";
 import { formatErrorMessage } from "./format";
@@ -83,7 +84,8 @@ async function pollProposals(evaluationId: string, entry: Entry) {
       else if (entry.notifyFor.delete(proposal.id)) {
         if (proposal.status === "READY") showToast(msg("grading.model.gradingAiTasks.theAiProposalForIs", { label: String(entry.label) }));
         else if (proposal.status === "FAILED" || proposal.status === "REJECTED") {
-          showErrorToast(proposal.safeError || msg("grading.model.gradingAiTasks.couldNotCreateAnAi", { label: String(entry.label) }));
+          showErrorToast(proposal.safeError ? describeAiFailure(proposal.safeError)
+            : msg("grading.model.gradingAiTasks.couldNotCreateAnAi", { label: String(entry.label) }));
         }
       }
     }

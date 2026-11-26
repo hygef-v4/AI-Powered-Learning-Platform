@@ -245,7 +245,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             if (task.dispatchedAt() != null && !task.dispatchedAt().plus(callWindow()).isBefore(now)) {
                 return null;
             }
-            markUnknown(task, "Không rõ kết quả của lần gọi trước");
+            markUnknown(task, "[AI_PROVIDER_RESULT_UNKNOWN] Không rõ kết quả của lần gọi trước");
             return null;
         }
         AiConnection connection = task.connectionId() == null ? null
@@ -414,7 +414,8 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
         } catch (ProviderException e) {
             return new Outcome(null, e);
         } catch (RuntimeException e) {
-            return new Outcome(null, new ProviderException(FailureKind.UNKNOWN, 0, "Lỗi khi gọi nhà cung cấp AI", null));
+            return new Outcome(null, new ProviderException(FailureKind.UNKNOWN, 0, "Lỗi khi gọi nhà cung cấp AI",
+                    null, "AI_PROVIDER_ERROR"));
         }
     }
 
@@ -431,8 +432,9 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             if (invalid.isPresent()) {
                 // Chỉ ghi vị trí lệch schema để chẩn đoán, không ghi nội dung kết quả.
                 log.warn("AI task output rejected taskId={} taskType={} reason={}", task.id(), task.taskType(),
-                        invalid.get().length() > 300 ? invalid.get().substring(0, 300) : invalid.get());                saveTask(task.moveTo(AiTaskState.FAILED, clock.instant()).completeWithResult(null, response.requestId())
-                        .failWithError("Kết quả AI không đúng định dạng yêu cầu"));
+                        invalid.get().length() > 300 ? invalid.get().substring(0, 300) : invalid.get());
+                saveTask(task.moveTo(AiTaskState.FAILED, clock.instant()).completeWithResult(null, response.requestId())
+                        .failWithError("[AI_OUTPUT_INVALID] Kết quả AI không đúng định dạng yêu cầu"));
             } else {
                 saveTask(task.completeWithResult(response.output(), response.requestId()).moveTo(AiTaskState.READY, clock.instant()));
             }
@@ -464,7 +466,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             return next;
         }
         AiTaskState end = e.readKind() == FailureKind.UNKNOWN ? AiTaskState.UNKNOWN : AiTaskState.FAILED;
-        saveTask(settled.moveTo(end, clock.instant()).failWithError(e.getMessage()));
+        saveTask(settled.moveTo(end, clock.instant()).failWithError(e.readSafeError()));
         return null;
     }
 
@@ -553,7 +555,7 @@ public class AiTaskJobHandler implements IJobHandler, IPendingSweeper, ISchedule
             transactions.executeWithoutResult(status -> tasks.lock(running.id())
                     .filter(t -> t.state() == AiTaskState.RUNNING && t.dispatchedAt() != null
                             && t.dispatchedAt().isBefore(runningDeadline))
-                    .ifPresent(t -> markUnknown(t, "Nhà cung cấp AI không trả lời kịp")));
+                    .ifPresent(t -> markUnknown(t, "[AI_PROVIDER_TIMEOUT] Nhà cung cấp AI không trả lời kịp")));
             deliverQuietly(running.id());
         }
         for (AiTask finished : tasks.listUnhandled(now.minus(Duration.ofMinutes(1)))) {

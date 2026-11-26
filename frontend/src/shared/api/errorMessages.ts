@@ -28,6 +28,27 @@ const CODE_KEYS: Record<string, string> = {
   ANNOUNCEMENT_STALE: "conflict",
   AI_TOO_MANY_TASKS: "aiTooManyTasks",
   AI_TASK_NOT_CANCELLABLE: "aiNotCancellable",
+  AI_REQUEST_TOO_LONG: "aiRequestTooLong",
+  AI_PROMPT_TOO_LARGE: "aiPromptTooLarge",
+  AI_SOURCE_UNAVAILABLE: "aiSourceUnavailable",
+  AI_PROVIDER_DNS_FAILED: "aiProviderDnsFailed",
+  AI_PROVIDER_CONNECT_FAILED: "aiProviderConnectFailed",
+  AI_PROVIDER_TIMEOUT: "aiProviderTimeout",
+  AI_PROVIDER_CONNECTION_LOST: "aiProviderConnectionLost",
+  AI_PROVIDER_INTERRUPTED: "aiProviderInterrupted",
+  AI_PROVIDER_RESULT_UNKNOWN: "aiProviderResultUnknown",
+  AI_PROVIDER_AUTH_FAILED: "aiProviderAuthFailed",
+  AI_PROVIDER_MODEL_UNAVAILABLE: "aiProviderModelUnavailable",
+  AI_PROVIDER_QUOTA_EXHAUSTED: "aiProviderQuotaExhausted",
+  AI_PROVIDER_RATE_LIMITED: "aiProviderRateLimited",
+  AI_PROVIDER_RATE_OR_QUOTA: "aiProviderRateOrQuota",
+  AI_PROVIDER_OVERLOADED: "aiProviderOverloaded",
+  AI_PROVIDER_REQUEST_REJECTED: "aiProviderRequestRejected",
+  AI_PROVIDER_ERROR: "aiProviderError",
+  AI_IMAGES_UNSUPPORTED: "aiImagesUnsupported",
+  AI_OUTPUT_LIMIT: "aiOutputLimit",
+  AI_OUTPUT_INVALID: "aiOutputInvalid",
+  AI_OUTPUT_UNUSABLE: "aiOutputUnusable",
 };
 
 /** Lý do lỗi AI mà backend lưu vào `safeError` (tiếng Việt, không kèm mã); khớp nguyên văn câu của server. */
@@ -69,6 +90,8 @@ function findMessageKey({ status, code }: ProblemText): string {
  * ngôn ngữ khác dịch theo `code`, không có thì theo status, không bao giờ hiện câu tiếng Việt của server.
  */
 export function describeApiProblem(problem: ProblemText): string {
+  const aiError = describeAiCode(problem.code, problem.detail);
+  if (aiError) return aiError;
   if (LOCALE === "vi" && problem.detail) return problem.detail;
   const key = findMessageKey(problem);
   if (key === "fileTooLarge") {
@@ -78,15 +101,24 @@ export function describeApiProblem(problem: ProblemText): string {
   return msg(`shared.api.errorMessages.${key}`);
 }
 
+function describeAiCode(code: string | undefined, detail?: string): string | undefined {
+  if (!code?.startsWith("AI_") || !CODE_KEYS[code]) return undefined;
+  const text = LOCALE === "vi" && detail ? detail : msg(`shared.api.errorMessages.${CODE_KEYS[code]}`);
+  return `[${code}] ${text}`;
+}
+
 /**
- * Lý do lỗi của task/góp ý AI theo ngôn ngữ giao diện. Giao diện tiếng Việt giữ câu của server; ngôn ngữ khác dịch
- * câu đã biết, giữ câu tiếng Anh của server, còn câu tiếng Việt chưa biết thì dùng `fallback`.
+ * Lý do lỗi của task/góp ý AI theo ngôn ngữ giao diện. Kết quả mới kèm mã (`[AI_...] chi tiết`) dịch theo mã. Kết quả
+ * cũ chỉ có câu tiếng Việt: giao diện tiếng Việt giữ câu của server; ngôn ngữ khác dịch câu đã biết (KAN-232), giữ câu
+ * tiếng Anh, còn câu tiếng Việt chưa biết thì dùng `fallback` nếu bên gọi truyền.
  */
-export function describeAiFailure(reason: string | null | undefined, fallback: string): string {
+export function describeAiFailure(reason: string | null | undefined, fallback?: string): string {
   const text = reason?.trim();
-  if (!text) return fallback;
+  if (!text) return fallback ?? "";
+  const match = /^\[(AI_[A-Z_]+)\]\s+([\s\S]*)$/.exec(text);
+  if (match) return describeAiCode(match[1], match[2]) ?? text;
   if (LOCALE === "vi") return text;
   const key = AI_FAILURE_KEYS[text];
   if (key) return msg(`shared.api.errorMessages.${key}`);
-  return NON_ASCII.test(text) ? fallback : text;
+  return NON_ASCII.test(text) && fallback ? fallback : text;
 }

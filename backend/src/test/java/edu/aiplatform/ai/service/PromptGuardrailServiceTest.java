@@ -176,12 +176,14 @@ class PromptGuardrailServiceTest {
 
         @Test
         void enforcesLengthPerContext() {
-            assertRejected(examEdit("a".repeat(4_001)), 1, GuardrailCategory.OFF_TOPIC, "T1_LENGTH_MAX");
-            assertThat(examEdit("Dịch đề " + "a".repeat(3_990)).ruleId()).isNotEqualTo("T1_LENGTH_MAX");
+            assertRejected(examEdit("a".repeat(10_001)), 1, GuardrailCategory.OFF_TOPIC, "T1_LENGTH_MAX");
+            assertThat(examEdit("Dịch đề " + "a".repeat(9_992)).ruleId()).isNotEqualTo("T1_LENGTH_MAX");
+            assertRejected(guardrail.evaluate(UserPromptInput.of(manager, PromptAction.GENERATE_QUESTIONS,
+                    PromptFlowState.AUTHORING_DRAFT, "a".repeat(4_001))), 1, GuardrailCategory.OFF_TOPIC, "T1_LENGTH_MAX");
             assertRejected(rubric("a".repeat(2_001)), 1, GuardrailCategory.OFF_TOPIC, "T1_LENGTH_MAX");
             assertRejected(feedback("a".repeat(1_001)), 1, GuardrailCategory.OFF_TOPIC, "T1_LENGTH_MAX");
             assertRejected(examEdit(" x "), 1, GuardrailCategory.OFF_TOPIC, "T1_LENGTH_MIN");
-            assertThat(examEdit("a".repeat(4_001)).message()).contains("4.000");
+            assertThat(examEdit("a".repeat(10_001)).message()).contains("10.000");
         }
     }
 

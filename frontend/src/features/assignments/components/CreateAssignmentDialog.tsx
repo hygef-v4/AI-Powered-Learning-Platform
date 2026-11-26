@@ -6,6 +6,8 @@ import { acceptAttribute, checkFile, type PurposePolicy } from "@/features/files
 import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
 import { Alert, Button, Dialog, Field, Icon, IconButton, Select, Textarea, TextInput } from "@/shared/ui";
 import { AiProgress, ReferencePicker, type SourceUpload } from "./AiDraftDialog";
+import { AiRequestLength, MAX_AI_REQUEST_LENGTH } from "./AiRequestLength";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import { SearchPicker } from "./SearchPicker";
 import { TemplateFileField } from "./TemplateFileField";
 import { checkImportFiles, IMPORT_ACCEPT, importKindOf } from "../model/importFiles";
@@ -102,6 +104,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const groupAllowed = !isClass || target.groupSupported;
   const existing = method === "EXISTING";
   const ai = method === "AI";
+  const requestTooLong = request.length > MAX_AI_REQUEST_LENGTH;
   // Đề có sẵn: đề mẫu của môn đứng đầu, rồi bài của các lớp mình dạy (thứ tự server trả). Bài của lớp ghi thêm `mã lớp · học kỳ`
   // để phân biệt lớp cùng mã ở các học kỳ (D-U04-05).
   const candidates = (sources ?? []).flatMap((source) => source.assignments);
@@ -243,7 +246,10 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
       if (!alive.current) throw new Error(msg("assignments.components.CreateAssignmentDialog.thePopupWasClosed"));
       draft = await assignmentsApi.aiDraft(assignment.id, draft.draftId);
     }
-    if (draft.status !== "READY" || !draft.proposal) throw new Error(draft.safeError ?? msg("assignments.components.CreateAssignmentDialog.theAiReturnedNoResult"));
+    if (draft.status !== "READY" || !draft.proposal) {
+      throw new Error(draft.safeError ? describeAiFailure(draft.safeError)
+        : msg("assignments.components.CreateAssignmentDialog.theAiReturnedNoResult"));
+    }
     const validation = draft.proposal.validation;
     if (!validation || validation.status === "INVALID" || draft.proposal.sections.length === 0) {
       await assignmentsApi.discardAiDraft(assignment.id, draft.draftId).catch(() => {});
@@ -258,6 +264,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   }
 
   async function submit(choice?: SourceChoice) {
+    if (ai && requestTooLong) return;
     const name = title.trim();
     if (!created && !aiCreated && !name) {
       setTitleError(msg("assignments.components.CreateAssignmentDialog.enterAnAssignmentTitle"));
@@ -351,7 +358,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     <Dialog open title={isClass ? msg("assignments.components.CreateAssignmentDialog.newAssignment") : msg("assignments.components.CreateAssignmentDialog.newTemplate")} size="lg" onClose={() => void close()} dismissible={!busy}
       footer={<>
         {created && <Button onClick={() => onCreated(created)} disabled={busy}>{msg("assignments.components.CreateAssignmentDialog.openAssignment")}</Button>}
-        <Button variant="primary" onClick={() => void submit()} loading={busy} data-testid="create-assignment-submit">
+        <Button variant="primary" onClick={() => void submit()} loading={busy} disabled={ai && requestTooLong} data-testid="create-assignment-submit">
           {created || aiCreated ? msg("assignments.components.CreateAssignmentDialog.retry") : msg("assignments.components.CreateAssignmentDialog.create")}
         </Button>
       </>}>
@@ -460,9 +467,11 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
                   onUpload={addUploads} onRemoveUpload={removeUpload} onRetryUpload={(item) => void upload(item.file, item.id)} />
               </Field>
               <Field label={msg("assignments.components.CreateAssignmentDialog.request")} htmlFor="ai-request">
-                <Textarea id="ai-request" rows={2} maxLength={4000} value={request} disabled={busy}
+                <Textarea id="ai-request" rows={2} value={request} disabled={busy}
+                  invalid={requestTooLong} aria-describedby="create-ai-request-length"
                   placeholder={msg("assignments.components.CreateAssignmentDialog.describeTheAssignmentYouNeed")}
                   onChange={(e) => setRequest(e.target.value)} />
+                <AiRequestLength id="create-ai-request-length" length={request.length} />
               </Field>
             </>
           )}
