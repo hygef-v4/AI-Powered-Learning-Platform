@@ -109,7 +109,7 @@ final class WorkFixtures {
         access = new WorkAccess(authorization, classes, assignments, attempts);
         submitter = new AttemptSubmitter(attempts, assignments, documents, listeners, json);
         attemptService = new AttemptService(access, attempts, submitter, assignments, documents, docx, artifacts,
-                clock, "http://localhost:8088");
+                clock, "http://localhost:8088", transactions);
         studentAssignments = new StudentAssignmentService(access, classes, assignments, groupWork, attempts, feedback,
                 clock);
         feedbackService = new PracticeFeedbackService(access, attempts, feedback, assignments, documents, aiTasks, json, transactions, clock, 20);
