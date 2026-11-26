@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AiSourcePicker, AiTaskStatus, type SourceChoice } from "@/shared/ai";
-import { Alert, BusyOverlay, Button, Dialog, Field, Icon, IconButton, Pill, Select, showErrorToast, Textarea } from "@/shared/ui";
+import { Alert, BusyOverlay, Button, Dialog, Field, FileDropZone, Icon, IconButton, Pill, Select, showErrorToast, Textarea } from "@/shared/ui";
 import { assignmentsApi } from "../api";
 import { AiDraftPreview } from "./AiDraftPreview";
 import { SearchPicker } from "./SearchPicker";
@@ -321,6 +321,8 @@ export function AiDraftDialog({
             {msg("assignments.components.AiDraftDialog.describeTheAssignmentYouNeed")}</p>
           {/* Mẫu đề và tài liệu tham khảo chỉ thêm ngữ cảnh, không bắt buộc (yêu cầu 2026-11-09). */}
           <Field label={msg("assignments.components.AiDraftDialog.template")} htmlFor="ai-template">
+            <FileDropZone accept=".docx" disabled={awaiting} label={msg("assignments.components.AiDraftDialog.dropTemplateHere")}
+              onFiles={([file]) => { if (!file) return; setTemplateId(""); void readTemplate(file); }}>
             <Select id="ai-template" aria-label={msg("assignments.components.AiDraftDialog.template")} disabled={awaiting} data-testid="ai-template"
               value={template ? "__file__" : templateId}
               onChange={(e) => {
@@ -341,6 +343,7 @@ export function AiDraftDialog({
               )}
               <option value="__upload__">{msg("assignments.components.AiDraftDialog.uploadATemplate")}</option>
             </Select>
+            </FileDropZone>
             <input ref={templateInput} type="file" accept=".docx" hidden aria-label={msg("assignments.components.AiDraftDialog.uploadATemplate2")} data-testid="ai-format"
               onChange={(event) => {
                 const file = event.target.files?.[0];
@@ -448,7 +451,7 @@ export function ReferencePicker({ id = "ai-reference", materials, chosen, upload
   accept?: string;
   onChoose: (materialId: string) => void;
   onUnchoose: (materialId: string) => void;
-  onUpload: (files: FileList | null) => void;
+  onUpload: (files: FileList | File[] | null) => void;
   onRemoveUpload: (item: SourceUpload) => void;
   onRetryUpload: (item: SourceUpload) => void;
 }) {
@@ -458,6 +461,9 @@ export function ReferencePicker({ id = "ai-reference", materials, chosen, upload
   const chip = "inline-flex h-7 max-w-[8.5rem] items-center gap-1.5 rounded-md border border-line bg-sunken pl-2 pr-0.5 text-xs";
   return (
     <>
+      {/* Kéo tệp vào ô tài liệu để tải lên (yêu cầu 2026-11-27). */}
+      <FileDropZone accept={accept} multiple disabled={disabled || !canUpload} label={msg("assignments.components.AiDraftDialog.dropDocumentsHere")}
+        onFiles={onUpload}>
       {/* Tài liệu đã chọn xếp hàng ngay trong thanh tìm, dài thì xuống dòng (yêu cầu 2026-11-05). */}
       <SearchPicker id={id} label={msg("assignments.components.AiDraftDialog.references")} disabled={disabled} optionIcon="menu_book" multiple
         placeholder={msg("assignments.components.AiDraftDialog.chooseSubjectMaterialsOrUpload")}
@@ -490,6 +496,7 @@ export function ReferencePicker({ id = "ai-reference", materials, chosen, upload
             ))}
           </ul>
         )} />
+      </FileDropZone>
       {uploads.some(item => item.file.type.startsWith("image/")) && <div className="flex flex-wrap gap-2">
         {uploads.filter(item => item.file.type.startsWith("image/")).map(item => <SourceImagePreview key={item.id} file={item.file} />)}
       </div>}

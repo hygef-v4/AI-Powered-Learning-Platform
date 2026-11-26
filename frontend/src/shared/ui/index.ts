@@ -9,6 +9,7 @@ export { cx } from "./cx";
 export { Dialog } from "./Dialog";
 export { DateInput } from "./DateInput";
 export { EmptyState } from "./EmptyState";
+export { FileDropZone, matchesAccept } from "./FileDropZone";
 export { Icon, type IconName } from "./Icon";
 export { IconTile } from "./IconTile";
 export { InfoTip } from "./InfoTip";
