@@ -147,11 +147,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
     if (sourcePicker || submitting.current || !input.trim()) return;
     if (attachments.pending) { showErrorToast(msg("assignments.components.AiReviseChat.waitForUploadsToFinish")); return; }
     setMenu(null);
-    if (nextSource) {
-      void sendMessage(nextSource);
-    } else {
-      setSourcePicker("send");
-    }
+    setSourcePicker("send");
   }
 
   function handleChooseSource(choice: SourceChoice) {
@@ -159,6 +155,8 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
       setNextSource(choice);
       setSourcePicker(null);
     } else {
+      // An unconfirmed request can be retried with the same selected source and request reference.
+      if (nextSource) setNextSource(choice);
       void sendMessage(choice);
     }
   }
@@ -421,7 +419,7 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
         </div>
       </section>
       {sourcePicker && <AiSourcePicker open hideUntilSelectionNeeded hideNotes requireConfirmation={sourcePicker === "choose"}
-        nextChoice={sourcePicker === "choose" ? nextSource : null}
+        nextChoice={nextSource} submitNextChoiceIfAvailable={sourcePicker === "send"}
         previousChoice={sourcePicker === "choose" ? previousSource : null}
         confirmLabel={sourcePicker === "choose" ? msg("assignments.components.AiReviseChat.useSourceForNextRequest") : undefined}
         task={msg("assignments.components.AiReviseChat.editAssignmentWithAi")}
