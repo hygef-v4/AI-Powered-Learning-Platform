@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { assignmentsApi } from "@/features/assignments/api";
 import { AiReviseChat } from "@/features/assignments/components/AiReviseChat";
@@ -76,6 +76,45 @@ describe("AiReviseChat", () => {
     send("Thêm câu dùng mặc định");
     await waitFor(() => expect(request).toHaveBeenCalledWith("a1", "Thêm câu dùng mặc định", expect.any(String),
       { source: "SHARED", provider: undefined }));
+  });
+
+  it("keeps the draft and asks for confirmation rather than switching to a paid source", async () => {
+    mockAiSources(undefined, { preferred: "PERSONAL" });
+    const request = vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue(draft("FAILED"));
+    const prepare = vi.fn().mockResolvedValue(3);
+    vi.spyOn(assignmentsApi, "materials").mockResolvedValue([
+      { materialId: "m1", title: "Chương 3 UML", hasText: true } as never,
+    ]);
+    render(<AiReviseChat assignmentId="a1" prepare={prepare} onApplied={vi.fn()} />);
+    fireEvent.click(screen.getByTestId("ai-revise-toggle"));
+    fireEvent.click(screen.getByRole("button", { name: "Đổi nguồn AI" }));
+    fireEvent.click(await screen.findByRole("radio", { name: /API của trường/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Dùng cho lần gửi tiếp theo" }));
+    expect(screen.queryByRole("dialog", { name: "Chọn nguồn AI" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId("ai-revise-attach"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Chọn học liệu của môn" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Chương 3 UML" }));
+    const instruction = "Thêm một câu hỏi dựa trên học liệu";
+    const field = screen.getByTestId("ai-revise-input");
+    fireEvent.change(field, { target: { value: instruction } });
+
+    mockAiSources(undefined, { preferred: "PERSONAL", sharedAvailable: false });
+    await act(async () => fireEvent.click(screen.getByTestId("ai-revise-send")));
+
+    const picker = within(await screen.findByRole("dialog", { name: "Chọn nguồn AI" }));
+    expect(request).not.toHaveBeenCalled();
+    expect(prepare).not.toHaveBeenCalled();
+    expect(picker.getByRole("radio", { name: /API của trường/ })).toBeDisabled();
+    expect(field).toHaveValue(instruction);
+    expect(screen.getByTestId("ai-revise-attachments")).toHaveTextContent("Chương 3 UML");
+
+    fireEvent.click(picker.getByRole("radio", { name: /API cá nhân · OpenAI/ }));
+    fireEvent.click(picker.getByRole("button", { name: "Gửi yêu cầu" }));
+    await waitFor(() => expect(request).toHaveBeenCalledExactlyOnceWith(
+      "a1", instruction, expect.any(String),
+      expect.objectContaining({ source: "PERSONAL", provider: "OPENAI", materialIds: ["m1"] }),
+    ));
   });
 
   it.each([{ preferred: null }, { sharedAvailable: false }])(

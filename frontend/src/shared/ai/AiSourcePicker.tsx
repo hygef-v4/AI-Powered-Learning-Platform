@@ -19,6 +19,8 @@ type Props = {
   hideNotes?: boolean;
   confirmLabel?: string;
   nextChoice?: SourceChoice | null;
+  /** At send time recheck the one-time choice; never auto-send a different source. */
+  submitNextChoiceIfAvailable?: boolean;
   previousChoice?: SourceChoice | null;
   busy?: boolean;
   onCancel: () => void;
@@ -36,7 +38,7 @@ function buildKey(choice: SourceChoice) {
  */
 export function AiSourcePicker({
   open, task, estimatedTokens, requireConfirmation, hideUntilSelectionNeeded, hideNotes, confirmLabel,
-  nextChoice, previousChoice, busy, onCancel, onSubmit,
+  nextChoice, submitNextChoiceIfAvailable, previousChoice, busy, onCancel, onSubmit,
 }: Props) {
   const [options, setOptions] = useState<SourceOption[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -60,11 +62,14 @@ export function AiSourcePicker({
         setError(null);
         const preferred = loaded.find((option) => option.preferred && option.available);
         const hasChoice = (key: string | null) => loaded.some((option) => option.available && buildKey(option) === key);
-        const selectedKey = hasChoice(nextKey) ? nextKey : preferred ? buildKey(preferred) : hasChoice(previousKey) ? previousKey : null;
+        const selectedNext = nextKey ? loaded.find((option) => option.available && buildKey(option) === nextKey) : undefined;
+        const selectedKey = selectedNext ? buildKey(selectedNext) : preferred ? buildKey(preferred) : hasChoice(previousKey) ? previousKey : null;
         setSelected(selectedKey);
-        setAutoSent(!!preferred && !requireConfirmation);
-        if (preferred && !requireConfirmation) {
-          submitRef.current({ source: preferred.source, provider: preferred.provider });
+        const autoChoice = requireConfirmation ? undefined
+          : submitNextChoiceIfAvailable && nextKey ? selectedNext : preferred;
+        setAutoSent(Boolean(autoChoice));
+        if (autoChoice) {
+          submitRef.current({ source: autoChoice.source, provider: autoChoice.provider });
         }
       },
       () => {
@@ -74,7 +79,7 @@ export function AiSourcePicker({
     return () => {
       active = false;
     };
-  }, [open, requireConfirmation, nextKey, previousKey]);
+  }, [open, requireConfirmation, nextKey, previousKey, submitNextChoiceIfAvailable]);
 
   const choice = options?.find((option) => buildKey(option) === selected && option.available);
   const preferred = options?.find((option) => option.preferred);
