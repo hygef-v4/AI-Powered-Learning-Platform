@@ -9,9 +9,13 @@ spring:
     username: ${POSTGRES_APP_USER:app}
     password: ${POSTGRES_APP_PASSWORD:}
     hikari:
-      connection-timeout: 3000
+      # Chờ kết nối tối đa 10 s: khi nhiều người cùng lưu bài, request xếp hàng chờ kết nối thay vì báo lỗi sau 3 s
+      # (TC-PERF-004, 005); vẫn dưới statement_timeout 15 s và proxy_read_timeout 120 s của Nginx cho /api/.
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:10000}
       validation-timeout: 1000
-      maximum-pool-size: 10
+      # Backend mặc định 20, worker 10 (application-worker.yml); tổng phải dưới max_connections 100 của Postgres.
+      # Pool 10 hết kết nối khi 100 người cùng lưu bài (TC-PERF-004, 005).
+      maximum-pool-size: ${DB_POOL_MAX:20}
       data-source-properties:
         connectTimeout: 5
         socketTimeout: 30

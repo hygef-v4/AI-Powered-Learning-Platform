@@ -14,6 +14,7 @@ x-backend-env: &backend-env
   APP_PUBLIC_URL: ${APP_PUBLIC_URL:?}
   POSTGRES_HOST: postgres
   POSTGRES_DB: platform
+  DB_CONNECTION_TIMEOUT: ${DB_CONNECTION_TIMEOUT:-10000}
   POSTGRES_APP_USER: app
   POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?}
   POSTGRES_MIGRATOR_USER: migrator
@@ -108,6 +109,7 @@ services:
     environment:
       <<: *backend-env
       SPRING_PROFILES_ACTIVE: default
+      DB_POOL_MAX: ${BACKEND_DB_POOL_MAX:-20}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -128,6 +130,7 @@ services:
     environment:
       <<: *backend-env
       SPRING_PROFILES_ACTIVE: worker
+      DB_POOL_MAX: ${WORKER_DB_POOL_MAX:-10}
       U03_SCAN_DELAY_MS: ${U03_SCAN_DELAY_MS:-15000}
     depends_on:
       postgres: { condition: service_healthy }
