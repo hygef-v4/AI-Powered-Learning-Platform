@@ -30,9 +30,7 @@ services:
       U01_COOKIE_SECURE: "false"
       # Rút ngắn khóa tạm khi thử tay (mặc định 15m).
       U01_LOGIN_LOCK_DURATION: ${U01_LOGIN_LOCK_DURATION:-15m}
-      U03_REQUIRE_DRIVE: "false"
       U03_LOCAL_STORAGE_DIR: /app/data/files
-      U03_LOCAL_BACKUP_DIR: /app/data/backups
     volumes:
       - files-local:/app/data/files
     ports:
@@ -49,7 +47,6 @@ services:
     environment: *local-mail
     volumes:
       - files-local:/app/data/files
-      - backups-local:/app/data/backups
 
   postgres:
     ports:
@@ -79,4 +76,3 @@ services:
 
 volumes:
   files-local: {}
-  backups-local: {}

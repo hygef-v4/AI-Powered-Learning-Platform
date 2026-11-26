@@ -15,7 +15,7 @@ import java.util.HexFormat;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-/** Thư mục backup local cho máy dev: {@code <dir>/<runId>/archive.alapbk}. */
+/** Thư mục backup local chỉ dùng trong kiểm thử: {@code <dir>/<runId>/archive.alapbk}. Ứng dụng chỉ lưu backup trên Drive. */
 public class LocalBackupStore implements IBackupStore {
 
     static final String ARCHIVE = "archive.alapbk";
@@ -56,6 +56,28 @@ public class LocalBackupStore implements IBackupStore {
             }
         } catch (IOException e) {
             throw new StorageUnavailableException("Không xóa được backup local", e);
+        }
+    }
+
+    @Override
+    public StoredArchive putWal(String name, Path file) {
+        Path dir = root.resolve("wal");
+        try {
+            Files.createDirectories(dir);
+            Path target = dir.resolve(name);
+            Files.copy(file, target, StandardCopyOption.REPLACE_EXISTING);
+            return new StoredArchive(name, Files.size(target), hashMd5(target));
+        } catch (IOException e) {
+            throw new StorageUnavailableException("Không ghi được WAL local", e);
+        }
+    }
+
+    @Override
+    public void deleteWal(String ref) {
+        try {
+            Files.deleteIfExists(root.resolve("wal").resolve(ref));
+        } catch (IOException e) {
+            throw new StorageUnavailableException("Không xóa được WAL local", e);
         }
     }
 

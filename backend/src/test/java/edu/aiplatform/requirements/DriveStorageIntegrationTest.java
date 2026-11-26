@@ -72,7 +72,7 @@ import org.testcontainers.junit.jupiter.*;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Google Drive storage with personal-Drive production settings ({@code require-drive=true}). The real Google Drive
+ * Google Drive storage with personal-Drive production settings. The real Google Drive
  * client library, {@link edu.aiplatform.files.integration.GoogleDriveStorageAdapter}, {@link DriveFolders},
  * {@code DriveBackupStore}, upload/download services, Redis, RabbitMQ and PostgreSQL are used; only the Drive client
  * points at a local HTTP server that implements the Drive v3 REST calls the platform makes (resumable upload,
@@ -82,7 +82,7 @@ import org.testcontainers.utility.DockerImageName;
         properties = {
                 "platform.identity.bcrypt-cost=4", "platform.identity.mail-from=integration@example.test",
                 "platform.identity.bootstrap-admin-email=", "platform.identity.mail-transport=smtp",
-                "platform.files.require-drive=true", "platform.files.drive-service-account-key=",
+                "platform.files.drive-service-account-key=",
                 "platform.files.shared-drive-id=", "platform.files.drive-oauth-client-id=integration-client",
                 "platform.files.drive-oauth-client-secret=integration-secret",
                 "platform.files.drive-oauth-refresh-token=integration-refresh-token",
@@ -139,7 +139,6 @@ class DriveStorageIntegrationTest {
         properties.add("platform.ai.key-encryption-key", () -> ENCRYPTION_KEY);
         properties.add("platform.files.fileref-secret", () -> FILE_SECRET);
         properties.add("platform.files.local-storage-dir", FILES::toString);
-        properties.add("platform.backup.local-dir", () -> FILES.resolve("backups").toString());
     }
 
     /** Replaces only how the Drive client is built: same library and calls, local Drive endpoint, fixed token. */
@@ -408,7 +407,7 @@ class DriveStorageIntegrationTest {
 
     FilesProperties withFolder(String folderName, String folderId) {
         var p = filesProperties;
-        return new FilesProperties(p.filerefSecret(), p.requireDrive(), p.localStorageDir(), p.uploadTmpDir(),
+        return new FilesProperties(p.filerefSecret(), p.localStorageDir(), p.uploadTmpDir(),
                 p.driveServiceAccountKey(), p.sharedDriveId(), p.driveOauthClientId(), p.driveOauthClientSecret(),
                 p.driveOauthRefreshToken(), folderName, folderId);
     }

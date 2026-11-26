@@ -13,7 +13,10 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/** B1: mỗi phút, đến giờ trong Settings thì tạo lần chạy của ngày (một lần mỗi ngày) và gửi {@code BACKUP_RUN}. */
+/**
+ * B1: mỗi phút, đến giờ trong Settings thì tạo lần chạy của ngày (một lần mỗi ngày) và gửi {@code BACKUP_RUN}. Chưa
+ * cấu hình Google Drive thì không tạo lần chạy nào.
+ */
 @Component
 public class BackupScheduleScanner implements IScheduledScanner {
 
@@ -22,11 +25,13 @@ public class BackupScheduleScanner implements IScheduledScanner {
     private final ISettings settings;
     private final BackupRunRepository runs;
     private final IJob jobs;
+    private final IBackupStore store;
 
-    public BackupScheduleScanner(ISettings settings, BackupRunRepository runs, IJob jobs) {
+    public BackupScheduleScanner(ISettings settings, BackupRunRepository runs, IJob jobs, IBackupStore store) {
         this.settings = settings;
         this.runs = runs;
         this.jobs = jobs;
+        this.store = store;
     }
 
     @Override
@@ -39,7 +44,7 @@ public class BackupScheduleScanner implements IScheduledScanner {
     public void scan(Instant now) {
         boolean enabled = settings.get(BackupSettingDefinitions.ENABLED).orElse(false);
         LocalTime dailyAt = settings.get(BackupSettingDefinitions.DAILY_AT).orElse(null);
-        if (!enabled || dailyAt == null) {
+        if (!enabled || dailyAt == null || !store.isAvailable()) {
             return;
         }
         ZonedDateTime local = now.atZone(ZONE);

@@ -111,7 +111,7 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest(classes = PlatformWorkflowIntegrationTest.Application.class, properties = {
         "platform.identity.bcrypt-cost=4", "platform.identity.mail-from=integration@example.test",
         "platform.identity.bootstrap-admin-email=", "platform.identity.mail-transport=smtp",
-        "platform.files.require-drive=false", "platform.files.drive-service-account-key=",
+        "platform.files.drive-service-account-key=",
         "platform.files.shared-drive-id=", "platform.backup.folder-id=",
         "spring.rabbitmq.listener.simple.auto-startup=false",
         "spring.rabbitmq.listener.direct.auto-startup=false",
@@ -163,7 +163,6 @@ class CrossUnitFlowIntegrationTest {
         properties.add("platform.ai.key-encryption-key", () -> ENCRYPTION_KEY);
         properties.add("platform.files.fileref-secret", () -> FILE_SECRET);
         properties.add("platform.files.local-storage-dir", FILES::toString);
-        properties.add("platform.backup.local-dir", () -> FILES.resolve("backups").toString());
     }
 
     @Autowired JdbcTemplate jdbc;

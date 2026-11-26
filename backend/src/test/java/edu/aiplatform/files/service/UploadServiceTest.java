@@ -61,7 +61,7 @@ class UploadServiceTest {
         when(authorization.authorize(any(), any(), any())).thenReturn(AuthorizationDecision.allow());
         when(settings.get(any())).thenReturn(Optional.empty());
         storage = spy(new LocalFolderStorageAdapter(dir.resolve("store")));
-        FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null,
+        FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", null,
                 dir.resolve("tmp").toString(), null, null, null, null, null, null, null);
         signer = new FileRefSigner(props, new ObjectMapper());
         service = new UploadService(authorization, new PurposePolicy(settings), new ContentInspector(), storage, signer,
@@ -160,7 +160,7 @@ class UploadServiceTest {
     void reportsUnavailableWhenStorageIsDown() {
         IStorage down = mock(IStorage.class);
         when(down.isAvailable()).thenReturn(false);
-        FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null,
+        FilesProperties props = new FilesProperties("secret-of-at-least-32-bytes-long!!", null,
                 dir.resolve("tmp").toString(), null, null, null, null, null, null, null);
         UploadService offline = new UploadService(authorization, new PurposePolicy(settings), new ContentInspector(),
                 down, signer, jobs, clock, props);

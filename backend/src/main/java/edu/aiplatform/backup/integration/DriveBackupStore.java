@@ -13,9 +13,12 @@ import java.util.function.Supplier;
 
 /**
  * Thư mục backup riêng trên Drive: {@code GOOGLE_BACKUP_FOLDER_ID} với Shared Drive, thư mục {@code backups} trong
- * thư mục app với Drive cá nhân. Mỗi lần chạy một thư mục con tên {@code runId}.
+ * thư mục app với Drive cá nhân. Mỗi lần chạy một thư mục con tên {@code runId}; tệp WAL nằm trong thư mục con
+ * {@code wal}.
  */
 public class DriveBackupStore implements IBackupStore {
+
+    public static final String WAL_FOLDER = "wal";
 
     private final DriveClientFactory clients;
     private final DriveFolders folders;
@@ -44,6 +47,27 @@ public class DriveBackupStore implements IBackupStore {
                 .setSupportsAllDrives(true).setFields("id,size,md5Checksum").execute());
         return new StoredArchive(created.getId(), created.getSize() == null ? -1 : created.getSize(),
                 created.getMd5Checksum());
+    }
+
+    @Override
+    public StoredArchive putWal(String name, Path file) {
+        String walFolder = folders.ensureChild(folderId.get(), WAL_FOLDER);
+        File metadata = new File().setName(name).setParents(List.of(walFolder));
+        File created = DriveClientFactory.runWithRetry(() -> clients.createDrive().files()
+                .create(metadata, new FileContent("application/octet-stream", file.toFile()))
+                .setSupportsAllDrives(true).setFields("id,size,md5Checksum").execute());
+        return new StoredArchive(created.getId(), created.getSize() == null ? -1 : created.getSize(),
+                created.getMd5Checksum());
+    }
+
+    @Override
+    public void deleteWal(String ref) {
+        try {
+            DriveClientFactory.runWithRetry(() -> clients.createDrive().files().delete(ref).setSupportsAllDrives(true)
+                    .execute());
+        } catch (DriveClientFactory.DriveNotFoundException e) {
+            // Đã xóa từ trước.
+        }
     }
 
     @Override

@@ -15165,3 +15165,21 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, điều chỉnh U03 (cài đặt, tệp) và U02 (màn hình Log).
 
 ---
+
+## U03 Chỉ lưu backup cơ sở dữ liệu trên Google Drive
+**Timestamp**: 2026-11-26T06:46:36Z
+**Requested by:** max2min
+**User Input**: "Bản backup luôn được tải lên Google Drive khi hệ thống có cấu hình Drive; không có cấu hình Drive thì không lưu backup. Mã hóa RSA không bắt buộc. Bỏ biến cấu hình U03_REQUIRE_DRIVE."
+**AI Response**: "Các thay đổi đã thực hiện: (1) BackupConfig chỉ dùng Google Drive: Shared Drive có GOOGLE_BACKUP_FOLDER_ID thì dùng thư mục đó, các trường hợp có Drive còn lại dùng thư mục backups trong thư mục gốc của ứng dụng. (2) Không cấu hình Drive thì BackupScheduleScanner không tạo lần chạy; lưu trữ backup cục bộ (LocalBackupStore, U03_LOCAL_BACKUP_DIR, volume backups-local và backups-staging) được loại bỏ khỏi ứng dụng, LocalBackupStore chỉ còn dùng trong kiểm thử. (3) Loại bỏ U03_REQUIRE_DRIVE khỏi FilesProperties, StorageConfig, DriveHealthIndicator, application.yml, các tệp docker-compose, tệp mẫu .env và README; khi không có Drive, tệp người dùng lưu tại thư mục cục bộ. Xóa UnconfiguredStorageAdapter do không còn được sử dụng. (4) Mã hóa bằng U03_BACKUP_PUBLIC_KEY tiếp tục là tùy chọn. Cập nhật BR-U03-94, logical-components và code-summary của U03. Kết quả kiểm thử: các bộ kiểm thử backup, files và ba bộ kiểm thử tích hợp liên quan đều đạt."
+**Context**: Construction, điều chỉnh U03 (backup và lưu trữ tệp).
+
+---
+
+## U03 Thay pg_dump bằng base backup và WAL archiving lên Google Drive
+**Timestamp**: 2026-11-26T07:30:18Z
+**Requested by:** max2min
+**User Input**: "Bỏ backup bằng pg_dump. Chụp base backup lên Google Drive mỗi 24 giờ và đẩy WAL lên Google Drive mỗi 5 phút. Không cần cảnh báo riêng cho WAL. Tự động hóa quy trình khôi phục ở mức có thể."
+**AI Response**: "Thiết kế được ghi tại infrastructure-design/2026-11-26-wal-backup-design.md và đã được người dùng duyệt (bỏ cảnh báo, tự động hóa khôi phục). Các thay đổi đã thực hiện: (1) PostgreSQL bật archive_mode, archive_timeout 5 phút, archive_command chỉ chép tệp WAL vào volume wal-archive dùng chung với worker; pg_hba.conf riêng cho phép role backup_replicator kết nối replication; role backup_replicator thay backup_reader. (2) PgBaseBackupRunner chạy pg_basebackup (tar nén, kèm WAL cần thiết, checkpoint giãn, giới hạn tốc độ U03_BACKUP_MAX_RATE) thay PgDumpRunner, theo lịch backup.dailyAt hiện có. (3) WalShipScanner chạy mỗi phút trong worker: nén gzip, mã hóa nếu có U03_BACKUP_PUBLIC_KEY, tải lên thư mục wal trên Drive, đối chiếu kích thước và MD5, ghi bảng wal_segments (migration mới) rồi xóa tệp trên máy; lỗi lưu trữ thì giữ tệp để thử lại; không cấu hình Drive hoặc đang tắt sao lưu thì xóa tệp mà không lưu. (4) Khi dọn base backup quá 7 ngày, xóa thêm các tệp WAL tải lên trước base backup cũ nhất còn giữ. (5) BackupRestoreTool và scripts/backup/restore-pitr.sh tự động tải base backup và WAL từ Drive, giải mã, phát lại tới thời điểm chọn trên một container PostgreSQL cô lập và kiểm tra số dòng; hướng dẫn chuyển production tại scripts/backup/README.md. (6) Cập nhật BR-U03-90, 91, 93, 96, 98, NFR-U03-71, các tài liệu thiết kế U03, README, .env.example và Dockerfile. Kết quả kiểm thử: 56 ca kiểm thử của module backup đều đạt. Kiểm thử trên stack Docker cục bộ: WAL được archive và tải lên Drive, base backup chạy thành công, khôi phục về mốc 2026-11-26T14:27:52+07:00 cho kết quả chỉ chứa dữ liệu ghi trước mốc và số dòng các bảng chính khớp cơ sở dữ liệu đang chạy. Cài đặt backup đã được trả về trạng thái ban đầu sau kiểm thử."
+**Context**: Construction, Infrastructure Design và Code Generation U03 (backup cơ sở dữ liệu).
+
+---
