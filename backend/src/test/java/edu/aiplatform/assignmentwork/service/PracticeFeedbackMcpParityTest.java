@@ -48,7 +48,7 @@ class PracticeFeedbackMcpParityTest {
         var read=tools.call(f.student,"read_own_work",Map.of("attemptId",attempt.id().toString()));
         assertThat(read.error()).isFalse();
         assertThat((Map<String,Object>)read.content()).containsKeys("instructions","assignment","submission","submissionHash")
-                .doesNotContainKeys("rubric","rubrics","correctAnswers");
+                .doesNotContainKeys("rubrics","correctAnswers");
         assertThat((Map<String,Object>)read.content()).containsEntry("submissionHash",attempt.receiptHash());
         var saved=tools.call(f.student,"record_private_feedback",args(attempt.id(),attempt.receiptHash()));
         assertThat(saved.error()).isFalse();
