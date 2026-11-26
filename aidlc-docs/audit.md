@@ -15508,3 +15508,67 @@ giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại 
 **Context**: Construction, U09. [Review](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/146#issuecomment-7195336960). [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publication-review-followup.md).
 
 ---
+
+## Main Business Flows — rà soát và sửa sơ đồ
+**Timestamp**: 2026-11-26T07:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi cần thuyết trình cho 5 luồng nghiệp vụ chính (business flow) nữa, hãy kiểm tra xem các sơ đồ hiện tại đã đúng chưa, có sai ở đâu không cho tôi"
+**AI Response**: "Đối chiếu BF-01..BF-05 với code staging 18fe8eff: nghiệp vụ khớp; BF-02 bước 4 lỗi thời sau 89b541fcf (nguồn AI mặc định), BF-03 bước 4 thiếu email; lỗi ký hiệu ở BF-03 (kiểm tra giới hạn góp ý không có hình thoi, thiếu vòng luyện lại), BF-05 (thiếu kiểm tra nội dung, bước giao section tùy chọn bị vẽ bắt buộc, kiểm tra section/nộp bài không có nhánh lỗi), BF-03/04/05 (giờ mở bài chưa là time trigger)."
+**Context**: Inception, Main Business Flows review (Report 3 presentation).
+
+---
+
+## Main Business Flows — sửa và xuất lại
+**Timestamp**: 2026-11-26T07:55:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa và xuất lại"
+**AI Response**: "Đổi nhãn BF-02 bước 4; sinh lại BF-03 (16 bước), BF-04 (thêm Opening time), BF-05 (21 bước) cùng style cũ; dựng lại file gộp (trang BF-01 giữ nguyên); xuất lại PNG 2× BF-02..BF-05 bằng draw.io viewer trong Edge headless; cập nhật bảng hoạt động và bảng góp ý hội đồng trong README. Chưa commit."
+**Context**: Inception, Main Business Flows revision 2026-11-26.
+
+---
+
+## Main Business Flows — bố cục dọc cho tài liệu Word
+**Timestamp**: 2026-11-26T08:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn phóng to các chữ, thu hẹp khoảng cách giữa các step lại tránh để ảnh quá to (do tôi cần chèn ảnh vào doc sao cho giảng viên vẫn có thể nhìn rõ mà không cần zoom). Bố trí lại bố cục cho hợp lý. Ngoài ra không được để 2 step sát như trong ảnh, vẫn phải nhìn được mũi tên (chữ yes đang che hết mũi tên)"
+**AI Response**: "Hỏi cách xử lý luồng dài và khổ trang; người dùng chọn: 'Vẫn giữ 1 ảnh mỗi luồng, chỉ giữ các step quan trọng' và 'A4 dọc (Recommended)'."
+**Context**: Inception, Main Business Flows revision 2026-11-26 (layout).
+
+---
+
+## Main Business Flows — vẽ lại dạng làn dọc
+**Timestamp**: 2026-11-26T08:45:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Vẫn giữ 1 ảnh mỗi luồng, chỉ giữ các step quan trọng; A4 dọc (Recommended)"
+**AI Response**: "Vẽ lại BF-01..BF-05 dạng làn dọc (làn là cột, luồng từ trên xuống), chữ 16-17px, khoảng trống tối thiểu 60px giữa hai ô kề nhau, nhãn Yes/No đặt cạnh mũi tên. Gộp bước phụ: BF-01 7 bước, BF-02 11, BF-03 10, BF-04 13, BF-05 12. Xuất lại PNG 2×, viết lại bảng hoạt động và bảng góp ý hội đồng trong README. Chưa commit."
+**Context**: Inception, Main Business Flows revision 2026-11-26 (layout).
+
+---
+
+## Main Business Flows — bỏ dòng Revision
+**Timestamp**: 2026-11-26T09:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "bỏ dòng Revision đi cho tôi"
+**AI Response**: "Bỏ dòng 'Revision 2026-11-26 · Report 3 (SRS) main business flow...' dưới cả 5 sơ đồ và file gộp, xuất lại PNG BF-01..BF-05. Chưa commit."
+**Context**: Inception, Main Business Flows revision 2026-11-26 (layout).
+
+---
+
+## Main Business Flows — BF-03 bỏ lane AI Provider
+**Timestamp**: 2026-11-26T09:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "BF03 bỏ lane Student's AI Provider"
+**AI Response**: "Bỏ lane Student's AI Provider khỏi BF-03; gộp việc sinh nhận xét vào bước 8 'Get AI feedback with personal key, log usage' (System), bước xem nhận xét thành 9. BF-03 còn 3 lane, 9 bước. Xuất lại BF-03.png, cập nhật README. Chưa commit."
+**Context**: Inception, Main Business Flows revision 2026-11-26 (layout).
+
+---
+
+## System Test — rà soát Report 5.4 (NFR)
+**Timestamp**: 2026-11-26T08:45:10Z
+**Requested by:** Đào Chí Cường
+**User Input**: "https://claude.ai/artifact/W9i1X6s7DDmjra9RnJd97b#0bd2fe34-76c2
+kiểm tra xem đúng không và gửi tôi hướng giải quyết" — sau đó người dùng dán toàn văn "Báo cáo kiểm thử phi chức năng (NFR) – Report 5.4" (78 case: Security 49 Pass/6 Fail, Performance 13 Pass/9 Fail/1 Not Run; toàn văn báo cáo nằm trong hội thoại, không chép lại ở đây vì dài).
+**AI Response**: "Link Claude Docs không đọc được (không được chia sẻ). Đối chiếu báo cáo với code tại staging (be90c802 + 5 commit): xác nhận Hikari maximum-pool-size 10, connection-timeout 3 s; backend giới hạn 2 CPU/1 GiB; bcrypt cost 12; nginx 1.28-alpine không có server_tokens off; log_format ghi nguyên $request (lộ token tải tệp); U03_BACKUP_PUBLIC_KEY trống thì ghi dump thường; GroupSectionEditorPage chỉ có beforeunload; listDueToClose cố ý chờ 30 s ân hạn + chu kỳ quét 60 s; GradebookService tải toàn lớp mỗi trang; GradingBatchService chạy một transaction cho mỗi điểm. Ghi chú: thiếu HSTS trên staging là cố ý (template staging). Gửi hướng giải quyết theo nhóm nguyên nhân. Không sửa code, chưa commit."
+**Context**: Construction, Build and Test — rà soát báo cáo kiểm thử NFR (System Test Report 5.4).
+
+---
