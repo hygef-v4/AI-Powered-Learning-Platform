@@ -222,7 +222,8 @@ class RequirementsCoverageIntegrationTest {
                 .containsExactly(2, 1);
         var history = materialQueryService.loadMaterial(manager, materialId, null);
         assertThat(history.versions()).hasSize(2);
-        assertThat(history.canManage()).isFalse();
+        // BR-U13-91: học liệu đã lưu trữ vẫn quản lý được để khôi phục; sửa vẫn bị chặn (MATERIAL_ARCHIVED bên dưới).
+        assertThat(history.canManage()).isTrue();
         materialQueryService.issueDownloadToken(manager, materialId, null, 1);
         verify(artifact).issueDownloadToken("file-" + materialId, manager.accountId());
         assertThatThrownBy(() -> materialService.updateMaterial(manager, materialId,
