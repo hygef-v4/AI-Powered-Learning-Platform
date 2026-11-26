@@ -156,7 +156,7 @@ function Workspace({
   const [offeredProposalId, setOfferedProposalId] = useState<string | null>(
     null,
   );
-  // Link từ MCP mở phần duyệt đề xuất. Giảng viên vẫn chọn áp dụng hoặc chỉnh điểm.
+  const filledLinkedProposalId = useRef<string | null>(null);
   const [aiOpen, setAiOpen] = useState(Boolean(proposalId));
   const [aiRequesting, setAiRequesting] = useState(false);
   const aiGenerating =
@@ -208,16 +208,28 @@ function Workspace({
     );
   }
 
-  // Chỉ xử lý tự điền cho đề xuất được yêu cầu từ màn hình hiện tại sau khi có kết quả.
+  // Dùng chung cách điền form cho kết quả vừa yêu cầu và đề xuất MCP được chỉ định trong link.
   function settleAwaitedProposal() {
     const awaited = proposals.find(
       (proposal) => proposal.id === awaitedProposalId.current,
     );
-    if (!awaited || awaited.status === "PENDING" || disabled) return;
-    awaitedProposalId.current = null;
-    if (awaited.status !== "READY" || !awaited.proposal) return;
-    if (dirty) setOfferedProposalId(awaited.id);
-    else applyReadyProposal(awaited);
+    const linked = proposalId && filledLinkedProposalId.current !== proposalId
+      ? proposals.find(
+        (proposal) => proposal.id === proposalId && proposal.origin === "MCP"
+          && proposal.status === "READY" && proposal.proposal,
+      )
+      : undefined;
+    const ready = awaited ?? linked;
+    if (!ready || ready.status === "PENDING" || disabled || busy || saving) return;
+    if (awaited) awaitedProposalId.current = null;
+    if (linked?.id === ready.id) filledLinkedProposalId.current = linked.id;
+    if (ready.status !== "READY" || !ready.proposal || form.usedProposalId === ready.id) return;
+    if (dirty) {
+      setOfferedProposalId(ready.id);
+    } else {
+      applyReadyProposal(ready);
+      if (linked?.id === ready.id) setAiOpen(false);
+    }
   }
 
   // Chạy mỗi lần render để dùng form mới nhất; ref chặn xử lý lặp.

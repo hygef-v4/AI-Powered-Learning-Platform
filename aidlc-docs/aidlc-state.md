@@ -1619,3 +1619,13 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 - [x] Tạo và sửa đề nhận tối đa 10.000 ký tự. Giao diện giữ phần dán vượt ngưỡng, hiển thị số ký tự và chặn gửi cho tới khi người dùng rút ngắn.
 - [x] Tạo đề xin 12.000 token đầu ra cho yêu cầu trên 4.000 ký tự. Nguồn AI vẫn áp dụng trần của provider. Chấm AI tiếp tục dùng tối đa 30 mục rubric và 8.192 token trả lời. API trường dùng chung quota với tạo đề.
 - [x] Thêm mã lỗi kết nối, timeout, xác thực, hạn mức và đầu ra. 238 kiểm thử backend, 409 frontend, TypeScript, lint phạm vi và Chrome với API giả lập đạt. [Kế hoạch và kết quả](construction/plans/code-generation-plan/2026-11-26-u07-ai-request-limits.md).
+
+## 2026-11-26 — U07 tạo nội dung trong chat sửa đề trống
+
+- [x] Chat dùng cấu trúc tạo đề khi bản nháp trống. Backend chuẩn hóa điểm thập phân, dựng khung và rubric, rồi kiểm tra phiên bản khi áp dụng.
+- [x] 738 kiểm thử backend và 28 frontend đạt. Bộ test mô phỏng 4 câu, 26 tiêu chí và 10 điểm. Một kiểm thử đánh giá AI chấm điểm được bỏ qua theo cấu hình. [Kế hoạch và kết quả](construction/plans/code-generation-plan/2026-11-26-u07-blank-ai-draft.md).
+
+## 2026-11-26 — U07/U09 mở kết quả MCP trong trình soạn và chấm
+
+- [x] Link đề xuất soạn đề hợp lệ và đúng phiên bản mở bản nháp đã điền. So phiên bản đề xuất tại backend khi áp dụng.
+- [x] Link chấm điền đúng đề xuất vào form qua cơ chế AI web. Giữ bước lưu điểm và công bố do giảng viên thực hiện. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u07-u09-mcp-result-links.md).

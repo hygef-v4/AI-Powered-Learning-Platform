@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Đề xuất của AI hoặc agent (BR-U07-50, 51): hướng dẫn, các mục heading cấp 1–6 kèm đoạn hướng dẫn, gợi ý rubric
@@ -30,6 +31,7 @@ final class AiDraftProposal {
     static final int MAX_SECTIONS = 100;
     static final int MAX_GENERATED_CONTEXT = 4000;
     static final int MAX_GENERATED_INSTRUCTIONS = 1200;
+    static final Pattern DECIMAL_POINTS_PATTERN = Pattern.compile("^[0-9]{1,4}(\\.[0-9]{1,2})?$");
     static final String OUTPUT_SCHEMA = """
             {"type":"object","required":["instructions","sections"],"additionalProperties":false,
              "properties":{
@@ -51,6 +53,20 @@ final class AiDraftProposal {
             """.replace("FORMAT", AiDraftFormatting.SCHEMA);
 
     private AiDraftProposal() {
+    }
+
+    static void normalizeNumericPoints(JsonNode draft) {
+        for (JsonNode section : draft.path("sections")) {
+            for (JsonNode criterion : section.path("rubric")) {
+                for (JsonNode item : criterion.path("items")) {
+                    JsonNode points = item.path("points");
+                    if (item instanceof ObjectNode object && points.isTextual()
+                            && DECIMAL_POINTS_PATTERN.matcher(points.textValue()).matches()) {
+                        object.put("points", new BigDecimal(points.textValue()));
+                    }
+                }
+            }
+        }
     }
 
     /** Chuẩn hóa đề xuất; {@code null} nếu sai định dạng hoàn toàn. */
