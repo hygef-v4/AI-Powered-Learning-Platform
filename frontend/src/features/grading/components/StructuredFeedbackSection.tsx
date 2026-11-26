@@ -123,6 +123,7 @@ export function RubricItemFeedback({
   maxPoints,
   feedbackItem,
   acknowledged = false,
+  scoreReviewRequired = false,
   validBlockIds,
   fallbackBlockId,
   editable = false,
@@ -137,6 +138,7 @@ export function RubricItemFeedback({
   maxPoints: number;
   feedbackItem?: StructuredFeedbackItem | null;
   acknowledged?: boolean;
+  scoreReviewRequired?: boolean;
   validBlockIds?: Set<string> | string[];
   fallbackBlockId?: string;
   editable?: boolean;
@@ -153,8 +155,8 @@ export function RubricItemFeedback({
     Number.isFinite(maxPoints) &&
     maxPoints > 0 &&
     Math.round(awardedPoints * 100) === Math.round(maxPoints * 100);
-  const needsAiReview = Boolean(itemFeedback.requiresReview && !acknowledged);
-  const showAckControl = editable && Boolean(onToggleAcknowledge) && (itemFeedback.requiresReview || acknowledged);
+  const needsReview = !acknowledged && (itemFeedback.requiresReview || scoreReviewRequired);
+  const showAckControl = editable && Boolean(onToggleAcknowledge) && (needsReview || acknowledged);
 
   const blockId = itemFeedback.evidenceBlockId?.trim() || fallbackBlockId || null;
   const hasValidBlock = blockId
@@ -169,9 +171,9 @@ export function RubricItemFeedback({
 
   return (
     <details
-      open={needsAiReview || undefined}
+      open={needsReview || undefined}
       className={`mt-2 text-xs leading-relaxed ${
-        needsAiReview
+        needsReview
           ? "rounded-lg border border-warning bg-warning-soft/50 p-2.5 text-ink"
           : "border-t border-line-soft pt-2 text-ink"
       }`}
@@ -179,13 +181,13 @@ export function RubricItemFeedback({
       <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2 font-semibold text-ink">
         <span className="inline-flex flex-wrap items-center gap-1.5">
           <span>{msg("grading.components.StructuredFeedbackSection.feedbackEvidence")}</span>
-          {needsAiReview && (
+          {needsReview && (
             <Pill tone="warning">
               <span aria-hidden="true">⚠</span>
               <span>{msg("grading.components.StructuredFeedbackSection.needsLecturerReview")}</span>
             </Pill>
           )}
-          {!needsAiReview && acknowledged && (
+          {acknowledged && (
             <Pill tone="success">
               <span aria-hidden="true">✓</span>
               <span>{msg("grading.components.StructuredFeedbackSection.confirmed")}</span>
@@ -195,6 +197,11 @@ export function RubricItemFeedback({
       </summary>
 
       <div className="mt-2 space-y-2">
+        {scoreReviewRequired && !acknowledged && (
+          <p role="note" className="text-xs font-semibold text-warning">
+            {msg("grading.components.StructuredFeedbackSection.reviewFeedbackForCurrentScore")}
+          </p>
+        )}
         {itemFeedback.requiresReview && (
           <div
             role="note"

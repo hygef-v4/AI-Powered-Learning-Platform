@@ -2208,7 +2208,7 @@
         "overallAiFeedback": "Overall AI feedback",
         "feedbackByPart": "Feedback by part (",
         "applyToDraft": "Apply to draft",
-        "onlyPreTicksTheChecklist": "Only pre-ticks the checklist and fills in the feedback; you can edit before saving.",
+        "applyConfirmsReview": "Applying marks any criteria flagged by AI as reviewed. You can edit the draft before saving.",
         "aiProposal2": "AI proposal",
         "reviewTheProposalAndSave": "Review the proposal and save to update the score.",
         "requestANewProposal": "Request a new proposal",
@@ -2468,7 +2468,8 @@
         "goToThePassageIn": "Go to the passage in the work",
         "theReferencedPassageIsNo": "The referenced passage is no longer in the submission.",
         "checkedAndConfirmedTheExplanation": "Checked and confirmed the explanation: {itemText}",
-        "feedbackAndScoreChecked": "Feedback and score checked"
+        "feedbackAndScoreChecked": "Feedback and score checked",
+        "reviewFeedbackForCurrentScore": "Update the explanation or confirm the feedback matches the current score."
       },
       "StudentGradesSection": {
         "submissionsAndScores": "Submissions and scores",
@@ -2579,6 +2580,8 @@
         "aiGradingRequestCancelled": "AI grading request cancelled.",
         "aiGradingSentYouCan": "AI grading sent. You can keep working.",
         "youHaveUnsavedMemberAssessments": "You have unsaved member assessments. Save member scores before publishing.",
+        "reviewFeedbackBeforePublishing": "Some criteria need review before publishing grades. Open the feedback for each flagged criterion and select Feedback and score checked.",
+        "saveGradeBeforePublishing": "Grade and save this submission before publishing.",
         "groupWork": "Group work",
         "studentWork": "Student work",
         "wholeAssignment": "Whole assignment",

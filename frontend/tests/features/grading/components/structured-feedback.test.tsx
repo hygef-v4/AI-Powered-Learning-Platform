@@ -292,17 +292,22 @@ describe("Structured Grading Feedback — Teacher Workspace & Student View", () 
     expect(screen.getByText(/Gợi ý thêm \(không trừ điểm\):/)).toBeInTheDocument();
   });
 
-  it("allows changing rubric score without requiring explanation or review blocker", async () => {
+  it("keeps changed rubric scores editable and savable as drafts before review", async () => {
     mocks.detail.mockResolvedValue({ ...baseDetail, evaluation: { ...baseDetail.evaluation,
       rubricItemScores: { r1: { i1: 1, i2: 0.5 } }, structuredFeedback: sampleStructuredFeedback,
       reviewedItemScores: { r1: { i1: 1, i2: 0.5 } }, acknowledgedReviewItems: { r1: ["i2"] },
     } });
     mocks.proposals.mockResolvedValue([]);
-    render(<GradingWorkspacePage evaluationId="e" />);
+    mocks.save.mockResolvedValue({ ...baseDetail.evaluation, rubricItemScores: { r1: { i1: 0, i2: 0.5 } } });
+    render(<GradingWorkspacePage evaluationId={baseDetail.evaluation.id} />);
     const item = await screen.findByRole("checkbox", { name: "Xác định thực thể" });
-    expect(screen.getByRole("checkbox", { name: /Đã kiểm tra và xác nhận giải thích/ })).toBeInTheDocument();
     fireEvent.click(item);
-    expect(screen.getByRole("checkbox", { name: /Đã kiểm tra và xác nhận giải thích/ })).toBeInTheDocument();
+    expect(screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Xác định thực thể")).not.toBeChecked();
+    expect(screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Bội số quan hệ")).toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledWith(baseDetail.evaluation.id, expect.objectContaining({
+      itemScoresByRubric: { r1: { i1: 0, i2: 0.5 } },
+    })));
   });
   it("applies AI partial scores and structured feedback without review blocker", async () => {
     mocks.detail.mockResolvedValue(baseDetail);

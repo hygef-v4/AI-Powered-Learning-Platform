@@ -441,7 +441,8 @@ public class GradingService {
                 resolvedAck = previouslyAck && !scoreChangedFromBaseline;
             } else if (scoreChangedFromBaseline) {
                 if (suppliedReviewedScore != null
-                        && suppliedReviewedScore.compareTo(currentScore) == 0) {
+                        && suppliedReviewedScore.compareTo(currentScore) == 0
+                        && (prevReviewedScore == null || prevReviewedScore.compareTo(currentScore) != 0)) {
                     throw ApiException.createBadRequest("INVALID_REVIEW_METADATA",
                             "Điểm mục rubric đã thay đổi; cần chỉnh sửa hoặc xác nhận lại giải thích.");
                 }

@@ -2208,7 +2208,7 @@
         "overallAiFeedback": "Nhận xét tổng hợp từ AI",
         "feedbackByPart": "Nhận xét từng phần (",
         "applyToDraft": "Áp dụng vào bản nháp",
-        "onlyPreTicksTheChecklist": "Chỉ tích sẵn checklist và điền nhận xét; bạn có thể sửa lại trước khi lưu.",
+        "applyConfirmsReview": "Áp dụng sẽ đánh dấu các tiêu chí AI yêu cầu xem lại là đã kiểm tra. Bạn có thể sửa bản nháp trước khi lưu.",
         "aiProposal2": "Đề xuất AI",
         "reviewTheProposalAndSave": "Kiểm tra đề xuất và lưu để cập nhật điểm.",
         "requestANewProposal": "Yêu cầu đề xuất mới",
@@ -2468,7 +2468,8 @@
         "goToThePassageIn": "Đi tới đoạn bài làm",
         "theReferencedPassageIsNo": "Đoạn tham chiếu không còn trong bài nộp.",
         "checkedAndConfirmedTheExplanation": "Đã kiểm tra và xác nhận giải thích: {itemText}",
-        "feedbackAndScoreChecked": "Đã kiểm tra nhận xét và điểm"
+        "feedbackAndScoreChecked": "Đã kiểm tra nhận xét và điểm",
+        "reviewFeedbackForCurrentScore": "Hãy cập nhật giải thích hoặc xác nhận nhận xét phù hợp với điểm hiện tại."
       },
       "StudentGradesSection": {
         "submissionsAndScores": "Bài nộp và điểm",
@@ -2579,6 +2580,8 @@
         "aiGradingRequestCancelled": "Đã hủy yêu cầu chấm AI.",
         "aiGradingSentYouCan": "Đã gửi chấm AI. Bạn có thể tiếp tục làm việc.",
         "youHaveUnsavedMemberAssessments": "Bạn có đánh giá thành viên chưa lưu. Hãy lưu điểm thành viên trước khi công bố.",
+        "reviewFeedbackBeforePublishing": "Còn tiêu chí cần kiểm tra trước khi công bố điểm. Hãy mở nhận xét của từng tiêu chí được đánh dấu và tích Đã kiểm tra nhận xét và điểm.",
+        "saveGradeBeforePublishing": "Hãy chấm và lưu điểm trước khi công bố.",
         "groupWork": "Bài làm nhóm",
         "studentWork": "Bài làm sinh viên",
         "wholeAssignment": "Toàn bài",

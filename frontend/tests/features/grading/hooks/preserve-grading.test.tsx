@@ -209,7 +209,7 @@ it("retains AI partial points, feedback and flags while resetting previous revie
   act(() => result.current.applyProposal({}, "AI feedback", "proposal", { r: { i: "0.75" } }, feedback));
   expect(mocks.saveEvaluation).not.toHaveBeenCalled();
   expect(result.current.form).toMatchObject({ feedback: "AI feedback", itemScores: { r: { i: "0.75" } },
-    structuredFeedback: feedback, clearStructuredFeedback: false, acknowledgedReviewItems: {}, reviewedItemScores: {} });
+    structuredFeedback: feedback, clearStructuredFeedback: false, acknowledgedReviewItems: {}, reviewedItemScores: { r: { i: "0.75" } } });
   await act(async () => { await result.current.save(); });
   await waitFor(() => expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({
     structuredFeedback: feedback, itemScoresByRubric: { r: { i: "0.75" } }, usedProposalId: "proposal",

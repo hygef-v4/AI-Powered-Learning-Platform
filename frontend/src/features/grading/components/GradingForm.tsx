@@ -205,9 +205,8 @@ export function buildStructuredItemPatch(
   };
 }
 
-// Đổi trạng thái xác nhận xem lại theo khóa rubric:mục và đồng bộ điểm đã xem.
+// Đổi xác nhận mà vẫn giữ điểm gốc của nhận xét nếu giảng viên bỏ xác nhận trước khi lưu.
 export function buildToggleAcknowledgePatch(
-  rubrics: Rubric[],
   form: GradingFormValues,
   key: string,
 ): Partial<GradingFormValues> | null {
@@ -217,20 +216,8 @@ export function buildToggleAcknowledgePatch(
   const willAck = !existingAck.has(itemId);
   if (willAck) existingAck.add(itemId);
   else existingAck.delete(itemId);
-  const currentScore = Number(
-    resolveItemPoints(rubricId, itemId, findItemMaxPoints(rubrics, rubricId, itemId), form.checks, form.itemScores),
-  );
-  const scoreStr = Number.isFinite(currentScore) ? currentScore.toFixed(2) : "0.00";
   return {
     acknowledgedReviewItems: { ...(form.acknowledgedReviewItems ?? {}), [rubricId]: [...existingAck] },
-    ...(willAck
-      ? {
-          reviewedItemScores: {
-            ...(form.reviewedItemScores ?? {}),
-            [rubricId]: { ...(form.reviewedItemScores?.[rubricId] ?? {}), [itemId]: scoreStr },
-          },
-        }
-      : {}),
   };
 }
 
@@ -248,11 +235,11 @@ export function buildProposalDraftPatch(
   const normalized = buildRubricValues(rubrics, checks, itemScores);
   const retainedFeedback = structuredFeedback ?? form.structuredFeedback ?? evaluation.structuredFeedback ?? null;
   const reviewedItemScores: ItemScores = {};
-  if (!structuredFeedback && retainedFeedback) {
-    for (const { rubricId, itemId } of retainedFeedback.items) {
-      const score = form.reviewedItemScores?.[rubricId]?.[itemId] ?? form.itemScores?.[rubricId]?.[itemId];
-      if (score !== undefined) (reviewedItemScores[rubricId] ??= {})[itemId] = score;
-    }
+  for (const { rubricId, itemId } of retainedFeedback?.items ?? []) {
+    const score = structuredFeedback
+      ? normalized.itemScores[rubricId]?.[itemId]
+      : form.reviewedItemScores?.[rubricId]?.[itemId] ?? form.itemScores?.[rubricId]?.[itemId];
+    if (score !== undefined) (reviewedItemScores[rubricId] ??= {})[itemId] = score;
   }
   return {
     checks: normalized.checks,
@@ -264,6 +251,50 @@ export function buildProposalDraftPatch(
     reviewedItemScores,
     usedProposalId: proposalId,
   };
+}
+
+export function buildProposalReviewPatch(
+  form: GradingFormValues,
+  feedback?: StructuredFeedback | null,
+): Partial<GradingFormValues> {
+  const acknowledgedReviewItems = { ...form.acknowledgedReviewItems };
+  for (const { rubricId, itemId, requiresReview } of feedback?.items ?? []) {
+    const score = form.itemScores?.[rubricId]?.[itemId];
+    const acknowledged = acknowledgedReviewItems[rubricId] ?? [];
+    if (!requiresReview || score === undefined || acknowledged.includes(itemId)) continue;
+    acknowledgedReviewItems[rubricId] = [...acknowledged, itemId];
+  }
+  return { acknowledgedReviewItems };
+}
+
+export function buildReviewedScoresForSave(form: GradingFormValues): ItemScores {
+  const reviewedItemScores = { ...form.reviewedItemScores };
+  for (const [rubricId, itemIds] of Object.entries(form.acknowledgedReviewItems ?? {})) {
+    const scores = { ...reviewedItemScores[rubricId] };
+    for (const itemId of itemIds) {
+      const score = form.itemScores?.[rubricId]?.[itemId];
+      if (score !== undefined) scores[itemId] = score;
+    }
+    reviewedItemScores[rubricId] = scores;
+  }
+  return reviewedItemScores;
+}
+
+export function listFeedbackScoreReviewItems(form: GradingFormValues, evaluation: Evaluation) {
+  const savedItems = new Set(evaluation.structuredFeedback?.items.map(
+    ({ rubricId, itemId }) => `${rubricId}:${itemId}`,
+  ));
+  const items = new Set<string>();
+  for (const { rubricId, itemId } of form.structuredFeedback?.items ?? []) {
+    const score = form.itemScores?.[rubricId]?.[itemId];
+    if (score === undefined || form.acknowledgedReviewItems?.[rubricId]?.includes(itemId)) continue;
+    const reviewedScore = form.reviewedItemScores?.[rubricId]?.[itemId];
+    const key = `${rubricId}:${itemId}`;
+    if (reviewedScore === undefined ? savedItems.has(key) : Number(reviewedScore) !== Number(score)) {
+      items.add(key);
+    }
+  }
+  return items;
 }
 
 /** Mục rubric mà form còn đúng bằng giá trị AI đã điền; sửa tay mục nào thì mục đó rời khỏi tập. Khóa `rubricId:itemId`. */

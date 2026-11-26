@@ -15472,3 +15472,30 @@ giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại 
 **Context**: Construction, U07 và U09. [Kế hoạch](construction/plans/code-generation-plan/2026-11-26-u07-u09-mcp-result-links.md).
 
 ---
+
+## U09 Xác nhận đề xuất và công bố điểm
+**Timestamp**: 2026-11-26T14:02:42Z
+**Requested by:** Quang Hung
+**User Input**: "thế thì phải hiện thông báo cho giảng viên chứ, với nếu giảng viên bấm chấp nhận đề xuất rồi thì cái đấy tự động được tick"
+**AI Response**: "Ghi xác nhận tiêu chí khi giảng viên giữ hoặc áp dụng đề xuất, hiện hướng dẫn trước bước công bố nếu còn tiêu chí chưa xác nhận và giữ lỗi từ máy chủ khi tải lại bản chấm. Kiểm tra 233 ca frontend U09, TypeScript và ESLint phạm vi."
+**Context**: Construction, U09. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-proposal-review-publish.md).
+
+---
+
+## U09 Chấm theo rubric và bước điểm tiêu chí
+**Timestamp**: 2026-11-26T14:18:21Z
+**Requested by:** Quang Hung
+**User Input**: "tôi nghĩ đổi 0.25 sang 0.1, tôi duyệt 1,2,3"
+**AI Response**: "Dùng rubric để tính điểm, đưa yêu cầu ngoài rubric vào nhận xét và yêu cầu rà soát khi chưa đủ minh chứng chấm. Đổi bước tăng giảm của ô điểm tiêu chí sang 0,1."
+**Context**: Construction, U09. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-rubric-grading-policy.md).
+
+---
+
+## U09 Xử lý các lỗi công bố điểm
+**Timestamp**: 2026-11-26T14:29:30Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại các lỗi này"
+**AI Response**: "Hiện ô xác nhận ở mục có điểm lệch so với nhận xét. Chỉ mở hộp công bố bài nhóm sau khi tải lại thành công. Báo lưu điểm trước nếu bài chưa chấm."
+**Context**: Construction, U09. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publish-guards.md).
+
+---
