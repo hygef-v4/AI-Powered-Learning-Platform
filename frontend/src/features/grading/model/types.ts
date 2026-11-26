@@ -110,6 +110,8 @@ export type SubmissionRow = {
   submittedAt: string | null;
   attemptCount: number;
   version: number;
+  /** The student was removed from the class but this earlier work is kept (BR-U05-25). */
+  leftClass?: boolean;
 };
 export type AssignmentContext = {
   id: string;

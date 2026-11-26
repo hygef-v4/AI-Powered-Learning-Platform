@@ -2324,6 +2324,7 @@
         "viewGrade": "Xem điểm",
         "select": "Chọn {name}",
         "late": "Trễ",
+        "leftClass": "Đã rời lớp",
         "noMatchingSubmissions": "Không có bài phù hợp."
       },
       "GradebookExportDialog": {

@@ -2324,6 +2324,7 @@
         "viewGrade": "View grade",
         "select": "Select {name}",
         "late": "Late",
+        "leftClass": "Left class",
         "noMatchingSubmissions": "No matching submissions."
       },
       "GradebookExportDialog": {
