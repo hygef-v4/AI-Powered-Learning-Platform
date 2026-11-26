@@ -15381,3 +15381,487 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, Build and Test U03.
 
 ---
+
+## System test NFR (Report-5.4) - Đề xuất test case và sửa Report 3
+**Timestamp**: 2026-11-25T16:46:46Z
+**Requested by:** Hải Nam
+**User Input**: "https://docs.google.com/spreadsheets/d/1aUV3pcqhlUkKUmF5nxA4WsKIKjSZGG7paJHQqpTO2TA/edit?gid=1786899261#gid=1786899261
+đề xuất toàn bộ các test case cho system test non functional theo các requirements của dự án trong aidlc docs. Đồng thời đề xuất sửa https://docs.google.com/document/d/1keJ0pUGo1VZ9Dzqd4ScREgFw-92LPSWm/edit
+phần non functional requirements. Lưu ý: phần security và performance chỉ những requirements nào có thể viết test case và test được thì mới ghi vào report 3" (gửi thêm trong lúc làm: "đồng thời đề xuất nên dùng tool gì để test các case nfr đó, ví dụ như k6 hay jmeter")
+**AI Response**: "Đọc NFR-001…005, SEC-001…006, REL-001…005 trong requirements.md, NFR từng unit, kết quả NFR 16–17/11 và mục IV của Report 3; đối chiếu giá trị với mã nguồn. Soạn test case NFR (Security, Performance, Usability) kèm tool đề xuất lên sheet Report-5.4, và viết đề xuất sửa mục IV Report 3 vào aidlc-docs/inception/requirements/2026-11-25-report-3-nfr-review.md."
+**Context**: Construction - system test NFR, đề xuất test case và review Report 3
+
+---
+
+## System test NFR (Report-5.4) - Kết quả
+**Timestamp**: 2026-11-25T17:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "không cần làm test case cho usability" và "lưu ý viết test case vào gg sheet bằng tiếng anh"
+**AI Response**: "Bỏ tab Usability vừa tạo. Ghi test case bằng tiếng Anh lên sheet Report-5.4: tab Security thêm cột Requirement và Tool, thay 2 dòng mẫu bằng TC-SEC-001…052; tab Performance thêm cột Requirement và Condition / Data, thay 3 dòng mẫu bằng TC-PERF-001…026; đặt dropdown Priority/Status, bỏ validation sai ở cột Defect IDs. Viết đề xuất sửa mục IV Report 3 và bảng tool (chọn k6 thay JMeter) ở aidlc-docs/inception/requirements/2026-11-25-report-3-nfr-review.md; các sai lệch chính: reveal MCP token đã bỏ, SameSite của refresh cookie là Strict, autosave bài cá nhân 5 phút, không có score distribution, rate limit cần số cụ thể. Chưa sửa tệp Report 3, chưa commit."
+**Context**: Construction - system test NFR, test case và review Report 3
+
+---
+
+## System test NFR (Report-5.4) - Chuyển sang k6, thủ công, OWASP ZAP, SonarQube
+**Timestamp**: 2026-11-25T17:20:58Z
+**Requested by:** Hải Nam
+**User Input**: "cập nhật thành k6 + manual testing. security thì theo owasp top 10 thêm tool owasp zap, có thể thêm sonarqube vì tôi đã được học về nó"
+**AI Response**: "Xác nhận danh mục OWASP Top 10:2025 trên owasp.org. Tab Security: thêm cột OWASP Top 10:2025, cột Tool chỉ còn k6, Manual, OWASP ZAP, SonarQube; bỏ case JSON AI sai schema (cần mock); thêm ZAP baseline (staging), ZAP active scan (systest), SonarQube và kiểm phiên bản phụ thuộc; còn 55 case. Tab Performance: chỉ k6 và Manual; bỏ 3 case cần mock AI (timeout 120 s, retry, giới hạn đồng thời); còn 23 case. Cập nhật đề xuất Report 3: rút ba yêu cầu không test được, sửa mục tool. Nhánh làm việc đã đổi sang chore/prune-unit-tests và file đề xuất cùng audit ngày 25/11 đang ở stash@{0} của staging, nên bản cập nhật để ở scratchpad, chờ người dùng quyết định khôi phục."
+**Context**: Construction - system test NFR, đổi tool và cập nhật đề xuất Report 3
+
+---
+
+## System test NFR (Report-5.4) - Khôi phục stash trên staging
+**Timestamp**: 2026-11-25T17:50:30Z
+**Requested by:** Hải Nam
+**User Input**: "quay về staging và restore lại"
+**AI Response**: "Checkout staging (đã có thêm PR #138), pop stash GitHub Desktop của staging; gộp xung đột audit.md bằng cách giữ cả mục U01 /manager của upstream và hai mục NFR ngày 25/11; chép bản đề xuất Report 3 đã cập nhật từ scratchpad và thêm mục audit lượt đổi tool. Chưa commit."
+**Context**: Construction - system test NFR, khôi phục thay đổi chưa commit
+
+---
+
+## System test NFR (Report-5.4) - Tạo branch và chuẩn bị chạy test
+**Timestamp**: 2026-11-25T17:59:37Z
+**Requested by:** Hải Nam
+**User Input**: "tạo branch mới từ staging rồi bắt đầu thực hiện test cho các case non functional, các công cụ để chạy các case thủ công bạn đã nói thì có cần tôi kết nối gì để bạn có thể dễ dàng lấy bằng chứng không?"
+**AI Response**: "Cập nhật staging tới origin/staging (PR #139), tạo branch system-test-nfr, mang theo đề xuất Report 3 và audit chưa commit; gộp xung đột audit.md bằng cách giữ cả mục U06 của upstream. Kiểm môi trường: stack systest đang chạy (image dựng trước PR #138/#139), Chrome và script CDP chụp bằng chứng đã có, chưa có k6, OWASP ZAP, SonarQube. Hỏi người dùng về việc tải tool, máy chủ SonarQube và quyền đọc VPS."
+**Context**: Construction - system test NFR, chuẩn bị thực thi
+
+---
+
+## System test NFR (Report-5.4) - Chọn cách cài công cụ
+**Timestamp**: 2026-11-25T18:05:00Z
+**Requested by:** Hải Nam
+**User Input**: "cài bằng cách nào thì dễ dàng nhất và dễ giải thích trước hội đồng?"
+**AI Response**: "Đề xuất cài k6 và OWASP ZAP bằng winget (gói chính thức, có kiểm tra hash), chạy SonarQube Community bằng Docker (cổng 127.0.0.1:9000), dùng sonar-scanner qua Docker. Hỏi người dùng có đồng ý cài không."
+**Context**: Construction - system test NFR, chuẩn bị công cụ
+
+---
+
+## System test NFR (Report-5.4) - Đồng ý cài công cụ
+**Timestamp**: 2026-11-25T18:08:00Z
+**Requested by:** Hải Nam
+**User Input**: "Yes, install them"
+**AI Response**: "Khởi chạy container SonarQube (sonarqube:community, 127.0.0.1:9000, volume sonarqube_data/extensions/logs). Bắt đầu cài k6 và ZAP bằng winget; bắt đầu dựng lại stack systest từ branch system-test-nfr (commit be90c802)."
+**Context**: Construction - system test NFR, cài công cụ
+
+---
+
+## System test NFR (Report-5.4) - Cài công cụ vào ổ E
+**Timestamp**: 2026-11-25T18:24:13Z
+**Requested by:** Hải Nam
+**User Input**: "cài vào ổ E giúp tôi"
+**AI Response**: "Gỡ ZAP và Temurin 17 JRE khỏi ổ C. Cài lại ZAP 2.17.0 vào E:\ZAP (chạy bằng JDK 21 có sẵn tại E:\Java\jdk-21.0.11, đã kiểm tra `-cmd -version`). Cài k6 2.4.0 vào E:\k6 (override INSTALLDIR), xoá bản k6 còn sót ở C:\Program Files\k6 và đổi PATH máy sang E:\k6; `k6 version` chạy từ E:\k6\k6.exe. SonarQube chạy trong Docker (dữ liệu Docker Desktop ở E:\DockerData)."
+**Context**: Construction - system test NFR, cài công cụ
+
+---
+
+## System test NFR (Report-5.4) - Hướng dẫn tạo token SonarQube
+**Timestamp**: 2026-11-26T01:10:00Z
+**Requested by:** Hải Nam
+**User Input**: "tiếp tục như nào" (kèm ảnh chụp trang Administration > General settings của SonarQube)
+**AI Response**: "Hướng dẫn tạo Global Analysis Token trong My Account > Security và lưu vào biến môi trường người dùng SONAR_TOKEN bằng setx; cảnh báo embedded database chỉ áp dụng cho môi trường đánh giá, chấp nhận được khi chạy SonarQube cục bộ cho system test."
+**Context**: Construction - system test NFR, chuẩn bị SonarQube (TC-SEC-054)
+
+---
+
+## System test NFR (Report-5.4) - Chạy SonarQube (TC-SEC-054)
+**Timestamp**: 2026-11-26T01:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "đã set token"
+**AI Response**: "Xác thực SONAR_TOKEN với SonarQube cục bộ (valid). Bắt đầu TC-SEC-054: phân tích tĩnh backend (Maven) và frontend (TypeScript) trên branch system-test-nfr, thu bằng chứng Quality Gate, Vulnerabilities, Security Hotspots."
+**Context**: Construction - system test NFR, thực thi TC-SEC-054
+
+---
+
+## System test NFR (Report-5.4) - Hướng dẫn nhập AI key và kiểm tra VPS
+**Timestamp**: 2026-11-26T01:35:00Z
+**Requested by:** Hải Nam
+**User Input**: "điền real AI key và làm VPS check như thế nào"
+**AI Response**: "Hướng dẫn: đăng nhập systest (http://localhost:49088) bằng t1.systest@fpt.edu.vn, mở AI connection (/ai/connection), chọn provider (Gemini/OpenAI/Claude), dán key, lưu và kiểm tra kết nối; không gửi key qua chat. VPS (TC-SEC-045): SSH vào VPS, chạy docker compose ps trong /opt/platform/infra và docker ps với cột Ports, chụp màn hình gửi lại."
+**Context**: Construction - system test NFR, chuẩn bị dữ liệu cho test case cần AI key và TC-SEC-045
+
+---
+
+## System test NFR (Report-5.4) - Đã nhập AI key trên systest
+**Timestamp**: 2026-11-26T01:50:00Z
+**Requested by:** Hải Nam
+**User Input**: "đã nhập key"
+**AI Response**: "Kiểm tra AI connection của t1 trên systest (chỉ đọc trạng thái, không đọc giá trị key), tiếp tục các test case NFR cần AI và theo dõi hai lượt quét SonarQube."
+**Context**: Construction - system test NFR, thực thi
+
+---
+
+## Report-5.3 - Shorten cover, test case list, requirements and rewrite all workflow cases
+**Timestamp**: 2026-11-26T09:00:00Z
+**Requested by:** Hải Nam
+**User Input**: "[image: sample table SYS_FLOW1_TC01 Create Role and Define Permissions] giúp tôi chỉnh lại report 5.3, các phần change description và reference của sheet cover ngắn gọn rõ ràng hơn. Description và precondition của sheet test case cũng rõ ràng hơn, precondition viết các điều kiện khác nhau thành list đánh số, test environment cũng làm ngắn gọn lại và viết thành list đánh số. Các phần test requirement của từng sheet workflow cũng vậy và làm ngắn gọn lại. các phần test case description, procedure, expected result, precondition cho từng test case làm rõ ràng hơn giống như mẫu trong ảnh, note cũng làm ngắn gọn và rõ ràng hơn"
+**AI Response**: "Edited the online Report 5.3 (Report-5.3_System Test_FRs). Cover: shortened Change description and Reference for v1.0 and v1.1. Test Cases: Test Environment Setup Description as a 6-item numbered list; workflow descriptions shortened; pre-conditions as numbered lists. WF01-WF07: Test requirement rewritten as short numbered lists; all 72 cases rewritten in the sample style (one-line description, one action per numbered step, numbered expected result per step, '- ' precondition bullets); notes condensed to Path / Requirements / Execution / Result or Round summaries / Evidence. Results, dates, testers, defect IDs and evidence links unchanged; no record-of-change row added."
+**Context**: Construction - Build and Test, Report-5.3 system test report editing
+
+---
+
+## System test NFR (Report-5.4) - Thực hiện toàn bộ case khả thi
+**Timestamp**: 2026-11-26T02:00:00Z
+**Requested by:** Hải Nam
+**User Input**: "ssh vào vps thế nào" / "sau đó tiếp tục thực hiện hết các case có thể thực hiện được cho tôi"
+**AI Response**: "Hướng dẫn SSH (lấy IP, user, mật khẩu/key từ người quản lý VPS; ssh user@ip hoặc web console của nhà cung cấp; không gửi thông tin đăng nhập qua chat). TC-PERF-014 chạy xong: Passed (request 4 trả 429 AI_TOO_MANY_TASKS, request 5 được nhận sau khi 3 task READY). Tiếp tục review kết quả SonarQube và thực thi lần lượt các case NFR còn lại trên systest."
+**Context**: Construction - system test NFR, thực thi
+
+---
+
+## Report-5.3 - Fix cover case count and run the remaining WF07 cases
+**Timestamp**: 2026-11-26T02:30:00Z
+**Requested by:** Hải Nam
+**User Input**: "có, sửa thành 72 cases. Sau đó test nốt các case còn lại của wf07"
+**AI Response**: "Changed the Cover v1.1 change description to 72 cases. Ran ST-WF07-003, 005, 007, 008, 009 and 010 (Round 1) on the systest stack with headless Chrome, plus API calls the UI makes where noted. Results: 003, 005, 008, 009, 010 Passed; 007 Failed (limit and cancel reasons in Vietnamese in the English UI; sixth MCP agent blocked with no reason shown), not yet logged in Jira. Updated WF07 rows, the Round 1 summary (9 Passed, 1 Failed, 0 Pending) and wrote _README.txt in the local evidence folder 'WF07_User_Authentication - Round 1 (UI, 2026-11-26)' for the user to upload to Drive. Test data restored: sv12 re-enabled, sv1 ASSIGNMENT_OPENED e-mail preference back on."
+**Context**: Construction - System test execution (Report 5.3, WF07)
+
+---
+
+## Construction - Report-5.4 NFR System Test Execution (progress)
+**Timestamp**: 2026-11-26T03:10:00Z
+**Requested by:** Hải Nam
+**User Input**: "(continuation of) sau đó tiếp tục thực hiện hết các case có thể thực hiện được cho tôi"
+**AI Response**: "Executed further cases on systest (commit be90c802) and recorded them in the Google Sheet Report-5.4_System Test_NFRs. Security Pass: TC-SEC-005 (a+b, OTP expiry after 10 min), 009 (JWT 900 s, 401 after 15 min), 022 (XSS, 8 pages in Chrome), 026 (download token bound + 5 min expiry), 035 (stale AI proposals: grading only after close, rubric locked, GRADE_VERSION_CONFLICT on outdated screen), 041 (CSP: YouTube nocookie + Draw.io allowed, other origins blocked; Draw.io confirmed in the desktop built-in browser), 042 (forged Draw.io postMessage from another origin ignored). Security Fail (decision needed): TC-SEC-036 (download token appears in the nginx access-log path; all other secrets 0 matches), TC-SEC-048 (per-IP sign-in limit works but returns neutral 401 by design NFR-U01-22, not 429 as the case expects). Performance Pass: TC-PERF-015 (MCP 60/min per credential, other credential unaffected), TC-PERF-016 (64 KB params rejected; 256 KB result branch by unit test). Evidence under .tmp/systemtest/proof-2026-11-25/system test proof/. A user-agent change to get past diagrams.net's 403 in headless Chrome was refused by the permission classifier and not attempted further. Nothing committed."
+**Context**: CONSTRUCTION - Build and Test (Report-5.4 NFR system test execution); test-only actions on the local systest stack
+
+---
+
+## Construction - Report-5.4 NFR System Test Execution (progress, continued)
+**Timestamp**: 2026-11-26T03:16:00Z
+**Requested by:** Hải Nam
+**User Input**: "(continuation of) sau đó tiếp tục thực hiện hết các case có thể thực hiện được cho tôi"
+**AI Response**: "More cases run on systest and recorded in the sheet. Security Pass: TC-SEC-004 (neutral sign-in/OTP answers, timing difference 25.5 ms / 0.4 ms), TC-SEC-049 (OTP cooldown, 5/hour per e-mail and 20/hour per IP enforced silently with neutral 202; checked by Mailpit counts). TC-SEC-040 systest headers recorded in Notes (case still Not Run: targets staging). Performance Pass: TC-PERF-008 (20 VUs 5 min, p95 ≤ 63 ms, 0.13% 503 from the bounded read pool at ramp-up; slow source → only that card unavailable). Rate-limit counters in systest Redis were cleared before/after each run (test set-up). Nothing committed."
+**Context**: CONSTRUCTION - Build and Test (Report-5.4 NFR system test execution)
+
+---
+
+## Report-5.4 NFR System Test — continued run (ZAP, load set-up)
+**Timestamp**: 2026-11-25T22:50:00Z
+**Requested by:** Hải Nam
+**User Input**: "Continue"
+**AI Response**: "Ran TC-SEC-053 OWASP ZAP authenticated spider + active scan on systest (11,334 attack requests, AI endpoints excluded): no injection/XSS/traversal/RCE alerts, 0 HTTP 5xx; 1 High (nginx 1.28.3 version with known CVEs, server_tokens not off) → Fail. Seeded 1,000 load accounts, subject LDT500, class LOAD200 (200 students), 200-question quiz, 30 assignments, file material. TC-PERF-013: account validation 0.29 s, question import 3.7 s, enrollment of 200 e-mails 5.3/6.6/4.2 s → Fail. Started TC-PERF-001 (k6, 100 VUs, 12 min) in the background. Stopped at the usage limit."
+**Context**: CONSTRUCTION — Build and Test, Report-5.4 non-functional system test execution
+
+---
+
+## Report-5.3 - Log ST-WF07-007 findings in Jira
+**Timestamp**: 2026-11-26T02:25:00Z
+**Requested by:** Hải Nam
+**User Input**: "Yes, log in Jira"
+**AI Response**: "Created KAN-232 ([U06] AI task-limit and cancel reasons show in Vietnamese in the English UI) and KAN-233 ([U06] 'Connect new agent' is disabled at 5 active agents with no reason shown), both Bug, Low, labels system-test and wf07, with steps, cause from code, expected result and evidence. Set Defect IDs of ST-WF07-007 in the WF07 sheet to 'KAN-232, KAN-233'."
+**Context**: Construction - System test execution (Report 5.3, WF07 defects)
+
+---
+
+## Report-5.4 NFR System Test — progress question
+**Timestamp**: 2026-11-26T00:10:00Z
+**Requested by:** Hải Nam
+**User Input**: "tiến độ test đến đâu rồi, còn những case nào"
+**AI Response**: "Reported progress from the Google Sheet: Security 42 Pass, 4 Fail (036, 048, 050, 053), 9 Not Run (008, 011, 039, 040, 043, 045, 051, 052, 054); Performance 4 Pass (008, 014, 015, 016), 1 Fail (013), 18 Not Run. Listed what each remaining case needs (systest work vs. user input). TC-PERF-001 first run invalid (k6 Secure-cookie problem), to be rerun."
+**Context**: CONSTRUCTION — Build and Test, Report-5.4 non-functional system test status
+
+---
+
+## Report-5.4 NFR System Test — continue
+**Timestamp**: 2026-11-26T00:15:00Z
+**Requested by:** Hải Nam
+**User Input**: "Tiếp tục"
+**AI Response**: "Continuing the remaining systest cases: fix the k6 cookie handling, rerun TC-PERF-001 and run PERF-002/003/007, then the remaining load, config-change and manual cases."
+**Context**: CONSTRUCTION — Build and Test, Report-5.4 non-functional system test execution
+
+---
+
+## Defect fix - KAN-232, KAN-233 (system test WF07)
+**Timestamp**: 2026-11-26T02:50:00Z
+**Requested by:** Hải Nam
+**User Input**: "sửa KAN-232 và KAN-233"
+**AI Response**: "Small frontend fix, following code conventions section 9 (do not show the server's Vietnamese text in the English UI). KAN-232: added describeAiFailure in shared/api/errorMessages.ts (keeps the server text in the vi UI; in other languages translates known AI failure reasons, keeps English server text, otherwise uses the screen's message); used in PracticeFeedbackPanel and shared/ai/AiTaskStatus; AI_TOO_MANY_TASKS and AI_TASK_NOT_CANCELLABLE mapped in describeApiProblem; en/vi keys added. KAN-233: McpAgentSection shows 'You can have up to 5 active agents. Revoke one to connect another.' when 5 agents are active (message reworded in en/vi). Tests: describeAiFailure cases and McpAgentSection.test.tsx; typecheck and lint of changed files pass. Checked on a local dev frontend (launch config frontend-dev-systest-backend, BACKEND_URL=http://localhost:49080) without restarting shared systest containers; t2's 5 temporary agents revoked. Jira comments added; issues left open until the fix is committed and the systest image is rebuilt. Not committed."
+**Context**: Construction - Defect fix from system test (Report 5.3, WF07)
+
+---
+
+## Report-5.3 - Retest ST-WF07-007 (Round 2)
+**Timestamp**: 2026-11-26T03:05:00Z
+**Requested by:** Hải Nam
+**User Input**: "test lại cho case failed giúp tôi"
+**AI Response**: "Retested ST-WF07-007 (the only failed WF07 case) as Round 2 on a local dev frontend (launch config frontend-dev-systest-backend) with the systest backend, because the KAN-232/233 fix is not committed or in the systest image and the stack is shared. Result Passed: the 4th concurrent feedback request was refused with an English reason; the Round 1 cancelled request reads 'You cancelled this request.' (new cancels got 409 AI_TASK_NOT_CANCELLABLE because the worker picked tasks up at once); at 5 active agents t1's page explains the limit and the API returns 409 MCP_LIMIT_REACHED; sv1 cannot change sv2's preferences (400/404); Admin cannot turn off the backup-failure e-mail (400). t1's 5 agents belonged to another test session and were not touched. Updated WF07 row 20 Round 2 (Passed, 2026-11-26, Claude Opus 5.5) and the Round 2 summary (1 Passed, 9 Pending); wrote _README.txt in the local folder 'WF07_User_Authentication - Round 2 (UI, 2026-11-26)' for the user to upload; added retest comments to KAN-232 and KAN-233 (left open until the fix is committed and deployed)."
+**Context**: Construction - System test execution (Report 5.3, WF07 Round 2)
+
+---
+
+## Build and Test - Report-5.4 NFR system test execution (continued)
+**Timestamp**: 2026-11-26T04:50:00Z
+**Requested by:** Hải Nam
+**User Input**: "Tiếp tục"
+**AI Response**: "Ran the remaining Report-5.4 NFR cases that systest can run (commit be90c802) and recorded them in the Google Sheet 'Report-5.4_System Test_NFRs'. Performance: TC-PERF-003, 006, 007, 010, 012, 017 and 022 Pass. TC-PERF-004, 005, 009, 011, 019 and 020 Fail. 004/005: HTTP 503/500 when the HikariCP pool (10 connections) ran out. 009: gradebook p95 9.3 s. 011: bulk finalize/publish p95 7.6/5.2 s. 019: unsaved group section text is lost when leaving by browser navigation. 020: assignments close 73 s after the schedule. TC-PERF-018 Not Run: the build has no AI kill switch or institutional AI connection. Security: TC-SEC-011 Pass (refresh idle 2 min and max 5 min enforced). Backend and worker were temporarily recreated with envchange.override.yml (U01_REFRESH_IDLE_TTL=2m, U01_REFRESH_MAX_TTL=5m, U08_FEEDBACK_PER_DAY=3), then restored to normal settings. Script mistakes were re-checked and noted in the sheet (wrong DB filters in PERF-007/022, a missing cookie on the PERF-012 download, accounts outside LOAD200 in PERF-019/020). Totals: Security 43 Pass, 4 Fail, 8 Not Run (need staging, production, the VPS, backups or SonarQube from the user). Performance 13 Pass, 9 Fail, 1 Not Run."
+**Context**: Build and Test stage; Report-5.4 NFR system test execution on the systest stack; evidence under .tmp/systemtest/proof-2026-11-25/system test proof/
+
+---
+
+## Build and Test - Report-5.4 NFR system test on staging and production
+**Timestamp**: 2026-11-26T05:25:00Z
+**Requested by:** Hải Nam
+**User Input**: "@\"C:\Users\ADMIN\.claude\uploads\b231389f-107c-48f1-8126-d4ab5eac6a05\e179ab13-staging-access.md\" https://staging.alapedu.online:8443/login
+https://alapedu.online
+ADMIN	admin@demo.alapedu.online	[password redacted]
+SUBJECT_MANAGER	chunhiem@demo.alapedu.online	[password redacted]
+TEACHER	giangvien1@demo.alapedu.online	[password redacted]
+TEACHER	giangvien2@demo.alapedu.online	[password redacted]
+STUDENT	sinhvien1@demo.alapedu.online	[password redacted]
+STUDENT	sinhvien2@demo.alapedu.online	[password redacted]
+STUDENT	sinhvien3@demo.alapedu.online	[password redacted]
+STUDENT	sinhvien4@demo.alapedu.online	[password redacted]
+STUDENT	sinhvien5@demo.alapedu.online	[password redacted]
+STUDENT	sinhvien6@demo.alapedu.online	[password redacted]
+Đây là 2 link đến bản deploy của staging và production thật
+Bạn nói cách truy cập bản backup là sao và kết quả sonarqube lấy như nào"
+**AI Response**: "Passwords in the input were redacted in this log; the attached staging access file is not copied here. Ran the read-only and anonymous checks: TC-SEC-039 HTTPS Pass, TC-SEC-040 security headers Pass (duplicate headers on API responses noted), TC-SEC-043 Swagger/actuator on production Pass. TC-SEC-008 session cookies Pass on staging, using sample student sv1.test, which signed out afterwards. Staging briefly answered 503 'The service is restarting' during the run. Production accounts were not used to sign in. Explained what the user still has to do for TC-SEC-051 (backups) and TC-SEC-054 (SonarQube). TC-SEC-054 was already analysed: Quality Gate OK, all 26 findings reviewed as safe, and an admin still has to mark them in SonarQube."
+**Context**: Build and Test stage; Report-5.4 security cases on staging/production; evidence under .tmp/systemtest/proof-2026-11-25/system test proof/Security - Round 2 (staging and production, 2026-11-26)/
+
+---
+
+## Build and Test - Report-5.4 TC-SEC-052 ZAP baseline on staging
+**Timestamp**: 2026-11-26T05:55:00Z
+**Requested by:** Hải Nam
+**User Input**: "chạy zap trên staging thì kiểm thử được case nào không? Không cần thì thôi" / "ok chạy zap cho tôi đi" / "trong lúc đấy tôi sẽ thực hiện sonarqube theo bạn yêu cầu" / "còn phần vps thì vì tôi không biết làm thế nào nên sau đó bạn hãy cho 1 guide cụ thể cho tôi"
+**AI Response**: "Explained that only TC-SEC-052 needs the staging ZAP baseline. Ran OWASP ZAP 2.17.0 against https://staging.alapedu.online:8443 in passive mode, anonymous, with a GET-only spider (38 URLs, 60 messages) and no active scan. Result: 1 High (nginx 1.28.3 with known CVEs, version shown in the Server header, the same as TC-SEC-053), 0 Medium, 65 Low (Server version leak; HSTS missing on static files, robots.txt, sitemap.xml and the /api 404), 8 Informational. TC-SEC-052 recorded as Fail. ZAP daemon shut down afterwards. Wrote the read-only VPS guide .tmp/systemtest/vps-guide.md for TC-SEC-045 and TC-SEC-051; the user runs it."
+**Context**: Build and Test stage; Report-5.4 security cases on staging; evidence under .tmp/systemtest/proof-2026-11-25/system test proof/Security - Round 2 (staging and production, 2026-11-26)/TC-SEC-052_ZAP baseline staging/
+
+---
+
+## Build and Test - Report-5.4 TC-SEC-054 SonarQube findings marked
+**Timestamp**: 2026-11-26T06:10:00Z
+**Requested by:** Hải Nam
+**User Input**: "bạn có thể mở trang sonarqube để tôi đăng nhập rồi bạn đánh dấu được không?" / "Signed in" / "tôi có để ssh vào vps được không hay cần phải có người có quyền"
+**AI Response**: "Started the local SonarQube container and opened its login page in the built-in browser. The user signed in as admin; the password was not seen or entered by the AI. In that session the 26 reviewed findings (23 backend, 3 frontend) got their review reason as a comment and were moved to False Positive: one in the UI, 25 through the SonarQube Web API in the same session, all HTTP 200. Result: 0 open security issues, Quality Gate OK, security rating A, 0 hotspots. TC-SEC-054 recorded as Pass. Explained what is needed for SSH access to the VPS."
+**Context**: Build and Test stage; Report-5.4 TC-SEC-054; evidence after-review-2026-11-26.md
+
+---
+
+## Build and Test - Report-5.4 NFR test report for the team
+**Timestamp**: 2026-11-26T06:40:00Z
+**Requested by:** Hải Nam
+**User Input**: "ok giờ làm 1 bản báo cáo test các case nfr để tôi gửi cho nhóm của tôi. Tập trung vào mục đích cảu các test, trạng thái hiện tại và lý do chi tiết tại sao bị failed hay đang not run" / "Tôi được gửi cho 2 thông tin này và bảo vào test khi gửi ảnh trên cho nhóm: [VPS IP redacted] [password redacted]" (with a screenshot of the earlier SEC-051 instructions)
+**AI Response**: "Wrote the doc 'Báo cáo kiểm thử phi chức năng (NFR) – Report 5.4' (https://claude.ai/artifact/W9i1X6s7DDmjra9RnJd97b, private until shared). It covers: totals (78 cases: 61 Pass, 14 Fail, 3 Not Run), the causes grouped, a detailed section per Fail and Not Run case, the purpose and status of all 55 Security and 23 Performance cases, and the environment and evidence. The VPS IP and password from the chat were not used: the AI does not sign in with passwords to the production server. The user was asked to SSH in themselves, or have the administrator run the read-only guide, and to have the password changed."
+**Context**: Build and Test stage; Report-5.4 summary report
+
+---
+
+## System Test (NFR) - VPS checks TC-SEC-045 / TC-SEC-051
+**Timestamp**: 2026-11-26T10:00:00Z
+**Requested by:** Hải Nam
+**User Input**: "(Pasted output of the 6 read-only VPS commands from vps-guide.md: docker ps, ss -tlnp, U03_BACKUP_PUBLIC_KEY length per backend container, private-key file search, private-key env counts per container, /var/backups listing. VPS IP and password redacted.)"
+**AI Response**: "Recorded TC-SEC-045 = Pass (only the nginx containers publish 80/443/8443; db-tunnel binds 127.0.0.1:5432 only; sshd on 22). Recorded TC-SEC-051 = Fail (U03_BACKUP_PUBLIC_KEY empty on the production and staging backends, so backups are plain pg_dump, not encrypted; no backup private key on the VPS and no PRIVATE_KEY env in any container; pre-deploy dumps in /var/backups are root-only 600 and unencrypted; Google Drive backup run and sharing not checked). Saved evidence vps-output.txt under Security - Round 2, updated the Security sheet rows 46 and 52, and updated the team report (totals 62 Pass, 15 Fail, 1 Not Run; new TC-SEC-051 Fail subsection; side finding: 36 pending Ubuntu security updates)."
+**Context**: Construction - Build and Test, NFR system test execution (Report-5.4)
+
+---
+
+## Defect fix - Commit KAN-232, KAN-233 fix
+**Timestamp**: 2026-11-26T12:00:00Z
+**Requested by:** Hải Nam
+**User Input**: "commit bản sửa KAN-232 và KAN-233"
+**AI Response**: "Committed the frontend fix for KAN-232 (AI failure reasons shown in the UI language) and KAN-233 (hint explaining the 5-agent MCP limit) with its tests, on branch system-test-nfr. Not pushed; audit.md, launch.json and other unrelated changes left out of the commit."
+**Context**: Construction - defect fix commit after the ST-WF07-007 Round 2 retest
+
+---
+
+## System Test (NFR) - Question on CPU-bound Fail cases
+**Timestamp**: 2026-11-26T10:30:00Z
+**Requested by:** Hải Nam
+**User Input**: "các case failed do thiếu cpu thì làm thế nào"
+**AI Response**: "Explained that PERF-001, 002, 004, 005, 009 failed under the CPU/RAM limits set in infra/docker-compose.yml (backend 2 CPU / 1 GiB, postgres 1 CPU / 1 GiB) with Hikari maximum-pool-size 10 and bcrypt cost 12, not because the 12-core test machine was short of CPU. Proposed: check the real VPS hardware, run a diagnostic re-run on systest with higher limits and pool size (recorded separately, not replacing the official result), then per case either fix code (gradebook recompute, dashboard queries, save payload), raise limits, or have the team revise unrealistic targets (PERF-002 login). No changes made."
+**Context**: Construction - Build and Test, NFR result analysis (Report-5.4)
+
+---
+
+## System Test (NFR) - Question on DB connection pool Fail cases
+**Timestamp**: 2026-11-26T10:45:00Z
+**Requested by:** Hải Nam
+**User Input**: "thế còn các case fail do pool kết nối thì fix thế nào"
+**AI Response**: "Checked PERF-004 evidence: failures are HTTP 503 SYSTEM_BUSY on start/save, which GlobalExceptionHandler returns for DataAccessResourceFailureException (includes pool wait > 3 s), QueryTimeout, PessimisticLocking and TransactionTimedOut; exact cause not confirmed because the backend container logs from that run are gone. Noted virtual threads are enabled with Hikari maximum-pool-size 10 (hard-coded) and Postgres max_connections 100, limited to 1 CPU. Proposed: make pool size configurable and raise it together with Postgres CPU, shorten connection hold time (no slow work inside transactions, index slow queries), bound concurrency before the pool, enable Hikari metrics, then re-run PERF-004/005/001. No code changed; any code change goes through the AI-DLC workflow."
+**Context**: Construction - Build and Test, NFR result analysis (Report-5.4)
+
+---
+
+## System Test (NFR) - Ownership of Fail cases
+**Timestamp**: 2026-11-26T11:00:00Z
+**Requested by:** Hải Nam
+**User Input**: "kiểm tra phân quyền, trong những case failed những case nào cần phải người khác trong nhóm sửa mới được"
+**AI Response**: "Mapped the 15 Fail cases to units and code owners using unit-of-work.md (Phân công code) and git history of infra/nginx and infra/docker-compose.yml. Requester (Người 4) owns U04, U13, U14; no Fail case lies only in those units. Owners: U01 Đào Chí Cường (SEC-048, PERF-002), U03/U07/U08 Võ Chiến Thắng (SEC-051 code side, SEC-050, PERF-004, PERF-020 60 s scan in ScheduledScanRunner), U02/U12 Võ Minh Tài (SEC-050 audit, PERF-005, PERF-019), U05/U09 Khuất Quang Hưng (PERF-009, PERF-011, PERF-013); infra/nginx and shared pool/limits (SEC-036, SEC-052, SEC-053, PERF-001) mostly by Đào Chí Cường and git account Max2Min (not mapped); SEC-051 key setup needs the VPS administrator. Corrected the earlier statement: PERF-004/005 sheet notes already record HikariCP 'Connection is not available' in the backend log. No changes made."
+**Context**: Construction - Build and Test, NFR result analysis (Report-5.4)
+
+---
+
+## System Test (NFR) - Who can fix infrastructure Fail cases
+**Timestamp**: 2026-11-26T11:15:00Z
+**Requested by:** Hải Nam
+**User Input**: "ý tôi muốn là những case cần sửa infrastructure thì tôi có thể tự sửa được không hay cần người khác chốt"
+**AI Response**: "Checked .github/workflows/ci.yml, infra/deploy/platform-deploy.sh and main merge history: the VPS pulls and deploys the latest green CI build of staging (staging) and main (production) automatically; feature branches go to staging, and staging-to-main PRs are merged by Quang Hung or Đào Chí Cường. Branch protection could not be checked (no gh CLI). Advised: repo-side infra fixes (nginx server_tokens/log_format/image pin, configurable Hikari pool, compose limits) can be written by the requester on a branch with a PR to staging, but production release needs the merger's approval; VPS-only changes (U03_BACKUP_PUBLIC_KEY, private key custody, OS updates, resource upgrades) need agreement from the VPS owner/team. No changes made."
+**Context**: Construction - Build and Test, NFR result analysis (Report-5.4)
+
+---
+
+## System Test (NFR) - Fix Fail cases request
+**Timestamp**: 2026-11-26T11:30:00Z
+**Requested by:** Hải Nam
+**User Input**: "bắt đầu fix giúp tôi các case failed đi, cần thiết thì ghi defect vào jira https://claude.ai/artifact/W9i1X6s7DDmjra9RnJd97b#0bd2fe34-76c2 rồi assign cho Hải Nam, có thắc mắc gì thì hỏi tôi lần lượt"
+**AI Response**: "Started the fix workflow for the 15 NFR Fail cases: reading AI-DLC rules, code conventions and state; checking Jira project and assignee; decisions will be asked one at a time before code changes."
+**Context**: Construction - Build and Test, NFR defect fixing (Report-5.4)
+
+---
+
+## System Test (NFR) - Merge staging before fixing
+**Timestamp**: 2026-11-26T11:45:00Z
+**Requested by:** Hải Nam
+**User Input**: "từ từ, hãy merge từ staging vào xem có thay đổi gì liên quan không rồi tiếp tục trả lời câu hỏi"
+**AI Response**: "Answer to question 1 recorded first: SEC-048 keep 401, reword the test case (no Jira). Fetched origin/staging and merged it into system-test-nfr (merge commit 5bec14c8, 17 incoming commits); the local audit.md edits were stashed and restored, and the append-only conflict was resolved by keeping both sections. Incoming changes are mostly Vietnamese source comments; real code changes are in U11 quiz practice (auto-submit of attempts stranded by a closed class or a student who left, migration V20261125_1000) and a jobs email pipeline test. Nothing touches the Fail-case areas (gradebook, enrollment, grading publish, group docs, nginx, compose, Hikari pool, 60 s ScheduledScanRunner). Continuing with question 2."
+**Context**: Construction - Build and Test, NFR defect fixing (Report-5.4)
+
+---
+
+## System Test (NFR) - Decisions for Fail cases
+**Timestamp**: 2026-11-26T12:15:00Z
+**Requested by:** Hải Nam
+**User Input**: "(Answers via question dialog) Câu 2/6 SEC-050: Giữ BR-U02-10, sửa test case. Câu 3/6 PERF-002: Sửa mục tiêu + tìm chỗ nghẽn. Câu 4/6 PERF-020: Quét mỗi 15 s, cấu hình được. Câu 5/6 Pool/CPU: Chỉnh pool, giữ giới hạn CPU. Câu 6/6 SEC-051: Bạn tự làm ngay."
+**AI Response**: "Recorded answers 1A, 2A, 3A, 4A, 5A, 6B in aidlc-docs/construction/plans/system-test-nfr-fix-questions.md. Wrote the SEC-051 key guide for the user (.tmp/systemtest/sec051-backup-key-guide.md: generate RSA-4096 locally with Git openssl, set the base64 X.509 public key in /opt/platform/infra/.env, recreate backend and worker, verify length and next backup marker ALAPBK01). Wrote the fix plan aidlc-docs/construction/plans/system-test-nfr-fix-plan.md and added a state section; asking for plan approval."
+**Context**: Construction - Build and Test, NFR defect fixing (Report-5.4), plan approval
+
+---
+
+## System Test (NFR) - Fix plan approved
+**Timestamp**: 2026-11-26T12:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "Duyệt, làm hết (Recommended)"
+**AI Response**: "Plan system-test-nfr-fix-plan.md approved; executing steps 1-6 in order (quick fixes first), no commit until requested."
+**Context**: Construction - Code Generation, NFR defect fixing (Report-5.4)
+
+---
+
+## System Test (NFR) - Code fixes for slow cases and Jira defects
+**Timestamp**: 2026-11-26T10:05:00Z
+**Requested by:** Hải Nam
+**User Input**: "(No new input; executing the approved plan \"Duyệt, làm hết\".)"
+**AI Response**: "Step 4 code fixes, each found by profiling the systest stack with pg_stat_statements. PERF-009 (U09): the gradebook now reads only gradebook fields (IEvaluationRepository.listGradebookEvaluations, columns plus feedback/score/maxScore/timestamps from JSON, SUPERSEDED and GROUP_DOCUMENT filtered in SQL), and the submission status of all individual columns in one call (ISubmissionQuery.listSubmissionsByAssignment, AttemptRepository.listStatusesOfClass without snapshot or content). PERF-011 (U08/U09): SubmissionQueryService.listSubmissions and listStudentsWithoutSubmission read status columns only; before, a 200-item finalize loaded 40,000 attempt rows with snapshot. PERF-013 (U04/U05): SubjectRepositoryAdapter.findByIdForUpdate read pg_settings (about 4 ms each, 200 times per enrollment); it now uses current_setting(...)::interval, checked equal for 0, 750ms, 1500, 2s, 90s, 2min, 3h, 1d. PERF-002 (U01): measured 1 sign-in at a time about 450 ms, 2 at once 3.4/s, 16 at once 1.5/s (2-CPU quota throttling); added ConcurrencyLimitedPasswordEncoder (U01_BCRYPT_MAX_CONCURRENT, default CPU count; U01_BCRYPT_QUEUE_WAIT 30 s, then 503 SYSTEM_BUSY). Tests added or updated (EvaluationVersionIntegrationTest, StudentAssignmentServiceTest, GradebookAssemblyTest, GradebookServiceTest, ConcurrencyLimitedPasswordEncoderTest); affected test classes pass. Frontend typecheck and lint of the PERF-019 files pass. Created Jira bugs KAN-241 (SEC-036), KAN-242 (SEC-052/053), KAN-243 (SEC-051), KAN-244 (pool, PERF-004/005), KAN-245 (PERF-020), KAN-246 (PERF-009), KAN-247 (PERF-011), KAN-248 (PERF-013), KAN-249 (PERF-019), KAN-250 (PERF-002), all assigned to Hải Nam with labels system-test and nfr; Defect IDs written to the sheet (Security column L, Performance column I). Rebuilding systest images for the re-run."
+**Context**: Construction - Code Generation and Build and Test, NFR defect fixing (Report-5.4)
+
+---
+
+## Construction - System test NFR fixes (PERF-011, PERF-013, PERF-002 re-test)
+**Timestamp**: 2026-11-26T11:40:00Z
+**Requested by:** Hải Nam
+**User Input**: "3/s, p95 ≤ 1 s (Recommended)" (answer to: "TC-PERF-002 (bcrypt 12, 2 CPU) ... Bạn muốn đổi Target của case thành gì?")
+**AI Response**: "PERF-011: added GradingService.BatchChecks (class write access, closed assignment and graded attempts of a class read once per bulk finalize/publish; every item still locked, version- and hash-checked in its own transaction) and ISubmissionQuery.findGradedAttemptId(…, GradingMode, …) / findGradedAttemptIds; tests GradingServiceTest.batchChecksClassAndAssignmentOnceButStillVerifiesEveryEvaluation, StudentAssignmentServiceTest updated (247 targeted tests pass). Re-tests on systest: PERF-011 finalize p95 1,179 ms / publish p95 1,367 ms (Pass, KAN-247); PERF-013 enrollment 3.40/3.14/3.01 s (Pass, KAN-248); PERF-002 100-VU burst 0% errors, sign-in p95 15.1 s, refresh p95 24 ms; steady 3 sign-ins/s p95 548 ms, 4/s p95 5.3 s. Per the answer, TC-PERF-002 target changed to: 3 sign-ins/s with p95 ≤ 1 s and < 1% errors; 100-user burst < 1% errors (queue ≤ 30 s), refresh p95 ≤ 500 ms → Pass (KAN-250). Sheet Performance rows 3, 10, 12, 14 updated; Jira comments on KAN-247, KAN-248, KAN-250."
+**Context**: CONSTRUCTION - system test NFR fix plan, step 5 (re-test and record)
+
+---
+
+## Kiểm tra erd-class-diagram-new
+**Timestamp**: 2026-11-26T00:00:00Z
+**Requested by:** Hải Nam
+**User Input**: "@"E:\FPTUni\sem9_fa26\diagram\erd.drawio" check lại giúp tôi erd-class-diagram đang sai những gì"
+**AI Response**: "Đọc tab erd-class-diagram-new (19 thực thể, 32 quan hệ), đối chiếu với DB và business rules; liệt kê lỗi bội số, quan hệ thiếu, nhãn quan hệ trống. Không sửa file drawio."
+**Context**: Review conceptual ERD
+
+---
+
+## Report-5.3 - Run the remaining Pending system test cases (WF01, WF06)
+**Timestamp**: 2026-11-26T12:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "check lại system test fr 5.3, sao vẫn còn 1 vài case pending, giúp tôi hoàn thiện nốt và cập nhật sheet đi" and the sheet link "https://docs.google.com/spreadsheets/d/1CIXobMzhstrPNrqWzkuoV701j74MHqF1y7vUKheDCO0/edit?gid=538726431#gid=538726431"
+**AI Response**: "Three Round 1 cases were Pending: ST-WF01-009, ST-WF06-005, ST-WF06-007. Ran them on the systest stack (English UI over CDP; set-up and some steps through the REST calls the UI makes, stated in each Note). ST-WF01-009 Passed (DOCUMENT_INVALID / TEACHER_BLOCK_MISSING, then submitted and graded). ST-WF06-007 Passed (version conflict, SELF_CHANGE_BLOCKED, ROLE_CHANGE_BLOCKED with the subject list in the UI, STUDENT_ROLE_CHANGE_NOT_ALLOWED). ST-WF06-005 Failed at step 5: after removal, t1's Students and Grading views no longer show sv4 or sv4's submission, although the attempt stays SUBMITTED in the database; not logged in Jira yet. Updated the WF01 and WF06 sheets (rows, Round 1 summaries) and the Test Statistics notes; totals now 61 Passed, 11 Failed, 0 Pending of 72. Evidence folders WF01/WF06 Round 1 (UI, 2026-11-26) with _README.txt, to be uploaded by the user. The backend was restarted by another session during one run; steps 3-5 of ST-WF06-005 were rerun on the same class."
+**Context**: Construction - Report 5.3 system test (FR), Round 1 completion
+
+---
+
+## Report-5.3 - Log ST-WF06-005 finding in Jira
+**Timestamp**: 2026-11-26T12:21:00Z
+**Requested by:** Hải Nam
+**User Input**: "Yes, log in Jira"
+**AI Response**: "Created KAN-251 (Bug, Low, labels system-test and wf06): teacher cannot see a removed student's earlier submissions; grading lists use listActiveStudents; noted the conflict between the case expectation (BR-U05-25) and the U09 design. Wrote KAN-251 in Defect IDs of ST-WF06-005 (WF06 sheet O17)."
+**Context**: Construction - Report 5.3 system test (FR), defect logging
+
+---
+
+## Construction - System test NFR fixes (PERF-004/005, KAN-244)
+**Timestamp**: 2026-11-26T12:35:00Z
+**Requested by:** Hải Nam
+**User Input**: "Sửa tiếp để hết 5xx (Recommended)" (answer to: "PERF-004/005 (KAN-244) sau khi sửa vòng lặp O(n²) khi lưu tài liệu ... Bạn muốn xử lý tiếp thế nào?")
+**AI Response**: "Profiled draft saves: DocumentFiles.resolveFiles rescanned the whole saved document for every block (O(n²), ~1 s per 2,000-block save) → single pass (DocumentFilesTest). Re-test: PERF-004 errors 17.8% → 8.4%, save p95 20.8 s → 11.2 s, submit p95 448 ms; PERF-005 errors 2.1%, save p95 130 ms. Per the answer: AttemptService.saveAttempt now sanitizes/validates outside the transaction and re-checks status, deadline and content version under the row lock before writing (AttemptServiceTest.saveValidatesBeforeTheWriteTransactionAndRechecksTheVersionUnderLock); Hikari connection-timeout 3 s → ${DB_CONNECTION_TIMEOUT:10000} (application.yml, compose, .env.example). Re-running PERF-004/005 on new assignments."
+**Context**: CONSTRUCTION - system test NFR fix plan, step 4/5
+
+---
+
+## Defect fix - KAN-251 assign, fix and retest; Report 5.3 v1.2
+**Timestamp**: 2026-11-26T12:50:00Z
+**Requested by:** Hải Nam
+**User Input**: "sau đó assign Hải Nam sau đó sửa và test lại" then, during the work: "sau đó cập nhật cả version của sheet cover nữa, ghi change description và reference ngắn gọn rõ ràng" and "Hãy thử lại"
+**AI Response**: "Assigned KAN-251 to Hải Nam. Fixed in the working tree (not committed): SubmissionReviewService lists removed students who still have attempts in the individual Grading list, progress and navigation, with SubmissionRow.leftClass; frontend shows a 'Left class' label; U09 business logic model F2 step 3 updated; SubmissionReviewNavigationTest updated and SubmissionReviewLeftClassTest added. Grading tests 120/120 passed; full backend run 2697 tests with 2 failures outside grading (DriveHealthIndicatorTest, DatabaseTimeoutIntegrationTest, also failing alone); frontend vitest, typecheck, eslint clean. Retested ST-WF06-005 as Round 2 (Passed) on an extra backend container platform-backend:kan251 on the systest database plus a local dev frontend; removed the container after the run at the request of the NFR test session and replied to it. Updated the WF06 sheet (Round 2, KAN-251), Cover (version 1.2, issue date 26/11/2026, record-of-change row) and Test Statistics (document code v1.2, issue date); commented KAN-251."
+**Context**: Construction - defect fix and Report 5.3 system test (FR) Round 2
+
+---
+
+## Defect fix - KAN-251 commit decision
+**Timestamp**: 2026-11-26T13:00:00Z
+**Requested by:** Hải Nam
+**User Input**: "Chưa commit"
+**AI Response**: "Left the KAN-251 fix uncommitted in the working tree on system-test-nfr; nothing staged or pushed."
+**Context**: Construction - defect fix, commit deferred by the user
+
+---
+
+## System test NFR fix - PERF-004/005 re-run (KAN-244)
+**Timestamp**: 2026-11-26T14:55:00Z
+**Requested by:** Hải Nam
+**User Input**: "Hãy thử lại"
+**AI Response**: "Re-ran TC-PERF-004/005 on systest with the save split out of the transaction and Hikari connection-timeout 10 s. PERF-005: 0% errors (latency still above target). PERF-004: 4.4% errors, all 503 SYSTEM_BUSY from the session check (Redis command over 500 ms). Diagnosis with temporary GC logging: the 1 GB container makes the JVM pick SerialGC; Full GC paused the app up to 862 ms. With -XX:+UseG1GC the longest pause was 239 ms, no Full GC, 80/80 parallel saves OK. Added -XX:+UseG1GC to backend/Dockerfile (backend and worker image), rebuilt systest and re-running PERF-004/005. Evidence: Performance - Round 2/TC-PERF-004_Assignment submit/gc-diagnosis-2026-11-26."
+**Context**: Construction - system test NFR fix plan, step 4/5 (KAN-244)
+
+---
+
+## System test NFR fix - faster diagnosis loop (KAN-244)
+**Timestamp**: 2026-11-26T16:05:00Z
+**Requested by:** Hải Nam
+**User Input**: "có cách nào chạy nhanh hơn không?"
+**AI Response**: "Proposed a faster loop: try settings through env in the systest override instead of rebuilding, recreate only the backend, sign in once and reuse the cookies, run one or two save bursts instead of three, and re-run PERF-005 only once PERF-004 is clean. The full k6 scripts stay the evidence for the sheet."
+**Context**: Construction - system test NFR fix plan, step 5 (KAN-244)
+
+---
+
+## System test NFR fix - fast loop approved, parallel sessions question
+**Timestamp**: 2026-11-26T16:07:00Z
+**Requested by:** Hải Nam
+**User Input**: "Ok, làm theo cách nhanh đó đi" / "bên cạnh đó bạn có thể điều khiển các phiên phụ để bạn chạy song song các case còn lại không? Có nên làm vậy không"
+**AI Response**: "Advised against parallel sessions: every remaining case uses the same systest stack on the same 12-thread host, and the probe run showed host CPU at 100% for 66 of 270 s during PERF-004, so parallel load tests would distort results; another writer on the shared tree would also risk conflicts. Wrote evidence/fast-perf004.mjs (cached sessions, pre-built bodies, N parallel 2,000-block saves per round). With the request-level SaveConcurrencyLimiter: 100/100 saves returned 200 in every burst (also with a host CPU burner and on the second round over a stored 2,000-block draft), no session-check failures, 6-8 saves/s."
+**Context**: Construction - system test NFR fix plan, step 5 (KAN-244)
+
+---
+
+## System test NFR fix - paused for system test FR
+**Timestamp**: 2026-11-26T16:15:00Z
+**Requested by:** Hải Nam
+**User Input**: "sau khi chạy xong thì từ từ hẵng chạy tiếp các case tiếp theo. Tôi muốn làm theo đề xuất của phiên Integration test cases cập nhật để hoàn tất nốt các case và proof của system test fr đã. Sau khi chạy xong thì nhắn để phiên đó commit các thay đổi lên branch chia thành các commit nhỏ cho tôi nhé"
+**AI Response**: "Stopped the NFR runs after the fast PERF-004 diagnosis. Removed the temporary GC logging from the systest override and recreated the backend (G1, normal settings). Messaged the 'Integration test cases cập nhật' session with the user's request and a file-to-change map so it can commit the work on system-test-nfr as small commits. Still open for NFR: full k6 PERF-004/005 evidence and the throughput-style latency target, PERF-001/019/020, SEC-036/053, sheet/Jira/report updates."
+**Context**: Construction - system test NFR fix plan, paused
+
+---
+
+## Report-5.3 - Evidence check and re-run recommendation
+**Timestamp**: 2026-11-26T13:20:00Z
+**Requested by:** Hải Nam
+**User Input**: "https://docs.google.com/spreadsheets/d/1CIXobMzhstrPNrqWzkuoV701j74MHqF1y7vUKheDCO0/edit?gid=1566615708#gid=1566615708
+check xem còn case nào chưa được thực hiện hay còn failed không?" then "ST-WF06-003, 004 và 011 có thể do tôi chưa up bằng chứng lên, check lại 1 lượt giúp tôi các proof trên máy tôi mà bạn lưu vào có đầy đủ chưa. Về các case passed dựa trên case cũ thì bạn khuyến nghị nên chạy lại không?"
+**AI Response**: "All 72 cases have a Round 1 result; the 11 Round 1 failures all passed in Round 2. No local or Drive evidence exists for 15 WF06 cases (the Drive WF06 folder holds BF04 proof under a wrong name). Recommended re-running WF06, the four main paths (WF01-001, WF01-005, WF02-001, WF07-001), the remaining loop paths of WF01, WF02, WF07, and capturing proof for WF03-004/005/007 and WF04-009."
+**Context**: Construction - Report 5.3 system test (FR) review
+
+---
+
+## Report-5.3 - Commit split then FR re-run
+**Timestamp**: 2026-11-26T13:30:00Z
+**Requested by:** Hải Nam
+**User Input**: "bạn đề xuất nên tách commit rồi commit lên branch trước sau đó chạy các case test hay như nào" then "Đồng ý, làm theo thứ tự đó đi. lưu ý không commit các file có ý nghĩa temperance không có ích cho dự án ví dụ như 3 file bạn nói ở trên"
+**AI Response**: "Order agreed: check each file and hunk against the NFR session's bug map, run mvn verify and frontend checks, split into small local commits on system-test-nfr (no push), rebuild systest from HEAD, then re-run the FR cases. Excluded from commits: backend/.sonar/, .claude/launch.json, aidlc-docs/inception/requirements/2026-11-25-report-3-nfr-review.md and other temporary files."
+**Context**: Construction - commit split and Report 5.3 re-run (the request was passed on through the NFR session and then confirmed by the user in this session)
+
+---

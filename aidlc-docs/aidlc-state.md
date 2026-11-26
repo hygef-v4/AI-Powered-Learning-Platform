@@ -1,5 +1,14 @@
 # AI-DLC State Tracking
 
+## System test NFR (Report-5.4): sửa case Fail · 2026-11-26
+
+Người dùng: "bắt đầu fix giúp tôi các case failed đi, cần thiết thì ghi defect vào jira ... rồi assign cho Hải Nam, có thắc mắc gì thì hỏi tôi lần lượt".
+
+- [x] Merge `origin/staging` vào `system-test-nfr` (5bec14c8); thay đổi từ staging không liên quan các case Fail.
+- [x] Sáu câu hỏi đã trả lời: [system-test-nfr-fix-questions.md](construction/plans/system-test-nfr-fix-questions.md) (1A, 2A, 3A, 4A, 5A, 6B).
+- [x] Hướng dẫn SEC-051 cho người dùng tự làm trên VPS: `.tmp/systemtest/sec051-backup-key-guide.md` (ngoài repo).
+- [x] Kế hoạch sửa đã duyệt ("Duyệt, làm hết"): [system-test-nfr-fix-plan.md](construction/plans/system-test-nfr-fix-plan.md).
+
 ## U03: Test pipeline email lỗi chập chờn trên PR #140 · 2026-11-26
 
 Người dùng: "giúp tôi check lại pr đang lỗi khi lên main".
