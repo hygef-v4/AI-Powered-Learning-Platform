@@ -1174,6 +1174,7 @@
       "AiDraftDialog": {
         "reviewTemplateDraft": "Đề được tạo từ mẫu. Kiểm tra câu hỏi và rubric trước khi áp dụng.",
         "draftFailed": "Tạo bản nháp thất bại",
+        "linkedDraftStale": "Đề đã thay đổi sau khi agent lưu đề xuất. Hãy yêu cầu agent đọc phiên bản mới và tạo lại đề xuất.",
         "theAiReturnedNoResult": "AI không trả kết quả.",
         "youCanStillWriteIt": "{value} Bạn vẫn soạn thủ công được.",
         "waitForUploadsToFinish": "Hãy đợi tải xong hoặc gỡ các tệp bị lỗi trước khi tạo đề.",

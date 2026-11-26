@@ -15445,3 +15445,30 @@ giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại 
 **Context**: Construction, U09.
 
 ---
+
+## U07 Tạo nội dung trong chat sửa đề trống
+**Timestamp**: 2026-11-26T10:12:13Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi sửa như vậy"
+**AI Response**: "Dùng cấu trúc tạo đề khi chat nhận bản nháp trống. Backend chuẩn hóa điểm dạng chuỗi số, dựng khung và rubric từ đề xuất hợp lệ rồi kiểm tra phiên bản khi áp dụng."
+**Context**: Construction, Code Generation U07. [Kế hoạch](construction/plans/code-generation-plan/2026-11-26-u07-blank-ai-draft.md).
+
+---
+
+## U07 Kiểm tra chat sửa đề trống
+**Timestamp**: 2026-11-26T10:16:57Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa tiếp"
+**AI Response**: "Giữ chế độ REVISE trong phản hồi và dùng dấu phân loại nội bộ. Kiểm tra 738 ca backend và 28 ca frontend đạt. Một ca đánh giá AI chấm điểm bỏ qua theo cấu hình."
+**Context**: Construction, Build and Test U07.
+
+---
+
+## U07/U09 Đồng bộ giao diện mở link MCP
+**Timestamp**: 2026-11-26T10:35:48Z
+**Requested by:** Quang Hung
+**User Input**: "tôi muốn nó đồng bộ giao diện luôn mở link thì k cần bấm áp dụng nó trả về giao diện giống lúc vừa mới gọi tạo bài ai, hoặc chấm điểm bằng api ai trên web"
+**AI Response**: "Tự điền bản nháp đề hợp lệ khi mở link. Link chấm dùng chung cơ chế điền form AI web, giữ thao tác lưu và công bố điểm của giảng viên."
+**Context**: Construction, U07 và U09. [Kế hoạch](construction/plans/code-generation-plan/2026-11-26-u07-u09-mcp-result-links.md).
+
+---
