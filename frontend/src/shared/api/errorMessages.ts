@@ -26,7 +26,25 @@ const CODE_KEYS: Record<string, string> = {
   ANNOUNCEMENT_INVALID: "announcementInvalid",
   ANNOUNCEMENT_EMAIL_INVALID: "announcementEmailInvalid",
   ANNOUNCEMENT_STALE: "conflict",
+  AI_TOO_MANY_TASKS: "aiTooManyTasks",
+  AI_TASK_NOT_CANCELLABLE: "aiNotCancellable",
 };
+
+/** Lý do lỗi AI mà backend lưu vào `safeError` (tiếng Việt, không kèm mã); khớp nguyên văn câu của server. */
+const AI_FAILURE_KEYS: Record<string, string> = {
+  "Bạn đang có 3 yêu cầu AI chưa xong; chờ hoặc hủy bớt rồi thử lại": "aiTooManyTasks",
+  "Người dùng đã hủy": "aiCancelled",
+  "Chờ quá 30 phút, đã hủy": "aiTimedOut",
+  "Kết nối AI đã bị tắt hoặc thu hồi": "aiConnectionRevoked",
+  "Kết quả AI không đúng định dạng yêu cầu": "aiInvalidResult",
+  "Kết quả AI không đúng định dạng": "aiInvalidResult",
+  "AI không trả kết quả": "aiNoResult",
+  "AI chưa sẵn sàng": "aiNotReady",
+  "AI trả nội dung không đọc được, hãy thử lại": "aiUnreadable",
+  "Bài nộp đã thay đổi": "submissionChanged",
+};
+
+const NON_ASCII = /[^\x00-\x7F]/;
 
 const STATUS_KEYS: Record<number, string> = {
   400: "invalidRequest",
@@ -58,4 +76,17 @@ export function describeApiProblem(problem: ProblemText): string {
     if (limitMb) return msg("shared.api.errorMessages.fileTooLargeMb", { value: limitMb });
   }
   return msg(`shared.api.errorMessages.${key}`);
+}
+
+/**
+ * Lý do lỗi của task/góp ý AI theo ngôn ngữ giao diện. Giao diện tiếng Việt giữ câu của server; ngôn ngữ khác dịch
+ * câu đã biết, giữ câu tiếng Anh của server, còn câu tiếng Việt chưa biết thì dùng `fallback`.
+ */
+export function describeAiFailure(reason: string | null | undefined, fallback: string): string {
+  const text = reason?.trim();
+  if (!text) return fallback;
+  if (LOCALE === "vi") return text;
+  const key = AI_FAILURE_KEYS[text];
+  if (key) return msg(`shared.api.errorMessages.${key}`);
+  return NON_ASCII.test(text) ? fallback : text;
 }

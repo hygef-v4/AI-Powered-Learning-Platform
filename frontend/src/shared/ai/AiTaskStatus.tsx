@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { fetchApi } from "@/shared/api/client";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import { usePollStatus } from "@/shared/status/usePollStatus";
 import { Button, Pill, type Tone } from "@/shared/ui";
 import type { AiTaskState, AiTaskView } from "./types";
@@ -62,7 +63,7 @@ export function AiTaskStatus({ taskId, cancellable = true, intervalMs = 2000, on
       {data.state === "UNKNOWN" && (
         <span className="text-muted">{msg("shared.ai.AiTaskStatus.theProviderDidNotReturn")}</span>
       )}
-      {data.safeError && data.state !== "UNKNOWN" && <span className="text-danger">{data.safeError}</span>}
+      {data.safeError && data.state !== "UNKNOWN" && <span className="text-danger">{describeAiFailure(data.safeError, label.text)}</span>}
       {data.applyResult === "STALE" && <span className="text-warning">{msg("shared.ai.AiTaskStatus.theDataChangedWhileWaiting")}</span>}
       {cancellable && data.state === "QUEUED" && (
         <Button size="sm" onClick={() => void cancel()} disabled={cancelling}>
