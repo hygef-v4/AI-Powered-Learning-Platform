@@ -15345,3 +15345,39 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, U11, Auto-fix PR #137
 
 ---
+
+## U03 Kiểm tra PR #140 lỗi CI khi lên main
+**Timestamp**: 2026-11-26T04:30:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi check lại pr đang lỗi khi lên main"
+**AI Response**: "PR #140 lỗi job backend ở RequirementsCoverageIntegrationTest.actualEmailJobPipelineRetriesBoundedlyPersistsFailureAndKeepsBusinessNotice do RejectedExecutionException chập chờn của JobDispatcher. Sửa test chờ worker rảnh bằng Awaitility; chưa commit."
+**Context**: Construction, Build and Test U03.
+
+---
+
+## U03 Sửa test PR #140 trên audit-staging
+**Timestamp**: 2026-11-26T04:40:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa trên audit staging"
+**AI Response**: "Sửa đã nằm trên nhánh audit-staging (chưa commit). Docker chưa chạy nên chưa chạy được integration test."
+**Context**: Construction, Build and Test U03.
+
+---
+
+## U03 Merge staging vào audit-staging
+**Timestamp**: 2026-11-26T04:50:00Z
+**Requested by:** Quang Hung
+**User Input**: "merge staging vào audit stagingtruwocs"
+**AI Response**: "Cất tạm thay đổi chưa commit, merge origin/staging vào audit-staging, rồi áp lại thay đổi."
+**Context**: Construction, Build and Test U03.
+
+---
+
+## U03 Yêu cầu commit sửa test chập chờn
+**Timestamp**: 2026-11-26T05:00:00Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit"
+**AI Response**: "Commit sửa test RequirementsCoverageIntegrationTest cùng ghi nhận AI-DLC lên audit-staging; chưa push."
+**Context**: Construction, Build and Test U03.
+
+---
