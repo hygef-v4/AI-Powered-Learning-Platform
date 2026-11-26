@@ -14,10 +14,16 @@ const SOURCES: SourceOption[] = [
   },
 ];
 
-export function mockAiSources(readTask?: () => AiTaskView) {
+export function mockAiSources(readTask?: () => AiTaskView, {
+  preferred = "SHARED", sharedAvailable = true,
+}: { preferred?: SourceOption["source"] | null; sharedAvailable?: boolean } = {}) {
   vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
-    if (url.endsWith("/api/v1/ai/sources")) return Response.json(SOURCES);
+    if (url.endsWith("/api/v1/ai/sources")) return Response.json(SOURCES.map((option) => ({
+      ...option,
+      preferred: option.source === preferred,
+      ...(option.source === "SHARED" && !sharedAvailable ? { available: false, reason: "Đã hết hạn mức hôm nay" } : {}),
+    })));
     if (readTask && url.endsWith("/api/v1/ai/tasks/t1")) return Response.json(readTask());
     return Response.json({ status: 404 }, { status: 404 });
   }));

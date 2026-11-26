@@ -1607,3 +1607,9 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 - [x] Xác nhận phạm vi đã được duyệt và tìm nơi tham chiếu các file wrapper.
 - [x] Xóa hai wrapper và ca test đọc chúng.
 - [x] Maven package đạt 109 test được chọn. JAR chứa đủ hai workflow soạn Assignment và chấm rubric.
+
+## 2026-11-26 — U07 nguồn AI của chat sửa đề
+
+- [x] Xác định popup luôn mở vì chat yêu cầu xác nhận mỗi lần từ commit f8b4523e. Kiểm tra từ chối đề xuất trống sau khi gộp và chuẩn hóa, giữ kiểm tra khi áp dụng.
+- [x] Gửi dùng nguồn mặc định khả dụng, đổi nguồn cho lần tiếp theo bằng nút cạnh đính kèm. Bộ chọn tô lựa chọn hiện tại và ẩn hai ghi chú của chat. Khi cần chọn thủ công, vẫn hiện thông tin bên chịu phí, hạn mức và lý do nguồn bị khóa.
+- [x] 104 kiểm thử frontend, 11 kiểm thử backend, TypeScript và lint phạm vi đạt. Chrome desktop và 390 px với API giả lập đạt. [Kế hoạch và kết quả](construction/plans/code-generation-plan/2026-11-26-u07-revision-default-source.md).
