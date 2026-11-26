@@ -26,6 +26,7 @@ export function ClassListPage({ classes, subjects, initialSubjectId, onOpen, onC
   const [query, setQuery] = useUrlState<string>("classQuery", "", undefined, "replace");
   const [pageValue, setPageValue] = useUrlState<string>("classPage", "0", undefined, "replace");
   const page = /^\d+$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 0;
+  // Đổi trang bằng giá trị chuỗi dùng trong trạng thái URL.
   const setPage = (page: number) => setPageValue(String(page));
   const subjectClasses = classes.filter((course) => course.subject.id === subjectId);
   const terms = listTermOptions(subjectClasses);

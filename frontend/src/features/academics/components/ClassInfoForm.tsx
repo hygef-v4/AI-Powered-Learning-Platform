@@ -16,6 +16,7 @@ export function ClassInfoForm(props: { value: CourseClassView; onSave: (value: C
   return <InfoEditor key={`${props.value.id}-${props.value.version}`} {...props}/>;
 }
 
+// Khởi tạo form từ bản lớp hiện tại và tính kỳ tương ứng với ngày bắt đầu.
 function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value: ClassInfoInput) => Promise<void> }) {
   const id = useId();
   const original = { description: value.description, startsOn: value.startsOn ?? "" };
@@ -29,6 +30,7 @@ function InfoEditor({ value, onSave }: { value: CourseClassView; onSave: (value:
   const dirty = !dateValid || fields.description !== original.description || fields.startsOn !== original.startsOn;
   const nextTerm = deriveTerm(fields.startsOn);
   const termChanged = fields.startsOn !== original.startsOn && nextTerm !== null && nextTerm !== value.term;
+  // Kiểm ngày bắt đầu và trạng thái lớp trước khi chuyển bản chỉnh sửa cho caller.
   async function handleSave(event: FormEvent) {
     event.preventDefault();
     if (busy || archived) return;

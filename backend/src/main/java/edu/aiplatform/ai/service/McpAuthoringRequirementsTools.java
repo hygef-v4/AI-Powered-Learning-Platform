@@ -24,11 +24,13 @@ public class McpAuthoringRequirementsTools implements IMcpToolProvider {
     private final McpToolRegistry registry;
     private final ObjectMapper json;
 
+    // Nhận registry để đọc schema hiện hành thay vì duy trì một bản sao.
     public McpAuthoringRequirementsTools(McpToolRegistry registry, ObjectMapper json) {
         this.registry = registry;
         this.json = json;
     }
 
+    // Khai báo các loại nội dung có thể tra yêu cầu soạn thảo.
     @Override
     public List<McpToolDefinition> tools() {
         return List.of(McpSchemas.read("read_authoring_requirements",
@@ -36,6 +38,7 @@ public class McpAuthoringRequirementsTools implements IMcpToolProvider {
                 "\"kind\":{\"enum\":[\"ASSIGNMENT\",\"QUIZ\",\"BANK\"]}", "kind"));
     }
 
+    // Tra schema lưu và tạo mới theo loại nội dung từ registry cùng giới hạn rubric cho agent.
     @Override
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
         McpInput.requireTeaching(actor);

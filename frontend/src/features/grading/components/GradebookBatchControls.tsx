@@ -19,14 +19,18 @@ type Props = {
 };
 const PAGE_SIZE = 20;
 const MAX_BATCH = 100;
+// Quy đổi trạng thái cũ về các nhóm mà bộ lọc sổ điểm dùng.
 const formatStatus = (status: string) => status === "FINALIZED" ? "DRAFT" : status === "IN_PROGRESS" ? "NOT_SUBMITTED" : status;
+// Chỉ cho chọn hàng có bản chấm và trạng thái hỗ trợ thao tác theo lô.
 const canSelect = (row: SubmissionRow) => !!row.evaluationId && ["PENDING", "DRAFT", "FINALIZED", "PUBLISHED"].includes(row.status);
 
+// Tải danh sách bài nộp và đặt lại bảng chọn khi phạm vi hoặc bộ lọc đổi.
 export function GradebookBatchControls(props: Props) {
   const directory = useSubmissionDirectory(props.classId, props.assignmentId);
   return <SubmissionTable key={JSON.stringify([props.classId, props.assignmentId, props.query, props.status])} {...props} directory={directory} />;
 }
 
+// Gắn kết quả danh sách với các hàng chọn, điều hướng và giới hạn thao tác của lớp.
 function SubmissionTable({ onDone, query = "", status = "", group = false, directory }: Props & { directory: ReturnType<typeof useSubmissionDirectory> }) {
   const { value, error, refresh } = directory;
   const readOnly = directory.editable === false;
@@ -50,6 +54,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
   const aiItems = buildGradeActionItems(selectedRows, "ai");
   const publishItems = buildGradeActionItems(selectedRows, "publish");
 
+  // Cập nhật tập ID được chọn mà vẫn áp dụng giới hạn số bản chấm trong lô.
   function toggleRow(id: string, checked: boolean) {
     setSelected(current => {
       const next = new Set(current);
@@ -57,6 +62,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
       return next;
     });
   }
+  // Áp lựa chọn cho các hàng của trang đang xem, giữ tập chọn ở trang khác.
   function togglePage(checked: boolean) {
     setSelected(current => {
       const next = new Set(current);

@@ -6,6 +6,7 @@ import { Alert, Button, InfoTip, Switch } from "@/shared/ui";
 import { gradingApi, type GradeDistributionVisibility } from "../api";
 import { msg } from "@/i18n/msg";
 
+// Chỉ mở cài đặt phân phối cho bài có chế độ GRADED.
 export function GradeDistributionSettings({ classId, assignmentId, gradingMode }: {
   classId: string;
   assignmentId: string;
@@ -16,6 +17,7 @@ export function GradeDistributionSettings({ classId, assignmentId, gradingMode }
     : null;
 }
 
+// Quản lý công tắc hiển thị theo lớp và bài, dựa vào quyền server trả về.
 function VisibilitySetting({ classId, assignmentId }: { classId: string; assignmentId: string }) {
   const [value, setValue] = useState<GradeDistributionVisibility | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +37,7 @@ function VisibilitySetting({ classId, assignmentId }: { classId: string; assignm
     return () => controller.abort();
   }, [classId, assignmentId, epoch]);
 
+  // Kiểm quyền sửa và dùng version đang xem để gửi thay đổi công tắc.
   async function handleSave(enabled: boolean) {
     if (!value?.canEdit || busy || error) return;
     setBusy(true);

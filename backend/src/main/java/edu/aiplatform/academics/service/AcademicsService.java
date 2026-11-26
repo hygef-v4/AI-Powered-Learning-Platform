@@ -39,6 +39,7 @@ public class AcademicsService {
     private final TransactionTemplate lineTransactionTemplate;
     private final Clock clock;
 
+    // Thiết lập giao dịch cho lệnh lớp và giao dịch riêng cho từng dòng ghi danh.
     public AcademicsService(ICourseClassRepository courseClassRepository,
             IEnrollmentRepository enrollmentRepository,
             IAcademicsReadRepository academicsReadRepository,
@@ -322,6 +323,7 @@ public class AcademicsService {
                             .collect(Collectors.toMap(AccountContact::studentCode,
                                     Function.identity(), (a, b) -> a));
             var results = new ArrayList<RowResult>();
+            // Mỗi dòng hợp lệ có giao dịch riêng, nên lỗi ở dòng sau không hoàn tác các dòng đã ghi.
             for (var row : rows) {
                 EnrollmentResult result = row.error();
                 if (result == null)
@@ -381,6 +383,7 @@ public class AcademicsService {
         });
     }
 
+    // Kiểm tư cách sinh viên và ghi mới hoặc khôi phục ghi danh trong giao dịch của caller.
     private EnrollmentResult enrollLine(Actor actor, CourseClass current, AccountContact account,
             EnrollmentSource source) {
         if (account == null)
@@ -410,6 +413,7 @@ public class AcademicsService {
         return result;
     }
 
+    // Khóa môn trước lớp, kiểm lại quyền và so version nếu caller gửi version.
     private CourseClass loadLockedClass(Actor actor, UUID id, Long version) {
         requireAudience(actor, "manager");
         CourseClass before = requireClassAccess(actor, "manager", id);
@@ -422,6 +426,7 @@ public class AcademicsService {
         return current;
     }
 
+    // Áp quy tắc quyền theo vai trò xem và trả lớp nếu người gọi có phạm vi tương ứng.
     private CourseClass requireClassAccess(Actor actor, String audience, UUID id) {
         CourseClass value = courseClassRepository.findClass(id)
                 .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
@@ -444,6 +449,7 @@ public class AcademicsService {
         return value;
     }
 
+    // Đối chiếu quyền quản lý môn hiện tại từ cả scope và hồ sơ môn.
     private void requireManager(Actor actor, UUID subjectId) {
         if (subjectId == null || !scope.isSubjectManager(actor.accountId(), subjectId)
                 || !actor.accountId().equals(loadSubject(subjectId).managerId()))
@@ -451,6 +457,7 @@ public class AcademicsService {
         requireAuthorization(actor, Actions.CLASS_MANAGE, ResourceRef.subject(subjectId), true);
     }
 
+    // Phân biệt yêu cầu thiếu đăng nhập với tài khoản đăng nhập sai vai trò của route.
     private void requireAudience(Actor actor, String audience) {
         if (actor == null || actor.accountId() == null || actor.role() == null)
             throw new ApiException(org.springframework.http.HttpStatus.UNAUTHORIZED,
@@ -475,6 +482,7 @@ public class AcademicsService {
         requireAuthorization(actor, action, ResourceRef.none(), false);
     }
 
+    // Áp kết quả phân quyền và trả 404 nếu từ chối trên tài nguyên cần che.
     private void requireAuthorization(Actor actor, String action, ResourceRef ref,
             boolean hideDeniedResource) {
         var decision = authorization.authorize(actor, action, ref);
@@ -505,21 +513,25 @@ public class AcademicsService {
             throw ApiException.createBadRequest("INVALID_TEACHER", "Chọn giảng viên đang hoạt động");
     }
 
+    // Chỉ coi tài khoản ACTIVE có vai trò giảng dạy phù hợp là người được phân công.
     private boolean isEligibleTeacher(AccountContact contact) {
         return contact.status() == AccountStatus.ACTIVE
                 && (contact.role() == Role.TEACHER || contact.role() == Role.SUBJECT_MANAGER);
     }
 
+    // Chặn ghi danh và chỉnh sửa trên lớp đã lưu trữ.
     private void requireEditableClass(CourseClass value) {
         if (value.status() == ClassStatus.ARCHIVED)
             throw ApiException.createConflict("CLASS_ARCHIVED", "Lớp đã lưu trữ chỉ được xem");
     }
 
+    // Đọc tham chiếu môn và báo nguồn tạm không khả dụng nếu thiếu dữ liệu.
     private SubjectRef loadSubject(UUID id) {
         return subjectQuery.getSubject(id).orElseThrow(
                 () -> ApiException.createUnavailable("SUBJECT_UNAVAILABLE", "Không đọc được môn học"));
     }
 
+    // Gom số lượt ghi danh theo ID lớp trong một truy vấn trước khi dựng danh sách trả về.
     private List<ClassView> mapClassViews(List<CourseClass> values) {
         var counts = academicsReadRepository
                 .countEnrollments(values.stream().map(CourseClass::id).toList());
@@ -531,10 +543,12 @@ public class AcademicsService {
                 .toList();
     }
 
+    // Dựng phản hồi cho một lớp qua cùng luồng đếm ghi danh của danh sách.
     private ClassView mapClassView(CourseClass value) {
         return mapClassViews(List.of(value)).get(0);
     }
 
+    // Ghép môn, giảng viên và các số đếm đã đọc vào phản hồi của lớp.
     private ClassView mapClassView(CourseClass courseClass,
             IAcademicsReadRepository.EnrollmentCounts counts) {
         var subject = loadSubject(courseClass.subjectId());
@@ -551,6 +565,7 @@ public class AcademicsService {
                 courseClass.showGradeDistribution(), courseClass.version());
     }
 
+    // Tổng hợp số lớp theo từng trạng thái để hiển thị tổng quan môn.
     private SubjectSummary mapSubjectSummary(SubjectRef subject) {
         var counts = new EnumMap<ClassStatus, Long>(ClassStatus.class);
         for (var status : ClassStatus.values())
@@ -561,6 +576,7 @@ public class AcademicsService {
                 subject.description(), subject.status(), Map.copyOf(counts));
     }
 
+    // Ghép trạng thái ghi danh với hồ sơ tài khoản hiện tại của sinh viên.
     private Student mapStudentView(Enrollment enrollment) {
         var account = accountLookup.getContact(enrollment.accountId()).orElseThrow(
                 () -> ApiException.createUnavailable("ACCOUNT_UNAVAILABLE", "Không đọc được sinh viên"));
@@ -568,11 +584,13 @@ public class AcademicsService {
                 enrollment.enrolledAt(), enrollment.status(), account.studentCode());
     }
 
+    // Chuyển hồ sơ liên lạc sang tên, email và mã sinh viên dùng trong phản hồi.
     private Person mapPerson(AccountContact account) {
         return new Person(account.accountId(), account.displayName(), account.email(),
                 account.studentCode());
     }
 
+    // Tạo cặp ID trước và sau để audit kể cả khi một phía chưa có giảng viên.
     private Map<String, Object> buildTeacherDetails(UUID before, UUID after) {
         var details = new HashMap<String, Object>();
         details.put("before", before == null ? "" : before.toString());
@@ -580,6 +598,7 @@ public class AcademicsService {
         return details;
     }
 
+    // Phát sự kiện sinh viên đã được kích hoạt ghi danh để các unit khác xử lý.
     private void publishEnrollmentActivation(CourseClass courseClass, UUID accountId) {
         eventPublisher
                 .publish(new DomainEvent(1, UUID.randomUUID(), EventTypes.ENROLLMENT_ACTIVATED,
@@ -589,15 +608,18 @@ public class AcademicsService {
                                 accountId.toString())));
     }
 
+    // Ghi audit thành công cho thao tác trên lớp cùng chi tiết do caller cung cấp.
     private void recordSuccess(Actor actor, String action, UUID id, Map<String, Object> details) {
         recordAudit(actor, action, id, AuditResult.SUCCESS, null, details);
     }
 
+    // Gắn loại tài nguyên COURSE_CLASS cho bản ghi audit của lớp.
     private void recordAudit(Actor actor, String action, UUID id, AuditResult result, String reason,
             Map<String, Object> details) {
         recordAudit(actor, action, "COURSE_CLASS", id, result, reason, details);
     }
 
+    // Ghi sự kiện audit kể cả khi yêu cầu chưa xác định được tài khoản hoặc tài nguyên.
     private void recordAudit(Actor actor, String action, String objectType, UUID id,
             AuditResult result, String reason, Map<String, Object> details) {
         audit.record(new AuditEvent(UUID.randomUUID(), actor == null ? null : actor.accountId(),
@@ -605,11 +627,13 @@ public class AcademicsService {
                 clock.instant()));
     }
 
+    // Chạy lệnh ghi trong giao dịch rồi dùng chung cơ chế chuyển lỗi và audit của unit.
     private <T> T executeCommand(Actor actor, String action, UUID id, Supplier<T> work) {
         return executeGuarded(actor, action, id,
                 () -> transactionTemplate.execute(tx -> work.get()));
     }
 
+    // Chạy thao tác qua xử lý lỗi và audit với bộ chi tiết yêu cầu mặc định.
     private <T> T executeGuarded(Actor actor, String action, UUID id, Supplier<T> work) {
         return executeGuarded(actor, action, id, Map.of(), work);
     }
@@ -639,6 +663,7 @@ public class AcademicsService {
         }
     }
 
+    // Ghép chi tiết yêu cầu với lý do từ chối để audit truy được phạm vi.
     private static Map<String, Object> describeDenial(Actor actor, String action,
             Map<String, Object> request) {
         Map<String, Object> details = new LinkedHashMap<>(request);
@@ -646,6 +671,7 @@ public class AcademicsService {
         return details;
     }
 
+    // Đưa vai trò xem và ID môn vào audit nếu hai giá trị đã được xác định.
     private static Map<String, Object> describeRequest(String audience, UUID subjectId) {
         Map<String, Object> request = new LinkedHashMap<>();
         if (audience != null)
@@ -655,6 +681,7 @@ public class AcademicsService {
         return request;
     }
 
+    // Quy đổi lỗi nghiệp vụ của lớp sang mã HTTP phù hợp với caller.
     private ApiException mapFailure(RuntimeException failure) {
         if (failure instanceof ApiException problem)
             return problem;
@@ -674,12 +701,14 @@ public class AcademicsService {
                 "Không thể hoàn thành yêu cầu. Hãy thử lại sau");
     }
 
+    // Chặn trang sai giới hạn và offset vượt miền số nguyên trước khi truy vấn.
     private void validatePage(int page, int size) {
         if (page < 1 || size < 1 || size > 100 || (long) (page - 1) * size > Integer.MAX_VALUE)
             throw ApiException.createBadRequest("INVALID_PAGE",
                     "Trang phải từ 1, kích thước từ 1 đến 100");
     }
 
+    // Giới hạn độ dài từ khóa trước khi chuyển xuống truy vấn.
     private void validateQuery(String query) {
         if (query != null && query.length() > 200)
             throw ApiException.createBadRequest("INVALID_QUERY", "Từ khóa tối đa 200 ký tự");

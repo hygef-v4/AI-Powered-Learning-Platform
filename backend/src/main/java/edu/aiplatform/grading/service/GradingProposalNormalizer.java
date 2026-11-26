@@ -25,9 +25,11 @@ final class GradingProposalNormalizer {
     private static final String MISSING_REVIEW_REASON =
             "AI đánh dấu mục này cần kiểm tra nhưng chưa nêu lý do.";
 
+    // Ngăn tạo đối tượng cho lớp chỉ cung cấp các hàm tĩnh.
     private GradingProposalNormalizer() {
     }
 
+    // Dựng đề xuất điểm 0 đầy đủ khi tài liệu không có phần nào cần gửi AI.
     static ObjectNode createZeroProposal(List<RubricView> rubrics, ObjectMapper objectMapper) {
         ObjectNode root = objectMapper.createObjectNode();
         ObjectNode checks = root.putObject("checks");
@@ -44,6 +46,7 @@ final class GradingProposalNormalizer {
         return root;
     }
 
+    // Tạo phiên bản schema và các mảng rỗng cần thiết cho phản hồi cấu trúc.
     private static ObjectNode initEmptyStructuredFeedback(ObjectNode root) {
         ObjectNode structured = root.putObject("structuredFeedback");
         structured.put("schemaVersion", 1);
@@ -54,6 +57,7 @@ final class GradingProposalNormalizer {
         return structured;
     }
 
+    // Điền điểm 0 cho rubric của mục trống và tránh lặp mục trong phản hồi.
     private static void appendZeroRubricEntries(RubricView rubric, ObjectNode checks,
             ObjectNode scores, ArrayNode sections, Set<String> seenPartIds, ArrayNode items) {
         String rId = rubric.rubricId().toString();
@@ -75,6 +79,7 @@ final class GradingProposalNormalizer {
         }
     }
 
+    // Thêm điểm 0 và phản hồi tương ứng cho một tiêu chí thuộc mục trống.
     private static void appendZeroItemEntry(String rId, RubricItem item,
             ObjectNode rubricScores, ArrayNode items) {
         String iId = item.itemId().toString();
@@ -90,6 +95,7 @@ final class GradingProposalNormalizer {
         itemObj.putNull("reviewReason");
     }
 
+    // Sao chép kết quả AI trước khi ghép thêm điểm và phản hồi cho các mục trống.
     static JsonNode mergeProposalWithEmptyRubrics(JsonNode aiPayload,
             List<RubricView> allRubrics, List<RubricView> emptyRubrics, ObjectMapper objectMapper) {
         if (emptyRubrics == null || emptyRubrics.isEmpty()) {
@@ -115,6 +121,7 @@ final class GradingProposalNormalizer {
         return merged;
     }
 
+    // Lập tập ID mục đã có trong đề xuất để bước ghép không thêm trùng.
     private static Set<String> collectExistingPartIds(ArrayNode sections) {
         Set<String> existingPartIds = new HashSet<>();
         for (JsonNode section : sections) {
@@ -123,6 +130,7 @@ final class GradingProposalNormalizer {
         return existingPartIds;
     }
 
+    // Bổ sung các trường cấu trúc còn thiếu để có thể ghép phản hồi mục trống.
     private static ObjectNode ensureStructuredForMerge(ObjectNode merged) {
         ObjectNode structured = ensureObject(merged, "structuredFeedback");
         if (!structured.has("schemaVersion")) {
@@ -137,6 +145,7 @@ final class GradingProposalNormalizer {
         return structured;
     }
 
+    // Tính tổng từ điểm từng mục của rubric thay vì dùng tổng do AI tự cộng.
     private static BigDecimal sumRubricScores(List<RubricView> rubrics, ObjectNode scores) {
         BigDecimal totalScore = ZERO_SCALED;
         if (rubrics == null || scores == null) {
@@ -157,6 +166,7 @@ final class GradingProposalNormalizer {
         return totalScore.setScale(2, RoundingMode.HALF_UP);
     }
 
+    // Chuẩn hóa dữ liệu JSON của đề xuất trước khi kiểm quy tắc theo rubric và bằng chứng.
     static JsonNode sanitizeAndNormalizeProposal(JsonNode payload,
             List<RubricView> rubrics, Set<String> validBlockIds, ObjectMapper objectMapper) {
         if (payload == null || !payload.isObject()) {
@@ -172,6 +182,7 @@ final class GradingProposalNormalizer {
         return merged;
     }
 
+    // Chuẩn hóa bảng điểm và bổ sung danh sách mục được đánh dấu nếu AI bỏ trường đó.
     private static void normalizeScoresAndSyncOmittedChecks(ObjectNode merged,
             List<RubricView> rubrics) {
         if (!(merged.get("itemScoresByRubric") instanceof ObjectNode scores)) {
@@ -217,6 +228,7 @@ final class GradingProposalNormalizer {
         }
     }
 
+    // Suy ra mục checklist từ điểm đã có trong rubric khi phải tạo lại checklist.
     private static void syncOmittedRubricChecks(RubricView rubric, ObjectNode rubricScores,
             ArrayNode syncedChecks) {
         for (var criterion : rubric.criteria()) {
@@ -236,6 +248,7 @@ final class GradingProposalNormalizer {
         }
     }
 
+    // Chuẩn hóa danh sách mục được đánh dấu ở từng rubric đã có trong payload.
     private static void normalizeExistingChecks(ObjectNode merged) {
         if (!(merged.get("checks") instanceof ObjectNode checks)) {
             return;
@@ -247,6 +260,7 @@ final class GradingProposalNormalizer {
         });
     }
 
+    // Chuẩn hóa biểu diễn tổng điểm và suy ra từ điểm từng mục khi thiếu.
     private static void normalizeTopLevelScore(ObjectNode merged, List<RubricView> rubrics) {
         JsonNode scoreNode = merged.get("score");
         if (scoreNode != null && !scoreNode.isNull()) {
@@ -264,6 +278,7 @@ final class GradingProposalNormalizer {
         }
     }
 
+    // Bỏ khoảng trắng thừa trong các trường chữ của phản hồi theo mục.
     private static void trimSections(ObjectNode merged) {
         if (!(merged.get("sections") instanceof ArrayNode sections)) {
             return;
@@ -276,6 +291,7 @@ final class GradingProposalNormalizer {
         }
     }
 
+    // Chuẩn hóa phản hồi cấu trúc và đối chiếu tham chiếu bằng chứng với tập block hợp lệ.
     private static void trimStructuredFeedback(ObjectNode merged, Set<String> validBlockIds) {
         if (!(merged.get("structuredFeedback") instanceof ObjectNode structured)) {
             return;
@@ -325,10 +341,12 @@ final class GradingProposalNormalizer {
         }
     }
 
+    // Xem trường thiếu, null hoặc chuỗi trắng là chưa có nội dung.
     private static boolean isMissingText(JsonNode value) {
         return value.isMissingNode() || value.isNull() || (value.isTextual() && value.asText().isBlank());
     }
 
+    // Sửa khoảng trắng tại chỗ cho trường JSON kiểu chuỗi.
     private static void trimTextField(ObjectNode node, String fieldName) {
         JsonNode value = node.get(fieldName);
         if (value != null && value.isTextual()) {
@@ -336,6 +354,7 @@ final class GradingProposalNormalizer {
         }
     }
 
+    // Chuẩn hóa các phần tử chuỗi trong mảng tại chỗ, giữ các kiểu khác.
     private static void trimArrayStrings(ArrayNode arrayNode) {
         for (int i = 0; i < arrayNode.size(); i++) {
             JsonNode element = arrayNode.get(i);
@@ -345,10 +364,12 @@ final class GradingProposalNormalizer {
         }
     }
 
+    // Lấy object con hiện có hoặc tạo object để ghi trường tiếp theo.
     private static ObjectNode ensureObject(ObjectNode parent, String fieldName) {
         return parent.path(fieldName) instanceof ObjectNode obj ? obj : parent.putObject(fieldName);
     }
 
+    // Lấy mảng con hiện có hoặc tạo mảng để nối phần tử.
     private static ArrayNode ensureArray(ObjectNode parent, String fieldName) {
         return parent.path(fieldName) instanceof ArrayNode arr ? arr : parent.putArray(fieldName);
     }

@@ -9,6 +9,7 @@ import { GradingAiTaskTracker } from "@/features/grading/components/GradingAiTas
 
 // U05: lớp được giao dạy, cho Teacher và Subject Manager.
 // U01 chặn phiên và role rồi vẽ khung chung AppShell (menu bên theo role của phiên, hồ sơ, đăng xuất).
+// Đặt trình theo dõi chấm AI ở layout để các tác vụ còn được theo dõi khi đổi trang.
 export default function TeachingLayout({ children }: { children: ReactNode }) {
   return <AuthenticatedLayout roles={["TEACHER", "SUBJECT_MANAGER"]}><GradingAiTaskTracker />{children}</AuthenticatedLayout>;
 }

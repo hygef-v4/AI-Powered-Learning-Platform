@@ -3,6 +3,7 @@ import {useEffect,useState} from "react";
 import type {PersonView} from "../model/types";
 import { msg } from "@/i18n/msg";
 export type CandidateLoader=(query:string,signal:AbortSignal)=>Promise<PersonView[]>;
+// Đổi nguồn ứng viên theo từ khóa, hủy yêu cầu cũ khi từ khóa thay đổi.
 export function useCandidates(initial:PersonView[],query:string,load?:CandidateLoader,limit=20) {
  const [state,setState]=useState<{rows:PersonView[];error:string;loading:boolean;query?:string}>({rows:[],error:"",loading:false});
  useEffect(()=>{if(!load)return; const abort=new AbortController(); const timer=setTimeout(()=>{

@@ -13,6 +13,7 @@ import styles from "../styles/academics.module.css";
 import { msg } from "@/i18n/msg";
 
 export class ReopenConflictError extends Error {
+  // Giữ danh sách sinh viên bị xung đột để hộp thoại có thể hiển thị khi mở lại lớp.
   constructor(public readonly students: string[]) { super(msg("academics.components.ClassDialogs.cannotReopenTheClassBecause")); }
 }
 
@@ -27,6 +28,7 @@ export function ClassStateActions({ value, onChange }: { value: CourseClassView;
   const [conflicts, setConflicts] = useState<string[]>([]);
   const open = target === "OPEN";
   const label = open ? value.status === "ARCHIVED" ? msg("academics.components.ClassDialogs.reopenClass") : msg("academics.components.ClassDialogs.openClass") : msg("academics.components.ClassDialogs.archiveClass");
+  // Gửi trạng thái đích cùng version và hiển thị danh sách xung đột nếu mở lại thất bại.
   async function confirm() {
     if (!target || busy) return;
     setBusy(true); setError(""); setConflicts([]);
@@ -38,6 +40,7 @@ export function ClassStateActions({ value, onChange }: { value: CourseClassView;
     catch (cause) { setError(formatOperationError(cause)); if (cause instanceof ReopenConflictError) setConflicts(cause.students); }
     finally { setBusy(false); }
   }
+  // Đổi lựa chọn trong hộp thoại và xóa lỗi của lần thử trước.
   function choose(status: ClassStatus) { setTarget(status); setError(""); setConflicts([]); }
   return <>
     {value.status !== "OPEN" && <Button variant="primary" icon="lock_open" onClick={() => choose("OPEN")} data-testid="class-state-open">{value.status === "ARCHIVED" ? msg("academics.components.ClassDialogs.reopenClass") : msg("academics.components.ClassDialogs.openClass")}</Button>}
@@ -59,6 +62,7 @@ export function AssignTeacherDialog({ value, teachers, onAssign, onClose, loadTe
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const unchanged = (selected?.id ?? "") === (value.teacher?.id ?? "");
+  // Gửi tài khoản được chọn hoặc null để bỏ phân công, kèm version đang xem.
   async function assign() {
     if (busy || unchanged) return;
     setBusy(true); setError("");
@@ -72,6 +76,7 @@ export function AssignTeacherDialog({ value, teachers, onAssign, onClose, loadTe
   </Dialog>;
 }
 
+// Hiện thông tin tài khoản và ghi danh của sinh viên đã chọn trong lớp.
 export function StudentDetailDialog({ classId, student, onClose }: { classId: string; student: EnrollmentView; onClose: () => void }) {
   return <Dialog open title={msg("academics.components.ClassDialogs.studentInformation")} onClose={onClose}>
     <div className={styles.person}><Avatar name={student.name}/><div><strong>{student.name}</strong><small>{student.email}</small></div></div>

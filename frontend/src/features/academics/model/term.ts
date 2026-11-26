@@ -23,6 +23,7 @@ export function isTerm(value: string | null | undefined): value is string {
   return TERM_PATTERN.test(value ?? "");
 }
 
+// Đổi mã kỳ thành thứ tự theo năm và mùa, trả âm nếu mã sai định dạng.
 function rankTerm(term: string) {
   const match = TERM_PATTERN.exec(term);
   if (!match) return -1;

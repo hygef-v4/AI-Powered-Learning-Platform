@@ -92,11 +92,13 @@ public class GradingService {
         return evaluation;
     }
 
+    // Xem cả CLOSED và RETIRED là trạng thái đã ngừng nhận bài.
     static boolean isAssignmentClosed(AssignmentView assignment) {
         return assignment.status() == AssignmentStatus.CLOSED
                 || assignment.status() == AssignmentStatus.RETIRED;
     }
 
+    // Kiểm bài đã đóng trước thao tác cần chốt bài nộp và quy đổi lỗi đọc nguồn.
     private void requireClosedAssignment(UUID assignmentId) {
         final AssignmentView assignment;
         try {
@@ -112,6 +114,7 @@ public class GradingService {
         }
     }
 
+    // Lấy dữ liệu bài nhóm từ contract nguồn trước khi xử lý đánh giá nhóm.
     private GroupSubmissionView requireGroupSubmission(Evaluation evaluation) {
         var source = groupSubmissionSourceProvider.getIfAvailable();
         if (source == null)
@@ -253,6 +256,7 @@ public class GradingService {
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.createBadRequest("GROUP_ROOT_REQUIRED", "Publish the group document");
 
+        // Công bố lại bản đã PUBLISHED chỉ trả bản hiện tại để khỏi gửi thông báo lần nữa.
         if (evaluation.state == EvaluationStatus.PUBLISHED) return evaluation;
         requireEvaluationReviewed(evaluation);
 
@@ -544,6 +548,7 @@ public class GradingService {
         }
     }
 
+    // Kiểm các mục phản hồi cần duyệt đã được xác nhận trước khi công bố.
     private void requireEvaluationReviewed(Evaluation evaluation) {
         var rubrics = GradingJson.readRubrics(objectMapper, evaluation.rubricSnapshot);
         requireStructuredFeedbackReviewed(evaluation.structuredFeedback,

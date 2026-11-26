@@ -20,6 +20,7 @@ public final class ClassTermPolicy {
             .thenComparingInt(term -> term.endsWith(BLOCK_FIVE) ? 1 : 0)
             .reversed();
 
+    // Ngăn tạo đối tượng cho lớp chỉ cung cấp các hàm tĩnh.
     private ClassTermPolicy() {
     }
 
@@ -55,10 +56,12 @@ public final class ClassTermPolicy {
         return NEWEST_FIRST;
     }
 
+    // Đọc hai chữ số năm sau tiền tố mùa của mã kỳ đã hợp lệ.
     private static int parseTermYear(String term) {
         return Integer.parseInt(term.substring(2, 4));
     }
 
+    // Xếp mùa theo thứ tự xuân, hè, thu khi so sánh các kỳ cùng năm.
     private static int rankTermSeason(String term) {
         return switch (term.substring(0, 2)) {
         case "SP" -> 0;

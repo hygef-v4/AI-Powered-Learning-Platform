@@ -224,6 +224,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         var snapshot = loadSnapshot(actor,
                 Map.of("evaluationId", evaluationId.toString(), "expectedVersion", version,
                         "submissionHash", hash, "snapshotFingerprint", fingerprint));
+        // Tiến độ đọc gắn với tài khoản và fingerprint của đúng snapshot đang dùng để chấm.
         progress.requireCompleteRead(actor.accountId(), evaluationId, snapshot.fingerprint(),
                 snapshot.detail().document().blocks().size());
     }
@@ -238,6 +239,7 @@ public class GradingMcpQueryService implements IMcpToolProvider {
         var in = new McpInput(args);
         UUID id = in.readUuid("evaluationId");
         int offset = in.readInteger("offset", 0, 0, Integer.MAX_VALUE);
+        // Trang tiếp theo phải khớp bản đã đọc, tránh ghép tài liệu hoặc rubric từ hai snapshot.
         if (offset > 0 && (!in.has("expectedVersion") || !in.has("submissionHash")
                 || !in.has("snapshotFingerprint")))
             throw McpInput.createInvalidArguments();

@@ -142,6 +142,7 @@ public class GradingMcpBatchService implements IMcpToolProvider {
         }
     }
 
+    // Báo giới hạn dung lượng của lượt đọc nhóm để client dời mục sang lần gọi sau.
     private static ApiException createBatchLimitError() {
         return ApiException.createBadRequest("MCP_BATCH_RESULT_LIMIT",
                 "Batch result is full; read this item in a later call");

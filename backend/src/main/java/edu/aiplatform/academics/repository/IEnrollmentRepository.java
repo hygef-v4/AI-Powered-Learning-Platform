@@ -22,6 +22,7 @@ public interface IEnrollmentRepository {
     boolean hasActiveEnrollmentElsewhere(UUID accountId, UUID subjectId, UUID excludedClassId);
 
     /** Inserts a new enrollment. */
+    // Tạo bản ghi theo cặp lớp và tài khoản cùng trạng thái ghi danh ban đầu.
     void insert(Enrollment value);
 
     /** Updates an enrollment only when its stored status matches the expected status. */

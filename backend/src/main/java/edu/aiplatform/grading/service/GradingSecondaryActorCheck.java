@@ -27,9 +27,11 @@ final class GradingSecondaryActorCheck {
     private static final Pattern SEPARATOR = Pattern.compile("[,;\\r\\n]+|\\s+(?:và|and)\\s+");
     private static final Pattern WHITESPACE = Pattern.compile("(?U)\\s+");
 
+    // Ngăn tạo đối tượng cho lớp chỉ cung cấp các hàm tĩnh.
     private GradingSecondaryActorCheck() {
     }
 
+    // Tìm các tiêu chí đã đánh dấu nhưng bằng chứng trong ô tác nhân không khớp.
     static Set<String> findMismatchedItems(RubricView rubric, List<DocumentBlock> blocks,
             JsonNode checkedItems) {
         if (!checkedItems.isArray() || checkedItems.isEmpty()) {
@@ -63,6 +65,7 @@ final class GradingSecondaryActorCheck {
         return mismatches;
     }
 
+    // Tìm giá trị ô mô tả tác nhân trong dữ liệu bảng của bài nộp.
     private static String findActorCell(List<DocumentBlock> blocks) {
         String observed = null;
         for (var block : blocks) {
@@ -82,6 +85,7 @@ final class GradingSecondaryActorCheck {
         return observed;
     }
 
+    // Tách các tên đã khai báo, chuẩn hóa và bỏ mục trống trước khi đối chiếu.
     private static Set<String> splitActorNames(String text) {
         return Arrays.stream(SEPARATOR.split(text.toLowerCase(Locale.ROOT)))
                 .map(GradingSecondaryActorCheck::normalizeText)
@@ -89,6 +93,7 @@ final class GradingSecondaryActorCheck {
                 .collect(Collectors.toSet());
     }
 
+    // Chuẩn hóa Unicode, chữ hoa/thường và khoảng trắng để so sánh nội dung.
     private static String normalizeText(String text) {
         return WHITESPACE.matcher(Normalizer.normalize(text, Normalizer.Form.NFC)
                 .toLowerCase(Locale.ROOT)).replaceAll(" ").strip();

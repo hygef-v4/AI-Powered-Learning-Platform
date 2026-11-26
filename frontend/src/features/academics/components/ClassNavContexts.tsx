@@ -19,6 +19,7 @@ const SUBJECTS_HREF = "/manager";
 /** Các màn quản lý một môn, gồm cả chi tiết một lớp của môn (`/manager/classes/{id}`, mục Lớp học). */
 const SUBJECT_ROOTS = ["/manager/subjects", "/manager/questions", "/manager/quizzes", "/manager/assignments", "/manager/materials", "/manager/classes"];
 
+// Khớp đúng nhánh URL theo ranh giới slash để không nhận nhầm tiền tố.
 function isUnderPath(pathname: string, root: string) {
   return pathname === root || pathname.startsWith(`${root}/`);
 }
@@ -39,6 +40,7 @@ export function resolveSubjectContext({ pathname, search }: NavLocation): NavCon
     : entries
         .filter((entry) => isUnderPath(pathname, entry.path))
         .reduce<string | null>((best, entry) => (best === null || entry.path.length > best.length ? entry.path : best), null);
+  // Ghép các mục đăng ký của môn và chọn mục khớp nhất với URL.
   const buildItems = (id: string): NavItem[] =>
     entries.map((entry) => ({
       href: entry.href?.(id) ?? `${entry.path}?subjectId=${encodeId(id)}`,
@@ -58,8 +60,11 @@ export function resolveSubjectContext({ pathname, search }: NavLocation): NavCon
 type ClassItem = { key: string; label: string; icon: IconName; href: (id: string) => string };
 type ClassScope = Extract<Scope, "teaching" | "me">;
 
+// Trả hàm dựng đường dẫn chi tiết lớp giảng dạy với tab cố định nếu đã chọn.
 const buildTeachingPage = (tab?: string) => (id: string) => `/teaching/classes/${encodeId(id)}${tab ? `?tab=${tab}` : ""}`;
+// Dựng link thông báo của lớp theo route giảng viên.
 const buildTeachingAnnouncements = (id: string) => `/teaching/classes/${encodeId(id)}/announcements`;
+// Dựng link thông báo của lớp theo route sinh viên.
 const buildStudentAnnouncements = (id: string) => `/classes/${encodeId(id)}/announcements`;
 
 /** Các tab của trang lớp (`?tab=`) đưa ra sidebar, thêm Thông báo lớp của lớp đó. */
@@ -73,9 +78,13 @@ const TEACHING_ITEMS: ClassItem[] = [
 ];
 /** Các trang sinh viên vào được của một lớp. */
 const STUDENT_ITEMS: ClassItem[] = [
+  // Trỏ đến tab thông tin mặc định của lớp sinh viên.
   { key: "info", label: msg("academics.components.ClassNavContexts.classInformation"), icon: "info", href: (id) => `/classes/${encodeId(id)}` },
+  // Trỏ đến nhóm của sinh viên trong lớp đã chọn.
   { key: "group", label: msg("academics.components.ClassNavContexts.myGroup"), icon: "group", href: (id) => `/classes/${encodeId(id)}/group` },
+  // Mở tab học liệu trên trang chi tiết lớp sinh viên.
   { key: "materials", label: msg("academics.components.ClassNavContexts.learningMaterials"), icon: "folder_open", href: (id) => `/classes/${encodeId(id)}?tab=materials` },
+  // Mở danh sách bài của sinh viên với bộ lọc lớp đang chọn.
   { key: "assignments", label: msg("academics.components.ClassNavContexts.assignments"), icon: "assignment", href: (id) => `/my-assignments?classId=${encodeId(id)}` },
   { key: "announcements", label: msg("academics.components.ClassNavContexts.classAnnouncements"), icon: "campaign", href: buildStudentAnnouncements },
 ];
@@ -89,6 +98,7 @@ const CLASS_ROOTS: Record<ClassScope, { href: string; label: string }> = {
 /** `id` rỗng: trang danh sách lớp, cây chưa mở lớp nào. */
 function buildClass(scope: ClassScope, id: string | null, open: string | null): NavContext {
   const list = scope === "teaching" ? TEACHING_ITEMS : STUDENT_ITEMS;
+  // Gắn các tab phù hợp vai trò vào lớp này và đánh dấu tab đang mở.
   const buildItems = (classId: string): NavItem[] =>
     list.map((item) => ({ href: item.href(classId), label: item.label, icon: item.icon, active: classId === id && item.key === open }));
   return {
@@ -133,6 +143,7 @@ function markCurrent(nodes: NavTreeNode[], currentId: string | null): NavTreeNod
   return [{ id: currentId }, ...nodes];
 }
 
+// Tải các môn trong phạm vi quản lý và dựng cây điều hướng theo từng môn.
 function SubjectNavTree({ subjectId, itemsFor }: { subjectId: string | null; itemsFor: (id: string) => NavItem[] }) {
   const [subjects, setSubjects] = useState<NavTreeNode[] | null>(null);
   useEffect(() => {
@@ -155,6 +166,7 @@ function SubjectNavTree({ subjectId, itemsFor }: { subjectId: string | null; ite
   );
 }
 
+// Tải lớp theo phạm vi được truyền vào để dựng cây điều hướng đúng vai trò.
 function ClassNavTree({ scope, id, itemsFor }: { scope: ClassScope; id: string | null; itemsFor: (id: string) => NavItem[] }) {
   const [classes, setClasses] = useState<NavTreeNode[] | null>(null);
   useEffect(() => {

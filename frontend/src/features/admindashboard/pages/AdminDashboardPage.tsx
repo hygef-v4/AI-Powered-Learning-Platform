@@ -48,7 +48,9 @@ function formatVietnamDay(back = 0) {
   date.setUTCDate(date.getUTCDate() - back);
   return date.toISOString().slice(0, 10);
 }
+// Hiện ngày ISO dạng ngày/tháng cho nhãn biểu đồ.
 const formatShortDay = (day: string) => `${day.slice(8, 10)}/${day.slice(5, 7)}`;
+// Định dạng một thời điểm hoạt động theo múi giờ của dashboard.
 const formatShortTime = (iso: string) => new Intl.DateTimeFormat("vi-VN", { timeZone: ZONE, hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })
   .formatToParts(new Date(iso)).reduce((acc, part) => ({ ...acc, [part.type]: part.value }), {} as Record<string, string>);
 
@@ -76,6 +78,7 @@ export function AdminDashboardPage() {
   );
 }
 
+// Cho biết số liệu có đang được làm mới trực tiếp hay đang giữ bản cũ.
 function LiveBadge({ live }: { live: boolean }) {
   return (
     <span role="status" data-testid="dashboard-live"
@@ -90,6 +93,7 @@ function LiveBadge({ live }: { live: boolean }) {
   );
 }
 
+// Chia kết quả tổng quan thành các thẻ và xử lý trạng thái nguồn theo từng thẻ.
 function Board({ data }: { data: Overview }) {
   const { dashboard, activity, usage, backups, loading } = data;
   const accounts = dashboard.accounts.data;
@@ -183,6 +187,7 @@ const KPI_TONES = {
 
 /** Hiện lần lượt lúc mới vào trang: mỗi khối trễ hơn khối trước 60ms (máy bật giảm chuyển động thì hiện ngay). */
 const ENTER = "animate-rise motion-reduce:animate-none";
+// Tạo style trễ theo thứ tự để các thẻ xuất hiện lần lượt.
 const createEnterDelay = (order: number): CSSProperties => ({ animationDelay: `${order * 60}ms` });
 
 /**
@@ -201,6 +206,7 @@ function CountUp({ value }: { value: number }) {
     }
     const start = performance.now();
     let frame = 0;
+    // Cập nhật số theo tiến độ hoạt ảnh và đặt số cuối khi hoàn tất.
     const step = (now: number) => {
       const t = Math.min(1, (now - start) / 900);
       text.nodeValue = formatNumber(Math.round(value * (1 - (1 - t) ** 4)));
@@ -228,6 +234,7 @@ function Kpi({ tone, label, value, loading, testId, order, children }: { tone: k
   );
 }
 
+// Dựng khung thẻ dùng chung với tiêu đề, thao tác và phần nội dung.
 function Panel({ title, subtitle, action, testId, order, children }: { title: string; subtitle: string; action?: ReactNode; testId: string; order: number; children: ReactNode }) {
   return (
     <Card as="section" padding="lg" aria-label={title} data-testid={testId} style={createEnterDelay(order)}
@@ -244,6 +251,7 @@ function Panel({ title, subtitle, action, testId, order, children }: { title: st
   );
 }
 
+// Phân biệt dữ liệu còn tải với dữ liệu hiện không khả dụng.
 function Unavailable({ loading = false }: { loading?: boolean }) {
   return <p role={loading ? "status" : undefined} className="py-6 text-center text-[13px] text-muted">{loading ? msg("admindashboard.pages.AdminDashboardPage.loading") : msg("admindashboard.pages.AdminDashboardPage.unavailable")}</p>;
 }
@@ -252,6 +260,7 @@ function Unavailable({ loading = false }: { loading?: boolean }) {
 function BackupCalendar({ runs }: { runs: BackupRunItem[] }) {
   const byDay = new Map(runs.map((run) => [run.scheduledFor, run]));
   const days = Array.from({ length: 30 }, (_, i) => formatVietnamDay(29 - i));
+  // Đổi lượt sao lưu trong ngày thành trạng thái hiển thị trên lịch.
   const resolveDayState = (day: string) => {
     const run = byDay.get(day);
     if (!run) return BACKUP.none;
@@ -274,6 +283,7 @@ function BackupCalendar({ runs }: { runs: BackupRunItem[] }) {
   );
 }
 
+// Hiện các sự kiện bảo mật đã tải, có thông báo riêng nếu danh sách trống.
 function SecurityTable({ events }: { events: SecurityEventItem[] }) {
   if (events.length === 0) return <p className="py-6 text-center text-[13px] text-muted">{msg("admindashboard.pages.AdminDashboardPage.noSuspiciousActivityInThe")}</p>;
   return (

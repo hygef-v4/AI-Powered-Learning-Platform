@@ -10,10 +10,12 @@ import org.springframework.stereotype.Component;
 public class AssignmentMcpQueryTools implements IMcpToolProvider {
     private final AssignmentAuthoringService assignmentAuthoringService;
 
+    // Dùng chung service soạn bài để giữ phạm vi đọc nhất quán giữa MCP và ứng dụng.
     public AssignmentMcpQueryTools(AssignmentAuthoringService assignmentAuthoringService) {
         this.assignmentAuthoringService = assignmentAuthoringService;
     }
 
+    // Khai báo bộ lọc phạm vi, trạng thái và phân trang cho danh sách Assignment.
     @Override
     public List<McpToolDefinition> tools() {
         String properties = McpSchemas.SCOPE + "," + McpSchemas.PAGE
@@ -27,6 +29,7 @@ public class AssignmentMcpQueryTools implements IMcpToolProvider {
                 properties));
     }
 
+    // Đọc tham số đã chuẩn hóa và trả một trang bài theo phạm vi người soạn được phép xem.
     @Override
     public McpToolResult call(Actor actor, String name, Map<String, Object> args) {
         McpInput.requireTeaching(actor);

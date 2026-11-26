@@ -28,10 +28,12 @@ public class RedisMcpRateLimiter implements IMcpRateLimiter {
     private final RedisConnectionFactory connectionFactory;
     private volatile ProxyManager<byte[]> proxyManager;
 
+    // Nhận kết nối Redis dùng chung để hạn mức token có hiệu lực qua các phiên.
     public RedisMcpRateLimiter(RedisConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
     }
 
+    // Tiêu thụ một lượt trong hạn mức theo ID token trước khi xử lý tool.
     @Override
     public boolean tryAcquire(UUID credentialId) {
         BucketConfiguration configuration = BucketConfiguration.builder()
@@ -47,6 +49,7 @@ public class RedisMcpRateLimiter implements IMcpRateLimiter {
         }
     }
 
+    // Khởi tạo một lần proxy Redis dùng quản lý các bucket giới hạn lượt gọi.
     private ProxyManager<byte[]> createProxyManager() {
         ProxyManager<byte[]> manager = proxyManager;
         if (manager == null) {

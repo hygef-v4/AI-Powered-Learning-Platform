@@ -9,6 +9,7 @@ public enum ContributionLevel {
     NEEDS_SUPPORT,
     NOT_COMPLETED;
 
+    // Chuyển tên enum đã lưu thành mức đóng góp, báo lỗi nếu giá trị không hợp lệ.
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     public static ContributionLevel parseLevel(String value) {
         return valueOf(value);

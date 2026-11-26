@@ -48,11 +48,13 @@ public class GradingPromptBuilder {
         return calculateMaxOutputTokens(rubrics);
     }
 
+    // Tăng ngân sách theo số tiêu chí cần trả và giới hạn đầu ra ở 8.192 token.
     public int calculateMaxOutputTokens(List<RubricView> rubrics) {
         int totalItems = requireValidRubricSize(rubrics);
         return Math.min(8192, 4096 + totalItems * 220);
     }
 
+    // Đếm mục rubric và từ chối chấm AI nếu vượt giới hạn đầu vào.
     private int requireValidRubricSize(List<RubricView> rubrics) {
         int totalItems = countRubricItems(rubrics);
         if (totalItems > MAX_AI_RUBRIC_ITEMS) {
@@ -85,6 +87,7 @@ public class GradingPromptBuilder {
         return buildOutputSchema(rubrics);
     }
 
+    // Tuần tự hóa schema đầu ra theo đúng tập rubric người chấm sẽ dùng.
     public String buildOutputSchema(List<RubricView> rubrics) {
         return GradingJson.writeSnapshot(objectMapper, buildSchema(rubrics));
     }
@@ -103,6 +106,7 @@ public class GradingPromptBuilder {
         return GradingJson.writeSnapshot(objectMapper, schema);
     }
 
+    // Dựng schema JSON giới hạn các trường được phép trong đề xuất.
     private ObjectNode buildSchema(List<RubricView> rubrics) {
         int totalItems = requireValidRubricSize(rubrics);
         var root = objectMapper.createObjectNode().put("type", "object")
@@ -119,6 +123,7 @@ public class GradingPromptBuilder {
         return root;
     }
 
+    // Ràng buộc điểm và mục đánh dấu theo ID cũng như thang điểm của từng rubric.
     private void addChecksAndScoresSchema(ObjectNode properties, List<RubricView> rubrics) {
         var checks = properties.putObject("checks").put("type", "object")
                 .put("additionalProperties", false);
@@ -150,6 +155,7 @@ public class GradingPromptBuilder {
         }
     }
 
+    // Khai báo phản hồi theo mục bài làm, gắn các ID được phép từ rubric.
     private void addSectionsSchema(ObjectNode properties, List<RubricView> rubrics) {
         var section = properties.putObject("sections").put("type", "array").putObject("items")
                 .put("type", "object").put("additionalProperties", false);
@@ -172,6 +178,7 @@ public class GradingPromptBuilder {
         addFeedbackItemsSchema(sfProps, rubrics, totalItems);
     }
 
+    // Khai báo các nhóm điểm mạnh, điểm cần sửa và bước tiếp theo trong phần tổng hợp.
     private void addSummarySchema(ObjectNode sfProps) {
         var summary = sfProps.putObject("summary").put("type", "object")
                 .put("additionalProperties", false);
@@ -183,6 +190,7 @@ public class GradingPromptBuilder {
         }
     }
 
+    // Ràng buộc phản hồi từng tiêu chí và giới hạn tổng số mục theo rubric.
     private void addFeedbackItemsSchema(ObjectNode sfProps, List<RubricView> rubrics,
             int totalItems) {
         var items = sfProps.putObject("items").put("type", "array").put("maxItems", totalItems);
@@ -217,6 +225,7 @@ public class GradingPromptBuilder {
         addEvidenceOrReviewConstraint(itemObj);
     }
 
+    // Buộc phản hồi chưa có bằng chứng phù hợp chuyển sang nhánh cần giảng viên xem lại.
     private void addEvidenceOrReviewConstraint(ObjectNode itemObj) {
         var evidenceOrReview = itemObj.putArray("anyOf");
         var observed = evidenceOrReview.addObject().put("type", "object");

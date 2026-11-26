@@ -56,6 +56,7 @@ public class McpAgentWorkflowTools implements IMcpToolProvider {
             String instructions=new ClassPathResource("agent-workflows/"+directory+"/SKILL.md")
                     .getContentAsString(StandardCharsets.UTF_8).replace("\r\n","\n");
             if(instructions.isBlank())throw new IllegalStateException("Empty packaged MCP workflow: "+workflow);
+            // Version nhận diện nội dung hướng dẫn sau khi chuẩn hóa xuống dòng trong bản backend.
             return Map.of("workflow",workflow,"version",McpFingerprint.of(json,instructions),"instructions",instructions);
         } catch(IOException ex){throw new IllegalStateException("Missing packaged MCP workflow: "+workflow,ex);}
     }
