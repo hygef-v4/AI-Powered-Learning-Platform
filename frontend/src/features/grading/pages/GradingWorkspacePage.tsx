@@ -28,6 +28,7 @@ import { useResource } from "../hooks/useResource";
 import {
   buildChecklistBindings,
   listAiFilledItems,
+  listFeedbackScoreReviewItems,
 } from "../components/GradingForm";
 import { useGradingWorkspace } from "../hooks/useGradingWorkspace";
 import { ActivityReview } from "../components/GradingReviewPanels";
@@ -156,7 +157,7 @@ function Workspace({
   const [offeredProposalId, setOfferedProposalId] = useState<string | null>(
     null,
   );
-  // Link từ MCP mở phần duyệt đề xuất. Giảng viên vẫn chọn áp dụng hoặc chỉnh điểm.
+  const filledLinkedProposalId = useRef<string | null>(null);
   const [aiOpen, setAiOpen] = useState(Boolean(proposalId));
   const [aiRequesting, setAiRequesting] = useState(false);
   const aiGenerating =
@@ -195,7 +196,7 @@ function Workspace({
   };
 
   // Lấy checklist, điểm và phản hồi của đề xuất đã có nội dung để điền vào form.
-  function applyReadyProposal(proposal: Proposal) {
+  function applyReadyProposal(proposal: Proposal, options?: { acceptReview: boolean }) {
     if (!proposal.proposal) return;
     const { checks, feedback, itemScoresByRubric, structuredFeedback } =
       proposal.proposal;
@@ -205,19 +206,32 @@ function Workspace({
       proposal.id,
       itemScoresByRubric,
       structuredFeedback,
+      options,
     );
   }
 
-  // Chỉ xử lý tự điền cho đề xuất được yêu cầu từ màn hình hiện tại sau khi có kết quả.
+  // Dùng chung cách điền form cho kết quả vừa yêu cầu và đề xuất MCP được chỉ định trong link.
   function settleAwaitedProposal() {
     const awaited = proposals.find(
       (proposal) => proposal.id === awaitedProposalId.current,
     );
-    if (!awaited || awaited.status === "PENDING" || disabled) return;
-    awaitedProposalId.current = null;
-    if (awaited.status !== "READY" || !awaited.proposal) return;
-    if (dirty) setOfferedProposalId(awaited.id);
-    else applyReadyProposal(awaited);
+    const linked = proposalId && filledLinkedProposalId.current !== proposalId
+      ? proposals.find(
+        (proposal) => proposal.id === proposalId && proposal.origin === "MCP"
+          && proposal.status === "READY" && proposal.proposal,
+      )
+      : undefined;
+    const ready = awaited ?? linked;
+    if (!ready || ready.status === "PENDING" || disabled || busy || saving) return;
+    if (awaited) awaitedProposalId.current = null;
+    if (linked?.id === ready.id) filledLinkedProposalId.current = linked.id;
+    if (ready.status !== "READY" || !ready.proposal || form.usedProposalId === ready.id) return;
+    if (dirty) {
+      setOfferedProposalId(ready.id);
+    } else {
+      applyReadyProposal(ready);
+      if (linked?.id === ready.id) setAiOpen(false);
+    }
   }
 
   // Chạy mỗi lần render để dùng form mới nhất; ref chặn xử lý lặp.
@@ -244,6 +258,16 @@ function Workspace({
     hasAiBackup &&
     Boolean(draftProposal?.proposal?.feedback) &&
     form.feedback === draftProposal?.proposal?.feedback;
+  const scoreReviewItems = listFeedbackScoreReviewItems(form, evaluation);
+  const needsFeedbackReview = scoreReviewItems.size > 0 || form.structuredFeedback?.items.some(
+    ({ rubricId, itemId, requiresReview }) =>
+      requiresReview && !form.acknowledgedReviewItems?.[rubricId]?.includes(itemId),
+  );
+  const feedbackReviewMessage = msg(
+    evaluation.state === "PUBLISHED"
+      ? "grading.pages.GradingWorkspacePage.reviewFeedbackBeforeSavingPublishedGrade"
+      : "grading.pages.GradingWorkspacePage.reviewFeedbackBeforePublishing",
+  );
 
   // Chỉ task còn QUEUED mới hủy được; RUNNING đã gửi tới nhà cung cấp, tự kết thúc khi hết thời gian chờ.
   const queuedProposal = proposals.find(
@@ -269,6 +293,10 @@ function Workspace({
   // Chặn công bố khi điểm thành viên chưa lưu và xử lý lưu bản chấm trước khi xác nhận.
   const handlePublish = async () => {
     if (busy || saving || disabled) return;
+    if (needsFeedbackReview) {
+      showErrorToast(feedbackReviewMessage);
+      return;
+    }
     if (membersDirty) {
       showErrorToast(
         msg(
@@ -277,8 +305,12 @@ function Workspace({
       );
       return;
     }
+    if (!dirty && (evaluation.state === "PENDING" || evaluation.score == null)) {
+      showErrorToast(msg("grading.pages.GradingWorkspacePage.saveGradeBeforePublishing"));
+      return;
+    }
     if (dirty) {
-      const saved = await save(false);
+      const saved = await save(false, { forPublish: true });
       if (!saved) return;
     }
     setAction("publish");
@@ -478,6 +510,7 @@ function Workspace({
                 onToggleAcknowledge={toggleAcknowledgedReviewItem}
                 feedbackItems={form.structuredFeedback?.items}
                 acknowledgedReviewItems={form.acknowledgedReviewItems}
+                scoreReviewItems={scoreReviewItems}
               />
             }
           />
@@ -688,6 +721,9 @@ function Workspace({
           {msg("grading.pages.GradingWorkspacePage.theAssignmentHasNoUsable")}
         </Alert>
       )}
+      {needsFeedbackReview && (
+        <Alert tone="warning" role="status">{feedbackReviewMessage}</Alert>
+      )}
 
       {draftProposal && (
         <AiDraftBanner
@@ -695,7 +731,7 @@ function Workspace({
           maxScore={evaluation.maxScore}
           offered={Boolean(offeredProposal)}
           onApply={() => {
-            applyReadyProposal(draftProposal);
+            applyReadyProposal(draftProposal, { acceptReview: true });
             setOfferedProposalId(null);
           }}
           onSkip={() => setOfferedProposalId(null)}
@@ -738,6 +774,7 @@ function Workspace({
                 id,
                 itemScores,
                 structuredFeedback,
+                { acceptReview: true },
               );
               setOfferedProposalId(null);
               setAiOpen(false);
@@ -965,7 +1002,8 @@ function Workspace({
       <div className="mt-6">
         <ActivityReview detail={detail} />
       </div>
-      {action && !disabled && (
+      {/* Giữ kết quả công bố trong lúc tải lại bản chấm. */}
+      {action && (
         <BatchActionDialog
           action={action}
           items={[{ evaluationId: evaluation.id, version: evaluation.version }]}

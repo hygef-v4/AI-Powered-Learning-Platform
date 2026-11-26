@@ -15481,3 +15481,66 @@ giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại 
 **Context**: Construction, U09.
 
 ---
+
+## U07 Tạo nội dung trong chat sửa đề trống
+**Timestamp**: 2026-11-26T10:12:13Z
+**Requested by:** Quang Hung
+**User Input**: "ok giúp tôi sửa như vậy"
+**AI Response**: "Dùng cấu trúc tạo đề khi chat nhận bản nháp trống. Backend chuẩn hóa điểm dạng chuỗi số, dựng khung và rubric từ đề xuất hợp lệ rồi kiểm tra phiên bản khi áp dụng."
+**Context**: Construction, Code Generation U07. [Kế hoạch](construction/plans/code-generation-plan/2026-11-26-u07-blank-ai-draft.md).
+
+---
+
+## U07 Kiểm tra chat sửa đề trống
+**Timestamp**: 2026-11-26T10:16:57Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa tiếp"
+**AI Response**: "Giữ chế độ REVISE trong phản hồi và dùng dấu phân loại nội bộ. Kiểm tra 738 ca backend và 28 ca frontend đạt. Một ca đánh giá AI chấm điểm bỏ qua theo cấu hình."
+**Context**: Construction, Build and Test U07.
+
+---
+
+## U07/U09 Đồng bộ giao diện mở link MCP
+**Timestamp**: 2026-11-26T10:35:48Z
+**Requested by:** Quang Hung
+**User Input**: "tôi muốn nó đồng bộ giao diện luôn mở link thì k cần bấm áp dụng nó trả về giao diện giống lúc vừa mới gọi tạo bài ai, hoặc chấm điểm bằng api ai trên web"
+**AI Response**: "Tự điền bản nháp đề hợp lệ khi mở link. Link chấm dùng chung cơ chế điền form AI web, giữ thao tác lưu và công bố điểm của giảng viên."
+**Context**: Construction, U07 và U09. [Kế hoạch](construction/plans/code-generation-plan/2026-11-26-u07-u09-mcp-result-links.md).
+
+---
+
+## U09 Xác nhận đề xuất và công bố điểm
+**Timestamp**: 2026-11-26T14:02:42Z
+**Requested by:** Quang Hung
+**User Input**: "thế thì phải hiện thông báo cho giảng viên chứ, với nếu giảng viên bấm chấp nhận đề xuất rồi thì cái đấy tự động được tick"
+**AI Response**: "Ghi xác nhận tiêu chí khi giảng viên giữ hoặc áp dụng đề xuất, hiện hướng dẫn trước bước công bố nếu còn tiêu chí chưa xác nhận và giữ lỗi từ máy chủ khi tải lại bản chấm. Kiểm tra 233 ca frontend U09, TypeScript và ESLint phạm vi."
+**Context**: Construction, U09. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-proposal-review-publish.md).
+
+---
+
+## U09 Chấm theo rubric và bước điểm tiêu chí
+**Timestamp**: 2026-11-26T14:18:21Z
+**Requested by:** Quang Hung
+**User Input**: "tôi nghĩ đổi 0.25 sang 0.1, tôi duyệt 1,2,3"
+**AI Response**: "Dùng rubric để tính điểm, đưa yêu cầu ngoài rubric vào nhận xét và yêu cầu rà soát khi chưa đủ minh chứng chấm. Đổi bước tăng giảm của ô điểm tiêu chí sang 0,1."
+**Context**: Construction, U09. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-rubric-grading-policy.md).
+
+---
+
+## U09 Xử lý các lỗi công bố điểm
+**Timestamp**: 2026-11-26T14:29:30Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại các lỗi này"
+**AI Response**: "Hiện ô xác nhận ở mục có điểm lệch so với nhận xét. Chỉ mở hộp công bố bài nhóm sau khi tải lại thành công. Báo lưu điểm trước nếu bài chưa chấm."
+**Context**: Construction, U09. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publish-guards.md).
+
+---
+
+## U09 Phản hồi review PR 146
+**Timestamp**: 2026-11-26T14:51:47Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi sửa lại theo comment"
+**AI Response**: "Chỉ tự xác nhận tiêu chí còn khớp điểm đã rà soát và hiện cảnh báo cho bản chấm đã công bố khi sửa điểm. Bổ sung các ca kiểm thử được nêu trong review."
+**Context**: Construction, U09. [Review](https://github.com/hygef-v4/AI-Powered-Learning-Platform/pull/146#issuecomment-7195336960). [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publication-review-followup.md).
+
+---

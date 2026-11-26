@@ -452,6 +452,27 @@ class GradingServiceTest {
     }
 
     @Test
+    void allowsPublicationAfterRestoringTheScoreAlreadyReviewedWithTheFeedback() {
+        var feedback = sampleFeedback("Đạt 2.00/4.00 điểm vì thiếu nửa sau", false, null);
+        var reviewedScores = Map.of(rubricId, Map.of(itemId, new BigDecimal("2.00")));
+        gradingService.saveEvaluation(teacher, evaluation.id, new Save(
+                0, Map.of(), BigDecimal.ZERO, null, "Original draft", null, null,
+                reviewedScores, feedback, false, null, null));
+        gradingService.saveEvaluation(teacher, evaluation.id, new Save(
+                0, Map.of(), BigDecimal.ZERO, null, "Edited score", null, null,
+                Map.of(rubricId, Map.of(itemId, new BigDecimal("3.00"))),
+                feedback, false, null, reviewedScores));
+
+        gradingService.saveEvaluation(teacher, evaluation.id, new Save(
+                0, Map.of(), BigDecimal.ZERO, null, "Restored score", null, null,
+                reviewedScores, feedback, false, null, reviewedScores));
+        gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
+
+        assertThat(evaluation.state).isEqualTo(EvaluationStatus.PUBLISHED);
+        assertThat(evaluation.score).isEqualByComparingTo("2.00");
+    }
+
+    @Test
     void unacknowledgedAiRequiresReviewBlocksFinalizationAndRejectsSilentUncheck() throws Exception {
         var proposal = new GradingProposal();
         proposal.id = UUID.randomUUID();

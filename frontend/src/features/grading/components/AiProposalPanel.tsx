@@ -274,7 +274,11 @@ export function AiProposalPanel({
             }}
           >
             {msg("grading.components.AiProposalPanel.applyToDraft")}</button>
-          <span className="text-xs text-muted">{msg("grading.components.AiProposalPanel.onlyPreTicksTheChecklist")}</span>
+          {reviewFlagCount > 0 && (
+            <span className="text-xs text-muted">
+              {msg("grading.components.AiProposalPanel.applyConfirmsReview")}
+            </span>
+          )}
         </div>
       </>
     );

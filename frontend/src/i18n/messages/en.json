@@ -1174,6 +1174,7 @@
       "AiDraftDialog": {
         "reviewTemplateDraft": "This draft uses a template. Check the questions and rubric before applying.",
         "draftFailed": "Draft generation failed",
+        "linkedDraftStale": "The assignment changed after the agent saved this proposal. Ask the agent to read the current version and create a new proposal.",
         "theAiReturnedNoResult": "The AI returned no result.",
         "youCanStillWriteIt": "{value} You can still write it manually.",
         "waitForUploadsToFinish": "Wait for uploads to finish or remove failed files before creating the assignment.",
@@ -2226,7 +2227,7 @@
         "overallAiFeedback": "Overall AI feedback",
         "feedbackByPart": "Feedback by part (",
         "applyToDraft": "Apply to draft",
-        "onlyPreTicksTheChecklist": "Only pre-ticks the checklist and fills in the feedback; you can edit before saving.",
+        "applyConfirmsReview": "Applying marks any criteria flagged by AI as reviewed. You can edit the draft before saving.",
         "aiProposal2": "AI proposal",
         "reviewTheProposalAndSave": "Review the proposal and save to update the score.",
         "requestANewProposal": "Request a new proposal",
@@ -2486,7 +2487,8 @@
         "goToThePassageIn": "Go to the passage in the work",
         "theReferencedPassageIsNo": "The referenced passage is no longer in the submission.",
         "checkedAndConfirmedTheExplanation": "Checked and confirmed the explanation: {itemText}",
-        "feedbackAndScoreChecked": "Feedback and score checked"
+        "feedbackAndScoreChecked": "Feedback and score checked",
+        "reviewFeedbackForCurrentScore": "Update the explanation or confirm the feedback matches the current score."
       },
       "StudentGradesSection": {
         "submissionsAndScores": "Submissions and scores",
@@ -2597,6 +2599,9 @@
         "aiGradingRequestCancelled": "AI grading request cancelled.",
         "aiGradingSentYouCan": "AI grading sent. You can keep working.",
         "youHaveUnsavedMemberAssessments": "You have unsaved member assessments. Save member scores before publishing.",
+        "reviewFeedbackBeforePublishing": "Some criteria need review before publishing grades. Open the feedback for each flagged criterion and select Feedback and score checked.",
+        "reviewFeedbackBeforeSavingPublishedGrade": "Some criteria need review before saving changes to this published grade. Open the feedback for each highlighted criterion and verify it against the current score.",
+        "saveGradeBeforePublishing": "Grade and save this submission before publishing.",
         "groupWork": "Group work",
         "studentWork": "Student work",
         "wholeAssignment": "Whole assignment",
