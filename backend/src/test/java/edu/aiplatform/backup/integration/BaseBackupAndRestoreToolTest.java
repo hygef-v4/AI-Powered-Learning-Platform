@@ -51,6 +51,20 @@ class BaseBackupAndRestoreToolTest {
     }
 
     @Test
+    void listsBaseCandidatesNewestFirstAndFindsOnlyACompleteArchive() {
+        var children = List.of(folder("run-1", "2026-11-24T19:05:00Z"), folder("run-2", "2026-11-25T19:05:00Z"),
+                folder("wal", "2026-11-26T00:00:00Z"));
+
+        assertThat(BackupRestoreTool.listBaseCandidates(children, null))
+                .extracting(BackupRestoreTool.DriveEntry::name).containsExactly("run-2", "run-1");
+        assertThat(BackupRestoreTool.findArchive(List.of(file("note.txt", "2026-11-25T19:06:00Z")))).isEmpty();
+        assertThat(BackupRestoreTool.findArchive(List.of(folder(BackupRestoreTool.ARCHIVE, "2026-11-25T19:06:00Z"))))
+                .isEmpty();
+        assertThat(BackupRestoreTool.findArchive(List.of(file(BackupRestoreTool.ARCHIVE, "2026-11-25T19:06:00Z"))))
+                .isPresent();
+    }
+
+    @Test
     void takesWalFromOneHourBeforeTheBaseBackupInNameOrder() {
         var wal = List.of(file("000000010000000000000003.gz", "2026-11-25T19:10:00Z"),
                 file("000000010000000000000001.gz", "2026-11-25T17:00:00Z"),

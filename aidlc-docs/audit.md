@@ -15693,3 +15693,12 @@ kiểm tra xem đúng không và gửi tôi hướng giải quyết" — sau đ�
 **Context**: Construction, sửa lỗi trình soạn tài liệu dùng chung (U07/U08/U12).
 
 ---
+
+## U03/U06/U07 Xử lý review PR 148
+**Timestamp**: 2026-11-26T18:05:00Z
+**Requested by:** max2min
+**User Input**: "Khắc phục các phát hiện trong review PR 148."
+**AI Response**: "Biện pháp: (1) gỡ khỏi git ba gói .whl nằm trong mã nguồn Java và tệp khóa tạm của Word trong samples, thêm *.whl và ~$* vào .gitignore; (2) WalShipScanner đẩy mỗi tệp WAL trong một transaction ngắn riêng, khóa advisory chỉ giữ trong lúc đẩy một tệp, tệp sau lỗi không hủy bản ghi wal_segments của tệp trước, tệp WAL trên máy chỉ bị xóa sau khi bản ghi đã commit; (3) BackupRestoreTool bỏ qua thư mục base backup chưa có archive.alapbk và lùi về bản đầy đủ liền trước; (4) AiJsonRecovery bóc mảng JSON nằm giữa chữ dẫn đúng toàn bộ mảng; (5) khi áp dụng bản sửa đề, hướng dẫn giảng viên đã sửa tay sau khi gửi yêu cầu được giữ nguyên. Việc có chép rubric khi sao chép đề mẫu TEMPLATE sang bài PRACTICE hay không được để người dùng quyết định. Kết quả kiểm thử: bổ sung kiểm thử cho WalShipScanner (tệp tải lên không khớp, lỗi ở tệp sau), BackupRestoreTool, AiJsonRecovery và AssignmentAiRevisionTest; mvn verify toàn bộ backend 2729 ca đều đạt."
+**Context**: Construction, phản hồi review PR 148.
+
+---

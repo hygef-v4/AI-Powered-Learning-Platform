@@ -65,16 +65,26 @@ public final class BackupRestoreTool {
         DriveFolders folders = new DriveFolders(clients, files);
         String backupFolder = resolveBackupFolder(folders, files);
         List<DriveEntry> children = listChildren(clients, files, backupFolder);
-        DriveEntry base = selectBase(children, options.targetTime())
-                .orElseThrow(() -> new IllegalStateException("Không có base backup nào trước thời điểm đã chọn"));
+        // Lần sao lưu dở (đã tạo thư mục, chưa tải archive) thì lùi về base backup hợp lệ liền trước (review PR 148).
+        DriveEntry base = null;
+        DriveEntry archive = null;
+        for (DriveEntry candidate : listBaseCandidates(children, options.targetTime())) {
+            Optional<DriveEntry> found = findArchive(listChildren(clients, files, candidate.id()));
+            if (found.isPresent()) {
+                base = candidate;
+                archive = found.get();
+                break;
+            }
+            System.out.println("Bỏ qua thư mục " + candidate.name() + ": không có " + ARCHIVE);
+        }
+        if (base == null) {
+            throw new IllegalStateException("Không có base backup đầy đủ nào trước thời điểm đã chọn");
+        }
         System.out.println("Base backup: thư mục " + base.name() + ", tạo lúc " + base.createdAt());
 
         PrivateKey privateKey = options.privateKey() == null ? null
                 : BackupEncryptor.parsePrivateKey(Files.readString(options.privateKey()));
         Files.createDirectories(options.outDir().resolve("wal"));
-        DriveEntry archive = listChildren(clients, files, base.id()).stream()
-                .filter(entry -> ARCHIVE.equals(entry.name())).findFirst()
-                .orElseThrow(() -> new IllegalStateException("Thư mục base backup không có " + ARCHIVE));
         Path downloaded = options.outDir().resolve(ARCHIVE);
         download(clients, archive.id(), downloaded);
         decryptTo(downloaded, options.outDir().resolve("base.tar.gz"), privateKey);
@@ -115,11 +125,22 @@ public final class BackupRestoreTool {
 
     /** Thư mục base backup (tên là runId) mới nhất được tạo không muộn hơn {@code target}; không có target thì mới nhất. */
     static Optional<DriveEntry> selectBase(List<DriveEntry> children, Instant target) {
+        return listBaseCandidates(children, target).stream().findFirst();
+    }
+
+    /** Các thư mục base backup không muộn hơn {@code target}, mới nhất trước, để lùi dần khi gặp thư mục dở. */
+    static List<DriveEntry> listBaseCandidates(List<DriveEntry> children, Instant target) {
         return children.stream()
                 .filter(DriveEntry::folder)
                 .filter(entry -> !DriveBackupStore.WAL_FOLDER.equals(entry.name()))
                 .filter(entry -> target == null || !entry.createdAt().isAfter(target))
-                .max(Comparator.comparing(DriveEntry::createdAt));
+                .sorted(Comparator.comparing(DriveEntry::createdAt).reversed())
+                .toList();
+    }
+
+    /** Tệp {@code archive.alapbk} trong thư mục base backup, nếu lần sao lưu đã tải xong. */
+    static Optional<DriveEntry> findArchive(List<DriveEntry> baseChildren) {
+        return baseChildren.stream().filter(entry -> !entry.folder() && ARCHIVE.equals(entry.name())).findFirst();
     }
 
     /** Tệp WAL tải lên từ trước base backup một khoảng an toàn trở đi, theo thứ tự tên. */

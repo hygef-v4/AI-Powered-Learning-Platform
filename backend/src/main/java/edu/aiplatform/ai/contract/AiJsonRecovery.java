@@ -172,9 +172,16 @@ public final class AiJsonRecovery {
         return text.substring(bodyStart + 1, bodyEnd).strip();
     }
 
-    /** JSON nằm giữa chữ dẫn: lấy từ dấu mở đầu tiên tới dấu đóng cuối cùng, ưu tiên object. */
+    /**
+     * JSON nằm giữa chữ dẫn: lấy từ dấu mở đầu tiên tới dấu đóng tương ứng cuối cùng. Thử loại dấu mở xuất hiện trước,
+     * để {@code Kết quả: [{"a":1}]} cho cả mảng chứ không phải object bên trong.
+     */
     private static JsonNode readEnclosedJson(ObjectMapper json, String text) {
-        for (char[] pair : new char[][] {{'{', '}'}, {'[', ']'}}) {
+        int objectStart = text.indexOf('{');
+        int arrayStart = text.indexOf('[');
+        boolean arrayFirst = arrayStart >= 0 && (objectStart < 0 || arrayStart < objectStart);
+        char[][] pairs = arrayFirst ? new char[][] {{'[', ']'}, {'{', '}'}} : new char[][] {{'{', '}'}, {'[', ']'}};
+        for (char[] pair : pairs) {
             int start = text.indexOf(pair[0]);
             int end = text.lastIndexOf(pair[1]);
             if (start >= 0 && end > start) {

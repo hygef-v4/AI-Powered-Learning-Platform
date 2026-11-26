@@ -43,7 +43,8 @@ class WalShipScannerTest {
     }
 
     WalShipScanner scanner(BackupProperties props, IBackupStore store) {
-        return new WalShipScanner(props, store, segments, settings);
+        return new WalShipScanner(props, store, segments, settings,
+                mock(org.springframework.transaction.PlatformTransactionManager.class));
     }
     final Instant now = Instant.parse("2026-11-26T07:00:00Z");
 
@@ -157,8 +158,41 @@ class WalShipScannerTest {
 
         scanner(props(null), store).scan(now);
 
-        verify(store, never()).isAvailable();
+        verify(store, never()).putWal(anyString(), any());
         assertThat(walDir().resolve(WAL_1)).exists();
+    }
+
+    @Test
+    void mismatchedUploadIsDeletedFromDriveAndTheLocalFileKept() throws Exception {
+        when(segments.tryLockShipping()).thenReturn(true);
+        Files.writeString(walDir().resolve(WAL_1), "first");
+        IBackupStore store = mock(IBackupStore.class);
+        when(store.isAvailable()).thenReturn(true);
+        when(store.putWal(anyString(), any())).thenReturn(new IBackupStore.StoredArchive("ref-1", 1L, null));
+
+        scanner(props(null), store).scan(now);
+
+        verify(store).deleteWal("ref-1");
+        verify(segments, never()).recordUploaded(anyString(), anyString(), anyLong(), any());
+        assertThat(walDir().resolve(WAL_1)).exists();
+    }
+
+    @Test
+    void failureOnALaterFileKeepsTheEarlierFileShipped() throws Exception {
+        when(segments.tryLockShipping()).thenReturn(true);
+        Files.writeString(walDir().resolve(WAL_1), "first");
+        Files.writeString(walDir().resolve(WAL_2), "second");
+        LocalBackupStore drive = new LocalBackupStore(dir.resolve("drive"));
+        IBackupStore store = mock(IBackupStore.class);
+        when(store.isAvailable()).thenReturn(true);
+        when(store.putWal(eq(WAL_1 + ".gz"), any())).thenAnswer(i -> drive.putWal(i.getArgument(0), i.getArgument(1)));
+        when(store.putWal(eq(WAL_2 + ".gz"), any())).thenThrow(new StorageUnavailableException("down", null));
+
+        scanner(props(null), store).scan(now);
+
+        verify(segments).recordUploaded(eq(WAL_1), eq(WAL_1 + ".gz"), anyLong(), eq(now));
+        assertThat(walDir().resolve(WAL_1)).doesNotExist();
+        assertThat(walDir().resolve(WAL_2)).exists();
     }
 
     @Test

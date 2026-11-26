@@ -38,6 +38,13 @@ class AiJsonRecoveryTest {
     }
 
     @Test
+    void arrayWrappedInProseIsReadWhole() throws Exception {
+        JsonNode recovered = AiJsonRecovery.recoverOutput(json, "Kết quả: [{\"a\":1},{\"a\":2}] xong", null);
+
+        assertThat(recovered).isEqualTo(json.readTree("[{\"a\":1},{\"a\":2}]"));
+    }
+
+    @Test
     void nestedFieldsSentAsTextFollowTheSchema() throws Exception {
         String output = "{\"summary\":\"{\\\"x\\\":1}\",\"parts\":\"[{\\\"partId\\\":\\\"P1\\\"}]\","
                 + "\"detail\":\"{\\\"note\\\":\\\"n\\\"}\"}";

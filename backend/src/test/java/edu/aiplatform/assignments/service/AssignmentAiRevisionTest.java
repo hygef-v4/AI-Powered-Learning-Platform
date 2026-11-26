@@ -283,6 +283,21 @@ class AssignmentAiRevisionTest {
     }
 
     @Test
+    void instructionsEditedByHandAfterTheRequestAreKept() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, vietnameseSkeleton(), true);
+        var snapshot = AssignmentDraftRevision.snapshot(a, f.rubricsOf(a.id()));
+        ObjectNode sent = snapshot.document().deepCopy();
+        sent.put("instructions", "Hướng dẫn lúc gửi");
+        ObjectNode proposal = AssignmentDraftRevision.normalize(AssignmentDraftRevision.merge(
+                read("{\"title\":\"\",\"instructions\":\"Hướng dẫn AI\",\"operations\":[]}"), sent), true);
+        AssignmentAiDraft ready = ready(a, proposal, snapshot.blockRefs(), sent);
+
+        f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version(), false, false));
+
+        assertThat(f.store.get(a.id()).instructions()).isEqualTo("Hướng dẫn");
+    }
+
+    @Test
     void revisionThatDeletesEveryBlockIsOnlyAWarning() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, vietnameseSkeleton(), true);
         ObjectNode proposal = AssignmentDraftRevision.normalize(read("{\"title\":\"x\",\"instructions\":\"\",\"blocks\":[]}"),

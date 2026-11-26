@@ -563,10 +563,13 @@ public class AssignmentAiDraftService {
             suggestions.put(wholePart, RubricService.normalize(built.wholeRubric(), current.diagramEnabled()));
         }
         // AI đã sửa hoặc xóa hướng dẫn (khác bản gửi đi) thì áp dụng luôn, kể cả khi hướng dẫn hiện tại có chữ
-        // (yêu cầu 2026-11-27); hướng dẫn AI giữ nguyên thì không ghi đè chữ người soạn sửa sau khi gửi yêu cầu.
+        // (yêu cầu 2026-11-27). Người soạn đã sửa tay hướng dẫn sau khi gửi yêu cầu thì giữ bản sửa tay (review PR 148).
         String proposedInstructions = draft.proposal().path("instructions").asText("");
-        boolean instructionsRevised = draft.provenance().path("snapshot").has("instructions")
-                && !proposedInstructions.equals(draft.provenance().path("snapshot").path("instructions").asText(""));
+        JsonNode sentInstructions = draft.provenance().path("snapshot").path("instructions");
+        String currentInstructions = current.instructions() == null ? "" : current.instructions();
+        boolean instructionsRevised = sentInstructions.isTextual()
+                && currentInstructions.equals(sentInstructions.asText())
+                && !proposedInstructions.equals(sentInstructions.asText());
         String instructions = command.replaceInstructions() || instructionsRevised
                 ? proposedInstructions : current.instructions();
         String title = replaceTitle ? proposedTitle : current.title();
