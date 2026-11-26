@@ -93,7 +93,8 @@ public class QuizReferenceMaterials {
     private List<SelectableMaterial> listMaterials(Actor actor, ResourceRef scope) {
         try {
             List<SelectableMaterial> result = materials.listSelectable(actor, scope);
-            return result == null ? List.of() : result;
+            // Quiz không lấy video làm nguồn cho AI (yêu cầu 2026-11-27); bỏ cả ở danh sách lẫn khi kiểm id gửi lên.
+            return result == null ? List.of() : result.stream().filter(material -> !material.video()).toList();
         } catch (ApiException rejected) {
             throw rejected;
         } catch (RuntimeException unavailable) {
