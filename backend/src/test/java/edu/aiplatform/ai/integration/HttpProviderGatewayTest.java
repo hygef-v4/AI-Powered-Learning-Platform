@@ -129,6 +129,7 @@ class HttpProviderGatewayTest {
                     assertThat(e.readKind()).isEqualTo(FailureKind.CHARGED);
                     assertThat(e).isInstanceOf(edu.aiplatform.ai.service.IProviderGateway.OutputLimitException.class);
                     assertThat(e.readUsage().outputTokens()).isEqualTo(500);
+                    assertThat(e.readSafeError()).startsWith("[AI_OUTPUT_LIMIT] ");
                     assertThat(e.getMessage()).contains("giới hạn token", "phản hồi").doesNotContain("hạn mức");
                     if (provider != AiProvider.CLAUDE) {
                         // Phần chữ đã nhận chỉ để chẩn đoán, không nằm trong thông báo lỗi.
@@ -140,15 +141,17 @@ class HttpProviderGatewayTest {
 
     @Test
     void quotaAndRateLimitMessagesUseExplicitProviderCodesWithoutExposingTheBody() {
-        assertThat(gateway.buildSafeMessage(429,
-                "{\"error\":{\"code\":\"insufficient_quota\",\"message\":\"secret-key\"}}"))
+        var quota = gateway.describeHttpFailure(429,
+                "{\"error\":{\"code\":\"insufficient_quota\",\"message\":\"secret-key\"}}");
+        assertThat(quota.code()).isEqualTo("AI_PROVIDER_QUOTA_EXHAUSTED");
+        assertThat(quota.message())
                 .contains("hạn mức", "số dư").doesNotContain("secret-key", "tần suất");
-        assertThat(gateway.buildSafeMessage(429,
-                "{\"error\":{\"code\":\"rate_limit_exceeded\"}}"))
+        var rate = gateway.describeHttpFailure(429, "{\"error\":{\"code\":\"rate_limit_exceeded\"}}");
+        assertThat(rate.code()).isEqualTo("AI_PROVIDER_RATE_LIMITED");
+        assertThat(rate.message())
                 .contains("tần suất").doesNotContain("hết hạn mức");
-        assertThat(gateway.buildSafeMessage(429, "{}"))
-                .contains("tần suất hoặc hết hạn mức");
-        assertThat(gateway.buildSafeMessage(429, " ")).contains("HTTP 429");
+        assertThat(gateway.describeHttpFailure(429, "{}").code()).isEqualTo("AI_PROVIDER_RATE_OR_QUOTA");
+        assertThat(gateway.describeHttpFailure(429, " ").message()).contains("HTTP 429");
     }
 
     @Test

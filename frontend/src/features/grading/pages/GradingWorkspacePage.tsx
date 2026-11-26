@@ -1,5 +1,6 @@
 "use client";
 import { formatStudentLabel } from "@/shared/studentCode";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import {
   useCallback,
   useEffect,
@@ -183,7 +184,7 @@ function Workspace({
     if (created)
       setGradingAiLabel(evaluation.id, `${assignmentTitle} — ${studentName}`);
     if (created?.status === "FAILED" || created?.status === "REJECTED") {
-      if (created.safeError) showErrorToast(created.safeError);
+      if (created.safeError) showErrorToast(describeAiFailure(created.safeError));
     } else if (created) {
       showToast(
         created.status === "READY"

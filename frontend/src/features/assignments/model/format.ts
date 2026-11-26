@@ -1,4 +1,5 @@
 import { ApiError } from "@/shared/api/client";
+import { describeApiProblem } from "@/shared/api/errorMessages";
 import type { ValidationIssue } from "@/shared/document";
 import { msg } from "@/i18n/msg";
 import type { AiDraft } from "./types";
@@ -40,6 +41,7 @@ export function readProblemCode(error: unknown): string | undefined {
 export function describeError(error: unknown, fallback = msg("assignments.model.format.couldNotCompleteItPlease")): string {
   if (error instanceof ApiError) {
     if (error.problem.status === 404) return msg("assignments.model.format.notFoundOrYouDo");
+    if (error.problem.code?.startsWith("AI_")) return describeApiProblem(error.problem);
     return error.problem.detail ?? fallback;
   }
   return error instanceof Error && error.message ? error.message : fallback;

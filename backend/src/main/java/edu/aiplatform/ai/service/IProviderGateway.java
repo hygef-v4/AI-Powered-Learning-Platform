@@ -65,12 +65,22 @@ public interface IProviderGateway {
         private final FailureKind kind;
         private final Usage usage;
         private final int status;
+        private final String code;
 
         public ProviderException(FailureKind kind, int status, String safeMessage, Usage usage) {
+            this(kind, status, safeMessage, usage, null);
+        }
+
+        public ProviderException(FailureKind kind, int status, String safeMessage, Usage usage, String code) {
             super(safeMessage);
             this.kind = kind;
             this.usage = usage;
             this.status = status;
+            this.code = code;
+        }
+
+        public String readSafeError() {
+            return code == null ? getMessage() : "[" + code + "] " + getMessage();
         }
 
         public FailureKind readKind() {
@@ -98,7 +108,7 @@ public interface IProviderGateway {
         public OutputLimitException(Usage usage, String partialOutput) {
             super(FailureKind.CHARGED, 200,
                     "AI đã đạt giới hạn token của lần gọi nên phản hồi chưa hoàn chỉnh. Hãy thử lại với bài nhỏ hơn hoặc cấu hình giới hạn đầu ra cao hơn.",
-                    usage);
+                    usage, "AI_OUTPUT_LIMIT");
             this.partialOutput = partialOutput;
         }
 
