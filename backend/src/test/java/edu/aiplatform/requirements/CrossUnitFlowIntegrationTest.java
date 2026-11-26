@@ -111,7 +111,7 @@ import org.testcontainers.utility.DockerImageName;
 @SpringBootTest(classes = PlatformWorkflowIntegrationTest.Application.class, properties = {
         "platform.identity.bcrypt-cost=4", "platform.identity.mail-from=integration@example.test",
         "platform.identity.bootstrap-admin-email=", "platform.identity.mail-transport=smtp",
-        "platform.files.require-drive=false", "platform.files.drive-service-account-key=",
+        "platform.files.drive-service-account-key=",
         "platform.files.shared-drive-id=", "platform.backup.folder-id=",
         "spring.rabbitmq.listener.simple.auto-startup=false",
         "spring.rabbitmq.listener.direct.auto-startup=false",
@@ -163,7 +163,6 @@ class CrossUnitFlowIntegrationTest {
         properties.add("platform.ai.key-encryption-key", () -> ENCRYPTION_KEY);
         properties.add("platform.files.fileref-secret", () -> FILE_SECRET);
         properties.add("platform.files.local-storage-dir", FILES::toString);
-        properties.add("platform.backup.local-dir", () -> FILES.resolve("backups").toString());
     }
 
     @Autowired JdbcTemplate jdbc;
@@ -515,8 +514,8 @@ class CrossUnitFlowIntegrationTest {
 
         assertThat(sessionStore.findSession(oldSession.sid())).isEmpty();
         mvc.perform(get("/api/v1/me/classes").cookie(oldCookie)).andExpect(status().isUnauthorized());
-        assertThat(count("select count(*) from audit_logs where action='PASSWORD_RESET' and actor_id=? and result='SUCCESS'",
-                student.accountId())).isEqualTo(1);
+        assertThat(count("select count(*) from audit_logs where action='PASSWORD_RESET' and actor_id=?",
+                student.accountId())).isZero();
         assertThatThrownBy(() -> authService.login(email, oldPassword, buildDocumentationIp(13))).isInstanceOf(ApiException.class);
         assertThat(authService.login(email, newPassword, buildDocumentationIp(14)).accessToken()).isNotBlank();
         assertThatThrownBy(() -> passwordResetService.complete(ticket, generateTestPassword()))
@@ -580,6 +579,23 @@ class CrossUnitFlowIntegrationTest {
         materialService.archiveMaterial(teacher, classMaterial, materialVersion);
         assertThat(materialQueryService.listClassMaterials(student, classId, true, detail.referenceMaterialIds()))
                 .extracting(MaterialViews.Detail::id).containsExactly(subjectMaterial);
+        // Lưu trữ không xóa (yêu cầu 2026-11-26): giảng viên vẫn thấy, vẫn khôi phục được với quyền thật; sửa thì bị chặn.
+        var archivedView = materialQueryService.listClassMaterials(teacher, classId, false, null).stream()
+                .filter(m -> m.id().equals(classMaterial)).findFirst().orElseThrow();
+        assertThat(archivedView.status()).isEqualTo(edu.aiplatform.materials.model.Material.Status.ARCHIVED);
+        assertThat(archivedView.canManage()).as("nút khôi phục cần canManage").isTrue();
+        long archivedVersion = jdbc.queryForObject("select version from materials where id=?", Long.class, classMaterial);
+        assertThatThrownBy(() -> materialService.archiveMaterial(teacher, classMaterial, archivedVersion))
+                .isInstanceOfSatisfying(ApiException.class, e -> assertThat(e.readCode()).isEqualTo("MATERIAL_ARCHIVED"));
+        // Học liệu môn đã lưu trữ thì giảng viên không thấy trong danh sách (chỉ Chủ nhiệm môn khôi phục được).
+        long subjectVersion = jdbc.queryForObject("select version from materials where id=?", Long.class, subjectMaterial);
+        materialService.archiveMaterial(actor(Role.SUBJECT_MANAGER), subjectMaterial, subjectVersion);
+        assertThat(materialQueryService.listClassMaterials(teacher, classId, false, null))
+                .extracting(MaterialViews.Detail::id).doesNotContain(subjectMaterial).contains(classMaterial);
+        materialService.restoreMaterial(actor(Role.SUBJECT_MANAGER), subjectMaterial, subjectVersion + 1);
+        materialService.restoreMaterial(teacher, classMaterial, archivedVersion);
+        assertThat(materialQueryService.listClassMaterials(student, classId, true, detail.referenceMaterialIds()))
+                .extracting(MaterialViews.Detail::id).containsExactlyInAnyOrder(subjectMaterial, classMaterial);
 
         academicsService.changeEnrollmentStatus(actor(Role.SUBJECT_MANAGER), classId, student.accountId(),
                 EnrollmentStatus.REMOVED);
@@ -654,7 +670,7 @@ class CrossUnitFlowIntegrationTest {
     }
 
     @Test
-    void svgDownloadCarriesSandboxHeadersAndForeignAccountIsDeniedAndAudited() throws Exception {
+    void svgDownloadCarriesSandboxHeadersAndForeignAccountIsDeniedWithoutAudit() throws Exception {
         var student = actor(Role.STUDENT);
         byte[] svg = "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert(1)</script><rect width=\"10\" height=\"10\"/></svg>"
                 .getBytes(StandardCharsets.UTF_8);
@@ -664,8 +680,8 @@ class CrossUnitFlowIntegrationTest {
         mvc.perform(get(svgUrl).cookie(loginCookie(actor(Role.TEACHER))))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("DOWNLOAD_TOKEN_NOT_FOUND"));
-        assertThat(count("select count(*) from audit_logs where action='FILE_DOWNLOAD' and result='DENIED' and actor_id=?",
-                actor(Role.TEACHER).accountId())).isEqualTo(1);
+        assertThat(count("select count(*) from audit_logs where action='FILE_DOWNLOAD' and actor_id=?",
+                actor(Role.TEACHER).accountId())).isZero();
 
         var started = mvc.perform(get(svgUrl).cookie(loginCookie(student))).andReturn();
         mvc.perform(asyncDispatch(started))
@@ -689,7 +705,7 @@ class CrossUnitFlowIntegrationTest {
 
 
     @Test
-    void concurrentFirstOpenCreatesOnlyOneDefaultModule() throws Exception {
+    void concurrentFirstOpenOfANewSubjectCreatesNoModule() throws Exception {
         jdbc.update("delete from material_modules where subject_id = ?", subjectId);
         var manager = actor(Role.SUBJECT_MANAGER);
         var policy = mock(MaterialAccessPolicy.class);
@@ -725,8 +741,9 @@ class CrossUnitFlowIntegrationTest {
         } finally {
             pool.shutdownNow();
         }
+        // Môn mới không tự có module (yêu cầu 2026-11-26), kể cả khi hai người mở trang cùng lúc.
         assertThat(jdbc.queryForList("select title from material_modules where subject_id = ?", String.class, subjectId))
-                .containsExactly("Module 1");
+                .isEmpty();
     }
 
 }

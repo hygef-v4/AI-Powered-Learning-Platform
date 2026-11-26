@@ -6,7 +6,8 @@ import { msg } from "@/i18n/msg";
 export type AssignmentScope = "CLASS" | "SUBJECT";
 export type AssignmentStatus = "DRAFT" | "REVIEWED" | "SCHEDULED" | "OPEN" | "CLOSED" | "RETIRED";
 export type SubmissionMode = "INDIVIDUAL" | "GROUP";
-export type GradingMode = "GRADED" | "PRACTICE";
+/** {@code TEMPLATE}: đề mẫu của môn, không có loại và không giao cho sinh viên (yêu cầu 2026-11-26). */
+export type GradingMode = "GRADED" | "PRACTICE" | "TEMPLATE";
 export type AssignmentOrigin = "MANUAL" | "CLONE" | "NEW_VERSION" | "CLASS_COPY";
 
 export type AssignmentRow = {
@@ -234,7 +235,7 @@ export const statusTones: Record<AssignmentStatus, Tone> = {
   DRAFT: "neutral", REVIEWED: "info", SCHEDULED: "accent", OPEN: "success", CLOSED: "warning", RETIRED: "danger",
 };
 
-export const gradingLabels: Record<GradingMode, string> = { GRADED: "Graded", PRACTICE: "Practice" };
+export const gradingLabels: Record<GradingMode, string> = { GRADED: "Graded", PRACTICE: "Practice", TEMPLATE: "Template" };
 export const submissionLabels: Record<SubmissionMode, string> = { INDIVIDUAL: msg("assignments.model.types.individual"), GROUP: msg("assignments.model.types.group") };
 export const originLabels: Record<AssignmentOrigin, string> = {
   MANUAL: msg("assignments.model.types.new"), CLONE: msg("assignments.model.types.duplicate"), NEW_VERSION: msg("assignments.model.types.newVersion"), CLASS_COPY: msg("assignments.model.types.copiedFromAnotherAssignment"),

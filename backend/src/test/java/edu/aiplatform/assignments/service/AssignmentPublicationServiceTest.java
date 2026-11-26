@@ -50,6 +50,20 @@ class AssignmentPublicationServiceTest {
     }
 
     @Test
+    void scheduledOpeningTimeCannotBeInThePast() {
+        Instant end = NOW.plus(Duration.ofDays(7));
+        Assignment a = reviewed();
+        assertThat(code(() -> f.publication.publish(f.teacher, a.id(),
+                publish(a.version(), NOW.minus(Duration.ofHours(1)), end, null, 1))))
+                .as("hẹn giờ mở ở quá khứ bị từ chối (yêu cầu 2026-11-26)").isEqualTo("SCHEDULE_INVALID");
+        assertThat(f.publication.publish(f.teacher, a.id(),
+                publish(a.version(), NOW.minus(Duration.ofSeconds(30)), end, null, 1)).status())
+                .as("chừa độ trễ mạng vài chục giây").isNotNull();
+        assertThat(code(() -> AssignmentPublicationService.requireNotPast(NOW.minus(Duration.ofMinutes(5)), NOW)))
+                .isEqualTo("SCHEDULE_INVALID");
+    }
+
+    @Test
     void publishNeedsAFinalizedAssignmentThenChecksReadinessAndSchedule() {
         Instant later = NOW.plus(Duration.ofDays(1));
         Instant end = NOW.plus(Duration.ofDays(7));

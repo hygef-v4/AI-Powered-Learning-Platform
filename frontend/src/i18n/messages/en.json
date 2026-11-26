@@ -159,7 +159,8 @@
       },
       "materials": {
         "page": {
-          "learningMaterials": "Learning materials"
+          "learningMaterials": "Learning materials",
+          "subjectMaterials": "Subject materials"
         }
       },
       "page": {
@@ -1316,7 +1317,8 @@
         "subject": "Subject",
         "class": "Class",
         "loadingAssignments": "Loading assignments…",
-        "noMatchingAssignments": "No matching assignments."
+        "noMatchingAssignments": "No matching assignments.",
+        "template": "Template"
       },
       "assignmentNav": {
         "assignmentParts": "Assignment parts",
@@ -1338,7 +1340,8 @@
         "mode": "Mode",
         "activityMonitoring": "Activity monitoring",
         "recordsWhenStudentsLeaveThe": "Records when students leave the page while working.",
-        "noticeToStudents": "Notice to students"
+        "noticeToStudents": "Notice to students",
+        "templateHasNoType": "Subject templates have no type and are never assigned to students. Teachers choose the type when they create a class assignment from this template."
       },
       "ClassAssignmentsSection": {
         "createAssignment": "Create assignment"
@@ -1458,7 +1461,9 @@
         "publishAnyway": "Publish anyway",
         "schedule": "Schedule",
         "publishNow": "Publish now",
-        "saveSchedule": "Save schedule"
+        "saveSchedule": "Save schedule",
+        "openingDateInThePast": "The opening time has already passed. Choose a time in the future.",
+        "deadlineInThePast": "The deadline has already passed. Choose a time in the future."
       },
       "SearchPicker": {
         "noResults": "No results.",
@@ -1586,7 +1591,8 @@
         "areYouSureYouWant": "Are you sure you want to delete this draft?",
         "withdrawAssignment": "Withdraw assignment",
         "areYouSureYouWant2": "Are you sure you want to withdraw this assignment?",
-        "reason": "Reason"
+        "reason": "Reason",
+        "template": "Template"
       },
       "SubjectAssignmentListPage": {
         "assignmentTemplates": "Assignment templates",
@@ -2005,7 +2011,26 @@
         "denied2": "Denied",
         "wrongKey": "Wrong key",
         "quotaExhausted": "Quota exhausted",
-        "timedOut": "Timed out"
+        "timedOut": "Timed out",
+        "createSubjectCode": "Create subject {code}",
+        "archiveSubjectCode": "Archive subject {code}",
+        "reopenSubjectCode": "Reopen subject {code}",
+        "createClassCode": "Create class {code}",
+        "openClassCode": "Open class {code}",
+        "archiveClassCode": "Archive class {code}",
+        "reopenClassCode": "Reopen class {code}",
+        "openClass": "Open class",
+        "archiveClass": "Archive class",
+        "reopenClass": "Reopen class",
+        "rejectRoleChange": "Role change rejected",
+        "uploadFile": "Upload file",
+        "downloadFile": "Download file",
+        "viewMcpAgentToken": "View MCP agent token",
+        "file": "File",
+        "aiSettings": "AI settings",
+        "adminDashboard": "Admin dashboard",
+        "mcpAgentToken": "MCP agent token",
+        "quiz": "Quiz"
       },
       "details": {
         "ui": {
@@ -3459,12 +3484,17 @@
         "learningMaterial": "learning material",
         "areYouSureYouWant": "Are you sure you want to ",
         "text": "?",
-        "theDraftQuizWillBe": " The draft quiz will be deleted permanently and cannot be restored."
+        "theDraftQuizWillBe": " The draft quiz will be deleted permanently and cannot be restored.",
+        "subjectMaterialAdded": "Subject material added",
+        "createSubjectMaterial": "Create subject material",
+        "editSubjectMaterial": "Edit subject material",
+        "learningMaterialArchived": "Learning material archived"
       },
       "MaterialList": {
         "learningMaterials": "Learning materials",
         "loadingSubjects": "Loading subjects…",
-        "youHaveNotBeenAssigned": "You have not been assigned any subject."
+        "youHaveNotBeenAssigned": "You have not been assigned any subject.",
+        "subjectMaterials": "Subject materials"
       },
       "MaterialPreview": {
         "download": "Download",
@@ -3511,7 +3541,14 @@
         "edit": "Edit {title}",
         "save": "Save",
         "moduleName": "Module name",
-        "enterTheModuleName": "Enter the module name."
+        "enterTheModuleName": "Enter the module name.",
+        "subjectMaterials": "Subject materials",
+        "createSubjectMaterial": "Create subject material",
+        "noSubjectMaterialsYet": "No subject materials yet",
+        "noModulesForClass": "This subject has no modules yet. Ask the subject manager to create one before adding learning materials.",
+        "noModulesForSubject": "No modules yet. Create a module before adding subject materials.",
+        "archived": "Archived",
+        "materialRestored": "Learning material restored"
       },
       "ModuleNav": {
         "moduleList": "Module list",
@@ -3528,7 +3565,14 @@
         "reopen": "Reopen {value}",
         "quizReopened": "Quiz reopened",
         "couldNotReopenTheQuiz": "Could not reopen the quiz",
-        "edit": "Edit {value}"
+        "edit": "Edit {value}",
+        "subjectMaterials": "Subject materials",
+        "createSubjectMaterial": "Create subject material",
+        "createSubjectMaterialIn": "Create subject material in {title}",
+        "noSubjectMaterialsYet": "No subject materials yet",
+        "restore": "Restore {value}",
+        "materialRestored": "Learning material restored",
+        "couldNotRestoreMaterial": "Could not restore the learning material, please try again."
       },
       "ModulePlace": {
         "previousAndNextMaterialsTop": "Previous and next materials (top of page)",
@@ -3558,11 +3602,17 @@
         "delete": "Delete",
         "description": "Description",
         "learningMaterialDeleted": "Learning material deleted",
-        "versionLabel": "Version {value}"
+        "versionLabel": "Version {value}",
+        "archive": "Archive",
+        "learningMaterialArchived": "Learning material archived",
+        "archived": "Archived",
+        "restore": "Restore",
+        "materialRestored": "Learning material restored"
       }
     },
     "register": {
-      "learningMaterial": "Learning material"
+      "learningMaterial": "Learning material",
+      "subjectMaterial": "Subject material"
     }
   },
   "notifications": {
@@ -4399,7 +4449,7 @@
     "model": {
       "types": {
         "files": "Files",
-        "limitsWhenUploadingLearningMaterials": "Limits when uploading learning materials and images in documents",
+        "limitsWhenUploadingLearningMaterials": "Size limits for uploaded documents and images",
         "backup": "Backup",
         "backUpTheDatabaseTo": "Back up the database to Google Drive · kept for 7 days (fixed)",
         "workActivity": "Work activity",
@@ -4408,7 +4458,15 @@
         "onOff": "on / off",
         "hourMinute": "hour:minute",
         "singleChoice": "single choice",
-        "multipleChoice": "multiple choice"
+        "multipleChoice": "multiple choice",
+        "materialMaxSize": "Maximum document size",
+        "materialMaxSizeDescription": "Maximum size of each document file.",
+        "imageMaxSize": "Maximum image size",
+        "imageMaxSizeDescription": "Maximum size of each image in a document.",
+        "backupEnabled": "Enable backup",
+        "backupEnabledDescription": "Back up the database every day.",
+        "backupDailyAt": "Daily run time",
+        "backupDailyAtDescription": "Backup time, in Vietnam time."
       },
       "validation": {
         "thisFieldMustHaveA": "This field must have a value",

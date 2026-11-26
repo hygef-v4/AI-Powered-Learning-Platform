@@ -215,7 +215,7 @@ class SubjectStatusTest {
         order.verify(audit).record(any());
         var event = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(event.capture());
-        assertThat(event.getValue().action()).isEqualTo("SUBJECT_ARCHIVED");
+        assertThat(event.getValue().action()).isEqualTo("SUBJECT_ABC_ARCHIVED");
         assertThat(event.getValue().occurredAt()).isEqualTo(NOW);
     }
 
@@ -232,7 +232,7 @@ class SubjectStatusTest {
         verifyNoInteractions(checks, checker);
         var event = ArgumentCaptor.forClass(AuditEvent.class);
         verify(audit).record(event.capture());
-        assertThat(event.getValue().action()).isEqualTo("SUBJECT_REOPENED");
+        assertThat(event.getValue().action()).isEqualTo("SUBJECT_ABC_REOPENED");
     }
 
     @Test
@@ -266,7 +266,7 @@ class SubjectStatusTest {
     }
 
     @Test
-    void archiveWithManagerEmitsBothNamedAuditsForOneVersionChange() {
+    void archiveWithManagerAuditsOnlyTheArchiveForOneVersionChange() {
         UUID managerId = UUID.randomUUID();
         Subject before = Subject.createSubject(id, "ABC", "Name", null, managerId, NOW.minusSeconds(60));
         when(subjectRepository.findByIdForUpdate(eq(id), any(Duration.class)))
@@ -279,9 +279,9 @@ class SubjectStatusTest {
         assertThat(after.version()).isEqualTo(2);
         verify(subjectRepository).updateSubject(after, 1L);
         var events = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(audit, times(2)).record(events.capture());
+        verify(audit, times(1)).record(events.capture());
         assertThat(events.getAllValues()).extracting(AuditEvent::action)
-                .containsExactly("SUBJECT_ARCHIVED", "SUBJECT_MANAGER_CHANGED");
+                .containsExactly("SUBJECT_ABC_ARCHIVED");
         assertThat(events.getAllValues()).allSatisfy(event -> {
             assertThat(event.actorId()).isEqualTo(admin.accountId());
             assertThat(event.objectId()).isEqualTo(id.toString());
@@ -289,8 +289,6 @@ class SubjectStatusTest {
         });
         assertThat(events.getAllValues().get(0).details())
                 .containsEntry("before", "ACTIVE").containsEntry("after", "ARCHIVED");
-        assertThat(events.getAllValues().get(1).details())
-                .containsEntry("oldManagerId", managerId).containsEntry("newManagerId", null);
     }
 
     private Subject active() {

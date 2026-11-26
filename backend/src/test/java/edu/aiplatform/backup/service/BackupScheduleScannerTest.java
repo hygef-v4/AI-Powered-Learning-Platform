@@ -26,11 +26,24 @@ class BackupScheduleScannerTest {
     final ISettings settings = mock(ISettings.class);
     final BackupRunRepository runs = mock(BackupRunRepository.class);
     final IJob jobs = mock(IJob.class);
-    final BackupScheduleScanner scanner = new BackupScheduleScanner(settings, runs, jobs);
+    final IBackupStore store = mock(IBackupStore.class);
+    final BackupScheduleScanner scanner = new BackupScheduleScanner(settings, runs, jobs, store);
 
     void configure(boolean enabled, LocalTime dailyAt) {
         when(settings.get(BackupSettingDefinitions.ENABLED)).thenReturn(Optional.of(enabled));
         when(settings.get(BackupSettingDefinitions.DAILY_AT)).thenReturn(Optional.ofNullable(dailyAt));
+        when(store.isAvailable()).thenReturn(true);
+    }
+
+    @Test
+    void doesNothingWithoutGoogleDrive() {
+        configure(true, LocalTime.of(2, 0));
+        when(store.isAvailable()).thenReturn(false);
+
+        scanner.scan(Instant.parse("2026-10-16T19:00:00Z"));
+
+        verify(runs, never()).createIfAbsent(any(), any());
+        verify(jobs, never()).enqueue(any(), any(), any());
     }
 
     @Test

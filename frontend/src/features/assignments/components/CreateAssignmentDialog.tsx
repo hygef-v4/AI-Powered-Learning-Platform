@@ -166,12 +166,15 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     setSourceId(id);
     setError(null);
     const source = candidates.find((item) => item.id === id);
-    if (!source) return;
+    // Đề mẫu không có loại: bài mới giữ loại giảng viên đang chọn (yêu cầu 2026-11-26).
+    if (!source || source.gradingMode === "TEMPLATE") return;
     const next: Kind = source.gradingMode === "PRACTICE" ? "PRACTICE" : source.submissionMode === "GROUP" ? "GROUP" : "INDIVIDUAL";
     if (next !== "GROUP" || groupAllowed) setKind(next);
   }
 
   function createInput(name: string): CreateInput {
+    // Đề mẫu của môn không có loại; backend luôn lưu TEMPLATE.
+    if (!isClass) return { title: name, submissionMode: "INDIVIDUAL", gradingMode: "TEMPLATE", diagramEnabled: true };
     return {
       title: name,
       submissionMode: kind === "GROUP" ? "GROUP" : "INDIVIDUAL",
@@ -368,14 +371,14 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
           data-testid="create-assignment-title"
           onChange={(e) => { setTitle(e.target.value); if (e.target.value.trim()) setTitleError(null); }} />
       </Field>
-      <Field label={msg("assignments.components.CreateAssignmentDialog.type")}>
+      {isClass && <Field label={msg("assignments.components.CreateAssignmentDialog.type")}>
         <Choice name={msg("assignments.components.CreateAssignmentDialog.type")} value={kind} disabled={setupLocked} onChange={setKind} options={[
           { value: "INDIVIDUAL", label: msg("assignments.components.CreateAssignmentDialog.individual") },
           { value: "GROUP", label: msg("assignments.components.CreateAssignmentDialog.group"), disabled: !groupAllowed, title: groupAllowed ? undefined : msg("assignments.components.CreateAssignmentDialog.thisClassCannotUseGroup") },
           { value: "PRACTICE", label: msg("assignments.components.CreateAssignmentDialog.practice") },
         ]} />
         <Hint key={kind}>{KIND_HINTS[kind]}</Hint>
-      </Field>
+      </Field>}
       <Field label={msg("assignments.components.CreateAssignmentDialog.howToCreate")}>
         <Choice name={msg("assignments.components.CreateAssignmentDialog.howToCreate")} value={method} disabled={setupLocked} onChange={changeMethod} options={[
           { value: "EXISTING", label: msg("assignments.components.CreateAssignmentDialog.existingAssignment") },

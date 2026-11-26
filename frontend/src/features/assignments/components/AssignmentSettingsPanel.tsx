@@ -25,6 +25,7 @@ const SUBMISSION_HINTS: Record<SubmissionMode, string> = {
 const GRADING_HINTS: Record<GradingMode, string> = {
   GRADED: msg("assignments.components.AssignmentSettingsPanel.countsTowardTheGradebook"),
   PRACTICE: msg("assignments.components.AssignmentSettingsPanel.selfPracticeNotGraded"),
+  TEMPLATE: msg("assignments.components.AssignmentSettingsPanel.templateHasNoType"),
 };
 
 export function readSettings(detail: AssignmentDetail): Settings {
@@ -51,6 +52,14 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
   classId?: string | null;
 }) {
   const group = detail.submissionMode === "GROUP";
+  // Đề mẫu của môn không có loại: giảng viên chọn loại khi tạo bài ở lớp (yêu cầu 2026-11-26).
+  if (detail.gradingMode === "TEMPLATE") {
+    return (
+      <div className="flex flex-col gap-4" data-testid="assignment-settings">
+        <ChoiceHint>{GRADING_HINTS.TEMPLATE}</ChoiceHint>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-4" data-testid="assignment-settings">
       <Field label={msg("assignments.components.AssignmentSettingsPanel.format")}>

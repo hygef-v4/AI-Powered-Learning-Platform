@@ -134,6 +134,18 @@ class PracticeFeedbackServiceTest {
     }
 
     @Test
+    void resultWrappedAsTextAtTheRootIsStillSaved() throws Exception {
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        PracticeFeedback p = pending(a, a.receiptHash());
+        when(f.feedback.markReady(eq(p.id()), any(), any(), any())).thenReturn(1);
+        String wrapped = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(OUTPUT.strip());
+
+        assertThat(f.feedbackService.handleReadyResult(result(p, wrapped))).isEqualTo(ApplyOutcome.APPLIED);
+        verify(f.feedback).markReady(eq(p.id()), argThat((JsonNode body) -> "Khá".equals(body.path("summary").asText())),
+                any(), any());
+    }
+
+    @Test
     void validResultIsSavedWithEstimateLabelAndWithoutRubric() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         PracticeFeedback p = pending(a, a.receiptHash());

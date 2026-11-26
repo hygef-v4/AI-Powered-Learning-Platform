@@ -70,7 +70,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U03-70 | Backup chạy trong worker trên queue `jobs.backup` với 1 luồng; timeout của việc `BACKUP_RUN` là 2 giờ. | FR-038 |
-| NFR-U03-71 | Dump dùng `pg_dump` (một snapshot MVCC, không khóa ghi); giờ chạy do Admin chọn ngoài giờ cao điểm. | FR-038 |
+| NFR-U03-71 | Base backup dùng `pg_basebackup` với checkpoint giãn và giới hạn tốc độ đọc (`U03_BACKUP_MAX_RATE`, mặc định 32M), không khóa ghi; giờ chạy do Admin chọn ngoài giờ cao điểm. WAL archiving chỉ chép tệp trên máy, worker tải lên Drive nên không chặn giao dịch (từ 2026-11-26, thay `pg_dump`). | FR-038 |
 | NFR-U03-72 | Mã hóa lai: mỗi lần chạy một khóa AES-256-GCM ngẫu nhiên, khóa này được bọc bằng public key RSA-OAEP (3072 bit) của người vận hành; private key không nằm trên VPS. | BR-U03-93 |
 | NFR-U03-73 | Thư mục tạm cho dump là volume riêng; kiểm dung lượng trống ≥ 2 lần kích thước database trước khi dump, không đủ thì thất bại sớm. | FR-038 |
 | NFR-U03-74 | RPO bằng khoảng cách giữa hai lần chạy (tối đa 24 giờ với lịch hằng ngày) và RTO được đo trong lần thử khôi phục; không cam kết con số trước khi đo. | FR-038 |

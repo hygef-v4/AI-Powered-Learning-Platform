@@ -157,7 +157,6 @@ platform:
   # U03 Job and Settings
   files:
     fileref-secret: ${U03_FILEREF_SECRET:}
-    require-drive: ${U03_REQUIRE_DRIVE:false}
     local-storage-dir: ${U03_LOCAL_STORAGE_DIR:}
     upload-tmp-dir: ${U03_UPLOAD_TMP_DIR:}
     drive-service-account-key: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:}
@@ -178,10 +177,12 @@ platform:
     db-host: ${POSTGRES_HOST:localhost}
     db-port: ${POSTGRES_PORT:5432}
     db-name: ${POSTGRES_DB:platform}
-    db-user: backup_reader
+    db-user: backup_replicator
     db-password: ${BACKUP_DB_PASSWORD:}
     tmp-dir: ${U03_BACKUP_TMP_DIR:}
-    local-dir: ${U03_LOCAL_BACKUP_DIR:}
+    # Thư mục WAL archive dùng chung với Postgres; giới hạn tốc độ đọc khi chụp base backup (U03, 2026-11-26).
+    wal-dir: ${U03_WAL_ARCHIVE_DIR:/wal-archive}
+    max-rate: ${U03_BACKUP_MAX_RATE:32M}
   # U07 Assignment Authoring: link trang xem sơ đồ ghi vào DOCX xuất ra (BR-U07-60).
   assignments:
     public-url: ${APP_PUBLIC_URL:http://localhost:8088}

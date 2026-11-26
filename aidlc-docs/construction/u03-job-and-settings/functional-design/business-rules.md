@@ -6,7 +6,7 @@ Thiết kế, chưa có mã. Phục vụ U07 BR-U07-87…101.
 
 | Mã | Quy tắc |
 |---|---|
-| BR-U03-99 | Mục đích `ASSIGNMENT_IMPORT` chỉ dùng để kiểm tệp, không lưu: PNG, JPEG, WEBP, PDF; người tải lên Teacher, Subject Manager; trần cứng 10MB; setting `files.assignmentImport.maxSizeMb` ("Tệp nhập đề (ảnh/PDF) tối đa", nhóm FILES, 1–10). Policy trả qua API policy hiện có để frontend kiểm trước khi gửi. Gọi `IArtifact.store` với mục đích này thì bị từ chối. |
+| BR-U03-99 | Mục đích `ASSIGNMENT_IMPORT` chỉ dùng để kiểm tệp, không lưu: PNG, JPEG, WEBP, PDF; người tải lên Teacher, Subject Manager; trần cứng 10MB, không có setting riêng (từ 2026-11-26 nhóm Tệp chỉ còn "Tài liệu tối đa" và "Ảnh tối đa"; tệp nguồn soạn bài AI cũng chỉ dùng trần cứng 2MB). Policy trả qua API policy hiện có để frontend kiểm trước khi gửi. Gọi `IArtifact.store` với mục đích này thì bị từ chối. |
 | BR-U03-100 | `FileType.WEBP` (`image/webp`, đuôi `webp`): `ContentInspector` nhận diện theo chữ ký `RIFF....WEBP`. WEBP chỉ thuộc `ASSIGNMENT_IMPORT`; ảnh trong tài liệu (`DOCUMENT_IMAGE`) vẫn chỉ PNG, JPEG. |
 | BR-U03-101 | `IArtifact.issuePreviewToken(fileRef, actor)` cấp link tải 5 phút (như `issueDownloadToken`) cho tệp vừa lưu mà chưa gắn, chỉ khi `fileRef` đúng chữ ký, còn hạn và thuộc `actor`; ngược lại trả rỗng, không ném lỗi. Không gắn tệp, không đổi lịch dọn tệp mồ côi. Dùng cho hình cắt trong bản xem trước nhập đề (FR-IMP-05.1). Thêm 2026-11-11 khi thử trên trình duyệt. |
 
@@ -65,7 +65,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U03-40 | Audit: upload bị từ chối, Drive từ chối trả tệp vì abuse, dùng token sai người, sửa cài đặt, backup thành công và thất bại. Không audit từng lần tải thành công. | FR-014, SEC-005 |
+| BR-U03-40 | Audit: sửa cài đặt, backup thành công và thất bại. Tải tệp lên, tải xuống (kể cả bị từ chối, abuse, token sai người) không ghi audit (yêu cầu 2026-11-26). | FR-014, SEC-005 |
 | BR-U03-41 | Drive không khả dụng thì upload và tải về trả "tạm thời không khả dụng", không để lại dữ liệu dở dang. | REL-003 |
 
 ## 6. Việc nền
@@ -103,7 +103,7 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 | BR-U03-84 | Không thêm hay xóa mục từ giao diện. Khi khởi động, mục đã khai báo mà chưa có trong bảng được tạo với giá trị mặc định (hoặc rỗng là "chưa cấu hình"); mục đã có giữ nguyên giá trị Admin đã sửa. | FR-033 |
 | BR-U03-85 | Bí mật (API key, mật khẩu SMTP, khóa Google Drive, khóa ký, khóa backup) không phải cài đặt khóa–giá trị: hoặc là biến môi trường, hoặc do unit sở hữu lưu dạng bảo vệ (API AI chung của U06). | SEC-006 |
 | BR-U03-86 | Cache thường refresh trong 30 giây; sửa cài đặt xóa cache của khóa đó sau khi transaction commit (không xóa trước commit để request khác đọc lại giá trị cũ vào cache). Khi DB lỗi và đã có cache, source tiếp tục dùng last-known value dù quá TTL; không có cache thì unavailable. Đây là ngoại lệ freshness trong outage, không hứa mọi instance luôn mới trong30 giây khi dependency lỗi. | FR-033 |
-| BR-U03-87 | Nhóm Tệp: `files.material.maxSizeMb` (1–50, mặc định 50), MATERIAL có định dạng cố định PDF, DOCX, PPTX, XLSX (không có setting allowedTypes cho học liệu), `files.documentImage.maxSizeMb` (1–5, mặc định 5), `files.documentImage.allowedTypes` (tập con khác rỗng của PNG, JPEG, GIF, SVG). | FR-013, FR-033 |
+| BR-U03-87 | Nhóm Tệp chỉ có hai mục, tên hiển thị theo ngôn ngữ giao diện: `files.material.maxSizeMb` ("Tài liệu tối đa", 1–50, mặc định 50), MATERIAL có định dạng cố định PDF, DOCX, PPTX, XLSX (không có setting allowedTypes cho học liệu), `files.documentImage.maxSizeMb` ("Ảnh tối đa", 1–5, mặc định 5), ảnh có định dạng cố định PNG, JPEG. | FR-013, FR-033 |
 | BR-U03-88 | Nhóm Backup: `backup.enabled` (mặc định tắt), `backup.dailyAt` (giờ:phút theo Asia/Ho_Chi_Minh, không có mặc định). Chỉ bật được khi đã đặt giờ; giờ chạy phải được xác nhận trước triển khai, hệ thống không tự gán. Thời gian giữ bản cố định 7 ngày (BR-U03-96), không phải cài đặt. | FR-038, council features, chốt 2026-10-15 |
 | BR-U03-89 | Cài đặt không dạng khóa–giá trị (API AI chung, quota giảng viên) do unit sở hữu (U06) cung cấp qua `ISettingsSectionProvider`: U03 chỉ hiện tên và bản tóm tắt đã che trên Setting List; xem chi tiết, sửa, thử kết nối, thu hồi đi qua API của U06, U06 tự kiểm quyền, version và audit. U03 không đọc hay ghi bảng của U06, không giữ key rõ. Phần của U06 không trả lời thì hiện "không khả dụng", không bao giờ báo đã lưu. | FR-033, FR-034 |
 
@@ -111,15 +111,15 @@ Mỗi rule có mã `BR-U03-xx` để truy vết sang test. Mã của phần tệ
 
 | Mã | Rule | Nguồn |
 |---|---|---|
-| BR-U03-90 | Backup chạy theo lịch trong Settings, mỗi ngày tối đa một lần chạy theo lịch; không có nút backup thủ công trên giao diện. | FR-038 |
-| BR-U03-91 | Chỉ backup database: một lần backup gồm bản dump PostgreSQL nhất quán tại một thời điểm, phiên bản schema và ứng dụng. Tệp người dùng trên Drive (học liệu, ảnh trong tài liệu) không được backup; tệp bị mất hoặc xóa trên Drive thì không khôi phục được từ backup. | FR-038, chốt 2026-10-15 |
+| BR-U03-90 | Base backup chạy theo lịch trong Settings, mỗi ngày tối đa một lần chạy theo lịch; không có nút backup thủ công trên giao diện. Từ 2026-11-26, PostgreSQL chép tệp WAL đã ghi xong vào thư mục WAL archive (chốt tối đa mỗi 5 phút, `archive_timeout=5min`) và worker đẩy WAL lên Google Drive mỗi phút, cho phép khôi phục về thời điểm bất kỳ trong 7 ngày (mất tối đa khoảng 6 phút dữ liệu). WAL chỉ được đẩy khi có Google Drive và đang bật `backup.enabled`; ngược lại worker xóa tệp WAL trên máy. Không có cảnh báo riêng cho WAL. | FR-038 |
+| BR-U03-91 | Chỉ backup database: một lần backup là một base backup vật lý (`pg_basebackup` bằng role `backup_replicator`, kèm WAL cần để tự nhất quán) cùng phiên bản schema và ứng dụng; không còn bản `pg_dump` hằng ngày (bỏ từ 2026-11-26). Base backup chỉ khôi phục được đúng PostgreSQL 16; trước khi nâng phiên bản lớn, người vận hành chạy `pg_dump` thủ công một lần. Tệp người dùng trên Drive (học liệu, ảnh trong tài liệu) không được backup; tệp bị mất hoặc xóa trên Drive thì không khôi phục được từ backup. | FR-038, chốt 2026-10-15 |
 | BR-U03-92 | Backup handle giữ transaction/row lock qua dump-upload-checksum-terminal update để serialize duplicate delivery. markSuccess=0 phải retry/rollback, không audit success/purge. SUCCESS commit rồi mới purge archive cũ; rollback không purge. Retention lỗi không đảo ngược SUCCESS đã commit. Connection/row lock được giữ trong thời gian dump/upload; readers thấy trạng thái đã commit trước đó cho tới khi kết thúc. | FR-038 |
-| BR-U03-93 | Khi có `U03_BACKUP_PUBLIC_KEY`, archive dump được mã hóa trước khi upload; khóa giải mã không nằm trên VPS và không nằm trong archive. Không có khóa thì lưu dump không mã hóa và ghi cảnh báo. Không xuất API key hay mật khẩu dạng rõ; bản ghi credential trong database vẫn là ciphertext. | FR-038, SEC-006 |
-| BR-U03-94 | Bản backup nằm trong thư mục Drive riêng tư tách khỏi thư mục tệp đang dùng. | FR-038 |
+| BR-U03-93 | Khi có `U03_BACKUP_PUBLIC_KEY`, base backup và từng tệp WAL được mã hóa trước khi upload; khóa giải mã không nằm trên VPS và không nằm trong archive. Không có khóa thì lưu không mã hóa và ghi cảnh báo một lần. Không xuất API key hay mật khẩu dạng rõ; bản ghi credential trong database vẫn là ciphertext. | FR-038, SEC-006 |
+| BR-U03-94 | Bản backup chỉ lưu trên Google Drive, trong thư mục riêng tư tách khỏi thư mục tệp đang dùng (Shared Drive dùng `GOOGLE_BACKUP_FOLDER_ID` nếu có, còn lại là thư mục `backups` trong thư mục gốc của ứng dụng). Không cấu hình Drive thì lịch backup không tạo lần chạy nào và không lưu bản backup ở nơi khác (từ 2026-11-26; bỏ `U03_REQUIRE_DRIVE` và `U03_LOCAL_BACKUP_DIR`). | FR-038 |
 | BR-U03-95 | Lỗi tạm (Drive, mạng) được thử lại hữu hạn; lỗi vĩnh viễn hoặc hết lượt thì `FAILED` kèm lỗi đã che, dọn phần upload dở, ghi audit và phát sự kiện `backup.failed` để U14 báo Admin. Lỗi gửi email không đổi kết quả backup. | FR-038 |
-| BR-U03-96 | Giữ các bản `SUCCESS` trong 7 ngày gần nhất; bản cũ hơn bị xóa khỏi thư mục backup. Không bao giờ xóa bản thành công gần nhất, kể cả khi đã quá 7 ngày vì các lần sau đều lỗi; bản lỗi không thay bản tốt. | FR-038, chốt 2026-10-15 |
+| BR-U03-96 | Giữ các base backup `SUCCESS` trong 7 ngày gần nhất; bản cũ hơn bị xóa khỏi thư mục backup, kèm các tệp WAL tải lên trước base backup cũ nhất còn giữ (lùi 1 giờ cho an toàn). Không bao giờ xóa bản thành công gần nhất, kể cả khi đã quá 7 ngày vì các lần sau đều lỗi; bản lỗi không thay bản tốt. | FR-038, chốt 2026-10-15 |
 | BR-U03-97 | Admin chỉ xem trạng thái, lịch sử, dung lượng và lỗi (qua Admin Dashboard của U15); quyền xem không cho tải archive hay dữ liệu học vụ. | FR-038, UC 66 |
-| BR-U03-98 | Khôi phục do người vận hành làm theo runbook, chỉ vào môi trường cô lập trước; không có nút khôi phục production hay tool MCP khôi phục. Sau khôi phục phải kiểm quyền, tài liệu và XML sơ đồ, bài nộp, điểm, quota và usage, số dòng audit; ghi bằng chứng và RPO/RTO đo được. Tệp trên Drive không được khôi phục (BR-U03-91). Không cam kết không mất dữ liệu. | FR-038 |
+| BR-U03-98 | Khôi phục vào môi trường cô lập được tự động hóa bằng `scripts/backup/restore-pitr.sh` (tải base backup và WAL từ Drive, phát lại tới thời điểm chọn, kiểm số dòng); chuyển production sang bản khôi phục vẫn do người vận hành làm theo `scripts/backup/README.md`; không có nút khôi phục production hay tool MCP khôi phục. Sau khôi phục phải kiểm quyền, tài liệu và XML sơ đồ, bài nộp, điểm, quota và usage, số dòng audit; ghi bằng chứng và RPO/RTO đo được. Tệp trên Drive không được khôi phục (BR-U03-91). Không cam kết không mất dữ liệu. | FR-038 |
 
 ## 10. Quy tắc chung
 

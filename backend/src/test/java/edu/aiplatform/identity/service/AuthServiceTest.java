@@ -102,7 +102,7 @@ class AuthServiceTest {
         when(tickets.peek("reset", OtpPurpose.PASSWORD_RESET)).thenReturn(Optional.of(active.id()));
         when(tickets.take("reset", OtpPurpose.PASSWORD_RESET, active.id())).thenReturn(true);
         PasswordResetService reset = new PasswordResetService(tickets, accounts, realSessions,
-                mock(OtpChallengeStore.class), encoder, audit, TransactionOperations.withoutTransaction(), afterReset);
+                mock(OtpChallengeStore.class), encoder, TransactionOperations.withoutTransaction(), afterReset);
         AuthService pausedAuth = new AuthService(accounts, realSessions, jwt, throttle, pausedEncoder,
                 audit, IdentityTestData.properties(), afterReset);
         var pool = Executors.newSingleThreadExecutor();

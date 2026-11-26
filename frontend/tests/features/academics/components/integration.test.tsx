@@ -42,11 +42,13 @@ it("hosts every teacher tab including info and gradebook",()=>{
  render(<ReadOnlyClassPage audience="teacher" value={value}/>);
  expect(screen.getByText("Extension info")).toBeInTheDocument(); fireEvent.click(screen.getByRole("tab",{name:"Chấm điểm"})); expect(screen.getByText("Extension gradebook")).toBeInTheDocument();
 });
-it("accepts empty authorized classes and never falls back on server failure",async()=>{
+it("picks the class list by role and never falls back to another audience",async()=>{
  const fn=vi.fn().mockImplementation(()=>Promise.resolve(Response.json([])));vi.stubGlobal("fetch",fn);
- await expect(loadClassCapability()).resolves.toEqual({audience:"student",classes:[]});expect(fn).toHaveBeenCalledTimes(1);
+ await expect(loadClassCapability("STUDENT")).resolves.toEqual({audience:"student",classes:[]});expect(String(fn.mock.calls[0]?.[0])).toContain("/me/classes");
+ fn.mockClear();
+ await expect(loadClassCapability("TEACHER")).resolves.toEqual({audience:"teacher",classes:[]});expect(fn).toHaveBeenCalledTimes(1);expect(String(fn.mock.calls[0]?.[0])).toContain("/teaching/classes");
  fn.mockReset().mockImplementation(()=>Promise.resolve(Response.json({}, {status:503})));
- await expect(loadClassCapability()).rejects.toMatchObject({problem:{status:503}});expect(fn).toHaveBeenCalledTimes(1);vi.unstubAllGlobals();
+ await expect(loadClassCapability("STUDENT")).rejects.toMatchObject({problem:{status:503}});expect(fn).toHaveBeenCalledTimes(1);vi.unstubAllGlobals();
 });
 
 it("restores dashboard filters without sharing their query parameter", () => {

@@ -69,6 +69,20 @@ function backend(modules: MaterialModule[], materials: Material[]) {
   });
 }
 
+it("hides archived materials the viewer cannot restore, such as archived subject materials for teachers", async () => {
+  backend([mod("m1", "Module 1")], [row("a"), row("old", { status: "ARCHIVED", canManage: false })]);
+  render(<ModuleBoard scope={{ kind: "class", classId: "class" }} />);
+  expect(await screen.findByText("Document a")).toBeInTheDocument();
+  expect(screen.queryByText("Document old")).not.toBeInTheDocument();
+});
+
+it("hides archived materials from students", async () => {
+  backend([mod("m1", "Module 1")], [row("a"), row("old", { status: "ARCHIVED" })]);
+  render(<ModuleBoard scope={{ kind: "student", classId: "class" }} />);
+  expect(await screen.findByText("Document a")).toBeInTheDocument();
+  expect(screen.queryByText("Document old")).not.toBeInTheDocument();
+});
+
 it("shows disabled material to staff with a state label but hides it from students", async () => {
   backend([mod("m1", "Module 1")], [row("off", { enabled: false })]);
   const { rerender } = render(<ModuleBoard scope={{ kind: "subject", subjectId: "subject" }} />);
@@ -82,7 +96,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-it("groups active materials and quizzes under their modules", async () => {
+it("groups materials and quizzes under their modules; archived materials stay visible to staff", async () => {
   backend(
     [
       mod("m1", "Module 1", {
@@ -108,7 +122,11 @@ it("groups active materials and quizzes under their modules", async () => {
   expect(
     within(screen.getByRole("region", { name: "Module 2" })).getByText("Document b"),
   ).toHaveAttribute("href", "/materials/b/view");
-  expect(screen.queryByText("Document old")).not.toBeInTheDocument();
+  // Lưu trữ không xóa (yêu cầu 2026-11-26): người quản lý vẫn thấy, có nhãn và nút khôi phục, không còn sửa / lưu trữ.
+  const archived = screen.getByTestId("module-row-m:old");
+  expect(within(archived).getByText("Đã lưu trữ")).toBeInTheDocument();
+  expect(within(archived).getByRole("button", { name: /Mở lại/ })).toBeInTheDocument();
+  expect(within(archived).queryByRole("button", { name: /Lưu trữ Document old/ })).not.toBeInTheDocument();
 });
 
 it("the chevron at the end of a module header collapses and reopens it", async () => {

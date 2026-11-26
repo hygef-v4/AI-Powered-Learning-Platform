@@ -17,6 +17,7 @@ import type {SubjectView, CourseClassView, EnrollmentView} from "../model/types"
 import styles from "../styles/academics.module.css";
 import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { msg } from "@/i18n/msg";
+import { useSession } from "@/features/identity/hooks/SessionProvider";
 
 type ResourceLoader<T> = (signal: AbortSignal) => Promise<T>;
 type ResourceState<T> = {
@@ -91,18 +92,18 @@ function Pending({error, retry}: {error?: unknown; retry: () => void}) {
 // Dựng danh sách lớp và dẫn đến trang chi tiết tương ứng với vai trò đang xem.
 export function ClassesRoute({teaching = false}: {teaching?: boolean}) {
   const router = useRouter();
-  // Chọn nguồn theo phạm vi giảng dạy hoặc khả năng của tài khoản rồi lấy đủ trang nếu cần.
+  const session = useSession();
+  // RoleGuard của layout chỉ vẽ trang khi phiên đã đăng nhập.
+  const role = session.status === "authenticated" ? session.profile.role : null;
   const load = useCallback(async (signal: AbortSignal) => {
-    const mode = teaching
-      ? {audience: "teacher" as const, classes: await academicsApi.listClasses("teaching", {}, signal)}
-      : await loadClassCapability(signal);
+    const mode = await loadClassCapability(teaching || !role ? "TEACHER" : role, signal);
     return {
       ...mode,
       classes: mode.classes.length === 100
         ? await listAllClasses(mode.audience === "student" ? "me" : "teaching", signal)
         : mode.classes,
     };
-  }, [teaching]);
+  }, [teaching, role]);
   const state = useResource(load);
   if (!state.data) return <Pending error={state.error} retry={state.refresh}/>;
 

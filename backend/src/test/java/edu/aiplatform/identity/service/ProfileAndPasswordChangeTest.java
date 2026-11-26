@@ -12,8 +12,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.IdentityTestData;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Actor;
@@ -33,9 +31,6 @@ import edu.aiplatform.identity.integration.VerificationTicketStore;
 import edu.aiplatform.shared.error.ApiException;
 import java.time.Clock;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,14 +52,12 @@ class ProfileAndPasswordChangeTest {
     private final OtpChallengeStore otpChallenges = mock(OtpChallengeStore.class);
     private final VerificationTicketStore tickets = mock(VerificationTicketStore.class);
     private final RequestThrottle throttle = mock(RequestThrottle.class);
-    private final List<AuditEvent> audits = new ArrayList<>();
-    private final IAudit audit = audits::add;
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(4);
     private final Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
-    private final ProfileService profiles = new ProfileService(accounts, authorization, audit,
+    private final ProfileService profiles = new ProfileService(accounts, authorization,
             TransactionOperations.withoutTransaction(), clock);
     private final PasswordChangeService passwords = new PasswordChangeService(accounts, authorization, sessions,
-            otpChallenges, tickets, throttle, encoder, audit, TransactionOperations.withoutTransaction(), clock);
+            otpChallenges, tickets, throttle, encoder, TransactionOperations.withoutTransaction(), clock);
     private Account account;
     private Actor actor;
 
@@ -95,22 +88,16 @@ class ProfileAndPasswordChangeTest {
     }
 
     @Test
-    void updateTrimsNameAndAuditsFieldNamesOnly() {
+    void updateTrimsNameAndPhone() {
         profiles.updateProfile(actor, "  Vũ Minh Tài Mới ", " 0912345678 ");
 
         verify(accounts).updateProfile(account.id(), "Vũ Minh Tài Mới", "0912345678", null, NOW);
-        assertThat(audits).singleElement().satisfies(e -> {
-            assertThat(e.action()).isEqualTo("PROFILE_UPDATED");
-            assertThat(e.details()).isEqualTo(Map.of("fields", List.of("displayName", "phoneNumber")));
-            assertThat(e.details().toString()).doesNotContain("0912345678");
-        });
     }
 
     @Test
     void unchangedProfileWritesNothing() {
         profiles.updateProfile(actor, "Vũ Minh Tài", "");
         verify(accounts, never()).updateProfile(any(), anyString(), any(), any(), any());
-        assertThat(audits).isEmpty();
     }
 
     @Test
@@ -136,7 +123,7 @@ class ProfileAndPasswordChangeTest {
         var keep = realSessions.createSession(account.id(), NOW.toEpochMilli());
         var other = realSessions.createSession(account.id(), NOW.toEpochMilli());
         PasswordChangeService changeService = new PasswordChangeService(accounts, authorization, realSessions,
-                otpChallenges, tickets, throttle, encoder, audit, TransactionOperations.withoutTransaction(), changeClock);
+                otpChallenges, tickets, throttle, encoder, TransactionOperations.withoutTransaction(), changeClock);
 
         changeService.change(actor, keep.sid(), PASSWORD, NEW_PASSWORD);
 
@@ -185,7 +172,6 @@ class ProfileAndPasswordChangeTest {
         verify(otpChallenges).deleteChallenge(account.id(), OtpPurpose.PASSWORD_RESET);
         verify(tickets).revoke(account.id(), OtpPurpose.PASSWORD_RESET);
         verify(throttle, never()).recordPasswordChangeFailure(any());
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("PASSWORD_CHANGED");
     }
 
     @Test

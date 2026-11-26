@@ -30,6 +30,7 @@ import {
   generateId,
   joinRunsText,
   numberSections,
+  WHOLE_DOCUMENT,
   type TitleContent,
   MAX_SECTION_DEPTH,
   formatSectionNumber,
@@ -751,6 +752,8 @@ export function DocumentEditor({
   // Người học chỉ viết trong phần: block nằm từ tiêu đề lá tới tiêu đề kế; khung không có tiêu đề thì cả bài.
   const sections = student ? filterWritable(numberSections(document, computeParts(document)), writableParts) : null;
   const isInPart = (blockId: string | undefined) => !sections || (!!blockId && sections.has(blockId));
+  // Người học được viết vào phần gốc (khung không có tiêu đề là phần "Toàn bài"; bài nhóm thì phải giữ phần đó).
+  const rootWritable = student && !readOnly && (!writableParts || writableParts.has(WHOLE_DOCUMENT));
   // Tài liệu trống không có tiêu đề nên cả bài là một phần; còn lại cuối tài liệu luôn thuộc tiêu đề cuối (là lá).
   const atEndInPart = blocks.length === 0 || isInPart(blocks.at(-1)!.id);
   // Bảng của người soạn trong phần: người học điền thẳng vào (yêu cầu 2026-10-22), không xóa bảng.
@@ -1206,7 +1209,8 @@ export function DocumentEditor({
    */
   function renderEmptyLeaf(section: DocSection, key: string): ReactNode {
     const last = section.blocks.at(-1) ?? section.heading;
-    if (!last) return null;
+    // Đề chỉ có phần gốc và chưa có khối nào: người học vẫn có chỗ viết ngay dưới gốc (yêu cầu 2026-11-27).
+    if (!last && !(section.heading === null && rootWritable)) return null;
     if (student && section.blocks.some((b) => b.origin === "STUDENT" && (!guided || b.type === "PARAGRAPH" || b.type === "LIST"))) return null;
     if (authoring || (!student && section.blocks.length > 0)) return null;
     if (student && !readOnly && section.heading && !isInPart(section.heading.id)) return null;
@@ -1217,7 +1221,7 @@ export function DocumentEditor({
     }
     return (
       <button type="button" aria-label={msg("shared.document.DocumentEditor.writeInThisPart")} data-testid={`write-part-${key}`}
-        onClick={() => insertAfter(last.id, createBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-focus" : "h-7")}>
+        onClick={() => insertAfter(last?.id ?? null, createBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-focus" : "h-7")}>
         {guided && ANSWER_PLACEHOLDER}
       </button>
     );
@@ -1372,9 +1376,9 @@ export function DocumentEditor({
     if (!heading) {
       return (
         <Fragment key={key}>
-          {guided && section.leaf && blocks.length > 0 ? renderLeafContent(section, key) : <>
+          {guided && section.leaf && (blocks.length > 0 || rootWritable) ? renderLeafContent(section, key) : <>
             {section.blocks.map(renderBlock)}
-            {section.leaf && blocks.length > 0 && renderEmptyLeaf(section, key)}
+            {section.leaf && (blocks.length > 0 || rootWritable) && renderEmptyLeaf(section, key)}
           </>}
           {authoring && section.children.length === 0 && <>{renderTailLine(section, key)}{renderQuickAdd(section)}</>}
           {children.map((child) => renderSection(child, null, only))}

@@ -58,6 +58,7 @@ final class AssignmentDraftRevision {
              "properties":{
               "title":{"type":"string","description":"Full assessment title after the change."},
               "instructions":{"type":"string","description":"Full instructions after the change."},
+              "clearInstructions":{"type":"boolean","description":"true only when the instruction asks to delete all instructions."},
               "operations":{"type":"array","items":{"type":"object","required":["op","ref","type","text"],
                "additionalProperties":false,"properties":{
                 "op":{"type":"string","enum":["UPDATE","INSERT","DELETE"]},
@@ -162,7 +163,10 @@ final class AssignmentDraftRevision {
                 + "UPDATE replaces the block with that ref by the given block; INSERT adds a new block after the block "
                 + "with that ref (empty ref inserts at the start; several INSERTs after the same ref keep their order); "
                 + "DELETE removes the block. Blocks not mentioned stay exactly as they are, so never repeat unchanged "
-                + "blocks and never delete content the instruction does not ask to remove. Every operation has op, "
+                + "blocks and never delete content the instruction does not ask to remove. When the instruction asks "
+                + "to delete text, remove it: DELETE each block whose whole text goes, UPDATE a block with its "
+                + "remaining text when only part of it goes, and set clearInstructions to true when all instructions "
+                + "must go (otherwise omit it). Every operation has op, "
                 + "ref, type and text; text is the full new text of the block. A LIST keeps one item per line in "
                 + "text; a TABLE has empty text and its cells in rows. IMAGE and DIAGRAM blocks cannot be created; "
                 + "UPDATE only changes their alt text. Headings are numbered automatically, so do not put numbers "
@@ -230,6 +234,10 @@ final class AssignmentDraftRevision {
                     if (old == null) {
                         continue;
                     }
+                    if (isClearedText(block, old)) {
+                        deleted.add(ref);
+                        continue;
+                    }
                     if (!block.has("rubric") && old.has("rubric")
                             && old.path("type").asText().equals(block.path("type").asText())) {
                         block.set("rubric", old.get("rubric"));
@@ -247,9 +255,13 @@ final class AssignmentDraftRevision {
         ObjectNode out = JsonNodeFactory.instance.objectNode();
         out.put("title", raw.path("title").isTextual() && !raw.path("title").asText().isBlank()
                 ? raw.path("title").asText() : snapshot.path("title").asText(""));
-        // Mô hình nhỏ hay bỏ trống hướng dẫn: rỗng là giữ nguyên, không xóa.
-        out.put("instructions", raw.path("instructions").isTextual() && !raw.path("instructions").asText().isBlank()
-                ? raw.path("instructions").asText() : snapshot.path("instructions").asText(""));
+        // Mô hình nhỏ hay bỏ trống hướng dẫn: rỗng là giữ nguyên; chỉ xóa khi AI báo rõ clearInstructions.
+        if (raw.path("clearInstructions").asBoolean(false)) {
+            out.put("instructions", "");
+        } else {
+            out.put("instructions", raw.path("instructions").isTextual() && !raw.path("instructions").asText().isBlank()
+                    ? raw.path("instructions").asText() : snapshot.path("instructions").asText(""));
+        }
         ArrayNode blocks = out.putArray("blocks");
         inserts.getOrDefault("", List.of()).forEach(blocks::add);
         for (String ref : order) {
@@ -264,6 +276,19 @@ final class AssignmentDraftRevision {
             out.set("wholeRubric", whole.deepCopy());
         }
         return out;
+    }
+
+    /**
+     * UPDATE xóa hết chữ của đoạn, danh sách hoặc tiêu đề đang có chữ là xóa khối đó (yêu cầu 2026-11-27): giữ lại một
+     * khối trống không có ích. Bảng, ảnh, sơ đồ không xét vì chữ của chúng nằm ở ô hoặc là chú thích.
+     */
+    private static boolean isClearedText(ObjectNode block, ObjectNode old) {
+        String type = block.path("type").asText("");
+        if (!type.equals(old.path("type").asText())
+                || !Set.of("PARAGRAPH", "LIST", "HEADING").contains(type)) {
+            return false;
+        }
+        return block.path("text").asText("").isBlank() && !old.path("text").asText("").isBlank();
     }
 
     private static ObjectNode blockOf(JsonNode operation) {
@@ -368,7 +393,8 @@ final class AssignmentDraftRevision {
         int leafCount = 0;
         BigDecimal total = BigDecimal.ZERO.setScale(2);
         if (blocks == null || !blocks.isArray() || blocks.isEmpty()) {
-            issue(issues, "ERROR", "PROPOSAL_STRUCTURE_INVALID", "blocks", "Đề sau khi sửa không còn nội dung.");
+            // Xóa hết nội dung là thao tác hợp lệ khi người soạn yêu cầu; chỉ cảnh báo để người soạn xem lại.
+            issue(issues, "WARNING", "PROPOSAL_EMPTY", "blocks", "Đề sau khi sửa không còn nội dung.");
         } else {
             List<JsonNode> headings = new ArrayList<>();
             blocks.forEach(block -> {
@@ -391,7 +417,7 @@ final class AssignmentDraftRevision {
                 }
                 leafCount++;
                 if (rubric.isMissingNode() || rubric.isEmpty()) {
-                    if (gradingMode == GradingMode.GRADED) {
+                    if (gradingMode.hasPoints()) {
                         issue(issues, "WARNING", "RUBRIC_RECOMMENDED", "blocks.rubric",
                                 "Mục \"" + heading.path("text").asText() + "\" chưa có tiêu chí chấm.");
                     }

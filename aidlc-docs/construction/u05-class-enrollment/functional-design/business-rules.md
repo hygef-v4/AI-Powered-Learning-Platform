@@ -63,7 +63,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 |---|---|---|
 | BR-U05-50 | Chủ nhiệm môn thấy lớp của các môn mình quản lý (UC 24); giảng viên thấy lớp mình dạy (UC 22); sinh viên thấy lớp đã ghi danh (UC 20). Trang tối đa 100 dòng, tìm theo mã hoặc tên. | UC 20, 22, 24 |
 | BR-U05-51 | Truy cập lớp ngoài phạm vi trả "không tìm thấy" và ghi audit `ACCESS_DENIED`. | US-CAT-002 S3 |
-| BR-U05-52 | Audit: `CLASS_CREATED`, `CLASS_UPDATED`, `CLASS_STATUS_CHANGED`, `CLASS_TEACHER_CHANGED` (trước/sau), `STUDENT_ENROLLED`, `STUDENT_REMOVED` (mỗi người một sự kiện). Cài đặt phân bố do U09 audit theo bài–lớp. | FR-014, SEC-005 |
+| BR-U05-52 | Audit chỉ ghi tạo, mở, lưu trữ, mở lại lớp; mã hành động kèm mã lớp: `CLASS_<mã>_CREATED`, `CLASS_<mã>_OPENED` (DRAFT→OPEN), `CLASS_<mã>_ARCHIVED`, `CLASS_<mã>_REOPENED` (ARCHIVED→OPEN). Sửa thông tin, đổi giảng viên, ghi danh, xóa sinh viên và lỗi nghiệp vụ không ghi; truy cập bị từ chối vẫn ghi `ACCESS_DENIED` (yêu cầu 2026-11-26). | FR-014, SEC-005 |
 | BR-U05-53 | Dữ liệu sai (lớp, môn hoặc người không tồn tại, sai role) thì từ chối toàn bộ thao tác đó, báo cách sửa, không lộ dữ liệu người khác. | US-CAT-001 S2 |
 | BR-U05-54 | U01 hoặc U04 không trả lời thì từ chối (fail closed). | BR-U01-93 |
 | BR-U05-55 | Admin không có màn hay API lớp; Admin chỉ xem danh sách lớp của một môn qua Subject Detail của U04. | BR-U01-60 |
@@ -104,7 +104,7 @@ Nguồn: [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-clas
 | BR-U05-69 | MCP `list_my_classes` trả thêm `term` cho mỗi lớp và nhận tham số tùy chọn `term`, kiểm như BR-U05-65. | CT-07 |
 | BR-U05-70 | Luật ghi danh giữ nguyên, không xét học kỳ: BR-U05-15 và BR-U05-22 (`IN_OTHER_CLASS`, `ENROLLMENT_CONFLICT`) vẫn áp dụng cho mọi lớp chưa lưu trữ cùng môn. Lớp kỳ trước phải lưu trữ thì sinh viên mới vào lớp cùng môn ở kỳ sau. | CT-09 |
 | BR-U05-71 | Không có danh mục, API hay màn hình quản lý học kỳ. Danh sách học kỳ của bộ lọc lấy từ chính các lớp đã tải cho người dùng (FD Q4). | Yêu cầu gốc, FD Q4 |
-| BR-U05-72 | Audit giữ mã sự kiện hiện có: tạo lớp ghi `CLASS_CREATED`, sửa ngày bắt đầu ghi `CLASS_UPDATED` như sửa thông tin lớp. Học kỳ không đưa vào prompt AI, thông báo hay email. | G2, BR-U05-52 |
+| BR-U05-72 | Audit theo BR-U05-52: tạo lớp ghi `CLASS_<mã>_CREATED`, sửa ngày bắt đầu không ghi như sửa thông tin lớp. Học kỳ không đưa vào prompt AI, thông báo hay email. | G2, BR-U05-52 |
 
 **Giao diện** (chi tiết ở frontend-components.md mục học kỳ):
 

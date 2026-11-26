@@ -159,3 +159,11 @@ lịch. UI xác nhận ngừng sửa/nộp và chốt nội dung đã lưu. Khó
 và chốt lượt cá nhân/nhóm trong cùng transaction; lỗi thì rollback. Giữ opensAt,
 closesAt, lateUntil gốc, không có mở lại; thao tác riêng với Ngưng giao. Chỉ sau commit
 mới cho phép chấm/công bố, không chỉ dựa vào giờ hạn nộp.
+
+## Đề mẫu của môn không có loại — 2026-11-26
+
+| Mã | Quy tắc | Thay thế |
+|---|---|---|
+| BR-U07-85 | Đề mẫu của môn không có loại: tạo, copy về môn hay sửa cài đặt đều lưu `grading_mode = 'TEMPLATE'` và `submission_mode = 'INDIVIDUAL'`, loại gửi lên bị bỏ qua. Ràng buộc DB `ck_assignments_template_scope` bảo đảm bài của lớp không bao giờ `TEMPLATE` (API trả `MODE_INVALID`). Migration chỉ đổi đề mẫu chưa từng giao (`DRAFT`, `REVIEWED`) sang `TEMPLATE`; bài của môn cũ đã từng giao cho sinh viên (trước 2026-11-09) giữ loại cũ để không làm hỏng lượt làm và điểm đã có. Đề mẫu không giao cho sinh viên (BR-U07-80). Đề mẫu vẫn giữ thang điểm và rubric như bài có chấm (`GradingMode.hasPoints()`). Giao diện của Chủ nhiệm môn không có ô Loại, cài đặt hiện ghi chú đề mẫu không có loại. | BR-U07-81 (đề mẫu được là bài `GROUP`) |
+| BR-U07-86 | Giảng viên tạo bài ở lớp từ đề mẫu: bài mới mang loại giảng viên đang chọn trong popup; chọn đề mẫu không đổi Loại. Không gửi loại thì mặc định Cá nhân, Graded. Kiểm bài nhóm của lớp (`GROUP_NOT_SUPPORTED`) áp dụng theo loại đã chọn. Copy từ bài của lớp khác vẫn nhảy Loại theo bài nguồn như trước. | BR-U07-82 phần loại của bài copy từ đề mẫu |
+| BR-U07-87 | Xếp lịch không chọn được thời điểm đã qua: ô ngày không nhận ngày trước hôm nay, ô giờ của hôm nay không nhận giờ đã qua (giờ Việt Nam). Hẹn giờ mở ở quá khứ trả `400 SCHEDULE_INVALID` ("Ngày mở phải ở tương lai"), chừa 2 phút cho độ trễ; bỏ hẹn giờ (mở ngay) vẫn gửi thời điểm hiện tại. Bài đang mở giữ ngày mở cũ; khi đang trong hạn nộp muộn chỉ cần hạn cuối nhận bài còn ở tương lai (yêu cầu 2026-11-26). | BR-U07-33 phần ngày mở |

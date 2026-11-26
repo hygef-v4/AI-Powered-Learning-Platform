@@ -11,7 +11,7 @@ browser --> nginx --> backend : upload, tải về, Settings
 backend --> Google Drive (thư mục MATERIAL, DOCUMENT_IMAGE) : lưu và đọc tệp
 backend --> RabbitMQ (exchange jobs, platform.events) : việc nền, sự kiện
 RabbitMQ --> worker : jobs.triggered, jobs.email, jobs.ai, jobs.drive, jobs.backup
-worker --> PostgreSQL : pg_dump bằng role backup_reader
+worker --> PostgreSQL : pg_basebackup bằng role backup_replicator, đọc WAL archive
 worker --> Google Drive (thư mục backup riêng) : archive dump đã mã hóa
 backend --> PostgreSQL : system_settings, backup_runs
 ```

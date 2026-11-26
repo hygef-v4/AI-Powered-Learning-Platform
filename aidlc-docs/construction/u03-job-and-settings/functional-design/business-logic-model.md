@@ -138,7 +138,7 @@ Luồng F1–F5 cho tệp, J1–J4 cho việc nền, E1 cho sự kiện thông b
 ### B2 - Chạy backup
 1. Handler nhận `BACKUP_RUN`, chuyển `CREATED` → `RUNNING` có điều kiện; dòng không còn `CREATED` thì bỏ (BR-U03-51).
 2. Kiểm dung lượng đĩa tạm; không đủ thì `FAILED` ngay.
-3. Chạy `pg_dump` ra tệp tạm (một snapshot nhất quán), ghi phiên bản schema (Flyway) và phiên bản ứng dụng.
+3. Chạy `pg_basebackup` ra tệp tar nén (base backup vật lý kèm WAL cần để tự nhất quán; trước 2026-11-26 là `pg_dump`), ghi phiên bản schema (Flyway) và phiên bản ứng dụng.
 4. Mã hóa dump (BR-U03-93), upload vào thư mục backup riêng, kiểm kích thước và checksum sau upload. Không chép tệp trên Drive (BR-U03-91).
 5. Ghi `SUCCESS` với tham chiếu archive, dung lượng, thời điểm xong; ghi audit `BACKUP_COMPLETED` (BR-U03-92).
 6. Chạy B3.

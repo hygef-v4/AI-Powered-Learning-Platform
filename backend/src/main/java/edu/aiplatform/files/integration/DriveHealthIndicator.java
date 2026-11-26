@@ -44,7 +44,7 @@ public class DriveHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         if (!properties.hasDrive()) {
-            return Health.up().withDetail("drive", properties.requireDrive() ? "NOT_CONFIGURED" : "LOCAL").build();
+            return Health.up().withDetail("drive", "LOCAL").build();
         }
         Instant now = clock.instant();
         if (now.isAfter(checkedAt.plus(CACHE)) && refreshing.compareAndSet(false, true)) {

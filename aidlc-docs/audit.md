@@ -15328,6 +15328,24 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 
 ---
 
+## U05 Khắc phục bản ghi audit sai khi giảng viên xem danh sách lớp
+**Timestamp**: 2026-11-25T19:05:45Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi hệ thống ghi nhầm bản ghi audit khi giảng viên xem danh sách lớp học."
+**AI Response**: "Nguyên nhân: trang /classes gửi yêu cầu thăm dò tới /me/classes trước khi chuyển sang /teaching/classes. Với tài khoản giảng viên, yêu cầu này bị từ chối (403 ROLE_DENIED), dẫn đến việc hệ thống ghi một bản ghi ACCESS_DENIED không phản ánh thao tác thực tế. Biện pháp: loadClassCapability lựa chọn API theo vai trò của phiên đăng nhập và không còn gửi yêu cầu thăm dò. Bộ kiểm thử academics đã được cập nhật (98/98 đạt; tsc và eslint không báo lỗi)."
+**Context**: Construction, khắc phục lỗi U05 (frontend academics).
+
+---
+
+## U03, U02 Bản địa hóa trang Cài đặt và chuẩn hóa bộ lọc màn hình Log
+**Timestamp**: 2026-11-25T22:40:14Z
+**Requested by:** max2min
+**User Input**: "Hiển thị tên và mô tả các mục trên trang Cài đặt theo ngôn ngữ giao diện đang chọn. Nhóm Tệp chỉ giữ hai mục: Tài liệu tối đa và Ảnh tối đa. Bộ lọc Hành động và Đối tượng trên màn hình Log chỉ liệt kê các mã mà hệ thống hiện còn ghi nhận."
+**AI Response**: "Nguyên nhân: tên và mô tả của mục cài đặt do backend trả về bằng tiếng Việt cố định, nên giao diện tiếng Anh vẫn hiển thị tiếng Việt; danh sách lựa chọn của bộ lọc Log bao gồm cả các mã đã ngừng ghi. Các thay đổi đã thực hiện: (1) Frontend hiển thị tên và mô tả của bốn mục cài đặt theo khóa, có bản dịch tiếng Việt và tiếng Anh. (2) Nhóm Tệp chỉ còn files.material.maxSizeMb (Tài liệu tối đa) và files.documentImage.maxSizeMb (Ảnh tối đa); tệp nguồn soạn bài AI và tệp nhập đề áp dụng trần cứng lần lượt 2 MB và 10 MB. (3) Bộ lọc Hành động chỉ còn 24 mã đang được ghi nhận, bộ lọc Đối tượng chỉ còn 12 loại; nhãn của các mã cũ được giữ lại để hiển thị bản ghi lịch sử. (4) Danh sách hành động bảo mật của Tổng quan bỏ AUTH_FAILED và MCP_TOKEN_REVEALED do không còn được ghi. Cập nhật BR-U03-87 và BR-U03-99. Kết quả kiểm thử: frontend 1263/1263 ca đạt, tsc và eslint không báo lỗi; các bộ kiểm thử backend liên quan (Audit, Setting, PurposePolicy, UploadService, AdminDashboard) đều đạt."
+**Context**: Construction, điều chỉnh U03 (cài đặt, tệp) và U02 (màn hình Log).
+
+---
+
 ## Construction - U11 Quiz Practice Auto-fix xung đột lần 3
 **Timestamp**: 2026-11-26T01:00:00Z
 **Requested by:** Đào Chí Cường
@@ -15379,6 +15397,24 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **User Input**: "giúp tôi commit"
 **AI Response**: "Commit sửa test RequirementsCoverageIntegrationTest cùng ghi nhận AI-DLC lên audit-staging; chưa push."
 **Context**: Construction, Build and Test U03.
+
+---
+
+## U03 Chỉ lưu backup cơ sở dữ liệu trên Google Drive
+**Timestamp**: 2026-11-26T06:46:36Z
+**Requested by:** max2min
+**User Input**: "Bản backup luôn được tải lên Google Drive khi hệ thống có cấu hình Drive; không có cấu hình Drive thì không lưu backup. Mã hóa RSA không bắt buộc. Bỏ biến cấu hình U03_REQUIRE_DRIVE."
+**AI Response**: "Các thay đổi đã thực hiện: (1) BackupConfig chỉ dùng Google Drive: Shared Drive có GOOGLE_BACKUP_FOLDER_ID thì dùng thư mục đó, các trường hợp có Drive còn lại dùng thư mục backups trong thư mục gốc của ứng dụng. (2) Không cấu hình Drive thì BackupScheduleScanner không tạo lần chạy; lưu trữ backup cục bộ (LocalBackupStore, U03_LOCAL_BACKUP_DIR, volume backups-local và backups-staging) được loại bỏ khỏi ứng dụng, LocalBackupStore chỉ còn dùng trong kiểm thử. (3) Loại bỏ U03_REQUIRE_DRIVE khỏi FilesProperties, StorageConfig, DriveHealthIndicator, application.yml, các tệp docker-compose, tệp mẫu .env và README; khi không có Drive, tệp người dùng lưu tại thư mục cục bộ. Xóa UnconfiguredStorageAdapter do không còn được sử dụng. (4) Mã hóa bằng U03_BACKUP_PUBLIC_KEY tiếp tục là tùy chọn. Cập nhật BR-U03-94, logical-components và code-summary của U03. Kết quả kiểm thử: các bộ kiểm thử backup, files và ba bộ kiểm thử tích hợp liên quan đều đạt."
+**Context**: Construction, điều chỉnh U03 (backup và lưu trữ tệp).
+
+---
+
+## U03 Thay pg_dump bằng base backup và WAL archiving lên Google Drive
+**Timestamp**: 2026-11-26T07:30:18Z
+**Requested by:** max2min
+**User Input**: "Bỏ backup bằng pg_dump. Chụp base backup lên Google Drive mỗi 24 giờ và đẩy WAL lên Google Drive mỗi 5 phút. Không cần cảnh báo riêng cho WAL. Tự động hóa quy trình khôi phục ở mức có thể."
+**AI Response**: "Thiết kế được ghi tại infrastructure-design/2026-11-26-wal-backup-design.md và đã được người dùng duyệt (bỏ cảnh báo, tự động hóa khôi phục). Các thay đổi đã thực hiện: (1) PostgreSQL bật archive_mode, archive_timeout 5 phút, archive_command chỉ chép tệp WAL vào volume wal-archive dùng chung với worker; pg_hba.conf riêng cho phép role backup_replicator kết nối replication; role backup_replicator thay backup_reader. (2) PgBaseBackupRunner chạy pg_basebackup (tar nén, kèm WAL cần thiết, checkpoint giãn, giới hạn tốc độ U03_BACKUP_MAX_RATE) thay PgDumpRunner, theo lịch backup.dailyAt hiện có. (3) WalShipScanner chạy mỗi phút trong worker: nén gzip, mã hóa nếu có U03_BACKUP_PUBLIC_KEY, tải lên thư mục wal trên Drive, đối chiếu kích thước và MD5, ghi bảng wal_segments (migration mới) rồi xóa tệp trên máy; lỗi lưu trữ thì giữ tệp để thử lại; không cấu hình Drive hoặc đang tắt sao lưu thì xóa tệp mà không lưu. (4) Khi dọn base backup quá 7 ngày, xóa thêm các tệp WAL tải lên trước base backup cũ nhất còn giữ. (5) BackupRestoreTool và scripts/backup/restore-pitr.sh tự động tải base backup và WAL từ Drive, giải mã, phát lại tới thời điểm chọn trên một container PostgreSQL cô lập và kiểm tra số dòng; hướng dẫn chuyển production tại scripts/backup/README.md. (6) Cập nhật BR-U03-90, 91, 93, 96, 98, NFR-U03-71, các tài liệu thiết kế U03, README, .env.example và Dockerfile. Kết quả kiểm thử: 56 ca kiểm thử của module backup đều đạt. Kiểm thử trên stack Docker cục bộ: WAL được archive và tải lên Drive, base backup chạy thành công, khôi phục về mốc 2026-11-26T14:27:52+07:00 cho kết quả chỉ chứa dữ liệu ghi trước mốc và số dòng các bảng chính khớp cơ sở dữ liệu đang chạy. Cài đặt backup đã được trả về trạng thái ban đầu sau kiểm thử."
+**Context**: Construction, Infrastructure Design và Code Generation U03 (backup cơ sở dữ liệu).
 
 ---
 
@@ -15473,6 +15509,49 @@ giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại 
 
 ---
 
+## U05, U13, U07 Ô lọc học kỳ, học liệu môn và đề mẫu không có loại
+**Timestamp**: 2026-11-26T12:45:48Z
+**Requested by:** max2min
+**User Input**: "Khắc phục popup chọn học kỳ trên trang Classes bị lệch. Môn mới tạo không tự có module học liệu. Học liệu do Chủ nhiệm môn tạo đổi tên thành Subject material, hiển thị cho mọi lớp thuộc môn; giảng viên không sửa và không lưu trữ được. Nút xóa học liệu của giảng viên và Chủ nhiệm môn đổi thành nút lưu trữ. Bỏ công tắc bật/tắt trong hộp thoại tạo học liệu. Đề mẫu bài tập của Chủ nhiệm môn không giao cho sinh viên, không có loại và được lưu với loại TEMPLATE; khi giảng viên tạo bài từ đề mẫu, bài mới giữ loại giảng viên đang chọn."
+**AI Response**: "Các thay đổi đã thực hiện: (1) Popup chọn học kỳ lệch do khung danh sách có độ rộng tối thiểu 208 px và căn theo mép phải của ô chọn rộng 176 px; Menu nhận thêm menuClassName, TermFilter cho khung danh sách rộng đúng bằng ô chọn. (2) MaterialModuleService không còn tự tạo Module 1; trang học liệu hiển thị hướng dẫn tạo module (Chủ nhiệm môn) hoặc chờ môn có module (giảng viên). (3) Giao diện của Chủ nhiệm môn dùng tên Subject material / Học liệu môn cho menu, tiêu đề trang, nút tạo và hộp thoại; quyền hiện có đã bảo đảm học liệu môn hiển thị cho mọi lớp và chỉ Chủ nhiệm môn được sửa hoặc lưu trữ. (4) Nút gỡ học liệu đổi thành Lưu trữ với biểu tượng archive trên danh sách module, trang chi tiết và hộp thoại xác nhận. (5) Hộp thoại tạo học liệu bỏ công tắc bật/tắt, học liệu mới luôn được bật. (6) Thêm GradingMode.TEMPLATE: đề mẫu của môn luôn lưu TEMPLATE và Cá nhân, giao diện của Chủ nhiệm môn không còn ô Loại; bài của lớp không được mang TEMPLATE (MODE_INVALID và ràng buộc ck_assignments_template_scope); migration chỉ đổi đề mẫu chưa từng giao, giữ nguyên bài của môn cũ đã giao để không ảnh hưởng lượt làm và điểm. Đề mẫu vẫn giữ thang điểm và rubric khi dùng với AI. Khi giảng viên chọn đề mẫu, loại bài không thay đổi và bài mới mang loại giảng viên đã chọn. Cập nhật BR-U13-M02, bổ sung BR-U13-90 đến 92, BR-U07-85 và 86. Kết quả kiểm thử: frontend 1270/1270 ca đạt, tsc và eslint không báo lỗi; các bộ kiểm thử backend của học liệu, bài tập và hai bộ kiểm thử tích hợp liên quan đều đạt."
+**Context**: Construction, điều chỉnh U05 (giao diện lớp), U13 (học liệu) và U07 (đề mẫu bài tập).
+
+---
+
+## U13 Khắc phục lưu trữ học liệu hiển thị như xóa
+**Timestamp**: 2026-11-26T13:11:03Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi lưu trữ học liệu làm học liệu biến mất như bị xóa; học liệu phải được lưu trữ và vẫn còn trong hệ thống."
+**AI Response**: "Nguyên nhân: backend lưu trữ đúng (chuyển trạng thái ARCHIVED, giữ dữ liệu và phiên bản), nhưng danh sách module ở frontend chỉ lấy học liệu ACTIVE và trang chi tiết chuyển về danh sách sau khi lưu trữ, nên học liệu biến mất như bị xóa. Biện pháp: (1) Danh sách module của giảng viên và Chủ nhiệm môn hiển thị học liệu đã lưu trữ với nhãn Đã lưu trữ, không cho sửa hoặc lưu trữ lại; sinh viên vẫn chỉ thấy học liệu ACTIVE. (2) Thêm API POST /materials/{id}/restore (MaterialService.restoreMaterial) đưa học liệu về ACTIVE mà không tạo phiên bản mới; nút khôi phục có trên danh sách module và trang chi tiết. (3) Trang chi tiết ở lại sau khi lưu trữ và hiển thị trạng thái đã lưu trữ. Cập nhật BR-U13-91. Kết quả kiểm thử: bộ kiểm thử học liệu frontend (58 ca) và backend MaterialServiceTest, MaterialModuleServiceTest (42 ca) đều đạt, tsc và eslint không báo lỗi."
+**Context**: Construction, khắc phục lỗi U13 (học liệu).
+
+---
+
+## U07 Bỏ tab Đã đóng trên danh sách đề mẫu của môn
+**Timestamp**: 2026-11-26T13:19:57Z
+**Requested by:** max2min
+**User Input**: "Bỏ tab Đã đóng trên danh sách đề mẫu của Chủ nhiệm môn, vì đề mẫu không có trạng thái đóng."
+**AI Response**: "AssignmentListCard chỉ hiển thị tab Đã đóng ở danh sách bài tập của lớp; trang đề mẫu của môn còn các tab Đang mở, Bản nháp và Đã hoàn tất. Kết quả kiểm thử: bộ kiểm thử bài tập frontend (104 ca) đạt, eslint không báo lỗi."
+**Context**: Construction, điều chỉnh giao diện U07 (đề mẫu của môn).
+
+---
+
+## U13 Khắc phục không khôi phục được học liệu đã lưu trữ
+**Timestamp**: 2026-11-26T13:29:34Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi không khôi phục được học liệu đã lưu trữ."
+**AI Response**: "Nguyên nhân: (1) MaterialQueryService trả canManage = false cho mọi học liệu ARCHIVED nên giao diện không hiển thị nút khôi phục; (2) MaterialService.restoreMaterial dùng chung bước kiểm tra quyền ghi, vốn từ chối học liệu ARCHIVED (MATERIAL_ARCHIVED). Kiểm thử đơn vị trước đó dùng quyền giả lập nên không phát hiện. Biện pháp: canManage không còn phụ thuộc trạng thái lưu trữ; MaterialAccessPolicy tách requireRestoreAccess (cùng quyền và phạm vi như sửa, chấp nhận học liệu ARCHIVED) khỏi requireWriteAccess (vẫn từ chối sửa và lưu trữ lại học liệu ARCHIVED); thanh điều hướng module không cho sửa học liệu đã lưu trữ. Bổ sung kiểm tra với quyền thật trong CrossUnitFlowIntegrationTest: giảng viên thấy học liệu đã lưu trữ với canManage, lưu trữ lại bị từ chối, khôi phục thành công và sinh viên thấy lại học liệu. Kết quả kiểm thử: 122 ca kiểm thử backend liên quan và 58 ca kiểm thử học liệu frontend đều đạt."
+**Context**: Construction, khắc phục lỗi U13 (học liệu).
+
+---
+
+## U13 Bổ sung nút khôi phục học liệu trên thanh điều hướng module
+**Timestamp**: 2026-11-26T13:35:53Z
+**Requested by:** max2min
+**User Input**: "Bổ sung nút khôi phục học liệu đã lưu trữ trên thanh điều hướng bên của trang học liệu."
+**AI Response**: "Nguyên nhân: thanh điều hướng module (ModuleNav) chỉ có nút mở lại cho Quiz đã ngưng, chưa có thao tác cho học liệu đã lưu trữ. Biện pháp: học liệu ARCHIVED mà người xem quản lý được hiển thị nút Khôi phục trên thanh điều hướng, gọi POST /materials/{id}/restore, thông báo kết quả và cập nhật danh sách module. Bổ sung kiểm thử cho thanh điều hướng. Kết quả kiểm thử: 59 ca kiểm thử học liệu frontend đạt, tsc và eslint không báo lỗi."
+**Context**: Construction, khắc phục lỗi U13 (học liệu).
+
 ## U09 Xác nhận đề xuất và công bố điểm
 **Timestamp**: 2026-11-26T14:02:42Z
 **Requested by:** Quang Hung
@@ -15509,6 +15588,39 @@ giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại 
 
 ---
 
+## U13 Ẩn học liệu môn đã lưu trữ với giảng viên
+**Timestamp**: 2026-11-26T16:32:04Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi học liệu môn đã lưu trữ vẫn hiển thị trong danh sách học liệu của giảng viên."
+**AI Response**: "Nguyên nhân: sau khi cho học liệu đã lưu trữ tiếp tục hiển thị để khôi phục, danh sách module hiển thị mọi học liệu ARCHIVED cho cả giảng viên, kể cả học liệu môn mà giảng viên không quản lý. Biện pháp: học liệu đã lưu trữ chỉ hiển thị với người khôi phục được (canManage), áp dụng ở MaterialQueryService.listClassMaterials và ở danh sách module phía frontend; tra cứu theo id (tài liệu tham khảo của bài) giữ nguyên theo BR-U13-13. Cập nhật BR-U13-91. Kết quả kiểm thử: CrossUnitFlowIntegrationTest bổ sung trường hợp giảng viên không thấy học liệu môn đã lưu trữ; 122 ca kiểm thử backend liên quan và 60 ca kiểm thử học liệu frontend đều đạt."
+**Context**: Construction, khắc phục lỗi U13 (học liệu).
+
+---
+
+## U07 Chặn chọn thời điểm đã qua khi xếp lịch bài tập
+**Timestamp**: 2026-11-26T16:32:04Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi ô chọn thời gian khi xếp lịch bài tập vẫn cho chọn thời điểm trong quá khứ."
+**AI Response**: "Nguyên nhân: ô ngày và ô giờ của ScheduleForm không giới hạn giá trị nhỏ nhất, và backend chấp nhận ngày mở hẹn giờ ở quá khứ (mở ngay lập tức). Biện pháp: (1) ô ngày không nhận ngày trước hôm nay, ô giờ của hôm nay không nhận giờ đã qua, ô có thời điểm đã qua được tô đỏ; (2) kiểm tra khi lưu báo lỗi nếu ngày giờ mở hoặc hạn nộp đã qua, bài đang mở chỉ cần hạn cuối nhận bài còn ở tương lai; (3) AssignmentPublicationService từ chối ngày mở hẹn giờ ở quá khứ (SCHEDULE_INVALID, chừa 2 phút cho độ trễ) khi phát hành và khi đổi ngày mở của bài đã lên lịch. Bổ sung BR-U07-87. Kết quả kiểm thử: bộ kiểm thử bài tập backend (124 ca) và frontend (107 ca) đều đạt, tsc và eslint không báo lỗi."
+**Context**: Construction, khắc phục lỗi U07 (xếp lịch bài tập).
+
+---
+
+## U06/U08/U09 Khôi phục JSON từ kết quả AI khi chấm bài và góp ý Practice
+**Timestamp**: 2026-11-26T17:14:03Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi góp ý AI cho bài Practice và lỗi chấm bài bằng AI không thực hiện được khi kết quả không theo đúng cấu trúc JSON mà chỉ là văn bản ở gốc."
+**AI Response**: "Nguyên nhân: mô hình AI hoặc agent MCP có lúc trả đúng nội dung nhưng sai lớp bọc: cả JSON bị mã hóa thành một chuỗi văn bản ở gốc, bọc trong khối ```json hoặc kèm chữ dẫn, hay một trường object/array (proposal, feedback, structuredFeedback) được gửi dạng chuỗi. Bước kiểm schema và các bước chuẩn hóa chỉ nhận object nên từ chối toàn bộ kết quả (AI_OUTPUT_INVALID, INVALID_AI_PROPOSAL, FEEDBACK_INVALID). Biện pháp: thêm AiJsonRecovery (ai.contract) đọc lại JSON bên trong chuỗi, bỏ khối ``` và chữ dẫn, đổi chuỗi sang object/array khi schema yêu cầu; nội dung không phải JSON vẫn bị từ chối như trước. Áp dụng tại AiTaskJobHandler trước khi kiểm schema (dùng chung cho chấm bài, góp ý Practice và soạn đề), tại McpServer trước khi kiểm tham số tool, tại GradingProposalTransactions.recordMcpProposal theo schema chấm của rubric, tại GradingProposalValidator.parseProposal và tại PracticeFeedbackService (kết quả AI và tool record_private_feedback). Kết quả kiểm thử: bổ sung AiJsonRecoveryTest và các ca kiểm thử trong AiTaskFlowTest, McpServerTest, PracticeFeedbackServiceTest, GradingPromptBuilderTest; 804 ca kiểm thử backend của các unit ai, assignments, assignmentwork, grading đều đạt."
+**Context**: Construction, khắc phục lỗi U06 (AI), U08 (góp ý Practice), U09 (chấm bài).
+
+---
+
+## U07 Cho phép AI xóa nội dung chữ khi sửa đề
+**Timestamp**: 2026-11-26T17:14:03Z
+**Requested by:** max2min
+**User Input**: "Cho phép AI xóa các nội dung chữ trong bài tập khi sửa đề."
+**AI Response**: "Nguyên nhân: khi sửa đề, hướng dẫn rỗng từ AI luôn được hiểu là giữ nguyên, hướng dẫn AI đã sửa chỉ được áp dụng nếu hướng dẫn hiện tại đang trống, thao tác UPDATE xóa hết chữ để lại khối trống, và đề không còn khối nào bị coi là lỗi chặn áp dụng. Biện pháp: (1) schema sửa đề có thêm trường clearInstructions để AI xóa hướng dẫn một cách tường minh; (2) UPDATE xóa hết chữ của đoạn, danh sách hoặc tiêu đề đang có chữ được xử lý như xóa khối; (3) hướng dẫn AI đã sửa hoặc xóa (khác bản gửi đi) được áp dụng cả khi hướng dẫn hiện tại có chữ; (4) đề không còn nội dung chỉ là cảnh báo PROPOSAL_EMPTY để giảng viên xem lại; (5) prompt nêu rõ cách xóa chữ khi giảng viên yêu cầu. Kết quả kiểm thử: bổ sung các ca kiểm thử trong AssignmentAiRevisionTest; bộ kiểm thử backend nêu trên đều đạt."
+**Context**: Construction, khắc phục lỗi U07 (soạn đề bằng AI).
 ## Main Business Flows — rà soát và sửa sơ đồ
 **Timestamp**: 2026-11-26T07:20:00Z
 **Requested by:** Đào Chí Cường
@@ -16061,5 +16173,23 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **User Input**: "lỗi DriveHealthIndicatorTest là do đâu, do ai gây ra" then "à temporary" then "để nguyên lỗi đó. Sau khi commit thì push lên branch, sau đó merge từ staging vào rồi check xem có lỗi ko. Không lỗi thì tạo pr vào staging."
 **AI Response**: "DriveHealthIndicatorTest waits only 2 s for a probe whose first deep-stub mock creation takes about that long; added in 0c6e3ffb (2026-11-17) and failing on HEAD too; left unchanged as asked. Created 13 commits (messages checked against the diffs), pushed system-test-nfr, merged origin/staging: resolved the describeAiFailure conflict by keeping both the code-prefixed AI errors from staging and the KAN-232 translation of legacy Vietnamese reasons, updated the KAN-232 test to the [AI_CODE] prefix convention, kept both audit blocks. Re-running backend and frontend checks before opening the PR."
 **Context**: Construction - integration of system-test-nfr into staging
+
+---
+
+## Bug fix — trình soạn bài làm: khung đề chỉ có phần gốc
+**Timestamp**: 2026-11-26T17:37:14Z
+**Requested by:** max2min
+**User Input**: "phần tạo đề nếu ko có ndoe thì cx ko sửa đc, sửa lại là nếu chỉ có root thì sẽ thêm một cái phần làm của bạn vào dưới root"
+**AI Response**: "Sửa `frontend/src/shared/document/DocumentEditor.tsx`: khi khung đề chỉ có phần gốc và chưa có khối nào, người học có ô 'Bài làm của bạn' ngay dưới gốc để viết (trước đây không có chỗ viết). Áp dụng khi người học được viết phần 'Toàn bài' (bài cá nhân, hoặc bài nhóm đang giữ phần đó); chế độ chỉ xem và người soạn không đổi. Thêm test trong `frontend/tests/shared/document/document.test.tsx`. Vitest 50 file / 516 test qua; tsc không lỗi. Chưa commit."
+**Context**: Construction, sửa lỗi trình soạn tài liệu dùng chung (U07/U08/U12).
+
+---
+
+## U03/U06/U07 Xử lý review PR 148
+**Timestamp**: 2026-11-26T18:05:00Z
+**Requested by:** max2min
+**User Input**: "Khắc phục các phát hiện trong review PR 148."
+**AI Response**: "Biện pháp: (1) gỡ khỏi git ba gói .whl nằm trong mã nguồn Java và tệp khóa tạm của Word trong samples, thêm *.whl và ~$* vào .gitignore; (2) WalShipScanner đẩy mỗi tệp WAL trong một transaction ngắn riêng, khóa advisory chỉ giữ trong lúc đẩy một tệp, tệp sau lỗi không hủy bản ghi wal_segments của tệp trước, tệp WAL trên máy chỉ bị xóa sau khi bản ghi đã commit; (3) BackupRestoreTool bỏ qua thư mục base backup chưa có archive.alapbk và lùi về bản đầy đủ liền trước; (4) AiJsonRecovery bóc mảng JSON nằm giữa chữ dẫn đúng toàn bộ mảng; (5) khi áp dụng bản sửa đề, hướng dẫn giảng viên đã sửa tay sau khi gửi yêu cầu được giữ nguyên. Việc có chép rubric khi sao chép đề mẫu TEMPLATE sang bài PRACTICE hay không được để người dùng quyết định. Kết quả kiểm thử: bổ sung kiểm thử cho WalShipScanner (tệp tải lên không khớp, lỗi ở tệp sau), BackupRestoreTool, AiJsonRecovery và AssignmentAiRevisionTest; mvn verify toàn bộ backend 2729 ca đều đạt."
+**Context**: Construction, phản hồi review PR 148.
 
 ---

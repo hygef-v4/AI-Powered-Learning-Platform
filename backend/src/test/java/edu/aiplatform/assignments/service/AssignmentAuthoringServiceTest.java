@@ -117,16 +117,26 @@ class AssignmentAuthoringServiceTest {
     }
 
     @Test
-    void groupNeedsU12InClassButSubjectTemplateMayBeGroup() {
+    void subjectTemplateHasNoTypeAndTeacherChoosesTheTypeWhenCopying() {
         assertThat(code(() -> f.authoring.createForClass(f.teacher, f.classId,
                 new AssignmentCommands.Create(SubmissionMode.GROUP, GradingMode.GRADED, false, null))))
                 .isEqualTo("GROUP_NOT_SUPPORTED");
+        // Đề mẫu của môn không có loại (yêu cầu 2026-11-26): loại gửi lên bị bỏ qua, luôn lưu TEMPLATE.
         AssignmentViews.Detail template = f.authoring.createForSubject(f.manager, f.subjectId,
                 new AssignmentCommands.Create(SubmissionMode.GROUP, GradingMode.GRADED, false, "Đồ án nhóm"));
-        assertThat(template.submissionMode()).isEqualTo(SubmissionMode.GROUP);
-        assertThat(template.warnings()).extracting(ValidationIssue::code).doesNotContain("GROUP_NOT_SUPPORTED");
-        assertThat(code(() -> f.copies.copyToClass(f.teacher, f.classId, template.id(), null)))
-                .as("lớp chưa dùng được bài nhóm thì không copy đề mẫu nhóm về").isEqualTo("GROUP_NOT_SUPPORTED");
+        assertThat(template.submissionMode()).isEqualTo(SubmissionMode.INDIVIDUAL);
+        assertThat(template.gradingMode()).isEqualTo(GradingMode.TEMPLATE);
+        assertThat(code(() -> f.copies.copyToClass(f.teacher, f.classId, template.id(), null,
+                SubmissionMode.GROUP, GradingMode.GRADED)))
+                .as("lớp chưa dùng được bài nhóm thì không tạo bài nhóm từ đề mẫu").isEqualTo("GROUP_NOT_SUPPORTED");
+        AssignmentViews.Detail practice = f.copies.copyToClass(f.teacher, f.classId, template.id(), null,
+                SubmissionMode.INDIVIDUAL, GradingMode.PRACTICE);
+        assertThat(practice.gradingMode()).as("bài mới mang loại giảng viên chọn").isEqualTo(GradingMode.PRACTICE);
+        AssignmentViews.Detail defaulted = f.copies.copyToClass(f.teacher, f.classId, template.id(), null);
+        assertThat(defaulted.gradingMode()).isEqualTo(GradingMode.GRADED);
+        assertThat(code(() -> f.authoring.createForClass(f.teacher, f.classId,
+                new AssignmentCommands.Create(SubmissionMode.INDIVIDUAL, GradingMode.TEMPLATE, false, null))))
+                .as("bài của lớp không là đề mẫu").isEqualTo("MODE_INVALID");
         assertThat(code(() -> AssignmentAuthoringService.validateModes(SubmissionMode.GROUP, GradingMode.PRACTICE)))
                 .isEqualTo("GROUP_MUST_BE_GRADED");
     }

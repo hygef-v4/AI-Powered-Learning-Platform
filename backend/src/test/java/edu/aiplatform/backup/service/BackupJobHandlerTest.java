@@ -70,8 +70,8 @@ class BackupJobHandlerTest {
 
     BackupJobHandler handler(String publicKey, IBackupStore store) {
         BackupProperties props = new BackupProperties(null, publicKey, "localhost", 5432, "platform", "backup_reader",
-                "", dir.resolve("tmp").toString(), null);
-        IDumpRunner dump = target -> {
+                "", dir.resolve("tmp").toString(), null, null);
+        IBaseBackupRunner dump = target -> {
             try {
                 Files.writeString(target, "-- dump của database");
             } catch (java.io.IOException e) {
