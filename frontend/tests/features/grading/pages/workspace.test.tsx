@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => ({
   loadTask: vi.fn(),
   saveMemberGrade: vi.fn(),
   listSubmissions: vi.fn(),
+  publishGrades: vi.fn(),
 }));
 const originalScrollIntoView = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollIntoView");
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
@@ -203,6 +204,56 @@ it("keeps member drafts read-only until a failed group refresh is retried succes
   await waitFor(() => expect(mocks.saveMemberGrade).toHaveBeenCalledWith(
     "e", "s2", 3, "7", "Bản nháp của Bình", "PARTIALLY_MEETS"));
 });
+
+it("waits for a successful group refresh before asking the teacher to publish", async () => {
+  const group = mockGroupWorkspace();
+  const saved = { ...group.evaluation, version: 3, feedback: "Ready to publish" };
+  mocks.saveEvaluation.mockResolvedValue(saved);
+  mocks.loadEvaluation.mockResolvedValueOnce(group)
+    .mockRejectedValueOnce(new Error("offline"))
+    .mockResolvedValue({ ...group, evaluation: saved });
+  render(<GradingWorkspacePage evaluationId="e" />);
+  fireEvent.change(await screen.findByRole("textbox", { name: "Nhận xét chung" }), {
+    target: { value: saved.feedback },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+  await screen.findByText("Đã lưu điểm nhóm. Tải lại bài để cập nhật điểm và phiên bản thành viên.");
+  expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+  expect(mocks.publishGrades).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole("button", { name: "Tải lại phiên bản" }));
+  const publish = screen.getByRole("button", { name: "Công bố điểm" });
+  await waitFor(() => expect(publish).toBeEnabled());
+  fireEvent.click(publish);
+  expect(screen.getByRole("dialog", { name: "Công bố điểm" })).toBeVisible();
+});
+
+it.each(["old submission", "read-only evaluation", "superseded evaluation"] as const)(
+  "blocks group publication when refresh returns a %s",
+  async (state) => {
+    const group = mockGroupWorkspace();
+    const saved = { ...group.evaluation, version: 3, feedback: "Saved group grade" };
+    mocks.saveEvaluation.mockResolvedValue(saved);
+    mocks.loadEvaluation.mockResolvedValueOnce(group).mockResolvedValue({
+      ...group,
+      current: state !== "old submission",
+      editable: state !== "read-only evaluation",
+      evaluation: {
+        ...saved,
+        state: state === "superseded evaluation" ? "SUPERSEDED" : "DRAFT",
+        feedback: "Refreshed group grade",
+      },
+    });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const feedback = await screen.findByRole("textbox", { name: "Nhận xét chung" });
+    fireEvent.change(feedback, { target: { value: saved.feedback } });
+    fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+    await waitFor(() => expect(feedback).toHaveValue("Refreshed group grade"));
+    expect(mocks.saveEvaluation).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+    expect(mocks.publishGrades).not.toHaveBeenCalled();
+  },
+);
 
 it("keeps every recorded author on a shared section and only lists their known parts", async () => {
   const group = mockGroupWorkspace();
@@ -517,6 +568,177 @@ describe("workspace save", () => {
     expect(mocks.saveEvaluation).not.toHaveBeenCalled();
     expect(mocks.requestProposal).not.toHaveBeenCalled();
   });
+  it("blocks publishing until the teacher reviews or keeps the linked proposal", async () => {
+    mocks.loadEvaluation.mockResolvedValue({ ...detail,
+      evaluation: { ...detail.evaluation, rubricItemScores: {} },
+      rubrics: [{ rubricId: "r", partId: "p", maxPoints: 2,
+        criteria: [{ criterionId: "c", title: "Design", items: [{ itemId: "i", text: "Test criterion", points: 2 }] }],
+      }],
+    });
+    const structuredFeedback = {
+      schemaVersion: 1,
+      summary: { strengths: [], improvements: [], nextSteps: [] },
+      items: [{ rubricId: "r", itemId: "i", reason: "Check the notation", requiresReview: true }],
+    };
+    mocks.listProposals.mockResolvedValue([{
+      id: "linked", versionNo: 1, status: "READY", origin: "MCP",
+      proposal: { checks: {}, score: 1, itemScoresByRubric: { r: { i: 1 } }, structuredFeedback },
+    }]);
+    mocks.saveEvaluation.mockResolvedValue({ ...detail.evaluation, version: 3, structuredFeedback,
+      score: 1, rubricItemScores: { r: { i: 1 } }, acknowledgedReviewItems: { r: ["i"] },
+      reviewedItemScores: { r: { i: 1 } },
+    });
+    mocks.publishGrades.mockResolvedValue({ items: [{ evaluationId: "e", outcome: "SUCCESS" }] });
+    render(<GradingWorkspacePage evaluationId="e" proposalId="linked" />);
+
+    const warning = await screen.findByText(/Còn tiêu chí cần kiểm tra trước khi công bố điểm/);
+    const review = screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Test criterion");
+    expect(review).not.toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+    expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Giữ đề xuất" }));
+    expect(review).toBeChecked();
+    expect(warning).not.toBeInTheDocument();
+    expect(mocks.publishGrades).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+    const confirm = await screen.findByRole("dialog", { name: "Công bố điểm" });
+    expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({
+      usedProposalId: "linked", acknowledgedReviewItems: { r: ["i"] }, reviewedItemScores: { r: { i: 1 } },
+    }));
+    expect(mocks.publishGrades).not.toHaveBeenCalled();
+    fireEvent.click(within(confirm).getByRole("button", { name: "Xác nhận" }));
+    await waitFor(() => expect(mocks.publishGrades).toHaveBeenCalledWith([{ evaluationId: "e", version: 3 }]));
+  });
+  it("keeps the server's publication error visible while refreshing the evaluation", async () => {
+    let finishRefresh!: (value: Detail) => void;
+    mocks.loadEvaluation.mockResolvedValueOnce(detail).mockReturnValueOnce(
+      new Promise<Detail>((resolve) => { finishRefresh = resolve; }),
+    );
+    mocks.publishGrades.mockResolvedValue({
+      items: [{ evaluationId: "e", outcome: "FAILED", code: "STRUCTURED_FEEDBACK_REVIEW_REQUIRED" }],
+    });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Công bố điểm" }));
+    const confirm = screen.getByRole("dialog", { name: "Công bố điểm" });
+    fireEvent.click(within(confirm).getByRole("button", { name: "Xác nhận" }));
+    await waitFor(() => expect(mocks.loadEvaluation).toHaveBeenCalledTimes(2));
+    const error = /Còn mục nhận xét cần giảng viên kiểm tra và xác nhận/;
+    expect(within(screen.getByRole("dialog", { name: "Công bố điểm" })).getByText(error)).toBeVisible();
+
+    await act(async () => finishRefresh(detail));
+    const result = within(screen.getByRole("dialog", { name: "Công bố điểm" }));
+    expect(result.getByText(error)).toBeVisible();
+    expect(result.queryByRole("button", { name: "Xác nhận" })).not.toBeInTheDocument();
+    fireEvent.click(result.getByText("Đóng", { selector: "button" }));
+    expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+  });
+  it("requires a saved grade before opening the publication dialog for an untouched attempt", async () => {
+    mocks.loadEvaluation.mockResolvedValue({
+      ...detail, evaluation: { ...detail.evaluation, state: "PENDING", score: null },
+    });
+    render(<><GradingWorkspacePage evaluationId="e" /><Toaster /></>);
+    fireEvent.click(await screen.findByRole("button", { name: "Công bố điểm" }));
+    expect(await screen.findByText("Hãy chấm và lưu điểm trước khi công bố.")).toBeVisible();
+    expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+    expect(mocks.publishGrades).not.toHaveBeenCalled();
+  });
+
+  function createReviewedGrade(): Detail {
+    const structuredFeedback = {
+      schemaVersion: 1,
+      summary: { strengths: [], improvements: [], nextSteps: [] },
+      items: [{
+        rubricId: "r", itemId: "i", evidence: "Visible notation", reason: "Original score",
+        suggestion: null, evidenceBlockId: null, requiresReview: false, reviewReason: null,
+      }],
+    };
+    return {
+      ...detail,
+      evaluation: {
+        ...detail.evaluation, score: 1, structuredFeedback,
+        rubricItemScores: { r: { i: 1 } }, reviewedItemScores: { r: { i: 1 } },
+      },
+      rubrics: [{ rubricId: "r", partId: "p", maxPoints: 2,
+        criteria: [{ criterionId: "c", title: "Design", items: [{ itemId: "i", text: "Test criterion", points: 2 }] }],
+      }],
+    };
+  }
+
+  it("lets the teacher confirm unflagged feedback after changing its score before publication", async () => {
+    const source = createReviewedGrade();
+    const saved = { ...source.evaluation, version: 3, score: 0.7, rubricItemScores: { r: { i: 0.7 } },
+      reviewedItemScores: { r: { i: 0.7 } }, acknowledgedReviewItems: { r: ["i"] } };
+    mocks.loadEvaluation.mockResolvedValue(source);
+    mocks.saveEvaluation.mockResolvedValue(saved);
+    mocks.publishGrades.mockResolvedValue({ items: [{ evaluationId: "e", outcome: "SUCCESS" }] });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    fireEvent.change(await screen.findByRole("spinbutton", { name: "Điểm mục Test criterion" }), {
+      target: { value: "0.7" },
+    });
+    const review = screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Test criterion");
+    expect(review).not.toBeChecked();
+    const publish = screen.getByRole("button", { name: "Công bố điểm" });
+    fireEvent.click(publish);
+    expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+    expect(mocks.saveEvaluation).not.toHaveBeenCalled();
+
+    fireEvent.click(review);
+    fireEvent.click(review);
+    expect(review).not.toBeChecked();
+    fireEvent.click(publish);
+    expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+    fireEvent.click(review);
+    fireEvent.click(publish);
+    const confirm = await screen.findByRole("dialog", { name: "Công bố điểm" });
+    expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({
+      itemScoresByRubric: { r: { i: 0.7 } }, reviewedItemScores: { r: { i: 0.7 } },
+      acknowledgedReviewItems: { r: ["i"] },
+    }));
+    fireEvent.click(within(confirm).getByRole("button", { name: "Xác nhận" }));
+    await waitFor(() => expect(mocks.publishGrades).toHaveBeenCalledWith([{ evaluationId: "e", version: 3 }]));
+  });
+
+  it("publishes when a draft score is restored to the previously reviewed score", async () => {
+    const source = createReviewedGrade();
+    const changed = { ...source.evaluation, version: 3, score: 0.7, rubricItemScores: { r: { i: 0.7 } } };
+    const restored = { ...source.evaluation, version: 4 };
+    mocks.loadEvaluation.mockResolvedValue(source);
+    mocks.saveEvaluation.mockResolvedValueOnce(changed).mockResolvedValueOnce(restored);
+    mocks.publishGrades.mockResolvedValue({ items: [{ evaluationId: "e", outcome: "SUCCESS" }] });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    const scoreInputName = { name: "Điểm mục Test criterion" };
+    fireEvent.change(await screen.findByRole("spinbutton", scoreInputName), { target: { value: "0.7" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    await waitFor(() => expect(screen.getByTestId("save-state")).toHaveTextContent(/Đã lưu/));
+
+    fireEvent.change(screen.getByRole("spinbutton", scoreInputName), { target: { value: "1" } });
+    expect(screen.queryByLabelText("Đã kiểm tra và xác nhận giải thích: Test criterion")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+    const confirm = await screen.findByRole("dialog", { name: "Công bố điểm" });
+    expect(mocks.saveEvaluation).toHaveBeenNthCalledWith(2, "e", expect.objectContaining({
+      version: 3, itemScoresByRubric: { r: { i: 1 } }, reviewedItemScores: { r: { i: 1 } },
+    }));
+    expect(mocks.saveEvaluation.mock.calls[1]?.[1]).not.toHaveProperty("acknowledgedReviewItems");
+    fireEvent.click(within(confirm).getByRole("button", { name: "Xác nhận" }));
+    await waitFor(() => expect(mocks.publishGrades).toHaveBeenCalledWith([{ evaluationId: "e", version: 4 }]));
+  });
+
+  it("shows a review warning before saving corrections to a published grade", async () => {
+    const source = createReviewedGrade();
+    mocks.loadEvaluation.mockResolvedValue({ ...source, evaluation: { ...source.evaluation, state: "PUBLISHED" } });
+    render(<GradingWorkspacePage evaluationId="e" />);
+    fireEvent.change(await screen.findByRole("spinbutton", { name: "Điểm mục Test criterion" }), {
+      target: { value: "0.7" },
+    });
+    const warning = "Còn tiêu chí cần kiểm tra trước khi lưu thay đổi của bài đã công bố.";
+    expect(screen.getByText(new RegExp(warning))).toBeVisible();
+    fireEvent.click(screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Test criterion"));
+    expect(screen.queryByText(new RegExp(warning))).not.toBeInTheDocument();
+  });
   it("names the current student and searches all pages before switching submissions", async () => {
     mocks.listSubmissions.mockResolvedValueOnce({ rows: [
       { student: { accountId: "s", name: "Nguyễn An", email: "an@school.test", studentCode: "SE000001" }, evaluationId: "e" },
@@ -712,8 +934,8 @@ describe("AI proposal comparison and draft application", () => {
               reason: "Xác định đúng thực thể chính",
               suggestion: null,
               evidenceBlockId: null,
-              requiresReview: false,
-              reviewReason: null,
+              requiresReview: true,
+              reviewReason: "Kiểm tra kết quả nhận dạng",
             }],
           },
         },
@@ -747,12 +969,18 @@ describe("AI proposal comparison and draft application", () => {
     expect(mocks.saveEvaluation).not.toHaveBeenCalled();
     expect(screen.queryByRole("region", { name: "Chấm bằng AI" })).not.toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Thực thể chính" })).toBeChecked();
     expect(screen.getByRole("region", { name: "Nhận xét chung" }))
       .toHaveTextContent("Nhận xét chung tiếng Việt");
     const item = within(screen.getByTestId("rubric-item-i1"));
     expect(item.getByText("Nhận xét & minh chứng")).toBeVisible();
     expect(item.getByText("Xác định đúng thực thể chính")).toBeInTheDocument();
+    expect(item.getByLabelText("Đã kiểm tra và xác nhận giải thích: Thực thể chính")).toBeChecked();
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Điểm mục Thực thể chính" }), {
+      target: { value: "0.75" },
+    });
+    expect(item.getByLabelText("Đã kiểm tra và xác nhận giải thích: Thực thể chính")).not.toBeChecked();
+    expect(screen.getByText(/Còn tiêu chí cần kiểm tra trước khi công bố điểm/)).toBeVisible();
   });
 
   it("shows the AI comparison without NaN when a fractional point was saved before", async () => {
@@ -1035,6 +1263,20 @@ describe("AI grading request lifecycle", () => {
   }
 
   const readyProposal = { ...pending, status: "READY", taskState: undefined, proposal: { checks: { r1: ["i1"] }, itemScoresByRubric: { r1: { i1: 1 } }, score: 1, feedback: "AI xong" } };
+  const readyProposalWithReview = {
+    ...readyProposal,
+    proposal: {
+      ...readyProposal.proposal,
+      structuredFeedback: {
+        schemaVersion: 1,
+        summary: { strengths: [], improvements: [], nextSteps: [] },
+        items: [{
+          rubricId: "r1", itemId: "i1", evidence: "Visible model", reason: "Identifies the main entities",
+          suggestion: null, evidenceBlockId: null, requiresReview: true, reviewReason: "Check the diagram",
+        }],
+      },
+    },
+  };
 
   it("fills the form when AI becomes READY and lets the teacher undo or keep it", async () => {
     mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([readyProposal]);
@@ -1105,22 +1347,45 @@ describe("AI grading request lifecycle", () => {
     expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
   });
 
-  it("asks before replacing unsaved manual edits with the AI proposal", async () => {
-    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending]).mockResolvedValue([readyProposal]);
+  it("asks before replacing unsaved edits and acknowledges flagged items when applying", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending])
+      .mockResolvedValue([readyProposalWithReview]);
     await requestAiGrade();
-    fireEvent.click(screen.getByRole("checkbox", { name: /Thực thể chính/ }));
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
-    fireEvent.click(screen.getByRole("checkbox", { name: /Thực thể chính/ }));
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    const checkbox = { name: "Thực thể chính" };
+    fireEvent.click(screen.getByRole("checkbox", checkbox));
+    expect(screen.getByRole("checkbox", checkbox)).toBeChecked();
+    fireEvent.click(screen.getByRole("checkbox", checkbox));
+    expect(screen.getByRole("checkbox", checkbox)).not.toBeChecked();
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3000);
     });
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", checkbox)).not.toBeChecked();
     fireEvent.click(screen.getByRole("button", { name: "Áp dụng đề xuất" }));
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).toBeChecked();
+    expect(screen.getByRole("checkbox", checkbox)).toBeChecked();
+    expect(screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Thực thể chính")).toBeChecked();
     fireEvent.click(screen.getByRole("button", { name: "Hoàn tác" }));
-    expect(screen.getByRole("checkbox", { name: /Thực thể chính/ })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", checkbox)).not.toBeChecked();
+  });
+
+  it("keeps reviewing a flagged score edited after AI prefill when the teacher keeps the proposal", async () => {
+    mocks.listProposals.mockResolvedValueOnce([]).mockResolvedValueOnce([pending])
+      .mockResolvedValue([readyProposalWithReview]);
+    await requestAiGrade();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    const review = screen.getByLabelText("Đã kiểm tra và xác nhận giải thích: Thực thể chính");
+    expect(review).not.toBeChecked();
+    fireEvent.change(screen.getByRole("spinbutton", { name: "Điểm mục Thực thể chính" }), {
+      target: { value: "0.7" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Giữ đề xuất" }));
+    expect(review).not.toBeChecked();
+    expect(screen.getByRole("spinbutton", { name: "Điểm mục Thực thể chính" })).toHaveValue(0.7);
+    fireEvent.click(screen.getByRole("button", { name: "Công bố điểm" }));
+    expect(screen.queryByRole("dialog", { name: "Công bố điểm" })).not.toBeInTheDocument();
+    expect(mocks.publishGrades).not.toHaveBeenCalled();
   });
 
   it("reports a proposal that FAILED while polling and lets the teacher request again", async () => {

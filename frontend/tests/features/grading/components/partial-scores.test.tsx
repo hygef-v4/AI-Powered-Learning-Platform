@@ -30,10 +30,14 @@ describe("rubric checklist (BR-U09-20)", () => {
     expect(screen.getByText("0.00 / 1.00 điểm")).toBeInTheDocument();
     expect(screen.getByTestId("scores")).toHaveTextContent('{"r":{"i":0}}');
   });
-  it("allows a partial score and clears the full-credit checkbox", () => {
+  it("steps by 0.1 and still accepts typed points up to two decimal places", () => {
     render(<Editor />);
-    fireEvent.change(screen.getByRole("spinbutton", { name: "Điểm mục Quan hệ đúng" }), { target: { value: "0.5" } });
-    expect(screen.getByTestId("scores")).toHaveTextContent('{"r":{"i":0.5}}');
+    const score = screen.getByRole("spinbutton", { name: "Điểm mục Quan hệ đúng" });
+    expect(score).toHaveAttribute("step", "0.1");
+    fireEvent.change(score, { target: { value: "0.2" } });
+    expect(screen.getByTestId("scores")).toHaveTextContent('{"r":{"i":0.2}}');
+    fireEvent.change(score, { target: { value: "0.15" } });
+    expect(screen.getByTestId("scores")).toHaveTextContent('{"r":{"i":0.15}}');
     expect(screen.getByRole("checkbox", { name: /Quan hệ đúng/ })).not.toBeChecked();
   });
   it("preserves saved or AI partial scores while deriving full-score checkboxes", () => {

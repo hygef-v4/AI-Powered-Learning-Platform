@@ -12,6 +12,8 @@ import { buildEvaluationHref, type NavigationFilters } from "../model/navigation
 import {
   buildItemScorePatch,
   buildProposalDraftPatch,
+  buildProposalReviewPatch,
+  buildReviewedScoresForSave,
   buildStructuredItemPatch,
   buildStructuredSummaryPatch,
   buildToggleAcknowledgePatch,
@@ -130,7 +132,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
 
   // Cập nhật xác nhận cần xem lại và điểm gắn với lần xác nhận đó.
   function toggleAcknowledgedReviewItem(key: string) {
-    const patch = buildToggleAcknowledgePatch(detail.rubrics, form, key);
+    const patch = buildToggleAcknowledgePatch(form, key);
     if (patch) updateForm(patch);
   }
 
@@ -191,7 +193,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
 
   // Gửi bản cục bộ theo version hiện hành và chỉ chuyển bài khi không còn chỉnh sửa mới chưa lưu.
   async function saveEvaluation(advance = false,
-    options: { background?: boolean } = {}): Promise<Evaluation | null> {
+    options: { background?: boolean; forPublish?: boolean } = {}): Promise<Evaluation | null> {
     if (disabled || savingRef.current || reloadingRef.current) return null;
     const currentIndex = detail.navigationIds.indexOf(evaluation.id);
     const next = currentIndex >= 0 ? detail.navigationIds[currentIndex + 1] : undefined;
@@ -208,11 +210,12 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       if (!supportsItemScores && hasPartialPoints(detail.rubrics, form.checks, form.itemScores)) {
         throw new Error(msg("grading.hooks.useGradingWorkspace.theServerDoesNotSupport"));
       }
+      const reviewedItemScores = buildReviewedScoresForSave(form);
       const hasStructuredPayload = Boolean(
         form.structuredFeedback ||
         form.clearStructuredFeedback ||
         (form.acknowledgedReviewItems && Object.keys(form.acknowledgedReviewItems).length > 0) ||
-        (form.reviewedItemScores && Object.keys(form.reviewedItemScores).length > 0),
+        Object.keys(reviewedItemScores).length > 0,
       );
       // Gửi version của bản đang sửa. usedProposalId báo backend kiểm đề xuất khi lưu.
       const saved = await gradingApi.saveEvaluation(evaluation.id, {
@@ -233,8 +236,8 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
             ...(form.acknowledgedReviewItems && Object.keys(form.acknowledgedReviewItems).length > 0
               ? { acknowledgedReviewItems: form.acknowledgedReviewItems }
               : {}),
-            ...(form.reviewedItemScores && Object.keys(form.reviewedItemScores).length > 0
-              ? { reviewedItemScores: form.reviewedItemScores }
+            ...(Object.keys(reviewedItemScores).length > 0
+              ? { reviewedItemScores }
               : {}),
           }
           : {}),
@@ -249,10 +252,11 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       if (saved) {
         setDetail((current) => ({ ...current, evaluation: saved }));
         let replacementForm: GradingFormValues | null = null;
+        let groupRefreshFailed = false;
         if (saved.kind === "GROUP_DOCUMENT") {
           try {
             const refreshed = await refresh();
-            if (refreshed.evaluation.submissionHash !== saved.submissionHash
+            if (!refreshed.current || refreshed.evaluation.submissionHash !== saved.submissionHash
                 || refreshed.editable === false || refreshed.evaluation.state === "SUPERSEDED") {
               setDetail(refreshed);
               replacementForm = createInitialForm(refreshed.evaluation, refreshed.rubrics);
@@ -260,6 +264,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
               setDetail({ ...refreshed, evaluation: saved });
             }
           } catch {
+            groupRefreshFailed = true;
             setDetail((current) => ({ ...current, evaluation: saved, editable: false }));
             setError(msg("grading.hooks.useGradingWorkspace.groupScoreSavedReloadThe"));
           }
@@ -285,6 +290,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         }
         dirtyRef.current = preserveEdits;
         if (advance && next && !preserveEdits) router.push(buildEvaluationHref(next, filters));
+        if (options.forPublish && (groupRefreshFailed || replacementForm || preserveEdits)) return null;
         return saved;
       }
       return null;
@@ -325,6 +331,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     proposalId: string,
     itemScores: ItemScores = {},
     structuredFeedback?: StructuredFeedback | null,
+    options: { acceptReview?: boolean } = {},
   ) {
     if (disabled || reloadingRef.current) return;
     editRevision.current += 1;
@@ -338,8 +345,11 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       itemScores,
       structuredFeedback,
     );
+    const review = options.acceptReview && structuredFeedback
+      ? buildProposalReviewPatch({ ...form, ...patch })
+      : {};
     setAiBackup((backup) => backup ?? { form, dirty });
-    setForm((current) => ({ ...current, ...patch }));
+    setForm((current) => ({ ...current, ...patch, ...review }));
     setDirty(true);
     setAiAutoApplied(true);
   }
@@ -363,7 +373,12 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
 
   /** Chốt bản AI đã điền (chưa lưu): bỏ khả năng hoàn tác và cho autosave chạy lại. */
   function keepProposal() {
-    setAiAutoApplied(false);
+    const applied = proposals.find((proposal) => proposal.id === form.usedProposalId);
+    if (applied?.proposal?.structuredFeedback && form.structuredFeedback?.items.some((item) => item.requiresReview)) {
+      updateForm(buildProposalReviewPatch(form));
+    } else {
+      setAiAutoApplied(false);
+    }
     setAiBackup(null);
   }
 

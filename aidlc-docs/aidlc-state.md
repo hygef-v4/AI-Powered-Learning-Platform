@@ -1629,3 +1629,23 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 
 - [x] Link đề xuất soạn đề hợp lệ và đúng phiên bản mở bản nháp đã điền. So phiên bản đề xuất tại backend khi áp dụng.
 - [x] Link chấm điền đúng đề xuất vào form qua cơ chế AI web. Giữ bước lưu điểm và công bố do giảng viên thực hiện. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u07-u09-mcp-result-links.md).
+
+## 2026-11-26 — U09 xác nhận đề xuất và công bố điểm
+
+- [x] Xác nhận tiêu chí theo đề xuất khi giảng viên giữ hoặc áp dụng. Hiện hướng dẫn nếu còn mục cần kiểm tra và giữ kết quả lỗi trong popup khi tải lại.
+- [x] Kiểm tra 233 ca frontend U09, TypeScript và lint phạm vi. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-proposal-review-publish.md).
+
+## 2026-11-26 — U09 chấm theo rubric và bước điểm tiêu chí
+
+- [x] Dùng chung quy tắc chấm theo rubric cho AI web và MCP. Rà soát khi thiếu minh chứng cho điểm. Ô điểm tiêu chí tăng giảm theo bước 0,1 và cho phép gõ tối đa hai chữ số thập phân.
+- [x] Kiểm tra 243 ca backend và 233 ca frontend, TypeScript và lint phạm vi. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-rubric-grading-policy.md).
+
+## 2026-11-26 — U09 kiểm tra trước khi công bố điểm
+
+- [x] Hiện ô xác nhận khi điểm khác điểm gắn với nhận xét. Bài nhóm phải tải lại thành công sau lưu. Bài chưa chấm được nhắc chấm và lưu trước khi công bố.
+- [x] Kiểm tra 244 ca backend và 236 ca frontend, TypeScript và lint phạm vi. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publish-guards.md).
+
+## 2026-11-26 — U09 phản hồi review PR 146
+
+- [x] Giữ đề xuất chỉ tự xác nhận các tiêu chí có điểm khớp với điểm gắn với nhận xét hiện tại. Hiện cảnh báo khi lưu thay đổi của bài đã công bố.
+- [x] 242 kiểm thử frontend U09, TypeScript và ESLint phạm vi đạt. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publication-review-followup.md).

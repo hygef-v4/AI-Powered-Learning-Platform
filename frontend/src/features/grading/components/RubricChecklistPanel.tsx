@@ -14,6 +14,7 @@ export type ChecklistProps = {
   onSetItemScore?: (rubricId: string, itemId: string, score: number) => void;
   feedbackItems?: StructuredFeedbackItem[];
   acknowledgedReviewItems?: Checks;
+  scoreReviewItems?: ReadonlySet<string>;
   validBlockIds?: Set<string> | string[];
   onChangeStructuredItem?: (rubricId: string, itemId: string, patch: Partial<StructuredFeedbackItem>) => void;
   onToggleAcknowledge?: (key: string) => void;
@@ -44,6 +45,7 @@ export function RubricChecklist({
   onSetItemScore,
   feedbackItems,
   acknowledgedReviewItems,
+  scoreReviewItems,
   validBlockIds,
   onChangeStructuredItem,
   onToggleAcknowledge,
@@ -109,7 +111,7 @@ export function RubricChecklist({
                     type="number"
                     min={0}
                     max={max}
-                    step="0.25"
+                    step="0.1"
                     aria-label={msg("grading.components.RubricChecklistPanel.pointsForItem", { text: String(item.text) })}
                     value={Number.isFinite(value) ? value : 0}
                     onChange={(event) => handleScoreInput(item.itemId, max, event.target.value)}
@@ -129,6 +131,7 @@ export function RubricChecklist({
                 maxPoints={max}
                 feedbackItem={feedback}
                 acknowledged={isAck}
+                scoreReviewRequired={scoreReviewItems?.has(ackKey)}
                 editable={!disabled}
                 disabled={disabled}
                 validBlockIds={validBlockIds}

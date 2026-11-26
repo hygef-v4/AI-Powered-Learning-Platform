@@ -48,7 +48,7 @@ export function AiDraftBanner({
       }
     >
       {msg(offered ? "grading.components.AiDraftBanner.offered" : "grading.components.AiDraftBanner.applied", { score, max })}
-      {reviewCount > 0 && ` ${msg("grading.components.AiDraftBanner.reviewItems", { count: String(reviewCount) })}`}
+      {offered && reviewCount > 0 && ` ${msg("grading.components.AiDraftBanner.reviewItems", { count: String(reviewCount) })}`}
     </Alert>
   );
 }
