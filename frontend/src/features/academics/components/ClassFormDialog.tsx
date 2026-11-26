@@ -23,10 +23,12 @@ export function ClassFormDialog({ subject, teachers, onSubmit, onClose, loadTeac
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const term = deriveTerm(values.startsOn);
+  // Cập nhật một trường và xóa lỗi cũ của riêng trường đó.
   function setValue(key: keyof typeof values, value: string) {
     setValues({ ...values, [key]: value });
     setErrors((current) => ({ ...current, [key]: undefined }));
   }
+  // Kiểm thông tin bắt buộc trước khi gửi dữ liệu tạo lớp và giữ lỗi để người dùng sửa.
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (busy) return;

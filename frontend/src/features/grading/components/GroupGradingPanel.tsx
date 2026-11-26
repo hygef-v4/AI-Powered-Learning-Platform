@@ -4,6 +4,7 @@ import { useWideLayout } from "@/shared/document";
 import { Button, Tabs, tabId } from "@/shared/ui";
 import { msg } from "@/i18n/msg";
 
+// Chuyển giữa rubric và thành viên, đặt lại vị trí cuộn khi lựa chọn đổi.
 export function GroupGradingPanel({ mode, onModeChange, open, onClose, rubric, children, selectionKey }: {
   mode: "rubric" | "members";
   onModeChange: (mode: "rubric" | "members") => void;

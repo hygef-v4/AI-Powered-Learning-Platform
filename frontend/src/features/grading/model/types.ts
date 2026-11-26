@@ -225,6 +225,7 @@ export const GRADE_STATUS_LABELS: Record<string, string> = {
   NOT_SUBMITTED: msg("grading.model.types.notSubmitted"),
   IN_PROGRESS: msg("grading.model.types.notSubmitted"),
 };
+// Hiển thị điểm trên điểm tối đa với hai chữ số, dùng dấu gạch nếu chưa chấm.
 export function formatPoints(score: Decimal | null | undefined, max: Decimal | null | undefined) {
   return score == null ? "—" : `${Number(score).toFixed(2)} / ${Number(max ?? 0).toFixed(2)}`;
 }

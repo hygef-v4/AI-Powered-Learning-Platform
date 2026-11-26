@@ -11,6 +11,7 @@ export function StudentGradeCell({
   classId: string;
   assignmentId: string;
 }) {
+  // Tải danh sách điểm của sinh viên đang đăng nhập cho lớp chứa ô điểm.
   const load = useCallback(() => gradingApi.listMyGrades(classId), [classId]);
   const { value, error } = useResource(load);
   const grade = value?.find((g) => g.assignmentId === assignmentId);

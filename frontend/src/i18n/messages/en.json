@@ -1239,6 +1239,10 @@
         "theRubricIsSetOn": "The rubric is set on the sub-questions.",
         "thisQuestionHasNoRubric": "This question has no rubric yet. Regenerate the assignment to add criteria and points."
       },
+      "AiRequestLength": {
+        "count": "{value}/{limit} characters",
+        "overLimit": "{value}/{limit} characters. Shorten the request by {excess, plural, one {# character} other {# characters}} before sending."
+      },
       "AiReviseChat": {
         "waitForUploadsToFinish": "Wait for uploads to finish or remove failed files before sending.",
         "theAiReturnedNoResult": "The AI returned no result.",
@@ -1262,6 +1266,9 @@
         "template": "Template:",
         "references": "References:",
         "theAiIsEditingThe": "The AI is editing the assignment…",
+        "changeAiSource": "Change AI source",
+        "nextAiSource": "AI source for the next request: {source}",
+        "useSourceForNextRequest": "Use for next request",
         "addATemplateOrReferences": "Add a template or references",
         "chooseAnExistingTemplate": "Choose an existing template",
         "chooseSubjectMaterials": "Choose subject materials",
@@ -3748,7 +3755,8 @@
         "theLecturerDecidedNotTo": "{leaves} · the lecturer decided not to deduct points: {decisionReason}",
         "noPointsDeductedYetThe": "{leaves} · no points deducted yet, the lecturer will review.",
         "autoSubmittedWhenTimeRan": "Auto-submitted when time ran out",
-        "autoSubmittedWhenTheQuiz": "Auto-submitted when the quiz was withdrawn"
+        "autoSubmittedWhenTheQuiz": "Auto-submitted when the quiz was withdrawn",
+        "autoSubmittedWhenClassAccessEnded": "Auto-submitted when the class closed or you left it"
       }
     },
     "pages": {
@@ -4707,6 +4715,27 @@
       "errorMessages": {
         "notFound": "Not found or you do not have access.",
         "invalidRequest": "The request is not valid. Check the information and try again.",
+        "aiRequestTooLong": "The request can contain up to 10,000 characters. Shorten it before sending.",
+        "aiPromptTooLarge": "The combined AI input is too long. Shorten the request or reduce the attachments.",
+        "aiSourceUnavailable": "The AI source is unavailable. Check its connection or quota.",
+        "aiProviderDnsFailed": "The AI provider hostname could not be resolved. Check DNS or the network connection.",
+        "aiProviderConnectFailed": "Could not connect to the AI provider.",
+        "aiProviderTimeout": "The AI provider did not respond in time. Check the request status before sending again.",
+        "aiProviderConnectionLost": "The connection to the AI provider was lost. Check the request status before sending again.",
+        "aiProviderInterrupted": "The call to the AI provider was interrupted.",
+        "aiProviderResultUnknown": "The outcome of the previous AI request could not be determined.",
+        "aiProviderAuthFailed": "The API key is invalid or lacks permission.",
+        "aiProviderModelUnavailable": "The model was not found or the API key cannot access it.",
+        "aiProviderQuotaExhausted": "The API account is out of quota or credits.",
+        "aiProviderRateLimited": "The AI provider is rate limiting requests. Try again later.",
+        "aiProviderRateOrQuota": "The AI provider reports a rate limit or exhausted quota.",
+        "aiProviderOverloaded": "The AI provider is overloaded. Try again later.",
+        "aiProviderRequestRejected": "The AI provider rejected the request. Check the selected model and configuration.",
+        "aiProviderError": "The AI provider encountered an error while handling the request.",
+        "aiImagesUnsupported": "This model cannot read images. Choose a model that supports images.",
+        "aiOutputLimit": "The response was cut off at the output token limit. Split the request into smaller parts.",
+        "aiOutputInvalid": "The AI result does not have the structure required to apply it.",
+        "aiOutputUnusable": "The AI provider did not return a usable result.",
         "forbidden": "You do not have permission to do this.",
         "conflict": "The data has just changed. Reload the page and try again.",
         "fileTooLarge": "The file is larger than allowed.",

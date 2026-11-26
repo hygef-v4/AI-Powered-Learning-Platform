@@ -1,5 +1,6 @@
 "use client";
 import { ApiError } from "@/shared/api/client";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import { showErrorToast, showToast } from "@/shared/ui/Toast";
 import { gradingApi } from "../api";
 import { formatErrorMessage } from "./format";
@@ -20,6 +21,7 @@ let trackingAccount: string | null = null;
 let trackingActive = false;
 let sessionRevision = 0;
 
+// Tái dùng trạng thái theo ID bản chấm hoặc tạo trạng thái rỗng cho lần theo dõi đầu.
 function findEntry(evaluationId: string): Entry {
   let entry = entries.get(evaluationId);
   if (!entry) {
@@ -30,20 +32,24 @@ function findEntry(evaluationId: string): Entry {
   }
   return entry;
 }
+// Thay snapshot và báo các màn hình đang đăng ký đọc bản mới.
 function updateSnapshot(entry: Entry, patch: Partial<Snapshot>) {
   entry.snapshot = { ...entry.snapshot, ...patch };
   entry.listeners.forEach((listener) => listener());
 }
+// Xóa bộ hẹn giờ và tăng thế hệ để phản hồi đang bay không cập nhật store.
 function stopPolling(entry: Entry) {
   if (entry.timer) clearTimeout(entry.timer);
   entry.timer = undefined;
   entry.generation += 1;
   entry.inFlight = false;
 }
+// Thay lịch cũ bằng một lần lấy đề xuất mới sau thời gian chờ.
 function schedulePolling(evaluationId: string, entry: Entry, delay = POLL_INTERVAL_MS) {
   if (entry.timer) clearTimeout(entry.timer);
   entry.timer = setTimeout(() => { entry.timer = undefined; void pollProposals(evaluationId, entry); }, delay);
 }
+// Đọc đề xuất một lần và dùng thế hệ cùng revision để loại phản hồi không còn hợp lệ.
 async function pollProposals(evaluationId: string, entry: Entry) {
   if (entry.inFlight) return;
   entry.inFlight = true;
@@ -78,7 +84,8 @@ async function pollProposals(evaluationId: string, entry: Entry) {
       else if (entry.notifyFor.delete(proposal.id)) {
         if (proposal.status === "READY") showToast(msg("grading.model.gradingAiTasks.theAiProposalForIs", { label: String(entry.label) }));
         else if (proposal.status === "FAILED" || proposal.status === "REJECTED") {
-          showErrorToast(proposal.safeError || msg("grading.model.gradingAiTasks.couldNotCreateAnAi", { label: String(entry.label) }));
+          showErrorToast(proposal.safeError ? describeAiFailure(proposal.safeError)
+            : msg("grading.model.gradingAiTasks.couldNotCreateAnAi", { label: String(entry.label) }));
         }
       }
     }
@@ -98,9 +105,11 @@ async function pollProposals(evaluationId: string, entry: Entry) {
     if (generation === entry.generation) entry.inFlight = false;
   }
 }
+// Lấy snapshot hiện tại để hook đồng bộ với store bên ngoài React.
 export function readGradingProposals(evaluationId: string) {
   return findEntry(evaluationId).snapshot;
 }
+// Bắt đầu theo dõi khi cần và trả hàm gỡ đăng ký cho bản chấm.
 export function subscribeGradingProposals(evaluationId: string, listener: () => void) {
   const entry = findEntry(evaluationId);
   entry.listeners.add(listener);
@@ -113,6 +122,7 @@ export function subscribeGradingProposals(evaluationId: string, listener: () => 
     }
   };
 }
+// Gộp đề xuất vừa tạo vào store và đặt trạng thái hàng đợi mặc định nếu server chưa gửi.
 export function addGradingProposal(evaluationId: string, proposal: Proposal) {
   const entry = findEntry(evaluationId);
   entry.revision += 1;
@@ -126,6 +136,7 @@ export function addGradingProposal(evaluationId: string, proposal: Proposal) {
     if (!entry.inFlight) void pollProposals(evaluationId, entry);
   }
 }
+// Xóa bộ đếm lỗi và thử lại một vòng thăm dò mới.
 export function resumeGradingPolling(evaluationId: string) {
   const entry = findEntry(evaluationId);
   entry.attempts = 0;
@@ -135,15 +146,19 @@ export function resumeGradingPolling(evaluationId: string) {
   updateSnapshot(entry, { pollExhausted: false, error: "" });
   void pollProposals(evaluationId, entry);
 }
+// Gắn nhãn màn hình để thông báo tác vụ còn nhận diện được khi đổi trang.
 export function setGradingAiLabel(evaluationId: string, label: string) {
   findEntry(evaluationId).label = label;
 }
+// Trả ID phiên đang sở hữu store theo dõi đề xuất.
 export function readGradingAiAccount() {
   return trackingAccount;
 }
+// Trả mốc phiên để caller nhận ra phản hồi thuộc tài khoản trước đó.
 export function readGradingAiSessionRevision() {
   return sessionRevision;
 }
+// Xóa các mục và lượt thăm dò cũ khi tài khoản đổi trước khi kích hoạt theo dõi.
 export function activateGradingAiTracking(accountId: string) {
   if (trackingAccount !== accountId) {
     sessionRevision += 1;

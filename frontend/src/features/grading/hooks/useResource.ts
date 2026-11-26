@@ -1,10 +1,12 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatErrorMessage } from "../model/format";
+// Quản lý dữ liệu và lỗi của một nguồn, bỏ kết quả thuộc lần tải đã cũ.
 export function useResource<T>(load: () => Promise<T>) {
   const [value, setValue] = useState<T | null>(null);
   const [error, setError] = useState("");
   const sequence = useRef(0);
+  // Đọc lại nguồn và chỉ cập nhật UI nếu số thứ tự vẫn là lần tải mới nhất.
   const refresh = useCallback(async () => {
     const current = ++sequence.current;
     setError("");

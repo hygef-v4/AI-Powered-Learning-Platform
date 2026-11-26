@@ -12,7 +12,7 @@ navEntries.register({ key: "manager-teaching-classes", order: 20, title: msg("ac
 navEntries.register({ key: "teaching-classes", order: 10, title: msg("academics.register.assignedClasses"), href: "/teaching/classes", icon: "class", roles: ["TEACHER"] });
 navEntries.register({ key: "my-classes", order: 10, title: msg("academics.register.myClasses"), href: "/classes", icon: "school", roles: ["STUDENT"] });
 
-subjectNavEntries.register({ key: "subject-info", order: 10, title: msg("academics.register.subjectInformation"), icon: "info", path: "/manager/subjects", href: (id) => `/manager/subjects/${encodeURIComponent(id)}` });
+subjectNavEntries.register({ key: "subject-info", order: 10, title: msg("academics.register.subjectInformation"), icon: "info", path: "/manager/subjects", /* Dựng URL môn quản lý từ ID được truyền qua slot điều hướng. */ href: (id) => `/manager/subjects/${encodeURIComponent(id)}` });
 subjectNavEntries.register({ key: "subject-classes", order: 20, title: msg("academics.register.classes"), icon: "groups", path: "/manager/classes" });
 
 contextNavEntries.register({ key: "class", order: 10, roles: ["TEACHER", "SUBJECT_MANAGER"], resolve: resolveClassContext });

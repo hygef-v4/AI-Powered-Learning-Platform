@@ -27,10 +27,12 @@ type ResourceState<T> = {
   key?: ResourceLoader<T>;
 };
 
+// Cung cấp cùng cách biểu diễn dữ liệu, trạng thái tải và lỗi cho các route lớp.
 function useResource<T>(load: ResourceLoader<T>) {
   const [state, setState] = useState<ResourceState<T>>({loading: true});
   const controller = useRef<AbortController | null>(null);
 
+  // Hủy lần tải đang chạy, cập nhật dữ liệu hoặc lỗi nếu lượt mới còn hiệu lực.
   const refresh = useCallback(async () => {
     controller.current?.abort();
     const current = new AbortController();
@@ -60,6 +62,7 @@ function useResource<T>(load: ResourceLoader<T>) {
   return {...(state.key === load ? state : {loading: true}), refresh};
 }
 
+// Ghép các trang lớp đến khi API trả về ít hơn giới hạn một trang.
 async function listAllClasses(scope: Scope, signal: AbortSignal) {
   const rows: CourseClassView[] = [];
   for (let page = 1; ; page++) {
@@ -69,6 +72,7 @@ async function listAllClasses(scope: Scope, signal: AbortSignal) {
   }
 }
 
+// Ghép mọi trang ghi danh của lớp đang xem, dùng cùng tín hiệu hủy.
 async function listAllStudents(scope: "manager" | "teaching", id: string, signal: AbortSignal) {
   const rows: EnrollmentView[] = [];
   for (let page = 1; ; page++) {
@@ -78,12 +82,14 @@ async function listAllStudents(scope: "manager" | "teaching", id: string, signal
   }
 }
 
+// Hiện trạng thái tải hoặc lỗi có nút thử lại trước khi dữ liệu sẵn sàng.
 function Pending({error, retry}: {error?: unknown; retry: () => void}) {
   if (!error) return <PageLoading/>;
   return <PageLoadError onRetry={() => void Promise.resolve(retry()).catch(() => {})}>{formatOperationError(error)}</PageLoadError>;
 }
 
 // Khung trang (thanh trên, menu bên theo role của phiên, hồ sơ, đăng xuất) do AuthenticatedLayout của U01 vẽ ở layout route.
+// Dựng danh sách lớp và dẫn đến trang chi tiết tương ứng với vai trò đang xem.
 export function ClassesRoute({teaching = false}: {teaching?: boolean}) {
   const router = useRouter();
   const session = useSession();
@@ -106,18 +112,23 @@ export function ClassesRoute({teaching = false}: {teaching?: boolean}) {
     onOpen={id => router.push(`${audience === "student" ? "/classes" : "/teaching/classes"}/${encodeURIComponent(id)}`)}/>;
 }
 
+// Chọn giao diện quản lý hoặc chỉ xem theo phạm vi và gắn các thao tác tương ứng.
 export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
   const router = useRouter();
+  // Tải chi tiết lớp và chỉ yêu cầu danh sách ghi danh ở phạm vi quản lý hoặc giảng dạy.
   const load = useCallback(async (signal: AbortSignal) => ({
     value: await academicsApi.loadClass(scope, id, signal),
     students: scope === "me" ? [] : await listAllStudents(scope, id, signal),
   }), [id, scope]);
   const state = useResource(load);
+  // Tra tài khoản người dạy theo từ khóa để đưa vào lựa chọn phân công.
   const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.listCandidates("teacher", q, signal), []);
+  // Giới hạn tìm tài khoản cho ghi danh vào lớp đang mở.
   const loadCandidates = useCallback((q: string, signal: AbortSignal) => academicsApi.listStudentCandidates(id, q, signal), [id]);
   const [mutationConflict, setMutationConflict] = useState<{classId: string; message: string} | null>(null);
   if (!state.data) return <Pending error={state.error} retry={state.refresh}/>;
 
+  // Tải lại dữ liệu sau khi ghi và làm mới bản đang xem trước khi báo xung đột version.
   async function mutate<T>(action: () => Promise<T>): Promise<T> {
     setMutationConflict(null);
     try {
@@ -139,11 +150,17 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
 
   const {value, students} = state.data;
   const actions: ManagedClassActions = {
+    // Lưu thông tin lớp rồi tải lại bản hiện hành.
     onSaveInfo: async input => { await mutate(() => academicsApi.updateClassInfo(id, input)); },
+    // Đổi phân công giảng viên với version của lớp đang mở.
     onAssign: async (teacherId, version) => { await mutate(() => academicsApi.assignTeacher(id, teacherId, version)); },
+    // Đổi trạng thái lớp và đi qua cùng luồng xử lý xung đột.
     onChangeStatus: async (status, version) => { await mutate(() => academicsApi.changeClassStatus(id, status, version)); },
+    // Đổi trạng thái ghi danh của một tài khoản và tải lại danh sách.
     onEnrollmentStatus: async (accountId, status) => { await mutate(() => academicsApi.changeEnrollmentStatus(id, accountId, status)); },
+    // Ghi danh một tài khoản đã chọn rồi làm mới trang lớp.
     onEnroll: async accountId => { await mutate(() => academicsApi.enrollStudent(id, accountId)); },
+    // Ghi danh theo danh sách và chuyển kết quả từng dòng cho hộp thoại.
     onBatch: async text => await mutate(() => academicsApi.enrollStudents(id, text)),
   };
 
@@ -163,9 +180,11 @@ export function ClassDetailRoute({id, scope}: {id: string; scope: Scope}) {
   </>;
 }
 
+// Dùng chung dữ liệu môn cho tổng quan, thông tin môn và danh sách lớp của quản lý.
 export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "subjects" | "classes"; id?: string; initialSubjectId?: string}) {
   const router = useRouter();
   const [creating, setCreating] = useState<SubjectView | null>(null);
+  // Luôn tải môn quản lý và chỉ lấy danh sách lớp khi màn hình lớp cần dùng.
   const load = useCallback(async (signal: AbortSignal) => {
     const subjects = await academicsApi.listSubjects(signal);
     // Chỉ mục Lớp học cần danh sách lớp; Thông tin môn tự tải lớp đang mở của môn.
@@ -173,6 +192,7 @@ export function ManagerRoute({view, id, initialSubjectId}: {view: "overview" | "
     return {subjects, classes, subject: id ? await academicsApi.loadSubject(id, signal) : subjects[0]};
   }, [id, view]);
   const state = useResource(load);
+  // Tra giảng viên cho form quản lý và chuyển tín hiệu hủy của lần tìm hiện tại.
   const loadTeachers = useCallback((q: string, signal: AbortSignal) => academicsApi.listCandidates("teacher", q, signal), []);
   if (!state.data) return <Pending error={state.error} retry={state.refresh}/>;
 

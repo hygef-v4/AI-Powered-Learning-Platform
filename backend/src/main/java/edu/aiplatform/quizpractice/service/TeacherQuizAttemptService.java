@@ -131,7 +131,7 @@ public class TeacherQuizAttemptService {
     /**
      * Giảng viên quyết định trừ hay không trừ điểm của một lượt có mức gợi ý, bắt buộc có lý do (BR-U11-33): tín hiệu rời
      * trang có thể sai nên hệ thống không tự trừ. Giảng viên được chọn số điểm khác mức gợi ý, không quá điểm gốc, và được
-     * đổi quyết định; mỗi lần đều ghi audit.
+     * đổi quyết định; không ghi audit (BR-U02-10).
      */
     @Transactional
     public TeacherAttemptDetail decidePenalty(Actor actor, UUID classId, UUID attemptId, PenaltyDecision decision,

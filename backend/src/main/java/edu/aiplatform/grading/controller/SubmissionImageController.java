@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SubmissionImageController {
     private final SubmissionImageService submissionImageService;
 
+    // Ủy quyền kiểm quyền xem và cấp token ảnh cho service của bài nộp.
     public SubmissionImageController(SubmissionImageService submissionImageService) {
         this.submissionImageService = submissionImageService;
     }

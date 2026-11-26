@@ -1,5 +1,6 @@
 package edu.aiplatform.ai.service;
 
+import edu.aiplatform.ai.contract.PromptAction;
 import edu.aiplatform.ai.contract.PromptContext;
 import edu.aiplatform.identity.contract.Role;
 import java.util.EnumSet;
@@ -50,7 +51,10 @@ enum PromptContextPolicy {
         throw new IllegalArgumentException("Chưa có chính sách cho phạm vi " + context);
     }
 
-    int calculateMaxChars() {
+    int calculateMaxChars(PromptAction action) {
+        if (this == EXAM_EDITING && (action == PromptAction.CREATE_DRAFT || action == PromptAction.REVISE_DRAFT)) {
+            return PromptAction.MAX_ASSIGNMENT_REQUEST_CHARS;
+        }
         return maxChars;
     }
 
@@ -58,8 +62,8 @@ enum PromptContextPolicy {
         return role != null && allowedRoles.contains(role);
     }
 
-    String describeTooLong() {
-        return "Yêu cầu tối đa " + String.format(Locale.ROOT, "%,d", maxChars).replace(',', '.') + " ký tự.";
+    static String describeTooLong(int limit) {
+        return "Yêu cầu tối đa " + String.format(Locale.ROOT, "%,d", limit).replace(',', '.') + " ký tự.";
     }
 
     String describeTooShort() {

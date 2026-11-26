@@ -26,6 +26,7 @@ public class McpWriteRequestService implements IMcpWriteRequest {
     private final ObjectMapper json;
     private final TransactionTemplate transaction;
 
+    // Chuẩn bị giao dịch có hạn 30 giây để ghi thao tác cùng kết quả phát lại.
     public McpWriteRequestService(McpWriteRequestRepository mcpWriteRequestRepository, ObjectMapper json,
                                   PlatformTransactionManager manager) {
         this.mcpWriteRequestRepository = mcpWriteRequestRepository;
@@ -34,6 +35,7 @@ public class McpWriteRequestService implements IMcpWriteRequest {
         this.transaction.setTimeout(30);
     }
 
+    // Tuần tự hóa lệnh cùng requestRef trong giao dịch để lần gọi lặp nhận lại phản hồi cũ.
     @Override
     public Map<String, Object> execute(Actor actor, String operation, String requestRef,
                                        String fingerprint,
@@ -72,6 +74,7 @@ public class McpWriteRequestService implements IMcpWriteRequest {
         return mcpWriteRequestRepository.deleteRequestsOlderThan(now.minus(RETENTION));
     }
 
+    // Đọc phản hồi JSON để đường tạo mới và phát lại trả cùng kiểu dữ liệu.
     private Map<String, Object> parseResponse(String response) {
         try {
             return json.readValue(response, RESPONSE_TYPE);

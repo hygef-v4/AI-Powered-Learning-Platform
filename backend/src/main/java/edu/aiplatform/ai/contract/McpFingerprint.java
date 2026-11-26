@@ -9,9 +9,11 @@ import java.util.*;
 
 /** Stable semantic JSON hash: object order and equivalent number representations do not matter. */
 public final class McpFingerprint {
+    // Ngăn tạo đối tượng cho lớp chỉ cung cấp các hàm tĩnh.
     private McpFingerprint() {
     }
 
+    // Băm JSON đã chuẩn hóa để so nội dung ngay cả khi thứ tự thuộc tính khác nhau.
     public static String of(ObjectMapper json, Object value) {
         try {
             byte[] canonicalJson = canonicalize(json.valueToTree(value)).toString()
@@ -22,6 +24,7 @@ public final class McpFingerprint {
         }
     }
 
+    // Sắp khóa object đệ quy và giữ nguyên thứ tự mảng để tạo biểu diễn băm ổn định.
     private static JsonNode canonicalize(JsonNode node) {
         if (node.isObject()) {
             ObjectNode out = JsonNodeFactory.instance.objectNode();

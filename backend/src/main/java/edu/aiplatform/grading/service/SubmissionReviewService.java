@@ -120,6 +120,7 @@ public class SubmissionReviewService {
     record Listing(List<SubmissionRow> rows,
             List<edu.aiplatform.grading.model.Evaluation> evaluations, Map<String, Long> summary,
             java.time.Instant closesAt, boolean editable, String readOnlyReason) {
+        // Tạo kết quả danh sách với mặc định cho các trường chỉnh sửa và dữ liệu bổ sung.
         Listing(List<SubmissionRow> rows,
                 List<edu.aiplatform.grading.model.Evaluation> evaluations, Map<String, Long> summary,
                 java.time.Instant closesAt) {
@@ -144,6 +145,7 @@ public class SubmissionReviewService {
                 courseClass.status() == edu.aiplatform.academics.contract.ClassStatus.OPEN);
     }
 
+    // Kiểm cả quyền đọc sổ điểm và xem bài nộp trước khi tổng hợp tiến độ theo bài.
     public Map<UUID, SubmissionPage> loadProgress(Actor actor, UUID classId) {
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
         gradingAccess.requireTeacher(actor, classId, Actions.GRADING_REVIEW);
@@ -167,6 +169,7 @@ public class SubmissionReviewService {
         return result;
     }
 
+    // Ghép bài cá nhân hoặc nhóm với bản chấm và hồ sơ sinh viên để lọc hàng cần duyệt.
     private Listing buildListing(UUID classId, UUID assignmentId, AssignmentView assignment,
             List<edu.aiplatform.grading.model.Evaluation> evals, String filter, Boolean late, List<UUID> students,
             Map<UUID, edu.aiplatform.identity.contract.AccountContact> contacts, boolean classEditable) {

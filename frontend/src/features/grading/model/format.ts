@@ -4,6 +4,7 @@ import { msg } from "@/i18n/msg";
 
 export const ADJUSTMENT_REASON_MESSAGE = msg("grading.model.format.enterAReasonWhenAdding");
 
+// Ánh xạ lỗi nghiệp vụ chấm sang thông báo UI có hướng xử lý phù hợp.
 export function formatErrorMessage(error: unknown) {
   if (error instanceof ApiError && error.problem.code === "ADJUSTMENT_REASON_REQUIRED") {
     return ADJUSTMENT_REASON_MESSAGE;

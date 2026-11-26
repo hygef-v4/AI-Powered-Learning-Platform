@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Card, Pill, type Tone } from "@/shared/ui";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import { formatDateTime, type SourceChoice } from "@/shared/ai";
 import { calculateChecklistPoints, hasInvalidItemScores, resolveItemPoints, isValidItemScore } from "../model/rubricScores";
 import { GradingFeedbackSummary, RubricItemFeedback } from "./StructuredFeedbackSection";
@@ -35,12 +36,14 @@ const STATUS_META: Record<string, { label: string; tone: Tone; icon: string }> =
   REJECTED: { label: msg("grading.components.AiProposalPanel.theProposalIsInvalid"), tone: "danger", icon: "✕" },
 };
 
+// Đổi trạng thái tác vụ thành nhãn của bước xử lý đề xuất.
 function describePendingStage(taskState?: string | null): string {
   if (taskState === "READY") return msg("grading.components.AiProposalPanel.aiResultReceivedProcessingThe");
   if (taskState === "RUNNING") return msg("grading.components.AiProposalPanel.theAiIsGrading");
   return msg("grading.components.AiProposalPanel.waitingToBeProcessed");
 }
 
+// Giải thích giai đoạn agent đang chạy hoặc kết quả đang được hệ thống xử lý.
 function describePendingStageDetail(taskState?: string | null): string {
   if (taskState === "READY") {
     return msg("grading.components.AiProposalPanel.theResultFromTheAi");
@@ -51,6 +54,7 @@ function describePendingStageDetail(taskState?: string | null): string {
   return msg("grading.components.AiProposalPanel.theAiGradingRequestIs");
 }
 
+// Hiển thị đề xuất đang chờ hoặc có nội dung, kể cả mục được mở từ link MCP.
 export function AiProposalPanel({
   proposals,
   selectedProposalId,
@@ -89,6 +93,7 @@ export function AiProposalPanel({
   const visibleProposals = proposals.filter((p) => p.status === "PENDING" || (p.proposal && p.status !== "FAILED" && p.status !== "REJECTED"));
   const latestFailure = proposals[0]?.status === "FAILED" || proposals[0]?.status === "REJECTED" ? proposals[0] : null;
 
+  // Dựng bản so sánh điểm và phản hồi để giảng viên cân nhắc trước khi áp dụng.
   function renderProposalContent(p: Proposal, isLatest: boolean) {
     const aiChecks = p.proposal?.checks ?? {};
     const aiScores = p.proposal?.itemScoresByRubric ?? {};
@@ -292,7 +297,8 @@ export function AiProposalPanel({
       </div>
       {latestFailure && <div role="alert" className="mt-3 rounded-lg bg-danger/5 p-3 text-sm">
         <p className="font-semibold text-danger">{msg("grading.components.AiProposalPanel.couldNotCreateAProposal")}</p>
-        <p className="mt-1">{latestFailure.safeError && !/^AI task (failed|unavailable or failed)$/.test(latestFailure.safeError) ? latestFailure.safeError : msg("grading.components.AiProposalPanel.theAiTaskFailedCheck")}</p>
+        <p className="mt-1">{latestFailure.safeError && !/^AI task (failed|unavailable or failed)$/.test(latestFailure.safeError)
+          ? describeAiFailure(latestFailure.safeError) : msg("grading.components.AiProposalPanel.theAiTaskFailedCheck")}</p>
         <p className="mt-1 text-muted">{msg("grading.components.AiProposalPanel.youCanStillGradeManually")}</p>
         <a href="/ai/connection" className="mt-2 inline-block font-semibold text-primary-ink underline underline-offset-2">{msg("grading.components.AiProposalPanel.checkAiConnection")}</a>
       </div>}

@@ -77,5 +77,14 @@ export function describePenaltyResult(penalty: PenaltyView): string | null {
 
 /** Lượt được hệ thống tự nộp thì ghi rõ lý do (L4); nộp tay thì không có nhãn. */
 export function submitModeText(mode: SubmitMode): string | null {
-  return mode === "AUTO_TIME_LIMIT" ? msg("quizpractice.model.labels.autoSubmittedWhenTimeRan") : mode === "AUTO_RETIRED" ? msg("quizpractice.model.labels.autoSubmittedWhenTheQuiz") : null;
+  switch (mode) {
+    case "AUTO_TIME_LIMIT":
+      return msg("quizpractice.model.labels.autoSubmittedWhenTimeRan");
+    case "AUTO_RETIRED":
+      return msg("quizpractice.model.labels.autoSubmittedWhenTheQuiz");
+    case "AUTO_ACCESS_LOST":
+      return msg("quizpractice.model.labels.autoSubmittedWhenClassAccessEnded");
+    default:
+      return null;
+  }
 }

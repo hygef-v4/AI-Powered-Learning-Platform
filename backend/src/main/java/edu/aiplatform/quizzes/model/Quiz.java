@@ -26,8 +26,10 @@ public record Quiz(UUID id, QuizScope scope, UUID classId, UUID subjectId, UUID 
                 retiredReason, createdBy, createdAt, updatedAt, version, null);
     }
 
-    /** Mặc định F6: không trộn, không giới hạn giờ, 1 lượt, hiện điểm, không hiện đáp án; theo dõi tắt. */
-    /** Quiz mới: không giới hạn thời gian và số lượt (người soạn tự đặt), hiện điểm sau khi nộp. */
+    /**
+     * Quiz mới: không trộn, không giới hạn thời gian và số lượt (người soạn tự đặt), hiện điểm sau khi nộp, không hiện
+     * đáp án; theo dõi hoạt động tắt.
+     */
     public static final QuizSettings DEFAULT_SETTINGS = new QuizSettings(false, false, null, null, true, false);
 
     public Quiz {

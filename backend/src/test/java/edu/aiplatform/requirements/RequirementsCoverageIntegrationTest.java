@@ -119,6 +119,14 @@ class RequirementsCoverageIntegrationTest {
         return Timestamp.from(time);
     }
 
+    private edu.aiplatform.jobs.service.JobDispatcher.Outcome dispatchWhenWorkerFree(
+            edu.aiplatform.jobs.contract.JobMessage message) {
+        // Luồng handler vừa xong lần trước có thể chưa quay lại SynchronousQueue nên dispatcher từ chối (backpressure).
+        return org.awaitility.Awaitility.await().atMost(Duration.ofSeconds(3))
+                .ignoreException(java.util.concurrent.RejectedExecutionException.class)
+                .until(() -> jobDispatcher.dispatch(message), Objects::nonNull);
+    }
+
     private UUID seedSubject(String code, UUID manager) {
         UUID id = UUID.randomUUID();
         jdbc.update("insert into subjects(id,code,name,status,manager_id,created_at,updated_at) values (?,?,?,'ACTIVE',?,?,?)",
@@ -612,13 +620,13 @@ class RequirementsCoverageIntegrationTest {
         var retry = org.mockito.ArgumentCaptor.forClass(edu.aiplatform.jobs.contract.JobMessage.class);
         for (int attempt = 0; attempt < 5; attempt++) {
             clearInvocations(messageSender);
-            assertThat(jobDispatcher.dispatch(current)).isEqualTo(edu.aiplatform.jobs.service.JobDispatcher.Outcome.RETRIED);
+            assertThat(dispatchWhenWorkerFree(current)).isEqualTo(edu.aiplatform.jobs.service.JobDispatcher.Outcome.RETRIED);
             verify(messageSender).sendRetry(retry.capture(), any());
             current = retry.getValue();
             assertThat(current.attempt()).isEqualTo(attempt + 1);
             assertThat(current.payload()).containsEntry("deliveryId", deliveryId.toString());
         }
-        assertThat(jobDispatcher.dispatch(current)).isEqualTo(edu.aiplatform.jobs.service.JobDispatcher.Outcome.FAILED);
+        assertThat(dispatchWhenWorkerFree(current)).isEqualTo(edu.aiplatform.jobs.service.JobDispatcher.Outcome.FAILED);
         assertThat(jdbc.queryForObject("select status from email_deliveries where id=?", String.class, deliveryId)).isEqualTo("FAILED");
         assertThat(jdbc.queryForObject("select attempts from email_deliveries where id=?", Integer.class, deliveryId)).isEqualTo(6);
         assertThat(jdbc.queryForObject("select last_error from email_deliveries where id=?", String.class, deliveryId))
@@ -654,7 +662,7 @@ class RequirementsCoverageIntegrationTest {
         }
         var replay = new edu.aiplatform.jobs.contract.JobMessage(1, edu.aiplatform.jobs.contract.JobTypes.EMAIL_SEND,
                 "email:" + deliveryId, Map.of("deliveryId", deliveryId.toString()), 0, "fixture");
-        assertThat(jobDispatcher.dispatch(replay)).isEqualTo(edu.aiplatform.jobs.service.JobDispatcher.Outcome.DONE);
+        assertThat(dispatchWhenWorkerFree(replay)).isEqualTo(edu.aiplatform.jobs.service.JobDispatcher.Outcome.DONE);
         emailDeliveryService.markEmailFailed(deliveryId);
         verify(mail).send(any());
         assertThat(jdbc.queryForObject("select status from email_deliveries where id=?", String.class, deliveryId)).isEqualTo("SENT");

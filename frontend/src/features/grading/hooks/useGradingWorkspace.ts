@@ -34,6 +34,7 @@ import { msg } from "@/i18n/msg";
 
 const UNSAVED_CHANGES_MESSAGE = msg("grading.hooks.useGradingWorkspace.youHaveUnsavedChangesLeave");
 
+// Quản lý bản gốc, bản đang sửa và các hành động lưu hoặc áp dụng đề xuất AI.
 export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Detail>,
   filters: NavigationFilters = {}, additionalDirty = false) {
   const [confirmDialog, requestConfirm] = useConfirmDialog();
@@ -67,6 +68,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     additionalDirtyRef.current = additionalDirty;
   }, [dirty, additionalDirty]);
   useEffect(() => {
+    // Cảnh báo khi rời trang còn chỉnh sửa bản chấm hoặc thành viên chưa lưu.
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       if (dirtyRef.current || additionalDirtyRef.current) {
         event.preventDefault();
@@ -77,6 +79,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
   }, []);
 
+  // Gộp chỉnh sửa thủ công và tăng revision để phản hồi lưu cũ không ghi đè.
   function updateForm(patch: Partial<GradingFormValues>) {
     if (disabled || reloadingRef.current) return;
     editRevision.current += 1;
@@ -86,6 +89,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     setAiAutoApplied(false);
   }
 
+  // Đưa mục về điểm tối đa hoặc 0 và đồng bộ checklist.
   function toggleItem(rubricId: string, itemId: string, achieved: boolean) {
     const max = Number(
       detail.rubrics
@@ -96,33 +100,41 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     updateForm(buildItemScorePatch(detail.rubrics, form, rubricId, itemId, achieved ? max : 0));
   }
 
+  // Cập nhật điểm lẻ theo rubric và làm lại trạng thái liên quan của mục.
   function setItemScore(rubricId: string, itemId: string, score: number) {
     updateForm(buildItemScorePatch(detail.rubrics, form, rubricId, itemId, score));
   }
 
+  // Ghi phản hồi chung vào bản cục bộ để lượt lưu gửi cùng điểm.
   function setFeedback(feedback: string) {
     updateForm({ feedback });
   }
+  // Giữ giá trị điều chỉnh trong form trước khi kiểm và lưu.
   function setAdjustment(adjustment: string) {
     updateForm({ adjustment });
   }
+  // Đưa lý do sửa điểm vào bản cục bộ để API nhận cùng thao tác chấm.
   function setChangeReason(changeReason: string) {
     updateForm({ changeReason });
   }
 
+  // Cập nhật phần tổng hợp trong khi giữ phản hồi theo từng tiêu chí.
   function updateStructuredSummary(summary: StructuredFeedbackSummary) {
     updateForm(buildStructuredSummaryPatch(form, summary));
   }
 
+  // Ghép chỉnh sửa vào đúng tiêu chí theo cặp ID.
   function updateStructuredItem(rubricId: string, itemId: string, patch: Partial<StructuredFeedbackItem>) {
     updateForm(buildStructuredItemPatch(detail.rubrics, form, rubricId, itemId, patch));
   }
 
+  // Cập nhật xác nhận cần xem lại và điểm gắn với lần xác nhận đó.
   function toggleAcknowledgedReviewItem(key: string) {
     const patch = buildToggleAcknowledgePatch(detail.rubrics, form, key);
     if (patch) updateForm(patch);
   }
 
+  // Nạp bản hiện hành, đặt lại nếu bài nộp đổi hoặc hợp nhất khi chỉ version bản chấm thay đổi.
   async function reloadEvaluation() {
     if (savingRef.current || reloadingRef.current) return;
     reloadingRef.current = true;
@@ -142,6 +154,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
       const rebased = reset || !dirtyRef.current
         ? { form: serverForm, dirty: false, conflict: false }
         : rebaseGradingForm(createInitialForm(evaluation, detail.rubrics), form, serverForm, refreshed.rubrics);
+      // Chuyển bản hợp nhất vào form và đặt lại thăm dò nếu bài nộp đã đổi.
       const apply = () => {
         setDetail(refreshed);
         setForm(rebased.form);
@@ -168,12 +181,15 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
+  // Hỏi xác nhận nếu còn chỉnh sửa và giữ bộ lọc khi chuyển bài nếu caller yêu cầu.
   function navigateEvaluation(id: string, keepFilters = true) {
+    // Chuyển route với bộ lọc cũ khi thao tác điều hướng đã được phép.
     const go = () => router.push(buildEvaluationHref(id, keepFilters ? filters : {}));
     if (dirty || additionalDirty) requestConfirm(UNSAVED_CHANGES_MESSAGE, go, msg("grading.hooks.useGradingWorkspace.discardChanges"));
     else go();
   }
 
+  // Gửi bản cục bộ theo version hiện hành và chỉ chuyển bài khi không còn chỉnh sửa mới chưa lưu.
   async function saveEvaluation(advance = false,
     options: { background?: boolean } = {}): Promise<Evaluation | null> {
     if (disabled || savingRef.current || reloadingRef.current) return null;
@@ -198,6 +214,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
         (form.acknowledgedReviewItems && Object.keys(form.acknowledgedReviewItems).length > 0) ||
         (form.reviewedItemScores && Object.keys(form.reviewedItemScores).length > 0),
       );
+      // Gửi version của bản đang sửa. usedProposalId báo backend kiểm đề xuất khi lưu.
       const saved = await gradingApi.saveEvaluation(evaluation.id, {
         ...(supportsItemScores ? { itemScoresByRubric: form.itemScores ?? {} } : {}),
         ...(hasStructuredPayload
@@ -247,6 +264,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
             setError(msg("grading.hooks.useGradingWorkspace.groupScoreSavedReloadThe"));
           }
         }
+        // Nếu giảng viên sửa tiếp trong lúc chờ lưu, giữ phần nhập mới để lần lưu sau gửi tiếp.
         const preserveEdits = !replacementForm && editRevision.current !== savedRevision;
         setForm((current) => replacementForm ?? (preserveEdits ? {
           ...current,
@@ -280,6 +298,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
+  // Chặn yêu cầu chồng lấn và đưa đề xuất vào UI nếu phiên tài khoản vẫn còn hiệu lực.
   async function requestProposal(input: AiRequest): Promise<Proposal | null> { // yêu cầu tạo đề xuất AI
     if (disabled || savingRef.current || reloadingRef.current || requestingRef.current) return null;
     requestingRef.current = true;
@@ -299,6 +318,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     }
   }
 
+  // Đưa đề xuất vào form và giữ bản sao để giảng viên có thể hoàn tác.
   function applyProposal(
     checks: Checks,
     feedback: string,
@@ -324,8 +344,10 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     setAiAutoApplied(true);
   }
 
+  // Bỏ đề xuất đang dùng trong form sau khi xử lý xác nhận nếu cần.
   function discardProposal() {
     if (!aiBackup || disabled || reloadingRef.current) return;
+    // Khôi phục dữ liệu và trạng thái chưa lưu từ trước khi áp dụng đề xuất.
     const restore = () => {
       editRevision.current += 1;
       setForm(aiBackup.form);

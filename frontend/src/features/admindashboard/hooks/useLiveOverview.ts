@@ -36,6 +36,7 @@ function requestSource<T>(read: (signal: AbortSignal) => Promise<T>, parent: Abo
   });
 }
 
+// Phân loại 401 và 403 để UI xóa số liệu và dừng tự làm mới.
 export const isDenied = (error: unknown) => error instanceof ApiError && [401, 403].includes(error.problem.status);
 
 /**
@@ -52,6 +53,7 @@ export function useLiveOverview() {
   // Đã có số để hiện chưa: lần cập nhật sau lỗi thì giữ số cũ, chưa có thì báo lỗi.
   const hasData = useRef(false);
 
+  // Hủy lần tải trước, lấy số đếm chính và cập nhật từng nguồn phụ khi có kết quả.
   const refresh = useCallback(async () => {
     controller.current?.abort();
     const current = new AbortController();
@@ -61,11 +63,13 @@ export function useLiveOverview() {
       loading: { activity: true, usage: true, backups: true },
     };
     let ready = false;
+    // Theo dõi trạng thái riêng cho từng nguồn phụ và bỏ phản hồi của lượt đã hủy.
     const loadOptionalSource = <K extends "activity" | "usage" | "backups">(key: K, read: (signal: AbortSignal) => Promise<Overview[K]>) => {
       void requestSource(read, current.signal).catch(() => null).then((value) => {
         if (current.signal.aborted) return;
         partial[key] = value;
         partial.loading = { ...partial.loading, [key]: false };
+        // Nguồn trả sớm được giữ trong partial. Nguồn trả muộn chỉ cập nhật thẻ tương ứng.
         if (ready) setData((previous) => previous && ({ ...previous, [key]: value, loading: partial.loading }));
       });
     };
@@ -104,6 +108,7 @@ export function useLiveOverview() {
   const stopped = isDenied(error);
   useEffect(() => {
     if (stopped) return;
+    // Chỉ gọi tải lại khi tab đang hiển thị.
     const refreshVisibleOverview = () => { if (document.visibilityState === "visible") void refresh(); };
     const timer = window.setInterval(refreshVisibleOverview, REFRESH_MS);
     document.addEventListener("visibilitychange", refreshVisibleOverview);
@@ -113,6 +118,7 @@ export function useLiveOverview() {
     };
   }, [refresh, stopped]);
 
+  // Xóa lỗi và bản cũ để khởi động một lượt tải mới.
   const retry = useCallback(() => {
     hasData.current = false;
     setError(null);

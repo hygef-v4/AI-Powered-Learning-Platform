@@ -22,6 +22,7 @@ export function ClassDashboardPage({ audience, classes, onOpen }: { audience: "s
   const term = terms.includes(termValue) ? termValue : "";
   const inTerm = term ? classes.filter((course) => course.term === term) : classes;
   const student = audience === "student";
+  // Đếm số lớp ở một trạng thái trong kỳ đang lọc.
   const count = (value: ClassStatus) => inTerm.filter((course) => course.status === value).length;
   const tabs: { value: ClassStatus; label: string }[] = student
     ? [{ value: "OPEN", label: msg("academics.pages.ClassDashboardPage.studying") }, { value: "ARCHIVED", label: msg("academics.pages.ClassDashboardPage.finished") }]

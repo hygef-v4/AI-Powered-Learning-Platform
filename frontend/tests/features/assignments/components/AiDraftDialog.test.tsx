@@ -89,6 +89,13 @@ describe("AiDraftDialog", () => {
     expect(screen.queryByText("hoặc")).toBeNull();
     expect(screen.queryByText("*")).toBeNull();
     expect(screen.queryByLabelText("Nguồn AI")).not.toBeInTheDocument();
+    const instruction = screen.getByLabelText("Yêu cầu");
+    fireEvent.change(instruction, { target: { value: "a".repeat(10_001) } });
+    expect(instruction).toHaveAccessibleDescription(/rút ngắn 1 ký tự/);
+    expect(instruction).toHaveValue("a".repeat(10_001));
+    expect(screen.getByTestId("ai-send")).toBeDisabled();
+    expect(requestAiDraft).not.toHaveBeenCalled();
+    fireEvent.change(instruction, { target: { value: "" } });
     expect(screen.getByTestId("ai-send")).toBeEnabled();
     fireEvent.click(screen.getByTestId("ai-send"));
     expect(requestAiDraft).not.toHaveBeenCalled();

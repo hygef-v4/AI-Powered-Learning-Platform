@@ -31,6 +31,7 @@ public final class GradingViews {
     /** {@code studentCode}: MSSV, rỗng khi chưa có hoặc là nhóm (BR-U09-75). */
     public record Person(UUID accountId, String name, String email, String studentCode) {
 
+        // Dựng hồ sơ rút gọn cho caller chưa có mã sinh viên.
         public Person(UUID accountId, String name, String email) {
             this(accountId, name, email, null);
         }
@@ -43,6 +44,7 @@ public final class GradingViews {
 
     public record SubmissionPage(List<SubmissionRow> rows, int total, int page, int size,
             Map<String, Long> summary, Instant deadline, boolean editable, String readOnlyReason) {
+        // Dựng trang nộp bài từ caller chưa cung cấp quyền chỉnh sửa và phiên bản phân phối.
         public SubmissionPage(List<SubmissionRow> rows, int total, int page, int size,
                 Map<String, Long> summary, Instant deadline) {
             this(rows, total, page, size, summary, deadline, true, null);
@@ -54,6 +56,7 @@ public final class GradingViews {
             String activityState, List<Evaluation> members, List<MemberActivity> memberActivities,
             List<GroupSectionAuthor> sectionAuthors, boolean current, UUID groupEvaluationId,
             boolean editable, String readOnlyReason) {
+        // Giữ quyền chỉnh sửa do caller truyền vào, để trống lý do chỉ đọc.
         public EvaluationDetail(Evaluation evaluation, DocumentModel document,
                 List<RubricView> rubrics, List<UUID> navigationIds, ActivitySummary activity,
                 String activityState, List<Evaluation> members, List<MemberActivity> memberActivities,
@@ -63,6 +66,7 @@ public final class GradingViews {
                     memberActivities, sectionAuthors, current, groupEvaluationId, editable, null);
         }
 
+        // Tạo phản hồi tương thích với caller chưa truyền quyền chỉnh sửa, mặc định là được sửa.
         public EvaluationDetail(Evaluation evaluation, DocumentModel document,
                 List<RubricView> rubrics, List<UUID> navigationIds, ActivitySummary activity,
                 String activityState, List<Evaluation> members, List<MemberActivity> memberActivities,

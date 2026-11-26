@@ -14,6 +14,7 @@ import { buildEvaluationHref } from "../model/navigation";
 import { GradebookExportDialog } from "./GradebookExportDialog";
 import { msg } from "@/i18n/msg";
 
+// Hiện sổ điểm dạng hàng sinh viên, cột bài tập với bộ lọc lấy từ URL.
 export function GradebookMatrix({ classId, headerActions }: { classId: string; headerActions?: HTMLElement | null }) {
   const params = useSearchParams();
   const [assignmentId, setAssignmentId] = useUrlState<string>("matrixAssignment", "");
@@ -25,6 +26,7 @@ export function GradebookMatrix({ classId, headerActions }: { classId: string; h
     const timer = setTimeout(() => setSearch(query.trim()), 300);
     return () => clearTimeout(timer);
   }, [query]);
+  // Tải trang sổ điểm phù hợp bộ lọc hiện hành của bảng ma trận.
   const load = useCallback(() => gradingApi.loadGradebook(classId, search, page), [classId, search, page]);
   const resource = useResource(load);
   const [kept, setKept] = useState<GradebookPage | null>(null);

@@ -1,5 +1,13 @@
 # AI-DLC State Tracking
 
+## U03: Test pipeline email lỗi chập chờn trên PR #140 · 2026-11-26
+
+Người dùng: "giúp tôi check lại pr đang lỗi khi lên main".
+
+- [x] Nguyên nhân: `JobDispatcher` dùng pool 1 luồng + `SynchronousQueue`; `dispatch` gọi liên tiếp có thể rơi vào lúc luồng vừa xong chưa rảnh → `RejectedExecutionException` (backpressure có chủ đích). Cùng SHA `923f7ff4`, run push đạt còn run pull_request lỗi.
+- [x] `RequirementsCoverageIntegrationTest`: thêm `dispatchWhenWorkerFree` (Awaitility bỏ qua rejection, giống `JobDispatcherTest`) cho 3 lần gọi `dispatch`. Không đổi mã chạy thật.
+- [ ] Biên dịch đạt; chưa chạy được integration test ở máy local vì Docker không chạy.
+
 ## U01: Chủ nhiệm môn đăng nhập vào /manager · 2026-11-25
 
 Người dùng: "lúc đăng nhập vào subject manager tôi nghĩ nên chuyển đến trang /manager chứ k hải trang lớp như teacher".
@@ -1599,3 +1607,15 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 - [x] Xác nhận phạm vi đã được duyệt và tìm nơi tham chiếu các file wrapper.
 - [x] Xóa hai wrapper và ca test đọc chúng.
 - [x] Maven package đạt 109 test được chọn. JAR chứa đủ hai workflow soạn Assignment và chấm rubric.
+
+## 2026-11-26 — U07 nguồn AI của chat sửa đề
+
+- [x] Xác định popup luôn mở vì chat yêu cầu xác nhận mỗi lần từ commit f8b4523e. Kiểm tra từ chối đề xuất trống sau khi gộp và chuẩn hóa, giữ kiểm tra khi áp dụng.
+- [x] Gửi dùng nguồn mặc định khả dụng, đổi nguồn cho lần tiếp theo bằng nút cạnh đính kèm. Bộ chọn tô lựa chọn hiện tại và ẩn hai ghi chú của chat. Khi cần chọn thủ công, vẫn hiện thông tin bên chịu phí, hạn mức và lý do nguồn bị khóa.
+- [x] 104 kiểm thử frontend, 11 kiểm thử backend, TypeScript và lint phạm vi đạt. Chrome desktop và 390 px với API giả lập đạt. [Kế hoạch và kết quả](construction/plans/code-generation-plan/2026-11-26-u07-revision-default-source.md).
+
+## 2026-11-26 — U07 giới hạn yêu cầu và mã lỗi AI
+
+- [x] Tạo và sửa đề nhận tối đa 10.000 ký tự. Giao diện giữ phần dán vượt ngưỡng, hiển thị số ký tự và chặn gửi cho tới khi người dùng rút ngắn.
+- [x] Tạo đề xin 12.000 token đầu ra cho yêu cầu trên 4.000 ký tự. Nguồn AI vẫn áp dụng trần của provider. Chấm AI tiếp tục dùng tối đa 30 mục rubric và 8.192 token trả lời. API trường dùng chung quota với tạo đề.
+- [x] Thêm mã lỗi kết nối, timeout, xác thực, hạn mức và đầu ra. 238 kiểm thử backend, 409 frontend, TypeScript, lint phạm vi và Chrome với API giả lập đạt. [Kế hoạch và kết quả](construction/plans/code-generation-plan/2026-11-26-u07-ai-request-limits.md).

@@ -17,7 +17,9 @@ export function buildGradebookHref(classId: string, pick?: { assignment?: string
   return `/teaching/classes/${encodeURIComponent(classId)}?${params}`;
 }
 
+// Kết hợp bài đang mở với số bài nộp để hiển thị tiến độ lớp.
 export function ClassProgressSection({ classId }: { classId: string; layout?: "standalone" | "overview" }) {
+  // Tải danh sách bài đang mở và tiến độ lớp song song để ghép theo bài.
   const load = useCallback(async () => {
     const [assignments, progress] = await Promise.all([
       assignmentsApi.listForClass(classId, { status: ["OPEN"] }),
