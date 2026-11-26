@@ -23,8 +23,8 @@
       "digest": "sha256:7f7d30b7fdd09467bac58198a1f166dd69789d348d4fe859cccb20e0cf287fbe"
     },
     {
-      "reference": "nginx:1.28-alpine",
-      "digest": "sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236"
+      "reference": "nginx:1.30-alpine",
+      "digest": "sha256:8eb04fe3b385090e9aa02961f77398ad09b6bf33ab07f6669a5bb7acce22c0d3"
     },
     {
       "reference": "rabbitmq:4.1-management-alpine",
