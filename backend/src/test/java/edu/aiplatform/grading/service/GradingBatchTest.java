@@ -42,9 +42,9 @@ class GradingBatchTest {
         var evaluation = new Evaluation();
         evaluation.version = 1;
         if (publish) {
-            when(gradingService.publishEvaluation(any(), any())).thenReturn(evaluation);
+            when(gradingService.publishEvaluation(any(), any(), any())).thenReturn(evaluation);
         } else {
-            when(gradingService.finalizeEvaluation(any(), any())).thenReturn(evaluation);
+            when(gradingService.finalizeEvaluation(any(), any(), any())).thenReturn(evaluation);
         }
         var items = java.util.stream.IntStream.range(0, size)
                 .mapToObj(index -> new ItemVersion(UUID.randomUUID(), 0)).toList();
@@ -72,8 +72,8 @@ class GradingBatchTest {
         var second = new ItemVersion(b, 4);
         var e = new Evaluation();
         e.version = 3;
-        when(grading.finalizeEvaluation(actor, first)).thenReturn(e);
-        when(grading.finalizeEvaluation(actor, second)).thenThrow(ApiException.createConflict("GRADE_VERSION_CONFLICT", "Reload"));
+        when(grading.finalizeEvaluation(eq(actor), eq(first), any())).thenReturn(e);
+        when(grading.finalizeEvaluation(eq(actor), eq(second), any())).thenThrow(ApiException.createConflict("GRADE_VERSION_CONFLICT", "Reload"));
         var result = new GradingBatchService(grading, manager).executeBatch(actor, new Batch(List.of(first, second, first)),
                 false);
         assertThat(result.items()).extracting(v -> v.outcome()).containsExactly("SUCCESS", "FAILED", "SKIPPED");
@@ -81,6 +81,6 @@ class GradingBatchTest {
                 argThat(d -> d.getPropagationBehavior() == TransactionDefinition.PROPAGATION_REQUIRES_NEW));
         verify(manager).commit(any());
         verify(manager).rollback(any());
-        verify(grading, times(1)).finalizeEvaluation(actor, first);
+        verify(grading, times(1)).finalizeEvaluation(eq(actor), eq(first), any());
     }
 }

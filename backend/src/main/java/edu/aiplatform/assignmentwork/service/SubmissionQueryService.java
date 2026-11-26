@@ -88,6 +88,43 @@ public class SubmissionQueryService implements ISubmissionQuery {
         return result;
     }
 
+    /** Lượt nộp cuối của sinh viên khi bài được chấm điểm; cùng quy tắc với {@link #summarizeSubmissions}. */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UUID> findGradedAttemptId(UUID assignmentId, UUID classId, UUID accountId) {
+        GradingMode mode = assignments.loadAssignment(assignmentId).map(AssignmentView::gradingMode).orElse(GradingMode.GRADED);
+        return findGradedAttemptId(assignmentId, mode, classId, accountId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UUID> findGradedAttemptId(UUID assignmentId, GradingMode mode, UUID classId, UUID accountId) {
+        if (mode != GradingMode.GRADED) {
+            return Optional.empty();
+        }
+        return attempts.listStatusesOfAccount(classId, assignmentId, accountId).stream()
+                .filter(a -> a.status() == AttemptStatus.SUBMITTED)
+                .max(Comparator.comparingInt(AttemptStatusRow::attemptNo)).map(AttemptStatusRow::id);
+    }
+
+    /** Một truy vấn trạng thái lượt cho cả lớp; không cần danh sách lớp vì sinh viên chưa nộp không có lượt được chấm. */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, UUID> findGradedAttemptIds(UUID assignmentId, GradingMode mode, UUID classId) {
+        if (mode != GradingMode.GRADED) {
+            return Map.of();
+        }
+        Map<UUID, AttemptStatusRow> lastSubmitted = new HashMap<>();
+        for (AttemptStatusRow row : attempts.listStatusesOfClass(classId, List.of(assignmentId))) {
+            if (row.status() == AttemptStatus.SUBMITTED) {
+                lastSubmitted.merge(row.accountId(), row, (a, b) -> a.attemptNo() >= b.attemptNo() ? a : b);
+            }
+        }
+        Map<UUID, UUID> result = new HashMap<>();
+        lastSubmitted.forEach((account, row) -> result.put(account, row.id()));
+        return result;
+    }
+
     /** Một dòng cho mỗi sinh viên đang học, cộng người còn lượt làm dù đã rời lớp. */
     private static List<StudentSubmissionStatus> summarizeSubmissions(List<AttemptStatusRow> rows, List<UUID> roster,
                                                                      GradingMode mode) {

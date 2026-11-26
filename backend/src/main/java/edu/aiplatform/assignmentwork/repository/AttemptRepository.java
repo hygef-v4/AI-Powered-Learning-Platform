@@ -136,6 +136,16 @@ public class AttemptRepository {
                 .list();
     }
 
+    /** Trạng thái các lượt của một sinh viên trong một bài của lớp (kiểm lượt được chấm, TC-PERF-011). */
+    public List<AttemptStatusRow> listStatusesOfAccount(UUID classId, UUID assignmentId, UUID accountId) {
+        return jdbc.sql("select id, assignment_id, account_id, attempt_no, status, late, submitted_at "
+                        + "from assignment_attempts where class_id = :classId and assignment_id = :assignmentId "
+                        + "and account_id = :accountId order by attempt_no")
+                .param("classId", classId).param("assignmentId", assignmentId).param("accountId", accountId)
+                .query(AttemptRepository::mapStatusRow)
+                .list();
+    }
+
     private static AttemptStatusRow mapStatusRow(ResultSet rs, int row) throws SQLException {
         return new AttemptStatusRow(rs.getObject("id", UUID.class), rs.getObject("assignment_id", UUID.class),
                 rs.getObject("account_id", UUID.class), rs.getInt("attempt_no"),

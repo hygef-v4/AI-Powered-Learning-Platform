@@ -200,6 +200,13 @@ final class WorkFixtures {
                             a.status(), a.late(), a.submittedAt()))
                     .toList();
         });
+        when(attempts.listStatusesOfAccount(any(), any(), any())).thenAnswer(i -> store.values().stream()
+                .filter(a -> a.classId().equals(i.getArgument(0)) && a.assignmentId().equals(i.getArgument(1))
+                        && a.accountId().equals(i.getArgument(2)))
+                .sorted(Comparator.comparingInt(AssignmentAttempt::attemptNo))
+                .map(a -> new AttemptRepository.AttemptStatusRow(a.id(), a.assignmentId(), a.accountId(), a.attemptNo(),
+                        a.status(), a.late(), a.submittedAt()))
+                .toList());
         when(attempts.listInProgress(any())).thenAnswer(i -> store.values().stream()
                 .filter(a -> a.assignmentId().equals(i.getArgument(0)) && a.hasInProgressStatus()).map(AssignmentAttempt::id).toList());
         when(attempts.listOverdue(any(), anyInt())).thenAnswer(i -> store.values().stream()
