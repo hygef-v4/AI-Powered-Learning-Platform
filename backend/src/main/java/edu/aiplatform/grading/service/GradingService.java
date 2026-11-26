@@ -78,14 +78,55 @@ public class GradingService {
      * Validates teacher rights, locks the evaluation, checks version concurrency, and verifies attempt recency.
      */
     public Evaluation requireCurrent(Actor actor, UUID id, long version) {
+        return requireCurrent(actor, id, version, BatchChecks.single());
+    }
+
+    /**
+     * Kết quả kiểm theo lớp và theo bài đã qua trong một lượt chốt/công bố hàng loạt của cùng giáo viên. Mỗi bản chấm
+     * vẫn khóa, kiểm phiên bản và kiểm bài nộp riêng; quyền ghi điểm của lớp, việc bài đã đóng và lượt được chấm của
+     * lớp được dùng lại (TC-PERF-011). Bài đã đóng thì không còn lượt nộp mới, nên đọc lượt được chấm một lần cho cả lớp
+     * vẫn đúng. Chỉ ghi nhớ khi kiểm thành công, nên lỗi vẫn báo đúng cho từng bản chấm.
+     */
+    public static final class BatchChecks {
+        private record ClassAssignment(UUID assignmentId, UUID classId) {
+        }
+
+        private final boolean batch;
+        private final Set<UUID> writableClasses = new HashSet<>();
+        private final Map<UUID, AssignmentView> closedAssignments = new HashMap<>();
+        private final Map<ClassAssignment, Map<UUID, UUID>> gradedAttempts = new HashMap<>();
+
+        private BatchChecks(boolean batch) {
+            this.batch = batch;
+        }
+
+        /** Cho một lượt hàng loạt: lượt được chấm đọc một lần cho mỗi lớp và bài. */
+        public static BatchChecks forBatch() {
+            return new BatchChecks(true);
+        }
+
+        // Thao tác trên một bản chấm: chỉ đọc lượt của sinh viên đó.
+        static BatchChecks single() {
+            return new BatchChecks(false);
+        }
+    }
+
+    private Evaluation requireCurrent(Actor actor, UUID id, long version, BatchChecks checks) {
         var evaluation = evaluationRepository.lockById(id)
                 .orElseThrow(() -> ApiException.createNotFound("GRADE_NOT_FOUND"));
-        gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_WRITE);
-        requireClosedAssignment(evaluation.assignmentId);
+        if (!checks.writableClasses.contains(evaluation.classId)) {
+            gradingAccess.requireTeacher(actor, evaluation.classId, Actions.GRADING_WRITE);
+            checks.writableClasses.add(evaluation.classId);
+        }
+        AssignmentView assignment = checks.closedAssignments.get(evaluation.assignmentId);
+        if (assignment == null) {
+            assignment = requireClosedAssignment(evaluation.assignmentId);
+            checks.closedAssignments.put(evaluation.assignmentId, assignment);
+        }
         evaluation.checkVersion(version);
         evaluation.requireEditableGrade();
         if (evaluation.kind == EvaluationKind.ATTEMPT) {
-            requireLatestSubmission(evaluation);
+            requireLatestSubmission(evaluation, assignment, checks);
         } else if (evaluation.kind == EvaluationKind.GROUP_DOCUMENT) {
             requireGroupSubmission(evaluation);
         }
@@ -99,7 +140,7 @@ public class GradingService {
     }
 
     // Kiểm bài đã đóng trước thao tác cần chốt bài nộp và quy đổi lỗi đọc nguồn.
-    private void requireClosedAssignment(UUID assignmentId) {
+    private AssignmentView requireClosedAssignment(UUID assignmentId) {
         final AssignmentView assignment;
         try {
             assignment = assignmentQuery.loadAssignment(assignmentId).orElseThrow(() ->
@@ -112,6 +153,7 @@ public class GradingService {
         if (!isAssignmentClosed(assignment)) {
             throw ApiException.createConflict("GRADING_ASSIGNMENT_OPEN", ASSIGNMENT_OPEN_MESSAGE);
         }
+        return assignment;
     }
 
     // Lấy dữ liệu bài nhóm từ contract nguồn trước khi xử lý đánh giá nhóm.
@@ -132,17 +174,24 @@ public class GradingService {
     /**
      * Verifies submission snapshot consistency and ensures only the latest student attempt is evaluated.
      */
-    private SubmissionView requireLatestSubmission(Evaluation evaluation) {
+    private SubmissionView requireLatestSubmission(Evaluation evaluation, AssignmentView assignment,
+            BatchChecks checks) {
         var submission = submissionQuery.getSubmission(evaluation.attemptId).orElseThrow(
                 () -> ApiException.createUnavailable("SUBMISSION_UNAVAILABLE", "Submission unavailable"));
         if (!evaluation.submissionHash.equals(submission.receiptHash())
                 || !evaluation.assignmentId.equals(submission.assignmentId())
                 || !evaluation.classId.equals(submission.classId()))
             throw ApiException.createConflict("SUBMISSION_CHANGED", "Submission snapshot changed");
-        boolean latest = submissionQuery
-                .listSubmissions(evaluation.assignmentId, evaluation.classId).stream()
-                .anyMatch(row -> evaluation.accountId.equals(row.accountId())
-                        && evaluation.attemptId.equals(row.gradedAttemptId()));
+        // Một bản chấm chỉ đọc lượt của sinh viên đó; lượt hàng loạt đọc lượt được chấm của cả lớp một lần (TC-PERF-011).
+        UUID graded = checks.batch
+                ? checks.gradedAttempts.computeIfAbsent(
+                        new BatchChecks.ClassAssignment(evaluation.assignmentId, evaluation.classId),
+                        key -> submissionQuery.findGradedAttemptIds(key.assignmentId(), assignment.gradingMode(),
+                                key.classId()))
+                        .get(evaluation.accountId)
+                : submissionQuery.findGradedAttemptId(evaluation.assignmentId, assignment.gradingMode(),
+                        evaluation.classId, evaluation.accountId).orElse(null);
+        boolean latest = evaluation.attemptId.equals(graded);
         if (!latest)
             throw ApiException.createConflict("NOT_LATEST_ATTEMPT",
                     "Only the latest submitted attempt can be graded");
@@ -233,8 +282,14 @@ public class GradingService {
      */
     @Transactional
     public Evaluation finalizeEvaluation(Actor actor, ItemVersion item) {
+        return finalizeEvaluation(actor, item, BatchChecks.single());
+    }
+
+    /** Như {@link #finalizeEvaluation(Actor, ItemVersion)}, dùng lại kết quả kiểm lớp/bài của lượt hàng loạt. */
+    @Transactional
+    public Evaluation finalizeEvaluation(Actor actor, ItemVersion item, BatchChecks checks) {
         // Step 1: Lock evaluation, verify teacher permission, and ensure it is not a group member sub-record
-        var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
+        var evaluation = requireCurrent(actor, item.evaluationId(), item.version(), checks);
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.createBadRequest("GROUP_ROOT_REQUIRED", "Finalize the group document");
 
@@ -251,8 +306,14 @@ public class GradingService {
      */
     @Transactional
     public Evaluation publishEvaluation(Actor actor, ItemVersion item) {
+        return publishEvaluation(actor, item, BatchChecks.single());
+    }
+
+    /** Như {@link #publishEvaluation(Actor, ItemVersion)}, dùng lại kết quả kiểm lớp/bài của lượt hàng loạt. */
+    @Transactional
+    public Evaluation publishEvaluation(Actor actor, ItemVersion item, BatchChecks checks) {
         // Step 1: Lock evaluation and ensure publication is performed on root evaluation
-        var evaluation = requireCurrent(actor, item.evaluationId(), item.version());
+        var evaluation = requireCurrent(actor, item.evaluationId(), item.version(), checks);
         if (evaluation.kind == EvaluationKind.MEMBER)
             throw ApiException.createBadRequest("GROUP_ROOT_REQUIRED", "Publish the group document");
 

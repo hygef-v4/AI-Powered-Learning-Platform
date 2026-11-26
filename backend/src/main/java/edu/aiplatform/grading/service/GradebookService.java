@@ -92,17 +92,16 @@ public class GradebookService {
         SubmissionReviewService.validatePage(page, size);
         gradingAccess.requireTeacher(actor, classId, Actions.GRADEBOOK_READ);
 
-        // Step 2: Load complete gradebook data (columns, students, latest evaluations)
-        var data = loadGradebook(classId, null);
+        // Step 2: Load gradebook columns and filter active students by optional search query (name or email)
+        var columns = listAssignmentColumns(requireClassRef(classId));
+        var students = resolveStudents(classAccess.listActiveStudents(classId)).stream()
+                .filter(student -> matchesQuery(student, query)).toList();
 
-        // Step 3: Filter active students by optional search query (name or email)
-        var students = data.students().stream().filter(student -> matchesQuery(student, query))
-                .toList();
-
-        // Step 4: Apply pagination and map student grades for each assignment column
-        var rows = students.stream().skip((long) (page - 1) * size).limit(size)
-                .map(student -> mapGradebookRow(student, data)).toList();
-        return new GradebookPage(rows, data.columns(), students.size(), page, size);
+        // Step 3: Apply pagination first, then load grades only for students on this page (TC-PERF-009)
+        var pageStudents = students.stream().skip((long) (page - 1) * size).limit(size).toList();
+        var data = assembleGradebook(classId, columns, pageStudents);
+        var rows = pageStudents.stream().map(student -> mapGradebookRow(student, data)).toList();
+        return new GradebookPage(rows, columns, students.size(), page, size);
     }
 
     /** Returns the gradebook row for one active student in the class. */
@@ -127,16 +126,42 @@ public class GradebookService {
     /** Assembles assignment columns, active students, and evaluations for current submissions. */
     private GradebookData loadGradebook(UUID classId, UUID accountId) {
         // Step 1: Verify course class exists and load gradable assignment columns
-        var courseClass = classAccess.getClassRef(classId)
-                .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
-        var columns = listAssignmentColumns(courseClass);
+        var columns = listAssignmentColumns(requireClassRef(classId));
 
-        // Step 2: Index current submission progress (individual and group submissions)
+        // Step 2: Resolve active student profiles and contact information
+        var students = resolveStudents(classAccess.listActiveStudents(classId).stream()
+                .filter(id -> accountId == null || id.equals(accountId)).toList());
+        return assembleGradebook(classId, columns, students);
+    }
+
+    private ClassRef requireClassRef(UUID classId) {
+        return classAccess.getClassRef(classId)
+                .orElseThrow(() -> ApiException.createNotFound("CLASS_NOT_FOUND"));
+    }
+
+    // Tên hiển thị, email và MSSV của sinh viên; thiếu hồ sơ thì hiện "Unavailable".
+    private List<Person> resolveStudents(List<UUID> studentIds) {
+        var contacts = accountLookup.getContacts(studentIds);
+        return studentIds.stream().map(id -> {
+            var contact = contacts.get(id);
+            return new Person(id, contact == null ? "Unavailable" : contact.displayName(),
+                    contact == null ? "" : contact.email(), contact == null ? null : contact.studentCode());
+        }).toList();
+    }
+
+    /** Matches current evaluations and submission progress for the given students only. */
+    private GradebookData assembleGradebook(UUID classId, List<AssignmentColumn> columns,
+            List<Person> students) {
+        // Step 1: Index current submission progress (individual and group submissions)
         var progress = loadSubmissionProgress(classId, columns);
         Map<GradeKey, Evaluation> current = new HashMap<>();
 
-        // Step 3: Match evaluations against latest student attempts or group documents
-        for (var evaluation : evaluationRepository.findForClass(classId)) {
+        // Step 2: Match evaluations against latest student attempts or group documents
+        // Chỉ đọc các trường bảng điểm của sinh viên cần hiện, không parse cả tài liệu chấm (TC-PERF-009).
+        var studentIds = students.stream().map(Person::accountId).toList();
+        var evaluations = studentIds.isEmpty() ? List.<Evaluation>of()
+                : evaluationRepository.listGradebookEvaluations(classId, studentIds);
+        for (var evaluation : evaluations) {
             if (evaluation.kind == EvaluationKind.GROUP_DOCUMENT
                     || evaluation.state == EvaluationStatus.SUPERSEDED)
                 continue;
@@ -149,16 +174,6 @@ public class GradebookService {
                     current.put(key, evaluation);
             }
         }
-
-        // Step 4: Resolve active student profiles and contact information
-        var studentIds = classAccess.listActiveStudents(classId).stream()
-                .filter(id -> accountId == null || id.equals(accountId)).toList();
-        var contacts = accountLookup.getContacts(studentIds);
-        var students = studentIds.stream().map(id -> {
-            var contact = contacts.get(id);
-            return new Person(id, contact == null ? "Unavailable" : contact.displayName(),
-                    contact == null ? "" : contact.email(), contact == null ? null : contact.studentCode());
-        }).toList();
         return new GradebookData(columns, students, current, progress);
     }
 
@@ -208,10 +223,18 @@ public class GradebookService {
                 for (var status : provider.listGroupSubmissions(column.id(), classId)) {
                     groupProgress.put(status.groupDocumentId(), status);
                 }
-            } else {
-                for (var status : submissionQuery.listSubmissions(column.id(), classId))
-                    individual.putIfAbsent(new GradeKey(column.id(), status.accountId()), status);
             }
+        }
+        // Bài cá nhân: một lần đọc cho cả lớp thay vì một lần mỗi cột (TC-PERF-009).
+        var individualColumns = columns.stream()
+                .filter(column -> column.submissionMode() != SubmissionMode.GROUP)
+                .map(AssignmentColumn::id).toList();
+        if (individualColumns.isEmpty())
+            return new SubmissionProgress(individual, groupProgress);
+        var submissions = submissionQuery.listSubmissionsByAssignment(individualColumns, classId);
+        for (var columnId : individualColumns) {
+            for (var status : submissions.getOrDefault(columnId, List.of()))
+                individual.putIfAbsent(new GradeKey(columnId, status.accountId()), status);
         }
         return new SubmissionProgress(individual, groupProgress);
     }

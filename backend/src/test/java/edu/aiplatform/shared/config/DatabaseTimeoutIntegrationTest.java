@@ -49,7 +49,9 @@ class DatabaseTimeoutIntegrationTest {
                     assertThat(jdbc.queryForObject("show statement_timeout", String.class)).isEqualTo("15s");
                     assertThat(jdbc.queryForObject("show lock_timeout", String.class)).isEqualTo("2s");
                     var pool = (HikariDataSource) source;
-                    assertThat(pool.getConnectionTimeout()).isLessThanOrEqualTo(3000);
+                    // Chờ pool vẫn có giới hạn và ngắn hơn statement_timeout; nâng 3 s → 10 s để request xếp hàng khi
+                    // nhiều người cùng lưu bài thay vì lỗi 5xx (TC-PERF-004/005, KAN-244, quyết định 2026-11-26).
+                    assertThat(pool.getConnectionTimeout()).isEqualTo(10_000);
                     jdbc.execute("create table nfr_lock(id int primary key, value int not null)");
                     jdbc.update("insert into nfr_lock values(1, 0)");
                     TransactionTemplate tx = new TransactionTemplate(new DataSourceTransactionManager(source));

@@ -47,7 +47,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 | NFR-U03-42 | Worker là container riêng, cùng mã nguồn backend với profile `worker`. | Thiết kế |
 | NFR-U03-43 | Mỗi queue có luồng xử lý riêng; gọi AI hoặc backup chậm không chặn email và việc nội bộ. | Thiết kế |
 | NFR-U03-44 | Thử lại tối đa 5 lượt với backoff 30 giây, 1, 2, 4, 8 phút qua các queue `jobs.retry.*`. | BR-U03-56 |
-| NFR-U03-45 | Sweeper và scanner chạy mỗi phút trong worker; chỉ có một worker nên không cần khóa phân tán. | BR-U03-58, 60 |
+| NFR-U03-45 | Sweeper chạy mỗi phút, scanner việc hẹn giờ mỗi 15 giây (`U03_SCAN_DELAY_MS`) trong worker; chỉ có một worker nên không cần khóa phân tán. | BR-U03-58, 60 |
 | NFR-U03-46 | Mỗi loại việc có timeout do unit sở hữu khai báo, mặc định 60 giây; quá hạn coi như lỗi tạm. | REL-003 |
 | NFR-U03-47 | Queue durable, message persistent; RabbitMQ khởi động lại không mất message đang chờ. | REL-003 |
 | NFR-U03-48 | Ack thủ công, chỉ sau khi handler đã cập nhật PostgreSQL. | BR-U03-53 |

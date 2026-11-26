@@ -942,7 +942,7 @@
         "connectionCheck": "Kiểm tra kết nối",
         "apiKeyEncryptionIsNot": "Hệ thống chưa bật mã hóa khóa API, hãy báo Quản trị viên.",
         "theDataWasJustChanged": "Dữ liệu vừa được thay đổi ở nơi khác, hãy tải lại.",
-        "youAlreadyHave5Active": "Bạn đã có 5 agent còn hiệu lực; hãy thu hồi bớt.",
+        "youAlreadyHave5Active": "Bạn chỉ được có tối đa 5 agent còn hiệu lực. Hãy thu hồi một agent để kết nối agent mới.",
         "passed": "Đạt",
         "wrongKey": "Sai khóa",
         "tokenLimit": "Giới hạn token",
@@ -2360,6 +2360,7 @@
         "viewGrade": "Xem điểm",
         "select": "Chọn {name}",
         "late": "Trễ",
+        "leftClass": "Đã rời lớp",
         "noMatchingSubmissions": "Không có bài phù hợp."
       },
       "GradebookExportDialog": {
@@ -4793,7 +4794,17 @@
         "announcementEmailInvalid": "Chỉ thông báo quan trọng mới gửi được email.",
         "tooManyRequests": "Quá nhiều yêu cầu. Đợi một lát rồi thử lại.",
         "systemBusy": "Hệ thống đang bận, vui lòng thử lại sau.",
-        "requestFailed": "Không thực hiện được yêu cầu. Vui lòng thử lại."
+        "requestFailed": "Không thực hiện được yêu cầu. Vui lòng thử lại.",
+        "aiTooManyTasks": "Bạn đang có 3 yêu cầu AI chưa xong; chờ hoặc hủy bớt rồi thử lại.",
+        "aiNotCancellable": "Yêu cầu đã được gửi tới nhà cung cấp AI, không hủy được.",
+        "aiCancelled": "Bạn đã hủy yêu cầu này.",
+        "aiTimedOut": "Chờ quá 30 phút, đã hủy.",
+        "aiConnectionRevoked": "Kết nối AI đã bị tắt hoặc thu hồi.",
+        "aiInvalidResult": "Kết quả AI không đúng định dạng yêu cầu.",
+        "aiNoResult": "AI không trả kết quả.",
+        "aiNotReady": "AI chưa sẵn sàng. Hãy kiểm tra kết nối AI.",
+        "aiUnreadable": "AI trả nội dung không đọc được, hãy thử lại.",
+        "submissionChanged": "Bài nộp đã thay đổi."
       }
     },
     "dateTime": {

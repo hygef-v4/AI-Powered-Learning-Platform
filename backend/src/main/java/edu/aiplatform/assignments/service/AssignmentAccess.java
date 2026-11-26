@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 /**
  * Quyền U07 (BR-U07-02, 70): bài của lớp do giảng viên chính của lớp soạn ({@code ASSIGNMENT_CLASS_MANAGE}); bài
  * của môn do Chủ nhiệm môn soạn ({@code ASSIGNMENT_SUBJECT_MANAGE}); giảng viên các lớp của môn chỉ xem bài của môn
- * đã phát hành. Ngoài phạm vi trả 404 kèm audit {@code ACCESS_DENIED}; U01, U04, U05 lỗi thì từ chối (fail closed).
+ * đã phát hành. Ngoài phạm vi trả 404, không ghi audit (BR-U02-10); U01, U04, U05 lỗi thì từ chối (fail closed).
  */
 @Component
 class AssignmentAccess {

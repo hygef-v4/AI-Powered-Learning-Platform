@@ -200,6 +200,29 @@ it("còn phần chưa lưu thì trình duyệt hỏi lại khi rời trang", asy
   expect(leave()).toBe(true);
 });
 
+it("đóng tab hoặc sang địa chỉ khác thì gửi ngay mục chưa lưu bằng keepalive (TC-PERF-019)", async () => {
+  const calls = backend({ current: workspace({ sections: [section("s2", ME), section("s3", OTHER)] }) });
+  render(<GroupSectionEditorPage documentId="doc1" focusPart="s2" />);
+
+  fireEvent.click(await screen.findByTestId("write-part-s2"));
+  const field = screen.getByLabelText("Đoạn văn");
+  field.textContent = "Đoạn chưa lưu";
+  fireEvent.input(field);
+  await waitFor(() => expect(screen.getByLabelText("Đoạn văn").textContent).toBe("Đoạn chưa lưu"));
+  expect(calls.some((c) => c.url.endsWith("/draft"))).toBe(false);
+
+  act(() => {
+    window.dispatchEvent(new Event("pagehide"));
+  });
+
+  const saves = vi.mocked(fetch).mock.calls.filter(([url]) => String(url).endsWith("/sections/s2/draft"));
+  expect(saves).toHaveLength(1);
+  expect(saves[0]![1]).toMatchObject({ method: "PUT", keepalive: true });
+  const body = JSON.parse(String(saves[0]![1]!.body)) as { version: number; blocks: DocumentBlock[] };
+  expect(body.version).toBe(2);
+  expect(JSON.stringify(body.blocks)).toContain("Đoạn chưa lưu");
+});
+
 it("bấm Xong thì đăng mục; không còn mục nào để soạn thì về tài liệu nhóm", async () => {
   const calls = backend({ current: workspace() });
   render(<GroupSectionEditorPage documentId="doc1" focusPart="s2" />);

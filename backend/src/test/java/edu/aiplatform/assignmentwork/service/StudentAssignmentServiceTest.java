@@ -147,4 +147,43 @@ class StudentAssignmentServiceTest {
         assertThat(query.getSubmission(working.id())).isEmpty();
         assertThat(query.getSubmission(last.id())).isPresent();
     }
+
+    @Test
+    void batchedSubmissionStatusesMatchPerAssignmentQueryInInputOrder() {
+        SubmissionQueryService query = new SubmissionQueryService(f.attempts, f.assignments, f.classes, f.groupWork);
+        UUID absent = UUID.randomUUID(), empty = UUID.randomUUID();
+        when(f.classes.listActiveStudents(f.classId)).thenReturn(List.of(f.student.accountId(), absent));
+        when(f.assignments.listForClass(f.classId)).thenReturn(List.of(f.view));
+        f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        f.attempt(2, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
+        var batched = query.listSubmissionsByAssignment(List.of(empty, f.assignmentId), f.classId);
+        assertThat(batched.keySet()).containsExactly(empty, f.assignmentId);
+        assertThat(batched.get(f.assignmentId)).isEqualTo(query.listSubmissions(f.assignmentId, f.classId));
+        assertThat(batched.get(empty)).isEqualTo(query.listSubmissions(empty, f.classId));
+        assertThat(query.listSubmissionsByAssignment(List.of(), f.classId)).isEmpty();
+    }
+
+    @Test
+    void gradedAttemptOfOneStudentMatchesTheClassListing() {
+        SubmissionQueryService query = new SubmissionQueryService(f.attempts, f.assignments, f.classes, f.groupWork);
+        UUID absent = UUID.randomUUID();
+        when(f.classes.listActiveStudents(f.classId)).thenReturn(List.of(f.student.accountId(), absent));
+        assertThat(query.findGradedAttemptId(f.assignmentId, f.classId, f.student.accountId())).isEmpty();
+        f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        AssignmentAttempt last = f.attempt(2, AttemptStatus.SUBMITTED, NOW, true);
+        f.attempt(3, AttemptStatus.IN_PROGRESS, NOW.plus(Duration.ofDays(1)), false);
+        assertThat(query.findGradedAttemptId(f.assignmentId, f.classId, f.student.accountId())).contains(last.id());
+        for (UUID account : List.of(f.student.accountId(), absent)) {
+            UUID expected = query.listSubmissions(f.assignmentId, f.classId).stream()
+                    .filter(s -> s.accountId().equals(account)).findFirst().orElseThrow().gradedAttemptId();
+            assertThat(query.findGradedAttemptId(f.assignmentId, f.classId, account).orElse(null)).isEqualTo(expected);
+        }
+        // Đọc gộp cả lớp cho lượt chốt/công bố hàng loạt khớp từng dòng listSubmissions; bài không chấm thì rỗng.
+        java.util.Map<UUID, UUID> expectedAll = new java.util.HashMap<>();
+        query.listSubmissions(f.assignmentId, f.classId).stream().filter(s -> s.gradedAttemptId() != null)
+                .forEach(s -> expectedAll.put(s.accountId(), s.gradedAttemptId()));
+        assertThat(query.findGradedAttemptIds(f.assignmentId, GradingMode.GRADED, f.classId))
+                .isEqualTo(expectedAll).containsEntry(f.student.accountId(), last.id()).doesNotContainKey(absent);
+        assertThat(query.findGradedAttemptIds(f.assignmentId, GradingMode.PRACTICE, f.classId)).isEmpty();
+    }
 }

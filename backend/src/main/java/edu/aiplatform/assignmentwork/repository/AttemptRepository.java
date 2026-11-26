@@ -118,6 +118,40 @@ public class AttemptRepository {
                 .param("assignmentId", assignmentId).param("classId", classId).query(this::map).list();
     }
 
+    /** Trạng thái nộp của một lượt, không đọc snapshot và nội dung bài. */
+    public record AttemptStatusRow(UUID id, UUID assignmentId, UUID accountId, int attemptNo, AttemptStatus status,
+                                   boolean late, Instant submittedAt) {
+    }
+
+    /** Trạng thái lượt làm của nhiều bài trong một lớp bằng một truy vấn (bảng điểm, TC-PERF-009). */
+    public List<AttemptStatusRow> listStatusesOfClass(UUID classId, Collection<UUID> assignmentIds) {
+        if (assignmentIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.sql("select id, assignment_id, account_id, attempt_no, status, late, submitted_at "
+                        + "from assignment_attempts where class_id = :classId and assignment_id in (:assignmentIds) "
+                        + "order by assignment_id, account_id, attempt_no")
+                .param("classId", classId).param("assignmentIds", assignmentIds)
+                .query(AttemptRepository::mapStatusRow)
+                .list();
+    }
+
+    /** Trạng thái các lượt của một sinh viên trong một bài của lớp (kiểm lượt được chấm, TC-PERF-011). */
+    public List<AttemptStatusRow> listStatusesOfAccount(UUID classId, UUID assignmentId, UUID accountId) {
+        return jdbc.sql("select id, assignment_id, account_id, attempt_no, status, late, submitted_at "
+                        + "from assignment_attempts where class_id = :classId and assignment_id = :assignmentId "
+                        + "and account_id = :accountId order by attempt_no")
+                .param("classId", classId).param("assignmentId", assignmentId).param("accountId", accountId)
+                .query(AttemptRepository::mapStatusRow)
+                .list();
+    }
+
+    private static AttemptStatusRow mapStatusRow(ResultSet rs, int row) throws SQLException {
+        return new AttemptStatusRow(rs.getObject("id", UUID.class), rs.getObject("assignment_id", UUID.class),
+                rs.getObject("account_id", UUID.class), rs.getInt("attempt_no"),
+                AttemptStatus.valueOf(rs.getString("status")), rs.getBoolean("late"), readInstant(rs, "submitted_at"));
+    }
+
     public List<UUID> listInProgress(UUID assignmentId) {
         return jdbc.sql("select id from assignment_attempts where assignment_id = :assignmentId "
                         + "and status = 'IN_PROGRESS'")

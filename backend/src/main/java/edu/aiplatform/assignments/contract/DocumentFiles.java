@@ -80,10 +80,15 @@ public final class DocumentFiles {
      */
     public static DocumentModel resolveFiles(DocumentModel previous, DocumentModel incoming,
                                              Function<String, String> attach) {
+        // Một lượt qua bản đã lưu; cùng kết quả với fileId(previous, id) (block ảnh đầu tiên có id đó) nhưng không quét lại
+        // cả tài liệu cho từng block (2.000 khối là 4 triệu bước mỗi lần lưu, TC-PERF-004).
         Map<UUID, String> known = new HashMap<>();
         if (previous != null) {
             for (DocumentBlock block : previous.blocks()) {
-                fileId(previous, block.id()).ifPresent(id -> known.put(block.id(), id));
+                if (block.id() != null && block.type() == BlockType.IMAGE && block.content() != null
+                        && block.content().path(FILE_ID).isTextual()) {
+                    known.putIfAbsent(block.id(), block.content().path(FILE_ID).asText());
+                }
             }
         }
         List<DocumentBlock> blocks = new ArrayList<>(incoming.blocks().size());

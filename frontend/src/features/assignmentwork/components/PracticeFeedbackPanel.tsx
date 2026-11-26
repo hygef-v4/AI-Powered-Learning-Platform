@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { describeAiFailure } from "@/shared/api/errorMessages";
 import type { DocumentComment, DocumentPart } from "@/shared/document";
 import { Alert, Button, Card, Icon, Pill, cx } from "@/shared/ui";
 import { workApi } from "../api";
@@ -184,7 +185,7 @@ export function PracticeOverallCard({ state }: { state: PracticeFeedbackState })
     } else if (state.busy) {
       status = <p role="status" className="text-[13px] text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.theAiIsWritingFeedback")}</p>;
     } else if (item?.status === "FAILED") {
-      status = <Alert tone="danger">{item.safeError ?? msg("assignmentwork.components.PracticeFeedbackPanel.noFeedbackReceived")}</Alert>;
+      status = <Alert tone="danger">{describeAiFailure(item.safeError, msg("assignmentwork.components.PracticeFeedbackPanel.noFeedbackReceived"))}</Alert>;
     } else if (state.loaded) {
       status = <p className="text-[13px] text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.noFeedbackYet")}</p>;
     }

@@ -97,3 +97,9 @@ it("bấm cả dòng là mở trang chấm; không còn dòng đếm số sinh v
   expect(router.push).toHaveBeenCalledWith(expect.stringContaining("e12"));
   expect(screen.queryByText(/Hiển thị/)).not.toBeInTheDocument();
 });
+it("marks earlier work of a student who left the class (KAN-251)", async () => {
+  mocks.listSubmissions.mockResolvedValue({ rows: [{ ...rows[0], leftClass: true }, rows[1]], total: 2 });
+  render(<GradebookBatchControls {...props} />);
+  expect(await screen.findByText("Student 0")).toBeInTheDocument();
+  expect(screen.getAllByText("Đã rời lớp")).toHaveLength(1);
+});

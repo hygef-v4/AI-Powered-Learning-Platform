@@ -2,6 +2,7 @@ package edu.aiplatform.grading.repository;
 
 import edu.aiplatform.grading.model.Evaluation;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +22,13 @@ public interface IEvaluationRepository {
 
     /** Lists evaluations in a class. */
     List<Evaluation> findForClass(UUID classId);
+
+    /**
+     * Bản chấm còn hiệu lực của lớp cho bảng điểm: chỉ các trường bảng điểm dùng (định danh, trạng thái, điểm, nhận
+     * xét, thời điểm) của các sinh viên {@code accountIds}, không đọc cả tài liệu chấm (TC-PERF-009). Bỏ bản SUPERSEDED và
+     * bản gốc của nhóm. Chỉ để đọc.
+     */
+    List<Evaluation> listGradebookEvaluations(UUID classId, Collection<UUID> accountIds);
 
     /** Persists the evaluation and returns its stored state. */
     Evaluation saveEvaluation(Evaluation evaluation);

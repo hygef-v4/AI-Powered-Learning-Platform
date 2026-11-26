@@ -78,7 +78,7 @@ Luồng F1–F5 cho tệp, J1–J4 cho việc nền, E1 cho sự kiện thông b
 1. Với mỗi `IPendingSweeper` đã đăng ký, lấy các dòng còn chờ và cập nhật lần cuối quá 5 phút.
 2. Gửi lại `JobMessage` cho từng dòng; handler idempotent nên trùng không gây hại (BR-U03-58, 59).
 
-### J4 - Việc hẹn giờ (mỗi phút)
+### J4 - Việc hẹn giờ (mỗi 15 giây, `U03_SCAN_DELAY_MS`)
 1. Worker gọi lần lượt các `IScheduledScanner` đã đăng ký (BR-U03-60).
 2. Mỗi scanner đọc mốc thời gian trên bảng của unit mình và cập nhật có điều kiện, nên chạy lại không gây trùng.
 3. Một scanner lỗi không chặn scanner khác.
@@ -130,7 +130,7 @@ Luồng F1–F5 cho tệp, J1–J4 cho việc nền, E1 cho sự kiện thông b
 ## 6. Backup
 
 ### B1 - Lên lịch
-1. `BackupScheduleScanner` chạy mỗi phút trong worker.
+1. `BackupScheduleScanner` chạy theo nhịp quét của worker (mặc định 15 giây).
 2. Đọc `backup.enabled`, `backup.dailyAt` qua `ISettings`; tắt hoặc chưa cấu hình thì bỏ qua.
 3. Đến hoặc qua giờ chạy của hôm nay và chưa có lần chạy cho ngày đó thì thêm `backup_runs` trạng thái `CREATED` với khóa duy nhất là ngày chạy (chạy lại không tạo trùng).
 4. Trong cùng transaction, gửi việc `BACKUP_RUN` qua `IJob` (queue `jobs.backup`).

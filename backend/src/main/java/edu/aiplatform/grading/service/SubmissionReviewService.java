@@ -197,10 +197,19 @@ public class SubmissionReviewService {
                         evaluation == null ? 0 : evaluation.version));
             }
         } else {
-            Map<UUID, StudentSubmissionStatus> source = new HashMap<>();
+            Map<UUID, StudentSubmissionStatus> source = new LinkedHashMap<>();
             for (var submission : submissionQuery.listSubmissions(assignmentId, classId))
                 source.put(submission.accountId(), submission);
-            for (var sid : students) {
+            // Người đã bị gỡ khỏi lớp nhưng còn lượt làm vẫn hiện để giảng viên xem lại (BR-U05-25).
+            var enrolled = new HashSet<>(students);
+            var leftClass = source.keySet().stream().filter(id -> !enrolled.contains(id)).toList();
+            var people = new ArrayList<>(students);
+            people.addAll(leftClass);
+            if (!leftClass.isEmpty()) {
+                contacts = new HashMap<>(contacts);
+                contacts.putAll(accountLookup.getContacts(leftClass));
+            }
+            for (var sid : people) {
                 var submission = source.get(sid);
                 var evaluation = submission == null ? null
                         : evals.stream().filter(
@@ -222,7 +231,7 @@ public class SubmissionReviewService {
                         submission != null && submission.late(),
                         submission == null ? null : submission.submittedAt(),
                         submission == null ? 0 : submission.attemptCount(),
-                        evaluation == null ? 0 : evaluation.version));
+                        evaluation == null ? 0 : evaluation.version, !enrolled.contains(sid)));
             }
         }
         Map<String, Long> summary = new LinkedHashMap<>();

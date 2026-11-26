@@ -147,7 +147,7 @@ Khai báo trong code của unit sở hữu: `key`, `group`, tên hiển thị, m
 |---|---|---|---|
 | `IJobHandler` | `jobType()`, `queue()`, `handle(message)`, `onFailed(message, error)`, `timeout()` | U01, U03, U06, U12, U13, U14 | Xử lý một loại việc nền trong worker và chuyển dòng nghiệp vụ sang lỗi khi hết lượt |
 | `IPendingSweeper` | `jobType()`, `findStalePending(olderThan)` | U03, U06, U12, U13, U14 | Trả các dòng còn chờ quá 5 phút để U03 gửi lại message bị mất |
-| `IScheduledScanner` | `name()`, `scan(now)` | U03 (lịch backup), U06 (giải phóng quota giữ quá hạn), U07 (mở, đóng bài theo lịch), U08 (tự nộp khi hết giờ, dọn dữ liệu hoạt động), U12 (tự nộp bài nhóm), U14 (nhắc hạn, gửi lại email hoãn) | Việc hẹn giờ chạy mỗi phút, cập nhật idempotent |
+| `IScheduledScanner` | `name()`, `scan(now)` | U03 (lịch backup), U06 (giải phóng quota giữ quá hạn), U07 (mở, đóng bài theo lịch), U08 (tự nộp khi hết giờ, dọn dữ liệu hoạt động), U12 (tự nộp bài nhóm), U14 (nhắc hạn, gửi lại email hoãn) | Việc hẹn giờ chạy mỗi 15 giây (`U03_SCAN_DELAY_MS`), cập nhật idempotent |
 | `SettingDefinition` | khai báo `key`, nhóm, kiểu, mặc định, giới hạn | U03, U08 | Thêm mục cài đặt khóa–giá trị vào Settings |
 | `ISettingsSectionProvider` | `sectionKey()`, `title()`, `summary()` | U06 | Thêm phần cài đặt do unit khác lưu (API AI chung, quota giảng viên) vào Setting List mà U03 không phụ thuộc ngược vào U06 |
 
