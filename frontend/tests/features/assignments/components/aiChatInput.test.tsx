@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AiReviseChat } from "@/features/assignments/components/AiReviseChat";
 import { assignmentsApi } from "@/features/assignments/api";
 import * as files from "@/features/files/api";
-import { confirmAiSource, mockAiSources } from "./aiSourceFixture";
+import { mockAiSources } from "./aiSourceFixture";
 
 beforeEach(() => {
   mockAiSources();
@@ -73,14 +73,12 @@ it("keeps text and files on prepare/request failure and reuses the request ref o
   await screen.findByText("Sẵn sàng");
   fireEvent.change(input, { target: { value: "Sửa đề theo tài liệu" } });
   fireEvent.keyDown(input, { key: "Enter" });
-  await confirmAiSource();
   await waitFor(() => expect(request).toHaveBeenCalledTimes(1));
   await waitFor(() => expect(input).not.toBeDisabled());
   expect(input).toHaveValue("Sửa đề theo tài liệu");
   expect(screen.getByTestId("ai-revise-attachments")).toHaveTextContent("ref.pdf");
   expect(screen.getByRole("log")).not.toHaveTextContent("Sửa đề theo tài liệu");
   fireEvent.keyDown(input, { key: "Enter" });
-  await confirmAiSource();
   await waitFor(() => expect(request).toHaveBeenCalledTimes(2));
   expect(request.mock.calls[1]![2]).toBe(request.mock.calls[0]![2]);
 });
@@ -94,7 +92,6 @@ it("does not duplicate rapid submits or send while composing Vietnamese", async 
   expect(request).not.toHaveBeenCalled();
   fireEvent.keyDown(input, { key: "Enter" });
   fireEvent.keyDown(input, { key: "Enter" });
-  await confirmAiSource();
   await waitFor(() => expect(request).toHaveBeenCalledOnce());
   await act(async () => reject(new Error("Stop test")));
 });
@@ -104,7 +101,6 @@ it("does not lose the composer when saving before the AI request fails", async (
   const input = await open(vi.fn().mockRejectedValue(new Error("Save conflict")));
   fireEvent.change(input, { target: { value: "Giữ nội dung" } });
   fireEvent.keyDown(input, { key: "Enter" });
-  await confirmAiSource();
   await waitFor(() => expect(input).not.toBeDisabled());
   expect(input).toHaveValue("Giữ nội dung");
   expect(request).not.toHaveBeenCalled();
@@ -117,7 +113,6 @@ it("restores accepted text and reference snapshots after AI failure without call
   await screen.findByText("Sẵn sàng");
   fireEvent.change(input, { target: { value: "Dựa theo tài liệu này" } });
   fireEvent.keyDown(input, { key: "Enter" });
-  await confirmAiSource();
   const restore = await screen.findByRole("button", { name: "Khôi phục yêu cầu" });
   await waitFor(() => expect(restore).toBeEnabled());
   expect(input).toHaveValue("");
@@ -135,7 +130,6 @@ it("does not report an applied revision as unchanged when refreshing the page fa
   const input = screen.getByTestId("ai-revise-input");
   fireEvent.change(input, { target: { value: "Sửa câu hỏi" } });
   fireEvent.keyDown(input, { key: "Enter" });
-  await confirmAiSource();
   expect(await screen.findByText(/Đề đã được cập nhật nhưng chưa tải lại được/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Khôi phục yêu cầu" })).not.toBeInTheDocument();
 });
@@ -148,7 +142,6 @@ it("does not repeat or discard an apply whose response was lost", async () => {
   const input = screen.getByTestId("ai-revise-input");
   fireEvent.change(input, { target: { value: "Sửa câu hỏi" } });
   fireEvent.keyDown(input, { key: "Enter" });
-  await confirmAiSource();
   expect(await screen.findByText(/Chưa xác nhận được kết quả áp dụng/)).toBeInTheDocument();
   expect(screen.queryByRole("button", { name: "Khôi phục yêu cầu" })).not.toBeInTheDocument();
   expect(discard).not.toHaveBeenCalled();

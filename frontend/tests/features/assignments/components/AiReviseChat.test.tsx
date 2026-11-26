@@ -30,7 +30,8 @@ describe("AiReviseChat", () => {
     vi.unstubAllGlobals();
   });
 
-  it("saves first, sends the instruction as a revision and applies the result to the page", async () => {
+  it("saves first and sends with the configured default without opening the source picker", async () => {
+    mockAiSources(undefined, { preferred: "PERSONAL" });
     const request = vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue(draft("READY"));
     const apply = vi.spyOn(assignmentsApi, "applyAiDraft").mockResolvedValue({} as never);
     const prepare = vi.fn().mockResolvedValueOnce(3).mockResolvedValueOnce(4);
@@ -38,16 +39,67 @@ describe("AiReviseChat", () => {
     render(<AiReviseChat assignmentId="a1" prepare={prepare} onApplied={onApplied} />);
 
     send("Dịch đề sang tiếng Anh");
-    await confirmAiSource();
+    expect(screen.queryByRole("dialog", { name: "Chọn nguồn AI" })).not.toBeInTheDocument();
 
     expect(await screen.findByText(/Đã sửa đề theo yêu cầu/)).toBeInTheDocument();
     expect(screen.getByText("Dịch đề sang tiếng Anh")).toBeInTheDocument();
     expect(screen.getByText(/chưa có tiêu chí chấm/)).toBeInTheDocument();
-    expect(request).toHaveBeenCalledWith("a1", "Dịch đề sang tiếng Anh", expect.any(String), { source: "SHARED", provider: undefined });
+    expect(request).toHaveBeenCalledWith("a1", "Dịch đề sang tiếng Anh", expect.any(String), { source: "PERSONAL", provider: "OPENAI" });
     expect(prepare.mock.invocationCallOrder[0]).toBeLessThan(request.mock.invocationCallOrder[0]!);
     expect(apply).toHaveBeenCalledWith("a1", "d1", 4, true, true);
     expect(onApplied).toHaveBeenCalledOnce();
   });
+
+  it("switches the next request without sending, highlights the choice and resumes the default afterwards", async () => {
+    const request = vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue(draft("FAILED"));
+    render(<AiReviseChat assignmentId="a1" prepare={vi.fn().mockResolvedValue(3)} onApplied={vi.fn()} />);
+    fireEvent.click(screen.getByTestId("ai-revise-toggle"));
+    const switchSource = screen.getByRole("button", { name: "Đổi nguồn AI" });
+    fireEvent.click(switchSource);
+    const school = await screen.findByRole("radio", { name: /API của trường/ });
+    expect(school).toBeChecked();
+    expect(school).toHaveTextContent("Trường chịu chi phí");
+    expect(screen.queryByText("Chưa có ước tính token trước khi gửi.")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Kết nối AI" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("radio", { name: /API cá nhân · OpenAI/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Dùng cho lần gửi tiếp theo" }));
+    expect(request).not.toHaveBeenCalled();
+    expect(switchSource).toHaveAccessibleDescription(/OpenAI/);
+
+    fireEvent.click(switchSource);
+    expect(await screen.findByRole("radio", { name: /API cá nhân · OpenAI/ })).toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Hủy" }));
+    send("Thêm câu dùng OpenAI");
+    await waitFor(() => expect(request).toHaveBeenCalledWith("a1", "Thêm câu dùng OpenAI", expect.any(String),
+      { source: "PERSONAL", provider: "OPENAI" }));
+    await waitFor(() => expect(screen.getByTestId("ai-revise-input")).not.toBeDisabled());
+    send("Thêm câu dùng mặc định");
+    await waitFor(() => expect(request).toHaveBeenCalledWith("a1", "Thêm câu dùng mặc định", expect.any(String),
+      { source: "SHARED", provider: undefined }));
+  });
+
+  it.each([{ preferred: null }, { sharedAvailable: false }])(
+    "prompts for a source when there is no usable default (%j)", async (options) => {
+      mockAiSources(undefined, options);
+      const request = vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue(draft("FAILED"));
+      render(<AiReviseChat assignmentId="a1" prepare={vi.fn().mockResolvedValue(3)} onApplied={vi.fn()} />);
+      fireEvent.click(screen.getByTestId("ai-revise-toggle"));
+      send("Thêm một câu hỏi");
+      const picker = within(await screen.findByRole("dialog", { name: "Chọn nguồn AI" }));
+      expect(request).not.toHaveBeenCalled();
+      expect(picker.getByRole("button", { name: "Gửi yêu cầu" })).toBeDisabled();
+      if (options.sharedAvailable === false) {
+        expect(picker.getByRole("radio", { name: /API của trường/ })).toBeDisabled();
+        expect(picker.getByRole("status")).toHaveTextContent("Đã hết hạn mức hôm nay");
+      }
+      await confirmAiSource(/API cá nhân · OpenAI/);
+      await waitFor(() => expect(request).toHaveBeenCalledWith("a1", "Thêm một câu hỏi", expect.any(String),
+        { source: "PERSONAL", provider: "OPENAI" }));
+      await waitFor(() => expect(screen.getByTestId("ai-revise-input")).not.toBeDisabled());
+      fireEvent.click(screen.getByRole("button", { name: "Đổi nguồn AI" }));
+      expect(await screen.findByRole("radio", { name: /API cá nhân · OpenAI/ })).toBeChecked();
+    },
+  );
 
   it("reports an AI failure in the chat and leaves the assignment unchanged", async () => {
     vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue(draft("FAILED", { safeError: "Hết hạn mức." }));
@@ -55,7 +107,6 @@ describe("AiReviseChat", () => {
     render(<AiReviseChat assignmentId="a1" prepare={vi.fn().mockResolvedValue(3)} onApplied={vi.fn()} />);
 
     send("Thêm một câu hỏi");
-    await confirmAiSource();
 
     expect(await screen.findByText("Hết hạn mức. Đề chưa thay đổi.")).toBeInTheDocument();
     expect(apply).not.toHaveBeenCalled();
@@ -70,7 +121,6 @@ describe("AiReviseChat", () => {
     render(<AiReviseChat assignmentId="a1" prepare={vi.fn().mockResolvedValue(3)} onApplied={vi.fn()} />);
 
     send("tạo cho tôi 10 yêu cầu");
-    await confirmAiSource();
 
     expect(await screen.findByText(/AI chưa thay đổi gì/)).toBeInTheDocument();
     expect(apply).not.toHaveBeenCalled();
@@ -140,7 +190,6 @@ describe("AiReviseChat", () => {
     expect(screen.getByRole("menuitem", { name: "Chọn đề mẫu có sẵn" })).toBeEnabled();
     fireEvent.click(screen.getByTestId("ai-revise-attach"));
     send("Làm lại đề theo mẫu này");
-    await confirmAiSource();
 
     expect(await screen.findByText(/Đã sửa đề theo yêu cầu/)).toBeInTheDocument();
     expect(request).toHaveBeenCalledWith("a1", "Làm lại đề theo mẫu này", expect.any(String),

@@ -15,13 +15,18 @@ type Props = {
   /** Token ước tính cho yêu cầu này, nếu unit gọi tính được. */
   estimatedTokens?: number;
   requireConfirmation?: boolean;
+  hideUntilSelectionNeeded?: boolean;
+  hideNotes?: boolean;
+  confirmLabel?: string;
+  nextChoice?: SourceChoice | null;
+  previousChoice?: SourceChoice | null;
   busy?: boolean;
   onCancel: () => void;
   onSubmit: (choice: SourceChoice) => void;
 };
 
-function buildKey(option: SourceOption) {
-  return `${option.source}:${option.provider ?? ""}`;
+function buildKey(choice: SourceChoice) {
+  return choice.source === "SHARED" ? choice.source : `${choice.source}:${choice.provider ?? ""}`;
 }
 
 /**
@@ -29,12 +34,17 @@ function buildKey(option: SourceOption) {
  * (FB-U06-01) và nguồn đó dùng được thì popup tự gửi bằng nguồn ấy, không bắt chọn lại; mặc định không dùng được
  * thì báo lý do để chọn nguồn khác cho lần này. Lỗi hay hết hạn mức không tự đổi nguồn (BR-U06-10, 11).
  */
-export function AiSourcePicker({ open, task, estimatedTokens, requireConfirmation, busy, onCancel, onSubmit }: Props) {
+export function AiSourcePicker({
+  open, task, estimatedTokens, requireConfirmation, hideUntilSelectionNeeded, hideNotes, confirmLabel,
+  nextChoice, previousChoice, busy, onCancel, onSubmit,
+}: Props) {
   const [options, setOptions] = useState<SourceOption[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   // Mỗi lần mở chỉ tự gửi một lần; gửi lỗi mà popup còn mở thì người dùng chọn lại như thường.
   const [autoSent, setAutoSent] = useState(false);
+  const nextKey = nextChoice ? buildKey(nextChoice) : null;
+  const previousKey = previousChoice ? buildKey(previousChoice) : null;
   const submitRef = useRef(onSubmit);
   useEffect(() => {
     submitRef.current = onSubmit;
@@ -49,7 +59,9 @@ export function AiSourcePicker({ open, task, estimatedTokens, requireConfirmatio
         setOptions(loaded);
         setError(null);
         const preferred = loaded.find((option) => option.preferred && option.available);
-        setSelected(preferred ? buildKey(preferred) : null);
+        const hasChoice = (key: string | null) => loaded.some((option) => option.available && buildKey(option) === key);
+        const selectedKey = hasChoice(nextKey) ? nextKey : preferred ? buildKey(preferred) : hasChoice(previousKey) ? previousKey : null;
+        setSelected(selectedKey);
         setAutoSent(!!preferred && !requireConfirmation);
         if (preferred && !requireConfirmation) {
           submitRef.current({ source: preferred.source, provider: preferred.provider });
@@ -62,10 +74,14 @@ export function AiSourcePicker({ open, task, estimatedTokens, requireConfirmatio
     return () => {
       active = false;
     };
-  }, [open, requireConfirmation]);
+  }, [open, requireConfirmation, nextKey, previousKey]);
 
   const choice = options?.find((option) => buildKey(option) === selected && option.available);
   const preferred = options?.find((option) => option.preferred);
+
+  if (hideUntilSelectionNeeded && !requireConfirmation && ((!options && !error) || autoSent)) {
+    return null;
+  }
 
   return (
     <Dialog
@@ -84,7 +100,7 @@ export function AiSourcePicker({ open, task, estimatedTokens, requireConfirmatio
             disabled={!choice || busy}
             onClick={() => choice && onSubmit({ source: choice.source, provider: choice.provider })}
           >
-            {msg("shared.ai.AiSourcePicker.sendRequest")}</Button>
+            {confirmLabel ?? msg("shared.ai.AiSourcePicker.sendRequest")}</Button>
         </>
       }
     >
@@ -117,14 +133,16 @@ export function AiSourcePicker({ open, task, estimatedTokens, requireConfirmatio
           ))}
         </div>
       )}
-      {options && requireConfirmation && estimatedTokens === undefined && (
+      {!hideNotes && options && requireConfirmation && estimatedTokens === undefined && (
         <p className="text-xs text-muted">{msg("shared.ai.AiSourcePicker.estimateUnavailable")}</p>
       )}
-      <p className="text-xs text-muted">
-        {preferred ? msg("shared.ai.AiSourcePicker.changeDefaultSource") : msg("shared.ai.AiSourcePicker.dontWantToChooseEvery")} {msg("shared.ai.AiSourcePicker.in")}{" "}
-        <Link href="/ai/connection?tab=settings" className="font-semibold text-primary-ink underline">
-          {msg("shared.ai.AiSourcePicker.aiConnection")}</Link>
-        {msg("shared.ai.AiSourcePicker.mcpAgentsAreNotA")}</p>
+      {!hideNotes && (
+        <p className="text-xs text-muted">
+          {preferred ? msg("shared.ai.AiSourcePicker.changeDefaultSource") : msg("shared.ai.AiSourcePicker.dontWantToChooseEvery")} {msg("shared.ai.AiSourcePicker.in")}{" "}
+          <Link href="/ai/connection?tab=settings" className="font-semibold text-primary-ink underline">
+            {msg("shared.ai.AiSourcePicker.aiConnection")}</Link>
+          {msg("shared.ai.AiSourcePicker.mcpAgentsAreNotA")}</p>
+      )}
     </Dialog>
   );
 }

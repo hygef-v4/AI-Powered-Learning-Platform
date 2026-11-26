@@ -15381,3 +15381,49 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 **Context**: Construction, Build and Test U03.
 
 ---
+
+## U07 Nguồn AI của chat sửa đề
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1]
+giúp tôi đọc code và tìm hiểu nguyên nhân đi, với lại xem lại cái phần mỗi lần bấm gửi AI thì nó lại hiện ra cái bảng này[Image #1]  mặc dù tôi đã chọn mặc định api ai rồi, tôi nghĩ nên thêm nút đổi api nhỏ ở cạnh chỗ tải file ấy khi nào muốn đổi thì bấm, còn mặc định thì nó theo cáu hình ở ai setting."
+**AI Response**: "Xác định chat luôn bật requireConfirmation từ f8b4523e. Đề xuất sửa bị chặn khi kết quả sau gộp và chuẩn hóa có blocks rỗng. Nguồn mặc định sẽ được đọc từ danh sách nguồn khả dụng."
+**Context**: Construction, chẩn đoán U07.
+
+---
+
+## U07 Tiếp tục đổi nguồn AI
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "làm tiếp"
+**AI Response**: "Triển khai nút Đổi nguồn AI cạnh nút đính kèm và giữ lựa chọn riêng cho lần gửi tiếp theo. Kiểm thử hồi quy tái hiện popup ở mã cũ."
+**Context**: Construction, Code Generation U07.
+
+---
+
+## U07 Ghi chú bộ chọn nguồn
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] k cần cái ghi chú này đâu"
+**AI Response**: "Ẩn ghi chú ước tính và đoạn hướng dẫn nguồn ở bộ chọn của chat. Giữ bên chịu phí, hạn mức và lý do nguồn chưa khả dụng."
+**Context**: Construction, Code Generation U07.
+
+---
+
+## U07 Tô nguồn đang chọn
+**Timestamp**: 2026-11-26T07:34:17Z
+**Requested by:** Quang Hung
+**User Input**: "[Image #1] với đang dùng cái nào thì tô đang chọn vào đấy"
+**AI Response**: "Tô nguồn cho lần tiếp theo. Khi không có lựa chọn riêng, dùng nguồn mặc định khả dụng hoặc nguồn vừa dùng trong chat khi chưa đặt mặc định."
+**Context**: Construction, Code Generation U07.
+
+---
+
+## U07 Yêu cầu commit và mở PR
+**Timestamp**: 2026-11-26T07:53:54Z
+**Requested by:** Quang Hung
+**User Input**: "giúp tôi commit change rồi tạo pr lên staging"
+**AI Response**: "Commit thay đổi đã kiểm thử của chat Sửa đề bằng AI và mở pull request từ audit-staging vào staging."
+**Context**: Construction, bàn giao U07.
+
+---
