@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.assignments.contract.GradingMode;
+import edu.aiplatform.assignments.model.AssignmentRubric;
 import java.util.List;
 
 /** Generation is deliberately flat: each requested question owns its rubric, before the longer shared text. */
@@ -18,6 +19,10 @@ final class AssignmentDraftGenerationSchema {
     }
 
     static String buildSchema(AssignmentCommands.DraftOptions options, GradingMode mode) {
+        return buildSchema(options, mode, false);
+    }
+
+    static String buildSchema(AssignmentCommands.DraftOptions options, GradingMode mode, boolean fromBlankRevision) {
         try {
             ObjectNode schema = (ObjectNode) JSON.readTree(AiDraftProposal.OUTPUT_SCHEMA);
             ObjectNode original = (ObjectNode) schema.path("properties");
@@ -44,15 +49,22 @@ final class AssignmentDraftGenerationSchema {
             addBoundedText(fields, "title", 1, 200);
             addBoundedText(fields, "guidance", 1, 3000);
             ObjectNode rubric = (ObjectNode) fields.path("rubric");
-            rubric.put("minItems", mode == GradingMode.GRADED ? 1 : 0).put("maxItems", 6);
+            rubric.put("minItems", mode == GradingMode.GRADED ? 1 : 0)
+                    .put("maxItems", fromBlankRevision ? AssignmentRubric.CRITERIA_MAX : 6);
             ObjectNode criterion = (ObjectNode) rubric.path("items").path("properties");
             addBoundedText(criterion, "title", 1, 200);
             addBoundedText(criterion, "description", 0, 1000);
             ObjectNode items = (ObjectNode) criterion.path("items");
-            items.put("minItems", 1).put("maxItems", 6);
+            items.put("minItems", 1).put("maxItems", fromBlankRevision ? AssignmentRubric.ITEMS_MAX : 6);
             ObjectNode item = (ObjectNode) items.path("items").path("properties");
             addBoundedText(item, "text", 1, 1000);
-            ((ObjectNode) item.path("points")).put("exclusiveMinimum", 0).put("maximum", 1000);
+            ObjectNode points = (ObjectNode) item.path("points");
+            points.put("exclusiveMinimum", 0).put("maximum", 1000);
+            if (fromBlankRevision) {
+                ObjectNode numericPoints = points.deepCopy();
+                points.removeAll().putArray("anyOf").add(numericPoints).addObject()
+                        .put("type", "string").put("pattern", AiDraftProposal.DECIMAL_POINTS_PATTERN.pattern());
+            }
             ObjectNode warning = properties.putObject("authoringWarnings").put("type", "array")
                     .put("maxItems", MAX_AUTHORING_WARNINGS).putObject("items")
                     .put("type", "object").put("additionalProperties", false);

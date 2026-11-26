@@ -497,14 +497,23 @@ describe("workspace save", () => {
     expect(mocks.saveEvaluation).not.toHaveBeenCalled();
     expect(mocks.requestProposal).not.toHaveBeenCalled();
   });
-  it("opens the exact older proposal from an agent link without applying or saving it", async () => {
+  it("fills the form from the exact linked MCP proposal without saving or publishing", async () => {
+    mocks.loadEvaluation.mockResolvedValue({ ...detail, evaluation: { ...detail.evaluation, rubricItemScores: {} },
+      rubrics: [{ rubricId: "r", partId: "p", maxPoints: 2,
+        criteria: [{ criterionId: "c", title: "Design", items: [{ itemId: "i", text: "Test criterion", points: 2 }] }],
+      }],
+    });
     mocks.listProposals.mockResolvedValue([
       { id: "new", versionNo: 2, status: "READY", origin: "MCP", proposal: { checks: {}, score: 2, feedback: "Latest agent feedback" } },
-      { id: "old", versionNo: 1, status: "READY", origin: "MCP", proposal: { checks: {}, score: 1, feedback: "Requested older feedback" } },
+      { id: "old", versionNo: 1, status: "READY", origin: "MCP", proposal: {
+        checks: {}, score: 1, itemScoresByRubric: { r: { i: 1 } }, feedback: "Requested older feedback",
+      } },
     ]);
     render(<GradingWorkspacePage evaluationId="e" proposalId="old" />);
-    expect(await screen.findByText("Requested older feedback")).toBeVisible();
-    expect(screen.getByRole("region", { name: "Chấm bằng AI" })).toBeInTheDocument();
+    const feedback = await screen.findByRole("textbox", { name: "Nhận xét chung" });
+    await waitFor(() => expect(feedback).toHaveValue("Requested older feedback"));
+    expect(screen.getByRole("spinbutton", { name: "Điểm mục Test criterion" })).toHaveValue(1);
+    expect(screen.queryByRole("region", { name: "Chấm bằng AI" })).not.toBeInTheDocument();
     expect(mocks.saveEvaluation).not.toHaveBeenCalled();
     expect(mocks.requestProposal).not.toHaveBeenCalled();
   });

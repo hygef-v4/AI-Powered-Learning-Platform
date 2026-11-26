@@ -262,7 +262,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     setDialog("import");
   }, [detail, id, importFiles]);
 
-  // Tạo đề bằng AI chỉ có ở popup tạo bài (yêu cầu 2026-11-10); trang soạn chỉ mở popup AI để duyệt đề xuất do agent MCP gửi.
+  // Mở đề xuất MCP theo link, mỗi đề xuất chỉ được xử lý một lần trong phiên soạn.
   useEffect(() => {
     if (!proposalId || detail?.id !== id || !detail.permissions.canEditContent || detail.status !== "DRAFT") return;
     const key = `${id}:${proposalId}`;
@@ -815,7 +815,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
         </Dialog>
       )}
       {dialog === "ai" && proposalId && detail.permissions.canEditContent && detail.status === "DRAFT" && (
-        <AiDraftDialog assignmentId={id} initialDraftId={proposalId} version={detail.version} currentPartCount={detail.parts.filter((p) => p.headingBlockId).length}
+        <AiDraftDialog key={proposalId} assignmentId={id} initialDraftId={proposalId} version={detail.version} currentPartCount={detail.parts.filter((p) => p.headingBlockId).length}
           currentTitle={title} currentInstructions={instructions} gradingMode={detail.gradingMode}
           prepareApply={saveForAi}
           onClose={() => setDialog(null)} onApplied={async () => {

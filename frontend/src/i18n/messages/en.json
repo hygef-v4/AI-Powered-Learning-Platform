@@ -1174,6 +1174,7 @@
       "AiDraftDialog": {
         "reviewTemplateDraft": "This draft uses a template. Check the questions and rubric before applying.",
         "draftFailed": "Draft generation failed",
+        "linkedDraftStale": "The assignment changed after the agent saved this proposal. Ask the agent to read the current version and create a new proposal.",
         "theAiReturnedNoResult": "The AI returned no result.",
         "youCanStillWriteIt": "{value} You can still write it manually.",
         "waitForUploadsToFinish": "Wait for uploads to finish or remove failed files before creating the assignment.",
