@@ -93,6 +93,9 @@ platform:
     refresh-idle-ttl: ${U01_REFRESH_IDLE_TTL:2h}
     refresh-max-ttl: ${U01_REFRESH_MAX_TTL:7d}
     bcrypt-cost: ${U01_BCRYPT_COST:12}
+    # Số bcrypt chạy cùng lúc (0 = số CPU JVM được cấp) và thời gian chờ tối đa của lần thừa (TC-PERF-002)
+    bcrypt-max-concurrent: ${U01_BCRYPT_MAX_CONCURRENT:0}
+    bcrypt-queue-wait: ${U01_BCRYPT_QUEUE_WAIT:30s}
     otp-ttl: ${U01_OTP_TTL:10m}
     otp-max-attempts: ${U01_OTP_MAX_ATTEMPTS:5}
     login-lock-threshold: ${U01_LOGIN_LOCK_THRESHOLD:5}
