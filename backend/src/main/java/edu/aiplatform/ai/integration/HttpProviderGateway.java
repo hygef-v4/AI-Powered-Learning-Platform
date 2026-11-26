@@ -220,14 +220,22 @@ public class HttpProviderGateway implements IProviderGateway {
         try {
             response = http.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (HttpConnectTimeoutException | ConnectException e) {
-            throw new ProviderException(FailureKind.REJECTED, 0, "Không kết nối được nhà cung cấp AI", null);
+            if (isUnresolvedHost(e)) {
+                throw new ProviderException(FailureKind.REJECTED, 0,
+                        "Không kết nối được nhà cung cấp AI vì không phân giải được tên miền", null, "AI_PROVIDER_DNS_FAILED");
+            }
+            throw new ProviderException(FailureKind.REJECTED, 0, "Không kết nối được nhà cung cấp AI",
+                    null, "AI_PROVIDER_CONNECT_FAILED");
         } catch (HttpTimeoutException e) {
-            throw new ProviderException(FailureKind.UNKNOWN, 0, "Nhà cung cấp AI không trả lời kịp", null);
+            throw new ProviderException(FailureKind.UNKNOWN, 0, "Nhà cung cấp AI không trả lời kịp",
+                    null, "AI_PROVIDER_TIMEOUT");
         } catch (IOException e) {
-            throw new ProviderException(FailureKind.UNKNOWN, 0, "Mất kết nối với nhà cung cấp AI", null);
+            throw new ProviderException(FailureKind.UNKNOWN, 0, "Mất kết nối với nhà cung cấp AI",
+                    null, "AI_PROVIDER_CONNECTION_LOST");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ProviderException(FailureKind.UNKNOWN, 0, "Lời gọi AI bị dừng", null);
+            throw new ProviderException(FailureKind.UNKNOWN, 0, "Lời gọi AI bị dừng",
+                    null, "AI_PROVIDER_INTERRUPTED");
         }
         int status = response.statusCode();
         if (status >= 200 && status < 300) {
@@ -235,13 +243,24 @@ public class HttpProviderGateway implements IProviderGateway {
                 return json.readTree(response.body());
             } catch (JsonProcessingException e) {
                 throw new ProviderException(FailureKind.UNKNOWN, status, "Phản hồi của nhà cung cấp AI không đọc được",
-                        null);
+                        null, "AI_OUTPUT_INVALID");
             }
         }
         if (status == 400 && !r.images().isEmpty() && mentionsImage(response.body())) {
-            throw new ProviderException(FailureKind.REJECTED, status, IMAGES_NOT_SUPPORTED, null);
+            throw new ProviderException(FailureKind.REJECTED, status, IMAGES_NOT_SUPPORTED, null, "AI_IMAGES_UNSUPPORTED");
         }
-        throw new ProviderException(classifyFailure(status), status, buildSafeMessage(status, response.body()), null);
+        ProviderDiagnostic diagnostic = describeHttpFailure(status, response.body());
+        throw new ProviderException(classifyFailure(status), status, diagnostic.message(), null, diagnostic.code());
+    }
+
+    private static boolean isUnresolvedHost(Throwable error) {
+        for (Throwable cause = error; cause != null; cause = cause.getCause()) {
+            if (cause instanceof java.net.UnknownHostException
+                    || cause instanceof java.nio.channels.UnresolvedAddressException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String encodeBase64(AiImage image) {
@@ -265,9 +284,12 @@ public class HttpProviderGateway implements IProviderGateway {
      * Gemini trả HTTP 400 (không phải 401) khi key sai; nhận ra qua mã lỗi trong body để báo đúng "key không hợp lệ".
      * Body chỉ dùng để phân loại, không đưa vào thông báo.
      */
-    String buildSafeMessage(int status, String body) {
+    record ProviderDiagnostic(String code, String message) {
+    }
+
+    ProviderDiagnostic describeHttpFailure(int status, String body) {
         if (status == 400 && body != null && (body.contains("API_KEY_INVALID") || body.contains("API key not valid"))) {
-            return "Key API không hợp lệ (HTTP 400)";
+            return new ProviderDiagnostic("AI_PROVIDER_AUTH_FAILED", "Key API không hợp lệ (HTTP 400)");
         }
         if (status == 429 && body != null && !body.isBlank()) {
             try {
@@ -275,33 +297,36 @@ public class HttpProviderGateway implements IProviderGateway {
                 String code = error.path("code").asText("");
                 String type = error.path("type").asText("");
                 if ("insufficient_quota".equals(code) || "insufficient_quota".equals(type)) {
-                    return "Tài khoản API đã hết hạn mức hoặc số dư. Kiểm tra hạn mức và thanh toán của nhà cung cấp.";
+                    return new ProviderDiagnostic("AI_PROVIDER_QUOTA_EXHAUSTED",
+                            "Tài khoản API đã hết hạn mức hoặc số dư. Kiểm tra hạn mức và thanh toán của nhà cung cấp.");
                 }
                 if ("rate_limit_exceeded".equals(code) || "rate_limit_error".equals(type)) {
-                    return "Nhà cung cấp AI đang giới hạn tần suất gọi. Vui lòng chờ rồi thử lại.";
+                    return new ProviderDiagnostic("AI_PROVIDER_RATE_LIMITED",
+                            "Nhà cung cấp AI đang giới hạn tần suất gọi. Vui lòng chờ rồi thử lại.");
                 }
             } catch (JsonProcessingException ignored) {
                 // HTTP429 alone cannot distinguish rate limits from exhausted quota.
             }
         }
-        return buildSafeMessage(status);
+        return switch (status) {
+            case 400 -> new ProviderDiagnostic("AI_PROVIDER_REQUEST_REJECTED",
+                    "Nhà cung cấp AI từ chối yêu cầu (HTTP 400): model hoặc tham số không hợp lệ");
+            case 401, 403 -> new ProviderDiagnostic("AI_PROVIDER_AUTH_FAILED",
+                    "Key API không hợp lệ hoặc không có quyền (HTTP " + status + ")");
+            case 404 -> new ProviderDiagnostic("AI_PROVIDER_MODEL_UNAVAILABLE",
+                    "Model không tồn tại hoặc key không dùng được model này (HTTP 404)");
+            case 429 -> new ProviderDiagnostic("AI_PROVIDER_RATE_OR_QUOTA",
+                    "Nhà cung cấp AI báo vượt giới hạn tần suất hoặc hết hạn mức (HTTP 429)");
+            case 503, 529 -> new ProviderDiagnostic("AI_PROVIDER_OVERLOADED",
+                    "Nhà cung cấp AI đang quá tải (HTTP " + status + ")");
+            default -> new ProviderDiagnostic("AI_PROVIDER_ERROR", "Nhà cung cấp AI lỗi (HTTP " + status + ")");
+        };
     }
 
     private static void requireCompleteOutput(String reason, Usage usage, String output) {
         if ("MAX_TOKENS".equals(reason) || "length".equals(reason) || "max_tokens".equals(reason)) {
             throw new OutputLimitException(usage, output);
         }
-    }
-
-    static String buildSafeMessage(int status) {
-        return switch (status) {
-            case 400 -> "Nhà cung cấp AI từ chối yêu cầu (HTTP 400): model hoặc tham số không hợp lệ";
-            case 401, 403 -> "Key API không hợp lệ hoặc không có quyền (HTTP " + status + ")";
-            case 404 -> "Model không tồn tại hoặc key không dùng được model này (HTTP 404)";
-            case 429 -> "Nhà cung cấp AI báo vượt giới hạn tần suất hoặc hết hạn mức (HTTP 429)";
-            case 503, 529 -> "Nhà cung cấp AI đang quá tải (HTTP " + status + ")";
-            default -> "Nhà cung cấp AI lỗi (HTTP " + status + ")";
-        };
     }
 
     /**
@@ -316,7 +341,8 @@ public class HttpProviderGateway implements IProviderGateway {
         if (promptBlocked || !NORMAL_STOPS.contains(reason) || output == null || output.isBlank()) {
             log.warn("AI provider returned unusable output provider={} model={} requestId={} reason={} promptBlocked={}",
                     provider, model, requestId, reason.isEmpty() ? "-" : reason, promptBlocked);
-            throw new ProviderException(FailureKind.CHARGED, 200, describeEmptyOutput(reason, promptBlocked), usage);
+            throw new ProviderException(FailureKind.CHARGED, 200, describeEmptyOutput(reason, promptBlocked), usage,
+                    "AI_OUTPUT_UNUSABLE");
         }
         return new Response(output, requestId, usage);
     }

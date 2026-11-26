@@ -137,6 +137,24 @@ describe("AiReviseChat", () => {
     expect(screen.getByTestId("ai-revise-send")).toBeDisabled();
   });
 
+  it("keeps the text that exceeds 10,000 characters and sends all of it once shortened to the limit", async () => {
+    const request = vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue(draft("FAILED", {
+      safeError: "[AI_PROVIDER_DNS_FAILED] Không phân giải được tên miền.",
+    }));
+    render(<AiReviseChat assignmentId="a1" prepare={vi.fn().mockResolvedValue(3)} onApplied={vi.fn()} />);
+    fireEvent.click(screen.getByTestId("ai-revise-toggle"));
+    const withinLimit = "a".repeat(9_997) + "end";
+    send(withinLimit + "!");
+    expect(screen.getByTestId("ai-revise-input")).toHaveValue(withinLimit + "!");
+    expect(screen.getByTestId("ai-revise-input")).toHaveAccessibleDescription(/rút ngắn 1 ký tự/);
+    expect(screen.getByTestId("ai-revise-send")).toBeDisabled();
+    expect(request).not.toHaveBeenCalled();
+
+    send(withinLimit);
+    await waitFor(() => expect(request).toHaveBeenCalledWith("a1", withinLimit, expect.any(String),
+      { source: "SHARED", provider: undefined }));
+    expect(await screen.findByText(/AI_PROVIDER_DNS_FAILED/)).toBeInTheDocument();
+  });
   it("is a popup that stays closed until its icon button is pressed, and closes again", () => {
     vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([]);
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);

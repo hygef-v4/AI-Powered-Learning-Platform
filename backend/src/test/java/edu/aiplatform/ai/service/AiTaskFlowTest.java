@@ -568,7 +568,7 @@ class AiTaskFlowTest {
 
         AiTask task = tasks.rows.get(view.taskId());
         assertThat(task.state()).isEqualTo(AiTaskState.FAILED);
-        assertThat(task.safeError()).contains("định dạng");
+        assertThat(task.safeError()).startsWith("[AI_OUTPUT_INVALID] ").contains("định dạng");
         verify(quota).settle(teacher.accountId(), task.quotaDay(), task.reservedTokens(), 15);
         verify(handler, never()).onReady(any());
     }

@@ -30,6 +30,8 @@ class GradingProposalErrorTest {
                 .contains("kết nối").doesNotContain("AI_SERVICE");
         String timeout = "Nhà cung cấp AI không trả lời kịp";
         assertThat(GradingProposalCallbackSupport.formatTaskError(timeout)).isEqualTo(timeout);
+        String codedTimeout = "[AI_PROVIDER_TIMEOUT] " + timeout;
+        assertThat(GradingProposalCallbackSupport.formatTaskError(codedTimeout)).isEqualTo(codedTimeout);
         assertThat(GradingProposalCallbackSupport.formatTaskError("UNRECOGNIZED_INTERNAL_ERROR"))
                 .doesNotContain("UNRECOGNIZED_INTERNAL_ERROR");
     }

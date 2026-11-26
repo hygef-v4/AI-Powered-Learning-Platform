@@ -9,6 +9,8 @@ public enum PromptAction {
     EXPLAIN_FEEDBACK(PromptContext.STUDENT_FEEDBACK, true),
     ASK(PromptContext.GENERAL, true);
 
+    public static final int MAX_ASSIGNMENT_REQUEST_CHARS = 10_000;
+
     private final PromptContext context;
     private final boolean textRequired;
 

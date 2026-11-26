@@ -65,6 +65,40 @@ class AssignmentAiDraftServiceTest {
 
     private final AssignmentFixtures f = new AssignmentFixtures();
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"4000, 8000", "4001, 12000", "10000, 12000"})
+    void sendsCompleteAcceptedPromptWithTheAuthoringOutputBudget(int length, int outputTokens) {
+        Assignment assignment = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        var inserted = new AtomicReference<AssignmentAiDraft>();
+        doAnswer(call -> {
+            inserted.set(call.getArgument(0));
+            return null;
+        }).when(f.drafts).insert(any());
+        when(f.drafts.findDraft(any())).thenAnswer(call -> Optional.ofNullable(inserted.get()));
+        when(f.aiTasks.submit(any())).thenReturn(new AiTaskView(UUID.randomUUID(), AiTaskState.QUEUED,
+                AiSource.PERSONAL, AiProvider.GEMINI, "mock", null, null, null));
+        String request = "a".repeat(length - 3) + "end";
+
+        f.aiDrafts.request(f.teacher, assignment.id(),
+                new AssignmentCommands.AiDraftRequest(request, List.of(), AiSource.PERSONAL, AiProvider.GEMINI, "limits"));
+
+        verify(f.aiTasks).submit(argThat(task -> task.maxOutputTokens() == outputTokens
+                && task.prompt().user().contains(request)));
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void rejectsOversizeRequestsBeforeSavingOrCallingAi(boolean revise) {
+        Assignment assignment = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        var command = new AssignmentCommands.AiDraftRequest("a".repeat(10_001), List.of(), List.of(),
+                AiSource.PERSONAL, AiProvider.GEMINI, "oversize", null, null, null, revise ? "REVISE" : null);
+
+        assertThatThrownBy(() -> f.aiDrafts.request(f.teacher, assignment.id(), command))
+                .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_REQUEST_TOO_LONG");
+        verify(f.drafts, never()).insert(any());
+        verify(f.aiTasks, never()).submit(any());
+    }
+
     @Test
     void templatesAreNonRetiredSubjectAssignmentsOfTheSameSubject() {
         Assignment mine = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
