@@ -63,4 +63,22 @@ describe("theme", () => {
     act(() => changeSystemScheme(true));
     expect(result.current[0]).toBe("light");
   });
+  it("gỡ listener hệ điều hành trên đúng MediaQueryList đã gắn, kể cả khi các hook huỷ không theo thứ tự", () => {
+    const attached: Set<unknown>[] = [];
+    vi.stubGlobal("matchMedia", vi.fn(() => {
+      // Mỗi lần gọi trả một đối tượng mới, như trình duyệt thật.
+      const listeners = new Set<unknown>();
+      attached.push(listeners);
+      return {
+        matches: false,
+        addEventListener: (_: string, listener: unknown) => listeners.add(listener),
+        removeEventListener: (_: string, listener: unknown) => listeners.delete(listener),
+      };
+    }));
+    const first = renderHook(() => useTheme());
+    const second = renderHook(() => useTheme());
+    first.unmount();
+    second.unmount();
+    expect(attached.reduce((total, listeners) => total + listeners.size, 0)).toBe(0);
+  });
 });

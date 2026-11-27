@@ -7,8 +7,15 @@ import edu.aiplatform.shared.error.ApiException;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.DateTimeException;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
@@ -16,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class EvaluationRepository implements IEvaluationRepository {
+    private static final Logger log = LoggerFactory.getLogger(EvaluationRepository.class);
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     /** Creates the repository with named-parameter JDBC access. */
@@ -69,7 +77,8 @@ public class EvaluationRepository implements IEvaluationRepository {
         if (accountIds.isEmpty()) {
             return List.of();
         }
-        return namedParameterJdbcTemplate.query("""
+        List<UUID> unreadable = new ArrayList<>();
+        List<Evaluation> evaluations = new ArrayList<>(namedParameterJdbcTemplate.query("""
                 select id, assignment_id, class_id, attempt_id, group_document_id, account_id, kind, status,
                        version,
                        grading_document->>'score' as score,
@@ -82,7 +91,28 @@ public class EvaluationRepository implements IEvaluationRepository {
                 where class_id=:classId and account_id in (:accountIds)
                   and status <> 'SUPERSEDED' and kind <> 'GROUP_DOCUMENT'
                 """, Map.of("classId", classId, "accountIds", accountIds),
-                EvaluationRepository::mapGradebookEvaluation);
+                (rs, index) -> mapGradebookRow(rs, index, unreadable)));
+        evaluations.removeIf(Objects::isNull);
+        if (!unreadable.isEmpty()) {
+            // Một bản chấm có khóa JSON lạ không được làm hỏng cả bảng điểm: đọc riêng các dòng đó qua Jackson.
+            evaluations.addAll(namedParameterJdbcTemplate.query(
+                    "select grading_document, version from evaluations where id in (:ids)",
+                    Map.of("ids", unreadable), EvaluationRepository::mapEvaluation));
+        }
+        return evaluations;
+    }
+
+    /** Dòng không đọc nhanh được thì ghi lại id để đọc đầy đủ, thay vì làm request bảng điểm trả 500. */
+    private static Evaluation mapGradebookRow(ResultSet rs, int index, List<UUID> unreadable) throws SQLException {
+        try {
+            return mapGradebookEvaluation(rs, index);
+        } catch (DateTimeException | NumberFormatException | ArithmeticException failure) {
+            UUID id = rs.getObject("id", UUID.class);
+            log.warn("Gradebook fast read fell back to full read evaluationId={} reason={}", id,
+                    failure.getClass().getSimpleName());
+            unreadable.add(id);
+            return null;
+        }
     }
 
     /** Inserts or updates an evaluation using its current version for concurrency control. */
@@ -165,16 +195,26 @@ public class EvaluationRepository implements IEvaluationRepository {
      * Jackson nhận cả hai, nên đường đọc nhanh cũng phải nhận cả hai.
      */
     static Instant parseEpochInstant(String value) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return null;
         }
+        value = value.strip();
         if (value.indexOf('T') >= 0) {
-            return Instant.parse(value);
+            return parseIsoInstant(value);
         }
         var decimal = new BigDecimal(value);
         long seconds = decimal.longValue();
         int nanos = decimal.subtract(BigDecimal.valueOf(seconds)).movePointRight(9).intValue();
         return Instant.ofEpochSecond(seconds, nanos);
+    }
+
+    /** ISO-8601 có offset ({@code ...Z}, {@code ...+07:00}); không có offset thì coi là UTC như cách Jackson ghi Instant. */
+    private static Instant parseIsoInstant(String value) {
+        try {
+            return OffsetDateTime.parse(value).toInstant();
+        } catch (DateTimeParseException withoutOffset) {
+            return LocalDateTime.parse(value).toInstant(ZoneOffset.UTC);
+        }
     }
 
     // Lấy điểm từ tài liệu chấm, không từ cột numeric(…,2), để giữ đúng số chữ số như bản đọc đầy đủ (10 chứ không 10.00).

@@ -16433,3 +16433,21 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **Context**: Construction - defect fix, commit and pull request at the user's request
 
 ---
+
+## Defect fix - Sửa các lỗi trong báo cáo kiểm tra 2026-11-27/28
+**Timestamp**: 2026-11-28T03:30:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Sửa ngay"
+**AI Response**: "Sửa các lỗi trong docs/bug-report-2026-11-28.md (trên nhánh chi-cuongg/bug-report-fixes, cắt từ origin/staging): (1) EvaluationRepository.listGradebookEvaluations: parseEpochInstant nhận chuỗi rỗng, ISO có offset bất kỳ và ISO không offset (coi là UTC); dòng nào đường đọc nhanh không đọc được (DateTimeException, NumberFormatException) thì ghi log cảnh báo kèm id và đọc lại riêng dòng đó qua Jackson, thay vì làm cả bảng điểm lớp trả 500. (2) groupWorkbook: cột Trưởng nhóm không tính các giá trị phủ định rõ ràng (Không, K, No, N, 0, FALSE, -), cập nhật BR-U12-100; nhận sinh viên theo MSSV, chỉ dòng không có MSSV mới theo email, đúng BR-U12-101. (3) shared/theme.ts: gỡ listener matchMedia trên đúng đối tượng đã gắn. (4) FileDropZone báo toast khi tệp kéo thả sai loại. (5) Thẻ phần Practice không có nhận xét ghi 'AI chưa nhận xét phần này.'. (6) Bỏ state activePart và import không dùng ở AssignmentWorkspacePage, hết cảnh báo lint. (7) Câu dịch SETTING_DEPENDENCY đổi thành câu chung cho mọi cài đặt phụ thuộc (giao diện tiếng Việt vẫn dùng detail của server). (8) Nâng next và eslint-config-next lên 16.4.6; npm audit --omit=dev còn 0 lỗ hổng. Mục 2.6 của báo cáo (thông báo công thức) là báo sai, không sửa. Thêm test cho từng thay đổi."
+**Context**: Construction - defect fix từ báo cáo kiểm tra lỗi toàn dự án
+
+---
+
+## Defect fix - Tách nhánh, commit và mở PR cho các lỗi trong báo cáo kiểm tra
+**Timestamp**: 2026-11-28T03:45:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tách nhánh riêng rồi commit, mở PR"
+**AI Response**: "Tạo nhánh chi-cuongg/bug-report-fixes từ origin/staging (đã có KAN-255), chuyển các thay đổi sửa lỗi sang đó, commit, push và mở pull request vào staging; .claude/launch.json và docs/ không đưa vào."
+**Context**: Construction - defect fix, commit và pull request theo yêu cầu người dùng
+
+---

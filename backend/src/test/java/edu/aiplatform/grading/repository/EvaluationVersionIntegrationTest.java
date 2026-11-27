@@ -156,6 +156,19 @@ class EvaluationVersionIntegrationTest {
     }
 
     @Test
+    void gradebookFallsBackToFullReadForRowsTheFastPathCannotParse() {
+        var created = seed();
+        // Jackson nhận số dạng chuỗi có khoảng trắng, đường đọc nhanh thì không: dòng đó phải được đọc đầy đủ, không 500.
+        owner.update("update evaluations set grading_document = jsonb_set(grading_document, '{score}', '\" 7.25 \"')"
+                + " where id = ?", created.id);
+        assertThat(evaluationRepository.listGradebookEvaluations(created.classId, List.of(created.accountId)))
+                .singleElement().satisfies(row -> {
+                    assertThat(row.id).isEqualTo(created.id);
+                    assertThat(row.score).isEqualByComparingTo("7.25");
+                });
+    }
+
+    @Test
     void lookupScopeAndMutationWithoutSaveDoNotWrite() {
         var created = seed();
         var other = seed();

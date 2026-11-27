@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { uploadFile } from "@/features/files/api";
 import { ApiError } from "@/shared/api/client";
@@ -10,10 +10,8 @@ import {
   DocxImportDialog,
   buildOutline,
   publishOutline,
-  numberSections,
   type DocumentBlock,
   type DocumentModel,
-  type DocumentPart,
   type ValidationIssue,
 } from "@/shared/document";
 import { Alert, Button, Dialog, Menu, MenuItem, Pill, showErrorToast, showToast } from "@/shared/ui";
@@ -81,7 +79,6 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
     observer.observe(element);
     headerObserver.current = observer;
   }, []);
-  const [activePart, setActivePart] = useState<string | null>(null);
   const [autosaveCycle, setAutosaveCycle] = useState(0);
   const version = useRef(0);
   const edits = useRef(0);
@@ -237,7 +234,6 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
     workApi.activity(attemptId, events, options.keepalive), [attemptId]);
   useActivityTracker({ enabled: !!attempt?.activityMonitoringEnabled && attempt.status === "IN_PROGRESS", send: sendActivity });
 
-  const sections = useMemo(() => numberSections(content, attempt?.parts ?? []), [content, attempt?.parts]);
 
   // Sidebar mục lục của bài, như trang soạn của giảng viên; lối về trang bài tập.
   useEffect(() => {
@@ -264,7 +260,6 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
   const editable = attempt.editable && attempt.status === "IN_PROGRESS";
   const left = describeRemaining(attempt.deadlineAt, now + offset);
   const beforeDeadline = new Date(attempt.deadlineAt).getTime() > now + offset;
-  const active = attempt.parts.find((part) => part.partId === activePart);
   const saveText = saving ? msg("assignmentwork.pages.AssignmentWorkspacePage.saving") : dirty ? msg("assignmentwork.pages.AssignmentWorkspacePage.unsavedChanges") : savedAt ? msg("assignmentwork.pages.AssignmentWorkspacePage.savedAt", { value: String(formatTime(savedAt)) }) : msg("assignmentwork.pages.AssignmentWorkspacePage.saved");
 
   // Dòng dưới tên bài như trang xem trước: chỉ ghi loại bài (Luyện tập, hoặc Cá nhân / Nhóm).
@@ -320,7 +315,6 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         titleField={{ text: attempt.title, readOnly: true, onText: NOOP }}
         header={header}
         highlightBlockId={null}
-        onFocusBlock={(blockId) => setActivePart(sections.get(blockId) ?? null)}
         viewSlot={viewSlot} />
 
       {dialog === "submit" && (

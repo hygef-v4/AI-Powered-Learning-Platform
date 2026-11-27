@@ -1634,6 +1634,7 @@
         "daysLeft": "Còn {days} ngày"
       },
       "PracticeFeedbackPanel": {
+        "noPartComment": "AI chưa nhận xét phần này.",
         "overall": "Tổng quan",
         "aiEstimate": "AI ước tính",
         "aiEstimateNotOfficial": "AI ước tính, không phải điểm chính thức",
@@ -4813,7 +4814,7 @@
       "errorMessages": {
         "notFound": "Không tìm thấy hoặc bạn không có quyền truy cập.",
         "invalidRequest": "Yêu cầu không hợp lệ. Kiểm tra thông tin rồi thử lại.",
-        "settingDependency": "Hãy đặt giờ chạy hằng ngày trước khi bật sao lưu, và tắt sao lưu trước khi xóa giờ chạy.",
+        "settingDependency": "Cài đặt này phụ thuộc vào cài đặt khác. Hãy đặt mục cần thiết trước khi bật, và tắt mục đang bật trước khi xóa mục nó cần.",
         "aiRequestTooLong": "Yêu cầu tối đa 10.000 ký tự. Hãy rút ngắn nội dung trước khi gửi.",
         "aiPromptTooLarge": "Tổng nội dung gửi AI quá dài. Hãy rút ngắn yêu cầu hoặc giảm tài liệu đính kèm.",
         "aiSourceUnavailable": "Nguồn AI hiện không khả dụng. Kiểm tra kết nối hoặc hạn mức của nguồn.",
@@ -5172,6 +5173,9 @@
       "TermFilter": {
         "filterByTerm": "Lọc theo học kỳ",
         "allTerms": "Tất cả học kỳ"
+      },
+      "FileDropZone": {
+        "unsupportedFiles": "Đã bỏ qua tệp không đúng loại. Chỉ nhận: {accept}."
       },
       "Toast": {
         "closeNotification": "Đóng thông báo"

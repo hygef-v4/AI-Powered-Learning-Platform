@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, useState, type DragEvent, type ReactNode } from "react";
+import { msg } from "@/i18n/msg";
 import { cx } from "./cx";
 import { Icon } from "./Icon";
+import { showErrorToast } from "./Toast";
 
 /** Tệp có khớp {@code accept} của ô chọn tệp không (đuôi ".docx" hay kiểu "image/*"); bỏ trống là nhận mọi tệp. */
 export function matchesAccept(file: File, accept?: string): boolean {
@@ -18,7 +20,7 @@ const hasFiles = (event: DragEvent) => Array.from(event.dataTransfer?.types ?? [
 
 /**
  * Vùng nhận tệp kéo thả (yêu cầu 2026-11-27): bọc một ô chọn tệp có sẵn (ô tìm mẫu đề, ô tài liệu tham khảo); khi kéo tệp
- * vào thì phủ một lớp viền đứt và nhãn {@code label}. Chỉ nhận tệp khớp {@code accept}; {@code multiple} sai thì lấy tệp đầu.
+ * vào thì phủ một lớp viền đứt và nhãn {@code label}. Chỉ nhận tệp khớp {@code accept}, tệp sai loại thì báo lỗi; {@code multiple} sai thì lấy tệp đầu.
  */
 export function FileDropZone({ accept, multiple = false, disabled = false, label, onFiles, children, className }: {
   accept?: string;
@@ -55,7 +57,12 @@ export function FileDropZone({ accept, multiple = false, disabled = false, label
         if (disabled || !hasFiles(event)) return;
         event.preventDefault();
         reset();
-        const files = Array.from(event.dataTransfer.files).filter((file) => matchesAccept(file, accept));
+        const dropped = Array.from(event.dataTransfer.files);
+        const files = dropped.filter((file) => matchesAccept(file, accept));
+        // Tệp sai loại không bị bỏ đi lặng lẽ: báo loại tệp nhận được.
+        if (files.length < dropped.length && accept) {
+          showErrorToast(msg("shared.ui.FileDropZone.unsupportedFiles", { accept }));
+        }
         if (files.length > 0) onFiles(multiple ? files : files.slice(0, 1));
       }}>
       {children}

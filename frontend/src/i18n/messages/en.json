@@ -1634,6 +1634,7 @@
         "daysLeft": "{days} days left"
       },
       "PracticeFeedbackPanel": {
+        "noPartComment": "The AI did not comment on this part.",
         "overall": "Overall",
         "aiEstimate": "AI estimate",
         "aiEstimateNotOfficial": "AI estimate, not an official grade",
@@ -4813,7 +4814,7 @@
       "errorMessages": {
         "notFound": "Not found or you do not have access.",
         "invalidRequest": "The request is not valid. Check the information and try again.",
-        "settingDependency": "Set the daily run time before turning backup on, and turn backup off before clearing the time.",
+        "settingDependency": "This setting depends on another one. Set the required setting before turning this on, and turn this off before clearing the setting it needs.",
         "aiRequestTooLong": "The request can contain up to 10,000 characters. Shorten it before sending.",
         "aiPromptTooLarge": "The combined AI input is too long. Shorten the request or reduce the attachments.",
         "aiSourceUnavailable": "The AI source is unavailable. Check its connection or quota.",
@@ -5172,6 +5173,9 @@
       "TermFilter": {
         "filterByTerm": "Filter by term",
         "allTerms": "All terms"
+      },
+      "FileDropZone": {
+        "unsupportedFiles": "Skipped files of an unsupported type. Accepted: {accept}."
       },
       "Toast": {
         "closeNotification": "Close notification"

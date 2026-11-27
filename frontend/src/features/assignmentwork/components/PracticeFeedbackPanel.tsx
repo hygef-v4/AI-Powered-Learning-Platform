@@ -279,6 +279,10 @@ function PracticePartCard({ part }: { part: PartFeedback }) {
           {comment.title && <span className="font-semibold text-ink">{comment.title}: </span>}{comment.text}
         </p>
       ))}
+      {/* Server thêm phần có rubric mà AI bỏ sót với điểm 0: nói rõ thay vì để thẻ trống. */}
+      {part.comments.length === 0 && (
+        <p className="text-[13px] text-muted">{msg("assignmentwork.components.PracticeFeedbackPanel.noPartComment")}</p>
+      )}
     </Card>
   );
 }
