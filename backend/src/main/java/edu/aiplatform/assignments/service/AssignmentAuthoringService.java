@@ -135,6 +135,7 @@ public class AssignmentAuthoringService {
     public AssignmentViews.Detail updateDetails(Actor actor, UUID id, AssignmentCommands.Details command) {
         Assignment current = support.lockEditable(actor, id, command.version(), "ASSIGNMENT_UPDATED");
         String title = command.title() == null ? current.title() : normalizeTitle(command.title());
+        support.requireUniqueTemplateTitle(current, title);
         String instructions = command.instructions() == null ? current.instructions()
                 : normalizeInstructions(command.instructions());
         GradingMode grading = command.gradingMode() == null ? current.gradingMode() : command.gradingMode();
@@ -184,6 +185,7 @@ public class AssignmentAuthoringService {
 
     private StoredSkeleton storeSkeleton(Actor actor, Assignment current, DocumentModel skeleton, String instructions,
                                          String title) {
+        support.requireUniqueTemplateTitle(current, title);
         DocumentModel pending = DocumentFiles.resolveFiles(current.skeleton(), documentModelService.sanitize(skeleton), null);
         ValidationResult result = documentModelService.validateSkeleton(pending);
         List<ValidationIssue> errors = new ArrayList<>(result.errors());
@@ -335,6 +337,13 @@ public class AssignmentAuthoringService {
         DocumentModel skeleton = new DocumentModel(List.of());
         List<DocumentPart> parts = PartCalculator.compute(skeleton);
         String title = command.title() == null || command.title().isBlank() ? DEFAULT_TITLE : normalizeTitle(command.title());
+        if (scope == AssignmentScope.SUBJECT) {
+            if (command.title() == null || command.title().isBlank()) {
+                title = support.resolveTemplateTitle(subjectId, title);
+            } else {
+                support.requireUniqueTemplateTitle(subjectId, title, null);
+            }
+        }
         Assignment assignment = new Assignment(UUID.randomUUID(), scope, classId, subjectId, null,
                 AssignmentOrigin.MANUAL, 1, command.submissionMode(), true, command.gradingMode(),
                 title, "", skeleton, parts, Map.of(), List.of(), false, null, AssignmentStatus.DRAFT, null, null, null,

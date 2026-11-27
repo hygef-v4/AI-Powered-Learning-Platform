@@ -112,7 +112,7 @@ export const assignmentsApi = {
     fetchApi<ImportDraft>(`${base}/assignments/${enc(id)}/ai-drafts/${enc(draftId)}`, { signal }),
   /** Đề mẫu của môn (bài do chủ nhiệm môn tạo) để chọn khi soạn bằng AI; {@code own}: thêm các đề cũ mình quản lý được. */
   listAiTemplates: (id: string, signal?: AbortSignal, own = false) =>
-    fetchApi<{ assignmentId: string; title: string; subjectTemplate: boolean }[]>(
+    fetchApi<{ assignmentId: string; title: string; subjectTemplate: boolean; createdAt: string }[]>(
       `${base}/assignments/${enc(id)}/ai-drafts/templates${own ? "?own=true" : ""}`, { signal }),
   previewAiSources: (id: string, sourceFileRefs: string[], signal?: AbortSignal) =>
     fetchApi<AiSourcePreview[]>(`${base}/assignments/${enc(id)}/ai-drafts/sources:preview`, {

@@ -47,6 +47,7 @@ const CODE_KEYS: Record<string, string> = {
   AI_OUTPUT_LIMIT: "aiOutputLimit",
   AI_OUTPUT_INVALID: "aiOutputInvalid",
   AI_OUTPUT_UNUSABLE: "aiOutputUnusable",
+  TEMPLATE_TITLE_DUPLICATE: "templateTitleDuplicate",
 };
 
 const STATUS_KEYS: Record<number, string> = {

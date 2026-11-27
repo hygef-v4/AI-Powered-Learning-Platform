@@ -53,14 +53,20 @@ public class AssignmentCopyService {
         this.clock = clock;
     }
 
-    /** BR-U07-40: bản nháp mới cùng lớp hoặc cùng môn; giữ nguyên tên như bài thường (yêu cầu 2026-10-22, bỏ "(bản sao)"). */
+    /**
+     * BR-U07-40: bản nháp mới cùng lớp hoặc cùng môn; bài của lớp giữ nguyên tên (yêu cầu 2026-10-22, bỏ "(bản sao)"),
+     * đề mẫu của môn thêm số thứ tự để không trùng tên (yêu cầu 2026-11-27).
+     */
     @Transactional
     public AssignmentViews.Detail cloneAssignment(Actor actor, UUID id) {
         Assignment source = support.loadManageable(actor, id, "ASSIGNMENT_CLONED");
         access.requireOwnerWritable(source);
         requireGroupSupport(source, source.classId());
+        // Đề mẫu của môn không trùng tên (yêu cầu 2026-11-27): bản nhân bản thêm " (2)", " (3)"…
+        String title = source.scope() == AssignmentScope.SUBJECT
+                ? support.resolveTemplateTitle(source.subjectId(), source.title()) : source.title();
         Assignment copy = insertCopy(actor, source, source.classId(), source.subjectId(), AssignmentOrigin.CLONE, 1,
-                source.title(), source.referenceMaterialIds());
+                title, source.referenceMaterialIds());
         return support.buildDetail(actor, copy, List.of());
     }
 
@@ -139,8 +145,14 @@ public class AssignmentCopyService {
         }
         Set<UUID> allowed = listSelectableIds(actor, ResourceRef.subject(subjectId));
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();
+        String copyTitle = copyTitle(title, source);
+        if (title == null || title.isBlank()) {
+            copyTitle = support.resolveTemplateTitle(subjectId, copyTitle);
+        } else {
+            support.requireUniqueTemplateTitle(subjectId, copyTitle, null);
+        }
         Assignment copy = insertCopy(actor, source.changeModes(submissionMode, gradingMode), null, subjectId,
-                AssignmentOrigin.CLASS_COPY, 1, copyTitle(title, source), kept);
+                AssignmentOrigin.CLASS_COPY, 1, copyTitle, kept);
         return support.buildDetail(actor, copy, List.of());
     }
 

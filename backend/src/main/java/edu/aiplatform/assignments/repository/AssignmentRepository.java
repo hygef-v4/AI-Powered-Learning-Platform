@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -45,7 +46,18 @@ public class AssignmentRepository {
         this.json = json;
     }
 
+    /** Tên unique index tên đề mẫu trong môn (BR-U07-102). */
+    static final String SUBJECT_TITLE_INDEX = "uq_assignments_subject_title";
+
     public void insert(Assignment a) {
+        try {
+            insertRow(a);
+        } catch (DuplicateKeyException e) {
+            throw translateDuplicate(e);
+        }
+    }
+
+    private void insertRow(Assignment a) {
         jdbc.sql("insert into assignments (" + COLUMNS + ") values (:id, :scope, :classId, :subjectId, :source, "
                         + ":origin, :versionNo, :submissionMode, :diagramEnabled, :gradingMode, :title, :instructions, "
                         + "cast(:skeleton as jsonb), cast(:parts as jsonb), cast(:required as jsonb), "
@@ -70,7 +82,35 @@ public class AssignmentRepository {
 
     /** Ghi mọi cột đổi được khi {@code version} còn khớp; trả bản đã tăng {@code version}. */
     public Assignment saveAssignment(Assignment a) {
-        int updated = jdbc.sql("update assignments set diagram_enabled = :diagramEnabled, grading_mode = :gradingMode, "
+        int updated;
+        try {
+            updated = updateRow(a);
+        } catch (DuplicateKeyException e) {
+            throw translateDuplicate(e);
+        }
+        if (updated != 1) {
+            throw new OptimisticLockingFailureException("assignment " + a.id());
+        }
+        return a.changeVersion(a.version() + 1);
+    }
+
+    /**
+     * Index tên đề mẫu chặn khi kiểm ở service bị vượt qua; trả cùng lỗi 409 như service. Trùng ở constraint khác giữ
+     * nguyên để nơi gọi tự xử lý (ví dụ version đang soạn).
+     */
+    private static RuntimeException translateDuplicate(DuplicateKeyException failure) {
+        for (Throwable cause = failure; cause != null; cause = cause.getCause()) {
+            if (cause instanceof SQLException sqlFailure && "23505".equals(sqlFailure.getSQLState())
+                    && String.valueOf(sqlFailure.getMessage()).contains("\"" + SUBJECT_TITLE_INDEX + "\"")) {
+                return edu.aiplatform.shared.error.ApiException.createConflict("TEMPLATE_TITLE_DUPLICATE",
+                        "Môn đã có đề mẫu tên này. Hãy đặt tên khác");
+            }
+        }
+        return failure;
+    }
+
+    private int updateRow(Assignment a) {
+        return jdbc.sql("update assignments set diagram_enabled = :diagramEnabled, grading_mode = :gradingMode, "
                         + "title = :title, instructions = :instructions, skeleton = cast(:skeleton as jsonb), "
                         + "parts = cast(:parts as jsonb), required_diagrams = cast(:required as jsonb), "
                         + "reference_material_ids = cast(:materials as jsonb), activity_monitoring_enabled = :activity, "
@@ -78,10 +118,6 @@ public class AssignmentRepository {
                         + "late_until = :lateUntil, max_attempts = :maxAttempts, retired_reason = :reason, "
                         + "updated_at = :updatedAt, version = version + 1 where id = :id and version = :version")
                 .params(bindAssignmentParams(a)).param("version", a.version()).update();
-        if (updated != 1) {
-            throw new OptimisticLockingFailureException("assignment " + a.id());
-        }
-        return a.changeVersion(a.version() + 1);
     }
 
     /** Bài lớp của lớp và bài môn đã phát hành của môn chứa lớp (F1). */
@@ -116,6 +152,12 @@ public class AssignmentRepository {
         return jdbc.sql("select " + COLUMNS + " from assignments where scope = 'SUBJECT' and subject_id = :subjectId "
                         + "order by created_at desc")
                 .param("subjectId", subjectId).query(this::map).list();
+    }
+
+    /** Khóa tên đề mẫu của môn tới cuối transaction: hai request đặt cùng tên không cùng lọt qua kiểm tra trùng. */
+    public void lockSubjectTitles(UUID subjectId) {
+        jdbc.sql("select 1 from (select pg_advisory_xact_lock(hashtextextended(:key, 0))) locked")
+                .param("key", "assignment-subject-title:" + subjectId).query(Integer.class).single();
     }
 
     public List<UUID> listDueToOpen(Instant now, int limit) {

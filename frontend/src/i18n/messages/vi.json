@@ -4714,6 +4714,7 @@
         "aiOutputLimit": "Phản hồi bị cắt do chạm giới hạn token đầu ra. Hãy chia yêu cầu thành phần nhỏ hơn.",
         "aiOutputInvalid": "Kết quả AI không có cấu trúc cần thiết để áp dụng.",
         "aiOutputUnusable": "Nhà cung cấp AI không trả kết quả dùng được.",
+        "templateTitleDuplicate": "Môn đã có đề mẫu tên này. Hãy đặt tên khác.",
         "forbidden": "Bạn không có quyền thực hiện thao tác này.",
         "conflict": "Dữ liệu vừa thay đổi. Tải lại trang rồi thử lại.",
         "fileTooLarge": "Tệp vượt dung lượng cho phép.",
