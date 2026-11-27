@@ -153,7 +153,7 @@ class GroupControllersTest {
     @Test
     void submitAndExportAreMapped() throws Exception {
         UUID doc = UUID.randomUUID();
-        when(submissions.export(actor, doc, true)).thenReturn(new GroupSubmissionService.Export("Bài nhóm - Nhóm 1",
+        when(submissions.export(eq(actor), eq(doc), eq(true), any())).thenReturn(new GroupSubmissionService.Export("Bài nhóm - Nhóm 1",
                 new byte[] {1, 2}));
         mvc.perform(post("/api/v1/group-docs/" + doc + "/submit").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"version\":7}")).andExpect(status().isOk());
@@ -162,5 +162,12 @@ class GroupControllersTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type",
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+        verify(submissions).export(actor, doc, true, java.util.Map.of());
+        // POST cùng đường dẫn mang ảnh PNG của sơ đồ do trình duyệt vẽ (yêu cầu 2026-11-27).
+        String png = "data:image/png;base64,iVBORw0KGgo=";
+        mvc.perform(post("/api/v1/group-docs/" + doc + "/export.docx").param("submitted", "true")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"diagramPngs\":{\"d1\":\"" + png + "\"}}"))
+                .andExpect(status().isOk());
+        verify(submissions).export(actor, doc, true, java.util.Map.of("d1", png));
     }
 }
