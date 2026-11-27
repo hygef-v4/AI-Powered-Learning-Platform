@@ -15364,6 +15364,15 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 
 ---
 
+## Construction - U11 Quiz Practice merge PR
+**Timestamp**: 2026-11-26T03:49:41Z
+**Requested by:** Đào Chí Cường
+**User Input**: "merge vào staging"
+**AI Response**: "Merge PR #137 vào staging bằng merge commit (923f7ff4), khớp head 316bd3d4; CI đạt, không xung đột."
+**Context**: Construction, U11, merge PR #137
+
+---
+
 ## U03 Kiểm tra PR #140 lỗi CI khi lên main
 **Timestamp**: 2026-11-26T04:30:00Z
 **Requested by:** Quang Hung
@@ -16323,3 +16332,101 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **User Input**: "Khắc phục lỗi hệ thống báo xung đột phiên bản khi giảng viên lưu thay đổi bản chấm ngay sau khi công bố điểm, trong trường hợp việc tải lại dữ liệu tự động sau khi công bố không thành công."
 **AI Response**: "Nguyên nhân: thao tác công bố điểm làm tăng phiên bản (version) của bản chấm, trong khi giao diện chỉ cập nhật phiên bản mới thông qua lần tải lại tự động sau khi công bố. Khi lần tải lại này thất bại, thao tác lưu tiếp theo vẫn gửi phiên bản cũ và bị backend từ chối với mã 409 GRADE_VERSION_CONFLICT. Biện pháp: BatchActionDialog truyền kết quả của lượt thực hiện cho onDone; useGradingWorkspace bổ sung hàm applyPublishResult, cập nhật ngay phiên bản mới (newVersion) và trạng thái PUBLISHED từ kết quả công bố, chỉ áp dụng khi bản chấm đang mở được công bố thành công và phiên bản không bị lùi, đồng thời giữ nguyên các chỉnh sửa trên biểu mẫu; GradingWorkspacePage gọi applyPublishResult trước khi tải lại dữ liệu. Bổ sung hai kiểm thử trong preserve-grading.test.tsx: thao tác lưu sử dụng phiên bản sau công bố khi việc tải lại thất bại; kết quả không liên quan đến bản chấm đang mở bị bỏ qua. Kết quả kiểm thử: 245 kiểm thử giao diện của phân hệ chấm điểm đạt; kiểm tra kiểu (tsc) và eslint không phát sinh lỗi; frontend trên môi trường local đã được build lại."
 **Context**: Construction — sửa lỗi phân hệ chấm điểm (frontend).
+## Construction - Sửa lỗi bảng điểm production (Gradebook 500)
+**Timestamp**: 2026-11-27T06:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tại sao lại bị lỗi này, kiểm tra trên vps cho tôi" (ảnh chụp trang Grading, tab gradebook, báo "The system is busy, please try again later.") rồi "Sửa ở đây"
+**AI Response**: "Kiểm tra log platform-backend-1 trên VPS: GET bảng điểm lỗi NumberFormatException tại EvaluationRepository.mapGradebookEvaluation (parseEpochInstant). Đường đọc nhanh từ commit e1521754 đọc createdAt/gradedAt/publishedAt bằng BigDecimal, nhưng 45 bản chấm trên production lưu thời gian dạng chuỗi ISO-8601. Sửa parseEpochInstant nhận cả chuỗi ISO (Instant.parse) lẫn số giây; thêm test gradebookTimestampsAcceptEpochSecondsAndIsoStrings vào EvaluationMappingTest. Kết quả: EvaluationMappingTest 9/9 đạt. Nhánh chi-cuongg/gradebook-iso-timestamps cắt từ origin/main; chưa commit, chưa deploy. Không sửa dữ liệu DB."
+**Context**: Construction - sửa lỗi production, bảng điểm (grading).
+
+---
+
+## U12 — nhập nhóm từ Excel / Google Sheets (Requirements Analysis)
+**Timestamp**: 2026-11-27T09:45:50Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn phần sinh viên tự chia nhóm sẽ thêm tính năng import danh sách từ file excel (có file excel mẫu để giảng viên tải về và sau đó có thể import danh sách nhóm theo file này, hoặc có thể tạo link google sheets để sinh viên tự vào điền)" (kèm ảnh màn tab Sinh viên của giảng viên, lớp SE1801, thẻ "Sinh viên tự chia nhóm")
+**AI Response**: "Brownfield, U12 đã có reverse engineering và functional design (BR-U12-01…98). Đối chiếu mã: lõi lưu bộ nhóm có version (BR-U12-04), mẫu nhập Excel ghi danh đọc ở frontend bằng SheetJS và tải mẫu tĩnh từ /templates, backend có POI và Google Drive (OAuth drive.file, service account) cho U03. Tạo câu hỏi làm rõ aidlc-docs/inception/plans/2026-11-27-group-import-questions.md (định dạng file, nhóm chính thức hay đề xuất, xung đột nhóm đã có, sĩ số, trưởng nhóm, mẫu điền sẵn, cách làm Google Sheets). Chưa sửa mã."
+**Context**: Inception, Requirements Analysis (standard) cho tính năng nhập nhóm U12.
+
+---
+
+## U12 — nhập nhóm từ Excel: trả lời câu hỏi
+**Timestamp**: 2026-11-27T09:52:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Theo khuyến nghị"
+**AI Response**: "Ghi câu trả lời theo khuyến nghị vào 2026-11-27-group-import-questions.md, bắt đầu đọc luồng lưu bộ nhóm và thẻ tự chia nhóm để thiết kế."
+**Context**: Inception, Requirements Analysis — chốt yêu cầu.
+
+---
+
+## U12 — nhập nhóm từ Excel: bỏ Google Sheets
+**Timestamp**: 2026-11-27T09:58:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "bỏ tính năng google sheets, cho dùng import excel"
+**AI Response**: "Bỏ Câu 7 (Google Sheets), Câu 8 không áp dụng. Chỉ làm nhập Excel ở frontend: mẫu sinh theo lớp bằng SheetJS, đọc file trên trình duyệt, xem trước, lưu qua PUT /classes/{id}/groups sẵn có (server kiểm lại theo BR-U12-02, 04, 88). Không đổi backend, API hay schema. Thêm BR-U12-99…103, kế hoạch code generation."
+**Context**: Requirements chốt; chuyển sang Code Generation (frontend U12).
+
+---
+
+## U12 — nhập nhóm từ Excel: code generation và kiểm tra
+**Timestamp**: 2026-11-27T11:42:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tiếp tục"
+**AI Response**: "Hoàn tất code frontend (groupWorkbook.ts, GroupImportDialog, nút trong ProposalReviewList, i18n vi/en với ICU plural), test 13 tệp/63 test đạt, typecheck và lint sạch. Dựng lại image platform-backend:local từ mã hiện tại để chạy local; kiểm trên trình duyệt: xem trước, bỏ qua dòng lỗi, cảnh báo sĩ số, lưu tạo nhóm, rồi xóa nhóm thử. Chưa commit."
+**Context**: Construction, Code Generation U12 (nhập nhóm Excel) — chờ người dùng duyệt.
+
+---
+
+## U12 — nhập nhóm từ Excel: duyệt code generation
+**Timestamp**: 2026-11-27T11:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, sang bước sau"
+**AI Response**: "Ghi nhận duyệt Code Generation; sang Build and Test: chạy toàn bộ test frontend, lint, build và ghi kết quả vào construction/build-and-test/2026-11-27/."
+**Context**: Construction, chuyển từ Code Generation sang Build and Test (U12 nhập nhóm Excel).
+
+---
+
+## U12 — nhập nhóm từ Excel: Build and Test
+**Timestamp**: 2026-11-27T12:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, sang bước sau"
+**AI Response**: "Build and Test: vitest toàn bộ 1273/1273 đạt, typecheck sạch, lint 0 lỗi (2 cảnh báo có sẵn ngoài phạm vi), next build đạt. Ghi kết quả ở construction/build-and-test/2026-11-27/2026-11-27-u12-group-excel-import.md. Chưa commit."
+**Context**: Construction, Build and Test (U12 nhập nhóm Excel) — chờ người dùng xác nhận.
+
+---
+
+## U07 — đề mẫu trùng tên và ngày tạo
+**Timestamp**: 2026-11-27T09:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tên của template có thể trùng nhau không"
+**AI Response**: "Có. Đề mẫu là assignment có scope SUBJECT chưa RETIRED; bảng assignments không có unique index trên title và service không kiểm tra; copy không nhập tên còn mặc định lấy tên bài nguồn. Trùng tên không gây lỗi vì mọi thao tác theo assignmentId, nhưng ô chọn đề mẫu chỉ hiện tên nên khó phân biệt."
+**Context**: Construction, U07 Assignment Authoring — hỏi đáp, không đổi mã.
+
+---
+
+## U07 — kiểm tra tên trùng và hiện ngày tạo
+**Timestamp**: 2026-11-27T09:52:35Z
+**Requested by:** Đào Chí Cường
+**User Input**: "hiện thêm ngày tạo trong danh sách chọn đề mẫu và kiểm tra tên trùng cho đề mẫu trong cùng một môn"
+**AI Response**: "Thêm BR-U07-102…105. Backend chặn tên trùng (409 TEMPLATE_TITLE_DUPLICATE) cho tên nhập tay, tự thêm ' (2)', ' (3)'… cho tên hệ thống đặt, cho phép version cùng chuỗi chung tên, khóa theo môn bằng advisory lock; Row và AiTemplateOption trả createdAt. Frontend hiện ngày tạo ở ô chọn đề mẫu và ô copy, dịch mã lỗi mới. Test backend assignments.service 181 đạt, test frontend liên quan đạt, typecheck và lint sạch. Chưa chạy mvn verify, chưa kiểm tra trên trình duyệt, chưa commit."
+**Context**: Construction, U07 Assignment Authoring — Code Generation (thay đổi nhỏ, theo mẫu các mục trước trong aidlc-state.md).
+
+---
+
+## U07 — database chặn tên đề mẫu trùng, tách nhánh
+**Timestamp**: 2026-11-27T10:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn database cũng chặn, tách nhánh riêng phiên làm việc này ra cho tôi"
+**AI Response**: "Thêm migration V20261127_1300: đổi tên đề mẫu đã trùng (bài tạo sớm nhất giữ tên, bài sau thêm ' (n)', tăng version) rồi tạo unique index uq_assignments_subject_title trên subject_id và tên đã chuẩn hóa, bỏ RETIRED và NEW_VERSION. AssignmentRepository đổi vi phạm index thành 409 TEMPLATE_TITLE_DUPLICATE. Thêm BR-U07-106. Test migration trên PostgreSQL 16 (Testcontainers) và 196 test gói assignments đạt. Đưa riêng các thay đổi của phiên này sang nhánh chi-cuongg/subject-template-unique-title (từ staging, không theo dõi upstream), commit, chưa push; gỡ chúng khỏi bản làm việc staging, giữ nguyên thay đổi U12 của phiên khác."
+**Context**: Construction, U07 Assignment Authoring — Code Generation (thay đổi nhỏ).
+
+---
+
+## Release - Đưa staging lên main
+**Timestamp**: 2026-11-27T13:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem đưa staging lên main được chưa" rồi "Làm đi"
+**AI Response**: "staging hơn main 12 commit (PR #154–#157), CI staging đạt. main có hotfix PR #153 chưa về staging nên merge staging → main xung đột ở aidlc-docs/audit.md. Merge origin/main vào nhánh sync/main-into-staging (cắt từ staging), giữ cả hai mục audit theo thời gian; commit cục bộ, chờ người dùng cho phép push. Lưu ý: migration V20261127_1300 đổi tên đề mẫu trùng trên production."
+**Context**: Release, đồng bộ main về staging trước khi đưa staging lên main.
+
+---

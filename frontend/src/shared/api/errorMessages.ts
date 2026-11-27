@@ -49,6 +49,7 @@ const CODE_KEYS: Record<string, string> = {
   AI_OUTPUT_LIMIT: "aiOutputLimit",
   AI_OUTPUT_INVALID: "aiOutputInvalid",
   AI_OUTPUT_UNUSABLE: "aiOutputUnusable",
+  TEMPLATE_TITLE_DUPLICATE: "templateTitleDuplicate",
 };
 
 /** Lý do lỗi AI mà backend lưu vào `safeError` (tiếng Việt, không kèm mã); khớp nguyên văn câu của server. */

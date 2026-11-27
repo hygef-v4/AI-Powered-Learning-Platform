@@ -1,5 +1,28 @@
 # AI-DLC State Tracking
 
+## U12: Nhập nhóm từ Excel · 2026-11-27
+
+Người dùng: "tôi muốn phần sinh viên tự chia nhóm sẽ thêm tính năng import danh sách từ file excel …", trả lời "Theo khuyến nghị", rồi "bỏ tính năng google sheets, cho dùng import excel".
+
+- [x] Câu hỏi và trả lời: `inception/plans/2026-11-27-group-import-questions.md`; BR-U12-99…103; [kế hoạch](construction/plans/code-generation-plan/2026-11-27-u12-group-excel-import.md).
+- [x] Chỉ frontend: `groups/model/groupWorkbook.ts` (mẫu sinh theo lớp, đọc file, ghép nhóm), `GroupImportDialog`, nút "Nhập từ Excel" trong thẻ Sinh viên tự chia nhóm; lưu qua `PUT /classes/{id}/groups` sẵn có. Không đổi backend, API, schema.
+- [x] Test groups và i18n đạt (13 tệp, 63 test, có `groupWorkbook.test.ts`, `groupTemplate.test.ts`, `GroupImportDialog.test.tsx`); typecheck, lint sạch. Tiếng Anh dùng ICU plural cho số nhóm, sinh viên, dòng.
+- [x] Kiểm trên trình duyệt local (backend dựng lại image `platform-backend:local` từ mã hiện tại vì image cũ chưa có API đề xuất nhóm): nhập file, bỏ qua dòng ngoài lớp, cảnh báo sĩ số, lưu tạo nhóm; nhóm thử đã xóa. Chưa bấm Tải file mẫu trên trình duyệt (nội dung mẫu kiểm bằng test).
+- [x] Code Generation được duyệt ("Duyệt, sang bước sau"). Build and Test: toàn bộ frontend 1273/1273 test, typecheck, lint (0 lỗi), build đạt; [kết quả](construction/build-and-test/2026-11-27/2026-11-27-u12-group-excel-import.md).
+- Extension: Security, Resiliency giữ phạm vi đã duyệt (file đọc ở trình duyệt, server kiểm lại cả bộ nhóm); PBT tắt. Chưa commit.
+
+## U07: Đề mẫu không trùng tên trong môn, ngày tạo trong danh sách chọn · 2026-11-27
+
+Người dùng: "hiện thêm ngày tạo trong danh sách chọn đề mẫu và kiểm tra tên trùng cho đề mẫu trong cùng một môn".
+
+- [x] BR-U07-102…106 trong `u07-assignment-authoring/functional-design/business-rules.md`.
+- [x] DB chặn (người dùng: "tôi muốn database cũng chặn"): migration `assignments/V20261127_1300__unique_subject_template_titles.sql` đổi tên bản trùng cũ rồi tạo `uq_assignments_subject_title`; `AssignmentRepository.insert`, `saveAssignment` đổi vi phạm index thành 409 `TEMPLATE_TITLE_DUPLICATE`.
+- [x] Backend: `AssignmentSupport.requireUniqueTemplateTitle` và `resolveTemplateTitle`; `AssignmentRepository.lockSubjectTitles`. Gắn vào tạo bài của môn, `updateDetails`, `storeSkeleton` (nhập đề), AI áp đề và áp bản sửa, nhân bản, `copyToSubject`. `Row` và `AiTemplateOption` có thêm `createdAt`.
+- [x] Frontend: `PickerOption.hint` trong `SearchPicker`; ngày tạo ở `CreateAssignmentDialog`, `AiDraftDialog`, `AiReviseChat`; `TEMPLATE_TITLE_DUPLICATE` có câu riêng (vi, en).
+- [x] Kiểm tra: `SubjectTemplateTitleTest` (7 test), `SubjectTemplateTitleMigrationIntegrationTest` (PostgreSQL 16 qua Testcontainers) và toàn bộ 196 test của gói `assignments` đạt (javac với classpath dựng tay vì máy không có Maven). Frontend: `SearchPicker.test.tsx` mới; test assignments, shared, i18n đạt; typecheck và lint sạch.
+- [x] Tách sang nhánh riêng `chi-cuongg/subject-template-unique-title` từ `staging` (người dùng: "tách nhánh riêng phiên làm việc này ra cho tôi"), commit, chưa push.
+- [ ] Chưa chạy `mvn verify` đầy đủ, chưa kiểm tra trên trình duyệt.
+
 ## System test NFR (Report-5.4): sửa case Fail · 2026-11-26
 
 Người dùng: "bắt đầu fix giúp tôi các case failed đi, cần thiết thì ghi defect vào jira ... rồi assign cho Hải Nam, có thắc mắc gì thì hỏi tôi lần lượt".
