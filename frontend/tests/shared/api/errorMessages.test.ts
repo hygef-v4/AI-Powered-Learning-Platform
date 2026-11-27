@@ -20,7 +20,7 @@ describe("describeApiProblem (English UI)", () => {
     expect(describeApiProblem({ status: 400, code: "MATERIAL_YOUTUBE_INVALID", detail: "Chỉ nhận link của một video YouTube" }))
       .toBe("Only a link to a single YouTube video is accepted.");
     expect(describeApiProblem({ status: 400, code: "SETTING_DEPENDENCY", detail: "Cần đặt Giờ chạy hằng ngày trước khi bật mục này" }))
-      .toBe("Set the daily run time before turning backup on, and turn backup off before clearing the time.");
+      .toBe("This setting depends on another one. Set the required setting before turning this on, and turn this off before clearing the setting it needs.");
   });
 
   it("keeps the size limit from the server text", async () => {

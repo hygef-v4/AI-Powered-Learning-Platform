@@ -20,6 +20,8 @@ function loadStoredTheme(): Theme | null {
 }
 
 const listeners = new Set<() => void>();
+/** MediaQueryList đã gắn listener; gỡ đúng trên đối tượng này, vì mỗi lần gọi `matchMedia` trả một đối tượng mới. */
+let systemQuery: MediaQueryList | null = null;
 
 function applyTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
@@ -32,12 +34,15 @@ function followSystemTheme(event: MediaQueryListEvent) {
 }
 
 function subscribe(listener: () => void) {
-  const query = typeof window.matchMedia === "function" ? window.matchMedia(DARK_SCHEME_QUERY) : null;
-  if (listeners.size === 0) query?.addEventListener?.("change", followSystemTheme);
+  if (listeners.size === 0 && typeof window.matchMedia === "function") {
+    systemQuery = window.matchMedia(DARK_SCHEME_QUERY);
+    systemQuery.addEventListener?.("change", followSystemTheme);
+  }
   listeners.add(listener);
   return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0) query?.removeEventListener?.("change", followSystemTheme);
+    if (!listeners.delete(listener) || listeners.size > 0) return;
+    systemQuery?.removeEventListener?.("change", followSystemTheme);
+    systemQuery = null;
   };
 }
 

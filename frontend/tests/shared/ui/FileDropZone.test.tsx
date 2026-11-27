@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { FileDropZone, matchesAccept } from "@/shared/ui";
+import * as toast from "@/shared/ui/Toast";
 
 const docx = new File(["x"], "De.DOCX", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
 const png = new File(["x"], "a.png", { type: "image/png" });
@@ -29,4 +30,14 @@ it("ignores drops while disabled", () => {
   render(<FileDropZone accept=".docx" label="Thả tệp" disabled onFiles={onFiles}><span>x</span></FileDropZone>);
   fireEvent.drop(screen.getByTestId("file-drop-zone"), drag([docx]));
   expect(onFiles).not.toHaveBeenCalled();
+});
+
+it("reports dropped files of the wrong type instead of ignoring them silently", () => {
+  const onFiles = vi.fn();
+  const error = vi.spyOn(toast, "showErrorToast").mockImplementation(() => {});
+  render(<FileDropZone accept=".docx" label="Thả tệp" onFiles={onFiles}><span>x</span></FileDropZone>);
+  fireEvent.drop(screen.getByTestId("file-drop-zone"), drag([png]));
+  expect(onFiles).not.toHaveBeenCalled();
+  expect(error).toHaveBeenCalledExactlyOnceWith(expect.stringContaining(".docx"));
+  error.mockRestore();
 });

@@ -54,6 +54,20 @@ describe("readGroupWorkbook", () => {
     expect(english).toEqual([{ row: 2, studentCode: "", email: "chi@fpt.edu.vn", groupName: "Team", leader: false }]);
   });
 
+  it("does not treat explicit no values in the leader column as leaders", async () => {
+    const rows = await readGroupWorkbook(createFile([
+      ["MSSV", "Tên nhóm", "Trưởng nhóm"],
+      ["SE1", "A", "Không"],
+      ["SE2", "A", "0"],
+      ["SE3", "A", false],
+      ["SE4", "A", "no"],
+      ["SE5", "A", "-"],
+      ["SE6", "A", "X"],
+      ["SE7", "A", "Có"],
+    ]));
+    expect(rows.map((r) => r.leader)).toEqual([false, false, false, false, false, true, true]);
+  });
+
   it("rejects files without the needed headers, with formulas, too many rows or not xlsx", async () => {
     await expect(readGroupWorkbook(createFile([["MSSV", "Họ tên"], ["SE1", "A"]]))).rejects.toThrow();
     await expect(readGroupWorkbook(createFile([["MSSV", "Tên nhóm"], [{ t: "s", v: "SE1", f: '"SE1"' }, "N"]])))
@@ -99,6 +113,15 @@ describe("buildGroupImport", () => {
       [8, "MISSING_STUDENT"],
     ]);
     expect(preview.groups.map((g) => g.memberIds)).toEqual([["a"]]);
+  });
+
+  it("matches by student ID when present and uses email only for rows without one", () => {
+    const preview = buildGroupImport([
+      row(2, "SE999999", "Nhóm A", false, "an@fpt.edu.vn"),
+      row(3, "", "Nhóm A", false, "chi@fpt.edu.vn"),
+    ], { set, people });
+    expect(preview.issues.map((i) => [i.row, i.code])).toEqual([[2, "NOT_IN_CLASS"]]);
+    expect(preview.groups.map((g) => g.memberIds)).toEqual([["c"]]);
   });
 
   it("flags several leaders, sizes outside the self-grouping range and students in proposals", () => {

@@ -50,6 +50,14 @@ it("thẻ Tổng quan gọn ở đầu cột bên lề: điểm cùng dòng tên
   expect(screen.getByTestId("practice-part-q2")).toHaveTextContent("4 / 6");
 });
 
+it("phần AI bỏ sót (server thêm với điểm 0, nhận xét rỗng) ghi rõ là chưa có nhận xét", async () => {
+  mocks.feedback.mockResolvedValue([{ ...ready, feedback: { ...ready.feedback!, parts: [{ partId: "q2", comment: "", score: 0, maxScore: 6 }] } }]);
+  render(<Cards />);
+  const card = await screen.findByTestId("practice-part-q2");
+  expect(card).toHaveTextContent("0 / 6");
+  expect(card).toHaveTextContent("AI chưa nhận xét phần này.");
+});
+
 it("chưa có góp ý thì có nút Nhận góp ý AI; lỗi thì xin lại được", async () => {
   mocks.feedback.mockResolvedValue([{ ...ready, status: "FAILED", feedback: null, safeError: "Hết hạn mức" }]);
   mocks.requestFeedback.mockResolvedValue({ ...ready, feedbackId: "g", status: "PENDING", feedback: null, createdAt: "2026-11-27T02:00:00Z" });

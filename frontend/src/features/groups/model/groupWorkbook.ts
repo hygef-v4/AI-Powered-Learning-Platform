@@ -75,6 +75,13 @@ const normalizeCode = (value: string) => value.trim().toUpperCase();
 const normalizeEmail = (value: string) => value.trim().toLowerCase();
 const normalizeGroupName = (value: string) => value.trim().replace(/\s+/g, " ");
 
+/** Giá trị phủ định rõ ràng ở cột Trưởng nhóm ("Không", "0", FALSE…) không tính là trưởng nhóm (BR-U12-100). */
+const NOT_LEADER = new Set(["khong", "k", "no", "n", "0", "false", "-"]);
+
+function isLeaderMark(value: string): boolean {
+  return value !== "" && !NOT_LEADER.has(normalizeHeader(value) || value.trim());
+}
+
 /** Tải mẫu điền sẵn sinh viên chưa có nhóm (MSSV, email, họ tên); sheet thứ hai là hướng dẫn. */
 export async function downloadGroupTemplate(people: Person[], fileName: string): Promise<void> {
   const XLSX = await import("xlsx");
@@ -155,7 +162,7 @@ export async function readGroupWorkbook(file: File): Promise<GroupImportRow[]> {
       studentCode: readCell(r, "studentCode"),
       email: readCell(r, "email"),
       groupName: normalizeGroupName(readCell(r, "groupName")),
-      leader: readCell(r, "leader") !== "",
+      leader: isLeaderMark(readCell(r, "leader")),
     };
     if (row.studentCode || row.email || row.groupName) rows.push(row);
   }
@@ -205,9 +212,10 @@ export function buildGroupImport(
       fail("GROUP_NAME_TAKEN");
       continue;
     }
-    const person = (row.studentCode && byCode.get(normalizeCode(row.studentCode)))
-      || (row.email && byEmail.get(normalizeEmail(row.email)))
-      || null;
+    // BR-U12-101: nhận theo MSSV; chỉ dòng không có MSSV mới nhận theo email (MSSV sai không tự lấy người theo email).
+    const person = (row.studentCode
+      ? byCode.get(normalizeCode(row.studentCode))
+      : byEmail.get(normalizeEmail(row.email))) ?? null;
     if (!person) {
       fail("NOT_IN_CLASS");
       continue;

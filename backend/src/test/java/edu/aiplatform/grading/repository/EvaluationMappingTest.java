@@ -21,6 +21,11 @@ class EvaluationMappingTest {
         assertThat(EvaluationRepository.parseEpochInstant("2026-10-29T14:59:58.922Z"))
                 .isEqualTo(Instant.parse("2026-10-29T14:59:58.922Z"));
         assertThat(EvaluationRepository.parseEpochInstant(null)).isNull();
+        assertThat(EvaluationRepository.parseEpochInstant("  ")).isNull();
+        assertThat(EvaluationRepository.parseEpochInstant("2026-10-29T21:59:58.922+07:00"))
+                .isEqualTo(Instant.parse("2026-10-29T14:59:58.922Z"));
+        assertThat(EvaluationRepository.parseEpochInstant("2026-10-29T14:59:58.922"))
+                .isEqualTo(Instant.parse("2026-10-29T14:59:58.922Z"));
     }
 
     @org.junit.jupiter.params.ParameterizedTest
