@@ -15572,3 +15572,57 @@ kiểm tra xem đúng không và gửi tôi hướng giải quyết" — sau đ�
 **Context**: Construction, Build and Test — rà soát báo cáo kiểm thử NFR (System Test Report 5.4).
 
 ---
+
+## U12 — nhập nhóm từ Excel / Google Sheets (Requirements Analysis)
+**Timestamp**: 2026-11-27T09:45:50Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn phần sinh viên tự chia nhóm sẽ thêm tính năng import danh sách từ file excel (có file excel mẫu để giảng viên tải về và sau đó có thể import danh sách nhóm theo file này, hoặc có thể tạo link google sheets để sinh viên tự vào điền)" (kèm ảnh màn tab Sinh viên của giảng viên, lớp SE1801, thẻ "Sinh viên tự chia nhóm")
+**AI Response**: "Brownfield, U12 đã có reverse engineering và functional design (BR-U12-01…98). Đối chiếu mã: lõi lưu bộ nhóm có version (BR-U12-04), mẫu nhập Excel ghi danh đọc ở frontend bằng SheetJS và tải mẫu tĩnh từ /templates, backend có POI và Google Drive (OAuth drive.file, service account) cho U03. Tạo câu hỏi làm rõ aidlc-docs/inception/plans/2026-11-27-group-import-questions.md (định dạng file, nhóm chính thức hay đề xuất, xung đột nhóm đã có, sĩ số, trưởng nhóm, mẫu điền sẵn, cách làm Google Sheets). Chưa sửa mã."
+**Context**: Inception, Requirements Analysis (standard) cho tính năng nhập nhóm U12.
+
+---
+
+## U12 — nhập nhóm từ Excel: trả lời câu hỏi
+**Timestamp**: 2026-11-27T09:52:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Theo khuyến nghị"
+**AI Response**: "Ghi câu trả lời theo khuyến nghị vào 2026-11-27-group-import-questions.md, bắt đầu đọc luồng lưu bộ nhóm và thẻ tự chia nhóm để thiết kế."
+**Context**: Inception, Requirements Analysis — chốt yêu cầu.
+
+---
+
+## U12 — nhập nhóm từ Excel: bỏ Google Sheets
+**Timestamp**: 2026-11-27T09:58:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "bỏ tính năng google sheets, cho dùng import excel"
+**AI Response**: "Bỏ Câu 7 (Google Sheets), Câu 8 không áp dụng. Chỉ làm nhập Excel ở frontend: mẫu sinh theo lớp bằng SheetJS, đọc file trên trình duyệt, xem trước, lưu qua PUT /classes/{id}/groups sẵn có (server kiểm lại theo BR-U12-02, 04, 88). Không đổi backend, API hay schema. Thêm BR-U12-99…103, kế hoạch code generation."
+**Context**: Requirements chốt; chuyển sang Code Generation (frontend U12).
+
+---
+
+## U12 — nhập nhóm từ Excel: code generation và kiểm tra
+**Timestamp**: 2026-11-27T11:42:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tiếp tục"
+**AI Response**: "Hoàn tất code frontend (groupWorkbook.ts, GroupImportDialog, nút trong ProposalReviewList, i18n vi/en với ICU plural), test 13 tệp/63 test đạt, typecheck và lint sạch. Dựng lại image platform-backend:local từ mã hiện tại để chạy local; kiểm trên trình duyệt: xem trước, bỏ qua dòng lỗi, cảnh báo sĩ số, lưu tạo nhóm, rồi xóa nhóm thử. Chưa commit."
+**Context**: Construction, Code Generation U12 (nhập nhóm Excel) — chờ người dùng duyệt.
+
+---
+
+## U12 — nhập nhóm từ Excel: duyệt code generation
+**Timestamp**: 2026-11-27T11:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, sang bước sau"
+**AI Response**: "Ghi nhận duyệt Code Generation; sang Build and Test: chạy toàn bộ test frontend, lint, build và ghi kết quả vào construction/build-and-test/2026-11-27/."
+**Context**: Construction, chuyển từ Code Generation sang Build and Test (U12 nhập nhóm Excel).
+
+---
+
+## U12 — nhập nhóm từ Excel: Build and Test
+**Timestamp**: 2026-11-27T12:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Duyệt, sang bước sau"
+**AI Response**: "Build and Test: vitest toàn bộ 1273/1273 đạt, typecheck sạch, lint 0 lỗi (2 cảnh báo có sẵn ngoài phạm vi), next build đạt. Ghi kết quả ở construction/build-and-test/2026-11-27/2026-11-27-u12-group-excel-import.md. Chưa commit."
+**Context**: Construction, Build and Test (U12 nhập nhóm Excel) — chờ người dùng xác nhận.
+
+---

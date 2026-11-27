@@ -3013,7 +3013,8 @@
         "rejectProposal": "Từ chối đề xuất {name}?",
         "reasonOptional": "Lý do (tùy chọn)",
         "theReasonCanBeAt": "Lý do tối đa 1.000 ký tự.",
-        "membersAreNotifiedAndCan": "Thành viên được báo và có thể lập hoặc vào đề xuất khác."
+        "membersAreNotifiedAndCan": "Thành viên được báo và có thể lập hoặc vào đề xuất khác.",
+        "importFromExcel": "Nhập từ Excel"
       },
       "RandomSplitDialog": {
         "groupsCreated": "Đã chia nhóm",
@@ -3057,6 +3058,35 @@
         "theClassIsReadyFor": "Lớp đã sẵn sàng cho bài nhóm.",
         "openTheStudentsTab": "Mở tab Sinh viên",
         "editGroupsInTheNew": "Sửa nhóm ở tab mới; quay lại đây hộp này tự cập nhật."
+      },
+      "GroupImportDialog": {
+        "title": "Nhập nhóm từ Excel",
+        "templateFileName": "mau-nhom.xlsx",
+        "couldNotCreateTemplate": "Không tạo được file mẫu.",
+        "chooseFile": "Chọn file Excel",
+        "chooseAnotherFile": "Chọn file khác",
+        "saveGroups": "Lưu {count} nhóm",
+        "imported": "Đã tạo {count} nhóm từ Excel",
+        "intro": "Tạo nhiều nhóm một lần từ file Excel.",
+        "stepDownload": "Tải file mẫu, đã điền sẵn {count} sinh viên chưa có nhóm.",
+        "stepFill": "Ghi cột Tên nhóm cho từng sinh viên (cùng tên là cùng nhóm) và đánh x vào cột Trưởng nhóm cho một người mỗi nhóm.",
+        "stepUpload": "Chọn file đã điền để xem trước, kiểm lại rồi lưu.",
+        "onlyNewGroups": "Chỉ thêm nhóm mới; nhóm đang có giữ nguyên. Sinh viên để trống Tên nhóm vẫn chưa có nhóm.",
+        "downloadTemplate": "Tải file mẫu",
+        "summary": "{file}: {groups} nhóm mới, {students} sinh viên.",
+        "skippedRows": "Bỏ qua {count} dòng:",
+        "noGroupsInFile": "File không có nhóm mới nào để tạo.",
+        "group": "Nhóm",
+        "members": "Thành viên",
+        "leader": "Trưởng nhóm",
+        "leaderOf": "Trưởng nhóm của {name}",
+        "chooseLeader": "Chọn trưởng nhóm",
+        "noLeader": "File chưa đánh dấu trưởng nhóm.",
+        "multipleLeaders": "File đánh dấu nhiều trưởng nhóm, hãy chọn một người.",
+        "belowMin": "Dưới {min} người",
+        "aboveMax": "Quá {max} người",
+        "inProposal": "đang ở đề xuất {name}",
+        "proposalNote": "Sinh viên đang ở đề xuất nhóm sẽ rời đề xuất đó khi lưu; nếu là trưởng nhóm thì đề xuất bị hủy."
       }
     },
     "model": {
@@ -3091,6 +3121,34 @@
         "couldNotCompleteItPlease": "Không thực hiện được, thử lại sau.",
         "proposalNotFoundOrYou": "Không tìm thấy đề xuất hoặc bạn không có quyền.",
         "theProposalJustChangedIt": "Đề xuất vừa thay đổi. Đã tải lại, hãy thử lại."
+      },
+      "groupWorkbook": {
+        "headerStudentCode": "MSSV",
+        "headerFullName": "Họ tên",
+        "headerGroupName": "Tên nhóm",
+        "headerLeader": "Trưởng nhóm",
+        "sheetGroups": "Nhóm",
+        "sheetGuide": "Hướng dẫn",
+        "guideTitle": "Hướng dẫn nhập nhóm",
+        "guideRows": "Mỗi dòng một sinh viên. Các dòng cùng Tên nhóm (không phân biệt hoa thường) thành một nhóm, tên tối đa 100 ký tự.",
+        "guideLeader": "Ghi x vào cột Trưởng nhóm cho đúng một người mỗi nhóm.",
+        "guideBlank": "Để trống Tên nhóm nếu chưa xếp nhóm cho sinh viên đó.",
+        "guideIdentity": "Sinh viên được nhận theo MSSV, không có MSSV thì theo email. Cột Họ tên chỉ để đọc.",
+        "guideExisting": "Chỉ tạo nhóm mới: tên trùng nhóm đã có hoặc sinh viên đã có nhóm sẽ bị bỏ qua.",
+        "fileTooLarge": "File tối đa 200 KB.",
+        "onlyXlsx": "Chỉ nhận file Excel .xlsx.",
+        "notXlsx": "File không phải Excel .xlsx.",
+        "couldNotRead": "Không đọc được file Excel.",
+        "emptyFile": "File Excel trống.",
+        "tooManyRows": "File tối đa {max} dòng sinh viên.",
+        "missingHeaders": "Dòng đầu cần có cột MSSV hoặc Email và cột Tên nhóm, như file mẫu.",
+        "formulaNotAllowed": "Dòng {row} có công thức hoặc ô nhiều dòng; hãy nhập giá trị thường.",
+        "issueMissingStudent": "Dòng {row}: thiếu MSSV hoặc email.",
+        "issueNotInClass": "Dòng {row}: {student} không phải sinh viên đang học của lớp.",
+        "issueAlreadyGrouped": "Dòng {row}: {student} đã có nhóm.",
+        "issueDuplicateStudent": "Dòng {row}: {student} xuất hiện nhiều lần trong file.",
+        "issueNameTooLong": "Dòng {row}: tên nhóm dài quá 100 ký tự.",
+        "issueGroupNameTaken": "Dòng {row}: lớp đã có nhóm {name}."
       }
     }
   },
