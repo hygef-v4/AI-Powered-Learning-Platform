@@ -1,5 +1,6 @@
 package edu.aiplatform.assignments.repository;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,13 +17,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers(disabledWithoutDocker = true)
 class RubricRepositoryTest {
-    @Container static final PostgreSQLContainer<?> DB = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database DB = SharedPostgres.createDatabase();
     final ObjectMapper json = new ObjectMapper();
     final UUID assignmentId = UUID.randomUUID();
     final List<RubricCriterion> criteria = List.of(new RubricCriterion(UUID.randomUUID(), "Architecture", "",

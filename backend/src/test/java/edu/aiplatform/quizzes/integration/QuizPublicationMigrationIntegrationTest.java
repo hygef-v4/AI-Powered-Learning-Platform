@@ -1,5 +1,6 @@
 package edu.aiplatform.quizzes.integration;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import edu.aiplatform.quizzes.repository.QuizRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,15 +17,12 @@ import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Upgrade from the legacy timestamp convention using only publication audit as positive provenance. */
 @Testcontainers(disabledWithoutDocker = true)
 class QuizPublicationMigrationIntegrationTest {
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabase();
     private static final Instant NOW = Instant.parse("2026-10-30T00:00:00Z");
 
     @Test
@@ -34,7 +32,6 @@ class QuizPublicationMigrationIntegrationTest {
             pool.setUsername(POSTGRES.getUsername());
             pool.setPassword(POSTGRES.getPassword());
             JdbcClient jdbc = JdbcClient.create(pool);
-            jdbc.sql("create role app").update();
             Flyway.configure().dataSource(pool).locations("classpath:db/migration")
                     .target("20261029.1100").load().migrate();
             UUID author = UUID.randomUUID(), subject = UUID.randomUUID();

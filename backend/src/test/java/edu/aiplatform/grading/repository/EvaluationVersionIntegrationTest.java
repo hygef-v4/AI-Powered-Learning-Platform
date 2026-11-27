@@ -1,5 +1,6 @@
 package edu.aiplatform.grading.repository;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,11 +9,6 @@ import edu.aiplatform.grading.model.GradingFeedback;
 import edu.aiplatform.grading.model.GradingProposal;
 import edu.aiplatform.shared.error.ApiException;
 import org.flywaydb.core.Flyway;
-import org.testcontainers.images.builder.Transferable;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.io.UncheckedIOException;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -29,19 +25,14 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
 /** Real owner migrations/app grants and committed versions, in a disposable database only. */
 @Testcontainers(disabledWithoutDocker = true)
 class EvaluationVersionIntegrationTest {
-    static final String APP_PASSWORD = UUID.randomUUID().toString();
-    static final String MIGRATOR_PASSWORD = UUID.randomUUID().toString();
-    @Container
-    static final PostgreSQLContainer<?> DB = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withEnv("POSTGRES_APP_PASSWORD", APP_PASSWORD)
-            .withEnv("POSTGRES_MIGRATOR_PASSWORD", MIGRATOR_PASSWORD)
-            .withCopyToContainer(rolesScript(), "/docker-entrypoint-initdb.d/01-roles.sh");
+    static final SharedPostgres.Database DB = SharedPostgres.createDatabaseWithRoles();
+    static final String APP_PASSWORD = DB.getAppPassword();
+    static final String MIGRATOR_PASSWORD = DB.getMigratorPassword();
     static JdbcTemplate owner;
     static AnnotationConfigApplicationContext context;
     static IEvaluationRepository evaluationRepository;
@@ -130,14 +121,38 @@ class EvaluationVersionIntegrationTest {
                 .execute(status -> evaluationRepository.findById(id).orElseThrow());
     }
 
-    private static Transferable rolesScript() {
-        try {
-            return Transferable
-                    .of(Files.readString(Path.of("..", "infra", "postgres", "init", "01-roles.sh"))
-                            .replace("\r", ""), 0755);
-        } catch (IOException failure) {
-            throw new UncheckedIOException(failure);
-        }
+    @Test
+    void gradebookProjectionMatchesFullDocumentAndSkipsSupersededGrades() {
+        var created = seed();
+        seed();
+        var saved = transactionTemplate.execute(status -> {
+            var value = evaluationRepository.lockById(created.id).orElseThrow();
+            value.score = new BigDecimal("7.25");
+            value.feedback = "Tốt \"lắm\"";
+            value.state = edu.aiplatform.grading.model.EvaluationStatus.PUBLISHED;
+            value.gradedAt = Instant.parse("2026-10-23T11:05:00.123456789Z");
+            value.publishedAt = Instant.parse("2026-10-23T11:06:00Z");
+            return evaluationRepository.saveEvaluation(value);
+        });
+        var full = evaluationRepository.findForClass(created.classId);
+        assertThat(evaluationRepository.listGradebookEvaluations(created.classId, List.of(created.accountId))).singleElement()
+                .usingRecursiveComparison()
+                .comparingOnlyFields("id", "assignmentId", "classId", "attemptId", "groupDocumentId", "accountId",
+                        "kind", "state", "score", "maxScore", "version", "feedback", "createdAt", "gradedAt",
+                        "publishedAt")
+                .isEqualTo(full.get(0));
+        assertThat(full.get(0).gradedAt).isEqualTo(Instant.parse("2026-10-23T11:05:00.123456789Z"));
+        assertThat(evaluationRepository.listGradebookEvaluations(created.classId, List.of(UUID.randomUUID())))
+                .isEmpty();
+        assertThat(evaluationRepository.listGradebookEvaluations(created.classId, List.of())).isEmpty();
+        transactionTemplate.executeWithoutResult(status -> {
+            var value = evaluationRepository.lockById(saved.id).orElseThrow();
+            value.supersedeEvaluation();
+            evaluationRepository.saveEvaluation(value);
+        });
+        assertThat(evaluationRepository.listGradebookEvaluations(created.classId, List.of(created.accountId))).isEmpty();
+        assertThat(EvaluationRepository.parseEpochInstant("1795664887")).isEqualTo(Instant.ofEpochSecond(1795664887));
+        assertThat(EvaluationRepository.parseEpochInstant(null)).isNull();
     }
 
     @Test

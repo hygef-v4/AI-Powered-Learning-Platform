@@ -11,8 +11,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+// Chờ probe tối đa 2 s; khi các fork test chạy song song làm máy bận thì quá hạn, nên chạy ở lượt tuần tự (pom.xml).
+@Tag("serial")
 class DriveHealthIndicatorTest {
     final FilesProperties properties = mock(FilesProperties.class);
     final DriveClientFactory clients = mock(DriveClientFactory.class);
@@ -83,8 +86,7 @@ class DriveHealthIndicatorTest {
     @Test
     void unconfiguredStorageDoesNotCallDrive() {
         when(properties.hasDrive()).thenReturn(false);
-        when(properties.requireDrive()).thenReturn(true);
-        assertThat(indicator.health().getDetails()).containsEntry("drive", "NOT_CONFIGURED");
+        assertThat(indicator.health().getDetails()).containsEntry("drive", "LOCAL");
         verifyNoInteractions(clients, folders);
     }
 }

@@ -24,7 +24,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.DigestInputStream;
-import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -45,7 +44,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * {@code BACKUP_RUN} (B2, B4): dump, mã hóa khi có {@code U03_BACKUP_PUBLIC_KEY} (không có thì lưu bản dump thường),
+ * {@code BACKUP_RUN} (B2, B4): chụp base backup bằng {@code pg_basebackup}, mã hóa khi có {@code U03_BACKUP_PUBLIC_KEY}
+ * (không có thì lưu bản chụp thường),
  * tải lên thư mục backup, đối chiếu kích thước và MD5, ghi {@code SUCCESS} rồi dọn bản cũ. Lỗi tạm thì thử lại theo
  * việc nền; lỗi vĩnh viễn hoặc hết lượt thì {@code FAILED}, dọn phần dở, audit và phát {@code backup.failed}.
  */
@@ -56,7 +56,7 @@ public class BackupJobHandler implements IJobHandler {
     static final Duration TIMEOUT = Duration.ofHours(2);
 
     private final BackupRunRepository runs;
-    private final IDumpRunner dumpRunner;
+    private final IBaseBackupRunner baseBackupRunner;
     private final IBackupStore store;
     private final BackupRetentionService backupRetentionService;
     private final IAudit audit;
@@ -65,11 +65,11 @@ public class BackupJobHandler implements IJobHandler {
     private final BackupProperties properties;
     private final Clock clock;
 
-    public BackupJobHandler(BackupRunRepository runs, IDumpRunner dumpRunner, IBackupStore store,
+    public BackupJobHandler(BackupRunRepository runs, IBaseBackupRunner baseBackupRunner, IBackupStore store,
                             BackupRetentionService backupRetentionService, IAudit audit, IEventPublisher events, IJob jobs,
                             BackupProperties properties, Clock clock) {
         this.runs = runs;
-        this.dumpRunner = dumpRunner;
+        this.baseBackupRunner = baseBackupRunner;
         this.store = store;
         this.backupRetentionService = backupRetentionService;
         this.audit = audit;
@@ -103,16 +103,16 @@ public class BackupJobHandler implements IJobHandler {
         if (runs.markRunning(runId, clock.instant()) == 0) {
             return;
         }
-        PublicKey publicKey = loadPublicKey();
+        PublicKey publicKey = BackupKeys.loadOptionalPublicKey(properties.publicKey());
         Path dir = Path.of(resolveTmpDir(), runId.toString());
         try {
             Files.createDirectories(dir);
             ensureSpace(dir);
             Instant snapshotAt = clock.instant();
-            Path dump = dir.resolve("dump.pgc");
-            dumpRunner.dumpDatabase(dump);
+            Path base = dir.resolve("base.tar.gz");
+            baseBackupRunner.runBaseBackup(base);
             Path archive = dir.resolve("archive.alapbk");
-            String sha256 = encryptDump(dump, archive, publicKey);
+            String sha256 = encryptArchiveFile(base, archive, publicKey);
             long size = Files.size(archive);
             IBackupStore.StoredArchive stored = store.putArchive(runId, archive);
             if (stored.byteSize() != size || (stored.md5() != null && !stored.md5().equalsIgnoreCase(hashMd5(archive)))) {
@@ -176,30 +176,17 @@ public class BackupJobHandler implements IJobHandler {
         long free = Files.getFileStore(dir).getUsableSpace();
         long needed = 2 * runs.measureDatabaseSize();
         if (free < needed) {
-            throw new BackupFailure("Không đủ dung lượng tạm để dump database");
+            throw new BackupFailure("Không đủ dung lượng tạm để chụp base backup");
         }
     }
 
-    /** Khóa mã hóa là tùy chọn: không đặt thì backup vẫn chạy nhưng archive không được mã hóa. */
-    private PublicKey loadPublicKey() {
-        if (properties.publicKey() == null || properties.publicKey().isBlank()) {
-            log.warn("Chưa đặt U03_BACKUP_PUBLIC_KEY: bản backup sẽ không được mã hóa");
-            return null;
-        }
-        try {
-            return BackupEncryptor.parsePublicKey(properties.publicKey());
-        } catch (GeneralSecurityException | IllegalArgumentException e) {
-            throw new BackupFailure("U03_BACKUP_PUBLIC_KEY không hợp lệ");
-        }
-    }
-
-    /** Mã hóa dump thành archive ({@code publicKey} null thì giữ nguyên bản dump), trả SHA-256 của archive. */
-    static String encryptDump(Path dump, Path archive, PublicKey publicKey) throws IOException {
+    /** Mã hóa tệp thành archive ({@code publicKey} null thì giữ nguyên tệp), trả SHA-256 của archive. */
+    static String encryptArchiveFile(Path source, Path archive, PublicKey publicKey) throws IOException {
         if (publicKey == null) {
-            Files.copy(dump, archive);
+            Files.copy(source, archive);
             return computeDigest(archive, "SHA-256");
         }
-        try (InputStream in = Files.newInputStream(dump); OutputStream out = Files.newOutputStream(archive)) {
+        try (InputStream in = Files.newInputStream(source); OutputStream out = Files.newOutputStream(archive)) {
             BackupEncryptor.encryptArchive(in, out, publicKey);
         }
         return computeDigest(archive, "SHA-256");

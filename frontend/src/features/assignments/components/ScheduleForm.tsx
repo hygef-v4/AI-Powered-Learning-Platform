@@ -25,14 +25,31 @@ function join(when: When): string | null {
   return when.date ? fromLocalInput(`${when.date}T${when.time || "00:00"}`) : null;
 }
 
-/** Ngày và giờ tách hai ô: chọn ngày là đủ, giờ có sẵn mặc định. */
+/** Ngày giờ hiện tại theo giờ Việt Nam, dạng {@code yyyy-mm-ddThh:mm}. */
+function nowLocal(): When {
+  const local = toLocalInput(new Date().toISOString()) ?? "";
+  return { date: local.slice(0, 10), time: local.slice(11, 16) };
+}
+
+/** Thời điểm đã qua (so tới phút theo giờ Việt Nam). */
+function isPast(when: When): boolean {
+  const at = join(when);
+  return !!at && new Date(at).getTime() < Date.now() - 60_000;
+}
+
+/**
+ * Ngày và giờ tách hai ô: chọn ngày là đủ, giờ có sẵn mặc định. Không chọn được ngày đã qua; hôm nay thì không chọn được
+ * giờ đã qua (yêu cầu 2026-11-26).
+ */
 function DateTime({ id, label, value, disabled, onChange }: { id: string; label: string; value: When; disabled?: boolean; onChange: (value: When) => void }) {
+  const now = nowLocal();
   return (
     <Field label={label} htmlFor={id}>
       <div className="flex gap-2">
         <DateInput id={id} aria-label={msg("assignments.components.ScheduleForm.date", { label: String(label) })} value={value.date} disabled={disabled} wrapperClassName="flex-1"
-          onChange={(date) => onChange({ ...value, date })} />
+          min={now.date} onChange={(date) => onChange({ ...value, date })} />
         <TextInput type="time" aria-label={msg("assignments.components.ScheduleForm.time", { label: String(label) })} value={value.time} disabled={disabled} wrapperClassName="w-28"
+          min={value.date === now.date ? now.time : undefined} invalid={!disabled && isPast(value)}
           onChange={(e) => onChange({ ...value, time: e.target.value })} />
       </div>
     </Field>
@@ -63,6 +80,10 @@ export function ScheduleForm({ assignment, mode, onSubmit }: Props) {
     if (!close) return msg("assignments.components.ScheduleForm.missingDeadline");
     const start = scheduled ? join(opens) : new Date().toISOString();
     if (!start) return msg("assignments.components.ScheduleForm.missingOpeningDate");
+    // Bài đang mở giữ ngày mở cũ; còn lại ngày mở hẹn giờ không được ở quá khứ.
+    if (scheduled && !open && isPast(opens)) return msg("assignments.components.ScheduleForm.openingDateInThePast");
+    // Bài đang trong hạn nộp muộn thì hạn nộp đã qua là bình thường: chỉ cần hạn cuối nhận bài còn ở tương lai.
+    if (open ? isPast(allowLate && late.date ? late : closes) : isPast(closes)) return msg("assignments.components.ScheduleForm.deadlineInThePast");
     if (new Date(close) <= new Date(start)) return msg("assignments.components.ScheduleForm.theDeadlineMustBeAfter");
     if (allowLate) {
       const until = join(late);

@@ -131,6 +131,30 @@ public class MaterialService {
         return next;
     }
 
+    /**
+     * Khôi phục học liệu đã lưu trữ về {@code ACTIVE} (yêu cầu 2026-11-26): lưu trữ không còn là xóa, người quản lý
+     * học liệu vẫn thấy nó trong module và đưa lại cho người học được.
+     */
+    public Material restoreMaterial(Actor actor, UUID id, long expected) {
+        Material m =
+                materialRepository
+                        .findMaterial(id)
+                        .orElseThrow(() -> ApiException.createNotFound("MATERIAL_NOT_FOUND"));
+        materialAccessPolicy.requireRestoreAccess(actor, m);
+        if (expected != m.version()) throw createVersionConflict();
+        if (m.status() == Material.Status.ACTIVE) return m;
+        Material next =
+                m.reviseMaterial(
+                        m.title(),
+                        m.description(),
+                        m.orderNo(),
+                        m.currentVersionNo(),
+                        Material.Status.ACTIVE,
+                        clock.instant());
+        saveMaterial(next, m.version());
+        return next;
+    }
+
     public void reorderMaterials(
             Actor actor, UUID scopeId, boolean classScope, MaterialCommands.Reorder input) {
         if (classScope) materialAccessPolicy.requireClassListAccess(actor, scopeId, false);

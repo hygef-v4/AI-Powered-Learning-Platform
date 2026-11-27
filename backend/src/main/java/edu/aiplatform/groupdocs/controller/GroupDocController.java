@@ -1,5 +1,6 @@
 package edu.aiplatform.groupdocs.controller;
 
+import edu.aiplatform.assignments.contract.DiagramPngs;
 import edu.aiplatform.assignments.contract.DocumentBlock;
 import edu.aiplatform.assignmentwork.contract.ActivityEventInput;
 import edu.aiplatform.groupdocs.service.GroupDocAccess;
@@ -153,7 +154,16 @@ public class GroupDocController {
     @GetMapping("/api/v1/group-docs/{id}/export.docx")
     public ResponseEntity<byte[]> export(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
                                          @RequestParam(defaultValue = "false") boolean submitted) {
-        Export export = groupSubmissionService.export(actor, id, submitted);
+        return exportWithDiagrams(actor, id, submitted, null);
+    }
+
+    /** Như GET, kèm ảnh PNG của sơ đồ chưa có ảnh lưu sẵn do trình duyệt vẽ (yêu cầu 2026-11-27). */
+    @PostMapping("/api/v1/group-docs/{id}/export.docx")
+    public ResponseEntity<byte[]> exportWithDiagrams(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+            @RequestParam(defaultValue = "false") boolean submitted,
+            @RequestBody(required = false) DiagramPngs.Body body) {
+        Export export = groupSubmissionService.export(actor, id, submitted,
+                DiagramPngs.Body.read(body));
         return ResponseEntity.ok().contentType(DOCX)
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
                         .filename(export.title() + ".docx", StandardCharsets.UTF_8).build().toString())

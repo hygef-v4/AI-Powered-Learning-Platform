@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import edu.aiplatform.backup.contract.BackupState;
 import edu.aiplatform.backup.model.BackupRun;
 import edu.aiplatform.backup.repository.BackupRunRepository;
+import edu.aiplatform.backup.repository.WalSegmentRepository;
 import edu.aiplatform.files.service.StorageUnavailableException;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -21,7 +22,8 @@ class BackupRetentionServiceTest {
 
     final BackupRunRepository runs = mock(BackupRunRepository.class);
     final IBackupStore store = mock(IBackupStore.class);
-    final BackupRetentionService retention = new BackupRetentionService(runs, store);
+    final WalSegmentRepository walSegments = mock(WalSegmentRepository.class);
+    final BackupRetentionService retention = new BackupRetentionService(runs, store, walSegments);
     final Instant now = Instant.parse("2026-10-16T19:30:00Z");
 
     static BackupRun success(Instant snapshotAt) {
@@ -56,5 +58,27 @@ class BackupRetentionServiceTest {
         retention.purgeOld(now);
 
         verify(runs, never()).markPurged(any(), any());
+    }
+
+    @Test
+    void deletesWalUploadedBeforeTheOldestRetainedBaseBackupWithOneHourMargin() {
+        Instant oldest = Instant.parse("2026-10-10T19:00:00Z");
+        when(runs.findOldestRetainedSnapshot()).thenReturn(java.util.Optional.of(oldest));
+        var segment = new WalSegmentRepository.WalSegment("000000010000000000000001", "wal-ref");
+        when(walSegments.findPurgeCandidates(oldest.minus(java.time.Duration.ofHours(1)))).thenReturn(List.of(segment));
+
+        retention.purgeOld(now);
+
+        verify(store).deleteWal("wal-ref");
+        verify(walSegments).markPurged("000000010000000000000001", now);
+    }
+
+    @Test
+    void keepsAllWalWhenNoBaseBackupIsRetained() {
+        when(runs.findOldestRetainedSnapshot()).thenReturn(java.util.Optional.empty());
+
+        retention.purgeOld(now);
+
+        verify(walSegments, never()).findPurgeCandidates(any());
     }
 }

@@ -290,7 +290,7 @@ export function AssignmentWorkspacePage({ attemptId }: { attemptId: string }) {
         actions={<>
           <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.AssignmentWorkspacePage.moreActions")} align="right">
             <MenuItem icon="download" onClick={() => {
-              void downloadAttemptDocx(attempt.attemptId)
+              void downloadAttemptDocx(attempt.attemptId, attempt.content.blocks)
                 .catch((error: unknown) => showErrorToast(describeError(error)));
             }}>{msg("assignmentwork.pages.AssignmentWorkspacePage.downloadDocx")}</MenuItem>
             {editable && <MenuItem icon="upload_file" onClick={() => setDialog("docx")}>{msg("assignmentwork.pages.AssignmentWorkspacePage.importDocx")}</MenuItem>}

@@ -47,7 +47,8 @@ public class ReferenceMaterialService implements IReferenceMaterial {
                                         m.id(),
                                         m.title(),
                                         m.current().textStatus()
-                                                == MaterialVersion.TextStatus.EXTRACTED))
+                                                == MaterialVersion.TextStatus.EXTRACTED,
+                                        m.kind() == Material.Kind.YOUTUBE_LINK))
                 .toList();
     }
 

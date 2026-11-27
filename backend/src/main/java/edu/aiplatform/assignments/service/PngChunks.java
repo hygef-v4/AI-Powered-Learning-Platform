@@ -122,6 +122,37 @@ final class PngChunks {
         return Optional.empty();
     }
 
+    /** Ảnh PNG của sơ đồ ({@code pngPreview}) lưu dạng data URI base64, tối đa 2 MB. */
+    static final int MAX_DIAGRAM_PNG_BYTES = 2 * 1024 * 1024;
+    private static final String PNG_DATA_URI = "data:image/png;base64,";
+
+    /**
+     * Đọc ảnh PNG Draw.io xuất khi lưu sơ đồ (yêu cầu 2026-11-27: tải về dùng đúng ảnh sơ đồ): data URI base64 của một
+     * PNG hợp lệ không quá {@link #MAX_DIAGRAM_PNG_BYTES}; sai dạng thì rỗng.
+     */
+    static Optional<byte[]> readPngDataUri(String value) {
+        if (value == null || !value.startsWith(PNG_DATA_URI)
+                || value.length() - PNG_DATA_URI.length() > MAX_DIAGRAM_PNG_BYTES / 3 * 4 + 4) {
+            return Optional.empty();
+        }
+        try {
+            byte[] png = java.util.Base64.getDecoder().decode(value.substring(PNG_DATA_URI.length()));
+            return isPng(png) && png.length <= MAX_DIAGRAM_PNG_BYTES ? Optional.of(png) : Optional.empty();
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** Ảnh trắng 480×270 cho sơ đồ chưa vẽ gì (yêu cầu 2026-11-27); XML sơ đồ ghi vào chunk {@code tEXt mxfile}. */
+    static byte[] drawBlankDiagram(String xml) {
+        int width = 480;
+        int height = 270;
+        int[] pixels = new int[width * height];
+        Arrays.fill(pixels, 0xFFFFFF);
+        byte[] png = encode(pixels, width, height);
+        return xml == null ? png : addTextChunk(png, MXFILE, encodeUri(xml));
+    }
+
     static boolean isPng(byte[] data) {
         return data != null && data.length > 8 && Arrays.equals(Arrays.copyOf(data, 8), SIGNATURE);
     }

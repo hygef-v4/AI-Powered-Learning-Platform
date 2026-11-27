@@ -134,6 +134,18 @@ class PracticeFeedbackServiceTest {
     }
 
     @Test
+    void resultWrappedAsTextAtTheRootIsStillSaved() throws Exception {
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        PracticeFeedback p = pending(a, a.receiptHash());
+        when(f.feedback.markReady(eq(p.id()), any(), any(), any())).thenReturn(1);
+        String wrapped = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(OUTPUT.strip());
+
+        assertThat(f.feedbackService.handleReadyResult(result(p, wrapped))).isEqualTo(ApplyOutcome.APPLIED);
+        verify(f.feedback).markReady(eq(p.id()), argThat((JsonNode body) -> "Khá".equals(body.path("summary").asText())),
+                any(), any());
+    }
+
+    @Test
     void validResultIsSavedWithEstimateLabelAndWithoutRubric() {
         AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         PracticeFeedback p = pending(a, a.receiptHash());
@@ -145,18 +157,45 @@ class PracticeFeedbackServiceTest {
         assertThat(FeedbackFormat.OUTPUT_SCHEMA).doesNotContain("rubric");
     }
 
-    @Test
-    void promptAndAgentReadHaveNoRubric() {
+    private void rubricOfTwoPoints() {
         when(f.assignments.getContent(any())).thenAnswer(i -> Optional.of(new AssignmentContent(f.view.assignmentId(), 1,
                 "Hướng dẫn", f.skeleton, List.of(new DocumentPart("DOCUMENT", null, List.of(), "Toàn bài")), Map.of(),
                 List.of(new RubricView(UUID.randomUUID(), f.view.assignmentId(), "DOCUMENT", List.of(new RubricCriterion(
-                        UUID.randomUUID(), "Mục chấm bí mật", "", CriterionKind.TEXT,
-                        List.of(new RubricItem(UUID.randomUUID(), "Mục chấm bí mật", BigDecimal.ONE)))), BigDecimal.ONE)))));
+                        UUID.randomUUID(), "Nội dung", "", CriterionKind.TEXT,
+                        List.of(new RubricItem(UUID.randomUUID(), "Đủ ý chính", new BigDecimal("2"))))),
+                        new BigDecimal("2"))))));
+    }
+
+    @Test
+    void promptAndAgentReadIncludeTheRubricToEstimatePartScores() {
+        rubricOfTwoPoints();
         AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
         AiPrompt prompt = f.feedbackService.prompt(a);
-        assertThat(prompt.system() + prompt.user()).doesNotContain("bí mật").doesNotContainIgnoringCase("rubric");
-        assertThat(f.feedbackService.readOwnWork(f.student, a.id())).doesNotContainKey("rubric")
+        assertThat(prompt.user()).contains("Rubric", "Đủ ý chính", "tối đa 2 điểm");
+        assertThat(prompt.system()).contains("score").contains("không chép lại hay liệt kê từng tiêu chí");
+        assertThat(f.feedbackService.readOwnWork(f.student, a.id())).containsKey("rubric")
                 .containsKeys("instructions", "assignment", "submission", "submissionHash");
+    }
+
+    @Test
+    void partScoresAreClampedToTheRubricAndTotalled() {
+        rubricOfTwoPoints();
+        AssignmentAttempt a = f.attempt(1, AttemptStatus.SUBMITTED, NOW, false);
+        PracticeFeedback p = pending(a, a.receiptHash());
+        when(f.feedback.markReady(eq(p.id()), any(), any(), any())).thenReturn(1);
+        String output = """
+                {"summary":"Khá","strengths":[],"parts":[{"partId":"DOCUMENT","comment":"Ổn","score":5},
+                 {"partId":"OTHER","comment":"Thêm","score":3}],"suggestions":[]}
+                """;
+
+        assertThat(f.feedbackService.handleReadyResult(result(p, output))).isEqualTo(ApplyOutcome.APPLIED);
+
+        verify(f.feedback).markReady(eq(p.id()), argThat((JsonNode body) ->
+                body.path("score").decimalValue().compareTo(new BigDecimal("2")) == 0
+                        && body.path("maxScore").decimalValue().compareTo(new BigDecimal("2")) == 0
+                        && body.path("parts").get(0).path("score").decimalValue().compareTo(new BigDecimal("2")) == 0
+                        && body.path("parts").get(0).path("maxScore").decimalValue().compareTo(new BigDecimal("2")) == 0
+                        && !body.path("parts").get(1).has("score")), any(), any());
     }
 
     @Test

@@ -41,7 +41,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 4. Chuẩn hóa và kiểm mã: định dạng, độ dài, chưa tồn tại (BR-U04-02); kiểm tên, mô tả (BR-U04-06).
 5. Có Chủ nhiệm môn thì kiểm qua `IAccountLookup.getContact`: phải `SUBJECT_MANAGER` và `ACTIVE` (BR-U04-03).
 6. Lưu môn trạng thái `ACTIVE`, `version` 1.
-7. Ghi audit `SUBJECT_CREATED` (kèm Chủ nhiệm môn nếu có) trong cùng transaction.
+7. Ghi audit `SUBJECT_<mã>_CREATED` (kèm Chủ nhiệm môn nếu có) trong cùng transaction (BR-U04-52).
 8. Đóng popup, danh sách tải lại.
 
 ### F3 - Xem chi tiết môn (UC 18)
@@ -55,14 +55,14 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Kiểm quyền `ADMIN`; mã môn không sửa được.
 3. Kiểm tên, mô tả (BR-U04-06).
 4. Cập nhật có điều kiện `version` khớp; lệch thì `409`, frontend báo tải lại.
-5. Ghi audit `SUBJECT_UPDATED` với tên trường đã đổi.
+5. Không ghi audit (BR-U04-52).
 
 ### F5 - Đổi Chủ nhiệm môn (UC 17, 19)
 1. Admin bấm "Đổi chủ nhiệm", chọn người hoặc chọn bỏ trống; frontend gọi `PUT /api/v1/admin/subjects/{id}/manager` kèm `managerId` (hoặc rỗng) và `version`.
 2. Kiểm quyền `ADMIN`.
 3. Có người mới thì kiểm `SUBJECT_MANAGER` và `ACTIVE` (BR-U04-03).
 4. Cập nhật `manager_id` có điều kiện `version`.
-5. Ghi audit `SUBJECT_MANAGER_CHANGED` với người cũ và người mới.
+5. Không ghi audit (BR-U04-52).
 6. Từ request tiếp theo, người cũ mất quyền R2 với môn này, người mới có quyền (BR-U04-10).
 
 ### F6 - Lưu trữ và mở lại môn (UC 19)
@@ -70,7 +70,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. Admin bấm Lưu trữ, xác nhận; frontend gọi `PUT /api/v1/admin/subjects/{id}/status` với `ARCHIVED` và `version`.
 2. Kiểm quyền `ADMIN`.
 3. Gọi `ISubjectClasses.archiveClassesOfSubject` trong cùng transaction: U05 lưu trữ mọi lớp `DRAFT`, `OPEN` của môn, giữ nguyên ghi danh, ghi audit `CLASS_STATUS_CHANGED` từng lớp; U05 không trả lời thì từ chối và không lưu trữ gì (BR-U04-04).
-4. Chuyển `ARCHIVED` và gỡ Chủ nhiệm môn có điều kiện `version` (một lần tăng `version`); ghi audit `SUBJECT_ARCHIVED`, có Chủ nhiệm thì thêm `SUBJECT_MANAGER_CHANGED` (BR-U04-11).
+4. Chuyển `ARCHIVED` và gỡ Chủ nhiệm môn có điều kiện `version` (một lần tăng `version`); ghi audit `SUBJECT_<mã>_ARCHIVED` (BR-U04-11, BR-U04-52).
 
 **Mở lại**:
 1. Admin bấm Mở lại; gửi `ACTIVE` và `version`.

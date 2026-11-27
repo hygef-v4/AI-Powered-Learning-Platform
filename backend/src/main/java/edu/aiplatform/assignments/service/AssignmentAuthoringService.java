@@ -104,22 +104,24 @@ public class AssignmentAuthoringService {
         if (ref.status() == ClassStatus.ARCHIVED) {
             throw ApiException.createConflict("ASSIGNMENT_READ_ONLY", "Lớp đã lưu trữ, không tạo bài được");
         }
-        validateModes(command.submissionMode(), command.gradingMode());
+        validateClassModes(command.submissionMode(), command.gradingMode());
         if (command.submissionMode() == SubmissionMode.GROUP && !support.groupSupported(classId)) {
             throw ApiException.createBadRequest("GROUP_NOT_SUPPORTED", "Chưa dùng được bài nhóm cho lớp này");
         }
         return createAssignment(actor, AssignmentScope.CLASS, classId, ref.subjectId(), command);
     }
 
-    /** F3 đề mẫu của môn, Chủ nhiệm môn soạn (BR-U07-02); có cả bài nhóm (yêu cầu 2026-11-09). */
+    /**
+     * F3 đề mẫu của môn, Chủ nhiệm môn soạn (BR-U07-02). Đề mẫu không có loại (yêu cầu 2026-11-26): luôn lưu
+     * {@code TEMPLATE}, loại gửi lên bị bỏ qua; giảng viên chọn loại khi tạo bài ở lớp từ đề mẫu.
+     */
     @Transactional
     public AssignmentViews.Detail createForSubject(Actor actor, UUID subjectId, AssignmentCommands.Create command) {
         access.requireSubjectManager(actor, subjectId, "ASSIGNMENT_CREATED");
         if (support.isSubjectArchived(subjectId)) {
             throw ApiException.createConflict("ASSIGNMENT_READ_ONLY", "Môn đã lưu trữ, không tạo bài được");
         }
-        validateModes(command.submissionMode(), command.gradingMode());
-        return createAssignment(actor, AssignmentScope.SUBJECT, null, subjectId, command);
+        return createAssignment(actor, AssignmentScope.SUBJECT, null, subjectId, command.asTemplate());
     }
 
     @Transactional(readOnly = true)
@@ -137,8 +139,17 @@ public class AssignmentAuthoringService {
         String title = command.title() == null ? current.title() : normalizeTitle(command.title());
         String instructions = command.instructions() == null ? current.instructions()
                 : normalizeInstructions(command.instructions());
-        GradingMode grading = command.gradingMode() == null ? current.gradingMode() : command.gradingMode();
-        validateModes(current.submissionMode(), grading);
+        GradingMode grading = current.scope() == AssignmentScope.SUBJECT ? GradingMode.TEMPLATE
+                : command.gradingMode() == null ? current.gradingMode() : command.gradingMode();
+        SubmissionMode submission = current.scope() == AssignmentScope.SUBJECT ? SubmissionMode.INDIVIDUAL
+                : command.submissionMode() == null ? current.submissionMode() : command.submissionMode();
+        if (current.scope() == AssignmentScope.CLASS) {
+            validateClassModes(submission, grading);
+            if (submission == SubmissionMode.GROUP && current.submissionMode() != SubmissionMode.GROUP
+                    && !support.groupSupported(current.classId())) {
+                throw ApiException.createBadRequest("GROUP_NOT_SUPPORTED", "Chưa dùng được bài nhóm cho lớp này");
+            }
+        }
         Map<DiagramType, Integer> required = command.requiredDiagrams() == null ? current.requiredDiagrams()
                 : normalizeRequiredDiagrams(command.requiredDiagrams());
         List<UUID> chosen = command.referenceMaterialIds() == null ? current.referenceMaterialIds()
@@ -146,8 +157,8 @@ public class AssignmentAuthoringService {
         boolean activity = command.activityMonitoringEnabled() == null ? current.activityMonitoringEnabled()
                 : command.activityMonitoringEnabled();
         String notice = command.activityNotice() == null ? current.activityNotice() : normalizeNotice(command.activityNotice());
-        Assignment saved = assignments.saveAssignment(current.updateDetails(title, instructions, true, grading, required,
-                chosen, activity, notice, clock.instant()));
+        Assignment saved = assignments.saveAssignment(current.changeModes(submission, grading)
+                .updateDetails(title, instructions, true, grading, required, chosen, activity, notice, clock.instant()));
         return support.buildDetail(actor, saved, List.of());
     }
 
@@ -437,6 +448,14 @@ public class AssignmentAuthoringService {
             out.put(type, count);
         });
         return out;
+    }
+
+    /** Bài của lớp phải có loại thật: đề mẫu ({@code TEMPLATE}) chỉ có ở môn. */
+    static void validateClassModes(SubmissionMode submissionMode, GradingMode gradingMode) {
+        validateModes(submissionMode, gradingMode);
+        if (gradingMode == GradingMode.TEMPLATE) {
+            throw ApiException.createBadRequest("MODE_INVALID", "Bài của lớp chọn Graded hoặc Practice");
+        }
     }
 
     static void validateModes(SubmissionMode submissionMode, GradingMode gradingMode) {

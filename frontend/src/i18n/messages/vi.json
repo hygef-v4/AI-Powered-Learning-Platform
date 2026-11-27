@@ -159,7 +159,8 @@
       },
       "materials": {
         "page": {
-          "learningMaterials": "Học liệu"
+          "learningMaterials": "Học liệu",
+          "subjectMaterials": "Học liệu môn"
         }
       },
       "page": {
@@ -941,7 +942,7 @@
         "connectionCheck": "Kiểm tra kết nối",
         "apiKeyEncryptionIsNot": "Hệ thống chưa bật mã hóa khóa API, hãy báo Quản trị viên.",
         "theDataWasJustChanged": "Dữ liệu vừa được thay đổi ở nơi khác, hãy tải lại.",
-        "youAlreadyHave5Active": "Bạn đã có 5 agent còn hiệu lực; hãy thu hồi bớt.",
+        "youAlreadyHave5Active": "Bạn chỉ được có tối đa 5 agent còn hiệu lực. Hãy thu hồi một agent để kết nối agent mới.",
         "passed": "Đạt",
         "wrongKey": "Sai khóa",
         "tokenLimit": "Giới hạn token",
@@ -1215,7 +1216,9 @@
         "remove": "Bỏ {title}",
         "retry2": "Thử lại {name}",
         "remove2": "Gỡ {name}",
-        "uploadDocuments2": "Tải tài liệu lên"
+        "uploadDocuments2": "Tải tài liệu lên",
+        "dropDocumentsHere": "Thả tệp để tải tài liệu lên",
+        "dropTemplateHere": "Thả tệp DOCX để dùng làm mẫu đề"
       },
       "AiDraftPreview": {
         "assignmentCheckResults": "Kết quả kiểm tra đề",
@@ -1316,7 +1319,8 @@
         "subject": "Môn",
         "class": "Lớp",
         "loadingAssignments": "Đang tải bài tập…",
-        "noMatchingAssignments": "Không có bài tập phù hợp."
+        "noMatchingAssignments": "Không có bài tập phù hợp.",
+        "template": "Đề mẫu"
       },
       "assignmentNav": {
         "assignmentParts": "Các phần của bài",
@@ -1330,15 +1334,16 @@
       "AssignmentSettingsPanel": {
         "eachStudentSubmitsTheirOwn": "Mỗi sinh viên nộp một bài.",
         "eachGroupSubmitsOneShared": "Mỗi nhóm nộp chung một bài.",
-        "countsTowardTheGradebook": "Tính vào sổ điểm.",
+        "type": "Loại",
         "selfPracticeNotGraded": "Tự luyện, không tính điểm.",
-        "format": "Hình thức",
+        "practice": "Luyện tập",
         "individual": "Cá nhân",
         "group": "Nhóm",
-        "mode": "Chế độ",
+        "thisClassCannotUseGroup": "Lớp chưa dùng được bài nhóm",
         "activityMonitoring": "Ghi nhận hoạt động",
         "recordsWhenStudentsLeaveThe": "Ghi lại khi sinh viên rời trang lúc làm bài.",
-        "noticeToStudents": "Lời báo cho sinh viên"
+        "noticeToStudents": "Lời báo cho sinh viên",
+        "templateHasNoType": "Đề mẫu của môn không có loại và không giao cho sinh viên. Giảng viên chọn loại khi tạo bài ở lớp từ đề mẫu này."
       },
       "ClassAssignmentsSection": {
         "createAssignment": "Tạo bài tập"
@@ -1399,7 +1404,8 @@
         "uploadATemplate": "Tải đề mẫu lên",
         "references": "Tài liệu tham khảo",
         "request": "Yêu cầu",
-        "describeTheAssignmentYouNeed": "Mô tả đề bạn cần: chủ đề, nội dung, độ khó…"
+        "describeTheAssignmentYouNeed": "Mô tả đề bạn cần: chủ đề, nội dung, độ khó…",
+        "dropTemplateHere": "Thả tệp DOCX để dùng làm mẫu đề"
       },
       "ExamImportDialog": {
         "assignmentImportedPressCtrlZ": "Đã nhập đề. Nhấn Ctrl+Z để quay lại bản trước.",
@@ -1458,7 +1464,9 @@
         "publishAnyway": "Vẫn phát hành",
         "schedule": "Xếp lịch",
         "publishNow": "Phát hành ngay",
-        "saveSchedule": "Lưu lịch"
+        "saveSchedule": "Lưu lịch",
+        "openingDateInThePast": "Ngày giờ mở đã qua. Chọn thời điểm trong tương lai.",
+        "deadlineInThePast": "Hạn nộp đã qua. Chọn thời điểm trong tương lai."
       },
       "SearchPicker": {
         "noResults": "Không có kết quả.",
@@ -1586,7 +1594,8 @@
         "areYouSureYouWant": "Bạn có chắc muốn xóa bản nháp này không?",
         "withdrawAssignment": "Ngưng giao bài",
         "areYouSureYouWant2": "Bạn có chắc muốn ngưng giao bài này không?",
-        "reason": "Lý do"
+        "reason": "Lý do",
+        "template": "Đề mẫu"
       },
       "SubjectAssignmentListPage": {
         "assignmentTemplates": "Đề mẫu bài tập",
@@ -1625,25 +1634,25 @@
         "daysLeft": "Còn {days} ngày"
       },
       "PracticeFeedbackPanel": {
-        "aiFeedback": " Góp ý AI",
+        "overall": "Tổng quan",
+        "aiEstimate": "AI ước tính",
+        "aiEstimateNotOfficial": "AI ước tính, không phải điểm chính thức",
+        "wholeAssignment": "Toàn bài",
         "reloadFeedback": "Tải lại góp ý",
         "theAiIsWritingFeedback": "AI đang góp ý…",
         "loadingFeedback": "Đang tải góp ý…",
         "noFeedbackYet": "Chưa có góp ý.",
-        "referenceFeedback": "Góp ý tham khảo",
-        "pending": "Đang chờ",
         "noFeedbackReceived": "Không nhận được góp ý",
         "personalApi": "API cá nhân",
-        "overallComments": "Nhận xét chung",
         "strengths": "Điểm mạnh",
         "toImprove": "Cần cải thiện",
-        "byPart": "Theo từng phần",
         "theAiIsStillProcessing": "AI vẫn đang xử lý. ",
         "checkFeedbackAgain": "Kiểm tra lại góp ý",
         "youCanManageYourPersonal": "Nhận xét dùng khóa API cá nhân hoặc agent MCP đã kết nối. Bạn quản lý cả hai tại",
         "aiConnection": "Kết nối AI",
-        "getFeedbackAgain": "Nhận góp ý lại",
-        "getAiFeedback": "Nhận góp ý AI"
+        "getAiFeedback": "Nhận góp ý AI",
+        "showMore": "Xem thêm",
+        "showLess": "Thu gọn"
       },
       "PublishedFeedback": {
         "strengths": "Điểm mạnh",
@@ -2005,7 +2014,26 @@
         "denied2": "Bị từ chối",
         "wrongKey": "Sai khóa",
         "quotaExhausted": "Hết hạn mức",
-        "timedOut": "Quá giờ"
+        "timedOut": "Quá giờ",
+        "createSubjectCode": "Tạo môn {code}",
+        "archiveSubjectCode": "Lưu trữ môn {code}",
+        "reopenSubjectCode": "Mở lại môn {code}",
+        "createClassCode": "Tạo lớp {code}",
+        "openClassCode": "Mở lớp {code}",
+        "archiveClassCode": "Lưu trữ lớp {code}",
+        "reopenClassCode": "Mở lại lớp {code}",
+        "openClass": "Mở lớp",
+        "archiveClass": "Lưu trữ lớp",
+        "reopenClass": "Mở lại lớp",
+        "rejectRoleChange": "Từ chối đổi vai trò",
+        "uploadFile": "Tải tệp lên",
+        "downloadFile": "Tải tệp xuống",
+        "viewMcpAgentToken": "Xem token agent MCP",
+        "file": "Tệp",
+        "aiSettings": "Cấu hình AI",
+        "adminDashboard": "Bảng điều khiển quản trị",
+        "mcpAgentToken": "Token agent MCP",
+        "quiz": "Quiz"
       },
       "details": {
         "ui": {
@@ -2332,6 +2360,7 @@
         "viewGrade": "Xem điểm",
         "select": "Chọn {name}",
         "late": "Trễ",
+        "leftClass": "Đã rời lớp",
         "noMatchingSubmissions": "Không có bài phù hợp."
       },
       "GradebookExportDialog": {
@@ -3516,12 +3545,17 @@
         "learningMaterial": "học liệu",
         "areYouSureYouWant": "Bạn có chắc muốn ",
         "text": " không?",
-        "theDraftQuizWillBe": " Quiz nháp sẽ bị xóa vĩnh viễn, không khôi phục được."
+        "theDraftQuizWillBe": " Quiz nháp sẽ bị xóa vĩnh viễn, không khôi phục được.",
+        "subjectMaterialAdded": "Đã thêm học liệu môn",
+        "createSubjectMaterial": "Tạo học liệu môn",
+        "editSubjectMaterial": "Sửa học liệu môn",
+        "learningMaterialArchived": "Đã lưu trữ học liệu"
       },
       "MaterialList": {
         "learningMaterials": "Học liệu",
         "loadingSubjects": "Đang tải môn học…",
-        "youHaveNotBeenAssigned": "Bạn chưa được phân công môn học."
+        "youHaveNotBeenAssigned": "Bạn chưa được phân công môn học.",
+        "subjectMaterials": "Học liệu môn"
       },
       "MaterialPreview": {
         "download": "Tải xuống",
@@ -3568,7 +3602,14 @@
         "edit": "Sửa {title}",
         "save": "Lưu",
         "moduleName": "Tên module",
-        "enterTheModuleName": "Nhập tên module."
+        "enterTheModuleName": "Nhập tên module.",
+        "subjectMaterials": "Học liệu môn",
+        "createSubjectMaterial": "Tạo học liệu môn",
+        "noSubjectMaterialsYet": "Chưa có học liệu môn",
+        "noModulesForClass": "Môn chưa có module. Nhờ chủ nhiệm môn tạo module trước khi thêm học liệu.",
+        "noModulesForSubject": "Chưa có module. Tạo module trước khi thêm học liệu môn.",
+        "archived": "Đã lưu trữ",
+        "materialRestored": "Đã khôi phục học liệu"
       },
       "ModuleNav": {
         "moduleList": "Danh sách module",
@@ -3585,7 +3626,14 @@
         "reopen": "Mở lại {value}",
         "quizReopened": "Đã mở lại quiz",
         "couldNotReopenTheQuiz": "Không mở lại được quiz",
-        "edit": "Sửa {value}"
+        "edit": "Sửa {value}",
+        "subjectMaterials": "Học liệu môn",
+        "createSubjectMaterial": "Tạo học liệu môn",
+        "createSubjectMaterialIn": "Tạo học liệu môn trong {title}",
+        "noSubjectMaterialsYet": "Chưa có học liệu môn",
+        "restore": "Khôi phục {value}",
+        "materialRestored": "Đã khôi phục học liệu",
+        "couldNotRestoreMaterial": "Không khôi phục được học liệu, vui lòng thử lại."
       },
       "ModulePlace": {
         "previousAndNextMaterialsTop": "Học liệu trước và sau (đầu trang)",
@@ -3615,11 +3663,17 @@
         "delete": "Xóa",
         "description": "Mô tả",
         "learningMaterialDeleted": "Đã xóa học liệu",
-        "versionLabel": "Phiên bản {value}"
+        "versionLabel": "Phiên bản {value}",
+        "archive": "Lưu trữ",
+        "learningMaterialArchived": "Đã lưu trữ học liệu",
+        "archived": "Đã lưu trữ",
+        "restore": "Khôi phục",
+        "materialRestored": "Đã khôi phục học liệu"
       }
     },
     "register": {
-      "learningMaterial": "Học liệu"
+      "learningMaterial": "Học liệu",
+      "subjectMaterial": "Học liệu môn"
     }
   },
   "notifications": {
@@ -4456,7 +4510,7 @@
     "model": {
       "types": {
         "files": "Tệp",
-        "limitsWhenUploadingLearningMaterials": "Giới hạn khi tải học liệu và ảnh trong tài liệu",
+        "limitsWhenUploadingLearningMaterials": "Giới hạn dung lượng khi tải tài liệu và ảnh",
         "backup": "Sao lưu",
         "backUpTheDatabaseTo": "Sao lưu cơ sở dữ liệu lên Google Drive · giữ 7 ngày (cố định)",
         "workActivity": "Hoạt động làm bài",
@@ -4465,7 +4519,15 @@
         "onOff": "bật / tắt",
         "hourMinute": "giờ:phút",
         "singleChoice": "chọn một",
-        "multipleChoice": "chọn nhiều"
+        "multipleChoice": "chọn nhiều",
+        "materialMaxSize": "Tài liệu tối đa",
+        "materialMaxSizeDescription": "Dung lượng tối đa của mỗi tệp tài liệu.",
+        "imageMaxSize": "Ảnh tối đa",
+        "imageMaxSizeDescription": "Dung lượng tối đa của mỗi ảnh trong tài liệu.",
+        "backupEnabled": "Bật sao lưu",
+        "backupEnabledDescription": "Sao lưu cơ sở dữ liệu hằng ngày.",
+        "backupDailyAt": "Giờ chạy hằng ngày",
+        "backupDailyAtDescription": "Giờ sao lưu, theo giờ Việt Nam."
       },
       "validation": {
         "thisFieldMustHaveA": "Mục này phải có giá trị",
@@ -4790,7 +4852,17 @@
         "announcementEmailInvalid": "Chỉ thông báo quan trọng mới gửi được email.",
         "tooManyRequests": "Quá nhiều yêu cầu. Đợi một lát rồi thử lại.",
         "systemBusy": "Hệ thống đang bận, vui lòng thử lại sau.",
-        "requestFailed": "Không thực hiện được yêu cầu. Vui lòng thử lại."
+        "requestFailed": "Không thực hiện được yêu cầu. Vui lòng thử lại.",
+        "aiTooManyTasks": "Bạn đang có 3 yêu cầu AI chưa xong; chờ hoặc hủy bớt rồi thử lại.",
+        "aiNotCancellable": "Yêu cầu đã được gửi tới nhà cung cấp AI, không hủy được.",
+        "aiCancelled": "Bạn đã hủy yêu cầu này.",
+        "aiTimedOut": "Chờ quá 30 phút, đã hủy.",
+        "aiConnectionRevoked": "Kết nối AI đã bị tắt hoặc thu hồi.",
+        "aiInvalidResult": "Kết quả AI không đúng định dạng yêu cầu.",
+        "aiNoResult": "AI không trả kết quả.",
+        "aiNotReady": "AI chưa sẵn sàng. Hãy kiểm tra kết nối AI.",
+        "aiUnreadable": "AI trả nội dung không đọc được, hãy thử lại.",
+        "submissionChanged": "Bài nộp đã thay đổi."
       }
     },
     "dateTime": {
@@ -4875,7 +4947,9 @@
         "numberedList": "Danh sách số",
         "insertTable": "Chèn bảng",
         "insertImage": "Chèn ảnh",
+        "resizeCommentColumn": "Kéo để đổi độ rộng cột nhận xét",
         "insertDrawIoDiagram": "Chèn sơ đồ Draw.io",
+        "newDiagram": "Tạo mới",
         "untitledAssignment": "Bài chưa đặt tên",
         "assignmentTitle": "Tên bài",
         "startWriting": "Bắt đầu viết",
@@ -4911,22 +4985,26 @@
         "importDocx": "Nhập DOCX",
         "docxFilesCanBeAt": "Tệp DOCX tối đa 20 MB",
         "import": "Nhập",
-        "docxFile": "Tệp DOCX",
         "atMost20MbThe": "Tối đa 20 MB; tệp chỉ đọc trong bộ nhớ, không lưu.",
         "chooseAnotherFile": "Chọn tệp khác",
         "chooseFile": "Chọn tệp",
         "readingFile": "Đang đọc tệp…",
-        "blocks": " khối · ",
-        "images": " ảnh · ",
-        "diagrams": " sơ đồ",
         "section": "Mục",
-        "length": "Độ dài",
         "blocks2": " khối",
         "diagramsRecovered": "Sơ đồ khôi phục được",
         "diagrams2": "{count} sơ đồ {value}",
         "importMethod": "Cách nhập",
         "replaceTheCurrentOutline": "Thay khung hiện tại",
-        "addToTheEnd": "Thêm vào cuối"
+        "addToTheEnd": "Thêm vào cuối",
+        "onlyDocxFiles": "Chỉ nhận tệp Word (.docx).",
+        "dropToRead": "Thả để đọc tệp",
+        "dragADocxFileHere": "Kéo tệp DOCX vào đây",
+        "or": "hoặc",
+        "chooseFromComputer": "chọn từ máy",
+        "removeFile": "Bỏ tệp",
+        "blocksLabel": "Khối nội dung",
+        "imagesLabel": "Ảnh",
+        "diagramsLabel": "Sơ đồ"
       },
       "FormattedTextEditor": {
         "canBeAtMostCharacters": "{label} tối đa {value} ký tự.",

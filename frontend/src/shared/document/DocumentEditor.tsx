@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 import { Icon, cx } from "@/shared/ui";
 import { CommentRail, useWideLayout, type DocumentComment } from "./CommentRail";
 import { DiagramEditor } from "./DiagramEditor";
+import { DIAGRAM_TEMPLATE_TYPES, buildTemplatePng, buildTemplateSvg, buildTemplateXml } from "./diagramTemplates";
 import { BlockView, HEADING_CLASS, PARAGRAPH_CLASS, RunsView, alignClass, type ImageUrl } from "./DocumentViewer";
 import { Glyph, type GlyphName } from "./Glyph";
 import { ToolbarButton } from "./ToolbarButton";
@@ -27,17 +28,21 @@ import {
   computeParts,
   buildDocumentTree,
   createBlock,
+  diagramTypeLabels,
   generateId,
   joinRunsText,
   numberSections,
+  WHOLE_DOCUMENT,
   type TitleContent,
   MAX_SECTION_DEPTH,
   formatSectionNumber,
   findUnderLevel,
+  pageKey,
   type Align,
   type BlockOrigin,
   type DocSection,
   type DocumentBlock,
+  type DiagramType,
   type DocumentModel,
   type HeadingStyle,
   type ListItem,
@@ -51,6 +56,93 @@ type Mode = "author" | "student";
 
 /** Chữ gợi ý ở ô Bài làm của bạn (yêu cầu 2026-11-10), ngắn như chữ gợi ý của người soạn. */
 const ANSWER_PLACEHOLDER = msg("shared.document.DocumentEditor.writeYourAnswer");
+
+/** Độ rộng cột ghi chú bên lề khi kéo được (yêu cầu 2026-11-27): mặc định 300px như cột cố định. */
+const RAIL_DEFAULT = 300;
+const RAIL_MIN = 280;
+const RAIL_MAX = 560;
+const RAIL_STORAGE_KEY = "document-rail-width";
+/** Không quá 40% bề ngang cửa sổ để trang giấy luôn rộng hơn cột ghi chú. */
+const clampRail = (value: number) => Math.round(Math.max(RAIL_MIN, Math.min(RAIL_MAX,
+  typeof window === "undefined" ? RAIL_MAX : window.innerWidth * 0.4, value)));
+
+/** Độ rộng cột ghi chú; kéo được thì nhớ lần kéo trước trong trình duyệt. */
+function useRailWidth(resizable: boolean): [number, (value: number) => void] {
+  const [width, setWidth] = useState(RAIL_DEFAULT);
+  useEffect(() => {
+    if (!resizable) return;
+    const saved = Number(window.localStorage?.getItem(RAIL_STORAGE_KEY));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- đọc độ rộng đã lưu sau khi hydrate.
+    if (saved) setWidth(clampRail(saved));
+    const fit = () => setWidth((current) => clampRail(current));
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [resizable]);
+  const update = useCallback((value: number) => {
+    const next = clampRail(value);
+    setWidth(next);
+    try { window.localStorage?.setItem(RAIL_STORAGE_KEY, String(next)); } catch { /* bộ nhớ trình duyệt bị chặn: chỉ không nhớ */ }
+  }, []);
+  return [resizable ? width : RAIL_DEFAULT, update];
+}
+
+/** Mép trái cột ghi chú: kéo chuột hoặc dùng phím mũi tên để đổi độ rộng. */
+function RailResizer({ width, onWidth }: { width: number; onWidth: (value: number) => void }) {
+  const [dragging, setDragging] = useState(false);
+  useEffect(() => {
+    if (!dragging) return;
+    const root = globalThis.document.documentElement;
+    root.style.setProperty("cursor", "col-resize");
+    root.style.setProperty("user-select", "none");
+    return () => { root.style.removeProperty("cursor"); root.style.removeProperty("user-select"); };
+  }, [dragging]);
+  function startDrag(event: ReactMouseEvent<HTMLDivElement>) {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = width;
+    setDragging(true);
+    // Kéo sang trái thì cột rộng ra.
+    const move = (next: MouseEvent) => onWidth(startWidth + startX - next.clientX);
+    const stop = () => {
+      setDragging(false);
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", stop);
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", stop);
+  }
+  return (
+    <div role="separator" aria-orientation="vertical" tabIndex={0} data-testid="rail-resizer"
+      aria-label={msg("shared.document.DocumentEditor.resizeCommentColumn")} title={msg("shared.document.DocumentEditor.resizeCommentColumn")}
+      aria-valuenow={width} aria-valuemin={RAIL_MIN} aria-valuemax={RAIL_MAX}
+      onMouseDown={startDrag}
+      onKeyDown={(event) => {
+        const step = event.key === "ArrowLeft" ? 24 : event.key === "ArrowRight" ? -24 : 0;
+        if (!step) return;
+        event.preventDefault();
+        onWidth(width + step);
+      }}
+      className="group absolute inset-y-0 -left-4 z-10 flex w-3 cursor-col-resize justify-center rounded-full outline-none focus-visible:outline-2 focus-visible:outline-focus">
+      <span aria-hidden className={cx("h-full w-0.5 rounded-full transition-colors", dragging ? "bg-primary" : "bg-transparent group-hover:bg-primary/40 group-focus-visible:bg-primary/60")} />
+      <span aria-hidden className="sticky top-1/2 -mt-6 flex h-12 w-3 -translate-x-[7px] items-center justify-center self-start rounded-full border border-line bg-surface opacity-0 shadow-[var(--shadow-lift)] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+        style={{ position: "sticky" }}>
+        <span className="flex flex-col gap-[3px]">{Array.from({ length: 3 }, (_, i) => <span key={i} className="size-[3px] rounded-full bg-muted" />)}</span>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Sơ đồ mẫu của đề trong bài làm (yêu cầu 2026-11-27): người học chưa vẽ thì khung hiện "Bấm để vẽ" thay vì hình mẫu;
+ * bấm vào vẫn mở Draw.io với hình mẫu để vẽ tiếp.
+ */
+function hideUntouchedTemplate(block: DocumentBlock, teacherBlock: boolean): DocumentBlock {
+  if (!teacherBlock || block.type !== "DIAGRAM" || block.content.studentEdited) return block;
+  const content = { ...block.content };
+  delete content.svgPreview;
+  delete content.pngPreview;
+  return { ...block, content };
+}
 
 /** Mục có chữ riêng (ngoài các mục con): có khối khác đoạn trống. */
 function hasOwnText(section: DocSection): boolean {
@@ -96,6 +188,11 @@ type Props = {
   comments?: DocumentComment[];
   /** Khung bên phải thay thế ghi chú bên lề; nội dung tự xử lý cách mở trên màn hẹp. */
   sidePanel?: ReactNode;
+  /**
+   * Cột ghi chú / khung bên phải kéo mép trái để đổi độ rộng, trong khoảng {@link RAIL_MIN}–{@link RAIL_MAX} px. Mặc định
+   * bật cho mọi trang có trang bài bên trái, rubric hay ghi chú bên phải (yêu cầu 2026-11-27).
+   */
+  resizableRail?: boolean;
   activeComment?: string | null;
   /** Tiêu đề của phần đang chọn: viền phần đó. */
   highlightBlockId?: string | null;
@@ -477,6 +574,24 @@ function ToolPopover({ title, label, disabled, children }: {
   );
 }
 
+/** Menu sơ đồ (yêu cầu 2026-11-27): đầu menu là Tạo mới (khung trống), dưới là các mẫu theo loại sơ đồ. */
+function DiagramTemplateMenu({ onPick }: { onPick: (template?: Exclude<DiagramType, "OTHER">) => void }) {
+  const item = "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[13px] text-body hover:bg-line-strong focus-visible:bg-line-strong";
+  return (
+    <div role="menu" className="flex w-52 flex-col gap-0.5">
+      <button type="button" role="menuitem" data-testid="add-DIAGRAM" className={cx(item, "font-semibold")} onClick={() => onPick()}>
+        <Icon name="add" size={16} />{msg("shared.document.DocumentEditor.newDiagram")}
+      </button>
+      <div className="my-1 border-t border-line" />
+      {DIAGRAM_TEMPLATE_TYPES.map((type) => (
+        <button key={type} type="button" role="menuitem" data-testid={`add-DIAGRAM-${type}`} className={item} onClick={() => onPick(type)}>
+          {diagramTypeLabels[type]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Swatches({ colors, onPick, noneLabel }: { colors: string[]; onPick: (color: string | undefined) => void; noneLabel: string }) {
   return (
     <div className="flex w-44 flex-col gap-1.5">
@@ -572,7 +687,7 @@ export function DocumentEditor({
   document, onChange, mode, diagramEnabled, readOnly = false, imageUrl, uploadImage, issues = [],
   header, sectionBylines, sectionActions, writableParts, sectionNumbers, initialView = "page", titleField, toolbarExtra, viewSlot, toolbarCenter, comments, activeComment,
   highlightBlockId, onFocusBlock, emptyLeafLabel, answerGuidance = false, fullWidth = false,
-  matchCommentHeight = false, sidePanel,
+  matchCommentHeight = false, sidePanel, resizableRail = true,
   externalEdit = null,
 }: Props) {
   const origin: BlockOrigin = mode === "author" ? "TEACHER" : "STUDENT";
@@ -637,6 +752,7 @@ export function DocumentEditor({
   const future = useRef<DocumentModel[]>([]);
   const lastPush = useRef(0);
   const wide = useWideLayout();
+  const [railWidth, setRailWidth] = useRailWidth(resizableRail);
   const previewsRef = useRef(previews);
   useEffect(() => {
     previewsRef.current = previews;
@@ -672,14 +788,13 @@ export function DocumentEditor({
       pinned.current = id;
       // Mỗi mục là một trang: mở đúng trang của mục được bấm (bấm 1 khi đang ở 1.2 thì về trang 1).
       // "DOCUMENT": văn bản ngoài mọi mục (trang gốc), cuộn tới khối đầu tiên của nó.
-      const root = id === "DOCUMENT";
       const pages = latestLeaves.current;
-      let page = pages.findIndex((leaf) => (root ? !leaf.heading : leaf.heading?.id === id));
+      let page = pages.findIndex((leaf) => pageKey(leaf) === id);
       if (latestView.current === "step" && page >= 0) {
         // Mục cha chưa có chữ riêng (chỉ chứa mục con): mở trang mục con đầu tiên, ví dụ bấm 1.2 thì sang 1.2.1; trang ngay
         // sau mục cha luôn là mục con đầu của nó (yêu cầu 2026-11-05).
-        while (pages[page]?.heading && pages[page]!.children.length > 0 && !hasOwnText(pages[page]!) && pages[page + 1]) page++;
-        pinned.current = pages[page]!.heading?.id ?? "DOCUMENT";
+        while (pages[page]?.heading && pages[page]!.children.length > 0 && !hasOwnText({ ...pages[page]!, after: [] }) && pages[page + 1]) page++;
+        pinned.current = pageKey(pages[page]!);
         // Ở chế độ Từng phần luôn chuyển trang rồi lên đầu trang, kể cả khi mục cha đang hiện trên trang mục con.
         setStepAt(page);
         requestAnimationFrame(() => {
@@ -689,8 +804,9 @@ export function DocumentEditor({
         return;
       }
       if (page >= 0) setStepAt(page);
-      const first = root ? latestLeaves.current.find((leaf) => !leaf.heading) : undefined;
-      const scrollId = root ? (first?.blocks[0] ?? first?.after[0])?.id : id;
+      // Văn bản không có tiêu đề (mở đầu, đoạn sau một mục): cuộn tới khối đầu tiên của nó.
+      const loose = page >= 0 && !pages[page]!.heading ? pages[page]! : undefined;
+      const scrollId = loose ? loose.blocks[0]?.id : id;
       requestAnimationFrame(() => paper.current?.querySelector(`[data-block-id="${scrollId}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
     };
     window.addEventListener("document:show-part", show);
@@ -751,6 +867,8 @@ export function DocumentEditor({
   // Người học chỉ viết trong phần: block nằm từ tiêu đề lá tới tiêu đề kế; khung không có tiêu đề thì cả bài.
   const sections = student ? filterWritable(numberSections(document, computeParts(document)), writableParts) : null;
   const isInPart = (blockId: string | undefined) => !sections || (!!blockId && sections.has(blockId));
+  // Người học được viết vào phần gốc (khung không có tiêu đề là phần "Toàn bài"; bài nhóm thì phải giữ phần đó).
+  const rootWritable = student && !readOnly && (!writableParts || writableParts.has(WHOLE_DOCUMENT));
   // Tài liệu trống không có tiêu đề nên cả bài là một phần; còn lại cuối tài liệu luôn thuộc tiêu đề cuối (là lá).
   const atEndInPart = blocks.length === 0 || isInPart(blocks.at(-1)!.id);
   // Bảng của người soạn trong phần: người học điền thẳng vào (yêu cầu 2026-10-22), không xóa bảng.
@@ -1021,10 +1139,21 @@ export function DocumentEditor({
     const createEmptyCell = (): TableCell => ({ runs: [{ text: "" }] });
     insert({ id: generateId(), origin, type: "TABLE", content: { rows: Array.from({ length: rows }, () => Array.from({ length: cols }, createEmptyCell)) } });
   }
-  /** Chèn khung sơ đồ trống; Draw.io chỉ mở khi người dùng bấm vào khung (yêu cầu 2026-11-04). */
-  function insertDiagram() {
+  /**
+   * Chèn khung sơ đồ trống; Draw.io chỉ mở khi người dùng bấm vào khung (yêu cầu 2026-11-04). Chọn một mẫu trong menu
+   * sơ đồ thì khung có sẵn hình mẫu, bấm vào vẫn mở Draw.io để sửa (yêu cầu 2026-11-27).
+   */
+  async function insertDiagram(template?: Exclude<DiagramType, "OTHER">) {
     if (!insertAllowed) return;
-    insert(createBlock("DIAGRAM", origin));
+    const block = createBlock("DIAGRAM", origin);
+    if (!template || block.type !== "DIAGRAM") {
+      insert(block);
+      return;
+    }
+    // Ảnh PNG của mẫu để tải DOCX ra đúng hình ngay cả khi chưa mở Draw.io.
+    const png = await buildTemplatePng(template);
+    insert({ ...block, content: { ...block.content, diagramType: template, xml: buildTemplateXml(template),
+      svgPreview: buildTemplateSvg(template), ...(png ? { pngPreview: png } : {}) } });
   }
   /** Định dạng chữ (yêu cầu 2026-10-22): có vùng bôi đen trong ô thì chỉ đổi phần bôi đen, không thì cả đoạn. */
   function formatText(range: (runs: Run[], start: number, end: number) => Run[], whole: (block: DocumentBlock) => DocumentBlock) {
@@ -1115,12 +1244,17 @@ export function DocumentEditor({
   const tree = buildDocumentTree(document);
   // Chế độ Từng phần (yêu cầu 2026-11-04): mỗi mục là một trang (văn bản của riêng mục, kèm khung các mục cha), theo thứ tự
   // trong bài; văn bản ở ngoài mọi mục là một trang riêng ở đầu.
+  // Chữ nằm ngay sau một mục là một trang riêng (yêu cầu 2026-11-27), không gộp với văn bản mở đầu của mục cha.
   const leaves: DocSection[] = [];
   const collect = (section: DocSection) => {
     if (section.heading) leaves.push(section);
-    section.children.forEach(collect);
+    section.children.forEach((child) => {
+      collect(child);
+      if (child.trailing.length > 0) leaves.push({ heading: null, level: section.level, depth: child.depth, blocks: child.trailing,
+        children: [], after: [], trailing: [], leaf: true, segment: { parent: section, child } });
+    });
   };
-  if (tree.blocks.length > 0 || tree.after.length > 0) leaves.push(tree);
+  if (tree.blocks.length > 0) leaves.push(tree);
   collect(tree);
   // Bài chưa có câu hỏi vẫn chuyển được sang Từng phần (yêu cầu 2026-11-10): cả bài là một trang.
   if (leaves.length === 0) leaves.push(tree);
@@ -1130,7 +1264,8 @@ export function DocumentEditor({
   // Từng phần: chỉ các mục đang hiện (mục của trang và các mục cha) mới có ghi chú bên lề, không để cột ghi chú kéo dài trang.
   const shownHeadings = new Set<string>();
   if (currentLeaf) {
-    const reachesCurrent = (section: DocSection): boolean => section === currentLeaf || section.children.some(reachesCurrent);
+    const goal = currentLeaf.segment?.parent ?? currentLeaf;
+    const reachesCurrent = (section: DocSection): boolean => section === goal || section.children.some(reachesCurrent);
     const mark = (section: DocSection) => {
       if (!reachesCurrent(section)) return;
       if (section.heading) shownHeadings.add(section.heading.id);
@@ -1170,7 +1305,7 @@ export function DocumentEditor({
         {removeLabel && <CornerDelete always label={removeLabel} onClick={() => removeBlock(block.id)} />}
         {lockedLabel && <CornerDelete label={lockedLabel} disabled onClick={() => {}} />}
         {isLocked ? (
-          <BlockView block={block} imageUrl={imageUrl} previewUrl={previews[block.id]}
+          <BlockView block={hideUntouchedTemplate(block, teacherBlock)} imageUrl={imageUrl} previewUrl={previews[block.id]}
             onOpenDiagram={drawable ? (id) => setDiagram(id) : undefined} />
         ) : (
           <BlockEditor block={block} imageUrl={imageUrl} previewUrl={previews[block.id]} uploadError={uploadError[block.id]}
@@ -1206,7 +1341,8 @@ export function DocumentEditor({
    */
   function renderEmptyLeaf(section: DocSection, key: string): ReactNode {
     const last = section.blocks.at(-1) ?? section.heading;
-    if (!last) return null;
+    // Đề chỉ có phần gốc và chưa có khối nào: người học vẫn có chỗ viết ngay dưới gốc (yêu cầu 2026-11-27).
+    if (!last && !(section.heading === null && rootWritable)) return null;
     if (student && section.blocks.some((b) => b.origin === "STUDENT" && (!guided || b.type === "PARAGRAPH" || b.type === "LIST"))) return null;
     if (authoring || (!student && section.blocks.length > 0)) return null;
     if (student && !readOnly && section.heading && !isInPart(section.heading.id)) return null;
@@ -1217,7 +1353,7 @@ export function DocumentEditor({
     }
     return (
       <button type="button" aria-label={msg("shared.document.DocumentEditor.writeInThisPart")} data-testid={`write-part-${key}`}
-        onClick={() => insertAfter(last.id, createBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-focus" : "h-7")}>
+        onClick={() => insertAfter(last?.id ?? null, createBlock("PARAGRAPH", origin))} className={cx("block w-full cursor-text text-left text-sm text-muted", guided ? "min-h-16 rounded-md px-2 focus-visible:ring-2 focus-visible:ring-focus" : "h-7")}>
         {guided && ANSWER_PLACEHOLDER}
       </button>
     );
@@ -1255,7 +1391,7 @@ export function DocumentEditor({
   /** Khối cuối cùng của cả phần (kể cả các phần con). */
   const findLast = (section: DocSection): DocumentBlock | null => {
     const child = section.children.at(-1);
-    return section.after.at(-1) ?? (child && findLast(child)) ?? section.blocks.at(-1) ?? section.heading;
+    return child?.trailing.at(-1) ?? (child && findLast(child)) ?? section.blocks.at(-1) ?? section.heading;
   };
   /** Khối cuối của riêng phần (chưa tính phần con): đoạn gõ ở dòng cuối của khung chèn ngay sau nó. */
   const findOwnEnd = (section: DocSection) => section.blocks.at(-1) ?? section.heading;
@@ -1365,20 +1501,36 @@ export function DocumentEditor({
    * con thì dòng cuối nằm dưới các mục con, không còn dòng cuối hay "+" nào ở giữa (yêu cầu 2026-11-02).
    * {@code only}: chế độ Từng phần, chỉ vẽ nhánh dẫn tới phần đó.
    */
+  /**
+   * Mục con kèm văn bản của mục cha nằm ngay sau từng mục con (yêu cầu 2026-11-27: chữ viết giữa hai mục con ở đúng chỗ).
+   * Chế độ Từng phần chỉ vẽ nhánh đang xem nhưng vẫn giữ văn bản của mục cha.
+   */
+  function renderChildren(section: DocSection, shown: DocSection[], problem: DocSection | null, only: DocSection | null): ReactNode {
+    return section.children.map((child) => (
+      <Fragment key={`children-${child.heading?.id}`}>
+        {shown.includes(child) && renderSection(child, problem, only)}
+        {/* Từng phần: đoạn sau một mục chỉ hiện ở trang riêng của nó. */}
+        {(!only || only.segment?.child === child) && child.trailing.map(renderBlock)}
+      </Fragment>
+    ));
+  }
+
   function renderSection(section: DocSection, problem: DocSection | null = null, only: DocSection | null = null): ReactNode {
     const heading = section.heading;
     const key = heading?.id ?? "DOCUMENT";
-    const children = only ? section.children.filter((child) => contains(child, only)) : section.children;
+    // Trang của một đoạn sau mục con: đi theo nhánh tới mục cha của đoạn; mục cha không vẽ văn bản mở đầu của nó.
+    const target = only?.segment ? only.segment.parent : only;
+    const children = target ? section.children.filter((child) => contains(child, target)) : section.children;
+    const segmentHere = only?.segment?.parent === section;
     if (!heading) {
       return (
         <Fragment key={key}>
-          {guided && section.leaf && blocks.length > 0 ? renderLeafContent(section, key) : <>
+          {guided && section.leaf && (blocks.length > 0 || rootWritable) ? renderLeafContent(section, key) : <>
             {section.blocks.map(renderBlock)}
-            {section.leaf && blocks.length > 0 && renderEmptyLeaf(section, key)}
+            {section.leaf && (blocks.length > 0 || rootWritable) && renderEmptyLeaf(section, key)}
           </>}
           {authoring && section.children.length === 0 && <>{renderTailLine(section, key)}{renderQuickAdd(section)}</>}
-          {children.map((child) => renderSection(child, null, only))}
-          {section.after.map(renderBlock)}
+          {renderChildren(section, children, null, only)}
           {authoring && !only && section.children.length > 0 && <>{renderTailLine(section, key, true)}{renderQuickAdd(section)}</>}
         </Fragment>
       );
@@ -1444,10 +1596,9 @@ export function DocumentEditor({
             if (authoring) focusField(paper.current, { id: children.length > 0 ? `tail-end-${key}` : `tail-${key}`, at: "end" });
             else if (section.leaf && writable) continueAfter((section.blocks.at(-1) ?? heading).id);
           }}>
-          {section.leaf ? renderLeafContent(section, key) : section.blocks.map(renderBlock)}
+          {segmentHere ? null : section.leaf ? renderLeafContent(section, key) : section.blocks.map(renderBlock)}
           {authoring && children.length === 0 && renderTailLine(section, key)}
-          {children.map((child) => renderSection(child, owner, only))}
-          {section.after.map(renderBlock)}
+          {renderChildren(section, children, owner, only)}
           {authoring && children.length > 0 && renderTailLine(section, key, true)}
           {authoring && renderQuickAdd(section)}
         </div>
@@ -1458,9 +1609,19 @@ export function DocumentEditor({
   }
 
   const findTop = (target: DocSection) => tree.children.find((child) => contains(child, target)) ?? target;
+  /**
+   * Một trang Từng phần: mục kèm khung các mục cha; trang của đoạn nằm sau một mục chỉ có đoạn đó, trong khung của mục cha
+   * (đoạn ở ngoài mọi mục thì không khung).
+   */
+  function renderPage(page: DocSection): ReactNode {
+    const segment = page.segment;
+    if (!segment) return renderSection(findTop(page), null, page);
+    if (!segment.parent.heading) return <Fragment key={pageKey(page)}>{segment.child.trailing.map(renderBlock)}</Fragment>;
+    return renderSection(findTop(segment.parent), null, page);
+  }
   latestLeaves.current = leaves;
   reportCurrent.current = () => {
-    let current: string | null = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : pinned.current;
+    let current: string | null = currentLeaf ? pageKey(currentLeaf) : pinned.current;
     if (!currentLeaf && !current) {
       const sections = Array.from(paper.current?.querySelectorAll<HTMLElement>("section[data-section]") ?? []);
       for (const section of sections) if (section.getBoundingClientRect().top <= 200) current = section.dataset.section ?? null;
@@ -1505,7 +1666,7 @@ export function DocumentEditor({
   const viewToggle = (
     <span role="radiogroup" aria-label={msg("shared.document.DocumentEditor.viewMode")} className="flex items-center gap-0.5 rounded-lg bg-line/60 p-0.5">
       <ViewButton label={msg("shared.document.DocumentEditor.wholePage")} on={!stepping} onClick={() => {
-        pinned.current = currentLeaf ? currentLeaf.heading?.id ?? "DOCUMENT" : null;
+        pinned.current = currentLeaf ? pageKey(currentLeaf) : null;
         // Về Cả trang thì cuộn tới đúng mục đang xem, không về đầu trang.
         const id = currentLeaf?.heading?.id;
         setView("page");
@@ -1513,7 +1674,7 @@ export function DocumentEditor({
       }}><PageGlyph /></ViewButton>
       <ViewButton label={msg("shared.document.DocumentEditor.partByPart")} on={stepping} onClick={() => {
         // Mở đúng trang của mục đang xem (theo chỗ đã cuộn tới), không thì theo chỗ con trỏ (yêu cầu 2026-11-05).
-        const viewing = lastCurrent.current ? leaves.findIndex((leaf) => (leaf.heading?.id ?? "DOCUMENT") === lastCurrent.current) : -1;
+        const viewing = lastCurrent.current ? leaves.findIndex((leaf) => pageKey(leaf) === lastCurrent.current) : -1;
         const at = viewing >= 0 ? viewing
           : focused ? leaves.findIndex((leaf) => leaf.heading?.id === focused.id || leaf.blocks.some((b) => b.id === focused.id)) : -1;
         if (at >= 0) setStepAt(at);
@@ -1540,7 +1701,7 @@ export function DocumentEditor({
     const hasTail = section.children.length === 0;
     const last = section.blocks.at(-1);
     if (hasTail && last?.type === "PARAGRAPH") tailOf.set(last.id, `tail-${section.heading?.id ?? "DOCUMENT"}`);
-    const lastAfter = section.after.at(-1);
+    const lastAfter = section.children.at(-1)?.trailing.at(-1);
     if (section.children.length > 0 && lastAfter?.type === "PARAGRAPH") tailOf.set(lastAfter.id, `tail-end-${section.heading?.id ?? "DOCUMENT"}`);
     section.children.forEach(mapTails);
   };
@@ -1559,15 +1720,27 @@ export function DocumentEditor({
   const selectedIds = new Set(allSelected?.ids.filter((id) => blocks.some((b) => b.id === id)) ?? []);
 
   /**
-   * Ctrl+A ở đoạn văn, danh sách hay dòng cuối: chọn cả văn bản của phần (không gồm tiêu đề mục và mục con). Tên bài, tiêu
-   * đề mục, ô bảng, hay phần chỉ có đúng đoạn đang viết thì để trình duyệt tự chọn hết ô. Trả false nếu không xử lý.
+   * Văn bản liền một khối của {@code section} chứa con trỏ: đoạn mở đầu (trước mục con đầu tiên) hoặc đoạn nằm ngay sau
+   * một mục con (yêu cầu 2026-11-27: chữ giữa hai mục con là một đoạn riêng, không gộp với đoạn mở đầu). Dòng cuối ở đáy
+   * ô thuộc đoạn sau mục con cuối cùng.
+   */
+  function findCursorSegment(section: DocSection): DocumentBlock[] {
+    const last = section.children.at(-1);
+    if (cursorLine) return cursorLine.tailKey.startsWith("tail-end-") && last ? last.trailing : section.blocks;
+    const owner = section.children.find((child) => child.trailing.some((b) => b.id === focused?.id));
+    return owner ? owner.trailing : section.blocks;
+  }
+  /**
+   * Ctrl+A ở đoạn văn, danh sách hay dòng cuối: chọn cả đoạn văn bản liền khối đang có con trỏ (không gồm tiêu đề mục, mục
+   * con và đoạn văn bản ở phía bên kia mục con). Tên bài, tiêu đề mục, ô bảng, hay đoạn chỉ có đúng khối đang viết thì để
+   * trình duyệt tự chọn hết ô. Trả false nếu không xử lý.
    */
   function selectPart(): boolean {
     if (inHeader) return false;
     if (!cursorLine && (!focused || focused.type === "HEADING" || focused.type === "TABLE")) return false;
     const section = cursorSection;
     if (!section) return false;
-    const own = [...section.blocks, ...section.after].filter((b) => !isBlockLocked(b));
+    const own = findCursorSegment(section).filter((b) => !isBlockLocked(b));
     if (own.length === 0) return false;
     if (!cursorLine && own.length === 1 && own[0]!.id === focused?.id && focused.type === "PARAGRAPH") return false;
     setAllSelected({ key: section.heading?.id ?? "DOCUMENT", ids: own.map((b) => b.id) });
@@ -1588,8 +1761,9 @@ export function DocumentEditor({
     if (!section || selectedIds.size === 0) return;
     const at = blocks.findIndex((b) => selectedIds.has(b.id));
     const under = findUnderLevel(blocks[at]!);
+    // Xóa đoạn có dòng cuối ngay dưới thì con trỏ về dòng cuối; đoạn ở giữa hai mục con thì còn một dòng trống giữ chỗ.
     const tailKey = section.children.length === 0 ? `tail-${allSelected!.key}`
-      : section.after.some((b) => selectedIds.has(b.id)) ? `tail-end-${allSelected!.key}` : null;
+      : section.children.at(-1)!.trailing.some((b) => selectedIds.has(b.id)) ? `tail-end-${allSelected!.key}` : null;
     if (text === null && authoring && tailKey) {
       let next = blocks;
       selectedIds.forEach((id) => { next = removeFromList(next, id); });
@@ -1672,7 +1846,8 @@ export function DocumentEditor({
         // Cùng lưới với trang giấy và cột ghi chú bên dưới, để nút giữa nằm thẳng giữa trang giấy.
         <div ref={measureToolbar} role="toolbar" aria-label={msg("shared.document.DocumentEditor.toolbar")}
           className={`sticky top-[var(--doc-toolbar-top,4rem)] z-20 rounded-xl border border-line bg-sunken px-3 py-1 ${TOOLBAR_COVER}`}>
-          <div className={rail ? "grid grid-cols-[minmax(0,816px)_300px] items-center justify-center gap-5" : "grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr] sm:gap-0"}>
+          <div className={rail ? "grid items-center justify-center gap-5" : "grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_auto_1fr] sm:gap-0"}
+            style={rail ? { gridTemplateColumns: `minmax(0,816px) ${railWidth}px` } : undefined}>
             {!rail && <span className="hidden sm:block" />}
             <div className="flex items-center justify-center gap-0.5">{toolbarCenter}</div>
             {/* Chỉ đọc (lịch sử nộp bài) cũng đổi được Cả trang / Từng phần (yêu cầu 2026-11-05). */}
@@ -1737,8 +1912,9 @@ export function DocumentEditor({
                 </label>
               )}
               {diagramEnabled && (
-                <ToolbarButton title={msg("shared.document.DocumentEditor.insertDrawIoDiagram")} aria-label={msg("shared.document.DocumentEditor.insertDrawIoDiagram")} data-testid="add-DIAGRAM" disabled={!insertAllowed}
-                  onClick={insertDiagram}><Glyph name="diagram" /></ToolbarButton>
+                <ToolPopover title={msg("shared.document.DocumentEditor.insertDrawIoDiagram")} disabled={!insertAllowed} label={<Glyph name="diagram" />}>
+                  {(close) => <DiagramTemplateMenu onPick={(template) => { void insertDiagram(template); close(); }} />}
+                </ToolPopover>
               )}
             </>
           )}
@@ -1751,7 +1927,8 @@ export function DocumentEditor({
         </div>
       )}
 
-      <div className={rail ? cx("grid items-start gap-5", fullWidth ? "grid-cols-[minmax(0,1fr)_300px]" : "grid-cols-[minmax(0,816px)_300px] justify-center") : cx("mx-auto w-full", !fullWidth && "max-w-[816px]")}>
+      <div className={rail ? cx("grid items-start gap-5", !fullWidth && "justify-center") : cx("mx-auto w-full", !fullWidth && "max-w-[816px]")}
+        style={rail ? { gridTemplateColumns: `${fullWidth ? "minmax(0,1fr)" : "minmax(0,816px)"} ${railWidth}px` } : undefined}>
         <div ref={paper} data-testid="document-paper" tabIndex={-1} onMouseLeave={stopHover} onMouseOver={stopHover}
           onMouseDownCapture={() => { if (allSelected) setAllSelected(null); }}
           onFocusCapture={(event) => { if (allSelected && event.target !== paper.current) setAllSelected(null); }}
@@ -1792,25 +1969,32 @@ export function DocumentEditor({
               ? <div className="h-16" />
               : student && <button type="button" aria-label={msg("shared.document.DocumentEditor.startWriting")} data-testid="write-document"
                 onClick={() => insertAfter(null, createBlock("PARAGRAPH", origin))} className="block h-16 w-full cursor-text" />)}
-            {currentLeaf ? renderSection(findTop(currentLeaf), null, currentLeaf) : renderSection(tree)}
+            {currentLeaf ? renderPage(currentLeaf) : renderSection(tree)}
           </div>
           {student && !readOnly && !stepping && blocks.length > 0 && atEndInPart && (
             <button type="button" aria-label={msg("shared.document.DocumentEditor.continueWritingAtTheEnd")} onClick={continueAtEnd} className="block h-14 w-full cursor-text" />
           )}
           {stepping && stepNav("bottom")}
         </div>
-        {sidePanel ? <aside data-testid="document-side-panel" className={wide ? "sticky min-w-0 overflow-y-auto" : undefined}
-          style={wide ? {
-            top: "calc(var(--doc-toolbar-top, 4rem) + var(--doc-toolbar-height, 2.25rem) + 0.5rem)",
-            maxHeight: "calc(100dvh - var(--doc-toolbar-top, 4rem) - var(--doc-toolbar-height, 2.25rem) - 1rem)",
-          } : undefined}>{sidePanel}</aside>
-          : rail && <CommentRail paper={content} comments={visible} activeKey={activeComment} matchSectionHeight={matchCommentHeight} />}
+        {(() => {
+          const column = sidePanel ? <aside data-testid="document-side-panel" className={wide ? "sticky min-w-0 overflow-y-auto" : undefined}
+            style={wide ? {
+              top: "calc(var(--doc-toolbar-top, 4rem) + var(--doc-toolbar-height, 2.25rem) + 0.5rem)",
+              maxHeight: "calc(100dvh - var(--doc-toolbar-top, 4rem) - var(--doc-toolbar-height, 2.25rem) - 1rem)",
+            } : undefined}>{sidePanel}</aside>
+            : rail && <CommentRail paper={content} comments={visible} activeKey={activeComment} matchSectionHeight={matchCommentHeight} />;
+          if (!resizableRail || !rail) return column;
+          return <div className="relative min-w-0 self-stretch"><RailResizer width={railWidth} onWidth={setRailWidth} />{column}</div>;
+        })()}
       </div>
 
       {editing && editing.type === "DIAGRAM" && (
         <DiagramEditor key={editing.id} xml={editing.content.xml} title={editing.content.alt || "Draw.io"}
           onClose={() => setDiagram(null)}
-          onSave={(xml, svg) => replace(editing.id, { ...editing, content: { ...editing.content, xml, ...(svg ? { svgPreview: svg } : {}) } })} />
+          onSave={(xml, svg, png) => replace(editing.id, { ...editing, content: { ...editing.content, xml,
+            ...(svg ? { svgPreview: svg } : {}), ...(png ? { pngPreview: png } : {}),
+            // Người học đã vẽ trên sơ đồ mẫu của đề: từ giờ khung hiện hình của người học (yêu cầu 2026-11-27).
+            ...(student && editing.origin === "TEACHER" ? { studentEdited: true } : {}) } })} />
       )}
     </div>
   );

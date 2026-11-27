@@ -32,3 +32,6 @@ DESIGN.md
 
 .vscode/
 uml/
+# Local tooling artifacts
+*.whl
+~$*

@@ -49,7 +49,7 @@ final class AssignmentDraftGenerationSchema {
             addBoundedText(fields, "title", 1, 200);
             addBoundedText(fields, "guidance", 1, 3000);
             ObjectNode rubric = (ObjectNode) fields.path("rubric");
-            rubric.put("minItems", mode == GradingMode.GRADED ? 1 : 0)
+            rubric.put("minItems", mode.hasPoints() ? 1 : 0)
                     .put("maxItems", fromBlankRevision ? AssignmentRubric.CRITERIA_MAX : 6);
             ObjectNode criterion = (ObjectNode) rubric.path("items").path("properties");
             addBoundedText(criterion, "title", 1, 200);

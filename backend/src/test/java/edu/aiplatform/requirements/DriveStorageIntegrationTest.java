@@ -1,5 +1,6 @@
 package edu.aiplatform.requirements;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -56,6 +57,7 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -67,12 +69,11 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 import org.testcontainers.utility.DockerImageName;
 
 /**
- * Google Drive storage with personal-Drive production settings ({@code require-drive=true}). The real Google Drive
+ * Google Drive storage with personal-Drive production settings. The real Google Drive
  * client library, {@link edu.aiplatform.files.integration.GoogleDriveStorageAdapter}, {@link DriveFolders},
  * {@code DriveBackupStore}, upload/download services, Redis, RabbitMQ and PostgreSQL are used; only the Drive client
  * points at a local HTTP server that implements the Drive v3 REST calls the platform makes (resumable upload,
@@ -82,7 +83,7 @@ import org.testcontainers.utility.DockerImageName;
         properties = {
                 "platform.identity.bcrypt-cost=4", "platform.identity.mail-from=integration@example.test",
                 "platform.identity.bootstrap-admin-email=", "platform.identity.mail-transport=smtp",
-                "platform.files.require-drive=true", "platform.files.drive-service-account-key=",
+                "platform.files.drive-service-account-key=",
                 "platform.files.shared-drive-id=", "platform.files.drive-oauth-client-id=integration-client",
                 "platform.files.drive-oauth-client-secret=integration-secret",
                 "platform.files.drive-oauth-refresh-token=integration-refresh-token",
@@ -92,7 +93,9 @@ import org.testcontainers.utility.DockerImageName;
                 "spring.rabbitmq.listener.direct.auto-startup=false",
                 "spring.main.allow-bean-definition-overriding=false"
         })
-@AutoConfigureMockMvc
+// Không in request/response: bản in đọc header trong khi luồng async tải file còn ghi, máy bận thì lỗi
+// "End size ... is less than fixed size ...".
+@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class DriveStorageIntegrationTest {
@@ -104,16 +107,15 @@ class DriveStorageIntegrationTest {
     static final String APP_FOLDER = FilesProperties.DEFAULT_FOLDER_NAME;
     static final FakeDrive DRIVE = FakeDrive.start();
 
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withInitScript("requirements/platform-roles.sql")
-            .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
     @Container
     static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:7.4-alpine"))
             .withExposedPorts(6379);
     @Container
     static final GenericContainer<?> BROKER = new GenericContainer<>(
             DockerImageName.parse("rabbitmq:4.1-management-alpine"))
+            // Các fork test song song cùng bật RabbitMQ thì có thể mở cổng chậm hơn mức chờ mặc định 60 s.
+            .withStartupTimeout(Duration.ofMinutes(3))
             .withEnv("RABBITMQ_DEFAULT_USER", "integration")
             .withEnv("RABBITMQ_DEFAULT_PASS", UUID.randomUUID().toString())
             .withExposedPorts(5672);
@@ -139,7 +141,6 @@ class DriveStorageIntegrationTest {
         properties.add("platform.ai.key-encryption-key", () -> ENCRYPTION_KEY);
         properties.add("platform.files.fileref-secret", () -> FILE_SECRET);
         properties.add("platform.files.local-storage-dir", FILES::toString);
-        properties.add("platform.backup.local-dir", () -> FILES.resolve("backups").toString());
     }
 
     /** Replaces only how the Drive client is built: same library and calls, local Drive endpoint, fixed token. */
@@ -297,7 +298,7 @@ class DriveStorageIntegrationTest {
     }
 
     @Test
-    void abusiveDriveFileIsReportedAsUnavailableAndAudited() throws Exception {
+    void abusiveDriveFileIsReportedAsUnavailableWithoutAudit() throws Exception {
         var student = actor(Role.STUDENT);
         String fileId = uploadPng(student, "flagged.png", createPng(Color.MAGENTA));
         DRIVE.failNext("GET /download/drive/v3/files/" + fileId + " alt=media", 403, "cannotDownloadAbusiveFile", 1);
@@ -306,8 +307,8 @@ class DriveStorageIntegrationTest {
         mvc.perform(get(url).cookie(loginCookie(student)))
                 .andExpect(status().isGone())
                 .andExpect(jsonPath("$.code").value("FILE_UNAVAILABLE"));
-        assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='FILE_DOWNLOAD' and result='FAILURE' "
-                + "and reason='DRIVE_ABUSE_BLOCKED' and actor_id=?", Long.class, student.accountId())).isEqualTo(1);
+        assertThat(jdbc.queryForObject("select count(*) from audit_logs where action='FILE_DOWNLOAD' and actor_id=?",
+                Long.class, student.accountId())).isZero();
         assertThat(DRIVE.item(fileId)).isPresent();
     }
 
@@ -408,7 +409,7 @@ class DriveStorageIntegrationTest {
 
     FilesProperties withFolder(String folderName, String folderId) {
         var p = filesProperties;
-        return new FilesProperties(p.filerefSecret(), p.requireDrive(), p.localStorageDir(), p.uploadTmpDir(),
+        return new FilesProperties(p.filerefSecret(), p.localStorageDir(), p.uploadTmpDir(),
                 p.driveServiceAccountKey(), p.sharedDriveId(), p.driveOauthClientId(), p.driveOauthClientSecret(),
                 p.driveOauthRefreshToken(), folderName, folderId);
     }

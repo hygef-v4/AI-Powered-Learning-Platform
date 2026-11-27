@@ -11,10 +11,13 @@ import edu.aiplatform.assignmentwork.contract.IGroupWorkStatus;
 import edu.aiplatform.assignmentwork.contract.ISubmissionQuery;
 import edu.aiplatform.assignmentwork.contract.StudentSubmissionStatus;
 import edu.aiplatform.assignmentwork.contract.SubmissionView;
-import edu.aiplatform.assignmentwork.model.AssignmentAttempt;
 import edu.aiplatform.assignmentwork.repository.AttemptRepository;
+import edu.aiplatform.assignmentwork.repository.AttemptRepository.AttemptStatusRow;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -49,17 +52,93 @@ public class SubmissionQueryService implements ISubmissionQuery {
     @Transactional(readOnly = true)
     public List<StudentSubmissionStatus> listSubmissions(UUID assignmentId, UUID classId) {
         GradingMode mode = assignments.loadAssignment(assignmentId).map(AssignmentView::gradingMode).orElse(GradingMode.GRADED);
-        Map<UUID, List<AssignmentAttempt>> byStudent = attempts.listOfClass(assignmentId, classId).stream()
-                .collect(Collectors.groupingBy(AssignmentAttempt::accountId));
-        Set<UUID> students = new LinkedHashSet<>(classes.listActiveStudents(classId));
+        // Chỉ đọc cột trạng thái: U09 gọi hàm này cho từng bản chấm khi chốt hàng loạt (TC-PERF-011).
+        List<AttemptStatusRow> rows = attempts.listStatusesOfClass(classId, List.of(assignmentId));
+        return summarizeSubmissions(rows, classes.listActiveStudents(classId), mode);
+    }
+
+    /**
+     * Như {@link #listSubmissions} cho nhiều bài của một lớp: đọc danh sách lớp, chế độ chấm và lượt làm mỗi thứ một lần
+     * thay vì một lần cho mỗi bài (bảng điểm 30 bài, TC-PERF-009). Kết quả giữ thứ tự {@code assignmentIds}.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, List<StudentSubmissionStatus>> listSubmissionsByAssignment(Collection<UUID> assignmentIds,
+                                                                              UUID classId) {
+        if (assignmentIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<UUID, GradingMode> modes = new HashMap<>();
+        for (AssignmentView view : assignments.listForClass(classId)) {
+            if (view.gradingMode() != null) {
+                modes.put(view.assignmentId(), view.gradingMode());
+            }
+        }
+        Map<UUID, List<AttemptStatusRow>> rowsByAssignment = attempts.listStatusesOfClass(classId, assignmentIds)
+                .stream().collect(Collectors.groupingBy(AttemptStatusRow::assignmentId));
+        List<UUID> roster = classes.listActiveStudents(classId);
+        Map<UUID, List<StudentSubmissionStatus>> result = new LinkedHashMap<>();
+        for (UUID assignmentId : assignmentIds) {
+            GradingMode mode = modes.containsKey(assignmentId) ? modes.get(assignmentId)
+                    : assignments.loadAssignment(assignmentId).map(AssignmentView::gradingMode)
+                            .orElse(GradingMode.GRADED);
+            result.put(assignmentId, summarizeSubmissions(rowsByAssignment.getOrDefault(assignmentId, List.of()),
+                    roster, mode));
+        }
+        return result;
+    }
+
+    /** Lượt nộp cuối của sinh viên khi bài được chấm điểm; cùng quy tắc với {@link #summarizeSubmissions}. */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UUID> findGradedAttemptId(UUID assignmentId, UUID classId, UUID accountId) {
+        GradingMode mode = assignments.loadAssignment(assignmentId).map(AssignmentView::gradingMode).orElse(GradingMode.GRADED);
+        return findGradedAttemptId(assignmentId, mode, classId, accountId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UUID> findGradedAttemptId(UUID assignmentId, GradingMode mode, UUID classId, UUID accountId) {
+        if (mode != GradingMode.GRADED) {
+            return Optional.empty();
+        }
+        return attempts.listStatusesOfAccount(classId, assignmentId, accountId).stream()
+                .filter(a -> a.status() == AttemptStatus.SUBMITTED)
+                .max(Comparator.comparingInt(AttemptStatusRow::attemptNo)).map(AttemptStatusRow::id);
+    }
+
+    /** Một truy vấn trạng thái lượt cho cả lớp; không cần danh sách lớp vì sinh viên chưa nộp không có lượt được chấm. */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, UUID> findGradedAttemptIds(UUID assignmentId, GradingMode mode, UUID classId) {
+        if (mode != GradingMode.GRADED) {
+            return Map.of();
+        }
+        Map<UUID, AttemptStatusRow> lastSubmitted = new HashMap<>();
+        for (AttemptStatusRow row : attempts.listStatusesOfClass(classId, List.of(assignmentId))) {
+            if (row.status() == AttemptStatus.SUBMITTED) {
+                lastSubmitted.merge(row.accountId(), row, (a, b) -> a.attemptNo() >= b.attemptNo() ? a : b);
+            }
+        }
+        Map<UUID, UUID> result = new HashMap<>();
+        lastSubmitted.forEach((account, row) -> result.put(account, row.id()));
+        return result;
+    }
+
+    /** Một dòng cho mỗi sinh viên đang học, cộng người còn lượt làm dù đã rời lớp. */
+    private static List<StudentSubmissionStatus> summarizeSubmissions(List<AttemptStatusRow> rows, List<UUID> roster,
+                                                                     GradingMode mode) {
+        Map<UUID, List<AttemptStatusRow>> byStudent = rows.stream()
+                .collect(Collectors.groupingBy(AttemptStatusRow::accountId));
+        Set<UUID> students = new LinkedHashSet<>(roster);
         students.addAll(byStudent.keySet());
         List<StudentSubmissionStatus> result = new ArrayList<>();
         for (UUID accountId : students) {
-            List<AssignmentAttempt> list = byStudent.getOrDefault(accountId, List.of());
-            AssignmentAttempt latest = list.stream().max(Comparator.comparingInt(AssignmentAttempt::attemptNo))
+            List<AttemptStatusRow> list = byStudent.getOrDefault(accountId, List.of());
+            AttemptStatusRow latest = list.stream().max(Comparator.comparingInt(AttemptStatusRow::attemptNo))
                     .orElse(null);
-            AssignmentAttempt lastSubmitted = list.stream().filter(a -> a.status() == AttemptStatus.SUBMITTED)
-                    .max(Comparator.comparingInt(AssignmentAttempt::attemptNo)).orElse(null);
+            AttemptStatusRow lastSubmitted = list.stream().filter(a -> a.status() == AttemptStatus.SUBMITTED)
+                    .max(Comparator.comparingInt(AttemptStatusRow::attemptNo)).orElse(null);
             UUID graded = mode == GradingMode.GRADED && lastSubmitted != null ? lastSubmitted.id() : null;
             result.add(new StudentSubmissionStatus(accountId, graded, list.size(),
                     latest == null ? null : latest.status(),
@@ -94,8 +173,8 @@ public class SubmissionQueryService implements ISubmissionQuery {
             }
             return missing;
         }
-        Set<UUID> submitted = attempts.listOfClass(assignmentId, classId).stream()
-                .filter(a -> a.status() == AttemptStatus.SUBMITTED).map(AssignmentAttempt::accountId)
+        Set<UUID> submitted = attempts.listStatusesOfClass(classId, List.of(assignmentId)).stream()
+                .filter(a -> a.status() == AttemptStatus.SUBMITTED).map(AttemptStatusRow::accountId)
                 .collect(Collectors.toSet());
         return students.stream().filter(id -> !submitted.contains(id)).toList();
     }

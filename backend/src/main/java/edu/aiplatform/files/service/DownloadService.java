@@ -21,19 +21,16 @@ public class DownloadService {
 
     private final DownloadTokenService downloadTokenService;
     private final IStorage storage;
-    private final FileAudit fileAudit;
     private final List<IArtifactDownloadPolicy> policies;
 
-    public DownloadService(DownloadTokenService downloadTokenService, IStorage storage, FileAudit fileAudit) {
-        this(downloadTokenService, storage, fileAudit, List.of());
+    public DownloadService(DownloadTokenService downloadTokenService, IStorage storage) {
+        this(downloadTokenService, storage, List.of());
     }
 
     @Autowired
-    public DownloadService(DownloadTokenService downloadTokenService, IStorage storage, FileAudit fileAudit,
-                           List<IArtifactDownloadPolicy> policies) {
+    public DownloadService(DownloadTokenService downloadTokenService, IStorage storage, List<IArtifactDownloadPolicy> policies) {
         this.downloadTokenService = downloadTokenService;
         this.storage = storage;
-        this.fileAudit = fileAudit;
         this.policies = List.copyOf(policies);
     }
 
@@ -44,7 +41,6 @@ public class DownloadService {
         DownloadTokenService.Grant grant = downloadTokenService.resolve(token)
                 .orElseThrow(() -> ApiException.createNotFound("DOWNLOAD_TOKEN_NOT_FOUND"));
         if (!grant.accountId().equals(actor.accountId())) {
-            fileAudit.downloadWrongAccount(actor.accountId());
             throw ApiException.createNotFound("DOWNLOAD_TOKEN_NOT_FOUND");
         }
         try {
@@ -67,7 +63,6 @@ public class DownloadService {
             InputStream content = storage.open(grant.fileId());
             return new Download(metadata, content, buildHeaders(metadata));
         } catch (FileAbusiveException e) {
-            fileAudit.downloadAbusive(actor.accountId());
             throw ApiException.createGone("FILE_UNAVAILABLE", "Tệp không khả dụng");
         } catch (StorageUnavailableException e) {
             throw ApiException.createUnavailable("STORAGE_UNAVAILABLE", "Lưu trữ tệp tạm thời không khả dụng");

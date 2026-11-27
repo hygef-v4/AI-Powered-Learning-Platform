@@ -43,6 +43,11 @@ export function McpAgentSection({ credentials, onCreate, onUpdate, onRevoke }: P
           {msg("ai.components.McpAgentSection.connectNewAgent")}</Button>
       }
     >
+      {active >= MAX_AGENTS && (
+        <p role="status" className="text-xs text-muted" data-testid="mcp-agent-limit">
+          {msg("ai.model.labels.youAlreadyHave5Active")}
+        </p>
+      )}
       {error && (
         <p role="alert" className="text-xs text-danger">
           {error}

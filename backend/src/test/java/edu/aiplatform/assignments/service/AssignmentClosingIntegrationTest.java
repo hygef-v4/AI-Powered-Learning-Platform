@@ -1,5 +1,6 @@
 package edu.aiplatform.assignments.service;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -14,14 +15,11 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers(disabledWithoutDocker = true)
 class AssignmentClosingIntegrationTest {
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
     final UUID assignmentId = UUID.randomUUID();
     final Instant deadline = Instant.parse("2026-11-15T12:00:00Z");
     DriverManagerDataSource dataSource;

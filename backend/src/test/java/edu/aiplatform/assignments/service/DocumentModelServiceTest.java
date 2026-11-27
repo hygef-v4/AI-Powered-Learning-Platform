@@ -273,6 +273,34 @@ class DocumentModelServiceTest {
     }
 
     @Test
+    void sanitizeKeepsAValidDiagramPngAndDropsAnythingElse() {
+        String png = "data:image/png;base64,"
+                + java.util.Base64.getEncoder().encodeToString(PngChunks.drawDiagramPlaceholder(null, false));
+        DocumentBlock kept = diagram(BlockOrigin.TEACHER, DIAGRAM, null);
+        ((ObjectNode) kept.content()).put("pngPreview", png);
+        DocumentBlock dropped = diagram(BlockOrigin.TEACHER, DIAGRAM, null);
+        ((ObjectNode) dropped.content()).put("pngPreview", "data:image/png;base64,PHN2Zy8+");
+
+        DocumentModel clean = service.sanitize(new DocumentModel(List.of(kept, dropped)));
+
+        assertThat(clean.blocks().get(0).content().path("pngPreview").asText()).isEqualTo(png);
+        assertThat(clean.blocks().get(1).content().has("pngPreview")).isFalse();
+    }
+
+    @Test
+    void sanitizeKeepsTheStudentEditedMarkOnlyWhenTrue() {
+        DocumentBlock edited = diagram(BlockOrigin.TEACHER, DIAGRAM, null);
+        ((ObjectNode) edited.content()).put("studentEdited", true);
+        DocumentBlock other = diagram(BlockOrigin.TEACHER, DIAGRAM, null);
+        ((ObjectNode) other.content()).put("studentEdited", "yes");
+
+        DocumentModel clean = service.sanitize(new DocumentModel(List.of(edited, other)));
+
+        assertThat(clean.blocks().get(0).content().path("studentEdited").asBoolean()).isTrue();
+        assertThat(clean.blocks().get(1).content().has("studentEdited")).isFalse();
+    }
+
+    @Test
     void formattedTitleIsKeptCleanedAndValidated() throws Exception {
         ObjectMapper json = new ObjectMapper();
         DocumentModel skeleton = json.readValue("{\"blocks\":[],\"title\":{\"runs\":[{\"text\":\"Bài\",\"bold\":true,\"font\":\"x\"}],\"align\":\"CENTER\",\"x\":1}}", DocumentModel.class);

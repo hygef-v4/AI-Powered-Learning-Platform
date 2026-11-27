@@ -136,8 +136,9 @@ class AcademicsAccessAndReadTest {
         else when(authorization.authorize(any(),anyString(),any())).thenThrow(new IllegalStateException("upstream secret"));
         assertProblem(() -> academicsService.listClasses(actor(Role.STUDENT),"student",null,null,null,null,1,20),status,code);
         verifyNoInteractions(courseClassRepository,enrollmentRepository,academicsReadRepository,subjectQuery,scope);
-        verify(audit).record(argThat(e -> e.result()==(status==503?AuditResult.FAILURE:AuditResult.DENIED)
-                && (status==503 ? e.details().isEmpty() : e.details().equals(Map.of("audience","student","action","CLASS_LIST","actorRole","STUDENT")))));
+        if (status==503) verifyNoInteractions(audit);
+        else verify(audit).record(argThat(e -> e.result()==AuditResult.DENIED
+                && e.details().equals(Map.of("audience","student","action","CLASS_LIST","actorRole","STUDENT"))));
     }
 
     @ParameterizedTest
@@ -359,7 +360,7 @@ class AcademicsAccessAndReadTest {
         else when(academicsReadRepository.countEnrollments(any())).thenThrow(new IllegalStateException("upstream secret"));
         String code = dependency.equals("subject")?"SUBJECT_UNAVAILABLE":dependency.equals("teacher")?"ACCOUNT_UNAVAILABLE":"ACADEMICS_DEPENDENCY_UNAVAILABLE";
         assertProblem(() -> academicsService.loadClass(actor(Role.STUDENT),"student",classId),503,code);
-        verify(audit).record(argThat(e -> e.result()==AuditResult.FAILURE));
+        verifyNoInteractions(audit);
     }
 
     @Test void studentCandidatesSupportMoreThanTwentyAndFilterOtherRoles() {
@@ -404,7 +405,7 @@ class AcademicsAccessAndReadTest {
             if (students) academicsService.listStudentCandidates(actor(Role.SUBJECT_MANAGER),classId,"term");
             else academicsService.listTeacherCandidates(actor(Role.SUBJECT_MANAGER),"term");
         },503,"ACADEMICS_DEPENDENCY_UNAVAILABLE");
-        verify(audit).record(argThat(e -> e.result()==AuditResult.FAILURE && e.details().isEmpty()));
+        verifyNoInteractions(audit);
     }
 
     @ParameterizedTest

@@ -1,9 +1,13 @@
 package edu.aiplatform.grading.repository;
 
 import edu.aiplatform.grading.model.Evaluation;
+import edu.aiplatform.grading.model.EvaluationKind;
+import edu.aiplatform.grading.model.EvaluationStatus;
 import edu.aiplatform.shared.error.ApiException;
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.*;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -60,6 +64,27 @@ public class EvaluationRepository implements IEvaluationRepository {
                 Map.of("classId", classId), EvaluationRepository::mapEvaluation);
     }
 
+    /** Lists current class evaluations with only the gradebook fields. */
+    public List<Evaluation> listGradebookEvaluations(UUID classId, Collection<UUID> accountIds) {
+        if (accountIds.isEmpty()) {
+            return List.of();
+        }
+        return namedParameterJdbcTemplate.query("""
+                select id, assignment_id, class_id, attempt_id, group_document_id, account_id, kind, status,
+                       version,
+                       grading_document->>'score' as score,
+                       grading_document->>'maxScore' as max_score,
+                       grading_document->>'feedback' as feedback,
+                       grading_document->>'createdAt' as created_at,
+                       grading_document->>'gradedAt' as graded_at,
+                       grading_document->>'publishedAt' as published_at
+                from evaluations
+                where class_id=:classId and account_id in (:accountIds)
+                  and status <> 'SUPERSEDED' and kind <> 'GROUP_DOCUMENT'
+                """, Map.of("classId", classId, "accountIds", accountIds),
+                EvaluationRepository::mapGradebookEvaluation);
+    }
+
     /** Inserts or updates an evaluation using its current version for concurrency control. */
     @Transactional
     public Evaluation saveEvaluation(Evaluation evaluation) {
@@ -111,6 +136,43 @@ public class EvaluationRepository implements IEvaluationRepository {
         row.document = rs.getString("grading_document");
         row.version = rs.getLong("version");
         return row.mapEvaluation();
+    }
+
+    /** Dựng bản chấm chỉ gồm các trường bảng điểm từ cột chỉ mục và vài khóa JSON. */
+    private static Evaluation mapGradebookEvaluation(ResultSet rs, int index) throws SQLException {
+        var evaluation = new Evaluation();
+        evaluation.id = rs.getObject("id", UUID.class);
+        evaluation.assignmentId = rs.getObject("assignment_id", UUID.class);
+        evaluation.classId = rs.getObject("class_id", UUID.class);
+        evaluation.attemptId = rs.getObject("attempt_id", UUID.class);
+        evaluation.groupDocumentId = rs.getObject("group_document_id", UUID.class);
+        evaluation.accountId = rs.getObject("account_id", UUID.class);
+        evaluation.kind = EvaluationKind.valueOf(rs.getString("kind"));
+        evaluation.state = EvaluationStatus.valueOf(rs.getString("status"));
+        evaluation.score = parseDecimal(rs.getString("score"));
+        evaluation.maxScore = parseDecimal(rs.getString("max_score"));
+        evaluation.version = rs.getLong("version");
+        evaluation.feedback = rs.getString("feedback");
+        evaluation.createdAt = parseEpochInstant(rs.getString("created_at"));
+        evaluation.gradedAt = parseEpochInstant(rs.getString("graded_at"));
+        evaluation.publishedAt = parseEpochInstant(rs.getString("published_at"));
+        return evaluation;
+    }
+
+    /** Đọc thời điểm Jackson ghi dạng số giây thập phân ({@code 1795664887.060311689}). */
+    static Instant parseEpochInstant(String value) {
+        if (value == null) {
+            return null;
+        }
+        var decimal = new BigDecimal(value);
+        long seconds = decimal.longValue();
+        int nanos = decimal.subtract(BigDecimal.valueOf(seconds)).movePointRight(9).intValue();
+        return Instant.ofEpochSecond(seconds, nanos);
+    }
+
+    // Lấy điểm từ tài liệu chấm, không từ cột numeric(…,2), để giữ đúng số chữ số như bản đọc đầy đủ (10 chứ không 10.00).
+    private static BigDecimal parseDecimal(String value) {
+        return value == null ? null : new BigDecimal(value);
     }
 
     /** Creates the error raised when a concurrent update changes the evaluation version. */

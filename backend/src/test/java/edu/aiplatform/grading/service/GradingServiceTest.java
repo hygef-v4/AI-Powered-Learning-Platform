@@ -59,6 +59,10 @@ class GradingServiceTest {
         when(submissionQuery.listSubmissions(assignmentId, classId))
                 .thenReturn(List.of(new StudentSubmissionStatus(studentId, evaluation.attemptId, 1,
                         AttemptStatus.SUBMITTED, Instant.now(), false)));
+        // Bản mặc định suy lượt được chấm từ listSubmissions đã stub ở trên.
+        when(submissionQuery.findGradedAttemptId(any(), any(), any())).thenCallRealMethod();
+        when(submissionQuery.findGradedAttemptId(any(), any(), any(), any())).thenCallRealMethod();
+        when(submissionQuery.findGradedAttemptIds(any(), any(), any())).thenCallRealMethod();
         gradingService = new GradingService(evaluationRepository, new GradingAccess(auth, classAccess), eventPublisher, submissionQuery, assignmentQuery, objectMapper, Clock.systemUTC(), groupProvider);
         when(assignmentQuery.loadAssignment(assignmentId)).thenReturn(Optional.of(assignmentView(AssignmentStatus.CLOSED)));
         when(groupProvider.getIfAvailable()).thenReturn(groupSource);
@@ -202,6 +206,50 @@ class GradingServiceTest {
             assertThat(item.code()).isEqualTo("GRADING_ASSIGNMENT_OPEN");
         });
         verify(evaluationRepository, never()).saveEvaluation(any());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {true, false})
+    void batchChecksClassAndAssignmentOnceButStillVerifiesEveryEvaluation(boolean publish) {
+        UUID otherStudent = UUID.randomUUID(), staleStudent = UUID.randomUUID();
+        var other = Evaluation.createPendingEvaluation(UUID.randomUUID(), assignmentId, classId, otherStudent, "hash",
+                new BigDecimal("4"), evaluation.rubricSnapshot, Instant.now());
+        // Bản chấm của lượt cũ: sinh viên đã nộp lượt mới hơn nên phải bị từ chối dù cùng lớp, cùng bài.
+        var stale = Evaluation.createPendingEvaluation(UUID.randomUUID(), assignmentId, classId, staleStudent, "hash",
+                new BigDecimal("4"), evaluation.rubricSnapshot, Instant.now());
+        for (var e : List.of(other, stale)) {
+            when(evaluationRepository.findById(e.id)).thenReturn(Optional.of(e));
+            when(evaluationRepository.lockById(e.id)).thenReturn(Optional.of(e));
+            when(submissionQuery.getSubmission(e.attemptId)).thenReturn(Optional.of(new SubmissionView(e.attemptId,
+                    assignmentId, classId, e.accountId, new DocumentModel(List.of()), "hash", Instant.now(), false,
+                    SubmitMode.values()[0])));
+        }
+        when(submissionQuery.listSubmissions(assignmentId, classId)).thenReturn(List.of(
+                new StudentSubmissionStatus(studentId, evaluation.attemptId, 1, AttemptStatus.SUBMITTED, Instant.now(), false),
+                new StudentSubmissionStatus(otherStudent, other.attemptId, 1, AttemptStatus.SUBMITTED, Instant.now(), false),
+                new StudentSubmissionStatus(staleStudent, UUID.randomUUID(), 2, AttemptStatus.SUBMITTED, Instant.now(), false)));
+        gradingService.saveEvaluation(teacher, evaluation.id, command(0));
+        gradingService.saveEvaluation(teacher, other.id, command(0));
+        clearInvocations(auth, classAccess, assignmentQuery, evaluationRepository, submissionQuery);
+        var transactions = mock(org.springframework.transaction.PlatformTransactionManager.class);
+        when(transactions.getTransaction(any())).thenReturn(
+                new org.springframework.transaction.support.SimpleTransactionStatus());
+
+        var result = new GradingBatchService(gradingService, transactions).executeBatch(teacher, new Batch(List.of(
+                new ItemVersion(evaluation.id, 0), new ItemVersion(other.id, 0), new ItemVersion(stale.id, 0))), publish);
+
+        assertThat(result.items()).extracting(item -> item.outcome() + ":" + item.code())
+                .containsExactly("SUCCESS:null", "SUCCESS:null", "FAILED:NOT_LATEST_ATTEMPT");
+        verify(auth, times(1)).authorize(any(), anyString(), any());
+        verify(classAccess, times(1)).getClassRef(classId);
+        verify(assignmentQuery, times(1)).loadAssignment(assignmentId);
+        verify(submissionQuery, times(1)).findGradedAttemptIds(assignmentId, GradingMode.GRADED, classId);
+        verify(submissionQuery, never()).findGradedAttemptId(any(), any(), any(), any());
+        for (var e : List.of(evaluation, other, stale)) {
+            verify(evaluationRepository).lockById(e.id);
+            verify(submissionQuery).getSubmission(e.attemptId);
+        }
+        verify(evaluationRepository, times(2)).saveEvaluation(any());
     }
 
     @Test

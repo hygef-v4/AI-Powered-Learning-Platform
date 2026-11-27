@@ -261,6 +261,16 @@ class MaterialServiceTest {
     }
 
     @Test
+    void restoreBringsAnArchivedMaterialBackWithoutANewVersion() {
+        var archived = materialService.archiveMaterial(actor, id, 0);
+        when(materialRepository.findMaterial(id)).thenReturn(java.util.Optional.of(archived));
+        var restored = materialService.restoreMaterial(actor, id, archived.version());
+        assertThat(restored.status()).isEqualTo(Material.Status.ACTIVE);
+        assertThat(restored.currentVersionNo()).isEqualTo(archived.currentVersionNo());
+        verify(materialRepository, never()).insertVersion(any());
+    }
+
+    @Test
     void staleVersionDoesNotAttachOrEnqueue() {
         assertThatThrownBy(
                         () ->

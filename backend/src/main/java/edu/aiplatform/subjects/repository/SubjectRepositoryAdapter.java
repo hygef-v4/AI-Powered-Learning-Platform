@@ -76,10 +76,13 @@ public class SubjectRepositoryAdapter implements ISubjectRepository {
                 select current_setting('transaction_isolation') as isolation,
                        current_setting('lock_timeout') as lock_timeout,
                        current_setting('statement_timeout') as statement_timeout,
-                       (select setting from pg_settings where name = 'lock_timeout') as lock_millis,
-                       (select setting from pg_settings where name = 'statement_timeout')
+                       (extract(epoch from current_setting('lock_timeout')::interval) * 1000)::bigint
+                           as lock_millis,
+                       (extract(epoch from current_setting('statement_timeout')::interval) * 1000)::bigint
                            as statement_millis
                 """)
+                        // Không đọc view pg_settings: view dựng mọi tham số (~4 ms mỗi lần), ghi danh 200 dòng
+                        // khóa môn 200 lần (TC-PERF-013).
                         .query()
                         .singleRow();
         if (!"read committed".equals(previous.get("isolation"))) {

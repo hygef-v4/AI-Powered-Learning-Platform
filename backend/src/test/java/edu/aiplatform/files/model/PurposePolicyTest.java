@@ -58,7 +58,6 @@ class PurposePolicyTest {
     @Test
     void examImportAcceptsImagesAndPdfUpToTenMegabytesForEducatorsOnly() {
         when(settings.get(any())).thenReturn(Optional.empty());
-        when(settings.get(PurposePolicy.ASSIGNMENT_IMPORT_MAX_MB)).thenReturn(Optional.of(25));
 
         PurposeLimits limits = policy.resolveLimits(ArtifactPurpose.ASSIGNMENT_IMPORT);
 

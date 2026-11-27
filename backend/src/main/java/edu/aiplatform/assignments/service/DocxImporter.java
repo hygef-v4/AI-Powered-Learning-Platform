@@ -554,6 +554,13 @@ final class DocxImporter {
                 if (svg != null) {
                     SvgSanitizer.sanitize(svg).ifPresent(clean -> content.put("svgPreview", clean));
                 }
+                // Ảnh PNG của sơ đồ trong tệp Word là ảnh thật của sơ đồ: giữ để tải DOCX lại có đúng ảnh (yêu cầu
+                // 2026-11-27); bỏ qua ảnh đại diện hay ảnh trắng do chính hệ thống dựng khi xuất.
+                if (data != null && PngChunks.isPng(data) && data.length <= PngChunks.MAX_DIAGRAM_PNG_BYTES
+                        && !java.util.Arrays.equals(data, PngChunks.drawDiagramPlaceholder(xml))
+                        && !java.util.Arrays.equals(data, PngChunks.drawBlankDiagram(xml))) {
+                    content.put("pngPreview", "data:image/png;base64," + java.util.Base64.getEncoder().encodeToString(data));
+                }
                 if (addBlock(id, BlockType.DIAGRAM, content)) {
                     issues.add(new ValidationIssue(how, id, "Khôi phục sơ đồ"));
                 }

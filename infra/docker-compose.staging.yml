@@ -48,9 +48,7 @@ services:
       SMTP_STARTTLS_ENABLED: "false"
       SMTP_FROM: ${SMTP_FROM:-no-reply@staging.local}
       MAIL_TRANSPORT: smtp
-      U03_REQUIRE_DRIVE: "false"
       U03_LOCAL_STORAGE_DIR: /app/data/files
-      U03_LOCAL_BACKUP_DIR: /app/data/backups
     volumes:
       - files-staging:/app/data/files
     deploy:
@@ -60,7 +58,6 @@ services:
     environment: *staging-env
     volumes:
       - files-staging:/app/data/files
-      - backups-staging:/app/data/backups
     deploy:
       resources: { limits: { cpus: "0.75", memory: 768M } }
 
@@ -92,4 +89,3 @@ services:
 
 volumes:
   files-staging: {}
-  backups-staging: {}

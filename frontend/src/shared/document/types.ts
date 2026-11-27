@@ -34,7 +34,9 @@ export type TableCell = { runs: Run[]; added?: boolean; align?: Align };
 export type TableContent = { headerRow?: boolean; rows: TableCell[][]; widths?: number[]; under?: number };
 /** {@code fileRef}: ảnh vừa tải lên, chưa lưu; {@code hasFile}: ảnh đã lưu, mở theo id block. */
 export type ImageContent = { fileRef?: string; hasFile?: boolean; alt?: string; width?: number; under?: number };
-export type DiagramContent = { diagramType: DiagramType; xml: string; svgPreview?: string; alt?: string; under?: number };
+/** {@code studentEdited}: người học đã vẽ trên sơ đồ mẫu của đề (bài làm hiện hình của người học thay vì "Bấm để vẽ"). */
+export type DiagramContent = { diagramType: DiagramType; xml: string; svgPreview?: string; pngPreview?: string; alt?: string; under?: number;
+  studentEdited?: boolean };
 
 type Base<T extends BlockType, C> = { id: string; origin: BlockOrigin; type: T; content: C };
 export type DocumentBlock =
@@ -326,12 +328,33 @@ export type DocSection = {
   depth: number;
   blocks: DocumentBlock[];
   children: DocSection[];
+  /** Văn bản của mục nằm sau mục con đầu tiên (gồm cả văn bản xen giữa các mục con), theo thứ tự tài liệu. */
   after: DocumentBlock[];
+  /**
+   * Văn bản của mục cha nằm ngay sau mục này, trước mục anh em kế tiếp (yêu cầu 2026-11-27: viết chữ ở giữa hai mục con).
+   * Là một đoạn của {@code after} của mục cha.
+   */
+  trailing: DocumentBlock[];
   leaf: boolean;
+  /**
+   * Chỉ có ở trang Từng phần dựng cho một đoạn {@code trailing}: đoạn nằm sau mục {@code child} của mục {@code parent}
+   * (yêu cầu 2026-11-27: chữ giữa hai mục là một phần riêng).
+   */
+  segment?: { parent: DocSection; child: DocSection };
 };
 
+/** Khóa của đoạn văn nằm ngay sau mục {@code child} (trang Từng phần, dòng Mục lục). */
+export function segmentKey(child: DocSection): string {
+  return `after-${child.heading?.id ?? ""}`;
+}
+
+/** Khóa trang Từng phần: id tiêu đề mục, khóa đoạn nằm sau một mục, hoặc "DOCUMENT" cho văn bản mở đầu ngoài mọi mục. */
+export function pageKey(page: DocSection): string {
+  return page.segment ? segmentKey(page.segment.child) : page.heading?.id ?? "DOCUMENT";
+}
+
 export function buildDocumentTree(document: DocumentModel): DocSection {
-  const root: DocSection = { heading: null, level: 0, depth: 0, blocks: [], children: [], after: [], leaf: false };
+  const root: DocSection = { heading: null, level: 0, depth: 0, blocks: [], children: [], after: [], trailing: [], leaf: false };
   const stack: DocSection[] = [root];
   for (const block of document.blocks) {
     const level = readHeadingLevel(block);
@@ -339,11 +362,18 @@ export function buildDocumentTree(document: DocumentModel): DocSection {
       const under = findUnderLevel(block);
       if (under !== null) while (stack.length > 1 && stack.at(-1)!.level > under) stack.pop();
       const owner = stack.at(-1)!;
-      (owner.children.length > 0 ? owner.after : owner.blocks).push(block);
+      const lastChild = owner.children.at(-1);
+      if (lastChild) {
+        owner.after.push(block);
+        lastChild.trailing.push(block);
+      } else {
+        owner.blocks.push(block);
+      }
       continue;
     }
     while (stack.length > 1 && stack.at(-1)!.level >= level) stack.pop();
-    const node: DocSection = { heading: block, level, depth: stack.length, blocks: [], children: [], after: [], leaf: false };
+    const node: DocSection = { heading: block, level, depth: stack.length, blocks: [], children: [], after: [], trailing: [],
+      leaf: false };
     stack.at(-1)!.children.push(node);
     stack.push(node);
   }

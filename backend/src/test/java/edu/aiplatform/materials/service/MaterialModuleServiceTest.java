@@ -81,7 +81,7 @@ class MaterialModuleServiceTest {
     }
 
     @Test
-    void managerDefaultModuleIsCreatedOnlyOnceAcrossRepeatedOpen() {
+    void managerOpeningANewSubjectDoesNotCreateAModule() {
         when(materialAccessPolicy.canManageModules(manager, subject)).thenReturn(true);
         when(materialAccessPolicy.requireSubject(subject))
                 .thenReturn(
@@ -96,11 +96,11 @@ class MaterialModuleServiceTest {
         doAnswer(call -> { stored.add(call.getArgument(0)); return null; })
                 .when(materialModuleRepository)
                 .insertModule(any());
+        // Môn mới không tự có module (yêu cầu 2026-11-26): Chủ nhiệm môn tự tạo module đầu tiên.
         materialModuleService.listSubjectModules(manager, subject);
         materialModuleService.listSubjectModules(manager, subject);
-        assertThat(stored).hasSize(1);
-        assertThat(stored.get(0).title()).isEqualTo("Module 1");
-        verify(materialModuleRepository).insertModule(any());
+        assertThat(stored).isEmpty();
+        verify(materialModuleRepository, never()).insertModule(any());
     }
 
     @Test
@@ -521,7 +521,7 @@ class MaterialModuleServiceTest {
     }
 
     @Test
-    void teacherOpeningAClassOfASubjectWithoutModulesGetsADefaultModule() {
+    void teacherOpeningAClassOfASubjectWithoutModulesDoesNotCreateAModule() {
         var teacher = new Actor(UUID.randomUUID(), Role.TEACHER);
         UUID fresh = UUID.randomUUID();
         when(materialAccessPolicy.requireClassListAccess(teacher, classId, false))
@@ -546,9 +546,7 @@ class MaterialModuleServiceTest {
 
         materialModuleService.listClassModules(teacher, classId, false);
 
-        verify(materialModuleRepository)
-                .insertModule(
-                        argThat(m -> m.subjectId().equals(fresh) && m.title().equals("Module 1")));
+        verify(materialModuleRepository, never()).insertModule(any());
     }
 
     @Test

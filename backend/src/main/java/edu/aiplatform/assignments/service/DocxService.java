@@ -10,6 +10,7 @@ import edu.aiplatform.assignments.contract.DocumentPart;
 import edu.aiplatform.assignments.contract.DocxImportPreview;
 import edu.aiplatform.assignments.contract.IDiagramLinker;
 import edu.aiplatform.assignments.contract.IDiagramResolver;
+import edu.aiplatform.assignments.contract.DiagramPngs;
 import edu.aiplatform.assignments.contract.IDocx;
 import edu.aiplatform.assignments.model.Assignment;
 import edu.aiplatform.assignments.repository.AssignmentRepository;
@@ -69,10 +70,16 @@ public class DocxService implements IDocx {
     /** F7 xuất đề: người đọc được bài; không lưu file. Rubric xuất riêng ({@link #exportRubric}, yêu cầu 2026-10-22). */
     @Transactional(readOnly = true)
     public Export exportAssignment(Actor actor, UUID id) {
+        return exportAssignment(actor, id, Map.of());
+    }
+
+    /** {@code diagramPngs}: ảnh sơ đồ trình duyệt vẽ cho sơ đồ chưa có ảnh lưu sẵn ({@link DiagramPngs}). */
+    @Transactional(readOnly = true)
+    public Export exportAssignment(Actor actor, UUID id, Map<String, String> diagramPngs) {
         Assignment assignment = support.loadReadable(actor, id, "ASSIGNMENT_DOCX_EXPORTED");
         // Không xuất phần hướng dẫn cũ (instructions): trang soạn không hiện nó nên tệp tải về cũng không có chữ lạ dưới
         // tên bài (yêu cầu 2026-11-12).
-        byte[] bytes = exporter.export(assignment.title(), null, assignment.skeleton(),
+        byte[] bytes = exporter.export(assignment.title(), null, DiagramPngs.fillMissing(assignment.skeleton(), diagramPngs),
                 createLinker(assignment.id()));
         return new Export(buildFileName(assignment.title()), bytes);
     }

@@ -55,6 +55,15 @@ public class MaterialController {
         return materialQueryService.loadMaterial(actor, id, null);
     }
 
+    @PostMapping("/restore")
+    public MaterialViews.Detail restoreMaterial(
+            @AuthenticationPrincipal Actor actor,
+            @PathVariable UUID id,
+            @Valid @RequestBody MaterialCommands.Expected input) {
+        materialService.restoreMaterial(actor, id, input.version());
+        return materialQueryService.loadMaterial(actor, id, null);
+    }
+
     @PostMapping("/download-token")
     public DownloadToken issueDownloadToken(
             @AuthenticationPrincipal Actor actor,

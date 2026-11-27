@@ -50,7 +50,7 @@ class PasswordCompletionTest {
     private final ActivationService activation = new ActivationService(tickets, accounts, encoder, auth, audit,
             TransactionOperations.withoutTransaction(), clock);
     private final PasswordResetService reset = new PasswordResetService(tickets, accounts, sessions, otpChallenges,
-            encoder, audit,
+            encoder,
             TransactionOperations.withoutTransaction(), clock);
 
     @Test
@@ -132,6 +132,6 @@ class PasswordCompletionTest {
         verify(sessions, times(2)).deleteAll(active.id());
         verify(otpChallenges).deleteChallenge(active.id(), OtpPurpose.PASSWORD_RESET);
         verify(auth, never()).startSession(any());
-        assertThat(audits).extracting(AuditEvent::action).containsExactly("PASSWORD_RESET");
+        assertThat(audits).isEmpty();
     }
 }

@@ -9,6 +9,7 @@ import { type AssignmentDetail, type GradingMode, type SubmissionMode } from "..
 import { msg } from "@/i18n/msg";
 
 export type Settings = {
+  submissionMode: SubmissionMode;
   gradingMode: GradingMode;
   diagramEnabled: boolean;
   requiredDiagrams: Partial<Record<DiagramType, number>>;
@@ -17,18 +18,28 @@ export type Settings = {
   referenceMaterialIds: string[];
 };
 
+/** Loại bài gộp Hình thức và Chế độ (yêu cầu 2026-11-27): Cá nhân, Nhóm (đều tính điểm) hoặc Luyện tập. */
+export type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
+
 /** Một câu ngắn dưới mỗi lựa chọn, giống popup tạo bài (yêu cầu 2026-11-10). */
-const SUBMISSION_HINTS: Record<SubmissionMode, string> = {
+const KIND_HINTS: Record<Kind, string> = {
   INDIVIDUAL: msg("assignments.components.AssignmentSettingsPanel.eachStudentSubmitsTheirOwn"),
   GROUP: msg("assignments.components.AssignmentSettingsPanel.eachGroupSubmitsOneShared"),
-};
-const GRADING_HINTS: Record<GradingMode, string> = {
-  GRADED: msg("assignments.components.AssignmentSettingsPanel.countsTowardTheGradebook"),
   PRACTICE: msg("assignments.components.AssignmentSettingsPanel.selfPracticeNotGraded"),
 };
 
+export function readKind(value: Pick<Settings, "submissionMode" | "gradingMode">): Kind {
+  return value.gradingMode === "PRACTICE" ? "PRACTICE" : value.submissionMode;
+}
+
+function applyKind(value: Settings, kind: Kind): Settings {
+  if (kind === "PRACTICE") return { ...value, submissionMode: "INDIVIDUAL", gradingMode: "PRACTICE" };
+  return { ...value, submissionMode: kind, gradingMode: "GRADED" };
+}
+
 export function readSettings(detail: AssignmentDetail): Settings {
   return {
+    submissionMode: detail.submissionMode,
     gradingMode: detail.gradingMode,
     diagramEnabled: detail.diagramEnabled,
     requiredDiagrams: detail.requiredDiagrams ?? {},
@@ -39,8 +50,8 @@ export function readSettings(detail: AssignmentDetail): Settings {
 }
 
 /**
- * Popup Cài đặt bài (BR-U07-13, 16) giống popup tạo bài (yêu cầu 2026-10-22): thẻ chọn Hình thức (chọn khi tạo, chỉ
- * xem), Chế độ; nút gạt Ghi nhận hoạt động kèm lời báo. Không còn mục sơ đồ bắt buộc và học liệu gắn kèm: giá trị đã
+ * Popup Cài đặt bài (BR-U07-13, 16) giống popup tạo bài (yêu cầu 2026-10-22): một thẻ chọn Loại (Cá nhân, Nhóm,
+ * Luyện tập) đổi qua lại tự do khi bài còn sửa được (yêu cầu 2026-11-27); nút gạt Ghi nhận hoạt động kèm lời báo. Không còn mục sơ đồ bắt buộc và học liệu gắn kèm: giá trị đã
  * có giữ nguyên khi lưu. Sơ đồ luôn dùng được (yêu cầu 2026-10-21 thay BR-U07-14).
  */
 export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, classId = detail.classId }: {
@@ -50,25 +61,30 @@ export function AssignmentSettingsPanel({ detail, value, onChange, readOnly, cla
   readOnly: boolean;
   classId?: string | null;
 }) {
-  const group = detail.submissionMode === "GROUP";
+  const kind = readKind(value);
+  // Bài đang là nhóm thì vẫn giữ được Nhóm dù lớp tạm thời chưa dùng được bài nhóm.
+  const groupAllowed = detail.groupSupported || detail.submissionMode === "GROUP";
+  // Đề mẫu của môn không có loại: giảng viên chọn loại khi tạo bài ở lớp (yêu cầu 2026-11-26).
+  if (detail.gradingMode === "TEMPLATE") {
+    return (
+      <div className="flex flex-col gap-4" data-testid="assignment-settings">
+        <ChoiceHint>{msg("assignments.components.AssignmentSettingsPanel.templateHasNoType")}</ChoiceHint>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-4" data-testid="assignment-settings">
-      <Field label={msg("assignments.components.AssignmentSettingsPanel.format")}>
-        <Choice<SubmissionMode> name={msg("assignments.components.AssignmentSettingsPanel.format")} value={detail.submissionMode} disabled onChange={() => {}} options={[
-          { value: "INDIVIDUAL", label: msg("assignments.components.AssignmentSettingsPanel.individual") },
-          { value: "GROUP", label: msg("assignments.components.AssignmentSettingsPanel.group") },
-        ]} />
-        <ChoiceHint>{SUBMISSION_HINTS[detail.submissionMode]}</ChoiceHint>
-      </Field>
-      {group && detail.classId && <SlotOutlet slot={assignmentFormSections} props={{ assignmentId: detail.id, classId: detail.classId }} />}
-      <Field label={msg("assignments.components.AssignmentSettingsPanel.mode")}>
-        <Choice<GradingMode> name={msg("assignments.components.AssignmentSettingsPanel.mode")} value={value.gradingMode} disabled={readOnly || group}
-          onChange={(gradingMode) => onChange({ ...value, gradingMode })} options={[
-            { value: "GRADED", label: "Graded" },
-            { value: "PRACTICE", label: "Practice" },
+      <Field label={msg("assignments.components.AssignmentSettingsPanel.type")}>
+        <Choice<Kind> name={msg("assignments.components.AssignmentSettingsPanel.type")} value={kind} disabled={readOnly}
+          onChange={(next) => onChange(applyKind(value, next))} options={[
+            { value: "INDIVIDUAL", label: msg("assignments.components.AssignmentSettingsPanel.individual") },
+            { value: "GROUP", label: msg("assignments.components.AssignmentSettingsPanel.group"), disabled: !groupAllowed,
+              title: groupAllowed ? undefined : msg("assignments.components.AssignmentSettingsPanel.thisClassCannotUseGroup") },
+            { value: "PRACTICE", label: msg("assignments.components.AssignmentSettingsPanel.practice") },
           ]} />
-        <ChoiceHint key={value.gradingMode}>{GRADING_HINTS[value.gradingMode]}</ChoiceHint>
+        <ChoiceHint key={kind}>{KIND_HINTS[kind]}</ChoiceHint>
       </Field>
+      {kind === "GROUP" && detail.classId && <SlotOutlet slot={assignmentFormSections} props={{ assignmentId: detail.id, classId: detail.classId }} />}
       {classId && <SlotOutlet slot={assignmentSettingsSections} props={{ assignmentId: detail.id, classId, gradingMode: value.gradingMode }} />}
       <div className="flex items-center gap-1">
         <Switch checked={value.activityMonitoringEnabled} label={msg("assignments.components.AssignmentSettingsPanel.activityMonitoring")}

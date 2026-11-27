@@ -1,7 +1,7 @@
 #!/bin/sh
 # Chạy một lần khi khởi tạo volume. `migrator` sở hữu schema (chỉ Flyway dùng), `app` chỉ đọc và ghi dữ liệu.
 # Quyền riêng của `audit_logs` (app không UPDATE, DELETE) do migration U02 đặt.
-# `backup_reader` chỉ SELECT, dùng cho pg_dump của worker (U03, NFR-U03-76).
+# `backup_replicator` chỉ có quyền REPLICATION, dùng cho pg_basebackup của worker (U03, 2026-11-26).
 set -eu
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<SQL
@@ -18,11 +18,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public
 ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public
     GRANT USAGE, SELECT ON SEQUENCES TO app;
 
-CREATE ROLE backup_reader LOGIN PASSWORD '${BACKUP_DB_PASSWORD:-}';
-GRANT CONNECT ON DATABASE ${POSTGRES_DB} TO backup_reader;
-GRANT USAGE ON SCHEMA public TO backup_reader;
-ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public
-    GRANT SELECT ON TABLES TO backup_reader;
-ALTER DEFAULT PRIVILEGES FOR ROLE migrator IN SCHEMA public
-    GRANT SELECT ON SEQUENCES TO backup_reader;
+CREATE ROLE backup_replicator LOGIN REPLICATION PASSWORD '${BACKUP_DB_PASSWORD:-}';
 SQL

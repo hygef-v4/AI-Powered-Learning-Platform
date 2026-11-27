@@ -42,7 +42,7 @@ class UnattachedFileScannerTest {
     @Test
     void attachingAFileRemovesItFromTheCleanupList() {
         FileRefSigner signer = new FileRefSigner(
-                new FilesProperties("secret-of-at-least-32-bytes-long!!", false, null, null, null, null, null, null, null, null, null),
+                new FilesProperties("secret-of-at-least-32-bytes-long!!", null, null, null, null, null, null, null, null, null),
                 new ObjectMapper());
         ArtifactService service = new ArtifactService(mock(UploadService.class), signer,
                 mock(DownloadTokenService.class), storage, Clock.fixed(now, ZoneOffset.UTC));

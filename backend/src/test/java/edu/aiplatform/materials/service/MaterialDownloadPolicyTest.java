@@ -80,7 +80,7 @@ class MaterialDownloadPolicyTest {
         when(storage.loadMetadata("file")).thenReturn(Optional.of(new StoredMetadata(managerId,
                 ArtifactPurpose.MATERIAL, "ref.pdf", "application/pdf", 1, "sha")));
         when(storage.open("file")).thenAnswer(call -> new ByteArrayInputStream(new byte[] {1}));
-        var downloadService = new DownloadService(tokens, storage, mock(FileAudit.class),
+        var downloadService = new DownloadService(tokens, storage,
                 List.of(new MaterialDownloadPolicy(materialRepository, materialAccessPolicy)));
 
         try (var content = downloadService.open(student, "student-token").content()) {

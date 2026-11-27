@@ -1,5 +1,6 @@
 package edu.aiplatform.assignments.controller;
 
+import edu.aiplatform.assignments.contract.DiagramPngs;
 import edu.aiplatform.assignments.service.AssignmentAuthoringService;
 import edu.aiplatform.assignments.service.AssignmentCopyService;
 import edu.aiplatform.assignments.service.AssignmentPublicationService;
@@ -92,6 +93,14 @@ public class AssignmentController {
     public ResponseEntity<byte[]> exportDocx(@AuthenticationPrincipal Actor actor, @PathVariable UUID id) {
         return download(docxService.exportAssignment(actor, id));
     }
+
+    /** Như GET, kèm ảnh PNG của sơ đồ chưa có ảnh lưu sẵn do trình duyệt vẽ (yêu cầu 2026-11-27). */
+    @PostMapping("/docx")
+    public ResponseEntity<byte[]> exportDocxWithDiagrams(@AuthenticationPrincipal Actor actor, @PathVariable UUID id,
+                                                         @RequestBody(required = false) DiagramPngs.Body body) {
+        return download(docxService.exportAssignment(actor, id, DiagramPngs.Body.read(body)));
+    }
+
 
     /** Rubric các phần thành tệp DOCX riêng, tách khỏi tệp đề (yêu cầu 2026-10-22). */
     @GetMapping("/rubric/docx")

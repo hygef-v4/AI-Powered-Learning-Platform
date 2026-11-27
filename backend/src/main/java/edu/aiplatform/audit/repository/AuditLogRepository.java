@@ -111,7 +111,13 @@ public class AuditLogRepository {
                         addCondition(conditions, params, "actor_id in (:actorIds)", "actorIds", filter.actorIds());
                     }
                 }
-                addCondition(conditions, params, "action = :action", "action", filter.action());
+                if (filter.action() != null && filter.action().contains("*")) {
+                    // Mã kèm mã môn/lớp như SUBJECT_CS101_CREATED: lọc "SUBJECT_*_CREATED" bằng LIKE.
+                    addCondition(conditions, params, "action like :action escape '\\'", "action",
+                            buildActionPattern(filter.action()));
+                } else {
+                    addCondition(conditions, params, "action = :action", "action", filter.action());
+                }
                 addCondition(conditions, params, "object_type = :objectType", "objectType", filter.objectType());
                 addCondition(conditions, params, "object_id = :objectId", "objectId", filter.objectId());
                 addCondition(conditions, params, "result = :result", "result",
@@ -123,6 +129,11 @@ public class AuditLogRepository {
             }
             String sql = conditions.isEmpty() ? "" : " where " + String.join(" and ", conditions);
             return new Where(sql, params);
+        }
+
+        /** {@code *} khớp một đoạn bất kỳ; {@code _}, {@code %} và {@code \} trong mã được so đúng ký tự. */
+        static String buildActionPattern(String action) {
+            return action.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_").replace("*", "%");
         }
 
         private static void addCondition(List<String> conditions, Map<String, Object> params, String condition, String name,

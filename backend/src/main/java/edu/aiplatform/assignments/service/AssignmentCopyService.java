@@ -139,8 +139,9 @@ public class AssignmentCopyService {
         }
         Set<UUID> allowed = listSelectableIds(actor, ResourceRef.subject(subjectId));
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();
-        Assignment copy = insertCopy(actor, source.changeModes(submissionMode, gradingMode), null, subjectId,
-                AssignmentOrigin.CLASS_COPY, 1, copyTitle(title, source), kept);
+        // Bài copy về môn thành đề mẫu, không có loại (yêu cầu 2026-11-26).
+        Assignment copy = insertCopy(actor, source.changeModes(SubmissionMode.INDIVIDUAL, GradingMode.TEMPLATE), null,
+                subjectId, AssignmentOrigin.CLASS_COPY, 1, copyTitle(title, source), kept);
         return support.buildDetail(actor, copy, List.of());
     }
 
@@ -203,7 +204,14 @@ public class AssignmentCopyService {
                 throw ApiException.createBadRequest("COPY_SAME_CLASS", "Bài đã thuộc lớp này, hãy dùng Nhân bản");
             }
         }
-        source = source.changeModes(submissionMode, gradingMode);
+        // Bài tạo ở lớp mang loại giảng viên đang chọn; đề mẫu không có loại thì mặc định Cá nhân, Graded.
+        if (source.gradingMode() == GradingMode.TEMPLATE) {
+            source = source.changeModes(submissionMode == null ? SubmissionMode.INDIVIDUAL : submissionMode,
+                    gradingMode == null ? GradingMode.GRADED : gradingMode);
+        } else {
+            source = source.changeModes(submissionMode, gradingMode);
+        }
+        AssignmentAuthoringService.validateClassModes(source.submissionMode(), source.gradingMode());
         requireGroupSupport(source, targetClassId);
         Set<UUID> allowed = listSelectableIds(actor, ResourceRef.courseClass(targetClassId));
         List<UUID> kept = source.referenceMaterialIds().stream().filter(allowed::contains).toList();

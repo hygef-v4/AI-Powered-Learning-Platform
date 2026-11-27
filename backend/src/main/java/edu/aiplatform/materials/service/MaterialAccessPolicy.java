@@ -134,14 +134,19 @@ public class MaterialAccessPolicy {
     }
 
     public void requireWriteAccess(Actor actor, Material material) {
+        requireRestoreAccess(actor, material);
+        if (material.status() != Material.Status.ACTIVE)
+            throw ApiException.createConflict("MATERIAL_ARCHIVED", "Học liệu đã được lưu trữ");
+    }
+
+    /** Khôi phục học liệu đã lưu trữ: cùng quyền và phạm vi như sửa, nhưng nhận học liệu ARCHIVED. */
+    public void requireRestoreAccess(Actor actor, Material material) {
         if (!canManageMaterial(actor, material)) denyAccess(actor, material.id());
         if (requireSubject(material.subjectId()).status() != SubjectStatus.ACTIVE
                 || (material.classId() != null
                         && requireClass(material.classId()).status() == ClassStatus.ARCHIVED))
             throw ApiException.createConflict(
                     "MATERIAL_SCOPE_READ_ONLY", "Môn hoặc lớp đã lưu trữ, học liệu chỉ đọc");
-        if (material.status() != Material.Status.ACTIVE)
-            throw ApiException.createConflict("MATERIAL_ARCHIVED", "Học liệu đã được lưu trữ");
     }
 
     public void requireReadAccess(Actor actor, Material material, UUID classId) {

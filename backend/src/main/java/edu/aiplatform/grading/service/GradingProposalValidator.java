@@ -287,10 +287,15 @@ public class GradingProposalValidator {
         if (value == null || value.length() > MAX_PAYLOAD_LENGTH)
             throw ApiException.createBadRequest("INVALID_AI_PROPOSAL", "AI proposal too large");
         try {
-            return objectMapper.reader()
+            var reader = objectMapper.reader()
                     .with(com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
-                    .with(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
-                    .readTree(value);
+                    .with(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
+            JsonNode payload = reader.readTree(value);
+            // Đề xuất bị mã hóa thành một chuỗi văn bản ở gốc: đọc lại phần JSON bên trong (yêu cầu 2026-11-27).
+            if (payload != null && payload.isTextual() && payload.asText().strip().startsWith("{")) {
+                payload = reader.readTree(payload.asText());
+            }
+            return payload;
         } catch (Exception ex) {
             log.warn("AI proposal validation rejected stage=JSON_PARSE exception={}", ex.getClass().getSimpleName());
             throw ApiException.createBadRequest("INVALID_AI_PROPOSAL", "Invalid AI proposal JSON");

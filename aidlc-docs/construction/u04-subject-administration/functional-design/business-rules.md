@@ -30,7 +30,7 @@ Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 c�
 | Mã | Rule | Nguồn |
 |---|---|---|
 | BR-U04-10 | `isSubjectManager(accountId, subjectId)` đọc `manager_id` hiện thời mỗi lần gọi, không cache; đổi hoặc bỏ Chủ nhiệm môn có hiệu lực ở request tiếp theo. | BR-U01-62, 64 |
-| BR-U04-11 | Lưu trữ môn thì gỡ Chủ nhiệm môn trong cùng transaction, cùng một lần tăng `version`; ghi audit `SUBJECT_ARCHIVED` và `SUBJECT_MANAGER_CHANGED`. Mở lại môn thì môn chưa có Chủ nhiệm, Admin gán lại. | BR-U04-07, Q14 |
+| BR-U04-11 | Lưu trữ môn thì gỡ Chủ nhiệm môn trong cùng transaction, cùng một lần tăng `version`; chỉ ghi audit lưu trữ môn (BR-U04-52). Mở lại môn thì môn chưa có Chủ nhiệm, Admin gán lại. | BR-U04-07, Q14 |
 | BR-U04-12 | Tài khoản bị vô hiệu hóa (BR-U01-71) thì bị gỡ khỏi Chủ nhiệm của mọi môn trong transaction vô hiệu hóa của U01: U01 gọi `ISubjectScope.releaseManagerAssignments`, U04 khóa từng môn, gỡ, tăng `version`, ghi audit `SUBJECT_MANAGER_CHANGED` với người thực hiện là Admin. Lỗi thì vô hiệu hóa rollback. Mở lại tài khoản không tự gán lại. | Q14 |
 
 ## 3. Danh sách, audit và lỗi
@@ -39,7 +39,7 @@ Mỗi rule có mã `BR-U04-xx` để truy vết sang test. Mã giữ như U04 c�
 |---|---|---|
 | BR-U04-50 | Subject List tìm theo mã hoặc tên, lọc theo trạng thái, sắp theo mã, mỗi trang tối đa 100 dòng; mỗi dòng có Chủ nhiệm môn, không có cột số lớp. Tổng số lớp mọi trạng thái hiện cạnh tab Lớp học tại chi tiết môn: hiển thị cả 0, ẩn số khi không khả dụng; không hiển thị 0 thay lỗi lấy dữ liệu. | UC 16 |
 | BR-U04-51 | Người không phải Admin gọi API quản trị môn nhận `403` và ghi audit `ACCESS_DENIED`. | SEC-002 |
-| BR-U04-52 | Audit: `SUBJECT_CREATED`, `SUBJECT_UPDATED` (tên trường đã đổi), `SUBJECT_MANAGER_CHANGED` (trước/sau), `SUBJECT_ARCHIVED`, `SUBJECT_REOPENED`. | FR-014, SEC-005 |
+| BR-U04-52 | Audit chỉ ghi tạo, lưu trữ, mở lại môn; mã hành động kèm mã môn: `SUBJECT_<mã>_CREATED`, `SUBJECT_<mã>_ARCHIVED`, `SUBJECT_<mã>_REOPENED` (ví dụ `SUBJECT_CS101_CREATED`). Sửa thông tin và đổi, gỡ Chủ nhiệm môn không ghi audit (yêu cầu 2026-11-26). | FR-014, SEC-005 |
 | BR-U04-53 | Dữ liệu sai (mã trùng, mã sai định dạng, Chủ nhiệm môn không tồn tại, sai role hoặc không `ACTIVE`) thì từ chối toàn bộ thao tác, báo cách sửa, không lộ dữ liệu người khác. | US-CAT-001 S2 |
 | BR-U04-54 | Không kiểm được quyền (U01 lỗi) thì từ chối. | BR-U01-93 |
 

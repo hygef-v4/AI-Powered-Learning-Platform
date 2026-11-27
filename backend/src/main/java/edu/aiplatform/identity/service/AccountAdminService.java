@@ -247,9 +247,6 @@ public class AccountAdminService {
         }
         if (target.role() == Role.STUDENT || newRole == Role.STUDENT) {
             // BR-U01-107: không đổi role vào hoặc ra khỏi STUDENT; xét trước BR-U01-64…66.
-            audit.record(new AuditEvent(UUID.randomUUID(), actor.accountId(), "ROLE_CHANGE_REJECTED", "ACCOUNT",
-                    id.toString(), AuditResult.DENIED, "STUDENT_ROLE_CHANGE_NOT_ALLOWED",
-                    Map.of("from", target.role().name(), "to", newRole.name()), clock.instant()));
             throw ApiException.createConflict("STUDENT_ROLE_CHANGE_NOT_ALLOWED",
                     "Không đổi được vai trò vào hoặc ra khỏi Sinh viên");
         }
