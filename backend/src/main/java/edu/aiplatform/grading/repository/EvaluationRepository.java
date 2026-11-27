@@ -159,10 +159,17 @@ public class EvaluationRepository implements IEvaluationRepository {
         return evaluation;
     }
 
-    /** Đọc thời điểm Jackson ghi dạng số giây thập phân ({@code 1795664887.060311689}). */
+    /**
+     * Đọc thời điểm Jackson ghi dạng số giây thập phân ({@code 1795664887.060311689}).
+     * Dữ liệu seed cũ lưu chuỗi ISO-8601 ({@code 2026-10-29T14:59:58.922Z}); bản đọc đầy đủ qua
+     * Jackson nhận cả hai, nên đường đọc nhanh cũng phải nhận cả hai.
+     */
     static Instant parseEpochInstant(String value) {
         if (value == null) {
             return null;
+        }
+        if (value.indexOf('T') >= 0) {
+            return Instant.parse(value);
         }
         var decimal = new BigDecimal(value);
         long seconds = decimal.longValue();
