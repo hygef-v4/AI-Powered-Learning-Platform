@@ -499,6 +499,27 @@ class GradingServiceTest {
         assertThat(evaluation.state).isEqualTo(EvaluationStatus.DRAFT);
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(booleans = {false, true})
+    void newItemFeedbackWrittenWithAScoreChangeExplainsTheNewScore(boolean published) {
+        gradingService.saveEvaluation(teacher, evaluation.id, new Save(
+                0, Map.of(), BigDecimal.ZERO, null, "", null, null,
+                Map.of(rubricId, Map.of(itemId, new BigDecimal("0")))));
+        if (published) gradingService.publishEvaluation(teacher, new ItemVersion(evaluation.id, 0));
+
+        // Như request của giao diện: đổi điểm 0 → 4 và viết nhận xét đầu tiên cho mục trong cùng một lần lưu.
+        var newNote = new GradingFeedback(1, new GradingFeedback.Summary(List.of(), List.of(), List.of()),
+                List.of(new GradingFeedback.Item(rubricId, itemId, ".", "", null, null, false, null)));
+        gradingService.saveEvaluation(teacher, evaluation.id, new Save(
+                0, Map.of(rubricId, Set.of(itemId)), BigDecimal.ZERO, null, "", null, null,
+                Map.of(rubricId, Map.of(itemId, new BigDecimal("4"))), newNote, null,
+                Map.of(rubricId, Set.of()), Map.of(rubricId, Map.of(itemId, new BigDecimal("4.00")))));
+
+        assertThat(evaluation.score).isEqualByComparingTo("4.00");
+        assertThat(evaluation.reviewedItemScores.get(rubricId).get(itemId)).isEqualByComparingTo("4.00");
+        assertThat(evaluation.state).isEqualTo(published ? EvaluationStatus.PUBLISHED : EvaluationStatus.DRAFT);
+    }
+
     @Test
     void allowsPublicationAfterRestoringTheScoreAlreadyReviewedWithTheFeedback() {
         var feedback = sampleFeedback("Đạt 2.00/4.00 điểm vì thiếu nửa sau", false, null);

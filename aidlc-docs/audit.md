@@ -16307,3 +16307,19 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **Context**: Construction - Build and Test, commit theo yêu cầu người dùng.
 
 ---
+
+## Sửa lỗi chấm điểm — Không lưu được điểm khi đồng thời viết nhận xét mới cho mục rubric (400 INVALID_REVIEW_METADATA)
+**Timestamp**: 2026-11-27T16:01:21Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi hệ thống từ chối lưu bản chấm khi giảng viên sửa điểm sau khi công bố, đồng thời gỡ bỏ phần ghi log tạm thời đã bổ sung để chẩn đoán."
+**AI Response**: "Nguyên nhân: khi trong cùng một lần lưu, giảng viên vừa thay đổi điểm của một mục rubric vừa viết nhận xét đầu tiên cho mục đó, phương thức GradingService.computeReviewMetadata chỉ công nhận nhận xét là đã giải thích cho điểm mới nếu mục đó đã có nhận xét từ trước (điều kiện editedText && baseItem != null). Nhận xét mới vì vậy bị xử lý như trường hợp điểm thay đổi nhưng chưa xác nhận lại giải thích, và yêu cầu bị từ chối với mã 400 INVALID_REVIEW_METADATA. Lỗi xảy ra ở cả bản chấm nháp lẫn bản chấm đã công bố; nguyên nhân được xác định qua log yêu cầu ghi nhận trên môi trường local. Biện pháp: nhận xét mới được xử lý tương tự nhận xét vừa chỉnh sửa, điểm đã xem xét được lấy theo điểm hiện tại; trạng thái xác nhận chỉ được giữ lại đối với nhận xét đã tồn tại trước đó. Bổ sung kiểm thử GradingServiceTest.newItemFeedbackWrittenWithAScoreChangeExplainsTheNewScore cho cả bản nháp và bản đã công bố, mô phỏng đúng yêu cầu đã ghi nhận. Phần ghi log tạm thời trong EvaluationController.saveEvaluation đã được gỡ bỏ hoàn toàn. Kết quả kiểm thử: kiểm thử mới thất bại trên mã nguồn cũ và đạt sau khi sửa; 300 kiểm thử của phân hệ chấm điểm đạt (1 kiểm thử bỏ qua sẵn có); backend và worker trên môi trường local đã được build lại và hoạt động ổn định."
+**Context**: Construction — sửa lỗi phân hệ chấm điểm (backend).
+
+---
+
+## Sửa lỗi chấm điểm — Xung đột phiên bản khi lưu bản chấm ngay sau khi công bố (409 GRADE_VERSION_CONFLICT)
+**Timestamp**: 2026-11-27T16:07:35Z
+**Requested by:** max2min
+**User Input**: "Khắc phục lỗi hệ thống báo xung đột phiên bản khi giảng viên lưu thay đổi bản chấm ngay sau khi công bố điểm, trong trường hợp việc tải lại dữ liệu tự động sau khi công bố không thành công."
+**AI Response**: "Nguyên nhân: thao tác công bố điểm làm tăng phiên bản (version) của bản chấm, trong khi giao diện chỉ cập nhật phiên bản mới thông qua lần tải lại tự động sau khi công bố. Khi lần tải lại này thất bại, thao tác lưu tiếp theo vẫn gửi phiên bản cũ và bị backend từ chối với mã 409 GRADE_VERSION_CONFLICT. Biện pháp: BatchActionDialog truyền kết quả của lượt thực hiện cho onDone; useGradingWorkspace bổ sung hàm applyPublishResult, cập nhật ngay phiên bản mới (newVersion) và trạng thái PUBLISHED từ kết quả công bố, chỉ áp dụng khi bản chấm đang mở được công bố thành công và phiên bản không bị lùi, đồng thời giữ nguyên các chỉnh sửa trên biểu mẫu; GradingWorkspacePage gọi applyPublishResult trước khi tải lại dữ liệu. Bổ sung hai kiểm thử trong preserve-grading.test.tsx: thao tác lưu sử dụng phiên bản sau công bố khi việc tải lại thất bại; kết quả không liên quan đến bản chấm đang mở bị bỏ qua. Kết quả kiểm thử: 245 kiểm thử giao diện của phân hệ chấm điểm đạt; kiểm tra kiểu (tsc) và eslint không phát sinh lỗi; frontend trên môi trường local đã được build lại."
+**Context**: Construction — sửa lỗi phân hệ chấm điểm (frontend).
