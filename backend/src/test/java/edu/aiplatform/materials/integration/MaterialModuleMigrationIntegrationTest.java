@@ -1,5 +1,6 @@
 package edu.aiplatform.materials.integration;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 
 import java.sql.Timestamp;
@@ -10,22 +11,18 @@ import org.junit.jupiter.api.*;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
 /** Actual U13 migrations; dependency tables are minimal FK fixtures, not composed unit evidence. */
 @Testcontainers(disabledWithoutDocker = true)
 class MaterialModuleMigrationIntegrationTest {
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
 
     @Test
     void backfillPreservesMaterialsAndQuizLinksAreUniqueAndCascadeOnModuleDeletion() {
         var dataSource = new DriverManagerDataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(),
                 DATABASE.getPassword());
         var jdbcTemplate = new JdbcTemplate(dataSource);
-        jdbcTemplate.execute("create role app nologin");
         for (String table : new String[] {"accounts", "subjects", "course_classes", "quizzes"}) {
             jdbcTemplate.execute("create table " + table + " (id uuid primary key)");
         }

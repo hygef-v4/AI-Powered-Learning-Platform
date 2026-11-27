@@ -1,5 +1,6 @@
 package edu.aiplatform.requirements;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -56,6 +57,7 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -67,7 +69,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 import org.testcontainers.utility.DockerImageName;
 
@@ -92,7 +93,9 @@ import org.testcontainers.utility.DockerImageName;
                 "spring.rabbitmq.listener.direct.auto-startup=false",
                 "spring.main.allow-bean-definition-overriding=false"
         })
-@AutoConfigureMockMvc
+// Không in request/response: bản in đọc header trong khi luồng async tải file còn ghi, máy bận thì lỗi
+// "End size ... is less than fixed size ...".
+@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class DriveStorageIntegrationTest {
@@ -104,16 +107,15 @@ class DriveStorageIntegrationTest {
     static final String APP_FOLDER = FilesProperties.DEFAULT_FOLDER_NAME;
     static final FakeDrive DRIVE = FakeDrive.start();
 
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withInitScript("requirements/platform-roles.sql")
-            .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
     @Container
     static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:7.4-alpine"))
             .withExposedPorts(6379);
     @Container
     static final GenericContainer<?> BROKER = new GenericContainer<>(
             DockerImageName.parse("rabbitmq:4.1-management-alpine"))
+            // Các fork test song song cùng bật RabbitMQ thì có thể mở cổng chậm hơn mức chờ mặc định 60 s.
+            .withStartupTimeout(Duration.ofMinutes(3))
             .withEnv("RABBITMQ_DEFAULT_USER", "integration")
             .withEnv("RABBITMQ_DEFAULT_PASS", UUID.randomUUID().toString())
             .withExposedPorts(5672);

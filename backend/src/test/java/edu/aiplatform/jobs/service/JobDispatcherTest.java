@@ -65,9 +65,10 @@ class JobDispatcherTest {
             failedWith = error;
         }
 
+        // 200 ms làm handler ném lỗi ngay vẫn bị tính quá giờ khi các fork test chạy song song làm máy bận.
         @Override
         public Duration timeout() {
-            return Duration.ofMillis(200);
+            return Duration.ofSeconds(1);
         }
     }
 
@@ -89,7 +90,8 @@ class JobDispatcherTest {
     @Test
     void usesMessageBudgetForMultiCallHandlers() {
         FakeHandler handler = new FakeHandler(m -> {
-            try { Thread.sleep(300); }
+            // Dài hơn timeout mặc định của FakeHandler để chứng minh budget theo message được dùng.
+            try { Thread.sleep(1_200); }
             catch (InterruptedException e) { throw new IllegalStateException(e); }
         }) {
             @Override

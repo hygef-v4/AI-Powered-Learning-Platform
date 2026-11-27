@@ -1,5 +1,6 @@
 package edu.aiplatform.shared.config;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -17,15 +18,12 @@ import org.springframework.dao.QueryTimeoutException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Loads the production pool settings, then proves cancellation and pool recovery against PostgreSQL. */
 @Testcontainers(disabledWithoutDocker = true)
 class DatabaseTimeoutIntegrationTest {
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabase();
 
     @Test
     void configuredPoolBoundsLocksAndQueriesAndRecoversAfterRollback() {

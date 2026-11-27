@@ -16290,5 +16290,20 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **User Input**: "Thẻ Tổng quan của góp ý Practice giữ ở cột bên phải, không đặt trong trang bài; thiết kế lại cho đẹp và không chiếm chỗ."
 **AI Response**: "Thay cho dải Tổng quan trong trang bài ở mục trước: thẻ Tổng quan trở lại đầu cột bên lề và được thu gọn: dòng đầu gồm tên thẻ, nhãn AI ước tính và điểm ước tính; thanh tỉ lệ mảnh; nhận xét chung thu còn 3 dòng với nút Xem thêm; Điểm mạnh và Cần cải thiện là hai nút có số lượng, bấm để mở từng danh sách (mặc định thu gọn); nguồn và thời gian. Thẻ từng câu giữ dạng gọn. Đã kiểm tra trên trình duyệt thật ở cột 300 px. Kết quả kiểm thử: PracticeFeedbackPanel.test.tsx, SubmissionHistoryPage.test.tsx cập nhật; toàn bộ frontend 169 tệp, 1312 ca đạt."
 **Context**: Construction, thay đổi giao diện góp ý bài luyện tập (U08).
+## Build and Test - Tăng tốc bộ test backend
+**Timestamp**: 2026-11-26T22:15:50Z
+**Requested by:** Hải Nam
+**User Input**: "tiếp tục" then (chuyển qua phiên NFR) "sau đó tiếp tục tăng tốc bộ test backend ở phiên kia"
+**AI Response**: "Nhánh perf/backend-test-speed cắt từ origin/staging (19e7bc00), worktree riêng. Thêm SharedPostgres (test): một container Postgres cho mỗi JVM, mỗi lớp một database riêng, role tạo một lần theo infra/postgres/init/01-roles.sh. Chuyển 30 lớp test tích hợp, bỏ các câu create role app và requirements/platform-roles.sql. pom.xml: surefire 3 fork, lượt serial-tests cho tag serial (RequirementsCoverageIntegrationTest, DriveHealthIndicatorTest), profile quick bỏ tag slow (6 test MaterialTextExtractorTest) và perf (2 test đo). Ổn định khi chạy song song: RabbitMQ chờ khởi động 3 phút, tắt bản in MockMvc ở 2 lớp tải file async, JobDispatcherTest tăng timeout handler giả 200 ms → 1 s. Đo: staging 29:12, 2.750 test, 1 lỗi p95 có sẵn; sau 15:02 (3 fork), 2.750 test, 0 lỗi, 1 bỏ qua; 4 fork 14:17. Guard CI qua. Không đổi code production, chưa commit."
+**Context**: Construction - Build and Test, tối ưu thời gian chạy test backend.
+
+---
+
+## Build and Test - Commit tăng tốc test backend
+**Timestamp**: 2026-11-27T00:28:03Z
+**Requested by:** Hải Nam
+**User Input**: "Commit"
+**AI Response**: "Commit toàn bộ thay đổi tăng tốc test backend (SharedPostgres, 30 lớp test, pom.xml, tài liệu đo) trên nhánh perf/backend-test-speed. Không push."
+**Context**: Construction - Build and Test, commit theo yêu cầu người dùng.
 
 ---
