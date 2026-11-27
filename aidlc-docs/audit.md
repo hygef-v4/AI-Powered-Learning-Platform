@@ -15364,6 +15364,15 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 
 ---
 
+## Construction - U11 Quiz Practice merge PR
+**Timestamp**: 2026-11-26T03:49:41Z
+**Requested by:** Đào Chí Cường
+**User Input**: "merge vào staging"
+**AI Response**: "Merge PR #137 vào staging bằng merge commit (923f7ff4), khớp head 316bd3d4; CI đạt, không xung đột."
+**Context**: Construction, U11, merge PR #137
+
+---
+
 ## U03 Kiểm tra PR #140 lỗi CI khi lên main
 **Timestamp**: 2026-11-26T04:30:00Z
 **Requested by:** Quang Hung
@@ -16308,6 +16317,15 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 
 ---
 
+## Construction - Sửa lỗi bảng điểm production (Gradebook 500)
+**Timestamp**: 2026-11-27T06:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tại sao lại bị lỗi này, kiểm tra trên vps cho tôi" (ảnh chụp trang Grading, tab gradebook, báo "The system is busy, please try again later.") rồi "Sửa ở đây"
+**AI Response**: "Kiểm tra log platform-backend-1 trên VPS: GET bảng điểm lỗi NumberFormatException tại EvaluationRepository.mapGradebookEvaluation (parseEpochInstant). Đường đọc nhanh từ commit e1521754 đọc createdAt/gradedAt/publishedAt bằng BigDecimal, nhưng 45 bản chấm trên production lưu thời gian dạng chuỗi ISO-8601. Sửa parseEpochInstant nhận cả chuỗi ISO (Instant.parse) lẫn số giây; thêm test gradebookTimestampsAcceptEpochSecondsAndIsoStrings vào EvaluationMappingTest. Kết quả: EvaluationMappingTest 9/9 đạt. Nhánh chi-cuongg/gradebook-iso-timestamps cắt từ origin/main; chưa commit, chưa deploy. Không sửa dữ liệu DB."
+**Context**: Construction - sửa lỗi production, bảng điểm (grading).
+
+---
+
 ## U12 — nhập nhóm từ Excel / Google Sheets (Requirements Analysis)
 **Timestamp**: 2026-11-27T09:45:50Z
 **Requested by:** Đào Chí Cường
@@ -16386,5 +16404,14 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **User Input**: "tôi muốn database cũng chặn, tách nhánh riêng phiên làm việc này ra cho tôi"
 **AI Response**: "Thêm migration V20261127_1300: đổi tên đề mẫu đã trùng (bài tạo sớm nhất giữ tên, bài sau thêm ' (n)', tăng version) rồi tạo unique index uq_assignments_subject_title trên subject_id và tên đã chuẩn hóa, bỏ RETIRED và NEW_VERSION. AssignmentRepository đổi vi phạm index thành 409 TEMPLATE_TITLE_DUPLICATE. Thêm BR-U07-106. Test migration trên PostgreSQL 16 (Testcontainers) và 196 test gói assignments đạt. Đưa riêng các thay đổi của phiên này sang nhánh chi-cuongg/subject-template-unique-title (từ staging, không theo dõi upstream), commit, chưa push; gỡ chúng khỏi bản làm việc staging, giữ nguyên thay đổi U12 của phiên khác."
 **Context**: Construction, U07 Assignment Authoring — Code Generation (thay đổi nhỏ).
+
+---
+
+## Release - Đưa staging lên main
+**Timestamp**: 2026-11-27T13:00:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "kiểm tra xem đưa staging lên main được chưa" rồi "Làm đi"
+**AI Response**: "staging hơn main 12 commit (PR #154–#157), CI staging đạt. main có hotfix PR #153 chưa về staging nên merge staging → main xung đột ở aidlc-docs/audit.md. Merge origin/main vào nhánh sync/main-into-staging (cắt từ staging), giữ cả hai mục audit theo thời gian; commit cục bộ, chờ người dùng cho phép push. Lưu ý: migration V20261127_1300 đổi tên đề mẫu trùng trên production."
+**Context**: Release, đồng bộ main về staging trước khi đưa staging lên main.
 
 ---
