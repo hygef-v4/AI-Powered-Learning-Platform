@@ -3042,7 +3042,8 @@
         "rejectProposal": "Reject proposal {name}?",
         "reasonOptional": "Reason (optional)",
         "theReasonCanBeAt": "The reason can be at most 1,000 characters.",
-        "membersAreNotifiedAndCan": "Members are notified and can start or join another proposal."
+        "membersAreNotifiedAndCan": "Members are notified and can start or join another proposal.",
+        "importFromExcel": "Import from Excel"
       },
       "RandomSplitDialog": {
         "groupsCreated": "Groups created",
@@ -3086,6 +3087,35 @@
         "theClassIsReadyFor": "The class is ready for group assignments.",
         "openTheStudentsTab": "Open the Students tab",
         "editGroupsInTheNew": "Edit groups in the new tab; this box updates when you come back."
+      },
+      "GroupImportDialog": {
+        "title": "Import groups from Excel",
+        "templateFileName": "group-template.xlsx",
+        "couldNotCreateTemplate": "Could not create the template file.",
+        "chooseFile": "Choose Excel file",
+        "chooseAnotherFile": "Choose another file",
+        "saveGroups": "Save {count, plural, one {# group} other {# groups}}",
+        "imported": "Created {count, plural, one {# group} other {# groups}} from Excel",
+        "intro": "Create many groups at once from an Excel file.",
+        "stepDownload": "Download the template, pre-filled with {count, plural, one {# student} other {# students}} without a group.",
+        "stepFill": "Fill in Group name for each student (same name means same group) and put an x in the Leader column for one person per group.",
+        "stepUpload": "Choose the filled file to preview, check it, then save.",
+        "onlyNewGroups": "Only new groups are added; existing groups stay as they are. Students with a blank Group name stay without a group.",
+        "downloadTemplate": "Download template",
+        "summary": "{file}: {groups, plural, one {# new group} other {# new groups}}, {students, plural, one {# student} other {# students}}.",
+        "skippedRows": "Skipped {count, plural, one {# row} other {# rows}}:",
+        "noGroupsInFile": "The file has no new groups to create.",
+        "group": "Group",
+        "members": "Members",
+        "leader": "Leader",
+        "leaderOf": "Leader of {name}",
+        "chooseLeader": "Choose a leader",
+        "noLeader": "The file does not mark a leader.",
+        "multipleLeaders": "The file marks several leaders; choose one.",
+        "belowMin": "Fewer than {min}",
+        "aboveMax": "More than {max}",
+        "inProposal": "in proposal {name}",
+        "proposalNote": "Students in a group proposal leave it when you save; if they lead it, the proposal is cancelled."
       }
     },
     "model": {
@@ -3120,6 +3150,34 @@
         "couldNotCompleteItPlease": "Could not complete it, please try again later.",
         "proposalNotFoundOrYou": "Proposal not found or you do not have permission.",
         "theProposalJustChangedIt": "The proposal just changed. It has been reloaded, please try again."
+      },
+      "groupWorkbook": {
+        "headerStudentCode": "Student ID",
+        "headerFullName": "Full name",
+        "headerGroupName": "Group name",
+        "headerLeader": "Leader",
+        "sheetGroups": "Groups",
+        "sheetGuide": "Guide",
+        "guideTitle": "How to import groups",
+        "guideRows": "One student per row. Rows with the same Group name (case-insensitive) form one group; names are up to 100 characters.",
+        "guideLeader": "Put an x in the Leader column for exactly one person per group.",
+        "guideBlank": "Leave Group name blank if the student has no group yet.",
+        "guideIdentity": "Students are matched by Student ID, or by email when there is no ID. The Full name column is for reading only.",
+        "guideExisting": "Only new groups are created: a name already used by a group, or a student who already has a group, is skipped.",
+        "fileTooLarge": "The file can be at most 200 KB.",
+        "onlyXlsx": "Only Excel .xlsx files are accepted.",
+        "notXlsx": "The file is not an Excel .xlsx file.",
+        "couldNotRead": "Could not read the Excel file.",
+        "emptyFile": "The Excel file is empty.",
+        "tooManyRows": "The file can have at most {max} student rows.",
+        "missingHeaders": "The first row needs a Student ID or Email column and a Group name column, as in the template.",
+        "formulaNotAllowed": "Row {row} has a formula or a multi-line cell; enter plain values.",
+        "issueMissingStudent": "Row {row}: missing Student ID or email.",
+        "issueNotInClass": "Row {row}: {student} is not an active student of this class.",
+        "issueAlreadyGrouped": "Row {row}: {student} already has a group.",
+        "issueDuplicateStudent": "Row {row}: {student} appears more than once in the file.",
+        "issueNameTooLong": "Row {row}: the group name is longer than 100 characters.",
+        "issueGroupNameTaken": "Row {row}: the class already has a group named {name}."
       }
     }
   },

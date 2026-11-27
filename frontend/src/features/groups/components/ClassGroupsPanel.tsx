@@ -156,7 +156,8 @@ export function ClassGroupsPanel({ classId, students, onView, onGroupNamesLoaded
 
   return (
     <div className="flex flex-col gap-4">
-      <ProposalReviewList classId={classId} setVersion={set.version} readOnly={readOnly} onGroupsChanged={() => void load()} />
+      <ProposalReviewList classId={classId} setVersion={set.version} readOnly={readOnly} onGroupsChanged={() => void load()}
+        groupSet={set} people={all} onGroupsSaved={(next) => applySaved(next)} />
       <LeaderRequestList set={set} groupId={filter || undefined} onChanged={() => void load()} />
       <GroupProgressTable classId={classId} set={set} />
       <div className="grid min-w-0 items-start gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">

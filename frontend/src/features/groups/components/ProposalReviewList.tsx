@@ -11,7 +11,9 @@ import {
   describeProposalError,
   WARNING_LABELS,
 } from "../model/proposals";
-import type { ClassProposalsView, ReviewProposalView } from "../model/types";
+import type { StudentRow } from "../model/groupDrafts";
+import type { ClassProposalsView, GroupSetView, ReviewProposalView } from "../model/types";
+import { GroupImportDialog } from "./GroupImportDialog";
 import { SelfGroupingSettingsDialog } from "./SelfGroupingSettingsDialog";
 import { msg } from "@/i18n/msg";
 
@@ -19,12 +21,16 @@ import { msg } from "@/i18n/msg";
  * Sinh viên tự chia nhóm ở tab Sinh viên của giảng viên (US-GRP-007, 010): trạng thái đợt và nút cài đặt; đề xuất đang hoạt
  * động, chọn nhiều đề xuất chờ duyệt để duyệt một lần, từ chối có lý do tùy chọn; sinh viên chưa có nhóm kèm đề xuất họ đang ở.
  * Tải lại khi `setVersion` của bộ nhóm đổi (giảng viên vừa lưu nhóm). Duyệt xong gọi `onGroupsChanged` để tải lại bộ nhóm.
+ * Có `groupSet` và `people` thì hiện nút Nhập từ Excel cạnh Cài đặt (BR-U12-99); lưu xong gọi `onGroupsSaved`.
  */
-export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChanged }: {
+export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChanged, groupSet, people, onGroupsSaved }: {
   classId: string;
   setVersion: number;
   readOnly: boolean;
   onGroupsChanged: () => void;
+  groupSet?: GroupSetView;
+  people?: StudentRow[];
+  onGroupsSaved?: (next: GroupSetView) => void;
 }) {
   const [view, setView] = useState<ClassProposalsView | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -33,6 +39,7 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [rejecting, setRejecting] = useState<ReviewProposalView | null>(null);
 
   const load = useCallback(() => getClassProposals(classId).then((loaded) => {
@@ -80,7 +87,12 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
 
   return (
     <Section title={msg("groups.components.ProposalReviewList.studentSelfGrouping")} icon="groups" description={msg("groups.components.ProposalReviewList.selfGrouping", { value: String(describeFormation(formation)) })}
-      actions={!readOnly && <Button size="sm" icon="settings" onClick={() => setSettingsOpen(true)} data-testid="formation-open">{msg("groups.components.ProposalReviewList.settings")}</Button>}>
+      actions={!readOnly && <div className="flex flex-wrap gap-2">
+        {groupSet && people && (
+          <Button size="sm" icon="upload_file" onClick={() => setImportOpen(true)} data-testid="group-import-open">{msg("groups.components.ProposalReviewList.importFromExcel")}</Button>
+        )}
+        <Button size="sm" icon="settings" onClick={() => setSettingsOpen(true)} data-testid="formation-open">{msg("groups.components.ProposalReviewList.settings")}</Button>
+      </div>}>
       {idle ? (
         <p className="text-[13px] text-muted">{msg("groups.components.ProposalReviewList.turnOnToLetStudents")}</p>
       ) : (
@@ -118,6 +130,13 @@ export function ProposalReviewList({ classId, setVersion, readOnly, onGroupsChan
       {settingsOpen && (
         <SelfGroupingSettingsDialog classId={classId} onClose={() => setSettingsOpen(false)}
           onSaved={() => { setSettingsOpen(false); showToast(msg("groups.components.ProposalReviewList.selfGroupingSettingsSaved")); void load(); }} />
+      )}
+      {importOpen && groupSet && people && (
+        <GroupImportDialog classId={classId} set={groupSet} people={people}
+          sizes={{ minSize: formation.minSize, maxSize: formation.maxSize }}
+          proposalOf={new Map(view.ungrouped.flatMap((u) => (u.proposalName ? [[u.person.accountId, u.proposalName] as const] : [])))}
+          onClose={() => setImportOpen(false)}
+          onSaved={(next) => { setImportOpen(false); onGroupsSaved?.(next); }} />
       )}
       {rejecting && (
         <RejectProposalDialog proposal={rejecting} onClose={() => setRejecting(null)}
