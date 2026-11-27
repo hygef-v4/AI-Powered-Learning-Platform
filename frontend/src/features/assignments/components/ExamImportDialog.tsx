@@ -126,7 +126,13 @@ export function ExamImportDialog({ assignmentId, currentSkeleton, prepare, initi
         setPreview({
           kind: "DOCX", document: docx.document,
           warnings: docx.warnings.map((w) => ({ kind: "OTHER" as const, message: w.message })),
-          counts: { headings: docx.headingCount, tables: 0, images: docx.imageCount, illegible: 0 },
+          // Phản hồi DOCX không có số bảng; đếm khối TABLE cấp ngoài cùng như backend đếm tiêu đề và ảnh.
+          counts: {
+            headings: docx.headingCount,
+            tables: docx.document.blocks.filter((block) => block.type === "TABLE").length,
+            images: docx.imageCount,
+            illegible: 0,
+          },
         });
         setPhase("preview");
         return;
