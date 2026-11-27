@@ -4,14 +4,15 @@ import edu.aiplatform.settings.contract.SettingDefinition;
 import edu.aiplatform.settings.contract.SettingGroup;
 import edu.aiplatform.settings.contract.SettingKey;
 import edu.aiplatform.settings.contract.SettingType;
+import edu.aiplatform.settings.model.SettingValidator;
 import java.time.LocalTime;
 import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Nhóm cài đặt Backup (BR-U03-88): mặc định tắt, giờ chạy không có mặc định. Bật được khi chưa đặt giờ; chưa có giờ
- * thì chưa chạy bản nào ({@code BackupScheduleScanner}).
+ * Nhóm cài đặt Backup (BR-U03-88): mặc định tắt, giờ chạy không có mặc định. Chỉ bật được khi đã đặt giờ, và không bỏ
+ * trống giờ khi đang bật (KAN-255); dữ liệu cũ bật mà chưa có giờ thì chưa chạy bản nào ({@code BackupScheduleScanner}).
  */
 @Configuration
 public class BackupSettingDefinitions {
@@ -22,8 +23,8 @@ public class BackupSettingDefinitions {
     @Bean
     SettingDefinition backupEnabled() {
         return new SettingDefinition(ENABLED.key(), SettingGroup.BACKUP, "Bật sao lưu",
-                "Sao lưu cơ sở dữ liệu hằng ngày.", SettingType.BOOLEAN, false,
-                Map.of());
+                "Sao lưu cơ sở dữ liệu hằng ngày. Đặt giờ chạy trước khi bật.", SettingType.BOOLEAN, false,
+                Map.of(SettingValidator.REQUIRES_WHEN_TRUE, DAILY_AT.key()));
     }
 
     @Bean

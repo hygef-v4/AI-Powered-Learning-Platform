@@ -76,7 +76,8 @@ public final class SettingValidator {
         if (required != null && value != null && value.isBoolean() && value.asBoolean()) {
             JsonNode other = current.get(required.toString());
             if (other == null || other.isNull()) {
-                throw createInvalidError("SETTING_DEPENDENCY", "Cần đặt " + required + " trước khi bật mục này");
+                throw createInvalidError("SETTING_DEPENDENCY",
+                        "Cần đặt " + readName(all, required.toString()) + " trước khi bật mục này");
             }
         }
         if (value == null || value.isNull()) {
@@ -84,10 +85,19 @@ public final class SettingValidator {
                 Object dependsOn = other.constraints() == null ? null : other.constraints().get(REQUIRES_WHEN_TRUE);
                 JsonNode otherValue = current.get(other.key());
                 if (definition.key().equals(dependsOn) && otherValue != null && otherValue.asBoolean(false)) {
-                    throw createInvalidError("SETTING_DEPENDENCY", "Đang bật " + other.key() + " nên không bỏ trống được mục này");
+                    throw createInvalidError("SETTING_DEPENDENCY",
+                            "Đang bật " + other.name() + " nên không bỏ trống được mục này");
                 }
             }
         }
+    }
+
+    private static String readName(Collection<SettingDefinition> all, String key) {
+        return all.stream()
+                .filter(definition -> definition.key().equals(key))
+                .map(SettingDefinition::name)
+                .findFirst()
+                .orElse(key);
     }
 
     private static JsonNode validateInteger(JsonNode value, Map<String, Object> constraints) {

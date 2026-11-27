@@ -50,7 +50,7 @@ const OVERVIEW: SettingsOverview = {
   ],
 };
 
-function backend() {
+function backend(overview: SettingsOverview = OVERVIEW) {
   const patches: { url: string; body: unknown }[] = [];
   vi.stubGlobal(
     "fetch",
@@ -61,7 +61,7 @@ function backend() {
         patches.push({ url, body });
         return Promise.resolve(Response.json({ ...MAX_UPLOAD, value: body.value, version: 3 }));
       }
-      return Promise.resolve(Response.json(OVERVIEW));
+      return Promise.resolve(Response.json(overview));
     }),
   );
   return patches;
@@ -76,17 +76,52 @@ describe("SettingListPage", () => {
     expect(await screen.findByText("Dung lượng tối đa")).toBeInTheDocument();
     expect(screen.queryByText("Phòng Đào tạo")).not.toBeInTheDocument();
     expect(screen.queryByText(/Sao lưu cơ sở dữ liệu lên Google Drive/)).not.toBeInTheDocument();
-    expect(screen.getAllByRole("tooltip")[0]).toHaveTextContent("Sao lưu cơ sở dữ liệu hằng ngày.");
+    expect(screen.getAllByRole("tooltip")[0]).toHaveTextContent("Sao lưu cơ sở dữ liệu hằng ngày. Đặt giờ chạy trước khi bật.");
     expect(screen.getAllByText("Cài đặt AI")).toHaveLength(1);
     expect(screen.getByRole("link", { name: /Cài đặt AI/ })).toHaveAttribute("href", "/admin/settings/sections/ai-connections");
     const titles = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
     expect(titles.slice(0, 2)).toEqual(["AI", "Tệp"]);
   });
 
-  it("giờ chạy hằng ngày bị khóa khi chưa bật sao lưu", async () => {
+  it("giờ chạy hằng ngày nhập được khi chưa bật sao lưu, để đặt giờ trước", async () => {
     backend();
     render(<SettingListPage />);
-    expect(await screen.findByLabelText("Giờ chạy hằng ngày")).toBeDisabled();
+    expect(await screen.findByLabelText("Giờ chạy hằng ngày")).toBeEnabled();
+    expect(screen.getByRole("switch", { name: "Bật sao lưu" })).toBeEnabled();
+  });
+
+  it("chưa đặt giờ chạy thì không bật được sao lưu (BR-U03-88, KAN-255)", async () => {
+    const noTime: SettingsOverview = {
+      ...OVERVIEW,
+      groups: [
+        {
+          group: "BACKUP",
+          items: [item({}), item({ key: "backup.dailyAt", name: "Giờ chạy hằng ngày", type: "TIME_OF_DAY", value: null, defaultValue: null })],
+        },
+      ],
+    };
+    backend(noTime);
+    render(<SettingListPage />);
+    expect(await screen.findByRole("switch", { name: "Bật sao lưu" })).toBeDisabled();
+    expect(screen.getByLabelText("Giờ chạy hằng ngày")).toBeEnabled();
+  });
+
+  it("đang bật sao lưu thì vẫn tắt được dù chưa có giờ (dữ liệu cũ)", async () => {
+    const onWithoutTime: SettingsOverview = {
+      ...OVERVIEW,
+      groups: [
+        {
+          group: "BACKUP",
+          items: [
+            item({ value: true }),
+            item({ key: "backup.dailyAt", name: "Giờ chạy hằng ngày", type: "TIME_OF_DAY", value: null, defaultValue: null }),
+          ],
+        },
+      ],
+    };
+    backend(onWithoutTime);
+    render(<SettingListPage />);
+    expect(await screen.findByRole("switch", { name: "Bật sao lưu" })).toBeEnabled();
   });
 
   it("nút Lưu chỉ hiện khi sửa; giới hạn hợp lệ chỉ hiện khi nhập sai", async () => {

@@ -43,6 +43,8 @@ export function SettingListPage() {
 
   const items = overview?.groups.flatMap((g) => g.items) ?? [];
   const backupOn = items.find((i) => i.key === BACKUP_ENABLED)?.value === true;
+  // BR-U03-88: đặt giờ chạy trước rồi mới bật sao lưu (KAN-255).
+  const hasDailyAt = typeof items.find((i) => i.key === BACKUP_DAILY_AT)?.value === "string";
   const ai = overview?.sections.find((s) => s.sectionKey === AI_SECTION);
 
   return (
@@ -84,7 +86,7 @@ export function SettingListPage() {
                   // trọn vẹn, không bị dựng lại giữa chừng khi lưu xong.
                   key={item.type === "BOOLEAN" ? item.key : `${item.key}-${item.version}`}
                   item={item}
-                  disabled={item.key === BACKUP_DAILY_AT && !backupOn}
+                  disabled={item.key === BACKUP_ENABLED && !backupOn && !hasDailyAt}
                   onSaved={replace}
                   onConflict={load}
                 />

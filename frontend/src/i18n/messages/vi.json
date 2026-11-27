@@ -4525,7 +4525,7 @@
         "imageMaxSize": "Ảnh tối đa",
         "imageMaxSizeDescription": "Dung lượng tối đa của mỗi ảnh trong tài liệu.",
         "backupEnabled": "Bật sao lưu",
-        "backupEnabledDescription": "Sao lưu cơ sở dữ liệu hằng ngày.",
+        "backupEnabledDescription": "Sao lưu cơ sở dữ liệu hằng ngày. Đặt giờ chạy trước khi bật.",
         "backupDailyAt": "Giờ chạy hằng ngày",
         "backupDailyAtDescription": "Giờ sao lưu, theo giờ Việt Nam."
       },
@@ -4813,6 +4813,7 @@
       "errorMessages": {
         "notFound": "Không tìm thấy hoặc bạn không có quyền truy cập.",
         "invalidRequest": "Yêu cầu không hợp lệ. Kiểm tra thông tin rồi thử lại.",
+        "settingDependency": "Hãy đặt giờ chạy hằng ngày trước khi bật sao lưu, và tắt sao lưu trước khi xóa giờ chạy.",
         "aiRequestTooLong": "Yêu cầu tối đa 10.000 ký tự. Hãy rút ngắn nội dung trước khi gửi.",
         "aiPromptTooLarge": "Tổng nội dung gửi AI quá dài. Hãy rút ngắn yêu cầu hoặc giảm tài liệu đính kèm.",
         "aiSourceUnavailable": "Nguồn AI hiện không khả dụng. Kiểm tra kết nối hoặc hạn mức của nguồn.",
