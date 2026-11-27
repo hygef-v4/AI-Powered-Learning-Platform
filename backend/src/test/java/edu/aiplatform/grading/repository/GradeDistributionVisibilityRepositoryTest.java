@@ -1,5 +1,6 @@
 package edu.aiplatform.grading.repository;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.UUID;
@@ -9,12 +10,11 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
 @Testcontainers(disabledWithoutDocker = true)
 class GradeDistributionVisibilityRepositoryTest {
-    @Container static final PostgreSQLContainer<?> DB = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database DB = SharedPostgres.createDatabase();
 
     @Test void migrationDefaultsOffAndConcurrentWritersCannotOverwriteAcrossClasses() throws Exception {
         var source = new DriverManagerDataSource(DB.getJdbcUrl(), DB.getUsername(), DB.getPassword());

@@ -1,5 +1,6 @@
 package edu.aiplatform.requirements;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -84,7 +85,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 import org.testcontainers.utility.DockerImageName;
 
@@ -155,10 +155,7 @@ class PlatformWorkflowIntegrationTest {
         }
         void reset() { attempts.set(0); failuresRemaining.set(0); accepted.clear(); }
     }
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withInitScript("requirements/platform-roles.sql")
-            .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
     @Container
     static final GenericContainer<?> REDIS = new GenericContainer<>(DockerImageName.parse("redis:7.4-alpine"))
             .withCommand("redis-server", "--requirepass", REDIS_PASSWORD)
@@ -166,6 +163,8 @@ class PlatformWorkflowIntegrationTest {
     @Container
     static final GenericContainer<?> BROKER = new GenericContainer<>(
             DockerImageName.parse("rabbitmq:4.1-management-alpine"))
+            // Các fork test song song cùng bật RabbitMQ thì có thể mở cổng chậm hơn mức chờ mặc định 60 s.
+            .withStartupTimeout(Duration.ofMinutes(3))
             .withEnv("RABBITMQ_DEFAULT_USER", "integration")
             .withEnv("RABBITMQ_DEFAULT_PASS", UUID.randomUUID().toString())
             .withExposedPorts(5672);

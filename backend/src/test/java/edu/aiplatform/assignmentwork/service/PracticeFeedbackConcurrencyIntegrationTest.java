@@ -1,5 +1,6 @@
 package edu.aiplatform.assignmentwork.service;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,10 +34,6 @@ import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
 import edu.aiplatform.identity.contract.Role;
 import edu.aiplatform.shared.error.ApiException;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -62,25 +59,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.images.builder.Transferable;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Real PostgreSQL transactions and feedback SQL; AI/auth contracts are local stubs, with no provider calls. */
 @Testcontainers
 class PracticeFeedbackConcurrencyIntegrationTest {
     private static final Instant NOW = Instant.parse("2026-10-30T03:00:00Z");
-    private static final String APP_PASSWORD = UUID.randomUUID().toString();
-    private static final String MIGRATOR_PASSWORD = UUID.randomUUID().toString();
     private static final String APPLICATION_NAME = "feedback-concurrency-" + UUID.randomUUID();
     private static final ObjectMapper JSON = new ObjectMapper().findAndRegisterModules();
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withEnv("POSTGRES_APP_PASSWORD", APP_PASSWORD)
-            .withEnv("POSTGRES_MIGRATOR_PASSWORD", MIGRATOR_PASSWORD)
-            .withCopyToContainer(rolesScript(), "/docker-entrypoint-initdb.d/01-roles.sh");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabaseWithRoles();
+    static final String APP_PASSWORD = POSTGRES.getAppPassword();
+    static final String MIGRATOR_PASSWORD = POSTGRES.getMigratorPassword();
 
     private static HikariDataSource appSource;
     private static HikariDataSource ownerSource;
@@ -290,12 +280,4 @@ class PracticeFeedbackConcurrencyIntegrationTest {
         return source;
     }
 
-    private static Transferable rolesScript() {
-        try {
-            return Transferable.of(Files.readString(Path.of("..", "infra", "postgres", "init", "01-roles.sh"))
-                    .replace("\r", ""), 0755);
-        } catch (IOException error) {
-            throw new UncheckedIOException(error);
-        }
-    }
 }

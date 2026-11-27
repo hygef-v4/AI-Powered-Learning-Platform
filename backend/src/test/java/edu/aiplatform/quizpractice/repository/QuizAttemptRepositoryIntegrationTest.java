@@ -1,5 +1,6 @@
 package edu.aiplatform.quizpractice.repository;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -14,11 +15,7 @@ import edu.aiplatform.quizpractice.model.QuestionResult;
 import edu.aiplatform.quizpractice.model.QuizAttempt;
 import edu.aiplatform.quizpractice.model.SubmitMode;
 import edu.aiplatform.quizzes.contract.QuizSettings;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -53,25 +50,17 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.images.builder.Transferable;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** SQL viết tay của {@link QuizAttemptRepository} và migration U11 trên PostgreSQL 16. */
 @Testcontainers(disabledWithoutDocker = true)
 class QuizAttemptRepositoryIntegrationTest {
 
-    // Sinh mỗi lần chạy: container chỉ sống trong test, không để chuỗi mật khẩu cố định trong mã.
-    private static final String APP_PASSWORD = UUID.randomUUID().toString();
-    private static final String MIGRATOR_PASSWORD = UUID.randomUUID().toString();
     private static final Instant NOW = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withEnv("POSTGRES_APP_PASSWORD", APP_PASSWORD)
-            .withEnv("POSTGRES_MIGRATOR_PASSWORD", MIGRATOR_PASSWORD)
-            .withCopyToContainer(rolesScript(), "/docker-entrypoint-initdb.d/01-roles.sh");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabaseWithRoles();
+    static final String APP_PASSWORD = POSTGRES.getAppPassword();
+    static final String MIGRATOR_PASSWORD = POSTGRES.getMigratorPassword();
 
     private static HikariDataSource appDataSource;
     private static HikariDataSource adminDataSource;
@@ -122,15 +111,6 @@ class QuizAttemptRepositoryIntegrationTest {
         admin.sql("insert into quizzes (id, scope, class_id, subject_id, title, settings, created_by, created_at,"
                         + " updated_at) values (:id, 'CLASS', :classId, :subject, 'Quiz', '{}'::jsonb, :author, now() - interval '1 day', now() - interval '1 day')")
                 .param("id", quizId).param("classId", classId).param("subject", subject).param("author", student).update();
-    }
-
-    private static Transferable rolesScript() {
-        try {
-            String script = Files.readString(Path.of("..", "infra", "postgres", "init", "01-roles.sh"));
-            return Transferable.of(script.replace("\r", ""), 0755);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private static HikariDataSource dataSource(String user, String password) {

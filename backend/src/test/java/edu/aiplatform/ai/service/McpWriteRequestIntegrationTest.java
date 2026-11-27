@@ -1,5 +1,6 @@
 package edu.aiplatform.ai.service;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.aiplatform.identity.contract.*;
@@ -15,19 +16,17 @@ import java.time.Instant;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.*;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
 @Testcontainers(disabledWithoutDocker = true)
 class McpWriteRequestIntegrationTest {
-    @Container static final PostgreSQLContainer<?> db = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database db = SharedPostgres.createDatabase();
     static JdbcTemplate jdbc;
     static McpWriteRequestService service;
     final Actor actor = new Actor(UUID.randomUUID(), Role.TEACHER);
     @BeforeAll static void setup() throws Exception {
         var source = new DriverManagerDataSource(db.getJdbcUrl(), db.getUsername(), db.getPassword());
         jdbc = new JdbcTemplate(source);
-        jdbc.execute("create role app");
         jdbc.execute("create table accounts(id uuid primary key)");
         jdbc.execute(Files.readString(Path.of("src/main/resources/db/migration/ai/V20261026_1800__create_mcp_write_requests.sql")));
         jdbc.execute(Files.readString(Path.of("src/main/resources/db/migration/ai/V20261123_1210__allow_mcp_write_request_cleanup.sql")));

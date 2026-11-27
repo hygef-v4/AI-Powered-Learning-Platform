@@ -1,5 +1,6 @@
 package edu.aiplatform.ai.model;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import edu.aiplatform.ai.repository.AiConnectionRepository;
 import edu.aiplatform.ai.repository.AiTaskRepository;
 import edu.aiplatform.ai.repository.AiUsageRepository;
@@ -17,10 +18,6 @@ import edu.aiplatform.ai.contract.UsageMeasurement;
 import edu.aiplatform.ai.model.AiConnection.EncryptedKey;
 import edu.aiplatform.ai.model.AiConnection.Scope;
 import edu.aiplatform.ai.model.AiConnection.Status;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -32,9 +29,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.images.builder.Transferable;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Production U06 SQL and constraints, with real Flyway migrations and the restricted app database role. */
@@ -42,14 +36,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class AiRepositoriesIntegrationTest {
 
     private static final Instant NOW = Instant.parse("2026-10-30T00:00:00Z");
-    private static final String APP_PASSWORD = UUID.randomUUID().toString();
-    private static final String MIGRATOR_PASSWORD = UUID.randomUUID().toString();
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withEnv("POSTGRES_APP_PASSWORD", APP_PASSWORD)
-            .withEnv("POSTGRES_MIGRATOR_PASSWORD", MIGRATOR_PASSWORD)
-            .withCopyToContainer(rolesScript(), "/docker-entrypoint-initdb.d/01-roles.sh");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabaseWithRoles();
+    static final String APP_PASSWORD = POSTGRES.getAppPassword();
+    static final String MIGRATOR_PASSWORD = POSTGRES.getMigratorPassword();
 
     private static HikariDataSource appDataSource;
     private static HikariDataSource adminDataSource;
@@ -79,15 +69,6 @@ class AiRepositoriesIntegrationTest {
         account = UUID.randomUUID();
         admin.sql("insert into accounts (id, school_email, role, status, display_name, password_hash) values "
                 + "(?, ?, 'TEACHER', 'ACTIVE', 'GV', 'x')").params(account, account + "@fpt.edu.vn").update();
-    }
-
-    private static Transferable rolesScript() {
-        try {
-            String script = Files.readString(Path.of("..", "infra", "postgres", "init", "01-roles.sh"));
-            return Transferable.of(script.replace("\r", ""), 0755);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private static HikariDataSource dataSource(String user, String password) {

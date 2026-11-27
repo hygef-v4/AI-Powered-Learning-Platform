@@ -1,5 +1,6 @@
 package edu.aiplatform.groupdocs.model;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import edu.aiplatform.groupdocs.repository.GroupDocumentRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,10 +17,6 @@ import edu.aiplatform.groupdocs.model.GroupDocument.SubmitMode;
 import edu.aiplatform.groups.model.ClassGroup;
 import edu.aiplatform.groups.repository.GroupRepository;
 import edu.aiplatform.groups.model.LeaderChangeRequest;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -30,9 +27,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.flywaydb.core.Flyway;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.images.builder.Transferable;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
@@ -42,14 +36,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 class GroupRepositoriesIntegrationTest {
 
-    private static final String APP_PASSWORD = UUID.randomUUID().toString();
-    private static final String MIGRATOR_PASSWORD = UUID.randomUUID().toString();
-
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withEnv("POSTGRES_APP_PASSWORD", APP_PASSWORD)
-            .withEnv("POSTGRES_MIGRATOR_PASSWORD", MIGRATOR_PASSWORD)
-            .withCopyToContainer(rolesScript(), "/docker-entrypoint-initdb.d/01-roles.sh");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabaseWithRoles();
+    static final String APP_PASSWORD = POSTGRES.getAppPassword();
+    static final String MIGRATOR_PASSWORD = POSTGRES.getMigratorPassword();
 
     private static HikariDataSource appDataSource;
     private static HikariDataSource ownerDataSource;
@@ -104,15 +93,6 @@ class GroupRepositoriesIntegrationTest {
                 + "(?, ?, 'TEACHER', 'ACTIVE', 'GV', 'x')").params(teacher, teacher + "@fpt.edu.vn").update();
         owner.sql("insert into course_classes (id, subject_id, code, name, status, teacher_id, starts_on, created_at, updated_at) values "
                 + "(?, ?, 'SE1', 'SE1', 'OPEN', ?, DATE '2026-11-14', now(), now())").params(classId, subject, teacher).update();
-    }
-
-    private static Transferable rolesScript() {
-        try {
-            String script = Files.readString(Path.of("..", "infra", "postgres", "init", "01-roles.sh"));
-            return Transferable.of(script.replace("\r", ""), 0755);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private static HikariDataSource dataSource(String user, String password) {

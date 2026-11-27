@@ -1,5 +1,6 @@
 package edu.aiplatform.academics.integration;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -9,7 +10,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,27 +18,17 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** D-U04-05 migration on disposable PostgreSQL: backfill, generated term and unique constraint. */
 @Testcontainers(disabledWithoutDocker = true)
 class ClassStartDateMigrationIntegrationTest {
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
 
     private final UUID subjectId = UUID.randomUUID();
     private DriverManagerDataSource dataSource;
     private JdbcTemplate jdbcTemplate;
     private String schema;
-
-    @BeforeAll
-    static void createApplicationRole() {
-        new JdbcTemplate(new DriverManagerDataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(),
-                DATABASE.getPassword())).execute("create role app");
-    }
 
     @BeforeEach
     void createSchemaFixtures() {

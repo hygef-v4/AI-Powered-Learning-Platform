@@ -94,7 +94,6 @@ class OwnerRequirementsTestConfig {
         pool.setMaximumPoolSize(10);
         pool.setMinimumIdle(2);
         var source = new com.zaxxer.hikari.HikariDataSource(pool);
-        new JdbcTemplate(source).execute("create role app nologin");
         Flyway.configure().dataSource(source).locations("classpath:db/migration").load().migrate();
         return source;
     }

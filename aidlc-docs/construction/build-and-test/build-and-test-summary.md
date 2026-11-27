@@ -22,6 +22,7 @@ The [build instructions](build-instructions.md) and [guard script](../../../scri
 
 | Recorded scope | Evidence | Result and limit |
 |---|---|---|
+| Tăng tốc test backend, 27/11, nhánh `perf/backend-test-speed` chưa commit | [Kết quả](2026-11-27/2026-11-27-backend-test-speed-results.md) | `mvn -B verify` 2.750 test: trước 29:12 (1 lỗi p95 có sẵn), sau 15:02 với 3 fork (0 lỗi, 1 bỏ qua), guard CI qua. Đo trên một máy Windows, chưa đo trên runner CI. |
 | U07 tạo đề bằng AI và U09 đọc sơ đồ, 22/11 | [Kết quả U07](2026-11-22/2026-11-22-u07-pe-assignment-evaluation.md) | Các lượt GPT-6 Luna qua Codex CLI, kiểm validator Java và luồng xem trước với API giả lập. |
 | U09 đánh giá AI chấm bài, 22/11 | [Báo cáo chấm AI](ai-grading-test-report.md) | Bằng chứng lượt 3 với Luna, Sol và Opus trên 20 bài tổng hợp. |
 | U04/U13/U14 chuyển JPA sang JDBC, 18/11, nhánh `refactor/jdbc-u04-u13-u14` (commit cục bộ `a4bd6934`) | [Kết quả](2026-11-18/2026-11-18-u04-u13-u14-jdbc-results.md) | Backend `mvn -B verify` 2.572 test, 0 thất bại, 0 lỗi, 1 bỏ qua, gồm test khóa/CAS mới trên PostgreSQL Testcontainers. Frontend không đổi nên không chạy. E2E API `u04-u13-u14` 40/40 trên stack cô lập `jdbc1118`, cần bản vá tạm cho lỗi RabbitMQ có sẵn trên staging (`3ed52391`); chưa thử trên staging. |

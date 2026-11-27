@@ -1,5 +1,6 @@
 package edu.aiplatform.requirements;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -37,17 +38,16 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
 /** Actual owner repositories/services, U01 JWT/current DB authorization, U02 audit and security filters. */
 @SpringJUnitConfig(OwnerRequirementsTestConfig.class)
 @WebAppConfiguration
 @Testcontainers(disabledWithoutDocker = true)
+// Cả lớp chạy ở lượt tuần tự (pom.xml): test perf đo trên JVM đã chạy các test khác của lớp, không có fork chạy song song.
+@Tag("serial")
 class RequirementsCoverageIntegrationTest {
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
     static final Instant NOW = Instant.parse("2026-11-08T04:00:00Z");
     @Autowired DataSource dataSource;
     @Autowired WebApplicationContext context;
@@ -483,6 +483,7 @@ class RequirementsCoverageIntegrationTest {
     }
 
     @Test
+    @Tag("perf")
     void localOwnerReadLatencyMeetsDeclaredP95ForTenMaterialsAndTwoHundredNotices() {
         for (int index = 0; index < 9; index++) {
             seedMaterial(subjectId, null, moduleId, "Source " + index, Material.Status.ACTIVE);
@@ -576,6 +577,7 @@ class RequirementsCoverageIntegrationTest {
     }
 
     @Test
+    @Tag("perf")
     void classEventCreatesExactlyTwoHundredNoticesAndRecordsLocalFanoutMeasurement() {
         jdbc.update("""
                 insert into accounts(id,school_email,role,status,password_hash,display_name,created_at,updated_at)

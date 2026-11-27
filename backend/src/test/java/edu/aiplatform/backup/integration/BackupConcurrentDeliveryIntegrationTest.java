@@ -1,5 +1,6 @@
 package edu.aiplatform.backup.integration;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -26,13 +27,12 @@ import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
 /** Two proxied handlers and real row transitions, using the production backup migration. */
 @Testcontainers(disabledWithoutDocker = true)
 class BackupConcurrentDeliveryIntegrationTest {
-    @Container static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabase();
     @Configuration @EnableTransactionManagement(proxyTargetClass = true) static class Transactions { }
     @TempDir Path dir;
 

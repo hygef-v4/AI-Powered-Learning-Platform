@@ -1,5 +1,6 @@
 package edu.aiplatform.backup.integration;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 import com.zaxxer.hikari.HikariDataSource;
 import edu.aiplatform.backup.service.BackupStatusService;
@@ -20,13 +21,12 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
 /** Isolated database: production backup migration and real transactional read provider. */
 @Testcontainers(disabledWithoutDocker = true)
 class BackupDashboardStatusIntegrationTest {
-    @Container static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabase();
     static final Instant TO = Instant.parse("2026-10-22T10:00:00Z");
     static final Instant FROM = Instant.parse("2026-10-15T10:00:00Z");
     static HikariDataSource pool;
