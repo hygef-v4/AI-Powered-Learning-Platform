@@ -272,3 +272,28 @@ it("does not carry saved marks onto a group receipt changed during the refresh",
   expect(result.current.form.feedback).toBe("");
   expect(result.current.detail.evaluation.submissionHash).toBe("new");
 });
+
+it("saves with the published version when the reload after publishing fails", async () => {
+  const refresh = vi.fn().mockRejectedValue(new Error("Service unavailable"));
+  const { result } = renderHook(() => useGradingWorkspace(initial, refresh));
+  act(() => result.current.applyPublishResult({ items: [
+    { evaluationId: "e", outcome: "SUCCESS", code: null, newVersion: 3 },
+  ] }));
+  await act(() => result.current.reload());
+  expect(result.current.evaluation).toMatchObject({ version: 3, state: "PUBLISHED" });
+
+  act(() => result.current.toggleItem("r", "i", true));
+  await act(() => result.current.save());
+  expect(mocks.saveEvaluation).toHaveBeenCalledWith("e", expect.objectContaining({
+    version: 3, checkedItemsByRubric: { r: ["i"] },
+  }));
+});
+
+it("ignores publish results that did not publish this evaluation", () => {
+  const { result } = renderHook(() => useGradingWorkspace(initial, async () => initial));
+  act(() => result.current.applyPublishResult({ items: [
+    { evaluationId: "e", outcome: "FAILED", code: "GRADE_VERSION_CONFLICT", newVersion: null },
+    { evaluationId: "other", outcome: "SUCCESS", code: null, newVersion: 9 },
+  ] }));
+  expect(result.current.evaluation).toMatchObject({ version: 2, state: "DRAFT" });
+});

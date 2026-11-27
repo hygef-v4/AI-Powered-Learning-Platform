@@ -41,7 +41,8 @@ export function BatchActionDialog({
   action: "finalize" | "publish" | "ai";
   items: ItemVersion[];
   onClose: () => void;
-  onDone: () => void;
+  /** Nhận kết quả của lượt vừa chạy để trang gọi cập nhật ngay version mới mà không phải chờ tải lại. */
+  onDone: (result: BatchResult) => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<BatchResult | null>(null);
@@ -114,7 +115,7 @@ export function BatchActionDialog({
         setCompleted(true);
         onClose();
       }
-      onDone();
+      onDone(completed);
     } catch (e) {
       if (action !== "ai" || sessionRevision === readGradingAiSessionRevision()) {
         setError(formatErrorMessage(e));

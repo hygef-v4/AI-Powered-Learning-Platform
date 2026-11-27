@@ -22,6 +22,7 @@ import {
 } from "../components/GradingForm";
 import type {
   AiRequest,
+  BatchResult,
   Checks,
   Detail,
   Evaluation,
@@ -134,6 +135,19 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
   function toggleAcknowledgedReviewItem(key: string) {
     const patch = buildToggleAcknowledgePatch(form, key);
     if (patch) updateForm(patch);
+  }
+
+  /**
+   * Ghi ngay version và trạng thái mà lượt công bố trả về, để lần lưu tiếp theo không bị xung đột phiên bản
+   * khi lần tải lại sau công bố thất bại. Form đang sửa được giữ nguyên.
+   */
+  function applyPublishResult(result: BatchResult) {
+    const row = result.items.find((item) => item.evaluationId === evaluation.id);
+    if (row?.outcome !== "SUCCESS" || row.newVersion == null) return;
+    const newVersion = row.newVersion;
+    setDetail((current) => current.evaluation.id !== row.evaluationId || current.evaluation.version > newVersion
+      ? current
+      : { ...current, evaluation: { ...current.evaluation, version: newVersion, state: "PUBLISHED" } });
   }
 
   // Nạp bản hiện hành, đặt lại nếu bài nộp đổi hoặc hợp nhất khi chỉ version bản chấm thay đổi.
@@ -408,6 +422,7 @@ export function useGradingWorkspace(initial: Detail, refresh: () => Promise<Deta
     updateStructuredItem,
     toggleAcknowledgedReviewItem,
     reload: reloadEvaluation,
+    applyPublishResult,
     navigate: navigateEvaluation,
     confirmDialog,
     save: saveEvaluation,

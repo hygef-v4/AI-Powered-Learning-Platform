@@ -497,9 +497,10 @@ public class GradingService {
             if (inputAck) {
                 resolvedReviewedScore = currentScore;
                 resolvedAck = true;
-            } else if (editedText && baseItem != null) {
+            } else if (editedText) {
+                // Nhận xét vừa sửa hoặc vừa viết mới đã giải thích cho điểm hiện tại.
                 resolvedReviewedScore = currentScore;
-                resolvedAck = previouslyAck && !scoreChangedFromBaseline;
+                resolvedAck = baseItem != null && previouslyAck && !scoreChangedFromBaseline;
             } else if (scoreChangedFromBaseline) {
                 if (suppliedReviewedScore != null
                         && suppliedReviewedScore.compareTo(currentScore) == 0

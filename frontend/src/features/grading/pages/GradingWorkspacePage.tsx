@@ -143,6 +143,7 @@ function Workspace({
     updateStructuredItem,
     toggleAcknowledgedReviewItem,
     reload,
+    applyPublishResult,
     navigate,
     save,
     requestProposal,
@@ -1008,7 +1009,10 @@ function Workspace({
           action={action}
           items={[{ evaluationId: evaluation.id, version: evaluation.version }]}
           onClose={() => setAction(null)}
-          onDone={() => void reload()}
+          onDone={(result) => {
+            applyPublishResult(result);
+            void reload();
+          }}
         />
       )}
     </div>
