@@ -16415,3 +16415,21 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **Context**: Release, đồng bộ main về staging trước khi đưa staging lên main.
 
 ---
+
+## Defect fix - KAN-255 (ST-WF06-009) log and fix
+**Timestamp**: 2026-11-27T17:50:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Tạo ticket Jira cho ST-WF06-009 và sửa code luôn"
+**AI Response**: "Created KAN-255 (Bug, Medium, labels system-test and wf06, unassigned): backup can be enabled without a daily run time, against BR-U03-88. Cause: commit 40a32b5a (27/10) removed requiresWhenTrue backup.dailyAt from BackupSettingDefinitions.backupEnabled, and the Settings page locks the time input until backup is on. Fixed on branch fix/kan-255-backup-time from origin/staging (not committed): restored the constraint; SettingValidator dependency errors now name the settings instead of their keys; Settings page lets Admin set the time first and disables the backup switch while it is off and no time is saved; SETTING_DEPENDENCY added to the shared error table with en/vi text; backup.enabled description says to set the time first. Tests: BackupSettingDefinitionsTest (new, 3), SettingValidatorTest 7/7, SettingsServiceTest, AdminDashboardBackupTest, BackupScheduleScannerTest, AiSettingsSectionsTest passed; frontend settings, errorMessages and locale tests 32/32, tsc and eslint clean. Existing data with backup on and no time is not changed; it still runs no backup until a time is set."
+**Context**: Construction - defect fix from Report 5.3 system test (FR), WF06
+
+---
+
+## Defect fix - KAN-255 commit and PR
+**Timestamp**: 2026-11-27T18:05:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "Commit, mở PR"
+**AI Response**: "Committed the KAN-255 fix on fix/kan-255-backup-time (backend, frontend, tests, this audit entry; .claude/launch.json and docs/ left out), pushed the branch and opened a pull request into staging."
+**Context**: Construction - defect fix, commit and pull request at the user's request
+
+---

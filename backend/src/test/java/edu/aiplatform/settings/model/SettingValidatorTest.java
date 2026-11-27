@@ -82,4 +82,19 @@ class SettingValidatorTest {
         assertThatThrownBy(() -> SettingValidator.validateCross(DAILY_AT, null, all, enabled))
                 .isInstanceOf(ApiException.class);
     }
+
+    @Test
+    void dependencyErrorsNameTheSettingsInsteadOfTheirKeys() throws Exception {
+        SettingDefinition enabled = new SettingDefinition("backup.enabled", SettingGroup.BACKUP, "Bật sao lưu", "d",
+                SettingType.BOOLEAN, false, Map.of(SettingValidator.REQUIRES_WHEN_TRUE, "backup.dailyAt"));
+        SettingDefinition dailyAt = new SettingDefinition("backup.dailyAt", SettingGroup.BACKUP, "Giờ chạy hằng ngày",
+                "d", SettingType.TIME_OF_DAY, null, Map.of());
+        List<SettingDefinition> all = List.of(enabled, dailyAt);
+
+        assertThatThrownBy(() -> SettingValidator.validateCross(enabled, json("true"), all, Map.of()))
+                .hasMessage("Cần đặt Giờ chạy hằng ngày trước khi bật mục này");
+        Map<String, JsonNode> on = Map.of("backup.enabled", json("true"), "backup.dailyAt", json("\"02:30\""));
+        assertThatThrownBy(() -> SettingValidator.validateCross(dailyAt, null, all, on))
+                .hasMessage("Đang bật Bật sao lưu nên không bỏ trống được mục này");
+    }
 }

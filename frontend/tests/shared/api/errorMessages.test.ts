@@ -19,6 +19,8 @@ describe("describeApiProblem (English UI)", () => {
       .toBe("This file type is not allowed.");
     expect(describeApiProblem({ status: 400, code: "MATERIAL_YOUTUBE_INVALID", detail: "Chỉ nhận link của một video YouTube" }))
       .toBe("Only a link to a single YouTube video is accepted.");
+    expect(describeApiProblem({ status: 400, code: "SETTING_DEPENDENCY", detail: "Cần đặt Giờ chạy hằng ngày trước khi bật mục này" }))
+      .toBe("Set the daily run time before turning backup on, and turn backup off before clearing the time.");
   });
 
   it("keeps the size limit from the server text", async () => {
