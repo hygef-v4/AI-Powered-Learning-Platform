@@ -15364,6 +15364,15 @@ GOOGLE_DRIVE_FOLDER_NAME=AI Learning Platform
 
 ---
 
+## Construction - U11 Quiz Practice merge PR
+**Timestamp**: 2026-11-26T03:49:41Z
+**Requested by:** Đào Chí Cường
+**User Input**: "merge vào staging"
+**AI Response**: "Merge PR #137 vào staging bằng merge commit (923f7ff4), khớp head 316bd3d4; CI đạt, không xung đột."
+**Context**: Construction, U11, merge PR #137
+
+---
+
 ## U03 Kiểm tra PR #140 lỗi CI khi lên main
 **Timestamp**: 2026-11-26T04:30:00Z
 **Requested by:** Quang Hung
@@ -16305,5 +16314,14 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **User Input**: "Commit"
 **AI Response**: "Commit toàn bộ thay đổi tăng tốc test backend (SharedPostgres, 30 lớp test, pom.xml, tài liệu đo) trên nhánh perf/backend-test-speed. Không push."
 **Context**: Construction - Build and Test, commit theo yêu cầu người dùng.
+
+---
+
+## Construction - Sửa lỗi bảng điểm production (Gradebook 500)
+**Timestamp**: 2026-11-27T06:10:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tại sao lại bị lỗi này, kiểm tra trên vps cho tôi" (ảnh chụp trang Grading, tab gradebook, báo "The system is busy, please try again later.") rồi "Sửa ở đây"
+**AI Response**: "Kiểm tra log platform-backend-1 trên VPS: GET bảng điểm lỗi NumberFormatException tại EvaluationRepository.mapGradebookEvaluation (parseEpochInstant). Đường đọc nhanh từ commit e1521754 đọc createdAt/gradedAt/publishedAt bằng BigDecimal, nhưng 45 bản chấm trên production lưu thời gian dạng chuỗi ISO-8601. Sửa parseEpochInstant nhận cả chuỗi ISO (Instant.parse) lẫn số giây; thêm test gradebookTimestampsAcceptEpochSecondsAndIsoStrings vào EvaluationMappingTest. Kết quả: EvaluationMappingTest 9/9 đạt. Nhánh chi-cuongg/gradebook-iso-timestamps cắt từ origin/main; chưa commit, chưa deploy. Không sửa dữ liệu DB."
+**Context**: Construction - sửa lỗi production, bảng điểm (grading).
 
 ---

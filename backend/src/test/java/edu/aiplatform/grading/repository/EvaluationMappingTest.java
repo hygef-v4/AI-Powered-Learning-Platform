@@ -14,6 +14,15 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class EvaluationMappingTest {
+    @Test
+    void gradebookTimestampsAcceptEpochSecondsAndIsoStrings() {
+        assertThat(EvaluationRepository.parseEpochInstant("1795664887.060311689"))
+                .isEqualTo(Instant.ofEpochSecond(1795664887, 60311689));
+        assertThat(EvaluationRepository.parseEpochInstant("2026-10-29T14:59:58.922Z"))
+                .isEqualTo(Instant.parse("2026-10-29T14:59:58.922Z"));
+        assertThat(EvaluationRepository.parseEpochInstant(null)).isNull();
+    }
+
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.EnumSource(ContributionLevel.class)
     void contributionLevelsRoundTripAndOldDocumentsDefaultUnassessed(ContributionLevel level)
