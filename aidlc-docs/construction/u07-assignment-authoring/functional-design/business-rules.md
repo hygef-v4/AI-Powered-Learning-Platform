@@ -1,5 +1,17 @@
 # U07 Assignment Authoring — business-rules
 
+## Tên đề mẫu không trùng trong môn, ngày tạo trong danh sách chọn — 2026-11-27
+
+Người dùng: "hiện thêm ngày tạo trong danh sách chọn đề mẫu và kiểm tra tên trùng cho đề mẫu trong cùng một môn", sau đó "tôi muốn database cũng chặn".
+
+| Mã | Rule | Thay cho |
+|---|---|---|
+| BR-U07-102 | Trong một môn, bài của môn (`scope = SUBJECT`) chưa `RETIRED` không trùng tên. So sau khi bỏ khoảng trắng đầu cuối, gộp khoảng trắng liên tiếp, không phân biệt hoa thường. Các version cùng chuỗi `NEW_VERSION` được giữ chung tên. Bài của lớp không theo rule này. Service kiểm dưới khóa theo môn (`pg_advisory_xact_lock`). DB chặn bằng unique index `uq_assignments_subject_title` trên `(subject_id, lower(btrim(regexp_replace(title, '\s+', ' ', 'g'))))` với `scope = 'SUBJECT'`, `status <> 'RETIRED'`, `origin <> 'NEW_VERSION'` (migration `V20261127_1300`); vi phạm index cũng trả `409 TEMPLATE_TITLE_DUPLICATE`. Bản `NEW_VERSION` không vào index nên chỉ service kiểm chúng với đề mẫu khác. | — |
+| BR-U07-106 | Migration `V20261127_1300` sửa dữ liệu cũ trước khi tạo index: trong mỗi nhóm trùng, bài tạo sớm nhất giữ tên, các bài sau thêm " (2)", " (3)"… (bỏ qua số đã có, cắt tên gốc để không quá 200 ký tự) và tăng `version`, nên màn hình đang mở bài đó phải tải lại trước khi lưu. | — |
+| BR-U07-103 | Tên người dùng nhập (tạo bài của môn, sửa chi tiết, nhập đề có tên, AI thay tên, copy vào môn có `title`) mà trùng thì trả `409 TEMPLATE_TITLE_DUPLICATE`. Chỉ kiểm khi tên đổi, nên bài đã trùng tên từ trước vẫn lưu được các thay đổi khác. | — |
+| BR-U07-104 | Tên do hệ thống đặt cho bài mới của môn (tên mặc định khi bỏ trống, nhân bản, copy vào môn không nhập `title`) mà trùng thì thêm " (2)", " (3)"…; tên gốc bị cắt để tổng không quá 200 ký tự. | BR-U07-40 (giữ nguyên tên) với đề mẫu của môn; bài của lớp vẫn giữ nguyên tên |
+| BR-U07-105 | `GET .../ai-drafts/templates` trả thêm `createdAt`; `Row` của bài trả thêm `createdAt`. Ô chọn đề mẫu (Tạo bài bằng AI, Soạn bằng AI, chat sửa đề) và ô copy bài có sẵn hiện ngày tạo dd/mm/yyyy cạnh tên. Gõ để tìm chỉ lọc theo tên. | — |
+
 ## Nhập đề từ ảnh/PDF — 2026-11-11
 
 Đã triển khai theo [yêu cầu FR-IMP-01…08](../../../inception/requirements/2026-11-11-exam-image-import.md). [Kế hoạch và quyết định thiết kế](../../plans/functional-design-plan/2026-11-11-u07-exam-image-import-functional-design-plan.md) ghi lựa chọn ban đầu. Các điều chỉnh khi triển khai nằm dưới bảng. Nhập DOCX dùng luồng riêng ở mục 7.
