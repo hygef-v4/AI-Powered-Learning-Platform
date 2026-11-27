@@ -176,6 +176,23 @@ describe("ExamImportDialog", () => {
     expect(start).not.toHaveBeenCalled();
   });
 
+  it("xem trước DOCX đếm đúng số bảng trong tài liệu", async () => {
+    const document: DocumentModel = { blocks: [
+      { id: "h", origin: "TEACHER", type: "HEADING", content: { style: "H1", text: "1. Class model" } },
+      { id: "t", origin: "TEACHER", type: "TABLE", content: { rows: [[{ runs: [{ text: "Class" }] }]] } },
+    ] } as DocumentModel;
+    vi.spyOn(assignmentsApi, "importDocx").mockResolvedValue({ document, warnings: [], headingCount: 1,
+      imageCount: 0, diagramCount: 0 });
+    render(<ExamImportDialog assignmentId="a1" currentSkeleton={EMPTY} prepare={vi.fn()}
+      onApplied={vi.fn()} onClose={vi.fn()} />);
+
+    choose([new File(["docx"], "de.docx")]);
+    fireEvent.click(screen.getByTestId("exam-import-convert"));
+
+    const counts = await screen.findByTestId("exam-import-counts");
+    expect(counts.textContent).toMatch(/^1\D+1\D+0\D/);
+  });
+
   it("tự chuyển đổi tệp chọn sẵn từ popup tạo bài", async () => {
     const start = vi.spyOn(assignmentsApi, "startImport").mockResolvedValue(READY);
     const files = [new File(["%PDF"], "de.pdf")];
