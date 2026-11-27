@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 class MaterialControllerTest {
     MaterialService materialService;
     MaterialQueryService materialQueryService;
+    MaterialModuleService materialModuleService;
     MockMvc mvc;
     final UUID id = UUID.randomUUID();
     final Actor actor = new Actor(UUID.randomUUID(), Role.SUBJECT_MANAGER);
@@ -27,13 +28,15 @@ class MaterialControllerTest {
     void setup() {
         materialService = mock(MaterialService.class);
         materialQueryService = mock(MaterialQueryService.class);
+        materialModuleService = mock(MaterialModuleService.class);
         mvc =
                 MockMvcBuilders.standaloneSetup(
                                 new MaterialController(materialService, materialQueryService),
                                 new SubjectMaterialController(
                                         materialService, materialQueryService),
                                 new ClassMaterialController(materialService, materialQueryService),
-                                new MyMaterialController(materialQueryService))
+                                new MyMaterialController(materialQueryService),
+                                new MaterialModuleController(materialModuleService))
                         .setControllerAdvice(new MaterialExceptionHandler())
                         .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                         .build();
@@ -99,6 +102,18 @@ class MaterialControllerTest {
                                 .content("{}"))
                 .andExpect(status().isBadRequest());
         verifyNoInteractions(materialService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/classes/%s/materials", "/subjects/%s/modules"})
+    void nonJsonCreateBodyIs415BeforeService(String pathTemplate) throws Exception {
+        mvc.perform(
+                        post("/api/v1" + pathTemplate.formatted(id))
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                .content("a=b"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.code").value("MATERIAL_REQUEST_INVALID"));
+        verifyNoInteractions(materialService, materialModuleService);
     }
 
     @Test
