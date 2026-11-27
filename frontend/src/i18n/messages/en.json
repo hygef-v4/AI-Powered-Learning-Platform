@@ -4776,6 +4776,7 @@
         "aiOutputLimit": "The response was cut off at the output token limit. Split the request into smaller parts.",
         "aiOutputInvalid": "The AI result does not have the structure required to apply it.",
         "aiOutputUnusable": "The AI provider did not return a usable result.",
+        "templateTitleDuplicate": "This subject already has a template with this name. Choose another name.",
         "forbidden": "You do not have permission to do this.",
         "conflict": "The data has just changed. Reload the page and try again.",
         "fileTooLarge": "The file is larger than allowed.",

@@ -16307,3 +16307,30 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 **Context**: Construction - Build and Test, commit theo yêu cầu người dùng.
 
 ---
+
+## U07 — đề mẫu trùng tên và ngày tạo
+**Timestamp**: 2026-11-27T09:20:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tên của template có thể trùng nhau không"
+**AI Response**: "Có. Đề mẫu là assignment có scope SUBJECT chưa RETIRED; bảng assignments không có unique index trên title và service không kiểm tra; copy không nhập tên còn mặc định lấy tên bài nguồn. Trùng tên không gây lỗi vì mọi thao tác theo assignmentId, nhưng ô chọn đề mẫu chỉ hiện tên nên khó phân biệt."
+**Context**: Construction, U07 Assignment Authoring — hỏi đáp, không đổi mã.
+
+---
+
+## U07 — kiểm tra tên trùng và hiện ngày tạo
+**Timestamp**: 2026-11-27T09:52:35Z
+**Requested by:** Đào Chí Cường
+**User Input**: "hiện thêm ngày tạo trong danh sách chọn đề mẫu và kiểm tra tên trùng cho đề mẫu trong cùng một môn"
+**AI Response**: "Thêm BR-U07-102…105. Backend chặn tên trùng (409 TEMPLATE_TITLE_DUPLICATE) cho tên nhập tay, tự thêm ' (2)', ' (3)'… cho tên hệ thống đặt, cho phép version cùng chuỗi chung tên, khóa theo môn bằng advisory lock; Row và AiTemplateOption trả createdAt. Frontend hiện ngày tạo ở ô chọn đề mẫu và ô copy, dịch mã lỗi mới. Test backend assignments.service 181 đạt, test frontend liên quan đạt, typecheck và lint sạch. Chưa chạy mvn verify, chưa kiểm tra trên trình duyệt, chưa commit."
+**Context**: Construction, U07 Assignment Authoring — Code Generation (thay đổi nhỏ, theo mẫu các mục trước trong aidlc-state.md).
+
+---
+
+## U07 — database chặn tên đề mẫu trùng, tách nhánh
+**Timestamp**: 2026-11-27T10:40:00Z
+**Requested by:** Đào Chí Cường
+**User Input**: "tôi muốn database cũng chặn, tách nhánh riêng phiên làm việc này ra cho tôi"
+**AI Response**: "Thêm migration V20261127_1300: đổi tên đề mẫu đã trùng (bài tạo sớm nhất giữ tên, bài sau thêm ' (n)', tăng version) rồi tạo unique index uq_assignments_subject_title trên subject_id và tên đã chuẩn hóa, bỏ RETIRED và NEW_VERSION. AssignmentRepository đổi vi phạm index thành 409 TEMPLATE_TITLE_DUPLICATE. Thêm BR-U07-106. Test migration trên PostgreSQL 16 (Testcontainers) và 196 test gói assignments đạt. Đưa riêng các thay đổi của phiên này sang nhánh chi-cuongg/subject-template-unique-title (từ staging, không theo dõi upstream), commit, chưa push; gỡ chúng khỏi bản làm việc staging, giữ nguyên thay đổi U12 của phiên khác."
+**Context**: Construction, U07 Assignment Authoring — Code Generation (thay đổi nhỏ).
+
+---

@@ -149,7 +149,7 @@ public class AssignmentAiDraftService {
                     .filter(candidate -> !candidate.id().equals(id) && (isTemplateFor(actor, assignment, candidate)
                             || own && isOwnAssignmentFor(actor, assignment, candidate)))
                     .map(candidate -> new AssignmentViews.AiTemplateOption(candidate.id(), candidate.title(),
-                            isTemplateFor(actor, assignment, candidate)))
+                            isTemplateFor(actor, assignment, candidate), candidate.createdAt()))
                     .toList();
         });
     }
@@ -520,6 +520,7 @@ public class AssignmentAiDraftService {
             String instructions = command.replaceInstructions()
                     ? draft.proposal().path("instructions").asText("") : current.instructions();
             String title = command.replaceTitle() ? proposedTitle : current.title();
+            support.requireUniqueTemplateTitle(current, title);
             Assignment saved = assignments.saveAssignment(current.updateAuthoring(title, instructions, built.skeleton(), parts, now));
             rubricService.replaceAll(saved, suggestions, now);
             if (drafts.markApplied(draft.id(), now) != 1) {
@@ -573,6 +574,7 @@ public class AssignmentAiDraftService {
         String instructions = command.replaceInstructions() || instructionsRevised
                 ? proposedInstructions : current.instructions();
         String title = replaceTitle ? proposedTitle : current.title();
+        support.requireUniqueTemplateTitle(current, title);
         Assignment saved = assignments.saveAssignment(current.updateAuthoring(title, instructions, skeleton, parts, now));
         rubricService.replaceAll(saved, suggestions, now);
         if (drafts.markApplied(draft.id(), now) != 1) {

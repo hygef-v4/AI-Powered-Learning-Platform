@@ -216,8 +216,8 @@ describe("AiReviseChat", () => {
 
   it("adds a template and a reference from the three-row + menu, shows them in one row template first, sends and clears them", async () => {
     vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([
-      { assignmentId: "t1", title: "Đề mẫu của môn", subjectTemplate: true },
-      { assignmentId: "o1", title: "Đề giữa kỳ năm trước", subjectTemplate: false },
+      { assignmentId: "t1", title: "Đề mẫu của môn", subjectTemplate: true, createdAt: "2026-11-20T03:00:00Z" },
+      { assignmentId: "o1", title: "Đề giữa kỳ năm trước", subjectTemplate: false, createdAt: "2026-05-02T03:00:00Z" },
     ]);
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue([{ materialId: "m1", title: "Chương 3 UML", hasText: true } as never]);
     const request = vi.spyOn(assignmentsApi, "requestAiRevision").mockResolvedValue(draft("READY"));
@@ -235,8 +235,8 @@ describe("AiReviseChat", () => {
     fireEvent.click(screen.getByTestId("ai-revise-attach"));
     fireEvent.click(screen.getByRole("menuitem", { name: "Chọn đề mẫu có sẵn" }));
     expect(screen.getAllByRole("menuitem").map((item) => item.textContent))
-      .toEqual(["Đề mẫu của môn", "Đề giữa kỳ năm trước"]);
-    fireEvent.click(screen.getByRole("menuitem", { name: "Đề giữa kỳ năm trước" }));
+      .toEqual(["Đề mẫu của môn 20/11/2026", "Đề giữa kỳ năm trước 02/05/2026"]);
+    fireEvent.click(screen.getByRole("menuitem", { name: "Đề giữa kỳ năm trước 02/05/2026" }));
 
     const chips = within(screen.getByTestId("ai-revise-attachments")).getAllByRole("listitem");
     expect(chips[0]).toHaveTextContent("Mẫu đề");

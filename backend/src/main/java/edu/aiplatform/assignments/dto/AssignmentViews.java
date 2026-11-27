@@ -26,7 +26,8 @@ public final class AssignmentViews {
     public record Row(UUID id, AssignmentScope scope, UUID classId, UUID subjectId, String title,
                       SubmissionMode submissionMode, GradingMode gradingMode, boolean diagramEnabled,
                       AssignmentStatus status, int versionNo, AssignmentOrigin origin, Instant opensAt,
-                      Instant closesAt, Instant lateUntil, Integer maxAttempts, Instant updatedAt, boolean readOnly) {
+                      Instant closesAt, Instant lateUntil, Integer maxAttempts, Instant createdAt, Instant updatedAt,
+                      boolean readOnly) {
     }
 
     public record Page(List<Row> items, int hiddenCount, Map<AssignmentStatus, Long> counts, boolean groupSupported,
@@ -90,9 +91,10 @@ public final class AssignmentViews {
 
     /**
      * Đề mẫu chọn được khi soạn bằng AI: bài của môn do chủ nhiệm môn tạo (yêu cầu 2026-11-09) hoặc đề cũ người soạn
-     * quản lý được (yêu cầu 2026-11-12); {@code subjectTemplate} phân biệt hai nhóm.
+     * quản lý được (yêu cầu 2026-11-12); {@code subjectTemplate} phân biệt hai nhóm. {@code createdAt} hiện cạnh tên để
+     * phân biệt đề cùng tên (yêu cầu 2026-11-27).
      */
-    public record AiTemplateOption(UUID assignmentId, String title, boolean subjectTemplate) {
+    public record AiTemplateOption(UUID assignmentId, String title, boolean subjectTemplate, Instant createdAt) {
     }
 
     public record AiSourcePreview(String fileName, String previewText, int extractedChars, boolean truncated) {
