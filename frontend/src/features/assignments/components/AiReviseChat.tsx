@@ -11,6 +11,7 @@ import { assignmentsApi } from "../api";
 import { describeError, requestRef } from "../model/format";
 import type { AiDraft, Material } from "../model/types";
 import { msg } from "@/i18n/msg";
+import { formatDate } from "@/shared/dateTime";
 
 const POLL_MS = 2000;
 const MAX_WARNINGS = 3;
@@ -32,7 +33,7 @@ type Message = {
   references?: string[];
   recover?: () => void;
 };
-type TemplateOption = { assignmentId: string; title: string; subjectTemplate: boolean };
+type TemplateOption = { assignmentId: string; title: string; subjectTemplate: boolean; createdAt: string };
 /** Menu của nút "+": danh sách gốc, hoặc danh sách đề có sẵn / học liệu để chọn. */
 type AttachMenu = "root" | "templates" | "materials";
 
@@ -391,7 +392,8 @@ function AiReviseChatPanel({ assignmentId, prepare, onApplied }: {
                       <div className="flex min-h-0 flex-col overflow-y-auto">
                         {menu === "templates" && templateChoices.map((item) => (
                           <MenuItem key={item.assignmentId} icon={TEMPLATE_ICON} className="w-full"
-                            onClick={() => { attachments.chooseExisting(item.assignmentId); setMenu(null); }}><span className="min-w-0 flex-1 truncate">{item.title}</span></MenuItem>
+                            onClick={() => { attachments.chooseExisting(item.assignmentId); setMenu(null); }}><span className="min-w-0 flex-1 truncate">{item.title}</span>{" "}
+                            <span className="shrink-0 text-[11px] text-muted">{formatDate(item.createdAt)}</span></MenuItem>
                         ))}
                         {menu === "materials" && materialChoices.map((item) => (
                           <MenuItem key={item.materialId} icon={REFERENCE_ICON} className="w-full"

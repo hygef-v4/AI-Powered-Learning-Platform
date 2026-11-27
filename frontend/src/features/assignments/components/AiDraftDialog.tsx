@@ -17,6 +17,7 @@ import type { AiDraft, GradingMode, Material } from "../model/types";
 export type { SourceUpload };
 import { SourceImagePreview } from "./SourceImagePreview";
 import { msg } from "@/i18n/msg";
+import { formatDate } from "@/shared/dateTime";
 import { LOCALES, LOCALE_NAMES } from "@/i18n/locales";
 type Template = TemplateFile;
 
@@ -63,7 +64,7 @@ export function AiDraftDialog({
   const [template, setTemplate] = useState<Template | null>(null);
   /** Đề mẫu chọn từ bài của môn (yêu cầu 2026-11-09); tệp tải lên thay thế lựa chọn này. */
   const [templateId, setTemplateId] = useState("");
-  const [templates, setTemplates] = useState<{ assignmentId: string; title: string }[]>([]);
+  const [templates, setTemplates] = useState<{ assignmentId: string; title: string; createdAt: string }[]>([]);
   const templateInput = useRef<HTMLInputElement>(null);
 
   const [draft, setDraft] = useState<AiDraft | null>(null);
@@ -338,7 +339,7 @@ export function AiDraftDialog({
               {template && <option value="__file__">{template.file.name}</option>}
               {templates.length > 0 && (
                 <optgroup label={msg("assignments.components.AiDraftDialog.subjectTemplates")}>
-                  {templates.map((item) => <option key={item.assignmentId} value={item.assignmentId}>{item.title}</option>)}
+                  {templates.map((item) => <option key={item.assignmentId} value={item.assignmentId}>{`${item.title} · ${formatDate(item.createdAt)}`}</option>)}
                 </optgroup>
               )}
               <option value="__upload__">{msg("assignments.components.AiDraftDialog.uploadATemplate")}</option>

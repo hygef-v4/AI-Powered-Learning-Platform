@@ -26,6 +26,7 @@ export type AssignmentRow = {
   closesAt: string | null;
   lateUntil: string | null;
   maxAttempts: number | null;
+  createdAt: string;
   updatedAt: string;
   readOnly: boolean;
 };

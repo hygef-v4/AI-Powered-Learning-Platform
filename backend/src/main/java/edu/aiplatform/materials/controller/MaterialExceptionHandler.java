@@ -3,6 +3,7 @@ package edu.aiplatform.materials.controller;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.*;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -31,7 +32,15 @@ public class MaterialExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail handleUnexpectedFailure(Exception ignored) {
+    public ProblemDetail handleUnexpectedFailure(Exception failure) {
+        // Lỗi request do Spring MVC phân loại (sai Content-Type 415, sai method 405...) giữ status 4xx.
+        if (failure instanceof ErrorResponse response
+                && response.getStatusCode().is4xxClientError()) {
+            return createProblem(
+                    HttpStatus.valueOf(response.getStatusCode().value()),
+                    "MATERIAL_REQUEST_INVALID",
+                    "Thông tin học liệu không hợp lệ");
+        }
         return createProblem(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "MATERIAL_UNAVAILABLE",
