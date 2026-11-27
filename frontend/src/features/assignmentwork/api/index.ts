@@ -1,6 +1,7 @@
-import { downloadApiFileToDisk, fetchApi } from "@/shared/api/client";
+import { buildDiagramPngsRequest, downloadApiFileToDisk, fetchApi } from "@/shared/api/client";
+import { renderMissingDiagramPngs } from "@/shared/document/diagramPngRenderer";
 import type { ActivityEventInput } from "@/shared/activity/useActivityTracker";
-import type { DocumentModel } from "@/shared/document";
+import type { DocumentBlock, DocumentModel } from "@/shared/document";
 import type { Attempt, AttemptDiagram, AttemptSummary, Feedback, ImportPreview, Receipt, Saved, StudentDetail, StudentRow } from "../model/types";
 
 const base = "/api/v1";
@@ -40,6 +41,8 @@ export function attemptImageUrl(attemptId: string) {
   return (blockId: string) => `${base}/attempts/${enc(attemptId)}/blocks/${enc(blockId)}/image`;
 }
 
-export function downloadAttemptDocx(attemptId: string) {
-  return downloadApiFileToDisk(`${base}/attempts/${enc(attemptId)}/export.docx`, "bai-lam.docx");
+/** {@code blocks}: bài làm đang hiện; sơ đồ chưa có ảnh lưu sẵn được trình duyệt dựng ảnh trước khi tải (yêu cầu 2026-11-27). */
+export async function downloadAttemptDocx(attemptId: string, blocks: DocumentBlock[] = []) {
+  return downloadApiFileToDisk(`${base}/attempts/${enc(attemptId)}/export.docx`, "bai-lam.docx",
+    buildDiagramPngsRequest(await renderMissingDiagramPngs(blocks)));
 }

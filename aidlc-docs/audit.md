@@ -16194,6 +16194,102 @@ check xem còn case nào chưa được thực hiện hay còn failed không?" t
 
 ---
 
+## U10 Thay đổi — Quiz: bỏ video khỏi tài liệu nguồn cho AI
+**Timestamp**: 2026-11-26T18:54:10Z
+**Requested by:** max2min
+**User Input**: "tạo quiz bỏ cái video ở phần tài liệu nguồn cho AI đi"
+**AI Response**: "SelectableMaterial bổ sung cờ video (học liệu loại YOUTUBE_LINK), do ReferenceMaterialService gán. QuizReferenceMaterials loại học liệu video khỏi danh sách tài liệu nguồn cho AI của Quiz và của ngân hàng câu hỏi. Khi gửi yêu cầu AI, mã video cũng bị từ chối với MATERIAL_NOT_SELECTABLE. Danh sách tài liệu của bài tập (U07) không thay đổi. Kết quả kiểm thử: bổ sung kiểm thử trong QuizAiDraftServiceTest; QuizAiDraftServiceTest, QuizControllersTest, MaterialQueryAndReferenceTest và AssignmentAuthoringServiceTest gồm 94 ca, tất cả đều đạt."
+**Context**: Construction, thay đổi phạm vi tài liệu nguồn cho AI soạn câu hỏi (U10/U13).
+
+---
+
+## U07 Thay đổi — Cài đặt bài: gộp Hình thức và Chế độ thành Loại
+**Timestamp**: 2026-11-27T03:05:00Z
+**Requested by:** max2min
+**User Input**: "Trong cài đặt bài tập, gộp Hình thức và Chế độ thành một trường Loại gồm ba lựa chọn (Cá nhân, Nhóm, Luyện tập), cho phép chuyển đổi tự do giữa ba lựa chọn."
+**AI Response**: "Biện pháp: popup Cài đặt bài (AssignmentSettingsPanel) thay hai trường bằng một trường Loại; chọn Nhóm thì bài tính điểm, chọn Luyện tập thì bài cá nhân không tính điểm; lớp chưa dùng được bài nhóm thì khóa lựa chọn Nhóm (bài đang là nhóm vẫn giữ được). Backend: lệnh sửa chi tiết bài (AssignmentCommands.Details, PATCH /assignments/{id}) nhận thêm submissionMode; AssignmentAuthoringService kiểm tra loại hợp lệ, từ chối chuyển sang Nhóm khi lớp chưa hỗ trợ (GROUP_NOT_SUPPORTED); AssignmentRepository.saveAssignment ghi thêm cột submission_mode. Đề mẫu của môn vẫn không có loại. Kết quả kiểm thử: bổ sung AssignmentAuthoringServiceTest.typeSwitchesFreelyBetweenIndividualGroupAndPractice và frontend settings-kind.test.tsx; 144 ca backend nhóm bài tập và 311 ca frontend (assignments, grading, assignmentwork) đều đạt."
+**Context**: Construction, thay đổi cài đặt loại bài tập (U07).
+
+---
+
+## Bug fix — trình soạn đề: văn bản nằm giữa hai mục con
+**Timestamp**: 2026-11-27T03:30:00Z
+**Requested by:** max2min
+**User Input**: "Văn bản viết ở cuối phần gốc hoặc cuối một mục, sau đó thêm mục mới, phải nằm giữa hai mục chứ không bị đẩy xuống dưới mục mới."
+**AI Response**: "Nguyên nhân: cây tài liệu (buildDocumentTree) gom mọi văn bản của mục cha nằm sau mục con đầu tiên vào after và trình soạn vẽ after sau tất cả mục con, nên văn bản xen giữa bị dồn xuống cuối dù thứ tự lưu đúng. Biện pháp: DocSection có thêm trailing (văn bản của mục cha nằm ngay sau từng mục con); DocumentEditor vẽ mỗi mục con kèm trailing của nó; khối cuối của mục (findLast) và dòng cuối tính theo trailing của mục con cuối. Kết quả kiểm thử: bổ sung ca trong authoringFlow.test.tsx (thất bại khi chưa sửa, đạt sau khi sửa); toàn bộ frontend 1294 ca, 4 ca chậm do tải máy đạt khi chạy lại riêng."
+**Context**: Construction, sửa lỗi trình soạn tài liệu dùng chung (U07/U08/U12).
+
+---
+
+## U07 Thay đổi — Sơ đồ: ảnh PNG thật khi tải DOCX và menu mẫu sơ đồ
+**Timestamp**: 2026-11-27T03:55:00Z
+**Requested by:** max2min
+**User Input**: "Khi tải về, sơ đồ phải là ảnh PNG của chính sơ đồ đã vẽ; sơ đồ trống thì là ảnh trắng. Nút sơ đồ trên thanh công cụ mở danh sách mẫu sơ đồ để chèn sẵn, đầu danh sách là lựa chọn Tạo mới giữ nguyên khung bấm để vẽ."
+**AI Response**: "Nguyên nhân: DocxExporter luôn dựng hình đại diện cố định cho sơ đồ và coi sơ đồ có SVG xem trước là đã vẽ, kể cả khi sơ đồ trống. Biện pháp: khi lưu trong Draw.io, DiagramEditor xuất thêm PNG kèm XML (xmlpng) và lưu vào pngPreview; DocumentModelService chỉ giữ pngPreview là PNG hợp lệ tối đa 2 MB; AttemptService chép pngPreview khi người học vẽ lại; DocxExporter dùng pngPreview (kèm chunk mxfile), sơ đồ không có hình là ảnh trắng, sơ đồ lưu trước thay đổi này chưa có PNG thì vẫn dùng hình đại diện cho tới khi lưu lại. Thanh công cụ có menu sơ đồ: Tạo mới chèn khung trống như trước; bảy mẫu (Use case, Lớp, Tuần tự, Hoạt động, ER, Thành phần, Trạng thái) chèn khung có sẵn XML Draw.io và SVG xem trước, bấm vào vẫn mở Draw.io để sửa (diagramTemplates.ts). Kết quả kiểm thử: bổ sung DocxRoundTripTest.exportUsesTheSavedDiagramPngAndAWhiteImageForAnEmptyDiagram, DocumentModelServiceTest.sanitizeKeepsAValidDiagramPngAndDropsAnythingElse và ca menu sơ đồ trong document.test.tsx; các bộ kiểm thử liên quan đều đạt."
+**Context**: Construction, thay đổi xuất DOCX và chèn sơ đồ (U07/U08).
+
+---
+
+## Bug fix — trình soạn đề: Ctrl+A gộp đoạn mở đầu với đoạn giữa hai mục con
+**Timestamp**: 2026-11-27T04:20:00Z
+**Requested by:** max2min
+**User Input**: "Văn bản viết giữa hai mục (ở phần gốc và trong một câu hỏi) phải là một đoạn riêng, không gộp vào đoạn mở đầu; Ctrl+A chỉ chọn đúng đoạn đang có con trỏ."
+**AI Response**: "Nguyên nhân: Ctrl+A chọn toàn bộ văn bản riêng của mục (đoạn mở đầu cùng mọi đoạn nằm sau các mục con), nên gõ đè, dán hoặc xóa sau Ctrl+A đưa nội dung về vị trí đoạn mở đầu và làm mất văn bản giữa hai mục. Biện pháp: DocumentEditor xác định đoạn liền khối chứa con trỏ (đoạn mở đầu, hoặc đoạn ngay sau một mục con, dòng cuối ở đáy thuộc đoạn sau mục con cuối) và Ctrl+A chỉ chọn đoạn đó; xóa đoạn nằm giữa hai mục con để lại một dòng trống giữ đúng chỗ. Đã tái hiện và kiểm tra trên trình duyệt thật bằng trang thử tạm (đã xóa). Kết quả kiểm thử: bổ sung ca trong editorShortcuts.test.tsx; 66 ca kiểm thử tài liệu đều đạt."
+**Context**: Construction, sửa lỗi trình soạn tài liệu dùng chung (U07/U08/U12).
+
+---
+
+## Bug fix — trình soạn đề: đoạn chữ giữa hai mục là một phần riêng ở chế độ Từng phần và Mục lục
+**Timestamp**: 2026-11-27T05:10:00Z
+**Requested by:** max2min
+**User Input**: "Ở chế độ Từng phần và trên Mục lục, văn bản nằm giữa hai mục phải là một phần riêng, không gộp với văn bản mở đầu."
+**AI Response**: "Nguyên nhân: chế độ Từng phần dựng trang văn bản ngoài mọi mục từ cả văn bản mở đầu lẫn mọi đoạn nằm sau các mục con, và Mục lục chỉ có một dòng cho toàn bộ văn bản đó. Biện pháp: mỗi đoạn nằm ngay sau một mục là một trang Từng phần riêng (khóa after-<id mục>, đặt ngay sau nhánh của mục đó; ở trong một câu hỏi thì nằm trong khung của câu hỏi, không kèm văn bản mở đầu của câu); trang mở đầu chỉ có văn bản trước mục đầu tiên; Mục lục (buildOutline, AssignmentNav) có một dòng riêng cho mỗi đoạn, cùng tầng với mục đứng trước; bấm dòng đó mở đúng trang. Đã kiểm tra trên trình duyệt thật bằng trang thử tạm (đã xóa). Kết quả kiểm thử: bổ sung ca Từng phần trong editorShortcuts.test.tsx và ca Mục lục trong outline.test.tsx; toàn bộ frontend 166 tệp, 1298 ca đều đạt; tsc không lỗi."
+**Context**: Construction, sửa lỗi trình soạn tài liệu dùng chung (U07/U08/U12).
+
+---
+
+## U08 Thay đổi — Góp ý AI bài Practice: thẻ theo từng câu, điểm ước tính theo rubric
+**Timestamp**: 2026-11-27T06:30:00Z
+**Requested by:** max2min
+**User Input**: "Thiết kế lại góp ý AI của bài Practice: bỏ nút Nhận góp ý lại; góp ý hiện thành thẻ bên lề ở từng câu giống thẻ rubric; thẻ Tổng quan đặt ở đầu, có tổng điểm; điểm mạnh và cần cải thiện dễ đọc, không chen vào phần khác; nút quay lại về trang chi tiết bài. AI chấm theo rubric nhưng chỉ ghi điểm và nhận xét của từng phần, không liệt kê tiêu chí."
+**AI Response**: "Backend: prompt góp ý Practice và tool MCP read_own_work kèm rubric theo phần; AI trả điểm từng phần (score); FeedbackFormat.applyRubricScores giới hạn điểm trong [0, điểm tối đa của rubric], tính tổng score/maxScore, bỏ điểm ở phần không có rubric tính điểm; nhận xét không liệt kê tiêu chí. Frontend: PracticeFeedbackPanel tách thành usePracticeFeedback và các thẻ: thẻ Tổng quan ở đầu (điểm ước tính lớn với thanh màu mực cam của AI, nhận xét chung, Điểm mạnh và Cần cải thiện thành hai mục riêng, nguồn và thời gian), mỗi câu hỏi một thẻ gắn vào tiêu đề câu với điểm và nhận xét; chỉ còn nút Nhận góp ý AI khi lượt chưa có góp ý dùng được; trang lịch sử nộp quay lại trang chi tiết bài. Kết quả kiểm thử: PracticeFeedbackServiceTest (rubric trong prompt, giới hạn và cộng điểm), PracticeFeedbackMcpParityTest, PracticeFeedbackPanel.test.tsx, SubmissionHistoryPage.test.tsx đều đạt."
+**Context**: Construction, thay đổi góp ý AI bài luyện tập (U08).
+
+---
+
+## U09/Chung Thay đổi — Cột nhận xét AI kéo được độ rộng; sơ đồ mẫu trong bài làm; ảnh sơ đồ khi tải DOCX; kéo thả tệp
+**Timestamp**: 2026-11-27T06:45:00Z
+**Requested by:** max2min
+**User Input**: "Cột nhận xét AI ở trang chấm bằng AI của giảng viên kéo rộng hẹp được trong giới hạn. Sơ đồ mẫu của đề trong bài làm hiện ô bấm để vẽ cho tới khi sinh viên sửa. Sơ đồ khi tải DOCX phải là ảnh thật. Nhập DOCX ở trang làm bài và trang soạn đề được thiết kế lại và kéo thả tệp được; popup tạo đề và soạn bằng AI cũng kéo thả tệp được."
+**AI Response**: "Cột nhận xét: DocumentEditor thêm resizableRail (trang chấm bài bật), kéo mép trái hoặc dùng phím mũi tên đổi độ rộng 280–560 px (không quá 40% cửa sổ), nhớ trong trình duyệt. Sơ đồ mẫu: người học chưa vẽ thì khung hiện Vẽ sơ đồ, lưu trong Draw.io thì gắn studentEdited (backend giữ qua làm sạch, so sánh khối của đề và ghép bài làm). Ảnh sơ đồ: nguyên nhân là sơ đồ nhập từ DOCX và sơ đồ chèn từ mẫu không có pngPreview nên bị dựng hình đại diện; DocxImporter giữ ảnh PNG thật của sơ đồ trong tệp Word (bỏ qua ảnh do hệ thống tự dựng), mẫu sơ đồ được vẽ thành PNG khi chèn, khung sơ đồ hiện ảnh PNG khi không có SVG; đã kiểm tra trên trình duyệt thật Draw.io trả PNG khi lưu. Kéo thả: FileDropZone dùng chung (lọc theo đuôi tệp) cho ô mẫu đề và ô tài liệu tham khảo của popup tạo đề và soạn bằng AI; DocxImportDialog thiết kế lại với vùng kéo thả lớn, thẻ tệp, ô số liệu, danh sách mục, cách nhập dạng thẻ chọn. Kết quả kiểm thử: DocxRoundTripTest, DocumentModelServiceTest bổ sung ca; FileDropZone.test.tsx, DocxImportDialog.test.tsx và ca sơ đồ mẫu trong document.test.tsx; toàn bộ frontend 168 tệp, 1307 ca đều đạt."
+**Context**: Construction, thay đổi trình soạn tài liệu dùng chung, chấm bài (U09) và nhập/xuất DOCX (U07/U08).
+
+---
+
+## Bug fix — Tải DOCX: sơ đồ lưu trước khi có ảnh PNG vẫn ra hình đại diện
+**Timestamp**: 2026-11-27T07:30:00Z
+**Requested by:** max2min
+**User Input**: "Sơ đồ trong tệp DOCX tải về phải là ảnh thật của sơ đồ, kể cả các sơ đồ đã có từ trước."
+**AI Response**: "Nguyên nhân: mọi sơ đồ đang có trong dữ liệu (4 sơ đồ trong đề, 2 trong bài làm) được lưu trước khi có pngPreview nên chỉ có XML; máy chủ không vẽ được sơ đồ từ XML nên dùng hình đại diện. Biện pháp: khi bấm tải DOCX (đề, bài làm, tài liệu nhóm), trình duyệt mở một Draw.io ẩn, nạp lần lượt các sơ đồ chưa có ảnh và xuất PNG (diagramPngRenderer), rồi gửi POST cùng đường dẫn tải kèm blockId → PNG; DiagramPngs.fillMissing điền ảnh vào bản sao dùng để xuất (không lưu, ảnh không hợp lệ bị bỏ qua, tối đa 50 sơ đồ). GET cũ vẫn dùng được. Đã kiểm tra trên trình duyệt thật: sơ đồ use case cũ trong dữ liệu được dựng thành ảnh thật trong khoảng 4,5 giây. Kết quả kiểm thử: DiagramPngsTest, diagramPngRenderer.test.ts, ArchitectureTest, DocxRoundTripTest đạt; toàn bộ frontend 169 tệp, 1310 ca đạt."
+**Context**: Construction, sửa lỗi xuất DOCX (U07/U08/U12).
+
+---
+
+## U08/Chung Thay đổi — Bố cục góp ý Practice; cột bên phải kéo được ở mọi trang bài
+**Timestamp**: 2026-11-27T08:10:00Z
+**Requested by:** max2min
+**User Input**: "Thiết kế lại bố cục chấm bài Practice cho đỡ chiếm chỗ và dễ nhìn. Mọi trang có trang bài bên trái và rubric hoặc khung tương tự bên phải đều kéo được độ rộng theo chiều ngang, có giới hạn, như trang chấm bài."
+**AI Response**: "Nguyên nhân: thẻ Tổng quan cao nằm đầu cột bên lề đẩy các thẻ từng câu xuống xa tiêu đề câu. Biện pháp: Tổng quan chuyển thành dải ngang ở đầu trang bài (PracticeOverview: điểm ước tính và thanh tỉ lệ bên trái, nhận xét chung bên phải, Điểm mạnh và Cần cải thiện thành hai cột, nguồn và thời gian; chưa có góp ý thì một dòng trạng thái và nút Nhận góp ý AI); cột bên lề chỉ còn thẻ từng câu, gọn hơn (điểm cùng dòng tên câu, thanh tỉ lệ mảnh, nhận xét) nên đứng sát câu của nó. DocumentEditor bật resizableRail mặc định nên mọi trang có cột bên phải (soạn đề, chấm bài, lịch sử nộp, bài nhóm) kéo được độ rộng 280–560 px, không quá 40% cửa sổ. Đã kiểm tra trên trình duyệt thật. Kết quả kiểm thử: PracticeFeedbackPanel.test.tsx, SubmissionHistoryPage.test.tsx cập nhật; toàn bộ frontend 169 tệp, 1312 ca đạt."
+**Context**: Construction, thay đổi bố cục góp ý bài luyện tập (U08) và trình soạn tài liệu dùng chung.
+
+---
+
+## U08 Thay đổi — Thẻ Tổng quan góp ý Practice gọn trong cột bên lề
+**Timestamp**: 2026-11-27T08:40:00Z
+**Requested by:** max2min
+**User Input**: "Thẻ Tổng quan của góp ý Practice giữ ở cột bên phải, không đặt trong trang bài; thiết kế lại cho đẹp và không chiếm chỗ."
+**AI Response**: "Thay cho dải Tổng quan trong trang bài ở mục trước: thẻ Tổng quan trở lại đầu cột bên lề và được thu gọn: dòng đầu gồm tên thẻ, nhãn AI ước tính và điểm ước tính; thanh tỉ lệ mảnh; nhận xét chung thu còn 3 dòng với nút Xem thêm; Điểm mạnh và Cần cải thiện là hai nút có số lượng, bấm để mở từng danh sách (mặc định thu gọn); nguồn và thời gian. Thẻ từng câu giữ dạng gọn. Đã kiểm tra trên trình duyệt thật ở cột 300 px. Kết quả kiểm thử: PracticeFeedbackPanel.test.tsx, SubmissionHistoryPage.test.tsx cập nhật; toàn bộ frontend 169 tệp, 1312 ca đạt."
+**Context**: Construction, thay đổi giao diện góp ý bài luyện tập (U08).
 ## Build and Test - Tăng tốc bộ test backend
 **Timestamp**: 2026-11-26T22:15:50Z
 **Requested by:** Hải Nam

@@ -281,6 +281,7 @@ it("chèn sơ đồ: con trỏ xuống dòng ngay sau (đoạn kế, dòng cuố
     const view = render(<DocumentEditor document={doc} onChange={(next) => { latest = next; }} mode="author" diagramEnabled />);
     fireEvent.mouseDown(screen.getByTestId("block-t"));
     fireEvent.click(screen.getByLabelText("Chèn sơ đồ Draw.io"));
+    fireEvent.click(screen.getByTestId("add-DIAGRAM"));
     expect(ids(latest!)).toEqual(expected[i]);
     view.unmount();
   });
@@ -334,4 +335,34 @@ it("thiếu tên bài: viền đỏ quanh ô tên, có tên thì hết", () => {
   rerender(<DocumentEditor document={empty} onChange={vi.fn()} mode="author" diagramEnabled={false}
     titleField={{ text: "Lab 1", invalid: false, onText: vi.fn() }} />);
   expect(document.querySelector('[data-block-id="TITLE"]')).not.toHaveClass("outline-danger");
+});
+
+it("chữ viết ở cuối rồi thêm câu hỏi / ý mới nằm giữa hai mục, cả ở ngoài cùng lẫn trong một câu hỏi (yêu cầu 2026-11-27)", () => {
+  render(<Page />);
+  // Ngoài cùng: câu I, chữ ở cuối tài liệu, rồi thêm câu II ở đáy → chữ nằm giữa I và II.
+  fireEvent.click(within(screen.getByTestId("quick-add-DOCUMENT")).getByRole("button", { name: "Thêm câu hỏi" }));
+  const bai1 = sectionIds()[0]!;
+  typeInto(screen.getByTestId("tail-end-DOCUMENT"), "Chữ giữa I và II");
+  fireEvent.click(within(screen.getByTestId("quick-add-DOCUMENT")).getByRole("button", { name: "Thêm câu hỏi" }));
+  const bai2 = sectionIds().at(-1)!;
+  const paper = screen.getByTestId("document-paper");
+  const between = within(paper).getByText("Chữ giữa I và II");
+  const position = (a: Node, b: Node) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING;
+  const sec = (id: string) => document.querySelector(`[data-section="${id}"]`)!;
+  expect(position(sec(bai1), between)).toBeTruthy();
+  expect(position(between, sec(bai2))).toBeTruthy();
+  // Dòng cuối của tài liệu vẫn ở sau câu II.
+  expect(position(sec(bai2), screen.getByTestId("tail-end-DOCUMENT"))).toBeTruthy();
+
+  // Trong câu I: ý I.1, chữ ở đáy câu I, rồi thêm ý I.2 → chữ nằm giữa I.1 và I.2.
+  fireEvent.click(within(screen.getByTestId(`quick-add-${bai1}`)).getByRole("button", { name: "Thêm ý" }));
+  const y1 = sectionIds()[1]!;
+  typeInto(screen.getByTestId(`tail-end-${bai1}`), "Chữ giữa I.1 và I.2");
+  fireEvent.click(within(screen.getByTestId(`quick-add-${bai1}`)).getByRole("button", { name: "Thêm ý" }));
+  const y2 = sectionIds()[2]!;
+  expect(screen.getByTestId(`number-${y2}`)).toHaveTextContent("I.2.");
+  const inner = within(sec(bai1) as HTMLElement).getByText("Chữ giữa I.1 và I.2");
+  expect(position(sec(y1), inner)).toBeTruthy();
+  expect(position(inner, sec(y2))).toBeTruthy();
+  expect(position(sec(y2), screen.getByTestId(`tail-end-${bai1}`))).toBeTruthy();
 });

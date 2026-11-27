@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { getPolicies, uploadFile } from "@/features/files/api";
 import { acceptAttribute, checkFile, type PurposePolicy } from "@/features/files/model/purposes";
 import { AiSourcePicker, type SourceChoice } from "@/shared/ai";
-import { Alert, Button, Dialog, Field, Icon, IconButton, Select, Textarea, TextInput } from "@/shared/ui";
+import { Alert, Button, Dialog, Field, FileDropZone, Icon, IconButton, Select, Textarea, TextInput } from "@/shared/ui";
 import { AiProgress, ReferencePicker, type SourceUpload } from "./AiDraftDialog";
 import { AiRequestLength, MAX_AI_REQUEST_LENGTH } from "./AiRequestLength";
 import { describeAiFailure } from "@/shared/api/errorMessages";
@@ -207,7 +207,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
     }
   }
 
-  function addUploads(files: FileList | null) {
+  function addUploads(files: FileList | File[] | null) {
     if (!files) return;
     const remaining = MAX_SOURCE_FILES - uploads.length;
     if (files.length > remaining) setError(msg("assignments.components.CreateAssignmentDialog.chooseAtMost3Source"));
@@ -423,6 +423,14 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
                 </Field>
                 {/* Mẫu đề như ô copy bài cũ: tìm đề mẫu của môn, dòng cuối là tải DOCX lên; đã chọn thì tên hiện ngay trong ô. */}
                 <Field label={msg("assignments.components.CreateAssignmentDialog.template")} htmlFor="ai-template">
+                  {/* Kéo tệp DOCX vào ô mẫu đề để dùng làm mẫu (yêu cầu 2026-11-27). */}
+                  <FileDropZone accept=".docx" disabled={busy} label={msg("assignments.components.CreateAssignmentDialog.dropTemplateHere")}
+                    onFiles={([templateFile]) => {
+                      if (!templateFile) return;
+                      setAiTemplateId("");
+                      setAiTemplateFile(templateFile);
+                      setPreserveTemplatePoints(false);
+                    }}>
                   <SearchPicker id="ai-template" label={msg("assignments.components.CreateAssignmentDialog.template")} placeholder={msg("assignments.components.CreateAssignmentDialog.chooseATemplateOrUpload")} disabled={busy}
                     optionIcon="assignment" loading={sources === null} emptyText={msg("assignments.components.CreateAssignmentDialog.theSubjectHasNoTemplates")} onOpen={loadSources}
                     options={subjectTemplates.filter((item) => item.id !== aiTemplateId).map((item) => ({ id: item.id, label: item.title }))}
@@ -430,6 +438,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
                     selected={templateName ? { label: templateName, clearLabel: msg("assignments.components.CreateAssignmentDialog.removeTemplate"),
                       onClear: () => { setAiTemplateId(""); setAiTemplateFile(null); setPreserveTemplatePoints(false); } } : undefined}
                     footer={{ label: msg("assignments.components.CreateAssignmentDialog.uploadATemplate"), icon: "upload_file", onPick: () => templateInput.current?.click() }} />
+                  </FileDropZone>
                   <input ref={templateInput} type="file" accept=".docx" hidden aria-label={msg("assignments.components.CreateAssignmentDialog.uploadATemplate")} data-testid="ai-format"
                     onChange={(event) => {
                       const templateFile = event.target.files?.[0];

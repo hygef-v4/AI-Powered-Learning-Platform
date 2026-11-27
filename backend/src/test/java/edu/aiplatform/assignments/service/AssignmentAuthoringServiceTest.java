@@ -25,6 +25,8 @@ import edu.aiplatform.assignments.contract.GradingMode;
 import edu.aiplatform.assignments.contract.RubricCriterion;
 import edu.aiplatform.assignments.contract.RubricView;
 import edu.aiplatform.assignments.contract.RubricItem;
+import edu.aiplatform.assignments.contract.IGroupAssignmentSupport;
+import edu.aiplatform.assignments.contract.ReadinessResult;
 import edu.aiplatform.assignments.contract.SubmissionMode;
 import edu.aiplatform.assignments.contract.ValidationIssue;
 import edu.aiplatform.assignments.model.Assignment;
@@ -197,6 +199,34 @@ class AssignmentAuthoringServiceTest {
                 a.version(), null, null, false, null, Map.of(DiagramType.CLASS, 1), null, null, null));
         assertThat(saved.diagramEnabled()).isTrue();
         assertThat(saved.requiredDiagrams()).containsEntry(DiagramType.CLASS, 1);
+    }
+
+    @Test
+    void typeSwitchesFreelyBetweenIndividualGroupAndPractice() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, new DocumentModel(List.of()), false);
+        AssignmentViews.Detail practice = f.authoring.updateDetails(f.teacher, a.id(), new AssignmentCommands.Details(
+                a.version(), null, null, null, GradingMode.PRACTICE, null, null, null, null, SubmissionMode.INDIVIDUAL));
+        assertThat(practice.gradingMode()).isEqualTo(GradingMode.PRACTICE);
+        assertThat(code(() -> f.authoring.updateDetails(f.teacher, a.id(), new AssignmentCommands.Details(
+                practice.version(), null, null, null, GradingMode.GRADED, null, null, null, null, SubmissionMode.GROUP))))
+                .as("lớp chưa dùng được bài nhóm").isEqualTo("GROUP_NOT_SUPPORTED");
+
+        when(f.groups.checkReadiness(any())).thenReturn(new ReadinessResult(List.of(), List.of()));
+        AssignmentViews.Detail group = f.authoring.updateDetails(f.teacher, a.id(), new AssignmentCommands.Details(
+                practice.version(), null, null, null, GradingMode.GRADED, null, null, null, null, SubmissionMode.GROUP));
+        assertThat(group.submissionMode()).isEqualTo(SubmissionMode.GROUP);
+        assertThat(group.gradingMode()).isEqualTo(GradingMode.GRADED);
+        assertThat(code(() -> f.authoring.updateDetails(f.teacher, a.id(), new AssignmentCommands.Details(
+                group.version(), null, null, null, GradingMode.PRACTICE, null, null, null, null, null))))
+                .as("bài nhóm chỉ tính điểm").isEqualTo("GROUP_MUST_BE_GRADED");
+
+        when(f.groups.checkReadiness(any())).thenReturn(new ReadinessResult(
+                List.of(IGroupAssignmentSupport.UNAVAILABLE), List.of()));
+        AssignmentViews.Detail back = f.authoring.updateDetails(f.teacher, a.id(), new AssignmentCommands.Details(
+                group.version(), null, null, null, GradingMode.PRACTICE, null, null, null, null, SubmissionMode.INDIVIDUAL));
+        assertThat(back.submissionMode()).isEqualTo(SubmissionMode.INDIVIDUAL);
+        assertThat(back.gradingMode()).isEqualTo(GradingMode.PRACTICE);
+        assertThat(f.store.get(a.id()).submissionMode()).isEqualTo(SubmissionMode.INDIVIDUAL);
     }
 
     @Test

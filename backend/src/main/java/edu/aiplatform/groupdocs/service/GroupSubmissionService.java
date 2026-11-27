@@ -5,6 +5,7 @@ import edu.aiplatform.assignments.contract.AssignmentContent;
 import edu.aiplatform.assignments.contract.AssignmentStatus;
 import edu.aiplatform.assignments.contract.AssignmentView;
 import edu.aiplatform.assignments.contract.DocumentModel;
+import edu.aiplatform.assignments.contract.DiagramPngs;
 import edu.aiplatform.assignments.contract.IAssignmentQuery;
 import edu.aiplatform.assignments.contract.IDocumentModel;
 import edu.aiplatform.assignments.contract.IDocx;
@@ -165,6 +166,12 @@ public class GroupSubmissionService {
     /** DOCX: thành viên tải bản hiện tại hoặc bản nộp; giảng viên chỉ bản nộp (BR-U12-44). */
     @Transactional(readOnly = true)
     public Export export(Actor actor, UUID documentId, boolean submitted) {
+        return export(actor, documentId, submitted, Map.of());
+    }
+
+    /** {@code diagramPngs}: ảnh sơ đồ trình duyệt vẽ cho sơ đồ chưa có ảnh lưu sẵn (yêu cầu 2026-11-27). */
+    @Transactional(readOnly = true)
+    public Export export(Actor actor, UUID documentId, boolean submitted, Map<String, String> diagramPngs) {
         GroupDocContext ctx = access.loadContext(actor, documentId);
         GroupDocument document = ctx.document();
         if (ctx.teacher() && !submitted) {
@@ -181,7 +188,7 @@ public class GroupSubmissionService {
         }
         String title = assignments.loadAssignment(document.assignmentId()).map(AssignmentView::title).orElse("Bai nhom") + " - "
                 + ctx.group().name();
-        return new Export(title, docx.export(model, title, blockId -> null));
+        return new Export(title, docx.export(DiagramPngs.fillMissing(model, diagramPngs), title, blockId -> null));
     }
 
     private Receipt store(GroupDocument document, ClassGroup group, AssignmentView assignment, GroupSnapshot.Result snapshot,

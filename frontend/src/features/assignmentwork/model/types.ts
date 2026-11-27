@@ -136,12 +136,15 @@ export type Receipt = {
 };
 
 /** Góp ý AI: không có ước tính theo rubric (người học không xem rubric); bản cũ có thể còn trường rubric, không hiện. */
+/** Góp ý Practice; điểm là AI ước tính theo rubric (yêu cầu 2026-11-27), chỉ có ở phần có rubric tính điểm. */
 export type FeedbackBody = {
   label: string;
   summary: string;
   strengths: string[];
   suggestions: string[];
-  parts: { partId: string; comment: string }[];
+  parts: { partId: string; comment: string; score?: number; maxScore?: number }[];
+  score?: number;
+  maxScore?: number;
 };
 
 export type Feedback = {

@@ -8,7 +8,7 @@ import { PageLoadError, PageLoading } from "@/shared/ui/PageStatus";
 import { attemptImageUrl, downloadAttemptDocx, workApi } from "../api";
 import { formatPoints, groupResultByPart, useAttemptResult, type ResultPart } from "../model/attemptResult";
 import { describeError, formatDateTime, canOpenHistory, listHistoryVersions } from "../model/format";
-import { PracticeFeedbackPanel } from "../components/PracticeFeedbackPanel";
+import { practiceFeedbackCards, usePracticeFeedback } from "../components/PracticeFeedbackPanel";
 import { studentGradeDistributions, type AttemptResult } from "../slots";
 import { PublishedFeedback, PublishedRubricItems } from "../components/PublishedFeedback";
 import type { Attempt, AttemptSummary, StudentDetail } from "../model/types";
@@ -25,7 +25,7 @@ function attemptTime(a: AttemptSummary) {
  * #41 Submission History (F8, UC 40): bài nộp hiện như trang tài liệu chỉ đọc (kiểu Docs ở chế độ chỉ xem):
  * giữa thanh công cụ, thẳng giữa trang giấy, là nút lượt trước / lượt sau và ô chọn lượt theo thời gian (mới nhất trước);
  * nút tải DOCX ở bên phải. Bên lề hiện góp ý AI của lượt luyện tập hoặc tổng điểm và điểm từng phần của bài đã chấm.
- * `?attempt=` mở sẵn một lượt; quay lại về đúng tab của bài trên trang Bài tập (`focus`).
+ * `?attempt=` mở sẵn một lượt; quay lại về trang chi tiết của bài (yêu cầu 2026-11-27, trước đây về danh sách Bài tập).
  */
 export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }) {
   const params = useSearchParams();
@@ -76,17 +76,17 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
     return () => controller.abort();
   }, [selected]);
 
-  // Sidebar mục lục của bài như trang làm bài; lối về trang Bài tập (yêu cầu 2026-11-05).
+  // Sidebar mục lục của bài như trang làm bài; lối về trang chi tiết của bài (yêu cầu 2026-11-27).
   useEffect(() => {
     if (!detail || !classId) return;
-    const focus = `focus=${encodeURIComponent(assignmentId)}`;
-    const backHref = general ? `/my-assignments?${focus}` : `/my-assignments?classId=${encodeURIComponent(classId)}&${focus}`;
+    const backHref = `/my-assignments/${encodeURIComponent(assignmentId)}?classId=${encodeURIComponent(classId)}${general ? "&from=all" : ""}`;
     const blocks = attempt && attempt.attemptId === selected ? attempt.content.blocks : [];
     publishOutline({ assignmentId, backHref, backLabel: msg("assignmentwork.pages.SubmissionHistoryPage.assignment"), entries: buildOutline(blocks) });
   }, [assignmentId, attempt, classId, detail, general, selected]);
   useEffect(() => () => publishOutline(null), []);
 
   const current = attempts?.find((a) => a.attemptId === selected) ?? null;
+  const practice = usePracticeFeedback(detail?.gradingMode === "PRACTICE" && current?.status === "SUBMITTED" ? current.attemptId : null);
   const { result } = useAttemptResult(current?.graded ? current.attemptId : null);
   const shownResult = result?.score != null && attempt?.attemptId === selected ? result : null;
 
@@ -113,20 +113,10 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
   const index = ordered.findIndex((a) => a.attemptId === selected);
   const shown = attempt && attempt.attemptId === selected ? attempt : null;
   const comments = shown && shownResult ? scoreCards(shownResult, shown) : [];
-  if (shown && detail.gradingMode === "PRACTICE" && current?.status === "SUBMITTED") {
-    comments.push({
-      key: `practice-feedback-${shown.attemptId}`,
-      anchorBlockId: null,
-      content: (
-        <PracticeFeedbackPanel
-          attemptId={shown.attemptId}
-          partTitles={{
-            ASSIGNMENT: msg("assignmentwork.pages.SubmissionHistoryPage.wholeAssignment"),
-            ...Object.fromEntries(shown.parts.map((part) => [part.partId, part.title])),
-          }}
-        />
-      ),
-    });
+  // Bài Practice: thẻ Tổng quan ở đầu cột bên lề, mỗi câu hỏi một thẻ góp ý gắn vào tiêu đề câu, như thẻ điểm của bài đã chấm.
+  const practiceShown = !!shown && detail.gradingMode === "PRACTICE" && current?.status === "SUBMITTED";
+  if (shown && practiceShown) {
+    comments.push(...practiceFeedbackCards(practice, shown.parts, new Set(shown.content.blocks.map((block) => block.id))));
   }
 
   const bar = (
@@ -134,7 +124,7 @@ export function SubmissionHistoryPage({ assignmentId }: { assignmentId: string }
       actions={current && (
         <Menu label="" icon="more_horiz" ariaLabel={msg("assignmentwork.pages.SubmissionHistoryPage.moreActions")} align="right">
           <MenuItem icon="download" onClick={() => {
-            void downloadAttemptDocx(current.attemptId)
+            void downloadAttemptDocx(current.attemptId, shown?.content.blocks ?? [])
               .catch((error: unknown) => showErrorToast(describeError(error)));
           }}>{msg("assignmentwork.pages.SubmissionHistoryPage.downloadDocx")}</MenuItem>
         </Menu>

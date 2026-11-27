@@ -26,6 +26,12 @@ class FakeReferenceMaterial implements IReferenceMaterial {
         return id;
     }
 
+    UUID addVideo(ResourceRef scope, String title) {
+        UUID id = UUID.randomUUID();
+        selectable.computeIfAbsent(scope, s -> new ArrayList<>()).add(new SelectableMaterial(id, title, true, true));
+        return id;
+    }
+
     @Override
     public List<SelectableMaterial> listSelectable(Actor actor, ResourceRef scopeRef) {
         if (down) {

@@ -62,7 +62,7 @@ it("sidebar có header Câu hỏi với nút + thêm câu hỏi ngoài cùng; m�
 it("văn bản ngoài mọi mục là một dòng tầng 0 trong Mục lục: mấy chữ đầu, chữ thường, không số, không nút +", () => {
   const loose: DocumentBlock[] = [{ id: "r", origin: "TEACHER", type: "PARAGRAPH", content: { runs: [{ text: "Đọc kỹ đề trước khi làm" }] } }, ...blocks];
   const entries = outlineOf(loose);
-  expect(entries[0]).toEqual({ id: "DOCUMENT", depth: 0, title: "Đọc kỹ đề trước khi làm", number: "" });
+  expect(entries[0]).toEqual({ id: "DOCUMENT", depth: 0, title: "Đọc kỹ đề trước khi làm", number: "", loose: true });
   const context = resolveAssignmentContext({ pathname: "/assignments/a1", search: new URLSearchParams() })!;
   render(<>{context.header}</>);
   act(() => publishOutline({ assignmentId: "a1", backHref: "/x", backLabel: "Bài tập", entries, editable: true }));
@@ -78,4 +78,21 @@ it("Mục lục sáng theo mục trình soạn đang hiện", () => {
   act(() => { window.dispatchEvent(new CustomEvent("document:current-part", { detail: { headingId: "q1" } })); });
   expect(screen.getByRole("button", { name: /Vẽ use case/ })).toHaveAttribute("aria-current", "true");
   expect(screen.getByRole("button", { name: /Hệ thống thư viện/ })).not.toHaveAttribute("aria-current");
+});
+
+it("chữ nằm giữa hai câu là một dòng riêng ngay sau câu trước, không gộp với văn bản mở đầu (yêu cầu 2026-11-27)", () => {
+  const p = (id: string, text: string, under?: number): DocumentBlock => ({ id, origin: "TEACHER", type: "PARAGRAPH",
+    content: { runs: [{ text }], ...(under !== undefined ? { under } : {}) } });
+  const h = (id: string, style: "H1" | "H2", text: string): DocumentBlock => ({ id, origin: "TEACHER", type: "HEADING", content: { style, text } });
+  const entries = outlineOf([p("i", "Mở đầu"), h("q1", "H1", "Câu 1"), h("a", "H2", "Ý a"), p("m", "Giữa ý", 1), h("b", "H2", "Ý b"),
+    p("g", "Giữa câu", 0), h("q2", "H1", "Câu 2")]);
+  expect(entries.map((e) => [e.id, e.depth, e.title, e.loose ?? false])).toEqual([
+    ["DOCUMENT", 0, "Mở đầu", true],
+    ["q1", 1, "Câu 1", false],
+    ["a", 2, "Ý a", false],
+    ["after-a", 2, "Giữa ý", true],
+    ["b", 2, "Ý b", false],
+    ["after-q1", 0, "Giữa câu", true],
+    ["q2", 1, "Câu 2", false],
+  ]);
 });

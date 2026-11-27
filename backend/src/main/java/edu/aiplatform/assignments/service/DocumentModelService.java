@@ -505,7 +505,8 @@ public class DocumentModelService implements IDocumentModel {
                         .ifPresent(code -> addIssue(errors, code, id, code.equals("DIAGRAM_TOO_LARGE")
                                 ? "XML sơ đồ vượt 2 MB" : "XML sơ đồ không hợp lệ"));
                 JsonNode svg = c.get("svgPreview");
-                if (svg != null && !svg.isNull() && !svg.isTextual()) {
+                JsonNode png = c.get("pngPreview");
+                if ((svg != null && !svg.isNull() && !svg.isTextual()) || (png != null && !png.isNull() && !png.isTextual())) {
                     addIssue(errors, "DIAGRAM_PREVIEW_INVALID", id, "Ảnh xem trước của sơ đồ không hợp lệ");
                 }
                 validateText(c.get("alt"), MAX_ALT, id, errors);
@@ -555,8 +556,8 @@ public class DocumentModelService implements IDocumentModel {
                 && block.content() instanceof ObjectNode b) {
             ObjectNode left = a.deepCopy();
             ObjectNode right = b.deepCopy();
-            left.remove("svgPreview");
-            right.remove("svgPreview");
+            left.remove(List.of("svgPreview", "pngPreview", "studentEdited"));
+            right.remove(List.of("svgPreview", "pngPreview", "studentEdited"));
             if (inPart) {
                 left.remove(List.of("xml", "diagramType"));
                 right.remove(List.of("xml", "diagramType"));
@@ -689,6 +690,15 @@ public class DocumentModelService implements IDocumentModel {
                 JsonNode svg = c.get("svgPreview");
                 if (svg != null && svg.isTextual()) {
                     SvgSanitizer.sanitize(svg.asText()).ifPresent(clean -> out.put("svgPreview", clean));
+                }
+                // Người học đã vẽ trên sơ đồ mẫu của đề (yêu cầu 2026-11-27): bài làm hiện hình của người học.
+                if (c.path("studentEdited").asBoolean(false)) {
+                    out.put("studentEdited", true);
+                }
+                // Ảnh PNG Draw.io xuất khi lưu, dùng khi tải DOCX; không phải PNG hợp lệ thì bỏ.
+                JsonNode png = c.get("pngPreview");
+                if (png != null && png.isTextual() && PngChunks.readPngDataUri(png.asText()).isPresent()) {
+                    out.put("pngPreview", png.asText());
                 }
             }
         }

@@ -314,7 +314,8 @@ export function AssignmentFormPage({ id }: { id: string }) {
       if (work.details && values.settings) {
         const s = values.settings;
         next = await assignmentsApi.updateDetails(id, version.current, {
-          title: values.title, instructions: values.instructions, gradingMode: s.gradingMode, diagramEnabled: s.diagramEnabled,
+          title: values.title, instructions: values.instructions, submissionMode: s.submissionMode, gradingMode: s.gradingMode,
+          diagramEnabled: s.diagramEnabled,
           requiredDiagrams: s.requiredDiagrams, activityMonitoringEnabled: s.activityMonitoringEnabled,
           activityNotice: s.activityNotice, referenceMaterialIds: s.referenceMaterialIds,
         });
@@ -561,7 +562,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
     try {
       if (!(await save())) return;
       const name = (latest.current.title.trim() || "bai-tap").replace(/[\\/:*?"<>|\r\n]+/g, " ");
-      await downloadDocx(id, what, `${what === "rubric" ? "Rubric - " : ""}${name}.docx`);
+      await downloadDocx(id, what, `${what === "rubric" ? "Rubric - " : ""}${name}.docx`, latest.current.skeleton.blocks);
     } catch (error) {
       notify(msg("assignments.pages.AssignmentFormPage.couldNotDownloadTheFile", { value: String(what === "rubric" ? "rubric" : msg("assignments.pages.AssignmentFormPage.assignment")), value2: String(describeError(error)) }), "danger");
     } finally {
@@ -705,7 +706,7 @@ export function AssignmentFormPage({ id }: { id: string }) {
       {/* Dòng cuối chỉ ghi loại bài (yêu cầu 2026-11-02): Luyện tập, hoặc Cá nhân / Nhóm. */}
       <p className="text-[13px] text-muted" data-testid="assignment-kind">
         {detail.gradingMode === "TEMPLATE" ? msg("assignments.pages.AssignmentFormPage.template")
-          : settings.gradingMode === "PRACTICE" ? msg("assignments.pages.AssignmentFormPage.practice") : submissionLabels[detail.submissionMode]}
+          : settings.gradingMode === "PRACTICE" ? msg("assignments.pages.AssignmentFormPage.practice") : submissionLabels[settings.submissionMode]}
       </p>
     </div>
   );
