@@ -1,5 +1,6 @@
 package edu.aiplatform.notifications.integration;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import edu.aiplatform.notifications.repository.NotificationRepositoryAdapter;
 
 import static org.assertj.core.api.Assertions.*;
@@ -32,7 +33,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.*;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
 /** Real U14 SQL/transactions; U01/U05/U07/U08, SMTP, job queue and SSE remain test boundaries. */
@@ -40,10 +40,7 @@ import org.testcontainers.junit.jupiter.*;
 @ContextConfiguration(classes = NotificationDeliveryIntegrationTest.Config.class)
 @Testcontainers(disabledWithoutDocker = true)
 class NotificationDeliveryIntegrationTest {
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabase();
 
     static final Instant NOW = Instant.parse("2026-10-25T08:00:00Z");
     @Autowired DataSource dataSource;
@@ -80,7 +77,6 @@ class NotificationDeliveryIntegrationTest {
                     new DriverManagerDataSource(
                             POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
             var jdbc = new JdbcTemplate(source);
-            jdbc.execute("create role app nologin");
             jdbc.execute("create table course_classes (id uuid primary key)");
             Flyway.configure()
                     .dataSource(source)

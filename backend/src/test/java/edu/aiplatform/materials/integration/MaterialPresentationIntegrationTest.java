@@ -1,5 +1,6 @@
 package edu.aiplatform.materials.integration;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,21 +17,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers(disabledWithoutDocker = true)
 class MaterialPresentationIntegrationTest {
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
 
     @Test
     void migrationKeepsLegacyMaterialsEnabledAndJdbcPersistsPresentationWithVersionGuards() {
         var dataSource = new DriverManagerDataSource(DATABASE.getJdbcUrl(), DATABASE.getUsername(), DATABASE.getPassword());
         var jdbc = new JdbcTemplate(dataSource);
-        jdbc.execute("create role app nologin");
         for (String table : new String[] {"accounts", "subjects", "course_classes", "quizzes"}) {
             jdbc.execute("create table " + table + " (id uuid primary key)");
         }

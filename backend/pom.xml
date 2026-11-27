@@ -42,6 +42,11 @@
         <!-- Không do Boot quản lý, kéo theo qua Tika/PDFBox và Google API client. -->
         <bouncycastle.version>1.87</bouncycastle.version>
         <guava.version>33.8.0-jre</guava.version>
+        <!-- Test: số JVM chạy song song, mỗi JVM một container PostgreSQL dùng chung (SharedPostgres). -->
+        <test.forkCount>3</test.forkCount>
+        <!-- Tag serial chạy ở lượt tuần tự (serial-tests). Profile quick bỏ thêm tag slow và perf ở cả hai lượt. -->
+        <test.excludedGroups>serial</test.excludedGroups>
+        <test.serialExcludedGroups/>
     </properties>
 
     <dependencyManagement>
@@ -260,6 +265,48 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- Lớp test được chia động cho các fork; JVM giữ lại để container và context Spring dùng tiếp. -->
+                    <forkCount>${test.forkCount}</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <excludedGroups>${test.excludedGroups}</excludedGroups>
+                </configuration>
+                <executions>
+                    <!-- Lớp có test đo thời gian (tag serial) chạy một JVM sau lượt song song, để số đo không bị
+                         fork khác làm nhiễu. -->
+                    <execution>
+                        <id>serial-tests</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <forkCount>1</forkCount>
+                            <!-- RequirementsCoverage chạy trước làm nóng JVM cho DriveHealthIndicatorTest (chờ probe 2 s). -->
+                            <runOrder>reversealphabetical</runOrder>
+                            <groups>serial</groups>
+                            <!-- override: không kế thừa excludedGroups=serial của cấu hình chung. -->
+                            <excludedGroups combine.self="override">${test.serialExcludedGroups}</excludedGroups>
+                            <!-- Chạy -Dtest=<lớp không có tag serial> thì lượt này không có test, không coi là lỗi. -->
+                            <failIfNoSpecifiedTests>false</failIfNoSpecifiedTests>
+                            <failIfNoTests>false</failIfNoTests>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Chạy nhanh ở máy dev: mvn verify -Pquick bỏ test tag slow và perf. CI vẫn chạy đủ. -->
+        <profile>
+            <id>quick</id>
+            <properties>
+                <test.excludedGroups>serial,slow,perf</test.excludedGroups>
+                <test.serialExcludedGroups>slow,perf</test.serialExcludedGroups>
+            </properties>
+        </profile>
+    </profiles>
 </project>

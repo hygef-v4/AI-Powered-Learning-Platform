@@ -1,5 +1,6 @@
 package edu.aiplatform.grading.repository;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,11 +9,6 @@ import edu.aiplatform.grading.model.GradingFeedback;
 import edu.aiplatform.grading.model.GradingProposal;
 import edu.aiplatform.shared.error.ApiException;
 import org.flywaydb.core.Flyway;
-import org.testcontainers.images.builder.Transferable;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.io.UncheckedIOException;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -29,19 +25,14 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 
 /** Real owner migrations/app grants and committed versions, in a disposable database only. */
 @Testcontainers(disabledWithoutDocker = true)
 class EvaluationVersionIntegrationTest {
-    static final String APP_PASSWORD = UUID.randomUUID().toString();
-    static final String MIGRATOR_PASSWORD = UUID.randomUUID().toString();
-    @Container
-    static final PostgreSQLContainer<?> DB = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withEnv("POSTGRES_APP_PASSWORD", APP_PASSWORD)
-            .withEnv("POSTGRES_MIGRATOR_PASSWORD", MIGRATOR_PASSWORD)
-            .withCopyToContainer(rolesScript(), "/docker-entrypoint-initdb.d/01-roles.sh");
+    static final SharedPostgres.Database DB = SharedPostgres.createDatabaseWithRoles();
+    static final String APP_PASSWORD = DB.getAppPassword();
+    static final String MIGRATOR_PASSWORD = DB.getMigratorPassword();
     static JdbcTemplate owner;
     static AnnotationConfigApplicationContext context;
     static IEvaluationRepository evaluationRepository;
@@ -128,16 +119,6 @@ class EvaluationVersionIntegrationTest {
     Evaluation read(UUID id) {
         return transactionTemplate
                 .execute(status -> evaluationRepository.findById(id).orElseThrow());
-    }
-
-    private static Transferable rolesScript() {
-        try {
-            return Transferable
-                    .of(Files.readString(Path.of("..", "infra", "postgres", "init", "01-roles.sh"))
-                            .replace("\r", ""), 0755);
-        } catch (IOException failure) {
-            throw new UncheckedIOException(failure);
-        }
     }
 
     @Test

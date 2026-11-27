@@ -1658,3 +1658,8 @@ Chỉ sửa tài liệu, không chạy test, không commit/push/deploy. Security
 
 - [x] Giữ đề xuất chỉ tự xác nhận các tiêu chí có điểm khớp với điểm gắn với nhận xét hiện tại. Hiện cảnh báo khi lưu thay đổi của bài đã công bố.
 - [x] 242 kiểm thử frontend U09, TypeScript và ESLint phạm vi đạt. [Kế hoạch và kiểm tra](construction/plans/code-generation-plan/2026-11-26-u09-publication-review-followup.md).
+
+## 2026-11-27 — Tăng tốc bộ test backend
+
+- [x] Một container PostgreSQL dùng chung cho mỗi JVM test, mỗi lớp test một database riêng (`SharedPostgres`). Surefire chạy 3 fork, lượt `serial-tests` cho lớp có tag `serial`, profile `quick` bỏ tag `slow` và `perf`. Không đổi code production.
+- [x] `mvn verify` 2.750 test: 29:12 → 15:02, 0 lỗi, guard CI qua. [Kết quả](construction/build-and-test/2026-11-27/2026-11-27-backend-test-speed-results.md). Chưa commit, chưa đo trên runner CI.

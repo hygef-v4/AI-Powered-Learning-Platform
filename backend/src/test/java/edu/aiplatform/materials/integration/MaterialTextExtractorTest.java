@@ -56,6 +56,7 @@ class MaterialTextExtractorTest {
     }
 
     @Test
+    @Tag("slow")
     void extractsActualDocxInBoundedChildJvm() throws Exception {
         byte[] bytes;
         try (var document = new XWPFDocument();
@@ -72,6 +73,7 @@ class MaterialTextExtractorTest {
     }
 
     @Test
+    @Tag("slow")
     void extractsActualPptx() throws Exception {
         byte[] bytes;
         try (var document = new XMLSlideShow();
@@ -88,6 +90,7 @@ class MaterialTextExtractorTest {
     }
 
     @Test
+    @Tag("slow")
     void extractsActualPdfAndCountsPages() throws Exception {
         byte[] bytes;
         try (var document = new PDDocument();
@@ -112,6 +115,7 @@ class MaterialTextExtractorTest {
     }
 
     @Test
+    @Tag("slow")
     void extractsActualXlsxAcrossSheetsUsingCachedFormulaValues() throws Exception {
         byte[] bytes;
         try (var workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
@@ -135,6 +139,7 @@ class MaterialTextExtractorTest {
     }
 
     @Test
+    @Tag("slow")
     void extractsFiftyMegabyteImageAndTextPdfWithinTwoMinutes() throws Exception {
         byte[] bytes;
         var random = new java.util.Random(20261108L);
@@ -173,6 +178,7 @@ class MaterialTextExtractorTest {
     }
 
     @Test
+    @Tag("slow")
     void imageOnlyPdfDoesNotInventTextThroughOcr() throws Exception {
         byte[] bytes;
         var image = new java.awt.image.BufferedImage(600, 80, java.awt.image.BufferedImage.TYPE_INT_RGB);

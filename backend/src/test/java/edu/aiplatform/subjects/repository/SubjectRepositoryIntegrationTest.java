@@ -1,5 +1,6 @@
 package edu.aiplatform.subjects.repository;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -47,7 +48,6 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -79,11 +79,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Testcontainers(disabledWithoutDocker = true)
 class SubjectRepositoryIntegrationTest {
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("u04_subjects_test")
-                    .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabase();
 
     private static final String SCHEMA =
             "u04_subjects_" + UUID.randomUUID().toString().replace("-", "");
