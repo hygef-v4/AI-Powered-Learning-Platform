@@ -4,6 +4,7 @@ import {ClassDetailRoute, ClassesRoute} from "@/features/academics/pages/ClassRo
 import type {CourseClassView} from "@/features/academics/model/types";
 
 vi.mock("next/navigation", () => ({useRouter: () => ({push: vi.fn()}), useSearchParams: () => new URLSearchParams(window.location.search)}));
+vi.mock("@/features/identity/hooks/SessionProvider", () => ({useSession: () => ({status: "authenticated", profile: {role: "TEACHER"}})}));
 afterEach(() => vi.unstubAllGlobals());
 
 function course(id = "c"): CourseClassView {

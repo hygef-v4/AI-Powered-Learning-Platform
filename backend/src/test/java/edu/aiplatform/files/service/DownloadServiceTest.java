@@ -21,9 +21,8 @@ class DownloadServiceTest {
 
     final DownloadTokenService tokens = mock(DownloadTokenService.class);
     final IStorage storage = mock(IStorage.class);
-    final FileAudit fileAudit = mock(FileAudit.class);
     final IArtifactDownloadPolicy policy = mock(IArtifactDownloadPolicy.class);
-    final DownloadService service = new DownloadService(tokens, storage, fileAudit, java.util.List.of(policy));
+    final DownloadService service = new DownloadService(tokens, storage, java.util.List.of(policy));
     final Actor student = new Actor(UUID.randomUUID(), Role.STUDENT);
 
     @org.junit.jupiter.api.BeforeEach
@@ -35,7 +34,7 @@ class DownloadServiceTest {
     void materialDownloadFailsClosedWithoutAnOwnerPolicy() {
         when(tokens.resolve("tok")).thenReturn(Optional.of(new DownloadTokenService.Grant("f", student.accountId())));
         when(storage.loadMetadata("f")).thenReturn(Optional.of(meta("application/pdf", "a.pdf")));
-        assertThatThrownBy(() -> new DownloadService(tokens, storage, fileAudit).open(student, "tok"))
+        assertThatThrownBy(() -> new DownloadService(tokens, storage).open(student, "tok"))
                 .isInstanceOfSatisfying(ApiException.class, failure -> assertThat(failure.readCode()).isEqualTo("FILE_ACCESS_UNAVAILABLE"));
         org.mockito.Mockito.verify(storage, org.mockito.Mockito.never()).open("f");
     }
@@ -61,7 +60,6 @@ class DownloadServiceTest {
 
         assertThatThrownBy(() -> service.open(student, "tok")).isInstanceOf(ApiException.class)
                 .extracting("status").isEqualTo(HttpStatus.NOT_FOUND);
-        verify(fileAudit).downloadWrongAccount(student.accountId());
     }
 
     @Test
@@ -72,7 +70,6 @@ class DownloadServiceTest {
 
         assertThatThrownBy(() -> service.open(student, "tok")).isInstanceOf(ApiException.class)
                 .extracting("status").isEqualTo(HttpStatus.GONE);
-        verify(fileAudit).downloadAbusive(student.accountId());
     }
 
     @Test

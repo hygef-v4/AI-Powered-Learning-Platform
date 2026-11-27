@@ -66,17 +66,18 @@ export function AssignmentNav() {
             {outline.entries.map((entry) => {
               const problem = entry.depth === 1;
               // Văn bản ngoài mọi mục: mấy chữ đầu rồi "…", chữ thường, không có "+" (yêu cầu 2026-11-04).
-              const loose = entry.depth === 0;
+              const loose = entry.depth === 0 || !!entry.loose;
               // Như trong trang: số rồi tiêu đề; mục chưa đặt tên chỉ có số.
               const title = loose ? entry.title || "…" : entry.title ? `${entry.number} ${entry.title}` : entry.number;
               const active = activeId === entry.id;
               return (
                 <li key={entry.id} className="group/row flex items-center">
                   <button type="button" title={title} aria-current={active ? "true" : undefined}
-                    style={problem || loose ? undefined : { paddingLeft: `${0.625 + (entry.depth - 1) * 0.875}rem` }}
+                    style={problem || entry.depth === 0 ? undefined : { paddingLeft: `${0.625 + (entry.depth - 1) * 0.875}rem` }}
                     onClick={() => { setActiveId(entry.id); showPart(entry.id); }}
                     className={cx("flex min-w-0 flex-1 items-center rounded-lg py-1.5 text-left text-[13px] whitespace-nowrap transition-colors",
-                      problem ? "px-2.5 font-semibold text-ink" : loose ? "px-2.5 text-body" : "pr-2.5 text-body md:group-data-[collapsed]/sidebar:!pl-2.5",
+                      problem && !loose ? "px-2.5 font-semibold text-ink" : entry.depth === 0 ? "px-2.5 text-body"
+                        : "pr-2.5 text-body md:group-data-[collapsed]/sidebar:!pl-2.5",
                       active ? "bg-primary-soft" : "hover:bg-sunken")}>
                     <span className={cx(WHEN_COLLAPSED, "w-full text-center font-mono text-xs tabular-nums", problem ? "font-bold" : "text-muted")}>{loose ? "…" : <SectionNumber value={entry.number} />}</span>
                     <span className={cx(WHEN_OPEN, "min-w-0 truncate")}>

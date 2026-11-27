@@ -110,7 +110,8 @@ public class AssignmentRepository {
     }
 
     private int updateRow(Assignment a) {
-        return jdbc.sql("update assignments set diagram_enabled = :diagramEnabled, grading_mode = :gradingMode, "
+        return jdbc.sql("update assignments set diagram_enabled = :diagramEnabled, submission_mode = :submissionMode, "
+                        + "grading_mode = :gradingMode, "
                         + "title = :title, instructions = :instructions, skeleton = cast(:skeleton as jsonb), "
                         + "parts = cast(:parts as jsonb), required_diagrams = cast(:required as jsonb), "
                         + "reference_material_ids = cast(:materials as jsonb), activity_monitoring_enabled = :activity, "

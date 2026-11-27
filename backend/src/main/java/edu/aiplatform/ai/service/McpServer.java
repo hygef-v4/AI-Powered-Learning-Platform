@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.ai.service.McpCredentialService.McpPrincipal;
+import edu.aiplatform.ai.contract.AiJsonRecovery;
 import edu.aiplatform.ai.contract.McpToolDefinition;
 import edu.aiplatform.ai.contract.McpToolKind;
 import edu.aiplatform.ai.contract.McpToolResult;
@@ -181,7 +182,10 @@ public class McpServer {
         if (countBytes(args.toString()) > MAX_ARGS_BYTES) {
             return buildError(id, INVALID_PARAMS, "Tham số vượt 64 KB");
         }
-        Optional<String> invalid = schemas.validateToolArguments(entry.get().definition().parameterSchema(), args);
+        // Một số agent gửi tham số object (proposal, feedback) dưới dạng chuỗi JSON: đổi lại theo schema của tool.
+        String parameterSchema = entry.get().definition().parameterSchema();
+        args = coerceArguments(parameterSchema, args);
+        Optional<String> invalid = schemas.validateToolArguments(parameterSchema, args);
         if (invalid.isPresent()) {
             // Reason code only: the validator message can echo agent-supplied property names.
             return buildError(id, INVALID_PARAMS, "Tham số không đúng schema: " + invalid.get());
@@ -245,6 +249,18 @@ public class McpServer {
             return json.writeValueAsString(content);
         } catch (JsonProcessingException e) {
             return "";
+        }
+    }
+
+    // Đổi tham số dạng chuỗi JSON sang object/array mà schema của tool yêu cầu; schema không đọc được thì giữ nguyên.
+    private JsonNode coerceArguments(String parameterSchema, JsonNode args) {
+        if (parameterSchema == null || parameterSchema.isBlank()) {
+            return args;
+        }
+        try {
+            return AiJsonRecovery.coerceToSchema(json, args, json.readTree(parameterSchema));
+        } catch (JsonProcessingException e) {
+            return args;
         }
     }
 

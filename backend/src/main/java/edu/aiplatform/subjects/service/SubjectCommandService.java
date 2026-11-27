@@ -94,7 +94,6 @@ public class SubjectCommandService {
             return before;
         }
         saveSubject(after, version);
-        subjectAuditRecorder.recordInformationUpdated(actor, before, after);
         return after;
     }
 
@@ -130,7 +129,6 @@ public class SubjectCommandService {
         }
         Subject after = before.changeManager(command.managerId(), clock.instant());
         saveSubject(after, version);
-        subjectAuditRecorder.recordManagerChanged(actor, before, after);
         return after;
     }
 

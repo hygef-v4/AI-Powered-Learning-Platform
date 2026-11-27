@@ -84,6 +84,12 @@ public class BackupRunRepository {
                 .param("id", id).param("now", convertTimestamp(now)).update();
     }
 
+    /** Thời điểm chụp của base backup thành công cũ nhất còn giữ; WAL trước đó không còn dùng được. */
+    public Optional<Instant> findOldestRetainedSnapshot() {
+        return jdbc.sql("select min(snapshot_at) from backup_runs where state = 'SUCCESS' and purged_at is null")
+                .query(java.sql.Timestamp.class).optional().map(java.sql.Timestamp::toInstant);
+    }
+
     public Optional<BackupRun> findLatestRun() {
         return jdbc.sql("select * from backup_runs order by scheduled_for desc limit 1")
                 .query(BackupRunRepository::map).optional();

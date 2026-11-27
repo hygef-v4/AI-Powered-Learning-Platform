@@ -54,7 +54,6 @@ public class UploadService {
     private final ContentInspector inspector;
     private final IStorage storage;
     private final FileRefSigner signer;
-    private final FileAudit fileAudit;
     private final IJob jobs;
     private final Clock clock;
     private final Path tmpDir;
@@ -62,14 +61,13 @@ public class UploadService {
     private UnattachedFiles unattached;
 
     public UploadService(IAuthorization authorization, PurposePolicy policy, ContentInspector inspector,
-                         IStorage storage, FileRefSigner signer, FileAudit fileAudit, IJob jobs, Clock clock,
+                         IStorage storage, FileRefSigner signer, IJob jobs, Clock clock,
                          FilesProperties properties) {
         this.authorization = authorization;
         this.policy = policy;
         this.inspector = inspector;
         this.storage = storage;
         this.signer = signer;
-        this.fileAudit = fileAudit;
         this.jobs = jobs;
         this.clock = clock;
         this.tmpDir = Path.of(properties.uploadTmpDir() == null || properties.uploadTmpDir().isBlank()
@@ -99,8 +97,6 @@ public class UploadService {
             }
             Optional<FileType> type = inspector.detect(temp, name);
             if (type.isEmpty() || !limits.allowedTypes().contains(type.get())) {
-                fileAudit.uploadDenied(actor.accountId(), "FILE_TYPE_NOT_ALLOWED",
-                        Map.of("purpose", purpose.name(), "detected", type.map(Enum::name).orElse("UNKNOWN")));
                 throw ApiException.createUnsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "Loại tệp không được phép");
             }
             if (!storage.isAvailable()) {
@@ -133,8 +129,6 @@ public class UploadService {
             Files.write(temp, content);
             Optional<FileType> type = inspector.detect(temp, name);
             if (type.isEmpty() || !limits.allowedTypes().contains(type.get())) {
-                fileAudit.uploadDenied(actor.accountId(), "FILE_TYPE_NOT_ALLOWED",
-                        Map.of("purpose", purpose.name(), "detected", type.map(Enum::name).orElse("UNKNOWN")));
                 throw ApiException.createUnsupportedMediaType("FILE_TYPE_NOT_ALLOWED", "Loại tệp không được phép");
             }
             return type.get().readMediaType();
@@ -152,14 +146,11 @@ public class UploadService {
             throw ApiException.createUnavailable("UPLOAD_AUTHORIZATION_UNAVAILABLE", "Chưa kiểm tra được quyền, thử lại sau");
         }
         if (!decision.allowed() || !policy.canUpload(actor.role(), purpose)) {
-            fileAudit.uploadDenied(actor.accountId(), "ROLE_NOT_ALLOWED", Map.of("purpose", purpose.name()));
             throw ApiException.createForbidden("FILE_UPLOAD_FORBIDDEN");
         }
     }
 
     private ApiException createTooLargeError(Actor actor, ArtifactPurpose purpose, PurposeLimits limits) {
-        fileAudit.uploadDenied(actor.accountId(), "FILE_TOO_LARGE",
-                Map.of("purpose", purpose.name(), "maxSizeMb", limits.maxSizeMb()));
         return ApiException.createPayloadTooLarge("FILE_TOO_LARGE", "Tệp vượt " + limits.maxSizeMb() + " MB");
     }
 

@@ -20,7 +20,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 | Thử lại | Queue `jobs.retry.*` có TTL, dead-letter về `jobs` | Không cần bảng job hay plugin |
 | Sweeper, scanner | `@Scheduled` trong worker | Một worker, không cần khóa phân tán |
 | Cài đặt hệ thống | Bảng `system_settings` (`value` jsonb) + cache trong bộ nhớ TTL 30 giây | Ít mục, đọc nhiều sửa ít |
-| Dump database | `pg_dump` và `pg_restore` của PostgreSQL 16 cài trong image worker | Công cụ chuẩn, snapshot nhất quán |
+| Backup database | `pg_basebackup` của PostgreSQL 16 cài trong image worker, WAL archiving của PostgreSQL; khôi phục bằng `BackupRestoreTool` và `scripts/backup/restore-pitr.sh` (từ 2026-11-26, thay `pg_dump`) | Công cụ chuẩn, snapshot nhất quán |
 | Mã hóa backup | JCE có sẵn trong Java: AES-256-GCM cho dữ liệu, RSA-OAEP-256 bọc khóa | Không thêm thư viện; private key giữ ngoài VPS |
 | Test | JUnit 5; Testcontainers (PostgreSQL, RabbitMQ) cho integration test do tester viết | Theo NFR-004 |
 

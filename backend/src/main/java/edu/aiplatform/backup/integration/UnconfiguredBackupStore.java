@@ -5,8 +5,13 @@ import edu.aiplatform.files.service.StorageUnavailableException;
 import java.nio.file.Path;
 import java.util.UUID;
 
-/** Production thiếu thư mục backup trên Drive: lần chạy lỗi tạm, hết lượt thì {@code FAILED} và báo Admin. */
+/**
+ * Chưa cấu hình Google Drive: lịch backup không tạo lần chạy, worker không đẩy WAL; lần chạy cũ còn dở thì lỗi tạm
+ * rồi {@code FAILED}.
+ */
 public class UnconfiguredBackupStore implements IBackupStore {
+
+    private static final String MESSAGE = "Chưa cấu hình Google Drive cho backup";
 
     @Override
     public boolean isAvailable() {
@@ -15,11 +20,21 @@ public class UnconfiguredBackupStore implements IBackupStore {
 
     @Override
     public StoredArchive putArchive(UUID runId, Path archive) {
-        throw new StorageUnavailableException("Chưa cấu hình thư mục backup trên Drive", null);
+        throw new StorageUnavailableException(MESSAGE, null);
     }
 
     @Override
     public void deleteArchive(String runId) {
-        throw new StorageUnavailableException("Chưa cấu hình thư mục backup trên Drive", null);
+        throw new StorageUnavailableException(MESSAGE, null);
+    }
+
+    @Override
+    public StoredArchive putWal(String name, Path file) {
+        throw new StorageUnavailableException(MESSAGE, null);
+    }
+
+    @Override
+    public void deleteWal(String ref) {
+        throw new StorageUnavailableException(MESSAGE, null);
     }
 }

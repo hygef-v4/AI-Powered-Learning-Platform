@@ -12,7 +12,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.Role;
@@ -34,8 +33,7 @@ class SubjectScopeServiceTest {
     private final IAudit audit = mock(IAudit.class);
     private final SubjectScopeService subjectScopeService =
             new SubjectScopeService(
-                    subjectRepository, new SubjectAuditRecorder(
-                            audit), Clock.fixed(NOW, ZoneOffset.UTC));
+                    subjectRepository, Clock.fixed(NOW, ZoneOffset.UTC));
     private final Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
 
     @Test
@@ -102,14 +100,7 @@ class SubjectScopeServiceTest {
                                         after.id().equals(second.id())
                                                 && after.managerId() == null),
                         org.mockito.ArgumentMatchers.eq(1L));
-        verify(audit, times(2))
-                .record(
-                        argThat(
-                                (AuditEvent event) ->
-                                        event.action().equals("SUBJECT_MANAGER_CHANGED")
-                                                && event.actorId().equals(admin.accountId())
-                                                && manager.equals(
-                                                        event.details().get("oldManagerId"))));
+        verifyNoInteractions(audit);
     }
 
     @Test
@@ -148,36 +139,17 @@ class SubjectScopeServiceTest {
                 () -> subjectScopeService.releaseManagerAssignments(
                         manager, admin)).isSameAs(failure);
 
-        var order = org.mockito.Mockito.inOrder(subjectRepository, audit);
+        var order = org.mockito.Mockito.inOrder(subjectRepository);
         order.verify(subjectRepository).findSubjectsManagedBy(manager);
         order.verify(subjectRepository).findByIdForUpdate(subjects.get(0).id());
         order
                 .verify(subjectRepository)
                 .updateSubject(argThat(s -> s.id().equals(subjects.get(0).id())), anyLong());
-        order.verify(audit).record(argThat(e -> e.objectId().equals(subjects.get(0).id().toString())));
         order.verify(subjectRepository).findByIdForUpdate(subjects.get(1).id());
         order
                 .verify(subjectRepository)
                 .updateSubject(argThat(s -> s.id().equals(subjects.get(1).id())), anyLong());
-        verify(audit, times(1)).record(any());
-    }
-
-    @Test
-    void secondReleaseAuditFailureIsNotConvertedIntoSuccessfulResult() {
-        UUID manager = UUID.randomUUID();
-        List<Subject> subjects = managedPair(manager);
-        var failure = new IllegalStateException("second audit unavailable");
-        when(subjectRepository.updateSubject(any(), anyLong())).thenReturn(true);
-        org.mockito.Mockito.doAnswer(call -> {
-            AuditEvent event = call.getArgument(0);
-            if (event.objectId().equals(subjects.get(1).id().toString())) throw failure;
-            return null;
-        }).when(audit).record(any());
-        assertThatThrownBy(
-                () -> subjectScopeService.releaseManagerAssignments(
-                        manager, admin)).isSameAs(failure);
-        verify(subjectRepository, times(2)).updateSubject(any(), anyLong());
-        verify(audit, times(2)).record(any());
+        verifyNoInteractions(audit);
     }
 
     private List<Subject> managedPair(UUID manager) {

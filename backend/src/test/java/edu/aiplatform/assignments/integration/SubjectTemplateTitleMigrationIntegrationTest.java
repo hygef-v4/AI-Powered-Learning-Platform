@@ -13,6 +13,7 @@ import edu.aiplatform.assignments.model.Assignment;
 import edu.aiplatform.assignments.model.AssignmentOrigin;
 import edu.aiplatform.assignments.repository.AssignmentRepository;
 import edu.aiplatform.shared.error.ApiException;
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
@@ -24,17 +25,13 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Migration BR-U07-102 trên PostgreSQL thật: đổi tên đề mẫu đã trùng rồi unique index chặn tên trùng mới. */
 @Testcontainers(disabledWithoutDocker = true)
 class SubjectTemplateTitleMigrationIntegrationTest {
 
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
 
     private static final Instant T0 = Instant.parse("2026-10-01T00:00:00Z");
 
@@ -49,7 +46,6 @@ class SubjectTemplateTitleMigrationIntegrationTest {
         DriverManagerDataSource dataSource = new DriverManagerDataSource(DATABASE.getJdbcUrl(),
                 DATABASE.getUsername(), DATABASE.getPassword());
         jdbc = new JdbcTemplate(dataSource);
-        jdbc.execute("create role app nologin");
         for (String table : new String[] {"accounts", "subjects", "course_classes"}) {
             jdbc.execute("create table " + table + " (id uuid primary key)");
         }

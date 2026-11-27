@@ -139,7 +139,7 @@ export function GroupWorkspacePage({ documentId }: { documentId: string }) {
   const download = async () => {
     if (!view) return;
     try {
-      const blob = await downloadDocx(view.documentId, false);
+      const blob = await downloadDocx(view.documentId, false, groupDocument?.blocks ?? []);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

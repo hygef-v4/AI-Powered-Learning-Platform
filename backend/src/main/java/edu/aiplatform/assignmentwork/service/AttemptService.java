@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import edu.aiplatform.academics.contract.ClassRef;
 import edu.aiplatform.assignments.contract.AssignmentContent;
 import edu.aiplatform.assignments.contract.AssignmentScope;
+import edu.aiplatform.assignments.contract.DiagramPngs;
 import edu.aiplatform.assignments.contract.AssignmentView;
 import edu.aiplatform.assignments.contract.BlockOrigin;
 import edu.aiplatform.assignments.contract.BlockType;
@@ -45,7 +46,9 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /** Bắt đầu lượt, làm và tự lưu, nhập/xuất DOCX, nộp (F3–F6; BR-U08-10…16, 20…22). */
 @Service
@@ -60,10 +63,12 @@ public class AttemptService {
     private final IArtifact artifacts;
     private final Clock clock;
     private final String publicUrl;
+    private final TransactionTemplate writeTransaction;
 
     public AttemptService(WorkAccess access, AttemptRepository attempts, AttemptSubmitter submitter,
                           IAssignmentQuery assignments, IDocumentModel documents, IDocx docx, IArtifact artifacts, Clock clock,
-                          @Value("${platform.assignments.public-url:http://localhost:8088}") String publicUrl) {
+                          @Value("${platform.assignments.public-url:http://localhost:8088}") String publicUrl,
+                          PlatformTransactionManager transactionManager) {
         this.access = access;
         this.attempts = attempts;
         this.submitter = submitter;
@@ -73,6 +78,7 @@ public class AttemptService {
         this.artifacts = artifacts;
         this.clock = clock;
         this.publicUrl = publicUrl.endsWith("/") ? publicUrl.substring(0, publicUrl.length() - 1) : publicUrl;
+        this.writeTransaction = new TransactionTemplate(transactionManager);
     }
 
     /** F3: trả lượt đang làm nếu có; không thì kiểm điều kiện và tạo lượt mới từ khung (BR-U08-10…12). */
@@ -156,22 +162,43 @@ public class AttemptService {
         return attemptView(attempt, view);
     }
 
-    /** F4 (P1): chủ lượt, còn làm, chưa quá hạn cộng ân hạn, {@code contentVersion} khớp, không đụng khung. */
-    @Transactional
+    /**
+     * F4 (P1): chủ lượt, còn làm, chưa quá hạn cộng ân hạn, {@code contentVersion} khớp, không đụng khung.
+     *
+     * <p>Làm sạch và kiểm tài liệu (vài trăm mili giây CPU với 2.000 khối) chạy ngoài transaction để không giữ kết nối DB
+     * trong lúc chờ CPU khi nhiều người cùng lưu (TC-PERF-004). Bước ghi khóa lượt và kiểm lại trạng thái, hạn, phiên bản:
+     * phiên bản không đổi nghĩa là nội dung đã kiểm vẫn dựa trên đúng bản đang lưu; khung đề không sửa được khi bài đang
+     * mở nhận bài, và bước ghi kiểm lại bài còn mở.
+     */
     public WorkViews.Saved saveAttempt(Actor actor, UUID attemptId, long contentVersion, DocumentModel content) {
-        AssignmentAttempt attempt = loadWritable(actor, attemptId, "ATTEMPT_SAVED");
-        if (attempt.contentVersion() != contentVersion) {
+        // Bước 1: đọc và kiểm sớm, không khóa.
+        AssignmentAttempt current = access.requireOwnAttempt(actor, attemptId, "ATTEMPT_SAVED");
+        requireWritable(current);
+        if (current.contentVersion() != contentVersion) {
             throw createVersionConflictError();
         }
-        AssignmentContent assignment = WorkAccess.call(() -> assignments.getContent(attempt.assignmentId()))
-                .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND"));
-        DocumentModel stored = prepare(actor, attempt, assignment.skeleton(), content);
+        DocumentModel skeleton = WorkAccess.call(() -> assignments.getContent(current.assignmentId()))
+                .orElseThrow(() -> ApiException.createNotFound("NOT_FOUND")).skeleton();
+        // Bước 2: làm sạch và kiểm, chưa giữ kết nối.
+        DocumentModel pending = validateDraft(current, skeleton, content);
+        // Bước 3: khóa, kiểm lại, gắn ảnh và ghi trong một transaction ngắn.
         Instant now = clock.instant();
-        if (attempts.saveContent(attempt.id(), stored, contentVersion, now) != 1) {
-            throw createVersionConflictError();
-        }
-        return new WorkViews.Saved(attempt.id(), contentVersion + 1, now, DocumentFiles.hideFiles(stored),
-                submitIssues(attempt, assignment.skeleton(), stored));
+        SavedDraft saved = writeTransaction.execute(status -> {
+            AssignmentAttempt attempt = loadWritable(actor, attemptId, "ATTEMPT_SAVED");
+            if (attempt.contentVersion() != contentVersion) {
+                throw createVersionConflictError();
+            }
+            DocumentModel stored = attachAndMerge(actor, attempt, skeleton, pending);
+            if (attempts.saveContent(attempt.id(), stored, contentVersion, now) != 1) {
+                throw createVersionConflictError();
+            }
+            return new SavedDraft(attempt, stored);
+        });
+        return new WorkViews.Saved(saved.attempt().id(), contentVersion + 1, now, DocumentFiles.hideFiles(saved.stored()),
+                submitIssues(saved.attempt(), skeleton, saved.stored()));
+    }
+
+    private record SavedDraft(AssignmentAttempt attempt, DocumentModel stored) {
     }
 
     /** F6: nộp tay (BR-U08-20…22); nộp lặp trả cùng biên nhận. */
@@ -226,11 +253,16 @@ public class AttemptService {
     /** F5 xuất: chủ lượt hoặc giảng viên chính của lớp; sơ đồ kèm mã {@code attempt/attemptId/blockId}. */
     @Transactional(readOnly = true)
     public Export export(Actor actor, UUID attemptId) {
+        return export(actor, attemptId, Map.of());
+    }
+
+    /** {@code diagramPngs}: ảnh sơ đồ trình duyệt vẽ cho sơ đồ chưa có ảnh lưu sẵn (yêu cầu 2026-11-27). */
+    public Export export(Actor actor, UUID attemptId, Map<String, String> diagramPngs) {
         AssignmentAttempt attempt = access.requireReadableAttempt(actor, attemptId, "ATTEMPT_DOCX_EXPORTED");
         // Bài có chấm không còn khái niệm lượt (yêu cầu 2026-11-10): tên tệp chỉ có tên bài; bài Luyện tập vẫn ghi lượt.
         String title = attempt.snapshot().gradingMode() == GradingMode.PRACTICE
                 ? attempt.snapshot().title() + " – Lượt " + attempt.attemptNo() : attempt.snapshot().title();
-        byte[] bytes = docx.export(attempt.content(), title, createLinker(attempt.id()));
+        byte[] bytes = docx.export(DiagramPngs.fillMissing(attempt.content(), diagramPngs), title, createLinker(attempt.id()));
         return new Export(buildFileName(title), bytes);
     }
 
@@ -258,6 +290,11 @@ public class AttemptService {
      * người học trên sơ đồ của người soạn nằm trong phần (yêu cầu 2026-10-21).
      */
     private DocumentModel prepare(Actor actor, AssignmentAttempt attempt, DocumentModel skeleton, DocumentModel content) {
+        return attachAndMerge(actor, attempt, skeleton, validateDraft(attempt, skeleton, content));
+    }
+
+    // Làm sạch và kiểm bài làm với khung; chỉ tính toán, không đọc ghi DB nên chạy được ngoài transaction.
+    private DocumentModel validateDraft(AssignmentAttempt attempt, DocumentModel skeleton, DocumentModel content) {
         if (content == null || content.blocks() == null) {
             throw ApiException.createBadRequest("DOCUMENT_INVALID", "Bài làm không hợp lệ");
         }
@@ -268,6 +305,12 @@ public class AttemptService {
         if (!errors.isEmpty()) {
             throw WorkProblem.createIssuesProblem(HttpStatus.BAD_REQUEST, "DOCUMENT_INVALID", "Bài làm có lỗi", errors);
         }
+        return pending;
+    }
+
+    // Gắn ảnh mới tải lên (ghi DB) và lấy block của người soạn theo đề; gọi trong transaction ghi.
+    private DocumentModel attachAndMerge(Actor actor, AssignmentAttempt attempt, DocumentModel skeleton,
+                                         DocumentModel pending) {
         DocumentModel attached = DocumentFiles.resolveFiles(attempt.content(), pending,
                 ref -> artifacts.attach(new FileRef(ref), actor, ArtifactPurpose.DOCUMENT_IMAGE).fileId());
         Map<UUID, DocumentBlock> teacher = new HashMap<>();
@@ -295,10 +338,12 @@ public class AttemptService {
         ObjectNode content = original.content().deepCopy();
         content.set("xml", block.content().path("xml").deepCopy());
         content.set("diagramType", block.content().path("diagramType").deepCopy());
-        if (block.content().hasNonNull("svgPreview")) {
-            content.set("svgPreview", block.content().get("svgPreview").deepCopy());
-        } else {
-            content.remove("svgPreview");
+        for (String preview : List.of("svgPreview", "pngPreview", "studentEdited")) {
+            if (block.content().hasNonNull(preview)) {
+                content.set(preview, block.content().get(preview).deepCopy());
+            } else {
+                content.remove(preview);
+            }
         }
         return new DocumentBlock(original.id(), original.origin(), original.type(), content);
     }
@@ -323,6 +368,15 @@ public class AttemptService {
 
     private AssignmentAttempt loadWritable(Actor actor, UUID attemptId, String action) {
         AssignmentAttempt attempt = access.requireOwnAttemptForUpdate(actor, attemptId, action);
+        Instant deadline = requireWritable(attempt);
+        if (deadline.isAfter(attempt.deadlineAt())) {
+            attempts.extendDeadline(attempt.id(), deadline);
+        }
+        return attempt;
+    }
+
+    // Lượt còn làm, bài còn mở và chưa quá hạn cộng ân hạn; trả hạn hiệu lực (bài có thể đã được kéo dài hạn).
+    private Instant requireWritable(AssignmentAttempt attempt) {
         if (!attempt.hasInProgressStatus()) {
             throw ApiException.createConflict("ATTEMPT_SUBMITTED", "Lượt đã nộp, không sửa được");
         }
@@ -332,13 +386,10 @@ public class AttemptService {
         if (!WorkAccess.openForStudents(view)) {
             throw ApiException.createConflict("SUBMISSION_CLOSED", "Bài đã đóng nhận bài");
         }
-        if (deadline.isAfter(attempt.deadlineAt())) {
-            attempts.extendDeadline(attempt.id(), deadline);
-        }
         if (clock.instant().isAfter(deadline.plus(AssignmentAttempt.GRACE))) {
             throw ApiException.createConflict("DEADLINE_PASSED", "Đã quá hạn, không lưu được nữa");
         }
-        return attempt;
+        return deadline;
     }
 
     /** Hạn của lượt; bài được kéo dài hạn sau khi bắt đầu thì lượt nhận hạn mới (BR-U07-35). */

@@ -14,7 +14,7 @@ import type { useAssignmentPage } from "../hooks/useAssignmentPage";
 import { msg } from "@/i18n/msg";
 
 type Tab = "open" | "draft" | "finalized" | "closed";
-type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE";
+type Kind = "INDIVIDUAL" | "GROUP" | "PRACTICE" | "TEMPLATE";
 
 const TABS: { value: Tab; label: string; statuses: AssignmentStatus[]; empty: string }[] = [
   { value: "open", label: msg("assignments.components.AssignmentListCard.open"), statuses: ["OPEN", "SCHEDULED"], empty: msg("assignments.components.AssignmentListCard.noOpenAssignments") },
@@ -23,13 +23,14 @@ const TABS: { value: Tab; label: string; statuses: AssignmentStatus[]; empty: st
   { value: "finalized", label: msg("assignments.components.AssignmentListCard.finalized"), statuses: ["REVIEWED"], empty: msg("assignments.components.AssignmentListCard.noFinalizedAssignments") },
   { value: "closed", label: msg("assignments.components.AssignmentListCard.closed"), statuses: ["CLOSED", "RETIRED"], empty: msg("assignments.components.AssignmentListCard.noClosedAssignmentsYet") },
 ];
-const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: msg("assignments.components.AssignmentListCard.individual"), GROUP: msg("assignments.components.AssignmentListCard.group"), PRACTICE: msg("assignments.components.AssignmentListCard.practice") };
+const KIND_LABELS: Record<Kind, string> = { INDIVIDUAL: msg("assignments.components.AssignmentListCard.individual"), GROUP: msg("assignments.components.AssignmentListCard.group"), PRACTICE: msg("assignments.components.AssignmentListCard.practice"), TEMPLATE: msg("assignments.components.AssignmentListCard.template") };
 const PAGE_SIZE = 10;
 /** Thẻ lọc tại chỗ nên tải mọi bài một lần (kể cả bài đã đóng). */
 export const ALL_ASSIGNMENTS: ListFilter = { includeClosed: true };
 
 /** Loại bài như trên bảng Bài tập của sinh viên: bài luyện tập là loại riêng, còn lại theo cá nhân hay nhóm. */
 function classifyKind(row: AssignmentRow): Kind {
+  if (row.gradingMode === "TEMPLATE") return "TEMPLATE";
   return row.gradingMode === "PRACTICE" ? "PRACTICE" : row.submissionMode;
 }
 
@@ -40,8 +41,10 @@ function classifyKind(row: AssignmentRow): Kind {
  */
 export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof useAssignmentPage>; classId?: string }) {
   const router = useRouter();
-  const [tab, setTab] = useUrlState<Tab>("assignmentState", "open", ["open", "draft", "finalized", "closed"]);
-  const [kind, setKind] = useUrlState<Kind | "">("assignmentKind", "", ["", "INDIVIDUAL", "GROUP", "PRACTICE"]);
+  // Đề mẫu của môn không giao nên không bao giờ đóng: trang môn không có tab Đã đóng (yêu cầu 2026-11-26).
+  const tabs = classId ? TABS : TABS.filter((t) => t.value !== "closed");
+  const [tab, setTab] = useUrlState<Tab>("assignmentState", "open", tabs.map((t) => t.value));
+  const [kind, setKind] = useUrlState<Kind | "">("assignmentKind", "", ["", "INDIVIDUAL", "GROUP", "PRACTICE", "TEMPLATE"]);
   const [query, setQuery] = useUrlState<string>("assignmentQuery", "", undefined, "replace");
   const [pageValue, setPageValue] = useUrlState<string>("assignmentPage", "0", undefined, "replace");
   const pageNo = /^\d+$/.test(pageValue) && Number.isSafeInteger(Number(pageValue)) ? Number(pageValue) : 0;
@@ -61,12 +64,13 @@ export function AssignmentListCard({ page, classId }: { page: ReturnType<typeof 
     <Card as="section" padding="lg" className="flex flex-col gap-3.5" aria-label={msg("assignments.components.AssignmentListCard.assignmentList")}>
       <div className="flex flex-wrap items-center gap-3">
         <Segmented as="tab" ariaLabel={msg("assignments.components.AssignmentListCard.assignmentStatus")} value={tab} onChange={(value) => { setTab(value); setPageNo(0); }}
-          options={TABS.map((t) => ({ value: t.value, label: <>{t.label}{page.data && <span className="ml-1 tabular-nums text-muted">{items.filter((row) => isInTab(row, t.value)).length}</span>}</> }))} />
+          options={tabs.map((t) => ({ value: t.value, label: <>{t.label}{page.data && <span className="ml-1 tabular-nums text-muted">{items.filter((row) => isInTab(row, t.value)).length}</span>}</> }))} />
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          <Select aria-label={msg("assignments.components.AssignmentListCard.assignmentType")} value={kind} wrapperClassName="w-36" onChange={(e) => { setKind(e.target.value as Kind | ""); setPageNo(0); }}>
+          {/* Trang môn chỉ có đề mẫu (không có loại) nên không lọc theo loại. */}
+          {classId && <Select aria-label={msg("assignments.components.AssignmentListCard.assignmentType")} value={kind} wrapperClassName="w-36" onChange={(e) => { setKind(e.target.value as Kind | ""); setPageNo(0); }}>
             <option value="">{msg("assignments.components.AssignmentListCard.allTypes")}</option>
             {(Object.keys(KIND_LABELS) as Kind[]).map((value) => <option key={value} value={value}>{KIND_LABELS[value]}</option>)}
-          </Select>
+          </Select>}
           <TextInput type="search" icon="search" aria-label={msg("assignments.components.AssignmentListCard.findAssignments")} placeholder={msg("assignments.components.AssignmentListCard.searchByName")} value={query} wrapperClassName="w-56"
             onChange={(e) => { setQuery(e.target.value); setPageNo(0); }} />
         </div>

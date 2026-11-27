@@ -254,22 +254,72 @@ class AssignmentAiRevisionTest {
     }
 
     @Test
-    void emptyRevisionCannotBeApplied() {
+    void aiCanDeleteBlockTextAndInstructionsWhenAsked() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, vietnameseSkeleton(), false);
+        var snapshot = AssignmentDraftRevision.snapshot(a, f.rubricsOf(a.id()));
+
+        ObjectNode merged = AssignmentDraftRevision.merge(read("""
+                {"title":"","instructions":"","clearInstructions":true,"operations":[
+                 {"op":"UPDATE","ref":"b2","type":"PARAGRAPH","text":"  "}]}
+                """), snapshot.document());
+
+        assertThat(merged.path("instructions").asText()).isEmpty();
+        assertThat(merged.path("blocks")).extracting(b -> b.path("ref").asText()).doesNotContain("b2");
+    }
+
+    @Test
+    void revisedInstructionsReplaceTheCurrentOnes() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, vietnameseSkeleton(), true);
+        var snapshot = AssignmentDraftRevision.snapshot(a, f.rubricsOf(a.id()));
+        ObjectNode merged = AssignmentDraftRevision.merge(
+                read("{\"title\":\"\",\"instructions\":\"\",\"clearInstructions\":true,\"operations\":[]}"),
+                snapshot.document());
+        ObjectNode proposal = AssignmentDraftRevision.normalize(merged, true);
+        AssignmentAiDraft ready = ready(a, proposal, snapshot.blockRefs(), snapshot.document());
+
+        f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version(), false, false));
+
+        assertThat(f.store.get(a.id()).instructions()).isEmpty();
+    }
+
+    @Test
+    void instructionsEditedByHandAfterTheRequestAreKept() {
+        Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, vietnameseSkeleton(), true);
+        var snapshot = AssignmentDraftRevision.snapshot(a, f.rubricsOf(a.id()));
+        ObjectNode sent = snapshot.document().deepCopy();
+        sent.put("instructions", "Hướng dẫn lúc gửi");
+        ObjectNode proposal = AssignmentDraftRevision.normalize(AssignmentDraftRevision.merge(
+                read("{\"title\":\"\",\"instructions\":\"Hướng dẫn AI\",\"operations\":[]}"), sent), true);
+        AssignmentAiDraft ready = ready(a, proposal, snapshot.blockRefs(), sent);
+
+        f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(), new AssignmentCommands.ApplyDraft(a.version(), false, false));
+
+        assertThat(f.store.get(a.id()).instructions()).isEqualTo("Hướng dẫn");
+    }
+
+    @Test
+    void revisionThatDeletesEveryBlockIsOnlyAWarning() {
         Assignment a = f.put(AssignmentScope.CLASS, AssignmentStatus.DRAFT, vietnameseSkeleton(), true);
         ObjectNode proposal = AssignmentDraftRevision.normalize(read("{\"title\":\"x\",\"instructions\":\"\",\"blocks\":[]}"),
                 true);
-        AssignmentAiDraft ready = ready(a, proposal, JsonNodeFactory.instance.objectNode());
 
-        assertThatThrownBy(() -> f.aiDrafts.applyDraft(f.teacher, a.id(), ready.id(),
-                new AssignmentCommands.ApplyDraft(a.version(), true, true)))
-                .isInstanceOf(ApiException.class).extracting("code").isEqualTo("AI_DRAFT_INVALID");
-        assertThat(f.store.get(a.id()).skeleton()).isEqualTo(a.skeleton());
+        ObjectNode validation = AssignmentDraftRevision.validate(proposal, a.gradingMode());
+
+        assertThat(validation.path("status").asText()).isEqualTo("NEEDS_REVIEW");
+        assertThat(validation.path("issues").get(0).path("code").asText()).isEqualTo("PROPOSAL_EMPTY");
     }
 
     private AssignmentAiDraft ready(Assignment a, JsonNode proposal, JsonNode blockRefs) {
+        return ready(a, proposal, blockRefs, null);
+    }
+
+    private AssignmentAiDraft ready(Assignment a, JsonNode proposal, JsonNode blockRefs, JsonNode snapshot) {
         ObjectNode provenance = JsonNodeFactory.instance.objectNode().put("origin", "AI_TASK")
                 .put("mode", AssignmentDraftRevision.MODE);
         provenance.set("blockRefs", blockRefs);
+        if (snapshot != null) {
+            provenance.set("snapshot", snapshot);
+        }
         AssignmentAiDraft ready = new AssignmentAiDraft(UUID.randomUUID(), a.id(), AssignmentAiDraft.Origin.AI_TASK,
                 null, "r1", AssignmentAiDraft.Status.READY, proposal, provenance, a.version(), null,
                 f.teacher.accountId(), AssignmentFixtures.NOW, null);

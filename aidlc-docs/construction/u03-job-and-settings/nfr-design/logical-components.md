@@ -41,7 +41,6 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 | `GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY`, `GOOGLE_SHARED_DRIVE_ID` | Drive cho tệp đang dùng |
 | `GOOGLE_BACKUP_FOLDER_ID` | Thư mục backup riêng |
 | `U03_FILEREF_SECRET` | Khóa ký `FileRef` |
-| `U03_REQUIRE_DRIVE` | Production bắt buộc có Drive |
 | `U03_JOB_HANDLER_TIMEOUT` | Timeout mặc định của handler |
 | `U03_SETTINGS_CACHE_TTL` | 30 giây |
 | `U03_BACKUP_PUBLIC_KEY` | Public key RSA bọc khóa archive; tùy chọn, để trống thì archive không mã hóa |

@@ -76,7 +76,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Chọn môn, nhập mã, tên, mô tả; tùy chọn chọn giảng viên (ô tìm gọi `GET /api/v1/manager/teacher-candidates`; U05 gọi `IAccountLookup.findAccounts` với role `TEACHER`, `SUBJECT_MANAGER` và chỉ giữ người `ACTIVE`).
 3. Kiểm người gọi là Chủ nhiệm môn của môn và môn `ACTIVE` (BR-U05-10).
 4. Kiểm mã trong môn và học kỳ (BR-U05-11, từ 2026-11-14 xem F17); kiểm giảng viên nếu có (BR-U05-12).
-5. Tạo lớp `DRAFT`; ghi audit `CLASS_CREATED` (và `CLASS_TEACHER_CHANGED` nếu có giảng viên).
+5. Tạo lớp `DRAFT`; ghi audit `CLASS_<mã>_CREATED` (BR-U05-52).
 6. Class List gọi ngay `DRAFT`→`OPEN` cho lớp vừa tạo (F14, BR-U05-14), nên lớp tạo từ giao diện ở `OPEN`; mở không được thì lớp ở lại `DRAFT`. Source-observed 2026-11-23.
 
 ### F8 - Chi tiết lớp của môn (UC 25)
@@ -88,7 +88,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 1. Bấm "Phân công giảng viên", tìm và chọn người; frontend gọi `PUT /api/v1/manager/classes/{id}/teacher` kèm `version`.
 2. Kiểm quyền Chủ nhiệm môn và lớp chưa lưu trữ (BR-U05-16); người mới phải `TEACHER` hoặc `SUBJECT_MANAGER` đang `ACTIVE` (BR-U05-12).
 3. Lớp `OPEN` được phép chưa gán giảng viên.
-4. Cập nhật có điều kiện `version`; ghi audit `CLASS_TEACHER_CHANGED` (người cũ, người mới).
+4. Cập nhật có điều kiện `version`; không ghi audit (BR-U05-52).
 5. Từ request tiếp theo, người cũ mất quyền dạy lớp.
 
 ### F10 - Thêm từng sinh viên (UC 28)
@@ -96,7 +96,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 2. Chọn sinh viên; frontend gọi `POST /api/v1/manager/classes/{id}/enrollments`.
 3. Kiểm quyền Chủ nhiệm môn, lớp `DRAFT` hoặc `OPEN`, role `STUDENT`, trạng thái `ACTIVE` hoặc `PENDING` (BR-U05-20).
 4. Khóa hàng theo (sinh viên, môn), kiểm chưa `ACTIVE` ở lớp chưa lưu trữ khác cùng môn (BR-U05-22).
-5. Tạo ghi danh `ACTIVE` hoặc khôi phục bản `REMOVED` (BR-U05-21); ghi audit `STUDENT_ENROLLED`.
+5. Tạo ghi danh `ACTIVE` hoặc khôi phục bản `REMOVED` (BR-U05-21); không ghi audit (BR-U05-52).
 6. Lớp `OPEN` thì phát `enrollment.activated` sau commit (BR-U05-26).
 
 ### F11 - Thêm sinh viên theo danh sách (UC 28)
@@ -108,20 +108,20 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 
 ### F12 - Gỡ sinh viên (UC 28)
 1. Bấm Gỡ ở dòng sinh viên, xác nhận; frontend gọi `PUT /api/v1/manager/classes/{id}/enrollments/{accountId}/status` với `REMOVED`.
-2. Kiểm quyền và lớp chưa lưu trữ; chuyển `REMOVED`, ghi `removedAt`; ghi audit `STUDENT_REMOVED` (BR-U05-25).
+2. Kiểm quyền và lớp chưa lưu trữ; chuyển `REMOVED`, ghi `removedAt` (BR-U05-25); không ghi audit (BR-U05-52).
 3. Từ request tiếp theo, sinh viên mất quyền vào lớp; bài làm và điểm giữ nguyên.
 4. Thêm lại người đã gỡ: cùng API với `ACTIVE`, chạy F10 bước 3–6.
 
 ### F13 - Sửa thông tin lớp (UC 29)
 1. Sửa tên, mô tả, Ngày bắt đầu (từ 2026-11-14, F18) kèm `version`: `PATCH /api/v1/manager/classes/{id}`; mã lớp và môn không sửa được.
 2. Kiểm quyền Chủ nhiệm môn và lớp chưa lưu trữ (BR-U05-16); cập nhật có điều kiện `version`, lệch thì `409`.
-3. Ghi audit `CLASS_UPDATED`. Cài đặt phân bố thuộc U09 theo bài–lớp; endpoint manager cũ bị gỡ.
+3. Không ghi audit (BR-U05-52). Cài đặt phân bố thuộc U09 theo bài–lớp; endpoint manager cũ bị gỡ.
 
 ### F14 - Đổi trạng thái lớp (UC 29)
 1. Bấm Mở, Lưu trữ hoặc Mở lại, xác nhận; frontend gọi `PUT /api/v1/manager/classes/{id}/status` kèm trạng thái mới và `version`.
 2. Kiểm quyền Chủ nhiệm môn và chuyển hợp lệ (BR-U05-14).
 3. Mở hoặc mở lại: cần môn `ACTIVE`; giảng viên tùy chọn, nếu có phải hợp lệ (hỏi U04); mở lại kiểm BR-U05-15, vướng thì trả danh sách người vướng.
-4. Cập nhật có điều kiện `version`; ghi audit `CLASS_STATUS_CHANGED`.
+4. Cập nhật có điều kiện `version`; ghi audit `CLASS_<mã>_OPENED`, `CLASS_<mã>_ARCHIVED` hoặc `CLASS_<mã>_REOPENED` (BR-U05-52).
 5. `DRAFT→OPEN`: phát `enrollment.activated` cho mọi ghi danh `ACTIVE` sau commit (BR-U05-26).
 6. Lưu trữ: lớp chỉ đọc; dữ liệu giữ nguyên (BR-U05-16).
 
@@ -150,7 +150,7 @@ Nguồn: [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-clas
 3. Thứ tự kiểm: dữ liệu đầu vào (thiếu `startsOn`, sai định dạng) → quyền Chủ nhiệm môn và môn `ACTIVE` (BR-U05-10) → khoảng ngày (`INVALID_CLASS_START_DATE`) → giảng viên (BR-U05-12).
 4. Domain tạo `CourseClass` `DRAFT` với `term = termOf(startsOn)`.
 5. Insert; trùng `(subject_id, term, code)` thì `CLASS_EXISTS` "Mã lớp đã tồn tại trong môn ở học kỳ này" (BR-U05-64).
-6. Ghi audit `CLASS_CREATED` như F7 bước 5.
+6. Ghi audit `CLASS_<mã>_CREATED` như F7 bước 5.
 
 ### F18 - Sửa Ngày bắt đầu (mở rộng F13)
 
@@ -159,7 +159,7 @@ Nguồn: [yêu cầu CT-01…09](../../../inception/requirements/2026-11-14-clas
 3. Kiểm quyền và lớp chưa lưu trữ; khóa dòng lớp; kiểm `version` (lệch `409`).
 4. Domain `updateInfo(name, description, startsOn, now)`: kiểm khoảng ngày, tính lại `term`, tăng `version`.
 5. Update; trùng `(subject_id, term, code)` thì `CLASS_EXISTS`, rollback, không đổi gì.
-6. Ghi audit `CLASS_UPDATED`.
+6. Không ghi audit (BR-U05-52).
 
 ### F19 - Danh sách lớp lọc theo học kỳ (mở rộng F1, F3, F6)
 

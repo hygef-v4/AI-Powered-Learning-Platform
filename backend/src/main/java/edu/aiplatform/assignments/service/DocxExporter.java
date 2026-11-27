@@ -39,7 +39,8 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.StylesDocument;
 /**
  * Xuất tài liệu ra DOCX (BR-U07-60): heading theo style Word (Title, Subtitle, Heading 1–6), đoạn, danh sách, bảng,
  * ảnh. Mỗi sơ đồ thành ảnh PNG kèm alt text "mô tả [drawio:mã]", hyperlink tới trang xem sơ đồ và chunk
- * {@code mxfile}. Ảnh PNG là hình đại diện dựng sẵn, không vẽ lại sơ đồ (image chạy không có thư viện vẽ SVG).
+ * {@code mxfile}. Ảnh PNG là ảnh Draw.io xuất khi lưu sơ đồ ({@code pngPreview}); sơ đồ chưa vẽ là ảnh trắng; sơ đồ lưu
+ * trước 2026-11-27 chưa có ảnh thì dùng hình đại diện dựng sẵn (image chạy không có thư viện vẽ SVG).
  */
 final class DocxExporter {
 
@@ -350,15 +351,20 @@ final class DocxExporter {
         String description = (alt.isEmpty() ? "Sơ đồ " + c.path("diagramType").asText("") : alt)
                 + (code == null ? "" : " [drawio:" + code + "]");
         // Sơ đồ chưa vẽ (trang soạn hiện "Chưa có sơ đồ"): khung trống, không dùng hình đại diện của sơ đồ đã vẽ.
-        boolean drawn = !c.path("svgPreview").asText("").isBlank()
-                || DiagramXml.countCells(c.path("xml").asText("")) > 0;
-        byte[] png = PngChunks.drawDiagramPlaceholder(c.path("xml").asText(null), drawn);
+        String xml = c.path("xml").asText(null);
+        boolean drawn = DiagramXml.countCells(xml == null ? "" : xml) > 0;
+        byte[] saved = drawn ? PngChunks.readPngDataUri(c.path("pngPreview").asText(null)).orElse(null) : null;
+        byte[] png = !drawn ? PngChunks.drawBlankDiagram(xml)
+                : saved == null ? PngChunks.drawDiagramPlaceholder(xml)
+                : PngChunks.readMxfile(saved).isPresent() || xml == null ? saved
+                : PngChunks.addTextChunk(saved, PngChunks.MXFILE, PngChunks.encodeUri(xml));
+        int[] size = saved == null ? new int[]{480, 270} : PngChunks.readSize(saved).orElse(new int[]{480, 270});
+        int width = Math.max(1, Math.min(size[0], MAX_IMAGE_WIDTH_PX));
         String url = linker == null ? null : linker.viewUrlFor(block.id());
         XWPFParagraph p = doc.createParagraph();
         p.setAlignment(ParagraphAlignment.CENTER);
         XWPFRun run = url == null ? p.createRun() : p.createHyperlinkRun(url);
-        addPicture(run, png, XWPFDocument.PICTURE_TYPE_PNG, "diagram-" + block.id() + ".png", 480, new int[]{480, 270},
-                description);
+        addPicture(run, png, XWPFDocument.PICTURE_TYPE_PNG, "diagram-" + block.id() + ".png", width, size, description);
         XWPFRun caption = p.createRun();
         caption.addBreak();
         caption.setItalic(true);

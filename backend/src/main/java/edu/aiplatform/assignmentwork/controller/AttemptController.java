@@ -1,5 +1,6 @@
 package edu.aiplatform.assignmentwork.controller;
 
+import edu.aiplatform.assignments.contract.DiagramPngs;
 import edu.aiplatform.ai.contract.AiProvider;
 import edu.aiplatform.assignments.contract.DocumentModel;
 import edu.aiplatform.assignmentwork.service.ActivityService;
@@ -116,7 +117,15 @@ public class AttemptController {
 
     @GetMapping("/api/v1/attempts/{attemptId}/export.docx")
     public ResponseEntity<byte[]> export(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId) {
-        AttemptService.Export export = attemptService.export(actor, attemptId);
+        return exportWithDiagrams(actor, attemptId, null);
+    }
+
+    /** Như GET, kèm ảnh PNG của sơ đồ chưa có ảnh lưu sẵn do trình duyệt vẽ (yêu cầu 2026-11-27). */
+    @PostMapping("/api/v1/attempts/{attemptId}/export.docx")
+    public ResponseEntity<byte[]> exportWithDiagrams(@AuthenticationPrincipal Actor actor, @PathVariable UUID attemptId,
+            @RequestBody(required = false) DiagramPngs.Body body) {
+        AttemptService.Export export = attemptService.export(actor, attemptId,
+                DiagramPngs.Body.read(body));
         return ResponseEntity.ok().contentType(DOCX).cacheControl(CacheControl.noStore())
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
                         .filename(export.fileName(), StandardCharsets.UTF_8).build().toString())

@@ -1,10 +1,10 @@
 package edu.aiplatform.grading.integration;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import java.sql.*;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import org.junit.jupiter.api.*;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.*;
 import static org.assertj.core.api.Assertions.*;
 
@@ -14,8 +14,7 @@ import static org.assertj.core.api.Assertions.*;
  */
 @Testcontainers(disabledWithoutDocker = true)
 class GradingPersistenceTest {
-    @Container
-    static final PostgreSQLContainer<?> DB = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database DB = SharedPostgres.createDatabase();
 
     static Connection connection() throws SQLException {
         return DriverManager.getConnection(DB.getJdbcUrl(), DB.getUsername(), DB.getPassword());

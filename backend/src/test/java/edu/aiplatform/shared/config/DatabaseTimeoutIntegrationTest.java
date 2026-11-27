@@ -1,5 +1,6 @@
 package edu.aiplatform.shared.config;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -17,15 +18,12 @@ import org.springframework.dao.QueryTimeoutException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** Loads the production pool settings, then proves cancellation and pool recovery against PostgreSQL. */
 @Testcontainers(disabledWithoutDocker = true)
 class DatabaseTimeoutIntegrationTest {
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabase();
 
     @Test
     void configuredPoolBoundsLocksAndQueriesAndRecoversAfterRollback() {
@@ -49,7 +47,9 @@ class DatabaseTimeoutIntegrationTest {
                     assertThat(jdbc.queryForObject("show statement_timeout", String.class)).isEqualTo("15s");
                     assertThat(jdbc.queryForObject("show lock_timeout", String.class)).isEqualTo("2s");
                     var pool = (HikariDataSource) source;
-                    assertThat(pool.getConnectionTimeout()).isLessThanOrEqualTo(3000);
+                    // Chờ pool vẫn có giới hạn và ngắn hơn statement_timeout; nâng 3 s → 10 s để request xếp hàng khi
+                    // nhiều người cùng lưu bài thay vì lỗi 5xx (TC-PERF-004/005, KAN-244, quyết định 2026-11-26).
+                    assertThat(pool.getConnectionTimeout()).isEqualTo(10_000);
                     jdbc.execute("create table nfr_lock(id int primary key, value int not null)");
                     jdbc.update("insert into nfr_lock values(1, 0)");
                     TransactionTemplate tx = new TransactionTemplate(new DataSourceTransactionManager(source));

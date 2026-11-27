@@ -55,8 +55,11 @@ export function useModuleOutline(
           module,
           items: [
             ...materials
-              .data!.filter((m) => m.status === "ACTIVE" && m.moduleId === module.id
-                && (scope?.kind !== "student" || m.enabled !== false))
+              // Học liệu đã lưu trữ chỉ hiện với người khôi phục được (giảng viên không thấy học liệu môn đã lưu trữ);
+              // người học chỉ thấy học liệu ACTIVE đang bật.
+              .data!.filter((m) => m.moduleId === module.id
+                && (scope?.kind === "student" ? m.status === "ACTIVE" && m.enabled !== false
+                  : m.status === "ACTIVE" || m.canManage))
               .sort((a, b) => a.orderNo - b.orderNo || a.title.localeCompare(b.title, "vi"))
               .map((material) => ({ kind: "material" as const, material })),
             ...module.quizzes.map((quiz) => ({ kind: "quiz" as const, quiz })),

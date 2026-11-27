@@ -1,5 +1,6 @@
 package edu.aiplatform.identity.repository;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import edu.aiplatform.identity.model.Account;
 import edu.aiplatform.identity.model.AccountSearch;
 
@@ -11,10 +12,6 @@ import static org.assertj.core.api.Assertions.within;
 import com.zaxxer.hikari.HikariDataSource;
 import edu.aiplatform.identity.contract.AccountStatus;
 import edu.aiplatform.identity.contract.Role;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -38,27 +35,18 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
- * SQL viết tay của {@link AccountRepository} chạy trên PostgreSQL 16 thật. Container chạy chính script tạo role của
- * {@code infra/postgres/init}: Flyway chạy bằng {@code migrator}, repository bằng {@code app} như khi triển khai.
+ * SQL viết tay của {@link AccountRepository} chạy trên PostgreSQL 16 thật. Database được cấp quyền theo chính
+ * script tạo role của {@code infra/postgres/init}: Flyway chạy bằng {@code migrator}, repository bằng {@code app} như khi triển khai.
  */
 @Testcontainers(disabledWithoutDocker = true)
 class AccountRepositoryIntegrationTest {
 
-    // Sinh mỗi lần chạy: container chỉ sống trong test, không để chuỗi mật khẩu cố định trong mã.
-    private static final String APP_PASSWORD = UUID.randomUUID().toString();
-    private static final String MIGRATOR_PASSWORD = UUID.randomUUID().toString();
-
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withEnv("POSTGRES_APP_PASSWORD", APP_PASSWORD)
-            .withEnv("POSTGRES_MIGRATOR_PASSWORD", MIGRATOR_PASSWORD)
-            .withCopyToContainer(rolesScript(), "/docker-entrypoint-initdb.d/01-roles.sh");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabaseWithRoles();
+    static final String APP_PASSWORD = POSTGRES.getAppPassword();
+    static final String MIGRATOR_PASSWORD = POSTGRES.getMigratorPassword();
 
     private static HikariDataSource appDataSource;
     private static HikariDataSource adminDataSource;
@@ -92,16 +80,6 @@ class AccountRepositoryIntegrationTest {
     @BeforeEach
     void clean() {
         admin.sql("truncate accounts cascade").update();
-    }
-
-    /** Script tạo role của môi trường thật; bỏ CR phòng khi checkout trên Windows đổi xuống dòng. */
-    private static Transferable rolesScript() {
-        try {
-            String script = Files.readString(Path.of("..", "infra", "postgres", "init", "01-roles.sh"));
-            return Transferable.of(script.replace("\r", ""), 0755);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private static HikariDataSource dataSource(String user, String password) {

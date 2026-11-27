@@ -150,7 +150,9 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
     case "DIAGRAM": {
       // Khung vẽ như bản demo (yêu cầu 2026-10-22): rộng hết trang, viền đứt, bấm vào là mở Draw.io; đã vẽ thì hiện hình.
       const svg = block.content.svgPreview;
-      const drawn = !!svg;
+      // Sơ đồ nhập từ tệp Word chỉ có ảnh PNG thật của sơ đồ: hiện ảnh đó (yêu cầu 2026-11-27).
+      const png = svg ? undefined : block.content.pngPreview;
+      const drawn = !!svg || !!png;
       return (
         <figure className="flex flex-col gap-1">
           <button type="button" onClick={() => onOpenDiagram?.(block.id)} disabled={!onOpenDiagram}
@@ -159,9 +161,9 @@ export function BlockView({ block, imageUrl, previewUrl, onOpenDiagram }: {
               drawn ? "bg-surface" : "bg-canvas",
               onOpenDiagram ? "cursor-pointer border-2 border-dashed border-line-strong hover:border-primary"
                 : drawn ? "cursor-default border border-line" : "cursor-default border-2 border-dashed border-line-strong")}>
-            {svg ? (
+            {svg || png ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={encodeSvgDataUri(svg)} alt={block.content.alt || diagramTypeLabels[block.content.diagramType]}
+              <img src={svg ? encodeSvgDataUri(svg) : png} alt={block.content.alt || diagramTypeLabels[block.content.diagramType]}
                 className="mx-auto block h-auto max-h-[560px] max-w-full p-3" />
             ) : (
               <span className="flex flex-col items-center gap-2 text-[13px] text-muted">

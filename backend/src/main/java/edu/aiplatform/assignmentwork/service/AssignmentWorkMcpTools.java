@@ -47,7 +47,7 @@ public class AssignmentWorkMcpTools implements IMcpToolProvider {
         String attempt = "{\"type\":\"object\",\"required\":[\"attemptId\"],\"properties\":{\"attemptId\":"
                 + "{\"type\":\"string\",\"format\":\"uuid\"}}}";
         return List.of(
-                new McpToolDefinition(READ_OWN, "Đọc bài Practice đã nộp của bạn; không trả rubric hoặc điểm chính thức.",
+                new McpToolDefinition(READ_OWN, "Đọc bài Practice đã nộp của bạn, kèm rubric để ước tính điểm từng phần; không trả điểm chính thức.",
                         attempt, McpToolKind.READ, Set.of(Role.STUDENT)),
                 new McpToolDefinition(RECORD, "Lưu góp ý riêng cho bài Practice đã nộp; cần submissionHash từ read_own_work.",
                         "{\"type\":\"object\",\"required\":[\"attemptId\",\"submissionHash\",\"feedback\"],"

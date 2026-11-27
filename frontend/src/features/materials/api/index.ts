@@ -52,6 +52,8 @@ export const materialApi = {
     sendWrite<Material>(`${buildMaterialPath(m.id)}/versions`, "POST", { version: m.version, source }),
   archiveMaterial: (m: Material) =>
     sendWrite<Material>(`${buildMaterialPath(m.id)}/archive`, "POST", { version: m.version }),
+  restoreMaterial: (m: Material) =>
+    sendWrite<Material>(`${buildMaterialPath(m.id)}/restore`, "POST", { version: m.version }),
   reorderMaterials: (path: string, items: Material[]) =>
     sendWrite<void>(`${path}:reorder`, "PUT", {
       items: items.map(({ id, version }) => ({ id, version })),

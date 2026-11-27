@@ -1,5 +1,6 @@
 package edu.aiplatform.quizzes.repository;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import edu.aiplatform.quizzes.model.DrawRule;
 import edu.aiplatform.quizzes.model.QuizPaperMode;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,11 +24,7 @@ import edu.aiplatform.quizzes.model.Quiz;
 import edu.aiplatform.quizzes.model.QuizAiDraft;
 import edu.aiplatform.quizzes.model.QuizItem;
 import edu.aiplatform.quizzes.model.QuizOrigin;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -41,25 +38,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.images.builder.Transferable;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /** SQL viết tay của {@link QuizRepository} và phần chọn câu của {@link QuestionRepository} trên PostgreSQL 16. */
 @Testcontainers(disabledWithoutDocker = true)
 class QuizRepositoryIntegrationTest {
 
-    // Sinh mỗi lần chạy: container chỉ sống trong test, không để chuỗi mật khẩu cố định trong mã.
-    private static final String APP_PASSWORD = UUID.randomUUID().toString();
-    private static final String MIGRATOR_PASSWORD = UUID.randomUUID().toString();
     private static final Instant NOW = Instant.now().truncatedTo(ChronoUnit.MICROS);
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withEnv("POSTGRES_APP_PASSWORD", APP_PASSWORD)
-            .withEnv("POSTGRES_MIGRATOR_PASSWORD", MIGRATOR_PASSWORD)
-            .withCopyToContainer(rolesScript(), "/docker-entrypoint-initdb.d/01-roles.sh");
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabaseWithRoles();
+    static final String APP_PASSWORD = POSTGRES.getAppPassword();
+    static final String MIGRATOR_PASSWORD = POSTGRES.getMigratorPassword();
 
     private static HikariDataSource appDataSource;
     private static HikariDataSource adminDataSource;
@@ -105,15 +94,6 @@ class QuizRepositoryIntegrationTest {
         admin.sql("insert into subjects (id, code, name, status, manager_id, created_at, updated_at)"
                         + " values (:id, 'SWT301', 'Kiểm thử', 'ACTIVE', :manager, now(), now())")
                 .param("id", subject).param("manager", author).update();
-    }
-
-    private static Transferable rolesScript() {
-        try {
-            String script = Files.readString(Path.of("..", "infra", "postgres", "init", "01-roles.sh"));
-            return Transferable.of(script.replace("\r", ""), 0755);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private static HikariDataSource dataSource(String user, String password) {

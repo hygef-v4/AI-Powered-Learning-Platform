@@ -14,6 +14,7 @@ x-backend-env: &backend-env
   APP_PUBLIC_URL: ${APP_PUBLIC_URL:?}
   POSTGRES_HOST: postgres
   POSTGRES_DB: platform
+  DB_CONNECTION_TIMEOUT: ${DB_CONNECTION_TIMEOUT:-10000}
   POSTGRES_APP_USER: app
   POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?}
   POSTGRES_MIGRATOR_USER: migrator
@@ -37,7 +38,6 @@ x-backend-env: &backend-env
   U01_BOOTSTRAP_ADMIN_EMAIL: ${U01_BOOTSTRAP_ADMIN_EMAIL:-}
   U01_BOOTSTRAP_ADMIN_NAME: ${U01_BOOTSTRAP_ADMIN_NAME:-Quản trị viên}
   U03_FILEREF_SECRET: ${U03_FILEREF_SECRET:-}
-  U03_REQUIRE_DRIVE: ${U03_REQUIRE_DRIVE:-true}
   U03_UPLOAD_TMP_DIR: /tmp/uploads
   U03_BACKUP_TMP_DIR: /tmp/backup
   GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:-}
@@ -56,7 +56,7 @@ x-backend-env: &backend-env
 
 services:
   nginx:
-    image: nginx:1.28-alpine@sha256:a8b39bd9cf0f83869a2162827a0caf6137ddf759d50a171451b335cecc87d236
+    image: nginx:1.30-alpine@sha256:8eb04fe3b385090e9aa02961f77398ad09b6bf33ab07f6669a5bb7acce22c0d3
     depends_on:
       frontend: { condition: service_healthy }
       backend: { condition: service_healthy }
@@ -108,6 +108,7 @@ services:
     environment:
       <<: *backend-env
       SPRING_PROFILES_ACTIVE: default
+      DB_POOL_MAX: ${BACKEND_DB_POOL_MAX:-20}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -128,12 +129,15 @@ services:
     environment:
       <<: *backend-env
       SPRING_PROFILES_ACTIVE: worker
+      DB_POOL_MAX: ${WORKER_DB_POOL_MAX:-10}
+      U03_SCAN_DELAY_MS: ${U03_SCAN_DELAY_MS:-15000}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
     volumes:
       - backup-tmp:/tmp/backup
+      - wal-archive:/wal-archive
     networks: [internal]
     deploy:
       resources: { limits: { cpus: "1", memory: 1536M } }
@@ -152,8 +156,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - wal-archive:/wal-archive
+    # Thư mục WAL archive dùng chung với worker (U03): worker đọc, tải lên Drive rồi xóa nên thư mục mở quyền ghi.
+    entrypoint:
+      - sh
+      - -c
+      - mkdir -p /wal-archive && chown postgres:postgres /wal-archive && chmod 0777 /wal-archive && exec docker-entrypoint.sh "$$@"
+      - --
     # Ghi truy vấn chậm hơn 500 ms (không ghi giá trị tham số) và thống kê theo câu lệnh.
     # Xem thống kê cần chạy một lần CREATE EXTENSION pg_stat_statements: docs/runbooks/deploy-vps.md.
+    # WAL archiving (U03, 2026-11-26): chốt tệp WAL tối đa mỗi 5 phút, archive_command chỉ chép vào /wal-archive
+    # trên máy, không gọi mạng; worker tải lên Google Drive.
     command:
       - postgres
       - -c
@@ -162,6 +176,16 @@ services:
       - log_min_duration_statement=500
       - -c
       - log_parameter_max_length=0
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_timeout=5min
+      - -c
+      - archive_command=test ! -f /wal-archive/%f && cp %p /wal-archive/%f.tmp && chmod 0644 /wal-archive/%f.tmp && mv /wal-archive/%f.tmp /wal-archive/%f
     networks: [internal]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d platform"]
@@ -224,5 +248,6 @@ volumes:
   rabbitmq-data: {}
   upload-tmp: {}
   backup-tmp: {}
+  wal-archive: {}
   letsencrypt: {}
   certbot-www: {}

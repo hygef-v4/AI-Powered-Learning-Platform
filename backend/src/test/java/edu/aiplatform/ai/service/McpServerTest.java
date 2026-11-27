@@ -135,6 +135,23 @@ class McpServerTest {
     }
 
     @Test
+    void objectArgumentSentAsJsonTextIsConvertedBeforeTheSchemaCheck() {
+        String objectSchema = """
+                {"type":"object","properties":{"proposal":{"type":"object",
+                 "properties":{"score":{"type":"string"}}}},"required":["proposal"]}""";
+        when(provider.tools()).thenReturn(List.of(new McpToolDefinition("record_proposal", "Ghi", objectSchema,
+                McpToolKind.WRITE, Set.of(Role.TEACHER))));
+        when(provider.call(eq(teacher), eq("record_proposal"), eq(Map.of("proposal", Map.of("score", "8")))))
+                .thenReturn(new McpToolResult(false, Map.of("status", "READY")));
+
+        JsonNode reply = handle(Access.READ_WRITE,
+                call("record_proposal", "{\"proposal\":\"{\\\"score\\\":\\\"8\\\"}\"}"));
+
+        assertThat(reply.at("/result/isError").asBoolean()).isFalse();
+        assertThat(reply.at("/result/content/0/text").asText()).contains("READY");
+    }
+
+    @Test
     void toolNameMustBeShortText() {
         assertThat(handle(Access.READ_ONLY, call("x".repeat(101), "{\"q\":\"x\"}")).at("/error/code").asInt()).isEqualTo(-32602);
         assertThat(handle(Access.READ_ONLY, "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":5}}")

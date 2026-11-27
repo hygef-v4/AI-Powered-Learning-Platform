@@ -59,7 +59,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [sto
 | Rule | Behavior |
 |---|---|
 | BR-U13-M01 | Manager của môn quản lý module; tên 1–200, orderNo ≥0, version CAS. Mọi material có moduleId cùng subject. |
-| BR-U13-M02 | Backfill materials cũ vào Module 1; module basic không cần embedding/AI/Lesson. Môn `ACTIVE` chưa có module nào (môn mới) thì tự tạo "Module 1" (audit `MATERIAL_MODULE_CREATED`) khi Chủ nhiệm môn mở trang học liệu của môn hoặc giảng viên mở trang học liệu của lớp, để thêm được học liệu; Student mở trang không tạo module. |
+| BR-U13-M02 | Backfill materials cũ vào Module 1; module basic không cần embedding/AI/Lesson. Từ 2026-11-26 môn mới không tự có module: mở trang học liệu không tạo "Module 1"; Chủ nhiệm môn tạo module đầu tiên, trước đó trang hiện hướng dẫn tạo module (Chủ nhiệm môn) hoặc chờ môn có module (giảng viên). |
 | BR-U13-M03 | Quiz tối đa một module qua unique quiz_id; attach chuyển link cũ. Quiz cùng môn và actor có quyền manage Quiz. |
 | BR-U13-M04 | Xóa chặn active materials; archived materials chuyển module khác; không xóa module cuối nếu còn archived materials. Quiz links cascade khi xóa module. |
 | BR-U13-M05 | Subject view chỉ subject Quiz; teacher class view thấy subject OPEN hoặc RETIRED có publishedAt thực và quiz lớp mình; RETIRED chưa phát hành bị ẩn; Student chỉ quiz listForClass cho phép. canManageModules khác canManageQuiz. |
@@ -73,3 +73,11 @@ Negative tests/source: MaterialModuleServiceTest, MaterialModuleService và migr
 `enabled` là boolean độc lập ACTIVE/ARCHIVED, mặc định true cho bản ghi và yêu cầu tạo cũ. Disabled ẩn danh sách sinh viên, chặn xem trực tiếp/cấp token và kiểm lại khi đổi token lấy nội dung; staff vẫn quản lý/bật lại theo quyền. Tài liệu disabled không được chọn/trích làm nguồn AI mới. Không xóa version/lịch sử.
 
 `descriptionDocument` là FormattedText tùy chọn; server lấy plain description từ document, tối đa 2.000 ký tự. Chỉ paragraph/danh sách, căn lề, indent 0–6 và run đậm/nghiêng/gạch chân; tối đa 100 block, 200 run/block, 1.000 run tổng. Không nhận HTML để render. Text cũ vẫn tương thích. MaterialRepositoryAdapter dùng JDBC; hai row JPA cũ đã bỏ, module repository giữ ngoài phạm vi (chuyển JDBC ngày 2026-11-18).
+
+## Học liệu môn, lưu trữ, công tắc khi tạo — 2026-11-26
+
+| Mã | Quy tắc |
+|---|---|
+| BR-U13-90 | Giao diện của Chủ nhiệm môn gọi học liệu của môn là "Subject material" / "Học liệu môn" (menu môn, tiêu đề trang, nút tạo, hộp thoại). Học liệu môn hiện chung trong học liệu của mọi lớp thuộc môn (BR-U13-02); giảng viên chỉ xem, không sửa, không lưu trữ (`canManage` của học liệu môn chỉ đúng với Chủ nhiệm môn). |
+| BR-U13-91 | Nút gỡ học liệu của giảng viên và Chủ nhiệm môn là "Lưu trữ" (biểu tượng archive), không còn "Xóa"; Học liệu đã lưu trữ chỉ còn hiện trong module với người quản lý được nó (nhãn "Đã lưu trữ", không sửa, không lưu trữ lại); giảng viên không thấy học liệu môn đã lưu trữ. Người quản lý khôi phục về `ACTIVE` bằng `POST /materials/{id}/restore` trên danh sách hoặc trang chi tiết; người học không thấy học liệu đã lưu trữ (BR-U13-13). Trang chi tiết không rời trang sau khi lưu trữ. Quiz nháp vẫn xóa được, Quiz đã phát hành lưu trữ. |
+| BR-U13-92 | Hộp thoại tạo học liệu không có công tắc bật/tắt; học liệu mới luôn `enabled = true`. Công tắc chỉ còn khi sửa và trên trang chi tiết. |

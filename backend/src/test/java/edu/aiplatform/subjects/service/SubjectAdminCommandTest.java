@@ -116,7 +116,7 @@ class SubjectAdminCommandTest {
         order.verify(subjectRepository).insertSubject(subject);
         order.verify(audit).record(any());
         AuditEvent event = event();
-        assertThat(event.action()).isEqualTo("SUBJECT_CREATED");
+        assertThat(event.action()).isEqualTo("SUBJECT_SWR302_CREATED");
         assertThat(event.actorId()).isEqualTo(admin.accountId());
         assertThat(event.result()).isEqualTo(AuditResult.SUCCESS);
         assertThat(event.occurredAt()).isEqualTo(NOW);
@@ -255,7 +255,7 @@ class SubjectAdminCommandTest {
     }
 
     @Test
-    void metadataOnArchivedSubjectChangesOnlyEditableFieldsAndAuditsFieldNames() {
+    void metadataOnArchivedSubjectChangesOnlyEditableFieldsWithoutAudit() {
         Subject before = subject(oldManager).archive(NOW.minusSeconds(30));
         when(subjectRepository.findById(subjectId)).thenReturn(Optional.of(before));
         Subject after =
@@ -268,9 +268,7 @@ class SubjectAdminCommandTest {
         assertThat(after.code()).isEqualTo(before.code());
         assertThat(after.createdAt()).isEqualTo(before.createdAt());
         assertThat(after.version()).isEqualTo(3);
-        assertThat(event().details())
-                .containsEntry("changedFields", List.of("name", "description"));
-        verifyNoInteractions(accountLookup);
+        verifyNoInteractions(accountLookup, audit);
     }
 
     @Test
@@ -325,20 +323,17 @@ class SubjectAdminCommandTest {
         Subject after =
                 subjectCommandService.changeManager(
                         admin, subjectId, new SubjectCommandService.ChangeManager(newManager, 1L));
-        var order = inOrder(subjectRepository, accountLookup, audit);
+        var order = inOrder(subjectRepository, accountLookup);
         order.verify(subjectRepository).findById(subjectId);
         order.verify(accountLookup).lockContact(newManager);
         order.verify(subjectRepository).findByIdForUpdate(subjectId);
         order.verify(subjectRepository).updateSubject(after, 1L);
-        order.verify(audit).record(any());
         assertThat(after.managerId()).isEqualTo(newManager);
-        assertThat(event().details())
-                .containsEntry("oldManagerId", oldManager)
-                .containsEntry("newManagerId", newManager);
+        verifyNoInteractions(audit);
     }
 
     @Test
-    void unassignmentAuditContainsExplicitNull() {
+    void unassignmentWritesNoAudit() {
         Subject before = subject(oldManager);
         when(subjectRepository.findById(subjectId)).thenReturn(Optional.of(before));
         when(subjectRepository.findByIdForUpdate(subjectId)).thenReturn(Optional.of(before));
@@ -347,8 +342,7 @@ class SubjectAdminCommandTest {
                         admin, subjectId, new SubjectCommandService.ChangeManager(null, 1L));
         assertThat(after.managerId()).isNull();
         assertThat(after.version()).isEqualTo(2);
-        assertThat(event().details()).containsEntry("newManagerId", null);
-        verifyNoInteractions(accountLookup);
+        verifyNoInteractions(accountLookup, audit);
     }
 
     @Test

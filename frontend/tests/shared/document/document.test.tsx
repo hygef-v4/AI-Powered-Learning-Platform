@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { CommentRail } from "@/shared/document/CommentRail";
@@ -56,6 +56,22 @@ describe("DocumentEditor", () => {
     expect(within(screen.getByTestId("answer-t1")).getByTestId("write-part-t1")).toHaveTextContent("Viết câu trả lời…");
   });
 
+  it("workspace: a skeleton with only the root still gives the student an answer box under it", () => {
+    const onChange = vi.fn();
+    const empty: DocumentModel = { blocks: [] };
+    const { rerender } = render(<DocumentEditor document={empty} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance />);
+    expect(within(screen.getByTestId("answer-DOCUMENT")).getByText("Bài làm của bạn")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("write-part-DOCUMENT"));
+    expect((onChange.mock.calls[0]![0] as DocumentModel).blocks[0]).toMatchObject({ origin: "STUDENT", type: "PARAGRAPH" });
+    // Bài nhóm: chỉ người giữ phần "Toàn bài" mới có ô viết; chỉ xem thì không có.
+    rerender(<DocumentEditor document={empty} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance writableParts={new Set<string>()} />);
+    expect(screen.queryByTestId("write-part-DOCUMENT")).toBeNull();
+    rerender(<DocumentEditor document={empty} onChange={onChange} mode="student" diagramEnabled={false} answerGuidance readOnly />);
+    expect(screen.queryByTestId("write-part-DOCUMENT")).toBeNull();
+    rerender(<DocumentEditor document={empty} onChange={onChange} mode="student" diagramEnabled={false} />);
+    expect(screen.getByTestId("write-part-DOCUMENT")).toBeInTheDocument();
+  });
+
   it("workspace: guidance is opt-in and cannot enable editing for read-only or author mode", () => {
     const onChange = vi.fn();
     const { rerender } = render(<DocumentEditor document={doc} onChange={onChange} mode="student" diagramEnabled answerGuidance readOnly />);
@@ -94,6 +110,7 @@ describe("DocumentEditor", () => {
   it("người soạn thêm mục ngay dòng đang đứng; nút chèn sơ đồ chỉ thêm khung, bấm khung mới mở Draw.io ở cột phải đẩy trang sang trái", () => {
     const onChange = vi.fn();
     const { rerender } = render(<DocumentEditor document={{ blocks: [] }} onChange={onChange} mode="author" diagramEnabled />);
+    fireEvent.click(screen.getByLabelText("Chèn sơ đồ Draw.io"));
     fireEvent.click(screen.getByTestId("add-DIAGRAM"));
     const inserted = onChange.mock.calls[0]![0] as DocumentModel;
     expect(inserted.blocks[0]!).toMatchObject({ origin: "TEACHER", type: "DIAGRAM", content: { diagramType: "OTHER" } });
@@ -676,5 +693,45 @@ describe("chế độ xem và số câu hỏi (yêu cầu 2026-11-10)", () => {
     const { container } = render(<p><SectionNumber value="IV.2.a." /></p>);
     expect(container).toHaveTextContent("IV.2.a.");
     expect(container.querySelector(".font-roman")).toHaveTextContent(/^IV$/);
+  });
+});
+
+describe("menu sơ đồ (yêu cầu 2026-11-27)", () => {
+  it("đầu menu là Tạo mới, dưới là các mẫu; chọn mẫu chèn khung có sẵn hình, bấm vào vẫn mở Draw.io", async () => {
+    const onChange = vi.fn();
+    const { rerender } = render(<DocumentEditor document={{ blocks: [] }} onChange={onChange} mode="author" diagramEnabled />);
+    fireEvent.click(screen.getByLabelText("Chèn sơ đồ Draw.io"));
+    const items = screen.getAllByRole("menuitem").map((item) => item.textContent);
+    expect(items[0]).toBe("Tạo mới");
+    expect(items).toHaveLength(8);
+    fireEvent.click(screen.getByTestId("add-DIAGRAM-CLASS"));
+    await waitFor(() => expect(onChange).toHaveBeenCalled());
+    const inserted = onChange.mock.calls[0]![0] as DocumentModel;
+    const block = inserted.blocks[0]!;
+    expect(block).toMatchObject({ type: "DIAGRAM", content: { diagramType: "CLASS" } });
+    expect(block.type === "DIAGRAM" && block.content.xml).toContain("ClassA");
+    expect(block.type === "DIAGRAM" && block.content.svgPreview).toContain("<svg");
+    rerender(<DocumentEditor document={inserted} onChange={onChange} mode="author" diagramEnabled />);
+    expect(screen.queryByTestId("drawio-panel")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Sửa sơ đồ" }));
+    expect(screen.getByTestId("drawio-panel")).toBeInTheDocument();
+  });
+});
+
+describe("sơ đồ mẫu của đề trong bài làm (yêu cầu 2026-11-27)", () => {
+  const template = (edited: boolean): DocumentModel => ({ blocks: [{ id: "d", origin: "TEACHER", type: "DIAGRAM",
+    content: { diagramType: "CLASS", xml: "<mxfile/>", svgPreview: "<svg xmlns=\"http://www.w3.org/2000/svg\"><rect/></svg>", ...(edited ? { studentEdited: true } : {}) } }] });
+
+  it("người học chưa vẽ thì hiện Bấm để vẽ thay vì hình mẫu; đã vẽ thì hiện hình", () => {
+    const { rerender } = render(<DocumentEditor document={template(false)} onChange={vi.fn()} mode="student" diagramEnabled />);
+    expect(screen.getByRole("button", { name: "Vẽ sơ đồ" })).toBeInTheDocument();
+    expect(screen.queryByRole("img")).toBeNull();
+    rerender(<DocumentEditor document={template(true)} onChange={vi.fn()} mode="student" diagramEnabled />);
+    expect(screen.getByRole("button", { name: "Sửa sơ đồ" })).toBeInTheDocument();
+  });
+
+  it("người soạn vẫn thấy hình mẫu", () => {
+    render(<DocumentEditor document={template(false)} onChange={vi.fn()} mode="author" diagramEnabled />);
+    expect(screen.getByRole("button", { name: "Sửa sơ đồ" })).toBeInTheDocument();
   });
 });

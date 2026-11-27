@@ -66,3 +66,22 @@ it("có classId trên URL thì không cần đọc Quiz", async () => {
   await waitFor(() => expect(paths()).toContain("/api/v1/classes/c2/modules"));
   expect(paths().some((path) => path.startsWith("/api/v1/quizzes/"))).toBe(false);
 });
+
+it("học liệu đã lưu trữ có nút khôi phục trên thanh bên", async () => {
+  const archived = {
+    id: "mat1", moduleId: "m1", title: "Slide cũ", status: "ARCHIVED", kind: "FILE", orderNo: 0, version: 3,
+    canManage: true, enabled: true, current: { textStatus: "READY" },
+  };
+  vi.mocked(fetchApi).mockImplementation(async (path) => {
+    const value = String(path);
+    if (value.startsWith("/api/v1/quizzes/")) return { quiz: { subjectId: "s1", scope: "SUBJECT", classId: null } };
+    if (value.endsWith("/restore")) return { ...archived, status: "ACTIVE", version: 4 };
+    if (value.endsWith("/modules")) return [{ id: "m1", title: "Module 1", orderNo: 1, quizzes: [], canManage: true, version: 0 }];
+    return value.includes("/materials") ? [archived] : [];
+  });
+  nav();
+
+  const restore = await screen.findByRole("button", { name: "Khôi phục Slide cũ" });
+  restore.click();
+  await waitFor(() => expect(paths()).toContain("/api/v1/materials/mat1/restore"));
+});

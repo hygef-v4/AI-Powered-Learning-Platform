@@ -47,7 +47,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 | NFR-U03-42 | Worker là container riêng, cùng mã nguồn backend với profile `worker`. | Thiết kế |
 | NFR-U03-43 | Mỗi queue có luồng xử lý riêng; gọi AI hoặc backup chậm không chặn email và việc nội bộ. | Thiết kế |
 | NFR-U03-44 | Thử lại tối đa 5 lượt với backoff 30 giây, 1, 2, 4, 8 phút qua các queue `jobs.retry.*`. | BR-U03-56 |
-| NFR-U03-45 | Sweeper và scanner chạy mỗi phút trong worker; chỉ có một worker nên không cần khóa phân tán. | BR-U03-58, 60 |
+| NFR-U03-45 | Sweeper chạy mỗi phút, scanner việc hẹn giờ mỗi 15 giây (`U03_SCAN_DELAY_MS`) trong worker; chỉ có một worker nên không cần khóa phân tán. | BR-U03-58, 60 |
 | NFR-U03-46 | Mỗi loại việc có timeout do unit sở hữu khai báo, mặc định 60 giây; quá hạn coi như lỗi tạm. | REL-003 |
 | NFR-U03-47 | Queue durable, message persistent; RabbitMQ khởi động lại không mất message đang chờ. | REL-003 |
 | NFR-U03-48 | Ack thủ công, chỉ sau khi handler đã cập nhật PostgreSQL. | BR-U03-53 |
@@ -70,7 +70,7 @@ Nguồn: [Inception catalog](../../../inception/requirements/use-cases.md), [req
 | Mã | Yêu cầu | Nguồn |
 |---|---|---|
 | NFR-U03-70 | Backup chạy trong worker trên queue `jobs.backup` với 1 luồng; timeout của việc `BACKUP_RUN` là 2 giờ. | FR-038 |
-| NFR-U03-71 | Dump dùng `pg_dump` (một snapshot MVCC, không khóa ghi); giờ chạy do Admin chọn ngoài giờ cao điểm. | FR-038 |
+| NFR-U03-71 | Base backup dùng `pg_basebackup` với checkpoint giãn và giới hạn tốc độ đọc (`U03_BACKUP_MAX_RATE`, mặc định 32M), không khóa ghi; giờ chạy do Admin chọn ngoài giờ cao điểm. WAL archiving chỉ chép tệp trên máy, worker tải lên Drive nên không chặn giao dịch (từ 2026-11-26, thay `pg_dump`). | FR-038 |
 | NFR-U03-72 | Mã hóa lai: mỗi lần chạy một khóa AES-256-GCM ngẫu nhiên, khóa này được bọc bằng public key RSA-OAEP (3072 bit) của người vận hành; private key không nằm trên VPS. | BR-U03-93 |
 | NFR-U03-73 | Thư mục tạm cho dump là volume riêng; kiểm dung lượng trống ≥ 2 lần kích thước database trước khi dump, không đủ thì thất bại sớm. | FR-038 |
 | NFR-U03-74 | RPO bằng khoảng cách giữa hai lần chạy (tối đa 24 giờ với lịch hằng ngày) và RTO được đo trong lần thử khôi phục; không cam kết con số trước khi đo. | FR-038 |

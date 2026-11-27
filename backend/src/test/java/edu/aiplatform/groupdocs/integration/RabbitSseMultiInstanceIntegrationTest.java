@@ -1,5 +1,6 @@
 package edu.aiplatform.groupdocs.integration;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +17,6 @@ import org.springframework.jdbc.datasource.*;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.*;
 import org.testcontainers.utility.DockerImageName;
@@ -27,10 +27,10 @@ class RabbitSseMultiInstanceIntegrationTest {
     @Container
     static final GenericContainer<?> BROKER = new GenericContainer<>(DockerImageName.parse("rabbitmq:4.1-management-alpine"))
             .withExposedPorts(5672)
-            .waitingFor(Wait.forLogMessage(".*Server startup complete;.*\\n", 1));
-    @Container
-    static final PostgreSQLContainer<?> DATABASE = new PostgreSQLContainer<>("postgres:16-alpine")
-            .withPassword(UUID.randomUUID().toString());
+            // Các fork test song song cùng bật RabbitMQ thì có thể khởi động chậm hơn mức chờ mặc định 60 s.
+            .waitingFor(Wait.forLogMessage(".*Server startup complete;.*\\n", 1)
+                    .withStartupTimeout(java.time.Duration.ofMinutes(3)));
+    static final SharedPostgres.Database DATABASE = SharedPostgres.createDatabase();
 
     @Test
     void committedNoticeReachesBothInstancesOnlyForItsAccountAndRollbackPublishesNothing() throws Exception {

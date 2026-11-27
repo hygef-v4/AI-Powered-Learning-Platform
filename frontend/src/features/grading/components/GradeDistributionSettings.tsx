@@ -10,7 +10,7 @@ import { msg } from "@/i18n/msg";
 export function GradeDistributionSettings({ classId, assignmentId, gradingMode }: {
   classId: string;
   assignmentId: string;
-  gradingMode: "GRADED" | "PRACTICE";
+  gradingMode: "GRADED" | "PRACTICE" | "TEMPLATE";
 }) {
   return gradingMode === "GRADED"
     ? <VisibilitySetting key={`${classId}:${assignmentId}`} classId={classId} assignmentId={assignmentId} />

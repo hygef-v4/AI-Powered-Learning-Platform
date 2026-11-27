@@ -215,7 +215,7 @@ class GradebookServiceTest {
         member.groupDocumentId = doc;
         member.score = BigDecimal.ONE;
         member.state = EvaluationStatus.PUBLISHED;
-        when(repo.findForClass(cid)).thenReturn(List.of(member));
+        when(repo.listGradebookEvaluations(eq(cid), anyCollection())).thenReturn(List.of(member));
         when(provider.listGroupSubmissions(aid, cid))
                 .thenReturn(List.of(new edu.aiplatform.grading.contract.GroupSubmissionStatus(doc, UUID.randomUUID(),
                         "Group", true, submittedAt, true)));

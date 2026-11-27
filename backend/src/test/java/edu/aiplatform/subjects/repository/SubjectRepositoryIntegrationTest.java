@@ -1,5 +1,6 @@
 package edu.aiplatform.subjects.repository;
 
+import edu.aiplatform.shared.testsupport.SharedPostgres;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -47,7 +48,6 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -79,11 +79,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Testcontainers(disabledWithoutDocker = true)
 class SubjectRepositoryIntegrationTest {
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("u04_subjects_test")
-                    .withPassword(UUID.randomUUID().toString());
+    static final SharedPostgres.Database POSTGRES = SharedPostgres.createDatabase();
 
     private static final String SCHEMA =
             "u04_subjects_" + UUID.randomUUID().toString().replace("-", "");
@@ -643,11 +639,11 @@ class SubjectRepositoryIntegrationTest {
                 .isInstanceOfSatisfying(
                         ApiException.class,
                         error -> assertThat(error.readCode()).isEqualTo("SUBJECT_VERSION_CONFLICT"));
-        verify(audit, times(2)).record(any());
+        verify(audit, times(1)).record(any());
     }
 
     @Test
-    void auditExceptionRollsBackBothInsertedAndUpdatedSubjects() {
+    void auditExceptionRollsBackInsertedSubject() {
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         Subject before = subject("BEFORE", "Before", null);
         subjectRepository.insertSubject(before);
@@ -660,15 +656,6 @@ class SubjectRepositoryIntegrationTest {
                                                 "ROLLBACK", "Name", null, null)))
                 .isInstanceOf(IllegalStateException.class);
         assertThat(subjectRepository.hasSubjectWithCode(new SubjectCode("ROLLBACK"))).isFalse();
-        assertThatThrownBy(
-                        () ->
-                                subjectCommandService.updateInformation(
-                                        admin,
-                                        before.id(),
-                                        new SubjectCommandService.UpdateInformation(
-                                                "After", null, 1L)))
-                .isInstanceOf(IllegalStateException.class);
-        assertThat(subjectRepository.findById(before.id()).orElseThrow()).isEqualTo(before);
     }
 
     @Test
@@ -705,7 +692,7 @@ class SubjectRepositoryIntegrationTest {
     }
 
     @Test
-    void managerCommandsUseFixtureAccountLocksAndRollbackAssignmentOnAuditFailure() {
+    void managerCommandsUseFixtureAccountLocksWithoutAudit() {
         Actor admin = new Actor(UUID.randomUUID(), Role.ADMIN);
         Subject created =
                 subjectCommandService.createSubject(
@@ -717,22 +704,15 @@ class SubjectRepositoryIntegrationTest {
                         new SubjectCommandService.ChangeManager(OTHER_MANAGER, 1L));
         assertThat(subjectScope.isSubjectManager(MANAGER, created.id())).isFalse();
         assertThat(subjectScope.isSubjectManager(OTHER_MANAGER, created.id())).isTrue();
-        doThrow(new IllegalStateException("test audit failure")).when(audit).record(any());
-        assertThatThrownBy(
-                        () ->
-                                subjectCommandService.changeManager(
-                                        admin,
-                                        created.id(),
-                                        new SubjectCommandService.ChangeManager(null, 2L)))
-                .isInstanceOf(IllegalStateException.class);
-        assertThat(subjectRepository.findById(created.id()).orElseThrow()).isEqualTo(reassigned);
-        reset(audit);
+        assertThat(reassigned.version()).isEqualTo(2);
         Subject unassigned =
                 subjectCommandService.changeManager(
                         admin, created.id(), new SubjectCommandService.ChangeManager(null, 2L));
         assertThat(unassigned.managerId()).isNull();
         assertThat(unassigned.version()).isEqualTo(3);
         assertThat(subjectScope.isSubjectManager(OTHER_MANAGER, created.id())).isFalse();
+        verify(audit, times(1)).record(argThat(event -> event.action().equals("SUBJECT_MANAGED_CREATED")));
+        verify(audit, times(1)).record(any());
     }
 
     @Test
@@ -805,7 +785,7 @@ class SubjectRepositoryIntegrationTest {
                                         original.id()))
                 .isEqualTo("ARCHIVED");
         verify(archiveChecker, times(1)).archiveClassesOfSubject(eq(original.id()), any());
-        verify(audit, times(3)).record(any());
+        verify(audit, times(2)).record(any());
     }
 
     @Test
@@ -1059,7 +1039,7 @@ class SubjectRepositoryIntegrationTest {
                                             String.class,
                                             original.id()))
                     .containsExactly("ARCHIVED");
-            verify(audit).record(argThat(event -> event.action().equals("SUBJECT_ARCHIVED")));
+            verify(audit).record(argThat(event -> event.action().equals("SUBJECT_WRITER-FIRST_ARCHIVED")));
         } finally {
             allowWriterCommit.countDown();
             workers.shutdownNow();

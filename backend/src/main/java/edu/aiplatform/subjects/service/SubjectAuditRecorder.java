@@ -1,5 +1,6 @@
 package edu.aiplatform.subjects.service;
 
+import edu.aiplatform.audit.contract.AuditActions;
 import edu.aiplatform.audit.contract.AuditEvent;
 import edu.aiplatform.audit.contract.AuditResult;
 import edu.aiplatform.audit.contract.IAudit;
@@ -8,7 +9,6 @@ import edu.aiplatform.identity.contract.ResourceRef;
 import edu.aiplatform.subjects.model.Subject;
 import java.time.Instant;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -49,54 +49,32 @@ public class SubjectAuditRecorder {
                         at));
     }
 
+    /** Chỉ ghi tạo, lưu trữ, mở lại môn; sửa thông tin hay đổi chủ nhiệm không ghi (yêu cầu 2026-11-26). */
     public void recordCreated(Actor actor, Subject subject) {
         Map<String, Object> details = new LinkedHashMap<>();
         details.put("code", subject.code().value());
         details.put("managerId", subject.managerId());
-        recordEvent(actor, "SUBJECT_CREATED", subject, details, subject.createdAt());
-    }
-
-    public void recordInformationUpdated(Actor actor, Subject before, Subject after) {
-        List<String> fields = new java.util.ArrayList<>();
-        if (!before.name().equals(after.name())) {
-            fields.add("name");
-        }
-        if (!java.util.Objects.equals(before.description(), after.description())) {
-            fields.add("description");
-        }
-        recordEvent(
-                actor,
-                "SUBJECT_UPDATED",
-                after,
-                Map.of("changedFields", List.copyOf(fields)),
-                after.updatedAt());
-    }
-
-    public void recordManagerChanged(Actor actor, Subject before, Subject after) {
-        Map<String, Object> details = new LinkedHashMap<>();
-        details.put("oldManagerId", before.managerId());
-        details.put("newManagerId", after.managerId());
-        recordEvent(actor, "SUBJECT_MANAGER_CHANGED", after, details, after.updatedAt());
+        recordEvent(actor, "CREATED", subject, details, subject.createdAt());
     }
 
     public void recordStatusChanged(Actor actor, Subject before, Subject after) {
         recordEvent(
                 actor,
                 after.status() == edu.aiplatform.subjects.contract.SubjectStatus.ARCHIVED
-                        ? "SUBJECT_ARCHIVED"
-                        : "SUBJECT_REOPENED",
+                        ? "ARCHIVED"
+                        : "REOPENED",
                 after,
                 Map.of("before", before.status().name(), "after", after.status().name()),
                 after.updatedAt());
     }
 
     private void recordEvent(
-            Actor actor, String action, Subject subject, Map<String, Object> details, Instant at) {
+            Actor actor, String event, Subject subject, Map<String, Object> details, Instant at) {
         audit.record(
                 new AuditEvent(
                         UUID.randomUUID(),
                         actor.accountId(),
-                        action,
+                        AuditActions.buildObjectAction("SUBJECT", subject.code().value(), event),
                         "SUBJECT",
                         subject.id().toString(),
                         AuditResult.SUCCESS,

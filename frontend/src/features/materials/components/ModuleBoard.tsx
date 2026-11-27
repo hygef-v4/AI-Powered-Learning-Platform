@@ -20,7 +20,7 @@ import {
   showToast,
 } from "@/shared/ui";
 import { ArchiveItemDialog, ModuleItemDialog, resolveRemovalAction, describeRemoval } from "./MaterialDialogs";
-import { describeMaterialError, moduleApi } from "../api";
+import { describeMaterialError, materialApi, moduleApi } from "../api";
 import { useModuleCollapse } from "../model/moduleCollapse";
 import {
   buildItemHref,
@@ -46,6 +46,11 @@ export function canEditItem(item: OutlineItem) {
     : item.quiz.canManage && item.quiz.status !== "RETIRED";
 }
 
+/** Học liệu đã lưu trữ: không sửa, không lưu trữ lại; người quản lý khôi phục được. */
+function isArchivedMaterial(item: OutlineItem) {
+  return item.kind === "material" && item.material.status === "ARCHIVED";
+}
+
 /**
  * Học liệu chia theo module (U13). Mỗi module một thẻ: học liệu (tệp, link YouTube) và Quiz theo thứ tự, mỗi dòng chỉ có
  * tên, bấm cả dòng mở trang chi tiết. Bấm đầu thẻ (mũi tên cuối hàng) để thu gọn / mở module. Chủ nhiệm môn thêm, đổi tên, xóa, sắp xếp module; Chủ nhiệm môn và giảng viên tạo,
@@ -67,6 +72,8 @@ export function ModuleBoard({
   const { collapsed, toggle } = useModuleCollapse("board");
   const outline = data.outline ?? [];
   const staff = scope.kind !== "student";
+  // Trang của Chủ nhiệm môn: học liệu của môn hiện chung cho mọi lớp nên gọi là Subject material (yêu cầu 2026-11-26).
+  const subject = scope.kind === "subject";
   const writable = staff && !readOnly;
   const canCreate = scope.kind === "subject" && !readOnly && !!data.outline;
 
@@ -117,7 +124,7 @@ export function ModuleBoard({
 
   return (
     <div className="flex flex-col gap-4">
-      {header && <PageHeader title={msg("materials.components.ModuleBoard.learningMaterials")} actions={canCreate && createButton} />}
+      {header && <PageHeader title={subject ? msg("materials.components.ModuleBoard.subjectMaterials") : msg("materials.components.ModuleBoard.learningMaterials")} actions={canCreate && createButton} />}
       {!header && canCreate && <div className="flex justify-end">{createButton}</div>}
       {data.error && (
         <p role="alert" className="text-sm text-danger">
@@ -137,7 +144,10 @@ export function ModuleBoard({
       )}
       {data.outline && outline.length === 0 && (
         <section className="rounded-xl border border-dashed border-line-strong bg-surface p-10 text-center text-sm text-muted">
-          {msg("materials.components.ModuleBoard.noModulesYet")}</section>
+          {/* Môn mới không tự có module (yêu cầu 2026-11-26): Chủ nhiệm môn tạo module trước, giảng viên chờ môn có module. */}
+          {subject && !readOnly ? msg("materials.components.ModuleBoard.noModulesForSubject")
+            : scope.kind === "class" && !readOnly ? msg("materials.components.ModuleBoard.noModulesForClass")
+              : msg("materials.components.ModuleBoard.noModulesYet")}</section>
       )}
       {outline.map(({ module, items }, index) => {
         const addable = writable && (scope.kind === "class" || module.canManage);
@@ -163,7 +173,7 @@ export function ModuleBoard({
                     onClick={() => setDialog({ type: "item", module })}
                     data-testid={`module-add-${module.id}`}
                   >
-                    {msg("materials.components.ModuleBoard.createLearningMaterial")}</Button>
+                    {subject ? msg("materials.components.ModuleBoard.createSubjectMaterial") : msg("materials.components.ModuleBoard.createLearningMaterial")}</Button>
                 )}
                 {scope.kind === "subject" && module.canManage && !readOnly && (
                   <Menu
@@ -222,7 +232,7 @@ export function ModuleBoard({
               <ul className="flex flex-col">
                 {items.length === 0 && (
                   <li className="border-t border-line px-5 py-4 text-[13px] text-muted">
-                    {msg("materials.components.ModuleBoard.noLearningMaterialsYet")}</li>
+                    {subject ? msg("materials.components.ModuleBoard.noSubjectMaterialsYet") : msg("materials.components.ModuleBoard.noLearningMaterialsYet")}</li>
                 )}
                 {items.map((item) => (
                   <ModuleRow
@@ -230,17 +240,18 @@ export function ModuleBoard({
                     item={item}
                     scope={scope}
                     staff={staff}
-                    editable={writable && canEditItem(item)}
+                    editable={writable && canEditItem(item) && !isArchivedMaterial(item)}
                     reopenable={
                       writable &&
-                      item.kind === "quiz" &&
-                      item.quiz.canManage &&
-                      item.quiz.status === "RETIRED"
+                      (item.kind === "quiz"
+                        ? item.quiz.canManage && item.quiz.status === "RETIRED"
+                        : item.material.canManage && isArchivedMaterial(item))
                     }
                     busy={busy}
                     onReopen={() =>
-                      item.kind === "quiz" &&
-                      void runAction(() => reopen(item.quiz.quizId, scope), msg("materials.components.ModuleBoard.quizReopened"))
+                      item.kind === "quiz"
+                        ? void runAction(() => reopen(item.quiz.quizId, scope), msg("materials.components.ModuleBoard.quizReopened"))
+                        : void runAction(() => materialApi.restoreMaterial(item.material), msg("materials.components.ModuleBoard.materialRestored"))
                     }
                     onEdit={() => setDialog({ type: "item", module, item })}
                     onArchive={() => setDialog({ type: "archive", item })}
@@ -416,7 +427,8 @@ function ModuleRow({
       {quiz && staff && (
         <Pill tone={QUIZ_STATUS_TONES[quiz.status]}>{QUIZ_STATUS_LABELS[quiz.status]}</Pill>
       )}
-      {material && staff && material.enabled === false && <Pill>{msg("materials.components.ModuleBoard.off")}</Pill>}
+      {material && staff && material.status === "ARCHIVED" && <Pill tone="warning">{msg("materials.components.ModuleBoard.archived")}</Pill>}
+      {material && staff && material.status !== "ARCHIVED" && material.enabled === false && <Pill>{msg("materials.components.ModuleBoard.off")}</Pill>}
       {reopenable && (
         <span className="flex shrink-0 items-center" onClick={(event) => event.stopPropagation()}>
           <IconButton

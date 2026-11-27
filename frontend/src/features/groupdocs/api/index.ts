@@ -1,4 +1,5 @@
-import { downloadApi, fetchApi } from "@/shared/api/client";
+import { buildDiagramPngsRequest, downloadApi, fetchApi } from "@/shared/api/client";
+import { renderMissingDiagramPngs } from "@/shared/document/diagramPngRenderer";
 import type { ActivityEventInput } from "@/shared/activity/useActivityTracker";
 import type { DocxPreview } from "@/shared/document";
 import type { DocumentBlock, Receipt, RevisionView, SectionView, WorkspaceView } from "../model/types";
@@ -21,8 +22,9 @@ export const assignSection = (id: string, sectionId: string, assigneeId: string,
 export const releaseSection = (id: string, sectionId: string) =>
   fetchApi<SectionView>(`${buildSectionPath(id, sectionId)}:release`, { method: "POST" });
 
-export const saveDraft = (id: string, sectionId: string, version: number, blocks: DocumentBlock[]) =>
-  fetchApi<SectionView>(`${buildSectionPath(id, sectionId)}/draft`, { method: "PUT", body: JSON.stringify({ version, blocks }) });
+/** `keepalive` cho lần lưu lúc rời trang, để yêu cầu vẫn đi khi trang đã đóng (TC-PERF-019). */
+export const saveDraft = (id: string, sectionId: string, version: number, blocks: DocumentBlock[], keepalive = false) =>
+  fetchApi<SectionView>(`${buildSectionPath(id, sectionId)}/draft`, { method: "PUT", body: JSON.stringify({ version, blocks }), keepalive });
 
 export const finishSection = (id: string, sectionId: string) =>
   fetchApi<SectionView>(`${buildSectionPath(id, sectionId)}:done`, { method: "POST" });
@@ -44,7 +46,9 @@ export const previewSectionDocx = async (id: string, sectionId: string, file: Fi
 export const submitDocument = (id: string, version: number) =>
   fetchApi<Receipt>(`${buildDocPath(id)}/submit`, { method: "POST", body: JSON.stringify({ version }) });
 
-export const downloadDocx = (id: string, submitted: boolean) => downloadApi(`${buildDocPath(id)}/export.docx?submitted=${submitted}`);
+/** {@code blocks}: tài liệu đang hiện; sơ đồ chưa có ảnh lưu sẵn được trình duyệt dựng ảnh trước khi tải (yêu cầu 2026-11-27). */
+export const downloadDocx = async (id: string, submitted: boolean, blocks: DocumentBlock[] = []) =>
+  downloadApi(`${buildDocPath(id)}/export.docx?submitted=${submitted}`, buildDiagramPngsRequest(await renderMissingDiagramPngs(blocks)));
 
 export const buildEventsUrl = (id: string) => `${buildDocPath(id)}/events`;
 

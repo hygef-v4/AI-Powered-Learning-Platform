@@ -22,6 +22,8 @@ import { WorkspaceTopBar } from "@/shared/layout/WorkspaceTopBar";
 import { msg } from "@/i18n/msg";
 
 export const AUTOSAVE_MS = 10_000;
+/** Trình duyệt giới hạn body của yêu cầu `keepalive` khoảng 64 KB; mục lớn hơn thì gửi bằng yêu cầu thường. */
+const KEEPALIVE_MAX = 60_000;
 
 type Drafts = Record<string, DocumentBlock[]>;
 type HeldSection = Pick<SectionView, "title" | "version" | "claimedAt">;
@@ -200,6 +202,21 @@ export function GroupSectionEditorPage({ documentId, focusPart = null }: { docum
   }, [dirty]);
   // Rời trang trong app (sidebar, nút quay lại): lưu nốt phần chưa lưu.
   useEffect(() => () => void save(), [save]);
+  // Đóng tab, tải lại hoặc sang địa chỉ khác: gửi ngay mọi mục chưa lưu, song song và không chờ kết quả, vì trang sắp
+  // đóng (TC-PERF-019). Hộp "Leave site?" vẫn hiện; người dùng chọn rời thì các yêu cầu này vẫn được gửi.
+  useEffect(() => {
+    const leave = () => {
+      for (const id of latest.current.dirty) {
+        const blocks = latest.current.drafts[id];
+        const claim = held.current.get(id);
+        if (!blocks || !claim) continue;
+        const keepalive = JSON.stringify({ version: claim.version, blocks }).length < KEEPALIVE_MAX;
+        void saveDraft(documentId, id, claim.version, blocks, keepalive).catch(NOOP);
+      }
+    };
+    window.addEventListener("pagehide", leave);
+    return () => window.removeEventListener("pagehide", leave);
+  }, [documentId]);
 
   const editorDocument = useMemo(() => (view ? assembleEditorDocument(view.sharedBlocks, view.sections, drafts) : null), [view, drafts]);
   // Số thứ tự như trang tài liệu nhóm (cả đề, kể cả mục của người khác), không đánh lại theo các phần đang hiện.

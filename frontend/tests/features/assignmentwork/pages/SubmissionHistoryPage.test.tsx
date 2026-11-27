@@ -105,17 +105,20 @@ describe("SubmissionHistoryPage (yêu cầu 2026-11-10)", () => {
     render(<SubmissionHistoryPage assignmentId="x" />);
 
     const comment = await screen.findByText("Nhận xét lượt 2");
-    const panel = screen.getByRole("region", { name: "Góp ý AI" });
+    const panel = screen.getByRole("region", { name: "Tổng quan" });
     expect(panel).toContainElement(comment);
     expect(panel.closest('[data-testid="comment-rail"]') !== null).toBe(wide);
-    expect(within(panel).getByText("Góp ý tham khảo")).toBeInTheDocument();
-    expect(within(panel).getByText("Toàn bài: Đọc lại đề")).toBeInTheDocument();
-    expect(within(panel).getByRole("button", { name: "Nhận góp ý lại" })).toBeEnabled();
+    fireEvent.click(within(panel).getByRole("button", { name: /Điểm mạnh/ }));
+    expect(within(panel).getByText("Điểm tốt")).toBeInTheDocument();
+    // Nhận xét theo phần nằm ở thẻ riêng, không chen vào thẻ Tổng quan; đã có góp ý thì không còn nút xin lại.
+    expect(within(panel).queryByText("Đọc lại đề")).toBeNull();
+    expect(screen.getByText("Đọc lại đề").closest("article")).toHaveTextContent("Toàn bài");
+    expect(within(panel).queryByRole("button", { name: /Nhận góp ý/ })).toBeNull();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByRole("combobox", { name: "Chọn bài nộp" }), { target: { value: "a1" } });
     const empty = await screen.findByText("Chưa có góp ý.");
-    const nextPanel = screen.getByRole("region", { name: "Góp ý AI" });
+    const nextPanel = screen.getByRole("region", { name: "Tổng quan" });
     expect(nextPanel).toContainElement(empty);
     expect(screen.queryByText("Nhận xét lượt 2")).not.toBeInTheDocument();
     expect(requestFeedback).not.toHaveBeenCalled();

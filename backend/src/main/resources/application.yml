@@ -9,9 +9,13 @@ spring:
     username: ${POSTGRES_APP_USER:app}
     password: ${POSTGRES_APP_PASSWORD:}
     hikari:
-      connection-timeout: 3000
+      # Chờ kết nối tối đa 10 s: khi nhiều người cùng lưu bài, request xếp hàng chờ kết nối thay vì báo lỗi sau 3 s
+      # (TC-PERF-004, 005); vẫn dưới statement_timeout 15 s và proxy_read_timeout 120 s của Nginx cho /api/.
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:10000}
       validation-timeout: 1000
-      maximum-pool-size: 10
+      # Backend mặc định 20, worker 10 (application-worker.yml); tổng phải dưới max_connections 100 của Postgres.
+      # Pool 10 hết kết nối khi 100 người cùng lưu bài (TC-PERF-004, 005).
+      maximum-pool-size: ${DB_POOL_MAX:20}
       data-source-properties:
         connectTimeout: 5
         socketTimeout: 30
@@ -93,6 +97,9 @@ platform:
     refresh-idle-ttl: ${U01_REFRESH_IDLE_TTL:2h}
     refresh-max-ttl: ${U01_REFRESH_MAX_TTL:7d}
     bcrypt-cost: ${U01_BCRYPT_COST:12}
+    # Số bcrypt chạy cùng lúc (0 = số CPU JVM được cấp) và thời gian chờ tối đa của lần thừa (TC-PERF-002)
+    bcrypt-max-concurrent: ${U01_BCRYPT_MAX_CONCURRENT:0}
+    bcrypt-queue-wait: ${U01_BCRYPT_QUEUE_WAIT:30s}
     otp-ttl: ${U01_OTP_TTL:10m}
     otp-max-attempts: ${U01_OTP_MAX_ATTEMPTS:5}
     login-lock-threshold: ${U01_LOGIN_LOCK_THRESHOLD:5}
@@ -150,7 +157,6 @@ platform:
   # U03 Job and Settings
   files:
     fileref-secret: ${U03_FILEREF_SECRET:}
-    require-drive: ${U03_REQUIRE_DRIVE:false}
     local-storage-dir: ${U03_LOCAL_STORAGE_DIR:}
     upload-tmp-dir: ${U03_UPLOAD_TMP_DIR:}
     drive-service-account-key: ${GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY:}
@@ -171,10 +177,12 @@ platform:
     db-host: ${POSTGRES_HOST:localhost}
     db-port: ${POSTGRES_PORT:5432}
     db-name: ${POSTGRES_DB:platform}
-    db-user: backup_reader
+    db-user: backup_replicator
     db-password: ${BACKUP_DB_PASSWORD:}
     tmp-dir: ${U03_BACKUP_TMP_DIR:}
-    local-dir: ${U03_LOCAL_BACKUP_DIR:}
+    # Thư mục WAL archive dùng chung với Postgres; giới hạn tốc độ đọc khi chụp base backup (U03, 2026-11-26).
+    wal-dir: ${U03_WAL_ARCHIVE_DIR:/wal-archive}
+    max-rate: ${U03_BACKUP_MAX_RATE:32M}
   # U07 Assignment Authoring: link trang xem sơ đồ ghi vào DOCX xuất ra (BR-U07-60).
   assignments:
     public-url: ${APP_PUBLIC_URL:http://localhost:8088}
@@ -182,3 +190,6 @@ platform:
   assignment-work:
     feedback-per-day: ${U08_FEEDBACK_PER_DAY:20}
     activity-events-per-minute: ${U08_ACTIVITY_EVENTS_PER_MINUTE:60}
+    # Số lần lưu nháp xử lý cùng lúc (0 = số CPU JVM được cấp) và thời gian chờ tối đa của lần thừa (TC-PERF-004).
+    save-max-concurrent: ${U08_SAVE_MAX_CONCURRENT:0}
+    save-queue-wait: ${U08_SAVE_QUEUE_WAIT:30s}

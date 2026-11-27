@@ -98,9 +98,6 @@ public class SubjectStatusService {
                     "Dữ liệu môn đã thay đổi. Hãy tải lại trước khi sửa");
         }
         subjectAuditRecorder.recordStatusChanged(actor, before, after);
-        if (before.managerId() != null && after.managerId() == null) {
-            subjectAuditRecorder.recordManagerChanged(actor, before, after);
-        }
         return after;
     }
 

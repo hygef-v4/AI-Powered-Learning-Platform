@@ -1,8 +1,5 @@
 package edu.aiplatform.identity.service;
 
-import edu.aiplatform.audit.contract.AuditEvent;
-import edu.aiplatform.audit.contract.AuditResult;
-import edu.aiplatform.audit.contract.IAudit;
 import edu.aiplatform.identity.contract.Actions;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
@@ -21,9 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -48,14 +43,12 @@ public class PasswordChangeService {
     private final VerificationTicketStore tickets;
     private final RequestThrottle throttle;
     private final PasswordEncoder passwordEncoder;
-    private final IAudit audit;
     private final TransactionOperations transactions;
     private final Clock clock;
 
     public PasswordChangeService(AccountRepository accounts, IAuthorization authorization, SessionStore sessions,
                                  OtpChallengeStore otpChallenges, VerificationTicketStore tickets,
-                                 RequestThrottle throttle, PasswordEncoder passwordEncoder, IAudit audit,
-                                 TransactionOperations transactions, Clock clock) {
+                                 RequestThrottle throttle, PasswordEncoder passwordEncoder, TransactionOperations transactions, Clock clock) {
         this.accounts = accounts;
         this.authorization = authorization;
         this.sessions = sessions;
@@ -63,7 +56,6 @@ public class PasswordChangeService {
         this.tickets = tickets;
         this.throttle = throttle;
         this.passwordEncoder = passwordEncoder;
-        this.audit = audit;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -92,8 +84,6 @@ public class PasswordChangeService {
         Instant now = clock.instant().truncatedTo(ChronoUnit.MILLIS);
         transactions.executeWithoutResult(status -> {
             accounts.updatePassword(account.id(), hash, now);
-            audit.record(new AuditEvent(UUID.randomUUID(), account.id(), "PASSWORD_CHANGED", "ACCOUNT",
-                    account.id().toString(), AuditResult.SUCCESS, null, Map.of(), now));
             sessions.restampSession(currentSid, now.toEpochMilli());
             sessions.deleteAllExcept(account.id(), currentSid);
         });

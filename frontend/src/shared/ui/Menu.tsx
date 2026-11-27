@@ -14,6 +14,8 @@ type Props = {
   variant?: "button" | "tool";
   className?: string;
   summaryClassName?: string;
+  /** Thêm class cho khung danh sách, ví dụ cho rộng đúng bằng nút mở. */
+  menuClassName?: string;
   children: ReactNode;
 };
 
@@ -21,7 +23,7 @@ type Props = {
  * Nút mở danh sách thao tác (dựa trên {@code details}): bấm ra ngoài, Esc hoặc chọn một mục thì đóng. Mở ra thì focus vào
  * mục đầu; mũi tên lên/xuống, Home, End di chuyển giữa các mục; Esc trả focus về nút mở.
  */
-export function Menu({ label, icon, ariaLabel, align = "left", variant = "button", className, summaryClassName, children }: Props) {
+export function Menu({ label, icon, ariaLabel, align = "left", variant = "button", className, summaryClassName, menuClassName, children }: Props) {
   const ref = useRef<HTMLDetailsElement>(null);
   const [open, setOpen] = useState(false);
 
@@ -87,7 +89,7 @@ export function Menu({ label, icon, ariaLabel, align = "left", variant = "button
         <Icon name="expand_more" size={12} className="text-muted" />
       </summary>
       <div role="menu" className={cx("absolute z-40 mt-1.5 flex min-w-52 animate-pop flex-col rounded-xl border border-line bg-surface p-1.5 shadow-[var(--shadow-float)]",
-        align === "right" ? "right-0" : "left-0")}>
+        align === "right" ? "right-0" : "left-0", menuClassName)}>
         {children}
       </div>
     </details>

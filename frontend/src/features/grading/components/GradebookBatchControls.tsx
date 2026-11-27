@@ -119,6 +119,7 @@ function SubmissionTable({ onDone, query = "", status = "", group = false, direc
           <Td><div className="flex flex-wrap gap-1.5">
             <Pill tone={state === "PUBLISHED" ? "success" : state === "DRAFT" ? "info" : state === "PENDING" ? "warning" : "neutral"}>{GRADE_STATUS_LABELS[state] ?? state}</Pill>
             {row.late && <Pill tone="danger">{msg("grading.components.GradebookBatchControls.late")}</Pill>}
+            {row.leftClass && <Pill tone="neutral">{msg("grading.components.GradebookBatchControls.leftClass")}</Pill>}
           </div></Td>
           <Td>{href && <Link href={href} aria-label={label} title={label}
             onClick={(event) => event.stopPropagation()}

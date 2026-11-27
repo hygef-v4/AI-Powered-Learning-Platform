@@ -20,6 +20,7 @@ import edu.aiplatform.ai.contract.AiTaskView;
 import edu.aiplatform.ai.contract.ApplyOutcome;
 import edu.aiplatform.ai.contract.IAiTask;
 import edu.aiplatform.ai.contract.McpToolResult;
+import edu.aiplatform.ai.contract.SelectableMaterial;
 import edu.aiplatform.identity.contract.Actor;
 import edu.aiplatform.identity.contract.AuthorizationDecision;
 import edu.aiplatform.identity.contract.IAuthorization;
@@ -328,6 +329,7 @@ class QuizAiDraftServiceTest {
     private QuizAuthoringService authoring;
     private QuizPublicationService publication;
     private QuizAiDraftService drafts;
+    private QuizReferenceMaterials referenceMaterials;
     private QuizDraftResultHandler handler;
     private QuizMcpTools mcp;
     private QuizAccess mcpAccess;
@@ -384,6 +386,7 @@ class QuizAiDraftServiceTest {
         ActiveSubjects active = new ActiveSubjects(subjects);
         QuizSupport support = new QuizSupport(store.quizRepository, store.questionRepository, classes, access, active);
         QuizReferenceMaterials materials = new QuizReferenceMaterials(u13, support, access);
+        referenceMaterials = materials;
         authoring = new QuizAuthoringService(store.quizRepository, store.questionRepository, support, access,
                 clock, listeners);
         publication = new QuizPublicationService(store.quizRepository, support,
@@ -558,6 +561,11 @@ class QuizAiDraftServiceTest {
         assertThat(api(() -> drafts.requestForQuiz(teacher, id, request("a", List.of(noText)), version)).readCode())
                 .isEqualTo("MATERIAL_NOT_SELECTABLE");
         assertThat(api(() -> drafts.requestForQuiz(teacher, id, request("b", List.of(otherScope)), version)).readCode())
+                .isEqualTo("MATERIAL_NOT_SELECTABLE");
+        UUID video = u13.addVideo(ResourceRef.courseClass(classA), "Video bài giảng");
+        assertThat(referenceMaterials.listForQuiz(teacher, id)).extracting(SelectableMaterial::materialId).doesNotContain(video)
+                .contains(ok);
+        assertThat(api(() -> drafts.requestForQuiz(teacher, id, request("v", List.of(video)), version)).readCode())
                 .isEqualTo("MATERIAL_NOT_SELECTABLE");
 
         u13.down = true;
