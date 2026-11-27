@@ -11,6 +11,7 @@ import edu.aiplatform.assignments.contract.IGroupAssignmentSupport;
 import edu.aiplatform.assignments.contract.ReadinessResult;
 import edu.aiplatform.assignments.contract.ValidationIssue;
 import edu.aiplatform.assignments.model.Assignment;
+import edu.aiplatform.assignments.model.AssignmentOrigin;
 import edu.aiplatform.assignments.repository.AssignmentRepository;
 import edu.aiplatform.assignments.model.AssignmentRubric;
 import edu.aiplatform.assignments.repository.RubricRepository;
@@ -77,6 +78,76 @@ class AssignmentSupport {
         return assignment;
     }
 
+    /**
+     * Tên đề mẫu không trùng trong môn (yêu cầu 2026-11-27): so với các bài của môn chưa ngưng giao, không phân biệt hoa
+     * thường và khoảng trắng thừa. Các version cùng chuỗi (NEW_VERSION) được giữ chung tên. Chỉ kiểm khi tên đổi, để
+     * bài cùng tên có từ trước vẫn lưu được các thay đổi khác.
+     */
+    void requireUniqueTemplateTitle(Assignment current, String nextTitle) {
+        if (current.scope() != AssignmentScope.SUBJECT || current.status() == AssignmentStatus.RETIRED
+                || matchesTitle(current.title(), nextTitle)) {
+            return;
+        }
+        requireUniqueTemplateTitle(current.subjectId(), nextTitle, current);
+    }
+
+    /** Tên do người dùng nhập cho bài mới của môn; {@code lineage}: bài cùng chuỗi version, null nếu không có. */
+    void requireUniqueTemplateTitle(UUID subjectId, String title, Assignment lineage) {
+        assignments.lockSubjectTitles(subjectId);
+        if (isTemplateTitleTaken(subjectId, title, lineage)) {
+            throw ApiException.createConflict("TEMPLATE_TITLE_DUPLICATE",
+                    "Môn đã có đề mẫu tên này. Hãy đặt tên khác");
+        }
+    }
+
+    /**
+     * Tên tự đặt cho bài mới của môn (tên mặc định, nhân bản, copy không nhập tên): trùng thì thêm " (2)", " (3)"…,
+     * cắt bớt tên gốc để không quá {@link Assignment#TITLE_MAX} ký tự.
+     */
+    String resolveTemplateTitle(UUID subjectId, String base) {
+        assignments.lockSubjectTitles(subjectId);
+        if (!isTemplateTitleTaken(subjectId, base, null)) {
+            return base;
+        }
+        for (int n = 2; ; n++) {
+            String suffix = " (" + n + ")";
+            String head = base.length() + suffix.length() > Assignment.TITLE_MAX
+                    ? base.substring(0, Assignment.TITLE_MAX - suffix.length()).strip() : base;
+            String candidate = head + suffix;
+            if (!isTemplateTitleTaken(subjectId, candidate, null)) {
+                return candidate;
+            }
+        }
+    }
+
+    private boolean isTemplateTitleTaken(UUID subjectId, String title, Assignment self) {
+        List<Assignment> all = assignments.listOfSubject(subjectId);
+        Map<UUID, Assignment> byId = new HashMap<>();
+        all.forEach(a -> byId.put(a.id(), a));
+        UUID selfRoot = self == null ? null : findVersionRoot(self, byId);
+        return all.stream().anyMatch(a -> a.status() != AssignmentStatus.RETIRED
+                && (self == null || !a.id().equals(self.id()))
+                && (selfRoot == null || !selfRoot.equals(findVersionRoot(a, byId)))
+                && matchesTitle(a.title(), title));
+    }
+
+    private static UUID findVersionRoot(Assignment assignment, Map<UUID, Assignment> byId) {
+        Assignment at = assignment;
+        while (at.origin() == AssignmentOrigin.NEW_VERSION && at.sourceAssignmentId() != null
+                && byId.containsKey(at.sourceAssignmentId())) {
+            at = byId.get(at.sourceAssignmentId());
+        }
+        return at.id();
+    }
+
+    private static boolean matchesTitle(String left, String right) {
+        return comparableTitle(left).equals(comparableTitle(right));
+    }
+
+    private static String comparableTitle(String title) {
+        return title == null ? "" : title.strip().replaceAll("\\s+", " ").toLowerCase(java.util.Locale.ROOT);
+    }
+
     static void requireVersion(Assignment assignment, long version) {
         if (assignment.version() != version) {
             throw createVersionConflictError();
@@ -112,7 +183,7 @@ class AssignmentSupport {
     AssignmentViews.Row buildRow(Assignment a, boolean readOnly) {
         return new AssignmentViews.Row(a.id(), a.scope(), a.classId(), a.subjectId(), a.title(), a.submissionMode(),
                 a.gradingMode(), a.diagramEnabled(), a.status(), a.versionNo(), a.origin(), a.opensAt(), a.closesAt(),
-                a.lateUntil(), a.maxAttempts(), a.updatedAt(), readOnly);
+                a.lateUntil(), a.maxAttempts(), a.createdAt(), a.updatedAt(), readOnly);
     }
 
     AssignmentViews.Detail buildDetail(Actor actor, Assignment a, List<ValidationIssue> warnings) {

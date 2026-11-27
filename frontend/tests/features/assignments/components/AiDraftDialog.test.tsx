@@ -338,7 +338,8 @@ describe("AiDraftDialog", () => {
 
   it("the template dropdown lists the subject's templates and can upload one", async () => {
     vi.spyOn(assignmentsApi, "materials").mockResolvedValue([]);
-    vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([{ assignmentId: "t1", title: "Đề mẫu cuối kỳ" , subjectTemplate: true }]);
+    vi.spyOn(assignmentsApi, "listAiTemplates").mockResolvedValue([{ assignmentId: "t1", title: "Đề mẫu cuối kỳ" , subjectTemplate: true,
+      createdAt: "2026-11-20T03:00:00Z" }]);
     const requestAiDraft = vi.spyOn(assignmentsApi, "requestAiDraft").mockResolvedValue({
       draftId: "d1", assignmentId: "a1", origin: "AI_TASK", status: "PENDING", taskId: null, proposal: null,
       provenance: {}, safeError: null, baseVersion: 1, createdAt: "now", decidedAt: null,
@@ -346,7 +347,7 @@ describe("AiDraftDialog", () => {
     render(<AiDraftDialog assignmentId="a1" version={1} currentPartCount={0} currentTitle="" currentInstructions=""
       gradingMode="GRADED" onClose={vi.fn()} onApplied={vi.fn()} />);
     const picker = screen.getByLabelText("Mẫu đề");
-    expect(await within(picker).findByRole("option", { name: "Đề mẫu cuối kỳ" })).toBeInTheDocument();
+    expect(await within(picker).findByRole("option", { name: "Đề mẫu cuối kỳ · 20/11/2026" })).toBeInTheDocument();
     expect(within(picker).getByRole("option", { name: "Tải đề mẫu lên…" })).toBeInTheDocument();
     fireEvent.change(picker, { target: { value: "t1" } });
     fireEvent.click(screen.getByTestId("ai-send"));

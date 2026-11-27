@@ -20,6 +20,7 @@ import { QuestionPointsField } from "./QuestionPointsField";
 import { extractTemplateText } from "../model/templateText";
 import { type AiDraft, type AssignmentDetail, type CopySource, type Material } from "../model/types";
 import { msg } from "@/i18n/msg";
+import { formatDate } from "@/shared/dateTime";
 import { LOCALES, LOCALE_NAMES } from "@/i18n/locales";
 
 type Props = {
@@ -106,10 +107,11 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
   const ai = method === "AI";
   const requestTooLong = request.length > MAX_AI_REQUEST_LENGTH;
   // Đề có sẵn: đề mẫu của môn đứng đầu, rồi bài của các lớp mình dạy (thứ tự server trả). Bài của lớp ghi thêm `mã lớp · học kỳ`
-  // để phân biệt lớp cùng mã ở các học kỳ (D-U04-05).
+  // để phân biệt lớp cùng mã ở các học kỳ (D-U04-05). Ngày tạo hiện bên phải để phân biệt bài cùng tên (yêu cầu 2026-11-27).
   const candidates = (sources ?? []).flatMap((source) => source.assignments);
   const options = (sources ?? []).flatMap((source) => source.assignments.map((item) => ({
     id: item.id, label: source.kind === "CLASS" && source.term ? `${item.title} · ${source.code} · ${source.term}` : item.title,
+    hint: item.createdAt ? formatDate(item.createdAt) : undefined,
   }))).filter((option) => option.id !== sourceId);
   const picked = candidates.find((item) => item.id === sourceId);
   const subjectTemplates = (sources ?? []).filter((source) => source.kind === "SUBJECT").flatMap((source) => source.assignments);
@@ -433,7 +435,7 @@ export function CreateAssignmentDialog({ target, onClose, onCreated }: Props) {
                     }}>
                   <SearchPicker id="ai-template" label={msg("assignments.components.CreateAssignmentDialog.template")} placeholder={msg("assignments.components.CreateAssignmentDialog.chooseATemplateOrUpload")} disabled={busy}
                     optionIcon="assignment" loading={sources === null} emptyText={msg("assignments.components.CreateAssignmentDialog.theSubjectHasNoTemplates")} onOpen={loadSources}
-                    options={subjectTemplates.filter((item) => item.id !== aiTemplateId).map((item) => ({ id: item.id, label: item.title }))}
+                    options={subjectTemplates.filter((item) => item.id !== aiTemplateId).map((item) => ({ id: item.id, label: item.title, hint: item.createdAt ? formatDate(item.createdAt) : undefined }))}
                     onPick={(id) => { setAiTemplateFile(null); setAiTemplateId(id); setPreserveTemplatePoints(false); }}
                     selected={templateName ? { label: templateName, clearLabel: msg("assignments.components.CreateAssignmentDialog.removeTemplate"),
                       onClear: () => { setAiTemplateId(""); setAiTemplateFile(null); setPreserveTemplatePoints(false); } } : undefined}

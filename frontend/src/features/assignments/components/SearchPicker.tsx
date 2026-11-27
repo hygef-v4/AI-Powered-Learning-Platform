@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import { Icon, IconButton, type IconName } from "@/shared/ui";
 import { msg } from "@/i18n/msg";
 
-export type PickerOption = { id: string; label: string };
+/** {@code hint}: chữ phụ bên phải (ví dụ ngày tạo), không dùng khi lọc. */
+export type PickerOption = { id: string; label: string; hint?: string };
 
 type Props = {
   id: string;
@@ -98,7 +99,9 @@ export function SearchPicker({ id, label, placeholder, options, onPick, onOpen, 
               onMouseDown={(e) => { e.preventDefault(); onPick(option.id); setQuery(""); if (!multiple) setOpen(false); }}
               className="flex shrink-0 cursor-pointer items-center gap-2 px-3 py-2 text-[13px] text-ink hover:bg-canvas">
               {optionIcon && <Icon name={optionIcon} size={15} className="text-muted" />}
-              <span className="min-w-0 truncate">{option.label}</span>
+              <span className="min-w-0 flex-1 truncate">{option.label}</span>
+              {option.hint && " "}
+              {option.hint && <span className="shrink-0 text-[11px] text-muted">{option.hint}</span>}
             </li>
           ))}
           {shown.length === 0 && (
